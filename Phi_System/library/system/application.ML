@@ -78,7 +78,6 @@ fun apply applications stat =
     of SOME stat' => stat'
      | NONE => raise THM ("Application Fail", 0, (snd stat)::applications)
 
-
 (*
 fun comp_no_flatten_matched (th, n) i rule =
   (case distinct Thm.eq_thm (Seq.list_of
@@ -98,18 +97,16 @@ fun MPs ctxt th1s' th2 =
           ]) @{thm \<phi>Application_Conv}
      |> (fn th => comp_no_flatten_matched (Thm.implies_elim th th1, 3) 1 th2)
      |> pair ctxt |> Seq.single
-     |> pair 0
      ) th1s
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ => "Reasoning modus pones..." ^ Position.here \<^here>)
     fun obligation_fail S = raise Phi_Reasoners.Attemption_Fail S
   in
-    case Seq.pull (Phi_Reasoner.reason_s ctxt stats)
-      of SOME (stat, _) => snd (Phi_Reasoners.safer_obligation_solver' obligation_fail stat)
+    case snd (Phi_Reasoner.reason_s ctxt (K ((), stats)))
+      of SOME stat => Phi_Reasoners.safer_obligation_solver' obligation_fail stat
        | NONE => Phi_Reasoner.error "Meta Modus Pones"
   end
 
-fun MP ctxt th1' th2 =
-  MPs ctxt [th1'] th2
-  *)
+fun MP ctxt th1' th2 = MPs ctxt [th1'] th2 *)
+
 end
 

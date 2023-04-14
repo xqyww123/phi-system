@@ -228,6 +228,7 @@ fun set_param raw_term (ctxt,sequent) =
                                      QuantExpansion.named_ExSet,
                                      QuantExpansion.named_metaAll]
           in (ctxt, set_param' ctxt_parse term' sequent
+                      |> QuantExpansion.named_predicate_expansion sctxt
                       |> Simplifier.full_simplify sctxt)
           end
     else (ctxt, set_param' ctxt_parse term sequent)

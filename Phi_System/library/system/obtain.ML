@@ -17,7 +17,7 @@ fun eliminate_term ctxt xs thm =
     val tm = Thm.prop_of thm
     val mode = Phi_Working_Mode.mode1 ctxt
     val vs = map (dest_Free o Thm.term_of) xs;
-    fun collect vs tm = Term.fold_aterms (fn t as Free v =>
+    fun collect vs tm = Term.fold_aterms (fn Free v =>
                         if member (op =) vs v then insert (op =) v else I | _ => I) tm []
     val bads = collect vs tm
   in #introduce_existence_in_assembling mode bads (ctxt, thm) |> snd

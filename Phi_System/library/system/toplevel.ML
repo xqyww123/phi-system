@@ -144,6 +144,8 @@ fun merge_premises_bindings R [] = map (the_default ((Binding.empty, []),[])) R
   | merge_premises_bindings [] (_::_)
       = error "Too much premises bindings given"
 
+exception Internal_Match_Fail of string
+
 in
 
 fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
@@ -223,7 +225,9 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                                     (Phi_Help.leading_antecedent' sequent, Thm.prop_of th2)
                                     (Vartab.empty, Vartab.empty)
                       |> Phi_Help.env_to_table ctxt''
-                handle Pattern.MATCH => error (Pretty.string_of (Pretty.chunks [
+                handle Pattern.MATCH =>
+                  raise Internal_Match_Fail (
+                    Pretty.string_of (Pretty.chunks [
                       Pretty.str "The higher-order pattern match fails",
                       Pretty.block [Pretty.str "from ",
                                     Syntax.pretty_term ctxt'' (Phi_Help.leading_antecedent' sequent)],
@@ -251,6 +255,10 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                                    | _ => sequent'3
              in (ctxt'3, sequent'4)
              end
+             handle Internal_Match_Fail msg =>
+              (case NuApply.try_apply [th2] (ctxt,sequent)
+                 of SOME s' => s'
+                  | _ => error msg)
       in if is_top
          then stat
                 |> Proof.enter_backward

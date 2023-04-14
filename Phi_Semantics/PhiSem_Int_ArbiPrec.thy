@@ -147,12 +147,20 @@ definition op_amul :: "(VAL \<times> VAL, VAL) proc'"
       Return (\<phi>arg (V_aint.mk (val_b * val_a)))
   )))"
 
-definition op_audiv :: "(VAL \<times> VAL, VAL) proc'"
-  where "op_audiv =
+definition op_adiv :: "(VAL \<times> VAL, VAL) proc'"
+  where "op_adiv =
       \<phi>M_caseV (\<lambda>va vb.
       \<phi>M_getV aint V_aint.dest va (\<lambda>val_a.
       \<phi>M_getV aint V_aint.dest vb (\<lambda>val_b.
       Return (\<phi>arg (V_aint.mk (val_b div val_a)))
+  )))"
+
+definition op_amod :: "(VAL \<times> VAL, VAL) proc'"
+  where "op_amod =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV aint V_aint.dest va (\<lambda>val_a.
+      \<phi>M_getV aint V_aint.dest vb (\<lambda>val_b.
+      Return (\<phi>arg (V_aint.mk (val_b mod val_a)))
   )))"
 
 definition op_alshr :: "(VAL \<times> VAL, VAL) proc'"
@@ -319,17 +327,36 @@ paragraph \<open>Division\<close>
 lemma op_udiv_aint_\<phi>app[\<phi>overload div,
                         \<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
-  \<open>\<p>\<r>\<o>\<c> op_audiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<int> \<rbrace>\<close>
-  unfolding op_audiv_def
+  \<open>\<p>\<r>\<o>\<c> op_adiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<int> \<rbrace>\<close>
+  unfolding op_adiv_def
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns)
 
 lemma op_udiv_anat_\<phi>app[\<phi>overload div,
                         \<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
-  \<open>\<p>\<r>\<o>\<c> op_audiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<nat> \<rbrace>\<close>
+  \<open>\<p>\<r>\<o>\<c> op_adiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_udiv_aint \<medium_right_bracket>
     by (simp add: div_int_pos_iff nat_div_distrib) .
+
+
+paragraph \<open>Modulo\<close>
+
+lemma op_mod_aint_\<phi>app[\<phi>overload mod,
+                       \<phi>synthesis for _ (100)
+                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (1200)]:
+  \<open>\<p>\<r>\<o>\<c> op_amod (vy \<^bold>, vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<int> \<rbrace>\<close>
+  unfolding op_amod_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
+      rule, simp add: \<phi>expns)                  
+
+lemma op_mod_anat_\<phi>app[\<phi>overload mod,
+                       \<phi>synthesis for _ (100)
+                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (1200)]:
+  \<open>\<p>\<r>\<o>\<c> op_amod (vy \<^bold>, vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<nat> \<rbrace>\<close>
+  \<medium_left_bracket> op_mod_aint \<medium_right_bracket>
+      by (metis nat_int of_nat_0_le_iff zmod_int) .
+    
 
 
 paragraph \<open>Right Shift\<close>
