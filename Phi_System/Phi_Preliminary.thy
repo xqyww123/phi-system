@@ -15,9 +15,22 @@ declare [ [ML_debugger, ML_exception_debugger]]
 subsection \<open>Named Theorems\<close>
 
 named_theorems \<phi>expns \<open>Semantics Expansions, used to expand assertions semantically.\<close>
-and \<phi>programming_simps \<open>Simplification rules used in the deductive programming\<close>
+  and \<phi>programming_simps \<open>Simplification rules used in the deductive programming\<close>
 
 declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
+
+ML \<open>
+structure Phi_Programming_Safe_Simp_SS = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = \<^binding>\<open>\<phi>programming_safe_simps\<close>
+  val comment = "Simplification rules used in low automation level, which is safer than usual"
+)
+\<close>
+
+lemmas [\<phi>programming_safe_simps] =
+  mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
+  mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>] mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
+  zero_fun[where 'a=\<open>'a::sep_magma set\<close>]
 
 subsection \<open>Error Mechanism\<close>
 

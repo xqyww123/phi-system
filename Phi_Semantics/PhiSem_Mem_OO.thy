@@ -270,7 +270,7 @@ proc (nodef) op_obj_load_field:
   input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
   output \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> \<v>\<a>\<l> x \<Ztypecolon> T\<close>
   \<medium_left_bracket> \<open>obj: _\<close> to Identity \<exists>v
-  have [simp]: \<open>v \<in> Well_Type TY\<close> using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast  
+  have [simp]: \<open>v \<in> Well_Type TY\<close> using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
   ;; $ref op_obj_load_field_raw[where TY=TY]
   \<medium_right_bracket> by (simp add: Nosep_expns the_\<phi>lemmata) .
   

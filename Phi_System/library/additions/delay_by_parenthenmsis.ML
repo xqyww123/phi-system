@@ -24,7 +24,7 @@ fun invoke_delayed_one s =
 val delayed_apps = Delayed_Apps.get
 
 val _ = Theory.setup (Context.theory_map (
-  Phi_Toplevel.End_of_Statement.add 999 (K (fn s => (
+  Phi_Toplevel.End_of_Statement.add 998 (K (fn s => (
     if null (delayed_apps (fst s)) then ()
     else warning "parenthesis is inbalanced!" ;
     s

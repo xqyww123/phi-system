@@ -8,7 +8,7 @@
 signature NU_PROCESSOR = sig
   type binding = Binding.binding
   exception Bypass of context_state option
-  exception Terminate_Process of context_state * (Proof.state -> Proof.state)
+  exception Terminate_Process of context_state * ((Proof.state -> Proof.state) (*continue*) -> Proof.state -> Proof.state) option
   exception ProcessFail of binding * context_state * exn
   exception Process_State_Call  of context_state * (Proof.state -> Proof.state)
   exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
@@ -28,12 +28,15 @@ signature NU_PROCESSOR = sig
   val list : Context.generic -> (binding * term pattern list) list
   val internal_process : context_state -> context_state parser
   val simple_process   : context_state -> context_state parser
-  val powerful_process : Token.T list -> Proof.state -> Proof.state
-  val powerful_process_p : (Proof.state -> Proof.state) parser
-  val powerful_process_p_inert : (Proof.state -> Proof.state) parser
-          (*if the input is empty, then powerful_process_p_inert does nothing*)
-  val process_by_input : Token.T list -> context_state -> context_state
-  val process_no_input : context_state -> context_state
+  val powerful_process : (Proof.state -> Proof.state) (*continue*)
+                      -> Token.T list -> Proof.state -> Proof.state
+  val powerful_process_p : int (*auto-level*) -> (Proof.state -> Proof.state) (*continue*)
+                        -> (Proof.state -> Proof.state) parser
+  val powerful_process_p_inert : int (*auto-level*) -> (Proof.state -> Proof.state) (*continue*)
+                              -> (Proof.state -> Proof.state) parser
+                      (*if the input is empty, then powerful_process_p_inert does nothing*)
+  val process_by_input : int (*auto-level*) -> Token.T list -> context_state -> context_state
+  val process_no_input : int (*auto-level*) -> context_state -> context_state
   val process_attr : attribute parser
 
   (* be activated only when auto level >= 1 *)
@@ -63,8 +66,8 @@ open Thm Phi_Envir
 
 exception Bypass of context_state option
 type binding = Binding.binding
-exception Terminate_Process  of context_state * (Proof.state -> Proof.state)
-exception Terminate_Process' of Token.T list * context_state * (Proof.state -> Proof.state)
+exception Terminate_Process  of context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
+exception Terminate_Process' of Token.T list * context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
 exception ProcessFail of binding * context_state * exn
 exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
 exception Process_State_Call of context_state * (Proof.state -> Proof.state)
@@ -193,10 +196,11 @@ fun internal_process (ctxt,sequent) toks =
 
 fun simple_process stat toks =
   internal_process stat toks
-  handle Process_State_Call' (toks,stat,_) => (stat,toks)
-       | Terminate_Process'  (toks,stat,_) => (stat,toks)
+  handle Process_State_Call' (toks,stat,_) => raise Fail "state call is not supported in simple process"
+       | Terminate_Process'  (toks,stat,NONE) => (stat,toks)
+       | Terminate_Process'  (toks,stat,SOME _) => raise Fail "state call is not supported in simple process"
 
-fun powerful_process toks stat =
+fun powerful_process continue toks stat =
   let
     val sequent = the_state_sequent stat
   in
@@ -206,33 +210,44 @@ fun powerful_process toks stat =
               |> (fn ((ctxt,sequent),_) => (sequent,ctxt))
           )
       |-> Phi_Envir.set_state_sequent
+      |> continue
     handle Process_State_Call' (toks,(ctxt,sequent),f) =>
-              powerful_process toks (stat |> Proof.map_context (K ctxt)
-                                          |> Phi_Envir.set_state_sequent sequent
-                                          |> f)
-         | Terminate_Process' (toks,(ctxt,sequent),f) =>
+              powerful_process continue toks
+                  (stat |> Proof.map_context (K ctxt)
+                        |> Phi_Envir.set_state_sequent sequent
+                        |> f)
+         | Terminate_Process' (toks,(ctxt,sequent), f) =>
               (Scan.catch Parse.eof toks;
                stat |> Proof.map_context (K ctxt)
                     |> Phi_Envir.set_state_sequent sequent
-                    |> f)
+                    |> (case f of SOME f' => f' continue | _ => I))
   end
 
-fun powerful_process_p toks =
-      (Proof.map_context (Config.put Phi_Reasoner.auto_level 2) #>
-          powerful_process (toks @ [Token.eof])
+val _ = Phi_Envir.under_programming_environ
+
+fun powerful_process_p_internal' lev continue toks s =
+  if Phi_Envir.under_programming_environ (Proof.context_of s)
+  then s |> Proof.map_context (Config.put Phi_Reasoner.auto_level lev)
+         |> powerful_process continue (toks @ [Token.eof])
+  else if Token.is_eof (hd toks)
+       then s
+       else error "Not in the \<phi> programming environment"
+
+fun powerful_process_p lev continue toks =
+      (powerful_process_p_internal' lev continue toks
       ,if Token.is_eof (hd toks) then [Token.eof] else [])
 
-fun powerful_process_p_inert toks =
-      (if Token.is_eof (hd toks)
-        then I
-        else Proof.map_context (Config.put Phi_Reasoner.auto_level 2)
-          #> powerful_process (toks @ [Token.eof])
+fun powerful_process_p_inert lev continue toks =
+      (if Token.is_eof (hd toks) then I
+       else powerful_process_p_internal' lev continue toks
       ,if Token.is_eof (hd toks) then [Token.eof] else [])
 
 
 val process_attr = wrap_attr (fn stat => simple_process stat #> apfst K)
-fun process_by_input tokens stat = simple_process stat (tokens @ [Token.eof]) |> #1
-val process_no_input = process_by_input []
+fun process_by_input lev tokens stat =
+      let val stat' = apfst (Config.put Phi_Reasoner.auto_level lev) stat
+       in simple_process stat' (tokens @ [Token.eof]) |> #1 end
+fun process_no_input lev = process_by_input lev []
 
 
 
@@ -283,13 +298,16 @@ fun apply_attr (attr:attribute) (ctxt, sequent) =
     |> apfst (Context.proof_of o the)
     |> apsnd the
 
-val simplifier = almost_safe (fn (ctxt, sequent) =>
-  Scan.succeed (fn _ => let
-    val simps'= Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>programming_simps\<close>
-    val ctxt' = Raw_Simplifier.addsimps (ctxt, simps')
-    val sequent' = Simplifier.full_simplify ctxt' sequent
-    in  raise Bypass (SOME (ctxt, sequent'))
-    end))
+fun simplifier (ctxt, sequent) = Scan.succeed (fn _ =>
+  let
+    val sctxt =
+      if Config.get ctxt Phi_Reasoner.auto_level >= 1
+      then let val simps'= Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>programming_simps\<close>
+            in Raw_Simplifier.addsimps (ctxt, simps') end
+      else Phi_Programming_Safe_Simp_SS.equip ctxt
+    val sequent' = Simplifier.full_simplify sctxt sequent
+  in  raise Bypass (SOME (ctxt, sequent'))
+  end)
 
 
 val pattern_keyword = (\<^keyword>\<open>premises\<close> >> K Premise)

@@ -56,7 +56,7 @@ proc FIB:
       return (\<open>$a + $b\<close>)
       affirm by (metis One_nat_def fib.elims le_Suc_eq le_zero_eq the_\<phi>)
     \<medium_right_bracket>.
-  \<medium_right_bracket> by (simp add: le_Suc_eq) .
+  \<medium_right_bracket> using le_Suc_eq the_\<phi>lemmata by force .
 
 proc FIB2:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>(8)\<close>

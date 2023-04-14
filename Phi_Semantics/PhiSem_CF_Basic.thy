@@ -172,7 +172,7 @@ throws E
   \<medium_left_bracket>
     V[unfolded Action_Tag_def]
     "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<s>\<u>\<b>\<j> invariant x'\<close>, simplified]
-  \<medium_left_bracket> B \<medium_right_bracket>.
+    \<medium_left_bracket> B \<medium_right_bracket>. !!
   \<medium_right_bracket> by simp .
 
 (*
@@ -200,8 +200,8 @@ proc while:
   \<medium_left_bracket> V C
     branch \<medium_left_bracket>
       do_while \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
-      \<medium_left_bracket> B C \<medium_right_bracket>.
-      \<medium_right_bracket>.
+      \<medium_left_bracket> B C \<medium_right_bracket>. !!
+    \<medium_right_bracket>.
     \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close> ..
   \<medium_right_bracket> .. .
 

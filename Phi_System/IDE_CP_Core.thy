@@ -1600,13 +1600,14 @@ subsubsection \<open>Controls\<close>
   \<open>Note the declared auto-level is only valid during the current statement.
    In the next statement, the auto-level will be reset to the default fully-automated level.\<close>
 
+(*
 \<phi>processor repeat 12 (\<open>PROP ?P\<close>) \<open>let
   in fn (ctxt, sequent) =>
     Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*") >> (fn (tok,n) => fn () =>
         (case Int.fromString n of SOME n => funpow n | _ => error ("should be a number: "^n))
           (Phi_Processor.process_by_input [tok]) (ctxt, sequent)
     )
-  end\<close>
+  end\<close> *)
 
 
 subsubsection \<open>Constructive\<close>
@@ -1784,7 +1785,7 @@ end)\<close>
 
 \<phi>processor enter_proof 790 (premises \<open>Premise _ _\<close> | premises \<open>Simplify _ _ _\<close>)
   \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn () =>
-      raise Terminate_Process (stat, snd o Phi_Toplevel.prove_prem false))\<close>
+      raise Terminate_Process (stat, SOME (snd oo Phi_Toplevel.prove_prem false)))\<close>
 
 \<phi>processor auto_obligation_solver 800 (premises \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | premises \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>

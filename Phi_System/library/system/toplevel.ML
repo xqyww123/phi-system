@@ -55,8 +55,10 @@ signature PHI_TOPLEVEL = sig
   structure Begining_of_Statement : HOOKS
   structure End_of_Statement : HOOKS
 
-  val prove_prem : bool -> Proof.state -> thm list * Proof.state
+  val prove_prem : bool -> (Proof.state -> Proof.state) -> Proof.state -> thm list * Proof.state
   (*val export_LLVM : theory -> theory *)
+
+  val suppress_value_cleaning_in_next_statement : bool Config.T
 end
 
 structure Phi_Toplevel : PHI_TOPLEVEL = struct
@@ -413,21 +415,29 @@ val finish_proc_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
 end
 
 
+val suppress_value_cleaning_in_next_statement =
+        Config.declare_bool ("Phi_Toplevel.suppress_value_cleaning_in_next_statement", \<^here>) (K false)
 
-fun prove_prem int stat =
+fun prove_prem int after_qed'' stat =
   let
     val sequent = Phi_Envir.the_state_sequent stat
     fun after_qed sequent stat =
       let
         val original_auto_level = Config.get (Proof.context_of stat) Phi_Reasoner.auto_level
       in
-        stat |> Proof.map_context
-                  (Config.put Phi_Reasoner.auto_level 0
-                #> Config.put Phi_Reasoner.auto_level original_auto_level)
-             |> Phi_Envir.set_state_sequent sequent
+        stat |> Proof.map_context_result
+                  (fn ctxt =>
+                   Phi_Processor.process_no_input 0 (ctxt,sequent)
+                  |> swap
+                  |> apsnd (Config.put Phi_Reasoner.auto_level original_auto_level
+                         #> Config.put suppress_value_cleaning_in_next_statement true))
+             |-> Phi_Envir.set_state_sequent
+             |> after_qed''
       end
-  in Phi_Sys.obligation_proof (print_results int) Proof_Context.mode_schematic ""
-        NONE after_qed [] [] sequent stat
+  in stat
+  |> Proof.map_context Phi_Envir.freeze_dynamic_lemmas
+  |> Phi_Sys.obligation_proof (print_results int) Proof_Context.mode_schematic ""
+        NONE after_qed [] [] sequent
   end
  (*let open Proof
     val sequent = Phi_Envir.the_state_sequent stat
@@ -567,15 +577,21 @@ fun clean_values (ctxt,sequent) =
       then (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst)
       else (ctxt, sequent)
 
+fun clean_values' (ctxt,sequent) =
+  if Config.get ctxt suppress_value_cleaning_in_next_statement
+  then (Config.put suppress_value_cleaning_in_next_statement false ctxt,sequent)
+  else clean_values (ctxt,sequent)
+
 val statement_cmd =
-  Phi_Processor.powerful_process_p >> (fn f => fn stat =>
-    stat |> Phi_Envir.map_state_sequent (Begining_of_Statement.invoke ())
-         |> f
-         |> Phi_Envir.map_state_sequent (End_of_Statement.invoke ())
+  Phi_Processor.powerful_process_p 3 (Phi_Envir.map_state_sequent (End_of_Statement.invoke ()))
+    >> (fn process => fn stat =>
+    stat 
+     |> Phi_Envir.map_state_sequent (Begining_of_Statement.invoke ())
+     |> process
   )
 
 val _ = Theory.setup (Context.theory_map (
-   Begining_of_Statement.add 50 (K clean_values)
+   Begining_of_Statement.add 50 (K clean_values')
 #> End_of_Statement.add 100 (K (apfst Phi_Envir.freeze_dynamic_lemmas))
 ))
 
@@ -685,7 +701,7 @@ val _ =
      -- optional (\<^keyword>\<open>premises\<close> |--
             and_list ((binding -- opt_attribs || attribs >> pair Binding.empty) -- ppats)) []
       >> begin_block_cmd)
-   -- Phi_Processor.powerful_process_p_inert)
+   -- Phi_Processor.powerful_process_p_inert 3 I)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
@@ -709,8 +725,8 @@ in
        stat
     |> end_block_cmd cast int
     |> repeat_future_proof0))
-   -- Phi_Processor.powerful_process_p_inert)
-   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
+   -- Phi_Processor.powerful_process_p 2 I)
+   >> (fn (blk,prcs) => Toplevel.proof' (fn int => prcs o blk int)))
 end
 
 (* val _ =
