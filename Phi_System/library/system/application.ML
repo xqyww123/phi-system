@@ -11,7 +11,7 @@
    applications and checking there is only one feasible application.
 *)
 
-signature NU_APPLICATION = sig
+signature PHI_APPLICATION = sig
 
   val apply_proc_naive : thm (*proc*) -> context_state -> context_state
 
@@ -19,7 +19,7 @@ signature NU_APPLICATION = sig
 an additional obligation antecedent at the last of the antecedent list,
 storing proof obligations generated during ToSA, no matter whether the obligations are trivial.*)
   val try_apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state option
-  val apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state
+  val apply : thm list (*rules to be applied*) -> context_state (*sequent*) -> context_state
 
 (*
   (*Advanced Modus Pones using logic programming about antecedent \<^term>\<open>\<phi>Application_Conv\<close>
@@ -30,7 +30,7 @@ storing proof obligations generated during ToSA, no matter whether the obligatio
 
 end
 
-structure NuApply : NU_APPLICATION = struct
+structure Phi_Apply : PHI_APPLICATION = struct
 open Phi_Help
 
 val expand_appliant =

@@ -40,13 +40,17 @@ signature PHI_TOPLEVEL = sig
         -> string option
         -> bool -> local_theory -> Proof.state *)
 
-  val begin_block :   binding list (*fixed variables*)
-                    * (Attrib.binding * term list) list (*bindings of conditions*)
+  val begin_block :
+        binding list (*names of fixed variables, use the name of the lambda variable if not given*)
+      * (Attrib.binding * term list) list (*bindings of conditions, attributes registered by
+                                      \<open>\<phi>premise_attribute\<close> will be applied on the conditions *)
         -> bool -> Proof.state -> Proof.state
-  val begin_block_cmd :   binding list (*fixed variables*)
-                        * (Attrib.binding * string list) list (*bindings of conditions*)
+  val begin_block_cmd :   binding list * (Attrib.binding * string list) list
         -> bool -> Proof.state -> Proof.state
+
   val end_block_cmd : string option -> bool -> Proof.state -> Proof.state
+  val end_block : term option (*a spec that the sequent will be transformed to before assembling*)
+               -> bool -> Proof.state -> Proof.state
 
   val statement_clean_values : bool Config.T (*controls whether the statement command \<^bold>;
         cleans all values at its beginning.*)
@@ -258,7 +262,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
              in (ctxt'3, sequent'4)
              end
              handle Internal_Match_Fail msg =>
-              (case NuApply.try_apply [th2] (ctxt,sequent)
+              (case Phi_Apply.try_apply [th2] (ctxt,sequent)
                  of SOME s' => s'
                   | _ => error msg)
       in if is_top
@@ -299,10 +303,12 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
 (*      |> Generic_Variable_Access.open_value_context' Position.none *)
       (* |> NuObtain.obtain_quick_pairs_perhaps_try *)
   end
+
 val begin_block_cmd =
       gen_begin_block Attrib.check_src
                       (Syntax.parse_prop o Proof_Context.set_mode Proof_Context.mode_pattern)
 val begin_block = gen_begin_block (K I) (K I)
+
 end
 
 (* End Block *)
@@ -392,7 +398,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Thm.pretty_thm ctxt' sequent',
                     Pretty.block (Pretty.here \<^here>)
                   ]))
-                val (_,result) = NuApply.apply [sequent'] (ctxt',goal')
+                val (_,result) = Phi_Apply.apply [sequent'] (ctxt',goal')
                               |> Phi_Reasoners.safer_obligation_solver1
               in result end
               handle E => raise (@{print} E)
@@ -404,14 +410,17 @@ fun gen_finish_proc prep_term qed spec int stat =
      |> snd
   end
 in
+
 val end_block_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
+val end_block = gen_finish_proc (K I) Proof.local_qed
 
 (* fun gen_finish_proc' prep_specthm qed int stat =
   let val sequent = Proof.the_fact stat
   in if current_block_depth sequent > 1 then
       gen_finish_proc' prep_specthm qed int (end_block_cmd false stat)
     else gen_finish_proc prep_specthm qed int stat end *)
-val finish_proc_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
+
+
 end
 
 

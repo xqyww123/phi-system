@@ -128,7 +128,7 @@ fun value_optimization bs stat =
                                     @{thm "__fast_assign_val__"}
                     RS rule) vterms
               |> (fn rule => @{thm "__fast_assign_val_0__"} RS rule)
-        val (ctxt,sequent) = NuApply.apply [rule] (ctxt,sequent)
+        val (ctxt,sequent) = Phi_Apply.apply [rule] (ctxt,sequent)
               |> Phi_Reasoners.safer_obligation_solver1
         val (sequent, vals) = HOLogic.conj_elim ctxt sequent
         val vals = HOLogic.conj_elims ctxt vals

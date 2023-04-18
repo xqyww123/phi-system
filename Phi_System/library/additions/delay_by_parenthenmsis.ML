@@ -19,7 +19,7 @@ fun invoke_delayed_one s =
   let val that = hd (Delayed_Apps.get (fst s))
    in s
    |> apfst (Delayed_Apps.map tl)
-   |> NuApply.apply that
+   |> Phi_Apply.apply that
   end
 val delayed_apps = Delayed_Apps.get
 

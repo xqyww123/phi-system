@@ -1632,7 +1632,7 @@ lemma \<phi>cast_exception_UI:
 hide_fact \<phi>cast_exception_UI
 
 \<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
-  (NuApply.apply (Phi_App_Rules.app_rules ctxt [xnames]) (ctxt, sequent)))\<close>
+  (Phi_Apply.apply (Phi_App_Rules.app_rules ctxt [xnames]) (ctxt, sequent)))\<close>
 
 ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 
@@ -1657,7 +1657,7 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
     let open Phi_Envir
     val apps = Phi_App_Rules.app_rules ctxt [thm]
     val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
-    in NuApply.apply apps (ctxt,sequent) end)\<close>
+    in Phi_Apply.apply apps (ctxt,sequent) end)\<close>
 
 (* case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
          of SOME (th, _) => (ctxt,th)

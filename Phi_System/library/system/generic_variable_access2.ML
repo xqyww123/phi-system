@@ -113,7 +113,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
   val decl = rev decl'
 
   (*apply the assignment procedure*)
-  val (ctxt, proc) = NuApply.apply [rule] (ctxt',sequent)
+  val (ctxt, proc) = Phi_Apply.apply [rule] (ctxt',sequent)
         |> apsnd (fn th =>
             (*find where is the procedural parameter, and permute it to the end*)
             let

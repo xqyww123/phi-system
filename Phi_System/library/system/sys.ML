@@ -56,7 +56,7 @@ fun apply_automatic_morphism' _ [] _ = raise Empty
   | apply_automatic_morphism' R (M::L) stat =
       case Thm.concl_of M
         of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Automatic_Transformation\<close>, _) $ \<^const>\<open>MODE_AUTO\<close> $ _ $ _)
-             => (rev R @ L, NuApply.apply [M] stat)
+             => (rev R @ L, Phi_Apply.apply [M] stat)
          | _ =>apply_automatic_morphism' (M::R) L stat
 
 fun apply_automatic_morphism (ctxt,sequent) =
