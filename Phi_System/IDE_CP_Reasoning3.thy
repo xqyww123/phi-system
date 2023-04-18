@@ -351,7 +351,7 @@ lemma Structural_Extract_reverse_morphism_I[intro?]:
   \<open> Structural_Extract X R Y W P
 \<Longrightarrow> RP \<longrightarrow> RX
 \<Longrightarrow> Structural_Extract X R Y W (Automatic_Morphism RP RX \<and> P)\<close>
-  unfolding Morphism_def Structural_Extract_def Imply_def
+  unfolding Automatic_Transformation_def Structural_Extract_def Imply_def
   by blast
 
 
@@ -597,7 +597,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
         (Structural_Extract ((y',x') \<Ztypecolon> Y' \<^emph> X') ((wy', wx') \<Ztypecolon> WY' \<^emph> WX') A' C' (P1' \<and> P2'))
       \<and> P1 \<and> P2)\<close>
   for A :: \<open>'a::sep_algebra set\<close> and A' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Morphism_def Compact_Antecedent_def Try_def
+  unfolding Automatic_Transformation_def Compact_Antecedent_def Try_def
   by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded Action_Tag_def Try_def]
                    Structural_Extract_\<phi>Prod_left [unfolded Action_Tag_def Try_def]
                    Structural_Extract_imply_P)
@@ -611,7 +611,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
       (Automatic_Morphism (RP1 \<and>\<^sub>\<r> RP2)
           (Structural_Extract Y' W2' ((x',y') \<Ztypecolon> T' \<^emph> U') ((r2',r') \<Ztypecolon> (R2' \<^emph> R')) (P1' \<and> P2')) \<and> P1 \<and> P2)\<close>
   for Y :: \<open>'a::sep_algebra set\<close> and Y' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Morphism_def Compact_Antecedent_def Try_def
+  unfolding Automatic_Transformation_def Compact_Antecedent_def Try_def
   by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded Action_Tag_def Try_def]
                    Structural_Extract_\<phi>Prod_left [unfolded Action_Tag_def Try_def]
                    Structural_Extract_imply_P)
@@ -624,7 +624,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
 \<Longrightarrow> Structural_Extract A C (X * Y) (WX * WY)
       (Automatic_Morphism (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract (X' * Y') (WX' * WY') A' C' (P1' \<and> P2')) \<and> P1 \<and> P2)\<close>
   for X :: \<open>'a::sep_algebra set\<close> and X' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Morphism_def Compact_Antecedent_def Try_def
+  unfolding Automatic_Transformation_def Compact_Antecedent_def Try_def
   by (blast intro: Structural_Extract_to_mult  [unfolded Action_Tag_def Try_def]
                    Structural_Extract_from_mult[unfolded Action_Tag_def Try_def]
                    Structural_Extract_imply_P)
@@ -665,7 +665,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (w \<Ztypecolon> k \<^bold>\<rightarrow> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') (w' \<Ztypecolon> k \<^bold>\<rightarrow> W') (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') (r' \<Ztypecolon> k \<^bold>\<rightarrow> R') P') \<and> P)\<close>
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Morphism_def \<r>Require_def
+  unfolding Automatic_Transformation_def \<r>Require_def
   by (blast intro: Structural_Extract_\<phi>MapAt[unfolded Action_Tag_def \<r>Require_def]
                    Structural_Extract_imply_P)
 
@@ -690,7 +690,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
       (Automatic_Morphism RP
         (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (yr' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ Ur') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)\<close>
 for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def \<r>Require_def
+  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def \<r>Require_def
   by (blast intro: Structural_Extract_\<phi>MapAt_L[unfolded Action_Tag_def \<r>Require_def]
                    Structural_Extract_imply_P)
 
@@ -740,7 +740,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1183]:
       (Automatic_Morphism RP
         (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Morphism_def
+  unfolding Automatic_Transformation_def
   by (blast intro: Structural_Extract_\<phi>MapAt_L_pad_left [unfolded Action_Tag_def]
                    Structural_Extract_\<phi>MapAt_L_pad_right[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
@@ -755,7 +755,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1153]:
       (Automatic_Morphism RP
         (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Morphism_def Action_Tag_def
+  unfolding Automatic_Transformation_def Action_Tag_def
   by (blast intro: Structural_Extract_\<phi>MapAt_L_pad_left [unfolded Action_Tag_def]
                    Structural_Extract_\<phi>MapAt_L_pad_right[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
@@ -777,7 +777,7 @@ lemma [\<phi>reason 1211]:
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) W
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)\<close>
-  unfolding Morphism_def Action_Tag_def
+  unfolding Automatic_Transformation_def Action_Tag_def
   by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def]
                    Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
@@ -787,7 +787,7 @@ lemma [\<phi>reason 1211]:
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T') R' P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) W
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') R' P') \<and> P)\<close>
-  unfolding Morphism_def Action_Tag_def
+  unfolding Automatic_Transformation_def Action_Tag_def
   by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def]
                    Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
@@ -822,7 +822,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
                                (x' \<Ztypecolon> \<phi>perm_ins_homo \<psi> T')
                                (r' \<Ztypecolon> \<phi>perm_ins_homo \<psi> R')
                                 P') \<and> P)\<close>
-  unfolding Morphism_def Action_Tag_def Compact_Antecedent_def
+  unfolding Automatic_Transformation_def Action_Tag_def Compact_Antecedent_def
   by (blast intro: Structural_Extract_\<phi>perm_ins_homo[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
 
@@ -849,7 +849,7 @@ lemma [\<phi>reason 1211]:
       (Automatic_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> T' ?\<^sub>\<phi> True) R' P') \<and> P)\<close>
  \<comment> \<open>If the mechanism requires to extract something nontrivial (note 1 and \<^term>\<open>() \<Ztypecolon> \<phi>None\<close>
       have been considered by more prior rule), claim the optional \<phi>-type.\<close>
-  unfolding Morphism_def Action_Tag_def
+  unfolding Automatic_Transformation_def Action_Tag_def
   by (blast intro: Structural_Extract_\<phi>Optional_left [unfolded Action_Tag_def]
                    Structural_Extract_\<phi>Optional_right[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
@@ -914,7 +914,7 @@ lemma
         (Structural_Extract (y' \<Ztypecolon> half (m / 2) \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m \<Znrres> T') ((x',r') \<Ztypecolon> m / 2 \<Znrres> T' \<^emph> R') P')
     \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def Compact_Antecedent_def half_def
+  unfolding Automatic_Transformation_def Compact_Antecedent_def half_def
   by (blast intro: Structural_Extract_share_half    [unfolded Action_Tag_def half_def]
                    Structural_Extract_share_half_rev[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
@@ -941,7 +941,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
       (Automatic_Morphism RP
           (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> m \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def Action_Tag_def \<r>Require_def conjunction_imp
+  unfolding Automatic_Transformation_def Action_Tag_def \<r>Require_def conjunction_imp
   by (blast intro: Structural_Extract_share_eq[unfolded Action_Tag_def \<r>Require_def conjunction_imp]
                    Structural_Extract_imply_P)
 
@@ -1004,7 +1004,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1183]:
       (Automatic_Morphism (RP \<and>\<^sub>\<r> (\<s>\<i>\<m>\<p>\<r>\<e>\<m> m-n = mn) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
         (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> n \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') ((r',x') \<Ztypecolon> (n \<Znrres> R' \<^emph> mn \<Znrres> T')) P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def Compact_Antecedent_def Premise_def
+  unfolding Automatic_Transformation_def Compact_Antecedent_def Premise_def
             conjunction_imp \<r>Require_def
   by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def \<r>Require_def conjunction_imp]
                    Structural_Extract_share_le[unfolded Action_Tag_def \<r>Require_def conjunction_imp]
@@ -1020,7 +1020,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1173]:
       (Automatic_Morphism (RP \<and>\<^sub>\<r> (\<s>\<i>\<m>\<p>\<r>\<e>\<m> nm = n - m) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical U')
         (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') ((w',y') \<Ztypecolon> m \<Znrres> W' \<^emph> nm \<Znrres> U') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def Compact_Antecedent_def Premise_def conjunction_imp \<r>Require_def
+  unfolding Automatic_Transformation_def Compact_Antecedent_def Premise_def conjunction_imp \<r>Require_def
   by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def conjunction_imp \<r>Require_def]
                    Structural_Extract_share_le[unfolded Action_Tag_def conjunction_imp \<r>Require_def]
                    Structural_Extract_imply_P)
@@ -1048,7 +1048,7 @@ lemma [\<phi>reason 2011]:
 \<Longrightarrow> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W
       (Automatic_Morphism RP (Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> (T' \<^emph> U')) W' X' R' P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
+  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 lemma [\<phi>reason 2011]:
@@ -1057,7 +1057,7 @@ lemma [\<phi>reason 2011]:
 \<Longrightarrow> Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> (T' \<^emph> U')) W' X' R'
       (Automatic_Morphism RP (Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P) \<and> P')\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
+  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 
@@ -1079,7 +1079,7 @@ lemma [\<phi>reason 2011]:
 \<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W
       (Automatic_Morphism RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T') W' X' R' P') \<and> P)\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
+  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
 lemma [\<phi>reason 2011]:
@@ -1088,7 +1088,7 @@ lemma [\<phi>reason 2011]:
 \<Longrightarrow> Structural_Extract (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T') W' X' R'
       (Automatic_Morphism RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P) \<and> P')\<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
+  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
 
@@ -1104,7 +1104,7 @@ lemma [\<phi>reason 2011]:
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W
       (Automatic_Morphism RP (Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
+  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
 lemma [\<phi>reason 2011]:
@@ -1113,7 +1113,7 @@ lemma [\<phi>reason 2011]:
 \<Longrightarrow> Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R'
       (Automatic_Morphism RP (Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W P) \<and> P')\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
-  unfolding Morphism_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
+  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
 

@@ -534,7 +534,7 @@ fun statespace_definition project_injectL value_sort Kd
               let
                 val nT = Proof_Context.infer_type (Local_Theory.target_of lthy) (n, dummyT)
               in Context.proof_map
-                  (update_declinfo (Morphism.term phi (Free (n,nT)),v))
+                  (update_declinfo (Automatic_Transformation.term phi (Free (n,nT)),v))
               end;
             val ctxt' = ctxt |> fold upd updates
           in ctxt' end;

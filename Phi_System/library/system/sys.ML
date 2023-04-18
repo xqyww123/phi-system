@@ -34,9 +34,9 @@ open Thm Phi_Envir Term
 fun print_dbg'' th = Seq.make (fn () => (@{print} th; raise NDBG th))
 fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 
-(** Morphism **)
+(** Automatic Transformation **)
 
-structure Morphism = Proof_Data (
+structure Automatic_Transformation = Proof_Data (
   type T = thm list
   val init = K []
 );
@@ -45,7 +45,7 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>mo
           fn genric =>
               case genric
               of Context.Theory _ => []
-               | Context.Proof ctxt => Morphism.get ctxt))
+               | Context.Proof ctxt => Automatic_Transformation.get ctxt))
 
 (** Basic Operations **)
 
@@ -55,13 +55,13 @@ val cast_exception = Phi_Working_Mode.cast_exception
 fun apply_automatic_morphism' _ [] _ = raise Empty
   | apply_automatic_morphism' R (M::L) stat =
       case Thm.concl_of M
-        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Morphism\<close>, _) $ \<^const>\<open>MODE_AUTO\<close> $ _ $ _)
+        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Automatic_Transformation\<close>, _) $ \<^const>\<open>MODE_AUTO\<close> $ _ $ _)
              => (rev R @ L, NuApply.apply [M] stat)
          | _ =>apply_automatic_morphism' (M::R) L stat
 
 fun apply_automatic_morphism (ctxt,sequent) =
-  case apply_automatic_morphism' [] (Morphism.get ctxt) (ctxt,sequent)
-    of (R, stat') => apfst (Morphism.put R) stat'
+  case apply_automatic_morphism' [] (Automatic_Transformation.get ctxt) (ctxt,sequent)
+    of (R, stat') => apfst (Automatic_Transformation.put R) stat'
 
 fun simplify_morphisms _   [] = []
   | simplify_morphisms ctxt L =
@@ -76,7 +76,7 @@ fun move_lemmata' (ctxt, sequent) =
          | _ => SOME th
     fun is_morphism th =
       case Thm.concl_of th
-        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Morphism\<close>, _) $ _ $ _ $ _) => true
+        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Automatic_Transformation\<close>, _) $ _ $ _ $ _) => true
          | _ => false
     val all_lemmas = (sequent RS @{thm conjunct2})
                   |> HOLogic.conj_elims ctxt
@@ -94,7 +94,7 @@ fun move_lemmata' (ctxt, sequent) =
     val ctxt'' =
       if null morphisms
       then ctxt'
-      else Morphism.map (fn L => morphisms@L) ctxt'
+      else Automatic_Transformation.map (fn L => morphisms@L) ctxt'
   in
     (ctxt'', sequent RS @{thm conjunct1})
   end

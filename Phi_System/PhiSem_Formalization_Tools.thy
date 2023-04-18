@@ -350,7 +350,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> \<phi> U') (w' \<Ztypecolon> \<phi> W') (x' \<Ztypecolon> \<phi> T') (r' \<Ztypecolon> \<phi> R') P') \<and> P)\<close>
-  unfolding Morphism_def Action_Tag_def
+  unfolding Automatic_Transformation_def Action_Tag_def
   by (blast intro: \<phi>_Structural_Extract[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
 
@@ -377,7 +377,7 @@ lemma ToSA_by_structural_extraction__reverse_morphism:
       (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> \<phi> T' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<a>\<n>\<d> P1' \<and> P2')
           \<and> P1 \<and> P2)"
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def
-            Morphism_def Compact_Antecedent_def Try_def \<r>Call_def
+            Automatic_Transformation_def Compact_Antecedent_def Try_def \<r>Call_def
   \<medium_left_bracket> premises SI and Q and SE and A
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
   ;; A[THEN implies_right_prod]

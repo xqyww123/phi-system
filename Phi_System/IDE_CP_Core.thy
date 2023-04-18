@@ -13,7 +13,7 @@ theory IDE_CP_Core
     "input" "affirm" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
-  and "\<medium_right_bracket>." :: prf_decl % "proof"
+  and "\<medium_right_bracket>." :: prf_decl % "proof"                                         
   and "\<medium_right_bracket>" :: prf_goal % "proof"
   and "\<phi>processor" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
@@ -1332,12 +1332,12 @@ lemma [\<phi>reason for \<open>
 
 
 
-subsubsection \<open>Morphism\<close>
+subsubsection \<open>Automatic_Transformation\<close>
 
 lemma [\<phi>reason 2000]:
   \<open> PROP \<phi>Application (RP \<Longrightarrow> RX @action morphism_mode) (Trueprop S) (PROP RET)
-\<Longrightarrow> PROP \<phi>Application (Trueprop (Morphism any_mode RP RX)) (Trueprop S) (PROP RET)\<close>
-  unfolding \<phi>Application_def Morphism_def Action_Tag_def
+\<Longrightarrow> PROP \<phi>Application (Trueprop (Automatic_Transformation any_mode RP RX)) (Trueprop S) (PROP RET)\<close>
+  unfolding \<phi>Application_def Automatic_Transformation_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2), OF prems(3)[THEN mp], simplified] . .
 
 lemma [\<phi>reason 1200 for \<open>
