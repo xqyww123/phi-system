@@ -104,6 +104,15 @@ fun move_lemmata (ctxt, sequent) =
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>conj\<close> $ _ $ _) => move_lemmata (move_lemmata' (ctxt, sequent))
      | _ => (ctxt, sequent)
 
+val conv_E_thms =
+  @{thms add_0_right[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
+         add_0_right[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma set\<close>, folded atomize_eq]
+         add_0_left[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
+         add_0_left[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma set\<close>, folded atomize_eq]
+         zero_fun[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
+         mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
+         mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
+   }
 
 fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =
   let val (_,_,_,_,E) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequent0)
@@ -124,8 +133,7 @@ fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =
              |> Drule.forall_intr_list [param_s, param_ret]
              |> (fn th => (th COMP_INCR rule)
                        |> Conv.fconv_rule (Phi_Syntax.pending_construction_abnm_conv
-                             (Conv.repeat_conv (Conv.rewrs_conv
-                                  @{thms add_0_right[folded atomize_eq] add_0_left[folded atomize_eq] zero_fun[folded atomize_eq]}))))
+                             (Conv.repeat_conv (Conv.rewrs_conv conv_E_thms))))
   end
 
 
