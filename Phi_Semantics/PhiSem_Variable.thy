@@ -62,29 +62,37 @@ abbreviation Inited_Var :: \<open>varname \<Rightarrow> (VAL,'a) \<phi> \<Righta
 abbreviation Uninited_Var :: \<open>varname \<Rightarrow> assn\<close> ("\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[_]" [22] 21)
   where \<open>Uninited_Var vname \<equiv> () \<Ztypecolon> Var vname \<circle>\<close>
 
+subsubsection \<open>Syntax\<close>
+
 syntax
   Inited_Var_ :: \<open>\<phi>identifier \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<v>\<a>\<r>[_] _" [22,22] 21)
+
+ML_file "library/variable_pre.ML"
 
 parse_translation \<open>let 
 in [
   (\<^syntax_const>\<open>Inited_Var_\<close>, (fn ctxt => fn [v, T] =>
     Const (\<^const_abbrev>\<open>Inited_Var\<close>, dummyT)
         $ (if Generic_Variable_Access.is_under_value_context ctxt
-           then Generic_Variable_Access.translate_value ctxt v
+           then the_default v (Generic_Variable_Access.translate_value ctxt v)
            else v)
         $ T))
 ] end\<close>
 
 print_translation \<open>let
+fun recovery ctxt (Const (\<^syntax_const>\<open>_free\<close>, _) $ X) = recovery ctxt X
+  | recovery ctxt (Free (N, TY)) =
+      case Phi_Variable.external_name_of ctxt N
+        of SOME N' => Free (N', TY)
+         | _       => Free (N, TY)
+
 in [(\<^const_syntax>\<open>Inited_Var\<close>, (fn ctxt => fn [a,b] =>
-      Const(\<^syntax_const>\<open>Inited_Var_\<close>, dummyT) $ (*TODO!*) a $ b))]
+      Const(\<^syntax_const>\<open>Inited_Var_\<close>, dummyT) $ recovery ctxt a $ b))]
 end
 \<close>
 
 
-
-
-
+subsubsection \<open>Properties\<close>
 
 lemma Var_inhabited[\<phi>inhabitance_rule,elim!]:
   \<open>Inhabited (x \<Ztypecolon> Var vname T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -450,8 +458,8 @@ lemma "__set_new_var_noty_rule__":
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
-
 ML_file "library/variable.ML"
+
 
 end
 

@@ -7,6 +7,8 @@ theory PhiTest_Arithmetic
     "HOL-Computational_Algebra.Primes"
 begin
 
+declare [[\<phi>hide_techinicals]]
+
 proc test_prime:
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close> \<comment> \<open>\<^term>\<open>prime :: nat => bool\<close> is a predicate checking primes\<close>
@@ -18,8 +20,7 @@ proc test_prime:
     \<medium_left_bracket>
       \<open>2 \<Ztypecolon> \<nat>\<close> \<rightarrow> var v ;;
 
-      while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat>
-             \<s>\<u>\<b>\<j> i.
+      while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat> \<s>\<u>\<b>\<j> i.
               Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j \<in> {1<..<i}. \<not> j dvd x)) \<and>
               Guard: (i \<noteq> x) \<and>
               End: (i = x)\<close> \<comment> \<open>Specification of the loop\<close>
@@ -50,8 +51,7 @@ proc test_prime':
       \<open>2 \<Ztypecolon> \<nat>\<close> \<rightarrow> var v ;;
       (* In the previous example, the loop iterates from 2 to x, here we apply an optimization
          where the loop only needs to iterate to sqrt(x). *)
-      while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat>
-         \<s>\<u>\<b>\<j> i.
+      while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat> \<s>\<u>\<b>\<j> i.
           Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j \<in> {1<..<i}. \<not> j dvd x)) \<and>
           Guard: (i * i \<le> x) \<and>
           End: (x < i * i)\<close>

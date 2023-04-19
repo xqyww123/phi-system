@@ -23,7 +23,8 @@ type value_parser_key =
 type value_parser = (Proof.context -> term -> term option)
 
 val add_parser : value_parser_key * value_parser -> Context.generic -> Context.generic
-val translate_value : Proof.context -> term -> term
+val translate_value  : Proof.context -> term -> term option
+val translate_value1 : Proof.context -> term -> term
 
 
 (** Initial Arguments **)
@@ -35,10 +36,10 @@ val collect_and_clean_value : bool (*whether to clean the Val \<phi>-types from 
 val register_value_spec_thms : Position.T -> thm list -> Context.generic -> Context.generic
   (*so that the values can be synthesised*)
 
-type process_of_argument = context_state -> context_state
+type process_of_arguments = context_state -> context_state
 
-val store_value_and_clean : process_of_argument
-val store_value_no_clean  : process_of_argument
+val store_value_and_clean : process_of_arguments
+val store_value_no_clean  : process_of_arguments
 
 structure Process_of_Argument : GENERIC_DATA
 
@@ -64,7 +65,7 @@ structure Value_Ctxt = Proof_Data (
   val init = K NONE
 )
 
-fun bad_ctxt () = raise Fail "Value context has not been set. Not under a programming context."
+fun bad_ctxt () = error "Value context has not been set. Not under a programming context."
 
 fun is_under_value_context ctxt = is_some (Value_Ctxt.get ctxt)
 
@@ -132,23 +133,24 @@ fun index_val ctxt i =
               " arguments, but it attempts to access the " ^ string_of_int i ^ "th argument.")
   end
 
+fun trans_error ctxt (V as Free (s, _))
+      = error (Pretty.string_of (Pretty.block [
+               Pretty.str "Generic variable named ",
+               Syntax.pretty_term ctxt V, Pretty.str " is not found."
+             ]))
+  | trans_error ctxt X
+      = error (Pretty.string_of (Pretty.block [
+               Pretty.str "There is no value or variable bound on term ",
+               Syntax.pretty_term ctxt X
+             ]))
 
 fun fallback_trans ctxt (V as Free (s, _)) =
       if can Value.parse_int s
-      then index_val ctxt (Value.parse_int s)
-      else (case Symtab.lookup (#2 (value_context_of ctxt)) s
-              of SOME s' => s'
-               | _ => error (Pretty.string_of (Pretty.block [
-                     Pretty.str "Generic variable named ",
-                     Syntax.pretty_term ctxt V, Pretty.str " is not found."
-                    ])))
+      then SOME (index_val ctxt (Value.parse_int s))
+      else Symtab.lookup (#2 (value_context_of ctxt)) s
   | fallback_trans ctxt (Const ("_constrain", _) $ X $ _)
       = fallback_trans ctxt X
-  | fallback_trans ctxt X =
-      error (Pretty.string_of (Pretty.block [
-         Pretty.str "There is no value or variable bound on term ",
-         Syntax.pretty_term ctxt X
-      ]))
+  | fallback_trans ctxt X = NONE
 
 
 fun translate_value ctxt X =
@@ -157,9 +159,14 @@ fun translate_value ctxt X =
   in
     case ParserTab.fold_rev (fn (_, f) => (fn NONE => f ctxt X
                                             | some => some)) tab NONE
-      of SOME ast => ast
-       | _ => fallback_trans ctxt X
+      of NONE => fallback_trans ctxt X
+       | some => some
   end
+
+fun translate_value1 ctxt X =
+  case translate_value ctxt X
+    of SOME y => y
+     | NONE => trans_error ctxt X
 
 
 local open Ast in
@@ -177,7 +184,7 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
   (\<^syntax_const>\<open>_identifier_id_\<close>, (fn _ => fn [X] => X)),
   (\<^syntax_const>\<open>_identifier_logic_\<close>, (fn _ => fn [X] => X))
 ]) #> Sign.parse_translation ([
-  (\<^const_syntax>\<open>\<phi>identifier\<close>, (fn ctxt => fn [X] => translate_value ctxt X))
+  (\<^const_syntax>\<open>\<phi>identifier\<close>, (fn ctxt => fn [X] => translate_value1 ctxt X))
 ]))
 
 end
@@ -273,13 +280,13 @@ fun gen_default_process clean pos (ctxt,sequent) =
 
 (** Mechanism **)
 
-type process_of_argument = context_state -> context_state
+type process_of_arguments = context_state -> context_state
 
 val store_value_and_clean = gen_default_process true  Position.none
 val store_value_no_clean  = gen_default_process false Position.none
 
 structure Process_of_Argument = Generic_Data (
-  type T = process_of_argument option
+  type T = process_of_arguments option
   val empty = NONE
   val merge = merge_options
 )

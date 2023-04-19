@@ -1,5 +1,7 @@
 signature PHI_VARIABLE = sig
 
+  include PHI_VARIABLE
+
   val variable_is_typed : bool Config.T
   val dest_Var : term -> (string * (term * term)) option
 
@@ -8,6 +10,8 @@ signature PHI_VARIABLE = sig
 end
 
 structure Phi_Variable : PHI_VARIABLE = struct
+
+open Phi_Variable
 
 val varname_prefix = "\<v>\<a>\<r>_"
 val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K false)
@@ -57,8 +61,10 @@ fun variable_assigner' b (ctxt,sequent) =
                      then @{thm "__set_new_var_rule__"}
                      else @{thm "__set_new_var_noty_rule__"}
           val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
-          val ctxt = Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free (Binding.name_of vb, @{typ varname}))] ctxt
+          val ctxt = ctxt
+                  |> Generic_Variable_Access.bind_local_vals
+                        [(Binding.name_of b, Free (Binding.name_of vb, @{typ varname}))]
+                  |> bind_variable (vname, Binding.name_of b)
           in (rule, ctxt,
               [Thm.cterm_of ctxt (Free (vname, @{typ varname}))],
               [declare_rule (Binding.pos_of b)])
@@ -70,8 +76,10 @@ fun variable_declarer' TY b (ctxt,sequent) =
   let
     val vb = Binding.prefix_name varname_prefix b
     val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
-    val ctxt = Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free (Binding.name_of vb, @{typ varname}))] ctxt
+    val ctxt = ctxt
+            |> Generic_Variable_Access.bind_local_vals
+                        [(Binding.name_of b, Free (Binding.name_of vb, @{typ varname}))]
+            |> bind_variable (vname, Binding.name_of b)
     val idx = Thm.maxidx_of_cterm TY + 1
     val rule = @{thm "__new_var_rule__"}
           |> Thm.incr_indexes idx

@@ -1494,7 +1494,6 @@ syntax
 
 consts \<phi>identifier :: "unit \<Rightarrow> unit" \<comment> \<open>used only in syntax parsing\<close>
 
-
 subsubsection \<open>Rule \& Implementation\<close>
 
 lemma "__value_access_0__":
