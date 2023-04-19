@@ -145,7 +145,6 @@ fun defer_antecedent contract ctxt thm =
     val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
           case tm of (_ $ (@{term Proof_Obligation} $ _)) => true
                    | _ => false)
-    val n = Thm.nprems_of thm
   in
     if idx = ~1
     then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")

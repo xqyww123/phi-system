@@ -692,12 +692,12 @@ lemma op_div_int_\<phi>app[\<phi>synthesis for _ (100)
     have [simp]: \<open>sint (word_of_int x::'b word) = x\<close>
       by (simp add: sint_of_int_eq the_\<phi>lemmata(3) the_\<phi>lemmata(4))
     have [simp]: \<open>sint (word_of_int y::'b word) = y\<close>
-      by (simp add: sint_of_int_eq the_\<phi>(4) the_\<phi>lemmata(1))
+      by (simp add: sint_of_int_eq the_\<phi>lemmata(1) the_\<phi>lemmata(2))
 
     have t1: \<open>x < 2 ^ (LENGTH('b)-1)\<close>
       using One_nat_def the_\<phi>lemmata(4) by presburger
     have t2: \<open>- (2 ^ (LENGTH('b)-1)) < x\<close>
-      using the_\<phi>(10) the_\<phi>lemmata(3) by fastforce
+      using the_\<phi>(6) the_\<phi>lemmata(3) by fastforce
     have t3: \<open>\<bar>x\<bar> < 2 ^ (LENGTH('b)-1)\<close>
       using t1 t2 by linarith
     have t4: \<open>\<bar>x sdiv y\<bar> < 2 ^ (LENGTH('b)-1)\<close>

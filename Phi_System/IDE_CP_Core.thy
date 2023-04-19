@@ -1790,11 +1790,15 @@ end)\<close>
 
 \<phi>processor auto_obligation_solver 800 (premises \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | premises \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn () =>
+    case Thm.major_prem_of sequent
+      of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _))
+         => (ctxt, @{thm Premise_True} RS sequent)
+       | _ => (
     if Config.get ctxt Phi_Reasoner.auto_level >= 2
     then case Seq.pull (Phi_Reasoners.auto_obligation_solver ctxt sequent)
            of SOME (ret, _) => (ctxt, ret)
             | NONE => raise Bypass NONE
-    else raise Bypass NONE)\<close>
+    else raise Bypass NONE))\<close>
 
 \<phi>processor fold 2000 (\<open>PROP ?P\<close>) \<open>
   fn (ctxt, sequent) => Phi_Parse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>

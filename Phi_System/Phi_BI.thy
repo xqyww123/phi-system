@@ -211,10 +211,10 @@ lemma Subjection_imp_I:
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<s>\<u>\<b>\<j> P \<a>\<n>\<d> Q\<close>
   unfolding Imply_def by (simp add: Subjection_expn)
 
-lemma Subjection_True [simp]: "(T \<s>\<u>\<b>\<j> True) = T"
+lemma Subjection_True [simp, \<phi>programming_safe_simps]: "(T \<s>\<u>\<b>\<j> True) = T"
   unfolding set_eq_iff by (simp add: Subjection_expn)
 
-lemma Subjection_Flase[simp]: \<open>(T \<s>\<u>\<b>\<j> False) = 0\<close>
+lemma Subjection_Flase[simp, \<phi>programming_safe_simps]: \<open>(T \<s>\<u>\<b>\<j> False) = 0\<close>
   unfolding set_eq_iff by (simp add: Subjection_expn zero_set_def)
 
 lemma Subjection_Subjection:
@@ -284,6 +284,8 @@ lemma ExSet_simps[simp]:
   \<open>(X2 a b \<s>\<u>\<b>\<j> a. P2 a b \<s>\<u>\<b>\<j> b. Q b) = (X2 a b \<s>\<u>\<b>\<j> a b. P2 a b \<and> Q b)\<close>
   \<open>ExSet 0 = 0\<close>
   unfolding set_eq_iff by (simp_all add: \<phi>expns) blast
+
+declare ExSet_simps(1)[\<phi>programming_safe_simps]
 
 (*lemma [\<phi>reason 200]: (*depreciated*)
    "(\<And>c. T c \<i>\<m>\<p>\<l>\<i>\<e>\<s> T' \<a>\<n>\<d> P c)
