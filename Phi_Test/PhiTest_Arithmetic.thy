@@ -17,6 +17,7 @@ proc test_prime:
     \<medium_right_bracket>.
     \<medium_left_bracket>
       \<open>2 \<Ztypecolon> \<nat>\<close> \<rightarrow> var v ;;
+
       while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat>
              \<s>\<u>\<b>\<j> i.
               Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j \<in> {1<..<i}. \<not> j dvd x)) \<and>
