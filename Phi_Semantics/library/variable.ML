@@ -35,6 +35,9 @@ fun find_Var var (Const (\<^const_name>\<open>times\<close>, _) $ R $ X) =
         of SOME (name, xT) => if name = var then SOME xT else NONE
          | NONE => NONE
 
+fun find_Var' var (_,sequent) =
+  find_Var var (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
+
 fun declare_rule pos rule =
   let
   val pattern = case Thm.prop_of rule
@@ -45,12 +48,12 @@ fun declare_rule pos rule =
    in Context.proof_map (Phi_Reasoner.add_intro_rule pos 1000 ([(pattern,NONE)], []) NONE [rule])
   end
 
+
 fun variable_assigner' b (ctxt,sequent) =
   let
   val vb = Binding.prefix_name varname_prefix b
   val iname = Variable.intern_fixed ctxt (Binding.name_of vb)
-  val existed = find_Var iname (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
-                 |> is_some
+  val existed = is_some (find_Var' iname (ctxt,sequent))
   in if existed
      then (Thm.instantiate (TVars.empty, Vars.make [((("var",0),\<^typ>\<open>varname\<close>),
                                                     Thm.cterm_of ctxt (Free(iname, \<^typ>\<open>varname\<close>)))])
@@ -63,7 +66,8 @@ fun variable_assigner' b (ctxt,sequent) =
           val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
           val ctxt = ctxt
                   |> Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free ((*Binding.name_of vb*) vname, @{typ varname}))]
+                        [(Binding.name_of b, (Free (vname, @{typ varname}),
+                                              Option.map fst o find_Var' vname))]
                   |> bind_variable (vname, Binding.name_of b)
           in (rule, ctxt,
               [Thm.cterm_of ctxt (Free (vname, @{typ varname}))],
@@ -78,7 +82,8 @@ fun variable_declarer' TY b (ctxt,sequent) =
     val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
     val ctxt = ctxt
             |> Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free ((*Binding.name_of vb*) vname, @{typ varname}))]
+                        [(Binding.name_of b, (Free (vname, @{typ varname}),
+                                              Option.map fst o find_Var' vname))]
             |> bind_variable (vname, Binding.name_of b)
     val idx = Thm.maxidx_of_cterm TY + 1
     val rule = @{thm "__new_var_rule__"}

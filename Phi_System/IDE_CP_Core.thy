@@ -1671,6 +1671,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
   let
     val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
                         |> Config.put phi_synthesis_parsing true
+                        |> Config.put Generic_Variable_Access.mode_synthesis true
     val binds = Variable.binds_of ctxt_parser
     val term = Syntax.parse_term ctxt_parser raw_term
                   |> Term.map_aterms (
@@ -1691,6 +1692,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
     let
       val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
                           |> Config.put phi_synthesis_parsing true
+                          |> Config.put Generic_Variable_Access.mode_synthesis true
       val term = Syntax.parse_term ctxt_parser ("$" ^ var)
                   |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt

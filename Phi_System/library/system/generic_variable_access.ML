@@ -8,12 +8,16 @@
 (*** Signature ***)
 signature GENERIC_VARIABLE_ACCESS = sig
 
+type get_value = context_state -> term option
+
 (** Value Context **)
 val open_value_context : term list (*arguments*) -> Proof.context -> Proof.context
 val assign_anony_local_val : typ option -> Proof.context -> string * Proof.context
-val bind_local_vals  : (xstring (*external name*) * term) list -> Proof.context -> Proof.context
-val lookup_bindings : Proof.context -> xstring -> term option
+val bind_local_vals  : (xstring (*external name*) * (term * get_value)) list -> Proof.context -> Proof.context
+val lookup_bindings : Proof.context -> xstring -> (term * get_value) option
 val is_under_value_context : Proof.context -> bool
+
+val mode_synthesis : bool Config.T
 
 (** Parser for Access **)
 type value_parser_key =
@@ -49,10 +53,12 @@ structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
 
 (*** Value Context ***)
 
+type get_value = context_state -> term option
+
 type value_context =
         ( term list (*argument list, of type 'a \<phi>arg.*)
-        * term Symtab.table (*binding table of local values,
-                              key: external name of the fixed variable*)
+        * (term * get_value) Symtab.table
+          (*binding table of local values, key: external name of the fixed variable*)
           (*Free variables in the terms must use external names, just as what is parsed and before
               checked from the user inputs.
             Use Variable.revert_fixed if it is a fixed free variable!
@@ -126,14 +132,15 @@ fun index_val ctxt i =
                       of SOME c => c
                        | _ => error ("Cannot access the " ^ string_of_int i ^ "th argument.\n\
                                      \Not under a programming context.")
-  in
-  if 1 <= i andalso i <= length A
-  then List.nth (A, i-1)
-  else error ("The programmign context only has " ^ string_of_int (length A) ^
-              " arguments, but it attempts to access the " ^ string_of_int i ^ "th argument.")
+  in if 1 <= i andalso i <= length A
+     then List.nth (A, i-1)
+     else error ("The programmign context only has " ^ string_of_int (length A) ^
+                 " arguments, but it attempts to access the " ^ string_of_int i ^ "th argument.")
   end
 
-fun trans_error ctxt (V as Free (s, _))
+fun no_binding_found N = error ("Generic variable named "^N^" is not found.")
+
+fun trans_error ctxt (V as Free _)
       = error (Pretty.string_of (Pretty.block [
                Pretty.str "Generic variable named ",
                Syntax.pretty_term ctxt V, Pretty.str " is not found."
@@ -147,7 +154,7 @@ fun trans_error ctxt (V as Free (s, _))
 fun fallback_trans ctxt (V as Free (s, _)) =
       if can Value.parse_int s
       then SOME (index_val ctxt (Value.parse_int s))
-      else Symtab.lookup (#2 (value_context_of ctxt)) s
+      else Option.map fst (Symtab.lookup (#2 (value_context_of ctxt)) s)
   | fallback_trans ctxt (Const ("_constrain", _) $ X $ _)
       = fallback_trans ctxt X
   | fallback_trans ctxt X = NONE
@@ -189,7 +196,7 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
       Appl[Constant \<^const_syntax>\<open>Set_Value\<close>, Y, ident V])),
   (\<^syntax_const>\<open>_identifier_id_\<close>, (fn _ => fn [X] =>
       Appl [Constant \<^syntax_const>\<open>_abs\<close>, X, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>])),
-  (\<^syntax_const>\<open>_identifier_logic_\<close>, (fn _ => fn [X] => @{print} X))
+  (\<^syntax_const>\<open>_identifier_logic_\<close>, (fn _ => fn [X] => X))
 ]))
 
 end
@@ -197,6 +204,14 @@ end
 fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_)) =
       translate_value0 ctxt (Free (N, dummyT))
   | check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ X) = translate_value0 ctxt X
+  | check_term ctxt ((H1 as Const (\<^const_name>\<open>Value_of\<close>, _))
+                        $ (H2 as Const (\<^const_name>\<open>Pure.dummy_pattern\<close>, _))
+                        $ (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_)))
+      = if Config.get ctxt mode_synthesis
+        then H1 $ H2 $ translate_value0 ctxt (Free (N, dummyT))
+        else (case lookup_bindings ctxt N
+                |> Option.mapPartial (fn (_, get) => get (ctxt, Phi_Envir.the_construction ctxt))
+                of SOME x => x | _ => no_binding_found N)
   | check_term ctxt (A $ B) = check_term ctxt A $ check_term ctxt B
   | check_term ctxt (Abs (N,TY,X)) = Abs (N,TY, check_term ctxt X)
   | check_term _ X = X
@@ -255,15 +270,16 @@ fun gen_default_process' clean pos (ctxt,sequent) =
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
-                                  $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Free (N,_) $ _))
-                 => SOME (Variable.revert_fixed ctxt N, (*revert_frees*) V)
+                                  $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ (X as Free (N,_)) $ _))
+                 => SOME (Variable.revert_fixed ctxt N, ((*revert_frees*) V, K (SOME X)))
              | _ => NONE)
     val binds'= rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ (V as Free (N,_)))
-                                  $ _)
-                 => SOME (Variable.revert_fixed ctxt N, (*revert_frees*) V)
+                                  $ X')
+                 => SOME (Variable.revert_fixed ctxt N, ((*revert_frees*) V,
+                      K (case X' of (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ X $ _) => SOME X | _ => NONE)))
              | _ => NONE)
 
     fun setup_lemmata ctxt =

@@ -86,6 +86,7 @@ in [
 ] end\<close>
 
 print_translation \<open>let
+
 fun recovery ctxt (Const (\<^syntax_const>\<open>_free\<close>, _) $ X) = recovery ctxt X
   | recovery ctxt (Free (N, TY)) =
      (case Phi_Variable.external_name_of ctxt N

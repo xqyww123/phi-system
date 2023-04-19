@@ -69,7 +69,7 @@ fun parse_assigner ctxt =
       end
     fun find name =
       case Generic_Variable_Access.lookup_bindings ctxt (Binding.name_of name)
-        of SOME X => (
+        of SOME (X,_) => (
             case Phi_Help.safe_fastype_of X
               of Type (T, _) =>
                   (case Symtab.lookup type_map T

@@ -78,7 +78,6 @@ fun dest_rule rule =
 
 fun update_val b rule ctxt = 
   let val (vname,T,V) = dest_rule rule
-      val vterm = Free ((*Variable.revert_fixed ctxt*) vname, T)
    in ctxt
      |> delete_val' (fn rule' => Thm.eq_thm_prop (rule',rule)) (Binding.name_of b)
      |> Values.map (Symtab.update ((Binding.name_of b), (rule, vname)))
@@ -87,7 +86,8 @@ fun update_val b rule ctxt =
                               (Binding.pos_of b) 1000
                               ([(pattern_of ctxt' (Binding.name_of b) rule, NONE)],[]) NONE
                               [rule]) ctxt')
-     |> Generic_Variable_Access.bind_local_vals [(Binding.name_of b, vterm)]
+     |> Generic_Variable_Access.bind_local_vals
+            [(Binding.name_of b, (Free (vname, T), K V))]
      |> Proof_Context.maybe_bind_term ((Binding.name_of b,0), V)
   end
 
