@@ -64,17 +64,23 @@ abbreviation Uninited_Var :: \<open>varname \<Rightarrow> assn\<close> ("\<u>\<n
 
 subsubsection \<open>Syntax\<close>
 
-syntax
-  Inited_Var_ :: \<open>\<phi>identifier \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<v>\<a>\<r>[_] _" [22,22] 21)
+syntax Inited_Var_ :: \<open>logic \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<v>\<a>\<r>[_] _" [22,22] 21)
 
 ML_file "library/variable_pre.ML"
 
-parse_translation \<open>let 
+parse_translation \<open>let
+
+fun get_bound ctxt (Const (\<^syntax_const>\<open>_constrain\<close>, _) $ X $ _) = get_bound ctxt X
+  | get_bound ctxt (Free (N, _)) = Option.map (K N) (Generic_Variable_Access.lookup_bindings ctxt N)
+  | get_bound _ _ = NONE
+
 in [
   (\<^syntax_const>\<open>Inited_Var_\<close>, (fn ctxt => fn [v, T] =>
     Const (\<^const_abbrev>\<open>Inited_Var\<close>, dummyT)
         $ (if Generic_Variable_Access.is_under_value_context ctxt
-           then the_default v (Generic_Variable_Access.translate_value ctxt v)
+           then (case get_bound ctxt v
+                   of SOME N => Const (\<^const_name>\<open>\<phi>identifier\<close>, dummyT) $ Abs (N, dummyT, Term.dummy)
+                    | NONE => v)
            else v)
         $ T))
 ] end\<close>
@@ -82,12 +88,19 @@ in [
 print_translation \<open>let
 fun recovery ctxt (Const (\<^syntax_const>\<open>_free\<close>, _) $ X) = recovery ctxt X
   | recovery ctxt (Free (N, TY)) =
-      case Phi_Variable.external_name_of ctxt N
-        of SOME N' => Free (N', TY)
-         | _       => Free (N, TY)
+     (case Phi_Variable.external_name_of ctxt N
+        of SOME N' => SOME (Free (N', TY))
+         | _       => NONE)
+  | recovery ctxt (Var ((N,idx), TY)) =
+     (case Phi_Variable.external_name_of ctxt N
+        of SOME N' => SOME (Var ((N',idx), TY))
+         | _       => NONE)
+  | recovery _ _ = NONE
+
+fun recovery' ctxt X = case recovery ctxt X of SOME Y => Y | _ => X
 
 in [(\<^const_syntax>\<open>Inited_Var\<close>, (fn ctxt => fn [a,b] =>
-      Const(\<^syntax_const>\<open>Inited_Var_\<close>, dummyT) $ recovery ctxt a $ b))]
+      Const(\<^syntax_const>\<open>Inited_Var_\<close>, dummyT) $ recovery' ctxt a $ b))]
 end
 \<close>
 
@@ -441,7 +454,8 @@ lemma "__set_new_var_rule__":
      \<lbrace> R\<heavy_comma> \<blangle> y \<Ztypecolon> \<v>\<a>\<l>[raw] U\<heavy_comma> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
     op_var_scope[where TY=\<open>Some TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
-      op_set_var G
+      op_set_var ;;G
+        thm G
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 

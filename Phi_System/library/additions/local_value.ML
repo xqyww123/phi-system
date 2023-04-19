@@ -78,7 +78,7 @@ fun dest_rule rule =
 
 fun update_val b rule ctxt = 
   let val (vname,T,V) = dest_rule rule
-      val vterm = Free (Variable.revert_fixed ctxt vname, T)
+      val vterm = Free ((*Variable.revert_fixed ctxt*) vname, T)
    in ctxt
      |> delete_val' (fn rule' => Thm.eq_thm_prop (rule',rule)) (Binding.name_of b)
      |> Values.map (Symtab.update ((Binding.name_of b), (rule, vname)))

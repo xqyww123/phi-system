@@ -168,6 +168,12 @@ fun translate_value1 ctxt X =
     of SOME y => y
      | NONE => trans_error ctxt X
 
+fun translate_value0 ctxt v =
+  if is_under_value_context ctxt
+  then the_default v (translate_value ctxt v)
+  else v
+
+val mode_synthesis = Config.declare_bool ("\<phi>-System.GVA.mode_synthesis", \<^here>) (K false)
 
 local open Ast in
 
@@ -181,13 +187,21 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
       Appl[Constant \<^const_syntax>\<open>Value_of\<close>, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>, ident X])),
   (\<^syntax_const>\<open>_set_identifier_\<close>, (fn _ => fn [V,Y] =>
       Appl[Constant \<^const_syntax>\<open>Set_Value\<close>, Y, ident V])),
-  (\<^syntax_const>\<open>_identifier_id_\<close>, (fn _ => fn [X] => X)),
-  (\<^syntax_const>\<open>_identifier_logic_\<close>, (fn _ => fn [X] => X))
-]) #> Sign.parse_translation ([
-  (\<^const_syntax>\<open>\<phi>identifier\<close>, (fn ctxt => fn [X] => translate_value1 ctxt X))
+  (\<^syntax_const>\<open>_identifier_id_\<close>, (fn _ => fn [X] =>
+      Appl [Constant \<^syntax_const>\<open>_abs\<close>, X, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>])),
+  (\<^syntax_const>\<open>_identifier_logic_\<close>, (fn _ => fn [X] => @{print} X))
 ]))
 
 end
+
+fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_)) =
+      translate_value0 ctxt (Free (N, dummyT))
+  | check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ X) = translate_value0 ctxt X
+  | check_term ctxt (A $ B) = check_term ctxt A $ check_term ctxt B
+  | check_term ctxt (Abs (N,TY,X)) = Abs (N,TY, check_term ctxt X)
+  | check_term _ X = X
+
+val _ = Theory.setup (Context.theory_map (Syntax_Phases.term_check ~110 "\<phi>-System.GVA" (map o check_term)))
 
 (*** Initial Process for Arguments ***)
 
@@ -228,28 +242,28 @@ fun register_value_spec_thms pos rules =
 fun gen_default_process' clean pos (ctxt,sequent) =
   let
     val (sequent', rules) = collect_and_clean_value clean ctxt sequent
-    val revert_frees = map_aterms (fn Free (N,T) => Free (Variable.revert_fixed ctxt N, T)
-                                    | X => X)
+    (*val revert_frees = map_aterms (fn Free (N,T) => Free (Variable.revert_fixed ctxt N, T)
+                                    | X => X)*)
     val args = rules |> map (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
                                   $ _)
-                 => revert_frees V
+                 => (*revert_frees*) V
              | _ => error "Internal Bug q34v6 nu89p")
     val binds = rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
                                   $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Free (N,_) $ _))
-                 => SOME (Variable.revert_fixed ctxt N, revert_frees V)
+                 => SOME (Variable.revert_fixed ctxt N, (*revert_frees*) V)
              | _ => NONE)
     val binds'= rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ (V as Free (N,_)))
                                   $ _)
-                 => SOME (Variable.revert_fixed ctxt N, revert_frees V)
+                 => SOME (Variable.revert_fixed ctxt N, (*revert_frees*) V)
              | _ => NONE)
 
     fun setup_lemmata ctxt =

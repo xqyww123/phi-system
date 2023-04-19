@@ -807,7 +807,7 @@ lemma op_lshr_int_\<phi>app
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_lshr LENGTH('ba) LENGTH('bb) (\<phi>V_pair v2 v1)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v1] \<int>('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] \<nat>('bb) \<longmapsto> \<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<int>('ba) \<rbrace>\<close>
-  \<medium_left_bracket>
+  \<medium_left_bracket> 
   ;; $v1
   have t1: \<open>x < 2 ^ (LENGTH('ba) - 1)\<close>
     using One_nat_def the_\<phi>(2) by presburger

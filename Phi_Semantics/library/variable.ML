@@ -63,7 +63,7 @@ fun variable_assigner' b (ctxt,sequent) =
           val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
           val ctxt = ctxt
                   |> Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free (Binding.name_of vb, @{typ varname}))]
+                        [(Binding.name_of b, Free ((*Binding.name_of vb*) vname, @{typ varname}))]
                   |> bind_variable (vname, Binding.name_of b)
           in (rule, ctxt,
               [Thm.cterm_of ctxt (Free (vname, @{typ varname}))],
@@ -78,7 +78,7 @@ fun variable_declarer' TY b (ctxt,sequent) =
     val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
     val ctxt = ctxt
             |> Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, Free (Binding.name_of vb, @{typ varname}))]
+                        [(Binding.name_of b, Free ((*Binding.name_of vb*) vname, @{typ varname}))]
             |> bind_variable (vname, Binding.name_of b)
     val idx = Thm.maxidx_of_cterm TY + 1
     val rule = @{thm "__new_var_rule__"}
