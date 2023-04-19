@@ -11,6 +11,8 @@ Formalizations of new languages can reuse the existing common semantic modules a
 
 The verification and the certified programming is lifted by data refinement onto an abstract domain. Therefore even when the certification is down to concrete semantics of low-level languages, the verification and the programming are always stay in abstraction and able to focus on the algorithm itself.
 
+Expressiveness: higher-order sequential and predicative separation logic combined with hybrid logic for the data refinement, terminable state monad for semantic formalization. Nontermination (coinductive-based like iTree) and coarse-grand concurrency are left for the future. The current aim of the project is to facilate and simplify formal verification in industrial scenario particularly smart contract.
+
 **The development is still in progress and the system is not ready for any use.**
 We release the current development as a preview and look for cooperators and contributors.
 
@@ -58,5 +60,11 @@ Any contributor must agree with releasing their contributions in LGPL-v3.0.
 
 ## State of the Development
 
-
-
+- Kernel Calculus of Programming: done.
+- Semantic Framework: may need further improvement.
+- Specification Framework:
+    - Fictional Separation Logic: under improvement
+- Language Features:
+    - Variable, local value, breakable branch & loop, return, arithmetics: done.
+    - Memories (OO model, C model): WIP.
+    - Blockchain-related: WIP
