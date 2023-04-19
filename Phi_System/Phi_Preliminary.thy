@@ -15,7 +15,6 @@ declare [ [ML_debugger, ML_exception_debugger]]
 subsection \<open>Named Theorems\<close>
 
 named_theorems \<phi>expns \<open>Semantics Expansions, used to expand assertions semantically.\<close>
-  and \<phi>programming_simps \<open>Simplification rules used in the deductive programming\<close>
 
 declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 
@@ -24,6 +23,12 @@ structure Phi_Programming_Safe_Simp_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = \<^binding>\<open>\<phi>programming_safe_simps\<close>
   val comment = "Simplification rules used in low automation level, which is safer than usual"
+)
+
+structure Phi_Programming_Simp_SS = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = \<^binding>\<open>\<phi>programming_simps\<close>
+  val comment = "Simplification rules used in the deductive programming"
 )
 \<close>
 

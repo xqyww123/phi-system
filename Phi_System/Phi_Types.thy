@@ -291,7 +291,7 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def using implies_refl .
 
 lemma [\<phi>reason 1200]:
-  \<open>() \<Ztypecolon> \<phi>None \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<Ztypecolon> Identity @action to Identity\<close> \<medium_left_bracket> \<medium_right_bracket>. .
+  \<open>() \<Ztypecolon> \<phi>None \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<Ztypecolon> Identity @action to Identity\<close>  \<medium_left_bracket>  \<medium_right_bracket>. .
 
 subsubsection \<open>Rules\<close>
 

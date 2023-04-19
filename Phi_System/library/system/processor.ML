@@ -32,7 +32,7 @@ signature NU_PROCESSOR = sig
                       -> Token.T list -> Proof.state -> Proof.state
   val powerful_process_p : int (*auto-level*) -> (Proof.state -> Proof.state) (*continue*)
                         -> (Proof.state -> Proof.state) parser
-  val powerful_process_p_inert : int (*auto-level*) -> (Proof.state -> Proof.state) (*continue*)
+  val powerful_process_p_inert : int (*auto-level*) * int -> (Proof.state -> Proof.state) (*continue*)
                               -> (Proof.state -> Proof.state) parser
                       (*if the input is empty, then powerful_process_p_inert does nothing*)
   val process_by_input : int (*auto-level*) -> Token.T list -> context_state -> context_state
@@ -57,7 +57,6 @@ signature NU_PROCESSOR = sig
         * (binding * string option * mixfix) list)
         * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
 
-  (*An example processor*)
   val simplifier : proc
 end
 
@@ -237,9 +236,10 @@ fun powerful_process_p lev continue toks =
       (powerful_process_p_internal' lev continue toks
       ,if Token.is_eof (hd toks) then [Token.eof] else [])
 
-fun powerful_process_p_inert lev continue toks =
-      (if Token.is_eof (hd toks) then I
-       else powerful_process_p_internal' lev continue toks
+fun powerful_process_p_inert (lev1,lev2) continue toks =
+      (if Token.is_eof (hd toks)
+       then (if lev2 < 0 then I else powerful_process_p_internal' lev2 continue toks)
+       else powerful_process_p_internal' lev1 continue toks
       ,if Token.is_eof (hd toks) then [Token.eof] else [])
 
 
@@ -300,13 +300,15 @@ fun apply_attr (attr:attribute) (ctxt, sequent) =
 
 fun simplifier (ctxt, sequent) = Scan.succeed (fn _ =>
   let
+    val lev = Config.get ctxt Phi_Reasoner.auto_level
     val sctxt =
-      if Config.get ctxt Phi_Reasoner.auto_level >= 1
-      then let val simps'= Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>programming_simps\<close>
-            in Raw_Simplifier.addsimps (ctxt, simps') end
-      else Phi_Programming_Safe_Simp_SS.equip ctxt
+      if lev >= 2
+      then Phi_Programming_Simp_SS.enhance ctxt
+      else if lev >= 1
+      then Phi_Programming_Safe_Simp_SS.equip ctxt
+      else raise Bypass (SOME (ctxt, sequent))
     val sequent' = Simplifier.full_simplify sctxt sequent
-  in  raise Bypass (SOME (ctxt, sequent'))
+  in raise Bypass (SOME (ctxt, sequent'))
   end)
 
 

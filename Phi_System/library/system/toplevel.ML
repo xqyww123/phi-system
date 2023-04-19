@@ -427,7 +427,7 @@ fun prove_prem int after_qed'' stat =
       in
         stat |> Proof.map_context_result
                   (fn ctxt =>
-                   Phi_Processor.process_no_input 0 (ctxt,sequent)
+                   Phi_Processor.process_no_input 1 (ctxt,sequent)
                   |> swap
                   |> apsnd (Config.put Phi_Reasoner.auto_level original_auto_level
                          #> Config.put suppress_value_cleaning_in_next_statement true))
@@ -701,7 +701,7 @@ val _ =
      -- optional (\<^keyword>\<open>premises\<close> |--
             and_list ((binding -- opt_attribs || attribs >> pair Binding.empty) -- ppats)) []
       >> begin_block_cmd)
-   -- Phi_Processor.powerful_process_p_inert 3 I)
+   -- Phi_Processor.powerful_process_p_inert (3,1) I)
    >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
 
 val _ =
@@ -725,7 +725,7 @@ in
        stat
     |> end_block_cmd cast int
     |> repeat_future_proof0))
-   -- Phi_Processor.powerful_process_p 2 I)
+   -- Phi_Processor.powerful_process_p_inert (3,1) I)
    >> (fn (blk,prcs) => Toplevel.proof' (fn int => prcs o blk int)))
 end
 
