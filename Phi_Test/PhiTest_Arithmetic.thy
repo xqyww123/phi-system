@@ -39,6 +39,8 @@ proc test_prime:
     \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
+thm test_prime_def \<comment> \<open>Semantic definition\<close>
+thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
 
 proc test_prime':
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>

@@ -1,5 +1,6 @@
 theory Instructions_to_make_a_conventional_VCG
   imports PhiTest_All
+  keywords "\<phi>VCG" :: prf_script % "proof"
 begin
 
 text \<open>
@@ -46,11 +47,61 @@ Since your VCG is offline, you need to collect them somewhere and give to users 
 
 text \<open>Here I give an example building a procedure using ML.\<close>
 
+
+
+proc
+  input \<open>flag \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
+  output \<open>(if flag then 1 else 2) \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  is [routine]
+  \<medium_left_bracket>
+    if \<open>$flag\<close> \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>2 \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>.
+  \<medium_right_bracket>. .
+
+text \<open>Assume we are going to build the following program.\<close>
+
+term \<open>PhiSem_CF_Basic.if TYPE(VAL) (Return \<a>\<r>\<g>1) (op_const_aint 1) (op_const_aint 2)\<close>
+
+thm op_const_aint_\<phi>app
+
 ML \<open>
 
+fun BLOCK f int =
+     Phi_Toplevel.begin_block ([],[]) int
+  #> f
+  #> Phi_Toplevel.end_block NONE int
 
+fun BLOCK' f = BLOCK (fn s => let val sequent = Phi_Envir.the_state_sequent s
+                               in s
+                               |> Proof.map_context_result (rpair sequent #> f #> swap)
+                               |-> Phi_Envir.set_state_sequent
+                              end)
+
+val mk_const_0 =
+     Phi_Apply.apply @{thms op_const_aint_\<phi>app[where x=\<open>0\<close>]}
+  #> Phi_Reasoners.auto_obligation_solver1
+  #> Phi_Sys.accept_proc
+
+val mk_const_1 =
+     Phi_Apply.apply @{thms op_const_aint_\<phi>app[where x=\<open>0\<close>]}
+  #> Phi_Reasoners.auto_obligation_solver1
+  #> Phi_Sys.accept_proc
+
+fun mk_branch cond branch_true branch_false =
+     Phi_Apply.apply @{thms if_\<phi>app}
+  #> Phi_Reasoners.auto_obligation_solver1
+  
+
+(*
+fun mk_if stat =
+  let val sequent = Phi_Envir.the_state_sequent stat
+      
+   in  *)
+
+val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>VCG\<close> "a very simple VCG"
+  (Scan.succeed (Toplevel.proof' (BLOCK' (mk_const_0))))
 
 \<close>
 
+term \<open>\<p>\<r>\<o>\<c> Return\<close>
 
 end
