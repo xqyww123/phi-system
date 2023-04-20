@@ -491,7 +491,7 @@ structure Procedure_Building_Envir = Proof_Data (
 val name_of_the_building_procedure = Procedure_Building_Envir.get
 
 
-fun gen_begin_proc prep_term prep_prop prep_var prep_attr post_process def_const
+fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
       binding arg ret throws rawfixes includes raw_defines raw_preconds action raw_modifiers
       int lthy =
   let
@@ -540,9 +540,8 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr post_process def_const
     fun post_process' binding int lthy th =
       (lthy,th)
         |> Finishing_Construction_Hooks.invoke ()
-        |> swap
-        |-> Phi_Procedure.define def_const binding
-        |-> (fn th => fn lthy =>
+        |> Phi_Procedure.define def_const binding
+        |> (fn (lthy, th) =>
               (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
                 (("\<phi>procedure", ""), [("", [th])]); lthy))
 
@@ -565,10 +564,10 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr post_process def_const
   end
 
 val begin_proc =
-      gen_begin_proc (K I) (K I) Proof_Context.cert_var (K I) (K I)
+      gen_begin_proc (K I) (K I) Proof_Context.cert_var (K I)
 val begin_proc_cmd =
       gen_begin_proc Syntax.parse_term Syntax.parse_prop Proof_Context.read_var
-                     Attrib.attribute_cmd (K I)
+                     Attrib.attribute_cmd
 
 
 

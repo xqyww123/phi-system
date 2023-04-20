@@ -12,7 +12,7 @@ signature PHI_PROCEDURE = sig
 
   val simp_monads : Proof.context -> thm -> thm
   val define : bool (*whether to define a new constant*)
-        -> Attrib.binding -> thm -> local_theory -> thm * local_theory
+        -> Attrib.binding -> local_theory * thm -> local_theory * thm
 
   type interface = {name: Binding.binding, thm: thm}
   (*interfaces introduced in this given theory, excluding others inherited from parent theories*)
@@ -137,7 +137,6 @@ fun norm_def ctxt (m,n,instance) def = let
   val insts = ty_vars @ normal_vars @ (map (Thm.cterm_of ctxt) instance)
   in
     fold (fn a => fn b => Thm.combination b a) (map Thm.reflexive insts) def
-      |> Drule.eta_contraction_rule
       |> Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>V_simps[folded atomize_eq]}
       |> Drule.eta_contraction_rule
   end
@@ -179,8 +178,8 @@ fun closure ctxt substT f =
       |> pair (TVars.size substT, length vars, instance)
   end
 
-fun rule_proc_F C ctxt = Conv.fconv_rule (
-          Phi_Helper_Conv.hhf_concl_conv (K
+fun rule_proc_F C ctxt =
+      Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (K
               (  Phi_Syntax.proc_monad_conv C
        else_conv Phi_Syntax.pending_construction_monad_conv C)) ctxt)
 
@@ -199,9 +198,8 @@ fun importT_proc th ctxt =
   in ((instT', th'), ctxt') end;
 
 
-fun gen_define def_const (binding,attrs) sequent01 lthy0 =
+fun gen_define def_const (binding,attrs) (lthy0,sequent0) =
   let
-    val sequent0 = simp_monads lthy0 sequent01
     val ((substT, sequent), lthy) = importT_proc sequent0 lthy0
 
     val (f,_,_,_) = Thm.concl_of sequent |> concl_of |> Phi_Syntax.dest_procedure
@@ -240,9 +238,13 @@ fun gen_define def_const (binding,attrs) sequent01 lthy0 =
   in lthy |> Local_Theory.notes_kind procedure_kind
                 [((proc_binding,attrs), [([sequent''],[])])]
           |> apfst (fn [(_,[sequent''''])] => sequent'''')
+          |> swap
   end
 
-fun define def_const binding =
-  if Binding.is_empty_atts binding then pair else gen_define def_const binding
+fun define' def_const binding stat =
+  if Binding.is_empty_atts binding then stat else gen_define def_const binding stat
+
+fun define def_const binding (lthy,sequent) =
+  define' def_const binding (lthy, simp_monads lthy sequent)
 
 end
