@@ -150,9 +150,7 @@ lemma [
   \<medium_left_bracket> destruct\<phi> _
     construct\<phi> \<open>y \<Ztypecolon> \<nat>\<^sup>r('b)\<close> 
     affirm by (simp add: the_\<phi> unat_of_nat word_unat_eq_iff)
-  ;;
-  \<medium_right_bracket>. 
-  .
+  \<medium_right_bracket>. .
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>\<^sup>r(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Word(_) \<a>\<n>\<d> _\<close>]:
   \<open> Threshold_Cost 7

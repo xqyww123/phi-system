@@ -5,7 +5,7 @@ end
 signature HOOKS = sig
 
 type arg
-type priority = int
+type priority = int (*small value is in higher priority to be executed*)
 
 (*In one theory two hooks having the identical priority are not allowed.
   But the restriction is not applied between theories.*)

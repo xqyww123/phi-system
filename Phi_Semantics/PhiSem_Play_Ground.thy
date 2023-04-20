@@ -79,8 +79,8 @@ proc YYY:
   \<medium_left_bracket>  \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
 
 thm YYY_def
- 
-  
+
+
 proc XXXX:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
@@ -88,7 +88,6 @@ proc XXXX:
   \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
 
 thm XXXX_def
-thm XXXX_def[simplified \<phi>V_simps]
 
 proc
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>

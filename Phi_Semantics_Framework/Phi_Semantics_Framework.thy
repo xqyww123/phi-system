@@ -293,7 +293,7 @@ qed
 
 
 definition \<open>\<phi>V_none = \<phi>arg ()\<close>
-definition \<phi>V_pair (infixr "\<^bold>," 10) where \<open>\<phi>V_pair x y = \<phi>arg (\<phi>arg.dest x, \<phi>arg.dest y)\<close>
+definition \<phi>V_pair ("\<^bold>, " [11,10] 10) where \<open>\<phi>V_pair x y = \<phi>arg (\<phi>arg.dest x, \<phi>arg.dest y)\<close>
 definition \<open>\<phi>V_case_prod f x \<equiv> case x of \<phi>arg (a,b) \<Rightarrow> f (\<phi>arg a) (\<phi>arg b)\<close>
 definition \<open>\<phi>V_fst x = map_\<phi>arg fst x\<close>
 definition \<open>\<phi>V_snd x = map_\<phi>arg snd x\<close>

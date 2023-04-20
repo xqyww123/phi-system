@@ -64,10 +64,10 @@ proc test_prime':
           return (False) affirm by (metis dvd_mult_cancel2 le_antisym le_neq_implies_less le_square less_not_refl mod_0_imp_dvd prime_gt_0_nat prime_nat_not_dvd the_\<phi>(1) the_\<phi>(2) the_\<phi>(4) the_\<phi>(5))  
         \<medium_right_bracket>.
         \<medium_left_bracket>
-          \<open>$v + 1\<close> \<rightarrow> $v
-          continue affirm by (metis \<open>1 < i \<and> i \<le> x \<and> (\<forall>j\<in>{1<..<i}. \<not> j dvd x)\<close> dvd_eq_mod_eq_0 gcd_nat.refl greaterThanLessThan_iff leI le_less_Suc_eq less_SucI the_\<phi>(1)) 
-        \<medium_right_bracket>.
-      \<medium_right_bracket>.
+          \<open>$v + 1\<close> \<rightarrow> $v 
+        \<medium_right_bracket>. 
+      \<medium_right_bracket> by (metis \<open>1 < i \<and> i \<le> x \<and> (\<forall>j\<in>{1<..<i}. \<not> j dvd x)\<close> dvd_imp_mod_0 greaterThanLessThan_iff le_antisym mod_self not_less_eq not_less_eq_eq not_less_iff_gr_or_eq) ;;
+
       return (True) affirm (*with this optimization, the final obligation fails to be solved
                              automatically, but the manual proof is intuitive and semi-automated.*)
         proof simp

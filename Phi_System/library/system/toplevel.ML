@@ -62,7 +62,7 @@ signature PHI_TOPLEVEL = sig
   val prove_prem : bool -> (Proof.state -> Proof.state) -> Proof.state -> thm list * Proof.state
   (*val export_LLVM : theory -> theory *)
 
-  val suppress_value_cleaning_in_next_statement : bool Config.T
+  val previous_statement_is_finished : Proof.context -> bool
 end
 
 structure Phi_Toplevel : PHI_TOPLEVEL = struct
@@ -423,9 +423,11 @@ val end_block = gen_finish_proc (K I) Proof.local_qed
 
 end
 
-
-val suppress_value_cleaning_in_next_statement =
-        Config.declare_bool ("Phi_Toplevel.suppress_value_cleaning_in_next_statement", \<^here>) (K false)
+val previous_statement_is_finished' =
+      Config.declare_bool ("Phi_Toplevel.previous_statement_is_finished", \<^here>) (K true)
+(* It is false iff the previous statement is ended by a proof meaning the intended construction
+   of the previous statement is interrupted by a pending proof so not finished.
+ *)
 
 fun prove_prem int after_qed'' stat =
   let
@@ -439,7 +441,7 @@ fun prove_prem int after_qed'' stat =
                    Phi_Processor.process_no_input 1 (ctxt,sequent)
                   |> swap
                   |> apsnd (Config.put Phi_Reasoner.auto_level original_auto_level
-                         #> Config.put suppress_value_cleaning_in_next_statement true))
+                         #> Config.put previous_statement_is_finished' false))
              |-> Phi_Envir.set_state_sequent
              |> after_qed''
       end
@@ -582,13 +584,11 @@ val statement_clean_values = Attrib.setup_config_bool \<^binding>\<open>\<phi>st
 fun clean_values (ctxt,sequent) =
       if can Phi_Syntax.dest_CurrentConstruction (Thm.prop_of sequent)
          andalso Config.get ctxt statement_clean_values
+         andalso Config.get ctxt previous_statement_is_finished' (*so that the previous construction
+                      has chance to do anything wanted about the values, and any remaining values
+                      must be that the user doesn't need.*)
       then (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst)
       else (ctxt, sequent)
-
-fun clean_values' (ctxt,sequent) =
-  if Config.get ctxt suppress_value_cleaning_in_next_statement
-  then (Config.put suppress_value_cleaning_in_next_statement false ctxt,sequent)
-  else clean_values (ctxt,sequent)
 
 val statement_cmd =
   Phi_Processor.powerful_process_p 3 (Phi_Envir.map_state_sequent (End_of_Statement.invoke ()))
@@ -596,14 +596,17 @@ val statement_cmd =
     stat 
      |> Phi_Envir.map_state_sequent (Begining_of_Statement.invoke ())
      |> process
+     (*the return of the process doesn't mean the end of the construction because the construction
+       can be interrupted and suspended by proofs.*)
   )
 
 val _ = Theory.setup (Context.theory_map (
-   Begining_of_Statement.add 50 (K clean_values')
+   Begining_of_Statement.add 50 (K clean_values)
+#> Begining_of_Statement.add 1000 (K (apfst (Config.put previous_statement_is_finished' true)))
 #> End_of_Statement.add 100 (K (apfst Phi_Envir.freeze_dynamic_lemmas))
 ))
 
-
+fun previous_statement_is_finished ctxt = Config.get ctxt previous_statement_is_finished'
 
 
 (* fun export_LLVM thy =
@@ -714,7 +717,8 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (option (\<^keyword>\<open>for\<close> |-- term) >> (Toplevel.proof' o end_block_cmd))
+    (option (\<^keyword>\<open>for\<close> |-- term --| Scan.option \<^keyword>\<open>affirm\<close>)
+      >> (Toplevel.proof' o end_block_cmd))
 
 val _ = let
   fun repeat_future_proof s =
