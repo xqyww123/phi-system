@@ -86,6 +86,7 @@ proc test_prime':
     \<medium_right_bracket>. \<comment> \<open>Close the top branch\<close>
   \<medium_right_bracket>. \<comment> \<open>Close the function body\<close> .
 
+thm test_prime'_def
 
 
 end

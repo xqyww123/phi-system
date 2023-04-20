@@ -207,6 +207,8 @@ fun gen_define def_const (binding,attrs) (lthy0,sequent0) =
     (*all variables are in the procedure body*)
     (*then f' is the standard form of a definition*)
     val (arity_ins,f') = closure lthy substT f
+                      |> apsnd (Raw_Simplifier.rewrite_term (Proof_Context.theory_of lthy)
+                                @{thms \<phi>V_simps[folded atomize_eq]} [])
 
     val (def_binding,proc_binding) = if Binding.is_empty binding
                                      then (binding,binding)

@@ -717,7 +717,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (option (\<^keyword>\<open>for\<close> |-- term --| Scan.option \<^keyword>\<open>affirm\<close>)
+    (option (\<^keyword>\<open>for\<close> |-- term) --| Scan.option \<^keyword>\<open>affirm\<close>
       >> (Toplevel.proof' o end_block_cmd))
 
 val _ = let

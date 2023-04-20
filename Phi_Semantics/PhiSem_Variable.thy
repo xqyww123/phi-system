@@ -64,7 +64,7 @@ abbreviation Uninited_Var :: \<open>varname \<Rightarrow> assn\<close> ("\<u>\<n
 
 subsubsection \<open>Syntax\<close>
 
-syntax Inited_Var_ :: \<open>logic \<Rightarrow> logic \<Rightarrow> logic\<close> ("\<v>\<a>\<r>[_] _" [22,22] 21)
+syntax Inited_Var_ :: \<open>logic \<Rightarrow> logic\<close> ("\<v>\<a>\<r>[_]")
 
 ML_file "library/variable_pre.ML"
 
@@ -75,14 +75,13 @@ fun get_bound ctxt (Const (\<^syntax_const>\<open>_constrain\<close>, _) $ X $ _
   | get_bound _ _ = NONE
 
 in [
-  (\<^syntax_const>\<open>Inited_Var_\<close>, (fn ctxt => fn [v, T] =>
+  (\<^syntax_const>\<open>Inited_Var_\<close>, (fn ctxt => fn [v] =>
     Const (\<^const_abbrev>\<open>Inited_Var\<close>, dummyT)
         $ (if Generic_Variable_Access.is_under_value_context ctxt
            then (case get_bound ctxt v
                    of SOME N => Const (\<^const_name>\<open>\<phi>identifier\<close>, dummyT) $ Abs (N, dummyT, Term.dummy)
                     | NONE => v)
-           else v)
-        $ T))
+           else v)))
 ] end\<close>
 
 print_translation \<open>let
@@ -329,6 +328,26 @@ lemma [\<phi>reason 2000 for
 ]:
   \<open>Synthesis_Parse var (\<lambda>_. x \<Ztypecolon> Var var T :: assn)\<close>
   unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason 2000 for
+  \<open>Synthesis_Parse (Var ?var) (?Y::?'ret \<Rightarrow> assn)\<close>
+]:
+  \<open>Synthesis_Parse (Var var) (\<lambda>_. x \<Ztypecolon> Var var T :: assn)\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason 2000 for
+  \<open>Synthesis_Parse (Inited_Var ?var) (?Y::?'ret \<Rightarrow> assn)\<close>
+]:
+  \<open>Synthesis_Parse (Inited_Var var) (\<lambda>_. x \<Ztypecolon> Inited_Var var T :: assn)\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason 2000 for
+  \<open>Synthesis_Parse (Uninited_Var ?var) (?Y::?'ret \<Rightarrow> assn)\<close>
+]:
+  \<open>Synthesis_Parse (Uninited_Var var) (\<lambda>_. Uninited_Var var :: assn)\<close>
+  unfolding Synthesis_Parse_def ..
+
+
 
 subsection \<open>Reasoning Process\<close>
 

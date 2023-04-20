@@ -460,6 +460,8 @@ definition DoSynthesis :: \<open>'a \<Rightarrow> prop \<Rightarrow> prop \<Righ
 definition Synthesis_Parse :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
   where \<open>Synthesis_Parse input parsed \<longleftrightarrow>  True\<close>
 
+declare [[\<phi>reason_default_pattern \<open>Synthesis_Parse ?in _\<close> \<Rightarrow> \<open>Synthesis_Parse ?in _\<close> (100)]]
+
 lemma \<phi>synthesis:
   \<open> PROP sequent
 \<Longrightarrow> PROP DoSynthesis X sequent result
@@ -577,7 +579,6 @@ lemma [\<phi>reason 10
       the \<phi>-type unspecified to be arbitrarily anything.\<close>
   unfolding Synthesis_Parse_def ..
 
-
 lemma [\<phi>reason 20
   for \<open>Synthesis_Parse (numeral ?n::?'bb::numeral) ?X\<close>
       \<open>Synthesis_Parse (0::?'cc::zero) ?X\<close>
@@ -590,6 +591,14 @@ lemma [\<phi>reason 20
       unspecified by user, the input is regarded as of natural number type.\<close>
   unfolding Synthesis_Parse_def
   ..
+
+lemma [\<phi>reason 20 for \<open>Synthesis_Parse (?T :: ?'ret2 \<Rightarrow> (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
+  \<open> Synthesis_Parse T (\<lambda>ret. x \<Ztypecolon> T ret :: assn) \<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason 20 for \<open>Synthesis_Parse (?T :: (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
+  \<open> Synthesis_Parse T (\<lambda>ret. x \<Ztypecolon> T :: assn) \<close>
+  unfolding Synthesis_Parse_def ..
 
 
 subsubsection \<open>Tagging the target of a synthesis rule\<close>
@@ -1686,7 +1695,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
   end)\<close>
 
 (*access local value or variable or any generic variables*)
-\<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)  \<open>
+\<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- (Parse.short_ident || Parse.long_ident || Parse.number)
   >> (fn var => fn () =>
     let
