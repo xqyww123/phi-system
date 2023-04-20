@@ -229,15 +229,9 @@ fun gen_define def_const (binding,attrs) (lthy0,sequent0) =
                   |> rpair (rename lthy_x (norm_def lthy_x arity_ins def) sequent)
                 )
 
-    (*val sequent = sequent
-          |> Raw_Simplifier.rewrite_rule lthy @{thms atomize_imp}
-          |> Raw_Simplifier.rewrite_rule lthy
-              (Proof_Context.get_thms lthy "Phi_Sys.final_proc_rewrite")
-          |> Raw_Simplifier.rewrite_rule lthy
-              (Proof_Context.get_thms lthy "Phi_Sys.final_proc_rewrite2") *)
   in lthy |> Local_Theory.notes_kind procedure_kind
                 [((proc_binding,attrs), [([sequent''],[])])]
-          |> apfst (fn [(_,[sequent''''])] => sequent'''')
+          |> apfst (fn [(_,[sequent'4])] => sequent'4)
           |> swap
   end
 

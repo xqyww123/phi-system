@@ -272,7 +272,7 @@ lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method
             (Trueprop (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P))
             working_mode_implication
-            (\<And>\<CC>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> X) \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> Y \<s>\<u>\<b>\<j> P)
+            (\<And>\<CC>c. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> X) \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> Y \<s>\<u>\<b>\<j> P)
             (Trueprop True)
             (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
@@ -283,7 +283,7 @@ lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X 
   \<open> PROP \<phi>Programming_Method
             (Trueprop (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y))
             working_mode_implication
-            (\<And>\<CC>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> X) \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> Y \<s>\<u>\<b>\<j> True)
+            (\<And>\<CC>c. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> X) \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> Y \<s>\<u>\<b>\<j> True)
             (Trueprop True)
             (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
@@ -293,7 +293,7 @@ lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method
             (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P))
             working_mode_view_shift
-            (\<And>\<CC> \<RR>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<v>\<i>\<e>\<w> \<CC> [\<RR>] \<i>\<s> X) \<Longrightarrow> \<v>\<i>\<e>\<w> \<CC> [\<RR>] \<i>\<s> Y \<s>\<u>\<b>\<j> P)
+            (\<And>\<CC>c \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> X) \<Longrightarrow> \<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> Y \<s>\<u>\<b>\<j> P)
             (Trueprop True)
             (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
@@ -303,7 +303,7 @@ lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X 
   \<open> PROP \<phi>Programming_Method
             (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y))
             working_mode_view_shift
-            (\<And>\<CC> \<RR>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<v>\<i>\<e>\<w> \<CC> [\<RR>] \<i>\<s> X) \<Longrightarrow> \<v>\<i>\<e>\<w> \<CC> [\<RR>] \<i>\<s> Y \<s>\<u>\<b>\<j> True)
+            (\<And>\<CC>c \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> X) \<Longrightarrow> \<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> Y \<s>\<u>\<b>\<j> True)
             (Trueprop True)
             (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
@@ -313,7 +313,7 @@ lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method
             (Trueprop (\<p>\<r>\<o>\<c> G \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
             working_mode_procedure
-            (\<And>\<SS> \<RR>. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<SS> [\<RR>] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> X) \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> G \<o>\<n> \<SS> [\<RR>] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E)
+            (\<And>\<SS>s \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<SS>s [\<RR>r] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> X) \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> G \<o>\<n> \<SS>s [\<RR>r] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E)
             (Trueprop True)
             (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def

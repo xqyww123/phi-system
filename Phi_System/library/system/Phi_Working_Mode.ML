@@ -198,9 +198,16 @@ fun finish_proc hyp (_,sequent) =
       |> (fn th => th COMP @{thm \<phi>reassemble_proc_final})
   end
 
+structure Nested_Proc_Idx = Proof_Data (
+  type T = int
+  val init = K 0
+)
+
 fun initialize_sequent_procedure arg ctxt =
   let open Phi_Syntax
-    val ([blk_name, RR],ctxt) = Variable.add_fixes ["\<SS>", "\<RR>"] ctxt
+    val idx = string_of_int (Nested_Proc_Idx.get ctxt)
+    val ([blk_name, RR],ctxt) = Variable.add_fixes ["\<SS>"^idx, "\<RR>"^idx] ctxt
+                             |> apsnd (Nested_Proc_Idx.map (fn i => i + 1))
     val stat_var = Free (blk_name, \<^typ>\<open>resource\<close>)
     val ctxt = Variable.declare_constraints stat_var ctxt
     val init = Const(\<^const_name>\<open>CurrentConstruction\<close>,
