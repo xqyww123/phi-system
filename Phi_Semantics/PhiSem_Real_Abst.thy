@@ -4,9 +4,6 @@ begin
 
 chapter \<open>Abstract Real Numbers\<close>
 
-no_notation inter (infixl "Int" 70)
-        and union (infixl "Un" 65)
-
 section \<open>Semantics\<close>
 
 subsection \<open>Type\<close>
@@ -164,8 +161,6 @@ lemma [\<phi>reason 1210
 subsubsection \<open>Integer Arithmetic\<close>
 
 paragraph \<open>Addition\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_add_areal_\<phi>app
   [\<phi>overload add,

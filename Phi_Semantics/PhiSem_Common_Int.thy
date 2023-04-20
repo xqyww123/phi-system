@@ -13,7 +13,8 @@ let val remove_synt = Sign.notation false Syntax.mode_default [
     (Const (\<^const_abbrev>\<open>inter\<close>, dummyT), Infixl (Input.string "Int", 70, Position.no_range)),
     (Const (\<^const_abbrev>\<open>union\<close>, dummyT), Infixl (Input.string "Un", 65, Position.no_range)),
     (Const (\<^const_name>\<open>Nats\<close>, dummyT), Mixfix (Input.string "\<nat>", [], 1000, Position.no_range)),
-    (Const (\<^const_name>\<open>Ints\<close>, dummyT), Mixfix (Input.string "\<int>", [], 1000, Position.no_range))
+    (Const (\<^const_name>\<open>Ints\<close>, dummyT), Mixfix (Input.string "\<int>", [], 1000, Position.no_range)),
+    (Const ("Real_Vector_Spaces.Reals", dummyT), Mixfix (Input.string "\<real>", [], 1000, Position.no_range))
   ]
 in remove_synt
 #> Theory.at_begin (fn thy =>
