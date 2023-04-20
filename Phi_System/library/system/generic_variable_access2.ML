@@ -132,7 +132,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
            ) (SOME ~1)
         |> apsnd (fn th => th RS @{thm conjunct1})
 
-  in if null vterms
+  in if null vterms andalso null decl'
      then (ctxt, @{thm "\<phi>__Return_rule__"[OF view_shift_refl]} RS proc)
               |> Phi_Sys.accept_proc
      else let
@@ -144,43 +144,59 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
                |> fold (fn v => fn prem => Drule.beta_conv (Thm.dest_arg prem) v) vterms
                |> strip_imp_prems_rev []
 
-      (*Now we change the goal of the programming context to add the *)
+      (*Now we change the goal of the programming context to add the newly generated items if any *)
       val (_,arg_spec,ret_spec,E_spec) = Phi_Syntax.dest_procedure_c proc_cterm
-      val goal = Phi_Envir.get_thesis ctxt
-      val (trueprop, goal_term) = Thm.dest_comb goal
-      val ((goal_Pending, goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
-      fun instantiate_R inst spec =
-        let
-          fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
-            | left_most X = X
-          val spec' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) spec
-          fun err () = error "At least one of the assignment rules is not configured properly."
-          val inst_ty = case Thm.typ_of_cterm inst
-                          of \<^Type>\<open>fun \<^Type>\<open>\<phi>arg _\<close> _\<close> =>
-                                  Thm.dest_ctyp0 (Thm.dest_ctyp0 (Thm.ctyp_of_cterm inst))
-                           | _ => err ()
-          val (R, tv) = case (case Thm.term_of spec'
-                                of Abs (_,_,X) => left_most X |> dest_comb |> fst
-                                 | X => left_most X)
-                          of Var (R, \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<open>TVar tv\<close>\<close> _\<close>) => (R,tv)
-                           | _ => err ()
-        in spec'
-        |> Thm.instantiate_cterm (TVars.make [(tv,inst_ty)], Vars.make [((R, Thm.typ_of_cterm inst), inst)])
-        end
-      val goal_ret' = instantiate_R goal_ret ret_spec
-      (*  val goal_E'   = instantiate_R goal_E   E_spec *)
-      val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_Pending goal_ret') goal_E)
-      val ctxt = Phi_Envir.put_thesis goal' ctxt
+      val ctxt =
+        if is_Var (Thm.term_of ret_spec) andalso is_Var (Thm.term_of E_spec)
+        then ctxt
+        else let  
+          val goal = Phi_Envir.get_thesis ctxt
+          val (trueprop, goal_term) = Thm.dest_comb goal
+          val ((goal_Pending, goal_ret), goal_E) = Thm.dest_comb goal_term |> apfst Thm.dest_comb
+          fun instantiate_R inst spec =
+            let
+              fun left_most (Const (\<^const_name>\<open>times\<close>, _) $ A $ _) = left_most A
+                | left_most X = X
+              val spec' = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm goal) spec
+              fun err () = error "At least one of the assignment rules is not configured properly."
+              val inst_ty = case Thm.typ_of_cterm inst
+                              of \<^Type>\<open>fun \<^Type>\<open>\<phi>arg _\<close> _\<close> =>
+                                      SOME (Thm.dest_ctyp0 (Thm.dest_ctyp0 (Thm.ctyp_of_cterm inst)))
+                               | \<^Type>\<open>fun \<^typ>\<open>ABNM\<close> _\<close> => NONE
+                               | _ => err ()
+              val (R, tv) = case (case Thm.term_of spec'
+                                    of Abs (_,_,X) => left_most X |> dest_comb |> fst
+                                     | X => left_most X)
+                              of Var (R, \<^Type>\<open>fun \<^Type>\<open>\<phi>arg \<open>TVar tv\<close>\<close> _\<close>) => (R, SOME tv)
+                               | Var (R, \<^Type>\<open>fun \<^typ>\<open>ABNM\<close> _\<close>) => (R, NONE)
+                               | _ => err ()
+              val tyinsts = case (tv, inst_ty)
+                              of (SOME a, SOME b) => TVars.make [(a,b)]
+                               | (NONE, NONE) => TVars.empty
+                               | _ => err ()
+            in spec'
+            |> Thm.instantiate_cterm (tyinsts, Vars.make [((R, Thm.typ_of_cterm inst), inst)])
+            end                        
+          val goal_ret' = instantiate_R goal_ret ret_spec
+          val goal_E'   = instantiate_R goal_E E_spec
+          val goal' = Thm.apply trueprop (Thm.apply (Thm.apply goal_Pending goal_ret') goal_E')
+          in Phi_Envir.put_thesis goal' ctxt end
 
       (*declare every hypothesis*)
-      val (Hs,ctxt) = Assumption.add_assms Assumption.presume_export (rev rev_hyps) ctxt
+      val (Hs,ctxt) =
+        if null rev_hyps
+        then ([], ctxt)
+        else Assumption.add_assms Assumption.presume_export (rev rev_hyps) ctxt
       val ctxt = fold2 (fn H => fn D => D H) Hs decl ctxt
 
       (*make the new initial sequent*)
       val (ctxt, sequent') = Phi_Working_Mode.initialize_sequent_procedure arg_spec ctxt
 
       (*insert a normalization of the abnormal spec before any exporting*)
-      val (_, ctxt) = Assumption.add_assms (fn _ => fn _ =>
+      val (_, ctxt) =
+        if is_Var (Thm.term_of E_spec) 
+        then ([], ctxt)
+        else Assumption.add_assms (fn _ => fn _ =>
                 ((fn sequentx => #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx)
                                     |> Phi_Reasoners.safer_obligation_solver1
                                     |> snd),

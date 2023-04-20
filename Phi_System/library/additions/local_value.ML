@@ -111,7 +111,7 @@ fun value_assigner b (ctxt,_) =
 
 
 (*An optimization if all assignments are to values*)
-fun value_optimization bs stat =
+fun optimized_value_assign bs stat =
   let
     fun fast_assign bs (ctxt, sequent) =
       let
@@ -145,7 +145,7 @@ fun value_optimization bs stat =
 val _ = Theory.setup (
    Generic_Variable_Access.register_assigner
       ("val", \<^type_name>\<open>valname\<close>, "to declare a new local value", (value_assigner_id, value_assigner))
-#> Context.theory_map (Generic_Variable_Access.Assignment_Hooks.add 100 value_optimization)
+#> Context.theory_map (Generic_Variable_Access.Assignment_Hooks.add 100 optimized_value_assign)
 )
 
 end
