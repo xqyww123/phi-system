@@ -140,7 +140,7 @@ proc "if":
 
 
 subsection \<open>Loops\<close>
-
+ 
 lemma "__DoWhile__rule_\<phi>app":
   " \<p>\<r>\<o>\<c> body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<v>\<a>\<l> P x' \<Ztypecolon> \<bool>) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_do_while body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> X x' \<s>\<u>\<b>\<j> x'. \<not> P x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E "
@@ -160,7 +160,7 @@ lemma "__DoWhile__rule_\<phi>app":
     qed
     apply fastforce
     by blast .
-
+  
 proc (nodef) do_while:
 assumes \<open>\<p>\<a>\<r>\<a>\<m> ( X' x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
     and V: \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<a>\<n>\<d> Any @action ToSA\<close>

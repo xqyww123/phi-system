@@ -54,7 +54,7 @@ signature PHI_TOPLEVEL = sig
 
   val statement_clean_values : bool Config.T (*controls whether the statement command \<^bold>;
         cleans all values at its beginning.*)
-  val statement_cmd : (Proof.state -> Proof.state) parser
+  val statement_cmd : int * int -> (Proof.state -> Proof.state) parser
 
   structure Begining_of_Statement : HOOKS
   structure End_of_Statement : HOOKS
@@ -286,7 +286,9 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
           "" NONE after_qed []
           (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems)
           [(Binding.empty_atts, [(goal',[])])] |> #2
-      |> Proof.map_context (Proof_Context.set_mode Proof_Context.mode_default)
+      |> Proof.map_context (
+               Proof_Context.set_mode Proof_Context.mode_default
+            #> Phi_ID.step_in)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC all_tac), Position.no_range))
       |> Seq.the_result "never fail"
@@ -424,7 +426,7 @@ val end_block = gen_finish_proc (K I) Proof.local_qed
 end
 
 val previous_statement_is_finished' =
-      Config.declare_bool ("Phi_Toplevel.previous_statement_is_finished", \<^here>) (K true)
+      Config.declare_bool ("Phi_Toplevel.previous_statement_is_finished", \<^here>) (K false)
 (* It is false iff the previous statement is ended by a proof meaning the intended construction
    of the previous statement is interrupted by a pending proof so not finished.
  *)
@@ -446,7 +448,6 @@ fun prove_prem int after_qed'' stat =
              |> after_qed''
       end
   in stat
-  |> Proof.map_context Phi_Envir.freeze_dynamic_lemmas
   |> Phi_Sys.obligation_proof (print_results int) Proof_Context.mode_schematic ""
         NONE after_qed [] [] sequent
   end
@@ -554,9 +555,10 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
   in
     lthy |> Specification.schematic_theorem false "" NONE after_qed Binding.empty_atts
               includes elems concls int
-         |> Proof.map_context (
-              Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)
-            #>Procedure_Building_Envir.put (SOME (fst binding))
+         |> Proof.map_context (fn ctxt =>
+              ctxt |> Phi_ID.set_construct (Binding.name_of (fst binding))
+                   |> Context.proof_map (Named_Theorems.clear \<^named_theorems>\<open>\<phi>lemmata\<close>)
+                   |> Procedure_Building_Envir.put (SOME (fst binding))
             )
          |> Proof.refine (Method.Basic (K (K (fn s => s
               |> Named_Premises.bind_sequent_assms (map (apsnd snd) preconds) 1
@@ -590,15 +592,31 @@ fun clean_values (ctxt,sequent) =
       then (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst)
       else (ctxt, sequent)
 
-val statement_cmd =
-  Phi_Processor.powerful_process_p 3 (Phi_Envir.map_state_sequent (End_of_Statement.invoke ()))
-    >> (fn process => fn stat =>
-    stat 
-     |> Phi_Envir.map_state_sequent (Begining_of_Statement.invoke ())
-     |> process
+fun statement_cmd auto_lev =
+  Phi_Processor.powerful_process_p auto_lev (
+                           Phi_Envir.map_state_sequent (End_of_Statement.invoke ()))
+    >> (fn process =>
+              Phi_Envir.map_state_sequent (Begining_of_Statement.invoke ())
+           #> process
      (*the return of the process doesn't mean the end of the construction because the construction
        can be interrupted and suspended by proofs.*)
   )
+
+val _ = previous_statement_is_finished'
+
+fun statement_cmd_begining auto_lev =
+  statement_cmd auto_lev >> (fn f =>
+       Proof.map_context (Config.put previous_statement_is_finished' false)
+    #> f)
+
+fun statement_cmd_tail auto_lev toks =
+  (statement_cmd auto_lev >> (fn f => fn s =>
+      if Phi_Envir.under_programming_environ (Proof.context_of s)
+      then f s
+      else if null toks orelse Token.is_eof (hd toks)
+           then s
+           else error "The construction has ended but a statement is given")) toks
+
 
 val _ = Theory.setup (Context.theory_map (
    Begining_of_Statement.add 50 (K clean_values)
@@ -664,6 +682,20 @@ val def_const_flag =
 val modifier  = (Parse.attribs >> Mod_by_Attr) || (Parse.thm >> Mod_by_Rule)
 val modifiers = repeat (\<^keyword>\<open>is\<close> |-- modifier)
 
+(*
+fun phi_proof step_in prf tr =
+  let (*val pos = Toplevel.pos_of tr*)
+      (*val doc_id = case Position.id_of (Toplevel.pos_of tr)
+                     of SOME id => @{print} id
+                      | _ => Exn.error "internal bug #vcj4i[10th;ji"*)
+   in Toplevel.proof' (fn int => fn stat =>
+        stat |> Proof.map_context step_in (*(fn ctxt =>
+                  let val ctxt' = step_in ctxt
+                   in Phi_Cache_DB.check_cache doc_id ctxt';
+                      ctxt'
+                  end)*)
+             |> prf int ) tr end *)
+
 in
 
 val _ =
@@ -704,7 +736,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (statement_cmd >> Toplevel.proof)
+    (statement_cmd (3,3) >> (fn f => Toplevel.proof (f o Proof.map_context Phi_ID.next)))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
@@ -712,21 +744,23 @@ val _ =
      -- optional (\<^keyword>\<open>premises\<close> |--
             and_list ((binding -- opt_attribs || attribs >> pair Binding.empty) -- ppats)) []
       >> begin_block_cmd)
-   -- Phi_Processor.powerful_process_p_inert (3,1) I)
-   >> (fn (blk,prcs) => Toplevel.proof' (prcs oo blk)))
+   -- statement_cmd_begining (3,1))
+   >> (fn (blk,prcs) => Toplevel.proof' (fn int => prcs o blk int o Proof.map_context Phi_ID.next)))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
     (option (\<^keyword>\<open>for\<close> |-- term) --| Scan.option \<^keyword>\<open>affirm\<close>
-      >> (Toplevel.proof' o end_block_cmd))
+      >> (fn opt => Toplevel.proof' (fn int =>
+            end_block_cmd opt int o Proof.map_context Phi_ID.next)))
 
 val _ = let
   fun repeat_future_proof s =
     if Proof.goal_finished s then s
-    else s
-      |> Proof.using_facts (Proof_Context.get_thms (Proof.context_of s) "\<phi>")
-      |> Proof.local_future_terminal_proof
-          ((Method.Basic (SIMPLE_METHOD o CHANGED_PROP o auto_tac), Position.no_range), NONE)
+    else let val id = Option.map Phi_ID.encode (Phi_ID.get_if_is_named (Proof.context_of s))
+             val meth = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (fn sequent =>
+                  Phi_Sledgehammer_Solver.auto id (ctxt, @{thm Premise_D[where mode=default]} RS sequent))))
+          in Proof.local_future_terminal_proof ((meth, Position.no_range), NONE) s
+         end
   fun repeat_future_proof0 s =
     if Proof.goal_finished s
     then Proof.local_done_proof s
@@ -736,9 +770,10 @@ in
     (((option (\<^keyword>\<open>for\<close> |-- term) >> (fn cast => fn int => fn stat =>
        stat
     |> end_block_cmd cast int
-    |> repeat_future_proof0))
-   -- Phi_Processor.powerful_process_p_inert (3,1) I)
-   >> (fn (blk,prcs) => Toplevel.proof' (fn int => prcs o blk int)))
+    |> repeat_future_proof0 ))
+   -- statement_cmd_tail (3,1))
+   >> (fn (blk,tail_statement) => Toplevel.proof' (fn int =>
+        tail_statement o Proof.map_context Phi_ID.next o blk int o Proof.map_context Phi_ID.next)))
 end
 
 (* val _ =

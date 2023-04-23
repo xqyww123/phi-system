@@ -68,8 +68,8 @@ definition \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi
   where [\<phi>defs]: \<open>\<phi>Fun f x = { f x }\<close>
 
 lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x
-\<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>Fun f\<close>
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x 
+\<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>Fun f\<close> 
   \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<phi>Fun f\<close> \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200]:

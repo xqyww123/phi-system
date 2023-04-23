@@ -46,10 +46,30 @@ subsection \<open>Helper ML\<close>
 ML_file \<open>library/tools/Phi_Help.ML\<close>
 ML_file \<open>library/syntax/helps.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
+ML_file \<open>library/system/Phi_Envir0.ML\<close>
+ML_file \<open>library/system/Phi_ID.ML\<close>
+ML_file \<open>library/tools/cache_file.ML\<close>
+
+ML_file \<open>library/tools/Hasher.ML\<close>
+
+
+(*
+A JSON lib. Maybe one day in the cache file we will use JSON (or better some K-V data base)
+instead of XML. I'm thinking of the performance of the XML, particularly we have a lot of
+`<` and `>` symbols. Need some tests.
+
+ML_file \<open>contrib/sml-json/json.sig\<close>
+ML_file \<open>contrib/sml-setmap/map/MONO_MAP.sig\<close>
+ML_file \<open>contrib/sml-setmap/map/OrderMapImpl.sml\<close>
+ML_file \<open>contrib/sml-setmap/map/OrderMap.sml\<close>
+ML_file \<open>contrib/sml-setmap/map/StringMap.sml\<close>
+ML_file \<open>contrib/sml-json/json.sml\<close> *)
 
 subsection \<open>Helper Lemmas\<close>
 
 lemma imp_implication: "(P \<longrightarrow> Q \<Longrightarrow> PROP R) \<equiv> ((P \<Longrightarrow> Q) \<Longrightarrow> PROP R)" by rule simp+
+
+ML_file \<open>library/tools/help_lemmas.ML\<close>
 
 subsection \<open>Helper Attributes \& Tactics\<close>
 

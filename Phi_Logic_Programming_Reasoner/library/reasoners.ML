@@ -1,8 +1,11 @@
 signature PHI_REASONERS = sig
-  exception Attemption_Fail of Proof.context * thm
+
+  exception Automation_Fail of (Proof.context * thm) option
+  val error_message : (Proof.context * thm) option -> string
 
   val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
   val auto_obligation_solver : Proof.context -> thm -> thm Seq.seq
+  val auto_obligation_solver_opt :  Proof.context * thm -> (Proof.context * thm) option
   val auto_obligation_solver' : (Proof.context * thm -> Proof.context * thm) (*failure callback*)
                               -> Proof.context * thm -> Proof.context * thm
   val auto_obligation_solver1 : Proof.context * thm -> Proof.context * thm
@@ -24,7 +27,20 @@ open Thm Term
 
 (** Preliminary **)
 
-exception Attemption_Fail of Proof.context * thm
+exception Automation_Fail of (Proof.context * thm) option
+
+fun error_message err =
+      Pretty.string_of (Pretty.chunks (
+        Pretty.str "Fail to solve the proof obligation automatically" ::
+        (case err of SOME (ctxt, sequent) =>
+            (case Thm.prems_of sequent
+               of (x::_)
+                    => [Syntax.pretty_term ctxt x]
+                | _ => [])
+                   | NONE => [])
+      ))
+
+
 
 fun wrap tac (ctxt,thm) = tac ctxt thm |> Seq.map (pair ctxt)
 
@@ -75,34 +91,41 @@ fun context_tactic_to_state_transition tac fail (ctxt, sequent) =
     of SOME (th', _) => (ctxt, th')
      | NONE => fail (ctxt, sequent)
 
+fun context_tactic_to_state_transition_opt tac (ctxt, sequent) =
+  case Seq.pull (tac ctxt sequent)
+    of SOME (th', _) => SOME (ctxt, th')
+     | NONE => NONE
+
 (*** Premise tac ***)
 
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
 fun auto_obligation_solver ctxt th =
-  case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
-    of SOME (_, \<^const>\<open>True\<close>) => Seq.single (@{thm Premise_True} RS th)
-     | SOME _ => raw_auto ctxt th
-     | NONE => Seq.empty
+  case major_prem_of th
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+          Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _)) =>
+            Seq.single (@{thm Premise_True} RS th)
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>True\<close>, _) =>
+          Seq.single (@{thm TrueI} RS th)
+     | _ => raw_auto ctxt th
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
+val auto_obligation_solver_opt = context_tactic_to_state_transition_opt auto_obligation_solver
 
-fun auto_obligation_solver1 (ctxt,sequent) =
-  case Thm.major_prem_of sequent
-    of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
+fun auto_obligation_solver1 (ctxt,sequent) =  (
         Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
             Pretty.str "Solving the following goal using \<open>auto\<close> method...",
-            Syntax.pretty_term ctxt Goal,
+            Syntax.pretty_term ctxt (Thm.major_prem_of sequent),
             Pretty.block (Pretty.here \<^here>)
         ]);
         auto_obligation_solver' (fn _ =>
-          error (Pretty.string_of (Pretty.chunks [
+          raise Automation_Fail (SOME (ctxt,sequent))
+          (*error (Pretty.string_of (Pretty.chunks [
               Pretty.str "Fail to solve the proof obligation automatically:",
               Syntax.pretty_term ctxt Goal
-        ]))) (ctxt,sequent)
+            ])) *)
+        ) (ctxt,sequent)
      )
-     | _ => raise THM ("auto_obligation_solver1: The leading antecedent of the given sequent \
-              \is not a proof obligation.", 1, [sequent])
 
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
@@ -114,6 +137,7 @@ fun safer_obligation_solver ctxt th =
      | NONE => Seq.single th
 
 val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver
+val safer_obligation_solver_opt = context_tactic_to_state_transition_opt safer_obligation_solver
 
 fun safer_obligation_solver1 (ctxt,sequent) =
   case Thm.major_prem_of sequent

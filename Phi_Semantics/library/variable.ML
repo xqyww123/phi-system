@@ -104,7 +104,7 @@ val _ = Theory.setup (
                                                 \<^pattern_prop>\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>]
     (fn (ctxt,sequent) => \<^keyword>\<open>var\<close> |--
                 Parse.list1 (Parse.list1 Parse.binding -- Scan.option (\<^keyword>\<open>::\<close> |-- Parse.term))
-     >> (fn raw_vars => fn () =>
+     >> (fn raw_vars => fn _ =>
       let
         val require_type = Config.get ctxt variable_is_typed
         val assigners = split_list raw_vars

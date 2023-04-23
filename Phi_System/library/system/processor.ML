@@ -5,14 +5,17 @@
    of IDE-CP.
 *)
 
-signature NU_PROCESSOR = sig
+signature PHI_PROCESSOR = sig
+
   type binding = Binding.binding
+  type processing_id = int (*Unique id of each runtime processing in a statement*)
+
   exception Bypass of context_state option
   exception Terminate_Process of context_state * ((Proof.state -> Proof.state) (*continue*) -> Proof.state -> Proof.state) option
   exception ProcessFail of binding * context_state * exn
   exception Process_State_Call  of context_state * (Proof.state -> Proof.state)
   exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
-  type proc = (context_state -> (unit -> context_state) parser)
+  type proc = (context_state -> (processing_id -> context_state) parser)
 
   val trace : bool Config.T
 
@@ -30,10 +33,9 @@ signature NU_PROCESSOR = sig
   val simple_process   : context_state -> context_state parser
   val powerful_process : (Proof.state -> Proof.state) (*continue*)
                       -> Token.T list -> Proof.state -> Proof.state
-  val powerful_process_p : int (*auto-level*) -> (Proof.state -> Proof.state) (*continue*)
-                        -> (Proof.state -> Proof.state) parser
-  val powerful_process_p_inert : int (*auto-level*) * int -> (Proof.state -> Proof.state) (*continue*)
-                              -> (Proof.state -> Proof.state) parser
+  val powerful_process_p : int (*auto-level*) * int (*auto-level when no user input*)
+                       -> (Proof.state -> Proof.state) (*continue*)
+                       -> (Proof.state -> Proof.state) parser
                       (*if the input is empty, then powerful_process_p_inert does nothing*)
   val process_by_input : int (*auto-level*) -> Token.T list -> context_state -> context_state
   val process_no_input : int (*auto-level*) -> context_state -> context_state
@@ -60,11 +62,14 @@ signature NU_PROCESSOR = sig
   val simplifier : proc
 end
 
-structure Phi_Processor : NU_PROCESSOR = struct
+structure Phi_Processor : PHI_PROCESSOR = struct
 open Thm Phi_Envir
 
 exception Bypass of context_state option
+
 type binding = Binding.binding
+type processing_id = int
+
 exception Terminate_Process  of context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
 exception Terminate_Process' of Token.T list * context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
 exception ProcessFail of binding * context_state * exn
@@ -73,7 +78,7 @@ exception Process_State_Call of context_state * (Proof.state -> Proof.state)
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_processing\<close> (K false);
 
-type proc = context_state -> (unit -> context_state) parser
+type proc = context_state -> (processing_id -> context_state) parser
 
 datatype 'a pattern = Whole_Prop of 'a | Concl of 'a | Premise of 'a
 
@@ -134,7 +139,9 @@ val list = Data.get #> Name_Space.dest_table
 fun wrap_attr (proc:proc) : attribute parser =
   Parse.args >> (fn toks => fn (ctxt, thm) =>
       (proc (Context.proof_of ctxt, thm) --| Scan.catch Parse.eof) toks
-              |> fst |> (fn f => f () |> apfst (SOME o Context.Proof) |> apsnd SOME))
+              |> (fn (f,_) => f 0
+                           |> apfst (SOME o Context.Proof)
+                           |> apsnd SOME))
 
 
 fun defined ctxt name =
@@ -160,21 +167,21 @@ exception Processed of (context_state * Token.T list)
 fun eof_wrap parse [] = (fst (parse [Token.eof]), [])
   | eof_wrap parse toks = parse toks
 
-fun process_impl procs (stat,toks) limit =
+fun process_impl procs (stat,toks) step_num =
       let
         val stat' = fold (fn (_, Processor {binding, pattern, proc,...}) => fn (ctxt,sequent) =>
           if exists (fn pat =>
                 matches (Proof_Context.theory_of ctxt) pat (Thm.prop_of sequent)
              ) pattern
           then let
-            val _ = if limit > 1000 then error "too deep process" else ();
+            val _ = if step_num > 1000 then error "too deep process" else ();
             val (execute,toks) =
               eof_wrap (proc (ctxt,sequent) || (fn _ => raise Bypass NONE)) toks
             val _ = if Config.get ctxt trace
                     then tracing ("\<phi>process: " ^ Binding.print binding)
                     else ()
             in
-            raise Processed (execute(), toks)
+            raise Processed (execute step_num, toks)
               handle Process_State_Call (meta,f) => raise Process_State_Call' (toks,meta,f)
                    | Terminate_Process (stat,f) => raise Terminate_Process' (toks,stat,f)
             end handle Bypass NONE => (ctxt,sequent)
@@ -184,7 +191,7 @@ fun process_impl procs (stat,toks) limit =
           else (ctxt,sequent)) procs stat
       in (stat',toks)
       end
-      handle Processed stat_toks => process_impl procs stat_toks (limit + 1)
+      handle Processed stat_toks => process_impl procs stat_toks (step_num + 1)
         | NDBG sequent => ((fst stat, sequent),[Token.eof])
 
 fun internal_process (ctxt,sequent) toks =
@@ -232,11 +239,7 @@ fun powerful_process_p_internal' lev continue toks s =
        then s
        else error "Not in the \<phi> programming environment"
 
-fun powerful_process_p lev continue toks =
-      (powerful_process_p_internal' lev continue toks
-      ,if Token.is_eof (hd toks) then [Token.eof] else [])
-
-fun powerful_process_p_inert (lev1,lev2) continue toks =
+fun powerful_process_p (lev1,lev2) continue toks =
       (if Token.is_eof (hd toks)
        then (if lev2 < 0 then I else powerful_process_p_internal' lev2 continue toks)
        else powerful_process_p_internal' lev1 continue toks

@@ -6,6 +6,9 @@ Basic supports for the nu-system.
 infix 0 MP MP_BY
 
 signature PHI_ENVIR = sig
+
+  include PHI_ENVIR
+
   exception NDBG of thm
 
   val under_programming_environ : Proof.context -> bool
@@ -38,7 +41,7 @@ signature PHI_ENVIR = sig
 end
 
 structure Phi_Envir : PHI_ENVIR = struct
-open Thm Term HOLogic Phi_Help
+open Thm Term HOLogic Phi_Help Phi_Envir
 exception NDBG of thm
 
 structure Programming_Sequent = Proof_Data (
