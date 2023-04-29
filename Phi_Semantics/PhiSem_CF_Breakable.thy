@@ -8,7 +8,7 @@ text \<open>Since we have \<^verbatim>\<open>break\<close> and \<^verbatim>\<ope
   guard, and termination condition.\<close>
 
 proc while:
-  assumes \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> End: termination x)\<close>
+  requires \<open>\<p>\<a>\<r>\<a>\<m> (X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> End: termination x)\<close>
   and S: \<open>U \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) @action ToSA\<close>
   and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. invariant x \<and> \<not> cond x \<longrightarrow> termination x)\<close>
   and C: "\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x \<Longrightarrow>

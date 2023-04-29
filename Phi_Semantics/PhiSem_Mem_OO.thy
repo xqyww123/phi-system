@@ -266,7 +266,7 @@ lemma op_obj_load_field_raw_\<phi>app:
   by (rule \<phi>M_getV_ref, rule, rule \<phi>SEQ, rule \<phi>M_assert, simp, rule, simp add: Identity_expn)
 
 proc (nodef) op_obj_load_field:
-  assumes A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
   output \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> \<v>\<a>\<l> x \<Ztypecolon> T\<close>
   \<medium_left_bracket> \<open>obj: _\<close> to Identity \<exists>v
@@ -294,8 +294,8 @@ lemma op_obj_store_field_raw_\<phi>app:
 
 
 proc (nodef) op_obj_store_field:
-  assumes A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  assumes B: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
+  requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
+  requires B: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> T \<heavy_comma> \<v>\<a>\<l> ref \<Ztypecolon> Ref cls \<heavy_comma> \<v>\<a>\<l> y \<Ztypecolon> U\<close>
   output \<open>y \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> U\<close>
   \<medium_left_bracket> to Identity \<exists>u
