@@ -62,14 +62,14 @@ lemma SemDoWhile_deterministic2:
 
 subsection \<open>Recursion\<close>
 
-inductive SemRec :: "(('a,'a) proc' \<Rightarrow> ('a,'a) proc')
-            \<Rightarrow> 'a \<phi>arg \<Rightarrow> resource \<Rightarrow> 'a comp set \<Rightarrow> bool"
+inductive SemRec :: "(('a,'b) proc' \<Rightarrow> ('a,'b) proc')
+            \<Rightarrow> 'a \<phi>arg \<Rightarrow> resource \<Rightarrow> 'b comp set \<Rightarrow> bool"
 where
   SemRec_I0: "(\<And>g. F g x res = y) \<Longrightarrow> SemRec F x res y"
 | SemRec_IS: "SemRec (F o F) x res y \<Longrightarrow> SemRec F x res y"
 
-definition op_fix_point :: "(('a,'a) proc' \<Rightarrow> ('a,'a) proc')
-                         \<Rightarrow> ('a,'a) proc'"
+definition op_fix_point :: "(('a,'b) proc' \<Rightarrow> ('a,'b) proc')
+                         \<Rightarrow> ('a,'b) proc'"
   where "op_fix_point F x s = (if (\<exists>t. SemRec F x s t) then The (SemRec F x s) else {})"
 
 

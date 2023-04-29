@@ -1501,7 +1501,7 @@ lemma [\<phi>reason 1250]:
          \<lbrace> R1 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> A (\<phi>V_snd ret)\<heavy_comma> B (\<phi>V_fst ret) \<brangle> \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @action synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
-    F1 F2 \<medium_right_bracket> .. .
+    F1 F2  \<medium_right_bracket> .. .
 
 lemma [\<phi>reason 1230]:
   \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> A \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis

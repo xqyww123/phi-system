@@ -2,6 +2,7 @@ signature PHI_WORKING_MODE = sig
 
 type working_mode = {
   name: string,
+  domain: term -> bool,
   is_on_going_construction: term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term (*the BI assertion*),
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
@@ -35,6 +36,8 @@ val get_by_name1 : Context.generic -> string -> working_mode
 val set  : working_mode -> Proof.context -> Proof.context
 val mode  : Proof.context -> working_mode option
 val mode1 : Proof.context -> working_mode
+val mode_of  : Context.generic -> term -> working_mode option
+val mode_of1 : Context.generic -> term -> working_mode
 
 val cast : cterm -> Proof.context * thm -> Proof.context * thm
 val cast_exception : cterm -> Proof.context * thm -> Proof.context * thm
@@ -47,6 +50,7 @@ structure Phi_Working_Mode : PHI_WORKING_MODE = struct
 
 type working_mode = {
   name: string,
+  domain: term -> bool,
   is_on_going_construction: term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term,
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
@@ -73,6 +77,15 @@ fun get_by_name1 ctxt name =
   case get_by_name ctxt name
     of SOME X => X
      | NONE => error ("No such registered mode: "^name)
+
+fun mode_of ctxt term =
+  Symtab.get_first (fn (_,m) => if #domain m term then SOME m else NONE)
+                   (Data.get ctxt)
+
+fun mode_of1 ctxt term =
+  case mode_of ctxt term
+    of SOME ret => ret
+     | NONE => raise TERM ("No mode scopes term", [term])
 
 fun register wms = Data.map (fold (fn wm => Symtab.update_new (#name wm, wm)) wms)
 
@@ -169,9 +182,11 @@ fun introduce_existence_cc extract rule0 xs (ctxt,sequent) =
       end
   else bad_sequent sequent
 
-fun cast desired (ctxt,sequent) = #cast (mode1 ctxt) desired (ctxt,sequent)
+fun cast desired (ctxt,sequent) =
+      #cast (mode_of1 (Context.Proof ctxt) (Thm.prop_of sequent)) desired (ctxt,sequent)
 
-fun cast_exception desired (ctxt,sequent) = #cast_exception (mode1 ctxt) desired (ctxt,sequent)
+fun cast_exception desired (ctxt,sequent) =
+      #cast_exception (mode_of1 (Context.Proof ctxt) (Thm.prop_of sequent)) desired (ctxt,sequent)
 
 fun vcg_by_cast destination (ctxt,sequent) = (
       Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.block [
@@ -232,10 +247,15 @@ local
 fun cast desired (ctxt, sequent) =
   let
     val idx = 1 + Thm.maxidx_of_cterm desired
+    val concl = Thm.concl_of sequent
     val rule =
-     (if can (Phi_Syntax.dest_CurrentConstruction) (Thm.concl_of sequent)
+     (if can (Phi_Syntax.dest_CurrentConstruction) concl
       then @{thm "_\<phi>cast_internal_rule_"}
-      else @{thm "_\<phi>cast_internal_rule_'"})
+      else if can (Phi_Syntax.dest_PendingConstruction) concl
+      then @{thm "_\<phi>cast_internal_rule_'"}
+      else if can (Phi_Syntax.dest_PendingConstruction) concl
+      then @{thm "_\<phi>cast_proc_return_internal_rule_"}
+      else raise THM ("Don't know how to apply transformation on the sequent", 0, [sequent]))
         |> Thm.incr_indexes idx
         |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
   in generic_cast rule "post-condition of the sequent" desired (ctxt, sequent)
@@ -300,6 +320,8 @@ in
 val procedure : working_mode =
   {
     name = \<^const_name>\<open>working_mode_procedure\<close>,
+    domain = (fn tm => Phi_Syntax.is_construction_mode \<^const>\<open>programming_mode\<close> tm orelse
+                       can Phi_Syntax.dest_procedure tm),
     is_on_going_construction = can Phi_Syntax.dest_CurrentConstruction,
     spec_of   = #4 o Phi_Syntax.dest_CurrentConstruction,
     spec_of_c = #4 o Phi_Syntax.dest_CurrentConstruction_c,
@@ -361,6 +383,8 @@ let
 in
 {
     name = \<^const_name>\<open>working_mode_view_shift\<close>,
+    domain = (fn tm => Phi_Syntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> tm orelse
+                       can Phi_Syntax.dest_view_shift tm),
     is_on_going_construction = can Phi_Syntax.dest_CurrentConstruction,
     spec_of   = #4 o Phi_Syntax.dest_CurrentConstruction,
     spec_of_c = #4 o Phi_Syntax.dest_CurrentConstruction_c,
@@ -423,6 +447,8 @@ local
 in
 val implication : working_mode = {
     name = \<^const_name>\<open>working_mode_implication\<close>,
+    domain = (fn tm => can Phi_Syntax.dest_ToA_Construction tm orelse
+                       can Phi_Syntax.dest_implication tm),
     is_on_going_construction = can Phi_Syntax.dest_ToA_Construction,
     spec_of   = #2 o Phi_Syntax.dest_ToA_Construction,
     spec_of_c = #2 o Phi_Syntax.dest_ToA_Construction_c,

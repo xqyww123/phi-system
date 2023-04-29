@@ -67,9 +67,7 @@ val dest_CodeBlock_c = perhaps (try dest_Trueprop_c) #> dest_quadop_c \<^const_n
 fun is_construction_mode mode tm =
   case try dest_CurrentConstruction tm
     of SOME (m,_,_,_) => mode = m
-     | _ => (case try dest_PendingConstruction tm
-               of SOME (m,_,_,_,_) => mode = m
-                | _ => false)
+     | _ => mode = \<^const>\<open>programming_mode\<close> andalso can dest_PendingConstruction tm
 
 fun block_var_of_Constuction c   = (dest_CurrentConstruction c |> #2)
   handle TERM _ => ((dest_PendingConstruction c |> #2)

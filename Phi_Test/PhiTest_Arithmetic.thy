@@ -7,7 +7,18 @@ theory PhiTest_Arithmetic
     "HOL-Computational_Algebra.Primes"
 begin
 
-ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
+proc GCD:
+  input \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  output \<open>gcd x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> 
+  is [recursive x y] \<comment> \<open>x, y are variable through recursive callings\<close>
+  is [routine]
+  \<medium_left_bracket>
+    if \<open>$x > $y\<close> \<medium_left_bracket> GCD ($y, $x) \<medium_right_bracket>.
+    \<medium_left_bracket>
+      \<open>$y mod $x\<close> \<rightarrow> val t
+      if \<open>$t = 0\<close> \<medium_left_bracket> $x \<medium_right_bracket>. \<medium_left_bracket> GCD ($t, $x) \<medium_right_bracket>.
+    \<medium_right_bracket>.
+  \<medium_right_bracket>. .
 
 proc test_prime:
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
@@ -39,16 +50,6 @@ proc test_prime:
 
 thm test_prime_def \<comment> \<open>Semantic definition\<close>
 thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
-
-
-
-
-
-
-
-
-
-
 
 
 proc test_prime':
@@ -95,5 +96,33 @@ proc test_prime':
     \<medium_right_bracket>. \<comment> \<open>Close the top branch\<close>
   \<medium_right_bracket>. \<comment> \<open>Close the function body\<close> .
 
+term \<open>False < True\<close>
+thm less_bool_def
+term monotone
+
+proc bin_search:
+  assumes F: \<open>\<forall>i v1. \<p>\<r>\<o>\<c> F v1 \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v1] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
+  premises \<open>mono f\<close>
+  input \<open>lower \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> upper \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  premises \<open>f upper\<close> and \<open>lower < upper\<close>
+  output \<open>(LEAST i. lower \<le> i \<and> i \<le> upper \<and> f i) \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  is [routine]
+  \<medium_left_bracket> 
+    if \<medium_left_bracket> F($lower) \<medium_right_bracket>. \<medium_left_bracket> return ($lower) \<medium_right_bracket>.
+    \<medium_left_bracket>
+      $lower, $upper \<rightarrow> var $l, $u ;;
+      while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<int>\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<int> \<s>\<u>\<b>\<j> l u.
+              Inv: (lower \<le> l \<and> l < u \<and> u \<le> upper \<and> \<not> f l \<and> f u) \<and>
+              Guard: (l + 1 < u) \<and>
+              End: (l + 1 = u)\<close>
+      \<medium_left_bracket> \<open>$l + 1 < $u\<close> \<medium_right_bracket>.
+      \<medium_left_bracket>
+        \<open>($l + $u) div 2\<close> \<rightarrow> val m ;;
+        if \<medium_left_bracket> F($m) \<medium_right_bracket>. \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket>. \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>.
+      \<medium_right_bracket>.
+      pure-fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
+      return ($u)
+     \<medium_right_bracket>.
+  \<medium_right_bracket>. .
 
 end

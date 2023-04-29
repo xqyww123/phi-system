@@ -271,6 +271,24 @@ lemma "_\<phi>cast_implication_":
 \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T\<close>
   unfolding ToA_Construction_def Action_Tag_def Imply_def by blast
 
+lemma "_\<phi>cast_proc_return_internal_rule_":
+  " \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> (\<And>v. Y v \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y' v \<a>\<n>\<d> Any @action ToSA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E"
+  unfolding Action_Tag_def
+  using \<phi>CONSEQ view_shift_by_implication view_shift_refl by blast
+
+lemma "_\<phi>cast_proc_exception_internal_rule_":
+  " \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+\<Longrightarrow> (\<And>e. E e \<i>\<m>\<p>\<l>\<i>\<e>\<s> E' e \<a>\<n>\<d> Any @action ToSA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'"
+  unfolding Action_Tag_def
+  using \<phi>CONSEQ view_shift_by_implication view_shift_refl by blast
+
 
 subsection \<open>Finalization Rewrites\<close>
 

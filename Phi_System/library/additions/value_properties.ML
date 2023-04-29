@@ -29,6 +29,7 @@ val make_zero_value' =
 
 val zero_value : Phi_Working_Mode.working_mode = {
   name = \<^const_name>\<open>working_mode_\<phi>Zero\<close>,
+  domain = can dest_Zero,
   is_on_going_construction = can dest_Zero,
   spec_of = #spec_of Phi_Working_Mode.implication,
   spec_of_c = #spec_of_c Phi_Working_Mode.implication,

@@ -96,12 +96,14 @@ fun force_reload thy =
     let val c = load_cache_raw thy
      in (c, Symtab.update (Context.theory_name thy, (c, false)) tab) end )
 
-fun get_cache thy =
-  Synchronized.change_result openning_caches (fn tab =>
-    case Symtab.lookup tab (Context.theory_name thy)
+fun get_cache_i thy tab =
+  case Symtab.lookup tab (Context.theory_name thy)
       of SOME (x, _) => (x, tab)
        | _ => let val c = load_cache_raw thy
-               in (c, Symtab.update_new (Context.theory_name thy, (c, false)) tab) end )
+               in (c, Symtab.update_new (Context.theory_name thy, (c, false)) tab) end
+
+fun get_cache thy =
+  Synchronized.change_result openning_caches (get_cache_i thy)
 
 fun register_async_task task thy =
   let val name = Context.theory_name thy
@@ -135,12 +137,11 @@ fun invalidate_cache thy =
 fun get_cached_proof thy = Symtab.lookup (#proofs (get_cache thy))
 
 fun update_cached_proof thy (id,s) =
-  Synchronized.change openning_caches (fn tab =>
-    let val name = Context.theory_name thy
-     in if Symtab.defined tab name
-        then Symtab.map_entry name (fn (c, _) => (cache_update_proof (id,s) c, true)) tab
-        else error ("The cache of "^name^" is not loaded.")
-    end)
+  Synchronized.change openning_caches (fn tab => (
+    get_cache_i thy tab;
+    Symtab.map_entry (Context.theory_name thy)
+                     (fn (c, _) => (cache_update_proof (id,s) c, true)) tab
+  ))
 
 fun report_cache_is_outdated warn thy =
   if Phi_Envir.runtime_mode () = Phi_Envir.PRODUCTION
@@ -151,12 +152,10 @@ fun report_cache_is_outdated warn thy =
 
 fun invalidate_proof_cache warn id thy =
  (report_cache_is_outdated warn thy;
-  Synchronized.change openning_caches (fn tab =>
-    let val name = Context.theory_name thy
-     in if Symtab.defined tab name
-        then Symtab.map_entry name (fn (c, _) => (cache_invalidate_proof id c, true)) tab
-        else error ("The cache of "^name^" is not loaded.")
-    end))
+  Synchronized.change openning_caches (fn tab => (
+    get_cache_i thy tab;
+    Symtab.map_entry (Context.theory_name thy) (fn (c, _) => (cache_invalidate_proof id c, true)) tab
+ )))
 
 (** Document_ID of each construct to detect if caches are invalid **)
 (*

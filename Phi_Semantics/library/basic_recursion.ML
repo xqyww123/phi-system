@@ -98,14 +98,14 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
     (* by the way, check the arity *)
     val arg_ty = Thm.typ_of_cterm v'             |> Procedure_Syntax.dest_argT
     val ret_ty = domain_type (Term.fastype_of Y) |> Procedure_Syntax.dest_argT
-    val _ = if arg_ty <> ret_ty
+   (* val _ = if arg_ty <> ret_ty
             then error (Pretty.string_of (Pretty.chunks [
                   Pretty.para "The argument arity and the return arity has to be identical\
                              \ in a recursive procedure!",
                   Pretty.item [Pretty.str "Argument: ", Syntax.pretty_typ ctxt arg_ty],
                   Pretty.item [Pretty.str "Return  : ", Syntax.pretty_typ ctxt ret_ty]
                 ]))
-            else ()
+            else () *)
 
 
     (* pack abstract recursive variables *)

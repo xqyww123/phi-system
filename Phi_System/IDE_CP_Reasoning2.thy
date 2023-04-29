@@ -486,7 +486,8 @@ lemma [\<phi>intro 1100]: \<comment> \<open>tail the step\<close>
 
 subsection \<open>Zero\<close>
 
-\<phi>reasoner_ML \<open>0 \<i>\<m>\<p>\<l>\<i>\<e>\<s> X\<close> 3100 (\<open>0 \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML \<open>0 \<i>\<m>\<p>\<l>\<i>\<e>\<s> X\<close> 3100 (\<open>0 \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _\<close> | \<open>?var_A \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _\<close>) =
+\<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let fun collect L (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (_,_,X)) = collect L X
         | collect L (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = collect L X
         | collect L (Const (\<^const_name>\<open>times\<close>, _) $ A $ B) = collect (collect L A) B
