@@ -365,7 +365,8 @@ fun auto' id (ctxt,sequent') =
         sledgehammer (ctxt, sequent) )
 
      fun update_cache hash (prf', (_, sequent')) = (
-           tracing ("Find proof (" ^ id ^ ", time: " ^ Value.print_time (fst prf') ^ "): " ^ snd prf') ;
+           tracing ("Find proof (" ^ id ^ ", time: " ^ Value.print_time (fst prf') ^ "): " ^
+                      (if snd prf' = "" then "default automation" else "\n" ^ snd prf')) ;
            update_hash_cache hash prf';
            Phi_Cache_DB.update_cached_proof thy (id, prf') ;
            sequent')

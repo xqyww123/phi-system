@@ -8,7 +8,7 @@ theory PhiTest_Arithmetic
 begin
  
 proc GCD:
-  input \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>gcd x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> 
   is [recursive x y] \<comment> \<open>x, y are variable through recursive callings\<close>
   is [routine]
@@ -21,7 +21,7 @@ proc GCD:
   \<medium_right_bracket>. .
 
 proc test_prime:
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
+  input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close> \<comment> \<open>\<^term>\<open>prime :: nat => bool\<close> is a predicate checking primes\<close>
   is [routine]
   \<medium_left_bracket>
@@ -35,8 +35,8 @@ proc test_prime:
               Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j. 1 < j \<and> j < i \<longrightarrow> \<not> j dvd x)) \<and>
               Guard: (i \<noteq> x) \<and>
               End: (i = x)\<close> \<comment> \<open>Specification of the loop\<close>
-      \<medium_left_bracket> \<open>$v \<noteq> $x\<close> \<medium_right_bracket>. \<comment> \<open>Code for loop guard\<close>
-      \<medium_left_bracket>               \<comment> \<open>Code for loop body\<close>
+            ( \<open>$v \<noteq> $x\<close> ) \<comment> \<open>Code for loop guard\<close>
+      \<medium_left_bracket>                   \<comment> \<open>Code for loop body\<close>
         if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
           return (False)
         \<medium_right_bracket>.
@@ -53,7 +53,7 @@ thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
 
 
 proc test_prime':
-  input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
+  input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close>
   is [routine]
   \<medium_left_bracket>
@@ -65,10 +65,10 @@ proc test_prime':
       (* In the previous example, the loop iterates from 2 to x, here we apply an optimization
          where the loop only needs to iterate to sqrt(x). *)
       while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat> \<s>\<u>\<b>\<j> i.
-          Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j \<in> {1<..<i}. \<not> j dvd x)) \<and>
-          Guard: (i * i \<le> x) \<and>
-          End: (x < i * i)\<close>
-      \<medium_left_bracket> \<open>$v * $v \<le> $x\<close> \<medium_right_bracket>.
+            Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j \<in> {1<..<i}. \<not> j dvd x)) \<and>
+            Guard: (i * i \<le> x) \<and>
+            End: (x < i * i)\<close>
+          ( \<open>$v * $v \<le> $x\<close> )
       \<medium_left_bracket>
         if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
           return (False)  
@@ -96,28 +96,30 @@ proc test_prime':
     \<medium_right_bracket>. \<comment> \<open>Close the top branch\<close>
   \<medium_right_bracket>. \<comment> \<open>Close the function body\<close> .
 
-proc bin_search:
-  assumes F: \<open>\<forall>i v1. \<p>\<r>\<o>\<c> F v1 \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v1] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
+
+
+proc binary_search:
+  requires F: \<open>\<forall>i v. \<p>\<r>\<o>\<c> F v \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close> \<comment> \<open>v: raw value\<close>
   premises \<open>mono f\<close>
-  input \<open>lower \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> upper \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  input  \<open>lower \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> upper \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
   premises \<open>f upper\<close> and \<open>lower < upper\<close>
   output \<open>(LEAST i. lower \<le> i \<and> i \<le> upper \<and> f i) \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
   is [routine]
   \<medium_left_bracket>
     pure-fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
 
-    if \<medium_left_bracket> F($lower) \<medium_right_bracket>. \<medium_left_bracket> return ($lower) \<medium_right_bracket>.
+    if ( F($lower) ) \<medium_left_bracket> return ($lower) \<medium_right_bracket>.
     \<medium_left_bracket>  
       $lower, $upper \<rightarrow> var $l, $u ;;
       while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<int>\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<int> \<s>\<u>\<b>\<j> l u.
               Inv: (lower \<le> l \<and> l < u \<and> u \<le> upper \<and> \<not> f l \<and> f u) \<and>
               Guard: (l + 1 < u) \<and>
               End: (l + 1 = u)\<close>
-      \<medium_left_bracket> \<open>$l + 1 < $u\<close> \<medium_right_bracket>.
+            ( \<open>$l + 1 < $u\<close> )
       \<medium_left_bracket>
         \<open>($l + $u) div 2\<close> \<rightarrow> val m ;;
-        if \<medium_left_bracket> F($m) \<medium_right_bracket>. \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket>. \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>.
-      \<medium_right_bracket>. 
+        if ( F($m) ) \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket>. \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>.
+      \<medium_right_bracket>.
       return ($u)
     \<medium_right_bracket>.
   \<medium_right_bracket>. .

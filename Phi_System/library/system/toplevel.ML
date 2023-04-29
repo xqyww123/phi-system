@@ -49,6 +49,7 @@ signature PHI_TOPLEVEL = sig
         -> bool -> Proof.state -> Proof.state
 
   val end_block_cmd : string option -> bool -> Proof.state -> Proof.state
+  val end_block_auto_proof_cmd : string option -> bool -> Proof.state -> Proof.state
   val end_block : term option (*a spec that the sequent will be transformed to before assembling*)
                -> bool -> Proof.state -> Proof.state
 
@@ -63,6 +64,7 @@ signature PHI_TOPLEVEL = sig
   (*val export_LLVM : theory -> theory *)
 
   val previous_statement_is_finished : Proof.context -> bool
+
 end
 
 structure Phi_Toplevel : PHI_TOPLEVEL = struct
@@ -416,6 +418,22 @@ in
 val end_block_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
 val end_block = gen_finish_proc (K I) Proof.local_qed
 
+fun repeat_future_proof s =
+  if Proof.goal_finished s then s
+  else let val id = Option.map Phi_ID.encode (Phi_ID.get_if_is_named (Proof.context_of s))
+           val meth = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (fn sequent =>
+                Phi_Sledgehammer_Solver.auto id (ctxt, @{thm Premise_D[where mode=default]} RS sequent))))
+        in Proof.local_future_terminal_proof ((meth, Position.no_range), NONE) s
+       end
+fun repeat_future_proof0 s =
+  if Proof.goal_finished s
+  then Proof.local_done_proof s
+  else repeat_future_proof s
+
+fun end_block_auto_proof_cmd cast int =
+       end_block_cmd cast int
+    #> repeat_future_proof0
+
 (* fun gen_finish_proc' prep_specthm qed int stat =
   let val sequent = Proof.the_fact stat
   in if current_block_depth sequent > 1 then
@@ -660,7 +678,7 @@ fun opt_thm_name s =
     Binding.empty_atts;
 
 val statement1 = Parse.and_list1 (opt_thm_name ":" -- Parse.propp);
-val requires_statement = \<^keyword>\<open>assumes\<close> |-- Parse.!!! statement1;
+val requires_statement = (\<^keyword>\<open>assumes\<close> || \<^keyword>\<open>requires\<close>) |-- Parse.!!! statement1;
 val premises_statement = \<^keyword>\<open>premises\<close> |-- Parse.!!! statement1;
 val precond_statements =
       Scan.repeat ((premises_statement >> map (pair Premise))
@@ -753,28 +771,14 @@ val _ =
       >> (fn opt => Toplevel.proof' (fn int =>
             end_block_cmd opt int o Proof.map_context Phi_ID.next)))
 
-val _ = let
-  fun repeat_future_proof s =
-    if Proof.goal_finished s then s
-    else let val id = Option.map Phi_ID.encode (Phi_ID.get_if_is_named (Proof.context_of s))
-             val meth = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (fn sequent =>
-                  Phi_Sledgehammer_Solver.auto id (ctxt, @{thm Premise_D[where mode=default]} RS sequent))))
-          in Proof.local_future_terminal_proof ((meth, Position.no_range), NONE) s
-         end
-  fun repeat_future_proof0 s =
-    if Proof.goal_finished s
-    then Proof.local_done_proof s
-    else repeat_future_proof s
-in
+val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
     (((option (\<^keyword>\<open>for\<close> |-- term) >> (fn cast => fn int => fn stat =>
        stat
-    |> end_block_cmd cast int
-    |> repeat_future_proof0 ))
+    |> end_block_auto_proof_cmd cast int ))
    -- statement_cmd_tail (3,1))
    >> (fn (blk,tail_statement) => Toplevel.proof' (fn int =>
         tail_statement o Proof.map_context Phi_ID.next o blk int o Proof.map_context Phi_ID.next)))
-end
 
 (* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"

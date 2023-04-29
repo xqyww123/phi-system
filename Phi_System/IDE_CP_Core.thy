@@ -10,7 +10,7 @@ theory IDE_CP_Core
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
     "var" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure-fact"
-    "input" "affirm" :: quasi_command
+    "input" "affirm" "requires" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
   and "\<medium_right_bracket>." :: prf_decl % "proof"                                         
@@ -1648,15 +1648,25 @@ hide_fact \<phi>cast_exception_UI
 
 ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 
-\<phi>processor delayed_apply 8999 (\<open>?P\<close>) \<open> fn (ctxt,sequent) =>
+\<phi>processor delayed_apply 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn (ctxt,sequent) =>
   (Phi_App_Rules.parser --| \<^keyword>\<open>(\<close>) >> (fn xnames => fn _ =>
-  (Phi_Delay_Application.delay_app (Phi_App_Rules.app_rules ctxt [xnames]) ctxt, sequent))\<close>
+    if Phi_Delay_Application.synt_can_delay_apply' (Context.Proof ctxt) (fst xnames)
+    then (Phi_Delay_Application.delay_app (Phi_Delay_Application.Apply (
+              Phi_App_Rules.app_rules ctxt [xnames])) ctxt, sequent)
+    else raise Bypass NONE)\<close>
 
-\<phi>processor apply_delayed 8999 (\<open>?P\<close>) \<open> fn s => 
-  \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Delay_Application.invoke_delayed_one s)\<close>
+\<phi>processor apply_delayed 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Delay_Application.invoke_delayed_one s)\<close>
 
 \<phi>processor comma 8999 (\<open>?P\<close>) \<open> fn s => 
   \<^keyword>\<open>,\<close> >> (fn _ => fn _ => Phi_Delay_Application.comma s)\<close>
+
+\<phi>processor embedded_block 8999 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
+\<open> fn stat => (\<^keyword>\<open>(\<close> >> (fn _ => fn _ =>
+  raise Process_State_Call (
+          stat |> apfst (Phi_Delay_Application.delay_app Phi_Delay_Application.End_Block),
+          Phi_Toplevel.begin_block_cmd ([],[]) false)))\<close>
 
 \<phi>processor set_param 5000 (premises \<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
   Phi_Sys.set_param_cmd term stat)\<close>
