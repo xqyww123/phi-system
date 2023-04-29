@@ -13,6 +13,7 @@ include PHI_SYNTAX
 
   val dest_implication   : term  -> term * term * term
   val dest_implication_c : cterm -> cterm * cterm * cterm
+  val implication_conv : conv -> conv -> conv -> conv
 
   val strip_separations : term -> term list
   val mk_separations : term list -> term
@@ -66,6 +67,10 @@ val dest_implication   =
 val dest_implication_c =
          dest_tags_c
       #> dest_triop_c @{const_name "Imply"}
+fun implication_conv C_s C_t C_p ctm = (
+  dest_implication_c ctm;
+  Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p ctm
+)
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
   | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T

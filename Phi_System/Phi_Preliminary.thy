@@ -35,7 +35,8 @@ structure Phi_Programming_Simp_SS = Simpset (
 lemmas [\<phi>programming_safe_simps] =
   mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
   mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>] mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
-  zero_fun[where 'a=\<open>'a::sep_magma set\<close>] HOL.simp_thms
+  add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
+  zero_fun HOL.simp_thms
 
 subsection \<open>Error Mechanism\<close>
 
@@ -156,7 +157,6 @@ in
                                         pretty_term_style
 #> basic_entity \<^binding>\<open>pattern_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_pattern)
                                         pretty_term_style
-
 end\<close>
 
 subsection \<open>Helper Methods\<close>

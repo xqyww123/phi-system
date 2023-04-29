@@ -183,10 +183,10 @@ fun introduce_existence_cc extract rule0 xs (ctxt,sequent) =
   else bad_sequent sequent
 
 fun cast desired (ctxt,sequent) =
-      #cast (mode_of1 (Context.Proof ctxt) (Thm.prop_of sequent)) desired (ctxt,sequent)
+      #cast (mode_of1 (Context.Proof ctxt) (Thm.concl_of sequent)) desired (ctxt,sequent)
 
 fun cast_exception desired (ctxt,sequent) =
-      #cast_exception (mode_of1 (Context.Proof ctxt) (Thm.prop_of sequent)) desired (ctxt,sequent)
+      #cast_exception (mode_of1 (Context.Proof ctxt) (Thm.concl_of sequent)) desired (ctxt,sequent)
 
 fun vcg_by_cast destination (ctxt,sequent) = (
       Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.block [
@@ -253,7 +253,7 @@ fun cast desired (ctxt, sequent) =
       then @{thm "_\<phi>cast_internal_rule_"}
       else if can (Phi_Syntax.dest_PendingConstruction) concl
       then @{thm "_\<phi>cast_internal_rule_'"}
-      else if can (Phi_Syntax.dest_PendingConstruction) concl
+      else if can (Phi_Syntax.dest_procedure) concl
       then @{thm "_\<phi>cast_proc_return_internal_rule_"}
       else raise THM ("Don't know how to apply transformation on the sequent", 0, [sequent]))
         |> Thm.incr_indexes idx

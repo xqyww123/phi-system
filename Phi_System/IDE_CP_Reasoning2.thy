@@ -240,53 +240,129 @@ consts ToA_flag_deep :: bool
 
 subsection \<open>Initialization\<close>
 
+lemma [\<phi>reason 2100 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?P @action ToSA' ?mode\<close>]:
+  \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action ToSA' mode\<close>
+  unfolding Action_Tag_def using implies_refl .
+
+lemma [\<phi>reason 2100 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<s>\<u>\<b>\<j> True \<a>\<n>\<d> ?P @action ToSA' ?mode\<close>]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action ToSA' mode
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<s>\<u>\<b>\<j> True \<a>\<n>\<d> P @action ToSA' mode\<close>
+  unfolding Action_Tag_def by simp
+
 lemma [\<phi>reason 2020 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y @action ToSA' _\<close>]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> Any @action ToSA' deep
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action ToSA' deep\<close>
   unfolding Action_Tag_def
   by (simp add: implies_weaken)
 
-lemma [\<phi>reason 2010 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> ?var_P @action ToSA' _\<close>]:
+lemma "_ToSA_init_focus_": (*[\<phi>reason 2010 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> ?var_P @action ToSA' _\<close>]:*)
   \<open> Simplify (assertion_simps SOURCE) X' X
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
-\<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
 \<Longrightarrow> \<r>CALL X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Y' \<brangle> \<a>\<n>\<d> P
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Y \<brangle> \<a>\<n>\<d> P @action ToSA' deep\<close>
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
   unfolding Action_Tag_def Simplify_def \<r>Call_def
   by simp
 
-lemma [\<phi>reason 2005 for \<open>(?X::?'a::sep_magma_1 set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>]:
+lemma "_ToSA_init_by_focus_": (*[\<phi>reason 2005 for \<open>(?X::?'a::sep_magma_1 set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>]:*)
   \<open> Simplify (assertion_simps SOURCE) X' X
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
-\<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
 \<Longrightarrow> \<r>CALL X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Y' \<brangle> \<a>\<n>\<d> P
-\<Longrightarrow> \<r>Clean R
+\<Longrightarrow> Simplify (assertion_simps undefined) R' R
+\<Longrightarrow> \<r>Clean R'
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action ToSA' deep\<close>
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def Simplify_def \<r>Call_def \<r>Clean_def
   apply simp
   by (metis Imply_def implies_right_prod mult_1_class.mult_1_left)
 
-lemma [\<phi>reason 2000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>]:
+lemma "_ToSA_init_": (*[\<phi>reason 2000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>]:*)
   \<open> Simplify (assertion_simps SOURCE) X' X
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
-\<Longrightarrow> Push_Envir_Var ToA_flag_deep deep
 \<Longrightarrow> \<r>CALL X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y' \<a>\<n>\<d> P
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action ToSA' deep\<close>
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   unfolding Action_Tag_def Simplify_def \<r>Call_def \<r>Clean_def
   by simp
 
-lemma [\<phi>reason 2100 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?P @action ToSA' ?mode\<close>]:
-  \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action ToSA' mode\<close>
-  unfolding Action_Tag_def using implies_refl .
+\<phi>reasoner_ML ToSA_init 2000 (\<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>) = \<open>
+fn (ctxt0,sequent0) => Seq.make (fn () =>
+  let val sequent = @{thm Action_Tag_I} RS sequent0
+      val _ (*Action_Tag*) $ (_ (*Trueprop*) $ (Const(\<^const_name>\<open>Imply\<close>, _) $ _ $ Y $ _))
+                           $ (Const(\<^const_name>\<open>ToSA'\<close>, _) $ deep)
+         = Thm.major_prem_of sequent0
 
-lemma [\<phi>reason 2100 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<s>\<u>\<b>\<j> True \<a>\<n>\<d> ?P @action ToSA' ?mode\<close>]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action ToSA' mode
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<s>\<u>\<b>\<j> True @action ToSA' mode\<close>
-  unfolding Action_Tag_def by simp
+      val ctxt = PLPR_Env.push \<^const_name>\<open>ToA_flag_deep\<close> deep ctxt0
+
+      fun mk_zero (v,ty) =
+            ((v,ty), Thm.instantiate_cterm (TVars.make [((("'a",0),\<^sort>\<open>zero\<close>), Thm.ctyp_of ctxt ty)],
+                                            Vars.empty)
+                                           \<^schematic_cterm>\<open>0::?'a::zero\<close>)
+      fun mk_one (v,ty) =
+            ((v,ty), Thm.instantiate_cterm (TVars.make [((("'a",0),\<^sort>\<open>one\<close>), Thm.ctyp_of ctxt ty)],
+                                            Vars.empty)
+                                           \<^schematic_cterm>\<open>1::?'a::one\<close>)
+
+      fun scan0 ret (Const (\<^const_name>\<open>plus\<close>, _) $ A $ B) = scan0 (scan0 ret A) B
+        | scan0 ret (Const (@{const_name Subjection}, _) $ X) = scan0 ret X
+        | scan0 ret (Const (@{const_name ExSet}, _) $ X) = scan0 ret X
+        | scan0 ret (Abs (_,_,X)) = scan0 ret X
+        | scan0 ret (Var v) = mk_zero v :: ret
+        | scan0 ret _ = ret
+
+      val zeros = scan0 [] Y
+      val sequent1 = (case zeros of [] => sequent
+                         | (_::zeros') => Thm.instantiate (TVars.empty, Vars.make zeros') sequent
+                                       |> Simplifier.simplify (Phi_Programming_Safe_Simp_SS.equip ctxt))
+
+      fun scan1 ret (Const (\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ _))
+            = (true,[])
+        | scan1 ret (Const (\<^const_name>\<open>times\<close>, _) $ A $ B) =
+            scan1 (case B of Var v => mk_one v :: ret | _ => []) A
+        | scan1 ret (Const (@{const_name Subjection}, _) $ X) = scan1 ret X
+        | scan1 ret (Const (@{const_name ExSet}, _) $ X) = scan1 ret X
+        | scan1 ret (Abs (_,_,X)) = scan1 ret X
+        | scan1 ret (Var v) = (false, mk_one v :: ret)
+        | scan1 _ _  = (false, [])
+
+      val (X,Y,P) = Phi_Syntax.dest_implication (Thm.major_prem_of sequent1)
+      val (already_has_focus, void_tails) = scan1 [] Y
+      val sequent2 = (case void_tails of [] => sequent1
+                         | (_::voids') => Thm.instantiate (TVars.empty, Vars.make voids') sequent1)
+
+      fun add_focus_tag' ctxt ctm =
+        case Thm.term_of ctm
+          of (Const (@{const_name Subjection}, _) $ _) => Conv.arg_conv (add_focus_tag' ctxt) ctm
+           | (Const (@{const_name ExSet}, _) $ _) => Conv.arg_conv (add_focus_tag' ctxt) ctm
+           | (Abs _) => Conv.abs_conv (add_focus_tag' o snd) ctxt ctm
+           | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ _)) =>
+                Conv.all_conv ctm
+           | (Const (\<^const_name>\<open>times\<close>, _) $ Var _ $ _) =>
+                Conv.arg_conv (Conv.rewr_conv @{thm FOCUS_TAG_def[symmetric, folded atomize_eq]}) ctm
+           | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _) =>
+                Conv.fun_conv (Conv.arg_conv (add_focus_tag' ctxt)) ctm
+
+      fun add_focus_tag ctxt =
+        Phi_Helper_Conv.leading_antecedent_conv (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+          Phi_Syntax.implication_conv Conv.all_conv (add_focus_tag' ctxt) Conv.all_conv
+        ) ctxt)
+
+      val sequent3 = if null void_tails then sequent2
+                     else Conv.fconv_rule (add_focus_tag ctxt) sequent2
+
+      val is_unital = Sign.of_sort (Proof_Context.theory_of ctxt) (fastype_of Y, \<^sort>\<open>sep_magma_1\<close>)
+
+      val rule = if already_has_focus
+                 then @{thm "_ToSA_init_focus_"}
+                 else if null void_tails andalso is_unital
+                 then @{thm "_ToSA_init_by_focus_"}
+                 else @{thm "_ToSA_init_"}
+   in SOME ((ctxt, rule RS sequent3), Seq.empty)
+  end)
+\<close>
+
+
 
 
 subsection \<open>Special Process for Holes\<close>

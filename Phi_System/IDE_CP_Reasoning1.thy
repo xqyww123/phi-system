@@ -162,7 +162,7 @@ lemmas [assertion_simps] =
   mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>]
   mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
   add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
-  zero_fun[where 'a=\<open>'a::sep_magma set\<close>] zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma set\<close>]
+  zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma set\<close>]
   plus_fun[where 'a=\<open>'a::sep_magma set\<close>]
   Subjection_Zero ExSet_simps(1,4,5,6) distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]

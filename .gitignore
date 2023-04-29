@@ -4,6 +4,7 @@
 *.swp
 *.swo
 .*.marks
+*.phi-cache
 
 \#*
 output

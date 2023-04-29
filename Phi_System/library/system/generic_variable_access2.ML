@@ -96,9 +96,6 @@ fun strip_imp_prems_rev ret ct =
   handle TERM _ => (ret, ct)
 
 
-(*TODO*)
-fun concact_sequent ctxt rule vars sequent =
-  Phi_Help.comp_rule_incr_left ctxt (Drule.forall_intr_list vars sequent) rule
 
 fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
   let
@@ -136,13 +133,15 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
      then (ctxt, @{thm "\<phi>__Return_rule__"[OF view_shift_refl]} RS proc)
               |> Phi_Sys.accept_proc
      else let
-      (*insert a callback frame for concatenating sequents*)
-      val (_, ctxt) = Assumption.add_assms
-                            (fn _ => fn _ => (concact_sequent ctxt proc vterms, I)) [] ctxt
 
       val (rev_hyps, proc_cterm) = Thm.cprem_of proc 1
                |> fold (fn v => fn prem => Drule.beta_conv (Thm.dest_arg prem) v) vterms
                |> strip_imp_prems_rev []
+
+      (*insert a callback frame for concatenating sequents*)
+      fun concact_sequent sequent' =
+            Phi_Help.comp_rule_incr_left ctxt (Drule.forall_intr_list vterms sequent') proc
+      val (_, ctxt) = Assumption.add_assms (fn _ => fn _ => (concact_sequent, I)) [] ctxt
 
       (*Now we change the goal of the programming context to add the newly generated items if any *)
       val (_,arg_spec,ret_spec,E_spec) = Phi_Syntax.dest_procedure_c proc_cterm
@@ -197,9 +196,18 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
         if is_Var (Thm.term_of E_spec) 
         then ([], ctxt)
         else Assumption.add_assms (fn _ => fn _ =>
-                ((fn sequentx => #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx)
+                ((fn sequentx =>
+                    let val (_,_,_,Y,_) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequentx)
+                        val thy = Proof_Context.theory_of ctxt
+                        val sequentx1 = if Pattern.matches thy (Thm.term_of ret_spec, Y)
+                                        then sequentx
+                                        else snd (Phi_Sys.cast ret_spec (ctxt,sequentx))
+                        val sequentx2 =
+                              #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx1)
                                     |> Phi_Reasoners.safer_obligation_solver1
-                                    |> snd),
+                                    |> snd
+                         in sequentx2
+                        end),
                  I)) [] ctxt
       in (ctxt, sequent')
       end

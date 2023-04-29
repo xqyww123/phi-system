@@ -1,9 +1,9 @@
 signature PLPR_ENVIR_VAR = sig
 
 val name_of : term -> string
-val push : string -> cterm -> Proof.context -> Proof.context
+val push : string -> term -> Proof.context -> Proof.context
 val pop  : string -> Proof.context -> Proof.context
-val get  : string -> Proof.context -> cterm option
+val get  : string -> Proof.context -> term option
 
 val boolean_flag : string -> bool -> Proof.context -> bool
 
@@ -12,7 +12,7 @@ end
 structure PLPR_Env : PLPR_ENVIR_VAR = struct
 
 structure Data = Proof_Data (
-  type T = cterm list Symtab.table
+  type T = term list Symtab.table
   val init = K Symtab.empty
 )
 
@@ -37,6 +37,6 @@ fun boolean_flag N default ctxt =
             ]))
    in case get N ctxt
         of NONE => default
-         | SOME X => parse (Thm.term_of X)
+         | SOME X => parse X
   end
 end

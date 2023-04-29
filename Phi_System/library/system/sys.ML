@@ -109,7 +109,7 @@ val conv_E_thms =
          add_0_right[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma set\<close>, folded atomize_eq]
          add_0_left[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
          add_0_left[where 'a=\<open>'b \<Rightarrow> 'a::sep_magma set\<close>, folded atomize_eq]
-         zero_fun[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
+         zero_fun[folded atomize_eq]
          mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
          mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>, folded atomize_eq]
    }

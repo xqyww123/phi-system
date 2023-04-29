@@ -1137,7 +1137,7 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
               then warning "PLPR Envir Var: The value to be assigned has schematic variables \
                            \which will not be retained!"
               else ()
-   in SOME ((PLPR_Env.push (PLPR_Env.name_of N) (Thm.cterm_of ctxt V) ctxt,
+   in SOME ((PLPR_Env.push (PLPR_Env.name_of N) V ctxt,
             @{thm Push_Envir_Var_I} RS sequent),
       Seq.empty) end
 )\<close>
@@ -1155,7 +1155,7 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
         of NONE => Phi_Reasoner.error
                       ("No enviromental variable " ^ PLPR_Env.name_of N ^ " is set")
          | SOME V' =>
-            let val V = Thm.incr_indexes_cterm idx V'
+            let val V = Thm.incr_indexes_cterm idx (Thm.cterm_of ctxt V')
              in SOME ((ctxt, ( @{thm Get_Envir_Var_I}
                         |> Thm.incr_indexes idx
                         |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
@@ -1169,8 +1169,8 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
 \<phi>reasoner_ML Get_Envir_Var' 1000 (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let val _ $ (_ $ N $ D $ _) = Thm.major_prem_of sequent
       val idx = Thm.maxidx_of sequent + 1
-      val V = (case PLPR_Env.get (PLPR_Env.name_of N) ctxt
-                 of SOME V => V | NONE => Thm.cterm_of ctxt D)
+      val V = Thm.cterm_of ctxt (case PLPR_Env.get (PLPR_Env.name_of N) ctxt
+                                   of SOME V => V | NONE => D)
                 |> Thm.incr_indexes_cterm idx
    in SOME ((ctxt, ( @{thm Get_Envir_Var'_I}
                   |> Thm.incr_indexes idx

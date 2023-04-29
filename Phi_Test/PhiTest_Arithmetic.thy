@@ -6,7 +6,7 @@ theory PhiTest_Arithmetic
     Phi_Semantics.PhiSem_Int_ArbiPrec
     "HOL-Computational_Algebra.Primes"
 begin
-
+ 
 proc GCD:
   input \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>gcd x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> 
@@ -96,10 +96,6 @@ proc test_prime':
     \<medium_right_bracket>. \<comment> \<open>Close the top branch\<close>
   \<medium_right_bracket>. \<comment> \<open>Close the function body\<close> .
 
-term \<open>False < True\<close>
-thm less_bool_def
-term monotone
-
 proc bin_search:
   assumes F: \<open>\<forall>i v1. \<p>\<r>\<o>\<c> F v1 \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v1] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>
   premises \<open>mono f\<close>
@@ -107,9 +103,11 @@ proc bin_search:
   premises \<open>f upper\<close> and \<open>lower < upper\<close>
   output \<open>(LEAST i. lower \<le> i \<and> i \<le> upper \<and> f i) \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
   is [routine]
-  \<medium_left_bracket> 
+  \<medium_left_bracket>
+    pure-fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
+
     if \<medium_left_bracket> F($lower) \<medium_right_bracket>. \<medium_left_bracket> return ($lower) \<medium_right_bracket>.
-    \<medium_left_bracket>
+    \<medium_left_bracket>  
       $lower, $upper \<rightarrow> var $l, $u ;;
       while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<int>\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<int> \<s>\<u>\<b>\<j> l u.
               Inv: (lower \<le> l \<and> l < u \<and> u \<le> upper \<and> \<not> f l \<and> f u) \<and>
@@ -119,10 +117,9 @@ proc bin_search:
       \<medium_left_bracket>
         \<open>($l + $u) div 2\<close> \<rightarrow> val m ;;
         if \<medium_left_bracket> F($m) \<medium_right_bracket>. \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket>. \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>.
-      \<medium_right_bracket>.
-      pure-fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
+      \<medium_right_bracket>. 
       return ($u)
-     \<medium_right_bracket>.
+    \<medium_right_bracket>.
   \<medium_right_bracket>. .
 
 end
