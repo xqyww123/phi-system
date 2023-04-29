@@ -22,7 +22,7 @@ The current version works on Isabelle-2022. Please download it from [here](https
 
 1. Some additional symbols are required. Please copy lines in file [symbols](https://github.com/xqyww123/phi-system/blob/master/symbols) into your Isabelle symbol file `$HOME/.isabelle/Isabelle2022/etc/symbols`.
 
-2. You maybe need to install [STIX](https://www.stixfonts.org/) font which we give in the directory [fonts](https://github.com/xqyww123/phi-system/tree/master/fonts).
+2. You maybe need to install a specific font [PhiSymbols](https://github.com/xqyww123/phi-system/tree/master/fonts/PhiSymbols.otf) given in the font directory which defines glyphs of symbols we used in Isabelle.
 
 3. Goto the root directory of φ-System. Execute,
 ```
@@ -49,7 +49,7 @@ The complete verification:
 
 ### More examples
 
-- A small prime-test example is given [here](https://xqyww123.github.io/phi-system/Unsorted/Phi_Test/PhiTest_Arithmetic.html).
+- Several small examples are given [here](https://xqyww123.github.io/phi-system/Unsorted/Phi_Test/PhiTest_Arithmetic.html).
 - A medium verification example is the unfinished [Uniswap v3 verification](https://github.com/xqyww123/Uniswap_v).
 
 ## Contributions
