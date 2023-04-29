@@ -78,9 +78,9 @@ proc test_prime':
         \<medium_right_bracket>.
       \<medium_right_bracket>. ;;
 
-      return (True) affirm (*with this optimization, the final obligation fails to be solved
-                             automatically, but the manual proof is intuitive and semi-automated.*)
-        proof simp
+      return (True) (*with this optimization, the final obligation fails to be solved
+                      automatically, but the manual proof is intuitive and semi-automated.*)
+        certified proof simp
           have \<open>False\<close> if assm: \<open>\<not> prime x\<close>
             proof -
               obtain k where \<open>k dvd x \<and> 1 < k \<and> k < x\<close>  (* v generated automatically by sledgehammer *)

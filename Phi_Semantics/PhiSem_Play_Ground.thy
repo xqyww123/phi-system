@@ -54,7 +54,7 @@ proc FIB:
       \<open>$n - 1\<close> FIB \<rightarrow> val a;;
       \<open>$n - 2\<close> FIB \<rightarrow> val b;;
       return (\<open>$a + $b\<close>)
-      affirm by (metis One_nat_def fib.elims le_Suc_eq le_zero_eq the_\<phi>)
+      certified by (metis One_nat_def fib.elims le_Suc_eq le_zero_eq the_\<phi>)
     \<medium_right_bracket>.
   \<medium_right_bracket> using le_Suc_eq the_\<phi>lemmata by force .
 

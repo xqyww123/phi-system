@@ -767,7 +767,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (option (\<^keyword>\<open>for\<close> |-- term) --| Scan.option \<^keyword>\<open>affirm\<close>
+    (option (\<^keyword>\<open>for\<close> |-- term) --| Scan.option \<^keyword>\<open>certified\<close>
       >> (fn opt => Toplevel.proof' (fn int =>
             end_block_cmd opt int o Proof.map_context Phi_ID.next)))
 

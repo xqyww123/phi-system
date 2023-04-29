@@ -10,7 +10,7 @@ theory IDE_CP_Core
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
     "var" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure-fact"
-    "input" "affirm" "requires" :: quasi_command
+    "input" "certified" "requires" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
   and "\<medium_right_bracket>." :: prf_decl % "proof"                                         
@@ -1809,7 +1809,7 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
 end)\<close>
 
 \<phi>processor enter_proof 790 (premises \<open>Premise _ _\<close> | premises \<open>Simplify _ _ _\<close>)
-  \<open>fn stat => \<^keyword>\<open>affirm\<close> >> (fn _ => fn _ =>
+  \<open>fn stat => \<^keyword>\<open>certified\<close> >> (fn _ => fn _ =>
       raise Terminate_Process (stat, SOME (snd oo Phi_Toplevel.prove_prem false)))\<close>
 
 \<phi>processor auto_obligation_solver 800 (premises \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | premises \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)

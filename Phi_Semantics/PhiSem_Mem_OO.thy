@@ -301,8 +301,8 @@ proc (nodef) op_obj_store_field:
   \<medium_left_bracket> to Identity \<exists>u
     \<open>obj: _\<close> to Identity \<exists>v
     op_obj_store_field_raw[where TY=TY]
-      affirm using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast ;;
-      affirm using B[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
+      certified using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast ;;
+      certified using B[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
   \<medium_right_bracket> by (simp add: Nosep_expns the_\<phi>lemmata) .
 
 

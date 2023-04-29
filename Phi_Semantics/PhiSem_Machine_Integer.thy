@@ -149,7 +149,7 @@ lemma [
 \<Longrightarrow> x \<Ztypecolon> \<nat>\<^sup>r('b) \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   \<medium_left_bracket> destruct\<phi> _
     construct\<phi> \<open>y \<Ztypecolon> \<nat>\<^sup>r('b)\<close> 
-    affirm by (simp add: the_\<phi> unat_of_nat word_unat_eq_iff)
+    certified by (simp add: the_\<phi> unat_of_nat word_unat_eq_iff)
   \<medium_right_bracket>. .
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>\<^sup>r(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Word(_) \<a>\<n>\<d> _\<close>]:
@@ -307,7 +307,7 @@ lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> Word(_) \<i>\<m>\<p>\<l>\<i>
 \<Longrightarrow> x \<Ztypecolon> Word('b) \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<int>('b)"
   for x :: \<open>'b::len word\<close>
   \<medium_left_bracket> construct\<phi> \<open>y \<Ztypecolon> \<int>('b)\<close>
-    affirm apply (simp add: \<open>y = sint x\<close>) using sint_greater_eq sint_less by blast
+    certified apply (simp add: \<open>y = sint x\<close>) using sint_greater_eq sint_less by blast
   \<medium_right_bracket>. .
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> Word(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to (Word _)\<close>]:
@@ -501,14 +501,14 @@ lemma op_const_nat_\<phi>app[\<phi>synthesis 200]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<v>\<a>\<l> n \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
   \<medium_left_bracket> have [simp]: \<open>unat (word_of_nat n :: 'b word) = n\<close> using \<phi> of_nat_inverse by blast
   ;; op_const_word_\<phi>app[where 'b='b and n'=\<open>of_nat n\<close> and n=n']
-    affirm by (simp add: \<open>n' = n\<close>)
+    certified by (simp add: \<open>n' = n\<close>)
   \<medium_right_bracket> by simp .
 
 lemma op_const_natR_\<phi>app[\<phi>synthesis 120]:
   \<open> Simplify literal n' (n mod 2 ^ LENGTH('b))
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<v>\<a>\<l> n \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
   \<medium_left_bracket> op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified]
-    affirm by (simp add: the_\<phi>(1) unat_of_nat)
+    certified by (simp add: the_\<phi>(1) unat_of_nat)
   \<medium_right_bracket> by (simp add: unat_of_nat) .
 
 lemma [\<phi>reason 50
@@ -665,7 +665,7 @@ lemma op_div_nat_\<phi>app[\<phi>overload div,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_udiv LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> op_udiv_word_\<phi>app[where 'b='b]
-    affirm using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast
+    certified using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast
   \<medium_right_bracket> by (simp add: the_\<phi>lemmata(1) the_\<phi>lemmata(2) of_nat_inverse unat_div) .
 
 declare op_udiv_word_\<phi>app[\<phi>overload div]
@@ -684,7 +684,7 @@ lemma op_div_int_\<phi>app[\<phi>synthesis for _ (100)
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<noteq> - (2 ^ (LENGTH('b) - 1)) \<and> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sdiv TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x sdiv y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket> op_sdiv_word
-    affirm using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by force \<medium_right_bracket>
+    certified using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by force \<medium_right_bracket>
     unfolding sdiv_word_def
   proof simp
     have [simp]: \<open>sint (word_of_int x::'b word) = x\<close>
@@ -736,7 +736,7 @@ lemma op_mod_nat_\<phi>app
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umod TYPE('b) (\<phi>V_pair vy vx)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> op_umod_word
-    affirm using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast \<medium_right_bracket>
+    certified using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast \<medium_right_bracket>
   by (simp add: of_nat_inverse the_\<phi>lemmata(1) the_\<phi>lemmata(2) unat_mod_distrib) .
 
 lemma op_smod_word_\<phi>app
@@ -754,7 +754,7 @@ lemma op_mod_int_\<phi>app
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_smod TYPE('b) (\<phi>V_pair vy vx)
       \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x smod y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
-  \<medium_left_bracket>  op_smod_word affirm using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by fastforce \<medium_right_bracket>
+  \<medium_left_bracket>  op_smod_word certified using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by fastforce \<medium_right_bracket>
   by (metis One_nat_def sint_of_int_eq smod_word_def smod_word_max smod_word_min the_\<phi>(1) the_\<phi>(2) the_\<phi>(3) the_\<phi>(4)) .
 
 lemma op_mod_int_fail[\<phi>synthesis 100]:
