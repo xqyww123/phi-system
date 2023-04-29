@@ -112,14 +112,14 @@
     </span><span class="comment1"><span>(* by the way, check the arity *)</span></span><span>
    </span><span> </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>arg_ty</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>Thm.typ_of_cterm</span><span> </span><span class="entity"><span>v'</span></span><span>             </span><span>|&gt;</span><span> </span><span class="entity"><span>Procedure_Syntax.dest_argT</span></span><span>
    </span><span> </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>ret_ty</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span>domain_type</span><span> </span><span class="main"><span>(</span></span><span>Term.fastype_of</span><span> </span><span class="entity"><span>Y</span></span><span class="main"><span>)</span></span><span> </span><span>|&gt;</span><span> </span><span class="entity"><span>Procedure_Syntax.dest_argT</span></span><span>
-   </span><span> </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="main"><span>_</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>if</span></span></span><span> </span><span class="entity"><span>arg_ty</span></span><span> </span><span>&lt;&gt;</span><span> </span><span class="entity"><span>ret_ty</span></span><span>
-            </span><span class="keyword2"><span class="keyword"><span>then</span></span></span><span> </span><span>error</span><span> </span><span class="main"><span>(</span></span><span>Pretty.string_of</span><span> </span><span class="main"><span>(</span></span><span>Pretty.chunks</span><span> </span><span class="main"><span>[</span></span><span>
-                  </span><span>Pretty.para</span><span> </span><span class="inner_quoted"><span>"The argument arity and the return arity has to be identical\
-                             \ in a recursive procedure!"</span></span><span class="main"><span>,</span></span><span>
-                  </span><span>Pretty.item</span><span> </span><span class="main"><span>[</span></span><span>Pretty.str</span><span> </span><span class="inner_quoted"><span>"Argument: "</span></span><span class="main"><span>,</span></span><span> </span><span>Syntax.pretty_typ</span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="entity"><span>arg_ty</span></span><span class="main"><span>]</span></span><span class="main"><span>,</span></span><span>
-                  </span><span>Pretty.item</span><span> </span><span class="main"><span>[</span></span><span>Pretty.str</span><span> </span><span class="inner_quoted"><span>"Return  : "</span></span><span class="main"><span>,</span></span><span> </span><span>Syntax.pretty_typ</span><span> </span><span class="entity"><span>ctxt</span></span><span> </span><span class="entity"><span>ret_ty</span></span><span class="main"><span>]</span></span><span>
-                </span><span class="main"><span>]</span></span><span class="main"><span>)</span></span><span class="main"><span>)</span></span><span>
-            </span><span class="keyword2"><span class="keyword"><span>else</span></span></span><span> </span><span class="main"><span>(</span></span><span class="main"><span>)</span></span><span>
+   </span><span class="comment1"><span>(* val _ = if arg_ty &lt;&gt; ret_ty
+            then error (Pretty.string_of (Pretty.chunks [
+                  Pretty.para "The argument arity and the return arity has to be identical\
+                             \ in a recursive procedure!",
+                  Pretty.item [Pretty.str "Argument: ", Syntax.pretty_typ ctxt arg_ty],
+                  Pretty.item [Pretty.str "Return  : ", Syntax.pretty_typ ctxt ret_ty]
+                ]))
+            else () *)</span></span><span>
 
 
     </span><span class="comment1"><span>(* pack abstract recursive variables *)</span></span><span>

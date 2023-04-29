@@ -25,7 +25,7 @@
    applications and checking there is only one feasible application.
 *)</span></span><span>
 
-</span><span class="keyword1"><span class="keyword"><span>signature</span></span></span><span> </span><span class="entity"><span>NU_APPLICATION</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>sig</span></span></span><span>
+</span><span class="keyword1"><span class="keyword"><span>signature</span></span></span><span> </span><span class="entity"><span>PHI_APPLICATION</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>sig</span></span></span><span>
 
   </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> apply_proc_naive </span><span class="main"><span>:</span></span><span> </span><span>thm</span><span> </span><span class="comment1"><span>(*proc*)</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>context_state</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>context_state</span></span><span>
 
@@ -33,7 +33,7 @@
 an additional obligation antecedent at the last of the antecedent list,
 storing proof obligations generated during ToSA, no matter whether the obligations are trivial.*)</span></span><span>
   </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> try_apply </span><span class="main"><span>:</span></span><span> </span><span>thm</span><span> </span><span>list</span><span> </span><span class="comment1"><span>(*applied rules*)</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>context_state</span></span><span> </span><span class="comment1"><span>(*sequent*)</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>context_state</span></span><span> </span><span>option</span><span>
-  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> apply </span><span class="main"><span>:</span></span><span> </span><span>thm</span><span> </span><span>list</span><span> </span><span class="comment1"><span>(*applied rules*)</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>context_state</span></span><span> </span><span class="comment1"><span>(*sequent*)</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>context_state</span></span><span>
+  </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> apply </span><span class="main"><span>:</span></span><span> </span><span>thm</span><span> </span><span>list</span><span> </span><span class="comment1"><span>(*rules to be applied*)</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>context_state</span></span><span> </span><span class="comment1"><span>(*sequent*)</span></span><span> </span><span class="main"><span>-&gt;</span></span><span> </span><span class="entity"><span>context_state</span></span><span>
 
 </span><span class="comment1"><span>(*
   (*Advanced Modus Pones using logic programming about antecedent <span class="hidden">\&lt;^</span><span class="control">term</span><span class="hidden">&gt;</span>‹φApplication_Conv›
@@ -44,7 +44,7 @@ storing proof obligations generated during ToSA, no matter whether the obligatio
 
 </span><span class="keyword2"><span class="keyword"><span>end</span></span></span><span>
 
-</span><span class="keyword1"><span class="keyword"><span>structure</span></span></span><span> </span><span class="entity"><span>NuApply</span></span><span> </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>NU_APPLICATION</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>struct</span></span></span><span>
+</span><span class="keyword1"><span class="keyword"><span>structure</span></span></span><span> </span><span class="entity"><span>Phi_Apply</span></span><span> </span><span class="main"><span>:</span></span><span> </span><span class="entity"><span>PHI_APPLICATION</span></span><span> </span><span class="main"><span>=</span></span><span> </span><span class="keyword2"><span class="keyword"><span>struct</span></span></span><span>
 </span><span class="keyword3"><span class="keyword"><span>open</span></span></span><span> </span><span>Phi_Help</span><span>
 
 </span><span class="keyword1"><span class="keyword"><span>val</span></span></span><span> </span><span class="entity"><span>expand_appliant</span></span><span> </span><span class="main"><span>=</span></span><span>
