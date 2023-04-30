@@ -267,9 +267,11 @@ fun assync_prove f (ctxt,sequent) =
 
 fun wrapper f (ctxt,sequent) =
   if Thm.no_prems sequent then sequent
-  else case PLPR_Syntax.dest_premise_tag (Thm.major_prem_of sequent)
-         of (_, \<^const>\<open>True\<close>) => @{thm Premise_True} RS sequent
-          | _ => assync_prove f (ctxt,sequent)
+  else case Thm.major_prem_of sequent
+    of Const (\<^const_name>\<open>Trueprop\<close>, _) $ \<^const>\<open>True\<close> => @{thm TrueI} RS sequent
+     | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ Const(\<^const_name>\<open>True\<close>,_))
+         => @{thm Premise_True} RS sequent
+     | _ => assync_prove f (ctxt,sequent)
 
 val time_delt = Time.fromMilliseconds 1000
 fun folerant_time t = Time.scale 1.3 t + time_delt
@@ -403,5 +405,27 @@ if no_cache
 fun auto id =
   wrapper (case id of SOME id' => auto' id'
                     | NONE => Phi_Reasoners.auto_obligation_solver1 #> snd)
+
+fun insert_tac _ [] _ = all_tac
+  | insert_tac ctxt facts i =
+      EVERY (map (fn r => resolve_tac ctxt [Thm.forall_intr_vars r COMP_INCR revcut_rl] i) facts);
+
+val _ = Theory.setup (Method.setup \<^binding>\<open>auto_sledgehammer\<close> (Scan.lift (Scan.succeed (fn _ =>
+  Method.CONTEXT_METHOD (fn uses => fn (ctxt0,sequent) => Seq.make (fn () =>
+    let val ctxt = Config.put assync_proof false ctxt0
+        val id = Hasher.goal (ctxt,sequent)
+        fun err () = Phi_Reasoners.error_message (SOME (ctxt,sequent))
+        val sequent' =
+              case Seq.pull (Method.insert_tac ctxt uses 1 sequent)
+                of SOME (ret, _) => ret
+                 | NONE => error "Why the insert_tac can fail?"
+     in SOME (
+         (Seq.Result (ctxt, auto (SOME id) (ctxt,sequent'))
+          handle Auto_Fail _ => Seq.Error err),
+         Seq.empty)
+    end))
+)))
+  "Apply sledgehammer transparently and record the outcome."
+)
 
 end

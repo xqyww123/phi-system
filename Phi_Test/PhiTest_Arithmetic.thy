@@ -70,12 +70,9 @@ proc test_prime':
       certified proof simp
         have \<open>False\<close> if assm: \<open>\<not> prime x\<close>
           proof -
-            obtain k where \<open>k dvd x \<and> 1 < k \<and> k < x\<close>  (* v generated automatically by sledgehammer *)
-              by (metis One_nat_def Suc_lessI assm dvd_pos_nat linorder_le_less_linear nat_dvd_not_less not_less_iff_gr_or_eq prime_nat_iff the_\<phi>(5) zero_less_iff_neq_zero)
-            then have \<open>k < ib \<or> x div k < ib\<close>   (* v generated automatically by sledgehammer *)
-              by (metis dvd_mult_div_cancel leD leI mult_le_mono the_\<phi>lemmata(4))
-            then show False                     (* v generated automatically by sledgehammer *)
-              by (metis One_nat_def \<open>k dvd x \<and> 1 < k \<and> k < x\<close> div_mod_decomp dvd_imp_mod_0 dvd_triv_right greaterThanLessThan_iff mult.commute nat_arith.rule0 nat_mult_1_right nat_mult_less_cancel_disj the_\<phi>lemmata(3))
+            obtain k where \<open>k dvd x \<and> 1 < k \<and> k < x\<close> by auto_sledgehammer
+            then have \<open>k < ib \<or> x div k < ib\<close> by auto_sledgehammer
+            then show False by auto_sledgehammer
           qed
         then show \<open>prime x\<close>
           by fastforce
