@@ -63,7 +63,7 @@ proc test_prime':
       \<medium_left_bracket>
         \<open>$v + 1\<close> \<rightarrow> $v 
       \<medium_right_bracket>.
-    \<medium_right_bracket>. ;;
+    \<medium_right_bracket>.
 
     return (True) (*with this optimization, the final obligation fails to be solved
                     automatically, but the manual proof is intuitive and semi-automated.*)
@@ -99,7 +99,7 @@ proc Coprime:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
   output \<open>coprime x y \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
 \<medium_left_bracket>
-  \<open>gcd $x $y = 1\<close> 
+  \<open>gcd $x $y = 1\<close>
 \<medium_right_bracket>. .
 
 
