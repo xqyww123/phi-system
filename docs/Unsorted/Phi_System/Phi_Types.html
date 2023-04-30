@@ -537,13 +537,13 @@ lemma [φreason for ‹(?x,?y) ⦂ ?N ∗ ?M 𝗌𝗁𝗂𝖿𝗍𝗌 (?x',?y') 
   </span><span class="keyword1"><span class="command"><span>by</span></span></span><span> </span><span class="main"><span>(</span></span><a class="entity_ref" href="../../HOL/HOL/ISABELLE_HOME/src/Provers/clasimp.ML.html#HOL.clarsimp|method"><span class="operator"><span>clarsimp</span></span></a><span> </span><span class="quasi_keyword"><span>simp</span></span><span> </span><span class="quasi_keyword"><span>add</span></span><span class="main"><span class="main"><span>:</span></span></span><span> </span><a class="entity_ref" href="../../HOL/HOL/Set.html#Set.set_eq_iff|fact"><span>set_eq_iff</span></a><span> </span><a class="entity_ref" href="Phi_Preliminary.html#Phi_Preliminary.\&lt;phi&gt;expns|fact"><span class="dynamic"><span class="dynamic"><span>φexpns</span></span></span></a><span class="main"><span class="keyword3"><span>;</span></span></span><span> </span><a class="entity_ref" href="../../HOL/HOL/ISABELLE_HOME/src/Provers/blast.ML.html#HOL.blast|method"><span class="operator"><span>blast</span></span></a><span class="main"><span>)</span></span><span>
 
 
-</span><span class="comment1"><span>(</span><span>*</span><span>lemma [simp]: "A ∩ S ⟂ A ∩ -S"
+</span><span class="comment1"><span>(</span><span>*</span><span>lemma [simp]: "A ∩ S \&lt;perpendicular&gt; A ∩ -S"
   unfolding disjoint_def by auto
 lemma heap_split_id: "P h1' h2' ⟹ ∃h1 h2. h1' ++ h2' = h1 ++ h2 ∧ P h1 h2" by auto
-lemma heap_split_by_set: "P (h |` S) (h |` (- S)) ⟹ ∃h1 h2. h = h1 ++ h2 ∧ dom h1 ⟂ dom h2 ∧ P h1 h2"
+lemma heap_split_by_set: "P (h |` S) (h |` (- S)) ⟹ ∃h1 h2. h = h1 ++ h2 ∧ dom h1 \&lt;perpendicular&gt; dom h2 ∧ P h1 h2"
   by (rule exI[of _ "h |` S"], rule exI[of _ "h |` (- S)"])
     (auto simp add: map_add_def option.case_eq_if restrict_map_def disjoint_def disjoint_iff domIff)
-lemma heap_split_by_addr_set: "P (h |` (MemAddress ` S)) (h |` (- (MemAddress ` S))) ⟹ ∃h1 h2. h = h1 ++ h2 ∧ dom h1 ⟂ dom h2 ∧ P h1 h2"
+lemma heap_split_by_addr_set: "P (h |` (MemAddress ` S)) (h |` (- (MemAddress ` S))) ⟹ ∃h1 h2. h = h1 ++ h2 ∧ dom h1 \&lt;perpendicular&gt; dom h2 ∧ P h1 h2"
   using heap_split_by_set .</span><span>*</span><span>)</span></span><span>
 
 

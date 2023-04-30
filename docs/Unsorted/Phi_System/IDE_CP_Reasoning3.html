@@ -70,8 +70,8 @@ lemma MemAddrState_restrict_I1[intro]: "h <span class="hidden">❙</span><b>a</b
   and MemAddrState_restrict_I2[intro]: "h <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T ⟹ MemAddress a ∉ S ⟹ h |` (- S) <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T "
   unfolding MemAddrState_def addr_allocated_def by auto
 
-lemma MemAddrState_add_I1[intro]: " h1 <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T ⟹ dom h1 ⟂ dom h2 ⟹ h1 ++ h2 <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T "
-  and  MemAddrState_add_I2[intro]: " h2 <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T ⟹ dom h1 ⟂ dom h2 ⟹ h1 ++ h2 <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T "
+lemma MemAddrState_add_I1[intro]: " h1 <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T ⟹ dom h1 \&lt;perpendicular&gt; dom h2 ⟹ h1 ++ h2 <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T "
+  and  MemAddrState_add_I2[intro]: " h2 <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T ⟹ dom h1 \&lt;perpendicular&gt; dom h2 ⟹ h1 ++ h2 <span class="hidden">❙</span><b>a</b><span class="hidden">❙</span><b>t</b> a 𝗂𝗌 T "
   unfolding MemAddrState_def addr_allocated_def by (auto simp add: map_add_def disjoint_def split: option.split)
 
 </span><span>*</span><span>)</span></span><span>
