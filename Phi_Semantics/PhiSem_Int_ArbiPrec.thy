@@ -5,6 +5,9 @@ begin
 
 chapter \<open>Integer of Arbitrary Precision\<close>
 
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
+                                          (SOME Generic_Variable_Access.store_value_no_clean))\<close>
+
 section \<open>Semantics\<close>
 
 subsection \<open>Type\<close>
@@ -433,5 +436,7 @@ lemma op_le_anat_\<phi>app[\<phi>overload less_equal,
   \<open>\<p>\<r>\<o>\<c> op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> op_le_aint \<medium_right_bracket>. .
 
+
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
 
 end

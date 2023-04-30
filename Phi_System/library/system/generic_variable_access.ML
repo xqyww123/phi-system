@@ -207,11 +207,13 @@ fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ 
   | check_term ctxt ((H1 as Const (\<^const_name>\<open>Value_of\<close>, _))
                         $ (H2 as Const (\<^const_name>\<open>Pure.dummy_pattern\<close>, _))
                         $ (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_)))
-      = if Config.get ctxt mode_synthesis
-        then H1 $ H2 $ translate_value0 ctxt (Free (N, dummyT))
-        else (case lookup_bindings ctxt N
-                |> Option.mapPartial (fn (_, get) => get (ctxt, Phi_Envir.the_construction ctxt))
-                of SOME x => x | _ => no_binding_found N)
+      = let val v = lookup_bindings ctxt N
+                  |> Option.mapPartial (fn (_, get) => get (ctxt, Phi_Envir.the_construction ctxt))
+         in if Config.get ctxt mode_synthesis
+            then H1 $ (case v of SOME x => Type.constraint (fastype_of x) H2 | _ => H2)
+                    $ translate_value0 ctxt (Free (N, dummyT))
+            else (case v of SOME x => x | _ => no_binding_found N)
+        end
   | check_term ctxt (A $ B) = check_term ctxt A $ check_term ctxt B
   | check_term ctxt (Abs (N,TY,X)) = Abs (N,TY, check_term ctxt X)
   | check_term _ X =  X
@@ -325,7 +327,7 @@ val _ = Theory.setup (Context.theory_map (
 Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
   if level = 0
   andalso #name (Phi_Working_Mode.mode1 ctxt) = #name Phi_Working_Mode.procedure
-  then the_default store_value_no_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
+  then the_default store_value_and_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
   else (ctxt,sequent)
 )))
 

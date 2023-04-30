@@ -92,12 +92,12 @@ thm XXXX_def
 proc
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
-  \<medium_left_bracket> add add \<medium_right_bracket>. .
+  \<medium_left_bracket> $a add ($b) add ($c) \<medium_right_bracket>. .
 
 proc
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
-  \<medium_left_bracket> ;; \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
 
 declare [[\<phi>hide_techinicals=true]]
  

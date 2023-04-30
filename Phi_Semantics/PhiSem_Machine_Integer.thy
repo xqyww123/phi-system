@@ -7,6 +7,9 @@ begin
 
 chapter \<open>Semantics for Machine Integers\<close>
 
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
+                                  (SOME Generic_Variable_Access.store_value_no_clean))\<close>
+
 section \<open>Models\<close>
 
 subsubsection \<open>Type\<close>
@@ -981,5 +984,6 @@ lemma op_upcast_int_\<phi>app:
       by (simp add: signed_take_bit_int_eq_self sint_sbintrunc' sint_up_scast t1 the_\<phi>lemmata(1) the_\<phi>lemmata(2))
   qed .
 
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
 
 end

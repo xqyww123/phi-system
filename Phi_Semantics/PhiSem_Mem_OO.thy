@@ -4,6 +4,9 @@ begin
 
 chapter \<open>Object Oriented Programming Model\<close>
 
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
+                                          (SOME Generic_Variable_Access.store_value_no_clean))\<close>
+
 section \<open>Semantics & Fictions\<close>
 
 subsection \<open>Models\<close>
@@ -345,5 +348,8 @@ lemma op_obj_dispose:
   using RES.Objs.get_res_Valid[simplified Valid_Objs_def, simplified]
     RES.Objs.raw_unit_assertion_implies'[where f=fields]
   by (smt (z3) domIff map_le_antisym map_le_def)
+
+
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
 
 end

@@ -9,7 +9,7 @@ theory IDE_CP_Core
   keywords
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
-    "var" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure-fact"
+    "var" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure_fact"
     "input" "certified" "requires" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
@@ -1515,7 +1515,6 @@ lemma "__value_access_0__":
 
 ML_file \<open>library/system/generic_variable_access.ML\<close>
 
-
 lemma [\<phi>reason 1000]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (x <val-of> any \<Ztypecolon> T) TY\<close>
@@ -1835,7 +1834,7 @@ let
   val statement = Parse.and_list1 (
           Parse_Spec.opt_thm_name ":" -- Scan.repeat1 Parse.prop -- for_fixes);
 in
-  fn (ctxt, sequent) => Parse.position \<^keyword>\<open>pure-fact\<close> -- statement >> (
+  fn (ctxt, sequent) => Parse.position \<^keyword>\<open>pure_fact\<close> -- statement >> (
   fn ((_,pos), raw_statements) => fn _ =>
   let val id = Phi_ID.get ctxt
 

@@ -2,6 +2,9 @@ theory PhiSem_Real_Abst_Int
   imports PhiSem_Real_Abst PhiSem_Int_ArbiPrec
 begin
 
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
+                                          (SOME Generic_Variable_Access.store_value_no_clean))\<close>
+
 section \<open>Conversion between Abstract Real and Arbitrary-precision Integers\<close>
 
 definition op_Ra_floor_Za :: \<open>(VAL, VAL) proc'\<close>
@@ -50,5 +53,7 @@ lemma op_Na_to_Ra_\<phi>app
   \<open> \<p>\<r>\<o>\<c> op_Za_to_Ra raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<nat> \<longmapsto> real_of_nat x \<Ztypecolon> \<v>\<a>\<l> \<real> \<rbrace> \<close>
   \<medium_left_bracket> op_Za_to_Ra \<medium_right_bracket>. .
 
+
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
 
 end

@@ -12,6 +12,9 @@ begin
 
 section \<open>Semantics\<close>
 
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
+                                          (SOME Generic_Variable_Access.store_value_no_clean))\<close>
+
 subsection \<open>Models\<close>
 
 subsubsection \<open>Resource\<close>
@@ -495,6 +498,8 @@ lemma "__set_new_var_noty_rule__":
 
 ML_file "library/variable.ML"
 
+
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
 
 end
 
