@@ -303,8 +303,8 @@ fun sledgehammer (ctxt,sequent0) =
 
           val (prfs,_) =
             funpow' N (fn j => fn (ps,s) =>
-                        let val _ = tracing ("Sledgehammering on " ^ string_of_int (N+1-j) ^ "th goal (\
-                                             \total " ^ Ns ^ ")")
+                        let val _ = tracing ("Sledgehammering on the " ^ string_of_int (N+1-j) ^
+                                             "th goal (total " ^ Ns ^ ")")
                             val prfx = raw_sledgehammer s
                             val (p',s') = eval_prf_strs_stat prfx s
                          in (p'::ps, s') end)

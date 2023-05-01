@@ -49,26 +49,21 @@ proc FIB:
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<close>
   is [recursive n]
   is [routine]
-  \<medium_left_bracket>
-    if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket>. \<medium_left_bracket>
-      \<open>$n - 1\<close> FIB \<rightarrow> val a;;
-      \<open>$n - 2\<close> FIB \<rightarrow> val b;;
-      return (\<open>$a + $b\<close>)
-      certified by (metis One_nat_def fib.elims le_Suc_eq le_zero_eq the_\<phi>)
-    \<medium_right_bracket>.
-  \<medium_right_bracket> using le_Suc_eq the_\<phi>lemmata by force .
+\<medium_left_bracket>
+  if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket>. \<medium_left_bracket>
+    FIB (\<open>$n - 1\<close>) add (FIB (\<open>$n - 2\<close>))
+  \<medium_right_bracket>.
+\<medium_right_bracket>. .
 
 proc FIB2:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>(8)\<close>
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
   is [recursive n]
-  is [routine]
-  \<medium_left_bracket> if \<open>$n \<le> 1\<close> \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>. \<medium_left_bracket>
-        \<open>$n - 1\<close> FIB2 \<rightarrow> val a;;
-        \<open>$n - 2\<close> FIB2 \<rightarrow> val b;;
-        \<open>$a + $b\<close>
-  \<medium_right_bracket>.
-  \<medium_right_bracket> by (smt (verit, ccfv_threshold) One_nat_def Value_of_def fib.elims fib.simps(1) fib.simps(2) le_Suc_eq le_zero_eq) .
+\<medium_left_bracket>
+  if \<open>$n \<le> 1\<close>
+  \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>.
+  \<medium_left_bracket> FIB2 (\<open>$n - 1\<close>) add (FIB2 (\<open>$n - 2\<close>)) \<medium_right_bracket>.
+\<medium_right_bracket>. .
 
 thm FIB2_def
 
