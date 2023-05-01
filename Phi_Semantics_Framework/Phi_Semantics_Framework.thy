@@ -332,6 +332,7 @@ lemma \<phi>V_simps[simp]:
     apply (simp add: fun_eq_iff \<phi>arg_forall)
     apply (simp add: fun_eq_iff \<phi>arg_forall) .
 
+
 definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
 
 paragraph \<open>More auxiliary properties\<close>

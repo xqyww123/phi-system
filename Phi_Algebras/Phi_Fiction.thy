@@ -4,7 +4,22 @@ begin
 
 section \<open>Interpretation of Fictional Separation\<close>
 
-subsection \<open>Algebric Structure\<close>
+subsection \<open>Algebraic Structure\<close>
+
+subsubsection \<open>Auxiliary Helper\<close>
+
+definition \<open>pairself f = (\<lambda>(x,y). (f x, f y))\<close>
+
+lemma pairself[simp]:
+  \<open>pairself f (x,y) = (f x, f y)\<close>
+  unfolding pairself_def by simp
+
+lemma pairself_image_Id_on[simp]:
+  \<open>pairself f ` Id_on S = Id_on (f ` S)\<close>
+  by (clarsimp simp add: set_eq_iff Id_on_iff image_iff Bex_def; blast)
+
+
+subsubsection \<open>Fictional Interpretation\<close>
 
 text \<open>
   Referring to Fictional Separation Logic~\cite{FSL}, the interpretation of fictional separation
@@ -29,14 +44,24 @@ lemmas Interp_inverse[simp] = Interp_inverse[simplified]
 lemma Interp_one[simp]: "\<I> I 1 = 1"
   using Interpretation_def \<I> by blast
 
+(*
 definition \<I>\<^sub>r\<^sub>e\<^sub>l :: \<open>('a::one,'b::one) interp \<Rightarrow> ('a \<times> 'b) set\<close> 
-  where \<open>\<I>\<^sub>r\<^sub>e\<^sub>l I = {(x,y). y \<in> \<I> I x}\<close>
+  where \<open>\<I>\<^sub>r\<^sub>e\<^sub>l I = {(x,y). y \<in> \<I> I x}\<close> *)
 
 
+subsubsection \<open>Fictional Refinement\<close>
 
 definition Fictional_Forward_Simulation :: \<open>'c rel \<Rightarrow> 'a rel \<Rightarrow> ('a::sep_magma_1,'c::sep_magma_1) interp \<Rightarrow> 'a set \<Rightarrow> bool\<close>
       ("_/ \<r>\<e>\<f>\<i>\<n>\<e>\<s> _/ \<w>.\<r>.\<t> _/ \<i>\<n> _" [11,11,11] 10)
-  where \<open>(F \<r>\<e>\<f>\<i>\<n>\<e>\<s> G \<w>.\<r>.\<t> T \<i>\<n> D) \<longleftrightarrow> (\<forall>x r R. F `` (R * \<I> T (r * x) \<s>\<u>\<b>\<j> r ## x \<and> x \<in> D) \<subseteq> { y'. \<exists>y. y' \<in> R * \<I> T (r * y) \<and> r ## y \<and> (x,y) \<in> G})\<close>
+  where \<open>(F \<r>\<e>\<f>\<i>\<n>\<e>\<s> G \<w>.\<r>.\<t> T \<i>\<n> D)
+    \<longleftrightarrow> (\<forall>x r R. F `` (R * \<I> T (r * x) \<s>\<u>\<b>\<j> r ## x \<and> x \<in> D) \<subseteq> { y'. \<exists>y. y' \<in> R * \<I> T (r * y) \<and> r ## y \<and> (x,y) \<in> G})\<close>
+
+text \<open>We use relation directly here but doesn't mean we cannot model return value or threw exceptions.
+They can parameterize the relation, as we don't need to (it is not designed to) abstract the values.
+We only relate resources in different abstractions.
+
+\<^prop>\<open>\<And>ret. F ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> G ret \<w>.\<r>.\<t> T \<i>\<n> D\<close>
+\<close>
 
 definition \<open>refinement_projection I D = \<Union> (\<I> I ` (UNIV * D))\<close>
 
@@ -74,6 +99,32 @@ lemma refinement_frame:
   apply (clarsimp simp add: subset_iff Subjection_expn set_mult_expn Image_def Bex_def Id_on_iff)
   by (smt (z3) sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc')
 
+lemma sep_refinement_horizontal_stepwise:
+  \<open> A1 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B1 \<w>.\<r>.\<t> I \<i>\<n> D
+\<Longrightarrow> A2 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B2 \<w>.\<r>.\<t> I \<i>\<n> D'
+\<Longrightarrow> (B1 `` D \<subseteq> D')
+\<Longrightarrow> A1 O A2 \<r>\<e>\<f>\<i>\<n>\<e>\<s> B1 O B2 \<w>.\<r>.\<t> I \<i>\<n> D\<close>
+  unfolding Fictional_Forward_Simulation_def
+  apply (clarsimp simp add: set_mult_expn Subjection_expn subset_iff Image_def Bex_def)
+  subgoal premises prems for x r R u v y z
+  proof -
+    have \<open>(\<exists>xa. (\<exists>u v. xa = u * v \<and> u \<in> R \<and> v \<in> \<I> I (r * x) \<and> u ## v) \<and> r ## x \<and> x \<in> D \<and> (xa, y) \<in> A1)\<close>
+      using prems(10) prems(4) prems(5) prems(6) prems(8) prems(9) by blast
+    note prems(1)[THEN spec[where x=x], THEN spec[where x=r], THEN spec[where x=R], THEN spec[where x=y],
+          THEN mp, OF this]
+    then show ?thesis
+      apply clarsimp
+      subgoal premises prems2 for y' u' v'
+      proof -
+        have \<open>(\<exists>x. (\<exists>u v. x = u * v \<and> u \<in> R \<and> v \<in> \<I> I (r * y') \<and> u ## v) \<and> r ## y' \<and> y' \<in> D' \<and> (x, z) \<in> A2)\<close>
+          using prems(3) prems(5) prems(7) prems2(1) prems2(2) prems2(3) prems2(4) prems2(5) prems2(6) by blast
+        note prems(2)[THEN spec[where x=y'], THEN spec[where x=r], THEN spec[where x=R], THEN spec[where x=z],
+          THEN mp, OF this]
+        then show ?thesis
+          apply clarsimp
+          using prems2(2) by blast
+      qed .
+  qed .
 
 
 
@@ -190,7 +241,6 @@ lemma \<F>_pointwise_\<I>[simp]:
   unfolding \<F>_pointwise_def
   by (rule Interp_inverse) (auto simp add: Interpretation_def one_fun_def fun_eq_iff)
 
-
 definition "\<F>_pointwise' I = Interp (\<lambda>f. {g. \<forall>x. g x \<in> \<I> (I x) (f x) })"
 
 lemma \<F>_pointwise'_\<I>[simp]:
@@ -198,7 +248,60 @@ lemma \<F>_pointwise'_\<I>[simp]:
   unfolding \<F>_pointwise'_def
   by (rule Interp_inverse) (auto simp add: Interpretation_def one_fun_def fun_eq_iff)
 
+lemma \<F>_pointwise_projection:
+  \<open> refinement_projection I D' \<subseteq> UNIV * D
+\<Longrightarrow> refinement_projection (\<F>_pointwise I) (fun_upd 1 k ` D') \<subseteq> UNIV * fun_upd 1 k ` D\<close>
+  for D :: \<open>'b::sep_monoid set\<close>
+  apply (clarsimp simp add: subset_iff Bex_def image_iff set_mult_expn times_fun
+            refinement_projection_def)
+  subgoal premises prems for t u xb
+  proof -
+    have t1: \<open>u k ## xb\<close>
+      by (metis fun_upd_same prems(3) sep_disj_fun)
+    have \<open>(\<exists>x. (\<exists>xa. (\<exists>u v. xa = u * v \<and> v \<in> D' \<and> u ## v) \<and> x = \<I> I xa) \<and> t k \<in> x)\<close>
+      by (metis prems(2) prems(4) t1)
+    note prems(1)[THEN spec[where x=\<open>t k\<close>], THEN mp, OF this]
+    then show ?thesis
+      apply clarsimp
+      subgoal premises prems2 for u' v'
+        apply (rule exI[where x=\<open>t(k := u')\<close>], rule exI[where x=\<open>1(k := v')\<close>])
+        by (simp add: fun_eq_iff prems2 sep_disj_fun_def times_fun) .
+  qed .
 
+lemma \<F>_pointwise_refinement:
+  \<open> Id_on UNIV * A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
+\<Longrightarrow> Id_on UNIV * pairself (fun_upd 1 k) ` A \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` B
+    \<w>.\<r>.\<t> \<F>_pointwise I \<i>\<n> fun_upd 1 k ` D\<close>
+  unfolding Fictional_Forward_Simulation_def
+  apply (clarsimp simp add: set_mult_expn Subjection_expn image_iff Image_def subset_iff Bex_def times_fun Id_on_iff)
+  subgoal premises prems for r R u v xb xc a b
+  proof -
+    have t1[simp]: \<open>xc k ## a\<close>
+      by (metis fun_upd_same prems(8) sep_disj_fun)
+    have t2[simp]: \<open>xc k ## b\<close>
+      by (metis fun_upd_same prems(9) sep_disj_fun)
+    have \<open>(\<exists>x. (\<exists>ua v. x = ua * v \<and> ua \<in> {u k} \<and> v \<in> \<I> I (r k * xb) \<and> ua ## v) \<and>
+     r k ## xb \<and>
+     xb \<in> D \<and> (\<exists>a ba aa. x = a * aa \<and> (\<exists>bb. xc k * b = ba * bb \<and> a = ba \<and> (aa, bb) \<in> A \<and> a ## aa \<and> ba ## bb)))\<close>
+      by (simp add: prems,
+          smt (verit, del_insts) fun_upd_same prems(10) prems(2) prems(5) prems(6) prems(7) sep_disj_fun_def t1 t2 times_fun)
+    note prems(1)[THEN spec[where x=xb], THEN spec[where x=\<open>r k\<close>], THEN spec[where x=\<open>{u k}\<close>, THEN spec[where x=\<open>xc k * b\<close>]],
+          THEN mp, OF this]
+    then show ?thesis
+      apply clarsimp
+      subgoal premises prems2 for y v'
+      proof -
+        have t4: \<open>u ## v(k := v')\<close>
+          by (clarsimp simp add: sep_disj_fun_def prems2 prems(7)) (simp add: prems(7))
+        have t3: \<open>xc * 1(k := b) = u * v(k := v')\<close>
+          by (clarsimp simp add: fun_eq_iff times_fun prems2,
+              metis (no_types, opaque_lifting) fun_upd_other mult_1_class.mult_1_right prems(5) times_fun_def)
+        show ?thesis
+          by (rule exI[where x=\<open>1(k := y)\<close>]; simp add: prems prems2; rule,
+               smt (verit, ccfv_threshold) fun_split_1 fun_upd_other fun_upd_same prems(3) prems(6) prems2(4) t3 t4 times_fun,
+               metis fun_sep_disj_1_fupdt(1) fun_upd_triv prems2(1) prems2(2))
+      qed .
+  qed .
 
 subsubsection \<open>Pairwise\<close>
 
