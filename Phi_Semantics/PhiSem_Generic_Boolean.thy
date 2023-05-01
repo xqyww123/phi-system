@@ -102,11 +102,11 @@ lemma op_const_bool_\<phi>app[\<phi>synthesis for \<open>\<lambda>v. True \<Ztyp
 
 lemma True_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_const_bool True \<lbrace> Void \<longmapsto> \<v>\<a>\<l> True \<Ztypecolon> \<bool> \<rbrace>\<close>
-  \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket>.
 
 lemma False_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_const_bool False \<lbrace> Void \<longmapsto> \<v>\<a>\<l> False \<Ztypecolon> \<bool> \<rbrace>\<close>
-  \<medium_left_bracket> \<open>False\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> \<open>False\<close> \<medium_right_bracket>.
 
 subsection \<open>Not\<close>
 

@@ -14,7 +14,7 @@ proc test_prime:
 \<medium_left_bracket>
   if \<open>$x \<le> 1\<close>  \<medium_left_bracket>
     return (False)
-  \<medium_right_bracket>.
+  \<medium_right_bracket>
   \<medium_left_bracket>
     \<open>2 \<Ztypecolon> \<nat>\<close> \<rightarrow> var v ;;
 
@@ -26,14 +26,14 @@ proc test_prime:
     \<medium_left_bracket>                   \<comment> \<open>Code for loop body\<close>
       if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
         return (False)
-      \<medium_right_bracket>.
+      \<medium_right_bracket>
       \<medium_left_bracket>
         \<open>$v + 1\<close> \<rightarrow> $v
-      \<medium_right_bracket>.
-    \<medium_right_bracket>.
+      \<medium_right_bracket>
+    \<medium_right_bracket>
     return (True)
-  \<medium_right_bracket>.
-\<medium_right_bracket>. .
+  \<medium_right_bracket>
+\<medium_right_bracket>.
 
 thm test_prime_def \<comment> \<open>Semantic definition\<close>
 thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
@@ -46,7 +46,7 @@ proc test_prime':
 \<medium_left_bracket>
   if \<open>$x \<le> 1\<close> \<medium_left_bracket>
     return (False)
-  \<medium_right_bracket>.
+  \<medium_right_bracket>
   \<medium_left_bracket>
     \<open>2 \<Ztypecolon> \<nat>\<close> \<rightarrow> var v ;;
     (* In the previous example, the loop iterates from 2 to x, here we apply an optimization
@@ -59,11 +59,11 @@ proc test_prime':
     \<medium_left_bracket>
       if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
         return (False)  
-      \<medium_right_bracket>.
+      \<medium_right_bracket>
       \<medium_left_bracket>
         \<open>$v + 1\<close> \<rightarrow> $v 
-      \<medium_right_bracket>.
-    \<medium_right_bracket>.
+      \<medium_right_bracket>
+    \<medium_right_bracket>
 
     return (True) (*with this optimization, the final obligation fails to be solved
                     automatically, but the manual proof is intuitive and semi-automated.*)
@@ -77,8 +77,8 @@ proc test_prime':
         then show \<open>prime x\<close>
           by fastforce
       qed
-  \<medium_right_bracket>. \<comment> \<open>Close the top branch\<close>
-\<medium_right_bracket>. \<comment> \<open>Close the function body\<close> .
+  \<medium_right_bracket> \<comment> \<open>Close the top branch\<close>
+\<medium_right_bracket> \<comment> \<open>Close the function body\<close> .
 
 
 proc GCD:
@@ -86,12 +86,12 @@ proc GCD:
   output \<open>gcd x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> 
   is [recursive x y] \<comment> \<open>x, y are variable through recursive callings\<close>
 \<medium_left_bracket>
-  if \<open>$x > $y\<close> \<medium_left_bracket> GCD ($y, $x) \<medium_right_bracket>.
+  if \<open>$x > $y\<close> \<medium_left_bracket> GCD ($y, $x) \<medium_right_bracket>
   \<medium_left_bracket>
     \<open>$y mod $x\<close> \<rightarrow> val t
-    if \<open>$t = 0\<close> \<medium_left_bracket> $x \<medium_right_bracket>. \<medium_left_bracket> GCD ($t, $x) \<medium_right_bracket>.
-  \<medium_right_bracket>.
-\<medium_right_bracket>. .
+    if \<open>$t = 0\<close> \<medium_left_bracket> $x \<medium_right_bracket> \<medium_left_bracket> GCD ($t, $x) \<medium_right_bracket>
+  \<medium_right_bracket>
+\<medium_right_bracket>.
 
 declare GCD_\<phi>app[\<phi>synthesis add] \<comment> \<open>So that we can use abstract spec \<open>gcd\<close> in synthesis\<close>
 
@@ -100,7 +100,7 @@ proc Coprime:
   output \<open>coprime x y \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
 \<medium_left_bracket>
   \<open>gcd $x $y = 1\<close>
-\<medium_right_bracket>. .
+\<medium_right_bracket>.
 
 
 proc binary_search:
@@ -113,7 +113,7 @@ proc binary_search:
 \<medium_left_bracket>
   pure_fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
 
-  if ( F($lower) ) \<medium_left_bracket> return ($lower) \<medium_right_bracket>.
+  if ( F($lower) ) \<medium_left_bracket> return ($lower) \<medium_right_bracket>
   \<medium_left_bracket>  
     $lower, $upper \<rightarrow> var $l, $u ;;
     while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<int>\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<int> \<s>\<u>\<b>\<j> l u.
@@ -123,10 +123,10 @@ proc binary_search:
           ( \<open>$l + 1 < $u\<close> )
     \<medium_left_bracket>
       \<open>($l + $u) div 2\<close> \<rightarrow> val m ;;
-      if ( F($m) ) \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket>. \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>.
-    \<medium_right_bracket>.
+      if ( F($m) ) \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket> \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>
+    \<medium_right_bracket>
     return ($u)
-  \<medium_right_bracket>.
-\<medium_right_bracket>. .
+  \<medium_right_bracket>
+\<medium_right_bracket>.
 
 end

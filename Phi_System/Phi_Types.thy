@@ -70,20 +70,20 @@ definition \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x 
 \<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>Fun f\<close> 
-  \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<phi>Fun f\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<phi>Fun f\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y
 \<Longrightarrow> x \<Ztypecolon> \<phi>Fun f \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Identity\<close>
-  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>. .
+  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y
-\<Longrightarrow> x \<Ztypecolon> \<phi>Fun f \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Identity @action to Identity\<close> \<medium_left_bracket> \<medium_right_bracket>. .
+\<Longrightarrow> x \<Ztypecolon> \<phi>Fun f \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Identity @action to Identity\<close> \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
   \<open>is_functional (x \<Ztypecolon> \<phi>Fun f)\<close>
-  \<medium_left_bracket> to Identity \<medium_right_bracket>. .
+  \<medium_left_bracket> to Identity \<medium_right_bracket> .
 
 
 subsection \<open>Any\<close>
@@ -129,20 +129,20 @@ definition \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<ph
    
 lemma [\<phi>reason 1200]:
   \<open>x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U) @action to RAW\<close>
-  \<medium_left_bracket> destruct\<phi> _ thm useful  \<medium_right_bracket>. .
+  \<medium_left_bracket> destruct\<phi> _ thm useful  \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
   \<open> y \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<Zcomp> U \<a>\<n>\<d> P\<close>
   \<medium_left_bracket> premises Y[unfolded Imply_def Identity_expn, simplified, useful]
-    construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket>. .
+    construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
   \<open> is_functional (x \<Ztypecolon> U)
 \<Longrightarrow> y \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<a>\<n>\<d> P\<close>
   \<medium_left_bracket> premises [unfolded is_functional_def, useful] and [unfolded satisfication_encoding, useful]
-    D \<medium_right_bracket>. .
+    D \<medium_right_bracket> .
 
 lemma \<phi>Composition_expn:
   \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>
@@ -183,7 +183,7 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1200]:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> is_functional (x \<Ztypecolon> T))
 \<Longrightarrow> is_functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  \<medium_left_bracket> premises [\<phi>reason add] ;; \<medium_right_bracket>. .
+  \<medium_left_bracket> premises [\<phi>reason add] ;; \<medium_right_bracket> .
 
 subsection \<open>Existential Quantification as a Type\<close>
 
@@ -291,7 +291,7 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def using implies_refl .
 
 lemma [\<phi>reason 1200]:
-  \<open>() \<Ztypecolon> \<phi>None \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<Ztypecolon> Identity @action to Identity\<close>  \<medium_left_bracket>  \<medium_right_bracket>. .
+  \<open>() \<Ztypecolon> \<phi>None \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<Ztypecolon> Identity @action to Identity\<close>  \<medium_left_bracket> \<medium_right_bracket> .
 
 subsubsection \<open>Rules\<close>
 
@@ -301,7 +301,7 @@ lemma [\<phi>reason 3000]:
 
 lemma [\<phi>reason 1200]:
   \<open>is_functional (() \<Ztypecolon> \<phi>None)\<close>
-  \<medium_left_bracket> to Identity \<medium_right_bracket>. .
+  \<medium_left_bracket> to Identity \<medium_right_bracket> .
 
 (*
 lemma [\<phi>reason 1500

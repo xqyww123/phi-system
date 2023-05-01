@@ -498,7 +498,7 @@ lemma Structural_Extract_aggrement_to [\<phi>reason 1200]:
   \<medium_left_bracket> premises A
     dup
     Agreement_cast[OF A]
-  \<medium_right_bracket>.
+  \<medium_right_bracket>
   using Agreement_cast .
 
 
@@ -510,7 +510,7 @@ lemma Structural_Extract_aggrement_from:
   \<medium_left_bracket> premises A
     Agreement_cast[OF A]
     Agreement_shrink
-  \<medium_right_bracket>.
+  \<medium_right_bracket>
   using Agreement_cast .
 
 
@@ -539,7 +539,7 @@ lemma Structural_Extract_to_mult:
   \<medium_left_bracket> premises L and R
     L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
     R[THEN implies_right_prod]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .
 
 declare Structural_Extract_to_mult [THEN SE_clean_waste, \<phi>reason 1200]
 
@@ -567,7 +567,7 @@ lemma Structural_Extract_from_mult:
     fold mult.assoc
     L[THEN implies_right_prod]
     R[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .
 
 declare Structural_Extract_from_mult [THEN SE_clean_waste,  \<phi>reason 1200]
 
@@ -582,7 +582,7 @@ lemma Structural_Extract_\<phi>Prod_left:
     fold mult.assoc
     L[THEN implies_right_prod]
     R[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .
 
 declare Structural_Extract_\<phi>Prod_left [THEN SE_clean_waste, \<phi>reason 1200]
 
@@ -879,7 +879,7 @@ lemma Structural_Extract_share_half:
     share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
     X[THEN implies_right_prod]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .
 
 declare Structural_Extract_share_half[THEN SE_clean_waste,
     \<phi>reason 1300 for \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) _ (?y \<Ztypecolon> half ?mmm \<Znrres> ?U) _ _\<close>]
@@ -896,7 +896,7 @@ lemma Structural_Extract_share_half_rev:
   ;; unfold t1
      X[THEN implies_right_prod]
      share_merge_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod, folded mult.assoc]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .
 
 (* declare Structural_Extract_share_half_rev[THEN SE_clean_waste] *)
 
@@ -964,7 +964,7 @@ lemma Structural_Extract_share_ge:
   have t1: \<open>(r \<Ztypecolon> n \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U) * (x \<Ztypecolon> m - n \<Znrres> T) = (x \<Ztypecolon> m - n \<Znrres> T) * (r \<Ztypecolon> n \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U)\<close>
     using mult.assoc mult.commute by blast
   ;; unfold t1
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .
 
 declare Structural_Extract_share_ge [THEN SE_clean_waste, \<phi>reason 1180]
 
@@ -987,7 +987,7 @@ lemma Structural_Extract_share_le:
   then have t1: \<open>(y \<Ztypecolon> n - m \<Znrres> U) * (r \<Ztypecolon> m \<Znrres> R) * (y \<Ztypecolon> m \<Znrres> U) = (r \<Ztypecolon> m \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U)\<close>
     by (metis ab_semigroup_mult_class.mult_ac(1) mult.commute)
   ;; unfold t1
-  \<medium_right_bracket>. .
+  \<medium_right_bracket> .
 
 declare Structural_Extract_share_le[THEN SE_clean_waste, \<phi>reason 1170]
 
@@ -1501,7 +1501,7 @@ lemma [\<phi>reason 1250]:
          \<lbrace> R1 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> A (\<phi>V_snd ret)\<heavy_comma> B (\<phi>V_fst ret) \<brangle> \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @action synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
-    F1 F2  \<medium_right_bracket> .. .
+    F1 F2  \<medium_right_bracket> .
 
 lemma [\<phi>reason 1230]:
   \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> A \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
@@ -1509,7 +1509,7 @@ lemma [\<phi>reason 1230]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<ggreater> f2) \<lbrace> R1 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> A \<heavy_comma> B ret \<brangle> \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (A \<heavy_comma> E2 e)) @action synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
-    F1 F2 \<medium_right_bracket> .. .
+    F1 F2 \<medium_right_bracket> .
 
 lemma [\<phi>reason 1240]:
   \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> A ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
@@ -1517,7 +1517,7 @@ lemma [\<phi>reason 1240]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<bind> (\<lambda>v. f2 \<ggreater> Return v)) \<lbrace> R1 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> A ret \<heavy_comma> B \<brangle> \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (ExSet A \<heavy_comma> E2 e)) @action synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
-    F1 F2 \<medium_right_bracket> .. .
+    F1 F2 \<medium_right_bracket> .
 
 lemma [\<phi>reason 1250]:
   \<open> \<p>\<r>\<o>\<c> f1 \<lbrace> R1 \<longmapsto> \<lambda>ret::unit \<phi>arg. R2\<heavy_comma> \<blangle> A \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
@@ -1525,7 +1525,7 @@ lemma [\<phi>reason 1250]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> (f1 \<ggreater> f2) \<lbrace> R1 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> A \<heavy_comma> B \<brangle> \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + (A \<heavy_comma> E2 e)) @action synthesis\<close>
   \<medium_left_bracket> premises F1 and F2
-    F1 F2 \<medium_right_bracket> .. .
+    F1 F2 \<medium_right_bracket> .
 
 (*
 subsection \<open>Infer the binding pattern\<close>
@@ -1705,7 +1705,7 @@ lemma [\<phi>reason 1200 for \<open>PROP Gen_Synthesis_Rule
   unfolding Gen_Synthesis_Rule_def FOCUS_TAG_def conjunction_imp
   subgoal premises prems apply (rule prems(1))
     \<medium_left_bracket> premises f and A
-      f prems(2)[OF A] \<medium_right_bracket>. . .
+      f prems(2)[OF A] \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200]: \<comment> \<open>Gen_Synthesis_Rule_step_value the last\<close>
   \<open> PROP Gen_Synthesis_Rule
@@ -1718,7 +1718,7 @@ lemma [\<phi>reason 1200]: \<comment> \<open>Gen_Synthesis_Rule_step_value the l
   unfolding Gen_Synthesis_Rule_def FOCUS_TAG_def conjunction_imp
   subgoal premises prems apply (rule prems(1))
     \<medium_left_bracket> premises f and A
-      f prems(2)[OF A] \<medium_right_bracket> .. . .
+      f prems(2)[OF A] \<medium_right_bracket> . .
 
 lemma [\<phi>reason 1200]: \<comment> \<open>Gen_Synthesis_Rule final\<close>
   \<open> (\<And>e. Remove_Values (E e) (E' e))
@@ -1743,7 +1743,7 @@ lemma [\<phi>reason 1210]:
   unfolding Gen_Synthesis_Rule_def FOCUS_TAG_def conjunction_imp
   subgoal premises prems apply (rule prems(1))
     \<medium_left_bracket> premises f and A
-      f prems(2)[OF A] \<medium_right_bracket> .. . .
+      f prems(2)[OF A] \<medium_right_bracket> . .
 
 
 lemma [\<phi>reason 2000]:
@@ -1855,7 +1855,7 @@ lemma [\<phi>reason 1200]:
   unfolding Gen_Synthesis_Rule_def
   subgoal premises prems apply (rule prems(2))
     \<medium_left_bracket> premises Ant
-      prems(3)[OF Ant] \<medium_right_bracket>. . .
+      prems(3)[OF Ant] \<medium_right_bracket> . .
 
 
 subsection \<open>Overloaded Synthesis\<close>
@@ -1973,7 +1973,7 @@ lemma overloaded_synthesis_unary:
     \<t>\<h>\<r>\<o>\<w>\<s> (E1 + E) @action synthesis\<close>
   unfolding Optimal_Synthesis_def
   \<medium_left_bracket> premises H1 and H
-    H1 H \<medium_right_bracket> .. .
+    H1 H \<medium_right_bracket> .
 
 lemma overloaded_synthesis_binary:
   \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
@@ -1986,7 +1986,7 @@ lemma overloaded_synthesis_binary:
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + E e) @action synthesis\<close>
   unfolding Optimal_Synthesis_def
   \<medium_left_bracket> premises H1 and H2 and H
-    H1 H2 H \<medium_right_bracket> .. .
+    H1 H2 H \<medium_right_bracket> .
 
 lemma overloaded_synthesis_ternary:
   \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
@@ -2003,7 +2003,7 @@ lemma overloaded_synthesis_ternary:
   unfolding Optimal_Synthesis_def
   \<medium_left_bracket> premises H1 and H2 and H3 and H
     H1 H2 H3 H
-  \<medium_right_bracket> .. .
+  \<medium_right_bracket> .
 
 lemma make_overloaded_synthesis_rule:
   \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R\<heavy_comma> E e)
@@ -2017,7 +2017,7 @@ lemma make_overloaded_synthesis_rule:
   unfolding Gen_Synthesis_Rule_def
   \<medium_left_bracket> premises E[assertion_simps] and F and X and A
     X F[OF A]
-  \<medium_right_bracket> .. .
+  \<medium_right_bracket> .
 
 lemma make_overloaded_synthesis_rule':
   \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R'\<heavy_comma> E e)

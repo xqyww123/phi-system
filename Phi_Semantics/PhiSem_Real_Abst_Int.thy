@@ -51,7 +51,7 @@ lemma op_Na_to_Ra_\<phi>app
   [\<phi>overload to_real, \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. real_of_int x \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_Za_to_Ra raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<nat> \<longmapsto> real_of_nat x \<Ztypecolon> \<v>\<a>\<l> \<real> \<rbrace> \<close>
-  \<medium_left_bracket> op_Za_to_Ra \<medium_right_bracket>. .
+  \<medium_left_bracket> op_Za_to_Ra \<medium_right_bracket>.
 
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>

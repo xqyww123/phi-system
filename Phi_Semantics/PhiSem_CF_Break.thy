@@ -166,9 +166,9 @@ lemma [\<phi>reason 1000]:
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
            Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
-    X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> TECHNICAL Brk_Frame l)\<close> ..
-            \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket> ..
-  \<medium_right_bracket>. .
+    X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
+            \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket>
+  \<medium_right_bracket>.
 
 
 lemma [\<phi>reason 3000 for \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<a>\<n>\<d> _\<close>]:
@@ -188,9 +188,9 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> (X1 + X2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
   unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right
   \<medium_left_bracket> premises X1 and X2
-    cases \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> TECHNICAL Brk_Frame l) + (E2 \<heavy_comma> TECHNICAL Brk_Frame l))\<close> by fast
-          \<medium_left_bracket> X1 \<medium_right_bracket>.
-  \<medium_right_bracket>. .
+    cases \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> TECHNICAL Brk_Frame l) + (E2 \<heavy_comma> TECHNICAL Brk_Frame l))\<close>
+          \<medium_left_bracket> X1 \<medium_right_bracket>
+  \<medium_right_bracket>.
 
 (* lemma [\<phi>reason 1200]:
   \<open> X1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y E
@@ -200,25 +200,25 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1200]:
   \<open>Brking_Frame l Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y 0\<close>
-  unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>. .
+  unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma Brking_Frame_absorb_item[assertion_simps]:
   \<open>((Brking_Frame l Y)\<heavy_comma> X) = Brking_Frame l (\<lambda>v. Y v \<heavy_comma> X)\<close>
   unfolding Brking_Frame_def
   apply (intro assertion_eq_intro)
-  \<medium_left_bracket> ;; \<medium_right_bracket>. \<medium_left_bracket> \<medium_right_bracket>. .
+  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma Brking_Frame_absorb_subj[assertion_simps]:
   \<open>((Brking_Frame l Y) \<s>\<u>\<b>\<j> P) = Brking_Frame l (\<lambda>v. Y v \<s>\<u>\<b>\<j> P)\<close>
   unfolding Brking_Frame_def
   apply (intro assertion_eq_intro)
-  \<medium_left_bracket> \<medium_right_bracket>. \<medium_left_bracket> ;; \<medium_right_bracket>. .
+  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma Brking_Frame_absorb_ex[assertion_simps]:
   \<open>(\<exists>*x. (Brking_Frame l (Y x))) = Brking_Frame l (\<lambda>v. \<exists>*x. Y x v)\<close>
   unfolding Brking_Frame_def
   apply (intro assertion_eq_intro)
-  \<medium_left_bracket> \<medium_right_bracket>. \<medium_left_bracket> ;; \<medium_right_bracket>. .
+  \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1180]:
   \<open> NO_MATCH TYPE('a) TYPE('b)
@@ -234,7 +234,7 @@ lemma [\<phi>reason 1000]:
   unfolding sift_brking_frame'_def FOCUS_TAG_def Technical_def
   \<medium_left_bracket> premises X
     X
-  \<medium_right_bracket>. .
+  \<medium_right_bracket>.
 
 hide_fact Brking_Frame_plus
 
@@ -248,7 +248,7 @@ lemma [\<phi>reason 2200]:
   unfolding Brking_Frame_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
     X[THEN implies_right_prod]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket>.
 
 lemma [\<phi>reason 2201]:
   (*The priority must override Void Padding*)
@@ -257,7 +257,7 @@ lemma [\<phi>reason 2201]:
   unfolding Brking_Frame_def FOCUS_TAG_def Technical_def
   \<medium_left_bracket> premises X
     X[THEN implies_right_prod]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket>.
 
 
 subsection \<open>Syntax hiding technical separation items\<close>
@@ -284,10 +284,10 @@ proc
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
         $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>]
-      \<medium_right_bracket> .. ;;
+      \<medium_right_bracket>
       assert \<bottom> (*this place is unreachable!*)
-    \<medium_right_bracket> ..
-  \<medium_right_bracket> .. .
+    \<medium_right_bracket>
+  \<medium_right_bracket> .
 
 
 end

@@ -25,11 +25,11 @@ proc
   output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
   is [routine]
   \<medium_left_bracket>
-    if \<medium_left_bracket> \<open>0 < $x\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket>. \<medium_left_bracket> \<open>0\<close> \<medium_right_bracket>.
+    if ( \<open>0 < $x\<close> ) \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket> \<medium_left_bracket> \<open>0\<close> \<medium_right_bracket>
     (* the cartouche like \<open>0 < $x\<close> invokes a synthesis proce
 ss
        to make a value satisfying that specification *)
-  \<medium_right_bracket> using \<phi> by simp .
+  \<medium_right_bracket> .
 
 (*
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
@@ -50,10 +50,10 @@ proc FIB:
   is [recursive n]
   is [routine]
 \<medium_left_bracket>
-  if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket>. \<medium_left_bracket>
+  if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket> \<medium_left_bracket>
     FIB (\<open>$n - 1\<close>) add (FIB (\<open>$n - 2\<close>))
-  \<medium_right_bracket>.
-\<medium_right_bracket>. .
+  \<medium_right_bracket>
+\<medium_right_bracket>.
 
 proc FIB2:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>(8)\<close>
@@ -61,9 +61,9 @@ proc FIB2:
   is [recursive n]
 \<medium_left_bracket>
   if \<open>$n \<le> 1\<close>
-  \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>.
-  \<medium_left_bracket> FIB2 (\<open>$n - 1\<close>) add (FIB2 (\<open>$n - 2\<close>)) \<medium_right_bracket>.
-\<medium_right_bracket>. .
+  \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>
+  \<medium_left_bracket> FIB2 (\<open>$n - 1\<close>) add (FIB2 (\<open>$n - 2\<close>)) \<medium_right_bracket>
+\<medium_right_bracket>.
 
 thm FIB2_def
 
@@ -71,7 +71,7 @@ proc YYY:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
   is [routine]
-  \<medium_left_bracket>  \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket>  \<open>$a + $b + $c\<close> \<medium_right_bracket>.
 
 thm YYY_def
 
@@ -80,19 +80,19 @@ proc XXXX:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
   is [routine_basic]
-  \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>.
 
 thm XXXX_def
 
 proc
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
-  \<medium_left_bracket> $a add ($b) add ($c) \<medium_right_bracket>. .
+  \<medium_left_bracket> $a add ($b) add ($c) \<medium_right_bracket>.
 
 proc
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
-  \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>. .
+  \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>.
 
 declare [[\<phi>hide_techinicals=true]]
  
@@ -103,13 +103,13 @@ proc
   is [routine]   
   \<medium_left_bracket>  $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*);;
     while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
-    \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket>. (*guard*)
+    \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket> (*guard*)
     \<medium_left_bracket>
-      if \<open>$v = 10\<close> \<medium_left_bracket> break \<medium_right_bracket>. \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v;; continue \<medium_right_bracket>.
+      if \<open>$v = 10\<close> \<medium_left_bracket> break \<medium_right_bracket> \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v;; continue \<medium_right_bracket>
       assert \<bottom>
-    \<medium_right_bracket>. (*loop body*)
+    \<medium_right_bracket> (*loop body*)
     $v
-  \<medium_right_bracket>. .
+  \<medium_right_bracket>.
 
 
 (*

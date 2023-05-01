@@ -275,7 +275,7 @@ proc (nodef) op_obj_load_field:
   \<medium_left_bracket> \<open>obj: _\<close> to Identity \<exists>v
   have [simp]: \<open>v \<in> Well_Type TY\<close> using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
   ;; $ref op_obj_load_field_raw[where TY=TY]
-  \<medium_right_bracket> by (simp add: Nosep_expns the_\<phi>lemmata) .
+  \<medium_right_bracket> certified by (simp add: Nosep_expns the_\<phi>lemmata) .
   
 
 paragraph \<open>Store Field\<close>
@@ -306,7 +306,7 @@ proc (nodef) op_obj_store_field:
     op_obj_store_field_raw[where TY=TY]
       certified using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast ;;
       certified using B[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
-  \<medium_right_bracket> by (simp add: Nosep_expns the_\<phi>lemmata) .
+  \<medium_right_bracket> certified by (simp add: Nosep_expns the_\<phi>lemmata) .
 
 
 paragraph \<open>Dispose\<close>

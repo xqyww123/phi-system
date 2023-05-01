@@ -765,12 +765,22 @@ val _ =
    -- statement_cmd_begining (3,1))
    >> (fn (blk,prcs) => Toplevel.proof' (fn int => prcs o blk int o Proof.map_context Phi_ID.next)))
 
+datatype end_blk_action = Enter_Proof_Mode | Transparent_Proof of (Proof.state -> Proof.state)
+
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (option (\<^keyword>\<open>for\<close> |-- term) --| Scan.option \<^keyword>\<open>certified\<close>
-      >> (fn opt => Toplevel.proof' (fn int =>
-            end_block_cmd opt int o Proof.map_context Phi_ID.next)))
-
+    (option (\<^keyword>\<open>for\<close> |-- term) -- (
+        \<^keyword>\<open>certified\<close> >> K Enter_Proof_Mode ||
+        statement_cmd_tail (3,1) >> Transparent_Proof
+  ) >> (fn (spec,act) => Toplevel.proof' (fn int => fn stat =>
+      stat
+   |> Proof.map_context Phi_ID.next
+   |> (case act
+         of Enter_Proof_Mode => end_block_cmd spec int
+          | Transparent_Proof tail_statement => end_block_auto_proof_cmd spec int
+                                             #> Proof.map_context Phi_ID.next
+                                             #> tail_statement))))
+(*
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
     (((option (\<^keyword>\<open>for\<close> |-- term) >> (fn cast => fn int => fn stat =>
@@ -779,7 +789,7 @@ val _ =
    -- statement_cmd_tail (3,1))
    >> (fn (blk,tail_statement) => Toplevel.proof' (fn int =>
         tail_statement o Proof.map_context Phi_ID.next o blk int o Proof.map_context Phi_ID.next)))
-
+*)
 (* val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<phi>interface\<close> "declare \<phi>interface"
       (Parse.binding --| $$$ "=" -- Parse.const -- option ($$$ ":" |-- Parse.typ --| $$$ "\<longmapsto>" -- Parse.typ)

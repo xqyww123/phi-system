@@ -365,7 +365,7 @@ lemma ToSA_by_structural_extraction:
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
   ;;  A[THEN implies_right_prod]
      SE[OF \<open>Q'\<close>]
-  \<medium_right_bracket> using \<phi> by simp .
+  \<medium_right_bracket> certified using \<phi> by simp .
 
 lemma ToSA_by_structural_extraction__reverse_morphism:
   " Structure_Info U Q
@@ -382,12 +382,12 @@ lemma ToSA_by_structural_extraction__reverse_morphism:
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
   ;; A[THEN implies_right_prod]
      SE[OF \<open>Q'\<close>]
-  \<medium_right_bracket> apply (simp add: \<phi>)
-    \<medium_left_bracket>
+  \<medium_right_bracket> certified apply  (simp add: \<phi>)
+  \<medium_left_bracket>
     have A : \<open>R2' \<heavy_comma> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
     have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
     ;; SE A[THEN implies_right_prod]
-  \<medium_right_bracket>. . .
+  \<medium_right_bracket>. .
 
 
 lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<a>\<n>\<d> _\<close> ]:
@@ -1283,7 +1283,7 @@ proc (nodef) try'':
   \<medium_left_bracket> "__op_try__"
     F
     G
-  \<medium_right_bracket> .. .
+  \<medium_right_bracket> .
 
 proc (nodef) try':
   assumes A: \<open>Union_the_Same_Or_Arbitrary_when_Var Z Y1 Y2\<close>
@@ -1294,7 +1294,7 @@ proc (nodef) try':
   throws E2
   \<medium_left_bracket> "__op_try__" F G
     unfold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def, THEN spec, symmetric]
-  \<medium_right_bracket>. .
+  \<medium_right_bracket>.
 
 
 subsection \<open>Access the Resource\<close>

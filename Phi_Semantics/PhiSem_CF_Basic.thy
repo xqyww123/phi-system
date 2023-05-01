@@ -136,7 +136,7 @@ proc "if":
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
-  \<medium_left_bracket> C branch brT brF BC \<medium_right_bracket>. .
+  \<medium_left_bracket> C branch brT brF BC \<medium_right_bracket>.
 
 
 subsection \<open>Loops\<close>
@@ -172,8 +172,8 @@ proc (nodef) do_while:
   \<medium_left_bracket>
     V[unfolded Action_Tag_def]
     "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<s>\<u>\<b>\<j> invariant x'\<close>, simplified]
-    \<medium_left_bracket> B \<medium_right_bracket>. !!
-  \<medium_right_bracket> by simp .
+    \<medium_left_bracket> B \<medium_right_bracket> !!
+  \<medium_right_bracket> .
 
 (*
 We fail to infer the abstraction of the loop guard automatically but
@@ -200,10 +200,10 @@ proc while:
   \<medium_left_bracket> V C
     branch \<medium_left_bracket>
       do_while \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
-      \<medium_left_bracket> B C \<medium_right_bracket>. !!
-    \<medium_right_bracket>.
-    \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close> ..
-  \<medium_right_bracket> .. .
+      \<medium_left_bracket> B C \<medium_right_bracket>
+    \<medium_right_bracket>
+    \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close>
+  \<medium_right_bracket> .
 
 
 proc (nodef) refine_while:
@@ -218,13 +218,12 @@ proc (nodef) refine_while:
     while \<open>X x' \<s>\<u>\<b>\<j> x' i.
         Inv: (x' = (f ^^ i) x \<and> (\<forall>k < i. cond ((f ^^ k) x)) \<and> (\<forall>k \<le> i. invariant ((f ^^ k) x)) ) \<and>
         Guard: cond x'\<close>
-    \<medium_left_bracket> C \<medium_right_bracket>.
-    \<medium_left_bracket> B \<medium_right_bracket>
-      apply (of_tac  \<open>\<lambda>_. i + 1\<close>) using \<phi> apply (auto simp add: less_Suc_eq_le)
-      using le_neq_implies_less apply blast
-      by (metis funpow.simps(2) less_Suc_eq_le nat_less_le o_apply) ;;
-  \<medium_right_bracket> using \<phi> apply (auto simp add: While_Combinator.while_def while_option_def)
-    by (metis (mono_tags, lifting) LeastI_ex Least_le le_eq_less_or_eq) .
+    \<medium_left_bracket> C \<medium_right_bracket>
+    \<medium_left_bracket> B \<medium_right_bracket> certified by (of_tac  \<open>\<lambda>_. i + 1\<close>, insert \<phi>, auto simp add: less_Suc_eq_le,
+                        (insert le_neq_implies_less, blast)[1],
+                        metis funpow.simps(2) less_Suc_eq_le nat_less_le o_apply)
+  \<medium_right_bracket> certified using \<phi> apply (auto simp add: While_Combinator.while_def while_option_def)
+            by (metis (mono_tags, lifting) LeastI_ex Least_le le_eq_less_or_eq) .
 
 
 

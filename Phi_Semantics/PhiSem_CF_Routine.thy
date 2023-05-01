@@ -32,9 +32,9 @@ lemma "__routine__":
       brk_scope \<medium_left_bracket> for label_ret
         F[where vs=\<open>tag vs\<close>, unfolded Technical_def[where 'a=\<open>bool\<close>], simplified]
         "_op_break_rule_"
-      \<medium_right_bracket>. ;;
-    \<medium_right_bracket>. ;;
-  \<medium_right_bracket>. .
+      \<medium_right_bracket>
+    \<medium_right_bracket>
+  \<medium_right_bracket>.
 
 attribute_setup routine =
   \<open>Scan.succeed (Phi_Modifier.wrap_to_attribute

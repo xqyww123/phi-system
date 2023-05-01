@@ -13,7 +13,6 @@ theory IDE_CP_Core
     "input" "certified" "requires" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
-  and "\<medium_right_bracket>." :: prf_decl % "proof"                                         
   and "\<medium_right_bracket>" :: prf_goal % "proof"
   and "\<phi>processor" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
