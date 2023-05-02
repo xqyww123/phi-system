@@ -1,4 +1,4 @@
-theory PhiSem_Formalization_Tools
+theory PhiSem_Formalization_Tools2
   imports IDE_CP
 begin
 
@@ -772,6 +772,19 @@ lemma "__allocation_rule__":
   qed .
 
 end
+
+locale fiction_base_for_mapping_resource =
+  R: mapping_resource Res
++ fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> I\<close>
+for Res :: "('key \<Rightarrow> 'val::sep_algebra) resource_entry"
+and I   :: "('T::sep_algebra, 'key \<Rightarrow> 'val) interp"
+and Fic :: "'T fiction_entry"
+begin
+
+sublocale
+
+end
+
 
 subsection \<open>One Level Parital Mapping\<close>
 

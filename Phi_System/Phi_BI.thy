@@ -236,11 +236,7 @@ lemma Subjection_plus:
 
 subsection \<open>Existential Quantification\<close>
 
-definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 14)
-  where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
-notation ExSet (binder "\<exists>\<^sup>s" 14)
-
-lemma ExSet_expn[\<phi>expns]: "p \<in> ExSet S \<longleftrightarrow> (\<exists>c. p \<in> S c)" unfolding ExSet_def by simp
+declare ExSet_expn[\<phi>expns]
 
 lemma ExSet_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (ExSet S) \<Longrightarrow> (\<And>x. Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>

@@ -86,7 +86,7 @@ lemma refinement_sub_fun:
 
 lemma refinement_sub_fun_right:
   \<open> B \<subseteq> B'
-\<Longrightarrow> A  \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
+\<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
 \<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B' \<w>.\<r>.\<t> I \<i>\<n> D\<close>
   unfolding Fictional_Forward_Simulation_def
   by (clarsimp simp add: Subjection_expn subset_iff Image_def Bex_def Id_on_iff; blast)
@@ -126,7 +126,22 @@ lemma sep_refinement_horizontal_stepwise:
       qed .
   qed .
 
+lemma constant_refinement:
+  \<open>Id_on UNIV * Id_on A \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on B \<w>.\<r>.\<t> I \<i>\<n> B\<close>
+  unfolding Fictional_Forward_Simulation_def
+  by (clarsimp simp add: subset_iff Id_on_iff set_mult_expn Subjection_expn times_fun; blast)
 
+lemma refinement_subjection:
+  \<open> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
+\<Longrightarrow> A \<s>\<u>\<b>\<j> P \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<s>\<u>\<b>\<j> P \<w>.\<r>.\<t> I \<i>\<n> D\<close>
+  unfolding Fictional_Forward_Simulation_def
+  by (clarsimp simp add: Subjection_expn subset_iff Image_def Bex_def Id_on_iff)
+
+lemma refinement_ExSet:
+  \<open> (\<And>v. A v \<r>\<e>\<f>\<i>\<n>\<e>\<s> B v \<w>.\<r>.\<t> I \<i>\<n> D)
+\<Longrightarrow> ExSet A \<r>\<e>\<f>\<i>\<n>\<e>\<s> ExSet B \<w>.\<r>.\<t> I \<i>\<n> D\<close>
+  unfolding Fictional_Forward_Simulation_def
+  by (clarsimp simp add: ExSet_expn subset_iff Image_def Bex_def Id_on_iff, blast)
 
 
 subsection \<open>Instances\<close>
@@ -141,6 +156,17 @@ lemma \<F>_it_\<I>[simp]: "\<I> \<F>_it = \<F>_it'"
   unfolding \<F>_it_def
   by (rule Interp_inverse) (simp add: Interpretation_def one_set_def)
 
+lemma \<F>_it_refinement_projection:
+  \<open>refinement_projection \<F>_it S \<subseteq> UNIV * S\<close>
+  unfolding refinement_projection_def
+  by (clarsimp simp add: set_mult_expn)
+
+lemma \<F>_it_refinement:
+  \<open>Id_on UNIV * {(u,v)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(u,v)} \<w>.\<r>.\<t> \<F>_it \<i>\<n> {u}\<close>
+  for u :: \<open>'a::{sep_cancel,sep_monoid}\<close>
+  unfolding Fictional_Forward_Simulation_def
+  by (clarsimp simp add: Subjection_expn set_mult_expn,
+      metis sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc')
 
 
 subsubsection \<open>Composition\<close>
@@ -362,6 +388,12 @@ lemma map_option_inj_at_1[simp]:
   unfolding one_option_def kernel_is_1_def
   by (simp add: split_option_all)
 
+lemma (in homo_sep_wand_monoid) \<F>_functional_projection [simp]:
+  \<open>refinement_projection (\<F>_functional \<psi>) (\<psi> ` S) \<subseteq> UNIV * S\<close>
+  unfolding refinement_projection_def
+  by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>]
+          homo_sep_wand; blast)
+
 
 definition "\<F>_share s = (case s of Share w v \<Rightarrow> if w = 1 then {v} else {})"
 
@@ -379,6 +411,48 @@ subsubsection \<open>Agreement\<close>
 definition \<open>\<F>_agree = (\<lambda>x. case x of agree x' \<Rightarrow> {x'})\<close>
 
 
+subsection \<open>Refinement of Algebraic Structures\<close>
+
+subsubsection \<open>Cancellative Permission Insertion Homomorphism\<close>
+
+context cancl_perm_ins_homo begin
+
+lemma constant_refinement:
+  \<open>Id_on UNIV * Id_on S \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ((share n o \<psi>) ` S) \<w>.\<r>.\<t> \<F>_functional \<psi> \<i>\<n> (share n o \<psi>) ` S\<close>
+  for S :: \<open>'a::{sep_algebra, sep_cancel} set\<close>
+  unfolding Fictional_Forward_Simulation_def
+  by (clarsimp simp add: Id_on_iff set_mult_expn Subjection_expn; blast)
+
+lemmas constant_refinement_1 = constant_refinement[where S=\<open>{u}\<close> for u, simplified]
+
+lemma refinement_projection:
+  \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> refinement_projection (\<F>_functional \<psi>) ((share n o \<psi>) ` S) \<subseteq> UNIV * S\<close>
+  unfolding refinement_projection_def
+  by (auto simp add: set_mult_expn homo_sep_wand share_sep_wand'; blast)
+
+lemma refinement:
+  \<open>Id_on UNIV * {(u,v)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` {(u, v)} \<w>.\<r>.\<t> \<F>_functional \<psi> \<i>\<n> \<psi> ` {u}\<close>
+  for u :: \<open>'a::{sep_algebra, sep_cancel}\<close>
+  unfolding Fictional_Forward_Simulation_def
+  apply (clarsimp simp add: Id_on_iff set_mult_expn Subjection_expn homo_sep_wand)
+  subgoal premises prems for R ru r1 r2
+  proof -
+    have t1: \<open>ru * u = (r1 * r2) * u\<close>
+      by (simp add: prems(1) prems(5) prems(6) sep_mult_assoc')
+    have t2: \<open>r1 * r2 ## u\<close>
+      using prems(5) prems(6) sep_disj_multI1 by blast
+    have t3: \<open>ru = r1 * r2\<close>
+      using prems(3) sep_cancel t1 t2 by blast
+    have t4: \<open>r2 ## v\<close>
+      using prems(4) prems(5) prems(6) sep_disj_multD1 sep_disj_multD2 t3 by blast
+    then have t5: \<open>\<psi> r2 ## \<psi> v\<close> by simp
+    show ?thesis
+      apply (simp add: t5)
+      apply (rule exI[where x=r1], rule exI[where x=\<open>r2 * v\<close>], simp add: t3)
+      by (metis local.homo_mult prems(2) prems(4) prems(5) prems(6) sep_disj_multD1 sep_disj_multI2 sep_mult_assoc t3 t4)
+  qed .
+
+end
 
 
 

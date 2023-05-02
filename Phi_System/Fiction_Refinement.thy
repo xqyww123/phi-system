@@ -1,5 +1,5 @@
 theory Fiction_Refinement
-  imports PhiSem_Formalization_Tools
+  imports PhiSem_Formalization_Tools Phi_Semantics_Framework.Phi_SemFrame_ex
   abbrevs "<refines>" = "\<r>\<e>\<f>\<i>\<n>\<e>\<s>"
       and "<w.r.t>" = "\<w>.\<r>.\<t>"
 begin
@@ -42,35 +42,6 @@ lemma
 definition Transition_of :: \<open>'ret proc \<Rightarrow> 'ret \<phi>arg + ABNM \<Rightarrow> resource rel\<close>
   where \<open>Transition_of f = (\<lambda>x. case x of Inl v \<Rightarrow> { (s,s'). Success v s' \<in> f s \<and> s \<in> RES.SPACE }
                                         | Inr e \<Rightarrow> { (s,s'). Abnormal e s' \<in> f s \<and> s \<in> RES.SPACE } )\<close> *)
-
-declare [[typedef_overloaded]]
-
-datatype 'ret eval_stat = Normal \<open>'ret \<phi>arg\<close> | Abnm ABNM | Crash
-
-declare [[typedef_overloaded = false]]
-
-lemma eval_stat_forall:
-  \<open>All P \<longleftrightarrow> (\<forall>ret. P (Normal ret)) \<and> (\<forall>e. P (Abnm e)) \<and> P Crash\<close>
-  by (metis eval_stat.exhaust)
-
-lemma eval_stat_ex:
-  \<open>Ex P \<longleftrightarrow> (\<exists>ret. P (Normal ret)) \<or> (\<exists>e. P (Abnm e)) \<or> P Crash\<close>
-  by (metis eval_stat.exhaust)
-
-
-definition Transition_of' :: \<open>'ret proc \<Rightarrow> 'ret eval_stat \<Rightarrow> resource rel\<close>
-  where \<open>Transition_of' f = (\<lambda>x. (case x of Normal v \<Rightarrow> { (s,s'). Success v s' \<in> f s \<and> s \<in> RES.SPACE }
-                                          | Abnm e \<Rightarrow> { (s,s'). Abnormal e s' \<in> f s \<and> s \<in> RES.SPACE }
-                                          | Crash \<Rightarrow> { (s,s'). Invalid \<in> f s \<and> s = s' \<and> s \<in> RES.SPACE }))\<close>
-
-definition Valid_Transition :: \<open>('ret eval_stat \<Rightarrow> 'a rel) \<Rightarrow> bool\<close>
-  where \<open>Valid_Transition tr \<longleftrightarrow> tr Crash = {}\<close>
-
-
-definition Transition_of_Success :: \<open>'ret proc \<Rightarrow> 'ret \<phi>arg \<Rightarrow> resource rel\<close>
-  where \<open>Transition_of_Success f = (\<lambda>v. { (s,s'). Success v s' \<in> f s })\<close>
-
-
 
 (*
 definition Raw_Procedure :: "'ret proc
@@ -270,7 +241,7 @@ lemma "__setter_rule__":
   \<open> Valid_Proc setter
 \<Longrightarrow> (\<And>ret. Transition_of' setter ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none
             \<w>.\<r>.\<t> R.basic_fiction o\<^sub>\<I> I \<i>\<n> {x})
-\<Longrightarrow> \<p>\<r>\<o>\<c> setter \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>ret. y \<Ztypecolon> \<phi> Identity \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> setter \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>_. y \<Ztypecolon> \<phi> Identity \<rbrace>\<close>
   by (rule from_fictional_refinement
                   [where Rel=\<open>\<lambda>ret. {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
       assumption,
@@ -280,7 +251,20 @@ lemma "__setter_rule__":
       simp add: Valid_Transition_def zero_set_def,
       simp)
 
-
+lemma "__allocator_rule__":
+  \<open> Valid_Proc allocator
+\<Longrightarrow> (\<And>ret. Transition_of' allocator ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k
+            \<w>.\<r>.\<t> R.basic_fiction o\<^sub>\<I> I \<i>\<n> {1})
+\<Longrightarrow> \<p>\<r>\<o>\<c> allocator \<lbrace> Void \<longmapsto> \<lambda>ret. y k \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace>\<close>
+  by (rule from_fictional_refinement
+        [where Rel=\<open>\<lambda>ret. {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k\<close>
+           and x=\<open>1\<close> and D=\<open>{1}\<close>, unfolded \<phi>_unit],
+      assumption,
+      clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExSet_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
+      simp add: Id_on_iff zero_set_def zero_fun_def,
+      assumption,
+      simp add: Valid_Transition_def zero_set_def,
+      simp)
 end
 
 
@@ -519,7 +503,8 @@ lemma getter_rule:
       rule R.getter_valid,
       rule sep_refinement_stepwise,
       rule R.getter_refinement[THEN refinement_frame[where R=UNIV]],
-      rule constant_refinement,
+      unfold Subjection_Id_on Subjection_times,
+      rule refinement_subjection[OF constant_refinement],
       rule \<F>_pointwise_projection[where D'=\<open>{x}\<close> and D=\<open>{Some v}\<close>, simplified],
       assumption)
 
@@ -539,6 +524,19 @@ lemma setter_rule:
       assumption,
       assumption,
       assumption)
+
+declare [[unify_trace_failure]]
+
+lemma
+  \<open> \<forall>k. P k \<longrightarrow> 1(k := u) \<in>\<^sub>S\<^sub>H R.domain
+\<Longrightarrow> \<forall>r. r \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. k \<notin> dom1 r \<and> P k)
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry' P u \<lbrace> Void \<longmapsto> \<lambda>ret. 1(k := u') \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace> \<close>
+  apply (rule "__allocator_rule__",
+      rule R.allocator_valid,
+      assumption,
+      assumption)
+thm R.allocator_refinement
+thm "__allocator_rule__"
 
 end
 
@@ -562,7 +560,8 @@ lemma getter_rule:
       rule R.getter_valid,
       rule sep_refinement_stepwise,
       rule R.getter_refinement[THEN refinement_frame[where R=UNIV]],
-      rule constant_refinement,
+      unfold Subjection_Id_on Subjection_times,
+      rule refinement_subjection[OF constant_refinement],
       rule \<F>_pointwise_projection[where D'=\<open>{1(k2 := x)}\<close> and D=\<open>{1(k2 \<mapsto> v)}\<close>, simplified],
       rule \<F>_pointwise_projection[where D'=\<open>{x}\<close> and D=\<open>{Some v}\<close>, simplified],
       assumption)
@@ -618,37 +617,6 @@ lemma
   by (clarsimp simp add: Id_on_iff set_mult_expn Subjection_expn; blast)
 
 
-context cancl_perm_ins_homo begin
-
-lemma
-  \<open>Id_on UNIV * Id_on {u} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(share n (\<psi> u), share n (\<psi> u))} \<w>.\<r>.\<t> \<F>_functional \<psi> \<i>\<n> {share n (\<psi> u)}\<close>
-  for u :: \<open>'a::{sep_algebra, sep_cancel}\<close>
-  unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: Id_on_iff set_mult_expn Subjection_expn; blast)
-
-lemma
-  \<open>Id_on UNIV * {(u,v)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(\<psi> u, \<psi> v)} \<w>.\<r>.\<t> \<F>_functional \<psi> \<i>\<n> {\<psi> u}\<close>
-  for u :: \<open>'a::{sep_algebra, sep_cancel}\<close>
-  unfolding Fictional_Forward_Simulation_def
-  apply (clarsimp simp add: Id_on_iff set_mult_expn Subjection_expn homo_sep_wand)
-  subgoal premises prems for R ru r1 r2
-  proof -
-    have t1: \<open>ru * u = (r1 * r2) * u\<close>
-      by (simp add: prems(1) prems(5) prems(6) sep_mult_assoc')
-    have t2: \<open>r1 * r2 ## u\<close>
-      using prems(5) prems(6) sep_disj_multI1 by blast
-    have t3: \<open>ru = r1 * r2\<close>
-      using prems(3) sep_cancel t1 t2 by blast
-    have t4: \<open>r2 ## v\<close>
-      using prems(4) prems(5) prems(6) sep_disj_multD1 sep_disj_multD2 t3 by blast
-    then have t5: \<open>\<psi> r2 ## \<psi> v\<close> by simp
-    show ?thesis
-      apply (simp add: t5)
-      apply (rule exI[where x=r1], rule exI[where x=\<open>r2 * v\<close>], simp add: t3)
-      by (metis local.homo_mult prems(2) prems(4) prems(5) prems(6) sep_disj_multD1 sep_disj_multI2 sep_mult_assoc t3 t4)
-  qed .
-
-end
 
 
 end

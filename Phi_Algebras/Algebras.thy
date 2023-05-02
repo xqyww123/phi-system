@@ -5,7 +5,10 @@ theory Algebras
   abbrevs "!!" = "!!"
 begin
 
-setup \<open>Attrib.setup \<^binding>\<open>locale_intro\<close> (Scan.succeed Locale.intro_add) ""\<close> (*TODO: move this*)
+setup \<open>
+   Attrib.setup \<^binding>\<open>locale_intro\<close> (Scan.succeed Locale.intro_add) ""
+#> Attrib.setup \<^binding>\<open>locale_witness\<close> (Scan.succeed Locale.witness_add) ""
+\<close> (*TODO: move this*)
 
 section \<open>Algebra Structures\<close>
 
@@ -115,6 +118,9 @@ class positive_sep_magma = sep_magma +
 
 class strict_positive_sep_magma = sep_magma +
   assumes join_strict_positivity: \<open>b ## a \<Longrightarrow> a = b * a \<Longrightarrow> False\<close>
+begin
+
+end
 
 
 subsubsection \<open>Separation Semigroup\<close>
@@ -523,6 +529,10 @@ locale homo_sep_wand = homo_sep \<psi>
 + assumes homo_sep_wand: \<open>a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
 begin
 
+lemma homo_sep_wand'[no_atp]:
+  \<open>a ## \<psi> b \<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
+  by (metis homo_sep_wand)
+
 sublocale homo_join_sub \<psi>
   apply standard
   unfolding join_sub_def
@@ -590,6 +600,10 @@ locale perm_ins_homo = homo_sep_wand_monoid \<psi>
     and   \<psi>_self_disj: \<open>\<psi> x ## \<psi> x\<close>
 begin
 
+lemma share_sep_wand'[no_atp]:
+  \<open>a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> \<psi> c = a * share n (\<psi> b) \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b)\<close>
+  by (metis share_sep_wand)
+
 lemma
   join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
   unfolding join_sub_def
@@ -602,12 +616,13 @@ lemma
 
 end
 
+(*
 locale perm_ins_homo_L =
   fixes \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
   assumes perm_ins_homo': \<open>id perm_ins_homo \<psi>\<close>
 begin
 sublocale perm_ins_homo using perm_ins_homo'[simplified] .
-end 
+end *)
 
 locale cancl_perm_ins_homo = perm_ins_homo \<psi>
   for \<psi> :: \<open>'a::{sep_cancel, sep_algebra} \<Rightarrow> 'b::share_module_sep\<close>
@@ -1784,7 +1799,7 @@ lemma prod_superset_dom1:
 subsubsection \<open>Total Permission Transformation\<close>
 
 
-lemma perm_ins_homo_pointwise:
+lemma perm_ins_homo_pointwise[locale_intro]:
   assumes prem: \<open>perm_ins_homo \<psi>\<close>
   shows \<open>perm_ins_homo ((\<circ>) \<psi>)\<close>
   unfolding comp_def
@@ -1817,7 +1832,7 @@ proof
 
 qed
 
-lemma perm_ins_homo_pointwise_eq[iff]:
+lemma perm_ins_homo_pointwise_eq:
   \<open>perm_ins_homo ((\<circ>) \<psi>) \<longleftrightarrow> perm_ins_homo \<psi>\<close>
   for \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
 proof
@@ -1976,7 +1991,7 @@ subsubsection \<open>Convert a function to sharing or back\<close>
 abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
-lemma perm_ins_homo_to_share[iff]:
+lemma perm_ins_homo_to_share[locale_witness]:
   \<open>perm_ins_homo (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
@@ -2099,6 +2114,8 @@ definition times_nosep :: \<open>'a nosep \<Rightarrow> 'a nosep \<Rightarrow> '
   where [simp]: \<open>times_nosep x y = undefined\<close>
 instance by (standard; case_tac x; simp; case_tac y; simp add: sep_disj_nosep_def)
 end
+
+instance nosep :: (type) sep_cancel by (standard; case_tac a; case_tac b; case_tac c; simp)
 
 instance nosep :: (type) sep_disj_intuitive by (standard; case_tac a; case_tac b; case_tac c; simp)
 
