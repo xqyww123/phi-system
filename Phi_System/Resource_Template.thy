@@ -5,6 +5,12 @@ begin
 
 chapter \<open>Resource Bases and Templates\<close>
 
+section \<open>Preliminary\<close>
+
+interpretation to_share: cancl_perm_ins_homo \<open>to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option\<close> ..
+interpretation pointwise_to_share:
+  cancl_perm_ins_homo \<open>(o) (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close> ..
+
 section \<open>Bases\<close>
 
 subsection \<open>Resource Base\<close>
@@ -622,11 +628,6 @@ locale partial_map_resource =
 for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 begin
 
-(*depreciate*)
-abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
-  where \<open>perm_ins_homo \<equiv> (o) to_share\<close>
-(*depreciate*)
-abbreviation \<open>share_fiction \<equiv> basic_fiction o\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
 
 subsubsection \<open>Getter\<close>
 
@@ -749,10 +750,214 @@ lemmas getter_rule = "_getter_rule_2_"[OF \<F>_it_refinement_projection]
 lemmas allocate_rule = "__allocate_rule_2__"
                             [OF \<F>_pointwise_refinement[OF \<F>_it_refinement, where u1=1, simplified]]
 
-
 end
 
 subsection \<open>Pointwise Share Fiction\<close>
+
+locale pointwise_share_fiction_for_partial_mapping_resource =
+   R: partial_map_resource Res
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise (\<F>_functional to_share)\<close>
+for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
+begin
+
+sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<F>_functional to_share\<close> Fic ..
+
+lemmas setter_rule =
+  "_setter_rule_2_"[OF to_share.refinement[simplified], simplified,
+                    OF to_share.refinement_projection[where S=\<open>{Some v}\<close> and n = 1 for v, simplified]]
+
+lemmas getter_rule =
+  "_getter_rule_2_"[OF to_share.refinement_projection[where S=\<open>{x}\<close> for x, simplified], simplified]
+
+lemmas allocate_rule =
+  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF to_share.refinement[where u=\<open>1\<close>, simplified], simplified],
+                        where u = \<open>Some u'\<close> for u', simplified]
+
+end
+
+
+
+section \<open>Two Level Parital Mapping\<close>
+
+subsection \<open>Preliminary\<close>
+
+definition \<open>map_fun_at g k f = (\<lambda>x. if x = k then g (f x) else f x)\<close>
+
+lemma map_fun_at_1[simp]: \<open>map_fun_at g k 1 = 1(k := g 1)\<close>
+  unfolding map_fun_at_def fun_eq_iff by simp
+
+lemma map_fun_at_const[simp]:
+  \<open>map_fun_at (\<lambda>_. u) k f = f(k := u)\<close>
+  unfolding map_fun_at_def fun_eq_iff by simp
+
+
+subsection \<open>Resource\<close>
+
+locale partial_map_resource2 =
+  mapping_resource Res
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+begin
+
+subsubsection \<open>Getter\<close>
+
+definition \<phi>R_get_res_entry' :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> 'val proc\<close>
+  where \<open>\<phi>R_get_res_entry' k k2 =
+    \<phi>R_get_res' \<bind> (\<lambda>res. case \<phi>arg.dest res k k2 of Some v \<Rightarrow> Return (\<phi>arg v) | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
+
+lemma getter_transition:
+  \<open> Transition_of' (\<phi>R_get_res_entry' k k2) ret
+        = Id_on {s. s \<in> SPACE \<and> ret = (case get s k k2 of Some v \<Rightarrow> Normal (\<phi>arg v) | _ \<Rightarrow> Crash)}\<close>
+  unfolding Transition_of'_def \<phi>R_get_res'_def \<phi>R_get_res_entry'_def bind_def Return_def det_lift_def
+  by (cases ret; clarsimp simp add: set_eq_iff Id_on_iff split: option.split; blast)
+
+lemma getter_refinement:
+  \<open>Transition_of' (\<phi>R_get_res_entry' k k2) ret
+   \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ({1(k := 1(k2 \<mapsto> any))} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg any))
+   \<w>.\<r>.\<t> basic_fiction \<i>\<n> {1(k := 1(k2 \<mapsto> any))}\<close>
+  unfolding Fictional_Forward_Simulation_def getter_transition
+  apply (cases ret; clarsimp split: option.split simp add: basic_fiction_\<I> set_mult_expn Id_on_iff
+          Subjection_expn zero_set_def set_eq_iff prj.homo_mult times_fun)
+  by (smt (verit, del_insts) fun_sep_disj_imply_v fun_upd_triv mult_1_class.mult_1_right option.exhaust option.inject sep_disj_commuteI sep_disj_get_name sep_disj_multD2 sep_disj_option_nonsepable(2) sep_mult_commute)
+
+lemma getter_valid:
+  \<open>Valid_Proc (\<phi>R_get_res_entry' k k2)\<close>
+  unfolding Valid_Proc_def \<phi>R_get_res_entry'_def \<phi>R_get_res'_def bind_def Return_def det_lift_def
+  by (clarsimp split: option.split)
+
+subsubsection \<open>Setter\<close>
+
+lemma setter_refinement:
+  \<open> \<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m k k2 = Some any \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S\<^sub>H domain
+\<Longrightarrow> Transition_of' (\<phi>R_set_res' (map_fun_at (map_fun_at (\<lambda>_. u) k2) k)) ret
+\<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` pairself (fun_upd 1 k2) ` {(Some any, u)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none
+\<w>.\<r>.\<t> basic_fiction \<i>\<n> (fun_upd 1 k) ` (fun_upd 1 k2) ` {Some any}\<close>
+  apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k\<close>]], assumption)
+  unfolding Fictional_Forward_Simulation_def setter_transition
+  apply (clarsimp simp add: basic_fiction_\<I> \<phi>expns prj.homo_mult times_fun_upd sep_disj_partial_map_upd
+        nonsepable_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
+        times_fun inj.homo_mult[symmetric] inject_wand_homo)
+  subgoal premises prems for r R x' u' a
+  proof -
+    have t1[simp]: \<open>a k k2 ## Some any\<close>
+      by (metis fun_sep_disj_imply_v fun_upd_triv prems(5) prems(9) sep_disj_commuteI sep_disj_multD2)
+    have t2[simp]: \<open>r k k2 ## a k k2 * Some any\<close>
+      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv nonsepable_semigroup_sepdisj_fun prems(5))
+    have t3[simp]: \<open>r k k2 * (a k k2 * Some any) = Some any\<close>
+      using t1 t2 by force
+    have t4[simp]: \<open>x' = clean u' * mk (map_fun_at (map_fun_at (\<lambda>_. u) k2) k (r * (a * 1(k := 1(k2 \<mapsto> any))))) \<and> ret = Normal \<phi>V_none\<close>
+      using prems(3) by fastforce
+    have t5[simp]: \<open>r ## 1(k := 1(k2 := u))\<close>
+      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv nonsepable_semigroup_sepdisj_fun prems(5))
+    have t6[simp]: \<open>(r * a) k k2 = None\<close>
+      by (metis sep_disj_multI1 sep_disj_option_nonsepable(1) t1 t2 times_fun)
+    then have [simp]:
+        \<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k (r * (a * 1(k := 1(k2 \<mapsto> any))))
+            = (r * a) * 1(k := 1(k2 := u))\<close>
+        unfolding map_fun_at_def fun_eq_iff times_fun_def
+        by simp
+    have t1[simp]: \<open>clean u' * mk a = u'\<close>
+      by (metis fun_split_1 prems(8))
+    show ?thesis
+      apply (simp, rule exI[where x=u']; simp add: prems; rule)
+      apply (smt (verit, del_insts) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.homo_mult inj.sep_disj_homo_semi inject_assoc_homo nonsepable_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_mult_commute sep_space_entry.times_fun_upd sep_space_entry_axioms times_fupdt_1_apply_sep)
+      by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo_semi nonsepable_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_disj_multI2)
+  qed .
+
+end
+
+
+subsection \<open>Pointwise Base Fiction\<close>
+
+locale pointwise_base_fiction_for_partial_mapping_resource2 =
+   R: partial_map_resource2 Res
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise (\<F>_pointwise I)\<close>
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+and I :: \<open>('fic::sep_algebra, 'val option) interp\<close>
+and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'fic) fiction_entry"
+begin
+
+sublocale fiction_base_for_mapping_resource Res \<open>\<F>_pointwise (\<F>_pointwise I)\<close> Fic ..
+
+lemma "_getter_rule_2_":
+  \<open> refinement_projection I {x} \<subseteq> UNIV * {Some v}
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k k2 \<lbrace> 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Identity \<longmapsto>
+                                    \<lambda>ret. 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> ret = \<phi>arg v \<rbrace>\<close>
+  by (rule "__getter_rule__",
+      rule R.getter_valid,
+      rule sep_refinement_stepwise,
+      rule R.getter_refinement[THEN refinement_frame[where R=UNIV]],
+      unfold Subjection_Id_on Subjection_times,
+      rule refinement_subjection[OF constant_refinement],
+      rule \<F>_pointwise_projection[where D'=\<open>{1(k2 := x)}\<close> and D=\<open>{1(k2 \<mapsto> v)}\<close>, simplified],
+      rule \<F>_pointwise_projection[where D'=\<open>{x}\<close> and D=\<open>{Some v}\<close>, simplified],
+      assumption)
+
+lemma "_setter_rule_2_":
+  \<open> Id_on UNIV * {(Some v, u)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', u')} \<w>.\<r>.\<t> I \<i>\<n> {v'}
+\<Longrightarrow> refinement_projection I {v'} \<subseteq> UNIV * {Some v}
+\<Longrightarrow> \<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m k k2 = Some v \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S\<^sub>H R.domain
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at (map_fun_at (\<lambda>_. u) k2) k)
+      \<lbrace> 1(k := 1(k2 := v')) \<Ztypecolon> \<phi> Identity \<longmapsto> 1(k := 1(k2 := u')) \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
+  by (rule "__setter_rule__",
+      rule R.setter_valid,
+      rule sep_refinement_stepwise[
+        OF R.setter_refinement[THEN refinement_frame[where R=UNIV], unfolded Subjection_times]
+           refinement_subjection[OF \<F>_pointwise_refinement[OF \<F>_pointwise_refinement]]
+           \<F>_pointwise_projection[OF \<F>_pointwise_projection],
+        where D'2=\<open>{v'}\<close> and B6=\<open>{(v',u')}\<close>, simplified],
+      assumption,
+      assumption,
+      assumption)
+
+end
+
+subsection \<open>Pointwise Fiction\<close>
+
+locale pointwise_fiction_for_partial_mapping_resource2 =
+   R: partial_map_resource2 Res
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise (\<F>_pointwise \<F>_it)\<close>
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) fiction_entry"
+begin
+
+sublocale pointwise_base_fiction_for_partial_mapping_resource2 Res \<F>_it Fic ..
+
+lemmas setter_rule = "_setter_rule_2_"[OF \<F>_it_refinement \<F>_it_refinement_projection]
+lemmas getter_rule = "_getter_rule_2_"[OF \<F>_it_refinement_projection]
+lemmas allocate_rule = "__allocate_rule_2__"[unfolded \<F>_pointwise_\<F>_it,
+                          OF \<F>_pointwise_refinement[OF \<F>_it_refinement, where u1=1, simplified, unfolded \<F>_pointwise_\<F>_it]]
+
+end
+
+
+subsection \<open>Pointwise Share Fiction\<close>
+
+locale pointwise_share_fiction_for_partial_mapping_resource2 =
+   R: partial_map_resource2 Res
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise (\<F>_pointwise (\<F>_functional to_share))\<close>
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) resource_entry"
+and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep share option) fiction_entry"
+begin
+
+sublocale pointwise_base_fiction_for_partial_mapping_resource2 Res \<open>\<F>_functional to_share\<close> Fic ..
+
+lemmas setter_rule =
+  "_setter_rule_2_""_setter_rule_2_"[OF to_share.refinement[simplified], simplified,
+                                     OF to_share.refinement_projection[where S=\<open>{Some v}\<close> and n = 1 for v, simplified]]
+lemmas getter_rule =
+  "_getter_rule_2_"[OF to_share.refinement_projection[where S=\<open>{x}\<close> for x, simplified], simplified]
+
+lemmas allocate_rule =
+  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF pointwise_to_share.refinement[where u=\<open>1\<close>, simplified], simplified, unfolded to_share.\<F>_functional_pointwise]]
+
+end
+
+
+
+
+
+
 
 
 

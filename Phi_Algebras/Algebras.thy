@@ -296,6 +296,8 @@ class nonsepable_semigroup = sep_disj + times +
 begin
 subclass sep_magma .
 subclass sep_ab_semigroup by (standard; simp add: local.join_sub_def)
+subclass sep_cancel by (standard; simp)
+subclass strict_positive_sep_magma by (standard; simp)
 end
 
 class nonsepable_monoid = sep_disj + mult_1 +
@@ -569,6 +571,7 @@ locale kernel_is_1 =
 lemma kernel_is_1_comp:
   \<open>kernel_is_1 f \<Longrightarrow> kernel_is_1 g \<Longrightarrow> kernel_is_1 (f o g)\<close>
   unfolding kernel_is_1_def by simp
+  
 
 locale homo_sep_wand_monoid = homo_sep_wand_1 \<psi>
   for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close>
@@ -2012,6 +2015,10 @@ proof
     apply (smt (verit, ccfv_SIG) diff_add_cancel diff_gt_0_iff_gt sep_cancel sep_disj_commuteI sep_disj_multD2 sep_disj_multI2 sep_disj_share sep_mult_commute times_share)
     by (metis join_strict_positivity less_numeral_extra(1) sep_disj_multD2 sep_disj_share)
 qed
+
+lemma to_share_kernel_is_1[locale_witness]:
+  \<open>kernel_is_1 to_share\<close>
+  by (standard; simp)
 
 
 lemma strip_share_Share[simp]:

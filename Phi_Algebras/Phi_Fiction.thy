@@ -44,6 +44,11 @@ lemmas Interp_inverse[simp] = Interp_inverse[simplified]
 lemma Interp_one[simp]: "\<I> I 1 = 1"
   using Interpretation_def \<I> by blast
 
+lemma interp_eq_I[intro!]:
+  \<open>\<I> x = \<I> y \<Longrightarrow> x = y\<close>
+  by (simp add: \<I>_inject)
+  
+
 (*
 definition \<I>\<^sub>r\<^sub>e\<^sub>l :: \<open>('a::one,'b::one) interp \<Rightarrow> ('a \<times> 'b) set\<close> 
   where \<open>\<I>\<^sub>r\<^sub>e\<^sub>l I = {(x,y). y \<in> \<I> I x}\<close> *)
@@ -267,6 +272,10 @@ lemma \<F>_pointwise_\<I>[simp]:
   unfolding \<F>_pointwise_def
   by (rule Interp_inverse) (auto simp add: Interpretation_def one_fun_def fun_eq_iff)
 
+lemma \<F>_pointwise_\<F>_it:
+  \<open>\<F>_pointwise \<F>_it = \<F>_it\<close>
+  by (rule interp_eq_I; simp add: fun_eq_iff set_eq_iff)
+
 definition "\<F>_pointwise' I = Interp (\<lambda>f. {g. \<forall>x. g x \<in> \<I> (I x) (f x) })"
 
 lemma \<F>_pointwise'_\<I>[simp]:
@@ -393,6 +402,17 @@ lemma (in homo_sep_wand_monoid) \<F>_functional_projection [simp]:
   unfolding refinement_projection_def
   by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>]
           homo_sep_wand; blast)
+
+lemma kernel_is_1_pointwise[locale_intro,intro!]:
+  \<open>kernel_is_1 \<psi> \<Longrightarrow> kernel_is_1 ((\<circ>) \<psi>)\<close>
+  unfolding kernel_is_1_def by (simp add: fun_eq_iff)
+
+lemma (in kernel_is_1) \<F>_functional_pointwise:
+  \<open>\<F>_functional ((\<circ>) \<psi>) = \<F>_pointwise (\<F>_functional \<psi>)\<close>
+proof -
+  interpret kernel_is_1 \<open>(\<circ>) \<psi>\<close> by intro_locales
+  show ?thesis by (rule interp_eq_I; simp add: fun_eq_iff)
+qed
 
 
 definition "\<F>_share s = (case s of Share w v \<Rightarrow> if w = 1 then {v} else {})"
