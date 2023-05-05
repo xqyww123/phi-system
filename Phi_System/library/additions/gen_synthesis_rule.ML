@@ -36,6 +36,8 @@ fun gen_rule ctxt proc_thm0 =
   end
 
 structure Pattern = Pattern_Translation(
+  val parse_pattern = Syntax.parse_prop
+  val check_pattern = Syntax.check_props
   val multi_translation_err_msg = "Bad configure in \<open>generate_pattern_of_synthesis_rule\<close>: \
         \Clash of multiple translation"
 )
@@ -72,15 +74,16 @@ fun declare_rule pos priority (patterns0,blacklist0) proc_thm0 ctxt0 =
       val concl = Thm.concl_of proc_thm
       fun pat_of P =
             case Pattern.translate ctxt0 (Logic.mk_conjunction (concl, encode_pattern false P))
-              of SOME pattern => pattern
-               | NONE => (
+              of h::L => h::L
+               | [] => (
             case Pattern.translate ctxt0 (Logic.mk_conjunction (concl, encode_pattern true P))
-              of SOME pattern => pattern
-               | NONE => error "Cannot infer the pattern of the antecedent to be bound.\n\
+              of h::L => h::L
+               | [] => error "Cannot infer the pattern of the antecedent to be bound.\n\
                   \Some translation rule for giving the pattern may be required, and can be decalred\
                   \ by \<open>declare [[generate_pattern_of_synthesis_rule \<dots> \<Rightarrow> \<dots>]].\<close>")
-      val patterns = map (apfst pat_of) (if null patterns0 then [(No_Pattern, NONE)] else patterns0)
-      val blacklist = map pat_of blacklist0
+      val patterns = maps (fn (P,prio) => map (rpair prio) (pat_of P))
+                          (if null patterns0 then [(No_Pattern, NONE)] else patterns0)
+      val blacklist = maps pat_of blacklist0
       val _ = Phi_Reasoner.info_pretty ctxt 1 (fn () => Pretty.chunks ([
                 Pretty.str "The rule is bound on pattern(s):",
                 Pretty.chunks (map (fn (X,N) => Pretty.item [

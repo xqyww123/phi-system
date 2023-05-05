@@ -75,6 +75,8 @@ type_synonym ('concrete,'abstract) \<phi> = " 'abstract \<Rightarrow> 'concrete 
 
 definition \<phi>Type :: "'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> 'a set" (infix "\<Ztypecolon>" 20) where " (x \<Ztypecolon> T) = (T x)"
 
+text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
+
 lemma typing_inhabited: "p \<in> (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (x \<Ztypecolon> T)"
   unfolding Inhabited_def \<phi>Type_def by blast
 
@@ -82,10 +84,29 @@ lemma \<phi>Type_eqI:
   \<open>(\<forall>x p. p \<in> (x \<Ztypecolon> a) \<longleftrightarrow> p \<in> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
   unfolding \<phi>Type_def by blast
 
-
 ML_file \<open>library/tools/simp_congruence.ML\<close>
 
-text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
+subsubsection \<open>Embedding of separation conjunction in \<phi>-Type\<close>
+
+definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 55)
+  where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
+
+lemma \<phi>Prod_expn[\<phi>expns]:
+  "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>cb ca. concrete = cb * ca \<and> cb \<in> (b \<Ztypecolon> B) \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb ## ca)"
+  unfolding \<phi>Prod_def \<phi>Type_def times_set_def by simp
+
+lemma \<phi>Prod_expn':
+  \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
+lemma \<phi>Prod_inhabited[elim!,\<phi>inhabitance_rule]:
+  "Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<Longrightarrow> (Inhabited (x1 \<Ztypecolon> T1) \<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (simp add: \<phi>expns, blast)
+
+lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)"
+  by (simp add: \<phi>expns set_eq_iff)
+
+
 
 subsection \<open>Implication\<close>
 

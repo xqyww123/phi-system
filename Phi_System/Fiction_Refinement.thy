@@ -525,8 +525,6 @@ lemma setter_rule:
       assumption,
       assumption)
 
-declare [[unify_trace_failure]]
-
 lemma
   \<open> \<forall>k. P k \<longrightarrow> 1(k := u) \<in>\<^sub>S\<^sub>H R.domain
 \<Longrightarrow> \<forall>r. r \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. k \<notin> dom1 r \<and> P k)

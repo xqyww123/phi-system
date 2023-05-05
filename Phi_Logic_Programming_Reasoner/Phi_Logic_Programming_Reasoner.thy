@@ -18,8 +18,8 @@ ML \<open>Timing.cond_timeit false "asd" (fn () => OS.Process.sleep (seconds 1.0
 ML_file \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
-ML_file \<open>library/pattern_translation.ML\<close>
-ML_file_debug \<open>library/tools/simpset.ML\<close>
+ML_file_debug \<open>library/pattern_translation.ML\<close>
+ML_file \<open>library/tools/simpset.ML\<close>
 
 
 definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>

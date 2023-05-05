@@ -1326,13 +1326,25 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
   unfolding \<phi>Application_def ToA_Construction_def
   using implies_left_prod by (metis Imply_def)
 
-lemma [\<phi>reason for \<open>
-  PROP \<phi>Application (Trueprop (_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) ?Result
+lemma [\<phi>reason 100 for \<open>
+  PROP \<phi>Application (Trueprop ((_::?'a::sep_magma_1 set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) ?Result
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S'' \<a>\<n>\<d> Any @action ToSA
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<i>\<m>\<p>\<l>\<i>\<e>\<s> T' \<a>\<n>\<d> P))
+      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P)"
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
+  by (meson \<phi>apply_implication_impl implies_left_prod)
+
+lemma [\<phi>reason 90
+  for \<open>PROP \<phi>Application (Trueprop (_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) ?Result\<close>
+  except \<open>PROP \<phi>Application (Trueprop ((_::?'a::sep_magma_1 set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) ?Result\<close>
+]:
+  " S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> Any @action ToSA
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<i>\<m>\<p>\<l>\<i>\<e>\<s> T \<a>\<n>\<d> P))
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
@@ -1877,6 +1889,12 @@ end
 \<phi>processor unfold 2000 (\<open>PROP ?P\<close>) \<open>
   fn (ctxt, sequent) => Phi_Parse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
+)\<close>
+
+\<phi>processor simplify 2000 (\<open>PROP ?P\<close>) \<open>
+  fn (ctxt, sequent) => Phi_Parse.$$$ "simplify" |-- \<^keyword>\<open>(\<close> |-- Parse.list Parse.thm --| \<^keyword>\<open>)\<close>
+>> (fn thms => fn _ =>
+    (ctxt, Simplifier.full_simplify (ctxt addsimps Attrib.eval_thms ctxt thms) sequent)
 )\<close>
 
 

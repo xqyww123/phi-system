@@ -24,13 +24,13 @@ locale homo_zero =
   fixes \<phi> :: \<open> 'a::zero \<Rightarrow> 'b::zero \<close>
   assumes homo_zero[iff]: \<open>\<phi> 0 = 0\<close>
 
-locale homo_mult = homo_one \<phi>
-  for \<phi> :: " 'a::{one,times} \<Rightarrow> 'b::{one,times} "
-+ assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
+locale homo_mult =
+  fixes \<phi> :: " 'a::times \<Rightarrow> 'b::times "
+  assumes homo_mult: "\<phi> (x * y) = \<phi> x * \<phi> y"
 
-lemma homo_mult:
+(*lemma homo_mult:
   \<open>homo_mult \<phi> \<longleftrightarrow> (\<phi> 1 = 1) \<and> (\<forall> x y. \<phi> (x * y) = \<phi> x * \<phi> y)\<close>
-  unfolding homo_mult_def homo_mult_axioms_def homo_one_def ..
+  unfolding homo_mult_def homo_mult_axioms_def homo_one_def .. *)
 
 locale mult_strip_011 =
   fixes \<psi> :: " 'a::times \<Rightarrow> 'b::times "
@@ -1038,6 +1038,11 @@ definition "times_list a b = b @ a"
 instance ..
 end
 
+instantiation list :: (type) plus begin
+definition "plus_list a b = b @ a"
+instance ..
+end
+
 instantiation list :: (type) zero begin
 definition [simp]: "zero_list = []"
 instance ..
@@ -1050,9 +1055,15 @@ end
 
 instance list :: (type) no_inverse by (standard, simp add: times_list_def) blast
 
+instance list :: (type) no_negative by (standard, simp add: plus_list_def) blast
+
 instance list :: (type) semigroup_mult by standard (simp_all add: times_list_def)
 
+instance list :: (type) semigroup_add by standard (simp_all add: plus_list_def)
+
 instance list :: (type) monoid_mult by standard (simp_all add: times_list_def)
+
+instance list :: (type) monoid_add by standard (simp_all add: plus_list_def)
 
 instantiation list :: (type) sep_magma begin
 definition sep_disj_list :: \<open>'a list \<Rightarrow> 'a list \<Rightarrow> bool\<close>
@@ -1320,17 +1331,17 @@ lemma fun_1upd1[simp]:
   unfolding one_fun_def fun_upd_def by simp
 
 lemma fun_1upd_homo:
-    "1(k := x) * 1(k := y) = 1(k := x * y)" for x :: "'a::sep_monoid"
+    "1(k := x) * 1(k := y) = 1(k := x * y)" for x :: "'a::sep_magma_1"
   unfolding one_fun_def fun_upd_def times_fun_def
   by fastforce
 
 lemma fun_1upd_homo_right1:
-    "f(k := x) * 1(k := y) = f(k := x * y)" for x :: "'a::sep_monoid"
+    "f(k := x) * 1(k := y) = f(k := x * y)" for x :: "'a::sep_magma_1"
   unfolding one_fun_def fun_upd_def times_fun_def fun_eq_iff
   by clarsimp
 
 lemma fun_1upd_homo_left1:
-    "1(k := x) * f(k := y) = f(k := x * y)" for x :: "'a::sep_monoid"
+    "1(k := x) * f(k := y) = f(k := x * y)" for x :: "'a::sep_magma_1"
   unfolding one_fun_def fun_upd_def times_fun_def fun_eq_iff
   by clarsimp
 

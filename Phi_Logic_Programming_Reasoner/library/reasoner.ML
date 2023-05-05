@@ -89,13 +89,14 @@ signature NU_REASONER = sig
                   ) * Input.source (* tactic source*)
         -> local_theory -> local_theory
 
-  (* Default Pattern of Introduction Rule *)
+  (* Default Pattern of Reasoning Rule *)
+  structure Default_Pattern : PATTERN_REWRITE
   val add_default_pattern :
-                  (int (*priority*) * term (*pattern P*) * term (*the default pattern X*)) list
+                  (int (*priority*) * term (*pattern P*) * Default_Pattern.rewrite (*the default pattern X*)) list
                -> Context.generic -> Context.generic
       (*The default pattern of an introduction rule whose conclusion matches P is X.*)
-  val remove_default_pattern : int * term * term -> Context.generic -> Context.generic
-  val the_default_pattern_of : Context.generic -> term -> term option
+  val remove_default_pattern : int * term * Default_Pattern.rewrite -> Context.generic -> Context.generic
+  val the_default_pattern_of : Context.generic -> term -> term list
 
   (* Helpful Tools *)
   val chop_seq_head' : 'a Seq.seq -> 'a option
@@ -560,6 +561,8 @@ val _ =
 (*** Default Pattern for Introduction Reasoning Rule ***)
 
 structure Default_Pattern = Pattern_Translation (
+  val parse_pattern = Syntax.parse_prop
+  val check_pattern = Syntax.check_props
   val multi_translation_err_msg = "Fail to determine which pattern is preferable. \
                                 \Please indicate the pattern manually using syntax \
                                 \\<open>\<phi>reason for \<open>pattern\<close>\<close>"
@@ -608,12 +611,13 @@ fun intro_reasoner ctxt pos (priority:priority) patterns blacklist guard rules =
                then case rules
                       of [rule] =>
                         let val concl = Thm.concl_of rule
-                            val pat = the_default concl (the_default_pattern_of ctxt concl)
-                            val _ = info_pretty_generic ctxt (fn () => Pretty.chunks [
-                                    Pretty.str "No pattern is given, use the default pattern:",
-                                    Syntax.pretty_term (Context.proof_of ctxt) pat
-                                ])
-                        in [(pat,priority)] end
+                            val pat' = the_default_pattern_of ctxt concl
+                            val pat = case pat' of [] => [concl] | _ => pat'
+                            val _ = info_pretty_generic ctxt (fn () => Pretty.chunks (
+                                    Pretty.str "No pattern is given, use the default pattern:" ::
+                                    map (Syntax.pretty_term (Context.proof_of ctxt)) pat
+                                ))
+                        in map (rpair priority) pat end
                        | _ => error "Pattern of the reasoner is required"
                else map (apsnd (the_default priority)) patterns
 

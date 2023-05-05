@@ -4,7 +4,7 @@ text \<open>The part includes small process that can be built without infrastruc
   IDE-CP, and declarations of other large process.\<close>
 
 theory IDE_CP_Reasoning1
-  imports Spec_Framework
+  imports Spec_Framework Phi_Refinement_Algebra
 begin
 
 section \<open>Annotations Guiding the Reasoning\<close>

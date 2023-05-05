@@ -74,7 +74,7 @@ lemma push_map_sep_disj[simp]:
 lemma push_map_distrib_sep_mult:
   \<open> f ## g
 \<Longrightarrow> push_map idx f * push_map idx g = push_map idx (f * g)\<close>
-  for f :: \<open>'a list \<Rightarrow> 'b::sep_monoid\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::sep_magma_1\<close>
   unfolding push_map_def fun_eq_iff times_fun_def by simp
 
 

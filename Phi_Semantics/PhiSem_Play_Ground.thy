@@ -110,7 +110,13 @@ proc
     \<medium_right_bracket> (*loop body*)
     $v
   \<medium_right_bracket>.
-
+  
+proc
+  input \<open>\<v>\<a>\<l> b \<Ztypecolon> \<bool>\<close>
+  output \<open>(if b then 32 else 24) \<Ztypecolon> \<v>\<a>\<l> (if b then \<nat>(32) else \<nat>(16))\<close>
+  \<medium_left_bracket>
+    if $b \<medium_left_bracket> \<open>32 \<Ztypecolon> \<nat>(32)\<close> \<medium_right_bracket> \<medium_left_bracket> \<open>24 \<Ztypecolon> \<nat>(16)\<close> \<medium_right_bracket>
+  \<medium_right_bracket> .
 
 (*
 proc XXX:

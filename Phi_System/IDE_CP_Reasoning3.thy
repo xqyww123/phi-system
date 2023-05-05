@@ -132,7 +132,7 @@ declare [[\<phi>reason_default_pattern
     \<open>?X = _ @action clean_automation_waste\<close> \<Rightarrow> \<open>?X = _ @action clean_automation_waste\<close> (100)
 ]]
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason 1]:
   \<open>X = X @action clean_automation_waste\<close>
   unfolding Action_Tag_def by simp
 
@@ -140,7 +140,29 @@ lemma [\<phi>reason 1200]:
   \<open>(() \<Ztypecolon> \<phi>None) = 1 @action clean_automation_waste\<close>
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason 1200]:
+lemma clean_automation_waste_general_rule:
+  \<open> Unit_Functor F
+\<Longrightarrow> (x \<Ztypecolon> F \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
+  unfolding Unit_Functor_def Imply_def Action_Tag_def \<phi>None_itself_is_one
+  by (clarsimp simp add: set_eq_iff; rule, insert \<phi>None_expn, blast, blast)
+
+\<phi>reasoner_ML clean_automation_waste_general_rule 50 (\<open>_ = _ @action clean_automation_waste\<close>) = \<open>
+fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ (*Action_Tag*) $ (_ (*Trueprop*) $ ( _ (*equal*) $ (_ (*\<phi>Type*) $ _ $ T) $ _)) $ _
+        = Thm.major_prem_of sequent
+   in case Phi_Functor_Detect.detect 1 ctxt T
+        of SOME [Ft,_] => let
+            val rule = Drule.infer_instantiate ctxt [(("F",0), Thm.cterm_of ctxt Ft)]
+                          @{thm "clean_automation_waste_general_rule"}
+             in SOME ((ctxt, rule RS sequent), Seq.empty) end
+         | NONE => NONE
+  end)
+\<close>
+
+
+(* (*TESTING... re-enable them for performance*)
+
+ lemma [\<phi>reason 1200]:
   \<open>(x \<Ztypecolon> k \<^bold>\<rightarrow> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>MapAt_\<phi>None by simp
 
@@ -148,14 +170,12 @@ lemma [\<phi>reason 1200]:
   \<open>(x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
 
-(*TODO: the two rules are bad?*)
-lemma [\<phi>reason 1200 for \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypecolon> ?k \<^bold>\<rightarrow> ?Z) @action clean_automation_waste\<close>]:
-  \<open>(x \<Ztypecolon> \<circle>) = (() \<Ztypecolon> k \<^bold>\<rightarrow> \<circle>) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>MapAt_\<phi>None by simp
+lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> \<circle>) = ?Z @action clean_automation_waste\<close>]:
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> 0 < n
+\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> \<circle>) = (() \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>)) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def Premise_def \<phi>Share_\<phi>None by simp
+*)
 
-lemma [\<phi>reason 1200 for \<open>(?y \<Ztypecolon> \<circle>) = (?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>@ ?Z) @action clean_automation_waste\<close>]:
-  \<open>(x \<Ztypecolon> \<circle>) = (() \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
 
 lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
   \<open> perm_ins_homo \<psi>
@@ -165,11 +185,6 @@ lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi
 
 declare perm_ins_homo_pointwise[\<phi>reason 1200]
         perm_ins_homo_to_share[\<phi>reason 1200]
-
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> 0 < n
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> \<circle>) = (() \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>)) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def Premise_def \<phi>Share_\<phi>None by simp
 
 lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> ?T \<^emph> \<circle>) = ?Z @action clean_automation_waste\<close>]:
   \<open>((x,y) \<Ztypecolon> T \<^emph> \<circle>) = ((x \<Ztypecolon> T) :: 'a::sep_magma_1 set) @action clean_automation_waste\<close>
@@ -258,6 +273,9 @@ section \<open>Transformation of Structural Abstraction\<close>
 
 subsection \<open>Structure Info\<close>
 
+text \<open>Instantiate your \<phi>-type functor with \<^const>\<open>Inhabitance_Functor\<close>
+  so that the automation relating to this reasoning task will be configured.\<close>
+
 definition Structure_Info :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Structure_Info T P \<longleftrightarrow> (\<forall>x. Inhabited (x \<Ztypecolon> T) \<longrightarrow> P)\<close>
   \<comment> \<open>Extract structure information inside an assertion, typically validity of permissions
@@ -269,15 +287,59 @@ lemma [\<phi>reason 1200 for \<open>Structure_Info (?n \<Znrres> ?T) ?P\<close>]
   unfolding Structure_Info_def Inhabited_def
   by (simp add: \<phi>expns)
 
+lemma [\<phi>reason 1200 for \<open>Structure_Info (?T \<^emph> ?U) ?P\<close>]:
+  \<open> Structure_Info T P
+\<Longrightarrow> Structure_Info U Q
+\<Longrightarrow> Structure_Info (T \<^emph> U) (P \<and> Q)\<close>
+  unfolding Structure_Info_def Inhabited_def
+  by (simp add: \<phi>expns; blast)
+
+lemma [\<phi>reason 1200 for \<open>Structure_Info (?T \<Zcomp> ?U) ?P\<close>]:
+  \<open> Structure_Info T P
+\<Longrightarrow> Structure_Info U Q
+\<Longrightarrow> Structure_Info (T \<Zcomp> U) (P \<and> Q)\<close>
+  unfolding Structure_Info_def Inhabited_def
+  by (simp add: \<phi>expns \<phi>Composition_expn) blast
+
+lemma [\<phi>reason 1200 for \<open>Structure_Info (\<phi>perm_ins_homo ?\<psi> ?T) ?P\<close>]:
+  \<open> Structure_Info T P
+\<Longrightarrow> Structure_Info (\<phi>perm_ins_homo \<psi> T) P\<close>
+  unfolding Structure_Info_def Inhabited_def
+  by (clarsimp simp add: \<phi>expns)
+
+lemma "_Structure_Info_general_rule_":
+  \<open> Inhabitance_Functor F any
+\<Longrightarrow> Structure_Info T P
+\<Longrightarrow> Structure_Info (F T) P \<close>
+  unfolding Inhabitance_Functor_def Structure_Info_def
+  by blast
+
+\<phi>reasoner_ML Structure_Info_general 50 (\<open>Structure_Info _ _\<close>) = \<open>
+fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ (*Trueprop*) $ (Const(\<^const_name>\<open>Structure_Info\<close>, _) $ T $ _ )
+        = Thm.major_prem_of sequent
+   in case Phi_Functor_Detect.detect 1 ctxt T
+        of SOME [Ft,Tt] => let
+              val rule = Drule.infer_instantiate ctxt
+                            [(("F",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt)]
+                            @{thm "_Structure_Info_general_rule_"}
+              in SOME ((ctxt, rule RS sequent), Seq.empty) end
+          | _ => NONE
+  end
+)\<close>
+
+lemma [\<phi>reason 30 for \<open>Structure_Info ?T ?P\<close>]:
+  \<open> Structure_Info T True \<close>
+  unfolding Structure_Info_def by blast
+
+(*
+(*TESTING... re-enable them for performance*)
+
+(* The following 3 rules are redundant, but is given for the sake of performance. *)
+
 lemma [\<phi>reason 1200 for \<open>Structure_Info (\<black_circle> ?T) ?P\<close>]:
   \<open> Structure_Info T P
 \<Longrightarrow> Structure_Info (\<black_circle> T) P\<close>
-  unfolding Structure_Info_def Inhabited_def
-  by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200 for \<open>Structure_Info (?k \<^bold>\<rightarrow> ?T) ?P\<close>]:
-  \<open> Structure_Info T P
-\<Longrightarrow> Structure_Info (k \<^bold>\<rightarrow> T) P\<close>
   unfolding Structure_Info_def Inhabited_def
   by (simp add: \<phi>expns)
 
@@ -287,23 +349,12 @@ lemma [\<phi>reason 1200 for \<open>Structure_Info (?k \<^bold>\<rightarrow>\<^s
   unfolding Structure_Info_def Inhabited_def
   by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>Structure_Info (?T \<^emph> ?U) ?P\<close>]:
+lemma [\<phi>reason 1200 for \<open>Structure_Info (?k \<^bold>\<rightarrow> ?T) ?P\<close>]:
   \<open> Structure_Info T P
-\<Longrightarrow> Structure_Info U Q
-\<Longrightarrow> Structure_Info (T \<^emph> U) (P \<and> Q)\<close>
+\<Longrightarrow> Structure_Info (k \<^bold>\<rightarrow> T) P\<close>
   unfolding Structure_Info_def Inhabited_def
-  by (simp add: \<phi>expns; blast)
-
-lemma [\<phi>reason 1200 for \<open>Structure_Info (\<phi>perm_ins_homo ?\<psi> ?T) ?P\<close>]:
-  \<open> Structure_Info T P
-\<Longrightarrow> Structure_Info (\<phi>perm_ins_homo \<psi> T) P\<close>
-  unfolding Structure_Info_def Inhabited_def
-  by (clarsimp simp add: \<phi>expns)
-
-lemma [\<phi>reason 30 for \<open>Structure_Info ?T ?P\<close>]:
-  \<open> Structure_Info T True \<close>
-  unfolding Structure_Info_def by blast
-
+  by (simp add: \<phi>expns)
+*)
 
 subsection \<open>Extract\<close>
 
@@ -646,6 +697,82 @@ lemma Structural_Extract_from_mult[\<phi>reason 1200 for
 
 paragraph \<open>Structural Node\<close>
 
+lemma "_Structural_Extract_general_rule_":
+  \<open> Separation_Functor F1 F4 F14 T Ur
+\<Longrightarrow> Separation_Functor F3 F2 F23 U R
+\<Longrightarrow> Transformation_Functor F14 F23 f1 f2
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = id \<and> f2 = id
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (yr \<Ztypecolon> F4 Ur) P\<close>
+  unfolding Structural_Extract_def
+  \<medium_left_bracket> premises _ and _ and _ and _ and Tr
+    ;;apply_Separation_Functor_go[where Fu=F4 and Ft=F1]
+    apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
+    simplify(useful)
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+    apply_Separation_Functor_back
+  \<medium_right_bracket> .
+
+lemma "_Structural_Extract_general_rule'_":
+  \<open> Separation_Functor F1' F4' F14' T' W'
+\<Longrightarrow> Separation_Functor F3' F2' F23' U' R'
+\<Longrightarrow> Transformation_Functor F23' F14' f1' f2'
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1' = id \<and> f2' = id
+\<Longrightarrow> Separation_Functor F1 F4 F14 T W
+\<Longrightarrow> Separation_Functor F3 F2 F23 U R
+\<Longrightarrow> Transformation_Functor F14 F23 f1 f2
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = id \<and> f2 = id
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
+      (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (w \<Ztypecolon> F4 W)
+      (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> F3' U') (w' \<Ztypecolon> F4' W') (x' \<Ztypecolon> F1' T') (r' \<Ztypecolon> F2' R') P') \<and> P) \<close>
+  unfolding Automatic_Transformation_def
+  by (blast intro: "_Structural_Extract_general_rule_"
+                   Structural_Extract_imply_P)
+                  
+\<phi>reasoner_ML "Structural_Extract_general_rule" 50 (\<open>Structural_Extract (_ \<Ztypecolon> _) _ (_ \<Ztypecolon> _) _ _\<close>) = \<open>
+
+fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ (*Trueprop*) $ (Const(\<^const_name>\<open>Structural_Extract\<close>, _)
+        $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)
+        $ _
+        $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ U)
+        $ _
+        $ P
+      ) = Thm.major_prem_of sequent
+      val mode_automatic_transformation =
+            (case P of Const(\<^const_name>\<open>conj\<close>, _) $ (
+                       Const(\<^const_name>\<open>Automatic_Transformation\<close>, _) $ _ $ _ $ _) $ _ => true
+                | _ => false)
+   in case (Phi_Functor_Detect.detect 1 ctxt T,
+            Phi_Functor_Detect.detect 1 ctxt U)
+        of (SOME [Ft,Tt], SOME [Fu, Uu]) => let
+              val rule = if mode_automatic_transformation
+                         then let (*This branch needs test*)
+                           val [varified_T, varified_U] = Variable.exportT_terms ctxt Phi_Help.empty_ctxt [T,U]
+                           val [vFt, vTt] = Phi_Functor_Detect.detect1 1 ctxt varified_T
+                           val [vFu, vUu] = Phi_Functor_Detect.detect1 1 ctxt varified_U
+                           in Drule.infer_instantiate ctxt
+                                  [(("F1",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt),
+                                   (("F3",0), Thm.cterm_of ctxt Fu), (("U",0), Thm.cterm_of ctxt Uu),
+                                   (("F1'",0), Thm.cterm_of ctxt vFt), (("T'",0), Thm.cterm_of ctxt vTt),
+                                   (("F3'",0), Thm.cterm_of ctxt vFu), (("U'",0), Thm.cterm_of ctxt vUu)]
+                                  @{thm "_Structural_Extract_general_rule'_"}
+                              RS @{thm SE_clean_waste'}
+                           end
+                         else Drule.infer_instantiate ctxt
+                                  [(("F1",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt),
+                                   (("F3",0), Thm.cterm_of ctxt Fu), (("U",0), Thm.cterm_of ctxt Uu)]
+                                  @{thm "_Structural_Extract_general_rule_"}
+                               RS @{thm SE_clean_waste}
+              in SOME ((ctxt, rule RS sequent), Seq.empty) end
+          | _ => NONE
+   end
+)
+\<close>
+
+
+(*use \<open>k \<^bold>\<rightarrow>\<close> to test*)
 lemma Structural_Extract_\<phi>MapAt:
   \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k' = k
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
@@ -654,6 +781,8 @@ lemma Structural_Extract_\<phi>MapAt:
   unfolding Structural_Extract_def Premise_def
   apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
   by (rule \<phi>MapAt_cast)
+
+(* Disabled for testing. Should be re-enabled for performance.
 
 declare Structural_Extract_\<phi>MapAt[THEN SE_clean_waste, \<phi>reason 1200]
 
@@ -667,8 +796,62 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('aa::sep_monoid,'bb) \<phi>\<close>
   unfolding Automatic_Transformation_def \<r>Require_def
   by (blast intro: Structural_Extract_\<phi>MapAt[unfolded Action_Tag_def \<r>Require_def]
-                   Structural_Extract_imply_P)
+                   Structural_Extract_imply_P) *)
 
+
+lemma Structural_Extract_general_LeSeminearing_left:
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> c * a = b
+\<Longrightarrow> Left_Seminearring_Functor F3 U D
+\<Longrightarrow> Left_Seminearring_Functor F4 W D
+\<Longrightarrow> Separation_Functor (F1 a) (F4 a) F14 T (F4 c W)
+\<Longrightarrow> Separation_Functor (F3 a) (F2 a) F23 (F3 c U) R
+\<Longrightarrow> Transformation_Functor F14 F23 f1 f2
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = id \<and> f2 = id
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> a \<in> D \<and> b \<in> D \<and> c \<in> D
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> F3 c U) (yr \<Ztypecolon> F4 c W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 a T) (r \<Ztypecolon> F2 a R) (y \<Ztypecolon> F3 b U) (yr \<Ztypecolon> F4 b W) P\<close>
+  unfolding Structural_Extract_def
+  \<medium_left_bracket> premises _ and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+               and _ and _ and _ and _ and _ and Tr
+    have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
+      by (metis LSF4 Left_Seminearring_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
+    have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
+      by (metis LSF3 Left_Seminearring_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
+    ;; unfold F4D
+       apply_Separation_Functor_go[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
+       apply_Transformation_Functor[where Fa=F14 and U=\<open>F3 c U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
+       simplify(useful)
+       \<medium_left_bracket> Tr \<medium_right_bracket>
+       apply_Separation_Functor_back
+       fold F3D
+  \<medium_right_bracket> .
+
+lemma Structural_Extract_general_LeSeminearing_right:
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> c * b = a
+\<Longrightarrow> Left_Seminearring_Functor F1 T D
+\<Longrightarrow> Left_Seminearring_Functor F2 R D
+\<Longrightarrow> Separation_Functor (F1 b) (F4 b) F14 (F1 c T) W
+\<Longrightarrow> Separation_Functor (F3 b) (F2 b) F23 U (F2 c R)
+\<Longrightarrow> Transformation_Functor F14 F23 f1 f2
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = id \<and> f2 = id
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> a \<in> D \<and> b \<in> D \<and> c \<in> D
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 c T) (r \<Ztypecolon> F2 c R) (y \<Ztypecolon> U) (yr \<Ztypecolon> W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 a T) (r \<Ztypecolon> F2 a R) (y \<Ztypecolon> F3 b U) (yr \<Ztypecolon> F4 b W) P\<close>
+  unfolding Structural_Extract_def
+  \<medium_left_bracket> premises _ and LSF1[\<phi>reason add] and LSF2[\<phi>reason add]
+               and _ and _ and _ and _ and _ and Tr
+    have F1D: \<open>F1 a T = F1 b (F1 c T)\<close>
+      by (metis LSF1 Left_Seminearring_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
+    have F2D: \<open>F2 a R = F2 b (F2 c R)\<close>
+      by (metis LSF2 Left_Seminearring_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
+    ;; unfold F1D
+       apply_Separation_Functor_go[where Fu=\<open>F4 b\<close> and Ft=\<open>F1 b\<close>]
+       apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> F2 c R\<close> and y=\<open>(y,r)\<close> and Q=P]
+       simplify(useful)
+       \<medium_left_bracket> Tr \<medium_right_bracket>
+       apply_Separation_Functor_back
+       fold F2D
+  \<medium_right_bracket> .
 
 lemma Structural_Extract_\<phi>MapAt_L:
   \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k' = k
@@ -1120,28 +1303,28 @@ lemma [\<phi>reason 2011]:
 
 lemma [\<phi>reason 2000]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W P
+\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> m * n \<Znrres> T) W P
 \<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P\<close>
   unfolding Premise_def by simp
 
 lemma [\<phi>reason 2000]:
-  \<open> Structural_Extract (x \<Ztypecolon> n * m \<Znrres> T) R Y W P
+  \<open> Structural_Extract (x \<Ztypecolon> m * n \<Znrres> T) R Y W P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) R Y W P\<close>
   unfolding Structural_Extract_def Action_Tag_def
   by (metis Imply_def Inhabited_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
 
 lemma [\<phi>reason 2011]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W
-      (Automatic_Morphism RP (Structural_Extract (x' \<Ztypecolon> n * m \<Znrres> T') W' X' R' P') \<and> P)
+\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> m * n \<Znrres> T) W
+      (Automatic_Morphism RP (Structural_Extract (x' \<Ztypecolon> m * n \<Znrres> T') W' X' R' P') \<and> P)
 \<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W
       (Automatic_Morphism RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> m \<Znrres> T') W' X' R' P') \<and> P)\<close>
   unfolding Premise_def by simp
 
 lemma [\<phi>reason 2011]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> Structural_Extract (x' \<Ztypecolon> n * m \<Znrres> T') W' X' R'
-      (Automatic_Morphism RP (Structural_Extract X R (x \<Ztypecolon> n * m \<Znrres> T) W P) \<and> P')
+\<Longrightarrow> Structural_Extract (x' \<Ztypecolon> m * n \<Znrres> T') W' X' R'
+      (Automatic_Morphism RP (Structural_Extract X R (x \<Ztypecolon> m * n \<Znrres> T) W P) \<and> P')
 \<Longrightarrow> Structural_Extract (x' \<Ztypecolon> n \<Znrres> m \<Znrres> T') W' X' R'
       (Automatic_Morphism RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P) \<and> P')\<close>
   unfolding Premise_def by simp
@@ -1370,7 +1553,8 @@ subsubsection \<open>Convergence of Structural Nodes\<close>
 
 lemma [\<phi>reason 1200 for \<open>If ?P (_ \<Ztypecolon> _ \<Znrres> _) (_ \<Ztypecolon> _ \<Znrres> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Z @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
-\<Longrightarrow> If P (x \<Ztypecolon> n \<Znrres> T) (y \<Ztypecolon> n \<Znrres> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> n \<Znrres> Z) @action branch_convergence\<close>
+\<Longrightarrow> If P n m = nm @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> n \<Znrres> T) (y \<Ztypecolon> m \<Znrres> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> nm \<Znrres> Z) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp add: \<phi>Share_transformation)
 
 lemma [\<phi>reason 1200 for \<open>If _ ((_,_) \<Ztypecolon> _ \<^emph> _) ((_,_) \<Ztypecolon> _ \<^emph> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
@@ -1381,6 +1565,7 @@ lemma [\<phi>reason 1200 for \<open>If _ ((_,_) \<Ztypecolon> _ \<^emph> _) ((_,
    apply (rule \<phi>Prod_transformation[where Pa=True and Pb=True, simplified], assumption, assumption)
   by (rule \<phi>Prod_transformation[where Pa=True and Pb=True, simplified], assumption, assumption)
 
+(* (*TESTING... re-enable them for performance*)
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> _ \<^bold>\<rightarrow>\<^sub>@ _) (_ \<Ztypecolon> _ \<^bold>\<rightarrow>\<^sub>@ _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
 \<Longrightarrow> If P (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (y \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ Z) @action branch_convergence\<close>
@@ -1396,13 +1581,11 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Val _ _) (_ \<Ztypecol
 \<Longrightarrow> If P (x \<Ztypecolon> Val v T) (y \<Ztypecolon> Val v U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Val v Z) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp add: Val_transformation)
 
-(*TODO: The rules can be generated from Transformation Functor!*)
-
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<black_circle> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
 \<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<black_circle> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> \<black_circle> Z) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp add: \<phi>Some_cast)
-
+*)
 
 (* fix me!!!
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
@@ -1419,6 +1602,33 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypec
   \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Identity\<close>]  
     cases \<medium_left_bracket> to Identity \<medium_right_bracket>. \<medium_left_bracket> to Identity \<medium_right_bracket>. ;; \<medium_right_bracket>. .
 *)
+
+lemma branch_convergence_general_rule:
+  \<open> Transformation_Functor Fa Fb id id
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> Fa T) (y \<Ztypecolon> Fa U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Fb Z) @action branch_convergence \<close>
+  unfolding Action_Tag_def Transformation_Functor_def
+  by (cases P; simp)
+
+\<phi>reasoner_ML branch_convergence_general_rule 50 (\<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>) = \<open>
+fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ (*Action_Tag*) $ (_ (*Trueprop*) $ (_ (*Imply*)
+            $ ( _ (*If*) $ _ $ (_(*\<phi>Type*) $ _ $ T) $ (_(*\<phi>Type*) $ _ $ U))
+            $ _
+            $ _
+      )) $ _
+        = snd (Phi_Help.varified_leading_antecedent_meta_quantifiers ctxt (Thm.prop_of sequent))
+   in case (Phi_Functor_Detect.detect 1 ctxt T,
+            Phi_Functor_Detect.detect 1 ctxt U)
+        of (SOME [Ft,_], SOME [Fu, _]) => let
+            val rule = Drule.infer_instantiate ctxt
+                          [(("Fa",0), Thm.cterm_of ctxt Ft), (("Fb",0), Thm.cterm_of ctxt Fu)]
+                          @{thm "branch_convergence_general_rule"}
+             in SOME ((ctxt, rule RS sequent), Seq.empty) end
+            handle THM _ => NONE
+         | _ => NONE
+  end)
+\<close>
 
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Nosep _) (_ \<Ztypecolon> Nosep _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence

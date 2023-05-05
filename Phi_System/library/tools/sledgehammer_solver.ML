@@ -254,7 +254,11 @@ fun assync_prove f (ctxt,sequent) =
                     |> (fn th => (if Thm.prop_of th aconv Thm.term_of goal_term' then () else
                                   error "XXXXXXXXXXXXX!"; th)) *)
                   handle
-                     Auto_Fail _ => (
+                     Phi_Reasoners.Automation_Fail _ => (
+                       Future.error_message pos
+                          ((serial (), Phi_Reasoners.error_message (SOME (ctxt,sequent))), NONE);
+                       raise Fail (Phi_Reasoners.error_message (SOME (ctxt,sequent))))
+                   | Auto_Fail _ => (
                        Future.error_message pos
                           ((serial (), Phi_Reasoners.error_message (SOME (ctxt,sequent))), NONE);
                        raise Fail (Phi_Reasoners.error_message (SOME (ctxt,sequent)))))
@@ -402,9 +406,11 @@ if no_cache
    end
 (* val proof = raw_sledgehammer stat *)
 
-fun auto id =
+fun auto id (ctxt,sequent) =
   wrapper (case id of SOME id' => auto' id'
-                    | NONE => Phi_Reasoners.auto_obligation_solver1 #> snd)
+                    | NONE => Phi_Reasoners.auto_obligation_solver1 #> snd) (ctxt,sequent)
+  handle Auto_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))
+       | Phi_Reasoners.Automation_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))
 
 fun insert_tac _ [] _ = all_tac
   | insert_tac ctxt facts i =

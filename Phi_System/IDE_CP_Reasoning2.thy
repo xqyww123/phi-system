@@ -188,6 +188,40 @@ lemma [\<phi>reason 1200]:
   unfolding \<r>Clean_def Imply_def
   by (simp add: Subjection_expn)
 
+subsubsection \<open>General Reasoning by Algebraic Properties\<close>
+
+lemma \<r>Clean_general_rule:
+  \<open> \<r>Clean (x \<Ztypecolon> T)
+\<Longrightarrow> Semi_Unit_Functor F
+\<Longrightarrow> \<r>Clean (x \<Ztypecolon> F T)\<close>
+  unfolding Semi_Unit_Functor_def \<r>Clean_def Unit_Homo_def
+  by clarsimp
+
+\<phi>reasoner_ML "\<r>Clean_general_rule" 50 (\<open>\<r>Clean (_ \<Ztypecolon> _)\<close>) = \<open>
+fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ (*Trueprop*) $ (_ (*\<r>Clean*) $ ( _ (*\<phi>Type*) $ _ $ T)) = Thm.major_prem_of sequent
+   in case Phi_Functor_Detect.detect 1 ctxt T
+        of SOME [Ft,Tt] => let
+            val rule = Drule.infer_instantiate ctxt
+                          [(("F",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt)]
+                          @{thm "\<r>Clean_general_rule"}
+             in SOME ((ctxt, rule RS sequent), Seq.empty) end
+         | _ => NONE
+  end)
+\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> Unit_Homo T
+\<Longrightarrow> \<r>Clean (1 \<Ztypecolon> T)\<close>
+  unfolding Unit_Homo_def \<r>Clean_def \<r>Require_def Premise_def
+  by clarsimp
+
+lemma [\<phi>reason 1200]:
+  \<open> Unit_Homo T
+\<Longrightarrow> \<r>Clean (() \<Ztypecolon> T)\<close>
+  unfolding Unit_Homo_def \<r>Clean_def \<r>Require_def Premise_def
+  by clarsimp
+
 
 subsubsection \<open>Structural Node\<close>
 

@@ -1,7 +1,7 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
 theory Phi_Types
-  imports IDE_CP_Reasoning2 Phi_Refinement_Algebra
+  imports IDE_CP_Reasoning2
 begin
 
 section \<open>Basics\<close>
@@ -67,6 +67,10 @@ subsection \<open>Func\<close>
 definition \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = { f x }\<close>
 
+lemma \<phi>Fun_expn:
+  \<open>v \<in> (x \<Ztypecolon> \<phi>Fun f) \<longleftrightarrow> v = f x \<close>
+  unfolding \<phi>Fun_def \<phi>Type_def by simp
+
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x 
 \<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>Fun f\<close> 
@@ -78,13 +82,27 @@ lemma [\<phi>reason 1200]:
   \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y
-\<Longrightarrow> x \<Ztypecolon> \<phi>Fun f \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Identity @action to Identity\<close> \<medium_left_bracket> \<medium_right_bracket> .
+  \<open> x \<Ztypecolon> \<phi>Fun f \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> Identity @action to Identity\<close> \<medium_left_bracket> \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
   \<open>is_functional (x \<Ztypecolon> \<phi>Fun f)\<close>
   \<medium_left_bracket> to Identity \<medium_right_bracket> .
 
+subsubsection \<open>Algebraic Properties\<close>
+
+lemma \<phi>Fun_separation_homo_eq[\<phi>reason add]:
+  \<open> homo_sep_disj_total f
+\<Longrightarrow> homo_sep_mult f
+\<Longrightarrow> Separation_Homo_eq (\<phi>Fun f)\<close>
+  unfolding Separation_Homo_eq_def Imply_def Separation_Homo_def
+  by (clarsimp simp add: set_mult_expn \<phi>Fun_expn homo_sep_disj_total.sep_disj_homo
+                         homo_sep_mult.homo_mult)
+
+lemma \<phi>Fun_unit_homo[\<phi>reason add]:
+  \<open> homo_one f
+\<Longrightarrow> Unit_Homo (\<phi>Fun f) \<close>
+  unfolding Unit_Homo_def homo_one_def Imply_def
+  by (simp add: \<phi>Fun_expn set_eq_iff)
 
 subsection \<open>Any\<close>
 
@@ -152,11 +170,25 @@ lemma \<phi>Composition_inhabited[elim,\<phi>inhabitance_rule]:
   \<open>Inhabited (x \<Ztypecolon> T \<Zcomp> U) \<Longrightarrow> (\<And>y. Inhabited (x \<Ztypecolon> U) \<Longrightarrow> Inhabited (y \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns \<phi>Composition_expn) blast
 
-lemma [\<phi>reason 1200 for \<open>(_ \<Ztypecolon> _ \<Zcomp> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (_ \<Ztypecolon> _ \<Zcomp> _) \<a>\<n>\<d> _\<close>]:
+lemma \<phi>Composition_transformation[\<phi>reason 1200 for \<open>(_ \<Ztypecolon> _ \<Zcomp> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (_ \<Ztypecolon> _ \<Zcomp> _) \<a>\<n>\<d> _\<close>]:
   \<open> x1 \<Ztypecolon> U1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> x2 \<Ztypecolon> U2 \<a>\<n>\<d> P
 \<Longrightarrow> (x1 \<Ztypecolon> T \<Zcomp> U1) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x2 \<Ztypecolon> T \<Zcomp> U2) \<a>\<n>\<d> P\<close>
   unfolding \<phi>Composition_expn Imply_def by blast
 
+subsubsection \<open>Algebraic Properties\<close>
+
+lemma \<phi>Composition_transformation_functor[\<phi>reason add]:
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> B = B'
+\<Longrightarrow> Transformation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B') id id\<close>
+  unfolding Transformation_Functor_def Premise_def
+  by (simp add: \<phi>Composition_transformation)
+
+lemma \<phi>Composition_separatio_functor[\<phi>reason add]:
+  \<open> Separation_Homo_eq B
+\<Longrightarrow> Separation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U\<close>
+  unfolding Separation_Functor_def Separation_Homo_eq_def Separation_Homo_def Imply_def
+  by (rule \<phi>Type_eqI; auto simp add: \<phi>Prod_expn \<phi>Composition_expn,
+      metis times_set_I, meson set_mult_expn)
 
 section \<open>Logical Connectives\<close>
 
@@ -184,6 +216,34 @@ lemma [\<phi>reason 1200]:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> is_functional (x \<Ztypecolon> T))
 \<Longrightarrow> is_functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   \<medium_left_bracket> premises [\<phi>reason add] ;; \<medium_right_bracket> .
+
+subsubsection \<open>Algebraic Properties\<close>
+
+declare [[\<phi>functor_of \<open>?T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<Rightarrow> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<open>?T\<close> (100) ]]
+
+lemma SubjectionTY_unit_functor[\<phi>reason add]:
+  \<open> Semi_Unit_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) \<close>
+  unfolding Semi_Unit_Functor_def Imply_def
+  by (clarsimp simp add: SubjectionTY_expn Subjection_expn set_eq_iff)
+
+lemma SubjectionTY_transformation_functor[\<phi>reason add]:
+  \<open> Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) id id \<close>
+  unfolding Transformation_Functor_def Imply_def
+  by (clarsimp simp add: SubjectionTY_expn Subjection_expn)
+
+lemma SubjectionTY_inhabitance_functor[\<phi>reason add]:
+  \<open> Inhabitance_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) id \<close>
+  unfolding Inhabitance_Functor_def Inhabited_def
+  by (clarsimp simp add: SubjectionTY_expn Subjection_expn)
+
+lemma SubjectionTY_separation_functor[\<phi>reason add]:
+  \<open> Separation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) T U \<close>
+  unfolding Separation_Functor_def Imply_def
+  by (rule \<phi>Type_eqI;
+      clarsimp simp add: SubjectionTY_expn Subjection_expn set_mult_expn \<phi>Prod_expn;
+      blast)
+
+
 
 subsection \<open>Existential Quantification as a Type\<close>
 
@@ -296,11 +356,11 @@ lemma [\<phi>reason 1200]:
 subsubsection \<open>Rules\<close>
 
 lemma [\<phi>reason 3000]:
-  \<open>\<r>Clean (() \<Ztypecolon> \<phi>None)\<close>
+  \<open>\<r>Clean (any \<Ztypecolon> \<phi>None)\<close>
   unfolding \<r>Clean_def by simp
 
 lemma [\<phi>reason 1200]:
-  \<open>is_functional (() \<Ztypecolon> \<phi>None)\<close>
+  \<open>is_functional (any \<Ztypecolon> \<phi>None)\<close>
   \<medium_left_bracket> to Identity \<medium_right_bracket> .
 
 (*
@@ -315,27 +375,11 @@ lemma [\<phi>reason 1500
 
 subsection \<open>Prod\<close>
 
-definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 55)
-  where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
-
-lemma \<phi>Prod_expn[\<phi>expns]:
-  "concrete \<in> ((a,b) \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>cb ca. concrete = cb * ca \<and> cb \<in> (b \<Ztypecolon> B) \<and> ca \<in> (a \<Ztypecolon> A) \<and> cb ## ca)"
-  unfolding \<phi>Prod_def \<phi>Type_def times_set_def by simp
-
-lemma \<phi>Prod_expn'[assertion_simps]:
-  \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-lemma \<phi>Prod_inhabited[elim!,\<phi>inhabitance_rule]:
-  "Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<Longrightarrow> (Inhabited (x1 \<Ztypecolon> T1) \<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns, blast)
+declare \<phi>Prod_expn'[assertion_simps]
 
 (* lemma \<phi>Prod_inhabited_expn[\<phi>inhabited]:
   \<open>Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longleftrightarrow> Inhabited (x1 \<Ztypecolon> T1) \<and> Inhabited (x2 \<Ztypecolon> T2)\<close>
   unfolding Inhabited_def apply (simp add: \<phi>expns) *)
-
-lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)"
-  by (simp add: \<phi>expns set_eq_iff)
 
 lemma \<phi>Prod_\<phi>None:
   \<open>((x',y) \<Ztypecolon> \<circle> \<^emph> U) = ((y \<Ztypecolon> U) :: 'a::sep_magma_1 set)\<close>
@@ -343,16 +387,6 @@ lemma \<phi>Prod_\<phi>None:
   unfolding set_eq_iff
   by (simp_all add: \<phi>expns)
 
-(*
-lemma
-  \<open> Separation_Homo B
-\<Longrightarrow> x \<Ztypecolon> (B \<Zcomp> T) \<^emph> (B \<Zcomp> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> B \<Zcomp> T \<^emph> U\<close>
-  unfolding Separation_Homo_def Imply_def
-  by (cases x; clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn; metis times_set_I)
-
-lemma
-  \<open> (B \<Zcomp> T) \<^emph> (B \<Zcomp> U) = (B \<Zcomp> (T \<^emph> U))\<close>
-  apply (rule \<phi>Type_eqI_imp) *)
 
 (*lemma (in \<phi>empty) SepNu_to_SepSet: "(OBJ (a,b) \<Ztypecolon> A \<^emph> B) = (OBJ a \<Ztypecolon> A) * (OBJ b \<Ztypecolon> B)"
   by (simp add: \<phi>expns set_eq_iff times_list_def) *)
@@ -543,20 +577,6 @@ lemma heap_split_by_set: "P (h |` S) (h |` (- S)) \<Longrightarrow> \<exists>h1 
 lemma heap_split_by_addr_set: "P (h |` (MemAddress ` S)) (h |` (- (MemAddress ` S))) \<Longrightarrow> \<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> P h1 h2"
   using heap_split_by_set .*)
 
-subsubsection \<open>Algebraic Properties\<close>
-(*WIP*)
-
-(*
-locale Separation_Functor_ty =
-  fixes Ft :: \<open>('b::sep_magma,'a1::sep_magma) \<phi> \<Rightarrow> ('b::sep_magma,'c1::sep_magma) \<phi>\<close>
-    and Fu :: \<open>('b::sep_magma,'a2::sep_magma) \<phi> \<Rightarrow> ('b::sep_magma,'c2::sep_magma) \<phi>\<close>
-    and F3 :: \<open>('b::sep_magma, 'a1 \<times> 'a2) \<phi> \<Rightarrow> ('b::sep_magma, 'c1 \<times> 'c2) \<phi>\<close>
-    and T  :: \<open>('b::sep_magma,'a1::sep_magma) \<phi>\<close>
-    and U  :: \<open>('b::sep_magma,'a2::sep_magma) \<phi>\<close>
-  assumes \<open>Ft(T) \<^emph> Fu(U) = F3 (T \<^emph> U)\<close> *)
-
-
-
 
 subsection \<open>List Item \& Empty List\<close>
 
@@ -657,7 +677,7 @@ paragraph \<open>Conversions\<close>
 
 lemma \<phi>MapAt_\<phi>Prod:
   \<open>k \<^bold>\<rightarrow> (T \<^emph> U) = (k \<^bold>\<rightarrow> T) \<^emph> (k \<^bold>\<rightarrow> U)\<close>
-  for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
+  for T :: \<open>('a::sep_magma_1,'b) \<phi>\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
   apply (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1))
   by (metis fun_1upd_homo_right1)
@@ -735,13 +755,6 @@ lemma [simp]:
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean (x \<Ztypecolon> T)
-\<Longrightarrow> \<r>Clean (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
-  unfolding \<r>Clean_def Imply_def
-  apply (clarsimp simp add: \<phi>expns)
-  by (metis fun_1upd1)
-
-lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> k = k'
 \<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> T \<a>\<n>\<d> P
 \<Longrightarrow> 1(k := v) \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> k' \<^bold>\<rightarrow> T \<a>\<n>\<d> P\<close>
@@ -751,6 +764,26 @@ lemma [\<phi>reason 1200]:
   \<open> is_functional (x \<Ztypecolon> T)
 \<Longrightarrow> is_functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
   by (clarsimp simp add: \<phi>expns is_functional_def, blast)
+
+paragraph \<open>Algebraic Properties\<close>
+
+declare [[\<phi>trace_reasoning = 1]] 
+
+lemma \<phi>MapAt_transformation_functor[\<phi>reason 1100]:
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
+\<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k') id id\<close>
+  unfolding Transformation_Functor_def Premise_def
+  by (simp add: \<phi>MapAt_cast)
+
+lemma \<phi>MapAt_separation_functor[\<phi>reason 1100]:
+  \<open>Separation_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) T U\<close>
+  for T :: \<open>('a::sep_magma_1,'b) \<phi>\<close>
+  unfolding Separation_Functor_def \<phi>MapAt_\<phi>Prod ..
+
+lemma \<phi>MapAt_void_functor[\<phi>reason add]:
+  \<open>Unit_Functor ((\<^bold>\<rightarrow>) k)\<close>
+  unfolding Unit_Functor_def Imply_def
+  by (clarsimp simp add: \<phi>expns; metis fun_1upd1)
 
 
 subsubsection \<open>By List of Keys\<close>
@@ -776,7 +809,7 @@ paragraph \<open>Conversion\<close>
 
 lemma \<phi>MapAt_L_\<phi>Prod:
   \<open>k \<^bold>\<rightarrow>\<^sub>@ (T \<^emph> U) = (k \<^bold>\<rightarrow>\<^sub>@ T) \<^emph> (k \<^bold>\<rightarrow>\<^sub>@ U)\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1,'b) \<phi>\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule)
   apply (clarsimp simp add: push_map_distrib_sep_mult[symmetric])
   using push_map_sep_disj apply blast
@@ -814,14 +847,6 @@ simproc_setup \<phi>MapAt_L_simp_cong ("x \<Ztypecolon> k \<^bold>\<rightarrow>\
 lemma \<phi>MapAt_L_At:
   \<open>(ks \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) = (ks \<^bold>\<rightarrow> T)\<close>
   by (rule \<phi>Type_eqI; simp add: \<phi>expns; metis append_self_conv push_map_unit)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean (x \<Ztypecolon> T)
-\<Longrightarrow> \<r>Clean (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T)\<close>
-  unfolding \<r>Clean_def Imply_def
-  apply (simp add: \<phi>expns)
-  using push_map_1 by blast
-
 
 
 paragraph \<open>Implication \& Action Rules\<close>
@@ -870,6 +895,29 @@ lemma [simp]:
 lemma [simp]:
   \<open>(k \<^bold>\<rightarrow>\<^sub>@ (T \<phi>\<s>\<u>\<b>\<j> P)) = (k \<^bold>\<rightarrow>\<^sub>@ T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
+
+paragraph \<open>Algebraic Properties\<close>
+
+lemma \<phi>MapAt_L_transformation_functor[\<phi>reason 1100]:
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
+\<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k') id id\<close>
+  unfolding Transformation_Functor_def Premise_def
+  by (simp add: \<phi>MapAt_L_cast)
+
+lemma \<phi>MapAt_L_separation_functor[\<phi>reason 1100]:
+  \<open>Separation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) T U\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1,'b) \<phi>\<close>
+  unfolding Separation_Functor_def \<phi>MapAt_L_\<phi>Prod ..
+
+lemma \<phi>MapAt_L_left_seminearring_functor[\<phi>reason 1100]:
+  \<open>Left_Seminearring_Functor (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>
+  unfolding Left_Seminearring_Functor_def
+  by (clarsimp simp add: \<phi>MapAt_L_\<phi>MapAt_L times_list_def)
+
+lemma \<phi>MapAt_L_void_functor[\<phi>reason add]:
+  \<open>Unit_Functor ((\<^bold>\<rightarrow>\<^sub>@) k)\<close>
+  unfolding Unit_Functor_def Imply_def
+  by (clarsimp simp add: \<phi>expns; metis fun_1upd1)
 
 (* subsection \<open>Down Lifting\<close> (*depreciated*)
 
@@ -1217,9 +1265,10 @@ lemma \<phi>Share_1[simp]:
 
 lemma \<phi>Share_\<phi>Share[simp]:
   \<open> 0 < n \<and> 0 < m
-\<Longrightarrow> n \<Znrres> m \<Znrres> T = n*m \<Znrres> T \<close>
+\<Longrightarrow> n \<Znrres> m \<Znrres> T = m*n \<Znrres> T \<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-  by (metis share_share_not0)
+  by (metis mult.commute share_share_not0)
+  
 
 lemma \<phi>Share_share:
   \<open> 0 < n \<and> 0 < m
@@ -1280,13 +1329,13 @@ lemma [\<phi>reason 1010]:
   using \<phi>Share_transformation by (simp add: Premise_def)
 
 lemma [\<phi>reason 1000]:
-  \<open> (x \<Ztypecolon> n * m \<Znrres> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P
+  \<open> (x \<Ztypecolon> m * n \<Znrres> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   unfolding Premise_def by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> n * m \<Znrres> T) \<a>\<n>\<d> P
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> m * n \<Znrres> T) \<a>\<n>\<d> P
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) \<a>\<n>\<d> P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
@@ -1327,13 +1376,6 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> (T \<^emph> U)) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
-
-lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean (x \<Ztypecolon> T)
-\<Longrightarrow> \<r>Clean (x \<Ztypecolon> n \<Znrres> T)\<close>
-  for T :: \<open>('a::share_semimodule_mult, 'b) \<phi>\<close>
-  unfolding \<r>Clean_def Imply_def apply (simp add: \<phi>expns)
-  using share_right_one by blast
 
 
 paragraph \<open>Action Rules\<close>
@@ -1402,6 +1444,19 @@ lemma share_merge_\<phi>app:
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) * (x \<Ztypecolon> m \<Znrres> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> n+m \<Znrres> T)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   by (simp add: \<phi>Share_share implies_refl Premise_def)
+
+paragraph \<open>Algebraic Properties\<close>
+
+lemma \<phi>Share_left_seminearring_functor[\<phi>reason add]:
+  \<open>Left_Seminearring_Functor (\<Znrres>) T {0<..1}\<close>
+  unfolding Left_Seminearring_Functor_def
+  by clarsimp
+
+lemma \<phi>Share_void_functor[\<phi>reason add]:
+  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> 0 < n
+\<Longrightarrow> Unit_Functor ((\<Znrres>) n :: ('a::share_one, 'b) \<phi> \<Rightarrow> ('a, 'b) \<phi>)\<close>
+  unfolding Unit_Functor_def Imply_def
+  by (clarsimp simp add: \<phi>Share_expn, insert share_right_one, blast)
 
 
 subsubsection \<open>\<phi>-Some\<close>
@@ -1490,6 +1545,18 @@ lemma [\<phi>reason 1200]:
   \<open> is_functional (x \<Ztypecolon> T)
 \<Longrightarrow> is_functional (x \<Ztypecolon> \<black_circle> T)\<close>
   by (clarsimp simp add: \<phi>expns is_functional_def)
+
+paragraph \<open>Algebraic Properties\<close>
+
+lemma \<phi>Some_transformation_functor[\<phi>reason 1100]:
+  \<open>Transformation_Functor \<phi>Some \<phi>Some id id\<close>
+  unfolding Transformation_Functor_def Premise_def
+  by (simp add: \<phi>Some_cast)
+
+lemma \<phi>Some_separation_functor[\<phi>reason 1100]:
+  \<open>Separation_Functor \<phi>Some \<phi>Some \<phi>Some T U\<close>
+  unfolding Separation_Functor_def
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>Prod_expn \<phi>Some_expn; force)
 
 
 subsubsection \<open>\<phi>Sep_Disj\<close>

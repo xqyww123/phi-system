@@ -56,6 +56,19 @@ simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
   K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Val_simp_cong} ctxt)
 \<close>
 
+subsection \<open>Algebraic Properties\<close>
+
+lemma Val_transformation_functor[\<phi>reason add]:
+  \<open>Transformation_Functor (Val v) (Val v) id id\<close>
+  unfolding Transformation_Functor_def
+  by (simp add: Val_transformation)
+
+lemma Val_inhabitance_functor[\<phi>reason add]:
+  \<open>Inhabitance_Functor (Val v) id\<close>
+  unfolding Inhabitance_Functor_def Inhabited_def
+  by (cases v; clarsimp simp add: Val_expn Subjection_expn; blast)
+
+
 subsection \<open>Application Methods for Transformations\<close>
 
 (*TODO: I really don't like this. It is not generic.

@@ -25,6 +25,12 @@ signature PHI_HELP = sig
   val leading_antecedent : term -> (string * typ) list (*quantified variables*)
                                  * term list (*premises of the antecedent*)
                                  * term (*conclusion containing loose bound*)
+  val fix_leading_antecedent_meta_quantifiers : Proof.context -> term
+                            -> term list (*premises*) * term (*conclusion*) * Proof.context
+                               (*where quantified variables are fixed*)
+  val varified_leading_antecedent_meta_quantifiers : Proof.context -> term
+                            -> term list (*premises*) * term (*conclusion*)
+                               (*where quantified variables are varified (schematic variables)*)
 
   val string_of_term_generic : Context.generic -> term -> string
 
@@ -86,7 +92,8 @@ signature PHI_HELP = sig
 
   val debug_RS : Proof.context -> thm -> thm -> thm
 
-  
+  val empty_ctxt : Proof.context
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -113,6 +120,24 @@ fun strip_meta_hhf term =
 
 fun leading_antecedent (Const("Pure.imp", _) $ H $ _) = strip_meta_hhf H
   | leading_antecedent X = raise TERM ("has no antecedent", [X])
+
+fun fix_leading_antecedent_meta_quantifiers ctxt0 sequent =
+  let
+    val (qvs, prems, ant01) = leading_antecedent sequent
+
+    (* fix universally quantified variables *)
+    val (qv_names, ctxt'01) = Variable.add_fixes (map fst qvs) ctxt0
+    val qvars = map2 (fn N => fn (_,T) => Free (N,T)) qv_names qvs
+    val ctxt = fold Variable.declare_term qvars ctxt'01
+    val leading_ant = subst_bounds (rev qvars, ant01)
+  in (prems,leading_ant,ctxt)
+  end
+
+fun varified_leading_antecedent_meta_quantifiers ctxt sequent =
+  let val (prems,leading_ant,ctxt') = fix_leading_antecedent_meta_quantifiers ctxt sequent
+      val (leading_ant'::prems') = Variable.export_terms ctxt' ctxt (leading_ant::prems)
+   in (prems',leading_ant')
+  end
 
 fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global thy
   | string_of_term_generic (Context.Proof ctxt) = Syntax.string_of_term ctxt
@@ -325,5 +350,8 @@ fun debug_RS ctxt tha thb =
     ([th], _) => Thm.solve_constraints th
   | ([], _) => raise THM ("RSN: no unifiers", 1, [tha, thb])
   | _ => raise THM ("RSN: multiple unifiers", 1, [tha, thb]));
+
+
+val empty_ctxt = Proof_Context.init_global Pure_Syn.bootstrap_thy
 
 end
