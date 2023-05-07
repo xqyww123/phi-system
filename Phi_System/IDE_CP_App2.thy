@@ -59,7 +59,7 @@ simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
 subsection \<open>Algebraic Properties\<close>
 
 lemma Val_transformation_functor[\<phi>reason add]:
-  \<open>Transformation_Functor (Val v) (Val v) id id\<close>
+  \<open>Transformation_Functor (Val v) (Val v) (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def
   by (simp add: Val_transformation)
 

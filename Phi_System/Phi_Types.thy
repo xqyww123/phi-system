@@ -179,7 +179,7 @@ subsubsection \<open>Algebraic Properties\<close>
 
 lemma \<phi>Composition_transformation_functor[\<phi>reason add]:
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> B = B'
-\<Longrightarrow> Transformation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B') id id\<close>
+\<Longrightarrow> Transformation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>Composition_transformation)
 
@@ -227,7 +227,7 @@ lemma SubjectionTY_unit_functor[\<phi>reason add]:
   by (clarsimp simp add: SubjectionTY_expn Subjection_expn set_eq_iff)
 
 lemma SubjectionTY_transformation_functor[\<phi>reason add]:
-  \<open> Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) id id \<close>
+  \<open> Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. x) (\<lambda>x. x) \<close>
   unfolding Transformation_Functor_def Imply_def
   by (clarsimp simp add: SubjectionTY_expn Subjection_expn)
 
@@ -661,6 +661,11 @@ lemma \<phi>Mapping_inhabited[\<phi>expns]:
 subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
+(*
+definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 60)
+  where [\<phi>defs]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
+*)
+
 
 definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 60)
   where \<open>\<phi>MapAt key T x = { 1(key := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
@@ -771,7 +776,7 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma \<phi>MapAt_transformation_functor[\<phi>reason 1100]:
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
-\<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k') id id\<close>
+\<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>MapAt_cast)
 
@@ -900,7 +905,7 @@ paragraph \<open>Algebraic Properties\<close>
 
 lemma \<phi>MapAt_L_transformation_functor[\<phi>reason 1100]:
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
-\<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k') id id\<close>
+\<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>MapAt_L_cast)
 
@@ -910,8 +915,8 @@ lemma \<phi>MapAt_L_separation_functor[\<phi>reason 1100]:
   unfolding Separation_Functor_def \<phi>MapAt_L_\<phi>Prod ..
 
 lemma \<phi>MapAt_L_left_seminearring_functor[\<phi>reason 1100]:
-  \<open>Left_Seminearring_Functor (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>
-  unfolding Left_Seminearring_Functor_def
+  \<open>Scala_Semimodule_Functor (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>
+  unfolding Scala_Semimodule_Functor_def
   by (clarsimp simp add: \<phi>MapAt_L_\<phi>MapAt_L times_list_def)
 
 lemma \<phi>MapAt_L_void_functor[\<phi>reason add]:
@@ -1448,8 +1453,8 @@ lemma share_merge_\<phi>app:
 paragraph \<open>Algebraic Properties\<close>
 
 lemma \<phi>Share_left_seminearring_functor[\<phi>reason add]:
-  \<open>Left_Seminearring_Functor (\<Znrres>) T {0<..1}\<close>
-  unfolding Left_Seminearring_Functor_def
+  \<open>Scala_Semimodule_Functor (\<Znrres>) T {0<..1}\<close>
+  unfolding Scala_Semimodule_Functor_def
   by clarsimp
 
 lemma \<phi>Share_void_functor[\<phi>reason add]:
@@ -1549,7 +1554,7 @@ lemma [\<phi>reason 1200]:
 paragraph \<open>Algebraic Properties\<close>
 
 lemma \<phi>Some_transformation_functor[\<phi>reason 1100]:
-  \<open>Transformation_Functor \<phi>Some \<phi>Some id id\<close>
+  \<open>Transformation_Functor \<phi>Some \<phi>Some (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>Some_cast)
 

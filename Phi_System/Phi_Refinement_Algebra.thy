@@ -31,8 +31,8 @@ definition \<open>Separation_Homo_eq T \<longleftrightarrow> Separation_Homo T \
                           (\<forall>x y. x ## y \<longrightarrow> ( (x * y \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> T) * (y \<Ztypecolon> T) ))\<close>
 definition \<open>Separation_Functor Ft Fu F3 T U \<longleftrightarrow> Ft(T) \<^emph> Fu(U) = F3 (T \<^emph> U)\<close>
 
-definition Left_Seminearring_Functor :: \<open>('s \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 's::monoid_mult set \<Rightarrow> bool\<close>
-  where \<open>Left_Seminearring_Functor F T D \<longleftrightarrow> (\<forall>s \<in> D. \<forall>t \<in> D. F s (F t T) = F (t * s) T)\<close>
+definition Scala_Semimodule_Functor :: \<open>('s \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 's::monoid_mult set \<Rightarrow> bool\<close>
+  where \<open>Scala_Semimodule_Functor F T D \<longleftrightarrow> (\<forall>s \<in> D. \<forall>t \<in> D. F s (F t T) = F (t * s) T)\<close>
 
 subsection \<open>Configurations\<close>
 
@@ -198,7 +198,7 @@ lemma [\<phi>reason add]:
 
 lemma Separation_Homo_functor:
   \<open> Separation_Functor F F F' T T
-\<Longrightarrow> Transformation_Functor F' F id id
+\<Longrightarrow> Transformation_Functor F' F (\<lambda>x. x) (\<lambda>x. x)
 \<Longrightarrow> Separation_Homo T
 \<Longrightarrow> Separation_Homo (F T)\<close>
   unfolding Separation_Homo_def Transformation_Functor_def Separation_Functor_def
@@ -206,7 +206,7 @@ lemma Separation_Homo_functor:
 
 lemma Separation_Homo_eq_functor:
   \<open> Separation_Functor F F F' T T
-\<Longrightarrow> Transformation_Functor F F' id id
+\<Longrightarrow> Transformation_Functor F F' (\<lambda>x. x) (\<lambda>x. x)
 \<Longrightarrow> Separation_Homo (F T)
 \<Longrightarrow> Separation_Homo_eq T
 \<Longrightarrow> Separation_Homo_eq (F T)\<close>

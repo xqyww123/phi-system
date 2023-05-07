@@ -701,7 +701,7 @@ lemma "_Structural_Extract_general_rule_":
   \<open> Separation_Functor F1 F4 F14 T Ur
 \<Longrightarrow> Separation_Functor F3 F2 F23 U R
 \<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = id \<and> f2 = id
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (yr \<Ztypecolon> F4 Ur) P\<close>
   unfolding Structural_Extract_def
@@ -717,11 +717,11 @@ lemma "_Structural_Extract_general_rule'_":
   \<open> Separation_Functor F1' F4' F14' T' W'
 \<Longrightarrow> Separation_Functor F3' F2' F23' U' R'
 \<Longrightarrow> Transformation_Functor F23' F14' f1' f2'
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1' = id \<and> f2' = id
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1' = (\<lambda>x. x) \<and> f2' = (\<lambda>x. x)
 \<Longrightarrow> Separation_Functor F1 F4 F14 T W
 \<Longrightarrow> Separation_Functor F3 F2 F23 U R
 \<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = id \<and> f2 = id
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (w \<Ztypecolon> F4 W)
@@ -801,12 +801,12 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
 
 lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested once we have usable test case*)
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> c * a = b
-\<Longrightarrow> Left_Seminearring_Functor F3 U D
-\<Longrightarrow> Left_Seminearring_Functor F4 W D
+\<Longrightarrow> Scala_Semimodule_Functor F3 U D
+\<Longrightarrow> Scala_Semimodule_Functor F4 W D
 \<Longrightarrow> Separation_Functor (F1 a) (F4 a) F14 T (F4 c W)
 \<Longrightarrow> Separation_Functor (F3 a) (F2 a) F23 (F3 c U) R
 \<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = id \<and> f2 = id
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> a \<in> D \<and> b \<in> D \<and> c \<in> D
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> F3 c U) (yr \<Ztypecolon> F4 c W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 a T) (r \<Ztypecolon> F2 a R) (y \<Ztypecolon> F3 b U) (yr \<Ztypecolon> F4 b W) P\<close>
@@ -814,9 +814,9 @@ lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested o
   \<medium_left_bracket> premises _ and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
                and _ and _ and _ and _ and _ and Tr
     have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
-      by (metis LSF4 Left_Seminearring_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
+      by (metis LSF4 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
     have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
-      by (metis LSF3 Left_Seminearring_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
+      by (metis LSF3 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
     ;; unfold F4D
        apply_Separation_Functor_go[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
        apply_Transformation_Functor[where Fa=F14 and U=\<open>F3 c U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
@@ -828,12 +828,12 @@ lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested o
 
 lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> c * b = a
-\<Longrightarrow> Left_Seminearring_Functor F1 T D
-\<Longrightarrow> Left_Seminearring_Functor F2 R D
+\<Longrightarrow> Scala_Semimodule_Functor F1 T D
+\<Longrightarrow> Scala_Semimodule_Functor F2 R D
 \<Longrightarrow> Separation_Functor (F1 b) (F4 b) F14 (F1 c T) W
 \<Longrightarrow> Separation_Functor (F3 b) (F2 b) F23 U (F2 c R)
 \<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = id \<and> f2 = id
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<r>\<e>\<m> a \<in> D \<and> b \<in> D \<and> c \<in> D
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 c T) (r \<Ztypecolon> F2 c R) (y \<Ztypecolon> U) (yr \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 a T) (r \<Ztypecolon> F2 a R) (y \<Ztypecolon> F3 b U) (yr \<Ztypecolon> F4 b W) P\<close>
@@ -841,9 +841,9 @@ lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
   \<medium_left_bracket> premises _ and LSF1[\<phi>reason add] and LSF2[\<phi>reason add]
                and _ and _ and _ and _ and _ and Tr
     have F1D: \<open>F1 a T = F1 b (F1 c T)\<close>
-      by (metis LSF1 Left_Seminearring_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
+      by (metis LSF1 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
     have F2D: \<open>F2 a R = F2 b (F2 c R)\<close>
-      by (metis LSF2 Left_Seminearring_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
+      by (metis LSF2 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
     ;; unfold F1D
        apply_Separation_Functor_go[where Fu=\<open>F4 b\<close> and Ft=\<open>F1 b\<close>]
        apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> F2 c R\<close> and y=\<open>(y,r)\<close> and Q=P]
@@ -1607,8 +1607,8 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypec
 *)
 
 lemma branch_convergence_general_rule:
-  \<open> Transformation_Functor Fa Fb id id
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+  \<open> Transformation_Functor Fa Fb fa fb
+\<Longrightarrow> If P (fa x \<Ztypecolon> T) (fa y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fb z \<Ztypecolon> Z) @action branch_convergence
 \<Longrightarrow> If P (x \<Ztypecolon> Fa T) (y \<Ztypecolon> Fa U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Fb Z) @action branch_convergence \<close>
   unfolding Action_Tag_def Transformation_Functor_def
   by (cases P; simp)
