@@ -83,7 +83,7 @@ fun update_val b rule ctxt =
      |> Values.map (Symtab.update ((Binding.name_of b), (rule, vname)))
      |> (fn ctxt' =>
         Context.proof_map (Phi_Reasoner.add_intro_rule
-                              (Binding.pos_of b) 1000
+                              (Binding.pos_of b) Phi_Reasoner.LOCAL_CUT 1000
                               ([(pattern_of ctxt' (Binding.name_of b) rule, NONE)],[]) NONE
                               [rule]) ctxt')
      |> Generic_Variable_Access.bind_local_vals

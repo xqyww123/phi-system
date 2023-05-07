@@ -155,6 +155,8 @@ lemma [\<phi>reason 1200]:
   \<medium_left_bracket> premises Y[unfolded Imply_def Identity_expn, simplified, useful]
     construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 2]]
+
 lemma [\<phi>reason 1200]:
   \<open> is_functional (x \<Ztypecolon> U)
 \<Longrightarrow> y \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> U \<a>\<n>\<d> P

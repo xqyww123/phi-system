@@ -94,7 +94,8 @@ fun declare_rule pos priority (patterns0,blacklist0) proc_thm0 ctxt0 =
                 Pretty.str "excluding pattern(s):",
                 Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) blacklist)
           ])))
-   in Phi_Reasoner.add_intro_rule pos priority (patterns, blacklist) NONE [proc_thm] ctxt0
+   in Phi_Reasoner.add_intro_rule pos (Phi_Reasoner.default_mode_of priority) priority
+                                  (patterns, blacklist) NONE [proc_thm] ctxt0
   end
 
 

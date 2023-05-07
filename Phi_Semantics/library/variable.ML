@@ -45,7 +45,8 @@ fun declare_rule pos rule =
                       Const (\<^const_name>\<open>Pure.eq\<close>, T1)
                         $ V1 $ Var (("out", maxidx_of_term V1 + 1), T)
                    | _ => raise THM ("Bad rule.", 0, [rule])
-   in Context.proof_map (Phi_Reasoner.add_intro_rule pos 1000 ([(pattern,NONE)], []) NONE [rule])
+   in Context.proof_map (Phi_Reasoner.add_intro_rule pos Phi_Reasoner.LOCAL_CUT 1000
+                                                     ([(pattern,NONE)], []) NONE [rule])
   end
 
 

@@ -93,7 +93,7 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
   let val var = Synchronized.var "PLPR_Optimum_Solution" (0, Candidates.empty)
       val (sh, ctxt) = ctxt
         |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn s =>
-                    SOME [(\<^here>, gen_finish SUPER_REACH s)])
+                    SOME [ (\<^here>, gen_finish SUPER_REACH s) ])
       val (gcut, ctxt) = ctxt
         |> Phi_Reasoner.disable_global_cut 1
                     "Global Cut is prohibited during Optimum_Solution reasoning"
@@ -138,7 +138,7 @@ fun best_among (_, []) = NONE
           Pretty.str "PLPR_Optimum_Solution: reasoning the optimal solution from candidates:" ::
           map (fn th => Pretty.item [Thm.pretty_thm ctxt th]) candidates
         ));
-      Phi_Reasoner.reason_s ctxt (fn ctxt => ((), [gen_start ctxt candidates]))
+      Phi_Reasoner.reason_s ctxt (fn ctxt => ((), gen_start ctxt candidates))
         |> snd)
 
 end

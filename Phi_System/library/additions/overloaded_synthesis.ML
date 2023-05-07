@@ -68,10 +68,10 @@ fun declare_overloaded_operator signat0 pos priority ctxt0 =
                   |> subst_vars ([(("'y",0), ret_val_ty)], [(("YY",0), ret)])
                   |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
    in ctxt0
-   |> Phi_Reasoner.add_intro_rule pos priority ([],[]) NONE [rule]
-   |> Phi_Reasoner.add_intro_rule pos 2000 ([(pattern1,NONE)],[]) NONE
+   |> Phi_Reasoner.add_intro_rule pos (Phi_Reasoner.default_mode_of priority) priority ([],[]) NONE [rule]
+   |> Phi_Reasoner.add_intro_rule pos Phi_Reasoner.LOCAL_CUT 2000 ([(pattern1,NONE)],[]) NONE
                    [@{thm make_overloaded_synthesis_rule}]
-   |> Phi_Reasoner.add_intro_rule pos 2010 ([(pattern2,NONE)],[]) NONE
+   |> Phi_Reasoner.add_intro_rule pos Phi_Reasoner.LOCAL_CUT 2010 ([(pattern2,NONE)],[]) NONE
                    [@{thm make_overloaded_synthesis_rule'}]
   end
 
