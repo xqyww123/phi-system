@@ -695,7 +695,7 @@ lemma Structural_Extract_from_mult[\<phi>reason 1200 for
 *)
 
 
-paragraph \<open>Structural Node\<close>
+paragraph \<open>General Rules\<close>
 
 lemma "_Structural_Extract_general_rule_":
   \<open> Separation_Functor F1 F4 F14 T Ur
@@ -782,7 +782,7 @@ lemma Structural_Extract_\<phi>MapAt:
   apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
   by (rule \<phi>MapAt_cast)
 
-(* Disabled for testing. Should be re-enabled for performance.
+(* Disabled for TESTING. Should be re-enabled for performance.
 
 declare Structural_Extract_\<phi>MapAt[THEN SE_clean_waste, \<phi>reason 1200]
 
@@ -799,7 +799,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
                    Structural_Extract_imply_P) *)
 
 
-lemma Structural_Extract_general_LeSeminearing_left:
+lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested once we have usable test case*)
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> c * a = b
 \<Longrightarrow> Left_Seminearring_Functor F3 U D
 \<Longrightarrow> Left_Seminearring_Functor F4 W D
@@ -826,7 +826,7 @@ lemma Structural_Extract_general_LeSeminearing_left:
        fold F3D
   \<medium_right_bracket> .
 
-lemma Structural_Extract_general_LeSeminearing_right:
+lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> c * b = a
 \<Longrightarrow> Left_Seminearring_Functor F1 T D
 \<Longrightarrow> Left_Seminearring_Functor F2 R D
@@ -851,7 +851,10 @@ lemma Structural_Extract_general_LeSeminearing_right:
        \<medium_left_bracket> Tr \<medium_right_bracket>
        apply_Separation_Functor_back
        fold F2D
-  \<medium_right_bracket> .
+           \<medium_right_bracket> .
+
+
+paragraph \<open>Structural Nodes\<close>
 
 lemma Structural_Extract_\<phi>MapAt_L:
   \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k' = k

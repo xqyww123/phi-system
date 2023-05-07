@@ -4,11 +4,6 @@ begin
 
 section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
 
-(*locale Transformation_Functor =
-  fixes F1 :: \<open>('b,'a1) \<phi> \<Rightarrow> ('c,'a1) \<phi>\<close>
-    and F2 :: \<open>('b,'a2) \<phi> \<Rightarrow> ('c,'a2) \<phi>\<close>
-  assumes transformation_functor[\<phi>reason 1200 for \<open>_\<close>]:
-      \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P \<Longrightarrow> x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<a>\<n>\<d> P\<close>*)
 subsection \<open>Definitions\<close>
 
 subsubsection \<open>Unit\<close>
@@ -64,16 +59,21 @@ declare [[
               val H = Const(\<^const_name>\<open>Transformation_Functor\<close>, TVar(("'TF",ind),[]))
            in @{print} [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "f1" "'f1" $ var "f2" "'f2"),
                Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "f1" "'f1" $ var "f2" "'f2")]
-          end\<close> (100)]]
+          end\<close> (100)
+]]
 
-(*The default pattern of a rule is more general here by varifying type variables. This is designed
-    specially. In \<^const>\<open>Automatic_Morphism\<close>, as the reverse transformation can have different type,
+(*The default patterns of the rules are more general here by varifying types.
+  This is designed specially.
+  In \<^const>\<open>Automatic_Morphism\<close>, as the reverse transformation can have different type,
     and in the algebraic general rule \<open>_Structural_Extract_general_rule'_\<close> the functors are
-    represented by variables, it means we have no way to varify the type of the functors in a simple
-    way. We use ML to capture the functor constant and varify the type variables as much as it can
-    (we have no way to know the appropriate extend to varify it). Under such varified types, we set
-    the default pattern of the algebraic properties to be also very varified, to hope the rules
-    can still capture the very varified reasoning subgoals.*)
+    represented by variables, it means we have no simple way to varify the type of the functors.
+    We use ML to capture the functor constant and varify the type variables as much as it can
+    (we have no way to know the appropriate extend to which it varifies).
+    Under such varified types, we set the default pattern of the algebraic properties to be also
+    similarly very varified, to hope the rules can still capture the very varified
+    reasoning subgoals.
+  We only need to over-varify Transformation_Functor and Separation_Functor in such way, because
+  only them two are used in the reverse transformation.*)
 
 declare [[
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Transformation_Functor _ _ _ _\<close>,
@@ -88,15 +88,10 @@ declare [[
     \<open>fn generic => fn term =>
       let val ctxt = Context.proof_of generic
           val [term'] = Variable.exportT_terms ctxt Phi_Help.empty_ctxt [term]
-          val Trueprop $ (H (*Separation_Functor*) $ F1 $ F2 $ F3 $ T $ U) = term'
-          val T_F1 = Term.fastype_of F1
-          val T_F2 = Term.fastype_of F2
-          val T_F3 = Term.fastype_of F3
-          val T_f1 = Term.fastype_of T
-          val T_f2 = Term.fastype_of U
-          val ind = Int.max (maxidx_of_term H, Int.max (maxidx_of_term F1,
-                    Int.max (maxidx_of_term F2, maxidx_of_term F3))) + 1
+          val Trueprop $ (_ (*Separation_Functor*) $ F1 $ F2 $ F3 $ T $ U) = term'
+          val ind = Int.max (maxidx_of_term F1, Int.max (maxidx_of_term F2, maxidx_of_term F3)) + 1
           fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
+          val H = Const(\<^const_name>\<open>Separation_Functor\<close>, TVar(("'SF",ind),[]))
        in [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3"
                          $ var "T" "'T" $ var "U" "U'"),
            Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3"
