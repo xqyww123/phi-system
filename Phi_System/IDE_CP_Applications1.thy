@@ -309,6 +309,19 @@ lemma [\<phi>reason 30]:
 \<Longrightarrow> P @action \<A>_structural_2_1 A\<close>
   unfolding Action_Tag_def .
 
+paragraph \<open>Default rules\<close>
+
+context Transformation_Functor_L begin
+
+lemma [\<phi>reason default 40]:
+  \<open> Prem
+\<Longrightarrow> fa x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> fb y \<Ztypecolon> U \<a>\<n>\<d> P @action \<A>_structural Act
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<a>\<n>\<d> P @action \<A>_structural Act \<close>
+  unfolding Action_Tag_def
+  using transformation by blast
+
+end
+
 section \<open>Basic Applications\<close>
 
 subsection \<open>Conversion\<close>

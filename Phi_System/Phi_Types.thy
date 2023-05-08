@@ -192,6 +192,7 @@ lemma \<phi>Composition_separatio_functor[\<phi>reason add]:
   by (rule \<phi>Type_eqI; auto simp add: \<phi>Prod_expn \<phi>Composition_expn,
       metis times_set_I, meson set_mult_expn)
 
+
 section \<open>Logical Connectives\<close>
 
 subsection \<open>Subjection as a Type\<close>
@@ -245,22 +246,31 @@ lemma SubjectionTY_separation_functor[\<phi>reason add]:
       clarsimp simp add: SubjectionTY_expn Subjection_expn set_mult_expn \<phi>Prod_expn;
       blast)
 
+lemma \<phi>\<s>\<u>\<b>\<j>_simp:
+  \<open> Transformation_Functor Fa Fa fa fa
+\<Longrightarrow> (Fa (T \<phi>\<s>\<u>\<b>\<j> P)) \<equiv> (Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  unfolding Transformation_Functor_def Imply_def atomize_eq
+  by (rule \<phi>Type_eqI, smt (z3) SubjectionTY_expn Subjection_True Subjection_expn \<phi>Type_eqI_imp implies_refl)
 
-
-
-lemma (in Transformation_Functor_L) \<phi>\<s>\<u>\<b>\<j>_simp[simp]:
-  \<open> Prem
-\<Longrightarrow> (Fa (T \<phi>\<s>\<u>\<b>\<j> P)) = (Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  by (rule \<phi>Type_eqI, insert transformation[unfolded Imply_def],
-      smt (z3) SubjectionTY_expn Subjection_True Subjection_expn \<phi>Type_eqI_imp implies_refl)
+simproc_setup (in Transformation_Functor_L) \<phi>\<s>\<u>\<b>\<j>_simp (\<open>Fa (T \<phi>\<s>\<u>\<b>\<j> P)\<close>) = \<open>
+fn morph => 
+let val redex_residue = Morphism.cterm morph \<^schematic_cterm>\<open>(Fa (?T \<phi>\<s>\<u>\<b>\<j> ?k), Fa)\<close>
+    val redex = Thm.dest_arg1 redex_residue
+    val residue = Thm.dest_arg redex_residue
+in fn ctxt => fn cterm =>
+  let val s = Thm.first_order_match (redex, cterm)
+      val Fa = Thm.instantiate_cterm s residue
+   in (ctxt, Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
+         |> Phi_Reasoner.reason (SOME 1)
+         |> Option.map snd
+  end
+end
+\<close>
 
   
 
 
 subsection \<open>Existential Quantification as a Type\<close>
-
-definition ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
-  where \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
 
 syntax
   "_SetcomprPhiTy" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<phi>\<s>\<u>\<b>\<j>/ _./ _ " [2,0,2] 2)
@@ -273,42 +283,15 @@ parse_ast_translation \<open>
     fun parse_SetcomprPhiTy ctxt [Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, x, T],idts,P] =
           Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
                 idts_to_abs x idts,
-                Appl [Constant "\<^const>Phi_Types.ExTyp_binder", idts,
+                Appl [Constant "\<^const>Phi_BI.ExTyp_binder", idts,
                       (case P of (Appl [Constant "_constrain", Variable "True", _]) => T
                                | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, T, P])]]
       | parse_SetcomprPhiTy ctxt [X,idts,P] =
-          Appl [Constant "\<^const>Phi_Types.ExTyp_binder", idts,
+          Appl [Constant "\<^const>Phi_BI.ExTyp_binder", idts,
                 (case P of (Appl [Constant "_constrain", Variable "True", _]) => X
                          | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
   in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
 \<close>
-
-(* TODO
-term \<open>x \<Ztypecolon> (X a) \<phi>\<s>\<u>\<b>\<j> a b c. P a\<close>
-
-translations
-  " _SetcomprPhiTy' x idts X" <= "x \<Ztypecolon> (\<exists>\<phi> idts. X)"
-
-print_ast_translation \<open>
-  [(\<^syntax_const>\<open>_SetcomprPhiTy'\<close>, (fn _ => fn x => hd (@{print} x)))]
-\<close>
-
-term \<open>x \<Ztypecolon> (X a) \<phi>\<s>\<u>\<b>\<j> a b c. P a\<close>
-
-*)
-
-lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
-  \<open>(x \<Ztypecolon> ExTyp T) = (\<exists>*a. x a \<Ztypecolon> T a)\<close>
-  unfolding set_eq_iff ExTyp_def \<phi>Type_def by (simp add: \<phi>expns)
-
-lemma ExTyp_inhabited[elim!, \<phi>inhabitance_rule]:
-  \<open>Inhabited (x \<Ztypecolon> ExTyp T) \<Longrightarrow> (Inhabited (\<exists>*a. x a \<Ztypecolon> T a) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding ExTyp_expn .
-
-(* lemma [\<phi>reason 1000]:
-  \<open> P @action \<A>nap (\<A>_structural (to Identity))
-\<Longrightarrow> P @action \<A>nap (to Identity)\<close>
-  unfolding Action_Tag_def . *)
 
 lemma Action_to_Identity[\<phi>reason 25]:
   \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> (v \<Ztypecolon> Identity \<phi>\<s>\<u>\<b>\<j> v. v \<in> X) @action to Identity\<close>
@@ -332,26 +315,6 @@ lemma \<phi>Inter_expn[\<phi>expns]:
 lemma \<phi>Inter_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited ((x,y) \<Ztypecolon> (T \<inter>\<^sub>\<phi> U)) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (y \<Ztypecolon> U) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
-
-subsubsection \<open>Algebraic Properties\<close>
-
-
-context
-  fixes a :: int
-begin
-
-lemma xxx: \<open>a = a\<close> by simp
-
-end
-
-thm xxx
-
-lemma (in Transformation_Functor_L) \<phi>\<s>\<u>\<b>\<j>_simp[simp]:
-  \<open> Prem
-\<Longrightarrow> (Fa (ExTyp T)) = (\<exists>\<phi> c. Fa (T c))\<close>
-  by (rule \<phi>Type_eqI, insert transformation[unfolded Imply_def],
-      smt (z3) SubjectionTY_expn Subjection_True Subjection_expn \<phi>Type_eqI_imp implies_refl)
-
 
 section \<open>Structural Connectives\<close>
 
@@ -579,7 +542,7 @@ lemma [\<phi>reason 1100]:
 
 paragraph \<open>Simplification\<close>
 
-lemma \<phi>Prod_simp_cong[folded atomize_eq]:
+(*lemma \<phi>Prod_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
 \<Longrightarrow> (y \<Ztypecolon> U) = (y' \<Ztypecolon> U')
 \<Longrightarrow> ((x,y) \<Ztypecolon> T \<^emph> U) = ((x',y') \<Ztypecolon> T' \<^emph> U')\<close>
@@ -587,7 +550,7 @@ lemma \<phi>Prod_simp_cong[folded atomize_eq]:
 
 simproc_setup \<phi>Prod_simp_cong ("(x,y) \<Ztypecolon> (T \<^emph> U)") = \<open>
   K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Prod_simp_cong} ctxt)
-\<close>
+\<close>*)
 
 lemma [simp]:
   \<open>((x,y) \<Ztypecolon> ExTyp T \<^emph> U) = ((\<lambda>c. (x c, y)) \<Ztypecolon> (\<exists>\<phi> c. T c \<^emph> U))\<close>
@@ -723,12 +686,6 @@ lemma \<phi>MapAt_\<phi>None:
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
 
 (*
-lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> ?k \<^bold>\<rightarrow> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y @action (?Act::?'a::simplification action)\<close>]:
-  \<open>x \<Ztypecolon> k \<^bold>\<rightarrow> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> () \<Ztypecolon> \<circle> @action Act\<close>
-  for Act :: \<open>'a::simplification action\<close>
-  unfolding Action_Tag_def
-  by (simp add: implies_refl \<phi>MapAt_\<phi>None) *)
-
 lemma \<phi>MapAt_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> k \<^bold>\<rightarrow> T) = (x' \<Ztypecolon> k \<^bold>\<rightarrow> T')\<close>
@@ -736,7 +693,7 @@ lemma \<phi>MapAt_simp_cong[folded atomize_eq]:
 
 simproc_setup \<phi>MapAt_simp_cong ("(x \<Ztypecolon> k \<^bold>\<rightarrow> T)") = \<open>
   K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>MapAt_simp_cong} ctxt)
-\<close>
+\<close> *)
 
 paragraph \<open>Implication \& Action rules\<close>
 
@@ -746,7 +703,7 @@ lemma \<phi>MapAt_cast:
   unfolding Imply_def
   by (clarsimp simp add: \<phi>expns; blast)
 
-lemma (*[\<phi>reason 1000]:*)
+lemma (*[\<phi>reason 1000]: TESTING*)
   \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<a>\<n>\<d> P\<close>
@@ -786,12 +743,7 @@ lemma [\<phi>reason 100]:
 lemma [simp]:
   \<open>(k \<^bold>\<rightarrow> (T \<phi>\<s>\<u>\<b>\<j> P)) = (k \<^bold>\<rightarrow> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-
 *)
-lemma [simp]:
-  \<open>(k \<^bold>\<rightarrow> ExTyp T) = (\<exists>\<phi> c. k \<^bold>\<rightarrow> T c)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> k = k'
@@ -805,8 +757,6 @@ lemma [\<phi>reason 1200]:
   by (clarsimp simp add: \<phi>expns is_functional_def, blast)
 
 paragraph \<open>Algebraic Properties\<close>
-
-declare [[\<phi>trace_reasoning = 1]] 
 
 lemma \<phi>MapAt_transformation_functor(*[\<phi>reason 1100]*):
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
@@ -826,6 +776,10 @@ lemma \<phi>MapAt_void_functor[\<phi>reason add]:
   \<open>Unit_Functor ((\<^bold>\<rightarrow>) k)\<close>
   unfolding Unit_Functor_def Imply_def
   by (clarsimp simp add: \<phi>expns; metis fun_1upd1)
+
+interpretation Union_Functor \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k\<close>
+  by (standard; rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
+
 
 
 subsubsection \<open>By List of Keys\<close>
@@ -877,6 +831,7 @@ lemma [\<phi>reason for \<open>?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub>#
   for Act :: \<open>'a::simplification action\<close>
   unfolding Action_Tag_def by (simp add: implies_refl \<phi>MapAt_L_\<phi>None) *)
 
+(*
 lemma \<phi>MapAt_L_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) = (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T')\<close>
@@ -884,7 +839,7 @@ lemma \<phi>MapAt_L_simp_cong[folded atomize_eq]:
 
 simproc_setup \<phi>MapAt_L_simp_cong ("x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T") = \<open>
   K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>MapAt_L_simp_cong} ctxt)
-\<close>
+\<close>*)
 
 lemma \<phi>MapAt_L_At:
   \<open>(ks \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) = (ks \<^bold>\<rightarrow> T)\<close>
@@ -899,11 +854,12 @@ lemma \<phi>MapAt_L_cast:
   unfolding Imply_def
   by (clarsimp simp add: \<phi>expns; blast)
 
+(* TESTING
 lemma [\<phi>reason 1020]:
   \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k' = k
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P\<close>
-  using \<phi>MapAt_L_cast by (simp add: Premise_def)
+  using \<phi>MapAt_L_cast by (simp add: Premise_def)*)
 
 lemma [\<phi>reason 1017]:
   \<open> \<r>REQUIRE
@@ -924,28 +880,28 @@ lemma [\<phi>reason 1013]:
   unfolding Imply_def \<r>Require_def conjunction_imp
   by (clarsimp simp add: \<phi>expns)
 
-
+(* TESTING
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action \<A>_structural Act
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P @action \<A>_structural Act \<close>
   unfolding Action_Tag_def using \<phi>MapAt_L_cast .
 
 lemma [simp]:
-  \<open>(k \<^bold>\<rightarrow>\<^sub>@ ExTyp T) = (\<exists>\<phi> c. k \<^bold>\<rightarrow>\<^sub>@ T c)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-lemma [simp]:
   \<open>(k \<^bold>\<rightarrow>\<^sub>@ (T \<phi>\<s>\<u>\<b>\<j> P)) = (k \<^bold>\<rightarrow>\<^sub>@ T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
+*)
 
 paragraph \<open>Algebraic Properties\<close>
 
-lemma \<phi>MapAt_L_transformation_functor[\<phi>reason 1100]:
+lemma \<phi>MapAt_L_transformation_functor:
   \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
 \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>MapAt_L_cast)
-
+(*
+interpretation \<phi>MapAt_L: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'\<close>
+  by (standard, rule \<phi>MapAt_L_transformation_functor)
+*)
 lemma \<phi>MapAt_L_separation_functor[\<phi>reason 1100]:
   \<open>Separation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) T U\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1,'b) \<phi>\<close>
@@ -960,6 +916,10 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason add]:
   \<open>Unit_Functor ((\<^bold>\<rightarrow>\<^sub>@) k)\<close>
   unfolding Unit_Functor_def Imply_def
   by (clarsimp simp add: \<phi>expns; metis fun_1upd1)
+
+interpretation \<phi>MapAt_L: Union_Functor \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close>
+  by (standard; rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
+
 
 (* subsection \<open>Down Lifting\<close> (*depreciated*)
 
@@ -1196,6 +1156,7 @@ lemma [simp]:
   \<open>(\<phi>perm_ins_homo \<psi> (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<phi>perm_ins_homo \<psi> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
+(*
 lemma \<phi>perm_ins_homo_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T) = (x' \<Ztypecolon> \<phi>perm_ins_homo \<psi> T')\<close>
@@ -1204,6 +1165,7 @@ lemma \<phi>perm_ins_homo_simp_cong[folded atomize_eq]:
 simproc_setup \<phi>perm_ins_homo_simp_cong ("x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T") = \<open>
   K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>perm_ins_homo_simp_cong} ctxt)
 \<close>
+*)
 
 
 lemma \<phi>perm_ins_homo_\<phi>None:
@@ -1461,7 +1423,7 @@ lemma [simp]:
   \<open>(n \<Znrres> (T \<phi>\<s>\<u>\<b>\<j> P)) = (n \<Znrres> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
-
+(*
 lemma \<phi>Share_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) = (x' \<Ztypecolon> n \<Znrres> T')\<close>
@@ -1469,7 +1431,7 @@ lemma \<phi>Share_simp_cong[folded atomize_eq]:
 
 simproc_setup \<phi>Share_simp_cong ("x \<Ztypecolon> n \<Znrres> T") = \<open>
   K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Share_simp_cong} ctxt)
-\<close>
+\<close>*)
 
 
 subparagraph \<open>Permission\<close>
@@ -1577,14 +1539,14 @@ lemma [simp]:
   \<open>(\<black_circle> (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<black_circle> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
-lemma \<phi>Some_simp_cong[folded atomize_eq]:
+(*lemma \<phi>Some_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> \<black_circle> T) = (x' \<Ztypecolon> \<black_circle> T')\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>Some_simp_cong ("x \<Ztypecolon> \<black_circle> T") = \<open>
   K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Some_simp_cong} ctxt)
-\<close>
+\<close>*)
 
 lemma [\<phi>reason 1200]:
   \<open> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> T \<a>\<n>\<d> P

@@ -262,6 +262,25 @@ lemma Subjection_plus:
   \<open>(A + B \<s>\<u>\<b>\<j> P) = (A \<s>\<u>\<b>\<j> P) + (B \<s>\<u>\<b>\<j> P)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns) blast
 
+subsection \<open>Disjunction\<close>
+
+(* Just similarly not needed
+
+subsubsection \<open>Embedding of disjunction in \<phi>-Type\<close>
+
+definition \<phi>Plus :: " ('concrete, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^bold>+" 55)
+  where "A \<^bold>+ B = (\<lambda>(a,b). B b + A a)"
+
+lemma \<phi>Plus_expn[\<phi>expns]:
+  "c \<in> ((a,b) \<Ztypecolon> A \<^bold>+ B) \<longleftrightarrow> c \<in> (b \<Ztypecolon> B) \<or> c \<in> (a \<Ztypecolon> A)"
+  unfolding \<phi>Plus_def \<phi>Type_def by simp
+
+lemma \<phi>Plus_expn':
+  \<open>((a,b) \<Ztypecolon> A \<^bold>+ B) = (b \<Ztypecolon> B) + (a \<Ztypecolon> A)\<close>
+  unfolding set_eq_iff by (simp add: \<phi>Plus_expn)
+*)
+
+
 subsection \<open>Existential Quantification\<close>
 
 declare ExSet_expn[\<phi>expns]
@@ -336,6 +355,20 @@ lemma ExSet_plus:
   \<open>(\<exists>*x. A x + B x) = ExSet A + ExSet B\<close>
   \<open>ExSet (A + B) = ExSet A + ExSet B\<close>
   unfolding set_eq_iff by (simp_all add: \<phi>expns plus_fun) blast+
+
+subsubsection \<open>Embedding in \<phi>-Type\<close>
+
+definition ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
+  where \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
+
+lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
+  \<open>(x \<Ztypecolon> ExTyp T) = (\<exists>*a. x a \<Ztypecolon> T a)\<close>
+  unfolding set_eq_iff ExTyp_def \<phi>Type_def by (simp add: \<phi>expns)
+
+lemma ExTyp_inhabited[elim!, \<phi>inhabitance_rule]:
+  \<open>Inhabited (x \<Ztypecolon> ExTyp T) \<Longrightarrow> (Inhabited (\<exists>*a. x a \<Ztypecolon> T a) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding ExTyp_expn .
+
 
 subsection \<open>Universal Quantification\<close>
 

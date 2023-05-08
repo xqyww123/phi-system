@@ -44,6 +44,10 @@ declare [[\<phi>hide_techinicals=false]]
 fun fib :: \<open>nat \<Rightarrow> nat\<close> where
   \<open>fib 0 = 1\<close> | \<open>fib (Suc 0) = 1\<close> | \<open>fib n = fib (n-1) + fib (n-2)\<close>
 
+thm fib.induct
+thm fib.simps
+thm fib.elims
+
 proc FIB:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<close>

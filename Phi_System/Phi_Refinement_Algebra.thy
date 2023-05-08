@@ -22,32 +22,17 @@ definition \<open>Transformation_Functor F1 F2 f1 f2 \<longleftrightarrow>
 (*f1 f2: do not use constants (e.g. id), use lambda expressions (e.g. \<lambda>x. x)
   so that pattern match has no impediment *)
 
-locale Transformation_Functor_L =
-  fixes Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
-    and Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
-    and fa :: \<open>'c \<Rightarrow> 'a\<close>
-    and fb :: \<open>'f \<Rightarrow> 'e\<close>
-    and Prem :: bool
-  assumes Transformation_Functor[\<phi>reason 1100]:
-    \<open>Prem \<Longrightarrow> Transformation_Functor Fa Fb fa fb\<close>
-begin
- 
-lemma transformation[\<phi>reason default 40]:
-  \<open> Prem
-\<Longrightarrow> fa x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> fb y \<Ztypecolon> U \<a>\<n>\<d> Q
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<a>\<n>\<d> Q\<close>
-  using Transformation_Functor[unfolded Transformation_Functor_def]
-  by blast
-
-end
-
-
-
-
 subsubsection \<open>Inhabitance\<close>
 
 definition \<open>Inhabitance_Functor F f \<longleftrightarrow> (\<forall>T x. Inhabited(x \<Ztypecolon> F T) \<longrightarrow> Inhabited(f x \<Ztypecolon> T))\<close>
 definition \<open>Inhabitance_Functor2 F f g \<longleftrightarrow> (\<forall>T U x. Inhabited(x \<Ztypecolon> F T U) \<longrightarrow> Inhabited(f x \<Ztypecolon> T) \<and> Inhabited(g x \<Ztypecolon> U))\<close>
+
+subsubsection \<open>Additive Disjunction\<close>
+
+locale Union_Functor =
+  fixes Fa :: \<open>('e, 'a \<Rightarrow> 'd) \<phi> \<Rightarrow> ('c, 'a \<Rightarrow> 'b) \<phi>\<close>
+    and Fb :: \<open>('e,'d) \<phi> \<Rightarrow> ('c, 'b) \<phi>\<close>
+  assumes union_functor[simp]: \<open>Fa (ExTyp T) = ExTyp (\<lambda>c. Fb (T c))\<close>
 
 subsubsection \<open>Separation\<close>
 
@@ -82,7 +67,7 @@ declare [[
               val ind = Int.max (maxidx_of_term F1, maxidx_of_term F2) + 1
               fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
               val H = Const(\<^const_name>\<open>Transformation_Functor\<close>, TVar(("'TF",ind),[]))
-           in @{print} [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "f1" "'f1" $ var "f2" "'f2"),
+           in [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "f1" "'f1" $ var "f2" "'f2"),
                Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "f1" "'f1" $ var "f2" "'f2")]
           end\<close> (100)
 ]]
@@ -276,6 +261,53 @@ lemma Inhabitance_Functor_from_Transformation_Functor[\<phi>reason 50]:
 \<Longrightarrow> Inhabitance_Functor Fa fa\<close>
   unfolding Inhabitance_Functor_def Transformation_Functor_def Inhabited_def Imply_def
   by clarsimp meson
+
+
+subsection \<open>Automation\<close>
+
+subsubsection \<open>Transformation\<close>
+
+lemma simp_cong[\<phi>simp_cong]:
+  \<open> Transformation_Functor Fa Fa fa fa
+\<Longrightarrow> (fa x \<Ztypecolon> T) \<equiv> (fa x' \<Ztypecolon> T')
+\<Longrightarrow> (x \<Ztypecolon> Fa T) \<equiv> (x' \<Ztypecolon> Fa T')\<close>
+  unfolding Transformation_Functor_def Imply_def atomize_eq
+  by blast
+
+locale Transformation_Functor_L =
+  fixes Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
+    and Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
+    and fa :: \<open>'c \<Rightarrow> 'a\<close>
+    and fb :: \<open>'f \<Rightarrow> 'e\<close>
+    and Prem :: bool
+  assumes Transformation_Functor[\<phi>reason 1100]:
+    \<open>Prem \<Longrightarrow> Transformation_Functor Fa Fb fa fb\<close>
+begin
+
+lemma transformation[\<phi>reason default 40]:
+  \<open> Prem
+\<Longrightarrow> fa x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> fb y \<Ztypecolon> U \<a>\<n>\<d> Q
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<a>\<n>\<d> Q\<close>
+  using Transformation_Functor[unfolded Transformation_Functor_def]
+  by blast
+(*
+simproc_setup simp_cong ("(x \<Ztypecolon> Fa T)") = \<open>
+fn morph =>
+let val redex_residue = Morphism.cterm morph \<^schematic_cterm>\<open>((?x \<Ztypecolon> Fa ?T), Fa)\<close>
+    val redex = Thm.dest_arg1 redex_residue
+    val residue = @{print} (Thm.dest_arg redex_residue)
+in fn ctxt => fn cterm =>
+  let val s = Thm.first_order_match (redex, cterm)
+      val Fa = Thm.instantiate_cterm s residue
+      val rule = (ctxt, Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm simp_cong})
+               |> Phi_Reasoner.reason (SOME 1)
+               |> Option.map snd
+   in Option.mapPartial (fn rule => Phi_SimpCong.simproc rule ctxt cterm) rule
+  end
+end
+\<close>
+*)
+end
 
 
 

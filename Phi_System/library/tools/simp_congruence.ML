@@ -66,4 +66,17 @@ fun simproc_qualifier cong ctx cterm =
       | _ => NONE
   end
 
+val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>simp_cong\<close> (Scan.lift (Scan.succeed (
+  Thm.declaration_attribute (fn rule => fn generic =>
+    let val (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ LHS $ _) = Thm.concl_of rule
+        fun install ctxt =
+          ctxt addsimprocs [Simplifier.make_simproc ctxt "\<phi>simp_cong" {
+              lhss = [LHS],
+              proc = K (simproc rule)
+            }]
+     in Context.mapping (Simplifier.map_theory_simpset install) install generic end)
+)))
+  ""
+)
+
 end

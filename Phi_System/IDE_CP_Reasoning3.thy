@@ -1053,7 +1053,7 @@ text \<open>Then, according to the expected permission n and the permission m th
   \<^item> m > n\<close>
 (*
 TODO: re-enable this! *)
-
+ 
 lemma Structural_Extract_share_half:
     \<comment> \<open>if only requires a half of the permission, give it a half of that currently we have.\<close>
   \<open> \<phi>Sep_Disj_Identical T
