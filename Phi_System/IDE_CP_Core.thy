@@ -3,7 +3,6 @@ chapter \<open>Integrated Deduction Environment for Programming (IDE-P)\<close>
 theory IDE_CP_Core
   imports
     "Phi_Semantics_Framework.Phi_Semantics_Framework"
-    "Phi_Algebras.Map_of_Tree"
     Calculus_of_Programming
     IDE_CP_Reasoning1
   keywords

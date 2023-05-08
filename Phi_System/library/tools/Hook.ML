@@ -2,10 +2,11 @@ signature HOOK_ARG = sig
 type arg
 end
 
+type priority = int (*small value is in higher priority to be executed*)
+
 signature HOOKS = sig
 
 type arg
-type priority = int (*small value is in higher priority to be executed*)
 
 (*In one theory two hooks having the identical priority are not allowed.
   But the restriction is not applied between theories.*)
@@ -25,15 +26,14 @@ val invoke_until_success : (arg -> context_state -> context_state) (*fallback*)
                         ->  arg -> context_state -> context_state
 end
 
-functor Hooks (Arg : HOOK_ARG) : HOOKS = struct
-
-type arg = Arg.arg
-type priority = int
-
 structure PriorityTab = Table (
   type key = priority * string
   val ord = prod_ord int_ord fast_string_ord
 )
+
+functor Hooks (Arg : HOOK_ARG) : HOOKS = struct
+
+type arg = Arg.arg
 
 structure Data = Generic_Data (
   type T = (arg -> context_state -> context_state) PriorityTab.table

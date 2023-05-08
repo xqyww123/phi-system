@@ -65,7 +65,7 @@ fun implications_of_inhabitance' erules ctxt sequent =
     val sctxt = Raw_Simplifier.put_simpset
                     (Raw_Simplifier.merge_ss (Raw_Simplifier.simpset_of ctxt,
                                               Inhabitance_SS.get' ctxt))  ctxt
-    open Tactical Tactic
+    open Tactical Tactic                      (* v eresolve_tac is inefficient! improve it! *)
   in rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt erules))) sequent
   |> Simplifier.asm_full_simplify sctxt
   |> rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt @{thms conjE})))

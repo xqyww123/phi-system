@@ -1,5 +1,6 @@
-theory Phi_Refinement_Algebra
-  imports Phi_BI
+theory Phi_Type_Algebra
+  imports Phi_BI Phi_Algebras.Map_of_Tree
+  keywords "\<phi>type_def" :: thy_defn
 begin
 
 section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
@@ -57,29 +58,6 @@ lemma (in homo_sep_mult) [\<phi>reason 1100]:
 lemma (in homo_sep_disj_total) [\<phi>reason 1100]:
   \<open>homo_sep_disj_total \<psi>\<close>
   by (simp add: homo_sep_disj_total_axioms)
-
-declare homo_sep_disj_total_comp[\<phi>reason 50]
-
-lemma [\<phi>reason 50]:
-  \<open> homo_sep_disj_total \<psi>
-\<Longrightarrow> homo_sep_disj_semi \<psi>\<close>
-  unfolding homo_sep_disj_semi_def homo_sep_disj_total_def
-  by blast
-
-lemma homo_sep_disj_total_fun_upd [\<phi>reason 1100]:
-  \<open>homo_sep_disj_total (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
-  unfolding homo_sep_disj_total_def
-  by (simp add: sep_disj_fun_def)
-
-lemma homo_sep_mult_fun_upd[\<phi>reason 1100]:
-  \<open>homo_sep_mult (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
-  unfolding homo_sep_mult_def
-  by (simp add: fun_eq_iff times_fun_def)
-
-lemma homo_one_fun_upd[\<phi>reason 1100]:
-  \<open>homo_one (fun_upd 1 k)\<close>
-  unfolding homo_one_def
-  by (simp add: fun_eq_iff times_fun_def)
 
 declare [[
   \<phi>reason_default_pattern_ML
@@ -334,7 +312,41 @@ end
 *)
 end
 
+subsubsection \<open>Fun upd\<close>
 
+declare homo_sep_disj_total_comp[\<phi>reason 50]
+
+lemma [\<phi>reason 50]:
+  \<open> homo_sep_disj_total \<psi>
+\<Longrightarrow> homo_sep_disj_semi \<psi>\<close>
+  unfolding homo_sep_disj_semi_def homo_sep_disj_total_def
+  by blast
+
+lemma homo_sep_disj_total_fun_upd [\<phi>reason 1100]:
+  \<open>homo_sep_disj_total (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
+  unfolding homo_sep_disj_total_def
+  by (simp add: sep_disj_fun_def)
+
+lemma homo_sep_mult_fun_upd[\<phi>reason 1100]:
+  \<open>homo_sep_mult (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
+  unfolding homo_sep_mult_def
+  by (simp add: fun_eq_iff times_fun_def)
+
+lemma homo_one_fun_upd[\<phi>reason 1100]:
+  \<open>homo_one (fun_upd 1 k)\<close>
+  unfolding homo_one_def
+  by (simp add: fun_eq_iff times_fun_def)
+
+subsubsection \<open>Push map\<close>
+
+declare homo_sep_disj_total_push_map [\<phi>reason 1100]
+        homo_sep_mult_push_map [\<phi>reason 1100]
+        homo_one_push_map [\<phi>reason 1100]
+
+
+subsection \<open>\<phi>-Type definition tools\<close>
+
+ML_file \<open>library/system/phi_type_definition.ML\<close>
 
 
 end

@@ -108,6 +108,22 @@ lemma push_map_dom_eq[simp]:
   unfolding dom_def fun_eq_iff push_map_def set_eq_iff apply simp
   by (metis (full_types) append_eq_conv_conj)
 
+subsubsection \<open>Algebraic Properties\<close>
+
+lemma homo_sep_disj_total_push_map:
+  \<open>homo_sep_disj_total (push_map k :: ('k list \<Rightarrow> 'a::sep_magma_1) \<Rightarrow> ('k list \<Rightarrow> 'a::sep_magma_1) )\<close>
+  unfolding homo_sep_disj_total_def push_map_def
+  by (auto simp add: sep_disj_fun_def, metis append_eq_conv_conj)
+
+lemma homo_sep_mult_push_map:
+  \<open>homo_sep_mult (push_map k :: ('k list \<Rightarrow> 'a::sep_magma_1) \<Rightarrow> ('k list \<Rightarrow> 'a::sep_magma_1))\<close>
+  unfolding homo_sep_mult_def push_map_def
+  by (simp add: fun_eq_iff times_fun_def)
+
+lemma homo_one_push_map:
+  \<open>homo_one (push_map k)\<close>
+  unfolding homo_one_def
+  by (simp add: fun_eq_iff times_fun_def)
 
 subsection \<open>Pull a map at a location\<close>
 
