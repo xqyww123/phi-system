@@ -151,7 +151,7 @@ fun safer_obligation_solver1 (ctxt,sequent) =
           error (Pretty.string_of (Pretty.chunks [
               Pretty.str "Fail to solve the proof obligation automatically:",
               Syntax.pretty_term ctxt Goal
-        ]))) (ctxt,sequent)
+        ]))) (ctxt addsimps @{thms Premise_def},sequent)
      )
      | _ => raise THM ("auto_obligation_solver1: The leading antecedent of the given sequent \
               \is not a proof obligation.", 1, [sequent])

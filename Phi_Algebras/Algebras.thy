@@ -1306,7 +1306,6 @@ lemma [simp]:
   "k' \<noteq> k \<Longrightarrow> (f * 1(k' := x))(k:=1) = f(k:=1) * 1(k' := x)" for f :: "'a \<Rightarrow> 'b::sep_monoid"
   unfolding fun_upd_def fun_eq_iff times_fun_def by simp
 
-
 instantiation "fun" :: (type,total_sep_monoid) total_sep_monoid begin
 instance proof
   fix x y :: \<open>'a \<Rightarrow> 'b\<close>

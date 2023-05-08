@@ -295,7 +295,7 @@ lemma op_get_var''_\<phi>app:
   unfolding op_get_var_def Premise_def
   by (rule; rule; simp add: \<phi>expns)
 
-
+declare \<phi>MapAt_def[\<phi>expns del] (*HOT FIX! TESTING!*)
 lemma op_set_var''_\<phi>app:
    \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> pred_option (\<lambda>TY'. TY = TY') (varname.type var)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u \<in> Well_Type TY

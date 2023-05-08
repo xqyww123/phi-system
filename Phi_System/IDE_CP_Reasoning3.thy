@@ -771,7 +771,7 @@ fn (ctxt,sequent) => Seq.make (fn () =>
 )
 \<close>
 
-
+(*
 (*use \<open>k \<^bold>\<rightarrow>\<close> to test*)
 lemma Structural_Extract_\<phi>MapAt:
   \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k' = k
@@ -780,7 +780,7 @@ lemma Structural_Extract_\<phi>MapAt:
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
   unfolding Structural_Extract_def Premise_def
   apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_\<phi>Prod[symmetric])
-  by (rule \<phi>MapAt_cast)
+  by (rule \<phi>MapAt_cast)*)
 
 (* Disabled for TESTING. Should be re-enabled for performance.
 

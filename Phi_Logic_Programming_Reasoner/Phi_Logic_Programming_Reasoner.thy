@@ -739,6 +739,9 @@ ML_file "library/reasoners.ML"
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.defer_obligation_tac\<close>
 
+\<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> ?P\<close>)
+  = \<open>Phi_Reasoners.safer_obligation_solver1 #> Seq.single\<close>
+
 
 subsection \<open>Reasoning Frame\<close>
 
@@ -958,8 +961,6 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
   = \<open>PLPR_Simplifier.simplifier NONE I\<close>
 
-\<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> ?P\<close>)
-  = \<open>PLPR_Simplifier.simplifier NONE I\<close>
 
 (* subsection \<open>Exhaustive Divergence\<close>
 

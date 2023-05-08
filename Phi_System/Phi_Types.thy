@@ -67,7 +67,7 @@ subsection \<open>Func\<close>
 definition \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = { f x }\<close>
 
-lemma \<phi>Fun_expn:
+lemma \<phi>Fun_expn[\<phi>expns]:
   \<open>v \<in> (x \<Ztypecolon> \<phi>Fun f) \<longleftrightarrow> v = f x \<close>
   unfolding \<phi>Fun_def \<phi>Type_def by simp
 
@@ -103,6 +103,7 @@ lemma \<phi>Fun_unit_homo[\<phi>reason add]:
 \<Longrightarrow> Unit_Homo (\<phi>Fun f) \<close>
   unfolding Unit_Homo_def homo_one_def Imply_def
   by (simp add: \<phi>Fun_expn set_eq_iff)
+
 
 subsection \<open>Any\<close>
 
@@ -164,7 +165,7 @@ lemma [\<phi>reason 1200]:
   \<medium_left_bracket> premises [unfolded is_functional_def, useful] and [unfolded satisfication_encoding, useful]
     D \<medium_right_bracket> .
 
-lemma \<phi>Composition_expn:
+lemma \<phi>Composition_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>
   unfolding \<phi>Composition_def \<phi>Type_def by (simp add: \<phi>expns)
 
@@ -192,6 +193,16 @@ lemma \<phi>Composition_separatio_functor[\<phi>reason add]:
   by (rule \<phi>Type_eqI; auto simp add: \<phi>Prod_expn \<phi>Composition_expn,
       metis times_set_I, meson set_mult_expn)
 
+lemma \<phi>Composition_unit_functor[\<phi>reason add]:
+  \<open> Unit_Homo B
+\<Longrightarrow> Unit_Functor ((\<Zcomp>) B)\<close>
+  unfolding Unit_Functor_def Imply_def Unit_Homo_def
+  by (auto simp add: \<phi>Composition_expn)
+
+lemma \<phi>Composition_union_functor[\<phi>reason add]:
+  \<open>Union_Functor ((\<Zcomp>) B) ((\<Zcomp>) B)\<close>
+  unfolding Union_Functor_def
+  by (clarify, rule \<phi>Type_eqI, simp add: \<phi>expns \<phi>Composition_expn; blast)
 
 section \<open>Logical Connectives\<close>
 
@@ -655,12 +666,43 @@ lemma \<phi>Mapping_inhabited[\<phi>expns]:
 subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
-(*
+
+
 definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 60)
-  where [\<phi>defs]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-*)
+  where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
+
+interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'\<close>
+  by (standard, unfold \<phi>MapAt_def, \<phi>reason)
+
+lemma \<phi>MapAt_separation_functor[\<phi>reason add]:
+  \<open>Separation_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) T U\<close>
+  for T :: \<open>('a::sep_magma_1,'b) \<phi>\<close>
+  unfolding \<phi>MapAt_def by \<phi>reason
+
+lemma \<phi>MapAt_void_functor[\<phi>reason 1100]:
+  \<open>Unit_Functor ((\<^bold>\<rightarrow>) k)\<close>
+  unfolding \<phi>MapAt_def
+  by \<phi>reason
+
+interpretation Union_Functor \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k\<close>
+  unfolding \<phi>MapAt_def
+  by \<phi>reason
+
+lemma [\<phi>reason 1200]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> k = k'
+\<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> T \<a>\<n>\<d> P
+\<Longrightarrow> 1(k := v) \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> v' \<Ztypecolon> k' \<^bold>\<rightarrow> T \<a>\<n>\<d> P\<close>
+  by (clarsimp simp add: \<phi>expns Imply_def \<phi>MapAt_def, blast)
+
+lemma [\<phi>reason 1200]:
+  \<open> is_functional (x \<Ztypecolon> T)
+\<Longrightarrow> is_functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
+  by (clarsimp simp add: \<phi>expns is_functional_def \<phi>MapAt_def, blast)
 
 
+
+(*
+TESTING
 definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 60)
   where \<open>\<phi>MapAt key T x = { 1(key := v) |v. v \<in> (x \<Ztypecolon> T) }\<close>
 
@@ -780,7 +822,7 @@ lemma \<phi>MapAt_void_functor[\<phi>reason add]:
 interpretation Union_Functor \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k\<close>
   by (standard; rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
-
+*)
 
 subsubsection \<open>By List of Keys\<close>
 
@@ -814,7 +856,7 @@ lemma \<phi>MapAt_L_\<phi>Prod:
 
 lemma \<phi>MapAt_L_\<phi>MapAt:
   \<open>k1 \<^bold>\<rightarrow>\<^sub>@ k2 \<^bold>\<rightarrow> T = k1 @ k2 \<^bold>\<rightarrow> T\<close>
-  by (rule \<phi>Type_eqI; simp add: \<phi>expns; force)
+  by (rule \<phi>Type_eqI; simp add: \<phi>expns \<phi>MapAt_def; force)
 
 lemma \<phi>MapAt_L_\<phi>MapAt_L:
   \<open>k1 \<^bold>\<rightarrow>\<^sub>@ k2 \<^bold>\<rightarrow>\<^sub>@ T = k1 @ k2 \<^bold>\<rightarrow>\<^sub>@ T\<close>
@@ -843,7 +885,7 @@ simproc_setup \<phi>MapAt_L_simp_cong ("x \<Ztypecolon> k \<^bold>\<rightarrow>\
 
 lemma \<phi>MapAt_L_At:
   \<open>(ks \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) = (ks \<^bold>\<rightarrow> T)\<close>
-  by (rule \<phi>Type_eqI; simp add: \<phi>expns; metis append_self_conv push_map_unit)
+  by (rule \<phi>Type_eqI; simp add: \<phi>expns \<phi>MapAt_def; metis append_self_conv push_map_unit)
 
 
 paragraph \<open>Implication \& Action Rules\<close>
@@ -1186,7 +1228,7 @@ qed
 
 lemma \<phi>perm_ins_homo_MapAt:
   \<open>\<phi>perm_ins_homo ((o) f) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_ins_homo f T)\<close>
-proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
+proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns \<phi>MapAt_def
             perm_ins_homo_pointwise_eq; rule; clarsimp)
   fix x :: 'a and va :: 'd
   assume \<open>perm_ins_homo f\<close>
