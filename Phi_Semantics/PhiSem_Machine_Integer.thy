@@ -970,7 +970,7 @@ lemma op_cast_int_\<phi>app:
       certified by (metis One_nat_def atLeastLessThan_iff signed_scast_eq signed_take_bit_int_eq_self sint_sbintrunc' the_\<phi>lemmata) .
 
 lemma op_upcast_nat_\<phi>app:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> LENGTH('ba) \<le> LENGTH('bb)
+  \<open> \<g>\<u>\<a>\<r>\<d> LENGTH('ba) \<le> LENGTH('bb)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_cast_uint TYPE('ba) TYPE('bb) v
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>('ba) \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> \<nat>('bb) \<rbrace>\<close>
   \<medium_left_bracket> have [useful]: \<open>x < 2 ^ LENGTH('ba)\<close> using \<phi> by blast
@@ -978,7 +978,7 @@ lemma op_upcast_nat_\<phi>app:
       certified by (metis min_def order_antisym_conv take_bit_nat_eq_self_iff take_bit_take_bit the_\<phi>(1) the_\<phi>(2)) .
 
 lemma op_upcast_int_\<phi>app:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> LENGTH('ba) \<le> LENGTH('bb)
+  \<open> \<g>\<u>\<a>\<r>\<d> LENGTH('ba) \<le> LENGTH('bb)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_cast_int TYPE('ba) TYPE('bb) v
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] \<int>('ba) \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> \<int>('bb) \<rbrace>\<close>
   \<medium_left_bracket> op_cast_int_word[where 'bb='bb] \<medium_right_bracket>

@@ -181,7 +181,7 @@ lemma \<phi>Composition_transformation[\<phi>reason 1200 for \<open>(_ \<Ztypeco
 subsubsection \<open>Algebraic Properties\<close>
 
 lemma \<phi>Composition_transformation_functor[\<phi>reason add]:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> B = B'
+  \<open> \<g>\<u>\<a>\<r>\<d> B = B'
 \<Longrightarrow> Transformation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>Composition_transformation)
@@ -671,7 +671,7 @@ subsubsection \<open>By Key\<close>
 definition \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 60)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
 
-interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'\<close>
+interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<g>\<u>\<a>\<r>\<d> k = k'\<close>
   by (standard, unfold \<phi>MapAt_def, \<phi>reason)
 
 lemma \<phi>MapAt_separation_functor[\<phi>reason add]:
@@ -746,7 +746,7 @@ lemma \<phi>MapAt_cast:
   by (clarsimp simp add: \<phi>expns; blast)
 
 lemma (*[\<phi>reason 1000]: TESTING*)
-  \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
+  \<open> \<r>REQUIRE \<g>\<u>\<a>\<r>\<d> k = k'
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<a>\<n>\<d> P\<close>
   using \<phi>MapAt_cast by (simp add: Premise_def)
@@ -801,12 +801,12 @@ lemma [\<phi>reason 1200]:
 paragraph \<open>Algebraic Properties\<close>
 
 lemma \<phi>MapAt_transformation_functor(*[\<phi>reason 1100]*):
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
+  \<open> \<g>\<u>\<a>\<r>\<d> k = k'
 \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>MapAt_cast)
 
-interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'\<close>
+interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<g>\<u>\<a>\<r>\<d> k = k'\<close>
   by (standard, rule \<phi>MapAt_transformation_functor)
 
 lemma \<phi>MapAt_separation_functor[\<phi>reason 1100]:
@@ -898,15 +898,15 @@ lemma \<phi>MapAt_L_cast:
 
 (* TESTING
 lemma [\<phi>reason 1020]:
-  \<open> \<r>REQUIRE \<s>\<i>\<m>\<p>\<r>\<e>\<m> k' = k
+  \<open> \<r>REQUIRE \<g>\<u>\<a>\<r>\<d> k' = k
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P\<close>
   using \<phi>MapAt_L_cast by (simp add: Premise_def)*)
 
 lemma [\<phi>reason 1017]:
   \<open> \<r>REQUIRE
-    \<s>\<i>\<m>\<p>\<r>\<e>\<m> length k < length k'
-&&& \<s>\<i>\<m>\<p>\<r>\<e>\<m> k @ kd = k'
+    \<g>\<u>\<a>\<r>\<d> length k < length k'
+&&& \<g>\<u>\<a>\<r>\<d> k @ kd = k'
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P\<close>
   unfolding Imply_def \<r>Require_def conjunction_imp
@@ -915,8 +915,8 @@ lemma [\<phi>reason 1017]:
 
 lemma [\<phi>reason 1013]:
   \<open> \<r>REQUIRE
-    \<s>\<i>\<m>\<p>\<r>\<e>\<m> length k' < length k
-&&& \<s>\<i>\<m>\<p>\<r>\<e>\<m> k @ kd = k'
+    \<g>\<u>\<a>\<r>\<d> length k' < length k
+&&& \<g>\<u>\<a>\<r>\<d> k @ kd = k'
 \<Longrightarrow> x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<a>\<n>\<d> P\<close>
   unfolding Imply_def \<r>Require_def conjunction_imp
@@ -936,12 +936,12 @@ lemma [simp]:
 paragraph \<open>Algebraic Properties\<close>
 
 lemma \<phi>MapAt_L_transformation_functor:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'
+  \<open> \<g>\<u>\<a>\<r>\<d> k = k'
 \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>MapAt_L_cast)
 (*
-interpretation \<phi>MapAt_L: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> k = k'\<close>
+interpretation \<phi>MapAt_L: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<g>\<u>\<a>\<r>\<d> k = k'\<close>
   by (standard, rule \<phi>MapAt_L_transformation_functor)
 *)
 lemma \<phi>MapAt_L_separation_functor[\<phi>reason 1100]:
@@ -1500,17 +1500,17 @@ lemma \<phi>Share_left_seminearring_functor[\<phi>reason add]:
   by clarsimp
 
 lemma \<phi>Share_void_functor[\<phi>reason add]:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> 0 < n
+  \<open> \<g>\<u>\<a>\<r>\<d> 0 < n
 \<Longrightarrow> Unit_Functor ((\<Znrres>) n :: ('a::share_one, 'b) \<phi> \<Rightarrow> ('a, 'b) \<phi>)\<close>
   unfolding Unit_Functor_def Imply_def
   by (clarsimp simp add: \<phi>Share_expn, insert share_right_one, blast)
 
 lemma \<phi>Share_transformation_functor:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> n = n'
+  \<open> \<g>\<u>\<a>\<r>\<d> n = n'
 \<Longrightarrow> Transformation_Functor ((\<Znrres>) n) ((\<Znrres>) n') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Imply_def by (clarsimp simp add: \<phi>expns; blast)
 
-interpretation \<phi>Share: Transformation_Functor_L \<open>(\<Znrres>) n\<close> \<open>(\<Znrres>) n'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<s>\<i>\<m>\<p>\<r>\<e>\<m> n = n'\<close>
+interpretation \<phi>Share: Transformation_Functor_L \<open>(\<Znrres>) n\<close> \<open>(\<Znrres>) n'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<g>\<u>\<a>\<r>\<d> n = n'\<close>
   by (standard; rule \<phi>Share_transformation_functor)
 
 subsubsection \<open>\<phi>-Some\<close>
@@ -1638,7 +1638,7 @@ lemma [\<phi>reason 1200]:
   unfolding \<phi>Sep_Disj_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k1 \<noteq> k2
+  \<open> \<g>\<u>\<a>\<r>\<d> k1 \<noteq> k2
 ||| \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow> T) (k2 \<^bold>\<rightarrow> U)\<close>
   for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
@@ -1646,7 +1646,7 @@ lemma [\<phi>reason 1200]:
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def)+
 
 lemma [\<phi>reason 1200]:
-  \<open> \<s>\<i>\<m>\<p>\<r>\<e>\<m> k1 \<noteq> k2
+  \<open> \<g>\<u>\<a>\<r>\<d> k1 \<noteq> k2
 ||| \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow>\<^sub># T) (k2 \<^bold>\<rightarrow>\<^sub># U)\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1, 'b) \<phi>\<close>
