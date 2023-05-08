@@ -19,6 +19,31 @@ subsubsection \<open>Transformation\<close>
 definition \<open>Transformation_Functor F1 F2 f1 f2 \<longleftrightarrow>
   (\<forall>T U x y Q. (f1 x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f2 y \<Ztypecolon> U \<a>\<n>\<d> Q) \<longrightarrow> (x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<a>\<n>\<d> Q))\<close>
 
+(*f1 f2: do not use constants (e.g. id), use lambda expressions (e.g. \<lambda>x. x)
+  so that pattern match has no impediment *)
+
+locale Transformation_Functor_L =
+  fixes Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
+    and Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
+    and fa :: \<open>'c \<Rightarrow> 'a\<close>
+    and fb :: \<open>'f \<Rightarrow> 'e\<close>
+    and Prem :: bool
+  assumes Transformation_Functor[\<phi>reason 1100]:
+    \<open>Prem \<Longrightarrow> Transformation_Functor Fa Fb fa fb\<close>
+begin
+ 
+lemma transformation[\<phi>reason default 40]:
+  \<open> Prem
+\<Longrightarrow> fa x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> fb y \<Ztypecolon> U \<a>\<n>\<d> Q
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<a>\<n>\<d> Q\<close>
+  using Transformation_Functor[unfolded Transformation_Functor_def]
+  by blast
+
+end
+
+
+
+
 subsubsection \<open>Inhabitance\<close>
 
 definition \<open>Inhabitance_Functor F f \<longleftrightarrow> (\<forall>T x. Inhabited(x \<Ztypecolon> F T) \<longrightarrow> Inhabited(f x \<Ztypecolon> T))\<close>

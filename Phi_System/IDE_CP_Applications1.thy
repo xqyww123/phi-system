@@ -350,6 +350,24 @@ lemma [\<phi>reason 5000]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action as X\<close>
   unfolding Action_Tag_def using implies_refl .
 
+context Transformation_Functor_L begin
+
+lemma [\<phi>reason default 40]:
+  \<open> Prem
+\<Longrightarrow> (fa x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fb y \<Ztypecolon> U) \<a>\<n>\<d> P @action as Z
+\<Longrightarrow> (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y \<Ztypecolon> Fb U) \<a>\<n>\<d> P @action as Z\<close>
+  unfolding Action_Tag_def
+  by (simp add: transformation)
+
+lemma [\<phi>reason default 45]:
+  \<open> Prem
+\<Longrightarrow> (fa x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fb y \<Ztypecolon> U) \<a>\<n>\<d> P @action as (fb z \<Ztypecolon> Z)
+\<Longrightarrow> (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y \<Ztypecolon> Fb U) \<a>\<n>\<d> P @action as (z \<Ztypecolon> Fb Z)\<close>
+  unfolding Action_Tag_def
+  by (simp add: transformation)
+
+end
+
 
 subsubsection \<open>To\<close>
 
@@ -378,7 +396,7 @@ lemma [\<phi>reason 1]:
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action to T\<close>
   unfolding Action_Tag_def by blast
 
-lemma [\<phi>reason 10]:
+lemma [\<phi>reason 5]:
   \<open> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y \<Ztypecolon> U) \<a>\<n>\<d> P
 \<Longrightarrow> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y \<Ztypecolon> U) \<a>\<n>\<d> P @action to U\<close>
   unfolding Action_Tag_def .
@@ -387,7 +405,23 @@ lemma [\<phi>reason 5000]:
   \<open> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> T) @action to T\<close>
   unfolding Action_Tag_def using implies_refl .
 
+context Transformation_Functor_L begin
 
+lemma [\<phi>reason default 45]:
+  \<open> Prem
+\<Longrightarrow> fa x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> fb y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<a>\<n>\<d> P @action to (F2 Z) \<close>
+  unfolding Action_Tag_def
+  using transformation by blast
+
+lemma [\<phi>reason default 40]:
+  \<open> Prem
+\<Longrightarrow> fa x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> fb y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<a>\<n>\<d> P @action to Z \<close>
+  unfolding Action_Tag_def
+  using transformation by blast
+
+end
 
 subsection \<open>Case Analysis\<close>
 

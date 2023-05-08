@@ -558,7 +558,7 @@ fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
 val mode = (\<^keyword>\<open>!\<close> |-- \<^keyword>\<open>!\<close> >> K (SOME GLOBAL_CUT)) ||
            (\<^keyword>\<open>!\<close> >> K (SOME LOCAL_CUT)) ||
            (\<^keyword>\<open>?\<close> >> K (SOME NORMAL)) ||
-           (Parse.$$$ "default" >> K (SOME TO_BE_OVERRIDE)) ||
+           (Args.$$$ "default" >> K (SOME TO_BE_OVERRIDE)) ||
            Scan.succeed NONE
 
 fun default_mode_of priority =
@@ -591,15 +591,22 @@ val _ =
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>print_\<phi>reasoners\<close>
     "print \<phi>reasoner matching the given pattern"
-    (Parse.term -- (Scan.optional (Args.query >> K false) true) >> (fn (raw_pattern, strict) =>
+    (Parse.term -- (Scan.optional ((Args.query |-- Args.query >> K 2) ||
+                                   (Args.query >> K 1)) 0)
+   >> (fn (raw_pattern, power) =>
       Toplevel.keep (fn top =>
         let val ctxt = Toplevel.context_of top
             val pattern = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt) raw_pattern
             val all_reasoners = Reasoners.get (Context.Proof ctxt)
-            val reasoners = if strict
-                            then get_reasoners' (Proof_Context.theory_of ctxt) all_reasoners pattern
-                            else Net.match_term all_reasoners pattern
-                                  |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
+            val reasoners = case power
+                              of 0 => get_reasoners' (Proof_Context.theory_of ctxt) all_reasoners pattern
+                               | 1 => Net.match_term all_reasoners pattern
+                                        |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
+                               | 2 => Net.entries all_reasoners
+                                        |> filter (fn (_,x,_,_) =>
+                                              Pattern.matches (Proof_Context.theory_of ctxt)
+                                                              (pattern,x))
+                                        |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
          in if null reasoners
             then writeln "No reasoner found."
             else writeln (Pretty.string_of (Pretty.chunks

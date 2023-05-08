@@ -8,6 +8,8 @@ theory Phi_Logic_Programming_Reasoner
   and "<simprem>" = "\<s>\<i>\<m>\<p>\<r>\<e>\<m>"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
   and "<threshold>" = "\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>"
+  and "!!" = "!!"
+  and "??" = "??"
 begin
 
 subsubsection \<open>Prelude Settings\<close>
@@ -286,7 +288,7 @@ text \<open>\<^emph>\<open>Remark\<close>: Attribute @{attribute \<phi>reason} c
 
 paragraph \<open>Example\<close>
 
-declare conjI[\<phi>reason add] TrueI[\<phi>reason 1000]
+declare conjI[\<phi>reason add 1000] TrueI[\<phi>reason 1000]
 
 paragraph \<open>\<open>\<r>\<close>Feasible \label{sec:rFeasible}\<close>
 

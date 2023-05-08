@@ -2363,5 +2363,6 @@ lemma Do_Literal_Simplification:
 
 hide_fact Do_Literal_Simplification
 
+print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to _\<close> ? ?
 
 end
