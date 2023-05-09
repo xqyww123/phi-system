@@ -513,6 +513,14 @@ locale homo_sep_mult =
   fixes \<psi> :: " 'a::sep_magma \<Rightarrow> 'b::sep_magma "
   assumes homo_mult: "x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y"
 
+lemma homo_sep_mult_comp:
+  \<open> homo_sep_disj_semi f
+\<Longrightarrow> homo_sep_mult f
+\<Longrightarrow> homo_sep_mult g
+\<Longrightarrow> homo_sep_mult (g o f)\<close>
+  unfolding homo_sep_mult_def homo_sep_disj_semi_def
+  by clarsimp
+
 locale homo_join_sub =
   fixes \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
   assumes homo_join_sub: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>

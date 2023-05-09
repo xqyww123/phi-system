@@ -67,6 +67,9 @@ subsection \<open>Func\<close>
 definition \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = { f x }\<close>
 
+lemma [\<phi>inhabitance_rule]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>Fun f) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
 lemma \<phi>Fun_expn[\<phi>expns]:
   \<open>v \<in> (x \<Ztypecolon> \<phi>Fun f) \<longleftrightarrow> v = f x \<close>
   unfolding \<phi>Fun_def \<phi>Type_def by simp
@@ -98,11 +101,16 @@ lemma \<phi>Fun_separation_homo_eq[\<phi>reason add]:
   by (clarsimp simp add: set_mult_expn \<phi>Fun_expn homo_sep_disj_total.sep_disj_homo
                          homo_sep_mult.homo_mult)
 
-lemma \<phi>Fun_unit_homo[\<phi>reason add]:
+interpretation Unit_Homo_L \<open>homo_one f\<close> \<open>\<phi>Fun f\<close>
+  apply standard
+  unfolding Unit_Homo_def homo_one_def Imply_def
+  by (simp add: \<phi>Fun_expn set_eq_iff)
+
+(* lemma \<phi>Fun_unit_homo[\<phi>reason add]:
   \<open> homo_one f
 \<Longrightarrow> Unit_Homo (\<phi>Fun f) \<close>
   unfolding Unit_Homo_def homo_one_def Imply_def
-  by (simp add: \<phi>Fun_expn set_eq_iff)
+  by (simp add: \<phi>Fun_expn set_eq_iff) *)
 
 
 subsection \<open>Any\<close>
@@ -192,6 +200,10 @@ lemma \<phi>Composition_separatio_functor[\<phi>reason add]:
   unfolding Separation_Functor_def Separation_Homo_eq_def Separation_Homo_def Imply_def
   by (rule \<phi>Type_eqI; auto simp add: \<phi>Prod_expn \<phi>Composition_expn,
       metis times_set_I, meson set_mult_expn)
+
+(*interpretation Unit_Functor_L \<open>Unit_Homo B\<close> \<open>((\<Zcomp>) B)\<close>
+  unfolding Unit_Functor_L_def Unit_Functor_def Imply_def Unit_Homo_def
+  by (auto simp add: \<phi>Composition_expn) *)
 
 lemma \<phi>Composition_unit_functor[\<phi>reason add]:
   \<open> Unit_Homo B
@@ -670,9 +682,11 @@ subsubsection \<open>By Key\<close>
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 60)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-
+ 
 interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<g>\<u>\<a>\<r>\<d> k = k'\<close>
   by (standard, unfold \<phi>MapAt_def, \<phi>reason)
+
+declare [[\<phi>trace_reasoning = 2]]
 
 lemma \<phi>MapAt_separation_functor[\<phi>reason add]:
   \<open>Separation_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) T U\<close>

@@ -85,39 +85,21 @@ begin
 
 subsubsection \<open>\<phi>-Type\<close>
 
-definition \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
-    \<comment> \<open>\<phi>Type for level-1 mapping\<close>
-  where \<open>\<phi> T = (\<lambda>x. { mk v |v. v \<in> (x \<Ztypecolon> T) })\<close>
+definition \<phi> :: \<open>(fiction, 'U) \<phi>\<close> where [\<phi>expns]: \<open>\<phi> = \<phi>Fun mk\<close>
 
-lemma \<phi>_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = mk v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Type_def \<phi>_def by simp
-
-lemma \<phi>_inhabited[\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma [\<phi>inhabitance_rule, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>) \<Longrightarrow> C \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
-lemma \<phi>_Prod:
-  \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
-  apply (metis mk_homo_mult)
-  by (metis fun_1upd_homo inj.homo_mult sep_disj_mk)
+declare [[\<phi>trace_reasoning = 2]]
 
-lemma \<phi>_\<phi>None:
-  \<open>\<phi> \<circle> = \<circle>\<close>
-  by (rule \<phi>Type_eqI; simp add: \<phi>expns)
+lemma \<phi>_separation_homo_eq[\<phi>reason add]:
+  \<open>Separation_Homo_eq \<phi>\<close>
+  unfolding \<phi>_def
+  by (\<phi>reason)
 
-lemma \<phi>_unit:
-  \<open>(1 \<Ztypecolon> \<phi> Identity) = Void\<close>
-  by (clarsimp simp add: set_eq_iff \<phi>_expn Identity_expn)
-
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open>(x \<Ztypecolon> \<phi> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>_\<phi>None by simp
-
-lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open>(x \<Ztypecolon> \<phi> \<circle>) = 1 @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>_\<phi>None by simp
+sublocale Unit_Homo_L \<open>True\<close> \<open>\<phi>\<close>
+  by (standard; unfold \<phi>_def; \<phi>reason)
 
 
 (*
@@ -128,28 +110,6 @@ lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<i>\<m>\
   by (simp add: implies_refl) *)
 
 paragraph \<open>Reasoning Rules\<close>
-
-lemma \<phi>_cast:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P\<close>
-  unfolding Imply_def by (clarsimp simp add: \<phi>expns)
-
-lemma \<phi>_Structural_Extract:
-  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W) P\<close>
-  unfolding Structural_Extract_def
-  by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
-
-declare \<phi>_Structural_Extract[THEN SE_clean_waste, \<phi>reason 1200]
-
-lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W)
-      (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> \<phi> U') (w' \<Ztypecolon> \<phi> W') (x' \<Ztypecolon> \<phi> T') (r' \<Ztypecolon> \<phi> R') P') \<and> P)\<close>
-  unfolding Automatic_Transformation_def Action_Tag_def
-  by (blast intro: \<phi>_Structural_Extract[unfolded Action_Tag_def]
-                   Structural_Extract_imply_P)
 
 lemma ToSA_by_structural_extraction:
   " Structure_Info U Q

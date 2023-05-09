@@ -923,14 +923,16 @@ lemma [\<phi>reason 800 for \<open> _ * ?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<bl
 
 text \<open>A very weak, one-to-one search.\<close>
 
-lemma [\<phi>reason 80 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]: \<comment> \<open>attempts the immediate cell\<close>
+lemma [\<phi>reason 80 except \<open> (_ :: assn) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<Ztypecolon> _ \<brangle> \<a>\<n>\<d> _\<close>
+                  if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " H \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P
 \<Longrightarrow> R * H \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> X \<brangle> \<a>\<n>\<d> P"
   for H :: \<open>'a::sep_semigroup set\<close>
   unfolding FOCUS_TAG_def Imply_def
   by (metis (no_types, lifting) mult.assoc set_mult_expn)
 
-lemma ToSA_skip [\<phi>reason 70 for \<open> _ * _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ?X \<brangle> \<a>\<n>\<d> _\<close>]:
+lemma ToSA_skip [\<phi>reason 70 for \<open> _ * _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ?X \<brangle> \<a>\<n>\<d> _\<close>
+                            except \<open> ( _ :: assn) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<Ztypecolon> _ \<brangle> \<a>\<n>\<d> _\<close>]:
 \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
   " R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * \<blangle> X \<brangle> \<a>\<n>\<d> P
 \<Longrightarrow> R * H \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * H * \<blangle> X \<brangle> \<a>\<n>\<d> P"
@@ -939,7 +941,8 @@ lemma ToSA_skip [\<phi>reason 70 for \<open> _ * _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\
   by (smt (verit, del_insts) mult.assoc mult.commute set_mult_expn)
 
 lemma [\<phi>reason 60 for \<open> _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> ?P\<close>
-               except \<open> _ * _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> ?P\<close>]:
+                  except \<open> _ * _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> ?P\<close>
+                         \<open> (_ :: assn ) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<Ztypecolon> _ \<brangle> \<a>\<n>\<d> _\<close>]:
   " H \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P
 \<Longrightarrow> H * R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> X \<brangle> \<a>\<n>\<d> P"
   for H :: \<open>'a::sep_ab_semigroup set\<close>

@@ -58,7 +58,7 @@ proc test_prime':
         ( \<open>$v * $v \<le> $x\<close> )
     \<medium_left_bracket>
       if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
-        return (False)  
+        return (False)
       \<medium_right_bracket>
       \<medium_left_bracket>
         \<open>$v + 1\<close> \<rightarrow> $v 

@@ -267,6 +267,51 @@ lemma Inhabitance_Functor_from_Transformation_Functor[\<phi>reason 50]:
 
 
 subsection \<open>Automation\<close>
+ 
+locale \<phi>Type_Functor =
+  fixes F :: \<open>('c,'a) \<phi> \<Rightarrow> ('c1,'a1) \<phi>\<close>
+begin
+ 
+declare [[\<phi>functor_of \<open>F ?T\<close> \<Rightarrow> \<open>F\<close> \<open>?T\<close> (31)]]
+(*priority of the 2-arity functor: 32*)
+
+end
+
+context Union_Functor begin
+sublocale \<phi>Type_Functor Fb .
+end
+
+subsubsection \<open>Unital\<close>
+
+locale Semi_Unit_Homo_L =
+  fixes Prem :: bool and T :: \<open>('b::one, 'a::one) \<phi>\<close>
+  assumes Semi_Unit_Homo[\<phi>reason 1100]:
+    \<open>Prem \<Longrightarrow> Semi_Unit_Homo T\<close>
+
+locale Unit_Homo_L =
+  fixes Prem :: bool and T :: \<open>('b::one, 'a::one) \<phi>\<close>
+  assumes Unit_Homo[\<phi>reason 1100]: \<open>Prem \<Longrightarrow> Unit_Homo T\<close>
+begin
+
+sublocale Semi_Unit_Homo_L
+  by (standard; simp add: Unit_Homo[unfolded Unit_Homo_def] Semi_Unit_Homo_def)
+
+end
+
+locale Semi_Unit_Functor_L = \<phi>Type_Functor F
+  for Prem :: bool and F :: \<open>('b::one,'a) \<phi> \<Rightarrow> ('c::one,'a) \<phi>\<close>
++ assumes Semi_Unit_Functor[\<phi>reason 1100]: \<open>Prem \<Longrightarrow> Semi_Unit_Functor F\<close>
+
+locale Unit_Functor_L = \<phi>Type_Functor F
+  for Prem :: bool and F :: \<open>('b::one,'a) \<phi> \<Rightarrow> ('c::one,'a) \<phi>\<close>
++ assumes Unit_Functor[\<phi>reason 1100]: \<open>Prem \<Longrightarrow> Unit_Functor F\<close>
+begin
+
+sublocale Semi_Unit_Functor_L _ F
+  by (standard; simp add: Semi_Unit_Functor_def Unit_Functor[unfolded Unit_Functor_def])
+
+end
+
 
 subsubsection \<open>Transformation\<close>
 
@@ -277,9 +322,9 @@ lemma simp_cong[\<phi>simp_cong]:
   unfolding Transformation_Functor_def Imply_def atomize_eq
   by blast
 
-locale Transformation_Functor_L =
-  fixes Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
-    and Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
+locale Transformation_Functor_L = \<phi>Type_Functor Fa
+  for Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
++ fixes Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
     and fa :: \<open>'c \<Rightarrow> 'a\<close>
     and fb :: \<open>'f \<Rightarrow> 'e\<close>
     and Prem :: bool
@@ -315,6 +360,8 @@ end
 subsubsection \<open>Fun upd\<close>
 
 declare homo_sep_disj_total_comp[\<phi>reason 50]
+        homo_sep_comp[\<phi>reason 50]
+        homo_sep_mult_comp[\<phi>reason 50]
 
 lemma [\<phi>reason 50]:
   \<open> homo_sep_disj_total \<psi>
@@ -327,8 +374,20 @@ lemma homo_sep_disj_total_fun_upd [\<phi>reason 1100]:
   unfolding homo_sep_disj_total_def
   by (simp add: sep_disj_fun_def)
 
+lemma homo_sep_disj_total_fun_upd' [\<phi>reason 1050]:
+  \<open> homo_sep_disj_total f
+\<Longrightarrow> homo_sep_disj_total (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
+  unfolding homo_sep_disj_total_def
+  by (simp add: sep_disj_fun_def)
+
 lemma homo_sep_mult_fun_upd[\<phi>reason 1100]:
   \<open>homo_sep_mult (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
+  unfolding homo_sep_mult_def
+  by (simp add: fun_eq_iff times_fun_def)
+
+lemma homo_sep_mult_fun_upd'[\<phi>reason 1050]:
+  \<open> homo_sep_mult f
+\<Longrightarrow> homo_sep_mult (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
   unfolding homo_sep_mult_def
   by (simp add: fun_eq_iff times_fun_def)
 
@@ -336,6 +395,13 @@ lemma homo_one_fun_upd[\<phi>reason 1100]:
   \<open>homo_one (fun_upd 1 k)\<close>
   unfolding homo_one_def
   by (simp add: fun_eq_iff times_fun_def)
+
+lemma homo_one_fun_upd'[\<phi>reason 1050]:
+  \<open> homo_one f
+\<Longrightarrow> homo_one (\<lambda>x. fun_upd 1 k (f x))\<close>
+  unfolding homo_one_def
+  by (simp add: fun_eq_iff times_fun_def)
+
 
 subsubsection \<open>Push map\<close>
 

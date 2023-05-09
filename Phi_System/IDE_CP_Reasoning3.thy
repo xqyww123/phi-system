@@ -405,6 +405,51 @@ lemma Structural_Extract_reverse_morphism_I[intro?]:
   unfolding Automatic_Transformation_def Structural_Extract_def Imply_def
   by blast
 
+paragraph \<open>Install\<close>
+
+lemma ToSA_by_structural_extraction:
+  " Structure_Info U Q
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
+\<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> U) R1 (x \<Ztypecolon> T) W P2))
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> P1
+\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d> P1 \<and> P2"
+  unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def Try_def \<r>Call_def
+  \<medium_left_bracket> premises SI and Q and SE and A
+  have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
+  ;;  A[THEN implies_right_prod]
+     SE[OF \<open>Q'\<close>]
+  \<medium_right_bracket> certified using \<phi> by simp .
+
+lemma ToSA_by_structural_extraction__reverse_transformation:
+  " Structure_Info U Q
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
+\<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> U) R1 (x \<Ztypecolon> T) W
+             (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> T') W' (y' \<Ztypecolon> U') R1' P2') \<and> P2)))
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> (Automatic_Morphism RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1') \<and> P1)
+\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d>
+      (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> T' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A'\<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P1' \<and> P2')
+          \<and> P1 \<and> P2)"
+  unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def
+            Automatic_Transformation_def Compact_Antecedent_def Try_def \<r>Call_def
+  \<medium_left_bracket> premises SI and Q and SE and A
+  have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
+  ;; A[THEN implies_right_prod]
+     SE[OF \<open>Q'\<close>]
+  \<medium_right_bracket> certified apply  (simp add: \<phi>)
+  \<medium_left_bracket>
+    have A : \<open>R2' \<heavy_comma> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
+    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
+    ;; SE A[THEN implies_right_prod]
+  \<medium_right_bracket>. .
+
+print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> _\<close> ? ?
+
+declare ToSA_by_structural_extraction
+    [\<phi>reason 90 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
+declare ToSA_by_structural_extraction__reverse_transformation
+    [\<phi>reason 91 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
+
+
 
 paragraph \<open>Termination\<close>
 

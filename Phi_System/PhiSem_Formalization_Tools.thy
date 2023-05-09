@@ -377,7 +377,13 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
   by (blast intro: \<phi>_Structural_Extract[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
 
-lemma ToSA_by_structural_extraction:
+lemma [\<phi>reason 1100]:
+  \<open> Structure_Info T P
+\<Longrightarrow> Structure_Info (\<phi> T) P\<close>
+  unfolding Structure_Info_def
+  by blast
+
+(*lemma ToSA_by_structural_extraction:
   " Structure_Info U Q
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
 \<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2))
@@ -411,7 +417,7 @@ lemma ToSA_by_structural_extraction__reverse_morphism:
     have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
     ;; SE A[THEN implies_right_prod]
   \<medium_right_bracket>. .
-
+*)
 
 lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<a>\<n>\<d> _\<close> ]:
   " R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d> P
@@ -580,11 +586,12 @@ lemma partial_implies_raw:
 
 paragraph \<open>Reasoning Rules\<close>
 
+(*
 declare ToSA_by_structural_extraction
     [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 declare ToSA_by_structural_extraction__reverse_morphism
     [\<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
-
+*)
 end
 
 
@@ -631,11 +638,12 @@ lemma expand:
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
+(*
 declare ToSA_by_structural_extraction
    [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 declare ToSA_by_structural_extraction__reverse_morphism
    [\<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
-
+*)
 end
 
 
@@ -708,10 +716,11 @@ paragraph \<open>\<phi>-Type\<close>
 
 abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nosep T))\<close>
 
-declare ToSA_by_structural_extraction
+(*declare ToSA_by_structural_extraction
     [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 declare ToSA_by_structural_extraction__reverse_morphism
     [\<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
+*)
 
 lemma \<phi>_double_\<phi>app:
   \<open>x \<Ztypecolon> \<phi>_ag T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>
