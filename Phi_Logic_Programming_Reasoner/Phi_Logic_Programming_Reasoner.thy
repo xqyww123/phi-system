@@ -454,7 +454,7 @@ text \<open>We provide a serial of predefined modes, which may be commonly usefu
 consts default :: mode
 consts MODE_SIMP :: mode \<comment> \<open>relating to simplification\<close>
 consts MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
-consts MODE_AUTO :: mode \<comment> \<open>something that will be triggered automatically\<close>
+consts MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close>
 
 
 

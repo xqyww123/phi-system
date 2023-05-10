@@ -54,20 +54,29 @@ text \<open>Simplification plays an important role in the programming in IDE_CP.
   so the work space will not be polluted by helpless propositions.
 \<close>
 
-subsubsection \<open>Structural Automatic Transformation\<close>
+subsubsection \<open>Generated Rules during Reasoning or Programming\<close>
+
+text \<open>Annotate a rule generated during the programming, to differentiate from the normal
+  contextual facts. The normal facts are stored in \<open>\<phi>lemmata\<close> while the generated rules
+  are in \<open>\<phi>generated\<close> (or maybe a better name like \<phi>generated_rules?)\<close>
 
 (*TODO: explain*)
 (*TODO: polish*)
 
-definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [17] 16)
+definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [17] 16) (*TODO: rename it, maybe like SP standing for 
+                                                          Structural Preserving*)
   where [iff]: \<open>SMorphism X = X\<close>
 
-definition Automatic_Transformation :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
-  where \<open>Automatic_Transformation _ R Q = (R \<longrightarrow> Q)\<close>
+definition Generated_Rule :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Generated_Rule _ embedded_prems stuff = (embedded_prems \<longrightarrow> stuff)\<close>
 
-consts morphism_mode :: mode (*TODO: depreciate*)
+(*consts morphism_mode :: mode (*TODO: depreciate*)*)
 
-abbreviation Automatic_Morphism :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Morphism \<equiv> Automatic_Transformation MODE_AUTO\<close>
+abbreviation Automatic_Rule :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Rule \<equiv> Generated_Rule (MODE_AUTO default)\<close>
+
+consts REVERSE_TRANSFORMATION :: mode
+abbreviation Reverse_Transformation :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Reverse_Transformation \<equiv> Generated_Rule (MODE_AUTO REVERSE_TRANSFORMATION)\<close>
 
 text \<open>
 Note, the argument here means any \<phi>-Type in the pre-condition, not necessary argument value.
@@ -100,10 +109,10 @@ Note, the argument here means any \<phi>-Type in the pre-condition, not necessar
 \<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Automatic_Morphism _ _ \<and> _\<close>    (110)
-  and \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Automatic_Morphism _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Automatic_Morphism _ _ \<and> _\<close>    (120)
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close>    (110)
+  and \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close>    (120)
 ]]
 
 

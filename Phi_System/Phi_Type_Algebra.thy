@@ -75,7 +75,7 @@ declare [[
 
 (*The default patterns of the rules are more general here by varifying types.
   This is designed specially.
-  In \<^const>\<open>Automatic_Morphism\<close>, as the reverse transformation can have different type,
+  In \<^const>\<open>Reverse_Transformation\<close>, as the reverse transformation can have different type,
     and in the algebraic general rule \<open>_Structural_Extract_general_rule'_\<close> the functors are
     represented by variables, it means we have no simple way to varify the type of the functors.
     We use ML to capture the functor constant and varify the type variables as much as it can

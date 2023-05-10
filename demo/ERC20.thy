@@ -67,7 +67,7 @@ proc balance_of:
 
   ;;op_load_ledge
   thm \<phi>lemmata
-  thm \<phi>morphism
+  thm \<phi>generated
   \<medium_right_bracket>. .
 
 (* { P } C {} *)

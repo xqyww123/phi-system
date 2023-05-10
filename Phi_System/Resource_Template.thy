@@ -153,10 +153,10 @@ declare \<phi>_Structural_Extract[THEN SE_clean_waste, \<phi>reason 1200]
 
 lemma [THEN SE_clean_waste', \<phi>reason 1211]:
   \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
+      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W)
-      (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> \<phi> U') (w' \<Ztypecolon> \<phi> W') (x' \<Ztypecolon> \<phi> T') (r' \<Ztypecolon> \<phi> R') P') \<and> P)\<close>
-  unfolding Automatic_Transformation_def Action_Tag_def
+      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> \<phi> U') (w' \<Ztypecolon> \<phi> W') (x' \<Ztypecolon> \<phi> T') (r' \<Ztypecolon> \<phi> R') P') \<and> P)\<close>
+  unfolding Generated_Rule_def Action_Tag_def
   by (blast intro: \<phi>_Structural_Extract[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
 
@@ -368,7 +368,7 @@ paragraph \<open>Reasoning Rules\<close>
 
 declare ToSA_by_structural_extraction
     [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
-declare ToSA_by_structural_extraction__reverse_morphism
+declare ToSA_by_structural_extraction__reverse_transformation
     [\<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 
 end
@@ -390,7 +390,7 @@ sublocale basic_fiction where I = \<open>\<F>_it\<close> ..
 
 declare ToSA_by_structural_extraction
    [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
-declare ToSA_by_structural_extraction__reverse_morphism
+declare ToSA_by_structural_extraction__reverse_transformation
    [\<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 
 end
@@ -452,7 +452,7 @@ abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nosep T))\<close>
 (*
 declare ToSA_by_structural_extraction
     [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
-declare ToSA_by_structural_extraction__reverse_morphism
+declare ToSA_by_structural_extraction__reverse_transformation
     [\<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 *)
 

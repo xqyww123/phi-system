@@ -881,9 +881,9 @@ lemma [\<phi>reason 2000]:
   by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 2000]:
-  \<open> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 * \<blangle> X \<brangle> \<a>\<n>\<d> Automatic_Morphism RP RX \<and> P
-\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 * \<blangle> SMORPH X \<brangle> \<a>\<n>\<d> Automatic_Morphism RP RX \<and> P\<close>
-  \<comment> \<open>This is the entry point of Automatic_Morphism !\<close>
+  \<open> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 * \<blangle> X \<brangle> \<a>\<n>\<d> Reverse_Transformation RP RX \<and> P
+\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 * \<blangle> SMORPH X \<brangle> \<a>\<n>\<d> Reverse_Transformation RP RX \<and> P\<close>
+  \<comment> \<open>This is the entry point of Reverse_Transformation !\<close>
   unfolding SMorphism_def .
 
 

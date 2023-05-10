@@ -1354,12 +1354,15 @@ lemma [\<phi>reason 90
 
 
 
-subsubsection \<open>Automatic_Transformation\<close>
+subsubsection \<open>Automatic Transformation\<close>
+
+(*
+TODO!!!!
 
 lemma [\<phi>reason 2000]:
   \<open> PROP \<phi>Application (RP \<Longrightarrow> RX @action morphism_mode) (Trueprop S) (PROP RET)
 \<Longrightarrow> PROP \<phi>Application (Trueprop (Automatic_Transformation any_mode RP RX)) (Trueprop S) (PROP RET)\<close>
-  unfolding \<phi>Application_def Automatic_Transformation_def Action_Tag_def
+  unfolding \<phi>Application_def Generated_Rule_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2), OF prems(3)[THEN mp], simplified] . .
 
 (*TODO: ungly!!!*)
@@ -1389,7 +1392,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
   by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
-
+*)
 
 subsection \<open>Action\<close>
 
