@@ -57,6 +57,7 @@ text \<open>Simplification plays an important role in the programming in IDE_CP.
 subsubsection \<open>Structural Automatic Transformation\<close>
 
 (*TODO: explain*)
+(*TODO: polish*)
 
 definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [17] 16)
   where [iff]: \<open>SMorphism X = X\<close>
@@ -64,7 +65,7 @@ definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [17] 16)
 definition Automatic_Transformation :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Automatic_Transformation _ R Q = (R \<longrightarrow> Q)\<close>
 
-consts morphism_mode :: mode
+consts morphism_mode :: mode (*TODO: depreciate*)
 
 abbreviation Automatic_Morphism :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Morphism \<equiv> Automatic_Transformation MODE_AUTO\<close>
 

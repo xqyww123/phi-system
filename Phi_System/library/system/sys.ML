@@ -36,7 +36,7 @@ fun print_dbg th = Seq.make (fn () => (@{print} th; SOME (th, Seq.empty))) *)
 
 (** Automatic Transformation **)
 
-structure Automatic_Transformation = Proof_Data (
+structure Automatic_Transformations = Proof_Data (
   type T = thm list
   val init = K []
 );
@@ -45,7 +45,7 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>mo
           fn genric =>
               case genric
               of Context.Theory _ => []
-               | Context.Proof ctxt => Automatic_Transformation.get ctxt))
+               | Context.Proof ctxt => Automatic_Transformations.get ctxt))
 
 (** Basic Operations **)
 
@@ -57,11 +57,11 @@ fun apply_automatic_morphism' _ [] _ = raise Empty
       case Thm.concl_of M
         of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Automatic_Transformation\<close>, _) $ \<^const>\<open>MODE_AUTO\<close> $ _ $ _)
              => (rev R @ L, Phi_Apply.apply [M] stat)
-         | _ =>apply_automatic_morphism' (M::R) L stat
+         | _ => apply_automatic_morphism' (M::R) L stat
 
 fun apply_automatic_morphism (ctxt,sequent) =
-  case apply_automatic_morphism' [] (Automatic_Transformation.get ctxt) (ctxt,sequent)
-    of (R, stat') => apfst (Automatic_Transformation.put R) stat'
+  case apply_automatic_morphism' [] (Automatic_Transformations.get ctxt) (ctxt,sequent)
+    of (R, stat') => apfst (Automatic_Transformations.put R) stat'
 
 fun simplify_morphisms _   [] = []
   | simplify_morphisms ctxt L =
@@ -94,7 +94,7 @@ fun move_lemmata' (ctxt, sequent) =
     val ctxt'' =
       if null morphisms
       then ctxt'
-      else Automatic_Transformation.map (fn L => morphisms@L) ctxt'
+      else Automatic_Transformations.map (fn L => morphisms@L) ctxt'
   in
     (ctxt'', sequent RS @{thm conjunct1})
   end

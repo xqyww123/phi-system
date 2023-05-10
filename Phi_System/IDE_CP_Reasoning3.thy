@@ -369,8 +369,9 @@ text \<open>The canonical form is where all permission annotation are on leaves.
 
 definition Structural_Extract :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Structural_Extract From Remain To Residual Aux \<longleftrightarrow> (Residual * From \<i>\<m>\<p>\<l>\<i>\<e>\<s> Remain * To \<a>\<n>\<d> Aux)\<close>
-  \<comment> \<open>Extract To from From, remaining Remain the unused part in From,
-      and leaving Residual the part in To that fails to be obtained from From.\<close>
+  \<comment> \<open>Extract \<open>To\<close> from \<open>From\<close>, remaining \<open>Remain\<close> the unused part in From,
+      and leaving \<open>Residual\<close> the part in \<open>To\<close> that fails to be obtained from From, and so needs
+      further reasoning to get \<open>Residual\<close> from the remaining unanalysised part of the source.\<close>
 
 declare [[\<phi>reason_default_pattern
       \<open>Structural_Extract ?X _ ?Y _ _\<close> \<Rightarrow> \<open>Structural_Extract ?X _ ?Y _ _\<close> (100)
@@ -538,20 +539,35 @@ lemma [\<phi>reason 3011]:
 
 paragraph \<open>Fall back\<close>
 
-lemma Structural_Extract_fallback
-  [\<phi>reason 10 for \<open>Try ?S (Structural_Extract _ _ _ _ _)\<close>]:
+lemma Structural_Extract_fail
+  [\<phi>reason 1 for \<open>Try ?S (Structural_Extract _ _ _ _ _)\<close>]:
   \<open> Try False (Structural_Extract X X Y Y True) \<close>
   for X :: \<open>'a::sep_ab_semigroup set\<close>
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def Try_def
   by (simp add: implies_refl mult.commute)
 
-lemma [\<phi>reason 10 for \<open>Try ?S (Structural_Extract _ _ _ _ (Automatic_Morphism _ _ \<and> _))\<close>]:
-  \<open> Try False (Structural_Extract X  X  Y  Y
+lemma [\<phi>reason 1 for \<open>Try ?S (Structural_Extract _ _ _ _ (Automatic_Morphism _ _ \<and> _))\<close>]:
+  \<open> Try False (Structural_Extract X X Y Y
       (Automatic_Morphism True (Structural_Extract X' X' Y' Y' True) \<and> True)) \<close>
   for X :: \<open>'a::sep_ab_semigroup set\<close> and X' :: \<open>'aa::sep_ab_semigroup set\<close>
   unfolding Action_Tag_def Try_def
-  by (blast intro: Structural_Extract_fallback[unfolded Action_Tag_def Try_def]
+  by (blast intro: Structural_Extract_fail[unfolded Action_Tag_def Try_def]
                    Structural_Extract_reverse_morphism_I)
+
+lemma Structural_Extract_fallback[\<phi>reason 5]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> U) (() \<Ztypecolon> \<phi>None) P\<close>
+  unfolding Structural_Extract_def
+  using implies_left_prod by blast
+
+(* TODO!!!!!
+lemma [\<phi>reason 5]:
+  \<open> Structural_Extract X X Y Y (Automatic_Morphism True (Structural_Extract X' X' Y' Y' True) \<and> True) \<close>
+  for X :: \<open>'a::sep_ab_semigroup set\<close> and X' :: \<open>'aa::sep_ab_semigroup set\<close>
+  unfolding Action_Tag_def Try_def
+  by (blast intro: Structural_Extract_fail[unfolded Action_Tag_def Try_def]
+                   Structural_Extract_reverse_morphism_I)
+*)
 
 
 

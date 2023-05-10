@@ -1362,6 +1362,8 @@ lemma [\<phi>reason 2000]:
   unfolding \<phi>Application_def Automatic_Transformation_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2), OF prems(3)[THEN mp], simplified] . .
 
+(*TODO: ungly!!!*)
+
 lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application (?S' \<s>\<h>\<i>\<f>\<t>\<s> ?T' \<a>\<n>\<d> ?P2 @action morphism_mode)
         (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
@@ -1375,6 +1377,18 @@ lemma [\<phi>reason 1200 for \<open>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def Simplify_def
   using \<phi>apply_implication \<phi>apply_view_shift \<phi>frame_view by blast
 
+lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
+  PROP \<phi>Application (Trueprop (?S' \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?T' \<a>\<n>\<d> ?P))
+      (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
+\<close>]:
+  "\<phi>IntroFrameVar R S'' S' T T'
+\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S'' \<a>\<n>\<d> Any @action ToSA
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<i>\<m>\<p>\<l>\<i>\<e>\<s> T' \<a>\<n>\<d> P))
+      (Trueprop (CurrentConstruction mode blk RR S))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
+  by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
 
 
 subsection \<open>Action\<close>
@@ -1530,6 +1544,11 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> \<phi>SemType (x <val-of> any \<Ztypecolon> T) TY\<close>
   unfolding Value_of_def .
 
+text \<open> \<Gamma> |- S
+apply {S'} C {Q}
+
+S --> ?R *  S'
+\<close>
 
 
 section \<open>Implementing the Interactive Environment\<close>

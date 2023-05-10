@@ -160,22 +160,23 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
   by (blast intro: \<phi>_Structural_Extract[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
 
+(*
 lemma [\<phi>reason 1100]:
   \<open> Structure_Info T P
 \<Longrightarrow> Structure_Info (\<phi> T) P\<close>
   unfolding Structure_Info_def
-  by blast
+  by blast *)
 
 thm ToSA_by_structural_extraction
     [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> for T U]
 
 declare ToSA_by_structural_extraction
     [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> for T U,
-     \<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
+     \<phi>reason 80 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 
 declare ToSA_by_structural_extraction__reverse_transformation
     [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> and T'=\<open>\<phi> T'\<close> and U'=\<open>\<phi> U'\<close> for T T' U U',
-     \<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
+     \<phi>reason 83 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 
 
 lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<a>\<n>\<d> _\<close> ]:
