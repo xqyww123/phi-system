@@ -20,6 +20,8 @@ signature PHI_REASONERS = sig
                                  -> Proof.context -> thm -> thm Seq.seq
   val defer_obligation_tac : Proof.context -> thm -> thm Seq.seq
 
+  structure Tactic_Configures : HOOKS
+
 end
 
 structure Phi_Reasoners : PHI_REASONERS = struct
@@ -49,28 +51,38 @@ fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME
 
 val aux_thms = Useful_Thms.get
 
+(** Tactic Configures **)
+
+datatype solver_mode = Agressive_Solver (*the auto method*) | Safe_Solver (*by clarsimp*)
+
+structure Tactic_Configures = Hooks (
+  type arg = solver_mode
+  type state = thm list (*aux thms*) * tactic * Proof.context
+)
+
+fun apply ctxt tactic  mode =
+  HEADGOAL (SOLVED' (K
+    (#2 (Tactic_Configures.invoke_until_success (Context.Proof ctxt)
+          (fn mode => fn (aux,tac,ctxt) =>
+              ([], tactic (ctxt,tac,aux,mode), ctxt)) mode (aux_thms ctxt, all_tac, ctxt)))))
+
+(* tac THEN HEADGOAL (Method.insert_tac ctxt aux)
+                       THEN tactic ctxt *)
+
+(*
+fun apply' protect_head ctxt tactic =
+  let val prep = if protect_head
+                 then *)
+
 (** Tactics **)
 
 (*** Auxiliaries ***)
 
-(*protects the remaining goals and only attach the first one*)
+(*protects the remaining goals and only attack the first one*)
 fun head_only tac th =
   if Thm.nprems_of th = 0
   then all_tac th
   else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
-
-fun raw_auto' ctxt =
-  let
-    val aux2 = Proof_Context.get_thms ctxt "\<phi>implication"
-  in Method.insert_tac ctxt (aux_thms ctxt @ aux2) 1
-     (*THEN (if null imp then all_tac else resolve_tac ctxt imp 1) *)
-     THEN Clasimp.auto_tac ctxt
-  end
-(*the classical 'auto' method that
-  attacks only the first goal and returns only if the goal is solved*)
-fun raw_auto ctxt =
-  head_only (raw_auto' ctxt
-          #> Seq.filter (fn st' => Thm.nprems_of st' = 0 (*check the only goal is solved*)))
 
 (*Wrap a context tactic of type `Proof.context -> thm -> thm Seq.seq` to the
   transition between states, of type `Proof.context * thm -> Proof.context * thm`.
@@ -107,7 +119,9 @@ fun auto_obligation_solver ctxt th =
             Seq.single (@{thm Premise_True} RS th)
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>True\<close>, _) =>
           Seq.single (@{thm TrueI} RS th)
-     | _ => raw_auto ctxt th
+     | _ => head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
+                pre THEN HEADGOAL (Method.insert_tac ctxt aux)
+                    THEN Clasimp.auto_tac ctxt) Agressive_Solver) th
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
 val auto_obligation_solver_opt = context_tactic_to_state_transition_opt auto_obligation_solver
@@ -133,7 +147,8 @@ and will usually terminate (if no loop is encountered in the simplification)*)
 fun safer_obligation_solver ctxt th =
   case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
     of SOME (_, \<^const>\<open>True\<close>) => Seq.single (@{thm Premise_True} RS th)
-     | SOME _ => HEADGOAL (Clasimp.clarsimp_tac ctxt) th
+     | SOME _ => apply ctxt (fn (ctxt,pre,aux,_) =>
+                    pre THEN HEADGOAL (Clasimp.clarsimp_tac (ctxt addsimps aux))) Safe_Solver th
      | NONE => Seq.single th
 
 val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver

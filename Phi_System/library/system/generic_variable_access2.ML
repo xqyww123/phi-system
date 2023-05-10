@@ -213,9 +213,12 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
       end
   end
 
-structure Assignment_Hooks = Hooks(type arg = (binding * assigner) list)
+structure Assignment_Hooks = Hooks (type arg = (binding * assigner) list
+                                    type state = context_state)
 
-val assignment = Assignment_Hooks.invoke_until_success default_assignment
+fun assignment assgns (ctxt,sequent)
+      = Assignment_Hooks.invoke_until_success (Context.Proof ctxt)
+                                              default_assignment assgns (ctxt,sequent)
 
 fun assignment_cmd binds (ctxt,sequent) =
       assignment (parse_assigner ctxt binds) (ctxt,sequent)

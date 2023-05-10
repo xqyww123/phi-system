@@ -31,7 +31,7 @@ fun push h ctxt =
    in (serial, Data.put (serial + 1, (serial, h) :: L) ctxt) end
 
 (*delt: 0 for the current reasoning context
-        1 for the sub-calling environment*)
+        1 for the sub-calling environment (children of the current context)*)
 fun push_localctxt delt h ctxt =
   let val lev = Arg.current_level ctxt + delt
       val _ = if lev = 0 then error "Not in PLPR reasoning environment" else ()

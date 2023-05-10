@@ -171,7 +171,7 @@ lemma [\<phi>reason 1200]:
   unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
 
 lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> 0 < n
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> \<circle>) = (() \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>)) @action clean_automation_waste\<close>
   unfolding Action_Tag_def Premise_def \<phi>Share_\<phi>None by simp
 *)
@@ -195,13 +195,13 @@ lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> \<circle> \<^emph> ?U
   unfolding \<phi>Prod_\<phi>None Action_Tag_def ..
 
 lemma [\<phi>reason 1200 for \<open>((?x,?r) \<Ztypecolon> (?T \<^emph> ?n \<Znrres> \<circle>)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> 0 < n
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
 \<Longrightarrow> ((x,r) \<Ztypecolon> (T \<^emph> n \<Znrres> \<circle>)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
   unfolding set_eq_iff Premise_def Action_Tag_def
   by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200 for \<open>((?r,?x) \<Ztypecolon> (?n \<Znrres> \<circle> \<^emph> ?T)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
-  \<open> \<g>\<u>\<a>\<r>\<d> 0 < n
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
 \<Longrightarrow> ((r,x) \<Ztypecolon> (n \<Znrres> \<circle> \<^emph> T)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
   unfolding set_eq_iff Premise_def Action_Tag_def
   by (simp add: \<phi>expns)
@@ -271,7 +271,12 @@ lemma [\<phi>reason 1200]:
 
 section \<open>Transformation of Structural Abstraction\<close>
 
-subsection \<open>Structure Info\<close>
+(* subsection \<open>Structure Info\<close>
+
+(*This design is entirely bad!
+  It should be some mechanism to explicitly update implication DB, and every contextual info
+  should be stored in that DB.*)
+
 
 text \<open>Instantiate your \<phi>-type functor with \<^const>\<open>Inhabitance_Functor\<close>
   so that the automation relating to this reasoning task will be configured.\<close>
@@ -355,10 +360,9 @@ lemma [\<phi>reason 1200 for \<open>Structure_Info (?k \<^bold>\<rightarrow> ?T)
   unfolding Structure_Info_def Inhabited_def
   by (simp add: \<phi>expns)
 *)
+*)
 
 subsection \<open>Extract\<close>
-
-text \<open>It is Separation of Abstraction!\<close>
 
 text \<open>The canonical form is where all permission annotation are on leaves.
   It minimizes fragments. (TODO: move this)\<close>
@@ -408,34 +412,28 @@ lemma Structural_Extract_reverse_morphism_I[intro?]:
 paragraph \<open>Install\<close>
 
 lemma ToSA_by_structural_extraction:
-  " Structure_Info U Q
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
-\<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> U) R1 (x \<Ztypecolon> T) W P2))
+  " \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> U) R1 (x \<Ztypecolon> T) W P2)
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> P1
 \<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d> P1 \<and> P2"
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def Try_def \<r>Call_def
-  \<medium_left_bracket> premises SI and Q and SE and A
-  have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-  ;;  A[THEN implies_right_prod]
-     SE[OF \<open>Q'\<close>]
+  \<medium_left_bracket> premises  SE and A
+    A[THEN implies_right_prod]
+    SE
   \<medium_right_bracket> certified using \<phi> by simp .
 
 lemma ToSA_by_structural_extraction__reverse_transformation:
-  " Structure_Info U Q
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
-\<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> U) R1 (x \<Ztypecolon> T) W
-             (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> T') W' (y' \<Ztypecolon> U') R1' P2') \<and> P2)))
+  " \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> U) R1 (x \<Ztypecolon> T) W
+             (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> T') W' (y' \<Ztypecolon> U') R1' P2') \<and> P2))
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> (Automatic_Morphism RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1') \<and> P1)
 \<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d>
       (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> T' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A'\<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P1' \<and> P2')
           \<and> P1 \<and> P2)"
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def
             Automatic_Transformation_def Compact_Antecedent_def Try_def \<r>Call_def
-  \<medium_left_bracket> premises SI and Q and SE and A
-  have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-  ;; A[THEN implies_right_prod]
-     SE[OF \<open>Q'\<close>]
-  \<medium_right_bracket> certified apply  (simp add: \<phi>)
+  \<medium_left_bracket> premises SE and A
+    A[THEN implies_right_prod]
+    SE
+  \<medium_right_bracket> certified apply (simp add: \<phi>)
   \<medium_left_bracket>
     have A : \<open>R2' \<heavy_comma> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
     have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
@@ -443,11 +441,6 @@ lemma ToSA_by_structural_extraction__reverse_transformation:
   \<medium_right_bracket>. .
 
 print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> _\<close> ? ?
-
-declare ToSA_by_structural_extraction
-    [\<phi>reason 90 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
-declare ToSA_by_structural_extraction__reverse_transformation
-    [\<phi>reason 91 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 
 
 
@@ -565,19 +558,19 @@ lemma [\<phi>reason 10 for \<open>Try ?S (Structural_Extract _ _ _ _ (Automatic_
 paragraph \<open>Terminations for Specific Node\<close>
 
 lemma Structural_Extract_\<phi>Some [\<phi>reason 1200]:
-  \<open> \<r>REQUIRE x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+  \<open> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None) P\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Require_def
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Guard_def
   using \<phi>Some_cast .
 
 lemma [\<phi>reason 1211]:
-  \<open> \<r>REQUIRE x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+  \<open> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None)
       (Automatic_Morphism (y' \<Ztypecolon> U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<a>\<n>\<d> P')
             (Structural_Extract (y' \<Ztypecolon> \<black_circle> U') (() \<Ztypecolon> \<phi>None) (x' \<Ztypecolon> \<black_circle> T') (() \<Ztypecolon> \<phi>None) P')
       \<and> P)\<close>
-  unfolding Action_Tag_def \<r>Require_def
-  by (blast intro: Structural_Extract_\<phi>Some[unfolded Action_Tag_def \<r>Require_def]
+  unfolding Action_Tag_def \<r>Guard_def
+  by (blast intro: Structural_Extract_\<phi>Some[unfolded Action_Tag_def \<r>Guard_def]
                    Structural_Extract_reverse_morphism_I)
 
 (*TODO: According to @{thm Agreement_times}, there must be a reasoning mechanism for \<inter>\<^sub>\<phi>
@@ -587,9 +580,9 @@ The bellowing reasoning is too weak! *)
 
 
 lemma Structural_Extract_aggrement_to [\<phi>reason 1200]:
-  \<open> \<r>REQUIRE x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+  \<open> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) P\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Require_def
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Guard_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
     dup
@@ -599,9 +592,9 @@ lemma Structural_Extract_aggrement_to [\<phi>reason 1200]:
 
 
 lemma Structural_Extract_aggrement_from:
-  \<open> \<r>REQUIRE y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P
+  \<open> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P
 \<Longrightarrow> Structural_Extract (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) P\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Require_def
+  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Guard_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
     Agreement_cast[OF A]
@@ -611,14 +604,14 @@ lemma Structural_Extract_aggrement_from:
 
 
 lemma [\<phi>reason 1211]:
-  \<open> \<r>REQUIRE x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+  \<open> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>)
       (Automatic_Morphism (y' \<Ztypecolon> U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<a>\<n>\<d> P')
           (Structural_Extract (y' \<Ztypecolon> Agreement U') (() \<Ztypecolon> \<circle>) (x' \<Ztypecolon> Agreement T') (x' \<Ztypecolon> Agreement T' ?\<^sub>\<phi> C') P')
       \<and> P)\<close>
-  unfolding Action_Tag_def \<r>Require_def
-  by (blast intro: Structural_Extract_aggrement_to  [unfolded Action_Tag_def \<r>Require_def]
-                   Structural_Extract_aggrement_from[unfolded Action_Tag_def \<r>Require_def]
+  unfolding Action_Tag_def \<r>Guard_def
+  by (blast intro: Structural_Extract_aggrement_to  [unfolded Action_Tag_def \<r>Guard_def]
+                   Structural_Extract_aggrement_from[unfolded Action_Tag_def \<r>Guard_def]
                    Structural_Extract_reverse_morphism_I)
 
 
@@ -628,7 +621,7 @@ paragraph \<open>Normalize the Target\<close>
 lemma Structural_Extract_to_mult:
   \<open> Try S1 (Structural_Extract A B Y WY P1)
 \<Longrightarrow> Try S2 (Structural_Extract B C X WX P2)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> S1 \<or> S2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
 \<Longrightarrow> Structural_Extract A C (X * Y) (WX * WY) (P1 \<and> P2)\<close>
   for X :: \<open>'a::sep_algebra set\<close>
   unfolding Structural_Extract_def Simplify_def Action_Tag_def Try_def
@@ -642,7 +635,7 @@ declare Structural_Extract_to_mult [THEN SE_clean_waste, \<phi>reason 1200]
 lemma Structural_Extract_\<phi>Prod_right:
   \<open> Try S1 (Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1)
 \<Longrightarrow> Try S2 (Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> S1 \<or> S2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
 \<Longrightarrow> Structural_Extract A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX) (P1 \<and> P2)\<close>
 for A :: \<open>'a::sep_algebra set\<close>
   unfolding \<phi>Prod_expn'
@@ -655,7 +648,7 @@ paragraph \<open>Step by Step\<close>
 lemma Structural_Extract_from_mult:
   \<open> Try S1 (Structural_Extract X R2 Y Wr P1)
 \<Longrightarrow> Try S2 (Structural_Extract L R Wr Wr2 P2)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> S1 \<or> S2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
 \<Longrightarrow> Structural_Extract (L * X) (R * R2) Y Wr2 (P1 \<and> P2)\<close>
   for X :: \<open>'a::sep_algebra set\<close>
   unfolding Structural_Extract_def Simplify_def Try_def
@@ -670,7 +663,7 @@ declare Structural_Extract_from_mult [THEN SE_clean_waste,  \<phi>reason 1200]
 lemma Structural_Extract_\<phi>Prod_left:
   \<open> Try S1 (Structural_Extract (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) Y W P1)
 \<Longrightarrow> Try S2 (Structural_Extract (y \<Ztypecolon> U) (r \<Ztypecolon> R) W W2 P2)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> S1 \<or> S2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
 \<Longrightarrow> Structural_Extract ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2 (P1 \<and> P2)\<close>
   for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Try_def
@@ -687,7 +680,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
       (Automatic_Morphism RP1 (Structural_Extract (y' \<Ztypecolon> Y') (wy' \<Ztypecolon> WY') A' B' P1') \<and> P1))
 \<Longrightarrow> Try S2 (Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX)
       (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> X') (wx' \<Ztypecolon> WX') B' C' P2') \<and> P2))
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> S1 \<or> S2
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
 \<Longrightarrow> Structural_Extract A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX)
       (Automatic_Morphism (RP1 \<and>\<^sub>\<r> RP2)
         (Structural_Extract ((y',x') \<Ztypecolon> Y' \<^emph> X') ((wy', wx') \<Ztypecolon> WY' \<^emph> WX') A' C' (P1' \<and> P2'))
@@ -746,7 +739,7 @@ lemma "_Structural_Extract_general_rule_":
   \<open> Separation_Functor F1 F4 F14 T Ur
 \<Longrightarrow> Separation_Functor F3 F2 F23 U R
 \<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (yr \<Ztypecolon> F4 Ur) P\<close>
   unfolding Structural_Extract_def
@@ -762,11 +755,11 @@ lemma "_Structural_Extract_general_rule'_":
   \<open> Separation_Functor F1' F4' F14' T' W'
 \<Longrightarrow> Separation_Functor F3' F2' F23' U' R'
 \<Longrightarrow> Transformation_Functor F23' F14' f1' f2'
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f1' = (\<lambda>x. x) \<and> f2' = (\<lambda>x. x)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1' = (\<lambda>x. x) \<and> f2' = (\<lambda>x. x)
 \<Longrightarrow> Separation_Functor F1 F4 F14 T W
 \<Longrightarrow> Separation_Functor F3 F2 F23 U R
 \<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (w \<Ztypecolon> F4 W)
@@ -819,7 +812,7 @@ fn (ctxt,sequent) => Seq.make (fn () =>
 (*
 (*use \<open>k \<^bold>\<rightarrow>\<close> to test*)
 lemma Structural_Extract_\<phi>MapAt:
-  \<open> \<r>REQUIRE \<g>\<u>\<a>\<r>\<d> k' = k
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (yr \<Ztypecolon> k \<^bold>\<rightarrow> Ur) P\<close>
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close>
@@ -833,26 +826,26 @@ declare Structural_Extract_\<phi>MapAt[THEN SE_clean_waste, \<phi>reason 1200]
 
 
 lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> \<r>REQUIRE \<g>\<u>\<a>\<r>\<d> k' = k
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) (r \<Ztypecolon> k \<^bold>\<rightarrow> R) (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) (w \<Ztypecolon> k \<^bold>\<rightarrow> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') (w' \<Ztypecolon> k \<^bold>\<rightarrow> W') (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') (r' \<Ztypecolon> k \<^bold>\<rightarrow> R') P') \<and> P)\<close>
   for T :: \<open>('a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Automatic_Transformation_def \<r>Require_def
-  by (blast intro: Structural_Extract_\<phi>MapAt[unfolded Action_Tag_def \<r>Require_def]
+  unfolding Automatic_Transformation_def \<r>Guard_def
+  by (blast intro: Structural_Extract_\<phi>MapAt[unfolded Action_Tag_def \<r>Guard_def]
                    Structural_Extract_imply_P) *)
 
 
 lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested once we have usable test case*)
-  \<open> \<g>\<u>\<a>\<r>\<d> c * a = b
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
 \<Longrightarrow> Scala_Semimodule_Functor F3 U D
 \<Longrightarrow> Scala_Semimodule_Functor F4 W D
 \<Longrightarrow> Separation_Functor (F1 a) (F4 a) F14 T (F4 c W)
 \<Longrightarrow> Separation_Functor (F3 a) (F2 a) F23 (F3 c U) R
 \<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> a \<in> D \<and> b \<in> D \<and> c \<in> D
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> D \<and> b \<in> D \<and> c \<in> D
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> F3 c U) (yr \<Ztypecolon> F4 c W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 a T) (r \<Ztypecolon> F2 a R) (y \<Ztypecolon> F3 b U) (yr \<Ztypecolon> F4 b W) P\<close>
   unfolding Structural_Extract_def
@@ -872,14 +865,14 @@ lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested o
   \<medium_right_bracket> .
 
 lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
-  \<open> \<g>\<u>\<a>\<r>\<d> c * b = a
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * b = a
 \<Longrightarrow> Scala_Semimodule_Functor F1 T D
 \<Longrightarrow> Scala_Semimodule_Functor F2 R D
 \<Longrightarrow> Separation_Functor (F1 b) (F4 b) F14 (F1 c T) W
 \<Longrightarrow> Separation_Functor (F3 b) (F2 b) F23 U (F2 c R)
 \<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> a \<in> D \<and> b \<in> D \<and> c \<in> D
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> D \<and> b \<in> D \<and> c \<in> D
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 c T) (r \<Ztypecolon> F2 c R) (y \<Ztypecolon> U) (yr \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 a T) (r \<Ztypecolon> F2 a R) (y \<Ztypecolon> F3 b U) (yr \<Ztypecolon> F4 b W) P\<close>
   unfolding Structural_Extract_def
@@ -902,7 +895,7 @@ lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
 paragraph \<open>Structural Nodes\<close>
 
 lemma Structural_Extract_\<phi>MapAt_L:
-  \<open> \<r>REQUIRE \<g>\<u>\<a>\<r>\<d> k' = k
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ Ur) P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
@@ -914,27 +907,27 @@ lemma Structural_Extract_\<phi>MapAt_L:
 declare Structural_Extract_\<phi>MapAt_L [THEN SE_clean_waste, \<phi>reason 1200]
 
 lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> \<r>REQUIRE \<g>\<u>\<a>\<r>\<d> k' = k
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (yr' \<Ztypecolon> Ur') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ Ur)
       (Automatic_Morphism RP
         (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (yr' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ Ur') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)\<close>
 for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def \<r>Require_def
-  by (blast intro: Structural_Extract_\<phi>MapAt_L[unfolded Action_Tag_def \<r>Require_def]
+  unfolding Automatic_Transformation_def atomize_imp atomize_conj Action_Tag_def \<r>Guard_def
+  by (blast intro: Structural_Extract_\<phi>MapAt_L[unfolded Action_Tag_def \<r>Guard_def]
                    Structural_Extract_imply_P)
 
 
 
 lemma Structural_Extract_\<phi>MapAt_L_pad_left:
-  \<open> \<r>REQUIRE
-    \<g>\<u>\<a>\<r>\<d> length k < length k'
-&&& \<g>\<u>\<a>\<r>\<d> k @ kd = k'
+  \<open> \<g>\<u>\<a>\<r>\<d>
+    \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> length k < length k'
+&&& \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k @ kd = k'
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Premise_def \<r>Require_def conjunction_imp
+  unfolding Structural_Extract_def Premise_def \<r>Guard_def conjunction_imp
   subgoal premises prems
     apply (insert prems(3),
        simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
@@ -945,13 +938,13 @@ declare Structural_Extract_\<phi>MapAt_L_pad_left [THEN SE_clean_waste, \<phi>re
 
 
 lemma Structural_Extract_\<phi>MapAt_L_pad_right:
-  \<open> \<r>REQUIRE
-    \<g>\<u>\<a>\<r>\<d> length k' < length k
-&&& \<g>\<u>\<a>\<r>\<d> k' @ kd = k
+  \<open> \<g>\<u>\<a>\<r>\<d>
+    \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> length k' < length k
+&&& \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' @ kd = k
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Premise_def \<r>Require_def conjunction_imp
+  unfolding Structural_Extract_def Premise_def \<r>Guard_def conjunction_imp
   subgoal premises prems
     apply (insert prems(3),
        simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
@@ -962,9 +955,9 @@ declare Structural_Extract_\<phi>MapAt_L_pad_right [THEN SE_clean_waste, \<phi>r
 
 
 lemma [THEN SE_clean_waste', \<phi>reason 1183]:
-  \<open> \<r>REQUIRE
-    \<g>\<u>\<a>\<r>\<d> length k < length k'
-&&& \<g>\<u>\<a>\<r>\<d> k @ kd = k'
+  \<open> \<g>\<u>\<a>\<r>\<d>
+    \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> length k < length k'
+&&& \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k @ kd = k'
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U') (w' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W)
@@ -977,9 +970,9 @@ lemma [THEN SE_clean_waste', \<phi>reason 1183]:
                    Structural_Extract_imply_P)
 
 lemma [THEN SE_clean_waste', \<phi>reason 1153]:
-  \<open> \<r>REQUIRE
-    \<g>\<u>\<a>\<r>\<d> length k' < length k
-&&& \<g>\<u>\<a>\<r>\<d> k' @ kd = k
+  \<open> \<g>\<u>\<a>\<r>\<d>
+    \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> length k' < length k
+&&& \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' @ kd = k
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W)
@@ -1098,7 +1091,7 @@ text \<open>Then, according to the expected permission n and the permission m th
   \<^item> m > n\<close>
 (*
 TODO: re-enable this! *)
- 
+
 lemma Structural_Extract_share_half:
     \<comment> \<open>if only requires a half of the permission, give it a half of that currently we have.\<close>
   \<open> \<phi>Sep_Disj_Identical T
@@ -1154,40 +1147,40 @@ lemma
 
 lemma Structural_Extract_share_eq:
   \<comment> \<open>If requires exactly what we have now, typically this happens after the previous rule or n = 1.\<close>
-  \<open> \<r>REQUIRE \<g>\<u>\<a>\<r>\<d> m = n
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m = n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W) P \<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def \<phi>Prod_expn'[symmetric] Premise_def \<r>Require_def conjunction_imp
+  unfolding Structural_Extract_def \<phi>Prod_expn'[symmetric] Premise_def \<r>Guard_def conjunction_imp
   apply (simp add: \<phi>Share_\<phi>Prod[symmetric])
   using \<phi>Share_transformation .
 
 declare Structural_Extract_share_eq [THEN SE_clean_waste, \<phi>reason 1200]
 
 lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> \<r>REQUIRE \<g>\<u>\<a>\<r>\<d> m = n
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m = n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W)
       (Automatic_Morphism RP
           (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> m \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Automatic_Transformation_def Action_Tag_def \<r>Require_def conjunction_imp
-  by (blast intro: Structural_Extract_share_eq[unfolded Action_Tag_def \<r>Require_def conjunction_imp]
+  unfolding Automatic_Transformation_def Action_Tag_def \<r>Guard_def conjunction_imp
+  by (blast intro: Structural_Extract_share_eq[unfolded Action_Tag_def \<r>Guard_def conjunction_imp]
                    Structural_Extract_imply_P)
 
 
 
 lemma Structural_Extract_share_ge:
   \<comment> \<open>If requires less than what we have, give it.\<close>
-  \<open> \<r>REQUIRE
-    \<g>\<u>\<a>\<r>\<d> 0 < n \<and> n < m
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> n < m
 &&& \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def \<phi>Prod_expn' Action_Tag_def conjunction_imp \<r>Require_def
-  \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and [\<phi>reason] and X
+  unfolding Structural_Extract_def \<phi>Prod_expn' Action_Tag_def conjunction_imp \<r>Guard_def
+  \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and [\<phi>reason] and _ and X
     share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
     X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
@@ -1201,14 +1194,14 @@ declare Structural_Extract_share_ge [THEN SE_clean_waste, \<phi>reason 1180]
 
 lemma Structural_Extract_share_le:
   \<comment> \<open>If requires more than what we have, give all what we can give.\<close>
-  \<open> \<r>REQUIRE
-    \<g>\<u>\<a>\<r>\<d> 0 < m \<and> m < n
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m < n
 &&& \<phi>Sep_Disj_Identical U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < m
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Structural_Extract_def \<phi>Prod_expn' conjunction_imp \<r>Require_def
-  \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and X
+  unfolding Structural_Extract_def \<phi>Prod_expn' conjunction_imp \<r>Guard_def
+  \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and _ and X
     X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
         THEN implies_left_prod, folded mult.assoc]
 
@@ -1226,34 +1219,34 @@ declare Structural_Extract_share_le[THEN SE_clean_waste, \<phi>reason 1170]
 
 lemma [THEN SE_clean_waste', \<phi>reason 1183]:
   \<comment> \<open>If requires less than what we have, give it.\<close>
-  \<open> \<r>REQUIRE
-    \<g>\<u>\<a>\<r>\<d> 0 < n \<and> n < m
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> n < m
 &&& \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W)
-      (Automatic_Morphism (RP \<and>\<^sub>\<r> (\<g>\<u>\<a>\<r>\<d> m-n = mn) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
+      (Automatic_Morphism (RP \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m-n = mn) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
         (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> n \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') ((r',x') \<Ztypecolon> (n \<Znrres> R' \<^emph> mn \<Znrres> T')) P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
   unfolding Automatic_Transformation_def Compact_Antecedent_def Premise_def
-            conjunction_imp \<r>Require_def
-  by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def \<r>Require_def conjunction_imp]
-                   Structural_Extract_share_le[unfolded Action_Tag_def \<r>Require_def conjunction_imp]
+            conjunction_imp \<r>Guard_def
+  by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def \<r>Guard_def conjunction_imp]
+                   Structural_Extract_share_le[unfolded Action_Tag_def \<r>Guard_def conjunction_imp]
                    Structural_Extract_imply_P)
 
 lemma [THEN SE_clean_waste', \<phi>reason 1173]:
-  \<open> \<r>REQUIRE
-    \<g>\<u>\<a>\<r>\<d> 0 < m \<and> m < n
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m < n
 &&& \<phi>Sep_Disj_Identical U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < m
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U)
-      (Automatic_Morphism (RP \<and>\<^sub>\<r> (\<g>\<u>\<a>\<r>\<d> nm = n - m) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical U')
+      (Automatic_Morphism (RP \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> nm = n - m) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical U')
         (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') ((w',y') \<Ztypecolon> m \<Znrres> W' \<^emph> nm \<Znrres> U') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
-  unfolding Automatic_Transformation_def Compact_Antecedent_def Premise_def conjunction_imp \<r>Require_def
-  by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def conjunction_imp \<r>Require_def]
-                   Structural_Extract_share_le[unfolded Action_Tag_def conjunction_imp \<r>Require_def]
+  unfolding Automatic_Transformation_def Compact_Antecedent_def Premise_def conjunction_imp \<r>Guard_def
+  by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def conjunction_imp \<r>Guard_def]
+                   Structural_Extract_share_le[unfolded Action_Tag_def conjunction_imp \<r>Guard_def]
                    Structural_Extract_imply_P)
 
 
@@ -1689,7 +1682,7 @@ definition EqualAddress :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool "
   where "EqualAddress _ _ = True"
 
 lemma [\<phi>reason]:
-  "\<g>\<u>\<a>\<r>\<d> a1 = a2
+  "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a1 = a2
    \<Longrightarrow> EqualAddress (a1 \<Zinj> x1 \<Ztypecolon> T1) (a2 \<Zinj> x2 \<Ztypecolon> T2) "
   unfolding EqualAddress_def .. *)
 

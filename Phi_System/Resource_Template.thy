@@ -85,21 +85,48 @@ begin
 
 subsubsection \<open>\<phi>-Type\<close>
 
-definition \<phi> :: \<open>(fiction, 'U) \<phi>\<close> where [\<phi>expns]: \<open>\<phi> = \<phi>Fun mk\<close>
+(*TODO:
+
+\<phi>type_def \<phi> :: \<open>('U,'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close> where [\<phi>expns]: \<open>\<phi> T = (\<phi>Fun mk \<Zcomp> T)\<close>
 
 lemma [\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>) \<Longrightarrow> C \<Longrightarrow> C\<close>
+  \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+*)
+
+definition \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
+    \<comment> \<open>\<phi>Type for level-1 mapping\<close>
+  where \<open>\<phi> T = (\<lambda>x. { mk v |v. v \<in> (x \<Ztypecolon> T) })\<close>
+
+lemma \<phi>_expn[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = mk v \<and> v \<in> (x \<Ztypecolon> T))\<close>
+  unfolding \<phi>Type_def \<phi>_def by simp
+
+lemma \<phi>_inhabited[\<phi>inhabitance_rule, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
-declare [[\<phi>trace_reasoning = 2]]
+lemma \<phi>_Prod:
+  \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
+  apply (metis mk_homo_mult)
+  by (metis fun_1upd_homo inj.homo_mult sep_disj_mk)
 
-lemma \<phi>_separation_homo_eq[\<phi>reason add]:
-  \<open>Separation_Homo_eq \<phi>\<close>
-  unfolding \<phi>_def
-  by (\<phi>reason)
+lemma \<phi>_\<phi>None:
+  \<open>\<phi> \<circle> = \<circle>\<close>
+  by (rule \<phi>Type_eqI; simp add: \<phi>expns)
 
-sublocale Unit_Homo_L \<open>True\<close> \<open>\<phi>\<close>
-  by (standard; unfold \<phi>_def; \<phi>reason)
+lemma \<phi>_unit:
+  \<open>(1 \<Ztypecolon> \<phi> Identity) = Void\<close>
+  by (clarsimp simp add: set_eq_iff \<phi>_expn Identity_expn)
+
+lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
+  \<open>(x \<Ztypecolon> \<phi> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>_\<phi>None by simp
+
+lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
+  \<open>(x \<Ztypecolon> \<phi> \<circle>) = 1 @action clean_automation_waste\<close>
+  unfolding Action_Tag_def \<phi>_\<phi>None by simp
 
 
 (*
@@ -111,40 +138,44 @@ lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<i>\<m>\
 
 paragraph \<open>Reasoning Rules\<close>
 
-lemma ToSA_by_structural_extraction:
-  " Structure_Info U Q
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
-\<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W P2))
-\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> P1
-\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d> P1 \<and> P2"
-  unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def Try_def \<r>Call_def
-  \<medium_left_bracket> premises SI and Q and SE and A
-  have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-  ;;  A[THEN implies_right_prod]
-     SE[OF \<open>Q'\<close>]
-  \<medium_right_bracket> certified using \<phi> by simp .
+lemma \<phi>_cast:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P\<close>
+  unfolding Imply_def by (clarsimp simp add: \<phi>expns)
 
-lemma ToSA_by_structural_extraction__reverse_morphism:
-  " Structure_Info U Q
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Q' : Q
-\<Longrightarrow> (Q' \<Longrightarrow> \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> \<phi> U) R1 (x \<Ztypecolon> \<phi> T) W
-             (Automatic_Morphism RP2 (Structural_Extract (x' \<Ztypecolon> \<phi> T') W' (y' \<Ztypecolon> \<phi> U') R1' P2') \<and> P2)))
-\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> (Automatic_Morphism RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1') \<and> P1)
-\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> \<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d>
-      (Automatic_Morphism (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> \<phi> T' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A'\<heavy_comma> y' \<Ztypecolon> \<phi> U' \<a>\<n>\<d> P1' \<and> P2')
-          \<and> P1 \<and> P2)"
-  unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def
-            Automatic_Transformation_def Compact_Antecedent_def Try_def \<r>Call_def
-  \<medium_left_bracket> premises SI and Q and SE and A
-  have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-  ;; A[THEN implies_right_prod]
-     SE[OF \<open>Q'\<close>]
-  \<medium_right_bracket> certified apply  (simp add: \<phi>)
-  \<medium_left_bracket>
-    have A : \<open>R2' \<heavy_comma> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
-    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
-    ;; SE A[THEN implies_right_prod]
-  \<medium_right_bracket>. .
+lemma \<phi>_Structural_Extract:
+  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W) P\<close>
+  unfolding Structural_Extract_def
+  by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
+
+declare \<phi>_Structural_Extract[THEN SE_clean_waste, \<phi>reason 1200]
+
+lemma [THEN SE_clean_waste', \<phi>reason 1211]:
+  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
+      (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W)
+      (Automatic_Morphism RP (Structural_Extract (y' \<Ztypecolon> \<phi> U') (w' \<Ztypecolon> \<phi> W') (x' \<Ztypecolon> \<phi> T') (r' \<Ztypecolon> \<phi> R') P') \<and> P)\<close>
+  unfolding Automatic_Transformation_def Action_Tag_def
+  by (blast intro: \<phi>_Structural_Extract[unfolded Action_Tag_def]
+                   Structural_Extract_imply_P)
+
+lemma [\<phi>reason 1100]:
+  \<open> Structure_Info T P
+\<Longrightarrow> Structure_Info (\<phi> T) P\<close>
+  unfolding Structure_Info_def
+  by blast
+
+thm ToSA_by_structural_extraction
+    [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> for T U]
+
+declare ToSA_by_structural_extraction
+    [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> for T U,
+     \<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
+
+declare ToSA_by_structural_extraction__reverse_transformation
+    [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> and T'=\<open>\<phi> T'\<close> and U'=\<open>\<phi> U'\<close> for T T' U U',
+     \<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 
 
 lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<a>\<n>\<d> _\<close> ]:
@@ -165,9 +196,9 @@ lemma [\<phi>reason 1200]:
 
 
 lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean (x \<Ztypecolon> T)
-\<Longrightarrow> \<r>Clean (x \<Ztypecolon> \<phi> T) \<close>
-  unfolding \<r>Clean_def Imply_def apply (simp add: \<phi>expns)
+  \<open> Is_Stateless (x \<Ztypecolon> T)
+\<Longrightarrow> Is_Stateless (x \<Ztypecolon> \<phi> T) \<close>
+  unfolding Is_Stateless_def Imply_def apply (simp add: \<phi>expns)
   using mk_homo_one by blast
 
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<phi> _) (_ \<Ztypecolon> \<phi> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
@@ -417,10 +448,12 @@ paragraph \<open>\<phi>-Type\<close>
 
 abbreviation \<open>\<phi>_ag T \<equiv> \<phi> (Agreement (Nosep T))\<close>
 
+(*
 declare ToSA_by_structural_extraction
     [\<phi>reason 1210 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 declare ToSA_by_structural_extraction__reverse_morphism
     [\<phi>reason 1213 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
+*)
 
 lemma \<phi>_double_\<phi>app:
   \<open>x \<Ztypecolon> \<phi>_ag T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>
@@ -705,10 +738,13 @@ begin
 
 sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<F>_it Fic ..
 
-lemmas setter_rule = "_setter_rule_2_"[OF \<F>_it_refinement \<F>_it_refinement_projection]
+lemmas setter_rule = "_setter_rule_2_"[OF \<F>_it_refinement \<F>_it_refinement_projection
+                                          Premise_D[where mode=default]]
 lemmas getter_rule = "_getter_rule_2_"[OF \<F>_it_refinement_projection]
 lemmas allocate_rule = "__allocate_rule_2__"
-                            [OF \<F>_pointwise_refinement[OF \<F>_it_refinement, where u1=1, simplified]]
+                            [OF \<F>_pointwise_refinement[OF \<F>_it_refinement, where u1=1, simplified]
+                                Premise_D[where mode=default]
+                                Premise_D[where mode=default]]
 
 end
 

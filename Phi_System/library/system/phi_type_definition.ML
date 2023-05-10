@@ -40,8 +40,15 @@ type phi_type = {
         algebras: thm list
 }
 
+
 fun constants_name_of ({def,...} : phi_type) =
-      case def of DIRECT_DEF (_,(_,th)) => [leading_const_name th]
+      case def of DIRECT_DEF (_,(_,th)) =>
+                    [ Term.term_name (Term.head_of (
+                          case Thm.concl_of th
+                            of Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ A $ _ ) => A
+                             | Const (\<^const_name>\<open>Pure.eq\<close>, _) $ A $ _ => A
+                             | _ => error "internal bug #vb43qp"
+                      )) ]
                 | RECURSIVE_DEF info => map Binding.name_of (#fnames info)
 
 type declaration = phi_type * algebra_hints -> local_theory -> phi_type * local_theory

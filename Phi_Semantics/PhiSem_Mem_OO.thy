@@ -265,17 +265,15 @@ lemma op_obj_load_field_raw_\<phi>app:
 \<rbrace>\<close>
   unfolding op_obj_load_field_def Premise_def
   by (rule \<phi>M_getV_ref, rule, rule \<phi>SEQ, rule \<phi>M_assert, simp, rule, simp add: Identity_expn)
-
-declare [[\<phi>trace_reasoning = 2]]
    
 proc (nodef) op_obj_load_field:
   requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
   output \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> \<v>\<a>\<l> x \<Ztypecolon> T\<close>
-  \<medium_left_bracket> \<open>obj: _\<close> to Identity \<exists>v
+\<medium_left_bracket> \<open>obj: _\<close> to Identity \<exists>v
   have [simp]: \<open>v \<in> Well_Type TY\<close> using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
   ;; $ref op_obj_load_field_raw[where TY=TY]
-  \<medium_right_bracket> certified by (simp add: Nosep_expns the_\<phi>lemmata) .
+\<medium_right_bracket> certified by (simp add: Nosep_expns the_\<phi>lemmata) .
   
 
 paragraph \<open>Store Field\<close>

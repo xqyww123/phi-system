@@ -134,7 +134,7 @@ subsection \<open>Show validity of an index for a type\<close>
 declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason 1200]:
-  \<open> \<g>\<u>\<a>\<r>\<d> i < length Tys
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < length Tys
 \<Longrightarrow> Simplify eval_semantic_index Ty (Tys!i) 
 \<Longrightarrow> valid_index Ty L
 \<Longrightarrow> valid_index (tup Tys) (i#L)\<close>

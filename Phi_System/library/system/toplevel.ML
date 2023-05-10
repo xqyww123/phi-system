@@ -501,8 +501,10 @@ fun prove_prem int after_qed'' stat =
 
 datatype ('a,'b) modifier = Mod_by_Rule of 'a | Mod_by_Attr of 'b
 
-structure Finishing_Modifier_Hooks = Hooks (type arg = unit)
-structure Finishing_Construction_Hooks = Hooks (type arg = unit)
+structure Finishing_Modifier_Hooks = Hooks (type arg = unit
+                                            type state = context_state)
+structure Finishing_Construction_Hooks = Hooks (type arg = unit
+                                                type state = context_state)
 
 structure Procedure_Building_Envir = Proof_Data (
   type T = binding option
@@ -530,7 +532,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
                  | Mod_by_Attr attr =>
                           fold (Phi_Modifier.apply_wrapped_attribute o prep_attr ctxt) attr
                ) raw_modifiers
-         |> Finishing_Modifier_Hooks.invoke ()
+         |> Finishing_Modifier_Hooks.invoke (Context.Proof ctxt) ()
 
     fun prep_attrterm prep ((b,attrs),(prop, pats)) =
           ((b, map (Attrib.check_src lthy) attrs), (prep prop, map parse_term pats))
@@ -560,7 +562,7 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
 
     fun post_process' binding int lthy th =
       (lthy,th)
-        |> Finishing_Construction_Hooks.invoke ()
+        |> Finishing_Construction_Hooks.invoke (Context.Proof lthy) ()
         |> Phi_Procedure.define def_const binding
         |> (fn (lthy, th) =>
               (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
@@ -595,8 +597,10 @@ val begin_proc_cmd =
 
 (** Statement **)
 
-structure Begining_of_Statement = Hooks(type arg = unit)
-structure End_of_Statement = Hooks(type arg = unit)
+structure Begining_of_Statement = Hooks (type arg = unit
+                                         type state = context_state)
+structure End_of_Statement = Hooks (type arg = unit
+                                    type state = context_state)
 
 (*Whether to remove all values at the beginning of the command \<^bold>;*)
 val statement_clean_values = Attrib.setup_config_bool \<^binding>\<open>\<phi>statement_clean_values\<close> (K true)
@@ -612,9 +616,11 @@ fun clean_values (ctxt,sequent) =
 
 fun statement_cmd auto_lev =
   Phi_Processor.powerful_process_p auto_lev (
-                           Phi_Envir.map_state_sequent (End_of_Statement.invoke ()))
+                        Phi_Envir.map_state_sequent (fn (ctxt,sequent) =>
+                            End_of_Statement.invoke (Context.Proof ctxt) () (ctxt,sequent)))
     >> (fn process =>
-              Phi_Envir.map_state_sequent (Begining_of_Statement.invoke ())
+              Phi_Envir.map_state_sequent (fn (ctxt,sequent) =>
+                    Begining_of_Statement.invoke (Context.Proof ctxt) () (ctxt,sequent))
            #> process
      (*the return of the process doesn't mean the end of the construction because the construction
        can be interrupted and suspended by proofs.*)

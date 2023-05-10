@@ -179,7 +179,7 @@ consts MODE_\<phi>EXPN :: mode \<comment> \<open>relating to named_theorems \<op
 abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>expn_Premise \<equiv> Premise MODE_\<phi>EXPN\<close>
 
 \<phi>reasoner \<phi>expn_Premise 10 (\<open><\<phi>expn> ?P\<close>)
-  = (rule Premise_I; simp add: \<phi>expns)
+  = (rule Premise_I; simp add: \<phi>expns useful)
 
 text \<open>Antecedent \<^prop>\<open><\<phi>expn> P\<close> indicates the reasoner solving the premise \<^prop>\<open>P\<close> using
   simplification rules of \<open>\<phi>expns\<close>.\<close>

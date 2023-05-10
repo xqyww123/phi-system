@@ -3,13 +3,13 @@
 
    The syntax parser for procedure specification.
 
-It is invoked once there is an anonymous value in the argument specification,
-or once the return specification is not a lambda abstraction nor an atom (a variable or a constant).
+It is invoked once there are anonymous values in the argument specification,
+or once the return specification is not given as an explicit lambda abstraction about the return values.
 For translation in argument specification, all anonymous values are replaces by a free variable
   generated automatically.
-For return specification, it collects all semantic values have \<^typ>\<open>'a \<phi>arg\<close> in the spec,
+For return specification, it collects all semantic values having \<^typ>\<open>'a \<phi>arg\<close> in the spec,
   and wrap the spec by a lambda abstraction over the semantic values, using the pair encoding
-  of multi-return-values.
+  of multi-return-values (rn, ...\<^bold>, r2 \<^bold>, r1).
 *)
 
 signature PROCEDURE_SYNTAX = sig
@@ -158,6 +158,7 @@ fun collect_vals Vs (v as Const (\<^const_name>\<open>anonymous\<close>, _)) = v
       = v::Vs
   | collect_vals Vs (Const (\<^const_name>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
   | collect_vals Vs (Const (\<^const_syntax>\<open>Val\<close>, _) $ v) = insert (op = ) v Vs
+  | collect_vals Vs (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ X) = collect_vals Vs X
   | collect_vals Vs (Abs (_,_,X)) = collect_vals Vs X
   | collect_vals Vs (X $ Y) =
       if R2L
@@ -200,6 +201,8 @@ fun map_ret Tys i VS (j, Const (\<^const_name>\<open>anonymous\<close>, _))
       = (j, h $ mk_projection Tys VS i v)
   | map_ret Tys i VS (j, (h as Const (\<^const_syntax>\<open>Val\<close>, _)) $ v)
       = (j, h $ mk_projection Tys VS i v)
+  | map_ret Tys i VS (j, (h as Const (\<^const_name>\<open>\<phi>Type\<close>, _)) $ A $ B)
+      = (case map_ret Tys i VS (j, B) of (j',B') => (j', h $ A $ B'))
   | map_ret Tys i VS (j, Abs (name,ty,X))
       = (case map_ret Tys (i+1) VS (j, X) of (j',X') => (j', Abs (name, ty,X')))
   | map_ret Tys i VS (j, X $ Y)

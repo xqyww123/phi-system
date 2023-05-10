@@ -42,6 +42,8 @@ lemma Valid_Proc_\<phi>M_getV_raw[intro!, \<phi>reason 1200]:
   unfolding Valid_Proc_def \<phi>M_getV_raw_def
   by blast
 
+(*to depreciate the above!*)
+
 
 subsection \<open>Reasoning for Elementary Constructions\<close>
 
@@ -51,6 +53,13 @@ lemma \<phi>M_assert[intro!]:
   \<open>(Inhabited X \<Longrightarrow> P) \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any\<close>
   unfolding \<phi>M_assert_def
   by (rule \<phi>Inhabited; simp; rule)
+
+lemma semantic_assert_\<phi>app:
+  \<open> \<p>\<a>\<r>\<a>\<m> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert P \<lbrace> X \<longmapsto> \<lambda>_. X \<rbrace>\<close>
+  unfolding \<phi>M_assert_def Premise_def
+  by (simp; rule)
 
 lemma \<phi>M_assert_True[simp]:
   \<open>\<phi>M_assert True = Return \<phi>V_none\<close>
@@ -98,6 +107,21 @@ lemma \<phi>M_caseV[intro!]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_caseV F (\<phi>V_pair va vb) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_caseV_def \<phi>V_pair_def by simp
 
+(*to depreciate the above!*)
+
+lemma semantic_return_\<phi>app:
+  \<open> \<p>\<a>\<r>\<a>\<m> (v \<in> (y \<Ztypecolon> T))
+\<Longrightarrow> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
+  unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
+  by (clarsimp simp add: \<phi>expns)
+
+lemma semantic_local_value_\<phi>app:
+  \<open> \<p>\<a>\<r>\<a>\<m> TY
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<longmapsto> \<lambda>_. Void \<s>\<u>\<b>\<j> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<rbrace>\<close>
+  unfolding \<phi>M_assert_def Premise_def \<phi>SemType_def subset_iff \<phi>Procedure_def det_lift_def Return_def
+  by (clarsimp simp add: \<phi>expns)
 
 subsection \<open>Drop & Duplicate Value\<close>
 

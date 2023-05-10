@@ -6,6 +6,7 @@ theory Phi_Logic_Programming_Reasoner
   abbrevs
       "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
   and "<guard>" = "\<g>\<u>\<a>\<r>\<d>"
+  and "<condition>" = "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>"
   and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
   and "<threshold>" = "\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>"
   and "!!" = "!!"
@@ -19,9 +20,14 @@ ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 ML_file_debug \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
+ML_file \<open>library/tools/Hook.ML\<close>
 
 
-definition \<r>Require :: \<open>prop \<Rightarrow> prop\<close> ("\<r>REQUIRE _" [2] 2) where [iff]: \<open>\<r>Require X \<equiv> X\<close>
+definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where [iff]: \<open>\<r>Guard X \<equiv> X\<close>
+    \<comment> \<open>If guards of a rule fail, the rule will be considered not appliable, just like the pattern
+        mismatch. It makes difference for cut rule and default 'to-be-overrided' rules.
+        If the rule is considered not appliable, the cut will not make effect and it will not
+        override default 'to-be-overrided' rules. \<close>
 
 typedecl action
 
@@ -34,7 +40,7 @@ lemma Action_Tag_I:
 
 ML_file_debug \<open>library/reasoner.ML\<close>
 
-lemma \<r>Require_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Require P\<close> unfolding \<r>Require_def .
+lemma \<r>Guard_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Guard P\<close> unfolding \<r>Guard_def .
 
 section \<open>Introduction\<close>
 
@@ -290,10 +296,10 @@ declare conjI[\<phi>reason add 1000] TrueI[\<phi>reason 1000]
 paragraph \<open>\<open>\<r>\<close>Feasible \label{sec:rFeasible}\<close>
 
 text \<open>Cut rules including local cut and global cut are those of priority $\geq$ 1000.
-A cut rule can have at most one special \<open>\<r>Require\<close> antecedent at the leading position,
+A cut rule can have at most one special \<open>\<r>Guard\<close> antecedent at the leading position,
 which determines the condition of the rule to be applied, e.g. the following rule can be applied
 only if \<open>A1\<close> and \<open>A2\<close> are solvable.
-\[ \<open>\<r>Require (A1 &&& A2) \<Longrightarrow> A3 \<Longrightarrow> C\<close> \]
+\[ \<open>\<r>Guard (A1 &&& A2) \<Longrightarrow> A3 \<Longrightarrow> C\<close> \]
 It provides a mechanism to constrain semantic conditions of applying the rule,
 whereas the pattern matches mentioned earlier are only able to check the syntactical conditions.
 \<close>
@@ -609,7 +615,7 @@ definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where "Premis
 
 abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
-abbreviation Simp_Premise ("\<g>\<u>\<a>\<r>\<d> _" [27] 26)
+abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [27] 26)
   where "Simp_Premise \<equiv> Premise MODE_SIMP"
 abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27] 26)
   where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
@@ -618,7 +624,7 @@ text \<open>
   \<^prop>\<open>Premise mode P\<close> represents an ordinary proposition has to be proved during the reasoning.
   There are different modes expressing different roles in the reasoning.
 
-  \<^descr> \<^prop>\<open>\<g>\<u>\<a>\<r>\<d> P\<close> is a \<^emph>\<open>guard\<close> of a rule, which constrains that the rule is appliable only
+  \<^descr> \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is a \<^emph>\<open>guard\<close> of a rule, which constrains that the rule is appliable only
   when \<^prop>\<open>P\<close> can be solved \<^emph>\<open>automatically\<close> during the reasoning.
   If \<^prop>\<open>P\<close> fails to be solved, even if it is actually valid, the rule will not be applied.
   Therefore, \<^prop>\<open>P\<close> has to be as simple as possible. The tactic used to solve \<^prop>\<open>P\<close> is
@@ -627,7 +633,7 @@ text \<open>
   non-blocking commonly.
   A blocking search branch blocks the whole reasoning, which is not acceptable.
 
-  \<^prop>\<open>\<g>\<u>\<a>\<r>\<d> P\<close> is not for proof obligations that are intended to be solved by users.
+  \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is not for proof obligations that are intended to be solved by users.
   It is more like 'controller or switch' of the rules, i.e. \<^emph>\<open>guard\<close>.
 
   \<^descr> \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> represents a proof obligation.
@@ -736,7 +742,7 @@ ML_file "library/reasoners.ML"
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.defer_obligation_tac\<close>
 
-\<phi>reasoner_ML Simp_Premise 10 (\<open>\<g>\<u>\<a>\<r>\<d> ?P\<close>)
+\<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.safer_obligation_solver1 #> Seq.single\<close>
 
 

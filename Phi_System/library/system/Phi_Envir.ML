@@ -98,12 +98,13 @@ val update_programming_sequent' = gen_update_programming_sequent'
 
 
 structure Enter_Programming_Environ =
-              Hooks (type arg = int (*level of the environ, starting from 0*))
+              Hooks (type arg = int (*level of the environ, starting from 0*)
+                     type state = context_state)
 
 fun enter_programming_environ' stat =
   let
     val level = length (Programming_Sequent.get (fst stat))
-    val (ctxt',sequent') = Enter_Programming_Environ.invoke level stat
+    val (ctxt',sequent') = Enter_Programming_Environ.invoke (Context.Proof (fst stat)) level stat
   in gen_update_programming_sequent'
           (fn ctxt => fn data => Programming_Sequent.map (fn L => data L :: L) ctxt)
           sequent' ctxt'
@@ -237,6 +238,10 @@ val _ = Theory.setup (
     )
   "theorems to be inserted in the automatic proving, \
   \having the same effect of using the @{command using} command."
+
+#> Context.theory_map (Phi_Reasoners.Tactic_Configures.add 0
+      (fn _ => fn (aux,tac,ctxt) =>
+          (Proof_Context.get_thms ctxt "IDE_CP_Core.\<phi>implication" @ aux,tac,ctxt)))
 )
 
 

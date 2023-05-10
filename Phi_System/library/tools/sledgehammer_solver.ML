@@ -345,7 +345,11 @@ fun sledgehammer (ctxt,sequent0) =
 fun auto' id (ctxt,sequent') =
   let
     val thy = Proof_Context.theory_of ctxt
-    val _ = tracing ("auto sledgehammer for "^id)
+    val _ = tracing (Pretty.string_of (Pretty.chunks [
+                        Pretty.block [ Pretty.str "auto sledgehammer for ",
+                                       Pretty.str id],
+                        Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent')
+                    ]))
     val sequent = @{thm Premise_I} RS sequent' handle THM _ => sequent'
 
     fun try_cached_proof fallback =

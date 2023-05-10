@@ -61,7 +61,8 @@ val is_constructing_recursive_procedure = Is_Recursive.get
 val _ = Phi_Toplevel.Finishing_Construction_Hooks.add 100 (fn () =>
           apfst (Is_Recursive.put false))
 
-structure Applying_Recursive_Modifier = Hooks(type arg = unit)
+structure Applying_Recursive_Modifier = Hooks (type arg = unit
+                                               type state = context_state)
 
 fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
   let
@@ -69,7 +70,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
             then error "the procedure has already been declared recursive"
             else ()
     val (ctxt0,sequent0) = (ctxt01,sequent01)
-          |> Applying_Recursive_Modifier.invoke ()
+          |> Applying_Recursive_Modifier.invoke (Context.Proof ctxt01) ()
           |> apfst (Is_Recursive.put true)
     val sequent = sequent0
                   (*first pack all premises*)

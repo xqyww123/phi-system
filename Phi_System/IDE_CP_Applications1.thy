@@ -355,7 +355,7 @@ lemma [\<phi>reason 10]:
   unfolding Action_Tag_def .
 
 lemma [\<phi>reason 1]:
-  \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> S)
+  \<open> ERROR TEXT(\<open>Fail to transform\<close> X \<open>to\<close> S)
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action as S\<close>
   unfolding Action_Tag_def by blast
 

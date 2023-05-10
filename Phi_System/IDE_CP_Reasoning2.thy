@@ -155,56 +155,56 @@ lemma apply_extract_a_value:
 
 subsection \<open>Cleaning to 1\<close>
 
-definition \<r>Clean :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>\<r>Clean S \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1)\<close>
+definition Is_Stateless :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Is_Stateless S \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1)\<close>
 
 subsubsection \<open>Termination\<close>
 
 lemma [\<phi>reason 3000]:
-  \<open>\<r>Clean 0\<close>
-  unfolding \<r>Clean_def by simp
+  \<open>Is_Stateless 0\<close>
+  unfolding Is_Stateless_def by simp
 
 lemma [\<phi>reason 3000]:
-  \<open>\<r>Clean 1\<close>
-  unfolding \<r>Clean_def by simp
+  \<open>Is_Stateless 1\<close>
+  unfolding Is_Stateless_def by simp
 
 subsubsection \<open>Logic Connectives\<close>
 
 lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean A
-\<Longrightarrow> \<r>Clean B
-\<Longrightarrow> \<r>Clean (A + B)\<close>
-  unfolding \<r>Clean_def
+  \<open> Is_Stateless A
+\<Longrightarrow> Is_Stateless B
+\<Longrightarrow> Is_Stateless (A + B)\<close>
+  unfolding Is_Stateless_def
   using \<phi>CASE_IMP by force
 
 lemma [\<phi>reason 1200]:
-  \<open>(\<And>x. \<r>Clean (A x))
-\<Longrightarrow> \<r>Clean (ExSet A)\<close>
-  unfolding \<r>Clean_def
+  \<open>(\<And>x. Is_Stateless (A x))
+\<Longrightarrow> Is_Stateless (ExSet A)\<close>
+  unfolding Is_Stateless_def
   by (metis ExSet_expn Imply_def)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean A
-\<Longrightarrow> \<r>Clean (A \<s>\<u>\<b>\<j> P)\<close>
-  unfolding \<r>Clean_def Imply_def
+  \<open> Is_Stateless A
+\<Longrightarrow> Is_Stateless (A \<s>\<u>\<b>\<j> P)\<close>
+  unfolding Is_Stateless_def Imply_def
   by (simp add: Subjection_expn)
 
 subsubsection \<open>General Reasoning by Algebraic Properties\<close>
 
-lemma \<r>Clean_general_rule:
-  \<open> \<r>Clean (x \<Ztypecolon> T)
+lemma Is_Stateless_general_rule:
+  \<open> Is_Stateless (x \<Ztypecolon> T)
 \<Longrightarrow> Semi_Unit_Functor F
-\<Longrightarrow> \<r>Clean (x \<Ztypecolon> F T)\<close>
-  unfolding Semi_Unit_Functor_def \<r>Clean_def Unit_Homo_def
+\<Longrightarrow> Is_Stateless (x \<Ztypecolon> F T)\<close>
+  unfolding Semi_Unit_Functor_def Is_Stateless_def Unit_Homo_def
   by clarsimp
 
-\<phi>reasoner_ML "\<r>Clean_general_rule" 50 (\<open>\<r>Clean (_ \<Ztypecolon> _)\<close>) = \<open>
+\<phi>reasoner_ML "Is_Stateless_general_rule" 50 (\<open>Is_Stateless (_ \<Ztypecolon> _)\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ (*Trueprop*) $ (_ (*\<r>Clean*) $ ( _ (*\<phi>Type*) $ _ $ T)) = Thm.major_prem_of sequent
+  let val _ (*Trueprop*) $ (_ (*Is_Stateless*) $ ( _ (*\<phi>Type*) $ _ $ T)) = Thm.major_prem_of sequent
    in case Phi_Functor_Detect.detect 1 ctxt T
         of SOME [Ft,Tt] => let
             val rule = Drule.infer_instantiate ctxt
                           [(("F",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt)]
-                          @{thm "\<r>Clean_general_rule"}
+                          @{thm "Is_Stateless_general_rule"}
              in SOME ((ctxt, rule RS sequent), Seq.empty) end
          | _ => NONE
   end)
@@ -212,31 +212,31 @@ fn (ctxt,sequent) => Seq.make (fn () =>
 
 lemma [\<phi>reason 1200]:
   \<open> Unit_Homo T
-\<Longrightarrow> \<r>Clean (1 \<Ztypecolon> T)\<close>
-  unfolding Unit_Homo_def \<r>Clean_def \<r>Require_def Premise_def
+\<Longrightarrow> Is_Stateless (1 \<Ztypecolon> T)\<close>
+  unfolding Unit_Homo_def Is_Stateless_def \<r>Guard_def Premise_def
   by clarsimp
 
 lemma [\<phi>reason 1200]:
   \<open> Unit_Homo T
-\<Longrightarrow> \<r>Clean (() \<Ztypecolon> T)\<close>
-  unfolding Unit_Homo_def \<r>Clean_def \<r>Require_def Premise_def
+\<Longrightarrow> Is_Stateless (() \<Ztypecolon> T)\<close>
+  unfolding Unit_Homo_def Is_Stateless_def \<r>Guard_def Premise_def
   by clarsimp
 
 
 subsubsection \<open>Structural Node\<close>
 
 lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean A
-\<Longrightarrow> \<r>Clean B
-\<Longrightarrow> \<r>Clean (A * B)\<close>
+  \<open> Is_Stateless A
+\<Longrightarrow> Is_Stateless B
+\<Longrightarrow> Is_Stateless (A * B)\<close>
   for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding \<r>Clean_def Imply_def
+  unfolding Is_Stateless_def Imply_def
   apply (simp add: \<phi>expns)
   using mult_1_class.mult_1_left by blast
 
 lemma [\<phi>reason 1200]:
-  \<open> \<r>Clean X
-\<Longrightarrow> \<r>Clean (TECHNICAL X)\<close>
+  \<open> Is_Stateless X
+\<Longrightarrow> Is_Stateless (TECHNICAL X)\<close>
   unfolding Technical_def .
 
 
@@ -303,11 +303,11 @@ lemma "_ToSA_init_by_focus_": (*[\<phi>reason 2005 for \<open>(?X::?'a::sep_magm
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> \<r>CALL X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Y' \<brangle> \<a>\<n>\<d> P
 \<Longrightarrow> Simplify (assertion_simps undefined) R' R
-\<Longrightarrow> \<r>Clean R'
+\<Longrightarrow> Is_Stateless R'
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def Simplify_def \<r>Call_def \<r>Clean_def
+  unfolding Action_Tag_def Simplify_def \<r>Call_def Is_Stateless_def
   apply simp
   by (metis Imply_def implies_right_prod mult_1_class.mult_1_left)
 
@@ -317,7 +317,7 @@ lemma "_ToSA_init_": (*[\<phi>reason 2000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>
 \<Longrightarrow> \<r>CALL X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y' \<a>\<n>\<d> P
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
-  unfolding Action_Tag_def Simplify_def \<r>Call_def \<r>Clean_def
+  unfolding Action_Tag_def Simplify_def \<r>Call_def Is_Stateless_def
   by simp
 
 \<phi>reasoner_ML ToSA_init 2000 (\<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>) = \<open>
@@ -852,10 +852,10 @@ consts ToA_Annotation :: \<open>'a \<Rightarrow> 'a\<close>
 
 (* lemma [\<phi>reason 25 except \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> _\<close>]:
   " \<r>RECURSION_GUARD(ToA_Annotation X) (R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R1 * \<blangle> X \<brangle> \<a>\<n>\<d> P)
-\<Longrightarrow> \<r>Clean R1
+\<Longrightarrow> Is_Stateless R1
 \<Longrightarrow> R  \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P"
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding FOCUS_TAG_def Imply_def split_paired_All \<r>Clean_def \<r>Recursion_Guard_def
+  unfolding FOCUS_TAG_def Imply_def split_paired_All Is_Stateless_def \<r>Recursion_Guard_def
   by (metis mult_1_class.mult_1_left set_mult_expn) *)
 
 (* lemma [\<phi>reason 1050 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> \<blangle> ?Y \<brangle> \<a>\<n>\<d> ?P @action reason_ToSA True ?G\<close>
@@ -923,8 +923,7 @@ lemma [\<phi>reason 800 for \<open> _ * ?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<bl
 
 text \<open>A very weak, one-to-one search.\<close>
 
-lemma [\<phi>reason 80 except \<open> (_ :: assn) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<Ztypecolon> _ \<brangle> \<a>\<n>\<d> _\<close>
-                  if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]: \<comment> \<open>attempts the immediate cell\<close>
+lemma [\<phi>reason 80 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " H \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P
 \<Longrightarrow> R * H \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> X \<brangle> \<a>\<n>\<d> P"
   for H :: \<open>'a::sep_semigroup set\<close>
@@ -932,7 +931,7 @@ lemma [\<phi>reason 80 except \<open> (_ :: assn) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _
   by (metis (no_types, lifting) mult.assoc set_mult_expn)
 
 lemma ToSA_skip [\<phi>reason 70 for \<open> _ * _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ?X \<brangle> \<a>\<n>\<d> _\<close>
-                            except \<open> ( _ :: assn) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<Ztypecolon> _ \<brangle> \<a>\<n>\<d> _\<close>]:
+                            ]:
 \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
   " R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * \<blangle> X \<brangle> \<a>\<n>\<d> P
 \<Longrightarrow> R * H \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * H * \<blangle> X \<brangle> \<a>\<n>\<d> P"
@@ -942,7 +941,7 @@ lemma ToSA_skip [\<phi>reason 70 for \<open> _ * _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\
 
 lemma [\<phi>reason 60 for \<open> _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> ?P\<close>
                   except \<open> _ * _ * _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> ?P\<close>
-                         \<open> (_ :: assn ) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<Ztypecolon> _ \<brangle> \<a>\<n>\<d> _\<close>]:
+                        ]:
   " H \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P
 \<Longrightarrow> H * R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> X \<brangle> \<a>\<n>\<d> P"
   for H :: \<open>'a::sep_ab_semigroup set\<close>

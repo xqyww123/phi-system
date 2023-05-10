@@ -189,7 +189,7 @@ lemma Unit_Homo_by_functor:
 
 \<phi>reasoner_ML Unit_Homo_by_functor 50 (\<open>Unit_Homo _\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ (*Trueprop*) $ (_ (*\<r>Clean*) $ ( _ (*\<phi>Type*) $ _ $ T)) = Thm.major_prem_of sequent
+  let val _ (*Trueprop*) $ (_ (*Unit_Homo*) $ T) = Thm.major_prem_of sequent
    in case Phi_Functor_Detect.detect 1 ctxt T
         of SOME [Ft,Tt] => let
             val rule = Drule.infer_instantiate ctxt

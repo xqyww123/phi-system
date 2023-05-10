@@ -677,14 +677,14 @@ fun intro_reasoner ctxt pos mode (priority:priority) patterns blacklist guard ru
                        | _ => error "Pattern of the reasoner is required"
                else map (apsnd (the_default priority)) patterns
     val rules_with_flag = map (fn rule =>
-      let fun is_Require (Const (\<^const_name>\<open>\<r>Require\<close>, _) $ _) = true
+      let fun is_Require (Const (\<^const_name>\<open>\<r>Guard\<close>, _) $ _) = true
             | is_Require (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_Require X
             | is_Require (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,X)) = is_Require X
             | is_Require _ = false
        in case Thm.prems_of rule
             of []    => (rule, false)
              | (r::L)=> if exists is_Require L
-                        then error("A reasoning rule can contain one \<r>Require antecedent at \
+                        then error("A reasoning rule can contain one \<r>Guard antecedent at \
                                    \the leading position.")
                         else (rule, is_Require r)
       end) rules
