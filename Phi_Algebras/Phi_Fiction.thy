@@ -176,29 +176,29 @@ lemma \<F>_it_refinement:
 
 subsubsection \<open>Composition\<close>
 
-definition interp_comp :: \<open>('b::one,'c::one) interp \<Rightarrow> ('a::one,'b) interp \<Rightarrow> ('a,'c) interp\<close> (infixr "\<circ>\<^sub>\<I>" 55)
-  where \<open>(I1 \<circ>\<^sub>\<I> I2) = Interp (\<lambda>x. \<Union>(\<I> I1 ` \<I> I2 x))\<close>
+definition interp_comp :: \<open>('b::one,'c::one) interp \<Rightarrow> ('a::one,'b) interp \<Rightarrow> ('a,'c) interp\<close> (infixr "\<Zcomp>\<^sub>\<I>" 55)
+  where \<open>(I1 \<Zcomp>\<^sub>\<I> I2) = Interp (\<lambda>x. \<Union>(\<I> I1 ` \<I> I2 x))\<close>
 
-notation interp_comp  (infixl "o\<^sub>\<I>" 55)
+notation (ASCII) interp_comp  (infixl ";\<^sub>\<I>" 55)
 
 lemma interp_comp_\<I>[simp]:
-  \<open>\<I> (I1 \<circ>\<^sub>\<I> I2) = (\<lambda>x. \<Union>(\<I> I1 ` \<I> I2 x))\<close>
+  \<open>\<I> (I1 \<Zcomp>\<^sub>\<I> I2) = (\<lambda>x. \<Union>(\<I> I1 ` \<I> I2 x))\<close>
   unfolding interp_comp_def
   by (rule Interp_inverse)  (simp add: Interpretation_def one_set_def)
 
 lemma interp_comp_assoc:
-  \<open>(I1 \<circ>\<^sub>\<I> I2) \<circ>\<^sub>\<I> I3 = I1 \<circ>\<^sub>\<I> (I2 \<circ>\<^sub>\<I> I3)\<close>
+  \<open>(I1 \<Zcomp>\<^sub>\<I> I2) \<Zcomp>\<^sub>\<I> I3 = I1 \<Zcomp>\<^sub>\<I> (I2 \<Zcomp>\<^sub>\<I> I3)\<close>
   by (subst \<I>_inject[symmetric]; simp)
 
 lemma \<F>_it_comp[simp]:
-  \<open>\<F>_it o\<^sub>\<I> I = I\<close> \<open>I o\<^sub>\<I> \<F>_it = I\<close>
+  \<open>\<F>_it ;\<^sub>\<I> I = I\<close> \<open>I ;\<^sub>\<I> \<F>_it = I\<close>
   by (subst \<I>_inject[symmetric], simp)+
 
 lemma sep_refinement_stepwise:
   \<open> S1 \<r>\<e>\<f>\<i>\<n>\<e>\<s> S2 \<w>.\<r>.\<t> I1 \<i>\<n> D
 \<Longrightarrow> S2 \<r>\<e>\<f>\<i>\<n>\<e>\<s> S3 \<w>.\<r>.\<t> I2 \<i>\<n> D'
 \<Longrightarrow> refinement_projection I2 D' \<subseteq> D
-\<Longrightarrow> S1 \<r>\<e>\<f>\<i>\<n>\<e>\<s> S3 \<w>.\<r>.\<t> (I1 o\<^sub>\<I> I2) \<i>\<n> D'\<close>
+\<Longrightarrow> S1 \<r>\<e>\<f>\<i>\<n>\<e>\<s> S3 \<w>.\<r>.\<t> (I1 ;\<^sub>\<I> I2) \<i>\<n> D'\<close>
   unfolding Fictional_Forward_Simulation_def interp_comp_\<I> refinement_projection_def
   apply (auto simp add: subset_iff Image_def Bex_def Subjection_expn set_mult_expn split_option_all)
   subgoal premises prems for x r R t u v xb
@@ -229,7 +229,7 @@ lemma sep_refinement_stepwise':
 \<Longrightarrow> S2' \<r>\<e>\<f>\<i>\<n>\<e>\<s> S3 \<w>.\<r>.\<t> I2 \<i>\<n> D'
 \<Longrightarrow> refinement_projection I2 D' \<subseteq> D
 \<Longrightarrow> S2 \<subseteq> S2'
-\<Longrightarrow> S1 \<r>\<e>\<f>\<i>\<n>\<e>\<s> S3 \<w>.\<r>.\<t> (I1 o\<^sub>\<I> I2) \<i>\<n> D'\<close>
+\<Longrightarrow> S1 \<r>\<e>\<f>\<i>\<n>\<e>\<s> S3 \<w>.\<r>.\<t> (I1 ;\<^sub>\<I> I2) \<i>\<n> D'\<close>
   using refinement_sub_fun sep_refinement_stepwise
   by metis
 
@@ -387,10 +387,16 @@ subsubsection \<open>Functional Fiction\<close>
 
 definition \<open>\<F>_functional \<psi> = Interp (\<lambda>x. {y. x = \<psi> y})\<close>
 
-lemma (in kernel_is_1) \<F>_functional_\<I>[simp]:
+(* lemma (in kernel_is_1) \<F>_functional_\<I>[simp]:
   \<open>\<I> (\<F>_functional \<psi>) = (\<lambda>x. {y. x = \<psi> y})\<close>
   unfolding \<F>_functional_def
-  by (rule Interp_inverse, simp add: Interpretation_def one_set_def set_eq_iff inj_at_1)
+  by (rule Interp_inverse, simp add: Interpretation_def one_set_def set_eq_iff inj_at_1) *)
+
+lemma \<F>_functional_\<I>[simp]:
+  \<open> kernel_is_1 \<psi>
+\<Longrightarrow> \<I> (\<F>_functional \<psi>) = (\<lambda>x. {y. x = \<psi> y})\<close>
+  unfolding \<F>_functional_def kernel_is_1_def
+  by (rule Interp_inverse, simp add: Interpretation_def one_set_def set_eq_iff)
 
 lemma map_option_inj_at_1[simp]:
   \<open>kernel_is_1 (map_option f)\<close>
@@ -401,7 +407,7 @@ lemma (in homo_sep_wand_monoid) \<F>_functional_projection [simp]:
   \<open>refinement_projection (\<F>_functional \<psi>) (\<psi> ` S) \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
   by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>]
-          homo_sep_wand; blast)
+      homo_sep_wand; blast)
 
 lemma kernel_is_1_pointwise[locale_intro,intro!]:
   \<open>kernel_is_1 \<psi> \<Longrightarrow> kernel_is_1 ((\<circ>) \<psi>)\<close>
@@ -414,6 +420,11 @@ proof -
   show ?thesis by (rule interp_eq_I; simp add: fun_eq_iff)
 qed
 
+lemma \<F>_functional_comp:
+  \<open> kernel_is_1 f
+\<Longrightarrow> kernel_is_1 g
+\<Longrightarrow> \<F>_functional (f o g) = \<F>_functional g ;\<^sub>\<I> \<F>_functional f\<close>
+  by (clarsimp simp add: fun_eq_iff set_eq_iff)
 
 definition "\<F>_share s = (case s of Share w v \<Rightarrow> if w = 1 then {v} else {})"
 

@@ -279,8 +279,8 @@ lemma basic_fiction_\<I>:
 
 lemma \<F>_itself_expn[\<phi>expns]:
   \<open>R2 ## x
-\<Longrightarrow> \<phi>Res_Spec (\<I> (basic_fiction \<circ>\<^sub>\<I> \<F>_it) (R2 * x))
-  = \<phi>Res_Spec (\<I> (basic_fiction \<circ>\<^sub>\<I> \<F>_it) R2 * {mk x})\<close>
+\<Longrightarrow> \<phi>Res_Spec (\<I> (basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it) (R2 * x))
+  = \<phi>Res_Spec (\<I> (basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it) R2 * {mk x})\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarsimp simp add: \<phi>expns basic_fiction_\<I> prj.homo_mult interp_comp_\<I>)
   apply (rule; clarify)
@@ -302,7 +302,7 @@ subsubsection \<open>Fiction Base\<close>
 
 locale basic_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<circ>\<^sub>\<I> I\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> I\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and I :: "('U::sep_algebra, 'T) interp"
 and Fic :: "'U fiction_entry"
@@ -501,7 +501,7 @@ locale permission_fiction =
    R: resource Res
 +  share: perm_ins_homo \<psi>
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
-      \<open>R.basic_fiction \<circ>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
+      \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
@@ -612,7 +612,7 @@ subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_it\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and Fic :: "'T fiction_entry"
 begin
@@ -666,7 +666,7 @@ for Res :: "'T nosep option resource_entry"
 begin
 
 definition fiction_agree
-  where \<open>fiction_agree = basic_fiction o\<^sub>\<I> \<F>_optionwise \<F>_agree\<close>
+  where \<open>fiction_agree = basic_fiction ;\<^sub>\<I> \<F>_optionwise \<F>_agree\<close>
 
 end
 
@@ -832,7 +832,7 @@ lemma "__dispose_rule__":
 abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
   where \<open>perm_ins_homo \<equiv> (o) to_share\<close>
 (*depreciate*)
-abbreviation \<open>share_fiction \<equiv> basic_fiction o\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
+abbreviation \<open>share_fiction \<equiv> basic_fiction ;\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
 
 (* lemma share_fiction_expn_full:
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<Znrres> v))))
@@ -892,7 +892,7 @@ subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_it\<close>
 for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val option) fiction_entry"
 begin
@@ -1063,7 +1063,7 @@ lemma "__dispose_rule__":
 
 abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
   where \<open>perm_ins_homo \<equiv> (o) ((o) to_share)\<close>
-abbreviation \<open>share_fiction \<equiv> basic_fiction o\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
+abbreviation \<open>share_fiction \<equiv> basic_fiction ;\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
 
 (*depreciated!*)
 (*lemma share_fiction_expn_full':

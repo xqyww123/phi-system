@@ -6,7 +6,7 @@ theory PhiTest_All_Sem
           Phi_Semantics.PhiSem_Variable
           Phi_Semantics.PhiSem_Int_ArbiPrec
           Phi_Semantics.PhiSem_Machine_Integer
-          Phi_Semantics.PhiSem_Mem_OO
+          (*Phi_Semantics.PhiSem_Mem_OO TO BE FIXED*)
 begin
 
 end

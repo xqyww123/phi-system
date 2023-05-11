@@ -573,12 +573,14 @@ lemma homo_sep_wand_1_comp:
 
 locale kernel_is_1 =
   fixes \<psi> :: " 'a::one \<Rightarrow> 'b::one"
-  assumes inj_at_1: \<open>\<forall>x. \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
+  assumes \<open>\<forall>x. \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
+begin
+  lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi>\<close> by (simp add: kernel_is_1_axioms)
+end
 
-lemma kernel_is_1_comp:
+lemma kernel_is_1_comp[simp]:
   \<open>kernel_is_1 f \<Longrightarrow> kernel_is_1 g \<Longrightarrow> kernel_is_1 (f o g)\<close>
   unfolding kernel_is_1_def by simp
-  
 
 locale homo_sep_wand_monoid = homo_sep_wand_1 \<psi>
   for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close>

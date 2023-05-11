@@ -77,7 +77,7 @@ subsection \<open>Fiction Base\<close>
 
 locale basic_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<circ>\<^sub>\<I> I\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> I\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and I :: "('U::sep_algebra, 'T) interp"
 and Fic :: "'U fiction_entry"
@@ -249,7 +249,7 @@ context begin
 
 private lemma from_fictional_refinement':
   \<open> Valid_Proc f
-\<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction o\<^sub>\<I> I \<i>\<n> D)
+\<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))\<close>
@@ -296,7 +296,7 @@ lemma from_fictional_refinement:
   \<open> Valid_Proc f
 \<Longrightarrow> YY = (\<lambda>v. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v))
 \<Longrightarrow> EE = (\<lambda>e. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))
-\<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction o\<^sub>\<I> I \<i>\<n> D)
+\<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE\<close>
@@ -306,7 +306,7 @@ end
 
 lemma "__getter_rule__":
   \<open> Valid_Proc getter
-\<Longrightarrow> (\<And>ret. Transition_of' getter ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ({x} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg v)) \<w>.\<r>.\<t> R.basic_fiction o\<^sub>\<I> I \<i>\<n> {x})
+\<Longrightarrow> (\<And>ret. Transition_of' getter ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ({x} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg v)) \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> {x})
 \<Longrightarrow> \<p>\<r>\<o>\<c> getter \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> ret = \<phi>arg v \<rbrace>\<close>
   by (rule from_fictional_refinement[where Rel = \<open>\<lambda>ret. Id_on ({x} \<s>\<u>\<b>\<j> ret = Normal (\<phi>arg v))\<close>
                                        and D = \<open>{x}\<close>],
@@ -320,7 +320,7 @@ lemma "__getter_rule__":
 lemma "__setter_rule__":
   \<open> Valid_Proc setter
 \<Longrightarrow> (\<And>ret. Transition_of' setter ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none
-            \<w>.\<r>.\<t> R.basic_fiction o\<^sub>\<I> I \<i>\<n> {x})
+            \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> {x})
 \<Longrightarrow> \<p>\<r>\<o>\<c> setter \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>_. y \<Ztypecolon> \<phi> Identity \<rbrace>\<close>
   by (rule from_fictional_refinement
                   [where Rel=\<open>\<lambda>ret. {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
@@ -334,7 +334,7 @@ lemma "__setter_rule__":
 lemma "__allocator_rule__":
   \<open> Valid_Proc allocator
 \<Longrightarrow> (\<And>ret. Transition_of' allocator ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k
-            \<w>.\<r>.\<t> R.basic_fiction o\<^sub>\<I> I \<i>\<n> {1})
+            \<w>.\<r>.\<t> R.basic_fiction ;\<^sub>\<I> I \<i>\<n> {1})
 \<Longrightarrow> \<p>\<r>\<o>\<c> allocator \<lbrace> Void \<longmapsto> \<lambda>ret. y k \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace>\<close>
   by (rule from_fictional_refinement
         [where Rel=\<open>\<lambda>ret. {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k\<close>
@@ -355,7 +355,7 @@ locale permission_fiction =
    R: resource Res
 +  share: perm_ins_homo \<psi>
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
-      \<open>R.basic_fiction \<circ>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
+      \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
@@ -381,7 +381,7 @@ subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_it\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and Fic :: "'T fiction_entry"
 begin
@@ -408,7 +408,7 @@ for Res :: "'T nosep option resource_entry"
 begin
 
 abbreviation fiction_agree
-  where \<open>fiction_agree \<equiv> basic_fiction o\<^sub>\<I> \<F>_optionwise \<F>_agree\<close>
+  where \<open>fiction_agree \<equiv> basic_fiction ;\<^sub>\<I> \<F>_optionwise \<F>_agree\<close>
 
 end
 
@@ -583,7 +583,7 @@ end
 
 locale fiction_base_for_mapping_resource =
   R: mapping_resource Res
-+ fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> I\<close>
++ fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> I\<close>
 for Res :: "('key \<Rightarrow> 'val::sep_algebra) resource_entry"
 and I   :: "('T::sep_algebra, 'key \<Rightarrow> 'val) interp"
 and Fic :: "'T fiction_entry"
@@ -687,7 +687,7 @@ subsection \<open>Pointwise Base Fiction\<close>
 
 locale pointwise_base_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise I\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise I\<close>
 for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 and I :: \<open>('fic::sep_algebra, 'val option) interp\<close>
 and Fic :: "('key \<Rightarrow> 'fic) fiction_entry"
@@ -732,7 +732,7 @@ subsection \<open>Pointwise Fiction\<close>
 
 locale pointwise_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise \<F>_it\<close>
 for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val nosep option) fiction_entry"
 begin
@@ -753,7 +753,7 @@ subsection \<open>Pointwise Share Fiction\<close>
 
 locale pointwise_share_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise (\<F>_functional to_share)\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_functional to_share)\<close>
 for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
 begin
@@ -868,7 +868,7 @@ subsection \<open>Pointwise Base Fiction\<close>
 
 locale pointwise_base_fiction_for_partial_mapping_resource2 =
    R: partial_map_resource2 Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise (\<F>_pointwise I)\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_pointwise I)\<close>
 for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 and I :: \<open>('fic::sep_algebra, 'val option) interp\<close>
 and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'fic) fiction_entry"
@@ -913,7 +913,7 @@ subsection \<open>Pointwise Fiction\<close>
 
 locale pointwise_fiction_for_partial_mapping_resource2 =
    R: partial_map_resource2 Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise (\<F>_pointwise \<F>_it)\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_pointwise \<F>_it)\<close>
 for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) fiction_entry"
 begin
@@ -932,7 +932,7 @@ subsection \<open>Pointwise Share Fiction\<close>
 
 locale pointwise_share_fiction_for_partial_mapping_resource2 =
    R: partial_map_resource2 Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_pointwise (\<F>_pointwise (\<F>_functional to_share))\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_pointwise (\<F>_functional to_share))\<close>
 for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep share option) fiction_entry"
 begin

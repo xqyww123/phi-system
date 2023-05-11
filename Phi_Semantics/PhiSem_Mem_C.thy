@@ -503,7 +503,7 @@ subsection \<open>Memory Object\<close>
 definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
   where \<open>Ref T x' = (case x' of (seg |: idx) \<Zinj> (n \<Znrres> x) \<Rightarrow>
     if 0 < n \<and> valid_index (segidx.layout seg) idx then
-    { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))
+    { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Map_of_Val v)))))
           |v. v \<in> Well_Type (logaddr_type (seg |: idx)) \<and> v \<in> (x \<Ztypecolon> T) }
     else {})\<close>
 
@@ -511,7 +511,7 @@ lemma (in agmem) Ref_expn[\<phi>expns]:
   \<open>fic \<in> ((seg |: idx) \<Zinj> (n \<Znrres> v) \<Ztypecolon> Ref Identity)
     \<longleftrightarrow> 0 < n \<and> valid_index (segidx.layout seg) idx
         \<and> v \<in> Well_Type (logaddr_type (seg |: idx))
-        \<and> fic = FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))\<close>
+        \<and> fic = FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Map_of_Val v)))))\<close>
   unfolding Ref_def \<phi>Type_def by (simp add: Identity_def) blast
 
 (*
@@ -520,7 +520,7 @@ definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 
     if valid_index (segidx.layout seg) idx
      \<and> (\<exists>N TY. index_type idx (segidx.layout seg) = \<tau>Array N TY \<and> i + length l \<le> N)
     then let 
-    { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Mapof_Val v)))))
+    { FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Map_of_Val v)))))
           |v. v \<in> Well_Type (logaddr_type (seg |: idx)) \<and> v \<in> (x \<Ztypecolon> T) }
     else {} | _ \<Rightarrow> {})\<close> *)
 
@@ -607,21 +607,21 @@ lemma (in agmem) \<phi>M_get_mem[\<phi>reason!]:
       subgoal premises prems2 for sh' v' proof -
         have [simp]: \<open>valid_index (segidx.layout seg) idx\<close>
           by (simp add: \<open>valid_index (segidx.layout seg) idx\<close> \<open>v' \<in> Well_Type (segidx.layout seg)\<close>)
-        note t2[simp] = this[THEN Mapof_Val_pull]
+        note t2[simp] = this[THEN Map_of_Val_pull]
 
-        have t3[simp]: \<open>pull_map idx sh' ## share n (to_share \<circ> Mapof_Val v)\<close>
+        have t3[simp]: \<open>pull_map idx sh' ## share n (to_share \<circ> Map_of_Val v)\<close>
           using \<open>sh' ## push_map idx _\<close> by (metis pull_map_sep_disj pull_push_map)
         have t5: \<open>index_value idx v' \<in> Well_Type (index_type idx (segidx.layout seg))\<close>
           using index_value_welltyp \<open>valid_index (segidx.layout seg) idx\<close>
                   \<open>v' \<in> Well_Type (segidx.layout seg)\<close> by blast
 
-        let \<open>?lhs = ?rhs\<close> = \<open>to_share \<circ> Mapof_Val v' = sh' * push_map idx (share n (to_share \<circ> Mapof_Val v))\<close>
+        let \<open>?lhs = ?rhs\<close> = \<open>to_share \<circ> Map_of_Val v' = sh' * push_map idx (share n (to_share \<circ> Map_of_Val v))\<close>
         from \<open>?lhs = ?rhs\<close> have \<open>pull_map idx ?lhs = pull_map idx ?rhs\<close> by fastforce
         note this[simplified pull_map_to_share pull_map_homo_mult pull_push_map t2]
-        then have \<open>Mapof_Val (index_value idx v') = (strip_share \<circ> pull_map idx sh') ++ (Mapof_Val v)\<close>
+        then have \<open>Map_of_Val (index_value idx v') = (strip_share \<circ> pull_map idx sh') ++ (Map_of_Val v)\<close>
           by (metis prems(5) prems2(6) strip_share_fun_mult strip_share_fun_share strip_share_share_funcomp(2) t2 t3)
         then have txx: \<open>index_value idx v' = v\<close>
-          using Valof_Map_append Valof_Map t5
+          using Val_of_Map_append Val_of_Map t5
           by (metis prems(7))
         
         show ?thesis by (subst txx) standard
@@ -663,14 +663,14 @@ lemma (in agmem) op_store_mem:
         have [simp]: \<open>seg \<in> dom mem\<close> using \<open>mem seg = Some val\<close> by blast
         have [simp]: \<open>\<And>any. mem_R ## mem(seg := any)\<close> using \<open>mem_R ## _\<close> \<open>mem seg = Some val\<close>
           by (smt (verit, best) fun_upd_apply sep_disj_commuteI sep_disj_fun_def sep_disj_option(3) sep_disj_partial_map_some_none)
-      have t1: \<open>dom (push_map idx (to_share \<circ> Mapof_Val u)) = dom (push_map idx (to_share \<circ> Mapof_Val v))\<close>
-        by simp (meson Mapof_Val_same_dom \<open>u \<in> Well_Type _\<close> \<open>v \<in> Well_Type _\<close>)
-      have t2: \<open>fic_mR ## push_map idx (to_share \<circ> Mapof_Val u)\<close>
+      have t1: \<open>dom (push_map idx (to_share \<circ> Map_of_Val u)) = dom (push_map idx (to_share \<circ> Map_of_Val v))\<close>
+        by simp (meson Map_of_Val_same_dom \<open>u \<in> Well_Type _\<close> \<open>v \<in> Well_Type _\<close>)
+      have t2: \<open>fic_mR ## push_map idx (to_share \<circ> Map_of_Val u)\<close>
         using total_Mapof_disjoint dom1_disjoint_sep_disj dom1_dom t1
-        by (metis \<open>fic_mR ## _\<close> \<open>to_share \<circ> Mapof_Val val = _\<close>)
+        by (metis \<open>fic_mR ## _\<close> \<open>to_share \<circ> Map_of_Val val = _\<close>)
         
         show ?thesis
-          apply (rule exI[where x=\<open>fic * FIC_mem.mk (1(seg := Fine (push_map idx (to_share \<circ> Mapof_Val u))))\<close>])
+          apply (rule exI[where x=\<open>fic * FIC_mem.mk (1(seg := Fine (push_map idx (to_share \<circ> Map_of_Val u))))\<close>])
           apply (auto simp add: prems prems2 inj_image_mem_iff index_mod_value_welltyp
                                 FIC_mem.interp_split' R_mem.times_fun_upd sep_disj_partial_map_upd
                                 times_set_def times_fine'[symmetric] R_mem.mk_homo_mult)
@@ -682,8 +682,8 @@ lemma (in agmem) op_store_mem:
           apply (rule exI[where x=\<open>R_mem.mk (Fine (mem(seg \<mapsto> index_mod_value idx (\<lambda>_. u) val)))\<close>])
           apply (simp add: prems share_mem_def )
           apply (auto simp add: mult_strip_fine_011 times_fun inj_image_mem_iff prems2 times_fine t2)
-          apply (rule exI[where x =\<open>fic_mR * push_map idx (to_share \<circ> Mapof_Val u)\<close>],
-              simp add: Mapof_Val_modify_fiction[of \<open>segidx.layout seg\<close> idx val v u fic_mR]
+          apply (rule exI[where x =\<open>fic_mR * push_map idx (to_share \<circ> Map_of_Val u)\<close>],
+              simp add: Map_of_Val_modify_fiction[of \<open>segidx.layout seg\<close> idx val v u fic_mR]
                         prems2 prems index_mod_value_welltyp)
           subgoal for x
             using \<open>\<forall>_. \<exists>y. _\<close>[THEN spec[where x=x]] apply clarsimp apply (case_tac \<open>y=1\<close>; simp)
@@ -746,7 +746,7 @@ lemma (in agmem) share_mem'_mono:
 
 lemma (in agmem) share_mem'_drop_seg:
   \<open> v \<in> Well_Type (segidx.layout seg)
-\<Longrightarrow> mem \<in> \<I> share_mem' (fic * 1(seg := Fine (to_share \<circ> Mapof_Val v)))
+\<Longrightarrow> mem \<in> \<I> share_mem' (fic * 1(seg := Fine (to_share \<circ> Map_of_Val v)))
 \<Longrightarrow> seg \<in> dom mem \<and> mem(seg := None) \<in> \<I> share_mem' fic\<close>
   unfolding share_mem'_def
   apply (auto simp add: times_fun)
@@ -760,14 +760,14 @@ lemma (in agmem) share_mem'_drop_seg:
       using prems(2)[THEN spec[where x=seg]]
       apply (clarsimp simp add: mult_strip_fine_011)  
       subgoal premises prems2 for r u proof -
-        have \<open>dom r \<inter> dom (to_share o Mapof_Val v) = {}\<close>
+        have \<open>dom r \<inter> dom (to_share o Map_of_Val v) = {}\<close>
           using total_Mapof_disjoint[where idx=\<open>[]\<close>, simplified]
-                \<open>r ## (to_share \<circ> Mapof_Val v)\<close> \<open>to_share \<circ> Mapof_Val u = r * (to_share \<circ> Mapof_Val v)\<close>
+                \<open>r ## (to_share \<circ> Map_of_Val v)\<close> \<open>to_share \<circ> Map_of_Val u = r * (to_share \<circ> Map_of_Val v)\<close>
           by fastforce
-        moreover have \<open>dom (to_share \<circ> Mapof_Val u) = dom (to_share \<circ> Mapof_Val v)\<close>
-          using Mapof_Val_same_dom
+        moreover have \<open>dom (to_share \<circ> Map_of_Val u) = dom (to_share \<circ> Map_of_Val v)\<close>
+          using Map_of_Val_same_dom
           by (metis \<open>u \<in> Well_Type (segidx.layout seg)\<close> dom_map_option_comp prems(1)) 
-        moreover have \<open>dom (to_share \<circ> Mapof_Val u) = dom r \<union> dom (to_share \<circ> Mapof_Val v)\<close>
+        moreover have \<open>dom (to_share \<circ> Map_of_Val u) = dom r \<union> dom (to_share \<circ> Map_of_Val v)\<close>
           using dom_mult by (metis prems2) 
         ultimately have \<open>dom r = {}\<close> by (metis inf_sup_absorb)
         then show ?thesis unfolding one_partial_map by blast
@@ -807,7 +807,7 @@ lemma (in agmem) op_alloc_mem:
 
     show ?thesis
       apply (rule exI[where x = \<open>fic * FIC_mem.mk
-                  (1(?seg := Fine (to_share \<circ> Mapof_Val (V_array.mk (TY, replicate n (Zero TY))))))\<close>])
+                  (1(?seg := Fine (to_share \<circ> Map_of_Val (V_array.mk (TY, replicate n (Zero TY))))))\<close>])
       apply (auto simp add: prems inj_image_mem_iff t1 list_all_length zero_well_typ
                             FIC_mem.interp_split' R_mem.times_fun_upd sep_disj_partial_map_upd
                             times_set_def times_fine'[symmetric] R_mem.mk_homo_mult)

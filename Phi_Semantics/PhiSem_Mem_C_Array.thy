@@ -4,7 +4,7 @@ begin
 
 debt_axiomatization
     memobj_size_arr: \<open>MemObj_Size (array N T) = N * MemObj_Size T\<close>
-and Mapof_Val_arr: \<open>Mapof_Val (V_array.mk vs) = nnode (map Mapof_Val vs)\<close>
+and Map_of_Val_arr: \<open>Map_of_Val (V_array.mk vs) = nnode (map Map_of_Val vs)\<close>
 
 
 end
