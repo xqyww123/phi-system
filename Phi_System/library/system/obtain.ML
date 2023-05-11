@@ -32,10 +32,11 @@ fun eliminate ctxt rule xs As thm'' =
     val ((_, [thm']), ctxt') = Variable.import true [thm] ctxt;
     val prems = Drule.strip_imp_prems (Thm.cprop_of thm');
   in
-    ((Drule.implies_elim_list thm' (map Thm.assume prems)
+    Phi_Help.comp_rule ctxt false
+      (Drule.implies_elim_list thm' (map Thm.assume prems)
         |> Drule.implies_intr_list (map (Drule.norm_hhf_cterm ctxt') As)
         |> Drule.forall_intr_list xs)
-      COMP rule)
+      rule
     |> Drule.implies_intr_list prems
     |> singleton (Variable.export ctxt' ctxt)
   end;

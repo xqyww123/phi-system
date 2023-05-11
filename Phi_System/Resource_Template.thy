@@ -138,7 +138,7 @@ lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<i>\<m>\
 
 paragraph \<open>Reasoning Rules\<close>
 
-lemma \<phi>_cast:
+lemma \<phi>_cast[\<phi>reason add]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns)

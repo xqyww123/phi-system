@@ -350,8 +350,8 @@ lemma as_\<phi>app:
   unfolding Do_def Action_Tag_def .
 
 lemma [\<phi>reason 10]:
-  \<open> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> S
-\<Longrightarrow> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> S @action as S\<close>
+  \<open> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> S \<a>\<n>\<d> P
+\<Longrightarrow> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> S \<a>\<n>\<d> P @action as S\<close>
   unfolding Action_Tag_def .
 
 lemma [\<phi>reason 1]:
@@ -405,7 +405,7 @@ lemma D_\<phi>app:
   unfolding Do_def Action_Tag_def .
 
 lemma [\<phi>reason 1]:
-  \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to \<phi>-type\<close> T)
+  \<open> ERROR TEXT(\<open>Fail to transform\<close> X \<open>to \<phi>-type\<close> T)
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action to T\<close>
   unfolding Action_Tag_def by blast
 

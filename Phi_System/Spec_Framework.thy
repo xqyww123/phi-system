@@ -333,6 +333,13 @@ lemma \<phi>Procedure_alt:
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
+lemma \<phi>Procedure_protect_body:
+  \<open> T \<equiv> T'
+\<Longrightarrow> U \<equiv> U'
+\<Longrightarrow> E \<equiv> E'
+\<Longrightarrow> \<phi>Procedure f T U E \<equiv> \<phi>Procedure f T' U' E'\<close>
+  by simp
+
 subsubsection \<open>Syntax\<close>
 
 ML_file \<open>library/syntax/procedure.ML\<close>
