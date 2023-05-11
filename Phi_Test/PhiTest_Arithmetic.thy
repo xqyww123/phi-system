@@ -5,7 +5,7 @@ theory PhiTest_Arithmetic
     Phi_Semantics.PhiSem_Variable
     Phi_Semantics.PhiSem_Int_ArbiPrec
     "HOL-Computational_Algebra.Primes"
-  keywords "." "{" "}" :: "quasi_command"
+  keywords "{" "}" :: "quasi_command"
 begin
 
 proc test_prime:
@@ -34,7 +34,7 @@ proc test_prime:
     \<medium_right_bracket>
     return (True)
   \<medium_right_bracket>
-\<medium_right_bracket> by this
+\<medium_right_bracket> .
 
 thm test_prime_def \<comment> \<open>Semantic definition\<close>
 thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
@@ -80,7 +80,7 @@ proc test_prime':
           by fastforce
       qed
   \<medium_right_bracket> \<comment> \<open>Close the top branch\<close>
-\<medium_right_bracket> \<comment> \<open>Close the function body\<close> by this
+\<medium_right_bracket> \<comment> \<open>Close the function body\<close> .
 
 
 proc GCD:
@@ -93,7 +93,7 @@ proc GCD:
     \<open>$y mod $x\<close> \<rightarrow> val t
     if \<open>$t = 0\<close> \<medium_left_bracket> $x \<medium_right_bracket> \<medium_left_bracket> GCD ($t, $x) \<medium_right_bracket>
   \<medium_right_bracket>
-\<medium_right_bracket> by this
+\<medium_right_bracket>.
 
 declare GCD_\<phi>app[\<phi>synthesis add] \<comment> \<open>So that we can use abstract spec \<open>gcd\<close> in synthesis\<close>
 
@@ -102,7 +102,7 @@ proc Coprime:
   output \<open>coprime x y \<Ztypecolon> \<v>\<a>\<l> \<bool>\<close>
 \<medium_left_bracket>
   \<open>gcd $x $y = 1\<close>
-\<medium_right_bracket> by this
+\<medium_right_bracket>.
 
 proc binary_search:
   requires F: \<open>\<forall>i v. \<p>\<r>\<o>\<c> F v \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close> \<comment> \<open>v: raw value\<close>
@@ -128,7 +128,7 @@ proc binary_search:
     \<medium_right_bracket>
     return ($u)
   \<medium_right_bracket>
-\<medium_right_bracket> by this
+\<medium_right_bracket>.
 
 
 end

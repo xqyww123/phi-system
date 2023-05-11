@@ -239,7 +239,7 @@ lemma [\<phi>reason 1200]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' \<noteq> s
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> X) Y (f o snd)\<close>
-  unfolding \<phi>Aggregate_Getter_def
+  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def
   by (clarsimp simp add: \<phi>expns,
       metis V_named_tup_mult V_named_tup_sep_disj_L fmadd_empty(2) fmadd_fmupd fmupd_lookup idx_step_value_named_tup)
 
@@ -247,7 +247,7 @@ lemma [\<phi>reason 1201]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
 \<Longrightarrow> \<phi>Aggregate_Getter idx T Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> X) Y (f o fst)\<close>
-  unfolding \<phi>Aggregate_Getter_def
+  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def
   by (clarsimp simp add: \<phi>expns,
       metis V_named_tup_mult V_named_tup_sep_disj_L fmadd_fmupd fmupd_lookup idx_step_value_named_tup option.sel)
 
@@ -255,14 +255,14 @@ lemma [\<phi>reason 1201]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
 \<Longrightarrow> \<phi>Aggregate_Getter idx T Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> Y f\<close>
-  unfolding \<phi>Aggregate_Getter_def
+  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def
   by (clarsimp simp add: \<phi>expns, metis fmupd_lookup idx_step_value_named_tup option.sel)
 
 lemma [\<phi>reason 1200]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' \<noteq> s
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> X) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> X') Y Y' (apsnd o f)\<close>
-  unfolding \<phi>Aggregate_Mapper_def
+  unfolding \<phi>Aggregate_Mapper_def \<r>Guard_def Premise_def
   apply (clarsimp simp add: \<phi>expns )
   subgoal premises prems for g g' a b c' v' proof -
     obtain c'f where c'f: \<open>c' = V_named_tup.mk c'f\<close> using V_named_tup_sep_disj_L[OF \<open>c' ## _\<close>] by blast

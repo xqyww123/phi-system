@@ -21,7 +21,6 @@ abbrevs
   and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
   and "<by>" = "\<^bold>b\<^bold>y"
   and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
-  and "<when>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>n"
   and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
   and "<obligation>" = "\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n>"
   and ">->" = "\<Zinj>"
@@ -71,7 +70,7 @@ text \<open>See \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> given in \
 
 subsection \<open>Judgement Obligation\<close>
 
-definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where [iff]: "Argument x \<equiv> x"
+definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where "Argument x \<equiv> x"
 
 lemma Argument_I[intro!]: "P \<Longrightarrow> Argument P" unfolding Argument_def .
 
@@ -653,7 +652,8 @@ lemma Synthesis_Proc_fallback_VS
   [\<phi>reason 10 for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. _ \<heavy_comma> \<blangle> ?X' ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]:
   \<open> S1 \<s>\<h>\<i>\<f>\<t>\<s> S2\<heavy_comma> \<blangle> X' \<brangle> \<a>\<n>\<d> Any
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' \<brangle> \<rbrace> @action synthesis\<close>
-  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def by simp
+  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def
+  by simp
 
 text \<open>The fallback from VS to IMP is given by @{thm view_shift_by_implication}\<close>
 
@@ -867,6 +867,7 @@ lemma \<phi>application:
 \<Longrightarrow> PROP State
 \<Longrightarrow> PROP \<phi>Application Apps State Result
 \<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP Result\<close>
   unfolding \<phi>Application_def Pure.prop_def Optimum_Solution_def Optimum_Among_def .
 
@@ -954,17 +955,6 @@ lemma \<phi>apply_user_antecedent:
   | \<open>PROP \<phi>Application (Trueprop (?Prem' \<longrightarrow> ?App')) ?State ?Result\<close> )
 = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let val _ $ app $ _ $ _ = Thm.major_prem_of sequent
-      fun is_user_dependent (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_user_dependent X
-        | is_user_dependent (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _) = true
-        | is_user_dependent (Const(\<^const_name>\<open>Argument\<close>, _) $ _ ) = true
-        | is_user_dependent (Const(\<^const_name>\<open>Do\<close>, _) $ _ ) = true
-        | is_user_dependent (Const(\<^const_name>\<open>ParamTag\<close>, _) $ _ ) = true
-        | is_user_dependent (Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _) = true
-        | is_user_dependent (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = is_user_dependent X
-        | is_user_dependent (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_user_dependent X
-        | is_user_dependent (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = is_user_dependent X
-        | is_user_dependent (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X)) = is_user_dependent X
-        | is_user_dependent _ = false
       val (user_rule, eager_rule) =
                case app of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
                               (@{thm \<phi>apply_user_antecedent}, @{thm \<phi>apply_eager_antecedent})
@@ -972,11 +962,11 @@ lemma \<phi>apply_user_antecedent:
                               (@{thm \<phi>apply_user_antecedent_meta}, @{thm \<phi>apply_eager_antecedent_meta})
       fun process (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) met_sequent = process X met_sequent
         | process (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ X) (met,eager,sequent) =
-            process X (if met > 0 orelse is_user_dependent A
+            process X (if met > 0 orelse Phi_Sys_Reasoner.is_user_dependent_antecedent A
                        then (met + 1, eager, user_rule RS sequent)
                        else (met, eager + 1, eager_rule RS sequent))
         | process (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ A $ X) (met,eager,sequent) =
-            process X (if met > 0 orelse is_user_dependent A
+            process X (if met > 0 orelse Phi_Sys_Reasoner.is_user_dependent_antecedent A
                        then (met + 1, eager, user_rule RS sequent)
                        else (met, eager + 1, eager_rule RS sequent))
         | process _ sequent = sequent
@@ -2003,12 +1993,7 @@ let val sequent = case Thm.major_prem_of sequent0
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
               "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
 in if Config.get ctxt Phi_Reasoner.auto_level >= 1
-      andalso (case Thm.major_prem_of sequent
-                 of _ (*Trueprop*) $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>default\<close> $ _) => false
-                  | _ (*Trueprop*) $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_COLLECT\<close> $ _) => false
-                  | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Argument\<close>, _) $ _) => false
-                  | _ (*Trueprop*) $ (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) => false
-                  | _ => true)
+      andalso not (Phi_Sys_Reasoner.is_user_dependent_antecedent (Thm.major_prem_of sequent))
    then case Phi_Reasoner.reason (SOME 1) (ctxt, sequent)
           of SOME (ctxt',sequent') => (ctxt', sequent')
            | NONE => raise Bypass (SOME (ctxt,sequent0))
@@ -2024,8 +2009,9 @@ end)\<close>
     case Thm.major_prem_of sequent
       of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _))
          => (ctxt, @{thm Premise_True} RS sequent)
-       | _ => (
-    if Config.get ctxt Phi_Reasoner.auto_level >= 2
+       | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ prop) => (
+    if Config.get ctxt Phi_Toplevel.is_interactive
+    then if Config.get ctxt Phi_Reasoner.auto_level >= 2
     then let val id = Option.map (Phi_ID.encode o Phi_ID.cons proc_id) (Phi_ID.get_if_is_named ctxt)
           in (ctxt, Phi_Sledgehammer_Solver.auto id (ctxt,sequent))
           handle Phi_Reasoners.Automation_Fail err =>
@@ -2034,7 +2020,16 @@ end)\<close>
 (*case Seq.pull (Phi_Reasoners.auto_obligation_solver ctxt sequent)
            of SOME (ret, _) => (ctxt, ret)
             | NONE => raise Bypass NONE *)
-    else raise Bypass NONE))\<close>
+    else raise Bypass NONE
+    else if Term.maxidx_of_term prop >= 0
+    then raise Phi_Toplevel.Schematic
+    else let val sequent' = (@{thm Premise_I} RS sequent)
+                          |> Conv.gconv_rule (Object_Logic.atomize ctxt) 1
+             val ([assm], ctxt') = Assumption.add_assms Assumption.presume_export
+                                        [fst (Thm.dest_implies (Thm.cprop_of sequent'))] ctxt
+          in (ctxt', assm RS sequent')
+         end
+))\<close>
 
 \<phi>processor pure_fact 2000 (\<open>PROP ?P\<close>) \<open>
 let

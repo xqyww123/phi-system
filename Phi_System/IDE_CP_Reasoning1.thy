@@ -72,7 +72,7 @@ definition Generated_Rule :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \
 
 (*consts morphism_mode :: mode (*TODO: depreciate*)*)
 
-abbreviation Automatic_Rule :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Rule \<equiv> Generated_Rule (MODE_AUTO default)\<close>
+(*abbreviation Automatic_Rule :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Rule \<equiv> Generated_Rule (MODE_AUTO default)\<close>*)
 
 consts REVERSE_TRANSFORMATION :: mode
 abbreviation Reverse_Transformation :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
@@ -128,6 +128,9 @@ structure Assertion_SS = Simpset (
   val comment = "Simplification rules normalizing an assertion. \
                        \It is applied before ToSA process."
 )
+
+val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
+      ctxt addsimprocs [Simplifier.the_simproc \<^context> "HOL.NO_MATCH"])))
 
 structure Assertion_SS_Source = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
@@ -431,8 +434,8 @@ lemma \<phi>IntroFrameVar'_Yes:
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
     else if Sign.of_sort (Proof_Context.theory_of ctxt) (Ty, \<^sort>\<open>sep_magma_1\<close>)
          then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
-         else Seq.of_list [(ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent),
-                           (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)]
+         else Seq.of_list [(ctxt, @{thm \<phi>IntroFrameVar_Yes}  RS sequent),
+                           (ctxt, @{thm \<phi>IntroFrameVar_No} RS sequent)]
   end\<close>
 
 \<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =

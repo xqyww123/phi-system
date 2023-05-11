@@ -441,8 +441,8 @@ sublocale aggregate_mem_resource Res typ_of_blk ..
 lemma getter_rule:
   \<open> valid_index (typ_of_blk blk) idx
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity \<longmapsto>
-      \<lambda>ret. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
+      \<lambda>ret. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (nosep x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
   by (rule "_getter_rule_2_"[OF fiction_Map_of_Val_ins_perm_projection,
                                 simplified split_nosep_ExSet inj_image_mem_iff inj_nosep])
@@ -451,7 +451,7 @@ lemma allocate_rule:
   \<open> (\<And>r. finite (dom r) \<Longrightarrow> \<exists>blk. blk \<notin> dom r \<and> typ_of_blk blk = TY)
 \<Longrightarrow> v \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry' (\<lambda>blk. typ_of_blk blk = TY) (Some (nosep v))
-      \<lbrace> Void \<longmapsto> \<lambda>ret. 1(blk := to_share \<circ> (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> blk. ret = \<phi>arg blk \<and> typ_of_blk blk = TY  \<rbrace> \<close>
+      \<lbrace> Void \<longmapsto> \<lambda>ret. 1(blk := to_share \<circ> (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> blk. ret = \<phi>arg blk \<and> typ_of_blk blk = TY  \<rbrace> \<close>
   subgoal premises prems proof-
 
   note pointwise_set_UNIV[simp] \<F>_functional_condition_Map_of_Val_ins_dom[simp]
@@ -476,8 +476,8 @@ lemma setter_rule:
 \<Longrightarrow> v \<in> Well_Type (index_type idx (typ_of_blk blk))
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at blk (Some \<circ> map_nosep (index_mod_value idx (\<lambda>_. v)) \<circ> the))
-      \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity \<longmapsto>
-        \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
+      \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Itself \<longmapsto>
+        \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   by (rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_nosep (index_mod_value idx (\<lambda>_. v))\<close>
                         and V=\<open>nosep ` {a. index_value idx a = u_idx}\<close>
                         and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)\<close>
@@ -494,8 +494,8 @@ lemma setter_rule:
 lemma deallocate_rule:
   \<open> v \<in> Well_Type (typ_of_blk blk)
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at blk Map.empty)
-      \<lbrace> 1(blk := to_share \<circ> (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Identity \<longmapsto>
-        \<lambda>\<r>\<e>\<t>. 1 \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
+      \<lbrace> 1(blk := to_share \<circ> (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Itself \<longmapsto>
+        \<lambda>\<r>\<e>\<t>. 1 \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
 subgoal premises prems
 proof -
   have [simp]:

@@ -1,6 +1,8 @@
 signature PHI_HELPER_CONV = sig
 include PHI_HELPER_CONV
 
+val forall_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
+
 (* Converting \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<dots> \<Longrightarrow> An \<Longrightarrow> C\<close> to \<open>A1 &&& A2 &&& \<dots> &&& An &&& PURE_TOP \<Longrightarrow> C\<close> *)
 val aggregate_imps : conv -> conv
 val expand_aggregated_imps : conv -> conv

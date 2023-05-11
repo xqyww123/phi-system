@@ -61,10 +61,10 @@ simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
 
 subsection \<open>Algebraic Properties\<close>
 
-lemma Val_transformation_functor[\<phi>reason add]:
-  \<open>Transformation_Functor (Val v) (Val v) (\<lambda>x. x) (\<lambda>x. x)\<close>
-  unfolding Transformation_Functor_def
-  by (simp add: Val_transformation)
+interpretation Val: Functional_Transformation_Functor_L \<open>Val v\<close> \<open>Val v'\<close>
+      \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v = v'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
+  by (standard; clarsimp simp add: Transformation_Functor_def Imply_def ExSet_expn Premise_def
+      Subjection_expn Val_expn)
 
 lemma Val_inhabitance_functor[\<phi>reason add]:
   \<open>Inhabitance_Functor (Val v) id\<close>
@@ -86,7 +86,7 @@ lemma [\<phi>reason 2100 for \<open>
 \<close>]:
   \<open> PROP \<phi>Application (Trueprop (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P))
       (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Val raw T))
-      (Trueprop ((\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P)\<close>
   unfolding \<phi>Application_def
   using \<phi>apply_implication Val_transformation implies_left_prod by metis
 
@@ -104,7 +104,7 @@ lemma [\<phi>reason 2000 for \<open>
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P))
       (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Val raw T))
-      (Trueprop ((\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P))\<close>
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P)\<close>
   unfolding \<phi>Application_def
   by (meson Val_transformation \<phi>apply_implication implies_left_prod)
 
@@ -259,16 +259,6 @@ lemma [\<phi>reason 1000]:
                              (Trueprop True)
                              (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def .
-
-
-subsubsection \<open>Equiv Object\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method (\<And>y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T) M D R F
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>Equiv_Obj T x eq)) M D R F\<close>
-  unfolding \<phi>Programming_Method_def \<phi>Equiv_Obj_def Premise_def
-  by clarsimp
-
 
 
 subsubsection \<open>Equality\<close>

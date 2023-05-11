@@ -82,17 +82,26 @@ signature NU_REASONER = sig
   (*The nested level of the current reasoning*)
   val nested_level : Proof.context -> int (*Starting from 1*)
 
-
+  type guard = context_state -> bool
   val default_mode_of : priority -> mode
   val add_intro_rule : Position.T -> mode -> priority
                     -> (pattern * priority option) list * pattern list
-                    -> (context_state -> bool) option
+                    -> guard option
                     -> thm list
                     -> Context.generic -> Context.generic
   val add_intro_rules: (thm list * Position.T * mode * priority
                        * (pattern * priority option) list * pattern list
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
+
+  type rule_pass = Position.T
+              -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+              -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+  val get_passes : Context.generic -> term list -> (string * term * rule_pass) list
+  val run_passes : Position.T
+                -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+                -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+  val add_pass : string * term * rule_pass -> Context.generic -> Context.generic
 
   val setup_cmd : (((string (*name term*) * Position.T) * (mode * priority (*default priority*)))
                    * ((bool (*true for matching, false for not matching*)
@@ -116,6 +125,14 @@ signature NU_REASONER = sig
   val single_RS' : thm (*rule*) -> context_state -> context_state option
   val single_RS  : thm (*rule*) -> context_state -> context_state Seq.seq
         (*The resolution that returns at most one solution.*)
+
+  val beta_eta_contract : thm -> thm
+  val attribute_parser_for_reasoning_rule :
+       (((((Position.T * (mode * priority)) * thm list) * cterm option)
+          * ((pattern * priority option) list * pattern list))
+        * (Proof.context * thm -> bool) option
+        -> attribute) -> attribute context_parser
+
 end
 
 (*A special name to prevent someone overriding this structure, whose visibility is essential
@@ -295,7 +312,7 @@ fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
 
 fun add reasoner0 ctxt =
   let val reasoner = normalize_reasoner I reasoner0
-      val _ = info_pretty_generic ctxt 2 (fn () =>
+      val _ = info_pretty_generic ctxt 1 (fn () =>
                 Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
                                pretty (Context.proof_of ctxt) reasoner])
    in Reasoners.map (fold (insert_net ctxt reasoner) (#pattern reasoner)) ctxt
@@ -304,7 +321,7 @@ fun add reasoner0 ctxt =
 fun adds reasoners ctxt = Reasoners.map (
       fold (fn reasoner0 =>
         let val reasoner = normalize_reasoner I reasoner0
-            val _ = info_pretty_generic ctxt 2 (fn () =>
+            val _ = info_pretty_generic ctxt 1 (fn () =>
                 Pretty.chunks [Pretty.str "Installing \<phi>-LPR reasoner:",
                                pretty (Context.proof_of ctxt) reasoner])
          in fold (insert_net ctxt reasoner) (#pattern reasoner)
@@ -615,24 +632,10 @@ val _ =
         end)));
 
 
-(*** Default Pattern for Introduction Reasoning Rule ***)
 
-structure Default_Pattern = Pattern_Translation (
-  val parse_pattern = Syntax.parse_prop
-  val check_pattern = Syntax.check_props
-  val multi_translation_err_msg = "Fail to determine which pattern is preferable. \
-                                \Please indicate the pattern manually using syntax \
-                                \\<open>\<phi>reason for \<open>pattern\<close>\<close>"
-)
+(*** Reasoner for Reasoning Rule ***)
 
-val add_default_pattern = Default_Pattern.add
-val remove_default_pattern = Default_Pattern.remove
-val the_default_pattern_of = Default_Pattern.translate
-
-val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>reason_default_pattern\<close>
-          "set the default pattern of a reasoning rule once its conclusion matches some pattern")
-
-(*** Reasoner for Introduction Reasoning Rule ***)
+(** Auxiliary Helpers **)
 
 fun chop_seq_head' seq =
   case Seq.chop 2 seq
@@ -662,9 +665,61 @@ fun beta_eta_contract th =
   then Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
   else th
 
-fun intro_reasoner ctxt pos mode (priority:priority) patterns blacklist guard rules =
+type guard = context_state -> bool
+
+(** Default Pattern **)
+
+structure Default_Pattern = Pattern_Translation (
+  val parse_pattern = Syntax.parse_prop
+  val check_pattern = Syntax.check_props
+  val multi_translation_err_msg = "Fail to determine which pattern is preferable. \
+                                \Please indicate the pattern manually using syntax \
+                                \\<open>\<phi>reason for \<open>pattern\<close>\<close>"
+)
+
+val add_default_pattern = Default_Pattern.add
+val remove_default_pattern = Default_Pattern.remove
+val the_default_pattern_of = Default_Pattern.translate
+
+val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>reason_default_pattern\<close>
+          "set the default pattern of a reasoning rule once its conclusion matches some pattern")
+
+(** Reasoning Rule Pass **)
+
+type rule_pass = Position.T
+              -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+              -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+
+fun rule_pass_eq ((n1,_,_),(n2,_,_)) = (n1 = n2)
+structure Rule_Pass = Generic_Data (
+  type T = (string (*name*) * pattern * rule_pass) Net.net
+  val empty = Net.empty
+  val merge = Net.merge rule_pass_eq
+)
+
+fun get_passes ctxt terms =
+  let val thy = Context.theory_of ctxt
+      fun get term =
+        Net.match_term (Rule_Pass.get ctxt) term
+          |> filter (fn (_,pat,_) => Pattern.matches thy (pat,term))
+   in fold (fn TM => union rule_pass_eq (get TM)) terms []
+  end
+
+fun run_passes pos (data as (rules, _, _, ctxt)) =
+  fold (fn (_,_,f) => f pos) (get_passes ctxt (map Thm.concl_of rules)) data
+
+fun add_pass rule_pass =
+  Rule_Pass.map (Net.insert_term rule_pass_eq (#2 rule_pass, rule_pass))
+
+(*structure Rule_Pass *)
+
+(** Main Function **)
+
+fun intro_reasoner ctxt0 pos mode (priority:priority) pats0 guard0 rules0 =
   let
-    val rules = rules
+    val (rules01, (patterns, blacklist), guard, ctxt) =
+            run_passes pos (rules0, pats0, guard0, ctxt0)
+    val rules = rules01
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
              |> map Thm.trim_context
     val _ = if null rules then error ("No rule is given!") else ()
@@ -706,22 +761,26 @@ fun intro_reasoner ctxt pos mode (priority:priority) patterns blacklist guard ru
                   | SOME G => let val tac = tactic rules
                                in (fn s => if G s then tac s else Seq.empty) end
 
-  in {name = name_of_intro_reasoner rules,
+  in({name = name_of_intro_reasoner rules,
       pos = pos,
       mode = mode,
       pattern = pats,
       blacklist = blacklist,
       tactic = guarded_tac rules_with_flag
-      }
+      },
+    ctxt)
   end
 
-fun add_intro_rule pos mode priority (pattern,blacklist) guard rules ctxt =
-      add (intro_reasoner ctxt pos mode priority pattern blacklist guard rules) ctxt
+fun add_intro_rule pos mode priority pats guard rules ctxt =
+      intro_reasoner ctxt pos mode priority pats guard rules
+        |-> add
 fun add_intro_rules rules ctxt =
   if null rules then ctxt
-  else adds (map (fn (rule,pos,mode,priority,pattern,blacklist,guard) =>
-              intro_reasoner ctxt pos mode priority pattern blacklist guard rule) rules) ctxt
+  else fold_map (fn (rule,pos,mode,priority,pattern,blacklist,guard) => fn ctxt =>
+                intro_reasoner ctxt pos mode priority (pattern,blacklist) guard rule) rules ctxt
+        |-> adds
 
+(** Interfaces **)
 
 fun attr_add_intro (((((pos, (mode,priority)), additional_rules), action), (pattern, blacklist)), guard) =
   Thm.declaration_attribute (fn rule =>
@@ -735,40 +794,41 @@ fun attr_add_intro (((((pos, (mode,priority)), additional_rules), action), (patt
        in add_intro_rule pos mode priority (pattern,blacklist) guard rules end)
 
 
+fun attribute_parser_for_reasoning_rule gen =
+  let open Args Scan Parse
+    fun read_term_mode mode' ctxt tm = Syntax.read_term (Proof_Context.set_mode mode' ctxt) tm
+    val read_term_pattern = read_term_mode Proof_Context.mode_pattern
+    val term_pattern = Scan.peek (named_term o read_term_pattern o Context.proof_of)
+  
+    fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
+    val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
+    val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
+    fun cterm (ctxt,toks) = let val (term,ret) = term_pattern (ctxt,toks)
+                             in (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term, ret) end
+    val pos_parser = Phi_Reasoner_Helpers.pos_parser "\<phi>reasoner"
+    val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
+         let val ctxt = Context.Proof (Context.proof_of ctxt0)
+              |> ML_Context.expression (Input.pos_of src)
+                (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put (" @
+                 ML_Lex.read_source src @
+                 ML_Lex.read "))")
+         in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
+       ))
+    val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
+  in
+    (lift pos_parser
+    -- lift (option add |-- mode_and_priority)
+    -- Attrib.thms
+    -- option (lift (\<^keyword>\<open>for\<close> |-- Args.$$$ "action") |-- cterm)
+    -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
+      -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
+    -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
+    >> gen)
+  end
 
-
-val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
-(let open Args Scan Parse
-  fun read_term_mode mode' ctxt tm = Syntax.read_term (Proof_Context.set_mode mode' ctxt) tm
-  val read_term_pattern = read_term_mode Proof_Context.mode_pattern
-  val term_pattern = Scan.peek (named_term o read_term_pattern o Context.proof_of)
-
-  fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
-  val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
-  val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
-  fun cterm (ctxt,toks) = let val (term,ret) = term_pattern (ctxt,toks)
-                           in (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term, ret) end
-  val pos_parser = Phi_Reasoner_Helpers.pos_parser "\<phi>reasoner"
-  val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
-       let val ctxt = Context.Proof (Context.proof_of ctxt0)
-            |> ML_Context.expression (Input.pos_of src)
-              (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put (" @
-               ML_Lex.read_source src @
-               ML_Lex.read "))")
-       in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
-     ))
-  val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
-in
-  (lift pos_parser
-  -- lift (option add |-- mode_and_priority)
-  -- Attrib.thms
-  -- option (lift (\<^keyword>\<open>for\<close> |-- Args.$$$ "action") |-- cterm)
-  -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
-    -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
-  -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
-  >> attr_add_intro)
-end)
-"Decalre or remove introduction rules in \<phi>-LPR."
+val _ = Theory.setup (
+      Attrib.setup \<^binding>\<open>\<phi>reason\<close> (attribute_parser_for_reasoning_rule attr_add_intro)
+        "Decalre or remove introduction rules in \<phi>-LPR."
 
 #> Method.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Scan Parse in
@@ -776,7 +836,7 @@ end)
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
                Method.modifier (attr_add_intro (((((pos,(NORMAL,100)),[]),NONE),([],[])),NONE)) \<^here>)
-] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems ctxt)
+] >> (fn num_prems => fn ctxt => fn ths (*TODO: check me!*) => reason_tac num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."
 

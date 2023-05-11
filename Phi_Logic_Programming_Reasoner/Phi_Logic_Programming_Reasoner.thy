@@ -56,7 +56,7 @@ ML_file \<open>library/tools/simpset.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 
 
-definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where [iff]: \<open>\<r>Guard X \<equiv> X\<close>
+definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
     \<comment> \<open>If guards of a rule fail, the rule will be considered not appliable, just like the pattern
         mismatch. It makes difference for cut rule and default 'to-be-overrided' rules.
         If the rule is considered not appliable, the cut will not make effect and it will not
@@ -64,9 +64,8 @@ definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r
 
 typedecl action
 
-
 definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [10,10] 9)
-  where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
+  where \<open>Action_Tag P A \<equiv> P\<close>
 
 lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
@@ -325,7 +324,7 @@ text \<open>\<^emph>\<open>Remark\<close>: Attribute @{attribute \<phi>reason} c
 
 paragraph \<open>Example\<close>
 
-declare conjI[\<phi>reason add 1000] TrueI[\<phi>reason 1000]
+declare TrueI[\<phi>reason 1000]
 
 paragraph \<open>\<open>\<r>\<close>Feasible \label{sec:rFeasible}\<close>
 
@@ -530,6 +529,10 @@ The fallback rule may has the following form,
 
 subsubsection \<open>Compact Representation of Antecedents\<close>
 
+declare conjunctionI[\<phi>reason 1000] conjI[\<phi>reason 1000]
+        allI[\<phi>reason 1000] impI[\<phi>reason 1000]
+
+(*
 text \<open>Meta-programming is feasible on \<phi>-LPR.
 The reasoning of an antecedent may generate dynamically another antecedent, and assign it to
 an output variable of type \<^typ>\<open>bool\<close>.
@@ -542,6 +545,7 @@ so they can be represented by one output variable of type \<^typ>\<open>bool\<cl
 respectively.
 \<close>
 
+(*TODO: depreciate this!*)
 definition Compact_Antecedent :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
   where [iff]: \<open>Compact_Antecedent = (\<and>)\<close>
 
@@ -557,8 +561,7 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   \<open>(\<And>x. P x) \<Longrightarrow> \<forall>\<^sub>\<r>x. P x\<close>
   unfolding Compact_Forall_def ..
-
-declare conjunctionI[\<phi>reason 1000] \<comment> \<open>Meta-conjunction \<open>P &&& Q\<close> is also a compression.\<close>
+*)
 
 
 subsubsection \<open>Matches\<close>
@@ -631,7 +634,7 @@ text \<open>Antecedent \<open>\<r>Success\<close> terminates the reasoning succe
 the result.\<close>
 
 definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
-lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
+lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
 
 \<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
   raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
@@ -640,7 +643,7 @@ lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def .
 subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}\<close>
 
 definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,27] 26)
-  where "Premise _ x = x"
+  where "Premise mode x = x"
 
 abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
@@ -716,8 +719,11 @@ text \<open>
 
 lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
 lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma Premise_E[elim!]: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
+lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
+lemma [simp]:
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close>
+  unfolding Premise_def by simp+
 
 subsubsection \<open>Implementation of the reasoners\<close>
 
@@ -737,16 +743,6 @@ lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
                                     \<open>Premise ?mode (?var_x = ?x)\<close>]:
   "Premise mode (x = x)"
   unfolding Premise_def ..
-
-(*lemma contract_premise_true:
-  "(True \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode B) "
-  by simp
-
-lemma contract_premise_imp:
-  "(A \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode (A \<longrightarrow> B)) "
-  unfolding Premise_def atomize_imp .
-*)
-declare [[ML_debugger = true]]
 
 ML \<open>
 structure Useful_Thms = Named_Thms (
@@ -776,9 +772,6 @@ lemma contract_premise_all:
   "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
   unfolding Premise_def atomize_all .
 
-term Pure.prop
-thm Pure.prop_def
-
 ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
@@ -786,6 +779,8 @@ ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
+
+hide_fact contract_premise_imp contract_drop_waste contract_obligations contract_premise_all
 
 
 subsection \<open>Reasoning Frame\<close>

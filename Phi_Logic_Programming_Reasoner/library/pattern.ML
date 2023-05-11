@@ -50,7 +50,7 @@ fun app (s,(i::is)) = app (s$Bound(i),is)
 
 fun red (Abs(_,_,s)) (i::is) js = red s is (i::js)
   | red t            []      [] = t
-  | red t            is      jn = app (mapbnd (nth jn) t,is);
+  | red t            is      jn = app (mapbnd (fn k => nth jn k handle Subscript => k) t,is);
 
 
 val incr = mapbnd (fn i => i+1);

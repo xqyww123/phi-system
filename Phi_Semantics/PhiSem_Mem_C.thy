@@ -124,11 +124,11 @@ definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'F
     else {})\<close>
 
 lemma (in agmem) Ref_expn[\<phi>expns]:
-  \<open>fic \<in> ((seg |: idx) \<Zinj> (n \<Znrres> v) \<Ztypecolon> Ref Identity)
+  \<open>fic \<in> ((seg |: idx) \<Zinj> (n \<Znrres> v) \<Ztypecolon> Ref Itself)
     \<longleftrightarrow> 0 < n \<and> valid_index (segidx.layout seg) idx
         \<and> v \<in> Well_Type (logaddr_type (seg |: idx))
         \<and> fic = FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Map_of_Val v)))))\<close>
-  unfolding Ref_def \<phi>Type_def by (simp add: Identity_def) blast
+  unfolding Ref_def \<phi>Type_def by (simp add: Itself_def) blast
 
 definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share option list) \<phi>\<close>
   where \<open>Slice T x' = (case x' of (seg |: i#idx) \<Zinj> l \<Rightarrow>
@@ -142,8 +142,8 @@ definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 
 section \<open>Instructions & Their Specifications\<close>
 
 lemma
-  \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Identity)
-    = (v \<Ztypecolon> \<m>\<e>\<m>[addr] ([] \<^bold>\<rightarrow> to_share.\<phi> (\<black_circle> Nosep Identity)))\<close>
+  \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Itself)
+    = (v \<Ztypecolon> \<m>\<e>\<m>[addr] ([] \<^bold>\<rightarrow> to_share.\<phi> (\<black_circle> Nosep Itself)))\<close>
   unfolding set_eq_iff
   apply (clarsimp simp add: \<phi>expns to_share.perm_ins_homo_axioms)
 
@@ -171,7 +171,7 @@ proc op_load_mem:
   input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<coercion> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
   output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<coercion> T)\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
 \<medium_left_bracket>
-  to Identity \<exists>v
+  to Itself \<exists>v
 thm \<phi>
   thm FIC.aggregate_mem.getter_rule
 
@@ -242,8 +242,8 @@ definition op_alloc_mem :: "'TY \<Rightarrow> ('VAL, unit,'RES_N,'RES) proc'"
 declare (in agmem) fiction_mem_\<I>[simp]
 
 lemma (in agmem) \<phi>M_get_mem[\<phi>reason!]:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> (seg |: idx) \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity \<longmapsto> Y \<rbrace>
-    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_mem seg idx F \<lbrace> (seg |: idx) \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity \<longmapsto> Y \<rbrace>\<close>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c F v \<lbrace> (seg |: idx) \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Itself \<longmapsto> Y \<rbrace>
+    \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_mem seg idx F \<lbrace> (seg |: idx) \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Itself \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>Procedure_def
   apply clarify
   apply (subgoal_tac \<open>\<phi>M_get_mem seg idx F comp = F v comp\<close>)
@@ -291,7 +291,7 @@ lemma (in agmem) \<phi>M_get_mem[\<phi>reason!]:
 lemma (in agmem) op_load_mem:
   \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
     \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_load_mem TY raw
-          \<lbrace> ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> ptr \<Ztypecolon> Val raw (Pointer TY) \<longmapsto> ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Identity \<rbrace>\<close>
+          \<lbrace> ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Itself\<heavy_comma> ptr \<Ztypecolon> Val raw (Pointer TY) \<longmapsto> ptr \<Zinj> n \<Znrres> v \<Ztypecolon> Ref Itself\<heavy_comma> \<^bold>v\<^bold>a\<^bold>l v \<Ztypecolon> Itself \<rbrace>\<close>
   unfolding Premise_def op_load_mem_def
   apply (cases ptr; simp)
   apply \<phi>reason
@@ -302,8 +302,8 @@ lemma (in agmem) op_store_mem:
    \<open>\<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e v \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>e\<^bold>m\<^bold>i\<^bold>s\<^bold>e u \<in> Well_Type TY
 \<Longrightarrow> \<^bold>p\<^bold>r\<^bold>o\<^bold>c op_store_mem TY (\<phi>V_pair raw_ptr raw_u)
-          \<lbrace> ptr \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> u \<Ztypecolon> Val raw_u Identity\<heavy_comma> ptr \<Ztypecolon> Val raw_ptr (Pointer TY)
-        \<longmapsto> ptr \<Zinj> 1 \<Znrres> u \<Ztypecolon> Ref Identity\<rbrace>\<close>
+          \<lbrace> ptr \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Itself\<heavy_comma> u \<Ztypecolon> Val raw_u Itself\<heavy_comma> ptr \<Ztypecolon> Val raw_ptr (Pointer TY)
+        \<longmapsto> ptr \<Zinj> 1 \<Znrres> u \<Ztypecolon> Ref Itself\<rbrace>\<close>
   unfolding Premise_def op_store_mem_def
   apply (rule \<phi>M_caseV, rule \<phi>M_get_logptr)
   apply (cases ptr; cases raw_u; simp, \<phi>reason)
@@ -442,7 +442,7 @@ lemma (in agmem) share_mem'_drop_seg:
 
 
 lemma (in agmem) op_alloc_mem:
-  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_mem TY raw_n \<lbrace> n \<Ztypecolon> Val raw_n Size \<longmapsto> ((seg |: []) \<Zinj> 1 \<Znrres> (Zero (\<tau>Array n TY)) \<Ztypecolon> Ref Identity \<^bold>s\<^bold>u\<^bold>b\<^bold>j seg. True) \<rbrace>\<close>
+  \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_alloc_mem TY raw_n \<lbrace> n \<Ztypecolon> Val raw_n Size \<longmapsto> ((seg |: []) \<Zinj> 1 \<Znrres> (Zero (\<tau>Array n TY)) \<Ztypecolon> Ref Itself \<^bold>s\<^bold>u\<^bold>b\<^bold>j seg. True) \<rbrace>\<close>
   unfolding op_alloc_mem_def
   apply (cases raw_n; simp, rule \<phi>M_tail_left, rule \<phi>M_getV; simp add: \<phi>expns)
   unfolding \<phi>M_set_res_def \<phi>Procedure_def
@@ -484,7 +484,7 @@ lemma (in agmem) op_alloc_mem:
 
 
 lemma (in agmem) op_free_mem:
-   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_mem vptr \<lbrace> (seg |: []) \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Identity\<heavy_comma> (seg |: 0) \<Ztypecolon> Val vptr RawPointer \<longmapsto> 1\<rbrace>\<close>
+   \<open>\<^bold>p\<^bold>r\<^bold>o\<^bold>c op_free_mem vptr \<lbrace> (seg |: []) \<Zinj> 1 \<Znrres> v \<Ztypecolon> Ref Itself\<heavy_comma> (seg |: 0) \<Ztypecolon> Val vptr RawPointer \<longmapsto> 1\<rbrace>\<close>
   unfolding op_free_mem_def
   apply (cases vptr; simp, rule \<phi>M_getV; simp add: \<phi>expns)
   unfolding \<phi>M_set_res_def \<phi>Procedure_def

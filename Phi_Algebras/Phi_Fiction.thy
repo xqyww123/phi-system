@@ -160,7 +160,7 @@ lemma refinement_projection_UNIV_times_D[simp]:
 
 subsection \<open>Instances\<close>
 
-subsubsection \<open>Identity\<close>
+subsubsection \<open>Itself\<close>
 
 definition [simp]: "\<F>_it x = {x}"
 

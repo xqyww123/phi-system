@@ -135,6 +135,7 @@ lemma [iff]:
   \<open> n < 16 \<Longrightarrow> Big n = n \<close>
   unfolding Big_def by simp+
 
+
 subsection \<open>Helper Conversion\<close>
 
 definition \<open>PURE_TOP \<equiv> (\<And>P::prop. PROP P \<Longrightarrow> PROP P)\<close>
@@ -152,7 +153,6 @@ next
 qed
 
 ML_file \<open>library/syntax/helper_conv.ML\<close>
-
 
 
 subsection \<open>Helper Methods\<close>
@@ -263,6 +263,97 @@ lemma [\<phi>inhabitance_rule, elim!]:
 lemma Membership_E_Inhabitance:
   \<open>x \<in> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by blast
+
+
+
+subsubsection \<open>Meta Ball\<close>
+
+definition meta_Ball :: \<open>'a set \<Rightarrow> ('a \<Rightarrow> prop) \<Rightarrow> prop\<close>
+  where \<open>meta_Ball S P \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)\<close>
+
+definition meta_case_prod :: \<open>('a \<Rightarrow> 'b \<Rightarrow> prop) \<Rightarrow> ('a \<times> 'b \<Rightarrow> prop)\<close>
+  where \<open>meta_case_prod f \<equiv> (\<lambda>x. f (fst x) (snd x))\<close>
+
+lemma meta_case_prod_simp[iff]:
+  \<open>meta_case_prod f (x,y) \<equiv> f x y\<close>
+  unfolding meta_case_prod_def by simp
+
+thm prod.case[folded atomize_eq]
+
+syntax
+  "_meta_Ball" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> prop \<Rightarrow> prop" ("(3\<And>(_/\<in>_)./ _)" [0, 0, 0] 0)
+
+translations
+  ("aprop") "_meta_Ball x A P" \<rightleftharpoons> ("aprop") "CONST meta_Ball A (\<lambda>x. P)"
+  ("aprop") "CONST meta_Ball A (\<lambda>(x,y,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_Ball A (CONST meta_case_prod (\<lambda>x (y, zs). P))"
+  ("aprop") "CONST meta_Ball A (\<lambda>(x,y). P)" \<rightleftharpoons> ("aprop") "CONST meta_Ball A (CONST meta_case_prod (\<lambda>x y. P))"
+  ("aprop") "CONST meta_case_prod (\<lambda>x (y,z,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_case_prod (\<lambda>x. CONST meta_case_prod (\<lambda>y (z,zs). P))"
+  ("aprop") "CONST meta_case_prod (\<lambda>x (y,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_case_prod (\<lambda>x. CONST meta_case_prod (\<lambda>y zs. P))"
+
+lemma meta_Ball_simp[simp]:
+  \<open> (\<And>x \<in> {y}. PROP P x) \<equiv> PROP P y \<close>
+  unfolding meta_Ball_def Premise_def by simp
+
+lemma Ball_for_reason:
+  \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> A \<Longrightarrow> P x)\<close>
+  unfolding atomize_imp atomize_all Ball_def Premise_def .
+
+ML_file \<open>library/tools/case_prod_conv.ML\<close>
+
+\<phi>reasoner_ML meta_case_prod_in_meta_Ball !1 (\<open>PROP meta_Ball _ _\<close>) = \<open>
+  fn (ctxt,sequent) => Seq.make (fn () =>
+  let val sequent' = Conv.gconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+                Conv.rewr_conv @{thm meta_Ball_def} then_conv
+                Phi_Helper_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
+            ) ctxt) 1 sequent
+   in SOME ((ctxt, sequent'), Seq.empty)
+  end)
+\<close>
+
+\<phi>reasoner_ML case_prod_in_Ball !1 (\<open>Ball _ _\<close>) = \<open>
+  fn (ctxt,sequent) => Seq.make (fn () =>
+  let val sequent' = Conv.gconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+                Conv.rewr_conv @{thm Ball_for_reason} then_conv
+                Phi_Helper_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
+            ) ctxt) 1 sequent
+   in SOME ((ctxt, sequent'), Seq.empty)
+  end)
+\<close>
+
+hide_fact Ball_for_reason
+
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP P y
+\<Longrightarrow> (\<And>x \<in> {y}. PROP P x)\<close>
+  unfolding meta_Ball_def Premise_def by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> P y
+\<Longrightarrow> (\<forall>x \<in> {y}. P x)\<close>
+  by simp
+
+lemma [\<phi>reason 1010]:
+  \<open> (\<And>y \<in> {y}. PROP P x y)
+\<Longrightarrow> (\<And>(x,y) \<in> {(x,y)}. PROP P x y)\<close>
+  unfolding meta_Ball_def meta_case_prod_def Premise_def by simp
+
+lemma [\<phi>reason 1010]:
+  \<open> (\<forall>y \<in> {y}. P x y)
+\<Longrightarrow> (\<forall>(x,y) \<in> {(x,y)}. P x y) \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> (Q \<Longrightarrow> (\<And>x \<in> S. PROP P x))
+\<Longrightarrow> (\<And>x \<in> S \<s>\<u>\<b>\<j> Q. PROP P x)\<close>
+  unfolding meta_Ball_def Premise_def Subjection_expn
+  by (clarsimp simp add: atomize_conj[symmetric] conjunction_imp norm_hhf_eq)
+
+lemma [\<phi>reason 1000]:
+  \<open> (Q \<Longrightarrow> \<forall>x \<in> S. P x)
+\<Longrightarrow> (\<forall>x \<in> S \<s>\<u>\<b>\<j> Q. P x)\<close>
+  unfolding Ball_def Subjection_expn
+  by simp
 
 
 subsection \<open>Very Early Mechanism\<close>

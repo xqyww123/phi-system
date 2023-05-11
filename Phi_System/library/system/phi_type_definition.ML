@@ -1,7 +1,7 @@
 signature PHI_TYPE_DEF = sig
 
-datatype def = DIRECT_DEF    of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
-             | RECURSIVE_DEF of Function.info
+datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
+             | WFREC_DEF  of Function.info
 
 type phi_type = {
         def: def,
@@ -25,11 +25,11 @@ fun leading_const_name thm =
   Term.term_name (Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of thm)))
 
 datatype def = DIRECT_DEF    of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
-             | RECURSIVE_DEF of Function.info
+             | WFREC_DEF of Function.info
 
 fun def_eq (DIRECT_DEF (_,(_,th1)), DIRECT_DEF (_,(_,th2)))
       = (leading_const_name th1 = leading_const_name th2)
-  | def_eq (RECURSIVE_DEF info1, RECURSIVE_DEF info2)
+  | def_eq (WFREC_DEF info1, WFREC_DEF info2)
       = (#fnames info1 = #fnames info2)
   | def_eq _ = false
 
@@ -49,7 +49,7 @@ fun constants_name_of ({def,...} : phi_type) =
                              | Const (\<^const_name>\<open>Pure.eq\<close>, _) $ A $ _ => A
                              | _ => error "internal bug #vb43qp"
                       )) ]
-                | RECURSIVE_DEF info => map Binding.name_of (#fnames info)
+                | WFREC_DEF info => map Binding.name_of (#fnames info)
 
 type declaration = phi_type * algebra_hints -> local_theory -> phi_type * local_theory
 
@@ -94,7 +94,7 @@ fun check_algebra_hints ctxt terms =
               of \<^Type>\<open>fun T _\<close> => pad_term (term $ Var (("uu", maxidx_of_term term + 1), T))
                | \<^Type>\<open>bool\<close> => HOLogic.Trueprop $ term
                | \<^Type>\<open>prop\<close> => term
-               | _ => raise TERM("BAD Algebra Instantiation", [term])
+               | _ => raise TERM("Bad Algebra Instantiation", [term])
    in map pad_term terms' end
 
 (*** Definition Command ***)
@@ -119,7 +119,7 @@ fun gen_add_fun hints add lthy =
                             \Fail to show the termination automatically. \
                             \May use command \<open>\<phi>type_definition\<close> to prove the termination manually"))
    in lthy2
-   |> add_phi_type hints (RECURSIVE_DEF info) |> snd
+   |> add_phi_type hints (WFREC_DEF info) |> snd
   end
 
 in

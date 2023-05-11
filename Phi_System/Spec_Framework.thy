@@ -87,10 +87,14 @@ lemma SemTyp_Of_I[intro!, simp]:
   unfolding SemTyp_Of_def
   using \<phi>SemType_unique by blast *)
 
+(*
+declare [[\<phi>trace_reasoning = 1]]
+
 lemma [\<phi>reason 100]:
   \<open> (\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY)
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
-  ..
+  .. *)
+
 
 subsubsection \<open>Multiple Values\<close>
 
@@ -376,11 +380,11 @@ lemma view_shift_refl[\<phi>reason 2000 for \<open>?A \<s>\<h>\<i>\<f>\<t>\<s> ?
   by (blast intro: view_shift_by_implication implies_refl)
 
 lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<s>\<h>\<i>\<f>\<t>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> ?P\<close>]:
-  " \<phi>Equiv_Obj T x eq
+  " \<phi>Equiv_Obj eq T
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y
 \<Longrightarrow> x \<Ztypecolon> T \<s>\<h>\<i>\<f>\<t>\<s> y \<Ztypecolon> T"
-  unfolding \<phi>Equiv_Obj_def
-  by (clarsimp, insert view_shift_by_implication, presburger)
+  unfolding \<phi>Equiv_Obj_def Premise_def
+  by (insert view_shift_by_implication, presburger)
 
 lemma view_shift_union[\<phi>reason 800]:
   \<open> A \<s>\<h>\<i>\<f>\<t>\<s> X \<a>\<n>\<d> P

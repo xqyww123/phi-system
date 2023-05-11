@@ -60,6 +60,10 @@ class mult_1 = times + one +
 subclass (in monoid_mult) mult_1
   by (standard; simp)
 
+class add_0 = plus + zero +
+  assumes add_0_add_0_left [simp]: \<open>0 + x = x\<close>
+      and add_0_add_0_right[simp]: \<open>x + 0 = x\<close>
+
 class ab_group_mult = inverse + comm_monoid_mult +
   assumes ab_left_inverse: "inverse a * a = 1"
   assumes ab_diff_conv_add_uminus: "a / b = a * (inverse b)"
@@ -121,9 +125,6 @@ class positive_sep_magma = sep_magma +
 
 class strict_positive_sep_magma = sep_magma +
   assumes join_strict_positivity: \<open>b ## a \<Longrightarrow> a = b * a \<Longrightarrow> False\<close>
-begin
-
-end
 
 
 subsubsection \<open>Separation Semigroup\<close>
@@ -700,6 +701,238 @@ lemma
     and unital_add_right[simp]: "x * 1 = x"
 
 subclass (in monoid_mult) unital_mult .. simp_all *)
+
+subsection \<open>Partial Additive Structures\<close>
+
+subsubsection \<open>Domain of the Addition\<close>
+
+class dom_of_add =
+  fixes dom_of_add :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> (infix "##\<^sub>+" 60)
+
+class total_dom_of_add = dom_of_add +
+  assumes total_dom_of_add[simp]: \<open>x ##\<^sub>+ y\<close>
+
+class comm_dom_of_add = dom_of_add +
+  assumes dom_of_add_commuteI: "x ##\<^sub>+ y \<Longrightarrow> y ##\<^sub>+ x"
+begin
+lemma dom_of_add_commute: "x ##\<^sub>+ y \<longleftrightarrow> y ##\<^sub>+ x"
+  by (blast intro: dom_of_add_commuteI)
+end
+
+subsubsection \<open>Partial Additive Magma\<close>
+
+class partial_add_magma = dom_of_add + plus
+begin
+
+definition additive_join_sub (infix "\<preceq>\<^sub>+" 50)
+  where \<open>additive_join_sub y z \<longleftrightarrow> (\<exists>x. z = x + y \<and> x ##\<^sub>+ y)\<close>
+
+end
+
+class partial_add_cancel = partial_add_magma +
+  assumes partial_add_cancel: \<open>a ##\<^sub>+ c \<Longrightarrow> b ##\<^sub>+ c \<Longrightarrow> a + c = b + c \<Longrightarrow> a = b\<close>
+
+class positive_partial_add_magma = partial_add_magma +
+  assumes additive_join_positivity: \<open>x \<preceq>\<^sub>+ y \<Longrightarrow> y \<preceq>\<^sub>+ x \<Longrightarrow> x = y\<close>
+
+class strict_positive_partial_add_magma = partial_add_magma +
+  assumes additive_join_strict_positivity: \<open>b ##\<^sub>+ a \<Longrightarrow> a = b + a \<Longrightarrow> False\<close>
+
+
+subsubsection \<open>Partial Additive Semigroup\<close>
+
+class partial_add_semigroup = partial_add_magma +
+  assumes partial_add_assoc:
+    "\<lbrakk> x ##\<^sub>+ y; x + y ##\<^sub>+ z \<rbrakk> \<Longrightarrow> (x + y) + z = x + (y + z)"
+  assumes partial_add_dom_multD1: "\<lbrakk> x ##\<^sub>+ y + z; y ##\<^sub>+ z \<rbrakk> \<Longrightarrow> x ##\<^sub>+ y"
+  assumes partial_add_dom_multI1: "\<lbrakk> x ##\<^sub>+ y + z; y ##\<^sub>+ z \<rbrakk> \<Longrightarrow> x + y ##\<^sub>+ z"
+  assumes partial_add_dom_multD2: "\<lbrakk> x + y ##\<^sub>+ z; x ##\<^sub>+ y \<rbrakk> \<Longrightarrow> y ##\<^sub>+ z"
+  assumes partial_add_dom_multI2: "\<lbrakk> x + y ##\<^sub>+ z; x ##\<^sub>+ y \<rbrakk> \<Longrightarrow> x ##\<^sub>+ y + z"
+begin
+
+lemma partial_add_assoc':
+    "\<lbrakk> y ##\<^sub>+ z; x ##\<^sub>+ y + z \<rbrakk> \<Longrightarrow> x + (y + z) = (x + y) + z"
+  by (metis local.partial_add_assoc local.partial_add_dom_multD1 local.partial_add_dom_multI1)
+
+end
+
+lemma positive_join_sub_antisym: \<open>x \<preceq>\<^sub>+ y \<Longrightarrow> y \<preceq>\<^sub>+ x \<Longrightarrow> False\<close>
+  for x :: \<open>'a :: {partial_add_semigroup, strict_positive_partial_add_magma}\<close>
+  unfolding additive_join_sub_def
+  by (clarsimp, metis additive_join_strict_positivity partial_add_assoc' partial_add_dom_multI1)
+
+class partial_add_ab_semigroup = partial_add_semigroup + comm_dom_of_add +
+  assumes partial_add_commute: "x ##\<^sub>+ y \<Longrightarrow> x + y = y + x"
+begin
+
+lemma self_dom_of_add_destruct:
+  \<open>x ##\<^sub>+ y \<Longrightarrow> x + y ##\<^sub>+ x + y \<Longrightarrow> x ##\<^sub>+ x\<close>
+  \<open>x ##\<^sub>+ y \<Longrightarrow> x + y ##\<^sub>+ x + y \<Longrightarrow> y ##\<^sub>+ y\<close>
+  using local.dom_of_add_commute local.partial_add_dom_multD1 apply blast
+  using local.dom_of_add_commute local.partial_add_dom_multD2 by blast
+
+end
+
+class dom_of_add_intuitive = partial_add_magma +
+  assumes dom_of_add_intuitive_right[simp]: \<open>b ##\<^sub>+ c \<Longrightarrow> a ##\<^sub>+ b + c \<longleftrightarrow> a ##\<^sub>+ b \<and> a ##\<^sub>+ c\<close>
+  assumes dom_of_add_intuitive_left [simp]: \<open>a ##\<^sub>+ b \<Longrightarrow> a + b ##\<^sub>+ c \<longleftrightarrow> a ##\<^sub>+ c \<and> b ##\<^sub>+ c\<close>
+
+
+subsubsection \<open>Unital Partial Additive Structures\<close>
+
+class partial_add_magma_0 = partial_add_magma + add_0 +
+  assumes partial_add_0_left  [simp]: "x ##\<^sub>+ 0"
+  assumes partial_add_0_right [simp]: "0 ##\<^sub>+ x"
+
+class partial_add_no_negative = partial_add_magma_0 +
+  assumes partial_add_no_negative[simp]: \<open>x ##\<^sub>+ y \<Longrightarrow> x + y = 0 \<longleftrightarrow> x = 0 \<and> y = 0\<close>
+
+class positive_partial_add_magma_0 = partial_add_magma_0 + positive_partial_add_magma
+begin
+subclass partial_add_no_negative
+  by standard (metis add_0_add_0_right local.additive_join_positivity local.additive_join_sub_def local.partial_add_0_left)
+end
+
+subsubsection \<open>Partial Additive Monoid\<close>
+
+class partial_add_monoid = partial_add_magma_0 + partial_add_semigroup
+
+(* definition (in plus) additive_subsume (infix "\<preceq>\<^sub>+''" 50)
+  where \<open>additive_subsume y z \<longleftrightarrow> (\<exists>x. z = x + y)\<close>
+
+class positive_add = plus +
+  assumes positive_add: \<open>x \<preceq>\<^sub>+' y \<Longrightarrow> y \<preceq>\<^sub>+' x \<Longrightarrow> x = y\<close>
+
+class positive_add_0 = positive_add + add_0
+begin
+
+subclass no_negative
+  by standard  (metis add_0_add_0_right local.positive_add plus.additive_subsume_def)
+  
+end *)
+
+class total_partial_add_monoid = monoid_add + total_dom_of_add
+begin
+subclass partial_add_magma .
+subclass partial_add_monoid proof
+  fix x y z :: 'a
+  show \<open>x ##\<^sub>+ 0\<close> by simp
+  show \<open>0 ##\<^sub>+ x\<close> by simp
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y ##\<^sub>+ z \<Longrightarrow> x + y + z = x + (y + z)\<close>
+    by (simp add: add_assoc)
+  show \<open>x ##\<^sub>+ y + z \<Longrightarrow> y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y\<close> by simp
+  show \<open>x ##\<^sub>+ y + z \<Longrightarrow> y ##\<^sub>+ z \<Longrightarrow> x + y ##\<^sub>+ z\<close> by simp
+  show \<open>x + y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y \<Longrightarrow> y ##\<^sub>+ z\<close> by simp
+  show \<open>x + y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y \<Longrightarrow> x ##\<^sub>+ y + z \<close> by simp
+  show \<open>0 + x = x\<close> by simp
+  show \<open>x + 0 = x\<close> by simp
+qed
+end
+
+subsubsection \<open>Partial Commutative Addition Monoid\<close>
+
+class partial_add_ab_monoid = partial_add_magma_0 + partial_add_ab_semigroup
+begin
+
+subclass partial_add_monoid ..
+
+lemma partial_add_left_commute[simp]:
+  "b ##\<^sub>+ (a + c) \<Longrightarrow> a ##\<^sub>+ c \<Longrightarrow> b + (a + c) = a + (b + c)"
+  by (metis local.dom_of_add_commuteI local.partial_add_assoc local.partial_add_commute local.partial_add_dom_multD1)
+
+lemma additive_join_sub_frame:
+  \<open>r ##\<^sub>+ y \<Longrightarrow> x \<preceq>\<^sub>+ y \<Longrightarrow> r + x \<preceq>\<^sub>+ r + y\<close>
+  unfolding additive_join_sub_def
+  by (clarsimp, metis local.dom_of_add_commute local.partial_add_commute local.partial_add_dom_multI1)
+
+lemma additive_join_sub_ext_left:
+  \<open>z ##\<^sub>+ y \<Longrightarrow> x \<preceq>\<^sub>+ y \<Longrightarrow> x \<preceq>\<^sub>+ z + y\<close>
+  unfolding additive_join_sub_def
+  using local.partial_add_assoc' local.partial_add_dom_multI1 by auto
+
+lemma additive_join_sub_ext_right:
+  \<open>y ##\<^sub>+ z \<Longrightarrow> x \<preceq>\<^sub>+ y \<Longrightarrow> x \<preceq>\<^sub>+ y + z\<close>
+  unfolding additive_join_sub_def
+  by (metis local.dom_of_add_commute local.partial_add_assoc' local.partial_add_commute local.partial_add_dom_multI1)
+
+end
+
+
+class total_partial_add_ab_monoid = comm_monoid_add + total_dom_of_add
+begin
+subclass partial_add_magma .
+subclass partial_add_ab_monoid proof
+  fix x y z :: 'a
+  show \<open>x ##\<^sub>+ 0\<close> by simp
+  show \<open>0 ##\<^sub>+ x\<close> by simp
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y = y + x\<close> by (simp add: add_commute) 
+  show \<open>x ##\<^sub>+ y + z \<Longrightarrow> y ##\<^sub>+ z \<Longrightarrow> x + y ##\<^sub>+ z\<close> by simp
+  show \<open>x ##\<^sub>+ y + z \<Longrightarrow> y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y\<close> by simp
+(*  show \<open>x \<preceq>\<^sub>+ y \<Longrightarrow> y \<preceq>\<^sub>+ x \<Longrightarrow> x = y\<close>
+    by (metis local.additive_join_sub_def local.positive_add plus.additive_subsume_def) *)
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> y ##\<^sub>+ x\<close> by simp
+  show \<open>x + y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y \<Longrightarrow> y ##\<^sub>+ z\<close> by simp
+  show \<open>x + y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y \<Longrightarrow> x ##\<^sub>+ y + z\<close> by simp
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y ##\<^sub>+ z \<Longrightarrow> x + y + z = x + (y + z)\<close> using add_assoc by blast
+  show \<open>x + 0 = x\<close> by simp
+  show \<open>0 + x = x\<close> by simp
+qed
+subclass total_partial_add_monoid ..
+end
+
+class discrete_partial_add_semigroup = dom_of_add + plus +
+  assumes discrete_dom_of_add[simp]: "x ##\<^sub>+ y \<longleftrightarrow> x = y"
+    and discrete_add[simp]: "x + y = (if x = y then x else undefined)"
+begin
+subclass partial_add_magma .
+subclass partial_add_ab_semigroup proof
+  fix x y z :: 'a
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y = y + x\<close> by simp
+(*  show \<open>x \<preceq>\<^sub>+ y \<Longrightarrow> y \<preceq>\<^sub>+ x \<Longrightarrow> x = y\<close> unfolding additive_join_sub_def by force *)
+  show \<open>x ##\<^sub>+ y + z \<Longrightarrow> y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y\<close> by simp
+  show \<open>x ##\<^sub>+ y + z \<Longrightarrow> y ##\<^sub>+ z \<Longrightarrow> x + y ##\<^sub>+ z\<close> by simp
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> y ##\<^sub>+ x\<close> by simp
+  show \<open>x + y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y \<Longrightarrow> y ##\<^sub>+ z\<close> by simp
+  show \<open>x + y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y \<Longrightarrow> x ##\<^sub>+ y + z\<close> by simp
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y ##\<^sub>+ z \<Longrightarrow> x + y + z = x + (y + z)\<close> by simp
+  (*show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
+    using local.join_sub_def by force*)
+qed
+end
+
+class empty_partial_add_semigroup = dom_of_add + plus +
+  assumes empty_dom_of_add[simp]: "\<not> x ##\<^sub>+ y"
+begin
+subclass partial_add_magma .
+subclass partial_add_ab_semigroup by (standard; simp add: additive_join_sub_def)
+subclass partial_add_cancel by (standard; simp)
+subclass strict_positive_partial_add_magma by (standard; simp)
+end
+
+class empty_partial_add_monoid = dom_of_add + add_0 +
+  assumes empty_dom_of_add_1[simp]: \<open>x ##\<^sub>+ y \<longleftrightarrow> x = 0 \<or> y = 0\<close>
+begin
+subclass partial_add_magma .
+subclass partial_add_ab_monoid proof
+  fix x y z :: 'a
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y = y + x\<close> by fastforce
+  show \<open>x ##\<^sub>+ y + z \<Longrightarrow> y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y\<close>
+    using local.empty_dom_of_add_1 by fastforce
+  show \<open>x ##\<^sub>+ y + z \<Longrightarrow> y ##\<^sub>+ z \<Longrightarrow> x + y ##\<^sub>+ z\<close>
+    using local.empty_dom_of_add_1 by fastforce
+(*  show \<open>x \<preceq>\<^sub>+ y \<Longrightarrow> y \<preceq>\<^sub>+ x \<Longrightarrow> x = y\<close>
+    unfolding additive_join_sub_def by (clarsimp, metis add_0_add_0_left) *)
+  show \<open>x ##\<^sub>+ 0\<close> by simp
+  show \<open>0 ##\<^sub>+ x\<close> by simp
+  show \<open>x + y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y \<Longrightarrow> y ##\<^sub>+ z\<close>
+    by (metis add_0_add_0_left local.empty_dom_of_add_1)
+  show \<open>x + y ##\<^sub>+ z \<Longrightarrow> x ##\<^sub>+ y \<Longrightarrow> x ##\<^sub>+ y + z\<close>
+    using local.empty_dom_of_add_1 by fastforce
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> y ##\<^sub>+ x\<close>
+    using local.empty_dom_of_add_1 by blast
+  show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y ##\<^sub>+ z \<Longrightarrow> x + y + z = x + (y + z)\<close> by force
+qed
+end
 
 
 section \<open>Instances of Algebras\<close>
@@ -2296,6 +2529,14 @@ instance agree :: (type) sep_disj_intuitive
 instance agree :: (type) sep_cancel
   by (standard; case_tac a; case_tac c; case_tac b; simp)
 
+
+subsection \<open>Rational Number\<close>
+
+instantiation rat :: total_partial_add_ab_monoid
+begin
+definition dom_of_add_rat :: \<open>rat \<Rightarrow> rat \<Rightarrow> bool\<close> where [iff]: \<open>dom_of_add_rat _ _ \<longleftrightarrow> True\<close>
+instance by standard simp
+end
 
 
 end
