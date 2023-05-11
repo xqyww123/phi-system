@@ -149,7 +149,7 @@ setup \<open>Sign.parent_path\<close>
 
 interpretation RES: "resource_space" RES.DOMAIN .
 
-ML_file \<open>resource_space_more.ML\<close>
+ML_file_debug \<open>resource_space_more.ML\<close>
  
 ML \<open>Resource_Space.define_command \<^command_keyword>\<open>resource_space\<close> "extend resource semantics"\<close>
 
@@ -221,16 +221,15 @@ setup \<open>Sign.parent_path\<close>
 
 instance FIC :: sep_algebra using FIC.sort .
 
-consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) interp\<close>
+consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) unital_homo_interp\<close>
 
 interpretation FIC: fictional_space FIC.DOMAIN INTERPRET .
 
-
-definition "INTERP_RES fic \<equiv> RES.SPACE \<inter> {_. fic \<in> FIC.SPACE } \<inter> \<I> FIC.INTERP fic"
+definition "INTERP_RES fic \<equiv> RES.SPACE \<inter> {_. fic \<in> FIC.SPACE } \<inter> FIC.INTERP fic"
   \<comment> \<open>Interpret a fiction\<close>
 
 lemma In_INTERP_RES:
-  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> r \<in> \<I> FIC.INTERP fic\<close>
+  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> r \<in> FIC.INTERP fic\<close>
   unfolding INTERP_RES_def by simp
 
 definition INTERP_SPEC :: \<open>assn \<Rightarrow> rassn\<close>
@@ -257,7 +256,7 @@ lemma INTERP_SPEC_0[simp]:
   \<open>INTERP_SPEC {} = {}\<close>
   unfolding INTERP_SPEC_def zero_set_def by simp+
 
-ML_file \<open>fiction_space_more.ML\<close>
+ML_file_debug \<open>fiction_space_more.ML\<close>
 
 ML \<open>Fiction_Space.define_command \<^command_keyword>\<open>fiction_space\<close> "extend fictions"\<close>
 

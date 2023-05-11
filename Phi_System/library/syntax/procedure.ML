@@ -234,24 +234,24 @@ fun package_values name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.
   end
 
 
-fun translate_ret (term as (Abs _)) = term
-  | translate_ret (term as (Var _)) = term
-  | translate_ret (term as (Free _)) = term
-  | translate_ret (tm as Const (\<^const_abbrev>\<open>Void\<close>, _))
+fun translate_ret' (term as (Abs _)) = term
+  | translate_ret' (term as (Var _)) = term
+  | translate_ret' (term as (Free _)) = term
+  | translate_ret' (tm as Const (\<^const_abbrev>\<open>Void\<close>, _))
       = Abs ("", \<^typ>\<open>unit \<phi>arg\<close>, tm)
-  | translate_ret (tm as Const (\<^const_name>\<open>one_class.one\<close>, _))
+  | translate_ret' (tm as Const (\<^const_name>\<open>one_class.one\<close>, _))
       = Abs ("", \<^typ>\<open>unit \<phi>arg\<close>, tm)
-  | translate_ret (term as (Const _)) = term
-  | translate_ret (Const ("_constrain", ty) $ X $ Y)
-      =(case translate_ret X of Abs (N,T,B) => Abs (N, T, Const ("_constrain", ty) $ B $ Y)
+  | translate_ret' (term as (Const _)) = term
+  | translate_ret' (Const ("_constrain", ty) $ X $ Y)
+      =(case translate_ret' X of Abs (N,T,B) => Abs (N, T, Const ("_constrain", ty) $ B $ Y)
                               | B => Const ("_constrain", ty) $ B $ Y)
-  | translate_ret (Const ("_type_constraint_", ty) $ X)
-      =(case translate_ret X of Abs (N,T,B) => Abs (N, T, Const ("_type_constraint_", ty) $ B)
+  | translate_ret' (Const ("_type_constraint_", ty) $ X)
+      =(case translate_ret' X of Abs (N,T,B) => Abs (N, T, Const ("_type_constraint_", ty) $ B)
                               | B => Const ("_type_constraint_", ty) $ B)
-  | translate_ret (Const ("_constrainAbs", ty) $ X $ Y)
-      =(case translate_ret X of Abs (N,T,B) => Abs (N, T, Const ("_constrainAbs", ty) $ B $ Y)
+  | translate_ret' (Const ("_constrainAbs", ty) $ X $ Y)
+      =(case translate_ret' X of Abs (N,T,B) => Abs (N, T, Const ("_constrainAbs", ty) $ B $ Y)
                               | B => Const ("_constrainAbs", ty) $ B $ Y)
-  | translate_ret term =
+  | translate_ret' term =
       snd (package_values "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> true NONE term)
 
 
@@ -274,6 +274,8 @@ fun need_translate_ret (Abs (_,_,_)) = false
       = need_translate_ret X
   | need_translate_ret _ = true
 
+fun translate_ret X = if need_translate_ret X then translate_ret' X else X
+
 (*
 The parse translation is invoked once there is an anonymous value in the argument specification,
 or once the return specification is not a lambda abstraction nor an atom (a variable or a constant)
@@ -282,12 +284,12 @@ val _ = Theory.setup (Sign.parse_translation [
     (\<^const_syntax>\<open>\<phi>Procedure\<close>, (fn _ => fn [f,Arg,Ret,E] =>
         Const (\<^const_name>\<open>\<phi>Procedure\<close>, dummyT) $ f
           $ (if need_translate_arg Arg then translate_arg Arg else Arg)
-          $ (if need_translate_ret Ret then translate_ret Ret else Ret)
+          $ (if need_translate_ret Ret then translate_ret' Ret else Ret)
           $ E)),
     (\<^const_syntax>\<open>\<phi>Procedure_no_exception\<close>, (fn _ => fn [f,Arg,Ret] =>
         Const (\<^const_abbrev>\<open>\<phi>Procedure_no_exception\<close>, dummyT) $ f
           $ (if need_translate_arg Arg then translate_arg Arg else Arg)
-          $ (if need_translate_ret Ret then translate_ret Ret else Ret)))
+          $ (if need_translate_ret Ret then translate_ret' Ret else Ret)))
 ])
 
 

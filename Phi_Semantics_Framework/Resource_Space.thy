@@ -11,143 +11,6 @@ theory Resource_Space
 begin
 
 
-subsection \<open>Separation Closed Set\<close>
-
-definition Sep_Closed :: \<open>'a::sep_magma_1 set \<Rightarrow> bool\<close>
-  where \<open>Sep_Closed S \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> x \<in> S \<and> y \<in> S \<longrightarrow> (x * y) \<in> S) \<and> 1 \<in> S\<close>
-
-lemma Sep_Closed_inter:
-  \<open>Sep_Closed S1 \<Longrightarrow> Sep_Closed S2 \<Longrightarrow> Sep_Closed (S1 \<inter> S2)\<close>
-  unfolding Sep_Closed_def by blast
-
-lemma Sep_Closed_UNIV[simp]:
-  \<open>Sep_Closed UNIV\<close>
-  unfolding Sep_Closed_def by simp
-
-typedef (overloaded) ('a::sep_magma_1) sep_closed_set = \<open>Collect (Sep_Closed::'a set \<Rightarrow> bool)\<close>
-  morphisms dest_sep_closed_set sep_closed_set
-  unfolding Sep_Closed_def by blast
-
-setup_lifting type_definition_sep_closed_set
-
-lift_definition sep_closed_member :: \<open>'a::sep_magma_1 \<Rightarrow> 'a sep_closed_set \<Rightarrow> bool\<close> (infix "\<in>\<^sub>S" 50)
-  is \<open>\<lambda>x S. x \<in> S\<close> .
-
-lemma in_sep_closed_set[simp]:
-  \<open>Sep_Closed S \<Longrightarrow> x \<in>\<^sub>S sep_closed_set S \<longleftrightarrow> x \<in> S\<close>
-  unfolding sep_closed_member_def
-  by (simp add: sep_closed_set_inverse)
-
-lemma one_in_sep_closed_set[simp]:
-  \<open>1 \<in>\<^sub>S S\<close> for S :: \<open>'a::sep_magma_1 sep_closed_set\<close>
-  by (transfer; simp add: Sep_Closed_def)
-
-lemma mult_in_sep_closed_set[simp]:
-  \<open>x ## y \<Longrightarrow> x \<in>\<^sub>S S \<and> y \<in>\<^sub>S S \<longrightarrow> x * y \<in>\<^sub>S S\<close> for S :: \<open>'a::sep_algebra sep_closed_set\<close>
-  by (transfer; simp add: Sep_Closed_def)
-
-lift_definition sep_closed_inter :: \<open>'a::sep_magma_1 sep_closed_set \<Rightarrow> 'a sep_closed_set \<Rightarrow> 'a sep_closed_set\<close> (infixl "\<inter>\<^sub>S" 65)
-  is \<open>\<lambda>S1 S2. S1 \<inter> S2\<close>
-  by (clarsimp simp add: Sep_Closed_def; blast)
-
-definition sep_closed_image :: \<open>('a::sep_algebra \<Rightarrow> 'b::sep_algebra) \<Rightarrow> 'a sep_closed_set \<Rightarrow> 'b sep_closed_set\<close> (infixr "`\<^sub>S" 90)
-  where \<open>(f `\<^sub>S S) = sep_closed_set (f ` dest_sep_closed_set S) \<close>
-
-definition Homo_Sep_Closed :: \<open>('a::sep_algebra \<Rightarrow> 'b::sep_algebra) \<Rightarrow> bool\<close>
-  where \<open>Homo_Sep_Closed f \<longleftrightarrow> (\<forall>S. Sep_Closed S \<longrightarrow> Sep_Closed (f ` S))\<close>
-
-lemma in_image_sep_closed[simp]:
-  \<open>Homo_Sep_Closed f \<Longrightarrow> x \<in>\<^sub>S f `\<^sub>S S \<longleftrightarrow> (\<exists>x'. x = f x' \<and> x' \<in>\<^sub>S S)\<close>
-  by (smt (verit, del_insts) Homo_Sep_Closed_def dest_sep_closed_set dest_sep_closed_set_inverse image_iff in_sep_closed_set mem_Collect_eq sep_closed_image_def)
-
-subsubsection \<open>Common Sep-Closed Sets\<close>
-
-lemma sep_closed_partial_map[simp]:
-  \<open>Sep_Closed {vars. finite (dom vars)}\<close>
-  unfolding Sep_Closed_def
-  by (clarsimp simp add: dom_mult)
-
-lemma sep_closed_partial_map1[simp]:
-  \<open>Sep_Closed {h::'a \<Rightarrow> 'b :: sep_no_inverse. finite (dom1 h)}\<close> 
-  unfolding Sep_Closed_def
-  by (clarsimp simp add: dom1_mult)
-
-lemma Sep_Closed_pointwise:
-  \<open> (\<forall>k. P k 1)
-\<Longrightarrow> (\<forall>k x y. x ## y \<longrightarrow> P k x \<and> P k y \<longrightarrow> P k (x * y))
-\<Longrightarrow>   Sep_Closed {f. \<forall>k. P k (f k) }\<close>
-  unfolding Sep_Closed_def
-  by (simp add: times_fun; blast)
-
-
-subsection \<open>Separation Homo Set\<close>
-
-definition Sep_Homo :: \<open>'a::sep_magma_1 set \<Rightarrow> bool\<close>
-  where \<open>Sep_Homo S \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> (x * y) \<in> S \<longleftrightarrow> x \<in> S \<and> y \<in> S) \<and> 1 \<in> S\<close>
-
-lemma Sep_Homo_inter:
-  \<open>Sep_Homo S1 \<Longrightarrow> Sep_Homo S2 \<Longrightarrow> Sep_Homo (S1 \<inter> S2)\<close>
-  unfolding Sep_Homo_def by blast
-
-lemma Sep_Homo_UNIV[simp]:
-  \<open>Sep_Homo UNIV\<close>
-  unfolding Sep_Homo_def by simp
-
-typedef (overloaded) ('a::sep_magma_1) sep_homo_set = \<open>Collect (Sep_Homo::'a set \<Rightarrow> bool)\<close>
-  morphisms dest_sep_homo_set sep_homo_set
-  unfolding Sep_Homo_def by blast
-
-setup_lifting type_definition_sep_homo_set
-
-lift_definition sep_homo_member :: \<open>'a::sep_magma_1 \<Rightarrow> 'a sep_homo_set \<Rightarrow> bool\<close> (infix "\<in>\<^sub>S\<^sub>H" 50)
-  is \<open>\<lambda>x S. x \<in> S\<close> .
-
-lemma in_sep_homo_set[simp]:
-  \<open>Sep_Homo S \<Longrightarrow> x \<in>\<^sub>S\<^sub>H sep_homo_set S \<longleftrightarrow> x \<in> S\<close>
-  unfolding sep_homo_member_def
-  by (simp add: sep_homo_set_inverse)
-
-lemma one_in_sep_homo_set[simp]:
-  \<open>1 \<in>\<^sub>S\<^sub>H S\<close> for S :: \<open>'a::sep_magma_1 sep_homo_set\<close>
-  by (transfer; simp add: Sep_Homo_def)
-
-lemma mult_in_sep_homo_set[simp]:
-  \<open>x ## y \<Longrightarrow> x * y \<in>\<^sub>S\<^sub>H S \<longleftrightarrow> x \<in>\<^sub>S\<^sub>H S \<and> y \<in>\<^sub>S\<^sub>H S\<close> for S :: \<open>'a::sep_algebra sep_homo_set\<close>
-  by (transfer; simp add: Sep_Homo_def)
-
-lift_definition sep_homo_inter :: \<open>'a::sep_magma_1 sep_homo_set \<Rightarrow> 'a sep_homo_set \<Rightarrow> 'a sep_homo_set\<close> (infixl "\<inter>\<^sub>S\<^sub>H" 65)
-  is \<open>\<lambda>S1 S2. S1 \<inter> S2\<close>
-  by (clarsimp simp add: Sep_Homo_def; blast)
-
-definition sep_homo_image :: \<open>('a::sep_algebra \<Rightarrow> 'b::sep_algebra) \<Rightarrow> 'a sep_homo_set \<Rightarrow> 'b sep_homo_set\<close> (infixr "`\<^sub>S\<^sub>H" 90)
-  where \<open>(f `\<^sub>S\<^sub>H S) = sep_homo_set (f ` dest_sep_homo_set S) \<close>
-
-definition Homo_Sep_Homo :: \<open>('a::sep_algebra \<Rightarrow> 'b::sep_algebra) \<Rightarrow> bool\<close>
-  where \<open>Homo_Sep_Homo f \<longleftrightarrow> (\<forall>S. Sep_Homo S \<longrightarrow> Sep_Homo (f ` S))\<close>
-
-lemma in_image_sep_homo[simp]:
-  \<open>Homo_Sep_Homo f \<Longrightarrow> x \<in>\<^sub>S\<^sub>H f `\<^sub>S\<^sub>H S \<longleftrightarrow> (\<exists>x'. x = f x' \<and> x' \<in>\<^sub>S\<^sub>H S)\<close>
-  by (smt (verit, best) Homo_Sep_Homo_def dest_sep_homo_set dest_sep_homo_set_inverse image_iff in_sep_homo_set mem_Collect_eq sep_homo_image_def)
-  
-subsubsection \<open>Common Sep-Homo Sets\<close>
-
-lemma sep_homo_partial_map[simp]:
-  \<open>Sep_Homo {vars. finite (dom vars)}\<close>
-  unfolding Sep_Homo_def
-  by (clarsimp simp add: dom_mult)
-
-lemma sep_homo_partial_map1[simp]:
-  \<open>Sep_Homo {h::'a \<Rightarrow> 'b :: sep_no_inverse. finite (dom1 h)}\<close> 
-  unfolding Sep_Homo_def
-  by (clarsimp simp add: dom1_mult)
-
-lemma Sep_Homo_pointwise:
-  \<open> (\<forall>k. P k 1)
-\<Longrightarrow> (\<forall>k x y. x ## y \<longrightarrow> P k (x * y) \<longleftrightarrow> P k x \<and> P k y)
-\<Longrightarrow>   Sep_Homo {f. \<forall>k. P k (f k) }\<close>
-  unfolding Sep_Homo_def
-  by (simp add: times_fun; blast)
-
 
 subsection \<open>Kind\<close>
 
@@ -199,8 +62,10 @@ it does not require the physical resource to be separable because any structure 
  none resource or no specification.
 \<close>
 
-locale sep_insertion =
-  inj: homo_sep inject + prj: homo_sep project + inj: homo_sep_disj_total inject
+locale sep_inj_proj =
+  inj: homo_sep inject + inj: homo_one inject +
+  prj: homo_sep project + prj: homo_one project +
+  inj: homo_sep_disj_total inject
   for inject :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
   and project:: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
     \<comment> \<open>the project' cannot be arbitrarily any inverse function of the inject',
@@ -210,8 +75,8 @@ locale sep_insertion =
               a * b = inject c \<longleftrightarrow> (\<exists>a' b'. a = inject a' \<and> b = inject b' \<and> a' * b' = c)\<close>
 begin
 
-sublocale inj: homo_sep_wand_monoid inject
-  by (standard, metis mult_in_dom prj.sep_disj_homo_semi proj_inj)
+sublocale inj: sep_insertion_monoid inject UNIV
+  by (standard; simp; metis mult_in_dom prj.sep_disj_homo_semi proj_inj)
 
 lemma inject_inj[iff]:
   \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
@@ -225,24 +90,26 @@ lemma inject_assoc_homo[simp]:
 lemma inj_Sep_Homo:
   \<open>Homo_Sep_Homo inject\<close>
   unfolding Sep_Closed_def Homo_Sep_Homo_def
-  apply clarsimp
-  by (smt (verit, ccfv_threshold) Sep_Homo_def inj.inj_at_1 prj.sep_disj_homo_semi proj_inj mult_in_dom image_iff)
+  apply (auto simp add: Sep_Homo_def)
+  using mult_in_dom apply auto[1]
+  using mult_in_dom apply auto[1]
+  by (metis imageI inj.homo_mult)
 
 end
 
-lemma sep_insertion_id: \<open>sep_insertion id id\<close> by (standard; simp)
+lemma sep_inj_proj_id: \<open>sep_inj_proj id id\<close> by (standard; simp)
 
-lemma sep_insertion_comp:
-  \<open> sep_insertion f1 g1
-\<Longrightarrow> sep_insertion f2 g2
-\<Longrightarrow> sep_insertion (f2 o f1) (g1 o g2)\<close>
-  unfolding sep_insertion_def sep_insertion_axioms_def
-  apply (simp add: homo_sep_comp homo_sep_disj_total_comp)
+lemma sep_inj_proj_comp:
+  \<open> sep_inj_proj f1 g1
+\<Longrightarrow> sep_inj_proj f2 g2
+\<Longrightarrow> sep_inj_proj (f2 o f1) (g1 o g2)\<close>
+  unfolding sep_inj_proj_def sep_inj_proj_axioms_def
+  apply (clarsimp simp add: homo_sep_comp homo_sep_disj_total_comp homo_one_def)
   using homo_sep_disj_total.sep_disj_homo by blast
 
 
 locale sep_space_entry =
-  sep_insertion inject' project'
+  sep_inj_proj inject' project'
   for name'   :: 'NAME
   and inject' :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
   and project':: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
@@ -293,7 +160,7 @@ lemma mk_homo_mult: \<open>a ## b \<Longrightarrow> mk (a * b) = mk a * mk b\<cl
 
 lemma mk_inj[iff]: \<open>mk a = mk b \<longleftrightarrow> a = b\<close>
   unfolding fun_eq_iff by simp
-
+(* 
 lemmas split = fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP]
 
 lemma inject_wand_homo: \<open>
@@ -304,13 +171,13 @@ lemma inject_wand_homo: \<open>
       This lemma is useful in fictional separation especially view shifts.\<close>
   using mult_in_dom by force
 
+lemma sep_disj_clean[simp]:
+  \<open>clean r ## mk any\<close>
+  by simp *)
+
 lemma times_fun_upd:
   \<open>(R * mk x)(name := inject y) = (clean R * mk y)\<close>
   unfolding times_fun_def fun_upd_def fun_eq_iff by simp
-
-lemma sep_disj_clean[simp]:
-  \<open>clean r ## mk any\<close>
-  by simp
 
 end
 
@@ -357,7 +224,8 @@ lemma in_DOMAIN[simp]:
 lemma \<r>_valid_split:
   \<open>res \<in> SPACE \<longleftrightarrow>
   clean res \<in> SPACE \<and> (\<exists>m. res name = inject m \<and> m \<in>\<^sub>S\<^sub>H domain)\<close>
-  apply (subst split; simp add: times_fun image_iff SPACE_def)
+  apply (subst fun_split_1[where ?k = name and ?'a = 'NAME and ?'b = 'REP];
+         simp add: times_fun image_iff SPACE_def)
   using inj_Sep_Homo raw_domain by auto
 
 lemma \<r>_valid_split': \<open>
@@ -377,8 +245,6 @@ for DOMAIN :: \<open>'NAME \<Rightarrow> 'REP::sep_algebra sep_homo_set\<close>
 and K :: "('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind"
 and DOM :: \<open>'T::sep_algebra sep_homo_set\<close>
 + assumes domain[simp]: "kind.domain K = DOM"
-
-
 
 ML_file \<open>resource_space.ML\<close>
 
@@ -418,11 +284,11 @@ and \<open>f i\<close> gets the representation of fictional resource \<open>i\<c
 locale fictional_space =
   resource_space DOMAIN
   for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_homo_set\<close>
-  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
+  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) unital_homo_interp"
     \<comment> \<open>\<^term>\<open>INTERPRET i\<close> gives the interpretation of fiction kind \<open>i\<close>, i.e., \<open>I\<^sub>i\<close> above.\<close>
 begin
 
-definition "INTERP = \<F>_fun' INTERPRET"
+definition "INTERP = \<F>_FP_homo INTERPRET"
 
 end
 
@@ -431,10 +297,10 @@ locale fiction_kind =
   fictional_space DOMAIN INTERPRET
 + resource_kind DOMAIN FK
   for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_homo_set\<close>
-  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
+  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) unital_homo_interp"
   and FK :: "('FNAME,'FREP,'T::sep_algebra) kind"
 + fixes I :: "('T,'RES) interp"
-assumes interpret_reduct[simp]: "\<I> (INTERPRET (kind.name FK)) = \<I> I o kind.project FK"
+assumes interpret_reduct: "INTERPRET (kind.name FK) = Unital_Homo (I o kind.project FK)"
   and   univ_domain[simp]: "kind.domain FK = sep_homo_set UNIV"
 begin
 
@@ -453,27 +319,24 @@ lemma \<r>_valid_split': \<open>
 lemma Fic_Space_m[simp]: "mk x \<in> SPACE"
   unfolding SPACE_def by simp
 
-lemma interp_m[simp]: "\<I> INTERP (mk x) = \<I> I x"
-  unfolding INTERP_def by (simp add: sep_disj_commute sep_mult_commute inj.inj_at_1)
+lemma interp_m[simp]: "homo_one I \<Longrightarrow> INTERP (mk x) = I x"
+  unfolding INTERP_def
+  by (simp add: sep_disj_commute sep_mult_commute interpret_reduct prj.homo_one_axioms,
+      metis homo_one.homo_one prj.homo_one_axioms proj_inj)
 
 lemma sep_disj_get_name_eq[simp]:
   \<open>r \<in> SPACE \<Longrightarrow> get r ## x \<longleftrightarrow> r ## mk x\<close>
   by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo inj_prj_in_SPACE)
 
 lemma interp_split:
-  "f \<in> SPACE \<Longrightarrow>
-    \<I> INTERP f = \<I> INTERP (clean f) * \<I> I (project (f name))
-  \<and> \<I> INTERP (clean f) ## \<I> I (project (f name))"
-  unfolding INTERP_def SPACE_def
-  apply (subst \<F>_fun'_split[where ?f = f and ?k = name])
-  by simp_all
-
-lemma interp_split':
   " NO_MATCH (clean f') f
-\<Longrightarrow> f \<in> SPACE
-\<Longrightarrow> \<I> INTERP f = \<I> INTERP (clean f) * \<I> I (project (f name))
-  \<and> \<I> INTERP (clean f) ## \<I> I (project (f name))"
-  using interp_split .
+\<Longrightarrow> homo_one I
+\<Longrightarrow> f \<in> SPACE \<Longrightarrow>
+    INTERP f = INTERP (clean f) * I (project (f name))
+  \<and> INTERP (clean f) ## I (project (f name))"
+  unfolding INTERP_def SPACE_def
+  by (subst \<F>_FP_homo_split[where ?f = f and ?k = name],
+      simp_all add: interpret_reduct prj.homo_one_axioms)
 
 lemma Fic_Space_mm[simp]: "f ## mk x \<Longrightarrow> f * mk x \<in> SPACE \<longleftrightarrow> f \<in> SPACE"
   unfolding SPACE_def finite_dom1_mult1

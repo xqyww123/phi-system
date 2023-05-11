@@ -173,19 +173,19 @@ lemma \<phi>Res_Sat_ex_abn:
   \<open>res \<in> INTERP_RES fic \<longleftrightarrow> res \<in> \<phi>Res_Spec (\<I> FIC.INTERP fic) \<and> fic \<in> FIC.SPACE\<close>
   unfolding In_INTERP_RES \<phi>Res_Spec_def by simp blast *)
 
-term \<open>\<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> FIC.INTERP (r * p) \<s>\<u>\<b>\<j> p. p \<in> P \<and> r \<in> FIC.SPACE \<and> p \<in> FIC.SPACE \<and> r ## p\<close>
+term \<open>\<s>\<t>\<a>\<t>\<e> s \<i>\<s> FIC.INTERP (r * p) \<s>\<u>\<b>\<j> p. p \<in> P \<and> r \<in> FIC.SPACE \<and> p \<in> FIC.SPACE \<and> r ## p\<close>
 
 lemma \<phi>Procedure_Hybrid_DL:
   \<open> \<p>\<r>\<o>\<c> f \<lbrace> P \<longmapsto> Q \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<longleftrightarrow> (\<forall>r s. (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> FIC.INTERP (r * p) \<s>\<u>\<b>\<j> p. p \<in> P \<and> r \<in> FIC.SPACE \<and> p \<in> FIC.SPACE \<and> r ## p)
-       \<longrightarrow> (f s \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. \<I> FIC.INTERP (r * q) \<s>\<u>\<b>\<j> q. q \<in> Q v \<and> r \<in> FIC.SPACE \<and> q \<in> FIC.SPACE \<and> r ## q)
-                \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. \<I> FIC.INTERP (r * e) \<s>\<u>\<b>\<j> e. e \<in> E v \<and> r \<in> FIC.SPACE \<and> e \<in> FIC.SPACE \<and> r ## e)))\<close>
+\<longleftrightarrow> (\<forall>r s. (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> FIC.INTERP (r * p) \<s>\<u>\<b>\<j> p. p \<in> P \<and> r \<in> FIC.SPACE \<and> p \<in> FIC.SPACE \<and> r ## p)
+       \<longrightarrow> (f s \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. FIC.INTERP (r * q) \<s>\<u>\<b>\<j> q. q \<in> Q v \<and> r \<in> FIC.SPACE \<and> q \<in> FIC.SPACE \<and> r ## q)
+                \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. FIC.INTERP (r * e) \<s>\<u>\<b>\<j> e. e \<in> E v \<and> r \<in> FIC.SPACE \<and> e \<in> FIC.SPACE \<and> r ## e)))\<close>
   apply rule
    apply (unfold \<phi>Procedure_alt INTERP_SPEC \<phi>Res_Sat_def \<phi>Comp_Sat_def \<phi>Res_Spec_def subset_iff)
    apply (clarsimp simp add: times_set_def \<phi>expns In_INTERP_RES)
   thm In_INTERP_RES
   subgoal premises prems for r res s c proof-
-    have t1: \<open>(\<exists>fic. (\<exists>y. fic = r * y \<and> y \<in> P \<and> r ## y) \<and> res \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> res \<in> \<I> FIC.INTERP fic)\<close>
+    have t1: \<open>(\<exists>fic. (\<exists>y. fic = r * y \<and> y \<in> P \<and> r ## y) \<and> res \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> res \<in> FIC.INTERP fic)\<close>
       using FIC.SPACE_mult_homo prems by blast
     show ?thesis
       apply (insert prems(1)[THEN spec[where x=res], THEN spec[where x=r], THEN mp, OF t1,
@@ -196,7 +196,7 @@ lemma \<phi>Procedure_Hybrid_DL:
   qed
   apply (clarsimp simp add: times_set_def \<phi>expns In_INTERP_RES)
   subgoal premises prems for res r s c proof-
-    have t1: \<open>res \<in> RES.SPACE \<and> (\<exists>c. res \<in> \<I> FIC.INTERP (r * c) \<and> c \<in> P \<and> r \<in> FIC.SPACE \<and> c \<in> FIC.SPACE \<and> r ## c)\<close>
+    have t1: \<open>res \<in> RES.SPACE \<and> (\<exists>c. res \<in> FIC.INTERP (r * c) \<and> c \<in> P \<and> r \<in> FIC.SPACE \<and> c \<in> FIC.SPACE \<and> r ## c)\<close>
       using prems FIC.SPACE_mult_homo by blast
     show ?thesis
       apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, OF t1,
@@ -207,8 +207,8 @@ lemma \<phi>Procedure_Hybrid_DL:
   qed .
 
 lemma \<phi>Res_Spec_expn_R:
-  \<open>\<phi>Res_Spec (\<I> FIC.INTERP (r * p) \<s>\<u>\<b>\<j> p. p \<in> (R \<heavy_comma> X) \<and> r \<in> FIC.SPACE \<and> p \<in> FIC.SPACE \<and> r ## p)
- = \<phi>Res_Spec (\<I> FIC.INTERP (r * u * x) \<s>\<u>\<b>\<j> u x. u \<in> R \<and> x \<in> X \<and> (r * u) \<in> FIC.SPACE \<and> x \<in> FIC.SPACE
+  \<open>\<phi>Res_Spec (FIC.INTERP (r * p) \<s>\<u>\<b>\<j> p. p \<in> (R \<heavy_comma> X) \<and> r \<in> FIC.SPACE \<and> p \<in> FIC.SPACE \<and> r ## p)
+ = \<phi>Res_Spec (FIC.INTERP (r * u * x) \<s>\<u>\<b>\<j> u x. u \<in> R \<and> x \<in> X \<and> (r * u) \<in> FIC.SPACE \<and> x \<in> FIC.SPACE
                                            \<and> r ## u \<and> (r * u) ## x)\<close>
   unfolding set_eq_iff \<phi>Res_Spec_def
   apply (clarsimp simp add: \<phi>expns; rule; clarify)
@@ -269,20 +269,18 @@ lemma get_res_Valid:
 \<Longrightarrow> get res \<in>\<^sub>S\<^sub>H domain\<close>
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def by (clarsimp simp add: \<r>_valid_split')
 
-definition \<open>basic_fiction = Interp (\<lambda>x. { 1(Res #= x) })\<close>
+definition \<open>basic_fiction = (\<lambda>x. { 1(Res #= x) })\<close>
 
-lemma basic_fiction_\<I>:
-  "\<I> basic_fiction = (\<lambda>x. { 1(Res #= x)})"
-  unfolding basic_fiction_def
-  by (rule Interp_inverse) (clarsimp simp add: Interpretation_def one_set_def)
-
+lemma basic_fiction_homo_one[simp]:
+  \<open>homo_one basic_fiction\<close>
+  unfolding homo_one_def basic_fiction_def by (clarsimp simp add: set_eq_iff)
 
 lemma \<F>_itself_expn[\<phi>expns]:
   \<open>R2 ## x
-\<Longrightarrow> \<phi>Res_Spec (\<I> (basic_fiction \<circ>\<^sub>\<I> \<F>_it) (R2 * x))
-  = \<phi>Res_Spec (\<I> (basic_fiction \<circ>\<^sub>\<I> \<F>_it) R2 * {mk x})\<close>
+\<Longrightarrow> \<phi>Res_Spec ((basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it) (R2 * x))
+  = \<phi>Res_Spec ((basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it) R2 * {mk x})\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarsimp simp add: \<phi>expns basic_fiction_\<I> prj.homo_mult interp_comp_\<I>)
+  apply (clarsimp simp add: \<phi>expns basic_fiction_def prj.homo_mult)
   apply (rule; clarify)
    apply (simp add: mk_homo_mult sep_mult_assoc')
   using SPACE_mult_homo inj.homo_mult by force
@@ -302,7 +300,7 @@ subsubsection \<open>Fiction Base\<close>
 
 locale basic_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<circ>\<^sub>\<I> I\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> I\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and I :: "('U::sep_algebra, 'T) interp"
 and Fic :: "'U fiction_entry"
@@ -499,45 +497,47 @@ subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
    R: resource Res
-+  share: perm_ins_homo \<psi>
++  share: perm_ins_homo \<psi> UNIV
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
-      \<open>R.basic_fiction \<circ>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
+      \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi> UNIV)\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
++ assumes \<psi>_kernel_is_1[simp]: \<open>kernel_is_1 \<psi> UNIV\<close>
 begin
 
-sublocale basic_fiction Res \<open>\<F>_functional \<psi>\<close> ..
+sublocale basic_fiction Res \<open>\<F>_functional \<psi> UNIV\<close> ..
+
+thm interp_split
 
 lemma sep_disj_fiction:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP r * { R.mk x }
+\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> s \<i>\<s> INTERP r * { R.mk x }
 \<Longrightarrow> r ## mk (\<psi> x)\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def set_eq_iff
-  apply (clarsimp simp add: R.basic_fiction_\<I> interp_comp_\<I> \<phi>expns
+  apply (clarsimp simp add: R.basic_fiction_def \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split'
-            R.inject_wand_homo interp_split'
+            R.inj.sep_insertion interp_split[where f=r, simplified]
             sep_disj_get_name_eq[symmetric]
             simp del: sep_disj_get_name_eq)
   using sep_disj_multD2 by force
 
 lemma expand_subj:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (\<psi> x)) \<s>\<u>\<b>\<j> r ## mk (\<psi> x))
-  = \<phi>Res_Spec (\<I> INTERP r * { R.mk x })\<close>
+\<Longrightarrow> \<phi>Res_Spec (INTERP (r * mk (\<psi> x)) \<s>\<u>\<b>\<j> r ## mk (\<psi> x))
+  = \<phi>Res_Spec (INTERP r * { R.mk x })\<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify, rule)
-  apply (clarsimp simp add: R.basic_fiction_\<I> interp_comp_\<I> \<phi>expns
-            share.homo_sep_wand \<phi>Res_Spec_def R.\<r>_valid_split'
-            R.inject_wand_homo interp_split' prj.homo_mult)
-  thm interp_split'
+  apply (clarsimp simp add: R.basic_fiction_def \<phi>expns
+            share.sep_insertion \<phi>Res_Spec_def R.\<r>_valid_split'
+            R.inj.sep_insertion interp_split[simplified] prj.homo_mult)
   subgoal for res_r a r'
     apply (rule exI[where x=\<open>res_r * R.mk a\<close>]; rule)
     apply (metis R.inj.homo_mult R.sep_disj_mk fun_1upd_homo_right1 sep_mult_assoc')
     by (metis R.mk_homo_mult R.sep_disj_mk sep_disj_multD1 sep_disj_multI1)
 
-  apply (clarsimp simp add: R.basic_fiction_\<I> \<phi>expns \<phi>Res_Spec_def R.\<r>_valid_split'
-        R.inject_wand_homo interp_split' sep_mult_assoc prj.homo_mult interp_comp_\<I>)
+  apply (clarsimp simp add: R.basic_fiction_def \<phi>expns \<phi>Res_Spec_def R.\<r>_valid_split'
+        R.inj.sep_insertion interp_split[simplified] sep_mult_assoc prj.homo_mult)
   subgoal premises prems for res_r a y proof -
     have t1[simp]: \<open>y ## x\<close>
       using prems(5) prems(7) sep_disj_multD2 by force
@@ -553,8 +553,8 @@ lemma expand_subj:
 lemma expand:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> r ## mk (\<psi> x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (\<psi> x))) =
-    \<phi>Res_Spec (\<I> INTERP r * {R.mk x})\<close>
+\<Longrightarrow> \<phi>Res_Spec (INTERP (r * mk (\<psi> x))) =
+    \<phi>Res_Spec (INTERP r * {R.mk x})\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
@@ -572,14 +572,14 @@ lemma partial_implies_raw:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> 0 < n
 \<Longrightarrow> r ## mk (share n (\<psi> x))
-\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (share n (\<psi> x)))
+\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP (r * mk (share n (\<psi> x)))
 \<Longrightarrow> x \<preceq>\<^sub>S\<^sub>L R.get res\<close>
   unfolding \<phi>Res_Spec_def \<phi>Res_Sat_def
-  apply (clarsimp simp add: R.basic_fiction_\<I> interp_comp_\<I> \<phi>expns
-            \<phi>Res_Spec_def R.\<r>_valid_split' R.inject_wand_homo
-            R.prj.homo_mult interp_split' prj.homo_mult)
+  apply (clarsimp simp add: R.basic_fiction_def \<phi>expns
+            \<phi>Res_Spec_def R.\<r>_valid_split' R.inj.sep_insertion
+            R.prj.homo_mult interp_split[simplified] prj.homo_mult)
   apply (cases \<open>n \<le> 1\<close>)
-  apply (metis join_sub_def join_sub_ext_left sep_disj_get_name share.join_sub_share_join_sub_whole)
+  apply (metis UNIV_I join_sub_def join_sub_ext_left sep_space_entry.sep_disj_get_name sep_space_entry_axioms share.join_sub_share_join_sub_whole)
   subgoal premises prems for u y a proof -
     have t0: \<open>1 / n * n = 1\<close>
       by (metis nonzero_eq_divide_eq order_less_irrefl prems(2))
@@ -591,7 +591,7 @@ lemma partial_implies_raw:
       using share_share_not0
       by (metis prems(2) share_left_one t0 t1)
     then show ?thesis
-      by (metis join_sub_ext_left prems(10) prems(3) prems(8) resource_kind_axioms resource_kind_def sep_space_entry.sep_disj_get_name share.homo_join_sub)
+      by (metis UNIV_I join_sub_ext_left prems(10) prems(3) prems(8) sep_disj_get_name share.homo_join_sub)
   qed .
 
 paragraph \<open>Reasoning Rules\<close>
@@ -612,7 +612,7 @@ subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction =
    R: resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and Fic :: "'T fiction_entry"
 begin
@@ -621,21 +621,21 @@ sublocale basic_fiction where I = \<open>\<F>_it\<close> ..
 
 lemma sep_disj_fiction:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP r * { R.mk x }
+\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> s \<i>\<s> INTERP r * { R.mk x }
 \<Longrightarrow> r ## mk x\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def set_eq_iff
-  apply (clarsimp simp add: R.basic_fiction_\<I> interp_comp_\<I> \<phi>expns
+  apply (clarsimp simp add: R.basic_fiction_def \<phi>expns
             \<phi>Res_Spec_def R.\<r>_valid_split'
-            R.inject_wand_homo interp_split'
+            R.inj.sep_insertion interp_split[simplified]
             sep_disj_get_name_eq[symmetric]
             simp del: sep_disj_get_name_eq)
   using sep_disj_multD2 by force
 
 lemma expand_subj:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> (\<phi>Res_Spec (\<I> INTERP (r * mk x) \<s>\<u>\<b>\<j> r ## mk x)) = \<phi>Res_Spec (\<I> INTERP r * {R.mk x}) \<close>
+\<Longrightarrow> (\<phi>Res_Spec (INTERP (r * mk x) \<s>\<u>\<b>\<j> r ## mk x)) = \<phi>Res_Spec (INTERP r * {R.mk x}) \<close>
   unfolding \<phi>Res_Spec_def set_eq_iff
-  apply (clarify; rule; clarsimp simp add: \<phi>expns R.basic_fiction_\<I> interp_split' prj.homo_mult interp_comp_\<I>)
+  apply (clarify; rule; clarsimp simp add: \<phi>expns R.basic_fiction_def interp_split[simplified] prj.homo_mult)
   apply (simp add: R.mk_homo_mult)
   apply (metis (no_types, lifting) R.sep_disj_mk sep_disj_get_name sep_disj_multD1 sep_disj_multI1 sep_mult_assoc')
   apply (simp add: R.mk_homo_mult[symmetric] sep_mult_assoc)
@@ -644,7 +644,7 @@ lemma expand_subj:
 lemma expand:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> r ## mk x
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk x)) = \<phi>Res_Spec (\<I> INTERP r * {R.mk x})\<close>
+\<Longrightarrow> \<phi>Res_Spec (INTERP (r * mk x)) = \<phi>Res_Spec (INTERP r * {R.mk x})\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
@@ -660,13 +660,13 @@ end
 subsection \<open>Nosep Monolithic Resource\<close>
   \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option\<close>\<close>
 
-locale nonsepable_mono_resource =
+(* locale nonsepable_mono_resource =
   resource Res
 for Res :: "'T nosep option resource_entry"
 begin
 
 definition fiction_agree
-  where \<open>fiction_agree = basic_fiction o\<^sub>\<I> \<F>_optionwise \<F>_agree\<close>
+  where \<open>fiction_agree = basic_fiction \<Zcomp>\<^sub>\<I> \<F>_optionwise \<F>_agree\<close>
 
 end
 
@@ -756,7 +756,7 @@ qed
 
 end
 
-
+*)
 
 subsection \<open>Resources based on Mapping\<close>
 
@@ -771,7 +771,7 @@ lemma "__allocation_rule__":
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := u)) res \<i>\<s> R * {mk (1(k := u))}\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: \<r>_valid_split' times_set_def inject_wand_homo
+  apply (clarsimp simp add: \<r>_valid_split' times_set_def inj.sep_insertion
           prj.homo_mult times_fun_upd)
   subgoal premises prems for m proof -
     {
@@ -807,7 +807,7 @@ lemma "__updt_rule__":
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k \<mapsto> any))}
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := u)) res \<i>\<s> R * {mk (1(k := u))}\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: \<r>_valid_split' times_set_def inject_wand_homo
+  apply (clarsimp simp add: \<r>_valid_split' times_set_def inj.sep_insertion
           prj.homo_mult times_fun_upd )
   apply (clarsimp simp add: sep_disj_partial_map_upd
           nonsepable_semigroup_sepdisj_fun mk_homo_mult)
@@ -832,7 +832,7 @@ lemma "__dispose_rule__":
 abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
   where \<open>perm_ins_homo \<equiv> (o) to_share\<close>
 (*depreciate*)
-abbreviation \<open>share_fiction \<equiv> basic_fiction o\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
+abbreviation \<open>share_fiction \<equiv> basic_fiction \<Zcomp>\<^sub>\<I> \<F>_functional perm_ins_homo UNIV\<close>
 
 (* lemma share_fiction_expn_full:
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<Znrres> v))))
@@ -881,9 +881,9 @@ lemma raw_unit_assertion_implies[simp]:
   \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * { mk (1(k \<mapsto> v))}
 \<Longrightarrow> get res k = Some v\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo
+  apply (clarsimp simp add: times_set_def \<r>_valid_split' inj.sep_insertion
       prj.homo_mult sep_disj_fun_def times_fun)
-  by (metis (mono_tags, lifting) sep_disj_option_nonsepable(1) sep_mult_commute times_option(2))
+  by (metis mult_1_class.mult_1_left one_option_def option.simps(3))
 
 
 end
@@ -892,7 +892,7 @@ subsubsection \<open>Identity Fiction\<close>
 
 locale identity_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction o\<^sub>\<I> \<F>_it\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it\<close>
 for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val option) fiction_entry"
 begin
@@ -911,13 +911,14 @@ for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entr
 and Fic :: "('key \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> ..
+sublocale permission_fiction Res \<open>R.perm_ins_homo\<close>
+  by (standard; simp add: pointwise_set_UNIV kernel_is_1_def)
 
 lemma expand:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> r ## mk (R.perm_ins_homo x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (R.perm_ins_homo x))) =
-    \<phi>Res_Spec (\<I> INTERP r * {R.mk x} )\<close>
+\<Longrightarrow> \<phi>Res_Spec (INTERP (r * mk (R.perm_ins_homo x))) =
+    \<phi>Res_Spec (INTERP r * {R.mk x} )\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
 
@@ -925,7 +926,7 @@ lemma partial_implies:
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> 0 < n
 \<Longrightarrow> r ## mk (1(k \<mapsto> Share n v))
-\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (1(k \<mapsto> Share n v)))
+\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP (r * mk (1(k \<mapsto> Share n v)))
 \<Longrightarrow> R.get res k = Some v\<close>
   using partial_implies_raw[where x=\<open>1(k \<mapsto> v)\<close> and n=n, simplified]
     nonsepable_partial_map_subsumption
@@ -935,7 +936,7 @@ lemma partial_implies'[simp]:
   assumes FS: \<open>r \<in> FIC.SPACE\<close>
     and N: \<open>0 < n\<close>
     and S: \<open>r ## mk (1(k \<mapsto> Share n v))\<close>
-    and A: \<open>\<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (1(k \<mapsto> Share n v)))\<close>
+    and A: \<open>\<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP (r * mk (1(k \<mapsto> Share n v)))\<close>
   shows \<open>R.get res k = Some v\<close>
 proof -
   from partial_implies[OF FS, OF N, OF S, OF A]
@@ -1003,7 +1004,7 @@ lemma "__updt_rule__":
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (map_fun_at (map_fun_at (\<lambda>_. u) k2) k) res
       \<i>\<s> R * {mk (1(k := 1(k2 := u)))} \<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: \<r>_valid_split' times_set_def inject_wand_homo
+  apply (clarsimp simp add: \<r>_valid_split' times_set_def inj.sep_insertion
           prj.homo_mult times_fun_upd)
   subgoal premises prems for x aa proof -
     have [simp]: \<open>aa k k2 = None\<close>
@@ -1038,7 +1039,7 @@ lemma "__dispose_rule__":
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * {mk (1(k := any))}
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> updt (\<lambda>f. f(k := 1)) res \<i>\<s> R\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: \<r>_valid_split' times_set_def inject_wand_homo
+  apply (clarsimp simp add: \<r>_valid_split' times_set_def inj.sep_insertion
           prj.homo_mult times_fun_upd )
   subgoal premises prems for x aa proof -
     have \<open>dom (aa k) = {}\<close>
@@ -1063,7 +1064,7 @@ lemma "__dispose_rule__":
 
 abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
   where \<open>perm_ins_homo \<equiv> (o) ((o) to_share)\<close>
-abbreviation \<open>share_fiction \<equiv> basic_fiction o\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
+abbreviation \<open>share_fiction \<equiv> basic_fiction \<Zcomp>\<^sub>\<I> \<F>_functional perm_ins_homo UNIV\<close>
 
 (*depreciated!*)
 (*lemma share_fiction_expn_full':
@@ -1146,15 +1147,15 @@ lemma raw_unit_assertion_implies[simp]:
   \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * { mk (1(k := 1(k2 \<mapsto> v)))}
 \<Longrightarrow> get res k k2 = Some v\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo
+  apply (clarsimp simp add: times_set_def \<r>_valid_split' inj.sep_insertion
       prj.homo_mult sep_disj_fun_def times_fun)
-  by (metis (full_types) fun_upd_same sep_disj_option_nonsepable(1) times_option(3))
+  by (metis fun_upd_same mult_1_class.mult_1_left one_option_def option.discI)
 
 lemma raw_unit_assertion_implies':
   \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * { mk (1(k := f))}
 \<Longrightarrow> f \<subseteq>\<^sub>m get res k\<close>
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
-  apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo)
+  apply (clarsimp simp add: times_set_def \<r>_valid_split' inj.sep_insertion)
   subgoal premises prems for x a proof -
     have t1[simp]: \<open>inject a ## inject (1(k := f))\<close>
       using prems(6) by fastforce
@@ -1180,7 +1181,9 @@ locale share_fiction_for_partial_mapping_resource2 =
     and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> ..
+sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> Fic
+  apply (standard, of_tac UNIV; simp add: pointwise_set_UNIV kernel_is_1_def)
+  using comp_eq_dest_lhs by fastforce
 
 lemma [simp]:
   \<open>R.perm_ins_homo (1(k := f)) = 1(k := to_share o f)\<close>
@@ -1192,7 +1195,7 @@ lemma partial_implies':
   \<open> r \<in> FIC.SPACE
 \<Longrightarrow> 0 < n
 \<Longrightarrow> r ## mk (1(k := 1(k2 \<mapsto> Share n v)))
-\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (1(k := 1(k2 \<mapsto> Share n v))))
+\<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP (r * mk (1(k := 1(k2 \<mapsto> Share n v))))
 \<Longrightarrow> R.get res k k2 = Some v\<close>
   using partial_implies_raw[where x=\<open>1(k := 1(k2 \<mapsto> v))\<close> and n=n, simplified]
     nonsepable_partial_map_subsumption
@@ -1202,7 +1205,7 @@ lemma partial_implies'':
   assumes FS: \<open>r \<in> FIC.SPACE\<close>
     and N: \<open>0 < n\<close>
     and S: \<open>r ## mk (1(k := 1(k2 \<mapsto> Share n v)))\<close>
-    and A: \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (1(k := 1(k2 \<mapsto> Share n v)))) \<close>
+    and A: \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP (r * mk (1(k := 1(k2 \<mapsto> Share n v)))) \<close>
   shows [simp]: \<open>R.get res k k2 = Some v\<close>
 proof -
   from partial_implies'[OF FS, OF N, OF S, OF A]
@@ -1380,7 +1383,7 @@ lemma \<phi>R_get_res[intro!]:
 
 end
 
-paragraph \<open>nonsepable_mono_resource\<close>
+(* paragraph \<open>nonsepable_mono_resource\<close>
 
 definition (in nonsepable_mono_resource) \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nosep.dest v')
@@ -1390,7 +1393,7 @@ lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
   \<open> get res = Some (nosep v)
 \<Longrightarrow> F v res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<phi>R_get_res_entry F res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp
+  unfolding \<phi>R_get_res_entry_def \<phi>R_get_res_def by simp *)
 
 paragraph \<open>partial_map_resource\<close>
 
@@ -1509,7 +1512,7 @@ context identity_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_set_res:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S\<^sub>H R.domain)
-\<Longrightarrow> (\<And>res r. (\<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
+\<Longrightarrow> (\<And>res r. (\<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
@@ -1528,7 +1531,7 @@ context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_set_res:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S\<^sub>H R.domain)
-\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
+\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
@@ -1556,7 +1559,7 @@ lemma (in partial_map_resource2) \<phi>R_set_res[intro!]:
 
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res"[THEN \<phi>CONSEQ'E0, intro!]:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in>\<^sub>S\<^sub>H R.domain)
-\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k := 1(k2 \<mapsto> v)))} \<Longrightarrow> P (R.get res))
+\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP r * {R.mk (1(k := 1(k2 \<mapsto> v)))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
@@ -1582,7 +1585,7 @@ context identity_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_dispose_res:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S\<^sub>H R.domain)
-\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
+\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
@@ -1599,7 +1602,7 @@ context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_dispose_res:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S\<^sub>H R.domain)
-\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
+\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
          \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
@@ -1623,7 +1626,7 @@ lemma (in partial_map_resource2) \<phi>R_dispose_res[intro!]:
 
 lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res"[THEN \<phi>CONSEQ'E0, intro!]:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k := 1) \<in>\<^sub>S\<^sub>H R.domain)
-\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k := f))}
+\<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> INTERP r * {R.mk (1(k := f))}
       \<Longrightarrow> P (R.get res) \<and> dom f = dom (R.get res k))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := 1))
          \<lbrace> to_share o f \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
@@ -1710,7 +1713,7 @@ lemma (in identity_fiction_for_partial_mapping_resource) "\<phi>R_allocate_res_e
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry P (Some init) F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_Hybrid_DL)
   subgoal for r res c
-  apply (rule R.\<phi>R_allocate_res_entry[where R="(\<I> INTERP (r * c))"])
+  apply (rule R.\<phi>R_allocate_res_entry[where R="(INTERP (r * c))"])
   apply (clarsimp)
   apply (clarsimp)
   apply (clarsimp)

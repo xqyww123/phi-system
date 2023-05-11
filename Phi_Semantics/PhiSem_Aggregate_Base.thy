@@ -44,9 +44,9 @@ text \<open>We first formalize the behavior of indexing one-step inside one leve
     such as the size of the term. It helps induction over the indexing. 
 \<close>
 
-abbreviation \<open>index_value \<equiv> fold idx_step_value\<close>
-abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>
-abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close>
+abbreviation \<open>index_value \<equiv> fold idx_step_value\<close> (*TODO: rename \<rightarrow> get_element_of_value*)
+abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>  (* get_element_of_type *)
+abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close> (* modify_value_element *)
 
 primrec valid_index :: \<open>TY \<Rightarrow> nat list \<Rightarrow> bool\<close>
   where \<open>valid_index T [] \<longleftrightarrow> True\<close>

@@ -356,6 +356,8 @@ lemma ExSet_plus:
   \<open>ExSet (A + B) = ExSet A + ExSet B\<close>
   unfolding set_eq_iff by (simp_all add: \<phi>expns plus_fun) blast+
 
+
+
 subsubsection \<open>Embedding in \<phi>-Type\<close>
 
 definition ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)

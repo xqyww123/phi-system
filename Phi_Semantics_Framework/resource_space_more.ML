@@ -15,6 +15,8 @@ val declare_entries :
 
 val define_command : Outer_Syntax.command_keyword -> string -> unit
 
+val lookup_entry : theory -> Symtab.key -> (term * term) option
+
 end
 
 signature GENERIC_RESOURCE_SPACE_ARGUMENT = sig
@@ -42,6 +44,8 @@ structure Entries = Theory_Data (
   val empty = Symtab.empty
   val merge = Symtab.merge (op =)
 )
+
+fun lookup_entry thy = Symtab.lookup (Entries.get thy)
 
 fun read_expr_term thy term0 =
       let val term = Syntax.read_term_global thy term0
@@ -197,7 +201,7 @@ val prepare_space_name_binding = Binding.suffix_name "_res"
 val mandatory_path = "RES"
 
 fun prepare_map_rewr field_B field domain (Expression.Positional TMS, rw) =
-      (Expression.Positional (TMS @ [SOME field]), rw)
+      (Expression.Positional (SOME field :: TMS), rw)
   | prepare_map_rewr field_B field domain (Expression.Named TMS, rw) =
       (Expression.Named (("Res", field) :: TMS), rw)
 
