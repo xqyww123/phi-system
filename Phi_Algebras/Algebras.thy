@@ -75,8 +75,6 @@ instantiation nat :: no_inverse begin
 instance by standard simp
 end
 
-thm add_nonneg_nonneg
-
 class add_order_0 = ord + zero + plus +
   assumes add_nonneg_nonneg: \<open>0 \<le> a \<Longrightarrow> 0 \<le> b \<Longrightarrow> 0 \<le> a + b\<close>
       and add_pos_pos: \<open>0 < a \<Longrightarrow> 0 < b \<Longrightarrow> 0 < a + b\<close>
@@ -523,7 +521,8 @@ lemma homo_sep_mult_comp:
 
 locale homo_join_sub =
   fixes \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
-  assumes homo_join_sub: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
+    and D :: \<open>'a set\<close>
+  assumes homo_join_sub: \<open>x \<in> D \<and> y \<in> D \<Longrightarrow> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
 
 locale homo_sep = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
@@ -535,66 +534,68 @@ lemma homo_sep_comp:
 
 locale sep_insertion = homo_sep \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
-+ assumes sep_insertion: \<open>a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
+  and D :: \<open>'a set\<close>
++ assumes sep_insertion: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
 begin
 
 lemma sep_insertion'[no_atp]:
-  \<open>a ## \<psi> b \<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
+  \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
   by (metis sep_insertion)
 
 sublocale homo_join_sub \<psi>
   apply standard
   unfolding join_sub_def
-  by (metis sep_insertion sep_disj_homo_semi)
+  by (metis homo_mult sep_disj_homo_semi sep_insertion)
 
 end
 
-locale sep_insertion_1 = sep_insertion \<psi>
-  for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close>
+locale sep_insertion_1 = sep_insertion \<psi> D
+  for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close> and D
++ assumes one_in_D: \<open>1 \<in> D\<close>
 begin
 
 sublocale homo_one \<psi>
-  by (standard, metis mult_1_class.mult_1_left mult_1_class.mult_1_right sep_insertion sep_magma_1_right)
+  by (standard, metis mult_1_class.mult_1_left mult_1_class.mult_1_right one_in_D sep_insertion sep_magma_1_right)
 
 end
 
 
 lemma sep_insertion_comp:
-  \<open> sep_insertion f \<Longrightarrow> sep_insertion g \<Longrightarrow> sep_insertion (f o g)\<close>
+  \<open> g ` Dg \<subseteq> Df
+\<Longrightarrow> sep_insertion f Df \<Longrightarrow> sep_insertion g Dg \<Longrightarrow> sep_insertion (f o g) Dg\<close>
   unfolding sep_insertion_def sep_insertion_axioms_def
-  by (clarsimp simp add: homo_sep_comp,
-      metis (no_types, lifting) homo_sep.axioms(2) homo_sep_disj_semi.sep_disj_homo_semi)
+  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
+      smt (verit, ccfv_threshold) homo_sep.axioms(2) homo_sep_disj_semi.sep_disj_homo_semi)
 
 lemma sep_insertion_1_comp:
-  \<open>sep_insertion_1 f \<Longrightarrow> sep_insertion_1 g \<Longrightarrow> sep_insertion_1 (f o g)\<close>
-  unfolding sep_insertion_1_def using sep_insertion_comp .
+  \<open> g ` Dg \<subseteq> Df
+\<Longrightarrow> sep_insertion_1 f Df \<Longrightarrow> sep_insertion_1 g Dg \<Longrightarrow> sep_insertion_1 (f o g) Dg\<close>
+  unfolding sep_insertion_1_def
+  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
+      metis image_subsetI sep_insertion_comp)
 
-
-locale kernel_is_1 =
-  fixes \<psi> :: " 'a::one \<Rightarrow> 'b::one"
-  assumes inj_at_1: \<open>\<forall>x. \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
-begin
-  lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi>\<close> by (simp add: kernel_is_1_axioms)
-end
+definition \<open>kernel_is_1 \<psi> D \<longleftrightarrow> (\<forall>x \<in> D. \<psi> x = 1 \<longleftrightarrow> x = 1) \<and> 1 \<in> D\<close>
 
 lemma kernel_is_1_comp[simp, locale_intro]:
-  \<open>kernel_is_1 f \<Longrightarrow> kernel_is_1 g \<Longrightarrow> kernel_is_1 (f o g)\<close>
-  unfolding kernel_is_1_def by simp
+  \<open> g ` Dg \<subseteq> Df \<Longrightarrow> kernel_is_1 f Df \<Longrightarrow> kernel_is_1 g Dg \<Longrightarrow> kernel_is_1 (f o g) Dg\<close>
+  unfolding kernel_is_1_def by (simp add: image_subset_iff)
 
-locale sep_insertion_monoid = sep_insertion_1 \<psi>
-  for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close>
+locale sep_insertion_monoid = sep_insertion_1 \<psi> D
+  for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close> and D
 begin
 
-sublocale kernel_is_1 \<psi>
-  by (standard, metis homo_one sep_insertion sep_magma_1_left sep_no_inverse)
+lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi> D\<close>
+  unfolding kernel_is_1_def
+  by (metis homo_join_sub homo_one join_sub.bot.extremum join_sub.bot.extremum_uniqueI one_in_D)
+
 end
 
 lemma sep_insertion_monoid_comp[locale_intro]:
-  \<open>sep_insertion_monoid f \<Longrightarrow> sep_insertion_monoid g \<Longrightarrow> sep_insertion_monoid (f o g)\<close>
+  \<open> g ` Dg \<subseteq> Df \<Longrightarrow> sep_insertion_monoid f Df \<Longrightarrow> sep_insertion_monoid g Dg \<Longrightarrow> sep_insertion_monoid (f o g) Dg\<close>
   unfolding sep_insertion_monoid_def using sep_insertion_1_comp .
 
-locale cancl_sep_insertion_monoid = sep_insertion_monoid \<psi>
-  for \<psi> :: \<open>'a::{sep_cancel, sep_monoid} \<Rightarrow> 'b::sep_monoid\<close>
+locale cancl_sep_insertion_monoid = sep_insertion_monoid \<psi> D
+  for \<psi> :: \<open>'a::{sep_cancel, sep_monoid} \<Rightarrow> 'b::sep_monoid\<close> and D
 
 (*
 locale sep_insertion_1 = sep_insertion \<psi>
@@ -604,18 +605,20 @@ end *)
 
 text \<open>Insertion homomorphism from a separation algebra to a separation permission semimodule.\<close>
 
-locale perm_ins_homo = sep_insertion_monoid \<psi>
-  for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
-+ assumes share_sep_wand: \<open>a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b)\<close>
-    and   \<psi>_self_disj: \<open>\<psi> x ## \<psi> x\<close>
+locale perm_ins_homo = sep_insertion_monoid \<psi> D
+  for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close> and D
++ assumes share_sep_wand: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
+                           a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+    and   \<psi>_self_disj: \<open>x \<in> D \<Longrightarrow> \<psi> x ## \<psi> x\<close>
 begin
 
 lemma share_sep_wand'[no_atp]:
-  \<open>a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> \<psi> c = a * share n (\<psi> b) \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b)\<close>
+  \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
+      \<psi> c = a * share n (\<psi> b) \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
   by (metis share_sep_wand)
 
 lemma
-  join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
+  join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> x \<in> D \<and> y \<in> D \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
   unfolding join_sub_def
   apply (rule; clarsimp simp add: homo_mult)
    apply (metis share_sep_wand)
@@ -626,6 +629,8 @@ lemma
 
 end
 
+locale perm_ins_homo_total = perm_ins_homo \<psi> UNIV for \<psi>
+
 (*
 locale perm_ins_homo_L =
   fixes \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
@@ -635,24 +640,29 @@ sublocale perm_ins_homo using perm_ins_homo'[simplified] .
 end *)
 
 lemma perm_ins_homo_composition[locale_intro]:
-  assumes f: \<open>sep_insertion_monoid f\<close>
-      and g: \<open>perm_ins_homo g\<close>
-    shows \<open>perm_ins_homo (g o f)\<close>
+  assumes dom_trans: \<open>g ` Dg \<subseteq> Df\<close>
+      and f: \<open>perm_ins_homo f Df\<close>
+      and g: \<open>sep_insertion_monoid g Dg\<close>
+    shows \<open>perm_ins_homo (f o g) Dg\<close>
 proof -
-  interpret f: sep_insertion_monoid f using f .
-  interpret g: perm_ins_homo g using g .
-  have g': \<open>sep_insertion_monoid g\<close> by (simp add: g.sep_insertion_monoid_axioms)
+  interpret f: perm_ins_homo f Df using f .
+  interpret g: sep_insertion_monoid g Dg using g .
+  have f': \<open>sep_insertion_monoid f Df\<close> by (simp add: f.sep_insertion_monoid_axioms)
+  have g': \<open>sep_insertion_monoid g Dg\<close> by (simp add: g.sep_insertion_monoid_axioms)
+  have t[simp]: \<open>x \<in> Dg \<Longrightarrow> g x \<in> Df\<close> for x using dom_trans by blast 
+
   show ?thesis
     unfolding perm_ins_homo_def perm_ins_homo_axioms_def
-    by (auto,
-        simp add: f g.sep_insertion_monoid_axioms sep_insertion_monoid_comp,
-        ((insert f.sep_insertion g.share_sep_wand, auto)[1]),
-        ((insert f.homo_mult g.share_sep_wand, auto)[1]),
-        simp add: g.\<psi>_self_disj)
+    apply (auto simp add: f.share_sep_wand)
+    apply (meson dom_trans f' g' sep_insertion_monoid_comp)
+    using g.sep_insertion apply auto[1]
+    using g.homo_mult apply auto[1]
+    using f.\<psi>_self_disj t by blast
+
 qed
 
-locale cancl_perm_ins_homo = perm_ins_homo \<psi>
-  for \<psi> :: \<open>'a::{sep_cancel, sep_algebra} \<Rightarrow> 'b::share_module_sep\<close>
+locale cancl_perm_ins_homo = perm_ins_homo \<psi> D
+  for \<psi> :: \<open>'a::{sep_cancel, sep_algebra} \<Rightarrow> 'b::share_module_sep\<close> and D
 begin
 
 sublocale cancl_sep_insertion_monoid ..
@@ -1841,49 +1851,56 @@ lemma prod_superset_dom1:
 
 subsubsection \<open>Total Permission Transformation\<close>
 
+definition \<open>pointwise_set D = {f. \<forall> k. f k \<in> D}\<close>
+
+lemma pointwise_set_UNIV:
+  \<open>pointwise_set UNIV = UNIV\<close>
+  unfolding pointwise_set_def by simp
 
 lemma perm_ins_homo_pointwise[locale_intro]:
-  assumes prem: \<open>perm_ins_homo \<psi>\<close>
-  shows \<open>perm_ins_homo ((\<circ>) \<psi>)\<close>
+  assumes D':   \<open>D' = pointwise_set D\<close>
+      and prem: \<open>perm_ins_homo \<psi> D\<close>
+  shows \<open>perm_ins_homo ((\<circ>) \<psi>) D'\<close>
   unfolding comp_def
 proof
-  interpret xx: perm_ins_homo \<psi> using prem .
+  interpret xx: perm_ins_homo \<psi> D using prem .
 
-  fix x y z a b c :: \<open>'c \<Rightarrow> 'a\<close>
-  fix a' :: \<open>'c \<Rightarrow> 'b\<close>
+  fix x y z a b c :: \<open>'a \<Rightarrow> 'b\<close>
+  fix a' :: \<open>'a \<Rightarrow> 'c\<close>
   fix n :: rat
   show \<open>a ## b \<longrightarrow> (\<lambda>x. \<psi> (a x)) ## (\<lambda>x. \<psi> (b x))\<close>
-    by (simp add: fun_eq_iff times_fun sep_disj_fun_def)
+    by (simp add: fun_eq_iff times_fun sep_disj_fun_def D' pointwise_set_def)
   show \<open>x ## y \<Longrightarrow> (\<lambda>xa. \<psi> ((x * y) xa)) = (\<lambda>xa. \<psi> (x xa)) * (\<lambda>x. \<psi> (y x))\<close>
     by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.homo_mult)
-  show \<open>a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
-     (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b)\<close>
-    by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.sep_insertion
-            all_conj_distrib[symmetric], subst choice_iff[symmetric]; blast)
+  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
+     (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b \<and> a \<in> D')\<close>
+    by (auto simp add: D' fun_eq_iff times_fun sep_disj_fun_def xx.sep_insertion pointwise_set_def; metis)
 
   (*show \<open>inj (\<lambda>g x. \<psi> (g x))\<close>
     by (rule, simp add: fun_eq_iff inj_eq) *)
   (* show \<open>\<forall>x. ((\<lambda>xa. \<psi> (x xa)) = 1) = (x = 1)\<close>
     by (simp add: one_fun_def fun_eq_iff) *)
-  show \<open>(\<lambda>xa. \<psi> (x xa)) ## (\<lambda>xa. \<psi> (x xa))\<close>
-    by (simp add: sep_disj_fun_def xx.\<psi>_self_disj)
+  show \<open>x \<in> D' \<Longrightarrow> (\<lambda>xa. \<psi> (x xa)) ## (\<lambda>xa. \<psi> (x xa))\<close>
+    by (simp add: D' sep_disj_fun_def xx.\<psi>_self_disj pointwise_set_def)
+  show \<open>1 \<in> D'\<close>
+    by (simp add: D' pointwise_set_def xx.one_in_D)
 
-  show \<open>a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
-       0 < n \<and> n \<le> 1 \<Longrightarrow> (a' * n :\<Znrres> (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a''. a' = (\<lambda>x. \<psi> (a'' x)) * (1 - n) :\<Znrres> (\<lambda>x. \<psi> (b x)) \<and> a'' * b = c \<and> a'' ## b)\<close>
-  by (clarsimp simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def xx.share_sep_wand
-            share_fun_def all_conj_distrib[symmetric]; rule; metis)
-
+  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
+       0 < n \<and> n \<le> 1 \<Longrightarrow> (a' * n :\<Znrres> (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x)))
+                        = (\<exists>a''. a' = (\<lambda>x. \<psi> (a'' x)) * (1 - n) :\<Znrres> (\<lambda>x. \<psi> (b x)) \<and> a'' * b = c \<and> a'' ## b \<and> a'' \<in> D')\<close>
+    by (auto simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def xx.share_sep_wand
+            share_fun_def pointwise_set_def D'; metis)
 qed
 
 lemma perm_ins_homo_pointwise_eq:
-  \<open>perm_ins_homo ((\<circ>) \<psi>) \<longleftrightarrow> perm_ins_homo \<psi>\<close>
+  \<open>perm_ins_homo ((\<circ>) \<psi>) (pointwise_set D) \<longleftrightarrow> perm_ins_homo \<psi> D\<close>
   for \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
 proof
   fix \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
-  assume prem: \<open>perm_ins_homo ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close>
-  show \<open>perm_ins_homo \<psi>\<close>
+  assume prem: \<open>perm_ins_homo ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c) (pointwise_set D)\<close>
+  show \<open>perm_ins_homo \<psi> D\<close>
   proof
-    interpret xx: perm_ins_homo \<open>((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close> using prem .
+    interpret xx: perm_ins_homo \<open>((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close> \<open>(pointwise_set D)\<close> using prem .
     fix x y a b c :: \<open>'b\<close> and a2 :: 'c and n :: rat
     show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close>
       using xx.homo_mult[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
@@ -1891,23 +1908,27 @@ proof
     show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
       using xx.sep_disj_homo_semi[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
       by meson
-    show \<open>a2 ## \<psi> b \<Longrightarrow> (a2 * \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
+    show \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow>
+            (a2 * \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
       using xx.sep_insertion[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff,
-          where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>, simplified]
+          where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>, simplified pointwise_set_def, simplified]
       by auto
-    (*show \<open>inj \<psi>\<close>
-      by (metis (no_types, opaque_lifting) fun_upd_comp inj_def mult_1_class.mult_1_left one_fun times_fupdt_1_apply_sep xx.inj_\<psi>)*)
-    show \<open>\<psi> x ## \<psi> x\<close>
-      by (metis fun_sep_disj_imply_v fun_upd_comp xx.\<psi>_self_disj)
 
-    show \<open>a2 ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> (a2 * n :\<Znrres> \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' * (1 - n) :\<Znrres> \<psi> b \<and> a' * b = c \<and> a' ## b)\<close>
+    show \<open>x \<in> D \<Longrightarrow> \<psi> x ## \<psi> x\<close>
+      using xx.\<psi>_self_disj[of \<open>\<lambda>_. x\<close>, simplified pointwise_set_def, simplified]
+      by (auto simp add: sep_disj_fun_def)
+
+    show \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
+            (a2 * n :\<Znrres> \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' * (1 - n) :\<Znrres> \<psi> b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
       by (insert xx.share_sep_wand[where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>];
-          clarsimp simp add: sep_disj_fun_def share_fun_def fun_eq_iff times_fun; rule; auto)
+          clarsimp simp add: sep_disj_fun_def share_fun_def fun_eq_iff times_fun pointwise_set_def; rule; auto)
 
+    show \<open>1 \<in> D\<close>
+      using xx.one_in_D by (auto simp add: pointwise_set_def)
   qed
 next
-  show \<open>perm_ins_homo \<psi> \<Longrightarrow> perm_ins_homo ((\<circ>) \<psi>)\<close>
-    using perm_ins_homo_pointwise .
+  show \<open>perm_ins_homo \<psi> D \<Longrightarrow> perm_ins_homo ((\<circ>) \<psi>) (pointwise_set D)\<close>
+    using perm_ins_homo_pointwise by blast 
 qed
 
 
@@ -2035,7 +2056,7 @@ abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
 lemma perm_ins_homo_to_share[locale_witness]:
-  \<open>perm_ins_homo (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close>
+  \<open>perm_ins_homo (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option) UNIV\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
   fix a' a2 :: \<open>'a share option\<close>
@@ -2043,22 +2064,23 @@ proof
   show \<open>a ## b \<longrightarrow> to_share a ## to_share b\<close> by (cases a; cases b; simp)
   show \<open>x ## y \<Longrightarrow> to_share (x * y) = to_share x * to_share y\<close> by (cases x; cases y; simp)
   show \<open>a' ## to_share b \<Longrightarrow>
-       (a' * to_share b = to_share c) = (\<exists>a. a' = to_share a \<and> a * b = c \<and> a ## b)\<close>
+       (a' * to_share b = to_share c) = (\<exists>a. a' = to_share a \<and> a * b = c \<and> a ## b \<and> a \<in> UNIV)\<close>
     apply (cases a'; cases b; cases c; simp add: split_option_ex)
     subgoal for a'' by (cases a''; simp) .
   (* show \<open>inj to_share\<close>
     by (rule, simp, metis option.inj_map_strong share.inject) *)
   show \<open>to_share x ## to_share x\<close> by (cases x; simp)
-  show \<open>a2 ## to_share b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> (a2 * n :\<Znrres> to_share b = to_share c) = (\<exists>a'. a2 = to_share a' * (1 - n) :\<Znrres> to_share b \<and> a' * b = c \<and> a' ## b)\<close>
+  show \<open>a2 ## to_share b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> (a2 * n :\<Znrres> to_share b = to_share c) = (\<exists>a'. a2 = to_share a' * (1 - n) :\<Znrres> to_share b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> UNIV)\<close>
     apply (cases a2; cases b; cases c; simp add: share_option_def)
     apply (cases \<open>n < 1\<close>; simp)
     apply (smt (verit, ccfv_SIG) diff_add_cancel diff_gt_0_iff_gt sep_cancel sep_disj_commuteI sep_disj_multD2 sep_disj_multI2 sep_disj_share sep_mult_commute times_share)
     by (metis join_strict_positivity less_numeral_extra(1) sep_disj_multD2 sep_disj_share)
+  show \<open>1 \<in> UNIV\<close> by simp
 qed
 
 lemma to_share_kernel_is_1[locale_witness]:
-  \<open>kernel_is_1 to_share\<close>
-  by (standard; simp)
+  \<open>kernel_is_1 to_share UNIV\<close>
+  by (simp add: kernel_is_1_def)
 
 
 lemma strip_share_Share[simp]:

@@ -391,7 +391,7 @@ lemma partialwise_\<I>[simp]: "\<I> (partialwise I) (Fine x) = { Fine y |y. y \<
 
 subsubsection \<open>Functional Fiction\<close>
 
-definition \<open>\<F>_functional \<psi> = Interp (\<lambda>x. {y. x = \<psi> y})\<close>
+definition \<open>\<F>_functional \<psi> D = Interp (\<lambda>x. {y. x = \<psi> y \<and> y \<in> D })\<close>
 
 (* lemma (in kernel_is_1) \<F>_functional_\<I>[simp]:
   \<open>\<I> (\<F>_functional \<psi>) = (\<lambda>x. {y. x = \<psi> y})\<close>
@@ -399,38 +399,38 @@ definition \<open>\<F>_functional \<psi> = Interp (\<lambda>x. {y. x = \<psi> y}
   by (rule Interp_inverse, simp add: Interpretation_def one_set_def set_eq_iff inj_at_1) *)
 
 lemma \<F>_functional_\<I>[simp]:
-  \<open> kernel_is_1 \<psi>
-\<Longrightarrow> \<I> (\<F>_functional \<psi>) = (\<lambda>x. {y. x = \<psi> y})\<close>
+  \<open> kernel_is_1 \<psi> D
+\<Longrightarrow> \<I> (\<F>_functional \<psi> D) = (\<lambda>x. {y. x = \<psi> y \<and> y \<in> D })\<close>
   unfolding \<F>_functional_def kernel_is_1_def
-  by (rule Interp_inverse, simp add: Interpretation_def one_set_def set_eq_iff)
+  by (rule Interp_inverse, auto simp add: Interpretation_def one_set_def set_eq_iff Ball_def)
 
 lemma map_option_inj_at_1[simp]:
-  \<open>kernel_is_1 (map_option f)\<close>
+  \<open>kernel_is_1 (map_option f) UNIV\<close>
   unfolding one_option_def kernel_is_1_def
   by (simp add: split_option_all)
 
 lemma (in sep_insertion_monoid) \<F>_functional_projection [simp]:
-  \<open>refinement_projection (\<F>_functional \<psi>) (\<psi> ` S) \<subseteq> UNIV * S\<close>
+  \<open> S \<subseteq> D
+\<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) (\<psi> ` S) \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
-  by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>]
-      sep_insertion; blast)
+  by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>] sep_insertion; blast)
 
-lemma kernel_is_1_pointwise[locale_intro,intro!]:
-  \<open>kernel_is_1 \<psi> \<Longrightarrow> kernel_is_1 ((\<circ>) \<psi>)\<close>
-  unfolding kernel_is_1_def by (simp add: fun_eq_iff)
+lemma kernel_is_1_pointwise[simp,intro!]:
+  \<open>kernel_is_1 \<psi> D \<Longrightarrow> kernel_is_1 ((\<circ>) \<psi>) (pointwise_set D)\<close>
+  unfolding kernel_is_1_def pointwise_set_def by (simp add: fun_eq_iff)
 
-lemma (in kernel_is_1) \<F>_functional_pointwise:
-  \<open>\<F>_functional ((\<circ>) \<psi>) = \<F>_pointwise (\<F>_functional \<psi>)\<close>
-proof -
-  interpret kernel_is_1 \<open>(\<circ>) \<psi>\<close> by intro_locales
-  show ?thesis by (rule interp_eq_I; simp add: fun_eq_iff)
-qed
+lemma \<F>_functional_pointwise:
+  \<open> kernel_is_1 \<psi> D
+\<Longrightarrow> \<F>_functional ((\<circ>) \<psi>) (pointwise_set D) = \<F>_pointwise (\<F>_functional \<psi> D)\<close>
+  by (rule interp_eq_I; auto simp add: fun_eq_iff set_eq_iff; simp add: pointwise_set_def)
 
 lemma \<F>_functional_comp:
-  \<open> kernel_is_1 f
-\<Longrightarrow> kernel_is_1 g
-\<Longrightarrow> \<F>_functional (f o g) = \<F>_functional g ;\<^sub>\<I> \<F>_functional f\<close>
-  by (clarsimp simp add: fun_eq_iff set_eq_iff)
+  \<open> g ` Dg \<subseteq> Df
+\<Longrightarrow> kernel_is_1 f Df
+\<Longrightarrow> kernel_is_1 g Dg
+\<Longrightarrow> \<F>_functional (f o g) Dg = \<F>_functional g Dg ;\<^sub>\<I> \<F>_functional f Df\<close>
+  by (auto simp add: fun_eq_iff set_eq_iff; blast)
+  
 
 definition "\<F>_share s = (case s of Share w v \<Rightarrow> if w = 1 then {v} else {})"
 
@@ -462,16 +462,15 @@ subgoal for r R u v w *)
 
 context cancl_sep_insertion_monoid begin
 
-lemma refinement_projection:
-  \<open>refinement_projection (\<F>_functional \<psi>) (\<psi> ` S) \<subseteq> UNIV * S\<close>
-  unfolding refinement_projection_def
-  by (auto simp add: set_mult_expn sep_insertion; metis sep_insertion)
-
-lemma refinement:
-  \<open> Id_on UNIV * {(a, b)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` {(a,b)} \<w>.\<r>.\<t> \<F>_functional \<psi> \<i>\<n> \<psi> ` {a} \<close>
+lemma \<F>_functional_refinement:
+  \<open> a \<in> D \<and> b \<in> D
+\<Longrightarrow> (\<forall>r x y. r ## x \<and> r \<in> D \<and> x \<in> D \<and> r * x \<in> D \<and> y \<in> D \<longrightarrow> r * y \<in> D)
+\<Longrightarrow> kernel_is_1 \<psi> D
+\<Longrightarrow> Id_on UNIV * {(a, b)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` {(a,b)} \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` {a} \<close>
   unfolding Fictional_Forward_Simulation_def
-  by (clarsimp simp add: set_mult_expn Subjection_expn sep_insertion,
-      metis (no_types, lifting) sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_insertion sep_mult_assoc)
+  apply (auto simp add: set_mult_expn Subjection_expn sep_insertion)
+  apply (metis (no_types, lifting) homo_mult sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
+  by (metis sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_mult_assoc')
 
 end
 
@@ -481,9 +480,10 @@ subsubsection \<open>Cancellative Permission Insertion Homomorphism\<close>
 context cancl_perm_ins_homo begin
 
 lemma refinement_projection_half_perm:
-  \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> refinement_projection (\<F>_functional \<psi>) ((share n o \<psi>) ` S) \<subseteq> UNIV * S\<close>
+  \<open>S \<subseteq> D \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) ((share n o \<psi>) ` S) \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
-  by (auto simp add: set_mult_expn sep_insertion share_sep_wand'; blast)
+  by (auto simp add: set_mult_expn sep_insertion share_sep_wand',
+      insert perm_ins_homo.share_sep_wand' perm_ins_homo_axioms, blast)
 
 
 end

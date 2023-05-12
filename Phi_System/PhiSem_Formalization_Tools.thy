@@ -1,7 +1,7 @@
 theory PhiSem_Formalization_Tools
   imports IDE_CP
 begin
-
+(*
 section \<open>Tools for Formalizing Instructions\<close>
 
 named_theorems discharging_semantic_debt
@@ -499,9 +499,9 @@ subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
    R: resource Res
-+  share: perm_ins_homo \<psi>
++  share: perm_ins_homo \<psi> UNIV
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
-      \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
+      \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi> UNIV)\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
@@ -1863,5 +1863,5 @@ lemma (in \<phi>empty) op_set_element:
 *)
 
 *)
-
+*)
 end

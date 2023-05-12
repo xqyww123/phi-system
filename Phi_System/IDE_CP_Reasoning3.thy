@@ -177,9 +177,9 @@ lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> \<circle>) = 
 *)
 
 
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open> perm_ins_homo \<psi>
-\<Longrightarrow> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
+lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi> _ \<circle>) = ?Z @action clean_automation_waste\<close>]:
+  \<open> perm_ins_homo \<psi> D
+\<Longrightarrow> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>perm_ins_homo_\<phi>None
   by simp
 
@@ -1040,10 +1040,10 @@ lemma [\<phi>reason 1211]:
 lemma Structural_Extract_\<phi>perm_ins_homo:
   \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> \<phi>Sep_Disj W T
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T)
-                       (r \<Ztypecolon> \<phi>perm_ins_homo \<psi> R)
-                       (y \<Ztypecolon> \<phi>perm_ins_homo \<psi> U)
-                       (w \<Ztypecolon> \<phi>perm_ins_homo \<psi> W)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T)
+                       (r \<Ztypecolon> \<phi>perm_ins_homo \<psi> D R)
+                       (y \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U)
+                       (w \<Ztypecolon> \<phi>perm_ins_homo \<psi> D W)
                        P\<close>
   unfolding Structural_Extract_def Imply_def \<phi>Sep_Disj_def
   apply (clarsimp simp add: \<phi>expns)
@@ -1055,15 +1055,15 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
   \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> \<phi>Sep_Disj W T
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T)
-                       (r \<Ztypecolon> \<phi>perm_ins_homo \<psi> R)
-                       (y \<Ztypecolon> \<phi>perm_ins_homo \<psi> U)
-                       (w \<Ztypecolon> \<phi>perm_ins_homo \<psi> W)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T)
+                       (r \<Ztypecolon> \<phi>perm_ins_homo \<psi> D R)
+                       (y \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U)
+                       (w \<Ztypecolon> \<phi>perm_ins_homo \<psi> D W)
        (Reverse_Transformation (RP \<and>\<^sub>\<r> \<phi>Sep_Disj R' U')
-           (Structural_Extract (y' \<Ztypecolon> \<phi>perm_ins_homo \<psi> U')
-                               (w' \<Ztypecolon> \<phi>perm_ins_homo \<psi> W')
-                               (x' \<Ztypecolon> \<phi>perm_ins_homo \<psi> T')
-                               (r' \<Ztypecolon> \<phi>perm_ins_homo \<psi> R')
+           (Structural_Extract (y' \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U')
+                               (w' \<Ztypecolon> \<phi>perm_ins_homo \<psi> D W')
+                               (x' \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T')
+                               (r' \<Ztypecolon> \<phi>perm_ins_homo \<psi> D R')
                                 P') \<and> P)\<close>
   unfolding Generated_Rule_def Action_Tag_def Compact_Antecedent_def
   by (blast intro: Structural_Extract_\<phi>perm_ins_homo[unfolded Action_Tag_def]

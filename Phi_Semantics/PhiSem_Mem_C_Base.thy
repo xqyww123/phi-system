@@ -144,33 +144,35 @@ lemma Val_of_Map_append[simp]:
 
 lemmas Val_of_Map[simp] = Val_of_Map_append[where f = \<open>Map.empty\<close>, simplified]
 
-definition Map_of_Val' :: \<open>TY \<Rightarrow> VAL option \<Rightarrow> nat list \<rightharpoonup> VAL\<close>
-  where \<open>Map_of_Val' TY V = (case V of Some V' \<Rightarrow> if V' \<in> Well_Type TY then 1 else Map_of_Val V'
-                                     | None \<Rightarrow> 1)\<close>
-
-
 definition Map_of_Val_ins
-  where \<open>Map_of_Val_ins TY = ((o) (map_option nosep)) o Map_of_Val' TY o map_option nosep.dest\<close>
+  where \<open>Map_of_Val_ins = ((o) (map_option nosep))
+                            o (\<lambda>V. (case V of Some V' \<Rightarrow> Map_of_Val V' | None \<Rightarrow> 1))
+                            o map_option nosep.dest\<close>
+definition Map_of_Val_ins_dom
+  where \<open>Map_of_Val_ins_dom TY = {x. pred_option (\<lambda>x'. nosep.dest x' \<in> Well_Type TY) x}\<close>
 
-interpretation Map_of_Val_ins: sep_insertion_monoid \<open>Map_of_Val_ins TY\<close>
-  apply (standard)
-apply (auto simp add: Map_of_Val_ins_def fun_eq_iff split_option_ex times_fun
-                                  Map_of_Val'_def sep_disj_fun_def split_nosep_meta_all
-                        split: option.split)[1]
 
-apply (auto simp add: Map_of_Val_ins_def fun_eq_iff split_option_ex times_fun
-                                  Map_of_Val'_def sep_disj_fun_def split_nosep_meta_all
-                        split: option.split)[1]
-
-apply (auto simp add: Map_of_Val_ins_def fun_eq_iff split_option_ex times_fun
-                                  Map_of_Val'_def sep_disj_fun_def split_nosep_meta_all
-                        split: option.split)[1]
-
-  using Map_of_Val'.inj_at_1 Map_of_Val'_def apply fastforce
+interpretation Map_of_Val_ins: cancl_sep_insertion_monoid \<open>Map_of_Val_ins\<close> \<open>Map_of_Val_ins_dom TY\<close>
+  apply (standard; auto simp add: Map_of_Val_ins_def fun_eq_iff split_option_ex times_fun
+                                  sep_disj_fun_def split_nosep_meta_all Map_of_Val_ins_dom_def
+                        split: option.split)
   using Mapof_not_1 apply fastforce
-  apply (case_tac \<open>Map_of_Val x xb\<close>)
-  subgoal for a x xa xb
-    apply (case_tac \<open>Map_of_Val x xa\<close>)
+  apply (metis Map_of_Val_same_dom domIff one_option_def option.exhaust_sel option.map_disc_iff sep_disj_option_nonsepable(1) sep_no_inverse)
+  subgoal premises prems for a x x' proof -
+    have t1: \<open>a x = 1\<close> for x
+      by (metis Map_of_Val_same_dom domIff one_option_def option.exhaust_sel option.map_disc_iff prems(1) prems(2) prems(3) prems(4) sep_disj_option_nonsepable(1) sep_no_inverse)
+    have t2: \<open>map_option nosep o Map_of_Val x = map_option nosep o Map_of_Val x'\<close>
+      using prems(4) t1 by auto
+    show ?thesis
+      by (metis (mono_tags, lifting) Map_of_Val_inj fun.inj_map_strong nosep.inject option.inj_map_strong prems(2) prems(3) t2) 
+  qed .
+
+interpretation Map_of_Val_shared_ins: cancl_perm_ins_homo \<open>((o) to_share) o Map_of_Val_ins\<close> \<open>Map_of_Val_ins_dom TY\<close>
+  by (standard; simp add: pointwise_set_UNIV)
+
+thm Map_of_Val_ins.\<F>_functional_refinement
+thm Map_of_Val_shared_ins.\<F>_functional_refinement
+
 
 interpretation Map_of_Val': kernel_is_1 \<open>Map_of_Val' TY\<close>
   by (standard, clarsimp simp add: split_option_all Map_of_Val'_def split_nosep_meta_all fun_eq_iff,

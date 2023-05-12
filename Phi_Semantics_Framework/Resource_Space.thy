@@ -210,8 +210,8 @@ locale sep_inj_proj =
               a * b = inject c \<longleftrightarrow> (\<exists>a' b'. a = inject a' \<and> b = inject b' \<and> a' * b' = c)\<close>
 begin
 
-sublocale inj: sep_insertion_monoid inject
-  by (standard, metis mult_in_dom prj.sep_disj_homo_semi proj_inj)
+sublocale inj: sep_insertion_monoid inject UNIV
+  by (standard; simp; metis mult_in_dom prj.sep_disj_homo_semi proj_inj)
 
 lemma inject_inj[iff]:
   \<open>inject a = inject b \<longleftrightarrow> a = b\<close>
@@ -225,8 +225,10 @@ lemma inject_assoc_homo[simp]:
 lemma inj_Sep_Homo:
   \<open>Homo_Sep_Homo inject\<close>
   unfolding Sep_Closed_def Homo_Sep_Homo_def
-  apply clarsimp
-  by (smt (verit, ccfv_threshold) Sep_Homo_def inj.inj_at_1 prj.sep_disj_homo_semi proj_inj mult_in_dom image_iff)
+  apply (auto simp add: Sep_Homo_def)
+  using mult_in_dom apply auto[1]
+  using mult_in_dom apply auto[1]
+  by (metis imageI inj.homo_mult)
 
 end
 
@@ -454,7 +456,8 @@ lemma Fic_Space_m[simp]: "mk x \<in> SPACE"
   unfolding SPACE_def by simp
 
 lemma interp_m[simp]: "\<I> INTERP (mk x) = \<I> I x"
-  unfolding INTERP_def by (simp add: sep_disj_commute sep_mult_commute inj.inj_at_1)
+  unfolding INTERP_def
+  by (simp add: sep_disj_commute sep_mult_commute, metis Interp_one inj.homo_one proj_inj)
 
 lemma sep_disj_get_name_eq[simp]:
   \<open>r \<in> SPACE \<Longrightarrow> get r ## x \<longleftrightarrow> r ## mk x\<close>

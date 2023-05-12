@@ -7,9 +7,10 @@ chapter \<open>Resource Bases and Templates\<close>
 
 section \<open>Preliminary\<close>
 
-interpretation to_share: cancl_perm_ins_homo \<open>to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option\<close> ..
+interpretation to_share: cancl_perm_ins_homo \<open>to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option\<close> UNIV ..
 interpretation pointwise_to_share:
-  cancl_perm_ins_homo \<open>(o) (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close> ..
+  cancl_perm_ins_homo \<open>(o) (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close> \<open>pointwise_set UNIV\<close>
+  by (standard; standard)
 
 section \<open>Bases\<close>
 
@@ -771,23 +772,23 @@ subsection \<open>Pointwise Share Fiction\<close>
 
 locale pointwise_share_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_functional to_share)\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_functional to_share UNIV)\<close>
 for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
 begin
 
-sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<F>_functional to_share\<close> Fic ..
+sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<F>_functional to_share UNIV\<close> Fic ..
 
 lemmas setter_rule =
   "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> for u u',
-                    OF to_share.refinement[simplified], simplified,
-                    OF to_share.refinement_projection[where S=\<open>{Some v}\<close> for v, simplified]]
+                    OF to_share.\<F>_functional_refinement[simplified], simplified,
+                    OF to_share.\<F>_functional_projection[where S=\<open>{Some v}\<close> for v, simplified]]
 
 lemmas getter_rule =
-  "_getter_rule_2_"[OF to_share.refinement_projection[where S=\<open>{x}\<close> for x, simplified], simplified]
+  "_getter_rule_2_"[OF to_share.\<F>_functional_projection[where S=\<open>{x}\<close> for x, simplified], simplified]
 
 lemmas allocate_rule =
-  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF to_share.refinement[where a=\<open>1\<close>, simplified], simplified],
+  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF to_share.\<F>_functional_refinement[where a=\<open>1\<close>, simplified], simplified],
                         where u = \<open>Some u'\<close> for u', simplified]
 
 end
@@ -939,22 +940,23 @@ subsection \<open>Pointwise Share Fiction\<close>
 
 locale pointwise_share_fiction_for_partial_mapping_resource2 =
    R: partial_map_resource2 Res
-+  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_pointwise (\<F>_functional to_share))\<close>
++  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_pointwise (\<F>_functional to_share UNIV))\<close>
 for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val nosep share option) fiction_entry"
 begin
 
-sublocale pointwise_base_fiction_for_partial_mapping_resource2 Res \<open>\<F>_functional to_share\<close> Fic ..
+sublocale pointwise_base_fiction_for_partial_mapping_resource2 Res \<open>\<F>_functional to_share UNIV\<close> Fic ..
 
 lemmas setter_rule =
-  "_setter_rule_2_""_setter_rule_2_"[OF to_share.refinement[simplified], simplified,
+  "_setter_rule_2_""_setter_rule_2_"[OF to_share.\<F>_functional_refinement[simplified], simplified,
                                      OF to_share.refinement_projection_half_perm[where S=\<open>{Some v}\<close> and n = 1 for v, simplified]]
 lemmas getter_rule =
-  "_getter_rule_2_"[OF to_share.refinement_projection[where S=\<open>{x}\<close> for x, simplified], simplified]
+  "_getter_rule_2_"[OF to_share.\<F>_functional_projection[where S=\<open>{x}\<close> for x, simplified], simplified]
 
 lemmas allocate_rule =
-  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF pointwise_to_share.refinement[where a=\<open>1\<close>, simplified], simplified, unfolded to_share.\<F>_functional_pointwise]]
-
+  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF pointwise_to_share.\<F>_functional_refinement[where a=\<open>1\<close>, simplified],
+        simplified, unfolded \<F>_functional_pointwise[OF to_share.kernel_is_1, unfolded pointwise_set_UNIV]]]
+thm \<F>_pointwise_refinement[OF pointwise_to_share.\<F>_functional_refinement[where a=\<open>1\<close>, simplified], simplified, unfolded]
 end
 
 
