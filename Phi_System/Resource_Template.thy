@@ -615,6 +615,18 @@ end
 
 section \<open>One Level Parital Mapping\<close>
 
+subsection \<open>Preliminary\<close>
+
+definition \<open>map_fun_at k g f = (\<lambda>x. if x = k then g (f x) else f x)\<close>
+
+lemma map_fun_at_1[simp]: \<open>map_fun_at k g 1 = 1(k := g 1)\<close>
+  unfolding map_fun_at_def fun_eq_iff by simp
+
+lemma map_fun_at_const[simp]:
+  \<open>map_fun_at k (\<lambda>_. u) f = f(k := u)\<close>
+  unfolding map_fun_at_def fun_eq_iff by simp
+
+
 subsection \<open>Resource\<close>
 
 locale partial_map_resource =
@@ -653,32 +665,36 @@ lemma getter_valid:
 subsubsection \<open>Setter\<close>
 
 lemma setter_refinement:
-  \<open>(\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m k = Some any \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H domain)
-\<Longrightarrow> Transition_of' (\<phi>R_set_res' (\<lambda>f. f(k := u))) ret
-  \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` {(Some any, u)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none \<w>.\<r>.\<t> basic_fiction \<i>\<n> fun_upd 1 k ` {Some any}\<close>
-  apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>\<lambda>f. f(k := u)\<close>]], assumption)
+  \<open>(\<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m k = Some v \<longrightarrow> map_fun_at k (F o the) m \<in>\<^sub>S\<^sub>H domain)
+\<Longrightarrow> Transition_of' (\<phi>R_set_res' (map_fun_at k (F o the))) ret
+  \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` {(Some v, F v)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none \<w>.\<r>.\<t> basic_fiction \<i>\<n> fun_upd 1 k ` {Some v}\<close>
+  apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at k (F o the)\<close>]], assumption)
   unfolding Fictional_Forward_Simulation_def setter_transition
   apply (clarsimp simp add: basic_fiction_\<I> \<phi>expns prj.homo_mult times_fun_upd sep_disj_partial_map_upd
         nonsepable_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
         times_fun inj.homo_mult[symmetric] inject_wand_homo dom_mult)
   subgoal premises prems for r R x' u' a
   proof -
-    have t1[simp]: \<open>a ## 1(k \<mapsto> any)\<close>
-      using prems(5) prems(9) sep_disj_commuteI sep_disj_multD2 by blast
-    have t2[simp]: \<open>r ## (a * 1(k \<mapsto> any))\<close>
-      by (simp add: prems(5) prems(9) sep_disj_commuteI sep_disj_multI1 sep_mult_commute)
-    have t3[simp]: \<open>x' = clean u' * mk ((r * (a * 1(k \<mapsto> any)))(k := u)) \<and> ret = Normal \<phi>V_none\<close>
+    have t1[simp]: \<open>a ## 1(k := x)\<close> for x
+      by (meson nonsepable_semigroup_sepdisj_fun prems(5) prems(9) sep_disj_commute sep_disj_multD2)
+    have t1'[simp]: \<open>r ## 1(k := x)\<close> for x
+      by (meson nonsepable_semigroup_sepdisj_fun prems(5))
+    have t2[simp]: \<open>r ## (a * 1(k := x))\<close> for x
+      by (smt (verit, ccfv_SIG) nonsepable_semigroup_sepdisj_fun prems(9) sep_disj_commute sep_disj_multD1 sep_disj_multI2 sep_mult_commute t1')
+    have t2'[simp]: \<open>a ## (r * 1(k := x))\<close> for x
+      by (metis sep_disj_commute sep_disj_multI2 sep_mult_commute t1 t1' t2)
+    have t3[simp]: \<open>x' = clean u' * mk (map_fun_at k (F \<circ> the) (r * (a * 1(k \<mapsto> v)))) \<and> ret = Normal \<phi>V_none\<close>
       by (smt (z3) map_upd_Some_unfold prems(3) prems(5) sep_disj_partial_map_some_none t1 times_option(3))
-    have t4[simp]: \<open>mk ((r * (a * 1(k \<mapsto> any)))(k := u)) = mk (r * (a * 1(k := u)))\<close>
-      by (metis domIff fun_upd_same fun_upd_upd option.distinct(1) sep_disj_partial_map_upd t1 t2)
-    have t5[simp]: \<open>clean u' * mk a = u'\<close>
+    have t4[simp]: \<open>map_fun_at k (F \<circ> the) (a * (r * 1(k \<mapsto> v))) = a * (r * 1(k := F v))\<close>
+      by (auto simp add: fun_eq_iff map_fun_at_def times_fun,
+          metis (mono_tags, opaque_lifting) fun_upd_apply option.sel prems(5) sep_disj_fun_def sep_disj_option_nonsepable(1) t1 times_option(3))
+    have t5: \<open>clean u' * mk a = u'\<close>
       by (metis fun_split_1 prems(8))
     show ?thesis
-      apply (simp add: prems, rule exI[where x=u']; simp add: prems; rule)
-      apply (smt (verit, ccfv_threshold) mk_homo_mult nonsepable_semigroup_sepdisj_fun prems(5) prems(9) sep_disj_clean sep_disj_mk sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc' sep_mult_left_commute t4 t5)
-      by (smt (verit, best) fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) inj.sep_disj_homo mult_1_class.mult_1_left nonsepable_semigroup_sepdisj_fun sep_disj_commute sep_disj_multD1 sep_disj_multI1 sep_mult_commute t1 t2 t5)
+      by (simp add: prems, rule exI[where x=u']; simp add: prems mk_homo_mult; rule,
+          metis (no_types, opaque_lifting) fun_1upd_homo_right1 mult_1_class.mult_1_left t5,
+          metis mk_homo_mult nonsepable_semigroup_sepdisj_fun prems(5) sep_disj_clean sep_disj_mk sep_disj_multI1 t2' t5)
   qed .
-
 
 end
 
@@ -708,21 +724,22 @@ lemma "_getter_rule_2_":
       assumption)
 
 lemma "_setter_rule_2_":
-  \<open> Id_on UNIV * {(Some v, u)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', u')} \<w>.\<r>.\<t> I \<i>\<n> {v'}
+  \<open> Id_on UNIV * {(Some v, f v)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', F v')} \<w>.\<r>.\<t> I \<i>\<n> {v'}
 \<Longrightarrow> refinement_projection I {v'} \<subseteq> UNIV * {Some v}
-\<Longrightarrow> \<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m k = Some v \<longrightarrow> m(k := u) \<in>\<^sub>S\<^sub>H R.domain
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (\<lambda>f. f(k := u))
-      \<lbrace> 1(k := v') \<Ztypecolon> \<phi> Identity \<longmapsto> 1(k := u') \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
+\<Longrightarrow> \<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m k = Some v \<longrightarrow> map_fun_at k (f o the) m \<in>\<^sub>S\<^sub>H R.domain
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (f o the))
+      \<lbrace> 1(k := v') \<Ztypecolon> \<phi> Identity \<longmapsto> 1(k := F v') \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
   by (rule "__setter_rule__",
       rule R.setter_valid,
       rule sep_refinement_stepwise[
         OF R.setter_refinement[THEN refinement_frame[where R=UNIV], unfolded Subjection_times]
            refinement_subjection[OF \<F>_pointwise_refinement]
            \<F>_pointwise_projection,
-         where D'1=\<open>{v'}\<close> and B4=\<open>{(v',u')}\<close>, simplified],
+        where D'1=\<open>{v'}\<close> and B4=\<open>{(v', F v')}\<close>, simplified],
       assumption,
       assumption,
       assumption)
+
 
 
 end
@@ -739,7 +756,8 @@ begin
 
 sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<F>_it Fic ..
 
-lemmas setter_rule = "_setter_rule_2_"[OF \<F>_it_refinement \<F>_it_refinement_projection
+lemmas setter_rule = "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> for u u',
+                                       OF \<F>_it_refinement \<F>_it_refinement_projection
                                           Premise_D[where mode=default]]
 lemmas getter_rule = "_getter_rule_2_"[OF \<F>_it_refinement_projection]
 lemmas allocate_rule = "__allocate_rule_2__"
@@ -761,14 +779,15 @@ begin
 sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<F>_functional to_share\<close> Fic ..
 
 lemmas setter_rule =
-  "_setter_rule_2_"[OF to_share.refinement[simplified], simplified,
-                    OF to_share.refinement_projection[where S=\<open>{Some v}\<close> and n = 1 for v, simplified]]
+  "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> for u u',
+                    OF to_share.refinement[simplified], simplified,
+                    OF to_share.refinement_projection[where S=\<open>{Some v}\<close> for v, simplified]]
 
 lemmas getter_rule =
   "_getter_rule_2_"[OF to_share.refinement_projection[where S=\<open>{x}\<close> for x, simplified], simplified]
 
 lemmas allocate_rule =
-  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF to_share.refinement[where u=\<open>1\<close>, simplified], simplified],
+  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF to_share.refinement[where a=\<open>1\<close>, simplified], simplified],
                         where u = \<open>Some u'\<close> for u', simplified]
 
 end
@@ -776,18 +795,6 @@ end
 
 
 section \<open>Two Level Parital Mapping\<close>
-
-subsection \<open>Preliminary\<close>
-
-definition \<open>map_fun_at g k f = (\<lambda>x. if x = k then g (f x) else f x)\<close>
-
-lemma map_fun_at_1[simp]: \<open>map_fun_at g k 1 = 1(k := g 1)\<close>
-  unfolding map_fun_at_def fun_eq_iff by simp
-
-lemma map_fun_at_const[simp]:
-  \<open>map_fun_at (\<lambda>_. u) k f = f(k := u)\<close>
-  unfolding map_fun_at_def fun_eq_iff by simp
-
 
 subsection \<open>Resource\<close>
 
@@ -825,11 +832,11 @@ lemma getter_valid:
 subsubsection \<open>Setter\<close>
 
 lemma setter_refinement:
-  \<open> \<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m k k2 = Some any \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S\<^sub>H domain
-\<Longrightarrow> Transition_of' (\<phi>R_set_res' (map_fun_at (map_fun_at (\<lambda>_. u) k2) k)) ret
+  \<open> \<forall>m. m \<in>\<^sub>S\<^sub>H domain \<longrightarrow> m k k2 = Some any \<longrightarrow> map_fun_at k (map_fun_at k2 (\<lambda>_. u)) m \<in>\<^sub>S\<^sub>H domain
+\<Longrightarrow> Transition_of' (\<phi>R_set_res' (map_fun_at k (map_fun_at k2 (\<lambda>_. u)))) ret
 \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (fun_upd 1 k) ` pairself (fun_upd 1 k2) ` {(Some any, u)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none
 \<w>.\<r>.\<t> basic_fiction \<i>\<n> (fun_upd 1 k) ` (fun_upd 1 k2) ` {Some any}\<close>
-  apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k\<close>]], assumption)
+  apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at k (map_fun_at k2 (\<lambda>_. u))\<close>]], assumption)
   unfolding Fictional_Forward_Simulation_def setter_transition
   apply (clarsimp simp add: basic_fiction_\<I> \<phi>expns prj.homo_mult times_fun_upd sep_disj_partial_map_upd
         nonsepable_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
@@ -842,14 +849,14 @@ lemma setter_refinement:
       by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv nonsepable_semigroup_sepdisj_fun prems(5))
     have t3[simp]: \<open>r k k2 * (a k k2 * Some any) = Some any\<close>
       using t1 t2 by force
-    have t4[simp]: \<open>x' = clean u' * mk (map_fun_at (map_fun_at (\<lambda>_. u) k2) k (r * (a * 1(k := 1(k2 \<mapsto> any))))) \<and> ret = Normal \<phi>V_none\<close>
+    have t4[simp]: \<open>x' = clean u' * mk (map_fun_at k (map_fun_at k2 (\<lambda>_. u)) (r * (a * 1(k := 1(k2 \<mapsto> any))))) \<and> ret = Normal \<phi>V_none\<close>
       using prems(3) by fastforce
     have t5[simp]: \<open>r ## 1(k := 1(k2 := u))\<close>
       by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv nonsepable_semigroup_sepdisj_fun prems(5))
     have t6[simp]: \<open>(r * a) k k2 = None\<close>
       by (metis sep_disj_multI1 sep_disj_option_nonsepable(1) t1 t2 times_fun)
     then have [simp]:
-        \<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k (r * (a * 1(k := 1(k2 \<mapsto> any))))
+        \<open>map_fun_at k (map_fun_at k2 (\<lambda>_. u)) (r * (a * 1(k := 1(k2 \<mapsto> any))))
             = (r * a) * 1(k := 1(k2 := u))\<close>
         unfolding map_fun_at_def fun_eq_iff times_fun_def
         by simp
@@ -893,8 +900,8 @@ lemma "_getter_rule_2_":
 lemma "_setter_rule_2_":
   \<open> Id_on UNIV * {(Some v, u)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', u')} \<w>.\<r>.\<t> I \<i>\<n> {v'}
 \<Longrightarrow> refinement_projection I {v'} \<subseteq> UNIV * {Some v}
-\<Longrightarrow> \<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m k k2 = Some v \<longrightarrow> map_fun_at (map_fun_at (\<lambda>_. u) k2) k m \<in>\<^sub>S\<^sub>H R.domain
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at (map_fun_at (\<lambda>_. u) k2) k)
+\<Longrightarrow> \<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m k k2 = Some v \<longrightarrow> map_fun_at k (map_fun_at k2 (\<lambda>_. u)) m \<in>\<^sub>S\<^sub>H R.domain
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (map_fun_at k2 (\<lambda>_. u)))
       \<lbrace> 1(k := 1(k2 := v')) \<Ztypecolon> \<phi> Identity \<longmapsto> 1(k := 1(k2 := u')) \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
   by (rule "__setter_rule__",
       rule R.setter_valid,
@@ -941,12 +948,12 @@ sublocale pointwise_base_fiction_for_partial_mapping_resource2 Res \<open>\<F>_f
 
 lemmas setter_rule =
   "_setter_rule_2_""_setter_rule_2_"[OF to_share.refinement[simplified], simplified,
-                                     OF to_share.refinement_projection[where S=\<open>{Some v}\<close> and n = 1 for v, simplified]]
+                                     OF to_share.refinement_projection_half_perm[where S=\<open>{Some v}\<close> and n = 1 for v, simplified]]
 lemmas getter_rule =
   "_getter_rule_2_"[OF to_share.refinement_projection[where S=\<open>{x}\<close> for x, simplified], simplified]
 
 lemmas allocate_rule =
-  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF pointwise_to_share.refinement[where u=\<open>1\<close>, simplified], simplified, unfolded to_share.\<F>_functional_pointwise]]
+  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[OF pointwise_to_share.refinement[where a=\<open>1\<close>, simplified], simplified, unfolded to_share.\<F>_functional_pointwise]]
 
 end
 

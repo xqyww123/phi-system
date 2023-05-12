@@ -121,7 +121,7 @@ lemma In_1[simp]:
   \<open>sum1.Inr 1 = 1\<close>
   by (transfer; simp)+
 
-interpretation left: sep_insertion sum1.Inl sum1.projl
+interpretation left: sep_inj_proj sum1.Inl sum1.projl
   apply (standard; transfer)
   apply (simp)
   apply (simp)
@@ -132,7 +132,7 @@ apply simp
 apply (case_tac a; case_tac b; simp; meson; simp)
   by blast
 
-interpretation right: sep_insertion sum1.Inr sum1.projr
+interpretation right: sep_inj_proj sum1.Inr sum1.projr
   apply (standard; transfer)
   apply (simp)
   apply (simp)

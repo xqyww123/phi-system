@@ -1,5 +1,5 @@
 theory PhiSem_Mem_C_Base
-  imports PhiSem_Aggregate_Base
+  imports PhiSem_Aggregate_Base Phi_System.Resource_Template
 begin
 
 section \<open>Semantics\<close>
@@ -63,14 +63,9 @@ debt_axiomatization Map_of_Val :: \<open>VAL \<Rightarrow> nat list \<rightharpo
   and   Map_of_Val_mod_step: \<open>valid_idx_step T i \<Longrightarrow> v \<in> Well_Type T
                          \<Longrightarrow> Map_of_Val (idx_step_mod_value i f v) = Map_of_Val v ++ push_map [i] (Map_of_Val (f (idx_step_value i v)))\<close>
 
-definition Map_of_Val' :: \<open>VAL nosep \<Rightarrow> nat list \<rightharpoonup> VAL nosep\<close>
-  where \<open>Map_of_Val' V = (map_option nosep o Map_of_Val (nosep.dest V))\<close>
-
 lemma Map_of_Val_pull:
   \<open>valid_index T idx \<Longrightarrow> V \<in> Well_Type T \<Longrightarrow> pull_map idx (Map_of_Val V) = Map_of_Val (index_value idx V)\<close>
-  apply (induct idx arbitrary: V T; simp)
-  using Map_of_Val_pull_step
-  by (metis idx_step_value_welltyp pull_map_cons)
+  by (induct idx arbitrary: V T; simp; metis Map_of_Val_pull_step idx_step_value_welltyp pull_map_cons)
 
 lemma total_Mapof_disjoint:
    \<open>g ## (push_map idx (to_share \<circ> h))
@@ -149,10 +144,79 @@ lemma Val_of_Map_append[simp]:
 
 lemmas Val_of_Map[simp] = Val_of_Map_append[where f = \<open>Map.empty\<close>, simplified]
 
+definition Map_of_Val' :: \<open>TY \<Rightarrow> VAL option \<Rightarrow> nat list \<rightharpoonup> VAL\<close>
+  where \<open>Map_of_Val' TY V = (case V of Some V' \<Rightarrow> if V' \<in> Well_Type TY then 1 else Map_of_Val V'
+                                     | None \<Rightarrow> 1)\<close>
 
-term \<open>Map_of_Val\<close>
 
-interpretation Val_of_Map: cancl_perm_ins_homo \<open>Map_of_Val\<close>
+definition Map_of_Val_ins
+  where \<open>Map_of_Val_ins TY = ((o) (map_option nosep)) o Map_of_Val' TY o map_option nosep.dest\<close>
+
+interpretation Map_of_Val_ins: sep_insertion_monoid \<open>Map_of_Val_ins TY\<close>
+  apply (standard)
+apply (auto simp add: Map_of_Val_ins_def fun_eq_iff split_option_ex times_fun
+                                  Map_of_Val'_def sep_disj_fun_def split_nosep_meta_all
+                        split: option.split)[1]
+
+apply (auto simp add: Map_of_Val_ins_def fun_eq_iff split_option_ex times_fun
+                                  Map_of_Val'_def sep_disj_fun_def split_nosep_meta_all
+                        split: option.split)[1]
+
+apply (auto simp add: Map_of_Val_ins_def fun_eq_iff split_option_ex times_fun
+                                  Map_of_Val'_def sep_disj_fun_def split_nosep_meta_all
+                        split: option.split)[1]
+
+  using Map_of_Val'.inj_at_1 Map_of_Val'_def apply fastforce
+  using Mapof_not_1 apply fastforce
+  apply (case_tac \<open>Map_of_Val x xb\<close>)
+  subgoal for a x xa xb
+    apply (case_tac \<open>Map_of_Val x xa\<close>)
+
+interpretation Map_of_Val': kernel_is_1 \<open>Map_of_Val' TY\<close>
+  by (standard, clarsimp simp add: split_option_all Map_of_Val'_def split_nosep_meta_all fun_eq_iff,
+      insert Mapof_not_1, fastforce)
+
+term \<open>((o) (map_option nosep)) o Map_of_Val' o map_option nosep.dest\<close>
+term \<open>map_option nosep.dest\<close>
+
+term \<open>pairself (\<lambda>v. push_map idx (map_option nosep o Map_of_Val v))\<close>
+
+
+term \<open>((o) (map_option nosep))\<close>
+
+lemma
+  \<open> Id_on UNIV * {(Some (nosep v), u)}
+    \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (map_option nosep.dest) ` {(v', F v')}
+    \<w>.\<r>.\<t> \<F>_functional (map_option nosep.dest)
+    \<i>\<n> map_option nosep.dest ` {v'} \<close>
+
+term \<open>\<F>_functional (map_option nosep.dest)\<close>
+
+lemma
+  \<open> Id_on UNIV * {(Some (nosep v), (Some o nosep o index_mod_value idx f) v)}
+    \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (((o) (map_option nosep)) o push_map idx o Map_of_Val) ` {(v, f v)}
+    \<w>.\<r>.\<t> \<F>_functional (((o) (map_option nosep)) o Map_of_Val' o map_option nosep.dest)
+    \<i>\<n>  (((o) (map_option nosep)) o push_map idx o Map_of_Val) ` {v}\<close>
+
+lemma
+  \<open> Id_on UNIV * {(Some (nosep v), (Some o nosep o index_mod_value idx f) v)}
+    \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (\<lambda>v. push_map idx (map_option nosep o Map_of_Val v)) ` {(v, f v)}
+    \<w>.\<r>.\<t> \<F>_functional (((o) (map_option nosep)) o Map_of_Val' o map_option nosep.dest) \<i>\<n> {v'}\<close>
+
+lemma
+  \<open> Id_on UNIV * {(Some (nosep v), (Some o nosep o index_mod_value idx f) v)}
+    \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself (\<lambda>v. push_map idx (map_option nosep o Map_of_Val v)) ` {(v, f v)}
+    \<w>.\<r>.\<t> \<F>_functional Map_of_Val' \<i>\<n> {v'}\<close>
+  unfolding Fictional_Forward_Simulation_def
+  apply (auto simp add: set_mult_expn Subjection_expn )
+
+term \<open> (\<lambda>x. Map_of_Val' x)\<close>
+term \<open>to_share\<close>
+thm to_share.refinement_projection
+thm to_share.refinement
+term 
+
+interpretation Val_of_Map: cancl_perm_ins_homo \<open>Map_of_Val'\<close>
 
 
 

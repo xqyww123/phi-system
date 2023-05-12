@@ -1047,7 +1047,7 @@ lemma Structural_Extract_\<phi>perm_ins_homo:
                        P\<close>
   unfolding Structural_Extract_def Imply_def \<phi>Sep_Disj_def
   apply (clarsimp simp add: \<phi>expns)
-  by (metis (no_types, lifting) homo_sep_def homo_sep_disj_semi_def homo_sep_mult.homo_mult homo_sep_wand_1_def homo_sep_wand_def homo_sep_wand_monoid_def perm_ins_homo.axioms(1))
+  by (metis (no_types, lifting) homo_sep_def homo_sep_disj_semi_def homo_sep_mult.homo_mult sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def perm_ins_homo.axioms(1))
 
 declare Structural_Extract_\<phi>perm_ins_homo[THEN SE_clean_waste, \<phi>reason 1200]
 

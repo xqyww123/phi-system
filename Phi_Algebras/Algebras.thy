@@ -533,82 +533,80 @@ lemma homo_sep_comp:
   unfolding homo_sep_mult_def homo_sep_disj_semi_def homo_sep_def
   by simp
 
-locale homo_sep_wand = homo_sep \<psi>
+locale sep_insertion = homo_sep \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
-+ assumes homo_sep_wand: \<open>a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
++ assumes sep_insertion: \<open>a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
 begin
 
-lemma homo_sep_wand'[no_atp]:
+lemma sep_insertion'[no_atp]:
   \<open>a ## \<psi> b \<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
-  by (metis homo_sep_wand)
+  by (metis sep_insertion)
 
 sublocale homo_join_sub \<psi>
   apply standard
   unfolding join_sub_def
-  by (metis homo_sep_wand sep_disj_homo_semi)
+  by (metis sep_insertion sep_disj_homo_semi)
 
 end
 
-locale homo_sep_wand_1 = homo_sep_wand \<psi>
+locale sep_insertion_1 = sep_insertion \<psi>
   for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close>
 begin
 
 sublocale homo_one \<psi>
-  apply standard
-  by (metis homo_sep_wand mult_1_class.mult_1_left mult_1_class.mult_1_right sep_magma_1_right)
+  by (standard, metis mult_1_class.mult_1_left mult_1_class.mult_1_right sep_insertion sep_magma_1_right)
 
 end
 
 
-lemma homo_sep_wand_comp:
-  \<open>homo_sep_wand f \<Longrightarrow> homo_sep_wand g \<Longrightarrow> homo_sep_wand (f o g)\<close>
-  unfolding homo_sep_wand_def homo_sep_wand_axioms_def
-  apply (simp add: homo_sep_comp)
-  using homo_sep.axioms(2) homo_sep_disj_semi.sep_disj_homo_semi by blast
+lemma sep_insertion_comp:
+  \<open> sep_insertion f \<Longrightarrow> sep_insertion g \<Longrightarrow> sep_insertion (f o g)\<close>
+  unfolding sep_insertion_def sep_insertion_axioms_def
+  by (clarsimp simp add: homo_sep_comp,
+      metis (no_types, lifting) homo_sep.axioms(2) homo_sep_disj_semi.sep_disj_homo_semi)
 
-lemma homo_sep_wand_1_comp:
-  \<open>homo_sep_wand_1 f \<Longrightarrow> homo_sep_wand_1 g \<Longrightarrow> homo_sep_wand_1 (f o g)\<close>
-  unfolding homo_sep_wand_1_def using homo_sep_wand_comp .
+lemma sep_insertion_1_comp:
+  \<open>sep_insertion_1 f \<Longrightarrow> sep_insertion_1 g \<Longrightarrow> sep_insertion_1 (f o g)\<close>
+  unfolding sep_insertion_1_def using sep_insertion_comp .
 
 
 locale kernel_is_1 =
   fixes \<psi> :: " 'a::one \<Rightarrow> 'b::one"
-  assumes \<open>\<forall>x. \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
+  assumes inj_at_1: \<open>\<forall>x. \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
 begin
   lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi>\<close> by (simp add: kernel_is_1_axioms)
 end
 
-lemma kernel_is_1_comp[simp]:
+lemma kernel_is_1_comp[simp, locale_intro]:
   \<open>kernel_is_1 f \<Longrightarrow> kernel_is_1 g \<Longrightarrow> kernel_is_1 (f o g)\<close>
   unfolding kernel_is_1_def by simp
 
-locale homo_sep_wand_monoid = homo_sep_wand_1 \<psi>
+locale sep_insertion_monoid = sep_insertion_1 \<psi>
   for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close>
 begin
 
 sublocale kernel_is_1 \<psi>
-  apply standard
-  by (metis homo_join_sub homo_sep_wand join_sub.bot_least join_sub.le_bot mult_1_class.mult_1_left sep_magma_1_right)
-
+  by (standard, metis homo_one sep_insertion sep_magma_1_left sep_no_inverse)
 end
 
-lemma homo_sep_wand_monoid_comp:
-  \<open>homo_sep_wand_monoid f \<Longrightarrow> homo_sep_wand_monoid g \<Longrightarrow> homo_sep_wand_monoid (f o g)\<close>
-  unfolding homo_sep_wand_monoid_def using homo_sep_wand_1_comp .
+lemma sep_insertion_monoid_comp[locale_intro]:
+  \<open>sep_insertion_monoid f \<Longrightarrow> sep_insertion_monoid g \<Longrightarrow> sep_insertion_monoid (f o g)\<close>
+  unfolding sep_insertion_monoid_def using sep_insertion_1_comp .
 
+locale cancl_sep_insertion_monoid = sep_insertion_monoid \<psi>
+  for \<psi> :: \<open>'a::{sep_cancel, sep_monoid} \<Rightarrow> 'b::sep_monoid\<close>
 
 (*
-locale homo_sep_wand_1 = homo_sep_wand \<psi>
+locale sep_insertion_1 = sep_insertion \<psi>
   for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close>
 begin
 end *)
 
 text \<open>Insertion homomorphism from a separation algebra to a separation permission semimodule.\<close>
 
-locale perm_ins_homo = homo_sep_wand_monoid \<psi>
+locale perm_ins_homo = sep_insertion_monoid \<psi>
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_module_sep\<close>
 + assumes share_sep_wand: \<open>a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b)\<close>
-    and   inj_\<psi>[simp]: \<open>inj \<psi>\<close>
     and   \<psi>_self_disj: \<open>\<psi> x ## \<psi> x\<close>
 begin
 
@@ -636,8 +634,31 @@ begin
 sublocale perm_ins_homo using perm_ins_homo'[simplified] .
 end *)
 
+lemma perm_ins_homo_composition[locale_intro]:
+  assumes f: \<open>sep_insertion_monoid f\<close>
+      and g: \<open>perm_ins_homo g\<close>
+    shows \<open>perm_ins_homo (g o f)\<close>
+proof -
+  interpret f: sep_insertion_monoid f using f .
+  interpret g: perm_ins_homo g using g .
+  have g': \<open>sep_insertion_monoid g\<close> by (simp add: g.sep_insertion_monoid_axioms)
+  show ?thesis
+    unfolding perm_ins_homo_def perm_ins_homo_axioms_def
+    by (auto,
+        simp add: f g.sep_insertion_monoid_axioms sep_insertion_monoid_comp,
+        ((insert f.sep_insertion g.share_sep_wand, auto)[1]),
+        ((insert f.homo_mult g.share_sep_wand, auto)[1]),
+        simp add: g.\<psi>_self_disj)
+qed
+
 locale cancl_perm_ins_homo = perm_ins_homo \<psi>
   for \<psi> :: \<open>'a::{sep_cancel, sep_algebra} \<Rightarrow> 'b::share_module_sep\<close>
+begin
+
+sublocale cancl_sep_insertion_monoid ..
+
+end
+
 
 (*
 lemma perm_ins_homo'_id[intro!,simp]:
@@ -646,9 +667,9 @@ lemma perm_ins_homo'_id[intro!,simp]:
 
 (*
 lemma
-  \<open>perm_ins_homo' f \<Longrightarrow> homo_sep_wand g \<and> inj_at_1 g \<Longrightarrow> perm_ins_homo' (f o g)\<close>
+  \<open>perm_ins_homo' f \<Longrightarrow> sep_insertion g \<and> inj_at_1 g \<Longrightarrow> perm_ins_homo' (f o g)\<close>
   unfolding perm_ins_homo'_def perm_ins_homo'_axioms_def
-  apply (simp add: inj_at_1_comp homo_sep_wand_comp) *)
+  apply (simp add: inj_at_1_comp sep_insertion_comp) *)
 
 
 
@@ -1837,11 +1858,11 @@ proof
     by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.homo_mult)
   show \<open>a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
      (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b)\<close>
-    by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.homo_sep_wand
+    by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.sep_insertion
             all_conj_distrib[symmetric], subst choice_iff[symmetric]; blast)
 
-  show \<open>inj (\<lambda>g x. \<psi> (g x))\<close>
-    by (rule, simp add: fun_eq_iff inj_eq)
+  (*show \<open>inj (\<lambda>g x. \<psi> (g x))\<close>
+    by (rule, simp add: fun_eq_iff inj_eq) *)
   (* show \<open>\<forall>x. ((\<lambda>xa. \<psi> (x xa)) = 1) = (x = 1)\<close>
     by (simp add: one_fun_def fun_eq_iff) *)
   show \<open>(\<lambda>xa. \<psi> (x xa)) ## (\<lambda>xa. \<psi> (x xa))\<close>
@@ -1871,11 +1892,11 @@ proof
       using xx.sep_disj_homo_semi[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
       by meson
     show \<open>a2 ## \<psi> b \<Longrightarrow> (a2 * \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' \<and> a' * b = c \<and> a' ## b)\<close>
-      using xx.homo_sep_wand[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff,
+      using xx.sep_insertion[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff,
           where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>, simplified]
       by auto
-    show \<open>inj \<psi>\<close>
-      by (metis (no_types, opaque_lifting) fun_upd_comp inj_def mult_1_class.mult_1_left one_fun times_fupdt_1_apply_sep xx.inj_\<psi>)
+    (*show \<open>inj \<psi>\<close>
+      by (metis (no_types, opaque_lifting) fun_upd_comp inj_def mult_1_class.mult_1_left one_fun times_fupdt_1_apply_sep xx.inj_\<psi>)*)
     show \<open>\<psi> x ## \<psi> x\<close>
       by (metis fun_sep_disj_imply_v fun_upd_comp xx.\<psi>_self_disj)
 
@@ -2025,8 +2046,8 @@ proof
        (a' * to_share b = to_share c) = (\<exists>a. a' = to_share a \<and> a * b = c \<and> a ## b)\<close>
     apply (cases a'; cases b; cases c; simp add: split_option_ex)
     subgoal for a'' by (cases a''; simp) .
-  show \<open>inj to_share\<close>
-    by (rule, simp, metis option.inj_map_strong share.inject)
+  (* show \<open>inj to_share\<close>
+    by (rule, simp, metis option.inj_map_strong share.inject) *)
   show \<open>to_share x ## to_share x\<close> by (cases x; simp)
   show \<open>a2 ## to_share b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> (a2 * n :\<Znrres> to_share b = to_share c) = (\<exists>a'. a2 = to_share a' * (1 - n) :\<Znrres> to_share b \<and> a' * b = c \<and> a' ## b)\<close>
     apply (cases a2; cases b; cases c; simp add: share_option_def)
@@ -2131,6 +2152,21 @@ subsection \<open>Non-sepable Semigroup\<close>
 
 datatype 'a nosep = nosep (dest: 'a)
 hide_const (open) dest
+
+lemma split_nosep_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (nosep x))\<close> by (metis nosep.exhaust)
+lemma split_nosep_ex : \<open>Ex P \<longleftrightarrow> (\<exists>x. P (nosep x))\<close> by (metis nosep.exhaust)
+lemma split_nosep_meta_all: \<open>Pure.all P \<equiv> (\<And>x. PROP P (nosep x))\<close>
+proof
+  fix x
+  assume \<open>\<And>x. PROP P x\<close>
+  then show \<open>PROP P (nosep x)\<close> .
+next
+  fix x :: \<open>'a nosep\<close>
+  assume \<open>(\<And>x. PROP P (nosep x))\<close>
+  note this[of \<open>nosep.dest x\<close>, simplified]
+  then show \<open>PROP P x\<close> .
+qed
+
 
 instantiation nosep :: (type) nonsepable_semigroup begin
 definition \<open>sep_disj_nosep (x :: 'a nosep) (y :: 'a nosep) = False\<close>

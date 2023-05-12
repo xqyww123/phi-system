@@ -199,7 +199,7 @@ it does not require the physical resource to be separable because any structure 
  none resource or no specification.
 \<close>
 
-locale sep_insertion =
+locale sep_inj_proj =
   inj: homo_sep inject + prj: homo_sep project + inj: homo_sep_disj_total inject
   for inject :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
   and project:: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
@@ -210,7 +210,7 @@ locale sep_insertion =
               a * b = inject c \<longleftrightarrow> (\<exists>a' b'. a = inject a' \<and> b = inject b' \<and> a' * b' = c)\<close>
 begin
 
-sublocale inj: homo_sep_wand_monoid inject
+sublocale inj: sep_insertion_monoid inject
   by (standard, metis mult_in_dom prj.sep_disj_homo_semi proj_inj)
 
 lemma inject_inj[iff]:
@@ -230,19 +230,19 @@ lemma inj_Sep_Homo:
 
 end
 
-lemma sep_insertion_id: \<open>sep_insertion id id\<close> by (standard; simp)
+lemma sep_inj_proj_id: \<open>sep_inj_proj id id\<close> by (standard; simp)
 
-lemma sep_insertion_comp:
-  \<open> sep_insertion f1 g1
-\<Longrightarrow> sep_insertion f2 g2
-\<Longrightarrow> sep_insertion (f2 o f1) (g1 o g2)\<close>
-  unfolding sep_insertion_def sep_insertion_axioms_def
+lemma sep_inj_proj_comp:
+  \<open> sep_inj_proj f1 g1
+\<Longrightarrow> sep_inj_proj f2 g2
+\<Longrightarrow> sep_inj_proj (f2 o f1) (g1 o g2)\<close>
+  unfolding sep_inj_proj_def sep_inj_proj_axioms_def
   apply (simp add: homo_sep_comp homo_sep_disj_total_comp)
   using homo_sep_disj_total.sep_disj_homo by blast
 
 
 locale sep_space_entry =
-  sep_insertion inject' project'
+  sep_inj_proj inject' project'
   for name'   :: 'NAME
   and inject' :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
   and project':: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>

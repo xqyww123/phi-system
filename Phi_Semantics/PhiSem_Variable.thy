@@ -359,7 +359,7 @@ proc op_var_scope:
 
 
 subsection \<open>Rules of Variable Operations\<close>
-  
+
 subsubsection \<open>Get\<close> 
 
 proc [\<phi>reason 1200]:

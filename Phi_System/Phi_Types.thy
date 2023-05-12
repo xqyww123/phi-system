@@ -1293,14 +1293,14 @@ lemma \<phi>perm_ins_homo_Prod_imply:
   \<open>x \<Ztypecolon> \<phi>perm_ins_homo f (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (\<phi>perm_ins_homo f T) \<^emph> (\<phi>perm_ins_homo f U)\<close>
   unfolding Imply_def
   apply (cases x; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def)
-  by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def homo_sep_wand_1_def homo_sep_wand_def homo_sep_wand_monoid_def perm_ins_homo_def)
+  by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion.axioms(1) sep_insertion_1.axioms sep_insertion_monoid.axioms perm_ins_homo.axioms(1))
 
 lemma \<phi>perm_ins_homo_Prod:
   \<open> \<phi>Sep_Disj T U
 \<Longrightarrow> \<phi>perm_ins_homo f (T \<^emph> U) = (\<phi>perm_ins_homo f T) \<^emph> (\<phi>perm_ins_homo f U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def homo_sep_wand_1_def homo_sep_wand_def homo_sep_wand_monoid_def perm_ins_homo_def)
-  by (metis homo_sep_wand.homo_sep_wand homo_sep_wand_1_def homo_sep_wand_monoid_def perm_ins_homo_def sep_disj_commute)
+  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def perm_ins_homo_def)
+  by (metis homo_sep_def homo_sep_mult.homo_mult sep_insertion_1.axioms sep_insertion_def sep_insertion_monoid.axioms perm_ins_homo.axioms(1) sep_disj_commuteI)
 
 
 subsubsection \<open>Permission Annotation\<close>

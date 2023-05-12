@@ -512,7 +512,7 @@ lemma expand_subj:
   unfolding \<phi>Res_Spec_def set_eq_iff
   apply (clarify, rule)
   apply (clarsimp simp add: R.basic_fiction_\<I> interp_comp_\<I> \<phi>expns
-            share.homo_sep_wand \<phi>Res_Spec_def R.\<r>_valid_split'
+            share.sep_inj_proj \<phi>Res_Spec_def R.\<r>_valid_split'
             R.inject_wand_homo interp_split' prj.homo_mult)
   thm interp_split'
   subgoal for res_r a r'
