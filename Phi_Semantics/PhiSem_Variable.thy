@@ -34,8 +34,11 @@ lemma infinite_varname:
         and f = \<open>\<lambda>n. varname n TY\<close>]
   using inj_def by fastforce
 
+(*TODO: polish this*)
+
 resource_space \<phi>var =
-  Var  :: \<open>{vars::RES.Var. finite (dom vars)}\<close> (partial_map_resource) ..
+  Var  :: \<open>{vars::RES.Var. finite (dom vars)}\<close> (partial_map_resource \<open>(\<lambda>_::varname. UNIV :: VAL option nosep set)\<close>)
+  by (standard, simp, meson domIff notin_range_Some)
 
 hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields_axioms
 
@@ -43,7 +46,8 @@ hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields
 subsubsection \<open>Fiction\<close>
 
 fiction_space \<phi>var =
-  Var :: \<open>RES.Var.basic_fiction ;\<^sub>\<I> \<F>_pointwise \<F>_it\<close> (pointwise_fiction_for_partial_mapping_resource RES.Var) ..
+  Var :: \<open>RES.Var.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
+            (pointwise_fiction_for_partial_mapping_resource RES.Var \<open>(\<lambda>_::varname. UNIV :: VAL option nosep set)\<close>) ..
 
 hide_fact FIC.\<phi>var_fic_ax FIC.\<phi>var_fic_axioms
 

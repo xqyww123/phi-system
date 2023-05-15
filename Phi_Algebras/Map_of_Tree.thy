@@ -77,7 +77,6 @@ lemma push_map_distrib_sep_mult:
   for f :: \<open>'a list \<Rightarrow> 'b::sep_magma_1\<close>
   unfolding push_map_def fun_eq_iff times_fun_def by simp
 
-
 lemma push_map_eq_1[simp]:
   \<open>push_map idx f = 1 \<longleftrightarrow> f = 1\<close>
   unfolding push_map_def fun_eq_iff by simp (metis append_eq_conv_conj)
@@ -95,9 +94,9 @@ lemma share_push_map:
   for f :: \<open>'a list \<Rightarrow> 'b :: share_one\<close>
   unfolding push_map_def fun_eq_iff share_fun_def by simp
 
-lemma (in homo_one) push_map_homo:
-  \<open>\<phi> o (push_map idx f) = push_map idx (\<phi> o f)\<close>
-  unfolding push_map_def fun_eq_iff by simp
+lemma push_map_homo:
+  \<open>homo_one \<phi> \<Longrightarrow> \<phi> o (push_map idx f) = push_map idx (\<phi> o f)\<close>
+  unfolding push_map_def fun_eq_iff by (simp add: homo_one_def)
 
 lemma push_map_to_share:
   \<open>push_map idx (to_share o f) = to_share o (push_map idx f)\<close>
@@ -107,6 +106,12 @@ lemma push_map_dom_eq[simp]:
   \<open>dom (push_map idx f) = dom (push_map idx g) \<longleftrightarrow> dom f = dom g\<close>
   unfolding dom_def fun_eq_iff push_map_def set_eq_iff apply simp
   by (metis (full_types) append_eq_conv_conj)
+
+lemma push_map_dom1_eq[simp]:
+  \<open>dom1 (push_map idx f) = dom1 (push_map idx g) \<longleftrightarrow> dom1 f = dom1 g\<close>
+  unfolding dom1_def fun_eq_iff push_map_def set_eq_iff
+  by (smt (verit, ccfv_threshold) append_eq_conv_conj mem_Collect_eq)
+
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -164,7 +169,7 @@ lemma pull_map_cons:
   unfolding pull_map_def fun_eq_iff by simp
 
 lemma pull_map_funcomp:
-  \<open>\<phi> 1 = 1 \<Longrightarrow> \<phi> o (pull_map idx f) = pull_map idx (\<phi> o f)\<close>
+  \<open>homo_one \<phi> \<Longrightarrow> \<phi> o (pull_map idx f) = pull_map idx (\<phi> o f)\<close>
   unfolding pull_map_def fun_eq_iff by simp
 
 lemma pull_map_homo_mult:
@@ -184,6 +189,65 @@ lemma pull_map_sep_disj[simp]:
   \<open>f ## g \<Longrightarrow> pull_map idx f ## pull_map idx g\<close>
   unfolding pull_map_def sep_disj_fun_def by simp
 
+lemma pull_map_dom_eq:
+  \<open>dom a = dom b \<Longrightarrow> dom (pull_map idx a) = dom (pull_map idx b)\<close>
+  by (induct idx; simp; simp add: dom_def set_eq_iff pull_map_def)
+
+lemma pull_map_map_add:
+  \<open>pull_map idx (f ++ g) = pull_map idx f ++ pull_map idx g\<close>
+  unfolding pull_map_def
+  by (simp add: map_add_def)
+
+subsection \<open>\<close>
+
+definition \<open>the_subtree  idx f = push_map idx (pull_map idx f)\<close>
+definition \<open>trim_subtree idx f = (\<lambda>x. if take (length idx) x = idx then 1 else f x )\<close>
+
+lemma the_subtree_times_trim_subtree[simp]:
+  \<open>the_subtree idx f * trim_subtree idx f = f\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::mult_1\<close>
+  unfolding fun_eq_iff trim_subtree_def the_subtree_def pull_map_def push_map_def
+  by (clarsimp simp add: times_fun; metis append_take_drop_id)
+
+lemma trim_subtree_subtract:
+  \<open> a ## trim_subtree idx f
+\<Longrightarrow> (a * trim_subtree idx f = f) \<longleftrightarrow> a = the_subtree idx f\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::nonsepable_monoid\<close>
+  unfolding fun_eq_iff trim_subtree_def the_subtree_def pull_map_def push_map_def
+  apply (auto simp add: times_fun sep_disj_fun_def)
+  apply (metis append_take_drop_id)
+  apply (metis mult_1_class.mult_1_right)
+  by (metis append_eq_conv_conj)
+
+lemma the_subtree_subtract:
+  \<open> a ## the_subtree idx f
+\<Longrightarrow> (a * the_subtree idx f = f) \<longleftrightarrow> a = trim_subtree idx f\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::nonsepable_monoid\<close>
+  unfolding fun_eq_iff trim_subtree_def the_subtree_def pull_map_def push_map_def
+  apply (auto simp add: times_fun sep_disj_fun_def)
+  apply (metis append_take_drop_id mult_1_class.mult_1_right)
+  by (metis append_eq_conv_conj)
+
+lemma the_subtree_one[simp]:
+  \<open>the_subtree idx 1 = 1\<close>
+  unfolding the_subtree_def fun_eq_iff by clarsimp
+
+lemma trim_subtree_one[simp]:
+  \<open>trim_subtree idx 1 = 1\<close>
+  unfolding trim_subtree_def fun_eq_iff by clarsimp
+
+(*lemma
+  \<open> a ## the_subtree idx f
+\<Longrightarrow> dom1 (the_subtree idx f) 
+\<Longrightarrow> a * the_subtree idx f = g
+\<Longrightarrow> the_subtree idx g = the_subtree idx f\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::nonsepable_monoid\<close>
+  unfolding fun_eq_iff trim_subtree_def the_subtree_def
+  apply (auto simp add: times_fun sep_disj_fun_def)
+  subgoal premises prems for x x'
+  proof -
+    have t1: \<open>take (length idx) (idx @ drop (length idx) x') = idx\<close> by force
+    then have \<open>f (idx @ drop (length idx) ((idx @ drop (length idx) x'))) \<noteq> 1\<close>*)
 
 subsection \<open>Helpers\<close>
 

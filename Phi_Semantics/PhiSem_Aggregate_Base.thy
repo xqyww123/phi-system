@@ -15,7 +15,9 @@ debt_axiomatization
     and idx_step_value :: \<open>index \<Rightarrow> VAL \<Rightarrow> VAL\<close>
     and idx_step_mod_value :: \<open>index \<Rightarrow> (VAL \<Rightarrow> VAL) \<Rightarrow> VAL \<Rightarrow> VAL\<close>
     and type_measure :: \<open>TY \<Rightarrow> nat\<close>
-where idx_step_value_welltyp:
+where valid_idx_valid_typ_step:
+           \<open>valid_idx_step T i \<Longrightarrow> Well_Type T \<noteq> {} \<Longrightarrow> Well_Type (idx_step_type i T) \<noteq> {}\<close>
+and   idx_step_value_welltyp:
            \<open>valid_idx_step T i
         \<Longrightarrow> v \<in> Well_Type T
         \<Longrightarrow> idx_step_value i v \<in> Well_Type (idx_step_type i T)\<close>
@@ -69,6 +71,10 @@ lemma valid_index_cat: \<open>valid_index T (a@b) \<Longrightarrow> valid_index 
   by (induct a arbitrary: T; simp)
 
 lemma valid_index_cons: \<open>valid_index T [i] \<longleftrightarrow> valid_idx_step T i\<close> by simp
+
+lemma valid_idx_valid_typ:
+  \<open>valid_index T idx \<Longrightarrow> Well_Type T \<noteq> {} \<Longrightarrow> Well_Type (index_type idx T) \<noteq> {}\<close>
+  by (induct idx arbitrary: T; simp; insert valid_idx_valid_typ_step, presburger)
 
 lemma index_value_welltyp:
   \<open>valid_index T idx \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> index_value idx v \<in> Well_Type (index_type idx T)\<close>

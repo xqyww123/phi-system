@@ -1283,9 +1283,9 @@ proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_e
   assume \<open>perm_ins_homo f D\<close>
   then interpret perm_ins_homo f .
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> k \<^enum>\<^sub>m va = k \<^enum>\<^sub>m v \<and> (\<exists>va. v = f \<circ> va \<and> va \<in> (x \<Ztypecolon> T))\<close>
-    using push_map_homo by blast
+    using homo_one_axioms push_map_homo by blast
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. k \<^enum>\<^sub>m (f \<circ> va) = f \<circ> v \<and> (\<exists>va. v = k \<^enum>\<^sub>m va \<and> va \<in> (x \<Ztypecolon> T))\<close>
-    by (metis push_map_homo)
+    by (metis homo_one_axioms push_map_homo)
 qed    
 
 

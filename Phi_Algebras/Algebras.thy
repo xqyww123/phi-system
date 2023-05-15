@@ -580,6 +580,8 @@ lemma kernel_is_1_comp[simp, locale_intro]:
   \<open> g ` Dg \<subseteq> Df \<Longrightarrow> kernel_is_1 f Df \<Longrightarrow> kernel_is_1 g Dg \<Longrightarrow> kernel_is_1 (f o g) Dg\<close>
   unfolding kernel_is_1_def by (simp add: image_subset_iff)
 
+lemma kernel_is_1_id[simp]: \<open>1 \<in> any \<Longrightarrow> kernel_is_1 id any\<close> unfolding kernel_is_1_def by simp
+
 locale sep_insertion_monoid = sep_insertion_1 \<psi> D
   for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close> and D
 begin
@@ -668,6 +670,9 @@ begin
 sublocale cancl_sep_insertion_monoid ..
 
 end
+
+
+
 
 
 (*
@@ -814,6 +819,9 @@ instantiation option :: (sep_ab_semigroup) sep_algebra begin
 instance ..
 end
 
+instance option :: (nonsepable_semigroup) nonsepable_monoid
+  by (standard; case_tac x; case_tac y; simp)
+
 
 instantiation option :: (share) share begin
 
@@ -887,6 +895,12 @@ instance apply (standard)
    apply (case_tac a; case_tac b; simp add: mult.commute)
   apply (case_tac a; simp) .
 end
+
+subsubsection \<open>Other Properties\<close>
+
+lemma map_option_homo_one[simp]:
+  \<open>homo_one (map_option f)\<close>
+  unfolding homo_one_def by simp
 
 
 
@@ -1761,8 +1775,8 @@ lemma dom_1[simp]: "dom 1 = {}"
 lemma dom1_upd[simp]: "dom1 (f(x:=y)) = (if y = 1 then dom1 f - {x} else insert x (dom1 f))"
   unfolding dom1_def by auto
 
-lemma dom1_dom: "dom1 f = dom f"
-  by (metis dom1_def dom_def one_option_def)
+lemma dom1_dom: "dom1 = dom"
+  by (metis fun_eq_iff dom1_def dom_def one_option_def)
 
 lemma one_updt_one[simp]: "1(a:=1) = 1" unfolding one_fun_def fun_upd_def by simp
 
@@ -2087,8 +2101,8 @@ lemma strip_share_Share[simp]:
   \<open>strip_share (map_option (Share n) x) = x\<close>
   by (cases x; simp)
 
-lemma to_share_funcomp_1[simp]:
-  \<open>to_share o 1 = 1\<close>
+lemma map_option_funcomp_1[simp]:
+  \<open>map_option f o 1 = 1\<close>
   unfolding fun_eq_iff by simp
 
 lemma strip_share_share_funcomp[simp]:
@@ -2135,9 +2149,13 @@ lemma to_share_total_disjoint:
     by (cases y, simp)
   done
 
-lemma to_share_funcomp_map_add:
+lemma map_option_funcomp_map_add:
+  \<open>(map_option f o (g ++ h)) = (map_option f o g) ++ (map_option f o h)\<close>
+  unfolding fun_eq_iff map_add_def by (clarsimp simp add: fun_eq_iff split: option.split)
+
+(* lemma to_share_funcomp_map_add: (*depreciated*)
   \<open>to_share o (f ++ g) = (to_share o f) ++ (to_share o g)\<close>
-  unfolding fun_eq_iff map_add_def by (auto split: option.split)
+  unfolding fun_eq_iff map_add_def by (auto split: option.split) *)
 
 
 lemma to_share_wand_homo:
@@ -2177,6 +2195,8 @@ hide_const (open) dest
 
 lemma split_nosep_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (nosep x))\<close> by (metis nosep.exhaust)
 lemma split_nosep_ex : \<open>Ex P \<longleftrightarrow> (\<exists>x. P (nosep x))\<close> by (metis nosep.exhaust)
+lemma split_nosep_ExSet: \<open>ExSet P = (\<exists>*x. P (nosep x))\<close>
+  unfolding set_eq_iff ExSet_expn split_nosep_ex by simp
 lemma split_nosep_meta_all: \<open>Pure.all P \<equiv> (\<And>x. PROP P (nosep x))\<close>
 proof
   fix x
@@ -2189,6 +2209,9 @@ next
   then show \<open>PROP P x\<close> .
 qed
 
+lemma inj_nosep[simp]:
+  \<open>inj nosep\<close>
+  unfolding inj_def by simp
 
 instantiation nosep :: (type) nonsepable_semigroup begin
 definition \<open>sep_disj_nosep (x :: 'a nosep) (y :: 'a nosep) = False\<close>
