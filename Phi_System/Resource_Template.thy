@@ -601,7 +601,7 @@ begin
 sublocale basic_fiction Res I Fic ..
 
 lemma "__allocate_rule_2__":
-  \<open> (\<And>k. Id_on UNIV * {(1, 1(k := u))} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1, u' k)} \<w>.\<r>.\<t> I \<i>\<n> {1})
+  \<open> (\<And>k. P k \<Longrightarrow> Id_on UNIV * {(1, 1(k := u))} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1, u' k)} \<w>.\<r>.\<t> I \<i>\<n> {1})
 \<Longrightarrow> \<forall>k. P k \<longrightarrow> 1(k := u) \<in>\<^sub>S\<^sub>H R.domain
 \<Longrightarrow> \<forall>r. r \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. k \<notin> dom1 r \<and> P k)
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry' P u \<lbrace> Void \<longmapsto> \<lambda>ret. u' k \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace> \<close>
@@ -616,7 +616,7 @@ lemma "__allocate_rule_2__":
       unfold ExSet_times_right Subjection_times,
       rule refinement_ExSet,
       rule refinement_subjection,
-      assumption,
+      blast,
       auto simp add: set_mult_expn)
 
 end
@@ -647,7 +647,7 @@ begin
 
 subsubsection \<open>Getter\<close>
 
-lemma in_domain:
+lemma in_invariant:
   \<open>x \<in>\<^sub>S\<^sub>H domain \<longleftrightarrow> x \<in> {h. finite (dom h) \<and> (\<forall>k \<in> dom h. h k \<in> Some ` P k)}\<close>
 proof -
   have \<open>Sep_Homo {h. finite (dom h) \<and> (\<forall>k\<in>dom h. h k \<in> Some ` P k)}\<close>
@@ -680,7 +680,7 @@ lemma getter_refinement:
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: basic_fiction_\<I> set_mult_expn Id_on_iff
                               Subjection_expn prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
-                              inj.sep_insertion[simplified] in_domain)
+                              inj.sep_insertion[simplified] in_invariant)
   by (smt (verit, ccfv_threshold) domI fun_upd_same image_iff mult_1_class.mult_1_left one_option_def option.sel sep_disj_fun_nonsepable(2) times_fun)
  
 
@@ -716,12 +716,12 @@ lemma setter_refinement:
     then have \<open>1(k \<mapsto> v) \<in>\<^sub>S\<^sub>H domain\<close>
       using mult_in_sep_homo_set x1 x2 by blast
     then have a2: \<open>v \<in> P k\<close>
-      by (clarsimp simp add: in_domain Ball_def times_fun)
+      by (clarsimp simp add: in_invariant Ball_def times_fun)
     have q3: \<open>map_fun_at k (F \<circ> the) (get u * (r * 1(k \<mapsto> v))) = get u * (r * 1(k := F v))\<close>
       apply (clarsimp simp add: fun_eq_iff map_fun_at_def times_fun)
       by (metis (mono_tags, lifting) dom_1 dom_eq_empty_conv fun_upd_same mult_1_class.mult_1_left option.sel sep_disj_fun sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep x1 x2)
     have q4: \<open>1(k := F v) \<in>\<^sub>S\<^sub>H domain\<close>
-      apply (clarsimp simp add: in_domain)
+      apply (clarsimp simp add: in_invariant)
       using a2 prems(1) prems(5) by fastforce
     have x3: \<open>map_fun_at k (F \<circ> the) (get u * (r * 1(k \<mapsto> v))) \<in>\<^sub>S\<^sub>H domain\<close>
       unfolding q3
@@ -766,6 +766,8 @@ begin
 
 sublocale fiction_base_for_mapping_resource Res \<open>\<F>_pointwise I\<close> Fic ..
 
+lemmas "__allocate_rule_3__" =
+  "__allocate_rule_2__"[OF \<F>_pointwise_refinement[where A=\<open>{(1,u)}\<close> and B=\<open>{(1,u')}\<close> and D=\<open>{1}\<close> for u u', simplified]]
 
 lemma "_getter_rule_2_":
   \<open> refinement_projection (I k) {x} \<subseteq> UNIV * Some ` S
@@ -830,13 +832,22 @@ begin
 
 sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambda>_. \<F>_it\<close> Fic P ..
 
-lemmas setter_rule =
-  "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u u' v,
-                    simplified, unfolded refinement_source_subjection,
-                    OF impI,
-                    OF \<F>_it_refinement
-                       \<F>_it_refinement_projection[where S=S and S'=S for S, simplified]
-                       Premise_D[where mode=default]]
+lemma setter_rule:
+  \<open>(v \<in> P k \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> pred_option (\<lambda>x. x \<in> P k) u) \<Longrightarrow>
+    \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (\<lambda>_. u)) \<lbrace> 1(k \<mapsto> v) \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>\<r>\<e>\<t>. 1(k := u) \<Ztypecolon> \<phi> Identity \<rbrace>  \<close>
+subgoal premises prems
+proof -
+  have [simp]: \<open>(\<lambda>_. u) \<circ> the = (\<lambda>_. u)\<close> for u by auto
+  show ?thesis
+    by (rule "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u u' v,
+                simplified, unfolded refinement_source_subjection,
+                OF impI,
+                OF \<F>_it_refinement
+                   \<F>_it_refinement_projection[where S=S and S'=S for S, simplified]
+                   Premise_D[where mode=default],
+                simplified],
+        rule prems)
+qed .
 
 lemmas getter_rule = "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified,
                                        OF \<F>_it_refinement_projection[where S=S and S'=S for S, simplified]]

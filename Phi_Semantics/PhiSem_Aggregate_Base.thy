@@ -15,9 +15,7 @@ debt_axiomatization
     and idx_step_value :: \<open>index \<Rightarrow> VAL \<Rightarrow> VAL\<close>
     and idx_step_mod_value :: \<open>index \<Rightarrow> (VAL \<Rightarrow> VAL) \<Rightarrow> VAL \<Rightarrow> VAL\<close>
     and type_measure :: \<open>TY \<Rightarrow> nat\<close>
-where valid_idx_valid_typ_step:
-           \<open>valid_idx_step T i \<Longrightarrow> Well_Type T \<noteq> {} \<Longrightarrow> Well_Type (idx_step_type i T) \<noteq> {}\<close>
-and   idx_step_value_welltyp:
+where idx_step_value_welltyp:
            \<open>valid_idx_step T i
         \<Longrightarrow> v \<in> Well_Type T
         \<Longrightarrow> idx_step_value i v \<in> Well_Type (idx_step_type i T)\<close>
@@ -46,9 +44,9 @@ text \<open>We first formalize the behavior of indexing one-step inside one leve
     such as the size of the term. It helps induction over the indexing. 
 \<close>
 
-abbreviation \<open>index_value \<equiv> fold idx_step_value\<close>
-abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>
-abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close>
+abbreviation \<open>index_value \<equiv> fold idx_step_value\<close> (*TODO: rename \<rightarrow> get_element_of_value*)
+abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>  (* get_element_of_type *)
+abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close> (* modify_value_element *)
 
 primrec valid_index :: \<open>TY \<Rightarrow> nat list \<Rightarrow> bool\<close>
   where \<open>valid_index T [] \<longleftrightarrow> True\<close>
@@ -71,10 +69,6 @@ lemma valid_index_cat: \<open>valid_index T (a@b) \<Longrightarrow> valid_index 
   by (induct a arbitrary: T; simp)
 
 lemma valid_index_cons: \<open>valid_index T [i] \<longleftrightarrow> valid_idx_step T i\<close> by simp
-
-lemma valid_idx_valid_typ:
-  \<open>valid_index T idx \<Longrightarrow> Well_Type T \<noteq> {} \<Longrightarrow> Well_Type (index_type idx T) \<noteq> {}\<close>
-  by (induct idx arbitrary: T; simp; insert valid_idx_valid_typ_step, presburger)
 
 lemma index_value_welltyp:
   \<open>valid_index T idx \<Longrightarrow> v \<in> Well_Type T \<Longrightarrow> index_value idx v \<in> Well_Type (index_type idx T)\<close>

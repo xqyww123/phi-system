@@ -115,7 +115,7 @@ lemma constant_refinement:
   by (clarsimp simp add: subset_iff Id_on_iff set_mult_expn Subjection_expn times_fun; blast)
 
 lemma refinement_subjection:
-  \<open> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D
+  \<open> (P \<Longrightarrow> A \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<w>.\<r>.\<t> I \<i>\<n> D)
 \<Longrightarrow> P \<longrightarrow> Q
 \<Longrightarrow> A \<s>\<u>\<b>\<j> P \<r>\<e>\<f>\<i>\<n>\<e>\<s> B \<s>\<u>\<b>\<j> Q \<w>.\<r>.\<t> I \<i>\<n> D\<close>
   unfolding Fictional_Forward_Simulation_def

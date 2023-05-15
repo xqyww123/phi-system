@@ -38,7 +38,7 @@ lemma infinite_varname:
 
 resource_space \<phi>var =
   Var  :: \<open>{vars::RES.Var. finite (dom vars)}\<close> (partial_map_resource \<open>(\<lambda>_::varname. UNIV :: VAL option nosep set)\<close>)
-  by (standard, simp, meson domIff notin_range_Some)
+  by (standard, simp, metis dom1_dom domIff notin_range_Some)
 
 hide_fact RES.\<phi>var_res_ax RES.\<phi>var_res_axioms RES.\<phi>var_res_fields_axioms
 
