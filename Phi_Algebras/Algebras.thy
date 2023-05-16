@@ -18,6 +18,11 @@ subsubsection \<open>Homomorphism-like\<close>
 locale homo_one =
   fixes \<phi> :: " 'a::one \<Rightarrow> 'b::one "
   assumes homo_one[iff]: "\<phi> 1 = 1"
+begin
+
+declare homo_one_axioms[simp]
+
+end
 
 locale homo_zero =
   fixes \<phi> :: \<open> 'a::zero \<Rightarrow> 'b::zero \<close>
@@ -40,8 +45,9 @@ locale homo_add =
   assumes homo_add: \<open>\<phi> (x + y) = \<phi> x + \<phi> y\<close>
 
 
-
-
+lemma homo_one_comp[simp]:
+  \<open>homo_one f \<Longrightarrow> homo_one g \<Longrightarrow> homo_one (f o g)\<close>
+  unfolding homo_one_def by simp
 
 
 
@@ -1213,9 +1219,9 @@ lemma (in homo_zero) fun_updt_single_point[simp]:
   \<open>\<phi> o 0(i := x) = 0(i := \<phi> x)\<close>
   unfolding fun_eq_iff by simp
 
-lemma (in homo_one) fun_updt_single_point[simp]:
-  \<open>\<phi> o 1(i := x) = 1(i := \<phi> x)\<close>
-  unfolding fun_eq_iff by simp
+lemma fun_updt_single_point[simp]:
+  \<open>homo_one \<phi> \<Longrightarrow> \<phi> o 1(i := x) = 1(i := \<phi> x)\<close>
+  unfolding fun_eq_iff homo_one_def by simp
 
 
 

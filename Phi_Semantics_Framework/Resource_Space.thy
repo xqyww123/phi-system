@@ -63,7 +63,9 @@ it does not require the physical resource to be separable because any structure 
 \<close>
 
 locale sep_inj_proj =
-  inj: homo_sep inject + prj: homo_sep project + inj: homo_sep_disj_total inject
+  inj: homo_sep inject + inj: homo_one inject +
+  prj: homo_sep project + prj: homo_one project +
+  inj: homo_sep_disj_total inject
   for inject :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
   and project:: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
     \<comment> \<open>the project' cannot be arbitrarily any inverse function of the inject',
@@ -102,7 +104,7 @@ lemma sep_inj_proj_comp:
 \<Longrightarrow> sep_inj_proj f2 g2
 \<Longrightarrow> sep_inj_proj (f2 o f1) (g1 o g2)\<close>
   unfolding sep_inj_proj_def sep_inj_proj_axioms_def
-  apply (simp add: homo_sep_comp homo_sep_disj_total_comp)
+  apply (clarsimp simp add: homo_sep_comp homo_sep_disj_total_comp homo_one_def)
   using homo_sep_disj_total.sep_disj_homo by blast
 
 
@@ -282,12 +284,11 @@ and \<open>f i\<close> gets the representation of fictional resource \<open>i\<c
 locale fictional_space =
   resource_space DOMAIN
   for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_homo_set\<close>
-  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
+  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) unital_homo_interp"
     \<comment> \<open>\<^term>\<open>INTERPRET i\<close> gives the interpretation of fiction kind \<open>i\<close>, i.e., \<open>I\<^sub>i\<close> above.\<close>
-+ assumes INTERPRET_homo_one: \<open>homo_one (INTERPRET k)\<close>
 begin
 
-definition "INTERP = \<F>_fun' INTERPRET"
+definition "INTERP = \<F>_FP_homo INTERPRET"
 
 end
 
@@ -296,10 +297,10 @@ locale fiction_kind =
   fictional_space DOMAIN INTERPRET
 + resource_kind DOMAIN FK
   for DOMAIN :: \<open>'FNAME \<Rightarrow> 'FREP::sep_algebra sep_homo_set\<close>
-  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) interp"
+  and INTERPRET :: "'FNAME \<Rightarrow> ('FREP::sep_algebra,'RES::sep_algebra) unital_homo_interp"
   and FK :: "('FNAME,'FREP,'T::sep_algebra) kind"
 + fixes I :: "('T,'RES) interp"
-assumes interpret_reduct[simp]: "INTERPRET (kind.name FK) = I o kind.project FK"
+assumes interpret_reduct: "INTERPRET (kind.name FK) = Unital_Homo (I o kind.project FK)"
   and   univ_domain[simp]: "kind.domain FK = sep_homo_set UNIV"
 begin
 
@@ -318,11 +319,10 @@ lemma \<r>_valid_split': \<open>
 lemma Fic_Space_m[simp]: "mk x \<in> SPACE"
   unfolding SPACE_def by simp
 
-lemma interp_m[simp]: "INTERP (mk x) = I x"
+lemma interp_m[simp]: "homo_one I \<Longrightarrow> INTERP (mk x) = I x"
   unfolding INTERP_def
-  by (simp add: sep_disj_commute sep_mult_commute,
-      metis INTERPRET_homo_one comp_apply homo_one.homo_one interpret_reduct proj_inj)
-      
+  by (simp add: sep_disj_commute sep_mult_commute interpret_reduct prj.homo_one_axioms,
+      metis homo_one.homo_one prj.homo_one_axioms proj_inj)
 
 lemma sep_disj_get_name_eq[simp]:
   \<open>r \<in> SPACE \<Longrightarrow> get r ## x \<longleftrightarrow> r ## mk x\<close>
@@ -330,12 +330,13 @@ lemma sep_disj_get_name_eq[simp]:
 
 lemma interp_split:
   " NO_MATCH (clean f') f
+\<Longrightarrow> homo_one I
 \<Longrightarrow> f \<in> SPACE \<Longrightarrow>
     INTERP f = INTERP (clean f) * I (project (f name))
   \<and> INTERP (clean f) ## I (project (f name))"
   unfolding INTERP_def SPACE_def
-  by (subst \<F>_fun'_split[where ?f = f and ?k = name],
-      simp_all add: INTERPRET_homo_one)
+  by (subst \<F>_FP_homo_split[where ?f = f and ?k = name],
+      simp_all add: interpret_reduct prj.homo_one_axioms)
 
 lemma Fic_Space_mm[simp]: "f ## mk x \<Longrightarrow> f * mk x \<in> SPACE \<longleftrightarrow> f \<in> SPACE"
   unfolding SPACE_def finite_dom1_mult1

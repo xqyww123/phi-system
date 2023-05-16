@@ -27,12 +27,11 @@ lemma get_res_valid_raw: (*TODO: depreciated?*)
   unfolding RES.SPACE_def
   by (simp, metis in_DOMAIN proj_inj)
 
-definition \<open>basic_fiction x = { 1(Res #= x) }\<close>
+definition [simp]: \<open>basic_fiction x = { 1(Res #= x) }\<close>
 
-lemma basic_fiction_\<I>:
-  "basic_fiction = (\<lambda>x. { 1(Res #= x)})"
-  unfolding basic_fiction_def
-  by (clarsimp simp add: one_set_def)
+lemma basic_fiction_homo_one[simp]:
+  \<open>homo_one basic_fiction\<close>
+  unfolding homo_one_def basic_fiction_def by (simp add: set_eq_iff)
 
 subsubsection \<open>Getter\<close>
 
@@ -86,6 +85,7 @@ subsection \<open>Fiction Base\<close>
 locale basic_fiction =
    R: resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> I\<close>
++  homo_one \<open>I\<close>
 for Res :: "'T::sep_algebra resource_entry"
 and I :: "('U::sep_algebra, 'T) interp"
 and Fic :: "'U fiction_entry"
@@ -262,7 +262,7 @@ private lemma from_fictional_refinement':
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))\<close>
   unfolding \<phi>Procedure_alt Fictional_Forward_Simulation_def atomize_all Valid_Transition_def
-  apply (auto simp add: Image_iff subset_iff Bex_def R.basic_fiction_\<I> \<phi>expns Transition_of'_def
+  apply (auto simp add: Image_iff subset_iff Bex_def \<phi>expns Transition_of'_def
           LooseStateSpec_def split_sum_all INTERP_RES_def interp_split R.\<r>_valid_split'
           R.inj.sep_insertion inj.sep_insertion prj.homo_mult eval_stat_forall split: eval_stat.split)
   subgoal premises prems for r u y v y' rr
@@ -569,8 +569,7 @@ lemma allocator_refinement:
    \<w>.\<r>.\<t> basic_fiction \<i>\<n> {1}\<close>
   apply (rule refinement_sub_fun[OF allocator_transition], assumption, assumption)
   unfolding Fictional_Forward_Simulation_def
-  apply (cases ret; clarsimp simp add: set_mult_expn Subjection_expn basic_fiction_\<I>
-      mk_homo_mult)
+  apply (cases ret; clarsimp simp add: set_mult_expn Subjection_expn mk_homo_mult)
   subgoal premises prems for r R u k
   proof -
     have [simp]: \<open>r ## 1(k := init)\<close>
@@ -593,6 +592,7 @@ end
 locale fiction_base_for_mapping_resource =
   R: mapping_resource Res
 + fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> I\<close>
++ homo_one \<open>I\<close>
 for Res :: "('key \<Rightarrow> 'val::sep_algebra) resource_entry"
 and I   :: "('T::sep_algebra, 'key \<Rightarrow> 'val) interp"
 and Fic :: "'T fiction_entry"
@@ -678,7 +678,7 @@ lemma getter_refinement:
    \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ({1(k \<mapsto> u)} \<s>\<u>\<b>\<j> u. ret = Normal (\<phi>arg u) \<and> u \<in> P k \<and> u \<in> S)
    \<w>.\<r>.\<t> basic_fiction \<i>\<n> fun_upd 1 k ` Some ` S\<close>
   unfolding Fictional_Forward_Simulation_def getter_transition
-  apply (cases ret; clarsimp split: option.split simp add: basic_fiction_\<I> set_mult_expn Id_on_iff
+  apply (cases ret; clarsimp split: option.split simp add: set_mult_expn Id_on_iff
                               Subjection_expn prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
                               inj.sep_insertion[simplified] in_invariant)
   by (smt (verit, ccfv_threshold) domI fun_upd_same image_iff mult_1_class.mult_1_left one_option_def option.sel sep_disj_fun_nonsepable(2) times_fun)
@@ -702,7 +702,7 @@ lemma setter_refinement:
 
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at k (F o the)\<close>]])
   unfolding Fictional_Forward_Simulation_def
-  apply (clarsimp simp add: basic_fiction_\<I> set_mult_expn Subjection_expn ExSet_expn
+  apply (clarsimp simp add: set_mult_expn Subjection_expn ExSet_expn
             prj.homo_mult \<r>_valid_split' inj.sep_insertion[simplified])
   subgoal premises prems for r R x' u v
   proof -
@@ -758,6 +758,7 @@ subsection \<open>Pointwise Base Fiction\<close>
 locale pointwise_base_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res RP
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise I\<close>
++  homo_one \<open>\<F>_pointwise I\<close>
 for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
 and I :: \<open>'key \<Rightarrow> ('fic::sep_algebra, 'val option) interp\<close>
 and Fic :: "('key \<Rightarrow> 'fic) fiction_entry"
@@ -825,6 +826,7 @@ subsection \<open>Pointwise Fiction\<close>
 locale pointwise_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res P
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
++  homo_one \<open>\<F>_pointwise (\<lambda>_::'key. \<F>_it::'val nosep option \<Rightarrow> 'val nosep option set)\<close>
 for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
 and P   :: \<open>'key \<Rightarrow> 'val nosep set\<close>
 and Fic :: "('key \<Rightarrow> 'val nosep option) fiction_entry"
@@ -864,6 +866,8 @@ subsection \<open>Pointwise Share Fiction\<close>
 locale pointwise_share_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res P
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_functional to_share UNIV)\<close>
++  homo_one \<open>\<F>_pointwise (\<lambda>_. \<F>_functional to_share UNIV)
+                :: ('key \<Rightarrow> 'val nosep share option) \<Rightarrow> ('key \<Rightarrow> 'val nosep option) set\<close>
 for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
 and P   :: \<open>'key \<Rightarrow> 'val nosep set\<close>

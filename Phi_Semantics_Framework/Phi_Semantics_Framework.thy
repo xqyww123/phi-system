@@ -221,13 +221,9 @@ setup \<open>Sign.parent_path\<close>
 
 instance FIC :: sep_algebra using FIC.sort .
 
-consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) interp\<close>
+consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) unital_homo_interp\<close>
 
-debt_axiomatization INTERPRET_homo_one_ax: \<open>INTERPRET k 1 = 1\<close>
-
-interpretation FIC: fictional_space FIC.DOMAIN INTERPRET
-  by (standard; insert INTERPRET_homo_one_ax)
-
+interpretation FIC: fictional_space FIC.DOMAIN INTERPRET .
 
 definition "INTERP_RES fic \<equiv> RES.SPACE \<inter> {_. fic \<in> FIC.SPACE } \<inter> FIC.INTERP fic"
   \<comment> \<open>Interpret a fiction\<close>

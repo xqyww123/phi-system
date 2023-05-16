@@ -69,7 +69,7 @@ fun cert_arg ctxt resT raw_TM env =
   in (Tm, env') end;
 
 fun dest_typ (\<^Type>\<open>fun T _\<close>) = T
-  | dest_typ T = raise TYPE ("shoud be an Algebras.interp", [T], [])
+  | dest_typ T = raise TYPE ("shoud be a unital_homo", [T], [])
 
 val field_locale = \<^locale>\<open>fiction_kind\<close>
 val space_locale = \<^locale>\<open>fictional_space\<close>
@@ -79,7 +79,7 @@ val nameT = TFree (NAME_N, \<^sort>\<open>type\<close>);
 
 fun space_locale_args resT repT =
   let val domainT = nameT --> \<^Type>\<open>sep_homo_set repT\<close>
-      val INTERP_T = nameT --> \<^Type>\<open>fun repT \<^Type>\<open>set resT\<close>\<close>
+      val INTERP_T = nameT --> \<^Type>\<open>unital_homo repT \<^Type>\<open>set resT\<close>\<close>
    in [(DOMAIN_N, domainT), (INTERPRET_N, INTERP_T)]
   end
 

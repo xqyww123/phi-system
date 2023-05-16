@@ -47,9 +47,7 @@ definition Scala_Semimodule_Functor :: \<open>('s \<Rightarrow> ('c,'a) \<phi> \
 
 subsection \<open>Configurations\<close>
 
-lemma (in homo_one) [\<phi>reason 1100]:
-  \<open>homo_one \<phi>\<close>
-  by (simp add: homo_one_axioms)
+declare (in homo_one) homo_one_axioms[\<phi>reason 1100]
 
 lemma (in homo_sep_mult) [\<phi>reason 1100]:
   \<open>homo_sep_mult \<psi>\<close>
