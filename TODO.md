@@ -1,3 +1,4 @@
+- Syntax: proc f {| X |--> Y |} to proc f {{ X |--> Y }}
 - Anti-quotation of applicative rules in synthesis
 - Eliminational φ-LPR, necessary in Inhabitance rule generation? Yes, the system RS uses an inefficient loop. We need item net.
 - Explicit flag to control backtrack in PLPR

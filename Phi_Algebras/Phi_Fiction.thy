@@ -305,6 +305,11 @@ lemma \<F>_pointwise_\<F>_it:
 
 definition [simp]: "\<F>_pointwise I f = {g. \<forall>x. g x \<in> (I x) (f x)}"
 
+lemma \<F>_pointwise_homo_one[simp, locale_intro]:
+  \<open> (\<And>k. homo_one (I k))
+\<Longrightarrow> homo_one (\<F>_pointwise I)\<close>
+  unfolding homo_one_def by (simp add: set_eq_iff) fastforce
+
 lemma \<F>_pointwise_\<F>_it:
   \<open>\<F>_pointwise (\<lambda>_. \<F>_it) = \<F>_it\<close>
   by (simp add: fun_eq_iff set_eq_iff)
@@ -418,7 +423,7 @@ definition [simp]: \<open>\<F>_functional \<psi> D x = {y. x = \<psi> y \<and> y
   unfolding \<F>_functional_def
   by (rule Interp_inverse, simp add: Interpretation_def one_set_def set_eq_iff inj_at_1) *)
 
-lemma \<F>_functional_homo_one[simp]:
+lemma \<F>_functional_homo_one[simp, locale_intro]:
   \<open> kernel_is_1 \<psi> D
 \<Longrightarrow> homo_one (\<F>_functional \<psi> D)\<close>
   unfolding homo_one_def \<F>_functional_def kernel_is_1_def

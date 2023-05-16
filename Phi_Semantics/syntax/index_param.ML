@@ -19,7 +19,7 @@ fun mk_index_step (By_Num i) = mk_index_step_N i
   | mk_index_step (By_Ident s) = Phi_Syntax.mk_labelled s Term.dummy
 
 (*may containing dummy term for schematic variable*)
-val mk_index = HOLogic.mk_list \<^typ>\<open>index\<close> o map mk_index_step
+val mk_index = HOLogic.mk_list \<^typ>\<open>aggregate_index\<close> o map mk_index_step
 
 val raw_index_parser = Parse.list1 (Parse.nat >> By_Num || Parse.short_ident >> By_Ident)
 

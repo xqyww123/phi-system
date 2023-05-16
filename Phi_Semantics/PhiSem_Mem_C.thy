@@ -41,13 +41,14 @@ datatype segidx = Null | Segment nat \<comment> \<open>nonce\<close> (layout: TY
 
 hide_const (open) layout
 
+(*TODO: rename: block, offset*)
 datatype 'index memaddr = memaddr (segment: segidx) (index: 'index) (infixl "|:" 60)
 declare [[typedef_overloaded = false]]
 
 declare memaddr.sel[iff]
 hide_const (open) segment index
 
-type_synonym logaddr = "nat list memaddr" (* the index of logaddr is non empty *)
+type_synonym logaddr = "aggregate_path memaddr"
 type_synonym rawaddr = \<open>size_t memaddr\<close> \<comment> \<open>having physical offset\<close>
 
 instantiation segidx :: zero begin
@@ -124,17 +125,14 @@ type_synonym mem = \<open>segidx \<rightharpoonup> VAL nosep\<close>
 
 setup \<open>Sign.parent_path\<close>
 
-resource_space c_mem =
-  C_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` nosep ` Well_Type (segidx.layout seg))}\<close>
-  (partial_map_resource) ..
-
-term RES.C_mem.basic_fiction
-
-thm RES.C_mem.basic_fiction_def
+resource_space pointer_mem =
+  pointer_mem :: \<open>{h::RES.mem. finite (dom h) \<and> (\<forall>seg \<in> dom h. h seg \<in> Some ` nosep ` Well_Type (segidx.layout seg))}\<close>
+  (pointer_mem_resource \<open>segidx.layout\<close>)
+  by (standard; simp)
 
 
-definition In_Mem :: \<open> resource \<Rightarrow> segidx \<Rightarrow> bool\<close>
-  where \<open>In_Mem res seg \<equiv> seg \<in> dom (RES.C_mem.get res)\<close>
+definition In_Mem :: \<open> resource \<Rightarrow> segidx \<Rightarrow> bool \<close>
+  where \<open>In_Mem res seg \<equiv> seg \<in> dom (RES.pointer_mem.get res)\<close>
 
 
 subsection \<open>Semantics\<close>
@@ -345,26 +343,17 @@ lemma rawaddr_to_log[simp]:
 
 subsection \<open>Fiction\<close>
 
-definition sem_read_mem :: \<open>logaddr \<Rightarrow> resource \<Rightarrow> VAL\<close>
-  where \<open>sem_read_mem addr res =
-    index_value (memaddr.index addr) (nosep.dest (the (RES.mem.get res (memaddr.segment addr))))\<close>
+fiction_space pointer_mem =
+  pointer_mem :: \<open>RES.pointer_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (segidx.layout blk)))\<close>
+     (perm_pointer_mem_fiction RES.pointer_mem segidx.layout)
+  by (standard, of_tac \<open>\<lambda>_. UNIV\<close>; simp add: pointwise_set_UNIV)
 
-definition sem_write_mem :: \<open>logaddr \<Rightarrow> VAL \<Rightarrow> resource \<Rightarrow> resource\<close>
-  where \<open>sem_write_mem addr val res =
-    (let seg = memaddr.segment addr
-       ; mem = RES.mem.get res
-       ; val' = index_mod_value (memaddr.index addr) (\<lambda>_. val) (nosep.dest (the (mem seg)))
-       ; mem' = mem(seg \<mapsto> nosep val')
-      in res(RES.mem #= mem'))\<close>
-
-
+thm FIC.pointer_mem.getter_rule
 
 (*
 
 fiction_space (in agmem_sem) agmem_fic :: \<open>'RES_N \<Rightarrow> 'RES\<close> = \<phi>min_fic +
   FIC_mem :: share_mem
-
-(* TODO: agmem_sem should be a locale expression! ! *)
 
 
 locale agmem = agmem_fic
@@ -404,8 +393,6 @@ lemma RawPointer_expn[\<phi>expns]:
 lemma RawPointer_inhabited[elim!, \<phi>inhabitance_rule]:
   "Inhabited (p \<Ztypecolon> RawPointer) \<Longrightarrow> (valid_rawaddr p \<Longrightarrow> C) \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
-
-declare [[\<phi>trace_reasoning = 1]]
 
 lemma RawPointer_zero[\<phi>reason 1200]:
   "\<phi>Zero pointer RawPointer (Null |: 0)"
@@ -448,10 +435,10 @@ lemma TypPtr_semty[\<phi>reason 1000]:
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns valid_logaddr_def)
 
-subsubsection \<open>Slice Pointer\<close>
+(* subsubsection \<open>Slice Pointer\<close>
 
 text \<open>A limitation of TypPtr is that it cannot point to the end of an array,
-  because there is no object at all at the end. To address this, there is a slice pointer which
+  because there is no object exists at the end. To address this, we provide slice pointer which
   can range over a piece of the array including the end.\<close>
 
 definition SlicePtr :: "TY \<Rightarrow> (VAL, logaddr \<times> nat \<times> nat) \<phi>"
@@ -496,9 +483,15 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
   unfolding \<phi>SemType_def subset_iff
   by (cases x, simp add: \<phi>expns valid_logaddr_def)
 
-
+*)
 
 subsection \<open>Memory Object\<close>
+
+term FIC.pointer_mem.\<phi>
+text \<open>\<triangleright>\<close>
+
+abbreviation Mem :: \<open>logaddr \<Rightarrow> (aggregate_path \<Rightarrow> VAL nosep share option,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
+  where \<open>Mem addr T \<equiv> FIC.pointer_mem.\<phi> (memaddr.segment addr \<^bold>\<rightarrow> memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
 
 definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
   where \<open>Ref T x' = (case x' of (seg |: idx) \<Zinj> (n \<Znrres> x) \<Rightarrow>

@@ -586,7 +586,8 @@ lemma kernel_is_1_comp[simp, locale_intro]:
   \<open> g ` Dg \<subseteq> Df \<Longrightarrow> kernel_is_1 f Df \<Longrightarrow> kernel_is_1 g Dg \<Longrightarrow> kernel_is_1 (f o g) Dg\<close>
   unfolding kernel_is_1_def by (simp add: image_subset_iff)
 
-lemma kernel_is_1_id[simp]: \<open>1 \<in> any \<Longrightarrow> kernel_is_1 id any\<close> unfolding kernel_is_1_def by simp
+lemma kernel_is_1_id[simp]: \<open>1 \<in> D \<Longrightarrow> kernel_is_1 id D\<close> unfolding kernel_is_1_def by simp
+
 
 locale sep_insertion_monoid = sep_insertion_1 \<psi> D
   for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close> and D
@@ -1332,6 +1333,14 @@ instance "fun" :: (type,comm_monoid_add) comm_monoid_add proof
   show \<open>0 + a = a\<close> unfolding plus_fun_def fun_eq_iff by simp
 qed
 
+paragraph \<open>Properties\<close>
+
+definition \<open>pointwise_set D = {f. \<forall> k. f k \<in> D}\<close>
+
+lemma kernel_is_1_pointwise[simp, locale_intro]:
+  \<open>kernel_is_1 f D \<Longrightarrow> kernel_is_1 ((o) f) (pointwise_set D)\<close>
+  unfolding kernel_is_1_def pointwise_set_def
+  by (clarsimp simp add: Ball_def fun_eq_iff)
 
 paragraph \<open>Multiplication with Function Update\<close>
 
@@ -1871,8 +1880,6 @@ lemma prod_superset_dom1:
 
 subsubsection \<open>Total Permission Transformation\<close>
 
-definition \<open>pointwise_set D = {f. \<forall> k. f k \<in> D}\<close>
-
 lemma pointwise_set_UNIV:
   \<open>pointwise_set UNIV = UNIV\<close>
   unfolding pointwise_set_def by simp
@@ -2099,7 +2106,8 @@ proof
 qed
 
 lemma to_share_kernel_is_1[locale_witness]:
-  \<open>kernel_is_1 to_share UNIV\<close>
+  \<open> 1 \<in> D
+\<Longrightarrow> kernel_is_1 to_share D\<close>
   by (simp add: kernel_is_1_def)
 
 

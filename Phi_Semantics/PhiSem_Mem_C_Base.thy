@@ -410,8 +410,8 @@ locale perm_pointer_mem_fiction =
       Res \<open>\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (typ_of_blk blk))\<close>
       Fic \<open>\<lambda>blk. nosep ` Well_Type (typ_of_blk blk)\<close>
   for Res :: "('blk \<Rightarrow> VAL nosep option) resource_entry"
-  and Fic :: "('blk \<Rightarrow> nat list \<Rightarrow> VAL nosep share option) fiction_entry"
   and typ_of_blk :: \<open>'blk \<Rightarrow> TY\<close>
+  and Fic :: "('blk \<Rightarrow> nat list \<Rightarrow> VAL nosep share option) fiction_entry"
 begin
 
 sublocale pointer_mem_resource Res typ_of_blk ..
