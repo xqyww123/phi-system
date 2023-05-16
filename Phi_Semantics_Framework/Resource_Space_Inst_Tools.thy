@@ -125,9 +125,11 @@ interpretation left: sep_inj_proj sum1.Inl sum1.projl
   apply (standard; transfer)
   apply (simp)
   apply (simp)
+  apply (simp)
   apply (case_tac x; case_tac y; simp; meson)
     apply (case_tac a; case_tac b; simp; meson; simp)
     apply simp
+  apply simp
 apply simp
 apply (case_tac a; case_tac b; simp; meson; simp)
   by blast
@@ -136,10 +138,12 @@ interpretation right: sep_inj_proj sum1.Inr sum1.projr
   apply (standard; transfer)
   apply (simp)
   apply (simp)
+  apply (simp)
   apply (case_tac x; case_tac y; simp; meson)
     apply (case_tac a; case_tac b; simp; meson; simp)
     apply simp
-apply simp
+  apply simp
+apply (simp)
 apply (case_tac a; case_tac b; simp; meson; simp)
   by blast
 

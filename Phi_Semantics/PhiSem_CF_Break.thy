@@ -1,5 +1,5 @@
 theory PhiSem_CF_Break
-  imports Phi_System.Resource_Template
+  imports Phi_System.PhiSem_Formalization_Tools
 begin
 
 section \<open>Semantic Model\<close>
@@ -29,9 +29,7 @@ type_synonym brk_frame = \<open>RES.brk_label \<rightharpoonup> VAL list option 
 setup \<open>Sign.parent_path\<close>
 
 resource_space \<phi>CF_break =
-  brk_frame :: \<open>{frames::RES.brk_frame. finite (dom frames)}\<close>
-    (partial_map_resource \<open>\<lambda>_::nat. UNIV::VAL list option nosep set\<close>)
-  by (standard, simp, meson domIff notin_range_Some)
+  brk_frame :: \<open>{frames::RES.brk_frame. finite (dom frames)}\<close> (partial_map_resource) ..
 
 hide_fact RES.\<phi>CF_break_res_ax
 
@@ -39,8 +37,8 @@ hide_fact RES.\<phi>CF_break_res_ax
 subsection \<open>Fiction of Scope Frames\<close>
 
 fiction_space \<phi>CF_break =
-  brk_frame :: \<open>RES.brk_frame.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
-               (pointwise_fiction_for_partial_mapping_resource RES.brk_frame \<open>\<lambda>_::nat. UNIV::VAL list option nosep set\<close>) ..
+  brk_frame :: \<open>RES.brk_frame.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it\<close>
+               (identity_fiction_for_partial_mapping_resource RES.brk_frame) ..
 
 hide_fact FIC.\<phi>CF_break_fic_ax
 
@@ -66,26 +64,10 @@ lemma Brk_Frame_eq_identity:
   unfolding set_eq_iff Brk_Frame_def
   by (simp add: \<phi>expns)
 
-lemma Brk_Frame_eq_raw_identity:
-  \<open>Brk_Frame l = (1(l \<mapsto> nosep None) \<Ztypecolon> FIC.brk_frame.\<phi> Identity)\<close>
-  unfolding set_eq_iff Brk_Frame_def
-  by (simp add: \<phi>expns)
-
-lemma Brk_Frame_eq_raw_identity_void:
-  \<open>(1 \<Ztypecolon> FIC.brk_frame.\<phi> Identity) = Void\<close>
-  unfolding set_eq_iff Brk_Frame_def
-  by (simp add: \<phi>expns)
-
 lemma Brking_Frame_eq_identity:
   \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nosep (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
   unfolding set_eq_iff Brking_Frame_def
   by (simp add: \<phi>expns)
-
-definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
-definition sift_brking_frame ("\<b>\<r>\<e>\<a>\<k> _/ \<w>\<i>\<t>\<h> _/ \<o>\<r> _" [1000,10,3] 3)
-  where \<open>sift_brking_frame = sift_brking_frame'\<close>
-
-declare sift_brking_frame'_def[folded sift_brking_frame_def, assertion_simps_source]
 
 
 
@@ -103,49 +85,6 @@ definition op_brk_scope :: \<open>(RES.brk_label \<Rightarrow> ('a::VALs) proc) 
 )))
 \<close>
 
-proc brk_scope:
-  requires BODY: \<open>\<And>l. \<p>\<r>\<o>\<c> f l \<lbrace> X\<heavy_comma> TECHNICAL Brk_Frame l \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> \<blangle> TECHNICAL Brk_Frame l \<brangle> \<rbrace>
-                      \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>a. sift_brking_frame l Y' (E a))\<close>
-  input  \<open>X\<close>
-  output \<open>\<lambda>ret. Y ret + Y' ret\<close>
-  throws E
-\<medium_left_bracket>
-  FIC.brk_frame.allocate_rule[where P=\<open>\<lambda>_. True\<close> and u=\<open>Some (nosep None)\<close>] \<exists>l
-  fold Brk_Frame_eq_raw_identity
-  try' \<medium_left_bracket>
-    BODY[unfolded Technical_def]
-    FIC.brk_frame.setter_rule[where u=\<open>None\<close> and v=\<open>nosep None\<close>, simplified,
-                              simplified Brk_Frame_eq_raw_identity_void Brk_Frame_eq_raw_identity[symmetric]]
-  \<medium_right_bracket> \<medium_left_bracket>
-    unfold sift_brking_frame_def
-    unfold sift_brking_frame'_def
-    
-
-  thm FIC.brk_frame.getter_rule
-      thm FIC.brk_frame.setter_rule[where u=\<open>None\<close> and v=\<open>nosep None\<close>, simplified,
-            simplified Brk_Frame_eq_raw_identity_void Brk_Frame_eq_raw_identity[symmetric]]
-  thm FIC.brk_frame.setter_rule
-
-thm \<phi>CASE
-
-lemma brk_scope:
-  \<open> (\<And>l. \<p>\<r>\<o>\<c> f l \<lbrace> X\<heavy_comma> TECHNICAL Brk_Frame l \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> \<blangle> TECHNICAL Brk_Frame l \<brangle> \<rbrace>
-    \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>a. sift_brking_frame l Y' (E a)))
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_brk_scope f \<lbrace> X \<longmapsto> \<lambda>ret. Y ret + Y' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  unfolding op_brk_scope_def sift_brking_frame_def sift_brking_frame'_def
-            Technical_def FOCUS_TAG_def
-  apply (rule, rule, rule, assumption, rule)
-  apply (rule \<phi>CONSEQ'E0[unfolded zero_fun_def], rule dispose_brk_scope[THEN \<phi>frame, simplified], rule)
-  apply (rule \<phi>CASE)
-  apply (simp only: Brking_Frame_eq_identity norm_precond_ex, rule, rule, simp, rule)
-  apply (rule FIC.brk_frame.\<phi>R_dispose_res_frm[where P=\<open>\<lambda>_. True\<close>]; simp)
-  apply (rule)
-  apply (simp only: Brk_Frame_eq_identity, rule, simp, rule)
-  apply (rule \<phi>CONSEQ'E0, rule FIC.brk_frame.\<phi>R_dispose_res_frm[where P=\<open>\<lambda>_. True\<close>]; simp)
-  by (rule, rule implies_refl)
-
-
-
 definition op_break :: \<open>RES.brk_label \<Rightarrow> ('a::VALs, 'ret) proc'\<close>
   where \<open>op_break l = (\<lambda>vs.
      RES.brk_frame.\<phi>R_set_res (\<lambda>f. f(l \<mapsto> nosep (Some (to_vals (\<phi>arg.dest vs)))))
@@ -156,6 +95,11 @@ lemma op_break_reduce_tail[procedure_simps,simp]:
   \<open>(op_break L v \<ggreater> f) = op_break L v\<close>
   unfolding op_break_def by simp
 
+definition \<open>sift_brking_frame' l Y E = (Brking_Frame l Y) + (E\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
+definition sift_brking_frame ("\<b>\<r>\<e>\<a>\<k> _/ \<w>\<i>\<t>\<h> _/ \<o>\<r> _" [1000,10,3] 3)
+  where \<open>sift_brking_frame = sift_brking_frame'\<close>
+
+declare sift_brking_frame'_def[folded sift_brking_frame_def, assertion_simps_source]
 
 context begin
 
