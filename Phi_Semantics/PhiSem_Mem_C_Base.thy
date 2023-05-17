@@ -10,7 +10,7 @@ debt_axiomatization
   where memobj_size_step : \<open>valid_idx_step T i \<Longrightarrow> MemObj_Size (idx_step_type i T) \<le> MemObj_Size T\<close>
     and idx_step_offset_size:
           \<open>valid_idx_step T i \<Longrightarrow> idx_step_offset T i + MemObj_Size (idx_step_type i T) \<le> MemObj_Size T\<close>
-    and idx_step_offset_disj:
+    and idx_step_offset_no_overlap:
           \<open>valid_idx_step T i \<Longrightarrow> valid_idx_step T j \<Longrightarrow>
                 idx_step_offset T i \<le> idx_step_offset T j \<Longrightarrow>
                 idx_step_offset T j < idx_step_offset T i + MemObj_Size (idx_step_type i T) \<Longrightarrow>
@@ -44,12 +44,24 @@ lemma index_offset_bound:
          simp del: append_assoc add: append_assoc[symmetric] fold_tail)
   using idx_step_offset_size index_offset_upper_bound by fastforce
 
+definition phantom_mem_semantic_type :: \<open>TY \<Rightarrow> bool\<close>
+  where \<open>phantom_mem_semantic_type TY \<longleftrightarrow> MemObj_Size TY = 0\<close>
+
 lemma index_offset_bound_strict:
-  \<open>valid_index T (base@idx) \<Longrightarrow> 0 < MemObj_Size (index_type (base@idx) T) \<Longrightarrow>
+  \<open>valid_index T (base@idx) \<Longrightarrow> \<not> phantom_mem_semantic_type (index_type (base@idx) T) \<Longrightarrow>
   index_offset T base \<le> index_offset T (base@idx) \<and> index_offset T (base@idx) < index_offset T base + MemObj_Size (index_type base T)\<close>
+  unfolding phantom_mem_semantic_type_def
   apply (induct idx arbitrary: base rule: rev_induct;
          simp del: append_assoc add: append_assoc[symmetric] fold_tail)
   using idx_step_offset_size index_offset_upper_bound by fastforce
+
+lemma phantom_mem_semantic_type_element:
+  \<open> valid_idx_step TY i
+\<Longrightarrow> phantom_mem_semantic_type TY
+\<Longrightarrow> phantom_mem_semantic_type (idx_step_type i TY)\<close>
+  unfolding phantom_mem_semantic_type_def
+  using memobj_size_step by fastforce
+
 
 
 section \<open>Fiction\<close>

@@ -2412,14 +2412,11 @@ subsubsection \<open>Evaluation\<close>
 
 consts literal :: mode
 
-lemma Do_Literal_Simplification:
-  \<open> PROP Do_Simplificatin A B
+lemma Do_Literal_Simplification[\<phi>reason 1000]:
+  \<open> Simplify default A B
 \<Longrightarrow> Is_Literal A
-\<Longrightarrow> Simplify s A B\<close>
-  unfolding Do_Simplificatin_def Simplify_def atomize_eq .
-
-\<phi>reasoner_ML \<open>Simplify literal\<close> 1000 (\<open>Simplify literal _ _\<close>) =
-  \<open>PLPR_Simplifier.simplifier (SOME @{thm Do_Literal_Simplification}) I\<close>
+\<Longrightarrow> Simplify literal A B\<close>
+  unfolding Simplify_def atomize_eq .
 
 hide_fact Do_Literal_Simplification
 

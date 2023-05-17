@@ -208,6 +208,11 @@ parse_ast_translation \<open>
    in [(\<^syntax_const>\<open>\<phi>Nat_syntax\<close>, (fn _ => fn [V] =>
           Appl [Constant \<^const_syntax>\<open>\<phi>Nat\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
+lemma \<phi>Nat_expn[\<phi>expns]:
+  \<open>p \<in> (n \<Ztypecolon> \<nat>('b)) \<longleftrightarrow> p = V_int.mk (LENGTH('b), n) \<and> n < 2 ^ LENGTH('b)\<close>
+  unfolding \<phi>Type_def \<phi>Nat_def \<phi>RoundedNat_def Word_def
+  by (clarsimp simp add: Subjection_expn, insert unat_of_nat_len, force)
+
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> \<nat>\<^sup>r(_) \<a>\<n>\<d> _\<close>]:
   \<open> Threshold_Cost 2
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = x

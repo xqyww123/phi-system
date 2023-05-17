@@ -44,9 +44,9 @@ debt_axiomatization
   and   V_tup_sep_disj_R[simp]: \<open>V_tup.mk l1 ## vl2 \<longleftrightarrow> (\<exists>l2. vl2 = V_tup.mk l2)\<close>
   and   V_tup_sep_disj_L[simp]: \<open>vl1 ## V_tup.mk l2 \<longleftrightarrow> (\<exists>l1. vl1 = V_tup.mk l1)\<close>
   and   V_tup_mult    : \<open>V_tup.mk l1 * V_tup.mk l2 = V_tup.mk (l2 @ l1)\<close>
-  and   idx_step_type_tup [eval_semantic_index] : \<open>i < length tys \<Longrightarrow> idx_step_type (AgIdx_N i) (tup tys) = tys!i \<close>
-  and   valid_idx_step_tup[eval_semantic_index] : \<open>valid_idx_step (tup tys) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < length tys}\<close>
-  and   idx_step_value_tup[eval_semantic_index] : \<open>idx_step_value (AgIdx_N i) (V_tup.mk vs) = vs!i\<close>
+  and   idx_step_type_tup [eval_aggregate_path] : \<open>i < length tys \<Longrightarrow> idx_step_type (AgIdx_N i) (tup tys) = tys!i \<close>
+  and   valid_idx_step_tup[eval_aggregate_path] : \<open>valid_idx_step (tup tys) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < length tys}\<close>
+  and   idx_step_value_tup[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (V_tup.mk vs) = vs!i\<close>
   and   idx_step_mod_value_tup : \<open>idx_step_mod_value (AgIdx_N i) f (V_tup.mk vs) = V_tup.mk (vs[i := f (vs!i)])\<close>
 
 lemma V_tup_mult_cons:
@@ -138,7 +138,7 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason 1200]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < length Tys
-\<Longrightarrow> Simplify eval_semantic_index Ty (Tys!i) 
+\<Longrightarrow> Simplify eval_aggregate_path Ty (Tys!i) 
 \<Longrightarrow> valid_index Ty L
 \<Longrightarrow> valid_index (tup Tys) (AgIdx_N i # L)\<close>
   unfolding Premise_def Simplify_def

@@ -129,21 +129,26 @@ section \<open>Reasoning\<close>
 
 subsection \<open>Evaluate Index\<close>
 
-consts eval_semantic_index :: mode
+consts eval_aggregate_path :: mode
 
 ML \<open>
 structure Eval_Sem_Idx_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>eval_semantic_index\<close>
+  val binding = \<^binding>\<open>eval_aggregate_path\<close>
   val comment = "Rules evaluating indexing of semantic type and value"
 )\<close>
 
-\<phi>reasoner_ML eval_semantic_index 1300 ( \<open>Simplify eval_semantic_index ?X' ?X\<close>
-                                      | \<open>Premise eval_semantic_index ?P\<close> )
-  = \<open>PLPR_Simplifier.simplifier_by_ss' NONE Eval_Sem_Idx_SS.get'\<close>
+\<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] ?X' : ?X\<close>
+                                      | \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] ?P\<close> )
+  = \<open>PLPR_Simplifier.simplifier_by_ss' Eval_Sem_Idx_SS.get'\<close>
 
 
-lemmas [eval_semantic_index] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms
+lemmas [eval_aggregate_path] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms
+
+declare [[
+  \<phi>premise_attribute  [elim_premise_tag] for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] _\<close>,
+  \<phi>premise_attribute? [useful]           for \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] _\<close>
+]]
 
 
 subsection \<open>Index to Fields of Structures\<close>
@@ -204,7 +209,7 @@ lemma op_set_aggregate:
   \<open> \<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> idx
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY2
-\<Longrightarrow> Premise eval_semantic_index (index_type idx TY = TY2 \<or> allow_assigning_different_typ TY idx)
+\<Longrightarrow> Premise eval_aggregate_path (index_type idx TY = TY2 \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> valid_index TY idx
 \<Longrightarrow> \<phi>Index_mapper idx T T' U' U f
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 idx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>

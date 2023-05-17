@@ -611,7 +611,8 @@ lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def .
 
 subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}\<close>
 
-definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" where "Premise _ x = x"
+definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,27] 26)
+  where "Premise _ x = x"
 
 abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
@@ -619,6 +620,7 @@ abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [27] 26)
   where "Simp_Premise \<equiv> Premise MODE_SIMP"
 abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27] 26)
   where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
+
 
 text \<open>
   \<^prop>\<open>Premise mode P\<close> represents an ordinary proposition has to be proved during the reasoning.
@@ -936,25 +938,25 @@ text \<open>\<open>\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] ?result : term\
 definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[_] _ :/ _" [10,1000,10] 9)
   where "Simplify setting result origin \<longleftrightarrow> result = origin"
 
-definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
-  where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close>
+(* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
+  where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close> *)
 
 lemma [cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
 
 lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .
 lemma Simplify_I: \<open>A = B \<Longrightarrow> Simplify m A B\<close> unfolding Simplify_def .
 
-lemma Do_Simplification:
+(* lemma Do_Simplification:
   \<open>PROP Do_Simplificatin A B \<Longrightarrow> Simplify s A B\<close>
-  unfolding Do_Simplificatin_def Simplify_def atomize_eq .
+  unfolding Do_Simplificatin_def Simplify_def atomize_eq . *)
 
-lemma End_Simplification : \<open>PROP Do_Simplificatin A A\<close> unfolding Do_Simplificatin_def .
-lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> PROP Do_Simplificatin A B\<close>
-  unfolding Do_Simplificatin_def Premise_def atomize_eq .
+lemma End_Simplification : \<open>Simplify mode A A\<close> unfolding Simplify_def ..
+lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> Simplify mode A B\<close>
+  unfolding Simplify_def Premise_def atomize_eq .
 
 ML_file \<open>library/simplifier.ML\<close>
 
-hide_fact End_Simplification' End_Simplification Do_Simplification
+hide_fact End_Simplification' End_Simplification
 
 subsubsection \<open>Default Simplifier\<close>
 
@@ -962,7 +964,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier NONE I\<close>
+  = \<open>PLPR_Simplifier.simplifier I\<close>
 
 
 (* subsection \<open>Exhaustive Divergence\<close>

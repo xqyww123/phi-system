@@ -59,32 +59,7 @@ section \<open>\<phi>Type for Semantic Models\<close>
 subsection \<open>Pointers\<close>
 
 
-subsubsection \<open>Typed Pointer\<close>
 
-definition TypPtr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>"
-  where "TypPtr TY x = ({ V_pointer.mk (logaddr_to_raw x) }
-              \<s>\<u>\<b>\<j> valid_logaddr x \<and> x \<noteq> 0 \<and> logaddr_type x = TY \<and> 0 < MemObj_Size TY)"
-
-lemma TypPtr_expn[\<phi>expns]:
-  "v \<in> (addr \<Ztypecolon> TypPtr TY) \<longleftrightarrow>
-      v = V_pointer.mk (logaddr_to_raw addr) \<and> valid_logaddr addr
-    \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY \<and> 0 < MemObj_Size TY"
-  unfolding \<phi>Type_def by (simp add: TypPtr_def Subjection_expn)
-
-lemma TypPtr_inhabited[elim!, \<phi>inhabitance_rule]:
-  "Inhabited (addr \<Ztypecolon> TypPtr TY) \<Longrightarrow>
-      (valid_logaddr addr \<and> addr \<noteq> 0 \<and> logaddr_type addr = TY \<and> 0 < MemObj_Size TY \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma TypPtr_eqcmp[\<phi>reason 1000]:
-    "\<phi>Equal (TypPtr TY) (\<lambda>x y. memaddr.segment x = memaddr.segment y) (=)"
-  unfolding \<phi>Equal_def
-  by (simp add: \<phi>expns) (metis logaddr_to_raw_inj)
-
-lemma TypPtr_semty[\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> TypPtr TY) pointer\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns valid_logaddr_def)
 
 (* subsubsection \<open>Slice Pointer\<close>
 
@@ -138,12 +113,10 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
 
 subsection \<open>Memory Object\<close>
 
-term FIC.pointer_mem.\<phi>
-text \<open>\<triangleright>\<close>
+abbreviation Mem :: \<open>logaddr \<Rightarrow> (aggregate_path \<Rightarrow> VAL nosep share option,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
+  where \<open>Mem addr T \<equiv> FIC.aggregate_mem.\<phi> (memaddr.segment addr \<^bold>\<rightarrow> memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
 
-abbreviation Mem :: \<open>logaddr \<Rightarrow> (aggregate_path \<Rightarrow> VAL nosep share option,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close>
-  where \<open>Mem addr T \<equiv> FIC.pointer_mem.\<phi> (memaddr.segment addr \<^bold>\<rightarrow> memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
-
+(*
 definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
   where \<open>Ref T x' = (case x' of (seg |: idx) \<Zinj> (n \<Znrres> x) \<Rightarrow>
     if 0 < n \<and> valid_index (segidx.layout seg) idx then
@@ -158,7 +131,6 @@ lemma (in agmem) Ref_expn[\<phi>expns]:
         \<and> fic = FIC_mem.mk (1(seg := Fine (push_map idx (share n (to_share o Map_of_Val v)))))\<close>
   unfolding Ref_def \<phi>Type_def by (simp add: Identity_def) blast
 
-(*
 definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share option list) \<phi>\<close>
   where \<open>Slice T x' = (case x' of (seg |: i#idx) \<Zinj> l \<Rightarrow>
     if valid_index (segidx.layout seg) idx
@@ -174,6 +146,7 @@ section \<open>Instructions & Their Specifications\<close>
 
 subsubsection \<open>Address / Pointer\<close>
 
+(*
 definition \<phi>M_get_logptr :: \<open>'TY \<Rightarrow> 'VAL sem_value \<Rightarrow> ('TY logaddr \<Rightarrow> ('ret,'RES_N,'RES) proc) \<Rightarrow> ('ret,'RES_N,'RES) proc\<close>
   where \<open>\<phi>M_get_logptr TY v F = \<phi>M_getV \<tau>Pointer V_pointer.dest v (\<lambda>p. F (rawaddr_to_log TY p))\<close>
 
@@ -186,7 +159,7 @@ lemma (in agmem) \<phi>M_get_logptr[\<phi>reason!]:
    \<^bold>p\<^bold>r\<^bold>o\<^bold>c \<phi>M_get_logptr TY v F \<lbrace> X\<heavy_comma> addr \<Ztypecolon> Val v (Pointer TY) \<longmapsto> Y \<rbrace>\<close>
   unfolding \<phi>M_get_logptr_def
   by (cases v, simp, rule \<phi>M_getV, simp add: \<phi>expns valid_logaddr_def, auto simp add: \<phi>expns)
-
+*)
 
 subsection \<open>Access the Resource\<close>
 

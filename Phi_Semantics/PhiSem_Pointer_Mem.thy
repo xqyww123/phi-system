@@ -1,4 +1,4 @@
-theory PhiSem_Pointer_Mem
+(*theory PhiSem_Pointer_Mem
   imports Phi_System.PhiSem_Formalization_Tools "HOL-Library.Word"
 begin
 
@@ -198,4 +198,4 @@ fixes \<M> :: \<open>('TY,'VAL) \<M>\<close>
 
 
 
-end
+end*)
