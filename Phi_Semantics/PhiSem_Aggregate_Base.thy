@@ -1,5 +1,5 @@
 theory PhiSem_Aggregate_Base
-  imports PhiSem_Base
+  imports PhiSem_Aggregate_Path
 begin
 
 text \<open>The base for aggregate values which have inner structures and whose members can be
@@ -7,8 +7,7 @@ text \<open>The base for aggregate values which have inner structures and whose 
 
 section \<open>Semantics\<close>
 
-type_synonym aggregate_index = nat
-type_synonym aggregate_path = \<open>aggregate_index list\<close>
+subsection \<open>Formalization\<close>
 
 debt_axiomatization
         valid_idx_step :: \<open>TY \<Rightarrow> aggregate_index \<Rightarrow> bool\<close>
@@ -49,7 +48,7 @@ abbreviation \<open>index_value \<equiv> fold idx_step_value\<close> (*TODO: ren
 abbreviation \<open>index_type  \<equiv> fold idx_step_type\<close>  (* get_element_of_type *)
 abbreviation \<open>index_mod_value \<equiv> foldr idx_step_mod_value\<close> (* modify_value_element *)
 
-primrec valid_index :: \<open>TY \<Rightarrow> nat list \<Rightarrow> bool\<close>
+primrec valid_index :: \<open>TY \<Rightarrow> aggregate_path \<Rightarrow> bool\<close>
   where \<open>valid_index T [] \<longleftrightarrow> True\<close>
       | \<open>valid_index T (i#idx) \<longleftrightarrow> valid_idx_step T i \<and> valid_index (idx_step_type i T) idx\<close>
 
@@ -213,8 +212,44 @@ lemma op_set_aggregate:
   by (cases rv; cases ru; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>Mapping_expn)
 
+section \<open>Syntax Base\<close>
+
+nonterminal "\<phi>_tuple_args_" and "\<phi>_tuple_arg_"
+
+consts \<phi>_Empty_Tuple_sugar :: \<open>(VAL, 'any) \<phi>\<close> ("\<lbrace> \<rbrace>") \<comment> \<open>A syntax sugar to be overloaded\<close>
+
+syntax "_\<phi>Tuple" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> ("\<lbrace> _ \<rbrace>")
+       "_\<phi>tuple_arg"  :: "\<phi>_tuple_arg_ \<Rightarrow> \<phi>_tuple_args_" ("_")
+       "_\<phi>tuple_args" :: "\<phi>_tuple_arg_ \<Rightarrow> \<phi>_tuple_args_ \<Rightarrow> \<phi>_tuple_args_" ("_,/ _")
+
+translations
+  "_\<phi>Tuple (_\<phi>tuple_args y z)" \<rightleftharpoons> "CONST \<phi>Prod (_\<phi>Tuple (_\<phi>tuple_arg y)) (_\<phi>Tuple z)"
 
 
 
+(*
+syntax
+  "_tuple"      :: "'a \<Rightarrow> tuple_args \<Rightarrow> 'a \<times> 'b"        ("(1'(_,/ _'))")
+  "_tuple_arg"  :: "'a \<Rightarrow> tuple_args"                   ("_")
+  "_tuple_args" :: "'a \<Rightarrow> tuple_args \<Rightarrow> tuple_args"     ("_,/ _")
+  "_pattern"    :: "pttrn \<Rightarrow> patterns \<Rightarrow> pttrn"         ("'(_,/ _')")
+  ""            :: "pttrn \<Rightarrow> patterns"                  ("_")
+  "_patterns"   :: "pttrn \<Rightarrow> patterns \<Rightarrow> patterns"      ("_,/ _")
+  "_unit"       :: pttrn                                ("'(')")
+translations
+  "(x, y)" \<rightleftharpoons> "CONST Pair x y"
+  "_pattern x y" \<rightleftharpoons> "CONST Pair x y"
+  "_patterns x y" \<rightleftharpoons> "CONST Pair x y"
+  "_tuple x (_tuple_args y z)" \<rightleftharpoons> "_tuple x (_tuple_arg (_tuple y z))"
+  "\<lambda>(x, y, zs). b" \<rightleftharpoons> "CONST case_prod (\<lambda>x (y, zs). b)"
+  "\<lambda>(x, y). b" \<rightleftharpoons> "CONST case_prod (\<lambda>x y. b)"
+  "_abs (CONST Pair x y) t" \<rightharpoonup> "\<lambda>(x, y). t"
+  \<comment> \<open>This rule accommodates tuples in \<open>case C \<dots> (x, y) \<dots> \<Rightarrow> \<dots>\<close>:
+     The \<open>(x, y)\<close> is parsed as \<open>Pair x y\<close> because it is \<open>logic\<close>,
+     not \<open>pttrn\<close>.\<close>
+  "\<lambda>(). b" \<rightleftharpoons> "CONST case_unit b"
+  "_abs (CONST Unity) t" \<rightharpoonup> "\<lambda>(). t"
+
+*)
 
 end

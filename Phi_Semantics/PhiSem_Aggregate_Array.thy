@@ -39,10 +39,10 @@ subsection \<open>Semantics\<close>
 debt_axiomatization
         WT_arr[simp]: \<open>Well_Type (array n t) = { V_array.mk vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
   and   zero_arr[simp]: \<open>Zero (array N T)  = map_option (\<lambda>z. V_array.mk (replicate N z)) (Zero T)\<close>
-  and   idx_step_type_arr [eval_semantic_index] : \<open>i \<le> N \<Longrightarrow> idx_step_type i (array N T) = T\<close>
-  and   valid_idx_step_arr[eval_semantic_index] : \<open>valid_idx_step (array N T) i \<longleftrightarrow> i < N\<close>
-  and   idx_step_value_arr[eval_semantic_index] : \<open>idx_step_value i (V_array.mk vs) = vs!i\<close>
-  and   idx_step_mod_value_arr : \<open>idx_step_mod_value i f (V_array.mk vs) = V_array.mk (vs[i := f (vs!i)])\<close>
+  and   idx_step_type_arr [eval_semantic_index] : \<open>i \<le> N \<Longrightarrow> idx_step_type (AgIdx_N i) (array N T) = T\<close>
+  and   valid_idx_step_arr[eval_semantic_index] : \<open>valid_idx_step (array N T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
+  and   idx_step_value_arr[eval_semantic_index] : \<open>idx_step_value (AgIdx_N i) (V_array.mk vs) = vs!i\<close>
+  and   idx_step_mod_value_arr : \<open>idx_step_mod_value (AgIdx_N i) f (V_array.mk vs) = V_array.mk (vs[i := f (vs!i)])\<close>
 
 lemma list_all_replicate:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>
@@ -89,14 +89,14 @@ subsection \<open>Index to Fields of Structures\<close>
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Index_getter idx X Y f
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
-\<Longrightarrow> \<phi>Index_getter (i # idx) (Array N X) Y (\<lambda>l. f (l!i))\<close>
+\<Longrightarrow> \<phi>Index_getter (AgIdx_N i # idx) (Array N X) Y (\<lambda>l. f (l!i))\<close>
   unfolding \<phi>Index_getter_def Premise_def
   by (clarsimp simp add: \<phi>expns idx_step_value_arr list_all2_conv_all_nth)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Index_mapper idx X X Y Y' f
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
-\<Longrightarrow> \<phi>Index_mapper (i # idx) (Array N X) (Array N X) Y Y' (\<lambda>g l. l[i := f g (l!i)])\<close>
+\<Longrightarrow> \<phi>Index_mapper (AgIdx_N i # idx) (Array N X) (Array N X) Y Y' (\<lambda>g l. l[i := f g (l!i)])\<close>
   unfolding \<phi>Index_mapper_def Premise_def
   by (clarsimp simp add: \<phi>expns idx_step_mod_value_arr list_all2_conv_all_nth nth_list_update)
 

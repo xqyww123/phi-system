@@ -6,7 +6,7 @@ section \<open>Semantics\<close>
 
 debt_axiomatization
         MemObj_Size     :: \<open>TY \<Rightarrow> nat\<close>
-    and idx_step_offset :: \<open>TY \<Rightarrow> nat \<Rightarrow> nat\<close>
+    and idx_step_offset :: \<open>TY \<Rightarrow> aggregate_index \<Rightarrow> nat\<close>
   where memobj_size_step : \<open>valid_idx_step T i \<Longrightarrow> MemObj_Size (idx_step_type i T) \<le> MemObj_Size T\<close>
     and idx_step_offset_size:
           \<open>valid_idx_step T i \<Longrightarrow> idx_step_offset T i + MemObj_Size (idx_step_type i T) \<le> MemObj_Size T\<close>
@@ -16,7 +16,7 @@ debt_axiomatization
                 idx_step_offset T j < idx_step_offset T i + MemObj_Size (idx_step_type i T) \<Longrightarrow>
                 i = j\<close>
 
-primrec index_offset :: \<open>TY \<Rightarrow> nat list \<Rightarrow> nat\<close>
+primrec index_offset :: \<open>TY \<Rightarrow> aggregate_path \<Rightarrow> nat\<close>
   where \<open>index_offset T [] = 0\<close>
       | \<open>index_offset T (i#idx) = idx_step_offset T i + index_offset (idx_step_type i T) idx\<close>
 
@@ -54,8 +54,8 @@ lemma index_offset_bound_strict:
 
 section \<open>Fiction\<close>
 
-debt_axiomatization Map_of_Val :: \<open>VAL \<Rightarrow> nat list \<rightharpoonup> VAL\<close>
-                and Dom_of_TY :: \<open>TY \<Rightarrow> nat list set\<close>
+debt_axiomatization Map_of_Val :: \<open>VAL \<Rightarrow> aggregate_path \<rightharpoonup> VAL\<close>
+                and Dom_of_TY :: \<open>TY \<Rightarrow> aggregate_path set\<close>
   where Map_of_Val_inj: \<open>Va \<in> Well_Type T \<Longrightarrow> Vb \<in> Well_Type T \<Longrightarrow> Map_of_Val Va = Map_of_Val Vb \<Longrightarrow> Va = Vb\<close>
   and   Map_of_Val_dom: \<open>Va \<in> Well_Type T \<Longrightarrow> dom (Map_of_Val Va) = Dom_of_TY T\<close>
   and   Dom_of_TY_step: \<open>valid_idx_step T i \<Longrightarrow> Dom_of_TY (idx_step_type i T) \<subseteq> Dom_of_TY T\<close>
@@ -400,21 +400,21 @@ lemma fiction_Map_of_Val_ins_perm_projection:
         where S=\<open>{idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>, simplified, simplified pointwise_set_UNIV],
       simp)
 
-locale pointer_mem_resource =
+locale aggregate_mem_resource =
   partial_map_resource Res \<open>\<lambda>blk. nosep ` Well_Type (typ_of_blk blk)\<close>
   for Res :: "('blk \<Rightarrow> VAL nosep option) resource_entry"
   and typ_of_blk :: \<open>'blk \<Rightarrow> TY\<close>
 
-locale perm_pointer_mem_fiction =
+locale perm_aggregate_mem_fiction =
   pointwise_base_fiction_for_partial_mapping_resource
       Res \<open>\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (typ_of_blk blk))\<close>
       Fic \<open>\<lambda>blk. nosep ` Well_Type (typ_of_blk blk)\<close>
   for Res :: "('blk \<Rightarrow> VAL nosep option) resource_entry"
   and typ_of_blk :: \<open>'blk \<Rightarrow> TY\<close>
-  and Fic :: "('blk \<Rightarrow> nat list \<Rightarrow> VAL nosep share option) fiction_entry"
+  and Fic :: "('blk \<Rightarrow> aggregate_path \<Rightarrow> VAL nosep share option) fiction_entry"
 begin
 
-sublocale pointer_mem_resource Res typ_of_blk ..
+sublocale aggregate_mem_resource Res typ_of_blk ..
 
 lemma getter_rule:
   \<open> valid_index (typ_of_blk blk) idx
