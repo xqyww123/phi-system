@@ -264,7 +264,7 @@ paragraph \<open>Addition\<close>
 declare [[\<phi>trace_reasoning = 1]]
 
 lemma op_add_aint_\<phi>app
-  [\<phi>overload add,
+  [\<phi>overload +,
    \<phi>synthesis for _ (100)
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<int> \<rbrace> \<close>
@@ -273,7 +273,7 @@ lemma op_add_aint_\<phi>app
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
    
 lemma op_add_anat_\<phi>app
-  [\<phi>overload add,
+  [\<phi>overload +,
    \<phi>synthesis for _ (100)
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<nat> \<rbrace> \<close>
@@ -281,7 +281,7 @@ lemma op_add_anat_\<phi>app
 
 paragraph \<open>Subtraction\<close>
 
-lemma op_sub_aint_\<phi>app[\<phi>overload sub,
+lemma op_sub_aint_\<phi>app[\<phi>overload -,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<int> \<rbrace>\<close>
@@ -289,7 +289,7 @@ lemma op_sub_aint_\<phi>app[\<phi>overload sub,
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
-lemma op_sub_anat_\<phi>app[\<phi>overload sub,
+lemma op_sub_anat_\<phi>app[\<phi>overload -,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
@@ -299,7 +299,7 @@ lemma op_sub_anat_\<phi>app[\<phi>overload sub,
 paragraph \<open>Negation\<close>
 
 lemma op_neg_aint_\<phi>app
-  [\<phi>overload neg,
+  [\<phi>overload ~,
    \<phi>synthesis for _ (100)
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. - x \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_aneg rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] \<int> \<longmapsto> \<v>\<a>\<l> -x \<Ztypecolon> \<int> \<rbrace> \<close>
@@ -309,7 +309,7 @@ lemma op_neg_aint_\<phi>app
 
 paragraph \<open>Times\<close>
 
-lemma op_mul_aint[\<phi>overload mul,
+lemma op_mul_aint[\<phi>overload *,
                   \<phi>synthesis for _ (100)
                              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_amul (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<int> \<rbrace>\<close>
@@ -317,7 +317,7 @@ lemma op_mul_aint[\<phi>overload mul,
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
-lemma op_mul_anat[\<phi>overload mul,
+lemma op_mul_anat[\<phi>overload *,
                   \<phi>synthesis for _ (100)
                              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_amul (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<nat> \<rbrace>\<close>
@@ -327,7 +327,7 @@ lemma op_mul_anat[\<phi>overload mul,
 
 paragraph \<open>Division\<close>
 
-lemma op_udiv_aint_\<phi>app[\<phi>overload div,
+lemma op_udiv_aint_\<phi>app[\<phi>overload /,
                         \<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_adiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<int> \<rbrace>\<close>
@@ -335,7 +335,7 @@ lemma op_udiv_aint_\<phi>app[\<phi>overload div,
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns)
 
-lemma op_udiv_anat_\<phi>app[\<phi>overload div,
+lemma op_udiv_anat_\<phi>app[\<phi>overload /,
                         \<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_adiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<nat> \<rbrace>\<close>

@@ -32,8 +32,8 @@ abbreviation LshL (infixl "LSHL" 70) where \<open>x LSHL y \<equiv> x  *  2 ^ Bi
 \<phi>overloads nat and int
 
 
-\<phi>overloads add and sub and mul and div and mod and less and less_equal and greater and greater_equal
-  and floor and ceiling and neg
+\<phi>overloads mod and less and less_equal and greater and greater_equal
+  and floor and ceiling
 
 declare [[
     overloaded_operator_in_synthesis \<open>(+)\<close>,
@@ -49,6 +49,13 @@ declare [[
     overloaded_operator_in_synthesis \<open>drop_bit\<close>,
     overloaded_operator_in_synthesis \<open>push_bit\<close>
 ]]
+
+declare_\<phi>operator
+  infixl 65 +
+  infixl 65 -
+  prefix 80 ~
+  infixl 70 *
+  infixl 70 /
 
 definition \<open>MK_CONST x \<equiv> x\<close>
 

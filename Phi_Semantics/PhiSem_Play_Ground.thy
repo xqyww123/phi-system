@@ -55,7 +55,7 @@ proc FIB:
   is [routine]
 \<medium_left_bracket>
   if \<open>$n \<le> 1\<close> \<medium_left_bracket> 1 \<medium_right_bracket> \<medium_left_bracket>
-    FIB (\<open>$n - 1\<close>) add (FIB (\<open>$n - 2\<close>))
+    FIB (\<open>$n - 1\<close>) + FIB (\<open>$n - 2\<close>)
   \<medium_right_bracket>
 \<medium_right_bracket>.
 
@@ -66,7 +66,7 @@ proc FIB2:
 \<medium_left_bracket>
   if \<open>$n \<le> 1\<close>
   \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>
-  \<medium_left_bracket> FIB2 (\<open>$n - 1\<close>) add (FIB2 (\<open>$n - 2\<close>)) \<medium_right_bracket>
+  \<medium_left_bracket> FIB2 (\<open>$n - 1\<close>) + FIB2 (\<open>$n - 2\<close>) \<medium_right_bracket>
 \<medium_right_bracket>.
 
 thm FIB2_def
@@ -82,16 +82,9 @@ thm YYY_def
 
 proc XXXX:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
-  output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
+  output \<open>\<v>\<a>\<l> a + b * c \<Ztypecolon> \<int>\<close>
   is [routine_basic]
-  \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>.
-
-thm XXXX_def
-
-proc
-  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
-  output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
-  \<medium_left_bracket> $a add ($b) add ($c) \<medium_right_bracket>.
+  \<medium_left_bracket> $a + $b * $c \<medium_right_bracket> .
 
 proc
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<^sup>r('b)\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
@@ -105,18 +98,16 @@ proc
   premises \<open>x < 10\<close>
   output \<open>\<v>\<a>\<l> 10 \<Ztypecolon> \<nat>\<close>
   is [routine]
-  \<medium_left_bracket>  $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
-    thm \<phi>
-thm \<phi>implication
-    ;;
-    while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
-    \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket> (*guard*)
-    \<medium_left_bracket>
-      if \<open>$v = 10\<close> \<medium_left_bracket> break \<medium_right_bracket> \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v;; continue \<medium_right_bracket>
-      assert \<bottom>
-    \<medium_right_bracket> (*loop body*)
-    $v
-  \<medium_right_bracket>.
+\<medium_left_bracket>
+  $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
+  while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
+  \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket> (*guard*)
+  \<medium_left_bracket>
+    if \<open>$v = 10\<close> \<medium_left_bracket> break \<medium_right_bracket> \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v;; continue \<medium_right_bracket>
+    assert \<bottom>
+  \<medium_right_bracket> (*loop body*)
+  $v
+\<medium_right_bracket>.
   
 proc
   input \<open>\<v>\<a>\<l> b \<Ztypecolon> \<bool>\<close>

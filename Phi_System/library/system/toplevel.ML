@@ -458,7 +458,7 @@ fun prove_prem int after_qed'' stat =
       in
         stat |> Proof.map_context_result
                   (fn ctxt =>
-                   Phi_Processor.process_no_input 1 (ctxt,sequent)
+                   Phi_Processor.process_no_input (SOME 1) (ctxt,sequent)
                   |> swap
                   |> apsnd (Config.put Phi_Reasoner.auto_level original_auto_level
                          #> Config.put previous_statement_is_finished' false))

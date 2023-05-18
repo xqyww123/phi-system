@@ -37,8 +37,8 @@ signature PHI_PROCESSOR = sig
                        -> (Proof.state -> Proof.state) (*continue*)
                        -> (Proof.state -> Proof.state) parser
                       (*if the input is empty, then powerful_process_p_inert does nothing*)
-  val process_by_input : int (*auto-level*) -> Token.T list -> context_state -> context_state
-  val process_no_input : int (*auto-level*) -> context_state -> context_state
+  val process_by_input : int (*auto-level*) option -> Token.T list -> context_state -> context_state
+  val process_no_input : int (*auto-level*) option -> context_state -> context_state
   val process_attr : attribute parser
 
   (* be activated only when auto level >= 1 *)
@@ -248,7 +248,8 @@ fun powerful_process_p (lev1,lev2) continue toks =
 
 val process_attr = wrap_attr (fn stat => simple_process stat #> apfst K)
 fun process_by_input lev tokens stat =
-      let val stat' = apfst (Config.put Phi_Reasoner.auto_level lev) stat
+      let val stat' = case lev of SOME lv => apfst (Config.put Phi_Reasoner.auto_level lv) stat
+                                | NONE => stat
        in simple_process stat' (tokens @ [Token.eof]) |> #1 end
 fun process_no_input lev = process_by_input lev []
 

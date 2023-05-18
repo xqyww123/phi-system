@@ -163,7 +163,7 @@ subsubsection \<open>Integer Arithmetic\<close>
 paragraph \<open>Addition\<close>
 
 lemma op_add_areal_\<phi>app
-  [\<phi>overload add,
+  [\<phi>overload +,
    \<phi>synthesis for _ (100)
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_add_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<real> \<rbrace> \<close>
@@ -174,7 +174,7 @@ lemma op_add_areal_\<phi>app
 paragraph \<open>Subtraction\<close>
 
 lemma op_sub_areal_\<phi>app
-  [\<phi>overload sub,
+  [\<phi>overload -,
    \<phi>synthesis for _ (100)
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_sub_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<real> \<rbrace>\<close>
@@ -185,7 +185,7 @@ lemma op_sub_areal_\<phi>app
 paragraph \<open>Negation\<close>
 
 lemma op_neg_areal_\<phi>app
-  [\<phi>overload neg,
+  [\<phi>overload ~,
    \<phi>synthesis for _ (100)
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. - x \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_neg_ar rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] \<real> \<longmapsto> \<v>\<a>\<l> -x \<Ztypecolon> \<real> \<rbrace> \<close>
@@ -195,7 +195,7 @@ lemma op_neg_areal_\<phi>app
 
 paragraph \<open>Times\<close>
 
-lemma op_mul_areal[\<phi>overload mul,
+lemma op_mul_areal[\<phi>overload *,
                   \<phi>synthesis for _ (100)
                              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_mul_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<real> \<rbrace>\<close>
@@ -206,7 +206,7 @@ lemma op_mul_areal[\<phi>overload mul,
 
 paragraph \<open>Division\<close>
 
-lemma op_div_areal_\<phi>app[\<phi>overload div,
+lemma op_div_areal_\<phi>app[\<phi>overload /,
                         \<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_div_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<real> \<rbrace>\<close>

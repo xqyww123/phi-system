@@ -556,7 +556,7 @@ lemma op_add_word_\<phi>app[\<phi>synthesis for _ (100)
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns unat_word_ariths)
 
-lemma op_add_nat_\<phi>app[\<phi>overload add,
+lemma op_add_nat_\<phi>app[\<phi>overload +,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x + y < 2 ^ LENGTH('b)
@@ -564,14 +564,14 @@ lemma op_add_nat_\<phi>app[\<phi>overload add,
   \<medium_left_bracket> op_add_word[where 'b='b] \<medium_right_bracket>
       certified using \<phi> by (metis of_nat_add of_nat_inverse) .
 
-lemma op_add_natR_\<phi>app[\<phi>overload add,
+lemma op_add_natR_\<phi>app[\<phi>overload +,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>\<^sup>r('b) \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
   \<medium_left_bracket> op_add_word[where 'b='b] \<medium_right_bracket>
       certified by (metis of_nat_add unat_of_nat) .
 
-lemma op_add_int_\<phi>app[\<phi>overload add,
+lemma op_add_int_\<phi>app[\<phi>overload +,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
@@ -579,7 +579,7 @@ lemma op_add_int_\<phi>app[\<phi>overload add,
   \<medium_left_bracket> op_add_word[where 'b='b] \<medium_right_bracket>
       certified using sint_of_int_eq that(1) by fastforce .
  
-declare op_add_word_\<phi>app[\<phi>overload add]
+declare op_add_word_\<phi>app[\<phi>overload +]
 
 
 subsubsection \<open>Subtraction\<close>
@@ -592,7 +592,7 @@ lemma op_sub_word_\<phi>app[\<phi>synthesis for _ (100)
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
   by (metis (no_types, opaque_lifting) Nat.add_diff_assoc2 add.commute add_0 mod_add_self2 unat_of_nat unat_sub_if' unsigned_0 word_arith_nat_add)
 
-lemma op_sub_nat_\<phi>app[\<phi>overload sub,
+lemma op_sub_nat_\<phi>app[\<phi>overload -,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
@@ -600,7 +600,7 @@ lemma op_sub_nat_\<phi>app[\<phi>overload sub,
   \<medium_left_bracket> op_sub_word[where 'b='b] \<medium_right_bracket>
       certified by (metis diff_le_self le_unat_uoi of_nat_diff the_\<phi>(3) the_\<phi>lemmata(2) unat_of_nat_eq) .
 
-lemma op_sub_natR_\<phi>app[\<phi>overload sub,
+lemma op_sub_natR_\<phi>app[\<phi>overload -,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
@@ -608,7 +608,7 @@ lemma op_sub_natR_\<phi>app[\<phi>overload sub,
   \<medium_left_bracket> op_sub_word[where 'b='b] \<medium_right_bracket>
       certified by (metis of_nat_diff the_\<phi>(1) unat_of_nat) .
 
-lemma op_sub_int_\<phi>app[\<phi>overload sub,
+lemma op_sub_int_\<phi>app[\<phi>overload -,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x - y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
@@ -616,7 +616,7 @@ lemma op_sub_int_\<phi>app[\<phi>overload sub,
   \<medium_left_bracket> op_sub_word[where 'b='b] \<medium_right_bracket>
       certified using sint_of_int_eq the_\<phi>(5) by fastforce .
 
-declare op_sub_word_\<phi>app[\<phi>overload sub]
+declare op_sub_word_\<phi>app[\<phi>overload -]
 
 
 subsubsection \<open>Multiplication\<close>
@@ -630,7 +630,7 @@ lemma op_mul_word_\<phi>app[\<phi>synthesis for _ (100)
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns unat_word_ariths(2))
 
-lemma op_mul_nat_\<phi>app[\<phi>overload mul,
+lemma op_mul_nat_\<phi>app[\<phi>overload *,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x * y < 2^LENGTH('b)
@@ -639,7 +639,7 @@ lemma op_mul_nat_\<phi>app[\<phi>overload mul,
   \<medium_left_bracket> op_mul_word[where 'b='b] \<medium_right_bracket>
       certified using the_\<phi>(3) unat_of_nat_eq by fastforce .
 
-lemma op_mul_natR_\<phi>app[\<phi>overload mul,
+lemma op_mul_natR_\<phi>app[\<phi>overload *,
                        \<phi>synthesis for _ (100)
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
@@ -647,7 +647,7 @@ lemma op_mul_natR_\<phi>app[\<phi>overload mul,
   \<medium_left_bracket> op_mul_word[where 'b='b] \<medium_right_bracket>
       certified by (metis of_nat_mult unat_of_nat) .
 
-lemma op_mul_int_\<phi>app[\<phi>overload mul,
+lemma op_mul_int_\<phi>app[\<phi>overload *,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x * y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
@@ -656,7 +656,7 @@ lemma op_mul_int_\<phi>app[\<phi>overload mul,
   \<medium_left_bracket> op_mul_word[where 'b='b] \<medium_right_bracket>
       certified by (metis atLeastLessThan_iff of_int_mult sint_of_int_eq the_\<phi>(5)) .
 
-declare op_mul_word_\<phi>app[\<phi>overload mul]
+declare op_mul_word_\<phi>app[\<phi>overload *]
 
 
 subsubsection \<open>Division\<close>
@@ -669,7 +669,7 @@ lemma op_udiv_word_\<phi>app[\<phi>synthesis for _ (100)
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
       rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
 
-lemma op_div_nat_\<phi>app[\<phi>overload div,
+lemma op_div_nat_\<phi>app[\<phi>overload /,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
@@ -678,7 +678,7 @@ lemma op_div_nat_\<phi>app[\<phi>overload div,
     certified using More_Word.of_nat_0 the_\<phi>(2) the_\<phi>(3) by blast
   \<medium_right_bracket> certified by (simp add: the_\<phi>lemmata(1) the_\<phi>lemmata(2) of_nat_inverse unat_div) .
 
-declare op_udiv_word_\<phi>app[\<phi>overload div]
+declare op_udiv_word_\<phi>app[\<phi>overload /]
 
 
 lemma op_sdiv_word_\<phi>app[\<phi>synthesis for _ (100)

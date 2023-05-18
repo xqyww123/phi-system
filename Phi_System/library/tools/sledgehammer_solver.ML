@@ -116,7 +116,7 @@ exception Auto_Fail of fail_reason
 
 fun eval_prf_str timeout "" (ctxt,sequent) =
      (Timeout.apply timeout (Timing.timing Phi_Reasoners.auto_obligation_solver1)
-                                  (ctxt,sequent) |> apfst (fn {cpu=time,...} => (time,""))
+                                  (ctxt,sequent) |> apfst (fn {elapsed=time,...} => (time,""))
               handle Phi_Reasoners.Automation_Fail _ => raise Auto_Fail Application_Fails
                   |  Timeout.TIMEOUT _               => raise Auto_Fail Timeout
                   |  err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
@@ -130,7 +130,7 @@ fun eval_prf_str timeout "" (ctxt,sequent) =
                 |> Method.check_text ctxt
               ) ctxt
         in case Timeout.apply timeout (Timing.timing Seq.pull) (meth [] (ctxt, sequent))
-             of ({cpu=time,...}, SOME (Seq.Result ret, _)) => ((time,prf), ret)
+             of ({elapsed=time,...}, SOME (Seq.Result ret, _)) => ((time,prf), ret)
               | _ => raise Auto_Fail Application_Fails
       end handle Timeout.TIMEOUT _ => raise Auto_Fail Timeout
                | err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
@@ -365,7 +365,7 @@ fun auto' id (ctxt,sequent') =
     fun find_proof () =
      (case Timeout.apply (Time.fromSeconds 3) (Timing.timing Seq.pull)
                             (Phi_Reasoners.auto_obligation_solver ctxt sequent)
-        of ({cpu=time,...}, SOME (sequent', _)) =>
+        of ({elapsed=time,...}, SOME (sequent', _)) =>
             ((time,""), (ctxt, sequent'))
          | _ => (
             tracing "Proof search by default tactic fails. Invoking sledgehammer...";

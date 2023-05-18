@@ -14,7 +14,7 @@ theory IDE_CP_Core
   and ";;" :: prf_goal % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"
   and "\<phi>processor" :: thy_decl % "ML"
-  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" :: thy_decl
+  and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>operator" :: thy_decl
 abbrevs
   "!!" = "!!"
   and "<argument>" = "\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t"
@@ -414,8 +414,8 @@ subsection \<open>Ad-hoc Overload\<close>
 
 ML_file \<open>library/system/app_rules.ML\<close>
 
-attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_position) >> (fn names =>
-  Thm.declaration_attribute (fn th => fold (Phi_App_Rules.overload th) names))\<close>
+attribute_setup \<phi>overload = \<open>Scan.lift (Parse.and_list1 Phi_App_Rules.name_and_symbol_position) >>
+  (fn names => Thm.declaration_attribute (fn th => fold (Phi_App_Rules.overload th) names))\<close>
 
 \<phi>overloads D \<open>Destructive subtyping rules\<close>
 \<phi>overloads cast \<open>Transform the content of a container\<close>
@@ -1681,14 +1681,35 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 
 \<phi>processor delayed_apply 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn (ctxt,sequent) =>
-  (Phi_App_Rules.parser --| \<^keyword>\<open>(\<close>) >> (fn xnames => fn _ =>
-    if Phi_Delay_Application.synt_can_delay_apply' (Context.Proof ctxt) (fst xnames)
-    then (Phi_Delay_Application.delay_app (Phi_Delay_Application.Apply (
-              Phi_App_Rules.app_rules ctxt [xnames])) ctxt, sequent)
-    else raise Bypass NONE)\<close>
+  (Phi_App_Rules.parser --| \<^keyword>\<open>(\<close>) >> (fn xname => fn _ =>
+    let fun name_pos_of (Facts.Named (name_pos, _)) = name_pos
+          | name_pos_of _ = ("", Position.none)
+    in
+      if Phi_Delay_Application.synt_can_delay_apply' (Context.Proof ctxt) (fst xname)
+      then (Phi_Delay_Application.delay_app
+              (Phi_Delay_Application.Apply (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname])) ctxt,
+            sequent)
+      else raise Bypass NONE
+    end)\<close>
+
+\<phi>processor apply_operator 8990 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn (ctxt,sequent) =>
+  (Phi_App_Rules.symbol_position >> (fn (xname,pos) => fn _ =>
+    case Phi_Delay_Application.lookup_operator (Proof_Context.theory_of ctxt) xname
+      of NONE => raise Bypass NONE
+       | SOME opr =>
+          let val rules = Phi_App_Rules.app_rules ctxt [(Facts.Named ((xname,pos), NONE), [])]
+           in Phi_Delay_Application.push_operator (opr, (xname,pos), rules)
+                                                  (ctxt, sequent)
+          end
+  ))\<close>
+
+\<phi>processor open_parenthesis 8995 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn (ctxt,sequent) =>
+  (\<^keyword>\<open>(\<close>) >> (fn _ => fn _ => (Phi_Delay_Application.open_parenthesis ctxt, sequent))\<close>
 
 \<phi>processor apply_delayed 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
-\<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Delay_Application.invoke_delayed_one s)\<close>
+\<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Delay_Application.close_parenthesis I s)\<close>
 
 \<phi>processor comma 8999 (\<open>?P\<close>) \<open> fn s => 
   \<^keyword>\<open>,\<close> >> (fn _ => fn _ => Phi_Delay_Application.comma s)\<close>
@@ -1754,7 +1775,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
     end)
 \<close>
 
-\<phi>processor assign_var 5000 (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
+\<phi>processor assignment 5000 (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
   fn (ctxt,sequent) => (\<^keyword>\<open>\<rightarrow>\<close> |--
           Parse.list1 (Scan.option \<^keyword>\<open>$\<close> |-- Scan.option Parse.keyword
                        --| Scan.option \<^keyword>\<open>$\<close> -- Parse.binding))
@@ -1763,7 +1784,9 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
     val (vars', _ ) =
           fold_map (fn (NONE,b)    => (fn k' => ((k',b),k'))
                      | (SOME k, b) => (fn _  => ((SOME k, b), SOME k))) vars NONE
-  in Generic_Variable_Access.assignment_cmd vars' (ctxt,sequent)
+  in (ctxt,sequent)
+  |> Phi_Delay_Application.end_expression
+  |> Generic_Variable_Access.assignment_cmd vars'
   end
 )\<close>
 
