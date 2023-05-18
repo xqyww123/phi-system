@@ -184,6 +184,16 @@ lemma \<F>_functional_condition_Map_of_Val_ins_dom:
   unfolding \<F>_functional_condition_def Map_of_Val_ins_dom_def
   by (clarsimp; case_tac r; case_tac x; simp)
 
+(*
+interpretation Map_of_Val_ins_UNIV: cancl_sep_insertion_monoid \<open>Map_of_Val_ins\<close> UNIV
+  apply (standard; clarsimp simp add: Map_of_Val_ins_def split_nosep_meta_all
+                                      Map_of_Val_ins_dom_def
+                            split: option.split)
+  apply (auto simp add: fun_eq_iff split_option_ex times_fun 
+                                  sep_disj_fun_def split_nosep_meta_all
+                        split: option.split)[1]
+  using Mapof_not_1 apply fastforce *)
+  
 
 interpretation Map_of_Val_ins: cancl_sep_insertion_monoid \<open>Map_of_Val_ins\<close> \<open>Map_of_Val_ins_dom TY\<close>
   apply (standard; clarsimp simp add: Map_of_Val_ins_def split_nosep_meta_all

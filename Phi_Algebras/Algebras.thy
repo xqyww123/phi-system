@@ -1884,62 +1884,86 @@ lemma pointwise_set_UNIV:
   \<open>pointwise_set UNIV = UNIV\<close>
   unfolding pointwise_set_def by simp
 
+lemma sep_insertion_monoid_pointwise[locale_intro]:
+  assumes D':   \<open>D' = pointwise_set D\<close>
+      and prem: \<open>sep_insertion_monoid \<psi> D\<close>
+  shows \<open>sep_insertion_monoid ((\<circ>) \<psi>) D'\<close>
+  unfolding comp_def
+proof
+  interpret xx: sep_insertion_monoid \<psi> D using prem .
+  fix x y a b c :: \<open>'a \<Rightarrow> 'b\<close>
+  fix a' :: \<open>'a \<Rightarrow> 'c\<close>
+  show \<open>x ## y \<Longrightarrow> (\<lambda>xa. \<psi> ((x * y) xa)) = (\<lambda>xa. \<psi> (x xa)) * (\<lambda>x. \<psi> (y x))\<close>
+    by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.homo_mult)
+  show \<open>a ## b \<longrightarrow> (\<lambda>x. \<psi> (a x)) ## (\<lambda>x. \<psi> (b x))\<close>
+    by (simp add: fun_eq_iff times_fun sep_disj_fun_def D' pointwise_set_def)
+  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
+     (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b \<and> a \<in> D')\<close>
+    by (auto simp add: D' fun_eq_iff times_fun sep_disj_fun_def xx.sep_insertion pointwise_set_def; metis)
+  show \<open>1 \<in> D'\<close>
+    by (simp add: D' pointwise_set_def xx.one_in_D)
+qed
+
 lemma perm_ins_homo_pointwise[locale_intro]:
   assumes D':   \<open>D' = pointwise_set D\<close>
       and prem: \<open>perm_ins_homo \<psi> D\<close>
-  shows \<open>perm_ins_homo ((\<circ>) \<psi>) D'\<close>
-  unfolding comp_def
-proof
+    shows \<open>perm_ins_homo ((\<circ>) \<psi>) D'\<close>
+proof (rule perm_ins_homo.intro, rule sep_insertion_monoid_pointwise,
+       rule D', rule perm_ins_homo.axioms(1)[OF prem], standard)
   interpret xx: perm_ins_homo \<psi> D using prem .
 
   fix x y z a b c :: \<open>'a \<Rightarrow> 'b\<close>
   fix a' :: \<open>'a \<Rightarrow> 'c\<close>
   fix n :: rat
-  show \<open>a ## b \<longrightarrow> (\<lambda>x. \<psi> (a x)) ## (\<lambda>x. \<psi> (b x))\<close>
-    by (simp add: fun_eq_iff times_fun sep_disj_fun_def D' pointwise_set_def)
-  show \<open>x ## y \<Longrightarrow> (\<lambda>xa. \<psi> ((x * y) xa)) = (\<lambda>xa. \<psi> (x xa)) * (\<lambda>x. \<psi> (y x))\<close>
-    by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.homo_mult)
-  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
-     (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b \<and> a \<in> D')\<close>
-    by (auto simp add: D' fun_eq_iff times_fun sep_disj_fun_def xx.sep_insertion pointwise_set_def; metis)
 
-  (*show \<open>inj (\<lambda>g x. \<psi> (g x))\<close>
-    by (rule, simp add: fun_eq_iff inj_eq) *)
-  (* show \<open>\<forall>x. ((\<lambda>xa. \<psi> (x xa)) = 1) = (x = 1)\<close>
-    by (simp add: one_fun_def fun_eq_iff) *)
-  show \<open>x \<in> D' \<Longrightarrow> (\<lambda>xa. \<psi> (x xa)) ## (\<lambda>xa. \<psi> (x xa))\<close>
+  show \<open>x \<in> D' \<Longrightarrow> (\<psi> \<circ> x) ## (\<psi> \<circ> x)\<close>
     by (simp add: D' sep_disj_fun_def xx.\<psi>_self_disj pointwise_set_def)
-  show \<open>1 \<in> D'\<close>
-    by (simp add: D' pointwise_set_def xx.one_in_D)
-
-  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
-       0 < n \<and> n \<le> 1 \<Longrightarrow> (a' * n :\<Znrres> (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x)))
-                        = (\<exists>a''. a' = (\<lambda>x. \<psi> (a'' x)) * (1 - n) :\<Znrres> (\<lambda>x. \<psi> (b x)) \<and> a'' * b = c \<and> a'' ## b \<and> a'' \<in> D')\<close>
+  
+  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<psi> \<circ> b) \<Longrightarrow>
+       0 < n \<and> n \<le> 1 \<Longrightarrow> (a' * n :\<Znrres> (\<psi> \<circ> b) = (\<psi> \<circ> c))
+                        = (\<exists>a''. a' = (\<psi> \<circ> a'') * (1 - n) :\<Znrres> (\<psi> \<circ> b) \<and> a'' * b = c \<and> a'' ## b \<and> a'' \<in> D')\<close>
     by (auto simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def xx.share_sep_wand
             share_fun_def pointwise_set_def D'; metis)
 qed
 
-lemma perm_ins_homo_pointwise_eq:
-  \<open>perm_ins_homo ((\<circ>) \<psi>) (pointwise_set D) \<longleftrightarrow> perm_ins_homo \<psi> D\<close>
-  for \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
+lemma sep_insertion_monoid_pointwise_eq:
+  \<open>sep_insertion_monoid ((\<circ>) \<psi>) (pointwise_set D) \<longleftrightarrow> sep_insertion_monoid \<psi> D\<close>
+  for \<psi> :: \<open>'b::sep_monoid \<Rightarrow> 'c::sep_monoid\<close>
 proof
-  fix \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
-  assume prem: \<open>perm_ins_homo ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c) (pointwise_set D)\<close>
-  show \<open>perm_ins_homo \<psi> D\<close>
+  assume prem: \<open>sep_insertion_monoid ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c) (pointwise_set D)\<close>
+  show \<open>sep_insertion_monoid \<psi> D\<close>
   proof
-    interpret xx: perm_ins_homo \<open>((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close> \<open>(pointwise_set D)\<close> using prem .
-    fix x y a b c :: \<open>'b\<close> and a2 :: 'c and n :: rat
+    interpret xx: sep_insertion_monoid \<open>(\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c\<close> \<open>(pointwise_set D)\<close> using prem .
+    fix x y a b c :: \<open>'b\<close> and a2 :: 'c
     show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close>
       using xx.homo_mult[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
       by meson
     show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
       using xx.sep_disj_homo_semi[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
       by meson
+    show \<open>1 \<in> D\<close>
+      using xx.one_in_D by (auto simp add: pointwise_set_def)
     show \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow>
             (a2 * \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
       using xx.sep_insertion[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff,
           where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>, simplified pointwise_set_def, simplified]
       by auto
+  qed
+next
+  show \<open>sep_insertion_monoid \<psi> D \<Longrightarrow> sep_insertion_monoid ((\<circ>) \<psi>) (pointwise_set D)\<close>
+    using sep_insertion_monoid_pointwise by blast 
+qed
+
+lemma perm_ins_homo_pointwise_eq:
+  \<open>perm_ins_homo ((\<circ>) \<psi>) (pointwise_set D) \<longleftrightarrow> perm_ins_homo \<psi> D\<close>
+  for \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_module_sep\<close>
+proof
+  assume prem: \<open>perm_ins_homo ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c) (pointwise_set D)\<close>
+  show \<open>perm_ins_homo \<psi> D\<close>
+  proof (rule perm_ins_homo.intro[OF perm_ins_homo.axioms(1)[OF prem, unfolded sep_insertion_monoid_pointwise_eq]],
+         standard)
+    interpret xx: perm_ins_homo \<open>((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close> \<open>(pointwise_set D)\<close> using prem .
+    fix x y a b c :: \<open>'b\<close> and a2 :: 'c and n :: rat
 
     show \<open>x \<in> D \<Longrightarrow> \<psi> x ## \<psi> x\<close>
       using xx.\<psi>_self_disj[of \<open>\<lambda>_. x\<close>, simplified pointwise_set_def, simplified]
@@ -1949,9 +1973,6 @@ proof
             (a2 * n :\<Znrres> \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' * (1 - n) :\<Znrres> \<psi> b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
       by (insert xx.share_sep_wand[where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>];
           clarsimp simp add: sep_disj_fun_def share_fun_def fun_eq_iff times_fun pointwise_set_def; rule; auto)
-
-    show \<open>1 \<in> D\<close>
-      using xx.one_in_D by (auto simp add: pointwise_set_def)
   qed
 next
   show \<open>perm_ins_homo \<psi> D \<Longrightarrow> perm_ins_homo ((\<circ>) \<psi>) (pointwise_set D)\<close>

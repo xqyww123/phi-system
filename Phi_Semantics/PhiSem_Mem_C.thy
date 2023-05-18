@@ -1,5 +1,6 @@
 theory PhiSem_Mem_C
   imports PhiSem_Mem_Pointer
+  abbrevs "<mem>" = "\<m>\<e>\<m>"
 begin
 
 section \<open>Semantics\<close>
@@ -21,11 +22,9 @@ lemma Valid_Mem_1[simp]: \<open>1 \<in> Valid_Mem\<close>
 subsection \<open>Fiction\<close>
 
 fiction_space aggregate_mem =
-  aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (segidx.layout blk)))\<close>
-     (perm_aggregate_mem_fiction RES.aggregate_mem segidx.layout)
+  aggregate_mem :: \<open>RES.aggregate_mem.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>blk. \<F>_functional ((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom (memblk.layout blk)))\<close>
+     (perm_aggregate_mem_fiction RES.aggregate_mem memblk.layout)
   by (standard, of_tac \<open>\<lambda>_. UNIV\<close>; simp add: pointwise_set_UNIV)
-
-thm FIC.aggregate_mem.getter_rule
 
 (*
 
@@ -114,7 +113,7 @@ lemma SlicePtr_semty[\<phi>reason on \<open>\<phi>SemType (?x \<Ztypecolon> Slic
 subsection \<open>Memory Object\<close>
 
 abbreviation Mem :: \<open>logaddr \<Rightarrow> (aggregate_path \<Rightarrow> VAL nosep share option,'a) \<phi> \<Rightarrow> (fiction, 'a) \<phi>\<close> ("\<m>\<e>\<m>[_]")
-  where \<open>Mem addr T \<equiv> FIC.aggregate_mem.\<phi> (memaddr.segment addr \<^bold>\<rightarrow> memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
+  where \<open>Mem addr T \<equiv> FIC.aggregate_mem.\<phi> (memaddr.blk addr \<^bold>\<rightarrow> memaddr.index addr \<^bold>\<rightarrow>\<^sub>@ T)\<close>
 
 (*
 definition Ref :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 'FIC, 'TY logaddr \<Zinj> 'a share) \<phi>\<close>
@@ -141,6 +140,48 @@ definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 
     else {} | _ \<Rightarrow> {})\<close> *)
 
 section \<open>Instructions & Their Specifications\<close>
+
+lemma
+  \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Identity)
+    = (v \<Ztypecolon> \<m>\<e>\<m>[addr] ([] \<^bold>\<rightarrow> to_share.\<phi> (\<black_circle> Nosep Identity)))\<close>
+  unfolding set_eq_iff
+  apply (clarsimp simp add: \<phi>expns to_share.perm_ins_homo_axioms)
+
+thm to_share.perm_ins_homo_axioms
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+term Map_of_Val_ins.\<phi>
+thm Map_of_Val_ins.\<phi>insertion
+
+proc op_load_mem:
+  input  \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<coercion> T)\<heavy_comma> addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
+  output \<open>x \<Ztypecolon> \<m>\<e>\<m>[addr] (\<coercion> T)\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+\<medium_left_bracket>
+  to Identity \<exists>v
+thm \<phi>
+  thm FIC.aggregate_mem.getter_rule
+
+
+
+
+
+
+
+
 
 
 

@@ -510,7 +510,6 @@ lemma Ptr_semty[\<phi>reason 1000]:
 
 section \<open>Semantic Operations\<close>
 
-
 proc op_get_element_pointer_symbol:
   requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(LOGIC_SYMBOL(symbol))\<close>
        and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(LOGIC_SYMBOL(symbol)) TY\<close>

@@ -977,10 +977,10 @@ lemma \<phi>MapAt_L_transformation_functor:
 \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k') (\<lambda>x. x) (\<lambda>x. x)\<close>
   unfolding Transformation_Functor_def Premise_def
   by (simp add: \<phi>MapAt_L_cast)
-(*
+
 interpretation \<phi>MapAt_L: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k = k'\<close>
   by (standard, rule \<phi>MapAt_L_transformation_functor)
-*)
+
 lemma \<phi>MapAt_L_separation_functor[\<phi>reason 1100]:
   \<open>Separation_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k) T U\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1,'b) \<phi>\<close>
@@ -1169,119 +1169,119 @@ definition \<phi>Sep_Disj_Identical :: \<open>('a::share_semimodule_sep, 'b) \<p
       \<and> (\<forall>x u. u \<in> (x \<Ztypecolon> T) \<longrightarrow> u ## u)\<close>
 
 
-subsubsection \<open>Permission Functor\<close>
+subsubsection \<open>Insertion Functor\<close>
 
-definition \<phi>perm_ins_homo :: \<open>('a::sep_algebra \<Rightarrow> 'b::share_module_sep) \<Rightarrow> 'a set \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
-  where \<open>\<phi>perm_ins_homo \<psi> D T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> perm_ins_homo \<psi> D})\<close>
+definition \<phi>insertion :: \<open>('a::sep_monoid \<Rightarrow> 'b::sep_monoid) \<Rightarrow> 'a set \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
+  where \<open>\<phi>insertion \<psi> D T = (\<lambda>x. { \<psi> v |v. v \<in> (x \<Ztypecolon> T) \<and> sep_insertion_monoid \<psi> D})\<close>
 
-abbreviation (in perm_ins_homo) \<open>\<phi> \<equiv> \<phi>perm_ins_homo \<psi> D\<close>
+abbreviation (in sep_insertion_monoid) \<open>\<phi> \<equiv> \<phi>insertion \<psi> D\<close>
 
-lemma \<phi>perm_ins_homo_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T)
-    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> perm_ins_homo \<psi> D)\<close>
-  unfolding \<phi>perm_ins_homo_def \<phi>Type_def by (simp add: \<phi>expns)
+lemma \<phi>insertion_expns[\<phi>expns]:
+  \<open>p \<in> (x \<Ztypecolon> \<phi>insertion \<psi> D T)
+    \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T) \<and> sep_insertion_monoid \<psi> D)\<close>
+  unfolding \<phi>insertion_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma (in perm_ins_homo) [\<phi>expns]:
+lemma (in sep_insertion_monoid) [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>perm_ins_homo_def \<phi>Type_def by (simp add: \<phi>expns perm_ins_homo_axioms)
+  unfolding \<phi>insertion_def \<phi>Type_def by (simp add: \<phi>expns sep_insertion_monoid_axioms)
 
-lemma \<phi>perm_ins_homo_inhabited[\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma \<phi>insertion_inhabited[\<phi>inhabitance_rule, elim!]:
+  \<open>Inhabited (x \<Ztypecolon> \<phi>insertion \<psi> D T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 paragraph \<open>Implication\<close>
 
-lemma \<phi>perm_ins_homo_cast[\<phi>reason 2000]:
+lemma \<phi>insertion_cast[\<phi>reason 2000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U \<a>\<n>\<d> P\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi>insertion \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>insertion \<psi> D U \<a>\<n>\<d> P\<close>
   unfolding Imply_def by (clarsimp simp add: \<phi>expns; blast)
 
 paragraph \<open>Action\<close>
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action \<A>_structural Act
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U \<a>\<n>\<d> P @action \<A>_structural Act\<close>
-  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>insertion \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>insertion \<psi> D U \<a>\<n>\<d> P @action \<A>_structural Act\<close>
+  unfolding Action_Tag_def using \<phi>insertion_cast .
 
 lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U \<a>\<n>\<d> P @action to Z \<close>
-  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>insertion \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>insertion \<psi> D U \<a>\<n>\<d> P @action to Z \<close>
+  unfolding Action_Tag_def using \<phi>insertion_cast .
 
 lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U \<a>\<n>\<d> P @action to (\<phi>perm_ins_homo \<psi> D Z) \<close>
-  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>insertion \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>insertion \<psi> D U \<a>\<n>\<d> P @action to (\<phi>insertion \<psi> D Z) \<close>
+  unfolding Action_Tag_def using \<phi>insertion_cast .
 
 lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as Z
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U \<a>\<n>\<d> P @action as Z \<close>
-  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>insertion \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>insertion \<psi> D U \<a>\<n>\<d> P @action as Z \<close>
+  unfolding Action_Tag_def using \<phi>insertion_cast .
 
 lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> x \<Ztypecolon> \<phi>perm_ins_homo \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>perm_ins_homo \<psi> D U \<a>\<n>\<d> P @action as (z \<Ztypecolon> \<phi>perm_ins_homo \<psi> D Z) \<close>
-  unfolding Action_Tag_def using \<phi>perm_ins_homo_cast .
+\<Longrightarrow> x \<Ztypecolon> \<phi>insertion \<psi> D T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi>insertion \<psi> D U \<a>\<n>\<d> P @action as (z \<Ztypecolon> \<phi>insertion \<psi> D Z) \<close>
+  unfolding Action_Tag_def using \<phi>insertion_cast .
 
 
 
 paragraph \<open>Simplification\<close>
 
 lemma [simp]:
-  \<open>(\<phi>perm_ins_homo \<psi> D (ExTyp T)) = (\<exists>\<phi> c. \<phi>perm_ins_homo \<psi> D (T c))\<close>
+  \<open>(\<phi>insertion \<psi> D (ExTyp T)) = (\<exists>\<phi> c. \<phi>insertion \<psi> D (T c))\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 lemma [simp]:
-  \<open>(\<phi>perm_ins_homo \<psi> D (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<phi>perm_ins_homo \<psi> D T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  \<open>(\<phi>insertion \<psi> D (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<phi>insertion \<psi> D T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 (*
-lemma \<phi>perm_ins_homo_simp_cong[folded atomize_eq]:
+lemma \<phi>insertion_simp_cong[folded atomize_eq]:
   \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
-\<Longrightarrow> (x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T) = (x' \<Ztypecolon> \<phi>perm_ins_homo \<psi> T')\<close>
+\<Longrightarrow> (x \<Ztypecolon> \<phi>insertion \<psi> T) = (x' \<Ztypecolon> \<phi>insertion \<psi> T')\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
-simproc_setup \<phi>perm_ins_homo_simp_cong ("x \<Ztypecolon> \<phi>perm_ins_homo \<psi> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>perm_ins_homo_simp_cong} ctxt)
+simproc_setup \<phi>insertion_simp_cong ("x \<Ztypecolon> \<phi>insertion \<psi> T") = \<open>
+  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>insertion_simp_cong} ctxt)
 \<close>
 *)
 
 
-lemma \<phi>perm_ins_homo_\<phi>None:
-  assumes prem: \<open>perm_ins_homo \<psi> D\<close>
-  shows \<open>\<phi>perm_ins_homo \<psi> D \<circle> = \<circle>\<close>
+lemma \<phi>insertion_\<phi>None:
+  assumes prem: \<open>sep_insertion_monoid \<psi> D\<close>
+  shows \<open>\<phi>insertion \<psi> D \<circle> = \<circle>\<close>
 proof -
-  interpret perm_ins_homo \<psi> using prem .
+  interpret sep_insertion_monoid \<psi> using prem .
   show \<open>\<phi> \<circle> = \<circle>\<close>
-    by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns perm_ins_homo_axioms)
+    by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns sep_insertion_monoid_axioms)
 qed
 
-(* lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>perm_ins_homo ?\<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X \<a>\<n>\<d> ?P @action (?Act::?'a::simplification action)\<close>]:
-  \<open>x \<Ztypecolon> \<phi>perm_ins_homo \<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<circle> @action Act\<close>
+(* lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>insertion ?\<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X \<a>\<n>\<d> ?P @action (?Act::?'a::simplification action)\<close>]:
+  \<open>x \<Ztypecolon> \<phi>insertion \<psi> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<circle> @action Act\<close>
   for Act :: \<open>'a::simplification action\<close>
   unfolding Imply_def Action_Tag_def
   apply (clarsimp simp add: \<phi>expns)
   using inj_at_1_def perm_ins_homo'.axioms(5) by blast *)
 
-lemma \<phi>perm_ins_homo_MapAt:
-  \<open>\<phi>perm_ins_homo ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>perm_ins_homo f D T)\<close>
-proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns \<phi>MapAt_def
-            perm_ins_homo_pointwise_eq; rule; clarsimp)
+lemma \<phi>insertion_MapAt:
+  \<open>\<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>insertion f D T)\<close>
+proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>MapAt_def
+            sep_insertion_monoid_pointwise_eq; rule; clarsimp)
   fix x :: 'a and va :: 'd
-  assume \<open>perm_ins_homo f D\<close>
-  then interpret perm_ins_homo f .
+  assume \<open>sep_insertion_monoid f D\<close>
+  then interpret sep_insertion_monoid f .
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> 1(k := va) = 1(k := v) \<and> (\<exists>va. v = f va \<and> va \<in> (x \<Ztypecolon> T))\<close> by fastforce
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. 1(k := f va) = f \<circ> v \<and> (\<exists>va. v = 1(k := va) \<and> va \<in> (x \<Ztypecolon> T))\<close>
     by (metis \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> 1(k := va) = 1(k := v) \<and> (\<exists>va. v = f va \<and> va \<in> (x \<Ztypecolon> T))\<close> comp_def fun_upd_same)
 qed
 
-lemma \<phi>perm_ins_homo_MapAt_L:
-  \<open>\<phi>perm_ins_homo ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow>\<^sub>@ T) = (k \<^bold>\<rightarrow>\<^sub>@ \<phi>perm_ins_homo ((o) f) (pointwise_set D) T)\<close>
-proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_expns
-            perm_ins_homo_pointwise_eq; rule; clarsimp)
+lemma \<phi>insertion_MapAt_L:
+  \<open>\<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow>\<^sub>@ T) = (k \<^bold>\<rightarrow>\<^sub>@ \<phi>insertion ((o) f) (pointwise_set D) T)\<close>
+proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns
+            sep_insertion_monoid_pointwise_eq; rule; clarsimp)
   fix x :: 'a and va :: \<open>'b list \<Rightarrow> 'd\<close>
-  assume \<open>perm_ins_homo f D\<close>
-  then interpret perm_ins_homo f .
+  assume \<open>sep_insertion_monoid f D\<close>
+  then interpret sep_insertion_monoid f .
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> k \<^enum>\<^sub>m va = k \<^enum>\<^sub>m v \<and> (\<exists>va. v = f \<circ> va \<and> va \<in> (x \<Ztypecolon> T))\<close>
     using homo_one_axioms push_map_homo by blast
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. k \<^enum>\<^sub>m (f \<circ> va) = f \<circ> v \<and> (\<exists>va. v = k \<^enum>\<^sub>m va \<and> va \<in> (x \<Ztypecolon> T))\<close>
@@ -1289,19 +1289,20 @@ proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>perm_ins_homo_e
 qed    
 
 
-lemma \<phi>perm_ins_homo_Prod_imply:
-  \<open>x \<Ztypecolon> \<phi>perm_ins_homo f D (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (\<phi>perm_ins_homo f D T) \<^emph> (\<phi>perm_ins_homo f D U)\<close>
+lemma \<phi>insertion_Prod_imply:
+  \<open>x \<Ztypecolon> \<phi>insertion f D (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (\<phi>insertion f D T) \<^emph> (\<phi>insertion f D U)\<close>
   unfolding Imply_def
   apply (cases x; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def)
   by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion.axioms(1) sep_insertion_1.axioms sep_insertion_monoid.axioms perm_ins_homo.axioms(1))
 
-lemma \<phi>perm_ins_homo_Prod:
-  \<open> \<phi>Sep_Disj T U
-\<Longrightarrow> \<phi>perm_ins_homo f D (T \<^emph> U) = (\<phi>perm_ins_homo f D T) \<^emph> (\<phi>perm_ins_homo f D U)\<close>
+lemma \<phi>insertion_Prod:
+  \<open> \<phi>Sep_Disj U T
+\<Longrightarrow> \<phi>insertion f D (T \<^emph> U) = (\<phi>insertion f D T) \<^emph> (\<phi>insertion f D U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def perm_ins_homo_def)
-  by (metis homo_sep_def homo_sep_mult.homo_mult sep_insertion_1.axioms sep_insertion_def sep_insertion_monoid.axioms perm_ins_homo.axioms(1) sep_disj_commuteI)
+  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def)
+  by (metis homo_sep_def homo_sep_mult.homo_mult sep_insertion_1.axioms(1) sep_insertion_def sep_insertion_monoid.axioms)
 
+thm perm_ins_homo.axioms(1)
 
 subsubsection \<open>Permission Annotation\<close>
 
@@ -1556,10 +1557,10 @@ definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<
   where \<open>\<phi>Some T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
 
 abbreviation \<phi>Share_Some ("\<fish_eye> _" [91] 90)
-  where \<open>\<phi>Share_Some T \<equiv> \<phi>perm_ins_homo to_share UNIV (\<phi>Some T)\<close>
+  where \<open>\<phi>Share_Some T \<equiv> \<phi>insertion to_share UNIV (\<phi>Some T)\<close>
 
 abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
-  where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> \<phi>perm_ins_homo to_share UNIV (\<phi>Some T)\<close>
+  where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> \<phi>insertion to_share UNIV (\<phi>Some T)\<close>
 
 \<phi>adhoc_overloading \<phi>coercion \<phi>Some \<phi>Share_Some \<phi>Share_Some_L
 
@@ -1741,29 +1742,29 @@ lemma \<phi>Sep_Disj_Identical_Prod[\<phi>reason 1200]:
 
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo f D T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow> T)) \<close>
-  by (subst \<phi>perm_ins_homo_MapAt; rule \<phi>Sep_Disj_Identical_\<phi>MapAt)
+  \<open> \<phi>Sep_Disj_Identical (\<phi>insertion f D T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow> T)) \<close>
+  by (subst \<phi>insertion_MapAt; rule \<phi>Sep_Disj_Identical_\<phi>MapAt)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo ((o) f) (pointwise_set D) T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow>\<^sub>@ T)) \<close>
-  by (subst \<phi>perm_ins_homo_MapAt_L; rule \<phi>Sep_Disj_Identical_\<phi>MapAt_L)
+  \<open> \<phi>Sep_Disj_Identical (\<phi>insertion ((o) f) (pointwise_set D) T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow>\<^sub>@ T)) \<close>
+  by (subst \<phi>insertion_MapAt_L; rule \<phi>Sep_Disj_Identical_\<phi>MapAt_L)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo f D T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo f D U)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>perm_ins_homo f D (T \<^emph> U)) \<close>
+  \<open> \<phi>Sep_Disj_Identical (\<phi>insertion f D T)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>insertion f D U)
+\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>insertion f D (T \<^emph> U)) \<close>
   unfolding \<phi>Sep_Disj_Identical_def
-  by (smt (verit) Imply_def \<phi>Sep_Disj_Identical_Prod \<phi>Sep_Disj_Identical_def \<phi>perm_ins_homo_Prod_imply)
+  by (smt (verit) Imply_def \<phi>Sep_Disj_Identical_Prod \<phi>Sep_Disj_Identical_def \<phi>insertion_Prod_imply)
 
 lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_ins_homo to_share D (\<phi>Some T))\<close>
+  \<open>\<phi>Sep_Disj_Identical (\<phi>insertion to_share D (\<phi>Some T))\<close>
   unfolding \<phi>Sep_Disj_Identical_def
   by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
 lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Identical (\<phi>perm_ins_homo to_share D \<phi>None)\<close>
+  \<open>\<phi>Sep_Disj_Identical (\<phi>insertion to_share D \<phi>None)\<close>
   unfolding \<phi>Sep_Disj_Identical_def
   by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
@@ -1862,7 +1863,9 @@ subsection \<open>Nosep\<close>
 definition Nosep :: \<open>('T, 'x) \<phi> \<Rightarrow> ('T nosep, 'x) \<phi>\<close>
   where \<open>Nosep T x = nosep ` (x \<Ztypecolon> T)\<close>
 
-\<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. \<black_circle> Nosep T\<close> \<open>\<lambda>T. \<fish_eye> Nosep T\<close> \<open>\<lambda>T. \<fish_eye>\<^sub>L Nosep T\<close>
+term \<open>\<lambda>T. \<fish_eye> Nosep T\<close>
+
+\<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. \<black_circle> Nosep T\<close> \<open>\<lambda>T. \<fish_eye> Nosep T\<close> (* \<open>\<lambda>T. \<fish_eye>\<^sub>L Nosep T\<close> *)
 
 (*TODO: give a configure flag to control this sugar*)
 translations
