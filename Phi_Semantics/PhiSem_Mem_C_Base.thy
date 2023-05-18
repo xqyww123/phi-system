@@ -15,6 +15,7 @@ debt_axiomatization
                 idx_step_offset T i \<le> idx_step_offset T j \<Longrightarrow>
                 idx_step_offset T j < idx_step_offset T i + MemObj_Size (idx_step_type i T) \<Longrightarrow>
                 i = j\<close>
+    and memobj_size_void[simp]: \<open>MemObj_Size void = 0\<close>
 
 primrec index_offset :: \<open>TY \<Rightarrow> aggregate_path \<Rightarrow> nat\<close>
   where \<open>index_offset T [] = 0\<close>
@@ -51,9 +52,8 @@ lemma index_offset_bound_strict:
   \<open>valid_index T (base@idx) \<Longrightarrow> \<not> phantom_mem_semantic_type (index_type (base@idx) T) \<Longrightarrow>
   index_offset T base \<le> index_offset T (base@idx) \<and> index_offset T (base@idx) < index_offset T base + MemObj_Size (index_type base T)\<close>
   unfolding phantom_mem_semantic_type_def
-  apply (induct idx arbitrary: base rule: rev_induct;
-         simp del: append_assoc add: append_assoc[symmetric] fold_tail)
-  using idx_step_offset_size index_offset_upper_bound by fastforce
+  by (induct idx arbitrary: base rule: rev_induct;
+      simp del: append_assoc add: append_assoc[symmetric] fold_tail)
 
 lemma phantom_mem_semantic_type_element:
   \<open> valid_idx_step TY i

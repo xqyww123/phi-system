@@ -17,8 +17,11 @@ proc op_get_element_pointer_numidx:
          \<in> (addr \<^enum>\<^sub>a LOGIC_IDX(AgIdx_N i) \<Ztypecolon> Ptr TY')\<close>
   certified by ((insert useful, simp add: \<phi>expns;
         cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>;
+        cases \<open>addr = 0\<close>;
         simp add: logaddr_to_raw_phantom_mem_type),
-        smt logaddr_to_raw_phantom_mem_type rawaddr_to_log_def someI_ex,
+        (insert valid_idx_step_void, blast)[1],
+        (smt logaddr_to_raw_phantom_mem_type rawaddr_to_log_def someI_ex),
+        (insert valid_idx_step_void,blast)[1],
         force)
 \<medium_right_bracket> .
 

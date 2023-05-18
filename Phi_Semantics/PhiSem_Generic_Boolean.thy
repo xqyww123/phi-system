@@ -4,7 +4,7 @@ theory PhiSem_Generic_Boolean
   imports Phi_System.PhiSem_Formalization_Tools
 begin
 
-section \<open>Semantic\<close>
+section \<open>Semantics\<close>
 
 consts bool :: TY
 
