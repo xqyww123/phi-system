@@ -1,5 +1,7 @@
 theory PhiSem_Mem_Pointer
   imports PhiSem_Mem_C_Base PhiSem_Agg_Void
+  keywords
+      "\<^enum>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
       and "|>"  = "\<^enum>"
       and "\<^enum>_a"  = "\<^enum>\<^sub>a"
@@ -361,7 +363,7 @@ subsubsection \<open>Address Arithmetic - Get Element Pointer\<close>
 definition addr_gep :: "logaddr \<Rightarrow> aggregate_index \<Rightarrow> logaddr"
   where "addr_gep addr i = map_memaddr (\<lambda>idx. idx @ [i]) addr"
 
-syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<^enum>\<^sub>a" 60)
+syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<^enum>\<^sub>a" 55)
 
 parse_translation \<open>[
   (\<^syntax_const>\<open>_addr_gep_\<close>, fn ctxt => fn [a,x] =>
@@ -510,7 +512,9 @@ lemma Ptr_semty[\<phi>reason 1000]:
 
 section \<open>Semantic Operations\<close>
 
-proc op_get_element_pointer_symbol:
+declare_\<phi>operator infixl 55 \<^enum>
+
+proc op_get_element_pointer_symbol[\<phi>overload "\<^enum>"]:
   requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(LOGIC_SYMBOL(symbol))\<close>
        and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(LOGIC_SYMBOL(symbol)) TY\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
@@ -530,7 +534,7 @@ proc op_get_element_pointer_symbol:
                    fastforce)
 \<medium_right_bracket> .
 
-proc op_get_element_pointer_const_numidx:
+proc op_get_element_pointer_const_numidx[\<phi>overload "\<^enum>"]:
   requires \<open>Is_Literal i\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(#i)\<close>
        and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(#i) TY\<close>

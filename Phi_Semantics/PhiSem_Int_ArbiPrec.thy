@@ -406,7 +406,7 @@ lemma op_lshl_anat_\<phi>app[\<phi>synthesis for _ (100)
 
 paragraph \<open>Less Than\<close>
 
-lemma op_lt_aint[\<phi>overload less,
+lemma op_lt_aint[\<phi>overload <,
                  \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_a_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -414,16 +414,34 @@ lemma op_lt_aint[\<phi>overload less,
   by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
-lemma op_lt_anat[\<phi>overload less,
+lemma op_lt_anat[\<phi>overload <,
                  \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_a_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> op_lt_aint \<medium_right_bracket>.
 
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
+
+proc (nodef) op_gt_aint[\<phi>overload >]:
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  output \<open>\<v>\<a>\<l> x > y \<Ztypecolon> \<bool>\<close>
+\<medium_left_bracket>
+  $y < $x
+\<medium_right_bracket>.
+
+proc (nodef) op_gt_anat[\<phi>overload >]:
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  output \<open>\<v>\<a>\<l> x > y \<Ztypecolon> \<bool>\<close>
+\<medium_left_bracket>
+  $y < $x
+\<medium_right_bracket>.
+
+setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
+                                          (SOME Generic_Variable_Access.store_value_no_clean))\<close>
 
 paragraph \<open>Less Equal\<close>
 
-lemma op_le_aint_\<phi>app[\<phi>overload less_equal,
+lemma op_le_aint_\<phi>app[\<phi>overload \<le>,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -431,7 +449,7 @@ lemma op_le_aint_\<phi>app[\<phi>overload less_equal,
   by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
-lemma op_le_anat_\<phi>app[\<phi>overload less_equal,
+lemma op_le_anat_\<phi>app[\<phi>overload \<le>,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -439,5 +457,20 @@ lemma op_le_anat_\<phi>app[\<phi>overload less_equal,
 
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
+
+
+proc (nodef) op_ge_aint[\<phi>overload \<ge>]:
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  output \<open>\<v>\<a>\<l> x \<ge> y \<Ztypecolon> \<bool>\<close>
+\<medium_left_bracket>
+  $y \<le> $x
+\<medium_right_bracket>.
+
+proc (nodef) op_ge_anat[\<phi>overload \<ge>]:
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close>
+  output \<open>\<v>\<a>\<l> x \<ge> y \<Ztypecolon> \<bool>\<close>
+\<medium_left_bracket>
+  $y \<le> $x
+\<medium_right_bracket>.
 
 end

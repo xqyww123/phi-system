@@ -99,12 +99,12 @@ val open_parenthesis = Parenthesis_Stack.map (fn L => Left_Parenthesis :: L)
 
 fun push_operator ((left_prec,prec,arity_delta),name,rule) (ctxt,sequent) =
   let val actions = Parenthesis_Stack.get ctxt
-      val (actions', s') = eval_opr left_prec actions (ctxt,sequent)
+      val (actions', (ctxt',sequent')) = eval_opr left_prec actions (ctxt,sequent)
       val arity_constraint =
-            Option.map (fn x => x + values_number 0 (#spec_of (Phi_Working_Mode.mode1 ctxt)
-                                                              (Thm.prop_of sequent)))
+            Option.map (fn x => x + values_number 0 (#spec_of (Phi_Working_Mode.mode1 ctxt')
+                                                              (Thm.prop_of sequent')))
                        arity_delta
-   in s'
+   in (ctxt',sequent')
    |> apfst (Parenthesis_Stack.put (Opr (prec,arity_constraint,name,rule) :: actions'))
   end
 
@@ -131,6 +131,9 @@ fun chk_precedence p =
   if 0 < p andalso p <= 1000 then p
   else error "precedence of operator should be within [1,1000]"
 
+fun decl_infix (precedence, symbol, arity) =
+      Operators.map (Symtab.update_new (symbol, (precedence, chk_precedence precedence, the_default (SOME 1) arity)))
+
 fun decl_infixr (precedence, symbol, arity) =
       Operators.map (Symtab.update_new (symbol, (precedence + 1, chk_precedence precedence, the_default (SOME 1) arity)))
 
@@ -152,6 +155,7 @@ val _ =
     "declare operators in \<phi>-programming"
     (Scan.repeat1
         (( \<^keyword>\<open>infixl\<close> >> K decl_infixl || \<^keyword>\<open>infixr\<close> >> K decl_infixr ||
+           \<^keyword>\<open>infix\<close> >> K decl_infix ||
          Args.$$$ "prefix" >> K decl_prefix || Args.$$$ "postfix" >> K decl_postfix)
        -- Parse.nat
        -- Parse.position symbol

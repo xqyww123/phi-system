@@ -217,7 +217,7 @@ lemma op_div_areal_\<phi>app[\<phi>overload /,
 
 paragraph \<open>Less Than\<close>
 
-lemma op_lt_areal[\<phi>overload less,
+lemma op_lt_areal[\<phi>overload <,
                  \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ar_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<real> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -225,16 +225,29 @@ lemma op_lt_areal[\<phi>overload less,
   by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
+proc (nodef) op_gt_areal[\<phi>overload >]:
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close>
+  output \<open>\<v>\<a>\<l> x > y \<Ztypecolon> \<bool>\<close>
+\<medium_left_bracket>
+  $y < $x
+\<medium_right_bracket>.
 
 paragraph \<open>Less Equal\<close>
 
-lemma op_le_areal_\<phi>app[\<phi>overload less_equal,
+lemma op_le_areal_\<phi>app[\<phi>overload \<le>,
                       \<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ar_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<real> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_ar_le_def
   by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+
+proc (nodef) op_ge_areal[\<phi>overload \<ge>]:
+  input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close>
+  output \<open>\<v>\<a>\<l> x \<ge> y \<Ztypecolon> \<bool>\<close>
+\<medium_left_bracket>
+  $y \<le> $x
+\<medium_right_bracket>.
 
 
 end

@@ -1,5 +1,5 @@
 theory PhiSem_Machine_Integer
-  imports PhiSem_Common_Int PhiSem_Generic_Boolean
+  imports PhiSem_Common_Int
           "Word_Lib.More_Word" (*We use the word lib from seL4*)
           "Word_Lib.Signed_Division_Word"
           "Word_Lib.Word_Lemmas"
@@ -874,7 +874,7 @@ subsubsection \<open>Comparison\<close>
 paragraph \<open>Unsigned Less Than\<close>
 
 lemma op_lt_word_\<phi>app
-  [\<phi>overload less, \<phi>synthesis for _ (100)
+  [\<phi>overload <, \<phi>synthesis for _ (100)
                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ult LENGTH('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -883,7 +883,7 @@ lemma op_lt_word_\<phi>app
       simp add: \<phi>expns, rule, simp add: \<phi>expns word_less_nat_alt)
 
 lemma op_lt_nat_\<phi>app
-  [\<phi>overload less, \<phi>synthesis for _ (100)
+  [\<phi>overload <, \<phi>synthesis for _ (100)
                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ult LENGTH('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -893,7 +893,7 @@ lemma op_lt_nat_\<phi>app
 paragraph \<open>Signed Less Than\<close>
 
 lemma op_slt_word_\<phi>app
-  [\<phi>overload less, \<phi>synthesis for _ (100)
+  [\<phi>overload <, \<phi>synthesis for _ (100)
                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x <s y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_slt TYPE('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x <s y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -902,7 +902,7 @@ lemma op_slt_word_\<phi>app
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
 
 lemma op_slt_int_\<phi>app
-  [\<phi>overload less, \<phi>synthesis for _ (100)
+  [\<phi>overload <, \<phi>synthesis for _ (100)
                            and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_slt TYPE('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -913,7 +913,7 @@ lemma op_slt_int_\<phi>app
 paragraph \<open>Unsigned Less Equal\<close>
 
 lemma op_le_word_\<phi>app
-  [\<phi>overload less_equal, \<phi>synthesis for _ (100)
+  [\<phi>overload \<le>, \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ule LENGTH('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] Word('b) \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -922,7 +922,7 @@ lemma op_le_word_\<phi>app
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns word_le_nat_alt)
 
 lemma op_le_nat_\<phi>app
-  [\<phi>overload less_equal, \<phi>synthesis for _ (100)
+  [\<phi>overload \<le>, \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ule LENGTH('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -932,7 +932,7 @@ lemma op_le_nat_\<phi>app
 paragraph \<open>Signed Less Equal\<close>
 
 lemma op_sle_word_\<phi>app
-  [\<phi>overload less_equal, \<phi>synthesis for _ (100)
+  [\<phi>overload \<le>, \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x \<le>s y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_sle TYPE('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] Word('b) \<longmapsto> \<v>\<a>\<l> x \<le>s y \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -941,7 +941,7 @@ lemma op_sle_word_\<phi>app
       rule, simp add: \<phi>expns, rule, simp add: \<phi>expns word_le_nat_alt)
 
 lemma op_le_int_\<phi>app
-  [\<phi>overload less_equal, \<phi>synthesis for _ (100)
+  [\<phi>overload \<le>, \<phi>synthesis for _ (100)
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_sle TYPE('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>

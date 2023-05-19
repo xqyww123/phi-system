@@ -69,7 +69,8 @@ val dest_implication_c =
       #> dest_triop_c @{const_name "Imply"}
 fun implication_conv C_s C_t C_p ctm = (
   dest_implication_c ctm;
-  Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p ctm
+  HOLogic.Trueprop_conv (
+    Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p) ctm
 )
 
 fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T

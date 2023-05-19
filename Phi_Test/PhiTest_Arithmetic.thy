@@ -12,11 +12,11 @@ proc test_prime:
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close> \<comment> \<open>\<^term>\<open>prime :: nat => bool\<close> is a predicate checking primes\<close>
   is [routine]
 \<medium_left_bracket>
-  if \<open>$x \<le> 1\<close>  \<medium_left_bracket>
+  if ( $x \<le> 1 )  \<medium_left_bracket>
     return (False)
   \<medium_right_bracket>
   \<medium_left_bracket>
-    \<open>2 \<Ztypecolon> \<nat>\<close> \<rightarrow> var v ;;
+    2 \<rightarrow> var v ;;
 
     while \<open>i \<Ztypecolon> \<v>\<a>\<r>[v] \<nat> \<s>\<u>\<b>\<j> i.
             Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j. 1 < j \<and> j < i \<longrightarrow> \<not> j dvd x)) \<and>
@@ -28,7 +28,7 @@ proc test_prime:
         return (False)
       \<medium_right_bracket>
       \<medium_left_bracket>
-        \<open>$v + 1\<close> \<rightarrow> $v
+        $v + 1 \<rightarrow> $v
       \<medium_right_bracket>
     \<medium_right_bracket>
     return (True)
@@ -55,7 +55,7 @@ proc test_prime':
           Inv: (1 < i \<and> i \<le> x \<and> (\<forall>j \<in> {1<..<i}. \<not> j dvd x)) \<and>
           Guard: (i * i \<le> x) \<and>
           End: (x < i * i)\<close>
-        ( \<open>$v * $v \<le> $x\<close> )
+        ( $v * $v \<le> $x )
     \<medium_left_bracket>
       if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
         return (False)
@@ -86,7 +86,7 @@ proc GCD:
   output \<open>gcd x y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> 
   is [recursive x y] \<comment> \<open>x, y are variable through recursive callings\<close>
 \<medium_left_bracket>
-  if \<open>$x > $y\<close> \<medium_left_bracket> GCD ($y, $x) \<medium_right_bracket>
+  if ($y < $x) \<medium_left_bracket> GCD ($y, $x) \<medium_right_bracket>
   \<medium_left_bracket>
     \<open>$y mod $x\<close> \<rightarrow> val t
     if \<open>$t = 0\<close> \<medium_left_bracket> $x \<medium_right_bracket> \<medium_left_bracket> GCD ($t, $x) \<medium_right_bracket>
