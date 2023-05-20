@@ -5,13 +5,17 @@ structure Synt_No_Delayed_Apply : GENERIC_DATA
   val synt_can_delay_apply' : Context.generic -> Facts.ref -> bool
 
 datatype delay_action = Apply of ((string * Position.T) * thm list)
-                      | End_Block
-                      | Opr of (int (*precedence*) * int option * (string * Position.T) * thm list)
+                      | Meta_Apply of ((int (*num of arguments in the parenthesis*) -> context_state -> context_state)
+                                        * int (*num of values in the sequent before applying this*))
+                      | Begin_Block
+                      | Opr of (int (*precedence*) * int option (*arity constraint*)
+                                  * (string * Position.T) * thm list)
                       | Left_Parenthesis
 
 type operator_info
 
-val delay_app : delay_action -> Proof.context -> Proof.context
+val apply : (string * Position.T) * thm list -> Proof.context -> Proof.context
+val begin_block : Proof.context -> Proof.context
 val close_parenthesis : (context_state -> context_state) -> context_state -> context_state
 val open_parenthesis : Proof.context -> Proof.context
 val push_operator : operator_info * (string * Position.T) * thm list -> context_state -> context_state
@@ -25,8 +29,11 @@ end
 structure Phi_Delay_Application : PHI_DELAY_APPLICATION = struct
 
 datatype delay_action = Apply of ((string * Position.T) * thm list)
-                      | End_Block
-                      | Opr of (int (*precedence*) * int option (*arity constraint*) * (string * Position.T) * thm list)
+                      | Meta_Apply of ((int (*num of arguments in the parenthesis*) -> context_state -> context_state)
+                                        * int (*num of values in the sequent before applying this*))
+                      | Begin_Block
+                      | Opr of (int (*precedence*) * int option (*arity constraint*)
+                                  * (string * Position.T) * thm list)
                       | Left_Parenthesis
 
 structure Parenthesis_Stack = Proof_Data (
@@ -35,6 +42,9 @@ structure Parenthesis_Stack = Proof_Data (
 )
 
 fun delay_app app = Parenthesis_Stack.map (fn L => app :: L)
+
+val apply = delay_app o Apply
+val begin_block = delay_app Begin_Block
 
 (* fun invoke_delayed_action (Apply (_, rules)) s = Phi_Apply.apply rules s
   | invoke_delayed_action End_Block s =
@@ -69,7 +79,7 @@ fun chk_arity_constraint NONE _ _ = ()
 
 fun close_parenthesis c s =
   let fun close c (Apply (_, rules) :: acts) s = c acts (Phi_Apply.apply rules s)
-        | close c (End_Block :: acts) s =
+        | close c (Begin_Block :: acts) s =
             raise Phi_Processor.Process_State_Call (s,
                 Phi_Toplevel.end_block_auto_proof_cmd NONE false
              #> Phi_Envir.map_state_sequent (c acts))
@@ -77,6 +87,11 @@ fun close_parenthesis c s =
             chk_arity_constraint arity name s;
             close c acts (Phi_Apply.apply rules s |> Phi_Processor.process_no_input NONE))
         | close c (Left_Parenthesis :: acts) s = c acts s
+        | close c (Meta_Apply (f, n') :: acts) (ctxt,sequent) =
+            let val mode = Phi_Working_Mode.mode1 ctxt
+                val n = values_number 0 (#spec_of mode (Thm.prop_of sequent))
+                val _ = if n < n' then error "Inbalanced argument stack!" else ()
+             in f (n - n') (ctxt,sequent) end
         | close _ [] _ = error "parenthesis is inbalanced!"
    in close (fn acts => fn (ctxt, sequent) =>
                   c (Parenthesis_Stack.put acts ctxt, sequent))
@@ -85,7 +100,7 @@ fun close_parenthesis c s =
   end
 
 fun eval_opr _ (acts as (Apply _ :: _)) s = (acts, s)
-  | eval_opr _ (acts as (End_Block :: _)) s = (acts, s)
+  | eval_opr _ (acts as (Begin_Block :: _)) s = (acts, s)
   | eval_opr limit (acts as (Opr (pr, arity, name, rules) :: aR)) s
       = if pr < limit then (acts, s)
         else (
@@ -93,6 +108,7 @@ fun eval_opr _ (acts as (Apply _ :: _)) s = (acts, s)
           eval_opr limit aR (
                 Phi_Apply.apply rules s |> Phi_Processor.process_no_input NONE))
   | eval_opr _ (acts as (Left_Parenthesis :: _)) s = (acts, s)
+  | eval_opr _ (acts as (Meta_Apply _ :: _)) s = (acts, s)
   | eval_opr _ [] s = ([], s)
 
 val open_parenthesis = Parenthesis_Stack.map (fn L => Left_Parenthesis :: L)
@@ -148,7 +164,7 @@ fun decl_postfix (precedence, symbol, arity) =
 
 fun lookup_operator thy symbol = Symtab.lookup (Operators.get thy) symbol
 
-val symbol = Parse.group (fn () => "symbol") (Parse.sym_ident || Parse.keyword)
+val symbol = Parse.group (fn () => "symbol") (Parse.sym_ident || Parse.keyword || Parse.string)
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>declare_\<phi>operator\<close>

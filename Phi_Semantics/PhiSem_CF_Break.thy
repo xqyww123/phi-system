@@ -166,8 +166,8 @@ lemma [\<phi>reason 1000]:
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
            Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
-    X cases \<medium_left_bracket> E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
-            \<medium_left_bracket> Y[THEN implies_right_prod] \<medium_right_bracket>
+    X cases \<medium_left_bracket> apply_rule E[THEN implies_right_prod] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
+            \<medium_left_bracket> apply_rule Y[THEN implies_right_prod] \<medium_right_bracket>
   \<medium_right_bracket>.
 
 
@@ -247,7 +247,7 @@ lemma [\<phi>reason 2200]:
 \<Longrightarrow> Brking_Frame l S \<i>\<m>\<p>\<l>\<i>\<e>\<s> Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
   unfolding Brking_Frame_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
-    X[THEN implies_right_prod]
+    apply_rule X[THEN implies_right_prod]
   \<medium_right_bracket>.
 
 lemma [\<phi>reason 2201]:
@@ -256,7 +256,7 @@ lemma [\<phi>reason 2201]:
 \<Longrightarrow> TECHNICAL Brking_Frame l S \<i>\<m>\<p>\<l>\<i>\<e>\<s> TECHNICAL Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
   unfolding Brking_Frame_def FOCUS_TAG_def Technical_def
   \<medium_left_bracket> premises X
-    X[THEN implies_right_prod]
+    apply_rule X[THEN implies_right_prod]
   \<medium_right_bracket>.
 
 
@@ -283,7 +283,7 @@ proc
   output \<open>y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
-        $y "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>]
+        apply_rule "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>] ($y)
       \<medium_right_bracket>
       assert \<bottom> (*this place is unreachable!*)
     \<medium_right_bracket>

@@ -142,7 +142,7 @@ definition Slice :: \<open>('VAL,'a) \<phi> \<Rightarrow> ('FIC_N \<Rightarrow> 
 section \<open>Instructions & Their Specifications\<close>
 
 lemma
-  \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Identity)
+  \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Identity)
     = (v \<Ztypecolon> \<m>\<e>\<m>[addr] ([] \<^bold>\<rightarrow> to_share.\<phi> (\<black_circle> Nosep Identity)))\<close>
   unfolding set_eq_iff
   apply (clarsimp simp add: \<phi>expns to_share.perm_ins_homo_axioms)

@@ -57,9 +57,15 @@ val name_and_symbol =
   group (fn () => "name") (short_ident || long_ident || sym_ident || keyword || string)
 val name_and_symbol_position = input name_and_symbol >> Input.source_content
 
+val attrib = token liberal_name ::: !!! args;
+val xattribs = $$$ "[" |-- list attrib --| $$$ "]";
+val xopt_attribs = Scan.optional xattribs [];
+
 val parser =
   (* $$$ "[" |-- attribs --| $$$ "]" >> pair (Facts.named "") || *)
-  (name_position -- Scan.option thm_sel >> Facts.Named) -- opt_attribs;
+  \<^keyword>\<open>apply_rule\<close> |-- ((name_position -- Scan.option thm_sel >> Facts.Named) -- xopt_attribs) ||
+  name_position >> (fn name => (Facts.Named (name, NONE), []))
+  
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword \<phi>overloads} "declare procedure overloads"

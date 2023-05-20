@@ -226,15 +226,15 @@ lemma map_tree_refinement_modify:
   apply (clarsimp simp add: Subjection_expn set_mult_expn ExSet_expn)
   subgoal premises prems for r R a' u x
   proof -
-    have t1: \<open>dom x \<inter> dom (idx \<^enum>\<^sub>m b) = {}\<close>
+    have t1: \<open>dom x \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
       using disjoint_iff prems(10) sep_disj_partial_map_disjoint by fastforce
-    have t2: \<open>dom r \<inter> dom (idx \<^enum>\<^sub>m b) = {}\<close>
+    have t2: \<open>dom r \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
       by (metis prems(2) prems(4) push_map_dom_eq sep_disj_partial_map_disjoint)
-    have t3: \<open>dom u \<inter> dom (idx \<^enum>\<^sub>m b) = {}\<close>
+    have t3: \<open>dom u \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
       by (metis prems(12) prems(2) push_map_dom_eq sep_disj_partial_map_disjoint)
-    have t4: \<open>u ## idx \<^enum>\<^sub>m b\<close>
+    have t4: \<open>u ## idx \<tribullet>\<^sub>m b\<close>
       using sep_disj_partial_map_disjoint t3 by blast
-    have t5: \<open>r ## idx \<^enum>\<^sub>m b\<close>
+    have t5: \<open>r ## idx \<tribullet>\<^sub>m b\<close>
       using sep_disj_partial_map_disjoint t2 by blast
     have t6: \<open>dom x \<inter> dom a' = {}\<close>
       by (meson prems(9) sep_disj_partial_map_disjoint)
@@ -253,8 +253,8 @@ lemma val_map_eq_index_value_eq:
   \<open>valid_index TY idx \<Longrightarrow>
     u_idx \<in> Well_Type (index_type idx TY) \<Longrightarrow>
     v \<in> Well_Type TY \<Longrightarrow>
-    map_option nosep \<circ> Map_of_Val v = u * idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<Longrightarrow>
-    u ## idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<Longrightarrow>
+    map_option nosep \<circ> Map_of_Val v = u * idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<Longrightarrow>
+    u ## idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<Longrightarrow>
     index_value idx v = u_idx \<close>
   subgoal premises prems proof -
     have t1: \<open>dom (pull_map idx (Map_of_Val v)) = Dom_of_TY (index_type idx TY)\<close>
@@ -281,17 +281,17 @@ lemma val_map_mod_index_value:
     x \<in> Well_Type TY \<Longrightarrow>
     u \<in> Well_Type (index_type idx TY) \<Longrightarrow>
     v \<in> Well_Type (index_type idx TY) \<Longrightarrow>
-    r ## idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u) \<Longrightarrow>
-    r ## idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v) \<Longrightarrow>
-    r * idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u) = map_option nosep \<circ> Map_of_Val x \<Longrightarrow>
-    r * idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v) = map_option nosep \<circ> Map_of_Val (index_mod_value idx (\<lambda>_. v) x)\<close>
+    r ## idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u) \<Longrightarrow>
+    r ## idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v) \<Longrightarrow>
+    r * idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u) = map_option nosep \<circ> Map_of_Val x \<Longrightarrow>
+    r * idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v) = map_option nosep \<circ> Map_of_Val (index_mod_value idx (\<lambda>_. v) x)\<close>
   by (simp add: Map_of_Val_mod map_option_funcomp_map_add,
       smt (verit) Map_of_Val_dom dom_map_option_comp map_add_subsumed_dom map_le_implies_dom_le map_option_homo_one pull_push_map push_map_dom_eq push_map_homo push_pull_map sep_disj_partial_map_disjoint times_fun_map_add_right)
 
 lemma val_map_mod_index_value_projection:
   \<open> valid_index TY idx \<Longrightarrow>
     u_idx \<in> Well_Type (index_type idx TY) \<Longrightarrow>
-    refinement_projection (\<F>_functional id (Map_of_Val_ins ` Map_of_Val_ins_dom TY)) {idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}
+    refinement_projection (\<F>_functional id (Map_of_Val_ins ` Map_of_Val_ins_dom TY)) {idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}
     \<subseteq> UNIV * Map_of_Val_ins ` Some ` nosep ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}\<close>
   apply (clarsimp simp add: image_iff set_mult_expn refinement_projection_def
                             Map_of_Val_ins_dom_def Map_of_Val_ins_def;
@@ -303,7 +303,7 @@ lemma fiction_Map_of_Val_ins_projection:
   \<open> valid_index TY idx
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> refinement_projection (\<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY))
-                          {idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}
+                          {idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}
       \<subseteq> UNIV * Some ` nosep ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY }\<close>
   apply (subst fiction_Map_of_Val_ins_comp_id_simp[symmetric])
   apply (rule refinement_projections_stepwise_UNIV_paired)
@@ -315,7 +315,7 @@ lemma fiction_Map_of_Val_ins_projection':
   \<open> valid_index TY idx
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> refinement_projection (\<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY))
-                          {idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}
+                          {idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}
       \<subseteq> UNIV * Some ` nosep ` {a. index_value idx a = u_idx }\<close>
   subgoal premises prems proof -
     have \<open> UNIV * Some ` nosep ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY }
@@ -332,10 +332,10 @@ lemma fiction_Map_of_Val_ins_refinement:
 \<Longrightarrow> Id_on UNIV * ({(Some u, (Some o map_nosep (index_mod_value idx (\<lambda>_. v))) u)}
                     \<s>\<u>\<b>\<j> u. u \<in> nosep ` {a. index_value idx a = u_idx}
                       \<and> u \<in> nosep ` Well_Type TY)
-    \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx),
-            idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v))}
+    \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx),
+            idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v))}
     \<w>.\<r>.\<t> \<F>_functional Map_of_Val_ins (Map_of_Val_ins_dom TY)
-    \<i>\<n> {idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>
+    \<i>\<n> {idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>
   apply (subst fiction_Map_of_Val_ins_comp_id_simp[symmetric])
   apply (rule sep_refinement_stepwise[
             OF refinement_frame[where R = UNIV, OF Map_of_Val_ins.\<F>_functional_refinement_complex[simplified]]])
@@ -350,7 +350,7 @@ lemma fiction_Map_of_Val_ins_refinement:
     have \<open>pairself Map_of_Val_ins `
             ({(Some u, (Some \<circ> map_nosep (index_mod_value idx (\<lambda>_. v))) u)} \<s>\<u>\<b>\<j> u.
              u \<in> nosep ` {a. index_value idx a = u_idx} \<and> u \<in> nosep ` Well_Type TY)
-        \<subseteq> ({(a, a ++ (idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v)))} \<s>\<u>\<b>\<j> a. dom a = Dom_of_TY TY)\<close>
+        \<subseteq> ({(a, a ++ (idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)))} \<s>\<u>\<b>\<j> a. dom a = Dom_of_TY TY)\<close>
       apply (clarsimp simp add: set_eq_iff ExSet_image Subjection_image;
              auto simp add: ExSet_expn Subjection_expn split_nosep_ex inj_image_mem_iff)
       apply (metis Map_of_Val_mod map_option_funcomp_map_add map_option_homo_one prems(1) prems(2) push_map_homo)
@@ -359,9 +359,9 @@ lemma fiction_Map_of_Val_ins_refinement:
     note t2 = this[THEN t1, THEN refinement_sub_fun]
     have t3: \<open>dom (Map_of_Val v) = Dom_of_TY (index_type idx TY)\<close>
       using Map_of_Val_dom prems(2) by force
-    have t4: \<open>idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<noteq> 1\<close>
+    have t4: \<open>idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<noteq> 1\<close>
       by (smt (verit) Mapof_not_1 dom_1 dom_eq_empty_conv dom_map_option_comp push_map_eq_1)
-    then have t5: \<open> r * idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<noteq> 1\<close> for r
+    then have t5: \<open> r * idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) \<noteq> 1\<close> for r
       by (metis (no_types, opaque_lifting) dom1_disjoint_sep_disj dom1_dom dom_eq_empty_conv empty_subsetI inf.orderE one_partial_map sep_no_inverse times_fun_def times_option_none)
     show ?thesis
       apply (rule t2)
@@ -390,10 +390,10 @@ lemma fiction_Map_of_Val_perm_partial_refinement:
 \<Longrightarrow> Id_on UNIV * ({(Some u, (Some o map_nosep (index_mod_value idx (\<lambda>_. v))) u)}
                     \<s>\<u>\<b>\<j> u. u \<in> nosep ` {a. index_value idx a = u_idx}
                       \<and> u \<in> nosep ` Well_Type TY)
-    \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(to_share o idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx),
-            to_share o idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v))}
+    \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(to_share o idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx),
+            to_share o idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v))}
     \<w>.\<r>.\<t> \<F>_functional((\<circ>) to_share \<circ> Map_of_Val_ins) (Map_of_Val_ins_dom TY)
-    \<i>\<n> {to_share o idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>
+    \<i>\<n> {to_share o idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>
   unfolding \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified]
   by (rule sep_refinement_stepwise,
       rule refinement_frame[OF fiction_Map_of_Val_ins_refinement],
@@ -404,14 +404,14 @@ lemma fiction_Map_of_Val_perm_partial_refinement:
       simp,
       simp,
       rule pointwise_to_share.\<F>_functional_projection[
-        where S=\<open>{idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>, simplified, simplified pointwise_set_UNIV],
+        where S=\<open>{idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>, simplified, simplified pointwise_set_UNIV],
       simp)
 
 lemma fiction_Map_of_Val_ins_perm_projection:
   \<open> valid_index TY idx
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx TY)
 \<Longrightarrow> refinement_projection (\<F>_functional ((\<circ>) to_share o Map_of_Val_ins) (Map_of_Val_ins_dom TY))
-                          { to_share o idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) }
+                          { to_share o idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx) }
       \<subseteq> UNIV * Some ` nosep ` {a. index_value idx a = u_idx }\<close>
   unfolding \<F>_functional_comp[where f=\<open>(\<circ>) to_share\<close> and Df=\<open>UNIV\<close>, simplified]
   by (rule refinement_projections_stepwise_UNIV_paired,
@@ -419,7 +419,7 @@ lemma fiction_Map_of_Val_ins_perm_projection:
       assumption,
       assumption,
       rule pointwise_to_share.\<F>_functional_projection[
-        where S=\<open>{idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>, simplified, simplified pointwise_set_UNIV],
+        where S=\<open>{idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>, simplified, simplified pointwise_set_UNIV],
       simp)
 
 locale aggregate_mem_resource =
@@ -441,8 +441,8 @@ sublocale aggregate_mem_resource Res typ_of_blk ..
 lemma getter_rule:
   \<open> valid_index (typ_of_blk blk) idx
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := to_share \<circ> idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity \<longmapsto>
-      \<lambda>ret. 1(blk := to_share \<circ> idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' blk \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity \<longmapsto>
+      \<lambda>ret. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (nosep x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
   by (rule "_getter_rule_2_"[OF fiction_Map_of_Val_ins_perm_projection,
                                 simplified split_nosep_ExSet inj_image_mem_iff inj_nosep])
@@ -476,11 +476,11 @@ lemma setter_rule:
 \<Longrightarrow> v \<in> Well_Type (index_type idx (typ_of_blk blk))
 \<Longrightarrow> u_idx \<in> Well_Type (index_type idx (typ_of_blk blk))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at blk (Some \<circ> map_nosep (index_mod_value idx (\<lambda>_. v)) \<circ> the))
-      \<lbrace> 1(blk := to_share \<circ> idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity \<longmapsto>
-        \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
+      \<lbrace> 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)) \<Ztypecolon> \<phi> Identity \<longmapsto>
+        \<lambda>\<r>\<e>\<t>. 1(blk := to_share \<circ> idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
   by (rule "_setter_rule_2_"[where f=\<open>Some \<circ> map_nosep (index_mod_value idx (\<lambda>_. v))\<close>
                         and V=\<open>nosep ` {a. index_value idx a = u_idx}\<close>
-                        and F=\<open>\<lambda>_. to_share o idx \<^enum>\<^sub>m (map_option nosep \<circ> Map_of_Val v)\<close>
+                        and F=\<open>\<lambda>_. to_share o idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)\<close>
                         for idx v u_idx,
                       OF fiction_Map_of_Val_perm_partial_refinement
                          fiction_Map_of_Val_ins_perm_projection],

@@ -287,6 +287,8 @@ text \<open>Arguments and Returns are wrapped by \<phi>arg type.
 datatype 'a \<phi>arg = \<phi>arg (dest: 'a)
 hide_const (open) dest
 
+definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
+
 lemma \<phi>arg_forall: \<open>All P \<longleftrightarrow> (\<forall>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
 lemma \<phi>arg_exists: \<open>Ex P  \<longleftrightarrow> (\<exists>x. P (\<phi>arg x))\<close> by (metis \<phi>arg.exhaust)
 lemma \<phi>arg_All: \<open>(\<And>x. PROP P x) \<equiv> (\<And>x. PROP P (\<phi>arg x))\<close>
@@ -331,8 +333,6 @@ lemma \<phi>V_simps[simp]:
     apply (simp add: fun_eq_iff \<phi>arg_forall)
     apply (simp add: fun_eq_iff \<phi>arg_forall) .
 
-
-definition unreachable :: \<open>'a::VALs\<close> where \<open>unreachable = undefined\<close>
 
 paragraph \<open>More auxiliary properties\<close>
 

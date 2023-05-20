@@ -1,10 +1,10 @@
 theory PhiSem_Mem_Pointer
   imports PhiSem_Mem_C_Base PhiSem_Agg_Void
   keywords
-      "\<^enum>" :: quasi_command
+      "\<tribullet>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
-      and "|>"  = "\<^enum>"
-      and "\<^enum>_a"  = "\<^enum>\<^sub>a"
+      and "|>"  = "\<tribullet>"
+      and "\<tribullet>_a"  = "\<tribullet>\<^sub>a"
 begin
 
 section \<open>Semantics of Pointer\<close>
@@ -363,7 +363,7 @@ subsubsection \<open>Address Arithmetic - Get Element Pointer\<close>
 definition addr_gep :: "logaddr \<Rightarrow> aggregate_index \<Rightarrow> logaddr"
   where "addr_gep addr i = map_memaddr (\<lambda>idx. idx @ [i]) addr"
 
-syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<^enum>\<^sub>a" 55)
+syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<tribullet>\<^sub>a" 55)
 
 parse_translation \<open>[
   (\<^syntax_const>\<open>_addr_gep_\<close>, fn ctxt => fn [a,x] =>
@@ -376,10 +376,10 @@ print_translation \<open>[
 ]\<close>
 
 
-text \<open>We can use \<^term>\<open>p \<^enum>\<^sub>a field\<close> to access the address of the element named \<open>field\<close> in the
+text \<open>We can use \<^term>\<open>p \<tribullet>\<^sub>a field\<close> to access the address of the element named \<open>field\<close> in the
   object pointed by \<open>p\<close>.
-  We may also use \<^term>\<open>p \<^enum>\<^sub>a 2\<close> to access the address of the 2nd element.
-  Use \<^term>\<open>p \<^enum>\<^sub>a LOGIC_IDX(var)\<close> to access the element \<open>var\<close> which is a logical variable\<close>
+  We may also use \<^term>\<open>p \<tribullet>\<^sub>a 2\<close> to access the address of the 2nd element.
+  Use \<^term>\<open>p \<tribullet>\<^sub>a LOGIC_IDX(var)\<close> to access the element \<open>var\<close> which is a logical variable\<close>
 
 text \<open>BTW, we also make the syntax for \<phi>-Type
 
@@ -388,15 +388,15 @@ TODO ...
 
 
 lemma addr_gep_memblk[iff]:
-  \<open>memaddr.blk (addr \<^enum>\<^sub>a LOGIC_IDX(i)) = memaddr.blk addr\<close>
+  \<open>memaddr.blk (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.blk addr\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
 lemma addr_gep_path[iff]:
-  \<open>memaddr.index (addr \<^enum>\<^sub>a LOGIC_IDX(i)) = memaddr.index addr @ [i]\<close>
+  \<open>memaddr.index (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.index addr @ [i]\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
 lemma addr_gep_not_eq_zero[intro!, simp]:
-  \<open>addr \<noteq> 0 \<Longrightarrow> addr \<^enum>\<^sub>a LOGIC_IDX(i) \<noteq> 0\<close>
+  \<open>addr \<noteq> 0 \<Longrightarrow> addr \<tribullet>\<^sub>a LOGIC_IDX(i) \<noteq> 0\<close>
   unfolding zero_memaddr_def addr_gep_def
   by (cases addr) simp
 
@@ -404,14 +404,14 @@ lemma addr_gep_valid[intro!, simp]:
   \<open> addr \<noteq> 0
 \<Longrightarrow> valid_idx_step (logaddr_type addr) i
 \<Longrightarrow> valid_logaddr addr
-\<Longrightarrow> valid_logaddr (addr \<^enum>\<^sub>a LOGIC_IDX(i))\<close>
+\<Longrightarrow> valid_logaddr (addr \<tribullet>\<^sub>a LOGIC_IDX(i))\<close>
   unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
   by (cases addr; clarsimp)
 
 lemma logaddr_to_raw_phantom_mem_type:
   \<open> phantom_mem_semantic_type (logaddr_type addr)
 \<Longrightarrow> valid_idx_step (logaddr_type addr) i
-\<Longrightarrow> logaddr_to_raw (addr \<^enum>\<^sub>a LOGIC_IDX(i)) = logaddr_to_raw addr\<close>
+\<Longrightarrow> logaddr_to_raw (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = logaddr_to_raw addr\<close>
   unfolding logaddr_to_raw_def addr_gep_def phantom_mem_semantic_type_def
   by (cases addr; clarsimp; insert idx_step_offset_size; fastforce)
 
@@ -512,18 +512,18 @@ lemma Ptr_semty[\<phi>reason 1000]:
 
 section \<open>Semantic Operations\<close>
 
-declare_\<phi>operator infixl 55 \<^enum>
+declare_\<phi>operator infixl 55 "\<tribullet>"
 
-proc op_get_element_pointer_symbol[\<phi>overload "\<^enum>"]:
+proc op_get_element_pointer_symbol[\<phi>overload "\<tribullet>"]:
   requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(LOGIC_SYMBOL(symbol))\<close>
        and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(LOGIC_SYMBOL(symbol)) TY\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  output \<open>addr \<^enum>\<^sub>a LOGIC_SYMBOL(symbol) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr \<tribullet>\<^sub>a LOGIC_SYMBOL(symbol) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
-     V_pointer.mk (logaddr_to_raw (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)) \<^enum>\<^sub>a LOGIC_SYMBOL(symbol)))
-         \<in> (addr \<^enum>\<^sub>a LOGIC_SYMBOL(symbol) \<Ztypecolon> Ptr TY')\<close>
+     V_pointer.mk (logaddr_to_raw (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)) \<tribullet>\<^sub>a LOGIC_SYMBOL(symbol)))
+         \<in> (addr \<tribullet>\<^sub>a LOGIC_SYMBOL(symbol) \<Ztypecolon> Ptr TY')\<close>
      certified by ((insert useful, simp add: \<phi>expns,
                    cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>;
                    cases \<open>addr = 0\<close>;
@@ -534,21 +534,22 @@ proc op_get_element_pointer_symbol[\<phi>overload "\<^enum>"]:
                    fastforce)
 \<medium_right_bracket> .
 
-proc op_get_element_pointer_const_numidx[\<phi>overload "\<^enum>"]:
+proc op_get_element_pointer_const_numidx[\<phi>overload "\<tribullet>"]:
   requires \<open>Is_Literal i\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(#i)\<close>
        and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(#i) TY\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  output \<open>addr \<^enum>\<^sub>a #i \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr \<tribullet>\<^sub>a #i \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
-     V_pointer.mk (logaddr_to_raw (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)) \<^enum>\<^sub>a LOGIC_IDX(AgIdx_N i)))
-         \<in> (addr \<^enum>\<^sub>a LOGIC_IDX(AgIdx_N i) \<Ztypecolon> Ptr TY')\<close>
+     V_pointer.mk (logaddr_to_raw (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)) \<tribullet>\<^sub>a LOGIC_IDX(AgIdx_N i)))
+         \<in> (addr \<tribullet>\<^sub>a LOGIC_IDX(AgIdx_N i) \<Ztypecolon> Ptr TY')\<close>
     certified by ((insert useful, simp add: \<phi>expns; cases \<open>addr = 0\<close>; simp),
                   (insert valid_idx_step_void, force)[1],
                   smt logaddr_to_raw_phantom_mem_type rawaddr_to_log rawaddr_to_log_def someI_ex)
 \<medium_right_bracket> .
+
 
 
 end

@@ -9,7 +9,7 @@ theory IDE_CP_Core
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
     "var" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure_fact"
-    "input" "certified" "requires" :: quasi_command
+    "input" "certified" "requires" "apply_rule" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"
@@ -1582,7 +1582,8 @@ ML_file \<open>library/system/modifier.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 
 
-hide_fact "__value_access_0__"
+hide_fact "__value_access_0__" "_rule_extract_and_remove_the_first_value_"
+  "_rule_push_a_value_" "apply_collect_clean_value"
 
 subsection \<open>Isar Commands \& Attributes\<close>
 
@@ -1686,8 +1687,7 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
           | name_pos_of _ = ("", Position.none)
     in
       if Phi_Delay_Application.synt_can_delay_apply' (Context.Proof ctxt) (fst xname)
-      then (Phi_Delay_Application.delay_app
-              (Phi_Delay_Application.Apply (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname])) ctxt,
+      then (Phi_Delay_Application.apply (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname]) ctxt,
             sequent)
       else raise Bypass NONE
     end)\<close>
@@ -1717,7 +1717,7 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 \<phi>processor embedded_block 8999 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
 \<open> fn stat => (\<^keyword>\<open>(\<close> >> (fn _ => fn _ =>
   raise Process_State_Call (
-          stat |> apfst (Phi_Delay_Application.delay_app Phi_Delay_Application.End_Block),
+          stat |> apfst Phi_Delay_Application.begin_block,
           Phi_Toplevel.begin_block_cmd ([],[]) false)))\<close>
 
 \<phi>processor set_param 5000 (premises \<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
@@ -1951,7 +1951,11 @@ end
       val prot = Const (\<^const_name>\<open>Implicit_Protector\<close>, ty --> ty) |> Thm.cterm_of ctxt
       val ctxt = Config.put Phi_Reasoner.auto_level 1 ctxt
     in Phi_Sys.cast (Thm.apply prot desired_nu) (ctxt,sequent) end
-)\<close> *)
+)\<close> 
+
+*)
+
+
 
 
 end

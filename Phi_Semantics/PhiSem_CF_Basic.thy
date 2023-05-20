@@ -170,8 +170,8 @@ proc (nodef) do_while:
   output \<open>X' x' \<s>\<u>\<b>\<j> x'. invariant x' \<and> \<not> cond x'\<close>
   throws E
   \<medium_left_bracket>
-    V[unfolded Action_Tag_def]
-    "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<s>\<u>\<b>\<j> invariant x'\<close>, simplified]
+    apply_rule V[unfolded Action_Tag_def]
+    apply_rule "__DoWhile__rule_\<phi>app"[where P=cond and X=\<open>\<lambda>x'. X' x' \<s>\<u>\<b>\<j> invariant x'\<close>, simplified]
     \<medium_left_bracket> B \<medium_right_bracket> !!
   \<medium_right_bracket> .
 

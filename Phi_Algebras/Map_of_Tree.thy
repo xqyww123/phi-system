@@ -12,7 +12,7 @@ text \<open>This section presents a representation of tree using the mapping fro
     and fetch a sub-tree at certain location respectively.
 
   In this representation, the indexes near the root locate at the left side of the list, e.g.,
-  \<open>[a,b,c] \<^enum>\<^sub>m D\<close> characterizes tree \<open>Root \<rightarrow> a \<rightarrow> b \<rightarrow> c \<rightarrow> D\<close>.
+  \<open>[a,b,c] \<tribullet>\<^sub>m D\<close> characterizes tree \<open>Root \<rightarrow> a \<rightarrow> b \<rightarrow> c \<rightarrow> D\<close>.
 \<close>
 
 (* subsection \<open>Preliminary\<close>
@@ -43,7 +43,7 @@ lemma prefix_subtract_prefix[simp]:
 
 subsection \<open>Push a map to a location\<close>
 
-definition push_map :: \<open>'a list \<Rightarrow> ('a list \<Rightarrow> 'b) \<Rightarrow> ('a list \<Rightarrow> 'b::one)\<close> (infixr "\<^enum>\<^sub>m" 75)
+definition push_map :: \<open>'a list \<Rightarrow> ('a list \<Rightarrow> 'b) \<Rightarrow> ('a list \<Rightarrow> 'b::one)\<close> (infixr "\<tribullet>\<^sub>m" 75)
   where \<open>push_map idx f = (\<lambda>x. if take (length idx) x = idx then f (drop (length idx) x) else 1 )\<close>
 
 lemma push_map_unit[simp]:

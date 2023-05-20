@@ -328,36 +328,39 @@ proc op_set_var:
   $y semantic_local_value TY
   \<open>var\<close> to Identity
   unfold Raw_Var_identity_eq
-  FIC.Var.setter_rule[where u=\<open>Some (nosep (Some (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
+  apply_rule FIC.Var.setter_rule[where u=\<open>Some (nosep (Some (\<phi>arg.dest \<a>\<r>\<g>1)))\<close>]
   fold Inited_Var_identity_eq
 \<medium_right_bracket> .
 
 proc op_free_var:
-  input  \<open>x \<Ztypecolon> Var var T\<close>
+  requires \<open>\<p>\<a>\<r>\<a>\<m> var\<close>
+      and  \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[semantic_mode] var' : var\<close>
+  input  \<open>x \<Ztypecolon> Var var' T\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
   to Identity
   unfold Raw_Var_identity_eq
-  FIC.Var.setter_rule[where u=\<open>None\<close>]
+  apply_rule FIC.Var.setter_rule[where u=\<open>None\<close> and k=\<open>var\<close>]
 \<medium_right_bracket> .
 
 
 proc op_var_scope:
-  requires BLK: \<open>\<And>var. varname.type var \<equiv> TY
+  requires \<open>\<p>\<a>\<r>\<a>\<m> TY\<close>
+       and BLK: \<open>\<And>var. varname.type var \<equiv> TY
                   \<Longrightarrow> \<p>\<r>\<o>\<c> F var \<lbrace> X\<heavy_comma> \<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[var] \<longmapsto> \<lambda>ret. Y ret\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any \<rbrace>
                       \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. E v \<heavy_comma> () \<Ztypecolon> Var var \<phi>Any) \<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws  E
   \<medium_left_bracket>
-    FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. varname.type v = TY)\<close> and u=\<open>Some (nosep None)\<close>]
+    apply_rule FIC.Var.allocate_rule[where P=\<open>(\<lambda>v. varname.type v = TY)\<close> and u=\<open>Some (nosep None)\<close>]
     \<exists>v as \<open>\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[v]\<close>
     note \<phi>Procedure_protect_body[cong] \<open>\<v>0 = \<phi>arg v\<close>[simp] ;;
     try'' \<medium_left_bracket>
-        BLK[of \<open>\<phi>arg.dest \<v>0\<close>, unfolded atomize_eq, OF Premise_D[where mode=default], simplified]
-        op_free_var[of \<open>\<phi>arg.dest \<v>0\<close>, simplified]
+        apply_rule BLK[of \<open>\<phi>arg.dest \<v>0\<close>, unfolded atomize_eq, OF Premise_D[where mode=default], simplified]
+        op_free_var \<open>\<phi>arg.dest \<v>0\<close>
     \<medium_right_bracket> \<medium_left_bracket>
-        op_free_var[of \<open>\<phi>arg.dest \<v>0\<close>, simplified]
+        op_free_var \<open>\<phi>arg.dest \<v>0\<close>
         throw
     \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -414,7 +417,7 @@ lemma "__new_var_rule__":
                              \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E e\<heavy_comma> () \<Ztypecolon> Var var \<phi>Any))
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a) TY g \<lbrace> R\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G
-    op_var_scope[where TY=\<open>TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>] G \<medium_right_bracket>
+    op_var_scope \<open>TY\<close> \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>] G \<medium_right_bracket>
   \<medium_right_bracket> .
 
 lemma "__set_new_var_rule__":
@@ -425,7 +428,7 @@ lemma "__set_new_var_rule__":
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a) (Some TY) (\<lambda>var. op_set_var TY var raw \<ggreater> g var)
      \<lbrace> R\<heavy_comma> \<blangle> y \<Ztypecolon> \<v>\<a>\<l>[raw] U\<heavy_comma> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
-    op_var_scope[where TY=\<open>Some TY\<close>] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
+    op_var_scope \<open>Some TY\<close> \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
       op_set_var G
     \<medium_right_bracket>
   \<medium_right_bracket>.
@@ -438,7 +441,7 @@ lemma "__set_new_var_noty_rule__":
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_var_scope TYPE('a) None (\<lambda>var. op_set_var TY var raw \<ggreater> g var)
      \<lbrace> R\<heavy_comma> \<blangle> y \<Ztypecolon> \<v>\<a>\<l>[raw] U\<heavy_comma> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G and [\<phi>reason]
-    op_var_scope[where TY=None] \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
+    op_var_scope None \<medium_left_bracket> premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
       op_set_var G
     \<medium_right_bracket>
   \<medium_right_bracket>.

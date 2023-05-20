@@ -417,8 +417,8 @@ lemma ToSA_by_structural_extraction:
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> P1
 \<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d> P1 \<and> P2"
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def Try_def \<r>Call_def
-  \<medium_left_bracket> premises  SE and A
-    A[THEN implies_right_prod]
+  \<medium_left_bracket> premises SE and A
+    apply_rule A[THEN implies_right_prod]
     SE
   \<medium_right_bracket> certified using \<phi> by simp .
 
@@ -432,13 +432,14 @@ lemma ToSA_by_structural_extraction__reverse_transformation:
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def
             Generated_Rule_def Compact_Antecedent_def Try_def \<r>Call_def
   \<medium_left_bracket> premises SE and A
-    A[THEN implies_right_prod]
+    apply_rule A[THEN implies_right_prod]
     SE
   \<medium_right_bracket> certified apply (simp add: \<phi>)
   \<medium_left_bracket>
     have A : \<open>R2' \<heavy_comma> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
-    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
-    ;; SE A[THEN implies_right_prod]
+    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp ;;
+    SE
+    apply_rule A[THEN implies_right_prod]
   \<medium_right_bracket>. .
 
 print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> _\<close> ? ?
@@ -605,7 +606,7 @@ lemma Structural_Extract_aggrement_to [\<phi>reason 1200]:
   apply (cases C; simp)
   \<medium_left_bracket> premises A
     dup
-    Agreement_cast[OF A]
+    apply_rule Agreement_cast[OF A]
   \<medium_right_bracket>
   using Agreement_cast .
 
@@ -616,7 +617,7 @@ lemma Structural_Extract_aggrement_from:
   unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Guard_def
   apply (cases C; simp)
   \<medium_left_bracket> premises A
-    Agreement_cast[OF A]
+    apply_rule Agreement_cast[OF A]
     Agreement_shrink
   \<medium_right_bracket>
   using Agreement_cast .
@@ -645,8 +646,8 @@ lemma Structural_Extract_to_mult:
   for X :: \<open>'a::sep_algebra set\<close>
   unfolding Structural_Extract_def Simplify_def Action_Tag_def Try_def
   \<medium_left_bracket> premises L and R
-    L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
-    R[THEN implies_right_prod]
+    apply_rule L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
+    apply_rule R[THEN implies_right_prod]
   \<medium_right_bracket> .
 
 declare Structural_Extract_to_mult [THEN SE_clean_waste, \<phi>reason 1200]
@@ -673,8 +674,8 @@ lemma Structural_Extract_from_mult:
   unfolding Structural_Extract_def Simplify_def Try_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
-    L[THEN implies_right_prod]
-    R[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
+    apply_rule L[THEN implies_right_prod]
+    apply_rule R[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
   \<medium_right_bracket> .
 
 declare Structural_Extract_from_mult [THEN SE_clean_waste,  \<phi>reason 1200]
@@ -688,8 +689,8 @@ lemma Structural_Extract_\<phi>Prod_left:
   unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Try_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
-    L[THEN implies_right_prod]
-    R[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
+    apply_rule L[THEN implies_right_prod]
+    apply_rule R[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
   \<medium_right_bracket> .
 
 declare Structural_Extract_\<phi>Prod_left [THEN SE_clean_waste, \<phi>reason 1200]
@@ -763,8 +764,8 @@ lemma "_Structural_Extract_general_rule_":
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (yr \<Ztypecolon> F4 Ur) P\<close>
   unfolding Structural_Extract_def
   \<medium_left_bracket> premises _ and _ and _ and _ and Tr
-    ;;apply_Separation_Functor_go[where Fu=F4 and Ft=F1]
-    apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
+    apply_rule apply_Separation_Functor_go[where Fu=F4 and Ft=F1]
+    apply_rule apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
     simplify(useful)
     \<medium_left_bracket> Tr \<medium_right_bracket>
     apply_Separation_Functor_back
@@ -875,8 +876,8 @@ lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested o
     have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
       by (metis LSF3 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
     ;; unfold F4D
-       apply_Separation_Functor_go[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
-       apply_Transformation_Functor[where Fa=F14 and U=\<open>F3 c U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
+       apply_rule apply_Separation_Functor_go[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
+       apply_rule apply_Transformation_Functor[where Fa=F14 and U=\<open>F3 c U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
        simplify(useful)
        \<medium_left_bracket> Tr \<medium_right_bracket>
        apply_Separation_Functor_back
@@ -902,13 +903,13 @@ lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
     have F2D: \<open>F2 a R = F2 b (F2 c R)\<close>
       by (metis LSF2 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(8))
     ;; unfold F1D
-       apply_Separation_Functor_go[where Fu=\<open>F4 b\<close> and Ft=\<open>F1 b\<close>]
-       apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> F2 c R\<close> and y=\<open>(y,r)\<close> and Q=P]
+       apply_rule apply_Separation_Functor_go[where Fu=\<open>F4 b\<close> and Ft=\<open>F1 b\<close>]
+       apply_rule apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> F2 c R\<close> and y=\<open>(y,r)\<close> and Q=P]
        simplify(useful)
        \<medium_left_bracket> Tr \<medium_right_bracket>
        apply_Separation_Functor_back
        fold F2D
-           \<medium_right_bracket> .
+  \<medium_right_bracket> .
 
 
 paragraph \<open>Structural Nodes\<close>
@@ -1119,9 +1120,9 @@ lemma Structural_Extract_share_half:
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def half_def Action_Tag_def
   \<medium_left_bracket> premises [\<phi>reason] and X
-    share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
+    apply_rule share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
     fold mult.assoc
-    X[THEN implies_right_prod]
+    apply_rule X[THEN implies_right_prod]
   \<medium_right_bracket> .
 
 declare Structural_Extract_share_half[THEN SE_clean_waste,
@@ -1137,8 +1138,8 @@ lemma Structural_Extract_share_half_rev:
   have t1: \<open>(r \<Ztypecolon> R) * (x \<Ztypecolon> m / 2 \<Znrres> T) * (y \<Ztypecolon> m / 2 \<Znrres> U) = (r \<Ztypecolon> R) * (y \<Ztypecolon> m / 2 \<Znrres> U) * (x \<Ztypecolon> m / 2 \<Znrres> T)\<close>
     by (metis (mono_tags, lifting) mult.assoc mult.commute)
   ;; unfold t1
-     X[THEN implies_right_prod]
-     share_merge_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod, folded mult.assoc]
+     apply_rule X[THEN implies_right_prod]
+     apply_rule share_merge[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod, folded mult.assoc]
   \<medium_right_bracket> .
 
 (* declare Structural_Extract_share_half_rev[THEN SE_clean_waste] *)
@@ -1200,10 +1201,10 @@ lemma Structural_Extract_share_ge:
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' Action_Tag_def conjunction_imp \<r>Guard_def
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and [\<phi>reason] and _ and X
-    share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
+    apply_rule share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
-    X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
-        THEN implies_right_prod]
+    apply_rule X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
+                 THEN implies_right_prod]
   have t1: \<open>(r \<Ztypecolon> n \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U) * (x \<Ztypecolon> m - n \<Znrres> T) = (x \<Ztypecolon> m - n \<Znrres> T) * (r \<Ztypecolon> n \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U)\<close>
     using mult.assoc mult.commute by blast
   ;; unfold t1
@@ -1221,8 +1222,8 @@ lemma Structural_Extract_share_le:
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' conjunction_imp \<r>Guard_def
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and _ and X
-    X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
-        THEN implies_left_prod, folded mult.assoc]
+    apply_rule X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
+                 THEN implies_left_prod, folded mult.assoc]
 
   have \<open>(y \<Ztypecolon> n - m \<Znrres> U) * (y \<Ztypecolon> m \<Znrres> U) = (y \<Ztypecolon> n \<Znrres> U)\<close>
     using \<phi>Share_share[where n=\<open>n-m\<close> and m=m, simplified] \<phi>
@@ -1977,8 +1978,10 @@ lemma [\<phi>reason 1200 for \<open>PROP Gen_Synthesis_Rule
             Ant Result \<close>
   unfolding Gen_Synthesis_Rule_def FOCUS_TAG_def conjunction_imp
   subgoal premises prems apply (rule prems(1))
-    \<medium_left_bracket> premises f and A
-      f prems(2)[OF A] \<medium_right_bracket>. .
+\<medium_left_bracket> premises f and A
+  f
+  apply_rule prems(2)[OF A]
+\<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200]: \<comment> \<open>Gen_Synthesis_Rule_step_value the last\<close>
   \<open> PROP Gen_Synthesis_Rule
@@ -1991,7 +1994,9 @@ lemma [\<phi>reason 1200]: \<comment> \<open>Gen_Synthesis_Rule_step_value the l
   unfolding Gen_Synthesis_Rule_def FOCUS_TAG_def conjunction_imp
   subgoal premises prems apply (rule prems(1))
     \<medium_left_bracket> premises f and A
-      f prems(2)[OF A] \<medium_right_bracket> . .
+      f
+      apply_rule prems(2)[OF A]
+    \<medium_right_bracket> . .
 
 lemma [\<phi>reason 1200]: \<comment> \<open>Gen_Synthesis_Rule final\<close>
   \<open> (\<And>e. Remove_Values (E e) (E' e))
@@ -2016,7 +2021,9 @@ lemma [\<phi>reason 1210]:
   unfolding Gen_Synthesis_Rule_def FOCUS_TAG_def conjunction_imp
   subgoal premises prems apply (rule prems(1))
     \<medium_left_bracket> premises f and A
-      f prems(2)[OF A] \<medium_right_bracket> . .
+      f
+      apply_rule prems(2)[OF A]
+    \<medium_right_bracket> . .
 
 
 lemma [\<phi>reason 2000]:
@@ -2128,7 +2135,8 @@ lemma [\<phi>reason 1200]:
   unfolding Gen_Synthesis_Rule_def
   subgoal premises prems apply (rule prems(2))
     \<medium_left_bracket> premises Ant
-      prems(3)[OF Ant] \<medium_right_bracket> . .
+      apply_rule prems(3)[OF Ant]
+    \<medium_right_bracket> . .
 
 
 subsection \<open>Overloaded Synthesis\<close>
@@ -2289,7 +2297,8 @@ lemma make_overloaded_synthesis_rule:
            @action overloaded_synthesis)\<close>
   unfolding Gen_Synthesis_Rule_def
   \<medium_left_bracket> premises E[assertion_simps] and F and X and A
-    X F[OF A]
+    X
+    apply_rule F[OF A]
   \<medium_right_bracket> .
 
 lemma make_overloaded_synthesis_rule':

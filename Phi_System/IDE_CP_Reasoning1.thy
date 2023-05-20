@@ -119,6 +119,7 @@ declare [[\<phi>reason_default_pattern
 section \<open>Normalization of Assertions\<close>
 
 consts assertion_simps :: \<open>mode \<Rightarrow> mode\<close>
+       semantic_mode :: mode
 
 ML \<open>
 structure Assertion_SS = Simpset (
@@ -145,6 +146,7 @@ structure Assertion_SS_Abnormal = Simpset (
   val binding = \<^binding>\<open>assertion_simps_abnormal\<close>
   val comment = "Simp rules normalizing particularly the abnormal spec of a triple."
 )
+
 \<close>
 
 \<phi>reasoner_ML assertion_simp_source 1300
@@ -167,6 +169,12 @@ structure Assertion_SS_Abnormal = Simpset (
      )
   = \<open>PLPR_Simplifier.simplifier_by_ss' Assertion_SS.get'\<close>
 
+\<phi>reasoner_ML semantic_simps 1200
+  (\<open>Premise semantic_mode _\<close> | \<open>Simplify semantic_mode ?X' ?X\<close>
+     )
+  = \<open>PLPR_Simplifier.simplifier (fn ctxt =>
+        Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse})\<close>
+
 lemmas [assertion_simps] =
   mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
   mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>]
@@ -179,6 +187,8 @@ lemmas [assertion_simps] =
   \<phi>V_simps
 
 lemmas [assertion_simps_source] = ExSet_times_left ExSet_times_right
+
+
 
 section \<open>Small Reasoning Process\<close>
 
@@ -310,6 +320,8 @@ lemma rename_abstraction:
      | term => raise THM ("Bad shape of rename_abstraction antecedent", 0, [sequent])
 \<close>
 
+hide_fact rename_abstraction
+
 
 subsubsection \<open>\<lambda>-Abstraction Tag\<close>
 
@@ -340,6 +352,8 @@ lemma [\<phi>reason 1200 for \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
     Seq.single (ctxt, rule RS sequent)
   end
 \<close>
+
+hide_fact lambda_abstraction
 
 lemma [\<phi>reason 1200 for \<open>lambda_abstraction (tag ?x) ?fx ?f\<close>]:
   \<open> lambda_abstraction x fx f
@@ -431,6 +445,8 @@ lemma \<phi>IntroFrameVar'_Yes:
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
     else Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_Yes} RS sequent)
   end\<close>
+
+hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes \<phi>IntroFrameVar'_Yes
 
 
 subsection \<open>Embedded Reasoning\<close>
@@ -584,11 +600,28 @@ text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> remove
   from the assertion \<open>Input\<close>. Bounded values such the return value of a procedure are not removed.\<close>
 
 
-subsection \<open>Collects all Values in an Assertion / from the State Sequent\<close>
+subsection \<open>Value Operations\<close>
+
+subsubsection \<open>Operations for a single Value\<close>
+
+lemma "_rule_extract_and_remove_the_first_value_"[no_atp]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<a>\<n>\<d> P @action ToSA' False
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<close>
+  for X :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+
+lemma "_rule_push_a_value_"[no_atp]:
+  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X * (x \<Ztypecolon> \<v>\<a>\<l>[v] T) \<close>
+  for X :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+
+
+subsubsection \<open>Collects all Values in an Assertion / from the State Sequent\<close>
 
 consts collect_clean_value :: \<open>bool \<Rightarrow> action\<close>
 
-lemma apply_collect_clean_value:
+lemma apply_collect_clean_value[no_atp]:
   \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value WHETHER_CLEAN
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V\<close>
   unfolding Action_Tag_def .

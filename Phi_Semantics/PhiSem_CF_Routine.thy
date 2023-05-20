@@ -27,10 +27,11 @@ lemma "__routine__":
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_routine TY_ARGs TY_RETs F vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
   unfolding op_routine_def
   \<medium_left_bracket> premises [\<phi>reason 5000] and [\<phi>reason 5000] and _ and F
-    "__routine_basic__"[where TY_ARGs=TY_ARGs and TY_RETs=TY_RETs and X=X and Y=Y and vs=vs and 'names='names, simplified]
+    apply_rule "__routine_basic__"[where TY_ARGs=TY_ARGs and TY_RETs=TY_RETs and X=X and Y=Y
+                                                         and vs=vs and 'names='names, simplified]
     \<medium_left_bracket> for vs
       brk_scope \<medium_left_bracket> for label_ret
-        F[where vs=\<open>tag vs\<close>, unfolded Technical_def[where 'a=\<open>bool\<close>], simplified]
+        apply_rule F[where vs=\<open>tag vs\<close>, unfolded Technical_def[where 'a=\<open>bool\<close>], simplified]
         "_op_break_rule_"
       \<medium_right_bracket>
     \<medium_right_bracket>

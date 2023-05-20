@@ -47,6 +47,11 @@ val store_value_no_clean  : process_of_arguments
 
 structure Process_of_Argument : GENERIC_DATA
 
+(* other operations about value *)
+
+val push_values : thm list -> context_state -> context_state
+val extract_and_remove_leading_values : int -> context_state -> thm list * context_state
+
 end
 
 structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
@@ -330,5 +335,36 @@ Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
   then the_default store_value_and_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
   else (ctxt,sequent)
 )))
+
+
+(*** Other operations about value ***)
+
+fun extract_and_remove_leading_values num (ctxt,sequent) =
+  let
+    val mode = Phi_Working_Mode.mode1 ctxt
+    val rule = @{thm "_rule_extract_and_remove_the_first_value_"}
+    fun extract (ret,(ctxt,sequent)) =
+          (ctxt, rule RS (sequent COMP #transformation_rule mode))
+            |> Phi_Reasoner.reason NONE
+            |> (fn SOME (ctxt', sequent'') =>
+                      (case HOLogic.conj_elim ctxt' sequent''
+                         of (sequent', value) => (value::ret, (ctxt', sequent')))
+                 | NONE => Phi_Reasoner.error "Internal bug #vb7iop23")
+   in funpow num extract ([], (ctxt,sequent))
+  end
+
+fun push_values values (ctxt,sequent) =
+  let
+    val mode = Phi_Working_Mode.mode1 ctxt
+    val rule = @{thm "_rule_push_a_value_"}
+    fun push value (ctxt,sequent) =
+          (ctxt, (value RS rule) RS (sequent COMP #transformation_rule mode))
+            |> Phi_Reasoner.reason NONE
+            |> (fn SOME (ctxt', sequent'') =>
+                      (case HOLogic.conj_elim ctxt' sequent''
+                         of (sequent', _) => (ctxt', sequent'))
+                 | NONE => Phi_Reasoner.error "Internal bug #vb7iop23")
+   in fold push values (ctxt,sequent)
+  end
 
 end

@@ -374,14 +374,14 @@ It is different with semimodule in that the scalar is not a semiring but only a 
 The scalar does not have addition operation.\<close>
 
 locale hierarchical_alg =
-  fixes locate :: \<open>'path::monoid_mult \<Rightarrow> 'a::sep_algebra \<Rightarrow> 'a\<close> (infixr ":\<^enum>" 75)
-  assumes locate_distrib_right: \<open>path :\<^enum> (x * y) = path :\<^enum> x * path :\<^enum> y\<close>
-    and   locate_assoc: \<open>pa :\<^enum> pb :\<^enum> x = (pa * pb) :\<^enum> x\<close>
-    and   locate_left_1:  \<open>1 :\<^enum> x = x\<close>
-    and   locate_right_1: \<open>path :\<^enum> 1 = 1\<close>
+  fixes locate :: \<open>'path::monoid_mult \<Rightarrow> 'a::sep_algebra \<Rightarrow> 'a\<close> (infixr ":\<tribullet>" 75)
+  assumes locate_distrib_right: \<open>path :\<tribullet> (x * y) = path :\<tribullet> x * path :\<tribullet> y\<close>
+    and   locate_assoc: \<open>pa :\<tribullet> pb :\<tribullet> x = (pa * pb) :\<tribullet> x\<close>
+    and   locate_left_1:  \<open>1 :\<tribullet> x = x\<close>
+    and   locate_right_1: \<open>path :\<tribullet> 1 = 1\<close>
 
 text \<open>As an example, a structure \<open>struct { struct {A a; B b} c; D d; }\<close> may be represented by
-\<open>c :\<^enum> (a :\<^enum> va * b :\<^enum> vb) * d :\<^enum> vd\<close>. \<close>
+\<open>c :\<tribullet> (a :\<tribullet> va * b :\<tribullet> vb) * d :\<tribullet> vd\<close>. \<close>
 
 
 subsection \<open>Permission Algebra\<close>
@@ -394,8 +394,8 @@ This relaxation eases various things.
 We do not need to check the permission does not exceed 1 when merge two permissions.
 The share (division by 2) and the merge are then free of side conditions.
 In the hierarchical algebra, the permission of a leaf can be greater than 1 when the permission
-of the node is less than 1, e.g. \<open>0.5 :\<Znrres> node_a :\<^enum> (leaf_a :\<^enum> 2 :\<Znrres> a * leaf_b 1 :\<Znrres> a ) \<close> which actually means
-\<open>node_a :\<^enum> (leaf_a :\<^enum> 1 :\<Znrres> a * leaf_b :\<^enum> 0.5 :\<Znrres> a )\<close>.
+of the node is less than 1, e.g. \<open>0.5 :\<Znrres> node_a :\<tribullet> (leaf_a :\<tribullet> 2 :\<Znrres> a * leaf_b 1 :\<Znrres> a ) \<close> which actually means
+\<open>node_a :\<tribullet> (leaf_a :\<tribullet> 1 :\<Znrres> a * leaf_b :\<tribullet> 0.5 :\<Znrres> a )\<close>.
 This helps the localized reasoning that focuses on the \<open>node_a\<close> by allowing disregarding to the
 environmental permission totally.
 

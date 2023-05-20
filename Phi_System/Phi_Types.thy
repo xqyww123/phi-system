@@ -1282,9 +1282,9 @@ proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns
   fix x :: 'a and va :: \<open>'b list \<Rightarrow> 'd\<close>
   assume \<open>sep_insertion_monoid f D\<close>
   then interpret sep_insertion_monoid f .
-  show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> k \<^enum>\<^sub>m va = k \<^enum>\<^sub>m v \<and> (\<exists>va. v = f \<circ> va \<and> va \<in> (x \<Ztypecolon> T))\<close>
+  show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> k \<tribullet>\<^sub>m va = k \<tribullet>\<^sub>m v \<and> (\<exists>va. v = f \<circ> va \<and> va \<in> (x \<Ztypecolon> T))\<close>
     using homo_one_axioms push_map_homo by blast
-  show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. k \<^enum>\<^sub>m (f \<circ> va) = f \<circ> v \<and> (\<exists>va. v = k \<^enum>\<^sub>m va \<and> va \<in> (x \<Ztypecolon> T))\<close>
+  show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. k \<tribullet>\<^sub>m (f \<circ> va) = f \<circ> v \<and> (\<exists>va. v = k \<tribullet>\<^sub>m va \<and> va \<in> (x \<Ztypecolon> T))\<close>
     by (metis homo_one_axioms push_map_homo)
 qed    
 

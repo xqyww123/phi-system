@@ -134,8 +134,6 @@ section \<open>Reasoning\<close>
 
 subsection \<open>Show validity of an index for a type\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma [\<phi>reason 1200]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < length Tys
 \<Longrightarrow> Simplify eval_aggregate_path Ty (Tys!i) 
@@ -191,5 +189,7 @@ lemma [\<phi>reason 1200]:
   unfolding \<phi>Index_mapper_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
   by (metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
+
+
 
 end

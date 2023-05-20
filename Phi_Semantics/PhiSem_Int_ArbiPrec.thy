@@ -217,7 +217,7 @@ lemma op_const_anat_\<phi>app[\<phi>synthesis 300]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> x' : of_nat x \<comment>\<open>TODO: improve this!\<close>
 \<Longrightarrow> Is_Literal x'
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_const_aint x' \<lbrace> Void \<longmapsto> \<v>\<a>\<l> x \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> op_const_aint[where x=x'] \<medium_right_bracket>.
+  \<medium_left_bracket> apply_rule op_const_aint[where x=x'] \<medium_right_bracket>.
 
 
 lemma [\<phi>reason 1210
