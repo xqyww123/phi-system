@@ -224,7 +224,7 @@ lemma op_lt_areal[\<phi>overload <,
   unfolding op_ar_lt_def
   by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
-
+ 
 proc (nodef) op_gt_areal[\<phi>overload >]:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close>
   output \<open>\<v>\<a>\<l> x > y \<Ztypecolon> \<bool>\<close>

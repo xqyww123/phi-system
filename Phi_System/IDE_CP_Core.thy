@@ -1687,10 +1687,11 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
           | name_pos_of _ = ("", Position.none)
     in
       if Phi_Delay_Application.synt_can_delay_apply' (Context.Proof ctxt) (fst xname)
-      then (Phi_Delay_Application.apply (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname]) ctxt,
-            sequent)
+      then Phi_Delay_Application.apply (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname]) (ctxt, sequent)
       else raise Bypass NONE
     end)\<close>
+
+
 
 \<phi>processor apply_operator 8990 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn (ctxt,sequent) =>
@@ -1705,14 +1706,14 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
   ))\<close>
 
 \<phi>processor open_parenthesis 8995 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
-\<open> fn (ctxt,sequent) =>
-  (\<^keyword>\<open>(\<close>) >> (fn _ => fn _ => (Phi_Delay_Application.open_parenthesis ctxt, sequent))\<close>
+\<open> fn s =>
+  (\<^keyword>\<open>(\<close>) >> (fn _ => fn _ => Phi_Delay_Application.open_parenthesis NONE s)\<close>
 
 \<phi>processor apply_delayed 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Delay_Application.close_parenthesis I s)\<close>
 
 \<phi>processor comma 8999 (\<open>?P\<close>) \<open> fn s => 
-  \<^keyword>\<open>,\<close> >> (fn _ => fn _ => Phi_Delay_Application.comma s)\<close>
+  \<^keyword>\<open>,\<close> >> (fn _ => fn _ => Phi_Delay_Application.comma NONE s)\<close>
 
 \<phi>processor embedded_block 8999 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
 \<open> fn stat => (\<^keyword>\<open>(\<close> >> (fn _ => fn _ =>

@@ -103,7 +103,7 @@ proc Coprime:
   \<open>gcd $x $y = 1\<close>
 \<medium_right_bracket> by this
 
-
+ 
 proc binary_search:
   requires F: \<open>\<forall>i v. \<p>\<r>\<o>\<c> F v \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close> \<comment> \<open>v: raw value\<close>
   premises \<open>mono f\<close>
@@ -115,8 +115,8 @@ proc binary_search:
   pure_fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
 
   if ( F($lower) ) \<medium_left_bracket> return ($lower) \<medium_right_bracket>
-  \<medium_left_bracket>  
-    $lower, $upper \<rightarrow> var $l, $u ;;
+  \<medium_left_bracket>
+    ($lower, $upper) \<rightarrow> var $l, $u ;;
     while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<int>\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<int> \<s>\<u>\<b>\<j> l u.
             Inv: (lower \<le> l \<and> l < u \<and> u \<le> upper \<and> \<not> f l \<and> f u) \<and>
             Guard: (l + 1 < u) \<and>

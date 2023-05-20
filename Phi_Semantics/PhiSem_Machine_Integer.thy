@@ -812,23 +812,21 @@ lemma drop_bit_nat_le:
   \<open>drop_bit n x \<le> x\<close> for x :: nat
   using div_le_dividend drop_bit_nat_def by presburger
 
-lemma op_lshr_int_\<phi>app
+proc op_lshr_int
   [\<phi>synthesis for _ (100)
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>('bb)\<close> \<Rightarrow> \<open>\<lambda>v. drop_bit y x \<Ztypecolon> _\<close> (1200)]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_lshr LENGTH('ba) LENGTH('bb) (\<phi>V_pair v2 v1)
-        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v1] \<int>('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] \<nat>('bb) \<longmapsto> \<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<int>('ba) \<rbrace>\<close>
-  \<medium_left_bracket> 
+  input \<open>x \<Ztypecolon> \<v>\<a>\<l>[v1] \<int>('ba)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] \<nat>('bb)\<close>
+  premises \<open>0 \<le> x\<close>
+  output \<open>\<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<int>('ba)\<close>
+\<medium_left_bracket> 
   ;; $v1
   have t1: \<open>x < 2 ^ (LENGTH('ba) - 1)\<close>
     using One_nat_def the_\<phi>(2) by presburger
   have t2: \<open>nat x < 2 ^ (LENGTH('ba) - 1)\<close>
     using t1 by fastforce
-
+note [[\<phi>trace_reasoning = 2]]
   ;; apply_rule op_lshr_nat_\<phi>app[where 'ba='ba and 'bb='bb] ($v1, $v2)
-  \<medium_right_bracket> certified
-  apply rule+ using t2 drop_bit_nat_le order.strict_trans1 apply blast
-  apply (simp add: of_nat_drop_bit the_\<phi>(2)) .. .
+\<medium_right_bracket> .
 
 paragraph \<open>Left Shift\<close>
 
