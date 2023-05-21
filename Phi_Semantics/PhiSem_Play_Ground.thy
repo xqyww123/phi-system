@@ -5,7 +5,29 @@ theory PhiSem_Play_Ground
     PhiSem_Variable
     PhiSem_Int_ArbiPrec
     PhiSem_Machine_Integer
+    PhiSem_Aggregate_Tuple
+    PhiSem_Aggregate_Named_Tuple
 begin
+
+
+\<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
+  where [\<phi>defs]: \<open>\<phi>Rational x = ((n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<s>\<u>\<b>\<j> n d. of_int n / of_int d = x \<and> d \<noteq> 0)\<close>
+
+lemma [\<phi>reason]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> of_int n / of_int d = x \<and> d \<noteq> 0
+\<Longrightarrow> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<rat>\<close>
+  \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<rat>\<close> \<medium_right_bracket> .
+
+proc rat_add:
+  input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
+  output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
+\<medium_left_bracket>
+  $q1 destruct\<phi> _ \<rightarrow> val q1 \<comment> \<open>The reasoner will not open an abstraction by default\<close>
+  $q2 destruct\<phi> _ \<rightarrow> val q2
+  $q1[0] * $q2[1] + $q2[0] * $q1[1] \<rightarrow> val numerator
+  $q1[1] * $q2[1] \<rightarrow> val denominator
+  \<lbrace> $numerator, $denominator \<rbrace>
+\<medium_right_bracket> .
 
 (*
 proc

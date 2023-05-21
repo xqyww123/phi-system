@@ -1,7 +1,7 @@
-signature PHI_VALUE_PROPERTIES = sig
+signature PHI_LOCAL_VALUE_PROPERTIES = sig
 end
 
-structure Phi_Value_Properties : PHI_VALUE_PROPERTIES = struct
+structure Phi_Local_Value_Properties : PHI_LOCAL_VALUE_PROPERTIES = struct
 
 val dest_Zero   = Phi_Syntax.dest_tags   #> Phi_Help.dest_triop   \<^const_name>\<open>\<phi>Zero\<close>
 val dest_Zero_c = Phi_Syntax.dest_tags_c #> Phi_Help.dest_triop_c \<^const_name>\<open>\<phi>Zero\<close>

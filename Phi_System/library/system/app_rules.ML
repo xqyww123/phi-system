@@ -44,8 +44,11 @@ fun overload th (name,pos) ctxt = (
 
 local open Parse Scan in
 
-val name =
-  group (fn () => "name")
+val id = group (fn () => "name") (short_ident || long_ident || keyword)
+
+val id_position = input id >> Input.source_content
+
+val name = group (fn () => "name")
     (short_ident || long_ident (* || sym_ident *) || keyword || string)
 
 val name_position = input name >> Input.source_content
@@ -64,7 +67,7 @@ val xopt_attribs = Scan.optional xattribs [];
 val parser =
   (* $$$ "[" |-- attribs --| $$$ "]" >> pair (Facts.named "") || *)
   \<^keyword>\<open>apply_rule\<close> |-- ((name_position -- Scan.option thm_sel >> Facts.Named) -- xopt_attribs) ||
-  name_position >> (fn name => (Facts.Named (name, NONE), []))
+  id_position >> (fn name => (Facts.Named (name, NONE), []))
   
 
 val _ =

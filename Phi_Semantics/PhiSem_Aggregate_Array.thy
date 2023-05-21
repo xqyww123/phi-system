@@ -87,17 +87,17 @@ subsection \<open>Index to Fields of Structures\<close>
 
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_getter idx X Y f
+  \<open> \<phi>Aggregate_Getter idx X Y f
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
-\<Longrightarrow> \<phi>Index_getter (AgIdx_N i # idx) (Array N X) Y (\<lambda>l. f (l!i))\<close>
-  unfolding \<phi>Index_getter_def Premise_def
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) (Array N X) Y (\<lambda>l. f (l!i))\<close>
+  unfolding \<phi>Aggregate_Getter_def Premise_def
   by (clarsimp simp add: \<phi>expns idx_step_value_arr list_all2_conv_all_nth)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_mapper idx X X Y Y' f
+  \<open> \<phi>Aggregate_Mapper idx X X Y Y' f
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
-\<Longrightarrow> \<phi>Index_mapper (AgIdx_N i # idx) (Array N X) (Array N X) Y Y' (\<lambda>g l. l[i := f g (l!i)])\<close>
-  unfolding \<phi>Index_mapper_def Premise_def
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i # idx) (Array N X) (Array N X) Y Y' (\<lambda>g l. l[i := f g (l!i)])\<close>
+  unfolding \<phi>Aggregate_Mapper_def Premise_def
   by (clarsimp simp add: \<phi>expns idx_step_mod_value_arr list_all2_conv_all_nth nth_list_update)
 
 

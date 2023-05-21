@@ -2429,6 +2429,8 @@ lemma Do_Literal_Simplification[\<phi>reason 1000]:
 
 hide_fact Do_Literal_Simplification
 
-print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to _\<close> ? ?
+subsection \<open>Compilibility / Validity of Semantics\<close>
+
+definition \<open>chk_semantics_validity x \<longleftrightarrow> True\<close> \<comment> \<open>A pure syntactic check and have no logical semantics\<close>
 
 end

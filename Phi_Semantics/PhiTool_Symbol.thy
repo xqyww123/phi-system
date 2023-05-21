@@ -31,7 +31,7 @@ ML \<open>
 structure Phi_Tool_Symbol = struct
 open Phi_Tool_Symbol
 
-fun parse (Free (id, _)) = Const(\<^const_name>\<open>mk_symbol\<close>, dummyT) $ Phi_Tool_Symbol.mk_symbol id
+fun parse (Free (id, _)) = Phi_Tool_Symbol.mk_symbol id
   | parse tm = (@{print} tm; error "Expect an identifier.")
 
 fun print tm =

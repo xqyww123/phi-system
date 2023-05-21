@@ -24,7 +24,7 @@ which always has a leading obligation P no matter whether it is trivially true.
 cast exception is the version for casting an exception assertion.
 *)
 
-val procedure : working_mode
+val programming : working_mode
 val view_shift : working_mode
 val implication : working_mode
 
@@ -39,7 +39,7 @@ val mode1 : Proof.context -> working_mode
 val mode_of  : Context.generic -> term -> working_mode option
 val mode_of1 : Context.generic -> term -> working_mode
 
-val cast : cterm -> Proof.context * thm -> Proof.context * thm
+val cast : cterm -> context_state -> context_state
 val cast_exception : cterm -> Proof.context * thm -> Proof.context * thm
 
 val infer_working_mode_of_sequent : context_state -> working_mode * context_state
@@ -320,7 +320,7 @@ fun vcg_before_assembling goal (ctxt,sequent) =
 
 in
 
-val procedure : working_mode =
+val programming : working_mode =
   {
     name = \<^const_name>\<open>working_mode_procedure\<close>,
     domain = (fn tm => Phi_Syntax.is_construction_mode \<^const>\<open>programming_mode\<close> tm orelse
@@ -480,7 +480,7 @@ val implication : working_mode = {
 }
 end
 
-val _ = Theory.setup (Context.theory_map (register [procedure, view_shift, implication]))
+val _ = Theory.setup (Context.theory_map (register [programming, view_shift, implication]))
 
 
 

@@ -5,10 +5,12 @@ structure Synt_No_Delayed_Apply : GENERIC_DATA
   val synt_can_delay_apply' : Context.generic -> Facts.ref -> bool
 
 type operator_info
-type arg_name = (string * Position.T) option
+type arg_name = string option * Position.T
+type named_arg = arg_name * thm list (*values*)
 
 val apply : (string * Position.T) * thm list -> context_state -> context_state
-val begin_block : Proof.context -> Proof.context
+val meta_apply : (string * Position.T) * arg_name -> (named_arg list -> context_state -> context_state) -> context_state -> context_state
+val begin_block : Position.T -> Proof.context -> Proof.context
 val close_parenthesis : (context_state -> context_state) -> context_state -> context_state
 val open_parenthesis : arg_name -> context_state -> context_state
 val push_operator : operator_info * (string * Position.T) * thm list -> context_state -> context_state
@@ -16,15 +18,18 @@ val end_expression : context_state -> context_state
 val comma : arg_name -> context_state -> context_state
 val lookup_operator : theory -> Symtab.key -> operator_info option
 
+val is_during_apply : Proof.context -> string -> bool
+
 end
 
-structure Phi_Delay_Application : PHI_DELAY_APPLICATION = struct
+structure Phi_Delayed_App : PHI_DELAY_APPLICATION = struct
 
-type arg_name = (string * Position.T) option
+type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
 datatype delay_action = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
                       | Meta_Apply of ((named_arg list -> context_state -> context_state)
-                                        * named_arg)
+                                        * thm list (*values before*)
+                                        * (string * Position.T) (*name and position of the apply*))
                       | Begin_Block
                       | Comma of named_arg
                       | Opr of (int (*precedence*) * int option (*arity constraint*)
@@ -32,8 +37,8 @@ datatype delay_action = Apply of ((string * Position.T) * thm list (*app rules*)
                       | Left_Parenthesis of thm list (*values before*)
 
 structure Parenthesis_Stack = Proof_Data (
-  type T = (delay_action list * (string * Position.T) option list (*current parameter name*))
-  val init = K ([], [NONE])
+  type T = (delay_action list * (string option * Position.T) list (*current parameter name*))
+  val init = K ([], [(NONE, Position.none)])
 )
 
 (* fun invoke_delayed_action (Apply (_, rules)) s = Phi_Apply.apply rules s
@@ -67,8 +72,8 @@ fun chk_arity_constraint NONE _ _ _ = ()
         end
 
 fun chk_no_name vs =
-  case get_first fst vs
-    of SOME (_,pos) => error ("Named arguement is not supported here! " ^ Position.here pos)
+  case get_first (fn ((SOME _, pos),_) => SOME pos | _ => NONE) vs
+    of SOME pos => error ("Named arguement is not supported here! " ^ Position.here pos)
      | _ =>  maps snd vs
 
 fun eval_opr _ _ (acts as (Apply _ :: _)) s = (acts, s)
@@ -102,8 +107,8 @@ fun close_parenthesis c s0 =
         | close _ _ (Opr _ :: _) _ = error "internal bug #91066fd2-8881-422f-bf54-4b3f69879042"
         | close c args (Left_Parenthesis vals_before :: acts) s =
             c acts (Generic_Variable_Access.push_values (vals_before @ chk_no_name args) s)
-        | close c args (Meta_Apply (f, arg) :: acts) (ctxt,sequent) =
-            c acts (f (arg :: args) (ctxt,sequent))
+        | close c args (Meta_Apply (f, vals_before, (_, pos)) :: acts) (ctxt,sequent) =
+            c acts (f (((NONE, pos), vals_before) :: args) (ctxt,sequent))
         | close c args (Comma arg :: acts) s =
             close c (arg :: args) acts s
         | close _ _ [] _ = error "parenthesis is inbalanced!"
@@ -137,10 +142,10 @@ fun push_operator ((left_prec,prec,arity_delta),name,rule) (ctxt,sequent) =
 
 fun end_expression s =
   let val mode = Phi_Working_Mode.mode1 (fst s)
-      val (actions, arg_name :: arg_names) = Parenthesis_Stack.get (fst s)
+      val (actions, arg_names) = Parenthesis_Stack.get (fst s)
       val (actions', s') = eval_opr mode 0 actions s
    in s'
-   |> apfst (Parenthesis_Stack.put (actions', NONE :: arg_names))
+   |> apfst (Parenthesis_Stack.put (actions', arg_names))
   end
 
 fun comma next_arg_name s =
@@ -155,12 +160,30 @@ fun comma next_arg_name s =
 fun apply (name, rules) (ctxt,sequent) =
   let val (actions, arg_names) = Parenthesis_Stack.get ctxt
       val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
-      val ctxt' = Parenthesis_Stack.put (Apply (name, rules, vals) :: actions, NONE :: arg_names) ctxt
+      val ctxt' = Parenthesis_Stack.put (Apply (name, rules, vals) :: actions, (NONE, snd name) :: arg_names) ctxt
    in (ctxt', sequent')
   end
 
-val begin_block = Parenthesis_Stack.map (fn (actions, arg_names) =>
-        (Begin_Block :: actions, NONE :: arg_names))
+fun meta_apply (pos,arg_name) f (ctxt,sequent) =
+  let val (actions, arg_names) = Parenthesis_Stack.get ctxt
+      val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
+      val ctxt' = Parenthesis_Stack.put (Meta_Apply (f, vals, pos) :: actions, arg_name :: arg_names) ctxt
+   in (ctxt', sequent')
+  end
+
+fun begin_block pos = Parenthesis_Stack.map (fn (actions, arg_names) =>
+        (Begin_Block :: actions, (NONE, pos) :: arg_names))
+
+fun is_during_apply ctxt name =
+  let val (actions, _) = Parenthesis_Stack.get ctxt
+      fun is_during (Apply ((s, _), _, _) :: _) = (s = name)
+        | is_during (Meta_Apply (_, _, (s, _)) :: _) = s = name
+        | is_during (Begin_Block :: _) = false
+        | is_during (Comma _ :: L) = is_during L
+        | is_during (Opr _ :: L) = is_during L
+        | is_during (Left_Parenthesis _ :: L) = is_during L
+   in is_during actions
+  end
 
 val delayed_apps = Parenthesis_Stack.get #> fst
 

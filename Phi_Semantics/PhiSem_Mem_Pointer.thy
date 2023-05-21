@@ -3,7 +3,6 @@ theory PhiSem_Mem_Pointer
   keywords
       "\<tribullet>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
-      and "|>"  = "\<tribullet>"
       and "\<tribullet>_a"  = "\<tribullet>\<^sub>a"
 begin
 
@@ -515,15 +514,15 @@ section \<open>Semantic Operations\<close>
 declare_\<phi>operator infixl 55 "\<tribullet>"
 
 proc op_get_element_pointer_symbol[\<phi>overload "\<tribullet>"]:
-  requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(LOGIC_SYMBOL(symbol))\<close>
-       and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(LOGIC_SYMBOL(symbol)) TY\<close>
+  requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(LOGIC_SYMBOL(s))\<close>
+       and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(LOGIC_SYMBOL(s)) TY\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  output \<open>addr \<tribullet>\<^sub>a LOGIC_SYMBOL(symbol) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr \<tribullet>\<^sub>a LOGIC_SYMBOL(s) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
-     V_pointer.mk (logaddr_to_raw (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)) \<tribullet>\<^sub>a LOGIC_SYMBOL(symbol)))
-         \<in> (addr \<tribullet>\<^sub>a LOGIC_SYMBOL(symbol) \<Ztypecolon> Ptr TY')\<close>
+     V_pointer.mk (logaddr_to_raw (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)) \<tribullet>\<^sub>a LOGIC_SYMBOL(s)))
+         \<in> (addr \<tribullet>\<^sub>a LOGIC_SYMBOL(s) \<Ztypecolon> Ptr TY')\<close>
      certified by ((insert useful, simp add: \<phi>expns,
                    cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>;
                    cases \<open>addr = 0\<close>;

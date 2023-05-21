@@ -32,7 +32,7 @@ lemma "__routine__":
     \<medium_left_bracket> for vs
       brk_scope \<medium_left_bracket> for label_ret
         apply_rule F[where vs=\<open>tag vs\<close>, unfolded Technical_def[where 'a=\<open>bool\<close>], simplified]
-        "_op_break_rule_"
+        apply_rule "_op_break_rule_"
       \<medium_right_bracket>
     \<medium_right_bracket>
   \<medium_right_bracket>.

@@ -2,7 +2,9 @@ theory PhiSem_Common_Int
   imports PhiSem_Generic_Boolean "HOL-Library.Signed_Division"
 begin
 
-section \<open>Preliminary\<close>
+section \<open>Common Integer Base\<close>
+
+subsection \<open>Logic Syntax and Isabelle Syntax Hijack\<close>
 
 ML \<open>structure PhiSem_Common_Int_Notation_Patch = Theory_Data (
   type T = string; val empty = ""; val merge = K ""
@@ -14,6 +16,7 @@ let val remove_synt = Sign.notation false Syntax.mode_default [
     (Const (\<^const_abbrev>\<open>union\<close>, dummyT), Infixl (Input.string "Un", 65, Position.no_range)),
     (Const (\<^const_name>\<open>Nats\<close>, dummyT), Mixfix (Input.string "\<nat>", [], 1000, Position.no_range)),
     (Const (\<^const_name>\<open>Ints\<close>, dummyT), Mixfix (Input.string "\<int>", [], 1000, Position.no_range)),
+    (Const (\<^const_name>\<open>Rats\<close>, dummyT), Mixfix (Input.string "\<rat>", [], 1000, Position.no_range)),
     (Const ("Real_Vector_Spaces.Reals", dummyT), Mixfix (Input.string "\<real>", [], 1000, Position.no_range))
   ]
 in remove_synt
@@ -28,6 +31,75 @@ declare Nat.One_nat_def[simp del] Num.add_2_eq_Suc'[simp del] split_paired_All[s
 
 abbreviation LshR (infixl "LSHR" 70) where \<open>x LSHR y \<equiv> x div 2 ^ Big y\<close>
 abbreviation LshL (infixl "LSHL" 70) where \<open>x LSHL y \<equiv> x  *  2 ^ Big y\<close>
+
+
+subsection \<open>Semantic Base\<close>
+
+debt_axiomatization \<phi>Sem_int_to_logic_int :: \<open>VAL \<Rightarrow> int option\<close>
+                and \<phi>Sem_int_to_logic_nat :: \<open>VAL \<Rightarrow> nat option\<close>
+
+subsubsection \<open>Reasoner Base for getting the logical int from a semantic int spec\<close>
+
+definition get_logical_int_from_semantic_int :: \<open>VAL set \<Rightarrow> int \<Rightarrow> bool\<close>
+  where \<open>get_logical_int_from_semantic_int S i = (\<forall>v \<in> S. Some i = \<phi>Sem_int_to_logic_int v)\<close>
+
+definition get_logical_nat_from_semantic_int :: \<open>VAL set \<Rightarrow> nat \<Rightarrow> bool\<close>
+  where \<open>get_logical_nat_from_semantic_int S i = (\<forall>v \<in> S. Some i = \<phi>Sem_int_to_logic_nat v)\<close>
+
+declare [[\<phi>reason_default_pattern
+    \<open>get_logical_nat_from_semantic_int ?S _\<close> \<Rightarrow> \<open>get_logical_nat_from_semantic_int ?S _\<close> (100)
+and \<open>get_logical_int_from_semantic_int ?S _\<close> \<Rightarrow> \<open>get_logical_int_from_semantic_int ?S _\<close> (100)
+]]
+
+
+
+
+
+definition \<r>nat_to_suc_nat :: \<open>nat \<Rightarrow> nat \<Rightarrow> bool\<close>
+  where [simp]: \<open>\<r>nat_to_suc_nat n sn \<longleftrightarrow> n = sn\<close>
+
+definition \<r>int_to_suc_nat :: \<open>int \<Rightarrow> nat \<Rightarrow> bool\<close>
+  where [simp]: \<open>\<r>int_to_suc_nat z n \<longleftrightarrow> z = of_nat n\<close>
+
+\<phi>reasoner_ML \<r>nat_to_suc_nat 1000 (\<open>\<r>nat_to_suc_nat _ _\<close> | \<open>\<r>int_to_suc_nat _ _\<close>) =
+\<open>fn (ctxt,sequent) =>
+let
+ exception Not_A_Number
+ fun dest_number (Const ("Groups.zero_class.zero", _)) = 0
+  | dest_number (Const ("Groups.one_class.one", _)) = 1
+  | dest_number (Const (\<^const_name>\<open>Suc\<close>, _) $ X) = 1 + dest_number X
+  | dest_number (Const ("Num.numeral_class.numeral", _) $ t) = HOLogic.dest_numeral t
+  | dest_number (Const ("Groups.uminus_class.uminus", _) $ t) = ~ (dest_number t)
+  | dest_number t = raise Not_A_Number;
+in
+  case Thm.major_prem_of sequent
+    of (_ (*Trueprop*) $ ( _ (*\<r>nat_to_suc_nat*) $ Z $ Var v))
+        => Seq.make (fn () =>
+          let val z = dest_number Z
+           in if z < 0 then NONE
+              else let
+                val v' = funpow z (fn x => \<^const>\<open>Suc\<close> $ x) \<^term>\<open>0::nat\<close>
+                in case Seq.pull (
+                    Thm.instantiate (TVars.empty, Vars.make [(v, Thm.cterm_of ctxt v')]) sequent
+                        |> SOLVED' (Simplifier.simp_tac ctxt) 1
+                        |> Seq.map (pair ctxt)
+                    ) of NONE => (
+                          warning (Pretty.string_of (Pretty.block [
+                              Syntax.pretty_term ctxt Z,
+                              Pretty.str " is not a literal number"
+                          ]));
+                          NONE)
+                       | some => some
+               end
+          end
+        handle Not_A_Number => NONE
+         )
+     | _ => Seq.empty
+end
+\<close>
+
+
+subsection \<open>Operator Overloading\<close>
 
 \<phi>overloads nat and int
 

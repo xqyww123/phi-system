@@ -175,7 +175,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> y \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> U \<a>\<n>\<d> P
 \<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<a>\<n>\<d> P\<close>
   \<medium_left_bracket> premises [unfolded is_functional_def, useful] and [unfolded satisfication_encoding, useful]
-    D \<medium_right_bracket> .
+    destruct \<medium_right_bracket> .
 
 lemma \<phi>Composition_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<in> (y \<Ztypecolon> T) \<and> y \<in> (x \<Ztypecolon> U))\<close>

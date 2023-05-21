@@ -19,7 +19,7 @@ val invoke : Proof.context -> Arg.domT -> Arg.retT
 
 end
 
-functor PLPR_Handlers(Arg : PLPR_HANDLERS_ARG) : PLPR_HANDLERS = struct
+functor Local_Handlers(Arg : PLPR_HANDLERS_ARG) : PLPR_HANDLERS = struct
 
 structure Data = Proof_Data (
   type T = serial * (serial * (Arg.domT -> Arg.retT option)) list

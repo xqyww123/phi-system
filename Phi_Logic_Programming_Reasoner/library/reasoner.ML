@@ -208,7 +208,7 @@ exception Success    of context_state
 exception Global_Cut of context_state
 exception Local_Cut  of (priority * Position.T * context_state Seq.seq)
 
-structure Global_Cut_Handlers = PLPR_Handlers(
+structure Global_Cut_Handlers = Local_Handlers(
   type domT = context_state
   type retT = (Position.T * context_state Seq.seq) list
   fun default s = raise Global_Cut s
@@ -216,7 +216,7 @@ structure Global_Cut_Handlers = PLPR_Handlers(
   val ctxt_of = fst
 )
 
-structure Success_Handlers = PLPR_Handlers(
+structure Success_Handlers = Local_Handlers(
   type domT = context_state
   type retT = (Position.T * context_state Seq.seq) list
   fun default s = raise Success s

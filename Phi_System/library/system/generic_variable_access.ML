@@ -33,6 +33,7 @@ val translate_value1 : Proof.context -> term -> term
 
 (** Initial Arguments **)
 
+(*performance hotsopt!*)
 val collect_and_clean_value : bool (*whether to clean the Val \<phi>-types from the sequent*)
                            -> Proof.context -> thm (*sequent*)
                            -> thm (*sequent*) * thm list (*specs of value*)
@@ -49,7 +50,9 @@ structure Process_of_Argument : GENERIC_DATA
 
 (* other operations about value *)
 
+(*performance hotsopt!*)
 val push_values : thm list -> context_state -> context_state
+(*performance hotsopt!*)
 val extract_and_remove_leading_values : int -> context_state -> thm list * context_state
 
 end
@@ -331,7 +334,7 @@ structure Process_of_Argument = Generic_Data (
 val _ = Theory.setup (Context.theory_map (
 Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
   if level = 0
-  andalso #name (Phi_Working_Mode.mode1 ctxt) = #name Phi_Working_Mode.procedure
+  andalso #name (Phi_Working_Mode.mode1 ctxt) = #name Phi_Working_Mode.programming
   then the_default store_value_and_clean (Process_of_Argument.get (Context.Proof ctxt)) (ctxt,sequent)
   else (ctxt,sequent)
 )))

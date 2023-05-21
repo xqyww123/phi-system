@@ -57,6 +57,11 @@ lemma list_all_replicate:
   \<open>list_all P (replicate n x) \<longleftrightarrow> n = 0 \<or> P x\<close>
   by (induct n; simp; blast)
 
+primrec semantic_tuple_constructor
+  where \<open>semantic_tuple_constructor [] = V_tup.mk []\<close>
+      | \<open>semantic_tuple_constructor (v#R) =
+            V_tup.mk (\<phi>arg.dest v # V_tup.dest (semantic_tuple_constructor R))\<close>
+
 (* lemma Valid_Type_\<tau>Tuple[simp]:
   \<open>Valid_Type (tup Ts) \<longleftrightarrow> list_all Valid_Type Ts\<close>
   unfolding Inhabited_def
@@ -142,7 +147,8 @@ lemma [\<phi>reason 1200]:
   unfolding Premise_def Simplify_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
-subsection \<open>Index\<close>
+
+subsection \<open>Aggregate Access\<close>
 
 lemma idx_step_value_V_tup_suc:
   \<open>idx_step_value (AgIdx_N (Suc i)) (V_tup.mk (va # vs)) = idx_step_value (AgIdx_N i) (V_tup.mk vs)\<close>
@@ -153,43 +159,72 @@ lemma idx_step_mod_value_V_tup_suc:
   by (metis NO_MATCH_I V_tup_mult_cons idx_step_mod_value_tup list_update_code(3) nth_Cons_Suc)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_getter (AgIdx_N i # idx) X Y f
-\<Longrightarrow> \<phi>Index_getter (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y (f o snd)\<close>
-  unfolding \<phi>Index_getter_def
+  \<open> \<phi>Aggregate_Getter (AgIdx_N i # idx) X Y f
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y (f o snd)\<close>
+  unfolding \<phi>Aggregate_Getter_def
   by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_V_tup_suc)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_getter idx X Y f
-\<Longrightarrow> \<phi>Index_getter (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> Y f\<close>
-  unfolding \<phi>Index_getter_def
+  \<open> \<phi>Aggregate_Getter idx X Y f
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> Y f\<close>
+  unfolding \<phi>Aggregate_Getter_def
   by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_getter idx X Y f
-\<Longrightarrow> \<phi>Index_getter (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) Y (f o fst)\<close>
-  unfolding \<phi>Index_getter_def
+  \<open> \<phi>Aggregate_Getter idx X Y f
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) Y (f o fst)\<close>
+  unfolding \<phi>Aggregate_Getter_def
   by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_mapper (AgIdx_N i # idx) X X' Y Y' f
-\<Longrightarrow> \<phi>Index_mapper (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) (\<lbrace> T \<rbrace> \<^emph> X') Y Y' (apsnd o f)\<close>
-  unfolding \<phi>Index_mapper_def
+  \<open> \<phi>Aggregate_Mapper (AgIdx_N i # idx) X X' Y Y' f
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) (\<lbrace> T \<rbrace> \<^emph> X') Y Y' (apsnd o f)\<close>
+  unfolding \<phi>Aggregate_Mapper_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_V_tup_suc)
   by (metis V_tup_sep_disj_R idx_step_mod_value_tup)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_mapper idx X X' Y Y' f
-\<Longrightarrow> \<phi>Index_mapper (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> \<lbrace> X' \<rbrace> Y Y' f\<close>
-  unfolding \<phi>Index_mapper_def
+  \<open> \<phi>Aggregate_Mapper idx X X' Y Y' f
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> \<lbrace> X' \<rbrace> Y Y' f\<close>
+  unfolding \<phi>Aggregate_Mapper_def
   by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Index_mapper idx X X' Y Y' f
-\<Longrightarrow> \<phi>Index_mapper (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) (\<lbrace> X' \<rbrace> \<^emph> R) Y Y' (apfst o f)\<close>
-  unfolding \<phi>Index_mapper_def
+  \<open> \<phi>Aggregate_Mapper idx X X' Y Y' f
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) (\<lbrace> X' \<rbrace> \<^emph> R) Y Y' (apfst o f)\<close>
+  unfolding \<phi>Aggregate_Mapper_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
   by (metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
 
 
+lemma [\<phi>reason 1000]:
+  \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor [] (tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
+  unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def
+  by (clarsimp simp add: EmptyTuple_expn)
+
+lemma [\<phi>reason 1020]:
+  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor [v] (tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
+  unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def
+  by (cases v; clarsimp simp add: Tuple_Field_expn; blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor vR (tup Tys) (r \<Ztypecolon> Tr)
+\<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor (v # vR) (tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
+  unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def
+  by (cases v; clarsimp simp add: Tuple_Field_expn \<phi>Prod_expn;
+      metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L subsetD)
+
+setup \<open>Context.theory_map (
+  Phi_Generic_Element_Access.Agg_Constructors.add 0 (fn (kind, args, (ctxt,sequent)) =>
+    if kind = "" andalso forall (fn ((NONE,_),[_]) => true | _ => false) args
+    then let val args' = map (fn (_,[rule]) => Phi_Local_Value.get_raw_val_in_rule rule) args
+          in SOME (ctxt, \<^cterm>\<open>semantic_tuple_constructor\<close>, args')
+         end
+    else NONE
+))\<close>
 
 end

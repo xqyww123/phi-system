@@ -203,7 +203,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
                                         then sequentx
                                         else snd (Phi_Sys.cast ret_spec (ctxt,sequentx))
                         val sequentx2 =
-                              #cast_exception Phi_Working_Mode.procedure E_spec (ctxt, sequentx1)
+                              #cast_exception Phi_Working_Mode.programming E_spec (ctxt, sequentx1)
                                     |> Phi_Reasoners.safer_obligation_solver1
                                     |> snd
                          in sequentx2

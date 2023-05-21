@@ -1,5 +1,5 @@
 theory PhiSem_Aggregate_Path
-  imports PhiSem_Base PhiTool_Symbol
+  imports Phi_System.PhiSem_Formalization_Tools2 PhiSem_Symbol
 begin
 
 section \<open>Path of Elements in an Aggregate Structure\<close>
@@ -84,6 +84,10 @@ print_translation \<open>[
             then Const (\<^syntax_const>\<open>_log_num_ag_idx_\<close>, dummyT) $ tm
             else Const (\<^syntax_const>\<open>_log_num_ag_idx'_\<close>, dummyT) $ tm)))
 ]\<close>
+
+
+
+
 
 
 end

@@ -1,5 +1,5 @@
 val phi_display_value_internal_name =
-      Attrib.setup_config_bool \<^binding>\<open>\<phi>display_value_internal_name\<close> (K true)
+      Attrib.setup_config_bool \<^binding>\<open>\<phi>display_value_internal_name\<close> (K false)
 
 val _ = Theory.setup (Sign.print_ast_translation (let open Ast in
   [(\<^const_syntax>\<open>Val\<close>, (fn ctxt => fn (args as [a,b]) =>

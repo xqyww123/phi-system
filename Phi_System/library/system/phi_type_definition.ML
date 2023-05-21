@@ -150,7 +150,7 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- (Parse_Spec.opt_thm_name "
         ))
 
 val _ = Outer_Syntax.local_theory' \<^command_keyword>\<open>\<phi>type_def\<close>
-    "define \<phi>-types" (def_direct || def_by_fun)
+            "define \<phi>-types" (def_direct || def_by_fun)
 
 
 (***  ***)

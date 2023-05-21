@@ -4,7 +4,7 @@
    Access and assignment for local value.
 *)
 
-signature PHI_VALUE = sig
+signature PHI_LOCAL_VALUE = sig
 
 val has_val : string (*external name*) -> Proof.context -> bool
 val delete_val : string (*external name*) -> Proof.context -> Proof.context
@@ -13,9 +13,15 @@ val update_val : binding -> thm (*rule*) -> Proof.context -> Proof.context
 
 val valname_prefix : string
 
+(*the rules must be in form \<open>\<phi>arg.dest v \<in> x : T\<close>*)
+val add_reasoning_rules : (thm * Position.T * Phi_Reasoner.mode * priority) list
+                       -> Context.generic -> Context.generic
+val remove_reasoning_rules: thm list -> Context.generic -> Context.generic
+val get_raw_val_in_rule : thm -> term
+
 end
 
-structure Phi_Value : PHI_VALUE = struct
+structure Phi_Local_Value : PHI_LOCAL_VALUE = struct
 
 structure Values = Proof_Data (
   type T = (thm * string) Symtab.table
@@ -28,27 +34,44 @@ fun has_val xname ctxt = Symtab.defined (Values.get ctxt) xname
 fun get_internal_val_name xname ctxt =
   Symtab.lookup (Values.get ctxt) xname |> Option.map snd
 
-fun pattern_of ctxt xname rule =
-  let
-    val iname = case get_internal_val_name xname ctxt
-                  of SOME x => x | _ => raise Fail "not a known local value"
-    val i = 1 + Thm.maxidx_of rule
+fun internal_name_of ctxt xname =
+  case get_internal_val_name xname ctxt
+    of SOME x => x | _ => raise Fail "not a known local value"
+
+fun get_raw_val_in_rule rule =
+   case Thm.prop_of rule
+     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+            $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
+            $ _)
+           => V
+       | _ => raise THM ("Bad Rule", 0, [rule])
+
+fun pattern_of' mk_var rule =
+  let val i = 1 + Thm.maxidx_of rule
   in case Thm.prop_of rule
        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>,
                                 (T1 as Type ("fun", [_, Type ("fun", [T,_])])))
-              $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2)
-                              $ (Const (\<^const_name>\<open>Value_of\<close>, T3) $ V1 $ Free (vname, T4)))
+              $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
               $ _)
-             => if vname = iname
-                then
-                  \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
-                    $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2)
-                          $ (Const (\<^const_name>\<open>Value_of\<close>, T3) $ Var (("val", i), fastype_of V1)
-                                                              $ Free (vname, T4)))
-                    $ Var (("out", i), T))
-                else raise THM ("Bad Rule", 0, [rule])
+             => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
+                  $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ mk_var (i,V))
+                  $ Var (("out", i), T))
          | _ => raise THM ("Bad Rule", 0, [rule])
   end
+
+fun pattern_of__value_of ctxt xname rule =
+      pattern_of' (fn (i,rawval) =>
+        case rawval of Const (\<^const_name>\<open>Value_of\<close>, T3) $ V1 $ Free (vname, T4)
+              => if vname = internal_name_of ctxt xname
+                 then Const (\<^const_name>\<open>Value_of\<close>, T3)
+                        $ Var (("val", i), fastype_of V1)
+                        $ Free (vname, T4)
+                 else raise THM ("Bad Rule", 0, [rule])
+           | _ => raise THM ("Bad Rule", 0, [rule])) rule
+
+fun pattern_of rule =
+      pattern_of' (fn (i,rawval) => Var (("val",i), fastype_of rawval)) rule
+
 
 fun delete_val' pred xname ctxt =
   case Symtab.lookup (Values.get ctxt) xname
@@ -57,7 +80,7 @@ fun delete_val' pred xname ctxt =
           then ctxt
           else Context.proof_map (
                   Phi_Reasoner.del_reasoners
-                      (pattern_of ctxt xname rule)
+                      (pattern_of__value_of ctxt xname rule)
                       (fn r => #name r aconv Thm.prop_of rule)
                   ) ctxt
      | NONE => ctxt
@@ -84,13 +107,23 @@ fun update_val b rule ctxt =
      |> (fn ctxt' =>
         Context.proof_map (Phi_Reasoner.add_intro_rule
                               (Binding.pos_of b) Phi_Reasoner.LOCAL_CUT 1000
-                              ([(pattern_of ctxt' (Binding.name_of b) rule, NONE)],[]) NONE
-                              [rule]) ctxt')
+                              ([(pattern_of__value_of ctxt' (Binding.name_of b) rule, NONE)],[])
+                              NONE [rule]) ctxt')
      |> Generic_Variable_Access.bind_local_vals
             [(Binding.name_of b, (Free (vname, T), K V))]
      |> Proof_Context.maybe_bind_term ((Binding.name_of b,0), V)
   end
 
+fun add_reasoning_rules rules ctxt =
+  Phi_Reasoner.add_intro_rules (map (fn (rule,pos,mode, prio) =>
+    ([rule], pos, mode, prio, [(pattern_of rule, NONE)],[], NONE))
+    rules) ctxt
+
+fun remove_reasoning_rules rules ctxt =
+  fold (fn rule => Phi_Reasoner.del_reasoners
+                      (pattern_of rule)
+                      (fn r => #name r aconv Thm.prop_of rule)
+       ) rules ctxt
 
 val value_assigner_id = "val"
 val valname_prefix = "\<v>\<a>\<l>_"

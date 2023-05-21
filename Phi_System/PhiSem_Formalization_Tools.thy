@@ -1327,7 +1327,7 @@ proc (nodef) try'':
   input  X
     output YY
   throws EE2
-  \<medium_left_bracket> "__op_try__"
+  \<medium_left_bracket> apply_rule "__op_try__"
     F
     G
   \<medium_right_bracket> .
@@ -1339,7 +1339,7 @@ proc (nodef) try':
   input  X
     output Z
   throws E2
-  \<medium_left_bracket> "__op_try__" F G
+  \<medium_left_bracket> apply_rule "__op_try__" F G
     unfold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def, THEN spec, symmetric]
   \<medium_right_bracket>.
 
@@ -1845,19 +1845,19 @@ definition op_set_element :: "nat list \<Rightarrow> TY \<Rightarrow> (VAL,'RES_
 lemma (in \<phi>empty) op_get_element:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> valid_index TY idx
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> X) TY
-\<Longrightarrow> \<phi>Index_getter idx X Y f
+\<Longrightarrow> \<phi>Aggregate_Getter idx X Y f
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_get_element idx TY \<lbrace> VAL x \<Ztypecolon> X \<longmapsto> VAL f x \<Ztypecolon> Y \<rbrace> \<close>
-  unfolding op_get_element_def \<phi>Index_getter_def Premise_def
+  unfolding op_get_element_def \<phi>Aggregate_Getter_def Premise_def
   apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
   by \<phi>reason
 
 lemma (in \<phi>empty) op_set_element:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> valid_index TY idx
-\<Longrightarrow> \<phi>Index_mapper idx X Y f
+\<Longrightarrow> \<phi>Aggregate_Mapper idx X Y f
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> X) TY
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> Y) (index_type idx TY)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_set_element idx TY \<lbrace> VAL x \<Ztypecolon> X\<heavy_comma> VAL y \<Ztypecolon> Y \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> X \<rbrace>\<close>
-  unfolding op_set_element_def \<phi>Index_mapper_def Premise_def
+  unfolding op_set_element_def \<phi>Aggregate_Mapper_def Premise_def
   apply \<phi>reason apply (simp add: \<phi>SemType_def subset_iff)
    apply (simp add: \<phi>SemType_def subset_iff)
   by \<phi>reason

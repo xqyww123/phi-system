@@ -65,6 +65,10 @@ debt_axiomatization
 and can_eqcmp_int[simp]: "Can_EqCompare res (V_int.mk (b1,x1)) (V_int.mk (b2,x2)) \<longleftrightarrow> b1 = b2"
 and eqcmp_int[simp]: "EqCompare (V_int.mk i1) (V_int.mk i2) \<longleftrightarrow> i1 = i2"
 and  zero_int[simp]: \<open>Zero (T_int.mk b)    = Some (V_int.mk (b,0))\<close>
+and \<phi>Sem_machine_int_to_logic_nat[simp]: \<open>\<phi>Sem_int_to_logic_nat (V_int.mk (b,x)) = Some (of_nat x)\<close>
+and \<phi>Sem_machine_int_to_logic_int[simp]:
+      \<open>\<phi>Sem_int_to_logic_int (V_int.mk (b,x)) = Some (if x < 2^(b - 1) then of_nat x
+                                                      else - of_nat (2^b - x))\<close>
 
 (*lemma Valid_Types[simp]:
   \<open>Valid_Type (T_int.mk n)\<close>
@@ -279,6 +283,17 @@ lemma [\<phi>reason 1000]:
   "\<phi>Equal (\<nat>('b::len)) (\<lambda>x y. True) (=)"
   \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket> certified using \<phi>lemmata of_nat_inverse by blast .
 
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<nat>('b::len))
+        (if n < 2^(LENGTH('b) - 1) then of_nat n else - of_nat (2^LENGTH('b) - n))\<close>
+  unfolding get_logical_int_from_semantic_int_def Ball_def
+  by (clarsimp simp add: \<phi>Nat_expn)
+
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_nat_from_semantic_int (n \<Ztypecolon> \<nat>('b::len)) n\<close>
+  unfolding get_logical_nat_from_semantic_int_def Ball_def
+  by (clarsimp simp add: \<phi>Nat_expn)
+
 
 subsection \<open>Integer\<close>
 
@@ -294,6 +309,17 @@ parse_ast_translation \<open>
   let open Ast
    in [(\<^syntax_const>\<open>\<phi>Int_syntax\<close>, (fn _ => fn [V] =>
           Appl [Constant \<^const_syntax>\<open>\<phi>Int\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
+
+lemma \<phi>Int_expn[\<phi>expns]:
+  \<open>p \<in> (n \<Ztypecolon> \<int>('b)) \<longleftrightarrow> p = V_int.mk (LENGTH('b), (if 0 \<le> n then nat n else nat (2^LENGTH('b) + n)))
+          \<and> n < 2 ^ (LENGTH('b) - 1) \<and> - (2 ^ (LENGTH('b) - 1)) \<le> n\<close>
+  unfolding \<phi>Type_def \<phi>Int_def Word_def
+  by (auto simp add: Subjection_expn,
+      smt (verit) More_Word.power_not_zero less_eq_decr_length_iff power_increasing_iff unat_eq_nat_uint word_exp_length_eq_0 word_of_int_inverse,
+      smt (verit, best) Suc_n_not_le_n diff_less len_gt_0 less_eq_Suc_le nat_uint_eq power_increasing_iff word_of_int_inverse,
+      smt (verit, best) More_Word.power_not_zero less_eq_decr_length_iff nat_uint_eq of_int_add power_increasing_iff word_arith_wis(7) word_exp_length_eq_0 word_of_int_2p_len word_of_int_inverse,
+      smt (verit, best) diff_less len_gt_0 nat_uint_eq power_strict_increasing wi_hom_add word_of_int_0 word_of_int_2p_len word_of_int_inverse zero_less_Suc)
+  
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<int>(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Word(_) \<a>\<n>\<d> _\<close>]:
   " Threshold_Cost 7
@@ -359,6 +385,25 @@ lemma [\<phi>reason 1000]:
   \<medium_left_bracket> to \<open>Word(_)\<close> \<medium_right_bracket>
       certified by (metis One_nat_def atLeastLessThan_iff the_\<phi>lemmata signed_take_bit_int_eq_self_iff sint_sbintrunc') .
 
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<int>('b::len)) n\<close>
+  unfolding get_logical_int_from_semantic_int_def Ball_def
+  apply (auto simp add: \<phi>Int_expn One_nat_def[symmetric] not_le  simp del: One_nat_def)
+  subgoal premises prems proof -
+    have \<open>n < 2 ^ (LENGTH('b) - 1) - 2 ^ LENGTH('b)\<close>
+      using prems(3) by force
+    then have \<open>n < 2 ^ (LENGTH('b) - 1) - 2 * 2 ^ (LENGTH('b) - 1)\<close>
+      by (metis One_nat_def decr_length_less_iff less_eq_Suc_le order.refl power.simps(2) verit_la_disequality)
+    then show ?thesis
+      by linarith
+  qed
+  by (simp add: int_ops(6),
+      smt (verit, best) less_imp_diff_less power_strict_increasing_iff)
+
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_nat_from_semantic_int (n \<Ztypecolon> \<int>('b::len)) (if 0 \<le> n then nat n else nat (2^LENGTH('b) + n))\<close>
+  unfolding get_logical_nat_from_semantic_int_def Ball_def
+  by (clarsimp simp add: \<phi>Int_expn)
 
 
 section \<open>Instructions\<close>

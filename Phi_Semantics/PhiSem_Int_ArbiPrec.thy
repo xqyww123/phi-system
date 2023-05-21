@@ -37,13 +37,15 @@ interpretation \<phi>spec_int_val VAL_CONS_OF \<open>TYPE(VAL_N)\<close> \<open>
 hide_fact \<phi>spec_int_val_ax \<phi>spec_int_val_axioms
 
 
-subsection \<open>Semantics\<close>
+subsection \<open>Semantic Properties\<close>
 
 debt_axiomatization
     WT_aint[simp]: \<open>Well_Type aint = { V_aint.mk i |i. True } \<close>
 and can_eqcmp_aint[simp]: "Can_EqCompare res (V_aint.mk i1) (V_aint.mk i2)"
 and eqcmp_aint[simp]: "EqCompare (V_aint.mk i1) (V_aint.mk i2) \<longleftrightarrow> i1 = i2"
 and  zero_aint[simp]: \<open>Zero aint   = Some (V_aint.mk 0)\<close>
+and \<phi>Sem_aint_to_logic_int[simp]: \<open>\<phi>Sem_int_to_logic_int (V_aint.mk i) = Some i\<close>
+and \<phi>Sem_aint_to_logic_nat[simp]: \<open>\<phi>Sem_int_to_logic_nat (V_aint.mk i) = (if 0 \<le> i then Some (nat i) else None)\<close>
 
 (*lemma Valid_Types[simp]:
   \<open>Valid_Type aint\<close>
@@ -66,7 +68,7 @@ lemma \<phi>AInt_expn[\<phi>expns]:
 
 lemma \<phi>AInt_inhabited[elim!,\<phi>inhabitance_rule]:
   "Inhabited (x \<Ztypecolon> \<int>) \<Longrightarrow> C \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  .
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
@@ -81,10 +83,25 @@ lemma \<phi>Int_semty[\<phi>reason 1000]:
   unfolding \<phi>SemType_def subset_iff
   by (simp add: \<phi>expns)
 
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<int>) n\<close>
+  unfolding get_logical_int_from_semantic_int_def Ball_def
+  by (clarsimp simp add: \<phi>AInt_expn)
+
+lemma [\<phi>reason 1000]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> n
+\<Longrightarrow> get_logical_nat_from_semantic_int (n \<Ztypecolon> \<int>) (nat n)\<close>
+  unfolding get_logical_nat_from_semantic_int_def Ball_def Premise_def
+  by (clarsimp simp add: \<phi>AInt_expn)
+
 
 subsection \<open>Natural Nmber\<close>
 
 definition \<phi>ANat ("\<nat>") where [\<phi>defs]: "\<nat> n = (of_nat n \<Ztypecolon> \<int>)"
+
+lemma \<phi>ANat_expn[\<phi>expns]:
+  "p \<in> (x \<Ztypecolon> \<nat>) \<longleftrightarrow> p = V_aint.mk (of_nat x)"
+  unfolding \<phi>Type_def by (simp add: \<phi>ANat_def \<phi>AInt_expn)
 
 lemma [\<phi>reason 1000]:
   " Threshold_Cost 4
@@ -112,6 +129,16 @@ lemma [\<phi>reason 1000]: \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<c
 lemma [\<phi>reason 1000]: "\<phi>Zero aint \<nat> 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> \<int>\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]: \<open>\<phi>Equal \<nat> (\<lambda>_ _. True) (=)\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>.
+
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<nat>) (of_nat n)\<close>
+  unfolding get_logical_int_from_semantic_int_def Ball_def
+  by (clarsimp simp add: \<phi>ANat_expn)
+
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_nat_from_semantic_int (n \<Ztypecolon> \<nat>) n\<close>
+  unfolding get_logical_nat_from_semantic_int_def Ball_def
+  by (clarsimp simp add: \<phi>ANat_expn)
 
 
 section \<open>Instructions\<close>

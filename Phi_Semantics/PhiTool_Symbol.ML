@@ -14,7 +14,7 @@ val symbols = Synchronized.var "Phi_Tool_Symbol.symbols"
                  syms = Symtab.empty : term Symtab.table,
                  lookup = Inttab.empty : string Inttab.table}
 
-fun mk_symbol identifier =
+fun mk_symbol_inner_rep identifier =
   Synchronized.change_result symbols (fn (data as {cnt, syms, lookup}) =>
     case Symtab.lookup syms identifier
       of SOME tm => (tm, data)
@@ -22,6 +22,8 @@ fun mk_symbol identifier =
           let val tm = mk_numeral_nat cnt
            in (tm, {cnt = cnt+1, syms = Symtab.update_new (identifier, tm) syms,
                     lookup = Inttab.update_new (cnt, identifier) lookup}) end)
+
+fun mk_symbol identifier = \<^const>\<open>mk_symbol\<close> $ mk_symbol_inner_rep identifier
 
 fun revert_symbol id =
   Inttab.lookup (#lookup (Synchronized.value symbols)) id

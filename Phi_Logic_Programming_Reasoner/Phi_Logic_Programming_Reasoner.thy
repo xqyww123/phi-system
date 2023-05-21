@@ -745,7 +745,7 @@ ML_file "library/reasoners.ML"
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.defer_obligation_tac\<close>
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
-  = \<open>Phi_Reasoners.safer_obligation_solver1 #> Seq.single\<close>
+  = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
 
 
 subsection \<open>Reasoning Frame\<close>
@@ -925,7 +925,11 @@ proof -
   qed
 qed
 
-declare [[\<phi>reason 1000 Branch_L Branch_R for \<open>PROP ?A ||| PROP ?B\<close>]]
+declare [[
+    \<phi>reason 1000 Branch_L Branch_R for \<open>PROP ?A ||| PROP ?B\<close>,
+    \<phi>reason 1000 HOL.disjI1 HOL.disjI2 for \<open>?A \<or> ?B\<close>
+]]
+
 
 subsection \<open>Simplification \& Rewrite\<close>
 

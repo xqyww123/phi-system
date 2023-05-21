@@ -399,7 +399,7 @@ lemma to_\<phi>app:
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   unfolding Do_def Action_Tag_def .
 
-lemma D_\<phi>app:
+lemma destruct_\<phi>app:
   \<open> \<^bold>d\<^bold>o X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_transform_to RAW
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
   unfolding Do_def Action_Tag_def .

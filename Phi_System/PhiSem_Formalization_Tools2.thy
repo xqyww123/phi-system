@@ -233,7 +233,7 @@ proc (nodef) try'':
   input  X
     output YY
   throws EE2
-  \<medium_left_bracket> "__op_try__"
+  \<medium_left_bracket> apply_rule "__op_try__"
     F
     G
   \<medium_right_bracket> .
@@ -245,7 +245,7 @@ proc (nodef) try':
   input  X
     output Z
   throws E2
-  \<medium_left_bracket> "__op_try__" F G
+  \<medium_left_bracket> apply_rule "__op_try__" F G
     unfold A[unfolded Union_the_Same_Or_Arbitrary_when_Var_def, THEN spec, symmetric]
   \<medium_right_bracket>.
 
