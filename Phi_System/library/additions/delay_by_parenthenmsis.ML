@@ -4,14 +4,15 @@ structure Synt_No_Delayed_Apply : GENERIC_DATA
   val synt_can_delay_apply  : Context.generic -> Symtab.key -> bool
   val synt_can_delay_apply' : Context.generic -> Facts.ref -> bool
 
-type operator_info
+type operator_info = (int (*left precedence*) * int (*precedence*) * int (*arity delta*) option)
 type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
+type free_param = exn option
 
 val apply : (string * Position.T) * thm list -> context_state -> context_state
-val meta_apply : (string * Position.T) * arg_name -> (named_arg list -> context_state -> context_state) -> context_state -> context_state
 val begin_block : Position.T -> Proof.context -> Proof.context
-val close_parenthesis : (context_state -> context_state) -> context_state -> context_state
+val close_parenthesis : free_param -> (context_state -> context_state)
+                     -> context_state -> context_state
 val open_parenthesis : arg_name -> context_state -> context_state
 val push_operator : operator_info * (string * Position.T) * thm list -> context_state -> context_state
 val end_expression : context_state -> context_state
@@ -20,20 +21,62 @@ val lookup_operator : theory -> Symtab.key -> operator_info option
 
 val is_during_apply : Proof.context -> string -> bool
 
-end
 
-structure Phi_Delayed_App : PHI_DELAY_APPLICATION = struct
-
-type arg_name = string option * Position.T
-type named_arg = arg_name * thm list (*values*)
 datatype delay_action = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
-                      | Meta_Apply of ((named_arg list -> context_state -> context_state)
+                      | Meta_Apply of ((named_arg list * exn option (*free argument*)
+                                              -> delay_action list * context_state
+                                              -> delay_action list * context_state)
                                         * thm list (*values before*)
                                         * (string * Position.T) (*name and position of the apply*))
                       | Begin_Block
                       | Comma of named_arg
                       | Opr of (int (*precedence*) * int option (*arity constraint*)
                                   * (string * Position.T) * thm list)
+                      | Meta_Opr of (int (*precedence*)
+                                  * int option (*arity constraint*)
+                                  * (string * Position.T)
+                                  * ((string * Position.T) ->
+                                        delay_action list * context_state ->
+                                        delay_action list * context_state))
+                      | Left_Parenthesis of thm list (*values before*)
+
+val eval_opr : Phi_Working_Mode.working_mode -> int ->
+                  delay_action list ->
+                    Proof.context * thm ->
+                      delay_action list * (Proof.context * thm)
+
+val meta_apply : (string * Position.T) * arg_name ->
+                    (named_arg list * free_param -> delay_action list * context_state -> delay_action list * context_state) ->
+                    context_state -> context_state
+val push_meta_operator : operator_info * (string * Position.T)
+                       * ( (string * Position.T)
+                              -> delay_action list * context_state
+                              -> delay_action list * context_state )
+                       -> context_state -> context_state
+
+end
+
+structure Phi_Delayed_App : PHI_DELAY_APPLICATION = struct
+
+type arg_name = string option * Position.T
+type named_arg = arg_name * thm list (*values*)
+type free_param = exn option
+
+datatype delay_action = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
+                      | Meta_Apply of ((named_arg list * exn option (*free argument*)
+                                              -> delay_action list * context_state
+                                              -> delay_action list * context_state)
+                                        * thm list (*values before*)
+                                        * (string * Position.T) (*name and position of the apply*))
+                      | Begin_Block
+                      | Comma of named_arg
+                      | Opr of (int (*precedence*) * int option (*arity constraint*)
+                                  * (string * Position.T) * thm list)
+                      | Meta_Opr of (int (*precedence*) * int option (*arity constraint*)
+                                  * (string * Position.T)
+                                  * ((string * Position.T) ->
+                                      delay_action list * context_state ->
+                                      delay_action list * context_state))
                       | Left_Parenthesis of thm list (*values before*)
 
 structure Parenthesis_Stack = Proof_Data (
@@ -47,20 +90,9 @@ structure Parenthesis_Stack = Proof_Data (
              Phi_Toplevel.end_block_auto_proof_cmd NONE false
           #> Proof.map_context (Parenthesis_Stack.map tl)) *)
 
-fun values_number ret (Const (@{const_name Subjection}, _) $ T) = values_number ret T
-  | values_number ret (Const (@{const_name ExSet}, _) $ T) = values_number ret T
-  | values_number ret (Abs (_, _, T)) = values_number ret T
-  | values_number ret (Const (\<^const_name>\<open>times\<close>, _) $ L $ (
-        Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _)))
-      = values_number (ret+1) L
-  | values_number ret (Const (\<^const_name>\<open>times\<close>, _) $ L $ _) = values_number ret L
-  | values_number ret (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _))
-      = ret + 1
-  | values_number ret _ = ret
-
 fun chk_arity_constraint NONE _ _ _ = ()
-  | chk_arity_constraint(SOME n) mode (name,pos) (ctxt,sequent)
-      = let val actual = values_number 0 (#spec_of mode (Thm.prop_of sequent))
+  | chk_arity_constraint(SOME n) mode (name,pos) (_,sequent)
+      = let val actual = Generic_Variable_Access.number_of_values (#spec_of mode (Thm.prop_of sequent))
          in if actual = n
             then ()
             else error (Pretty.string_of (Pretty.block ([
@@ -83,19 +115,19 @@ fun eval_opr _ _ (acts as (Apply _ :: _)) s = (acts, s)
         else (
           chk_arity_constraint arity mode name s;
           eval_opr mode limit aR (
-            let val (ctxt',sequent') = Phi_Processor.process_no_input NONE (Phi_Apply.apply rules s)
-             in if #is_on_going_construction mode (Thm.prop_of sequent')
-                then (ctxt',sequent')
-                else error ("Fail to solve obligations of operat " ^ fst name ^ " (" ^
-                            Position.here (snd name) ^ ")\n\
-                            \You may need to prove its obligations manually using \<^keyword>\<open>certified\<close>.")
-            end))
+            Phi_Processor.process_all_antecedents NONE (Phi_Apply.apply rules s)))
+  | eval_opr mode limit (acts as (Meta_Opr (pr, arity, name, meta) :: aR)) s
+      = if pr < limit then (acts, s)
+        else (
+          chk_arity_constraint arity mode name s;
+          meta name (aR,s)
+            |> apsnd (Phi_Processor.process_all_antecedents NONE))
   | eval_opr _ _ (acts as (Left_Parenthesis _ :: _)) s = (acts, s)
   | eval_opr _ _ (acts as (Meta_Apply _ :: _)) s = (acts, s)
   | eval_opr _ _ (acts as (Comma _ :: _)) s = (acts, s)
   | eval_opr _ _ [] s = ([], s)
 
-fun close_parenthesis c s0 =
+fun close_parenthesis arg c s0 =
   let fun close c args (Apply (_, rules, vals_before) :: acts) s =
             c acts (Phi_Apply.apply rules (
                       Generic_Variable_Access.push_values (vals_before @ chk_no_name args) s))
@@ -105,10 +137,11 @@ fun close_parenthesis c s0 =
                 Phi_Toplevel.end_block_auto_proof_cmd NONE false
              #> Phi_Envir.map_state_sequent (c acts))
         | close _ _ (Opr _ :: _) _ = error "internal bug #91066fd2-8881-422f-bf54-4b3f69879042"
+        | close _ _ (Meta_Opr _ :: _) _ = error "internal bug #10cc33ab-de95-48fb-8b8c-103f2c0110fd"
         | close c args (Left_Parenthesis vals_before :: acts) s =
             c acts (Generic_Variable_Access.push_values (vals_before @ chk_no_name args) s)
         | close c args (Meta_Apply (f, vals_before, (_, pos)) :: acts) (ctxt,sequent) =
-            c acts (f (((NONE, pos), vals_before) :: args) (ctxt,sequent))
+            uncurry c (f (((NONE, pos), vals_before) :: args, arg) (acts, (ctxt,sequent)))
         | close c args (Comma arg :: acts) s =
             close c (arg :: args) acts s
         | close _ _ [] _ = error "parenthesis is inbalanced!"
@@ -133,11 +166,23 @@ fun push_operator ((left_prec,prec,arity_delta),name,rule) (ctxt,sequent) =
       val (actions, arg_names) = Parenthesis_Stack.get ctxt
       val (actions', (ctxt',sequent')) = eval_opr mode left_prec actions (ctxt,sequent)
       val arity_constraint =
-            Option.map (fn x => x + values_number 0 (#spec_of (Phi_Working_Mode.mode1 ctxt')
-                                                              (Thm.prop_of sequent')))
+            Option.map (fn x => x + Generic_Variable_Access.number_of_values
+                                      (#spec_of (Phi_Working_Mode.mode1 ctxt') (Thm.prop_of sequent')))
                        arity_delta
    in (ctxt',sequent')
    |> apfst (Parenthesis_Stack.put (Opr (prec,arity_constraint,name,rule) :: actions', arg_names))
+  end
+
+fun push_meta_operator ((left_prec,prec,arity_delta),name,meta) (ctxt,sequent) =
+  let val mode = Phi_Working_Mode.mode1 ctxt
+      val (actions, arg_names) = Parenthesis_Stack.get ctxt
+      val (actions', (ctxt',sequent')) = eval_opr mode left_prec actions (ctxt,sequent)
+      val arity_constraint =
+            Option.map (fn x => x + Generic_Variable_Access.number_of_values (
+                                        #spec_of (Phi_Working_Mode.mode1 ctxt') (Thm.prop_of sequent')))
+                       arity_delta
+   in (ctxt',sequent')
+   |> apfst (Parenthesis_Stack.put (Meta_Opr (prec,arity_constraint,name,meta) :: actions', arg_names))
   end
 
 fun end_expression s =
@@ -181,7 +226,9 @@ fun is_during_apply ctxt name =
         | is_during (Begin_Block :: _) = false
         | is_during (Comma _ :: L) = is_during L
         | is_during (Opr _ :: L) = is_during L
+        | is_during (Meta_Opr _ :: L) = is_during L
         | is_during (Left_Parenthesis _ :: L) = is_during L
+        | is_during [] = false
    in is_during actions
   end
 

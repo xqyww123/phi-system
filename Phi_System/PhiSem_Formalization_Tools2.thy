@@ -1,5 +1,6 @@
 theory PhiSem_Formalization_Tools2
   imports IDE_CP
+  keywords ":=" :: quasi_command
 begin
 
 section \<open>Tools for Formalizing Instructions\<close>

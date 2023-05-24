@@ -55,6 +55,9 @@ val push_values : thm list -> context_state -> context_state
 (*performance hotsopt!*)
 val extract_and_remove_leading_values : int -> context_state -> thm list * context_state
 
+val is_local_value: term -> bool
+val number_of_values : term -> int
+
 end
 
 structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
@@ -369,5 +372,17 @@ fun push_values values (ctxt,sequent) =
                  | NONE => Phi_Reasoner.error "Internal bug #vb7iop23")
    in fold push values (ctxt,sequent)
   end
+
+fun is_local_value (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true
+  | is_local_value _ = false
+
+fun values_number ret (Const (@{const_name Subjection}, _) $ T) = values_number ret T
+  | values_number ret (Const (@{const_name ExSet}, _) $ T) = values_number ret T
+  | values_number ret (Abs (_, _, T)) = values_number ret T
+  | values_number ret (Const (\<^const_name>\<open>times\<close>, _) $ L $ X)
+      = values_number (if is_local_value X then ret+1 else ret) L
+  | values_number ret X = if is_local_value X then ret+1 else ret
+
+val number_of_values = values_number 0
 
 end

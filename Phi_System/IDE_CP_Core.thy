@@ -1710,7 +1710,7 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
     Phi_Delayed_App.open_parenthesis (NONE, pos) s)\<close>
 
 \<phi>processor apply_delayed 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
-\<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Delayed_App.close_parenthesis I s)\<close>
+\<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Delayed_App.close_parenthesis NONE I s)\<close>
 
 \<phi>processor comma 8999 (\<open>?P\<close>) \<open> fn s => 
   Parse.position \<^keyword>\<open>,\<close> -- Scan.option (Parse.short_ident --| \<^keyword>\<open>:\<close>)

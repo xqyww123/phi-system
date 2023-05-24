@@ -18,6 +18,7 @@ lemma [\<phi>reason]:
 \<Longrightarrow> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<rat>\<close>
   \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<rat>\<close> \<medium_right_bracket> .
 
+
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
@@ -28,6 +29,7 @@ proc rat_add:
   $q1[1] * $q2[1] \<rightarrow> val denominator
   \<lbrace> $numerator, $denominator \<rbrace>
 \<medium_right_bracket> .
+
 
 (*
 proc

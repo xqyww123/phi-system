@@ -39,6 +39,7 @@ signature PHI_PROCESSOR = sig
                       (*if the input is empty, then powerful_process_p_inert does nothing*)
   val process_by_input : int (*auto-level*) option -> Token.T list -> context_state -> context_state
   val process_no_input : int (*auto-level*) option -> context_state -> context_state
+  val process_all_antecedents : int (*auto-level*) option -> context_state -> context_state
   val process_attr : attribute parser
 
   (* be activated only when auto level >= 1 *)
@@ -253,6 +254,27 @@ fun process_by_input lev tokens stat =
        in simple_process stat' (tokens @ [Token.eof]) |> #1 end
 fun process_no_input lev = process_by_input lev []
 
+fun process_all_antecedents lev s =
+  let val (ctxt',sequent') = process_no_input lev s
+   in if #is_on_going_construction (Phi_Working_Mode.mode1 (fst s)) (Thm.prop_of sequent')
+      then (ctxt',sequent')
+      else error (Pretty.string_of (
+        let val ant = Phi_Help.leading_antecedent' sequent'
+         in case ant
+              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ G) =>
+                  Pretty.chunks [
+                    Pretty.str "Fail to solve obligation:",
+                    Syntax.pretty_term ctxt' G,
+                    Pretty.str "You may need to prove its obligations manually using \<^keyword>\<open>certified\<close>."
+                  ]
+               | _ =>
+                  Pretty.chunks [
+                    Pretty.str "Fail to solve reasoner job:",
+                    Syntax.pretty_term ctxt' ant,
+                    Pretty.str "It usually means you are doing unexpected operation."
+                  ]
+        end))
+  end
 
 
 val read_prop_pattern = Syntax.read_props o Proof_Context.set_mode Proof_Context.mode_pattern

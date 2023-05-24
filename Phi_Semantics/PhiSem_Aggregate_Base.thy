@@ -326,18 +326,30 @@ section \<open>IDE Interface\<close>
 \<phi>overloads "[]" and "[]="
 
 declare op_get_aggregate[\<phi>overload "[]"]
+        op_set_aggregate[\<phi>overload "[]="]
 
 ML_file \<open>library/generic_element_access.ML\<close>
 
-\<phi>processor aggregate_getter 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>processor aggregate_getter_setter 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>[\<close> >> (fn (_, pos) => fn _ =>
-    Phi_Generic_Element_Access.gen_access \<^named_theorems>\<open>[]_\<phi>app\<close> (("[",pos), (NONE, pos)) s) \<close>
+    Phi_Generic_Element_Access.gen_access (\<^named_theorems>\<open>[]_\<phi>app\<close>, \<^named_theorems>\<open>[]=_\<phi>app\<close>)
+                                          (("[",pos), (NONE, pos)) s) \<close>
 
 \<phi>processor aggregate_getter_end 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>]\<close> >> (fn (_, pos) => fn _ => (
     if Phi_Delayed_App.is_during_apply ctxt "[" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
-    Phi_Delayed_App.close_parenthesis I (ctxt,sequent)
+    Phi_Delayed_App.close_parenthesis (SOME Phi_Generic_Element_Access.Bracket_Opr_Read)
+                                      I (ctxt,sequent)
+)) \<close>
+
+\<phi>processor aggregate_setter_end 8989 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>]\<close> -- Parse.position \<^keyword>\<open>:=\<close>
+>> (fn ((_, pos), (_, pos')) => fn _ => (
+    if Phi_Delayed_App.is_during_apply ctxt "[" then ()
+    else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
+    Phi_Delayed_App.close_parenthesis (SOME (Phi_Generic_Element_Access.Bracket_Opr_Write pos'))
+                                      I (ctxt,sequent)
 )) \<close>
 
 \<phi>processor construct_aggregate 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
@@ -349,7 +361,7 @@ ML_file \<open>library/generic_element_access.ML\<close>
 \<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>\<rbrace>\<close> >> (fn (_, pos) => fn _ => (
     if Phi_Delayed_App.is_during_apply ctxt "\<lbrace>" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
-    Phi_Delayed_App.close_parenthesis I (ctxt,sequent)
+    Phi_Delayed_App.close_parenthesis NONE I (ctxt,sequent)
 )) \<close>
 
 (*

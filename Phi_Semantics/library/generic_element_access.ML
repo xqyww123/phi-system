@@ -6,9 +6,12 @@ structure Agg_Constructors : HANDLERS
 val mk_agg_path_default : Phi_Delayed_App.named_arg list * context_state -> Proof.context * thm
 val mk_agg_path_val : Phi_Delayed_App.named_arg list * context_state -> Proof.context * thm
 
-val gen_access : string -> (string * Position.T) * Phi_Delayed_App.arg_name -> context_state -> context_state
+val gen_access : string * string -> (string * Position.T) * Phi_Delayed_App.arg_name -> context_state -> context_state
 val gen_constructor : string -> (string * Position.T) * Phi_Delayed_App.arg_name
                    -> context_state -> context_state
+
+exception Bracket_Opr_Read
+exception Bracket_Opr_Write of Position.T
 
 end
 
@@ -49,18 +52,35 @@ structure Agg_Path_Encoders = Handlers (
   type ret = (Proof.context * thm (*unwind_aggregate_path_into_logical_form*))
 )
 
+exception Bracket_Opr_Read
+exception Bracket_Opr_Write of Position.T
+
 fun gen_access named_thm_of_rules pos_and_first_args stat =
-  let fun invoke ((_, vals_before) :: args) (ctxt0,sequent0) =
-        let val (ctxt,sequent) = Generic_Variable_Access.push_values vals_before (ctxt0,sequent0)
-            val (ctxt', unwind) = Agg_Path_Encoders.invoke (Context.Proof ctxt) (args, (ctxt,sequent))
+  let val _ = if Generic_Variable_Access.number_of_values
+                    (#spec_of Phi_Working_Mode.programming (Thm.prop_of (snd stat))) = 0
+              then error ("Bad Syntax: The operand of aggregate access is absent. " ^
+                           Position.here (snd (fst pos_and_first_args)))
+              else ()
+      fun invoke (args, rules_name) (opstack, (ctxt,sequent)) =
+        let val (ctxt', unwind) = Agg_Path_Encoders.invoke (Context.Proof ctxt) (args, (ctxt,sequent))
                                 |> (fn SOME ret => ret
                                      | NONE => mk_agg_path_default (args, (ctxt,sequent)))
-            val rules = Named_Theorems.get ctxt named_thm_of_rules
+            val rules = Named_Theorems.get ctxt rules_name
                       |> map (fn thm => unwind RS thm)
-         in Phi_Apply.apply rules (ctxt', sequent)
+         in (opstack, Phi_Apply.apply rules (ctxt', sequent))
         end                                      
         | invoke _ _ = error "internal bug #a2a96e04-14d6-4b66-9c2e-053e5c2bfcbe"
-   in Phi_Delayed_App.meta_apply pos_and_first_args invoke stat
+      fun invoke' ((_, vals_before) :: args, SOME Bracket_Opr_Read) (opstack, stat) =
+            invoke (args, fst named_thm_of_rules)
+                (opstack, Generic_Variable_Access.push_values vals_before stat)
+        | invoke' ((_, vals_before) :: args, SOME (Bracket_Opr_Write pos)) (opstack, stat) =
+            (Phi_Delayed_App.Meta_Opr (50, SOME (1 + length vals_before), (":=", pos),
+                  K (invoke (args, snd named_thm_of_rules))
+               ) :: opstack,
+             Generic_Variable_Access.push_values vals_before stat)
+        | invoke' ((_, vals_before) :: args, _) (opstack, stat) =
+            error "Bad free_arg in Phi_Generic_Element_Access"
+   in Phi_Delayed_App.meta_apply pos_and_first_args invoke' stat
   end
 
 structure Agg_Constructors = Handlers (
@@ -70,8 +90,10 @@ structure Agg_Constructors = Handlers (
 )
 
 fun gen_constructor kind pos_and_first_args stat =
-  let fun invoke ((_, vals_before) :: args0) (ctxt0, sequent0) =
-        let val (ctxt,sequent) = Generic_Variable_Access.push_values vals_before (ctxt0,sequent0)
+  let fun invoke ((_, vals_before) :: args0, free_arg) (oprs, (ctxt0, sequent0)) =
+        let val _ = case free_arg of NONE => ()
+                       | _ => error "Bad free_arg: a32d7843-538e-4ddc-af95-ea71514cc0ad"
+            val (ctxt,sequent) = Generic_Variable_Access.push_values vals_before (ctxt0,sequent0)
             val kind' = if kind = "" then "structure" else kind
             val (ctxt', ctor, args') = Agg_Constructors.invoke (Context.Proof ctxt)
                                                                (kind, args0, (ctxt,sequent))
@@ -93,7 +115,7 @@ fun gen_constructor kind pos_and_first_args stat =
                   |> Phi_Reasoner.reason (SOME 1)
                   |> (fn SOME ret => ret
                        | NONE => error ("Fail to construct " ^ kind'))
-         in Phi_Apply.apply [rule'] (ctxt'3, sequent)
+         in (oprs, Phi_Apply.apply [rule'] (ctxt'3, sequent))
         end
         | invoke _ _ = error "internal bug #5330d2f8-c5e3-46ae-9b45-5ae9550f037d"
    in Phi_Delayed_App.meta_apply pos_and_first_args invoke stat
