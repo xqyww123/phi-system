@@ -337,18 +337,18 @@ ML_file \<open>library/generic_element_access.ML\<close>
 
 \<phi>processor aggregate_getter_end 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>]\<close> >> (fn (_, pos) => fn _ => (
-    if Phi_Delayed_App.is_during_apply ctxt "[" then ()
+    if Phi_Opr_Stack.is_during_apply ctxt "[" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
-    Phi_Delayed_App.close_parenthesis (SOME Phi_Generic_Element_Access.Bracket_Opr_Read)
+    Phi_Opr_Stack.close_parenthesis (SOME Phi_Generic_Element_Access.Bracket_Opr_Read)
                                       I (ctxt,sequent)
 )) \<close>
 
 \<phi>processor aggregate_setter_end 8989 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>]\<close> -- Parse.position \<^keyword>\<open>:=\<close>
 >> (fn ((_, pos), (_, pos')) => fn _ => (
-    if Phi_Delayed_App.is_during_apply ctxt "[" then ()
+    if Phi_Opr_Stack.is_during_apply ctxt "[" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
-    Phi_Delayed_App.close_parenthesis (SOME (Phi_Generic_Element_Access.Bracket_Opr_Write pos'))
+    Phi_Opr_Stack.close_parenthesis (SOME (Phi_Generic_Element_Access.Bracket_Opr_Write pos'))
                                       I (ctxt,sequent)
 )) \<close>
 
@@ -359,10 +359,24 @@ ML_file \<open>library/generic_element_access.ML\<close>
 
 \<phi>processor construct_aggregate_end 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>\<rbrace>\<close> >> (fn (_, pos) => fn _ => (
-    if Phi_Delayed_App.is_during_apply ctxt "\<lbrace>" then ()
+    if Phi_Opr_Stack.is_during_apply ctxt "\<lbrace>" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
-    Phi_Delayed_App.close_parenthesis NONE I (ctxt,sequent)
+    Phi_Opr_Stack.close_parenthesis NONE I (ctxt,sequent)
 )) \<close>
+
+
+
+setup \<open>fn thy => thy
+|> Phi_Opr_Stack.decl_infixr (900, "\<tribullet>", SOME 1) |> snd
+|> Phi_Opr_Stack.decl_postfix (901, "!", SOME 0) |> snd
+|> Phi_Opr_Stack.decl_internal_opr (901, 50, ":=", SOME 1)
+|> Phi_Opr_Stack.set_meta_opr ("\<tribullet>",
+        Phi_Generic_Element_Access.dot_triangle_opr (0, \<^named_theorems>\<open>[]_\<phi>app\<close>))
+|> Phi_Opr_Stack.set_meta_opr (":=",
+        Phi_Generic_Element_Access.dot_triangle_opr (1, \<^named_theorems>\<open>[]=_\<phi>app\<close>))
+\<close>
+
+
 
 (*
 syntax

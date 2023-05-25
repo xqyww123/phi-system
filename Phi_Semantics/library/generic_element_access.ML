@@ -3,36 +3,32 @@ signature PHI_GENERIC_ELEMENT_ACCESS = sig
 structure Agg_Path_Encoders : HANDLERS
 structure Agg_Constructors : HANDLERS
 
-val mk_agg_path_default : Phi_Delayed_App.named_arg list * context_state -> Proof.context * thm
-val mk_agg_path_val : Phi_Delayed_App.named_arg list * context_state -> Proof.context * thm
+val mk_agg_path_default : (Position.T * thm) list * context_state -> Proof.context * thm
+val mk_agg_path_val : (Position.T * thm) list * context_state -> Proof.context * thm
 
-val gen_access : string * string -> (string * Position.T) * Phi_Delayed_App.arg_name -> context_state -> context_state
-val gen_constructor : string -> (string * Position.T) * Phi_Delayed_App.arg_name
+val gen_access : string * string -> (string * Position.T) * Phi_Opr_Stack.arg_name -> context_state -> context_state
+val gen_constructor : string -> (string * Position.T) * Phi_Opr_Stack.arg_name
                    -> context_state -> context_state
 
 exception Bracket_Opr_Read
 exception Bracket_Opr_Write of Position.T
+
+val dot_triangle_opr : int * string -> string * Position.T
+          -> Phi_Opr_Stack.opr_frame list * context_state
+          -> Phi_Opr_Stack.opr_frame list * context_state
 
 end
 
 structure Phi_Generic_Element_Access : PHI_GENERIC_ELEMENT_ACCESS = struct
 
 fun gen_mk_agg_path idx_val_constr args ctxt =
-  let val _ = List.app (
-        fn ((SOME _, pos), _) => error ("named argument is not supported here " ^ 
-                                         Position.here pos)
-         | ((_, pos), _ :: _ :: _) => error (Position.here pos ^ " the expression returns more than\
-                                              \ one value")
-         | ((_, pos), []) => error (Position.here pos ^ " the expression returns no value!")
-         | _ => ()
-        ) args
-      val raw_path' = map (fn (_, [rule]) =>
+  let val raw_path' = map (fn (_, rule) =>
             case Phi_Local_Value.get_raw_val_in_rule rule
               of _ (*\<phi>arg*) $ (\<^term>\<open>V_symbol.mk\<close> $ sym) => \<^Const>\<open>AgIdx_S \<^typ>\<open>VAL\<close>\<close> $ sym
                | v => idx_val_constr $ v) args
       val raw_path = HOLogic.mk_list \<^typ>\<open>aggregate_index\<close> raw_path'
       val reasoning_rules =
-            map (fn ((_, pos), [rule]) => (rule,pos,Phi_Reasoner.LOCAL_CUT,1000)) args
+            map (fn (pos, rule) => (rule,pos,Phi_Reasoner.LOCAL_CUT,1000)) args
       val ctxt' = Context.proof_map (Phi_Local_Value.add_reasoning_rules reasoning_rules) ctxt
       val ind = Term.maxidx_term raw_path ~1 + 1
    in Goal.init (Thm.cterm_of ctxt' (
@@ -48,12 +44,20 @@ fun mk_agg_path_default (args,(ctxt,_)) = (ctxt, gen_mk_agg_path \<^Const>\<open
 fun mk_agg_path_val (args,(ctxt,_)) = (ctxt, gen_mk_agg_path \<^Const>\<open>AgIdx_V \<^typ>\<open>VAL\<close>\<close> args ctxt)
 
 structure Agg_Path_Encoders = Handlers (
-  type arg = Phi_Delayed_App.named_arg list * context_state
+  type arg = (Position.T * thm) list * context_state
   type ret = (Proof.context * thm (*unwind_aggregate_path_into_logical_form*))
 )
 
 exception Bracket_Opr_Read
 exception Bracket_Opr_Write of Position.T
+
+fun chk_arg ((SOME _, pos), _) =
+      error ("named argument is not supported here " ^ Position.here pos)
+  | chk_arg ((_, pos), _ :: _ :: _) =
+      error (Position.here pos ^ " the expression returns more than one value")
+  | chk_arg ((_, pos), []) =
+      error (Position.here pos ^ " the expression returns no value!")
+  | chk_arg ((_, pos), [v]) = (pos, v)
 
 fun gen_access named_thm_of_rules pos_and_first_args stat =
   let val _ = if Generic_Variable_Access.number_of_values
@@ -71,21 +75,21 @@ fun gen_access named_thm_of_rules pos_and_first_args stat =
         end                                      
         | invoke _ _ = error "internal bug #a2a96e04-14d6-4b66-9c2e-053e5c2bfcbe"
       fun invoke' ((_, vals_before) :: args, SOME Bracket_Opr_Read) (opstack, stat) =
-            invoke (args, fst named_thm_of_rules)
+            invoke (map chk_arg args, fst named_thm_of_rules)
                 (opstack, Generic_Variable_Access.push_values vals_before stat)
         | invoke' ((_, vals_before) :: args, SOME (Bracket_Opr_Write pos)) (opstack, stat) =
-            (Phi_Delayed_App.Meta_Opr (50, SOME (1 + length vals_before), (":=", pos),
-                  K (invoke (args, snd named_thm_of_rules))
+            (Phi_Opr_Stack.Meta_Opr (50, SOME (1 + length vals_before), (":=", pos),
+                  K (invoke (map chk_arg args, snd named_thm_of_rules))
                ) :: opstack,
              Generic_Variable_Access.push_values vals_before stat)
         | invoke' ((_, vals_before) :: args, _) (opstack, stat) =
             error "Bad free_arg in Phi_Generic_Element_Access"
-   in Phi_Delayed_App.meta_apply pos_and_first_args invoke' stat
+   in Phi_Opr_Stack.meta_apply pos_and_first_args invoke' stat
   end
 
 structure Agg_Constructors = Handlers (
   type arg = string (*user's source hint, indicating which object to be constructed*)
-           * Phi_Delayed_App.named_arg list * context_state
+           * Phi_Opr_Stack.named_arg list * context_state
   type ret = Proof.context * cterm (*constructor*) * term list (*arguments*)
 )
 
@@ -118,7 +122,30 @@ fun gen_constructor kind pos_and_first_args stat =
          in (oprs, Phi_Apply.apply [rule'] (ctxt'3, sequent))
         end
         | invoke _ _ = error "internal bug #5330d2f8-c5e3-46ae-9b45-5ae9550f037d"
-   in Phi_Delayed_App.meta_apply pos_and_first_args invoke stat
+   in Phi_Opr_Stack.meta_apply pos_and_first_args invoke stat
+  end
+
+
+
+fun dot_triangle_opr (front_arity, rules_name) (name, pos) (stack, (ctxt0,sequent0)) =
+  let val (front_args, (ctxt, sequent)) =
+            Generic_Variable_Access.extract_and_remove_leading_values front_arity (ctxt0,sequent0)
+      fun collect (ret, Phi_Opr_Stack.Meta_Opr (_, _, ("\<tribullet>", pos), _) :: L) = collect (pos :: ret, L)
+        | collect ret_L = ret_L
+      val (poss, stack') = collect ((if name = "\<tribullet>" then [pos] else []), stack)
+      val actual = Generic_Variable_Access.number_of_values (
+                        #spec_of Phi_Working_Mode.programming (Thm.prop_of sequent))
+      val _ = if actual < length poss
+              then error ("Unbalanced operator stack " ^ Position.here pos) else ()
+      val (args', (ctxt',sequent')) =
+              Generic_Variable_Access.extract_and_remove_leading_values (length poss) (ctxt,sequent)
+      val args = poss ~~ args'
+      val (ctxt'', unwind) = Agg_Path_Encoders.invoke (Context.Proof ctxt') (args, (ctxt',sequent'))
+                              |> (fn SOME ret => ret
+                                   | NONE => mk_agg_path_default (args, (ctxt',sequent')))
+      val (ctxt'3, sequent'3) = Generic_Variable_Access.push_values front_args (ctxt'',sequent')
+      val rules = map (fn thm => unwind RS thm) (Named_Theorems.get ctxt'' rules_name)
+   in (stack', Phi_Apply.apply rules (ctxt'3, sequent'3))
   end
 
 end

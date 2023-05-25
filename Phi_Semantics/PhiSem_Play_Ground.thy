@@ -23,8 +23,8 @@ proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>
-  $q1 destruct\<phi> _ \<rightarrow> val q1 \<comment> \<open>The reasoner will not open an abstraction by default\<close>
-  $q2 destruct\<phi> _ \<rightarrow> val q2
+  $q1 destruct\<phi> _ \<rightarrow> var q1 \<comment> \<open>The reasoner will not open an abstraction by default\<close>
+  $q2 destruct\<phi> _ \<rightarrow> var q2
   $q1[0] * $q2[1] + $q2[0] * $q1[1] \<rightarrow> val numerator
   $q1[1] * $q2[1] \<rightarrow> val denominator
   \<lbrace> $numerator, $denominator \<rbrace>

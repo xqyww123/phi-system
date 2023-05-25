@@ -1,4 +1,4 @@
-signature PHI_DELAY_APPLICATION = sig
+signature PHI_OPR_STACK = sig
 
 structure Synt_No_Delayed_Apply : GENERIC_DATA
   val synt_can_delay_apply  : Context.generic -> Symtab.key -> bool
@@ -17,55 +17,69 @@ val open_parenthesis : arg_name -> context_state -> context_state
 val push_operator : operator_info * (string * Position.T) * thm list -> context_state -> context_state
 val end_expression : context_state -> context_state
 val comma : arg_name -> context_state -> context_state
-val lookup_operator : theory -> Symtab.key -> operator_info option
+val lookup_operator : theory -> string -> operator_info option
 
 val is_during_apply : Proof.context -> string -> bool
 
 
-datatype delay_action = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
-                      | Meta_Apply of ((named_arg list * exn option (*free argument*)
-                                              -> delay_action list * context_state
-                                              -> delay_action list * context_state)
-                                        * thm list (*values before*)
-                                        * (string * Position.T) (*name and position of the apply*))
-                      | Begin_Block
-                      | Comma of named_arg
-                      | Opr of (int (*precedence*) * int option (*arity constraint*)
-                                  * (string * Position.T) * thm list)
-                      | Meta_Opr of (int (*precedence*)
-                                  * int option (*arity constraint*)
-                                  * (string * Position.T)
-                                  * ((string * Position.T) ->
-                                        delay_action list * context_state ->
-                                        delay_action list * context_state))
-                      | Left_Parenthesis of thm list (*values before*)
+datatype opr_frame = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
+                   | Meta_Apply of ((named_arg list * exn option (*free argument*)
+                                          -> opr_frame list * context_state
+                                          -> opr_frame list * context_state)
+                                    * thm list (*values before*)
+                                    * (string * Position.T) (*name and position of the apply*))
+                   | Begin_Block
+                   | Comma of named_arg
+                   | Opr of (int (*precedence*) * int option (*arity constraint*)
+                              * (string * Position.T) * thm list)
+                   | Meta_Opr of (int (*precedence*)
+                               * int option (*arity constraint*)
+                               * (string * Position.T)
+                               * ((string * Position.T) ->
+                                    opr_frame list * context_state ->
+                                    opr_frame list * context_state))
+                   | Left_Parenthesis of thm list (*values before*)
+type meta_opr = (string * Position.T) ->
+                opr_frame list * context_state ->
+                opr_frame list * context_state
 
 val eval_opr : Phi_Working_Mode.working_mode -> int ->
-                  delay_action list ->
+                  opr_frame list ->
                     Proof.context * thm ->
-                      delay_action list * (Proof.context * thm)
+                      opr_frame list * (Proof.context * thm)
 
 val meta_apply : (string * Position.T) * arg_name ->
-                    (named_arg list * free_param -> delay_action list * context_state -> delay_action list * context_state) ->
+                    (named_arg list * free_param -> opr_frame list * context_state -> opr_frame list * context_state) ->
                     context_state -> context_state
+
+val lookup_meta_opr : theory -> string -> meta_opr option
+val set_meta_opr : string * meta_opr -> theory -> theory
 val push_meta_operator : operator_info * (string * Position.T)
                        * ( (string * Position.T)
-                              -> delay_action list * context_state
-                              -> delay_action list * context_state )
+                              -> opr_frame list * context_state
+                              -> opr_frame list * context_state )
                        -> context_state -> context_state
+
+
+val decl_internal_opr : int * int * string * int option -> theory -> theory
+(* val decl_infix : int * string * int option -> theory -> operator_info * theory *)
+val decl_infixl : int * string * int option -> theory -> operator_info * theory
+val decl_infixr : int * string * int option -> theory -> operator_info * theory
+val decl_prefix : int * string * int option -> theory -> operator_info * theory
+val decl_postfix : int * string * int option -> theory -> operator_info * theory
 
 end
 
-structure Phi_Delayed_App : PHI_DELAY_APPLICATION = struct
+structure Phi_Opr_Stack : PHI_OPR_STACK = struct
 
 type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
 type free_param = exn option
 
-datatype delay_action = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
+datatype opr_frame = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
                       | Meta_Apply of ((named_arg list * exn option (*free argument*)
-                                              -> delay_action list * context_state
-                                              -> delay_action list * context_state)
+                                              -> opr_frame list * context_state
+                                              -> opr_frame list * context_state)
                                         * thm list (*values before*)
                                         * (string * Position.T) (*name and position of the apply*))
                       | Begin_Block
@@ -75,12 +89,16 @@ datatype delay_action = Apply of ((string * Position.T) * thm list (*app rules*)
                       | Meta_Opr of (int (*precedence*) * int option (*arity constraint*)
                                   * (string * Position.T)
                                   * ((string * Position.T) ->
-                                      delay_action list * context_state ->
-                                      delay_action list * context_state))
+                                      opr_frame list * context_state ->
+                                      opr_frame list * context_state))
                       | Left_Parenthesis of thm list (*values before*)
 
+type meta_opr = (string * Position.T) ->
+                opr_frame list * context_state ->
+                opr_frame list * context_state
+
 structure Parenthesis_Stack = Proof_Data (
-  type T = (delay_action list * (string option * Position.T) list (*current parameter name*))
+  type T = (opr_frame list * (string option * Position.T) list (*current parameter name*))
   val init = K ([], [(NONE, Position.none)])
 )
 
@@ -118,10 +136,11 @@ fun eval_opr _ _ (acts as (Apply _ :: _)) s = (acts, s)
             Phi_Processor.process_all_antecedents NONE (Phi_Apply.apply rules s)))
   | eval_opr mode limit (acts as (Meta_Opr (pr, arity, name, meta) :: aR)) s
       = if pr < limit then (acts, s)
-        else (
-          chk_arity_constraint arity mode name s;
-          meta name (aR,s)
-            |> apsnd (Phi_Processor.process_all_antecedents NONE))
+        else let
+          val _ = chk_arity_constraint arity mode name s
+          val (acts',s') = meta name (aR,s)
+                         |> apsnd (Phi_Processor.process_all_antecedents NONE)
+           in eval_opr mode limit acts' s' end
   | eval_opr _ _ (acts as (Left_Parenthesis _ :: _)) s = (acts, s)
   | eval_opr _ _ (acts as (Meta_Apply _ :: _)) s = (acts, s)
   | eval_opr _ _ (acts as (Comma _ :: _)) s = (acts, s)
@@ -248,20 +267,43 @@ fun chk_precedence p =
   if 0 < p andalso p <= 1000 then p
   else error "precedence of operator should be within [1,1000]"
 
-fun decl_infix (precedence, symbol, arity) =
+(*fun decl_infix' (precedence, symbol, arity) =
       Operators.map (Symtab.update_new (symbol, (precedence, chk_precedence precedence, the_default (SOME 1) arity)))
 
-fun decl_infixr (precedence, symbol, arity) =
+fun decl_infix (precedence, symbol, arity) thy =
+  ( (precedence, precedence, arity),
+    decl_infix' (precedence, symbol, SOME arity) thy )*)
+
+fun decl_internal_opr (left_precedence, precedence, symbol, arity) =
+      Operators.map (Symtab.update_new (symbol, (chk_precedence left_precedence, chk_precedence precedence, arity)))
+
+fun decl_infixr' (precedence, symbol, arity) =
       Operators.map (Symtab.update_new (symbol, (precedence + 1, chk_precedence precedence, the_default (SOME 1) arity)))
 
-fun decl_infixl (precedence, symbol, arity) =
+fun decl_infixr (precedence, symbol, arity) thy =
+  ( (precedence + 1, precedence, arity),
+    decl_infixr' (precedence, symbol, SOME arity) thy )
+
+fun decl_infixl' (precedence, symbol, arity) =
       Operators.map (Symtab.update_new (symbol, (chk_precedence precedence, precedence+1, the_default (SOME 1) arity)))
 
-fun decl_prefix (precedence, symbol, arity) =
+fun decl_infixl (precedence, symbol, arity) thy =
+  ( (precedence, precedence+1, arity),
+    decl_infixl' (precedence, symbol, SOME arity) thy )
+
+fun decl_prefix' (precedence, symbol, arity) =
       Operators.map (Symtab.update_new (symbol, (1001, chk_precedence precedence, the_default (SOME 1) arity)))
 
-fun decl_postfix (precedence, symbol, arity) =
+fun decl_prefix (precedence, symbol, arity) thy =
+  ( (1001, precedence, arity),
+    decl_prefix' (precedence, symbol, SOME arity) thy )
+
+fun decl_postfix' (precedence, symbol, arity) =
       Operators.map (Symtab.update_new (symbol, (chk_precedence precedence, 1001, the_default (SOME 0) arity)))
+
+fun decl_postfix (precedence, symbol, arity) thy =
+  ( (precedence, 1001, arity),
+    decl_postfix' (precedence, symbol, SOME arity) thy )
 
 fun lookup_operator thy symbol = Symtab.lookup (Operators.get thy) symbol
 
@@ -271,9 +313,9 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>declare_\<phi>operator\<close>
     "declare operators in \<phi>-programming"
     (Scan.repeat1
-        (( \<^keyword>\<open>infixl\<close> >> K decl_infixl || \<^keyword>\<open>infixr\<close> >> K decl_infixr ||
-           \<^keyword>\<open>infix\<close> >> K decl_infix ||
-         Args.$$$ "prefix" >> K decl_prefix || Args.$$$ "postfix" >> K decl_postfix)
+        (( \<^keyword>\<open>infixl\<close> >> K decl_infixl' || \<^keyword>\<open>infixr\<close> >> K decl_infixr' ||
+           \<^keyword>\<open>infix\<close> >> K decl_infixl' ||
+         Args.$$$ "prefix" >> K decl_prefix' || Args.$$$ "postfix" >> K decl_postfix')
        -- Parse.nat
        -- Parse.position symbol
        -- Scan.option (Parse.int >> SOME || \<^keyword>\<open>var\<close> >> K NONE))
@@ -330,5 +372,16 @@ val _ = Theory.setup (Context.theory_map (Synt_No_Delayed_Apply.map (
    Symtab.insert_set "if"
 #> Symtab.insert_set "while"
 )))
+
+
+structure Meta_Opr = Theory_Data (
+  type T = meta_opr Symtab.table
+  val empty = Symtab.empty
+  val merge = Symtab.merge (K false)
+)
+
+fun lookup_meta_opr thy = Symtab.lookup (Meta_Opr.get thy)
+val set_meta_opr = Meta_Opr.map o Symtab.update
+
 
 end
