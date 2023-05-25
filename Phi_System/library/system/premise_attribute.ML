@@ -56,7 +56,15 @@ val _ = Theory.setup (
     Scan.lift (Scan.optional (\<^keyword>\<open>?\<close> >> K false) true) --
     Attrib.attribs --| Scan.lift \<^keyword>\<open>for\<close> -- prop_patterns
     >> (fn ((mandatory, attr), pats) => Thm.declaration_attribute (fn _ => fn ctxt =>
-            fold (fn pat => register_attribute (serial(), mandatory, pat, chk_attribute ctxt attr))
+            fold (fn pat => register_attribute (serial(), mandatory, pat, @{print} (chk_attribute ctxt attr)))
+                            pats ctxt))
+    ) "register attributes applying on premises matching the given pattern, for those premises\
+      \ in \<phi>-programming block."
+#>Attrib.setup \<^binding>\<open>\<phi>premise_attribute_ML\<close> (
+    Scan.lift (Scan.optional (\<^keyword>\<open>?\<close> >> K false) true) --
+    phi_system_ML_attribute_parser --| Scan.lift \<^keyword>\<open>for\<close> -- prop_patterns
+    >> (fn ((mandatory, attr), pats) => Thm.declaration_attribute (fn _ => fn ctxt =>
+            fold (fn pat => register_attribute (serial(), mandatory, pat, [Morphism.form attr]))
                             pats ctxt))
     ) "register attributes applying on premises matching the given pattern, for those premises\
       \ in \<phi>-programming block."

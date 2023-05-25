@@ -384,6 +384,8 @@ proc [\<phi>reason 1200]:
 
 subsubsection \<open>Set\<close>
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc (nodef) op_set_var__synthesis
   [\<phi>reason 1200 for
       \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> \<blangle> (?y <set-to> ?var) \<Ztypecolon> ?U ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis\<close>]:
@@ -396,7 +398,10 @@ proc (nodef) op_set_var__synthesis
   throws E
   @action synthesis
 \<medium_left_bracket>
-  G S op_set_var P op_get_var
+  G
+  S
+  apply_rule op_set_var[OF P]
+  op_get_var
 \<medium_right_bracket> .
 
 
@@ -408,7 +413,8 @@ lemma "__set_var_rule__":
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> (op_set_var TY var raw \<ggreater> g) \<lbrace> R\<heavy_comma> \<blangle> x \<Ztypecolon> Var var T \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw] U\<heavy_comma> X \<brangle> \<longmapsto> Z \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   \<medium_left_bracket> premises G and P and [\<phi>reason]
-    op_set_var P G
+    apply_rule op_set_var[OF P]
+    G
   \<medium_right_bracket>.
 
 lemma "__new_var_rule__":

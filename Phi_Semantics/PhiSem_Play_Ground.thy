@@ -7,6 +7,7 @@ theory PhiSem_Play_Ground
     PhiSem_Machine_Integer
     PhiSem_Aggregate_Tuple
     PhiSem_Aggregate_Named_Tuple
+    PhiSem_Mem_Pointer
 begin
 
 
@@ -18,6 +19,7 @@ lemma [\<phi>reason]:
 \<Longrightarrow> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<rat>\<close>
   \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<rat>\<close> \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 0]]
 
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
@@ -25,11 +27,17 @@ proc rat_add:
 \<medium_left_bracket>
   $q1 destruct\<phi> _ \<rightarrow> var q1 \<comment> \<open>The reasoner will not open an abstraction by default\<close>
   $q2 destruct\<phi> _ \<rightarrow> var q2
-  $q1[0] * $q2[1] + $q2[0] * $q1[1] \<rightarrow> val numerator
+  $q1\<tribullet>0 * $q2[1] + $q2[0] * $q1[1] \<rightarrow> val numerator
   $q1[1] * $q2[1] \<rightarrow> val denominator
   \<lbrace> $numerator, $denominator \<rbrace>
 \<medium_right_bracket> .
 
+proc test_ptr:
+  input \<open>ptr \<Ztypecolon> \<v>\<a>\<l> Ptr (tup [tup [aint], aint])\<close>
+  output \<open>ptr \<tribullet>\<^sub>a 1 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
+\<medium_left_bracket>
+  $ptr \<tribullet> 1
+\<medium_right_bracket> .
 
 (*
 proc

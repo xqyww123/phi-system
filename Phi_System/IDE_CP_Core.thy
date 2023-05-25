@@ -933,21 +933,75 @@ lemma [\<phi>reason 70 for \<open>
 \<Longrightarrow> PROP \<phi>Application (PROP App &&& PROP Apps) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def conjunction_imp .
 
-lemma [\<phi>reason 1100 for \<open>
-  PROP \<phi>Application (PROP ?Prem \<Longrightarrow> PROP ?App) ?State ?Result
-\<close>]:
+lemma \<phi>apply_eager_antecedent_meta:
+  \<open> PROP \<phi>Application (PROP App) State (PROP Result)
+\<Longrightarrow> PROP Prem
+\<Longrightarrow> PROP \<phi>Application (PROP Prem \<Longrightarrow> PROP App) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def imp_implication
+  subgoal premises prems using prems(1)[OF prems(3) prems(4)[OF prems(2)]] . .
+
+lemma \<phi>apply_eager_antecedent:
+  \<open> PROP \<phi>Application (Trueprop App) State (PROP Result)
+\<Longrightarrow> Prem
+\<Longrightarrow> PROP \<phi>Application (Trueprop (Prem \<longrightarrow> App)) State (PROP Result)\<close>
+  unfolding prop_def \<phi>Application_def imp_implication
+  subgoal premises prems using prems(1)[OF prems(3) prems(4)[OF prems(2)]] . .
+
+lemma \<phi>apply_user_antecedent_meta:
   \<open> PROP \<phi>Application (PROP App) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (PROP Prem \<Longrightarrow> PROP App) State (PROP Prem \<Longrightarrow> PROP Result)\<close>
   unfolding prop_def \<phi>Application_def imp_implication
   subgoal premises prems using prems(1)[OF  prems(2) prems(3)[OF prems(4)]] . .
 
-lemma [\<phi>reason 1100 for \<open>
-  PROP \<phi>Application (Trueprop (?Prem \<longrightarrow> ?App)) ?State ?Result
-\<close>]:
+lemma \<phi>apply_user_antecedent:
   \<open> PROP \<phi>Application (Trueprop App) State Result
 \<Longrightarrow> PROP \<phi>Application (Trueprop (Prem \<longrightarrow> App)) State (Prem \<Longrightarrow> PROP Result)\<close>
   unfolding prop_def \<phi>Application_def imp_implication
   subgoal premises prems using prems(1)[OF prems(2) prems(3)[OF prems(4)]] . .
+
+\<phi>reasoner_ML \<phi>apply_admit_antecedent 1100
+  ( \<open>PROP \<phi>Application (PROP ?Prem \<Longrightarrow> PROP ?App) ?State ?Result\<close>
+  | \<open>PROP \<phi>Application (Trueprop (?Prem' \<longrightarrow> ?App')) ?State ?Result\<close> )
+= \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ app $ _ $ _ = Thm.major_prem_of sequent
+      fun is_user_dependent (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_user_dependent X
+        | is_user_dependent (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _) = true
+        | is_user_dependent (Const(\<^const_name>\<open>Argument\<close>, _) $ _ ) = true
+        | is_user_dependent (Const(\<^const_name>\<open>Do\<close>, _) $ _ ) = true
+        | is_user_dependent (Const(\<^const_name>\<open>ParamTag\<close>, _) $ _ ) = true
+        | is_user_dependent (Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _) = true
+        | is_user_dependent (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = is_user_dependent X
+        | is_user_dependent (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_user_dependent X
+        | is_user_dependent (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = is_user_dependent X
+        | is_user_dependent (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X)) = is_user_dependent X
+        | is_user_dependent _ = false
+      val (user_rule, eager_rule) =
+               case app of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+                              (@{thm \<phi>apply_user_antecedent}, @{thm \<phi>apply_eager_antecedent})
+                         | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+                              (@{thm \<phi>apply_user_antecedent_meta}, @{thm \<phi>apply_eager_antecedent_meta})
+      fun process (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) met_sequent = process X met_sequent
+        | process (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ X) (met,eager,sequent) =
+            process X (if met > 0 orelse is_user_dependent A
+                       then (met + 1, eager, user_rule RS sequent)
+                       else (met, eager + 1, eager_rule RS sequent))
+        | process (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ A $ X) (met,eager,sequent) =
+            process X (if met > 0 orelse is_user_dependent A
+                       then (met + 1, eager, user_rule RS sequent)
+                       else (met, eager + 1, eager_rule RS sequent))
+        | process _ sequent = sequent
+      val (_, eager, sequent') = process app (0,0,sequent)
+      val N = Thm.nprems_of sequent'
+      val sequent'2 =
+        if eager <= 1 then sequent'
+        else let val sequent'3 = Thm.permute_prems 1 (eager-1) sequent'
+                 fun perm i sqt = if i = eager + 1 then sqt
+                                  else perm (i+1) (Thm.permute_prems i (N-i-1) sqt)
+              in perm 2 sequent'3 end
+   in SOME ((ctxt, sequent'2), Seq.empty)
+  end
+) \<close>
+
 
 lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application (Pure.all ?App) ?State ?Result
@@ -1674,10 +1728,10 @@ lemma \<phi>cast_exception_UI:
 
 hide_fact \<phi>cast_exception_UI
 
-\<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
-  (Phi_Apply.apply (Phi_App_Rules.app_rules ctxt [xnames]) (ctxt, sequent)))\<close>
-
 ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
+
+\<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
+  (Phi_Opr_Stack.do_application (Phi_App_Rules.app_rules ctxt [xnames]) (ctxt, sequent)))\<close>
 
 \<phi>processor delayed_apply 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn (ctxt,sequent) =>
@@ -1686,7 +1740,7 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
           | name_pos_of _ = ("", Position.none)
     in
       if Phi_Opr_Stack.synt_can_delay_apply' (Context.Proof ctxt) (fst xname)
-      then Phi_Opr_Stack.apply (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname]) (ctxt, sequent)
+      then Phi_Opr_Stack.begin_apply (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname]) (ctxt, sequent)
       else raise Bypass NONE
     end)\<close>
 
@@ -1792,7 +1846,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
           fold_map (fn (NONE,b)    => (fn k' => ((k',b),k'))
                      | (SOME k, b) => (fn _  => ((SOME k, b), SOME k))) vars NONE
   in (ctxt,sequent)
-  |> Phi_Opr_Stack.end_expression
+  |> Phi_Opr_Stack.end_expression 0
   |> Generic_Variable_Access.assignment_cmd vars'
   end
 )\<close>

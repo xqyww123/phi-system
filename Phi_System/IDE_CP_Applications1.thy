@@ -4,7 +4,7 @@ text \<open>In this part, we build simple applications based on IDE-CP directly,
   advanced reasoning processes.\<close>
 
 theory IDE_CP_Applications1
-  imports IDE_CP_Core
+  imports Phi_Type_Algebra
   keywords "val" :: quasi_command
   abbrevs "<vals>" = "\<v>\<a>\<l>s"
 begin

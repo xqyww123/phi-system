@@ -58,7 +58,7 @@ declare [[\<phi>reason_default_pattern \<open>valid_index ?T ?idx\<close> \<Righ
 
 lemma [\<phi>reason 1200]: \<open>valid_index T []\<close> by simp
 
-lemma valid_index_tail[simp]:
+lemma valid_index_tail[iff]:
   \<open>valid_index T (idx@[i]) \<longleftrightarrow> valid_index T idx \<and> valid_idx_step (index_type idx T) i\<close>
   by (induct idx arbitrary: T; simp)
 
@@ -135,7 +135,8 @@ paragraph \<open>Unwind aggregate path into logical form easy for reasoning\<clo
 definition \<open>unwind_aggregate_path_into_logical_form A B \<longleftrightarrow> A = B\<close>
 
 declare [[\<phi>reason_default_pattern
-  \<open>unwind_aggregate_path_into_logical_form ?A _\<close> => \<open>unwind_aggregate_path_into_logical_form ?A _\<close> (100)
+  \<open>unwind_aggregate_path_into_logical_form ?A _\<close> => \<open>unwind_aggregate_path_into_logical_form ?A _\<close> (100),
+  \<phi>premise_attribute? [unfolded unwind_aggregate_path_into_logical_form_def, useful] for \<open>unwind_aggregate_path_into_logical_form _ _\<close>
 ]]
 
 lemma [\<phi>reason 1000]:
@@ -252,6 +253,16 @@ lemma [\<phi>reason 1200]:
   unfolding \<phi>Aggregate_Mapper_def
   by (simp add: \<phi>Mapping_expn)
 
+subsection \<open>Is Aggregate\<close>
+
+definition \<open>Is_Aggregate T \<longleftrightarrow> True\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> Is_Aggregate T
+\<Longrightarrow> Is_Aggregate U
+\<Longrightarrow> Is_Aggregate (T \<^emph> U)\<close>
+  unfolding Is_Aggregate_def ..
+
 (*
 subsection \<open>IDE-Interfaces\<close>
 
@@ -275,6 +286,7 @@ section \<open>First-level Abstraction of Instructions\<close>
 
 lemma op_get_aggregate:
   \<open> unwind_aggregate_path_into_logical_form raw_idx idx
+\<Longrightarrow> Is_Aggregate T
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> valid_index TY idx
 \<Longrightarrow> \<phi>Aggregate_Getter idx T U f
@@ -285,6 +297,7 @@ lemma op_get_aggregate:
 
 lemma op_set_aggregate:
   \<open> unwind_aggregate_path_into_logical_form raw_idx idx
+\<Longrightarrow> Is_Aggregate T
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY2
 \<Longrightarrow> Premise eval_aggregate_path (index_type idx TY = TY2 \<or> allow_assigning_different_typ TY idx)
@@ -323,9 +336,9 @@ translations
 
 section \<open>IDE Interface\<close>
 
-\<phi>overloads "[]" and "[]="
+\<phi>overloads "[]" and "[]=" and "\<tribullet>"
 
-declare op_get_aggregate[\<phi>overload "[]"]
+declare op_get_aggregate[\<phi>overload "[]", \<phi>overload "\<tribullet>"]
         op_set_aggregate[\<phi>overload "[]="]
 
 ML_file \<open>library/generic_element_access.ML\<close>
@@ -367,11 +380,11 @@ ML_file \<open>library/generic_element_access.ML\<close>
 
 
 setup \<open>fn thy => thy
-|> Phi_Opr_Stack.decl_infixr (900, "\<tribullet>", SOME 1) |> snd
-|> Phi_Opr_Stack.decl_postfix (901, "!", SOME 0) |> snd
-|> Phi_Opr_Stack.decl_internal_opr (901, 50, ":=", SOME 1)
+|> Phi_Opr_Stack.decl_infixr (910, "\<tribullet>", SOME 1) |> snd
+|> Phi_Opr_Stack.decl_postfix (911, "!", SOME 0) |> snd
+|> Phi_Opr_Stack.decl_internal_opr (911, 50, ":=", SOME 1)
 |> Phi_Opr_Stack.set_meta_opr ("\<tribullet>",
-        Phi_Generic_Element_Access.dot_triangle_opr (0, \<^named_theorems>\<open>[]_\<phi>app\<close>))
+        Phi_Generic_Element_Access.dot_triangle_opr (0, \<^named_theorems>\<open>\<tribullet>_\<phi>app\<close>))
 |> Phi_Opr_Stack.set_meta_opr (":=",
         Phi_Generic_Element_Access.dot_triangle_opr (1, \<^named_theorems>\<open>[]=_\<phi>app\<close>))
 \<close>

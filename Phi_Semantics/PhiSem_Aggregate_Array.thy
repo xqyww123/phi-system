@@ -80,6 +80,9 @@ lemma Array_zero[\<phi>reason 1000]:
   unfolding \<phi>Zero_def
   by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth Inhabited_def image_iff; blast)
 
+lemma [\<phi>reason 1000]:
+  \<open>Is_Aggregate (Array N T)\<close>
+  unfolding Is_Aggregate_def ..
 
 section \<open>Reasoning\<close>
 

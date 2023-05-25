@@ -553,7 +553,8 @@ lemma op_const_nat_\<phi>app[\<phi>synthesis 200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n < 2 ^ LENGTH('b)
 \<Longrightarrow> Simplify literal n' n
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<v>\<a>\<l> n \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
-  \<medium_left_bracket> have [simp]: \<open>unat (word_of_nat n :: 'b word) = n\<close> using \<phi> of_nat_inverse by blast
+  \<medium_left_bracket>
+     have [simp]: \<open>unat (word_of_nat n :: 'b word) = n\<close> using \<phi> of_nat_inverse by blast
   ;; apply_rule op_const_word_\<phi>app[where 'b='b and n'=\<open>of_nat n\<close> and n=n']
      certified by (simp add: \<open>n' = n\<close>)
   \<medium_right_bracket> .

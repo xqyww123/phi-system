@@ -327,6 +327,14 @@ lemma rawaddr_to_log[simp]:
   unfolding rawaddr_to_log_def
   by (rule some_equality, simp) (metis logaddr_to_raw_inj) 
 
+lemma logaddr_to_raw[iff]:
+  \<open> (\<exists>laddr. logaddr_to_raw laddr = addr \<and> logaddr_type laddr = TY \<and> valid_logaddr laddr)
+\<Longrightarrow> logaddr_to_raw (rawaddr_to_log TY addr) = addr \<and>
+    logaddr_type (rawaddr_to_log TY addr) = TY \<and>
+    valid_logaddr (rawaddr_to_log TY addr)\<close>
+  unfolding rawaddr_to_log_def
+  by (elim exE; rule someI; blast)
+
 lemma logaddr_type__rawaddr_to_log__logaddr_type[simp]:
   \<open> valid_logaddr laddr
 \<Longrightarrow> logaddr_type (rawaddr_to_log (logaddr_type laddr) (logaddr_to_raw laddr)) = logaddr_type laddr\<close>
@@ -362,6 +370,9 @@ subsubsection \<open>Address Arithmetic - Get Element Pointer\<close>
 definition addr_gep :: "logaddr \<Rightarrow> aggregate_index \<Rightarrow> logaddr"
   where "addr_gep addr i = map_memaddr (\<lambda>idx. idx @ [i]) addr"
 
+definition addr_gep_N :: "logaddr \<Rightarrow> aggregate_path \<Rightarrow> logaddr"
+  where "addr_gep_N addr path = map_memaddr (\<lambda>idx. idx @ path) addr"
+
 syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<tribullet>\<^sub>a" 55)
 
 parse_translation \<open>[
@@ -390,22 +401,53 @@ lemma addr_gep_memblk[iff]:
   \<open>memaddr.blk (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.blk addr\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
+lemma addr_gep_N_memblk[iff]:
+  \<open>memaddr.blk (addr_gep_N addr path) = memaddr.blk addr\<close>
+  unfolding addr_gep_N_def by (cases addr; simp)
+
 lemma addr_gep_path[iff]:
   \<open>memaddr.index (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.index addr @ [i]\<close>
   unfolding addr_gep_def by (cases addr; simp)
+
+lemma addr_gep_N_path[iff]:
+  \<open>memaddr.index (addr_gep_N addr path) = memaddr.index addr @ path\<close>
+  unfolding addr_gep_N_def by (cases addr; simp)
+
+lemma addr_gep_eq[iff]:
+  \<open>addra \<tribullet>\<^sub>a LOGIC_IDX(ia) = addrb \<tribullet>\<^sub>a LOGIC_IDX(ib) \<longleftrightarrow> addra = addrb \<and> ia = ib\<close>
+  unfolding addr_gep_def by (cases addra; cases addrb; simp)
+
+lemma addr_gep_N_simp[iff]:
+  \<open>addr_gep_N addr (i#path) = addr_gep_N (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) path\<close>
+  unfolding addr_gep_N_def addr_gep_def by (cases addr; simp)
+
+lemma addr_gep_N0_simp[iff]:
+  \<open>addr_gep_N addr [] = addr\<close>
+  unfolding addr_gep_N_def by (cases addr; simp)
 
 lemma addr_gep_not_eq_zero[intro!, simp]:
   \<open>addr \<noteq> 0 \<Longrightarrow> addr \<tribullet>\<^sub>a LOGIC_IDX(i) \<noteq> 0\<close>
   unfolding zero_memaddr_def addr_gep_def
   by (cases addr) simp
 
+lemma logaddr_type_gep[iff]:
+  \<open>logaddr_type (addr \<tribullet>\<^sub>a LOGIC_IDX(x)) = idx_step_type x (logaddr_type addr)\<close>
+  unfolding addr_gep_def by (cases addr; simp)
+
 lemma addr_gep_valid[intro!, simp]:
-  \<open> addr \<noteq> 0
-\<Longrightarrow> valid_idx_step (logaddr_type addr) i
+  \<open> valid_idx_step (logaddr_type addr) i
 \<Longrightarrow> valid_logaddr addr
 \<Longrightarrow> valid_logaddr (addr \<tribullet>\<^sub>a LOGIC_IDX(i))\<close>
   unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
-  by (cases addr; clarsimp)
+  by (cases addr; clarsimp simp add: valid_idx_step_void)
+
+lemma addr_gep_N_valid[intro!, simp]:
+  \<open> valid_index (logaddr_type addr) path
+\<Longrightarrow> valid_logaddr addr
+\<Longrightarrow> valid_logaddr (addr_gep_N addr path)\<close>
+  unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
+  by (induct path arbitrary: addr; clarsimp simp add: valid_idx_step_void;
+      metis addr_gep_N_path addr_gep_N_simp addr_gep_memblk addr_gep_valid append_self_conv2 logaddr_type_gep not_Cons_self2 valid_logaddr_def)
 
 lemma logaddr_to_raw_phantom_mem_type:
   \<open> phantom_mem_semantic_type (logaddr_type addr)
@@ -414,6 +456,16 @@ lemma logaddr_to_raw_phantom_mem_type:
   unfolding logaddr_to_raw_def addr_gep_def phantom_mem_semantic_type_def
   by (cases addr; clarsimp; insert idx_step_offset_size; fastforce)
 
+lemma logaddr_to_raw_phantom_mem_type_gep_N:
+  \<open> phantom_mem_semantic_type (logaddr_type addr)
+\<Longrightarrow> valid_index (logaddr_type addr) path
+\<Longrightarrow> logaddr_to_raw (addr_gep_N addr path) = logaddr_to_raw addr\<close>
+  unfolding logaddr_to_raw_def phantom_mem_semantic_type_def addr_gep_N_def
+  apply (induct path arbitrary: addr; clarsimp simp add: split_memaddr_meta_all)
+  subgoal premises prems for a path blk ofs
+    apply (simp add: prems(1)[of \<open>ofs @ [a]\<close> blk, simplified,
+                  OF \<open>valid_index (idx_step_type a (index_type ofs (memblk.layout blk))) path\<close>])
+    using idx_step_offset_size prems(2) by force .
 
 subsubsection \<open>Install Semantics\<close>
 
@@ -511,43 +563,27 @@ lemma Ptr_semty[\<phi>reason 1000]:
 
 section \<open>Semantic Operations\<close>
 
-declare_\<phi>operator infixl 55 "\<tribullet>"
-
-proc op_get_element_pointer_symbol[\<phi>overload "\<tribullet>"]:
-  requires \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(LOGIC_SYMBOL(s))\<close>
-       and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(LOGIC_SYMBOL(s)) TY\<close>
+proc op_get_element_pointer[\<phi>overload \<tribullet>]:
+  requires \<open>unwind_aggregate_path_into_logical_form raw_path path\<close>
+       and [useful]: \<open>valid_index TY path\<close>
+       and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : index_type path TY\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  output \<open>addr \<tribullet>\<^sub>a LOGIC_SYMBOL(s) \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr_gep_N addr path \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
-     V_pointer.mk (logaddr_to_raw (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)) \<tribullet>\<^sub>a LOGIC_SYMBOL(s)))
-         \<in> (addr \<tribullet>\<^sub>a LOGIC_SYMBOL(s) \<Ztypecolon> Ptr TY')\<close>
-     certified by ((insert useful, simp add: \<phi>expns,
+    V_pointer.mk (logaddr_to_raw (addr_gep_N (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) raw_path))
+      \<in> (addr_gep_N addr path \<Ztypecolon> Ptr TY')\<close>
+  certified by ((insert useful, simp add: \<phi>expns,
                    cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>;
                    cases \<open>addr = 0\<close>;
                    simp add: logaddr_to_raw_phantom_mem_type),
-                   (insert valid_idx_step_void, force)[1],
-                   smt (verit, del_insts) logaddr_to_raw_phantom_mem_type logaddr_to_raw_MemBlk rawaddr_to_log_def someI_ex,
-                   (insert valid_idx_step_void, force)[1],
-                   fastforce)
+                smt (verit, del_insts) addr_gep_N0_simp fold_simps(1) memaddr_blk_zero memaddr_idx_zero memblk.layout(1) rawaddr_to_log_def someI_ex the_\<phi>(4) the_\<phi>(5) valid_index_void valid_logaddr_0 zero_list_def,
+                metis logaddr_to_raw logaddr_to_raw_phantom_mem_type_gep_N,
+                simp add: phantom_mem_semantic_type_def,
+                force)
 \<medium_right_bracket> .
 
-proc op_get_element_pointer_const_numidx[\<phi>overload "\<tribullet>"]:
-  requires \<open>Is_Literal i\<close>
-       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] valid_idx_step TY AG_IDX(#i)\<close>
-       and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : idx_step_type AG_IDX(#i) TY\<close>
-  input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  output \<open>addr \<tribullet>\<^sub>a #i \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
-\<medium_left_bracket>
-  $addr semantic_local_value pointer
-  semantic_return \<open>
-     V_pointer.mk (logaddr_to_raw (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1)) \<tribullet>\<^sub>a LOGIC_IDX(AgIdx_N i)))
-         \<in> (addr \<tribullet>\<^sub>a LOGIC_IDX(AgIdx_N i) \<Ztypecolon> Ptr TY')\<close>
-    certified by ((insert useful, simp add: \<phi>expns; cases \<open>addr = 0\<close>; simp),
-                  (insert valid_idx_step_void, force)[1],
-                  smt logaddr_to_raw_phantom_mem_type rawaddr_to_log rawaddr_to_log_def someI_ex)
-\<medium_right_bracket> .
 
 
 

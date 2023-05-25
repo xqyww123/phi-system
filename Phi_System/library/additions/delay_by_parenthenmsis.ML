@@ -9,13 +9,15 @@ type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
 type free_param = exn option
 
-val apply : (string * Position.T) * thm list -> context_state -> context_state
+val do_application : thm list -> context_state -> context_state
+val begin_apply : (string * Position.T) * thm list -> context_state -> context_state
 val begin_block : Position.T -> Proof.context -> Proof.context
 val close_parenthesis : free_param -> (context_state -> context_state)
                      -> context_state -> context_state
 val open_parenthesis : arg_name -> context_state -> context_state
 val push_operator : operator_info * (string * Position.T) * thm list -> context_state -> context_state
-val end_expression : context_state -> context_state
+val end_expression : int (*precedence*) -> context_state -> context_state (*evaluate stacked operators
+      of precedence higher than the given argument*)
 val comma : arg_name -> context_state -> context_state
 val lookup_operator : theory -> string -> operator_info option
 
@@ -204,13 +206,18 @@ fun push_meta_operator ((left_prec,prec,arity_delta),name,meta) (ctxt,sequent) =
    |> apfst (Parenthesis_Stack.put (Meta_Opr (prec,arity_constraint,name,meta) :: actions', arg_names))
   end
 
-fun end_expression s =
+fun end_expression precedence s =
   let val mode = Phi_Working_Mode.mode1 (fst s)
       val (actions, arg_names) = Parenthesis_Stack.get (fst s)
-      val (actions', s') = eval_opr mode 0 actions s
+      val (actions', s') = eval_opr mode precedence actions s
    in s'
    |> apfst (Parenthesis_Stack.put (actions', arg_names))
   end
+
+fun do_application rules stat =
+      stat
+   |> Phi_Apply.apply rules
+   |> end_expression 900
 
 fun comma next_arg_name s =
   let val mode = Phi_Working_Mode.mode1 (fst s)
@@ -221,7 +228,7 @@ fun comma next_arg_name s =
    in (ctxt', sequent')
   end
 
-fun apply (name, rules) (ctxt,sequent) =
+fun begin_apply (name, rules) (ctxt,sequent) =
   let val (actions, arg_names) = Parenthesis_Stack.get ctxt
       val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
       val ctxt' = Parenthesis_Stack.put (Apply (name, rules, vals) :: actions, (NONE, snd name) :: arg_names) ctxt
@@ -333,7 +340,7 @@ val _ =
 
 val _ = Theory.setup (Context.theory_map (
 
-  Phi_Toplevel.End_of_Statement.add ~10 (K end_expression)
+  Phi_Toplevel.End_of_Statement.add ~10 (K (end_expression 0))
 
 #>Phi_Toplevel.End_of_Statement.add 998 (K (fn (ctxt,sequent) => (
     if not (null (delayed_apps ctxt))

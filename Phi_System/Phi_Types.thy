@@ -78,6 +78,8 @@ lemma \<phi>Fun_expn[\<phi>expns]:
   \<open>v \<in> (x \<Ztypecolon> \<phi>Fun f) \<longleftrightarrow> v = f x \<close>
   unfolding \<phi>Fun_def \<phi>Type_def by simp
 
+declare [[\<phi>trace_reasoning = 2]]
+
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x 
 \<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>Fun f\<close> 

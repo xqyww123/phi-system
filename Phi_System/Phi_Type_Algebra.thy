@@ -1,5 +1,5 @@
 theory Phi_Type_Algebra
-  imports Phi_BI Phi_Algebras.Map_of_Tree
+  imports IDE_CP_Core Phi_Algebras.Map_of_Tree
   keywords "\<phi>type_def" :: thy_defn
 begin
 
@@ -144,9 +144,9 @@ subsubsection \<open>Transformation Functor\<close>
 
 lemma apply_Transformation_Functor:
   \<open> Transformation_Functor Fa Fb fa fb
-\<Longrightarrow> (fa x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> fb y \<Ztypecolon> U \<a>\<n>\<d> Q)
+\<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t fa x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> fb y \<Ztypecolon> U \<a>\<n>\<d> Q
 \<Longrightarrow> (x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<a>\<n>\<d> Q)\<close>
-  unfolding Transformation_Functor_def
+  unfolding Transformation_Functor_def Argument_def
   by blast
 
 subsection \<open>Reasoning\<close>

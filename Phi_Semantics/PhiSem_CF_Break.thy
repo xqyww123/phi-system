@@ -277,11 +277,14 @@ val _ = Theory.setup (
 
 
 section \<open>Example\<close>
- 
+
+
+declare [[\<phi>trace_reasoning = 2]]
 proc
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   output \<open>y \<Ztypecolon> \<v>\<a>\<l> U\<close>
-  \<medium_left_bracket> brk_scope \<medium_left_bracket> for l1
+  \<medium_left_bracket>
+    brk_scope \<medium_left_bracket> for l1
       brk_scope \<medium_left_bracket> for l2
         apply_rule "_op_break_rule_"[of l1 \<a>\<r>\<g>2 \<open>\<lambda>ret. TECHNICAL Brk_Frame l2\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ret] U\<close>] ($y)
       \<medium_right_bracket>

@@ -11,6 +11,7 @@ signature PHI_APP_RULES = sig
   val declare_overloading : binding -> string (*comment*) -> local_theory -> string * local_theory
   val overload : thm -> (string * Position.T) -> Context.generic -> Context.generic
   val parser : (Facts.ref * Token.src list) parser
+  val name_pos_of_rule_ref : Facts.ref * Token.src list -> xstring * Position.T
   val name_position : (string * Position.T) parser
   val symbol_position : (string * Position.T) parser
   val name_and_symbol_position : (string * Position.T) parser
@@ -68,7 +69,8 @@ val parser =
   (* $$$ "[" |-- attribs --| $$$ "]" >> pair (Facts.named "") || *)
   \<^keyword>\<open>apply_rule\<close> |-- ((name_position -- Scan.option thm_sel >> Facts.Named) -- xopt_attribs) ||
   id_position >> (fn name => (Facts.Named (name, NONE), []))
-  
+
+fun name_pos_of_rule_ref (Facts.Named (name_pos, _), _) = name_pos
 
 val _ =
   Outer_Syntax.local_theory @{command_keyword \<phi>overloads} "declare procedure overloads"

@@ -1459,25 +1459,6 @@ lemma share_fun_updt[simp]:
   unfolding share_fun_def fun_eq_iff by simp
 
 
-(*
-paragraph \<open>Complete Permission\<close>
-
-ML \<open>
-structure ML_Attribute = Generic_Data (
-  type T = Thm.attribute option
-  val empty : T = NONE
-  fun merge (a,_) = a
-)
-\<close>
-
-attribute_setup ML_attr = \<open>Scan.peek (fn ctxt => Parse.ML_source >> (fn src =>
-  ML_Context.expression (Input.pos_of src)
-    ( ML_Lex.read "Context.>> (ML_Attribute.put (SOME (Thm.rule_attribute [] (("
-    @ ML_Lex.read_source src
-    @ ML_Lex.read ") o Context.proof_of))))") ctxt
-  |> ML_Attribute.get |> the
-))\<close>
- *)
 
 subsection \<open>Finite Map\<close>
 

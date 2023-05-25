@@ -81,12 +81,44 @@ attribute_setup TRY_THEN = \<open>(Scan.lift (Scan.optional (Args.bracks Parse.n
       >> (fn (i, B) => Thm.rule_attribute [B] (fn _ => fn A => A RSN (i, B) handle THM _ => A)))
     \<close> "resolution with rule, and do nothing if fail"
 
+ML \<open>
+val phi_system_ML_attribute_locker_do_not_override = Mutex.mutex ()
+val phi_system_ML_attribute_sender_do_not_override : (morphism -> Thm.attribute) option Unsynchronized.ref =
+      Unsynchronized.ref NONE
+fun phi_system_read_ML_attribute generic src =
+  let val _ = Mutex.lock phi_system_ML_attribute_locker_do_not_override
+      val _ =   ML_Context.expression (Input.pos_of src)
+              ( ML_Lex.read "phi_system_ML_attribute_sender_do_not_override := SOME (("
+              @ ML_Lex.read_source src
+              @ ML_Lex.read ") : morphism -> Thm.attribute)") generic
+            handle err => (
+              Mutex.unlock phi_system_ML_attribute_locker_do_not_override;
+              raise err)
+      val attr = the (@{print} (!phi_system_ML_attribute_sender_do_not_override))
+      val _ = Mutex.unlock phi_system_ML_attribute_locker_do_not_override;
+  in attr
+  end
+val phi_system_ML_attribute_parser = (
+   Scan.lift Args.internal_attribute
+|| Scan.peek (fn ctxt => Parse.token Parse.ML_source >>
+    Token.evaluate Token.Attribute (fn tok => 
+let val src = Token.input_of tok
+in phi_system_read_ML_attribute ctxt src
+end )))
+\<close>
+
+attribute_setup ML_attribute = \<open>
+  phi_system_ML_attribute_parser >> Morphism.form\<close>
+  \<open>Use ML directly in an attribute without defining a new attribute if you just
+  want to use it here specifically\<close>
+
 
 subsection \<open>Helper Objects\<close>
 
 subsubsection \<open>Big Number\<close>
 
-text \<open>A tag to suppress unnecessary expanding of big numbers like \<open>2^256  \<close>\<close>
+text \<open>A tag to suppress unnecessary expanding of big numbers like \<open>2^256\<close>
+  (*depreciated! use \<open>declare power_numeral[simp del]\<close> instead!*)\<close>
 
 definition \<open>Big x = x\<close>
 

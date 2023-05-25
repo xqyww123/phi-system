@@ -133,6 +133,9 @@ lemma Tuple_Field_semtys[\<phi>reason 1000]:
   apply (clarsimp simp add: \<phi>expns)
   by (metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
 
+lemma [\<phi>reason 1000]:
+  \<open>Is_Aggregate (Tuple_Field T)\<close>
+  unfolding Is_Aggregate_def ..
 
 
 section \<open>Reasoning\<close>

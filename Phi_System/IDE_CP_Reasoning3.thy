@@ -2386,6 +2386,9 @@ subsubsection \<open>Check\<close>
 
 definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Literal _ \<longleftrightarrow> True\<close>
 
+lemma Is_Literal_internal_rule:
+  \<open>Is_Literal any\<close> unfolding Is_Literal_def ..
+
 lemma [\<phi>reason 1]:
   \<open> FAIL TEXT(x \<open>should be a literal\<close>)
 \<Longrightarrow> Is_Literal x\<close> unfolding Is_Literal_def ..
@@ -2421,13 +2424,30 @@ subsubsection \<open>Evaluation\<close>
 
 consts literal :: mode
 
-lemma Do_Literal_Simplification[\<phi>reason 1000]:
+lemma [\<phi>reason 1000]:
   \<open> Simplify default A B
 \<Longrightarrow> Is_Literal A
 \<Longrightarrow> Simplify literal A B\<close>
   unfolding Simplify_def atomize_eq .
 
-hide_fact Do_Literal_Simplification
+lemma simplify_literal_implies_literal:
+  \<open>Simplify literal A B \<Longrightarrow> Is_Literal A\<close>
+  unfolding Is_Literal_def ..
+
+declare [[
+  \<phi>premise_attribute_ML \<open>fn _ => Thm.declaration_attribute (fn thm => fn ctxt =>
+    let val term_A = case Thm.prop_of thm
+                       of _ $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ _ ) => A
+                        | _ $ (Const(\<^const_name>\<open>Simplify\<close>, _) $ _ $ A $ _ ) => A
+        val cterm_A = Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term_A
+        val rule = Drule.infer_instantiate (Context.proof_of ctxt) [(("any",0), cterm_A)]
+                                           @{thm Is_Literal_internal_rule}
+     in Phi_Reasoner.add_intro_rule Position.none Phi_Reasoner.LOCAL_CUT 1000
+            ([(Thm.concl_of rule, NONE)], []) NONE [rule] ctxt
+    end
+    handle MATCH => ctxt
+  )\<close> for \<open>Simplify literal _ _\<close>
+]]
 
 subsection \<open>Compilibility / Validity of Semantics\<close>
 

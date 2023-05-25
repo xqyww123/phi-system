@@ -105,6 +105,10 @@ lemma Empty_Named_Tuple_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> Empty_Named_Tuple) \<longleftrightarrow> p = V_named_tup.mk fmempty \<close>
   unfolding Empty_Named_Tuple_def \<phi>Type_def by simp
 
+lemma [\<phi>reason 1000]:
+  \<open>Is_Aggregate Empty_Named_Tuple\<close>
+  unfolding Is_Aggregate_def ..
+
 
 subsection \<open>Field\<close>
 
@@ -185,6 +189,11 @@ lemma Tuple_Field_semtys[\<phi>reason 1000]:
 \<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts)) (named_tup.mk (fmupd s TY TYs))\<close>
   unfolding \<phi>SemType_def subset_iff
   by (clarsimp simp add: \<phi>expns; metis V_named_tup_mult fmadd_empty(2) fmadd_fmupd fmrel_upd)
+
+lemma [\<phi>reason 1000]:
+  \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>
+  unfolding Is_Aggregate_def ..
+
 
 section \<open>Reasoning\<close>
 
