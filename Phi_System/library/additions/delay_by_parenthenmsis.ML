@@ -9,6 +9,8 @@ type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
 type free_param = exn option
 
+exception String_Param of string
+
 val do_application : thm list -> context_state -> context_state
 val begin_apply : (string * Position.T) * thm list -> context_state -> context_state
 val begin_block : Position.T -> Proof.context -> Proof.context
@@ -37,15 +39,19 @@ datatype opr_frame = Apply of ((string * Position.T) * thm list (*app rules*) * 
                    | Meta_Opr of (int (*precedence*)
                                * int option (*arity constraint*)
                                * (string * Position.T)
-                               * ((string * Position.T) ->
+                               * free_param
+                               * ((string * Position.T) * free_param ->
                                     opr_frame list * context_state ->
                                     opr_frame list * context_state))
                    | Left_Parenthesis of thm list (*values before*)
-type meta_opr = (string * Position.T) ->
+
+type meta_opr = (string * Position.T) * free_param ->
                 opr_frame list * context_state ->
                 opr_frame list * context_state
 
-val eval_opr : Phi_Working_Mode.working_mode -> int ->
+val lookup_current_opstack : Proof.context -> opr_frame list
+
+val eval_opr : Phi_Working_Mode.working_mode * int * (string * Position.T) ->
                   opr_frame list ->
                     Proof.context * thm ->
                       opr_frame list * (Proof.context * thm)
@@ -56,15 +62,15 @@ val meta_apply : (string * Position.T) * arg_name ->
 
 val lookup_meta_opr : theory -> string -> meta_opr option
 val set_meta_opr : string * meta_opr -> theory -> theory
-val push_meta_operator : operator_info * (string * Position.T)
-                       * ( (string * Position.T)
+val push_meta_operator : operator_info * (string * Position.T) * free_param
+                       * ( (string * Position.T) * free_param
                               -> opr_frame list * context_state
                               -> opr_frame list * context_state )
                        -> context_state -> context_state
 
 
-val decl_internal_opr : int * int * string * int option -> theory -> theory
-(* val decl_infix : int * string * int option -> theory -> operator_info * theory *)
+val decl_opr : int * int * string * int option -> theory -> theory
+val decl_infix : int * string * int option -> theory -> operator_info * theory
 val decl_infixl : int * string * int option -> theory -> operator_info * theory
 val decl_infixr : int * string * int option -> theory -> operator_info * theory
 val decl_prefix : int * string * int option -> theory -> operator_info * theory
@@ -78,8 +84,10 @@ type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
 type free_param = exn option
 
+exception String_Param of string
+
 datatype opr_frame = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
-                      | Meta_Apply of ((named_arg list * exn option (*free argument*)
+                      | Meta_Apply of ((named_arg list * free_param
                                               -> opr_frame list * context_state
                                               -> opr_frame list * context_state)
                                         * thm list (*values before*)
@@ -90,25 +98,28 @@ datatype opr_frame = Apply of ((string * Position.T) * thm list (*app rules*) * 
                                   * (string * Position.T) * thm list)
                       | Meta_Opr of (int (*precedence*) * int option (*arity constraint*)
                                   * (string * Position.T)
-                                  * ((string * Position.T) ->
+                                  * free_param
+                                  * ((string * Position.T) * free_param ->
                                       opr_frame list * context_state ->
                                       opr_frame list * context_state))
                       | Left_Parenthesis of thm list (*values before*)
 
-type meta_opr = (string * Position.T) ->
+type meta_opr = (string * Position.T) * free_param ->
                 opr_frame list * context_state ->
                 opr_frame list * context_state
 
-structure Parenthesis_Stack = Proof_Data (
+structure Opr_Stack = Proof_Data (
   type T = (opr_frame list * (string option * Position.T) list (*current parameter name*))
   val init = K ([], [(NONE, Position.none)])
 )
+
+val lookup_current_opstack = fst o Opr_Stack.get
 
 (* fun invoke_delayed_action (Apply (_, rules)) s = Phi_Apply.apply rules s
   | invoke_delayed_action End_Block s =
       raise Phi_Processor.Process_State_Call (s,
              Phi_Toplevel.end_block_auto_proof_cmd NONE false
-          #> Proof.map_context (Parenthesis_Stack.map tl)) *)
+          #> Proof.map_context (Opr_Stack.map tl)) *)
 
 fun chk_arity_constraint NONE _ _ _ = ()
   | chk_arity_constraint(SOME n) mode (name,pos) (_,sequent)
@@ -128,25 +139,30 @@ fun chk_no_name vs =
     of SOME pos => error ("Named arguement is not supported here! " ^ Position.here pos)
      | _ =>  maps snd vs
 
-fun eval_opr _ _ (acts as (Apply _ :: _)) s = (acts, s)
-  | eval_opr _ _ (acts as (Begin_Block :: _)) s = (acts, s)
-  | eval_opr mode limit (acts as (Opr (pr, arity, name, rules) :: aR)) s
+fun bad_syntax (name, pos) =
+      error ("Bad Syntax: " ^ name ^ " " ^ Position.here pos)
+
+fun eval_opr _ (acts as (Apply _ :: _)) s = (acts, s)
+  | eval_opr _ (acts as (Begin_Block :: _)) s = (acts, s)
+  | eval_opr (mode, limit, name') (acts as (Opr (pr, arity, name, rules) :: aR)) s
       = if pr < limit then (acts, s)
+        else if pr = limit then bad_syntax name'
         else (
           chk_arity_constraint arity mode name s;
-          eval_opr mode limit aR (
+          eval_opr (mode, limit, name') aR (
             Phi_Processor.process_all_antecedents NONE (Phi_Apply.apply rules s)))
-  | eval_opr mode limit (acts as (Meta_Opr (pr, arity, name, meta) :: aR)) s
+  | eval_opr (mode, limit, name') (acts as (Meta_Opr (pr, arity, name, param, meta) :: aR)) s
       = if pr < limit then (acts, s)
+        else if pr = limit then bad_syntax name'
         else let
           val _ = chk_arity_constraint arity mode name s
-          val (acts',s') = meta name (aR,s)
+          val (acts',s') = meta (name,param) (aR,s)
                          |> apsnd (Phi_Processor.process_all_antecedents NONE)
-           in eval_opr mode limit acts' s' end
-  | eval_opr _ _ (acts as (Left_Parenthesis _ :: _)) s = (acts, s)
-  | eval_opr _ _ (acts as (Meta_Apply _ :: _)) s = (acts, s)
-  | eval_opr _ _ (acts as (Comma _ :: _)) s = (acts, s)
-  | eval_opr _ _ [] s = ([], s)
+           in eval_opr (mode, limit, name') acts' s' end
+  | eval_opr _ (acts as (Left_Parenthesis _ :: _)) s = (acts, s)
+  | eval_opr _ (acts as (Meta_Apply _ :: _)) s = (acts, s)
+  | eval_opr _ (acts as (Comma _ :: _)) s = (acts, s)
+  | eval_opr _ [] s = ([], s)
 
 fun close_parenthesis arg c s0 =
   let fun close c args (Apply (_, rules, vals_before) :: acts) s =
@@ -167,86 +183,98 @@ fun close_parenthesis arg c s0 =
             close c (arg :: args) acts s
         | close _ _ [] _ = error "parenthesis is inbalanced!"
       val mode = Phi_Working_Mode.mode1 (fst s0)
-      val (actions, arg_name :: arg_names) = Parenthesis_Stack.get (fst s0)
-      val (actions', (ctxt,sequent)) = eval_opr mode 0 actions s0
+      val (actions, arg_name :: arg_names) = Opr_Stack.get (fst s0)
+      val (actions', (ctxt,sequent)) = eval_opr (mode, 0, ("<internal bug>", Position.none)) actions s0
       val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
    in close (fn acts => fn (ctxt, sequent) =>
-                  c (Parenthesis_Stack.put (acts, arg_names) ctxt, sequent))
+                  c (Opr_Stack.put (acts, arg_names) ctxt, sequent))
             [(arg_name, vals)] actions' (ctxt, sequent')
   end
 
 fun open_parenthesis arg_name (ctxt,sequent) =
   let val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
-   in (Parenthesis_Stack.map (fn (L, arg_names) =>
+   in (Opr_Stack.map (fn (L, arg_names) =>
           (Left_Parenthesis vals :: L, arg_name :: arg_names)) ctxt,
        sequent')
   end
 
 fun push_operator ((left_prec,prec,arity_delta),name,rule) (ctxt,sequent) =
   let val mode = Phi_Working_Mode.mode1 ctxt
-      val (actions, arg_names) = Parenthesis_Stack.get ctxt
-      val (actions', (ctxt',sequent')) = eval_opr mode left_prec actions (ctxt,sequent)
+      val (actions, arg_names) = Opr_Stack.get ctxt
+      val (actions', (ctxt',sequent')) = eval_opr (mode, left_prec, name) actions (ctxt,sequent)
       val arity_constraint =
             Option.map (fn x => x + Generic_Variable_Access.number_of_values
                                       (#spec_of (Phi_Working_Mode.mode1 ctxt') (Thm.prop_of sequent')))
                        arity_delta
    in (ctxt',sequent')
-   |> apfst (Parenthesis_Stack.put (Opr (prec,arity_constraint,name,rule) :: actions', arg_names))
+   |> apfst (Opr_Stack.put (Opr (prec,arity_constraint,name,rule) :: actions', arg_names))
   end
 
-fun push_meta_operator ((left_prec,prec,arity_delta),name,meta) (ctxt,sequent) =
+fun push_meta_operator ((left_prec,prec,arity_delta),name,param,meta) (ctxt,sequent) =
   let val mode = Phi_Working_Mode.mode1 ctxt
-      val (actions, arg_names) = Parenthesis_Stack.get ctxt
-      val (actions', (ctxt',sequent')) = eval_opr mode left_prec actions (ctxt,sequent)
+      val (actions, arg_names) = Opr_Stack.get ctxt
+      val (actions', (ctxt',sequent')) = eval_opr (mode, left_prec, name) actions (ctxt,sequent)
       val arity_constraint =
             Option.map (fn x => x + Generic_Variable_Access.number_of_values (
                                         #spec_of (Phi_Working_Mode.mode1 ctxt') (Thm.prop_of sequent')))
                        arity_delta
    in (ctxt',sequent')
-   |> apfst (Parenthesis_Stack.put (Meta_Opr (prec,arity_constraint,name,meta) :: actions', arg_names))
+   |> apfst (Opr_Stack.put (Meta_Opr (prec,arity_constraint,name,param,meta) :: actions', arg_names))
   end
 
 fun end_expression precedence s =
   let val mode = Phi_Working_Mode.mode1 (fst s)
-      val (actions, arg_names) = Parenthesis_Stack.get (fst s)
-      val (actions', s') = eval_opr mode precedence actions s
+      val (actions, arg_names) = Opr_Stack.get (fst s)
+      val (actions', s') = eval_opr (mode, precedence, ("", Position.none)) actions s
    in s'
-   |> apfst (Parenthesis_Stack.put (actions', arg_names))
+   |> apfst (Opr_Stack.put (actions', arg_names))
   end
 
 fun do_application rules stat =
       stat
-   |> Phi_Apply.apply rules
    |> end_expression 900
+   |> Phi_Apply.apply rules
 
 fun comma next_arg_name s =
   let val mode = Phi_Working_Mode.mode1 (fst s)
-      val (actions, arg_name :: arg_names) = Parenthesis_Stack.get (fst s)
-      val (actions', (ctxt,sequent)) = eval_opr mode 0 actions s
+      val (actions, arg_name :: arg_names) = Opr_Stack.get (fst s)
+      fun chk_actions (Left_Parenthesis _ :: _) = ()
+        | chk_actions (Meta_Apply _ :: _) = ()
+        | chk_actions (Apply _ :: _) = ()
+        | chk_actions (Begin_Block :: _) = bad_syntax (",", snd next_arg_name)
+        | chk_actions (Comma _ :: _ ) = ()
+        | chk_actions (_ :: L) = chk_actions L
+        | chk_actions [] = bad_syntax (",", snd next_arg_name)
+      val _ = chk_actions actions
+      val (actions', (ctxt,sequent)) = eval_opr (mode, 0, ("",Position.none)) actions s
       val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
-      val ctxt' = Parenthesis_Stack.put (Comma (arg_name, vals) :: actions', next_arg_name :: arg_names) ctxt
+      val ctxt' = Opr_Stack.put (Comma (arg_name, vals) :: actions', next_arg_name :: arg_names) ctxt
    in (ctxt', sequent')
   end
 
 fun begin_apply (name, rules) (ctxt,sequent) =
-  let val (actions, arg_names) = Parenthesis_Stack.get ctxt
-      val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
-      val ctxt' = Parenthesis_Stack.put (Apply (name, rules, vals) :: actions, (NONE, snd name) :: arg_names) ctxt
-   in (ctxt', sequent')
+  let val mode = Phi_Working_Mode.mode1 ctxt
+      val (actions, arg_names) = Opr_Stack.get ctxt
+      val (actions', (ctxt',sequent')) = eval_opr (mode, 900, name) actions (ctxt,sequent)
+      val (sequent'', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt' sequent'
+      val ctxt' = Opr_Stack.put (Apply (name, rules, vals) :: actions', (NONE, snd name) :: arg_names) ctxt'
+   in (ctxt', sequent'')
   end
 
 fun meta_apply (pos,arg_name) f (ctxt,sequent) =
-  let val (actions, arg_names) = Parenthesis_Stack.get ctxt
-      val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
-      val ctxt' = Parenthesis_Stack.put (Meta_Apply (f, vals, pos) :: actions, arg_name :: arg_names) ctxt
-   in (ctxt', sequent')
+  let val mode = Phi_Working_Mode.mode1 ctxt
+      val (actions, arg_names) = Opr_Stack.get ctxt
+      val (actions', (ctxt',sequent')) = eval_opr (mode, 900, pos) actions (ctxt,sequent)
+      val (sequent'', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt' sequent'
+      val ctxt' = Opr_Stack.put (Meta_Apply (f, vals, pos) :: actions', arg_name :: arg_names) ctxt'
+   in (ctxt', sequent'')
   end
 
-fun begin_block pos = Parenthesis_Stack.map (fn (actions, arg_names) =>
+fun begin_block pos = Opr_Stack.map (fn (actions, arg_names) =>
         (Begin_Block :: actions, (NONE, pos) :: arg_names))
 
 fun is_during_apply ctxt name =
-  let val (actions, _) = Parenthesis_Stack.get ctxt
+  let val (actions, _) = Opr_Stack.get ctxt
       fun is_during (Apply ((s, _), _, _) :: _) = (s = name)
         | is_during (Meta_Apply (_, _, (s, _)) :: _) = s = name
         | is_during (Begin_Block :: _) = false
@@ -258,7 +286,7 @@ fun is_during_apply ctxt name =
    in is_during actions
   end
 
-val delayed_apps = Parenthesis_Stack.get #> fst
+val delayed_apps = Opr_Stack.get #> fst
 
 (*** Prefix, Infix, Postfix operators  ***)
 
@@ -274,14 +302,14 @@ fun chk_precedence p =
   if 0 < p andalso p <= 1000 then p
   else error "precedence of operator should be within [1,1000]"
 
-(*fun decl_infix' (precedence, symbol, arity) =
+fun decl_infix' (precedence, symbol, arity) =
       Operators.map (Symtab.update_new (symbol, (precedence, chk_precedence precedence, the_default (SOME 1) arity)))
 
 fun decl_infix (precedence, symbol, arity) thy =
   ( (precedence, precedence, arity),
-    decl_infix' (precedence, symbol, SOME arity) thy )*)
+    decl_infix' (precedence, symbol, SOME arity) thy )
 
-fun decl_internal_opr (left_precedence, precedence, symbol, arity) =
+fun decl_opr (left_precedence, precedence, symbol, arity) =
       Operators.map (Symtab.update_new (symbol, (chk_precedence left_precedence, chk_precedence precedence, arity)))
 
 fun decl_infixr' (precedence, symbol, arity) =
@@ -321,7 +349,7 @@ val _ =
     "declare operators in \<phi>-programming"
     (Scan.repeat1
         (( \<^keyword>\<open>infixl\<close> >> K decl_infixl' || \<^keyword>\<open>infixr\<close> >> K decl_infixr' ||
-           \<^keyword>\<open>infix\<close> >> K decl_infixl' ||
+           \<^keyword>\<open>infix\<close> >> K decl_infix' ||
          Args.$$$ "prefix" >> K decl_prefix' || Args.$$$ "postfix" >> K decl_postfix')
        -- Parse.nat
        -- Parse.position symbol
@@ -344,15 +372,13 @@ val _ = Theory.setup (Context.theory_map (
 
 #>Phi_Toplevel.End_of_Statement.add 998 (K (fn (ctxt,sequent) => (
     if not (null (delayed_apps ctxt))
-       andalso Phi_Toplevel.previous_statement_is_finished ctxt
     then warning "parenthesis is inbalanced!"
     else () ;
     (ctxt,sequent)
   )))
 
-#>Phi_Toplevel.Begining_of_Statement.add 1 (K (fn (ctxt,sequent) => (
+#>Phi_Toplevel.Begin_of_Next_Statement.add 1 (K (fn (ctxt,sequent) => (
     if not (null (delayed_apps ctxt))
-       andalso Phi_Toplevel.previous_statement_is_finished ctxt
     then error "parenthesis is inbalanced!"
     else () ;
     (ctxt,sequent)

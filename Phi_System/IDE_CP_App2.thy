@@ -2,7 +2,7 @@ theory IDE_CP_App2
   imports Phi_Types
 begin
 
-section \<open>Value \& Its Settings\<close>
+section \<open>Value \& Reasoning of it\<close>
 
 subsection \<open>Reasoning Rules\<close>
 
@@ -127,17 +127,19 @@ lemma [\<phi>reason 1200 for \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_
   unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn implies_refl) *)
 
-lemma [\<phi>reason 1200 for \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T \<brangle> \<a>\<n>\<d> _\<close>]:
+lemma [\<phi>reason 1200 for \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T \<brangle> \<a>\<n>\<d> _\<close>]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> x <val-of> raw \<Ztypecolon> \<v>\<a>\<l>[raw] T \<brangle>\<close>
+\<Longrightarrow> report_unprocessed_element_index path
+\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[raw] T \<brangle>\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn implies_refl)
 
 lemma [\<phi>reason 1200 for
-    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
+    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
 ]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> raw \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
+\<Longrightarrow> report_unprocessed_element_index path
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
@@ -150,10 +152,10 @@ lemma \<phi>arg_val_varify_type:
   unfolding Imply_def atomize_Branch by blast
 
 lemma [\<phi>reason 1200 for
-    \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_comma> \<blangle> ?x <set-to> (?raw::VAL \<phi>arg) \<Ztypecolon> ?T \<brangle> \<a>\<n>\<d> _ \<close>
+    \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_comma> \<blangle> ?x <set-to> (?raw::VAL \<phi>arg) <path> _ \<Ztypecolon> ?T \<brangle> \<a>\<n>\<d> _ \<close>
 ]:
   \<open> ERROR TEXT(\<open>Local value is immutable. Cannot assign to\<close> raw)
-\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> x <set-to> (raw::VAL \<phi>arg) \<Ztypecolon> T \<brangle>\<close>
+\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> x <set-to> (raw::VAL \<phi>arg) <path> any \<Ztypecolon> T \<brangle>\<close>
   by simp
 
 lemma [OF \<phi>arg_val_varify_type,
@@ -166,21 +168,23 @@ lemma [OF \<phi>arg_val_varify_type,
 
 subsection \<open>Assignment\<close>
 
-typedecl valname
+typedecl valname \<comment> \<open>The name of local value in user programming interface\<close>
 
 lemma [OF \<phi>arg_val_varify_type,
-       \<phi>reason 1200 for \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T \<brangle> \<a>\<n>\<d> _ \<close>]:
-  \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<v>\<a>\<l>[raw] T \<brangle>\<close>
+       \<phi>reason 1200 for \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_comma> \<blangle> ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T \<brangle> \<a>\<n>\<d> _ \<close>]:
+  \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> report_unprocessed_element_index path
+\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[raw] T \<brangle>\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn)
 
 lemma [OF \<phi>arg_val_varify_type,
        \<phi>reason 1200 for
-    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
+    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
 ]:
-  \<open> \<phi>arg.dest (raw <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> name \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
+  \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<in> (x \<Ztypecolon> T)
+\<Longrightarrow> report_unprocessed_element_index path
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
@@ -188,14 +192,14 @@ lemma [OF \<phi>arg_val_varify_type,
 
 
 lemma "__set_value_rule__":
-  \<open> (\<phi>arg.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )
+  \<open> (\<phi>arg.dest (v <val-of> (name::valname) <path> []) \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )
 \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<brangle> \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_def Value_of_def
   by (clarsimp simp add: \<phi>expns)
 
 lemma "__fast_assign_val__":
   \<open> R\<heavy_comma> \<blangle> X \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> P
-\<Longrightarrow> R\<heavy_comma> \<blangle> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> \<phi>arg.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T) \<and> P\<close>
+\<Longrightarrow> R\<heavy_comma> \<blangle> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> \<phi>arg.dest (v <val-of> (name::valname) <path> []) \<in> (x \<Ztypecolon> T) \<and> P\<close>
   unfolding Imply_def
   by (clarsimp simp add: Val_expn Subjection_expn)
 

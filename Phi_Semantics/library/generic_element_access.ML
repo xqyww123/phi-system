@@ -1,10 +1,11 @@
 signature PHI_GENERIC_ELEMENT_ACCESS = sig
 
+include PHI_GENERIC_ELEMENT_ACCESS
+
 structure Agg_Path_Encoders : HANDLERS
 structure Agg_Constructors : HANDLERS
 
-val mk_agg_path_default : (Position.T * thm) list * context_state -> Proof.context * thm
-val mk_agg_path_val : (Position.T * thm) list * context_state -> Proof.context * thm
+val mk_element_index_input : thm list -> term
 
 val gen_access : string * string -> (string * Position.T) * Phi_Opr_Stack.arg_name -> context_state -> context_state
 val gen_constructor : string -> (string * Position.T) * Phi_Opr_Stack.arg_name
@@ -13,7 +14,7 @@ val gen_constructor : string -> (string * Position.T) * Phi_Opr_Stack.arg_name
 exception Bracket_Opr_Read
 exception Bracket_Opr_Write of Position.T
 
-val dot_triangle_opr : int * string -> string * Position.T
+val dot_triangle_opr : int * string -> (string * Position.T) * Phi_Opr_Stack.free_param
           -> Phi_Opr_Stack.opr_frame list * context_state
           -> Phi_Opr_Stack.opr_frame list * context_state
 
@@ -21,31 +22,19 @@ end
 
 structure Phi_Generic_Element_Access : PHI_GENERIC_ELEMENT_ACCESS = struct
 
-fun gen_mk_agg_path idx_val_constr args ctxt =
-  let val raw_path' = map (fn (_, rule) =>
-            case Phi_Local_Value.get_raw_val_in_rule rule
-              of _ (*\<phi>arg*) $ (\<^term>\<open>V_symbol.mk\<close> $ sym) => \<^Const>\<open>AgIdx_S \<^typ>\<open>VAL\<close>\<close> $ sym
-               | v => idx_val_constr $ v) args
-      val raw_path = HOLogic.mk_list \<^typ>\<open>aggregate_index\<close> raw_path'
-      val reasoning_rules =
-            map (fn (pos, rule) => (rule,pos,Phi_Reasoner.LOCAL_CUT,1000)) args
-      val ctxt' = Context.proof_map (Phi_Local_Value.add_reasoning_rules reasoning_rules) ctxt
-      val ind = Term.maxidx_term raw_path ~1 + 1
-   in Goal.init (Thm.cterm_of ctxt' (
-        \<^const>\<open>Trueprop\<close> $ (\<^Const>\<open>unwind_aggregate_path_into_logical_form \<^typ>\<open>aggregate_path\<close>\<close>
-                              $ raw_path $ Var (("logical_path", ind), \<^typ>\<open>aggregate_path\<close>))))
-    |> pair ctxt'
-    |> Phi_Reasoner.reason (SOME 1)
-    |> (fn SOME (_, ret) => Goal.conclude ret (*we drop the context here*)
-         | NONE => error "Fail to unwind the aggregate path into a logical form.")
+open Phi_Generic_Element_Access
+
+fun gen_mk_element_index_input f args =
+  let val raw_path' = map (fn rule =>
+            HOLogic.mk_prod (Phi_Syntax.dest_satisfaction (Thm.prop_of (f rule)))) args
+   in HOLogic.mk_list \<^typ>\<open>VAL \<times> VAL set\<close> raw_path'
   end
 
-fun mk_agg_path_default (args,(ctxt,_)) = (ctxt, gen_mk_agg_path \<^Const>\<open>AgIdx_VN \<^typ>\<open>VAL\<close>\<close> args ctxt)
-fun mk_agg_path_val (args,(ctxt,_)) = (ctxt, gen_mk_agg_path \<^Const>\<open>AgIdx_V \<^typ>\<open>VAL\<close>\<close> args ctxt)
+val mk_element_index_input = gen_mk_element_index_input I
 
 structure Agg_Path_Encoders = Handlers (
   type arg = (Position.T * thm) list * context_state
-  type ret = (Proof.context * thm (*unwind_aggregate_path_into_logical_form*))
+  type ret = (Proof.context * cterm (*raw index*))
 )
 
 exception Bracket_Opr_Read
@@ -59,32 +48,56 @@ fun chk_arg ((SOME _, pos), _) =
       error (Position.here pos ^ " the expression returns no value!")
   | chk_arg ((_, pos), [v]) = (pos, v)
 
+fun mk_element_index_input_internal args ctxt =
+  let val idx_input = gen_mk_element_index_input snd args
+      fun pattern_of (Trueprop $ ((H1 as Const (\<^const_name>\<open>Set.member\<close>, _)) $ V $ S))
+            = let val i = Int.max (maxidx_of_term H1, maxidx_of_term V) + 1
+               in \<^const>\<open>Action_Tag\<close> $ (Trueprop $ (H1 $ V $ Var(("S",i), fastype_of S)))
+                                    $ \<^const>\<open>parse_element_index_input\<close>
+              end
+        | pattern_of X =
+            raise TERM ("bad rule #c419df7c-c917-4605-a129-bb914d5716bf", [X])
+      val reasoning_rules = map (fn (pos, rule) =>
+            ([rule RS @{thm Action_Tag_I[where A=\<open>parse_element_index_input\<close>]}], pos,
+             Phi_Reasoner.LOCAL_CUT, 1000, [(pattern_of (Thm.prop_of rule), NONE)], [], NONE)
+          ) args
+      val thy = Proof_Context.theory_of ctxt
+      val pats = map (pattern_of o Thm.prop_of o snd) args
+   in ctxt
+   |> Context.proof_map (
+        Phi_Reasoner.del_reasoners \<^pattern>\<open>(_ :: VAL) \<in> _ @action parse_element_index_input\<close>
+          (fn r => exists (fn pat => Pattern.matches thy (pat, #name r)) pats))
+   |> Context.proof_map (
+        Phi_Reasoner.add_intro_rules reasoning_rules)
+   |> pair idx_input
+  end
+
 fun gen_access named_thm_of_rules pos_and_first_args stat =
-  let val _ = if Generic_Variable_Access.number_of_values
-                    (#spec_of Phi_Working_Mode.programming (Thm.prop_of (snd stat))) = 0
-              then error ("Bad Syntax: The operand of aggregate access is absent. " ^
-                           Position.here (snd (fst pos_and_first_args)))
-              else ()
-      fun invoke (args, rules_name) (opstack, (ctxt,sequent)) =
-        let val (ctxt', unwind) = Agg_Path_Encoders.invoke (Context.Proof ctxt) (args, (ctxt,sequent))
-                                |> (fn SOME ret => ret
-                                     | NONE => mk_agg_path_default (args, (ctxt,sequent)))
-            val rules = Named_Theorems.get ctxt rules_name
-                      |> map (fn thm => unwind RS thm)
+  let fun invoke (args, rules_name) (opstack, (ctxt,sequent)) =
+        let val (idx_input, ctxt') = mk_element_index_input_internal args ctxt
+            val rules = Named_Theorems.get ctxt' rules_name
+                      |> map (Drule.infer_instantiate ctxt' [(("input_index", 0), Thm.cterm_of ctxt' idx_input)])
          in (opstack, Phi_Apply.apply rules (ctxt', sequent))
-        end                                      
-        | invoke _ _ = error "internal bug #a2a96e04-14d6-4b66-9c2e-053e5c2bfcbe"
-      fun invoke' ((_, vals_before) :: args, SOME Bracket_Opr_Read) (opstack, stat) =
-            invoke (map chk_arg args, fst named_thm_of_rules)
-                (opstack, Generic_Variable_Access.push_values vals_before stat)
-        | invoke' ((_, vals_before) :: args, SOME (Bracket_Opr_Write pos)) (opstack, stat) =
-            (Phi_Opr_Stack.Meta_Opr (50, SOME (1 + length vals_before), (":=", pos),
-                  K (invoke (map chk_arg args, snd named_thm_of_rules))
-               ) :: opstack,
-             Generic_Variable_Access.push_values vals_before stat)
-        | invoke' ((_, vals_before) :: args, _) (opstack, stat) =
+        end
+      fun invoke' (args, SOME Bracket_Opr_Read) (opstack, stat) =
+            invoke (map chk_arg args, fst named_thm_of_rules) (opstack, stat)
+        | invoke' (args, SOME (Bracket_Opr_Write pos)) (opstack, stat) =
+            let val arity = 1 + Generic_Variable_Access.number_of_values
+                                    (#spec_of Phi_Working_Mode.programming (Thm.prop_of (snd stat)))
+             in (Phi_Opr_Stack.Meta_Opr (50, SOME arity, (":=", pos), NONE,
+                      K (invoke (map chk_arg args, snd named_thm_of_rules))
+                   ) :: opstack,
+                 stat)
+            end
+        | invoke' _ _ =
             error "Bad free_arg in Phi_Generic_Element_Access"
-   in Phi_Opr_Stack.meta_apply pos_and_first_args invoke' stat
+      fun invoke'3 ((_, vals_before) :: args, free_arg) (opstack, stat) =
+            if length vals_before = 0
+            then error ("Bad Syntax: The operand of aggregate access is absent. " ^
+                         Position.here (snd (fst pos_and_first_args)))
+            else invoke' (args, free_arg) (opstack, Generic_Variable_Access.push_values vals_before stat)
+        | invoke'3 _ _ = error "internal bug #a2a96e04-14d6-4b66-9c2e-053e5c2bfcbe"
+   in Phi_Opr_Stack.meta_apply pos_and_first_args invoke'3 stat
   end
 
 structure Agg_Constructors = Handlers (
@@ -126,11 +139,13 @@ fun gen_constructor kind pos_and_first_args stat =
   end
 
 
+fun is_empty (Const (\<^const_name>\<open>Nil\<close>, _)) = true
+  | is_empty _ = false
 
-fun dot_triangle_opr (front_arity, rules_name) (name, pos) (stack, (ctxt0,sequent0)) =
+fun dot_triangle_opr (front_arity, rules_name) ((name, pos), _) (stack, (ctxt0,sequent0)) =
   let val (front_args, (ctxt, sequent)) =
             Generic_Variable_Access.extract_and_remove_leading_values front_arity (ctxt0,sequent0)
-      fun collect (ret, Phi_Opr_Stack.Meta_Opr (_, _, ("\<tribullet>", pos), _) :: L) = collect (pos :: ret, L)
+      fun collect (ret, Phi_Opr_Stack.Meta_Opr (_, _, ("\<tribullet>", pos), _, _) :: L) = collect (pos :: ret, L)
         | collect ret_L = ret_L
       val (poss, stack') = collect ((if name = "\<tribullet>" then [pos] else []), stack)
       val actual = Generic_Variable_Access.number_of_values (
@@ -140,12 +155,34 @@ fun dot_triangle_opr (front_arity, rules_name) (name, pos) (stack, (ctxt0,sequen
       val (args', (ctxt',sequent')) =
               Generic_Variable_Access.extract_and_remove_leading_values (length poss) (ctxt,sequent)
       val args = poss ~~ args'
-      val (ctxt'', unwind) = Agg_Path_Encoders.invoke (Context.Proof ctxt') (args, (ctxt',sequent'))
-                              |> (fn SOME ret => ret
-                                   | NONE => mk_agg_path_default (args, (ctxt',sequent')))
-      val (ctxt'3, sequent'3) = Generic_Variable_Access.push_values front_args (ctxt'',sequent')
-      val rules = map (fn thm => unwind RS thm) (Named_Theorems.get ctxt'' rules_name)
-   in (stack', Phi_Apply.apply rules (ctxt'3, sequent'3))
+
+      val (idx_input'0, ctxt'2) = mk_element_index_input_internal args ctxt'
+      val idx_input = Thm.cterm_of ctxt'2 idx_input'0
+      val (ctxt'3, sequent'3) = Generic_Variable_Access.push_values front_args (ctxt'2,sequent')
+
+      val (idx_input', ctxt'4, sequent'4, stack'') =
+        case stack'
+          of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), SOME (Phi_Opr_Stack.String_Param vname), _) :: stack'')
+              => let val ctxt'3' = Phi_Generic_Element_Access.enable_report_unprocessed_element_index ctxt'3
+                     val (ctxt'4, sequent'4) = Generic_Variable_Access.get_value vname idx_input  (ctxt'3', sequent'3)
+                                            |> Phi_Processor.process_all_antecedents NONE
+                     val idx_input' = Phi_Generic_Element_Access.get_unprocessed_element_index ctxt'4
+                  in (idx_input', ctxt'4, sequent'4, stack'')
+                 end
+           | _ => (idx_input, ctxt'3, sequent'3, stack')
+
+      val rules = Named_Theorems.get ctxt'4 rules_name
+      fun process_index idx s =
+        if is_empty (Thm.term_of idx)
+        then s |> apfst Phi_Generic_Element_Access.stop_reporting_unprocessed_element_index
+        else let val rules' = map (Drule.infer_instantiate ctxt [(("input_index", 0), idx)]) rules
+                 val s' = s
+                        |> apfst Phi_Generic_Element_Access.enable_report_unprocessed_element_index
+                        |> Phi_Apply.apply rules'
+                        |> Phi_Processor.process_all_antecedents NONE
+              in process_index (Phi_Generic_Element_Access.get_unprocessed_element_index (fst s)) s'
+             end
+   in (stack'', process_index idx_input' (ctxt'4, sequent'4))
   end
 
 end

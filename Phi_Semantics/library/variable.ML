@@ -3,7 +3,8 @@ signature PHI_VARIABLE = sig
   include PHI_VARIABLE
 
   val variable_is_typed : bool Config.T
-  val dest_Var : term -> (string * (term * term)) option
+  val dest_Var : cterm -> (string * (cterm * cterm)) option
+  val dest_Var': term -> (string * (term * term)) option
 
   val varname_prefix : string
 
@@ -16,7 +17,20 @@ open Phi_Variable
 val varname_prefix = "\<v>\<a>\<r>_"
 val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K false)
 
-fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
+fun dest_Var ctm =
+  case Thm.term_of ctm
+    of (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
+          $ x
+          $ (Const (\<^const_name>\<open>basic_fiction.\<phi>\<close>,_)
+              $ _
+              $ (Const (\<^const_name>\<open>\<phi>MapAt\<close>, _)
+                  $ Free (name, \<^typ>\<open>varname\<close>)
+                  $ (Const (\<^const_name>\<open>\<phi>Some\<close>, _) $ T))))
+         => SOME (name, (Thm.dest_arg1 ctm (*x*),
+                         Thm.dest_arg (Thm.dest_arg (Thm.dest_arg (Thm.dest_arg ctm))) (*T*)))
+     | _ => NONE
+
+fun dest_Var' (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
                 $ x
                 $ (Const (\<^const_name>\<open>basic_fiction.\<phi>\<close>,_)
                     $ _
@@ -24,19 +38,20 @@ fun dest_Var (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
                         $ Free (name, \<^typ>\<open>varname\<close>)
                         $ (Const (\<^const_name>\<open>\<phi>Some\<close>, _) $ T))))
       = SOME (name, (x,T))
-  | dest_Var _ = NONE
+  | dest_Var' _ = NONE
 
-fun find_Var var (Const (\<^const_name>\<open>times\<close>, _) $ R $ X) =
-     (case dest_Var X
-        of SOME (name, xT) => if name = var then SOME xT else find_Var var R
-         | NONE => find_Var var R)
-  | find_Var var X =
-      case dest_Var X
-        of SOME (name, xT) => if name = var then SOME xT else NONE
-         | NONE => NONE
+fun find_Var var ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>times\<close>, _) $ R $ X
+        => (case dest_Var (Thm.dest_arg ctm)
+              of SOME (name, xT) => if name = var then SOME xT else find_Var var (Thm.dest_arg1 ctm)
+               | NONE => find_Var var (Thm.dest_arg1 ctm))
+    | _ => (case dest_Var ctm
+              of SOME (name, xT) => if name = var then SOME xT else NONE
+               | NONE => NONE)
 
 fun find_Var' var (_,sequent) =
-  find_Var var (#4 (Phi_Syntax.dest_CurrentConstruction (Thm.concl_of sequent)))
+  find_Var var (#4 (Phi_Syntax.dest_CurrentConstruction_c (Thm.cconcl_of sequent)))
 
 fun declare_rule pos rule =
   let
@@ -67,8 +82,8 @@ fun variable_assigner' b (ctxt,sequent) =
           val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
           val ctxt = ctxt
                   |> Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, (Free (vname, @{typ varname}),
-                                              Option.map fst o find_Var' vname))]
+                        [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, @{typ varname})),
+                                              find_Var' vname))]
                   |> bind_variable (vname, Binding.name_of b)
           in (rule, ctxt,
               [Thm.cterm_of ctxt (Free (vname, @{typ varname}))],
@@ -83,8 +98,8 @@ fun variable_declarer' TY b (ctxt,sequent) =
     val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
     val ctxt = ctxt
             |> Generic_Variable_Access.bind_local_vals
-                        [(Binding.name_of b, (Free (vname, @{typ varname}),
-                                              Option.map fst o find_Var' vname))]
+                        [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, @{typ varname})),
+                                              find_Var' vname))]
             |> bind_variable (vname, Binding.name_of b)
     val idx = Thm.maxidx_of_cterm TY + 1
     val rule = @{thm "__new_var_rule__"}
@@ -135,12 +150,12 @@ fun process_arguments_to_variables (ctxt, sequent) =
          |> map_index I
          |> map_filter (fn (_, (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _
                                   $ (Const (\<^const_name>\<open>Val\<close>, _)
-                                      $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (N, _))
+                                      $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (N, _) $ _ )
                                       $ _)))
                               => Variable.revert_fixed ctxt N
                          | (_, (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _
                                   $ (Const (\<^const_name>\<open>Val\<close>, _)
-                                      $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (N, _))
+                                      $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (N, _) $ _ )
                                       $ _)))
   in ()
   end *)

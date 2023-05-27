@@ -61,11 +61,13 @@ fun pattern_of' mk_var rule =
 
 fun pattern_of__value_of ctxt xname rule =
       pattern_of' (fn (i,rawval) =>
-        case rawval of Const (\<^const_name>\<open>Value_of\<close>, T3) $ V1 $ Free (vname, T4)
+        case rawval of Const (\<^const_name>\<open>Value_of\<close>, T3)
+                        $ V1 $ Free (vname, T4) $ (path as Const (\<^const_name>\<open>Nil\<close>, _))
               => if vname = internal_name_of ctxt xname
                  then Const (\<^const_name>\<open>Value_of\<close>, T3)
                         $ Var (("val", i), fastype_of V1)
                         $ Free (vname, T4)
+                        $ path
                  else raise THM ("Bad Rule", 0, [rule])
            | _ => raise THM ("Bad Rule", 0, [rule])) rule
 
@@ -88,30 +90,39 @@ fun delete_val' pred xname ctxt =
 val delete_val = delete_val' (K false)
 
 
+fun extract_x_T th =
+      let val ctm = Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg
+       in (Thm.dest_arg1 ctm, Thm.dest_arg ctm)
+      end
+
 fun dest_rule rule =
   case Thm.prop_of rule
     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
           $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _)
-                       $ (Const (\<^const_name>\<open>Value_of\<close>, _) $ _ $ Free (vname, T)))
+                       $ (Const (\<^const_name>\<open>Value_of\<close>, _)
+                            $ _ $ Free (vname, T) $ Const (\<^const_name>\<open>Nil\<close>, _)))
           $ Spec)
          => (vname,T,
-             (case Spec of \<^Const>\<open>\<phi>Type _ _\<close> $ V $ _ => SOME V
+             (case Spec of \<^Const>\<open>\<phi>Type _ _\<close> $ _ $ _ => SOME (extract_x_T rule)
                          | _ => NONE))
      | _ => raise THM ("Bad Rule", 0, [rule])
 
 fun update_val b rule ctxt = 
   let val (vname,T,V) = dest_rule rule
-   in ctxt
-     |> delete_val' (fn rule' => Thm.eq_thm_prop (rule',rule)) (Binding.name_of b)
-     |> Values.map (Symtab.update ((Binding.name_of b), (rule, vname)))
-     |> (fn ctxt' =>
-        Context.proof_map (Phi_Reasoner.add_intro_rule
-                              (Binding.pos_of b) Phi_Reasoner.LOCAL_CUT 1000
-                              ([(pattern_of__value_of ctxt' (Binding.name_of b) rule, NONE)],[])
-                              NONE [rule]) ctxt')
+      val ctxt' = ctxt
+                |> delete_val' (fn rule' => Thm.eq_thm_prop (rule',rule)) (Binding.name_of b)
+                |> Values.map (Symtab.update ((Binding.name_of b), (rule, vname)))
+      val pattern = pattern_of__value_of ctxt' (Binding.name_of b) rule
+      val thy = Proof_Context.theory_of ctxt
+   in ctxt'
+     |> Context.proof_map (
+          Phi_Reasoner.del_reasoners pattern (fn r => Pattern.matches thy (pattern, #name r))
+       #> Phi_Reasoner.add_intro_rule (Binding.pos_of b) Phi_Reasoner.LOCAL_CUT 1000
+                              ([(pattern, NONE)],[]) NONE [rule])
      |> Generic_Variable_Access.bind_local_vals
-            [(Binding.name_of b, (Free (vname, T), K V))]
-     |> Proof_Context.maybe_bind_term ((Binding.name_of b,0), V)
+            [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, T)), K V))]
+     |> Proof_Context.maybe_bind_term ((Binding.name_of b,0),
+                                       Option.map (Thm.term_of o fst) V)
   end
 
 fun add_reasoning_rules rules ctxt =

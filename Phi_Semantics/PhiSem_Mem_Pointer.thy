@@ -564,24 +564,26 @@ lemma Ptr_semty[\<phi>reason 1000]:
 section \<open>Semantic Operations\<close>
 
 proc op_get_element_pointer[\<phi>overload \<tribullet>]:
-  requires \<open>unwind_aggregate_path_into_logical_form raw_path path\<close>
-       and [useful]: \<open>valid_index TY path\<close>
-       and \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] TY' : index_type path TY\<close>
+  requires \<open>parse_element_index_input_by_semantic_type TY input_index sidx unwinded pidx reject\<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> unwinded \<noteq> []\<close>
+       and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of unwinded TY TY'\<close>
+       and \<open>report_unprocessed_element_index reject\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  output \<open>addr_gep_N addr path \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr_gep_N addr pidx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
-    V_pointer.mk (logaddr_to_raw (addr_gep_N (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) raw_path))
-      \<in> (addr_gep_N addr path \<Ztypecolon> Ptr TY')\<close>
+    V_pointer.mk (logaddr_to_raw (addr_gep_N (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sidx))
+      \<in> (addr_gep_N addr pidx \<Ztypecolon> Ptr TY')\<close>
   certified by ((insert useful, simp add: \<phi>expns,
                    cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>;
                    cases \<open>addr = 0\<close>;
                    simp add: logaddr_to_raw_phantom_mem_type),
-                smt (verit, del_insts) addr_gep_N0_simp fold_simps(1) memaddr_blk_zero memaddr_idx_zero memblk.layout(1) rawaddr_to_log_def someI_ex the_\<phi>(4) the_\<phi>(5) valid_index_void valid_logaddr_0 zero_list_def,
-                metis logaddr_to_raw logaddr_to_raw_phantom_mem_type_gep_N,
-                simp add: phantom_mem_semantic_type_def,
-                force)
+                 metis addr_gep_N0_simp fold_simps(1) logaddr_to_raw memaddr_blk_zero memaddr_idx_zero memblk.layout(1) parse_element_index_input_by_semantic_type_def that(1) valid_index_void valid_logaddr_0 zero_list_def,
+                 metis addr_gep_N_valid logaddr_to_raw logaddr_to_raw_phantom_mem_type_gep_N parse_element_index_input_by_semantic_type_def that(1),
+                 simp add: phantom_mem_semantic_type_def,
+                 simp add: phantom_mem_semantic_type_def)
+
 \<medium_right_bracket> .
 
 

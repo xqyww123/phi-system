@@ -8,27 +8,27 @@
 (*** Signature ***)
 signature GENERIC_VARIABLE_ACCESS = sig
 
-type get_value = context_state -> term option
+type get_value = context_state -> (cterm (*abstract object*) * cterm (*phi type*)) option
 
 (** Value Context **)
-val open_value_context : term list (*arguments*) -> Proof.context -> Proof.context
+val open_value_context : cterm list (*arguments*) -> Proof.context -> Proof.context
 val assign_anony_local_val : typ option -> Proof.context -> string * Proof.context
-val bind_local_vals  : (xstring (*external name*) * (term * get_value)) list -> Proof.context -> Proof.context
-val lookup_bindings : Proof.context -> xstring -> (term * get_value) option
+val bind_local_vals  : (xstring (*external name*) * (cterm * get_value)) list -> Proof.context -> Proof.context
+val lookup_bindings : Proof.context -> xstring -> (cterm * get_value) option
 val is_under_value_context : Proof.context -> bool
 
 val mode_synthesis : bool Config.T
 
 (** Parser for Access **)
-type value_parser_key =
+(*type value_parser_key =
   ( int (*priority, descend order, the higher one is attempted first*)
   * string (*name*))
 
 type value_parser = (Proof.context -> term -> term option)
 
-val add_parser : value_parser_key * value_parser -> Context.generic -> Context.generic
-val translate_value  : Proof.context -> term -> term option
-val translate_value1 : Proof.context -> term -> term
+val add_parser : value_parser_key * value_parser -> Context.generic -> Context.generic *)
+val translate_value  : Proof.context -> term -> cterm option
+val translate_value1 : Proof.context -> term -> cterm
 
 
 (** Initial Arguments **)
@@ -64,11 +64,11 @@ structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
 
 (*** Value Context ***)
 
-type get_value = context_state -> term option
+type get_value = context_state -> (cterm * cterm) option
 
 type value_context =
-        ( term list (*argument list, of type 'a \<phi>arg.*)
-        * (term * get_value) Symtab.table
+        ( cterm list (*argument list, of type 'a \<phi>arg.*)
+        * (cterm * get_value) Symtab.table
           (*binding table of local values, key: external name of the fixed variable*)
           (*Free variables in the terms must use external names, just as what is parsed and before
               checked from the user inputs.
@@ -94,8 +94,8 @@ fun map_value_context f =
                    | NONE => bad_ctxt())
 
 fun open_value_context arguments =
-  Value_Ctxt.map (fn SOME (_, LV, CNT) => SOME (arguments, LV, CNT)
-                   | NONE => SOME (arguments, Symtab.empty, 0))
+  Value_Ctxt.map (fn SOME (_, LV, CNT) => SOME (map Thm.trim_context_cterm arguments, LV, CNT)
+                   | NONE => SOME (map Thm.trim_context_cterm arguments, Symtab.empty, 0))
 
 fun assign_anony_local_val ty ctxt =
   let
@@ -108,7 +108,7 @@ fun assign_anony_local_val ty ctxt =
   end
 
 fun bind_local_vals vals =
-  map_value_context (fn (A,V,N) => (A, fold Symtab.update vals V ,N))
+  map_value_context (fn (A,V,N) => (A, fold (Symtab.update o apsnd (apfst Thm.trim_context_cterm)) vals V ,N))
 
 fun lookup_bindings ctxt = Symtab.lookup (#2 (value_context_of ctxt))
 
@@ -116,7 +116,7 @@ fun lookup_bindings ctxt = Symtab.lookup (#2 (value_context_of ctxt))
 
 (* Data *)
 
-type value_parser_key =
+(*type value_parser_key =
   ( int (*priority, descend order, the higher one is attempted first*)
   * string (*name*))
 
@@ -132,7 +132,7 @@ structure Value_Parsers = Generic_Data (
   val merge = ParserTab.merge (K true)
 )
 
-fun add_parser parser = Value_Parsers.map (ParserTab.update_new parser)
+fun add_parser parser = Value_Parsers.map (ParserTab.update_new parser)*)
 
 
 (* Translation *)
@@ -162,16 +162,16 @@ fun trans_error ctxt (V as Free _)
                Syntax.pretty_term ctxt X
              ]))
 
-fun fallback_trans ctxt (V as Free (s, _)) =
+fun translate_value ctxt (Free (s, _)) =
       if can Value.parse_int s
       then SOME (index_val ctxt (Value.parse_int s))
       else Option.map fst (Symtab.lookup (#2 (value_context_of ctxt)) s)
-  | fallback_trans ctxt (Const ("_constrain", _) $ X $ _)
-      = fallback_trans ctxt X
-  | fallback_trans ctxt X = NONE
+  | translate_value ctxt (Const ("_constrain", _) $ X $ _)
+      = translate_value ctxt X
+  | translate_value _ _ = NONE
 
 
-fun translate_value ctxt X =
+(*fun translate_value ctxt X =
   let
     val tab = Value_Parsers.get (Context.Proof ctxt)
   in
@@ -179,32 +179,62 @@ fun translate_value ctxt X =
                                             | some => some)) tab NONE
       of NONE => fallback_trans ctxt X
        | some => some
-  end
+  end*)
 
 fun translate_value1 ctxt X =
   case translate_value ctxt X
     of SOME y => y
      | NONE => trans_error ctxt X
-
+(*
 fun translate_value0 ctxt v =
   if is_under_value_context ctxt
   then the_default v (translate_value ctxt v)
-  else v
+  else v *)
 
 val mode_synthesis = Config.declare_bool ("\<phi>-System.GVA.mode_synthesis", \<^here>) (K false)
 
-local open Ast in
+local open Ast
 
 fun ident X = Appl[Constant \<^const_syntax>\<open>\<phi>identifier\<close>, X]
+fun parse_elements ret (Appl [Constant \<^syntax_const>\<open>_identifier_element_\<close>, X, idx])
+      = parse_elements (idx :: ret) X
+  | parse_elements ret (Appl [Constant \<^syntax_const>\<open>_identifier_element_0_\<close>, X])
+      = (ret, X)
+  | parse_elements _ _ = error "Internal bug #fc1bc973-fab2-4706-a68e-6d4ce9cbe7d0"
+
+fun mk_element_path (idx :: R) =
+      Appl [Constant \<^const_syntax>\<open>Cons\<close>,
+              Appl [Constant \<^syntax_const>\<open>_MK_ag_idx_\<close>, idx],
+              mk_element_path R]
+  | mk_element_path [] = Constant \<^const_syntax>\<open>Nil\<close>
+
+in
 
 val _ = Theory.setup (Sign.parse_ast_translation ([
   (\<^syntax_const>\<open>_identifier_\<close>, (fn _ => fn [X] => ident X)),
   (\<^syntax_const>\<open>_identifier_1_\<close>, (fn _ => fn _ => Variable "1")),
   (\<^syntax_const>\<open>_identifier_num_\<close>, (fn _ => fn [X] => X)),
-  (\<^syntax_const>\<open>_get_identifier_\<close>, (fn _ => fn [X] =>
-      Appl[Constant \<^const_syntax>\<open>Value_of\<close>, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>, ident X])),
-  (\<^syntax_const>\<open>_set_identifier_\<close>, (fn _ => fn [V,Y] =>
-      Appl[Constant \<^const_syntax>\<open>Set_Value\<close>, Y, ident V])),
+  (\<^syntax_const>\<open>_get_\<phi>var_\<close>, (fn _ => fn [X] =>
+        Appl[ Constant \<^const_syntax>\<open>Value_of\<close>,
+              Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>,
+              ident X,
+              Constant \<^const_syntax>\<open>Nil\<close> ])),
+  (\<^syntax_const>\<open>_\<phi>element_step_\<close>, fn ctxt => fn [left, idx] =>
+    (case left
+       of Appl [Constant \<^const_syntax>\<open>Value_of\<close>, x, idt, path]
+            => let fun insert (Appl [Constant \<^const_syntax>\<open>Cons\<close>, X, Y]) =
+                          Appl [Constant \<^const_syntax>\<open>Cons\<close>, X, insert Y]
+                     | insert (Constant \<^const_syntax>\<open>Nil\<close>) =
+                          Appl [Constant \<^const_syntax>\<open>Cons\<close>, Appl [Constant \<^syntax_const>\<open>_MK_ag_idx_\<close>, idx]]
+                in Appl [Constant \<^const_syntax>\<open>Value_of\<close>, x, idt, insert path]
+               end
+        | _ => error "Syntax Error: Aggregate Element Access operator \<tribullet> can only be used after variables like $x.")),
+  (\<^syntax_const>\<open>_set_\<phi>var_\<close>, (fn _ => fn [V,Y] =>
+      case parse_elements [] V of (path, V') =>
+        Appl[ Constant \<^const_syntax>\<open>Set_Value\<close>,
+              Y,
+              ident V',
+              mk_element_path path ])),
   (\<^syntax_const>\<open>_identifier_id_\<close>, (fn _ => fn [X] =>
       Appl [Constant \<^syntax_const>\<open>_abs\<close>, X, Constant \<^const_syntax>\<open>Pure.dummy_pattern\<close>])),
   (\<^syntax_const>\<open>_identifier_logic_\<close>, (fn _ => fn [X] => X))
@@ -213,23 +243,34 @@ val _ = Theory.setup (Sign.parse_ast_translation ([
 end
 
 fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_)) =
-      translate_value0 ctxt (Free (N, dummyT))
-  | check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ X) = translate_value0 ctxt X
+      Thm.term_of (translate_value1 ctxt (Free (N, dummyT)))
+  | check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ X) =
+      Thm.term_of (translate_value1 ctxt X)
   | check_term ctxt ((H1 as Const (\<^const_name>\<open>Value_of\<close>, _))
                         $ (H2 as Const (\<^const_name>\<open>Pure.dummy_pattern\<close>, _))
-                        $ (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_)))
+                        $ (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ Abs (N,_,_))
+                        $ element_index)
       = let val v = lookup_bindings ctxt N
                   |> Option.mapPartial (fn (_, get) => get (ctxt, Phi_Envir.the_construction ctxt))
          in if Config.get ctxt mode_synthesis
-            then H1 $ (case v of SOME x => Type.constraint (fastype_of x) H2 | _ => H2)
-                    $ translate_value0 ctxt (Free (N, dummyT))
-            else (case v of SOME x => x | _ => no_binding_found N)
+            then H1 $ (case v of SOME (x, _) => Type.constraint (fastype_of (Thm.term_of x)) H2
+                               | _ => H2)
+                    $ Thm.term_of (translate_value1 ctxt (Free (N, dummyT)))
+                    $ element_index
+            else (case v of SOME (x,T) =>
+                              (case element_index
+                                 of Const (\<^const_name>\<open>Nil\<close>, _) => Thm.term_of x
+                                  | _ => Phi_Generic_Element_Access.get_element_of_abstract_object
+                                              ctxt (x,T,Thm.cterm_of ctxt element_index)
+                                         |> Thm.term_of)
+                          | _ => no_binding_found N)
         end
   | check_term ctxt (A $ B) = check_term ctxt A $ check_term ctxt B
   | check_term ctxt (Abs (N,TY,X)) = Abs (N,TY, check_term ctxt X)
   | check_term _ X =  X
 
 val _ = Theory.setup (Context.theory_map (Syntax_Phases.term_check ~110 "\<phi>-System.GVA" (map o check_term)))
+
 
 (*** Initial Process for Arguments ***)
 
@@ -270,29 +311,36 @@ fun register_value_spec_thms pos rules =
 fun gen_default_process' clean pos (ctxt,sequent) =
   let
     val (sequent', rules) = collect_and_clean_value clean ctxt sequent
-    (*val revert_frees = map_aterms (fn Free (N,T) => Free (Variable.revert_fixed ctxt N, T)
-                                    | X => X)*)
     val args = rules |> map (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
                                   $ _)
-                 => (*revert_frees*) V
+                 => Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg1 |> Thm.dest_arg
              | _ => error "Internal Bug q34v6 nu89p")
+    fun extract_x_T th =
+      let val ctm = Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg
+       in (Thm.dest_arg1 ctm, Thm.dest_arg ctm)
+      end
     val binds = rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
                                   $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ (X as Free (N,_)) $ _))
-                 => SOME (Variable.revert_fixed ctxt N, ((*revert_frees*) V, K (SOME X)))
+                 => SOME (Variable.revert_fixed ctxt N,
+                            (Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg1 |> Thm.dest_arg,
+                             K (SOME (extract_x_T th))))
              | _ => NONE)
     val binds'= rules |> map_filter (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ (V as Free (N,_)))
                                   $ X')
-                 => SOME (Variable.revert_fixed ctxt N, ((*revert_frees*) V,
-                      K (case X' of (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ X $ _) => SOME X | _ => NONE)))
+                 => SOME (Variable.revert_fixed ctxt N,
+                            (Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg1 |> Thm.dest_arg,
+                            K (case X' of (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)
+                                  => SOME (extract_x_T th)
+                                | _ => NONE)))
              | _ => NONE)
 
     fun setup_lemmata ctxt =

@@ -26,8 +26,10 @@ signature PHI_HELP = sig
                                  * term list (*premises of the antecedent*)
                                  * term (*conclusion containing loose bound*)
   val fix_leading_antecedent_meta_quantifiers : Proof.context -> term
-                            -> term list (*premises*) * term (*conclusion*) * Proof.context
+                            -> term list (*quant vars*) * term list (*premises*) * term (*conclusion*) * Proof.context
                                (*where quantified variables are fixed*)
+  val strip_meta_hhf_c :
+        cterm -> Proof.context -> cterm list (*quant vars*) * cterm list (*premises*) * cterm * Proof.context
   val varified_leading_antecedent_meta_quantifiers : Proof.context -> term
                             -> term list (*premises*) * term (*conclusion*)
                                (*where quantified variables are varified (schematic variables)*)
@@ -130,11 +132,24 @@ fun fix_leading_antecedent_meta_quantifiers ctxt0 sequent =
     val qvars = map2 (fn N => fn (_,T) => Free (N,T)) qv_names qvs
     val ctxt = fold Variable.declare_term qvars ctxt'01
     val leading_ant = subst_bounds (rev qvars, ant01)
-  in (prems,leading_ant,ctxt)
+  in (qvars,prems,leading_ant,ctxt)
   end
 
+fun strip_meta_hhf_c cterm ctxt =
+  let
+    fun strip (V,P) (Const("Pure.imp", _) $ H $ B) ctm ctxt
+          = strip (V, Thm.dest_arg1 ctm :: P) B (Thm.dest_arg ctm) ctxt
+      | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) ctm ctxt
+          = let val ([name'],ctxt') = Variable.add_fixes [a] ctxt
+                val (v', B') = Thm.dest_abs_fresh name' (Thm.dest_arg ctm)
+             in strip (v'::V,P) B B' ctxt'
+            end
+      | strip (V,P) X ctm ctxt = (rev V, rev P, ctm, ctxt)
+  in strip ([],[]) (Thm.term_of cterm) cterm ctxt end
+
+
 fun varified_leading_antecedent_meta_quantifiers ctxt sequent =
-  let val (prems,leading_ant,ctxt') = fix_leading_antecedent_meta_quantifiers ctxt sequent
+  let val (_,prems,leading_ant,ctxt') = fix_leading_antecedent_meta_quantifiers ctxt sequent
       val (leading_ant'::prems') = Variable.export_terms ctxt' ctxt (leading_ant::prems)
    in (prems',leading_ant')
   end
@@ -355,3 +370,59 @@ fun debug_RS ctxt tha thb =
 val empty_ctxt = Proof_Context.init_global Pure_Syn.bootstrap_thy
 
 end
+
+functor Single_Thread_Proof_Data(Arg: PROOF_DATA_ARGS): PROOF_DATA = struct
+
+type T = Arg.T
+
+structure Data = Proof_Data (
+type T = Arg.T Unsynchronized.ref
+val init = Unsynchronized.ref o Arg.init
+)
+
+val get = Unsynchronized.! o Data.get
+fun put x ctxt = (Data.get ctxt := x; ctxt)
+fun map f ctxt = let val r = Data.get ctxt in r := f (!r); ctxt end
+
+end
+
+signature PROOF_DATA_OPT_ARGS =
+sig
+  type T
+end;
+
+signature PROOF_DATA_OPT =
+sig
+  type T
+  val get: Proof.context -> T option
+  val put: T -> Proof.context -> Proof.context
+  val del: Proof.context -> Proof.context
+  val map: (T option -> T) -> Proof.context -> Proof.context
+end;
+
+functor Single_Thread_Proof_Data_Opt(Arg: PROOF_DATA_OPT_ARGS): PROOF_DATA_OPT = struct
+
+type T = Arg.T
+
+structure Data = Proof_Data (
+type T = Arg.T Unsynchronized.ref option
+val init = K NONE
+)
+
+val get = Option.map Unsynchronized.! o Data.get
+
+fun put x ctxt =
+  case Data.get ctxt
+    of SOME r => (r := x; ctxt)
+     | NONE => Data.put (SOME (Unsynchronized.ref x)) ctxt
+
+val del = Data.put NONE
+
+fun map f ctxt =
+  case Data.get ctxt
+    of SOME r => (r := f (SOME (!r)); ctxt)
+     | NONE => Data.put (SOME (Unsynchronized.ref (f NONE))) ctxt
+
+end
+
+

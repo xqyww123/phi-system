@@ -26,6 +26,8 @@ include PHI_SYNTAX
   val dest_CodeBlock   : term -> term * term * term * term
   val dest_CodeBlock_c : cterm -> cterm * cterm * cterm * cterm
 
+  val dest_satisfaction : term -> term * term
+
 end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
@@ -95,5 +97,9 @@ val dest_ToA_Construction =
 val dest_ToA_Construction_c =
          dest_tags_c
       #> dest_binop_c @{const_name ToA_Construction}
+
+val dest_satisfaction =
+      dest_tags #> dest_binop \<^const_name>\<open>Set.member\<close>
+
 
 end

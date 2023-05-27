@@ -1,6 +1,6 @@
 theory PhiSem_Aggregate_Base
-  imports PhiSem_Aggregate_Path PhiSem_Common_Int
-  keywords "\<lbrace>" "\<rbrace>" :: quasi_command
+  imports PhiSem_Common_Int PhiSem_Symbol
+  keywords "\<lbrace>" "\<rbrace>" "\<tribullet>" :: quasi_command
   abbrevs "|>"  = "\<tribullet>"
 begin
 
@@ -97,7 +97,6 @@ lemma index_type_idem:
   using index_type_measure
   by (metis fold_simps(2) list.discI order_less_irrefl valid_index.simps(2))
 
-
 subsection \<open>Semantics of aggregate path\<close>
 
 definition \<open>AgIdx_VN v = AgIdx_N (the (\<phi>Sem_int_to_logic_nat (\<phi>arg.dest v)))\<close>
@@ -130,43 +129,53 @@ lemma [\<phi>reason 1020]:
 \<Longrightarrow> chk_semantics_validity [AgIdx_N n]\<close>
   unfolding chk_semantics_validity_def ..
 
-paragraph \<open>Unwind aggregate path into logical form easy for reasoning\<close>
+(* paragraph \<open>Unwind aggregate path into logical form easy for reasoning\<close>
 
-definition \<open>unwind_aggregate_path_into_logical_form A B \<longleftrightarrow> A = B\<close>
+definition \<open>parse_element_index_input A B C \<longleftrightarrow> B = C\<close>
 
 declare [[\<phi>reason_default_pattern
-  \<open>unwind_aggregate_path_into_logical_form ?A _\<close> => \<open>unwind_aggregate_path_into_logical_form ?A _\<close> (100),
-  \<phi>premise_attribute? [unfolded unwind_aggregate_path_into_logical_form_def, useful] for \<open>unwind_aggregate_path_into_logical_form _ _\<close>
+  \<open>parse_element_index_input ?A _ _\<close> => \<open>parse_element_index_input ?A _ _\<close> (100),
+  \<phi>premise_attribute? [unfolded parse_element_index_input_def, useful] for \<open>parse_element_index_input _ _ _\<close>
 ]]
 
 lemma [\<phi>reason 1000]:
-  \<open>unwind_aggregate_path_into_logical_form [] []\<close>
-  unfolding unwind_aggregate_path_into_logical_form_def ..
+  \<open>parse_element_index_input [] [] []\<close>
+  unfolding parse_element_index_input_def by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> unwind_aggregate_path_into_logical_form X X'
-\<Longrightarrow> unwind_aggregate_path_into_logical_form R R'
-\<Longrightarrow> unwind_aggregate_path_into_logical_form (X#R) (X'#R')\<close>
-  unfolding unwind_aggregate_path_into_logical_form_def by simp
+  \<open> parse_element_index_input A A' A''
+\<Longrightarrow> parse_element_index_input L L' L''
+\<Longrightarrow> parse_element_index_input (A # L) (A' # L') (A'' # L'')\<close>
+  unfolding parse_element_index_input_def by simp
 
 lemma [\<phi>reason 1000]:
   \<open> \<phi>arg.dest v \<in> S
 \<Longrightarrow> get_logical_nat_from_semantic_int S n
 \<Longrightarrow> \<r>nat_to_suc_nat n n'
-  \<or> ERROR TEXT(\<open>Fail to access the\<close> n \<open>th element: Fail to reduce it into a literal number\<close>)
-\<Longrightarrow> unwind_aggregate_path_into_logical_form (AgIdx_VN v) (AgIdx_N n')\<close>
-  unfolding get_logical_nat_from_semantic_int_def unwind_aggregate_path_into_logical_form_def
+\<Longrightarrow> parse_element_index_input (AgIdx_VN v) (AgIdx_N n') (AgIdx_N n)\<close>
+  unfolding get_logical_nat_from_semantic_int_def element_index_refinement_def
             AgIdx_VN_def Ball_def
   by (cases v; simp; metis option.sel)
 
 lemma [\<phi>reason 1000]:
-  \<open> Is_Literal n
-\<Longrightarrow> unwind_aggregate_path_into_logical_form (AgIdx_N n) (AgIdx_N n)\<close>
-  unfolding unwind_aggregate_path_into_logical_form_def ..
+  \<open> \<r>nat_to_suc_nat n n'
+\<Longrightarrow> element_index_refinement (AgIdx_N n) (AgIdx_N n') (AgIdx_N n)\<close>
+  unfolding element_index_refinement_def by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> unwind_aggregate_path_into_logical_form (AgIdx_S s) (AgIdx_S s)\<close>
-  unfolding unwind_aggregate_path_into_logical_form_def ..
+  \<open>element_index_refinement (AgIdx_S s) (AgIdx_S s) (AgIdx_S s)\<close>
+  unfolding element_index_refinement_def by simp
+
+*)
+(*
+lemma [\<phi>reason 1000]:
+  \<open> Is_Literal n
+\<Longrightarrow> element_index_refinement (AgIdx_N n) (AgIdx_N n)\<close>
+  unfolding element_index_refinement_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open> element_index_refinement (AgIdx_S s) (AgIdx_S s)\<close>
+  unfolding element_index_refinement_def .. *)
 
 
 section \<open>Instructions\<close>
@@ -200,6 +209,75 @@ definition op_set_aggregate :: "TY \<Rightarrow> TY \<Rightarrow> aggregate_path
 
 section \<open>Reasoning\<close>
 
+subsection \<open>Index Validation\<close>
+
+definition \<open>is_valid_step_idx_of idx T U \<longleftrightarrow> valid_idx_step T idx \<and> U = idx_step_type idx T\<close>
+definition \<open>is_valid_index_of idx T U \<longleftrightarrow> valid_index T idx \<and> U = index_type idx T\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>is_valid_index_of ?idx ?T _\<close> \<Rightarrow> \<open>is_valid_index_of ?idx ?T _\<close> (100)
+    and \<open>is_valid_step_idx_of ?idx ?T _ \<close> \<Rightarrow> \<open>is_valid_step_idx_of ?idx ?T _ \<close> (100)
+]]
+
+lemma [\<phi>reason 1000]:
+  \<open> is_valid_index_of idx T U
+\<Longrightarrow> valid_index T idx\<close>
+  unfolding is_valid_index_of_def by blast
+
+lemma [\<phi>reason 1000]:
+  \<open> is_valid_index_of [] T T \<close>
+  unfolding is_valid_index_of_def by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> is_valid_step_idx_of i T W
+\<Longrightarrow> is_valid_index_of idx W U
+\<Longrightarrow> is_valid_index_of (i # idx) T U \<close>
+  unfolding is_valid_index_of_def is_valid_step_idx_of_def
+  by simp
+
+subsection \<open>Parse Element Index Input by Semantic Type\<close>
+
+consts parse_element_index_input :: action
+
+definition \<open>parse_element_index_input_by_semantic_type TY (input::element_index_input) semantic_idx unwinded pretty_idx (reject::element_index_input)
+    \<longleftrightarrow> valid_index TY unwinded \<and> semantic_idx = unwinded \<and> pretty_idx = unwinded\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>parse_element_index_input_by_semantic_type ?TY ?input _ _ _ _ \<close> \<Rightarrow>
+      \<open>parse_element_index_input_by_semantic_type ?TY ?input _ _ _ _ \<close> (100)]]
+
+lemma [\<phi>reason 1200]:
+  \<open>parse_element_index_input_by_semantic_type TY [] [] [] [] []\<close>
+  unfolding parse_element_index_input_by_semantic_type_def
+  by simp
+
+lemma [\<phi>reason 1]:
+  \<open>parse_element_index_input_by_semantic_type TY input [] [] [] input\<close>
+  unfolding parse_element_index_input_by_semantic_type_def
+  by simp
+
+lemma [\<phi>reason 900]:
+  \<open> is_valid_step_idx_of (AgIdx_S s) TY U
+\<Longrightarrow> parse_element_index_input_by_semantic_type U input sidx unwinded pidx reject
+\<Longrightarrow> parse_element_index_input_by_semantic_type TY
+      ((\<phi>arg.dest (\<phi>arg (\<phi>embed_semantic_symbol s)), S) # input)
+      (AgIdx_S s # sidx) (AgIdx_S s # unwinded) (AgIdx_S s # pidx) reject \<close>
+  unfolding parse_element_index_input_by_semantic_type_def is_valid_step_idx_of_def
+  by simp
+
+lemma [\<phi>reason 850]:
+  \<open> \<phi>arg.dest v \<in> S @action parse_element_index_input
+\<Longrightarrow> get_logical_nat_from_semantic_int S n'
+\<Longrightarrow> \<r>nat_to_suc_nat n' n
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) TY U
+\<Longrightarrow> parse_element_index_input_by_semantic_type U input sidx unwinded pidx reject
+\<Longrightarrow> parse_element_index_input_by_semantic_type TY
+      ((\<phi>arg.dest v, S) # input) (AgIdx_VN v # sidx) (AgIdx_N n # unwinded) (AgIdx_N n' # pidx) reject \<close>
+  unfolding parse_element_index_input_by_semantic_type_def Action_Tag_def
+            get_logical_nat_from_semantic_int_def AgIdx_VN_def is_valid_step_idx_of_def
+  by (cases v; simp; metis option.sel)
+
+
 subsection \<open>Evaluate Index\<close>
 
 consts eval_aggregate_path :: mode
@@ -227,25 +305,35 @@ declare [[
 subsection \<open>Index to Fields of Structures\<close>
 
 definition \<phi>Aggregate_Getter :: \<open>aggregate_path \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
-  where \<open>\<phi>Aggregate_Getter idx T U g \<longleftrightarrow> index_value idx \<in> (g \<Ztypecolon> T \<Rrightarrow> U)\<close>
+  where \<open>\<phi>Aggregate_Getter idx T U g \<longleftrightarrow> index_value idx \<in> (g \<Ztypecolon> T \<Rrightarrow> U) \<close>
 
 definition \<phi>Aggregate_Mapper :: \<open>aggregate_path \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'a2) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> (VAL,'b2) \<phi> \<Rightarrow> (('b \<Rightarrow> 'b2) \<Rightarrow> 'a \<Rightarrow> 'a2) \<Rightarrow> bool\<close>
   where \<open>\<phi>Aggregate_Mapper idx T T' U U' f
-    \<longleftrightarrow> (\<forall>g g'. g \<in> (g' \<Ztypecolon> U \<Rrightarrow> U') \<longrightarrow> index_mod_value idx g \<in> (f g' \<Ztypecolon> T \<Rrightarrow> T'))\<close>
+    \<longleftrightarrow> (\<forall>g g'. g \<in> (g' \<Ztypecolon> U \<Rrightarrow> U') \<longrightarrow> index_mod_value idx g \<in> (f g' \<Ztypecolon> T \<Rrightarrow> T')) \<close>
 
 definition \<phi>Aggregate_Constructor :: \<open>(VAL \<phi>arg list \<Rightarrow> VAL) \<Rightarrow> VAL \<phi>arg list \<Rightarrow> TY \<Rightarrow> VAL set \<Rightarrow> bool\<close>
   where \<open>\<phi>Aggregate_Constructor constructor args TY Spec
     \<longleftrightarrow> constructor args \<in> Spec \<and> constructor args \<in> Well_Type TY\<close>
 
 declare [[\<phi>reason_default_pattern
-    \<open>\<phi>Aggregate_Getter ?idx ?T _ _\<close> \<Rightarrow> \<open>\<phi>Aggregate_Getter ?idx ?T _ _\<close> (100)
-and \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _\<close> \<Rightarrow> \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _\<close> (100)
+    \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> (100)
+and \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Mapper _ ?T _ _ _ _ \<close> (100)
 and \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> \<Rightarrow> \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> (100)
 ]]
+
+lemma [\<phi>reason 1]:
+  \<open>\<phi>Aggregate_Getter [] T T id\<close>
+  unfolding \<phi>Aggregate_Getter_def
+  by (simp add: \<phi>Mapping_expn)
 
 lemma [\<phi>reason 1200]:
   \<open>\<phi>Aggregate_Getter [] T T id\<close>
   unfolding \<phi>Aggregate_Getter_def
+  by (simp add: \<phi>Mapping_expn)
+
+lemma [\<phi>reason 1]:
+  \<open>\<phi>Aggregate_Mapper [] T T' T T' id\<close>
+  unfolding \<phi>Aggregate_Mapper_def
   by (simp add: \<phi>Mapping_expn)
 
 lemma [\<phi>reason 1200]:
@@ -285,27 +373,30 @@ ML_file \<open>syntax/index_param.ML\<close>
 section \<open>First-level Abstraction of Instructions\<close>
 
 lemma op_get_aggregate:
-  \<open> unwind_aggregate_path_into_logical_form raw_idx idx
-\<Longrightarrow> Is_Aggregate T
+  \<open> Is_Aggregate T
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> valid_index TY idx
-\<Longrightarrow> \<phi>Aggregate_Getter idx T U f
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate raw_idx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
+\<Longrightarrow> parse_element_index_input_by_semantic_type TY input_index sidx unwinded pidx reject
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> unwinded \<noteq> []
+\<Longrightarrow> \<phi>Aggregate_Getter unwinded T U f
+\<Longrightarrow> report_unprocessed_element_index reject
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_get_aggregate sidx TY rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T \<longmapsto> f x \<Ztypecolon> \<v>\<a>\<l> U \<rbrace>\<close>
   unfolding op_get_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Getter_def
-            unwind_aggregate_path_into_logical_form_def
+            parse_element_index_input_by_semantic_type_def
   by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>Mapping_expn)
 
 lemma op_set_aggregate:
-  \<open> unwind_aggregate_path_into_logical_form raw_idx idx
-\<Longrightarrow> Is_Aggregate T
+  \<open> Is_Aggregate T
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> parse_element_index_input_by_semantic_type TY input_index sidx idx pidx reject
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> idx \<noteq> []
 \<Longrightarrow> \<phi>SemType (y \<Ztypecolon> U) TY2
-\<Longrightarrow> Premise eval_aggregate_path (index_type idx TY = TY2 \<or> allow_assigning_different_typ TY idx)
-\<Longrightarrow> valid_index TY idx
+\<Longrightarrow> is_valid_index_of idx TY TY2'
+\<Longrightarrow> Premise eval_aggregate_path (TY2' = TY2 \<or> allow_assigning_different_typ TY idx)
 \<Longrightarrow> \<phi>Aggregate_Mapper idx T T' U' U f
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 raw_idx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
+\<Longrightarrow> report_unprocessed_element_index reject
+\<Longrightarrow> \<p>\<r>\<o>\<c> op_set_aggregate TY TY2 sidx (ru\<^bold>, rv) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[ru] U \<longmapsto> f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<l> T' \<rbrace>\<close>
   unfolding op_set_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
-            unwind_aggregate_path_into_logical_form_def
+            parse_element_index_input_by_semantic_type_def is_valid_index_of_def
   by (cases rv; cases ru; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
       rule, simp add: \<phi>Mapping_expn)
 
@@ -322,6 +413,8 @@ proc op_construct_aggregate:
 
 section \<open>Syntax Base\<close>
 
+subsection \<open>Structure and Tuple\<close>
+
 nonterminal "\<phi>_tuple_args_" and "\<phi>_tuple_arg_"
 
 consts \<phi>_Empty_Tuple_sugar :: \<open>(VAL, 'any) \<phi>\<close> ("\<lbrace> \<rbrace>") \<comment> \<open>A syntax sugar to be overloaded\<close>
@@ -333,60 +426,74 @@ syntax "_\<phi>Tuple" :: \<open>\<phi>_tuple_args_ \<Rightarrow> logic\<close> (
 translations
   "_\<phi>Tuple (_\<phi>tuple_args y z)" \<rightleftharpoons> "CONST \<phi>Prod (_\<phi>Tuple (_\<phi>tuple_arg y)) (_\<phi>Tuple z)"
 
+subsection \<open>GEP for Variable\<close>
+
+
+
 
 section \<open>IDE Interface\<close>
 
-\<phi>overloads "[]" and "[]=" and "\<tribullet>"
+declare_\<phi>operator infix 40 :=
+
+\<phi>overloads "[]" and "[]:=" and "\<tribullet>"
 
 declare op_get_aggregate[\<phi>overload "[]", \<phi>overload "\<tribullet>"]
-        op_set_aggregate[\<phi>overload "[]="]
+        op_set_aggregate[\<phi>overload "[]:="]
 
 ML_file \<open>library/generic_element_access.ML\<close>
 
-\<phi>processor aggregate_getter_setter 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>processor aggregate_getter_setter 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>[\<close> >> (fn (_, pos) => fn _ =>
-    Phi_Generic_Element_Access.gen_access (\<^named_theorems>\<open>[]_\<phi>app\<close>, \<^named_theorems>\<open>[]=_\<phi>app\<close>)
+    Phi_Generic_Element_Access.gen_access (\<^named_theorems>\<open>[]_\<phi>app\<close>, \<^named_theorems>\<open>[]:=_\<phi>app\<close>)
                                           (("[",pos), (NONE, pos)) s) \<close>
 
-\<phi>processor aggregate_getter_end 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
-\<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>]\<close> >> (fn (_, pos) => fn _ => (
+\<phi>processor aggregate_getter_end 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>]\<close> -- Scan.option (Parse.position \<^keyword>\<open>:=\<close>)
+>> (fn ((_, pos), assign) => fn _ => (
     if Phi_Opr_Stack.is_during_apply ctxt "[" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
-    Phi_Opr_Stack.close_parenthesis (SOME Phi_Generic_Element_Access.Bracket_Opr_Read)
-                                      I (ctxt,sequent)
+    Phi_Opr_Stack.close_parenthesis
+      (SOME (case assign of SOME (_, pos') => Phi_Generic_Element_Access.Bracket_Opr_Write pos'
+                          | NONE => Phi_Generic_Element_Access.Bracket_Opr_Read))
+      I (ctxt,sequent)
 )) \<close>
 
-\<phi>processor aggregate_setter_end 8989 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
-\<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>]\<close> -- Parse.position \<^keyword>\<open>:=\<close>
->> (fn ((_, pos), (_, pos')) => fn _ => (
-    if Phi_Opr_Stack.is_during_apply ctxt "[" then ()
-    else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
-    Phi_Opr_Stack.close_parenthesis (SOME (Phi_Generic_Element_Access.Bracket_Opr_Write pos'))
-                                      I (ctxt,sequent)
-)) \<close>
-
-\<phi>processor construct_aggregate 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>processor construct_aggregate 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>\<lbrace>\<close> -- Scan.option (Parse.short_ident --| \<^keyword>\<open>:\<close>)
 >> (fn ((_, pos), arg_name) => fn _ =>
     Phi_Generic_Element_Access.gen_constructor "" (("\<lbrace>",pos), (arg_name, pos)) s) \<close>
 
-\<phi>processor construct_aggregate_end 8990 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>processor construct_aggregate_end 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>\<rbrace>\<close> >> (fn (_, pos) => fn _ => (
     if Phi_Opr_Stack.is_during_apply ctxt "\<lbrace>" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
     Phi_Opr_Stack.close_parenthesis NONE I (ctxt,sequent)
 )) \<close>
 
+\<phi>processor triangle_operator 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<open> fn s => Parse.position \<^keyword>\<open>\<tribullet>\<close> >> (fn (_, pos) => fn _ => (
+let open Phi_Opr_Stack
+    fun is_the_first (Phi_Opr_Stack.Apply _ :: _) = true
+      | is_the_first (Phi_Opr_Stack.Meta_Apply _ :: _) = true
+      | is_the_first (Begin_Block :: _) = true
+      | is_the_first (Comma _ :: _) = true
+      | is_the_first (Opr _ :: L) = is_the_first L
+      | is_the_first (Meta_Opr (_,_,("\<tribullet>",_),_,_) :: _) = false
+      | is_the_first (Meta_Opr _ :: L) = is_the_first L
+      | is_the_first (Left_Parenthesis _ :: _) = true
+      | is_the_first [] = true
+ in if is_the_first (lookup_current_opstack (fst s))
+    then push_meta_operator ((922,910,SOME 1), ("\<tribullet>", pos), NONE,
+            Phi_Generic_Element_Access.dot_triangle_opr (0, \<^named_theorems>\<open>\<tribullet>_\<phi>app\<close>)) s
+    else push_meta_operator ((911,910,SOME 1), ("\<tribullet>", pos), NONE,
+            Phi_Generic_Element_Access.dot_triangle_opr (0, \<^named_theorems>\<open>\<tribullet>_\<phi>app\<close>)) s
+end
+)) \<close>
+
 
 
 setup \<open>fn thy => thy
-|> Phi_Opr_Stack.decl_infixr (910, "\<tribullet>", SOME 1) |> snd
-|> Phi_Opr_Stack.decl_postfix (911, "!", SOME 0) |> snd
-|> Phi_Opr_Stack.decl_internal_opr (911, 50, ":=", SOME 1)
-|> Phi_Opr_Stack.set_meta_opr ("\<tribullet>",
-        Phi_Generic_Element_Access.dot_triangle_opr (0, \<^named_theorems>\<open>\<tribullet>_\<phi>app\<close>))
-|> Phi_Opr_Stack.set_meta_opr (":=",
-        Phi_Generic_Element_Access.dot_triangle_opr (1, \<^named_theorems>\<open>[]=_\<phi>app\<close>))
+|> Phi_Opr_Stack.decl_postfix (922, "!", SOME 0) |> snd
 \<close>
 
 

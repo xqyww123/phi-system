@@ -39,7 +39,7 @@ fun routine_mod mk_F_Ty mk_F_Tm routine_rule (ctxt01,sequent) =
             then error "the procedure has already been declared as a routine"
             else ()
     val ctxt0 = Is_Routine.put true ctxt01
-    val (_,proc01,ctxt) = fix_leading_antecedent_meta_quantifiers ctxt0 sequent
+    val (_,_,proc01,ctxt) = Phi_Help.fix_leading_antecedent_meta_quantifiers ctxt0 (Thm.prop_of sequent)
     val proc0 = case proc01
                   of \<^const>\<open>Trueprop\<close> $ (X as Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _)
                        => X

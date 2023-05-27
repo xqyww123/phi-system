@@ -19,25 +19,36 @@ lemma [\<phi>reason]:
 \<Longrightarrow> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<rat>\<close>
   \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<rat>\<close> \<medium_right_bracket> .
 
+declare One_nat_def [simp del]
 declare [[\<phi>trace_reasoning = 0]]
 
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>
-  $q1 destruct\<phi> _ \<rightarrow> var q1 \<comment> \<open>The reasoner will not open an abstraction by default\<close>
-  $q2 destruct\<phi> _ \<rightarrow> var q2
-  $q1\<tribullet>0 * $q2[1] + $q2[0] * $q1[1] \<rightarrow> val numerator
-  $q1[1] * $q2[1] \<rightarrow> val denominator
+  var q1 \<leftarrow> $q1 destruct\<phi> _ ; \<comment> \<open>The reasoner will not open an abstraction by default\<close>
+  var q2 \<leftarrow> $q2 destruct\<phi> _ ;
+  val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1] ;
+  val denominator \<leftarrow> $q1[1] * $q2[1] ;
   \<lbrace> $numerator, $denominator \<rbrace>
-\<medium_right_bracket> .
+\<medium_right_bracket> . 
 
 proc test_ptr:
-  input \<open>ptr \<Ztypecolon> \<v>\<a>\<l> Ptr (tup [tup [aint], aint])\<close>
-  output \<open>ptr \<tribullet>\<^sub>a 1 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
-\<medium_left_bracket>
-  $ptr \<tribullet> 1
+  input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (tup [tup [aint], aint, aint]), \<int> \<rbrace>\<close>
+  output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
+\<medium_left_bracket> 
+  val a, b \<leftarrow> (2, 0) ;
+  $1 \<tribullet> $b \<tribullet> $a
 \<medium_right_bracket> .
+
+proc test_agg2:
+  input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((a,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+\<medium_left_bracket>
+  $1[0,1] := \<open>2 \<Ztypecolon> \<int>\<close>
+\<medium_right_bracket> .
+
+
 
 (*
 proc
@@ -59,11 +70,13 @@ proc
   \<medium_left_bracket>
     if ( \<open>0 < $x\<close> ) \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket> \<medium_left_bracket> \<open>0\<close> \<medium_right_bracket>
     (* the cartouche like \<open>0 < $x\<close> invokes a synthesis proce
-ss
+ss \<leftarrow>
        to make a value satisfying that specification *)
   \<medium_right_bracket> .
 
 (*
+
+
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
            (SOME Generic_Variable_Access.store_value_no_clean))\<close> *)
 
@@ -111,6 +124,8 @@ proc YYY:
 
 thm YYY_def
 
+
+declare [[\<phi>trace_reasoning = 2]]
 
 proc XXXX:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>

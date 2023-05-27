@@ -34,8 +34,6 @@ hide_fact tuple_val_ax
 
 abbreviation \<open>tup \<equiv> tup.mk\<close>
 
-term \<open>tuple(a, b, c, d)\<close>
-
 subsection \<open>Semantics\<close>
 
 debt_axiomatization
@@ -143,11 +141,14 @@ section \<open>Reasoning\<close>
 subsection \<open>Show validity of an index for a type\<close>
 
 lemma [\<phi>reason 1200]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < length Tys
-\<Longrightarrow> Simplify eval_aggregate_path Ty (Tys!i) 
-\<Longrightarrow> valid_index Ty L
-\<Longrightarrow> valid_index (tup Tys) (AgIdx_N i # L)\<close>
-  unfolding Premise_def Simplify_def
+  \<open> is_valid_step_idx_of (AgIdx_N 0) (tup (Ty # Tys)) Ty \<close>
+  unfolding is_valid_step_idx_of_def Premise_def
+  by (simp add: valid_idx_step_tup idx_step_type_tup)
+
+lemma [\<phi>reason 1200]:
+  \<open> is_valid_step_idx_of (AgIdx_N i) (tup Tys) RET
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N (Suc i)) (tup (Ty # Tys)) RET \<close>
+  unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
 
@@ -169,32 +170,32 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Getter idx X Y f
-\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> Y f\<close>
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> Y f \<close>
   unfolding \<phi>Aggregate_Getter_def
   by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Getter idx X Y f
-\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) Y (f o fst)\<close>
+\<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) Y (f o fst) \<close>
   unfolding \<phi>Aggregate_Getter_def
   by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Mapper (AgIdx_N i # idx) X X' Y Y' f
-\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) (\<lbrace> T \<rbrace> \<^emph> X') Y Y' (apsnd o f)\<close>
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) (\<lbrace> T \<rbrace> \<^emph> X') Y Y' (apsnd o f) \<close>
   unfolding \<phi>Aggregate_Mapper_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_V_tup_suc)
   by (metis V_tup_sep_disj_R idx_step_mod_value_tup)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Mapper idx X X' Y Y' f
-\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> \<lbrace> X' \<rbrace> Y Y' f\<close>
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> \<lbrace> X' \<rbrace> Y Y' f \<close>
   unfolding \<phi>Aggregate_Mapper_def
   by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Mapper idx X X' Y Y' f
-\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) (\<lbrace> X' \<rbrace> \<^emph> R) Y Y' (apfst o f)\<close>
+\<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) (\<lbrace> X' \<rbrace> \<^emph> R) Y Y' (apfst o f) \<close>
   unfolding \<phi>Aggregate_Mapper_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
   by (metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)

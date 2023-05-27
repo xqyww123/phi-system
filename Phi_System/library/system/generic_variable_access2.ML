@@ -1,10 +1,14 @@
 signature GENERIC_VARIABLE_ACCESS = sig
 include GENERIC_VARIABLE_ACCESS
 
+(** Get **)
+
+val get_value : string -> cterm -> context_state -> context_state
+
 (** Assignment **)
 
-type assigner = string (*identifier of the assigner*)
-             * (binding (*name of the value or variable*)
+type assigner = string (*identifier (kind) of the assigner*)
+              * (binding (*name of the value or variable*)
                -> context_state
                -> ( thm (*rule*)
                   * Proof.context
@@ -28,6 +32,26 @@ end
 
 structure Generic_Variable_Access : GENERIC_VARIABLE_ACCESS = struct
 open Generic_Variable_Access
+
+(*** Get Value ***)
+
+fun get_value name element_index (ctxt,sequent) =
+  let val vname = translate_value1 ctxt (Free (name, dummyT))
+      val idx = Int.max (Thm.maxidx_of_cterm vname, Thm.maxidx_of_cterm element_index) + 1
+      val Ty = lookup_bindings ctxt name
+            |> Option.mapPartial (fn (_, get) => get (ctxt, Phi_Envir.the_construction ctxt))
+            |> Option.map (fastype_of o Thm.term_of o fst)
+            |> (fn SOME T => T
+                 | NONE => TVar (("'x", idx), \<^sort>\<open>type\<close>))
+      val target =
+            Thm.apply (
+            Thm.apply (
+              Thm.cterm_of ctxt (\<^Const>\<open>Value_of \<open>Ty\<close> \<open>Thm.typ_of_cterm vname\<close>\<close>
+                                    $ Var (("x",idx), Ty)))
+              vname)
+              element_index
+   in Phi_Sys.synthesis target (ctxt,sequent)
+  end
 
 (*** Assignment ***)
 
@@ -70,7 +94,7 @@ fun parse_assigner ctxt =
     fun find name =
       case Generic_Variable_Access.lookup_bindings ctxt (Binding.name_of name)
         of SOME (X,_) => (
-            case Phi_Help.safe_fastype_of X
+            case Thm.typ_of_cterm X
               of Type (T, _) =>
                   (case Symtab.lookup type_map T
                      of SOME key => key

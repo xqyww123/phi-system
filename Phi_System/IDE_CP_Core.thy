@@ -1,14 +1,11 @@
 chapter \<open>Integrated Deduction Environment for Programming (IDE-P)\<close>
 
 theory IDE_CP_Core
-  imports
-    "Phi_Semantics_Framework.Phi_Semantics_Framework"
-    Calculus_of_Programming
-    IDE_CP_Reasoning1
+  imports Calculus_of_Programming Phi_Element_Path
   keywords
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
-    "var" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure_fact"
+    "var" "val" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure_fact"
     "input" "certified" "requires" "apply_rule" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
@@ -21,17 +18,20 @@ abbrevs
   and "<do>" = "\<^bold>d\<^bold>o"
   and "<param>" = "\<p>\<a>\<r>\<a>\<m>"
   and "<label>" = "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l"
-      and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
-      and "<by>" = "\<^bold>b\<^bold>y"
-      and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
-      and "<when>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>n"
-      and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
+  and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
+  and "<by>" = "\<^bold>b\<^bold>y"
+  and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
+  and "<when>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>n"
+  and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
   and "<obligation>" = "\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n>"
   and ">->" = "\<Zinj>"
   and "<;>" = "\<Zcomp>"
   and "<val>" = "\<v>\<a>\<l>"
   and "<ret>" = "\<^bold>r\<^bold>e\<^bold>t"
   and "<is>" = "\<i>\<s>"
+  and "|>" = "\<tribullet>"
+  and "<-" = "\<leftarrow>"
+  and "\<leftarrow>->" = "\<longleftrightarrow>"
 begin
 
 section \<open>Preliminary Configuration\<close>
@@ -1549,13 +1549,68 @@ lemma [\<phi>reason 1]:
   unfolding Do_Action_def Action_Tag_def Action_Tag_def .
 
 
-subsection \<open>Generic Assignment \& Access\<close>
+subsection \<open>Generic Element Access\<close>
+
+subsubsection \<open>Get Element of Abstract Object\<close>
+
+type_synonym element_index_input = \<open>(VAL \<times> VAL set) list\<close>
+
+definition Get_Abstract_Element :: \<open>'x \<Rightarrow> ('val,'x) \<phi> \<Rightarrow> element_index_input \<Rightarrow> 'y \<Rightarrow> bool\<close>
+  where \<open>Get_Abstract_Element x T path y \<longleftrightarrow> True\<close>
+  \<comment> \<open>Purely syntactic\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>Get_Abstract_Element ?x ?T ?path _ \<close> \<Rightarrow> \<open>Get_Abstract_Element ?x ?T ?path _\<close> (100)
+]]
+
+lemma [\<phi>reason 1000]:
+  \<open>Get_Abstract_Element x T [] x\<close>
+  unfolding Get_Abstract_Element_def ..
+
+subsubsection \<open>Other\<close>
+
+definition report_unprocessed_element_index :: \<open>element_index_input \<Rightarrow> bool\<close>
+  where \<open>report_unprocessed_element_index path \<longleftrightarrow> True\<close>
+  \<comment> \<open>Flow style processing of element index. A reasoning process can accept some leading part of the
+      index and reject the remains to leave to other processors. \<close>
+
+lemma report_unprocessed_element_index_I:
+  \<open>report_unprocessed_element_index path\<close>
+  unfolding report_unprocessed_element_index_def ..
+
+
+subsubsection \<open>ML\<close>               
+
+ML_file \<open>library/system/generic_element_access.ML\<close>
+
+\<phi>reasoner_ML report_unprocessed_element_index 1000 (\<open>report_unprocessed_element_index _\<close>) = \<open>
+fn (ctxt,sequent) => Seq.make (fn () =>
+  let val (_,_,ant,_) =
+        Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent))) ctxt
+      val idx = Thm.dest_arg (Thm.dest_arg ant)
+   in if (case Thm.term_of idx of Const(\<^const_name>\<open>Nil\<close>, _) => true | _ => false)
+         orelse Phi_Generic_Element_Access.is_enabled_report_unprocessed_element_index ctxt
+      then SOME ((Phi_Generic_Element_Access.report_unprocessed_element_index idx ctxt,
+                 @{thm report_unprocessed_element_index_I} RS sequent),
+                Seq.empty)
+      else (
+        warning (Pretty.string_of (Pretty.block [
+            Pretty.str "Fail to access element ",
+            Syntax.pretty_term ctxt (Thm.term_of idx)
+        ])) ;
+        NONE )
+  end)
+\<close>
+
+hide_fact report_unprocessed_element_index_I
+
+subsection \<open>Generic Variable Access\<close>
 
 subsubsection \<open>Annotation\<close>
 
-definition Value_of :: \<open>'x \<Rightarrow> 'v \<Rightarrow> 'x\<close> (infix "<val-of>" 22)
-  where [iff, post_synthesis_simp]: \<open>(x <val-of> v) = x\<close>
-  \<comment> \<open>This tag annotates that \<open>x\<close> is the value of \<open>Var v\<close> or \<open>Val v\<close>.
+definition Value_of :: \<open>'x \<Rightarrow> 'v \<Rightarrow> element_index_input \<Rightarrow> 'x\<close> ("_ <val-of> _ <path> _" [23,23,23] 22)
+  where [iff, post_synthesis_simp]: \<open>(x <val-of> v <path> path) = x\<close>
+  \<comment> \<open>This tag annotates that \<open>x\<close> is the value of \<open>v\<close> at its element path \<open>path\<close>.
 
     One usage is during synthesis of variable access.
     When user types in \<open>$var\<close> meaning to synthesis the value of variable \<open>var\<close>,
@@ -1564,25 +1619,27 @@ definition Value_of :: \<open>'x \<Rightarrow> 'v \<Rightarrow> 'x\<close> (infi
     of the variable \<open>var\<close>. With the syntactical annotation, the reasoning can be properly
     configured to synthesis the desired value.\<close>
 
-definition Set_Value :: \<open>'x \<Rightarrow> 'v \<Rightarrow> 'x\<close> ("_ <set-to> _" [51, 1000] 50)
-  where [iff, post_synthesis_simp]: \<open>(y <set-to> x) = y\<close>
-  \<comment> \<open>This tag is mainly used in synthesis, annotating the action of assigning some value
-      container \<open>x\<close> like a variable with value \<open>y\<close>.
-     As the evaluation of the \<close>
+definition Set_Value :: \<open>'x \<Rightarrow> 'v \<Rightarrow> element_index_input \<Rightarrow> 'x\<close> ("_ <set-to> _ <path> _" [51, 1000, 51] 50)
+  where [iff, post_synthesis_simp]: \<open>(y <set-to> x <path> path) = y\<close>
+  \<comment> \<open>This tag is mainly used in synthesis, annotating the action of assigning the element \<open>path\<close>
+      of value container \<open>x\<close> with value \<open>y\<close>. \<close>
 
 
 subsubsection \<open>Syntax\<close>
 
-nonterminal \<phi>identifier
+nonterminal \<phi>identifier and \<phi>identifier_element
 
 syntax
   "_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$\"_")
-  "_get_identifier_" :: "\<phi>identifier \<Rightarrow> logic" ("$_")
-  "_set_identifier_" :: "\<phi>identifier \<Rightarrow> logic \<Rightarrow> logic" ("$_ := _" [991, 51] 50)
   "_identifier_id_" :: \<open>id \<Rightarrow> \<phi>identifier\<close> ("_")
   "_identifier_num_" :: \<open>num_token \<Rightarrow> \<phi>identifier\<close> ("_")
   "_identifier_1_" :: \<open>\<phi>identifier\<close> ("1")
   "_identifier_logic_" :: \<open>logic \<Rightarrow> \<phi>identifier\<close> ("'(_')")
+  "_identifier_element_0_" :: \<open>\<phi>identifier \<Rightarrow> \<phi>identifier_element\<close> ("_")
+  "_identifier_element_"   :: \<open>\<phi>identifier_element \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> \<phi>identifier_element\<close> (infixl "\<tribullet>" 910)
+  "_\<phi>element_step_" :: \<open>logic \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logic\<close> (infixl "\<tribullet>" 910)
+  "_get_\<phi>var_" :: "\<phi>identifier \<Rightarrow> logic" ("$_")
+  "_set_\<phi>var_" :: "\<phi>identifier_element \<Rightarrow> logic \<Rightarrow> logic" ("$_ := _" [910, 51] 50)
 
 consts \<phi>identifier :: "unit \<Rightarrow> unit" \<comment> \<open>used only in syntax parsing\<close>
 
@@ -1595,17 +1652,12 @@ lemma "__value_access_0__":
 
 ML_file \<open>library/system/generic_variable_access.ML\<close>
 
+
+(*
 lemma [\<phi>reason 1000]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (x <val-of> any \<Ztypecolon> T) TY\<close>
-  unfolding Value_of_def .
-
-text \<open> \<Gamma> |- S
-apply {S'} C {Q}
-
-S --> ?R *  S'
-\<close>
-
+  unfolding Value_of_def . *)
 
 section \<open>Implementing the Interactive Environment\<close>
 
@@ -1754,7 +1806,7 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
        | SOME opr => (
           case Phi_Opr_Stack.lookup_meta_opr (Proof_Context.theory_of ctxt) xname
             of SOME meta =>
-                Phi_Opr_Stack.push_meta_operator (opr, (xname,pos), meta) (ctxt, sequent)
+                Phi_Opr_Stack.push_meta_operator (opr, (xname,pos), NONE, meta) (ctxt, sequent)
              | NONE =>
                 let val rules = Phi_App_Rules.app_rules ctxt [(Facts.Named ((xname,pos), NONE), [])]
                  in Phi_Opr_Stack.push_operator (opr, (xname,pos), rules)
@@ -1762,24 +1814,29 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
                 end)
   ))\<close>
 
-\<phi>processor open_parenthesis 8995 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<phi>processor open_parenthesis 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn s =>
   (Parse.position \<^keyword>\<open>(\<close>) >> (fn (_, pos) => fn _ =>
     Phi_Opr_Stack.open_parenthesis (NONE, pos) s)\<close>
 
-\<phi>processor apply_delayed 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<phi>processor close_parenthensis 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Opr_Stack.close_parenthesis NONE I s)\<close>
 
-\<phi>processor comma 8999 (\<open>?P\<close>) \<open> fn s => 
+\<phi>processor comma 8800 (\<open>?P\<close>) \<open> fn s => 
   Parse.position \<^keyword>\<open>,\<close> -- Scan.option (Parse.short_ident --| \<^keyword>\<open>:\<close>)
 >> (fn ((_,pos), arg_name) => fn _ =>
     Phi_Opr_Stack.comma (arg_name, pos) s)\<close>
 
-\<phi>processor embedded_block 8999 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
+\<phi>processor embedded_block 8800 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
 \<open> fn stat => (Parse.position \<^keyword>\<open>(\<close> >> (fn (_, pos) => fn _ =>
   raise Process_State_Call (
           stat |> apfst (Phi_Opr_Stack.begin_block pos),
           Phi_Toplevel.begin_block_cmd ([],[]) false)))\<close>
+
+\<phi>processor delimiter_of_statement 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn s => \<^keyword>\<open>;\<close> >> (fn _ => fn _ =>
+    s |> Phi_Toplevel.End_of_Statement.invoke (Context.Proof (fst s)) ()
+      |> Phi_Toplevel.Begin_of_Next_Statement.invoke (Context.Proof (fst s)) ()) \<close>
 
 \<phi>processor set_param 5000 (premises \<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
   Phi_Sys.set_param_cmd term stat)\<close>
@@ -1801,8 +1858,8 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)\<close>
 
 \<phi>processor synthesis 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)
-  \<open>fn (ctxt, sequent) => Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number))
->> (fn raw_term => fn _ =>
+  \<open>fn (ctxt, sequent) => Parse.position (Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number)))
+>> (fn (raw_term, pos) => fn _ =>
   let
     val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
                         |> Config.put phi_synthesis_parsing true
@@ -1816,23 +1873,26 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
                      ) (*patch to enable term binding*)
                   |> Syntax.check_term ctxt_parser
                   |> Thm.cterm_of ctxt
-   in
-    Phi_Sys.synthesis term (ctxt, sequent)
+   in case Thm.prop_of sequent
+        of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+              Phi_Sys.synthesis term (ctxt, sequent)
+         | _ =>
+              Phi_Opr_Stack.push_meta_operator ((920,921,SOME 0), ("<synthesis>", pos), NONE,
+                  (K (apsnd (Phi_Sys.synthesis term)))) (ctxt, sequent)
   end)\<close>
 
 (*access local value or variable or any generic variables*)
 \<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)  \<open>
-  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- (Parse.short_ident || Parse.long_ident || Parse.number)
-  >> (fn var => fn _ =>
-    let
-      val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
-                          |> Config.put phi_synthesis_parsing true
-                          |> Config.put Generic_Variable_Access.mode_synthesis true
-      val term = Syntax.parse_term ctxt_parser ("$" ^ var)
-                  |> Syntax.check_term ctxt_parser
-                  |> Thm.cterm_of ctxt
-    in
-      Phi_Sys.synthesis term (ctxt,sequent)
+  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.position (Parse.short_ident || Parse.long_ident || Parse.number)
+  >> (fn (var,pos) => fn _ =>
+    let val get = Generic_Variable_Access.get_value var Phi_Generic_Element_Access.empty_input
+    in case Thm.prop_of sequent
+         of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => get (ctxt,sequent)
+          | _ =>
+              Phi_Opr_Stack.push_meta_operator
+                  ((920,921, SOME 0), ("$", pos), SOME (Phi_Opr_Stack.String_Param var),
+                      (K (fn (oprs, s) => (oprs, get s))))
+                  (ctxt,sequent)
     end)
 \<close>
 
@@ -1848,6 +1908,18 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
   in (ctxt,sequent)
   |> Phi_Opr_Stack.end_expression 0
   |> Generic_Variable_Access.assignment_cmd vars'
+  end
+)\<close>
+
+\<phi>processor left_assignment 5000 (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
+  fn (ctxt,sequent) =>
+    Parse.list1 ((\<^keyword>\<open>var\<close> || \<^keyword>\<open>val\<close>) -- Parse.list1 Parse.binding) --
+    Parse.position \<^keyword>\<open>\<leftarrow>\<close>
+>> (fn (vars,(_,pos)) => fn _ =>
+  let val vars' = maps (fn (k,bs) => map (pair (SOME k)) bs) vars
+   in (ctxt,sequent)
+    |> Phi_Opr_Stack.push_meta_operator ((0,20,SOME (length vars')),("\<leftarrow>",pos),NONE,
+          K (apsnd (Generic_Variable_Access.assignment_cmd vars')))
   end
 )\<close>
 

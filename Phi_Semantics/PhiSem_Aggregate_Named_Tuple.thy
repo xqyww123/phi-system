@@ -201,23 +201,23 @@ subsection \<open>Semantics Related\<close>
 
 lemma [\<phi>reason 1020]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s = s'
-\<Longrightarrow> valid_index TY L
-\<Longrightarrow> valid_index (named_tup.mk (fmupd s TY Tys)) (AgIdx_S s' # L)\<close>
-  unfolding \<r>Guard_def Premise_def
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (named_tup.mk (fmupd s TY Tys)) TY \<close>
+  unfolding \<r>Guard_def Premise_def is_valid_step_idx_of_def
   by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
 
 lemma [\<phi>reason 1000]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s \<noteq> s'
-\<Longrightarrow> valid_index (named_tup.mk Tys) (AgIdx_S s' # L)
-\<Longrightarrow> valid_index (named_tup.mk (fmupd s TY Tys)) (AgIdx_S s' # L)\<close>
-  unfolding \<r>Guard_def Premise_def
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (named_tup.mk Tys) RET
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s') (named_tup.mk (fmupd s TY Tys)) RET \<close>
+  unfolding \<r>Guard_def Premise_def is_valid_step_idx_of_def
   by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
 
 lemma [\<phi>reason 1020]:
   \<open> FAIL TEXT(s \<open>is not a field in the named tuple\<close>)
-\<Longrightarrow> valid_index (named_tup.mk fmempty) (AgIdx_S s # L)\<close>
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_S s) (named_tup.mk fmempty) RET \<close>
   unfolding \<r>Guard_def Premise_def
   by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
+
 
 subsection \<open>General\<close>
 

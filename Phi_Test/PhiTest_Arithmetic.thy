@@ -40,6 +40,8 @@ thm test_prime_def \<comment> \<open>Semantic definition\<close>
 thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
 
 
+declare [[\<phi>trace_reasoning = 0]]
+
 proc test_prime':
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close>
@@ -68,7 +70,7 @@ proc test_prime':
 
     return (True) (*with this optimization, the final obligation fails to be solved
                     automatically, but the manual proof is intuitive and semi-automated.*)
-      certified proof simp
+    certified proof simp
         have \<open>False\<close> if assm: \<open>\<not> prime x\<close>
           proof -
             obtain k where \<open>k dvd x \<and> 1 < k \<and> k < x\<close> by auto_sledgehammer
@@ -103,7 +105,6 @@ proc Coprime:
   \<open>gcd $x $y = 1\<close>
 \<medium_right_bracket> by this
 
- 
 proc binary_search:
   requires F: \<open>\<forall>i v. \<p>\<r>\<o>\<c> F v \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close> \<comment> \<open>v: raw value\<close>
   premises \<open>mono f\<close>
@@ -129,10 +130,6 @@ proc binary_search:
     return ($u)
   \<medium_right_bracket>
 \<medium_right_bracket> by this
-
-
-
-
 
 
 end

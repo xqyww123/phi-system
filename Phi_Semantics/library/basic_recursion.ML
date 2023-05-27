@@ -1,7 +1,5 @@
 signature PHISEM_CONTROL_FLOW = sig
 
-val fix_leading_antecedent_meta_quantifiers : (*a helpful tool*)
-            Proof.context -> thm -> term list * term * Proof.context
 val mk_parameterized_schematic_proc : (typ -> typ)
                                    -> (int -> (term -> term) -> term -> term)
                                    -> Proof.context -> typ -> typ -> string -> term
@@ -17,18 +15,6 @@ structure Applying_Recursive_Modifier : HOOKS
 end
 
 structure PhiSem_Control_Flow : PHISEM_CONTROL_FLOW = struct
-
-fun fix_leading_antecedent_meta_quantifiers ctxt0 sequent =
-  let
-    val (qvs, prems, ant01) = Phi_Help.leading_antecedent (Thm.prop_of sequent)
-
-    (* fix universally quantified variables *)
-    val (qv_names, ctxt'01) = Variable.add_fixes (map fst qvs) ctxt0
-    val qvars = map2 (fn N => fn (_,T) => Free (N,T)) qv_names qvs
-    val ctxt = fold Variable.declare_term qvars ctxt'01
-    val ant = subst_bounds (rev qvars, ant01)
-  in (prems,ant,ctxt)
-  end
 
 (*arg_ty, ret_ty: not wrapped by \<phi>arg*)
 fun mk_parameterized_schematic_proc mk_T mk_F ctxt arg_ty ret_ty var_name =
@@ -80,7 +66,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
                       then_conv protect_conv
                     ) ctxt0
                  end) 1
-    val (_,proc01',ctxt) = fix_leading_antecedent_meta_quantifiers ctxt0 sequent
+    val (_,_,proc01',ctxt) = Phi_Help.fix_leading_antecedent_meta_quantifiers ctxt0 (Thm.prop_of sequent)
 
     val (_(*Pure.prop*) $ (_ (*imp*) $ (\<^const>\<open>Trueprop\<close> $ PP) $ proc02)) = proc01'
     val proc0 = case proc02

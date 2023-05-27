@@ -39,7 +39,7 @@ subsection \<open>Semantics\<close>
 debt_axiomatization
         WT_arr[simp]: \<open>Well_Type (array n t) = { V_array.mk vs |vs. length vs = n \<and> list_all (\<lambda>v. v \<in> Well_Type t) vs }\<close>
   and   zero_arr[simp]: \<open>Zero (array N T)  = map_option (\<lambda>z. V_array.mk (replicate N z)) (Zero T)\<close>
-  and   idx_step_type_arr [eval_aggregate_path] : \<open>i \<le> N \<Longrightarrow> idx_step_type (AgIdx_N i) (array N T) = T\<close>
+  and   idx_step_type_arr [eval_aggregate_path] : \<open>i < N \<Longrightarrow> idx_step_type (AgIdx_N i) (array N T) = T\<close>
   and   valid_idx_step_arr[eval_aggregate_path] : \<open>valid_idx_step (array N T) j \<longleftrightarrow> j \<in> {AgIdx_N i | i. i < N}\<close>
   and   idx_step_value_arr[eval_aggregate_path] : \<open>idx_step_value (AgIdx_N i) (V_array.mk vs) = vs!i\<close>
   and   idx_step_mod_value_arr : \<open>idx_step_mod_value (AgIdx_N i) f (V_array.mk vs) = V_array.mk (vs[i := f (vs!i)])\<close>
@@ -86,8 +86,13 @@ lemma [\<phi>reason 1000]:
 
 section \<open>Reasoning\<close>
 
-subsection \<open>Index to Fields of Structures\<close>
+lemma [\<phi>reason 1200]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < N
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (array N TY) TY \<close>
+  unfolding is_valid_step_idx_of_def Premise_def
+  by (simp add: valid_idx_step_arr idx_step_type_arr)
 
+subsection \<open>Index to Fields of Structures\<close>
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Getter idx X Y f

@@ -318,6 +318,8 @@ proc op_get_var:
   fold Inited_Var_identity_eq
 \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc op_set_var:
   input  \<open>x \<Ztypecolon> Var var T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> U\<close>
   requires [unfolded Action_Tag_def, useful]:
@@ -374,7 +376,8 @@ proc [\<phi>reason 1200]:
   input \<open>X\<close>
   requires Find: \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<v>\<a>\<r>[var] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<a>\<n>\<d> Any\<close>
       and  \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  output \<open>\<v>\<a>\<l> x <val-of> var \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[var] T\<close>
+      and  \<open>report_unprocessed_element_index path\<close>
+  output \<open>\<v>\<a>\<l> x <val-of> var <path> path \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<r>[var] T\<close>
   @action synthesis
 \<medium_left_bracket>
   Find
@@ -388,13 +391,13 @@ declare [[\<phi>trace_reasoning = 2]]
 
 proc (nodef) op_set_var__synthesis
   [\<phi>reason 1200 for
-      \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> \<blangle> (?y <set-to> ?var) \<Ztypecolon> ?U ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis\<close>]:
+      \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R'\<heavy_comma> \<blangle> (?y <set-to> ?var <path> []) \<Ztypecolon> ?U ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action synthesis\<close>]:
   input X
   requires G: \<open>\<p>\<r>\<o>\<c> g \<lbrace> X \<longmapsto> X1\<heavy_comma> \<blangle> \<v>\<a>\<l> y \<Ztypecolon> U \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
        and P: \<open>pred_option (\<lambda>TY'. TY = TY') (varname.type var) @action infer_var_type\<close>
        and S: \<open>X1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y\<heavy_comma> x \<Ztypecolon> Var var T \<a>\<n>\<d> Any @action ToSA\<close>
        and    \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
-  output \<open>Y\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[var] U \<heavy_comma> \<blangle> \<v>\<a>\<l> (y <set-to> var) \<Ztypecolon> U \<brangle>\<close>
+  output \<open>Y\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<r>[var] U \<heavy_comma> \<blangle> \<v>\<a>\<l> (y <set-to> var <path> []) \<Ztypecolon> U \<brangle>\<close>
   throws E
   @action synthesis
 \<medium_left_bracket>

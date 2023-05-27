@@ -55,15 +55,15 @@ signature PHI_TOPLEVEL = sig
 
   val statement_clean_values : bool Config.T (*controls whether the statement command \<^bold>;
         cleans all values at its beginning.*)
-  val statement_cmd : int * int -> (Proof.state -> Proof.state) parser
+  val statement_line_cmd : int * int -> (Proof.state -> Proof.state) parser
 
-  structure Begining_of_Statement : HOOKS
+  structure Begin_of_Line : HOOKS
+  structure End_of_Line : HOOKS
+  structure Begin_of_Next_Statement : HOOKS
   structure End_of_Statement : HOOKS
 
   val prove_prem : bool -> (Proof.state -> Proof.state) -> Proof.state -> thm list * Proof.state
   (*val export_LLVM : theory -> theory *)
-
-  val previous_statement_is_finished : Proof.context -> bool
 
 end
 
@@ -597,10 +597,10 @@ val begin_proc_cmd =
 
 (** Statement **)
 
-structure Begining_of_Statement = Hooks (type arg = unit
-                                         type state = context_state)
-structure End_of_Statement = Hooks (type arg = unit
-                                    type state = context_state)
+structure Begin_of_Next_Statement = Hooks (type arg = unit type state = context_state)
+structure End_of_Statement = Hooks (type arg = unit type state = context_state)
+structure Begin_of_Line = Hooks (type arg = unit type state = context_state)
+structure End_of_Line = Hooks (type arg = unit type state = context_state)
 
 (*Whether to remove all values at the beginning of the command \<^bold>;*)
 val statement_clean_values = Attrib.setup_config_bool \<^binding>\<open>\<phi>statement_clean_values\<close> (K true)
@@ -608,33 +608,28 @@ val statement_clean_values = Attrib.setup_config_bool \<^binding>\<open>\<phi>st
 fun clean_values (ctxt,sequent) =
       if can Phi_Syntax.dest_CurrentConstruction (Thm.prop_of sequent)
          andalso Config.get ctxt statement_clean_values
-         andalso Config.get ctxt previous_statement_is_finished' (*so that the previous construction
-                      has chance to do anything wanted about the values, and any remaining values
-                      must be that the user doesn't need.*)
       then (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst)
       else (ctxt, sequent)
 
-fun statement_cmd auto_lev =
+fun statement_line_cmd auto_lev =
   Phi_Processor.powerful_process_p auto_lev (
                         Phi_Envir.map_state_sequent (fn (ctxt,sequent) =>
-                            End_of_Statement.invoke (Context.Proof ctxt) () (ctxt,sequent)))
+                            End_of_Line.invoke (Context.Proof ctxt) () (ctxt,sequent)))
     >> (fn process =>
               Phi_Envir.map_state_sequent (fn (ctxt,sequent) =>
-                    Begining_of_Statement.invoke (Context.Proof ctxt) () (ctxt,sequent))
+                    Begin_of_Line.invoke (Context.Proof ctxt) () (ctxt,sequent))
            #> process
      (*the return of the process doesn't mean the end of the construction because the construction
-       can be interrupted and suspended by proofs.*)
+       can be interrupted and suspended by inserted proofs.*)
   )
 
-val _ = previous_statement_is_finished'
-
-fun statement_cmd_begining auto_lev =
-  statement_cmd auto_lev >> (fn f =>
+fun statement_cmd_first_line auto_lev =
+  statement_line_cmd auto_lev >> (fn f =>
        Proof.map_context (Config.put previous_statement_is_finished' false)
     #> f)
 
 fun statement_cmd_tail auto_lev toks =
-  (statement_cmd auto_lev >> (fn f => fn s =>
+  (statement_line_cmd auto_lev >> (fn f => fn s =>
       if Phi_Envir.under_programming_environ (Proof.context_of s)
       then f s
       else if null toks orelse Token.is_eof (hd toks)
@@ -643,9 +638,17 @@ fun statement_cmd_tail auto_lev toks =
 
 
 val _ = Theory.setup (Context.theory_map (
-   Begining_of_Statement.add 50 (K clean_values)
-#> Begining_of_Statement.add 1000 (K (apfst (Config.put previous_statement_is_finished' true)))
-#> End_of_Statement.add 100 (K (apfst Phi_Envir.freeze_dynamic_lemmas))
+   Begin_of_Line.add 0 (K (fn s =>
+     if Config.get (fst s) previous_statement_is_finished'
+     then Begin_of_Next_Statement.invoke (Context.Proof (fst s)) () s
+     else s))
+#> End_of_Line.add 0 (K (fn s =>
+     if Config.get (fst s) previous_statement_is_finished'
+     then End_of_Statement.invoke (Context.Proof (fst s)) () s
+     else s))
+#> Begin_of_Next_Statement.add 50 (K clean_values)
+#> Begin_of_Line.add 1000 (K (apfst (Config.put previous_statement_is_finished' true))) (*reset*)
+#> End_of_Line.add 100 (K (apfst Phi_Envir.freeze_dynamic_lemmas))
 ))
 
 fun previous_statement_is_finished ctxt = Config.get ctxt previous_statement_is_finished'
@@ -760,7 +763,7 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (statement_cmd (3,3) >> (fn f => Toplevel.proof (f o Proof.map_context Phi_ID.next)))
+    (statement_line_cmd (3,3) >> (fn f => Toplevel.proof (f o Proof.map_context Phi_ID.next)))
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
@@ -768,7 +771,7 @@ val _ =
      -- optional (\<^keyword>\<open>premises\<close> |--
             and_list ((binding -- opt_attribs || attribs >> pair Binding.empty) -- ppats)) []
       >> begin_block_cmd)
-   -- statement_cmd_begining (3,1))
+   -- statement_cmd_first_line (3,1))
    >> (fn (blk,prcs) => Toplevel.proof' (fn int => prcs o blk int o Proof.map_context Phi_ID.next)))
 
 datatype end_blk_action = Enter_Proof_Mode | Transparent_Proof of (Proof.state -> Proof.state)

@@ -1,5 +1,5 @@
-theory PhiSem_Aggregate_Path
-  imports Phi_System.PhiSem_Formalization_Tools2 PhiSem_Symbol
+theory Phi_Element_Path
+  imports Phi_System.Calculus_of_Programming PhiTool_Symbol
 begin
 
 section \<open>Path of Elements in an Aggregate Structure\<close>
