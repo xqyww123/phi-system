@@ -139,8 +139,11 @@ fun remove_reasoning_rules rules ctxt =
 val value_assigner_id = "val"
 val valname_prefix = "\<v>\<a>\<l>_"
 
-fun value_assigner b (ctxt,_) =
-  let
+fun value_assigner (b,eleidx) (ctxt,_) =
+let
+  val _ = if Generic_Element_Access.is_empty_input (Thm.term_of eleidx)
+          then ()
+          else error "Cannot assign partially to an element of a local value"
   val xname = Binding.name_of b
   val (vname, ctxt) =
         case get_internal_val_name xname ctxt
@@ -151,7 +154,7 @@ fun value_assigner b (ctxt,_) =
   val vterm = Thm.cterm_of ctxt (Free (vname, \<^typ>\<open>valname\<close>))
   val rule = @{thm "__set_value_rule__"}
         |> Thm.instantiate (TVars.empty, Vars.make [((("name",0), \<^typ>\<open>valname\<close>), vterm)])
-  in (rule, ctxt, [], [update_val b]) end
+in (rule, ctxt, [], [update_val b]) end
 
 
 (*An optimization if all assignments are to values*)
@@ -159,7 +162,11 @@ fun optimized_value_assign bs stat =
   let
     fun fast_assign bs (ctxt, sequent) =
       let
-        val (vnames, ctxt) = fold_map (fn (b,_) => fn ctxt =>
+        val _ = if forall (fn ((_,eleidx),_) =>
+                      Generic_Element_Access.is_empty_input (Thm.term_of eleidx)) bs
+                then ()
+                else error "Cannot assign partially to an element of a local value"
+        val (vnames, ctxt) = fold_map (fn ((b,_),_) => fn ctxt =>
               case get_internal_val_name (Binding.name_of b) ctxt
                 of SOME vname => (vname, ctxt)
                  | NONE => Proof_Context.add_fixes [(Binding.prefix_name valname_prefix b,
@@ -177,7 +184,7 @@ fun optimized_value_assign bs stat =
         val (sequent, vals) = HOLogic.conj_elim ctxt sequent
         val vals = HOLogic.conj_elims ctxt vals
               |> Phi_Help.front
-      in fold2 (update_val o fst) bs vals ctxt
+      in fold2 (fn ((x,_),_) => update_val x) bs vals ctxt
       |> rpair sequent
       end
   in if forall (fn (_,(id,_)) => id = value_assigner_id) bs

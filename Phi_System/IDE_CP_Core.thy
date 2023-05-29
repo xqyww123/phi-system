@@ -1578,19 +1578,38 @@ lemma report_unprocessed_element_index_I:
   \<open>report_unprocessed_element_index path\<close>
   unfolding report_unprocessed_element_index_def ..
 
+definition chk_element_index_all_solved :: \<open>element_index_input \<Rightarrow> bool\<close>
+  where \<open>chk_element_index_all_solved path \<longleftrightarrow> True\<close>
 
 subsubsection \<open>ML\<close>               
 
 ML_file \<open>library/system/generic_element_access.ML\<close>
+
+\<phi>reasoner_ML chk_element_index_all_solved 1000 (\<open>chk_element_index_all_solved _\<close>) = \<open>
+fn (ctxt,sequent) => Seq.make (fn () =>
+  let val (_,_,ant,_) =
+        Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent))) ctxt
+      val idx = Thm.dest_arg (Thm.dest_arg ant)
+   in if Generic_Element_Access.is_empty_input (Thm.term_of idx)
+      then SOME ((ctxt, @{thm report_unprocessed_element_index_I} RS sequent),
+                Seq.empty)
+      else (
+        warning (Pretty.string_of (Pretty.block [
+            Pretty.str "Fail to access element ",
+            Syntax.pretty_term ctxt (Thm.term_of idx)
+        ])) ;
+        NONE )
+  end)
+\<close>
 
 \<phi>reasoner_ML report_unprocessed_element_index 1000 (\<open>report_unprocessed_element_index _\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
   let val (_,_,ant,_) =
         Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent))) ctxt
       val idx = Thm.dest_arg (Thm.dest_arg ant)
-   in if (case Thm.term_of idx of Const(\<^const_name>\<open>Nil\<close>, _) => true | _ => false)
-         orelse Phi_Generic_Element_Access.is_enabled_report_unprocessed_element_index ctxt
-      then SOME ((Phi_Generic_Element_Access.report_unprocessed_element_index idx ctxt,
+   in if Generic_Element_Access.is_empty_input (Thm.term_of idx)
+         orelse Generic_Element_Access.is_enabled_report_unprocessed_element_index ctxt
+      then SOME ((Generic_Element_Access.report_unprocessed_element_index idx ctxt,
                  @{thm report_unprocessed_element_index_I} RS sequent),
                 Seq.empty)
       else (
@@ -1602,7 +1621,6 @@ fn (ctxt,sequent) => Seq.make (fn () =>
   end)
 \<close>
 
-hide_fact report_unprocessed_element_index_I
 
 subsection \<open>Generic Variable Access\<close>
 
@@ -1624,6 +1642,11 @@ definition Set_Value :: \<open>'x \<Rightarrow> 'v \<Rightarrow> element_index_i
   \<comment> \<open>This tag is mainly used in synthesis, annotating the action of assigning the element \<open>path\<close>
       of value container \<open>x\<close> with value \<open>y\<close>. \<close>
 
+declare [[
+  \<phi>reason_default_pattern
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> _ <val-of> ?v <path> ?path \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> _ <val-of> ?v <path> ?path \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (120)
+]]
 
 subsubsection \<open>Syntax\<close>
 
@@ -1885,7 +1908,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
 \<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.position (Parse.short_ident || Parse.long_ident || Parse.number)
   >> (fn (var,pos) => fn _ =>
-    let val get = Generic_Variable_Access.get_value var Phi_Generic_Element_Access.empty_input
+    let val get = Generic_Variable_Access.get_value var Generic_Element_Access.empty_input
     in case Thm.prop_of sequent
          of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => get (ctxt,sequent)
           | _ =>
@@ -1901,10 +1924,10 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
           Parse.list1 (Scan.option \<^keyword>\<open>$\<close> |-- Scan.option Parse.keyword
                        --| Scan.option \<^keyword>\<open>$\<close> -- Parse.binding))
 >> (fn vars => fn _ =>
-  let
+  let open Generic_Element_Access
     val (vars', _ ) =
-          fold_map (fn (NONE,b)    => (fn k' => ((k',b),k'))
-                     | (SOME k, b) => (fn _  => ((SOME k, b), SOME k))) vars NONE
+          fold_map (fn (NONE,b)    => (fn k' => ((k',(b,empty_input)),k'))
+                     | (SOME k, b) => (fn _  => ((SOME k, (b,empty_input)), SOME k))) vars NONE
   in (ctxt,sequent)
   |> Phi_Opr_Stack.end_expression 0
   |> Generic_Variable_Access.assignment_cmd vars'
@@ -1916,7 +1939,8 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
     Parse.list1 ((\<^keyword>\<open>var\<close> || \<^keyword>\<open>val\<close>) -- Parse.list1 Parse.binding) --
     Parse.position \<^keyword>\<open>\<leftarrow>\<close>
 >> (fn (vars,(_,pos)) => fn _ =>
-  let val vars' = maps (fn (k,bs) => map (pair (SOME k)) bs) vars
+  let open Generic_Element_Access
+      val vars' = maps (fn (k,bs) => map (pair (SOME k) o rpair empty_input) bs) vars
    in (ctxt,sequent)
     |> Phi_Opr_Stack.push_meta_operator ((0,20,SOME (length vars')),("\<leftarrow>",pos),NONE,
           K (apsnd (Generic_Variable_Access.assignment_cmd vars')))

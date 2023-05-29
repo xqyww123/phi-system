@@ -253,14 +253,16 @@ fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ 
       = let val v = lookup_bindings ctxt N
                   |> Option.mapPartial (fn (_, get) => get (ctxt, Phi_Envir.the_construction ctxt))
          in if Config.get ctxt mode_synthesis
-            then H1 $ (case v of SOME (x, _) => Type.constraint (fastype_of (Thm.term_of x)) H2
-                               | _ => H2)
+            then H1 $ (case (v, element_index)
+                         of (SOME (x, _), Const (\<^const_name>\<open>Nil\<close>, _)) =>
+                                 Type.constraint (fastype_of (Thm.term_of x)) H2
+                          | _ => H2)
                     $ Thm.term_of (translate_value1 ctxt (Free (N, dummyT)))
                     $ element_index
             else (case v of SOME (x,T) =>
                               (case element_index
                                  of Const (\<^const_name>\<open>Nil\<close>, _) => Thm.term_of x
-                                  | _ => Phi_Generic_Element_Access.get_element_of_abstract_object
+                                  | _ => Generic_Element_Access.get_element_of_abstract_object
                                               ctxt (x,T,Thm.cterm_of ctxt element_index)
                                          |> Thm.term_of)
                           | _ => no_binding_found N)

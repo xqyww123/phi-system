@@ -1,4 +1,4 @@
-signature PHI_GENERIC_ELEMENT_ACCESS = sig
+signature GENERIC_ELEMENT_ACCESS = sig
 
 val get_element_of_abstract_object : Proof.context -> cterm * cterm * cterm -> cterm
 
@@ -9,10 +9,11 @@ val report_unprocessed_element_index : cterm -> Proof.context -> Proof.context
 val get_unprocessed_element_index : Proof.context -> cterm
 
 val empty_input : cterm
+val is_empty_input : term -> bool
 
 end
 
-structure Phi_Generic_Element_Access : PHI_GENERIC_ELEMENT_ACCESS = struct
+structure Generic_Element_Access : GENERIC_ELEMENT_ACCESS = struct
 
 (*** Get Element of Abstract Object ***)
 
@@ -37,6 +38,8 @@ fun get_element_of_abstract_object ctxt (x,T,path) =
 (*** Element Index Process ***)
 
 val empty_input = \<^cterm>\<open>[]::element_index_input\<close>
+fun is_empty_input (Const (\<^const_name>\<open>Nil\<close>, _)) = true
+  | is_empty_input _ = false
 
 structure Unprc_EleIdx = Single_Thread_Proof_Data_Opt (type T = cterm)
 

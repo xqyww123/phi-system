@@ -223,7 +223,7 @@ lemma [\<phi>reason 1000]:
       metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L subsetD)
 
 setup \<open>Context.theory_map (
-  Phi_Generic_Element_Access.Agg_Constructors.add 0 (fn (kind, args, (ctxt,sequent)) =>
+  Generic_Element_Access.Agg_Constructors.add 0 (fn (kind, args, (ctxt,sequent)) =>
     if kind = "" andalso forall (fn ((NONE,_),[_]) => true | _ => false) args
     then let val args' = map (fn (_,[rule]) => Phi_Local_Value.get_raw_val_in_rule rule) args
           in SOME (ctxt, \<^cterm>\<open>semantic_tuple_constructor\<close>, args')

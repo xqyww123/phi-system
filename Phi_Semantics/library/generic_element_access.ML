@@ -1,6 +1,6 @@
-signature PHI_GENERIC_ELEMENT_ACCESS = sig
+signature GENERIC_ELEMENT_ACCESS = sig
 
-include PHI_GENERIC_ELEMENT_ACCESS
+include GENERIC_ELEMENT_ACCESS
 
 structure Agg_Path_Encoders : HANDLERS
 structure Agg_Constructors : HANDLERS
@@ -14,15 +14,21 @@ val gen_constructor : string -> (string * Position.T) * Phi_Opr_Stack.arg_name
 exception Bracket_Opr_Read
 exception Bracket_Opr_Write of Position.T
 
-val dot_triangle_opr : int * string -> (string * Position.T) * Phi_Opr_Stack.free_param
+val dot_triangle_opr : (string * Position.T) * Phi_Opr_Stack.free_param
           -> Phi_Opr_Stack.opr_frame list * context_state
           -> Phi_Opr_Stack.opr_frame list * context_state
+
+val dot_triangle_assignment : (string * Position.T) * Phi_Opr_Stack.free_param
+          -> Phi_Opr_Stack.opr_frame list * context_state
+          -> Phi_Opr_Stack.opr_frame list * context_state
+
+val err_assignment : Position.T -> 'a
 
 end
 
-structure Phi_Generic_Element_Access : PHI_GENERIC_ELEMENT_ACCESS = struct
+structure Generic_Element_Access : GENERIC_ELEMENT_ACCESS = struct
 
-open Phi_Generic_Element_Access
+open Generic_Element_Access
 
 fun gen_mk_element_index_input f args =
   let val raw_path' = map (fn rule =>
@@ -90,7 +96,7 @@ fun gen_access named_thm_of_rules pos_and_first_args stat =
                  stat)
             end
         | invoke' _ _ =
-            error "Bad free_arg in Phi_Generic_Element_Access"
+            error "Bad free_arg in Generic_Element_Access"
       fun invoke'3 ((_, vals_before) :: args, free_arg) (opstack, stat) =
             if length vals_before = 0
             then error ("Bad Syntax: The operand of aggregate access is absent. " ^
@@ -142,7 +148,8 @@ fun gen_constructor kind pos_and_first_args stat =
 fun is_empty (Const (\<^const_name>\<open>Nil\<close>, _)) = true
   | is_empty _ = false
 
-fun dot_triangle_opr (front_arity, rules_name) ((name, pos), _) (stack, (ctxt0,sequent0)) =
+
+fun gen_dot_triangle_opr F front_arity ((name, pos), _) (stack, (ctxt0,sequent0)) =
   let val (front_args, (ctxt, sequent)) =
             Generic_Variable_Access.extract_and_remove_leading_values front_arity (ctxt0,sequent0)
       fun collect (ret, Phi_Opr_Stack.Meta_Opr (_, _, ("\<tribullet>", pos), _, _) :: L) = collect (pos :: ret, L)
@@ -159,30 +166,52 @@ fun dot_triangle_opr (front_arity, rules_name) ((name, pos), _) (stack, (ctxt0,s
       val (idx_input'0, ctxt'2) = mk_element_index_input_internal args ctxt'
       val idx_input = Thm.cterm_of ctxt'2 idx_input'0
       val (ctxt'3, sequent'3) = Generic_Variable_Access.push_values front_args (ctxt'2,sequent')
-
-      val (idx_input', ctxt'4, sequent'4, stack'') =
-        case stack'
-          of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), SOME (Phi_Opr_Stack.String_Param vname), _) :: stack'')
-              => let val ctxt'3' = Phi_Generic_Element_Access.enable_report_unprocessed_element_index ctxt'3
-                     val (ctxt'4, sequent'4) = Generic_Variable_Access.get_value vname idx_input  (ctxt'3', sequent'3)
-                                            |> Phi_Processor.process_all_antecedents NONE
-                     val idx_input' = Phi_Generic_Element_Access.get_unprocessed_element_index ctxt'4
-                  in (idx_input', ctxt'4, sequent'4, stack'')
-                 end
-           | _ => (idx_input, ctxt'3, sequent'3, stack')
-
-      val rules = Named_Theorems.get ctxt'4 rules_name
-      fun process_index idx s =
-        if is_empty (Thm.term_of idx)
-        then s |> apfst Phi_Generic_Element_Access.stop_reporting_unprocessed_element_index
-        else let val rules' = map (Drule.infer_instantiate ctxt [(("input_index", 0), idx)]) rules
-                 val s' = s
-                        |> apfst Phi_Generic_Element_Access.enable_report_unprocessed_element_index
-                        |> Phi_Apply.apply rules'
-                        |> Phi_Processor.process_all_antecedents NONE
-              in process_index (Phi_Generic_Element_Access.get_unprocessed_element_index (fst s)) s'
-             end
-   in (stack'', process_index idx_input' (ctxt'4, sequent'4))
+   in F ((name, pos), stack', idx_input, ctxt'3, sequent'3)
   end
+
+fun err_assignment pos =
+  error ("Bad Syntax: The assignment does not assign to a (generic) variable." ^
+         Position.here pos)
+
+val dot_triangle_assignment =
+  gen_dot_triangle_opr (fn ((_, pos), stack, idx_input, ctxt, sequent) =>
+    let val (stack', vname, pos) =
+          case stack
+            of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), SOME (Phi_Opr_Stack.String_Param vname), _) :: stack')
+                => (stack', vname, pos)
+             | _ => err_assignment pos
+     in (stack', Generic_Variable_Access.assignment_cmd [(NONE, (Binding.make (vname, pos), idx_input))] (ctxt, sequent))
+    end
+  ) 1
+ 
+
+val dot_triangle_opr =
+  gen_dot_triangle_opr (fn (_, stack', idx_input, ctxt'3, sequent'3) =>
+    let val (idx_input', ctxt'4, sequent'4, stack'') =
+          case stack'
+            of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), SOME (Phi_Opr_Stack.String_Param vname), _) :: stack'')
+                => let val ctxt'3' = Generic_Element_Access.enable_report_unprocessed_element_index ctxt'3
+                       val (ctxt'4, sequent'4) = Generic_Variable_Access.get_value vname idx_input  (ctxt'3', sequent'3)
+                                              |> Phi_Processor.process_all_antecedents NONE
+                       val idx_input' = Generic_Element_Access.get_unprocessed_element_index ctxt'4
+                    in (idx_input', ctxt'4, sequent'4, stack'')
+                   end
+             | _ => (idx_input, ctxt'3, sequent'3, stack')
+  
+        val rules = Named_Theorems.get ctxt'4 \<^named_theorems>\<open>\<tribullet>_\<phi>app\<close>
+        fun process_index idx s =
+          if is_empty (Thm.term_of idx)
+          then s |> apfst Generic_Element_Access.stop_reporting_unprocessed_element_index
+          else let val rules' = map (Drule.infer_instantiate ctxt'4 [(("input_index", 0), idx)]) rules
+                   val s' = s
+                          |> apfst Generic_Element_Access.enable_report_unprocessed_element_index
+                          |> Phi_Apply.apply rules'
+                          |> Phi_Processor.process_all_antecedents NONE
+                in process_index (Generic_Element_Access.get_unprocessed_element_index (fst s)) s'
+               end
+     in (stack'', process_index idx_input' (ctxt'4, sequent'4))
+    end
+  ) 0
+
 
 end

@@ -7,8 +7,10 @@ val get_value : string -> cterm -> context_state -> context_state
 
 (** Assignment **)
 
+type element_index_input = cterm
 type assigner = string (*identifier (kind) of the assigner*)
-              * (binding (*name of the value or variable*)
+              * ( binding (*name of the value or variable*)
+                * element_index_input
                -> context_state
                -> ( thm (*rule*)
                   * Proof.context
@@ -16,10 +18,10 @@ type assigner = string (*identifier (kind) of the assigner*)
                   * (thm -> Proof.context -> Proof.context) list)
                       (*declare the condition, coinciding with the order of the conditions*))
 
-val assignment : (binding * assigner) list
-              -> Proof.context * thm -> Proof.context * thm
-val assignment_cmd : (string (*keyword*) option * binding (*of generic variables*)) list
-      -> Proof.context * thm -> Proof.context * thm
+val assignment : ((binding * element_index_input) * assigner) list
+              -> context_state -> context_state
+val assignment_cmd : (string (*keyword*) option * (binding (*of generic variables*) * element_index_input)) list
+              -> context_state -> context_state
 
 val register_assigner : string (*keyword that the assigner binds*)
                       * string (*type name of the generic variable*)
@@ -38,11 +40,12 @@ open Generic_Variable_Access
 fun get_value name element_index (ctxt,sequent) =
   let val vname = translate_value1 ctxt (Free (name, dummyT))
       val idx = Int.max (Thm.maxidx_of_cterm vname, Thm.maxidx_of_cterm element_index) + 1
-      val Ty = lookup_bindings ctxt name
+      val Ty = TVar(("'x",idx), \<^sort>\<open>type\<close>)
+      (*val Ty = lookup_bindings ctxt name
             |> Option.mapPartial (fn (_, get) => get (ctxt, Phi_Envir.the_construction ctxt))
             |> Option.map (fastype_of o Thm.term_of o fst)
             |> (fn SOME T => T
-                 | NONE => TVar (("'x", idx), \<^sort>\<open>type\<close>))
+                 | NONE => TVar (("'x", idx), \<^sort>\<open>type\<close>))*)
       val target =
             Thm.apply (
             Thm.apply (
@@ -55,8 +58,10 @@ fun get_value name element_index (ctxt,sequent) =
 
 (*** Assignment ***)
 
+type element_index_input = cterm
 type assigner = string (*identifier of the assigner*)
-             * (binding (*name of the value or variable*)
+             * ( binding (*name of the value or variable*)
+               * element_index_input
                -> context_state
                -> ( thm (*rule*)
                   * Proof.context
@@ -79,7 +84,7 @@ fun register_assigner (keyword, typ_const, descr, assigner) =
   Assigner.map (fn (A,K) => (Symtab.update_new (keyword, (descr, assigner)) A,
                              Symtab.update_new (typ_const, keyword) K))
 
-fun parse_assigner ctxt =
+fun parse_assigner ctxt assgm =
   let
     val (assigner, type_map) = Assigner.get (Proof_Context.theory_of ctxt)
     fun not_found name = let open Pretty in
@@ -101,15 +106,15 @@ fun parse_assigner ctxt =
                       | NONE => not_found name)
                | _ => not_found name)
          | _ => not_found name
-    fun parse (NONE, name) = parse (SOME (find name), name)
+    fun parse (NONE, name) = parse (SOME (find (fst name)), name)
       | parse (SOME key, name) =
           case Symtab.lookup assigner key
             of SOME (_, A) => (name, A)
              | _ => let open Pretty
                      in error (string_of (block [
-                          keyword1 key, str " is not associated with any assignment rule."
+                          keyword1 key, str " is not a kind of assignment target."
                      ])) end
-  in map parse
+  in map parse assgm
   end
 
 
@@ -121,12 +126,12 @@ fun strip_imp_prems_rev ret ct =
 
 
 
-fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) =
+fun default_assignment (name_assigner:((binding * element_index_input) * assigner) list) (ctxt,sequent) =
   let
   (*make the assignment procedure*)
   val (rule', ctxt', vterms', decl') = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
-        |> fold (fn (name,(_,f)) => fn (proc, ctxt, vterms, Asm) =>
-              let val (rule, ctxt', vterms', Asm') = f name (ctxt,sequent)
+        |> fold (fn (name_idx,(_,f)) => fn (proc, ctxt, vterms, Asm) =>
+              let val (rule, ctxt', vterms', Asm') = f name_idx  (ctxt,sequent)
                in (rule RS proc, ctxt', rev vterms' @ vterms, rev Asm' @ Asm) end
            ) name_assigner
   val rule = @{thm "__value_access_0__"} RS rule'
@@ -237,7 +242,7 @@ fun default_assignment (name_assigner:(binding * assigner) list) (ctxt,sequent) 
       end
   end
 
-structure Assignment_Hooks = Hooks (type arg = (binding * assigner) list
+structure Assignment_Hooks = Hooks (type arg = ((binding * element_index_input) * assigner) list
                                     type state = context_state)
 
 fun assignment assgns (ctxt,sequent)

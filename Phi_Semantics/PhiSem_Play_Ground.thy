@@ -36,19 +36,23 @@ proc rat_add:
 proc test_ptr:
   input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (tup [tup [aint], aint, aint]), \<int> \<rbrace>\<close>
   output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
-\<medium_left_bracket> 
+\<medium_left_bracket>
   val a, b \<leftarrow> (2, 0) ;
   $1 \<tribullet> $b \<tribullet> $a
 \<medium_right_bracket> .
 
+
 proc test_agg2:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-  output \<open>((a,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
+  output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
 \<medium_left_bracket>
-  $1[0,1] := \<open>2 \<Ztypecolon> \<int>\<close>
+  var v \<leftarrow> $1 ;
+  $v \<tribullet> 0 \<tribullet> 1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
+  $v \<tribullet> 0 \<tribullet> 0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
+  $v
 \<medium_right_bracket> .
 
-
+thm test_agg2_def
 
 (*
 proc

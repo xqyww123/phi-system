@@ -219,6 +219,20 @@ lemma Friendly_Help_I: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_
  )
 \<close>
 
+subsection \<open>General Reasoning Rules\<close>
+
+declare refl[\<phi>reason 1000]
+
+subsubsection \<open>pred_option\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> P x
+\<Longrightarrow> pred_option P (Some x)\<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> pred_option P None\<close>
+  by simp
 
 subsection \<open>Some very Early Reasoning\<close>
 

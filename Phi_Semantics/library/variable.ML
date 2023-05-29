@@ -64,21 +64,35 @@ fun declare_rule pos rule =
                                                      ([(pattern,NONE)], []) NONE [rule])
   end
 
+fun chk_no_path_during_creating (b,idx) =
+  if Generic_Element_Access.is_empty_input (Thm.term_of idx)
+  then ()
+  else error ("Variable " ^ Binding.name_of b ^ " has not been declared. \
+              \Thus it is infeasible to assign its element partially. " ^
+              Position.here (Binding.pos_of b))
 
-fun variable_assigner' b (ctxt,sequent) =
+fun variable_assigner' (b,idx) (ctxt,sequent) =
   let
   val vb = Binding.prefix_name varname_prefix b
   val iname = Variable.intern_fixed ctxt (Binding.name_of vb)
   val existed = is_some (find_Var' iname (ctxt,sequent))
   in if existed
-     then (Thm.instantiate (TVars.empty, Vars.make [((("var",0),\<^typ>\<open>varname\<close>),
-                                                    Thm.cterm_of ctxt (Free(iname, \<^typ>\<open>varname\<close>)))])
-                           @{thm "__set_var_rule__"},
+     then (if Generic_Element_Access.is_empty_input (Thm.term_of idx)
+           then Thm.instantiate
+                   (TVars.empty,
+                    Vars.make [((("var",0),\<^typ>\<open>varname\<close>), Thm.cterm_of ctxt (Free(iname, \<^typ>\<open>varname\<close>)))])
+                   @{thm "__set_var_rule_0__\<phi>app"}
+           else Thm.instantiate
+                   (TVars.empty,
+                    Vars.make [((("var",0),\<^typ>\<open>varname\<close>), Thm.cterm_of ctxt (Free(iname, \<^typ>\<open>varname\<close>))),
+                               ((("input_index",0), \<^typ>\<open>element_index_input\<close>), idx)])
+                   @{thm "__set_var_rule__\<phi>app"},
            ctxt, [], [])
      else let
+          val _ = chk_no_path_during_creating (b,idx)
           val rule = if Config.get ctxt variable_is_typed
-                     then @{thm "__set_new_var_rule__"}
-                     else @{thm "__set_new_var_noty_rule__"}
+                     then @{thm "__set_new_var_rule__\<phi>app"}
+                     else @{thm "__set_new_var_noty_rule__\<phi>app"}
           val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
           val ctxt = ctxt
                   |> Generic_Variable_Access.bind_local_vals
@@ -92,8 +106,9 @@ fun variable_assigner' b (ctxt,sequent) =
   end
 val variable_assigner : Generic_Variable_Access.assigner = ("var", variable_assigner')
 
-fun variable_declarer' TY b (ctxt,sequent) =
+fun variable_declarer' TY (b,idx) (ctxt,sequent) =
   let
+    val _ = chk_no_path_during_creating (b,idx)
     val vb = Binding.prefix_name varname_prefix b
     val ([vname],ctxt) = Proof_Context.add_fixes [(vb, SOME \<^typ>\<open>varname\<close>, NoSyn)] ctxt
     val ctxt = ctxt
@@ -132,7 +147,8 @@ val _ = Theory.setup (
                                                  \Please use syntax \<open>var name :: type\<close> to indicate\
                                                  \the semantic types of the variables."
                                       else Thm.cterm_of ctxt (@{const None (TY)})))
-            |> uncurry (map2 (fn vs => fn TY => map (fn V => (V, variable_declarer TY)) vs))
+            |> uncurry (map2 (fn vs => fn TY =>
+                    map (fn V => ((V, Generic_Element_Access.empty_input), variable_declarer TY)) vs))
             |> flat
       in Generic_Variable_Access.assignment assigners (ctxt,sequent) end
    )) ""

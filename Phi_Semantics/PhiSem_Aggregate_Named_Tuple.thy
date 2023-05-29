@@ -324,7 +324,7 @@ lemma [\<phi>reason 1000]:
   using V_named_tup_mult by auto
   
 setup \<open>Context.theory_map (
-  Phi_Generic_Element_Access.Agg_Constructors.add 0 (fn (kind, args, (ctxt,sequent)) =>
+  Generic_Element_Access.Agg_Constructors.add 0 (fn (kind, args, (ctxt,sequent)) =>
     if kind = "" andalso forall (fn ((SOME _, _),[_]) => true | _ => false) args
     then let val args' = map (fn (_,[rule]) => Phi_Local_Value.get_raw_val_in_rule rule) args
              val symbols = map (fn ((SOME s, _),_) => Phi_Tool_Symbol.mk_symbol s) args
