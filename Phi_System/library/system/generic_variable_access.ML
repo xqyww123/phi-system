@@ -33,11 +33,6 @@ val translate_value1 : Proof.context -> term -> cterm
 
 (** Initial Arguments **)
 
-(*performance hotsopt!*)
-val collect_and_clean_value : bool (*whether to clean the Val \<phi>-types from the sequent*)
-                           -> Proof.context -> thm (*sequent*)
-                           -> thm (*sequent*) * thm list (*specs of value*)
-
 val register_value_spec_thms : Position.T -> thm list -> Context.generic -> Context.generic
   (*so that the values can be synthesised*)
 
@@ -50,10 +45,9 @@ structure Process_of_Argument : GENERIC_DATA
 
 (* other operations about value *)
 
-(*performance hotsopt!*)
+val add_extraction_rule : string (*const name*) * (thm * thm) -> Context.generic -> Context.generic
+val extract_values : int * bool -> context_state -> thm list * context_state
 val push_values : thm list -> context_state -> context_state
-(*performance hotsopt!*)
-val extract_and_remove_leading_values : int -> context_state -> thm list * context_state
 
 val is_local_value: term -> bool
 val number_of_values : term -> int
@@ -274,24 +268,87 @@ fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ 
 val _ = Theory.setup (Context.theory_map (Syntax_Phases.term_check ~110 "\<phi>-System.GVA" (map o check_term)))
 
 
+(*** Extract Value(s) ***)
+
+structure Extraction_Rules = Generic_Data (
+  type T = (thm (*remove*) * thm (*not remove*)) Symtab.table
+  val empty = Symtab.empty
+  val merge = Symtab.merge (eq_pair Thm.eq_thm Thm.eq_thm)
+)
+
+val add_extraction_rule = Extraction_Rules.map o Symtab.update_new
+
+fun extract_values (num_limit, remove) (ctxt, sequent) =
+  if num_limit = 0 then ([], (ctxt, sequent)) else
+  let val mode = Phi_Working_Mode.mode1 ctxt
+      val _ = if #is_on_going_construction mode (Thm.prop_of sequent)
+              then ()
+              else raise THM ("Not a ready on-going construction", 0, [sequent])
+      fun gen_rule num (ctxt,thm) =
+        if num = 0 then (ctxt, @{thm implies_refl} RS thm) else
+        case Phi_Syntax.dest_implication (Thm.major_prem_of thm)
+          of (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ ,_,_)
+                => gen_rule num (ctxt, @{thm Subjection_transformation} RS thm)
+           | (Const (\<^const_name>\<open>ExSet\<close>, _) $ _ $ _ ,_,_)
+                => gen_rule num (ctxt, @{thm ExSet_transformation} RS thm)
+           | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm) ,_,_)
+                => (case head_of tm
+                      of Const (C,_) => (
+                          case Symtab.lookup (Extraction_Rules.get (Context.Proof ctxt)) C
+                            of SOME (remove_rule, no_remove_rule) =>
+                              let val rule = if remove then remove_rule else no_remove_rule
+                                  val bi_prod_rule =
+                                        case Phi_Syntax.dest_implication (Thm.concl_of rule)
+                                          of (_,Const(\<^const_name>\<open>one_class.one\<close>,_),_) =>
+                                               @{thm implies_prod_right_1}
+                                           | _ => @{thm implies_prod_bi_prod}
+                                  val m = Thm.nprems_of rule
+                               in (ctxt, rule RS (bi_prod_rule RS thm))
+                               |> Phi_Reasoner.reason (SOME m)
+                               |> (fn SOME ret => gen_rule (num - 1) ret
+                                    | NONE => error ("Fail to extract a value from the sequent. \
+                                        \A extraction rule fails: \n" ^
+                                        Thm.string_of_thm ctxt rule))
+                              end
+                              | _ => gen_rule num (ctxt, @{thm implies_right_prod} RS thm))
+                       | _ => gen_rule num (ctxt, @{thm implies_right_prod} RS thm)
+                      )
+           | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _ , _, _)
+                => gen_rule num (ctxt, @{thm implies_right_prod} RS thm)
+           | (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm, _ , _)
+                => (case head_of tm
+                      of Const (C,_) => (
+                          case Symtab.lookup (Extraction_Rules.get (Context.Proof ctxt)) C
+                            of SOME (remove_rule, no_remove_rule) =>
+                              let val rule = if remove then remove_rule else no_remove_rule
+                                  val m = Thm.nprems_of rule
+                               in (ctxt, rule RS thm)
+                               |> Phi_Reasoner.reason (SOME m)
+                               |> (fn SOME ret => ret
+                                    | NONE => error ("Fail to extract a value from the sequent. \
+                                        \A extraction rule fails: \n" ^
+                                        Thm.string_of_thm ctxt rule))
+                              end
+                              | _ => (ctxt, @{thm implies_refl} RS thm))
+                       | _ => (ctxt, @{thm implies_refl} RS thm)
+                      )
+           | _ => (ctxt, @{thm implies_refl} RS thm)
+      val initial = sequent RS #transformation_rule mode
+      val (ctxt',rule) = gen_rule num_limit (ctxt,initial)
+      val (sequent', vals) = rule
+                |> HOLogic.conj_elim ctxt
+                |> apsnd (fn th => th |> HOLogic.conj_elims ctxt |> rev
+                                      |> (fn [] => []
+                                           | (H::L) => case Thm.prop_of H
+                                                         of _ $ (Const (\<^const_name>\<open>True\<close>, _)) => L
+                                                          | _ => H::L))
+   in (vals, (ctxt', sequent'))
+  end
+  
+
 (*** Initial Process for Arguments ***)
 
 (** Predefined Processes **)
-
-fun collect_and_clean_value whether_clean ctxt sequent =
-  let
-    val mode = Phi_Working_Mode.mode1 ctxt
-    val rule = if whether_clean
-               then @{thm apply_collect_clean_value[where WHETHER_CLEAN = True]}
-               else @{thm apply_collect_clean_value[where WHETHER_CLEAN = False]}
-  in (ctxt, rule RS (sequent COMP #transformation_rule mode))
-  |> Phi_Reasoner.reason NONE
-  |> (fn SOME (_, sequent') => sequent'
-                            |> HOLogic.conj_elim ctxt
-                            |> apsnd (fn th => th |> HOLogic.conj_elims ctxt |> rev
-                                                  |> tl (*the head is always True*))
-       | NONE => Phi_Reasoner.error "Internal bug #vb7iop23")
-  end
 
 fun register_value_spec_thms pos rules =
   Phi_Reasoner.add_intro_rules (map (fn rule =>
@@ -312,12 +369,12 @@ fun register_value_spec_thms pos rules =
 
 fun gen_default_process' clean pos (ctxt,sequent) =
   let
-    val (sequent', rules) = collect_and_clean_value clean ctxt sequent
+    val (rules, (ctxt',sequent')) = extract_values (~1, clean) (ctxt,sequent)
     val args = rules |> map (fn th =>
           case Thm.prop_of th
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
-                                  $ _)
+                                  $ _)                                
                  => Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg1 |> Thm.dest_arg
              | _ => error "Internal Bug q34v6 nu89p")
     fun extract_x_T th =
@@ -329,7 +386,7 @@ fun gen_default_process' clean pos (ctxt,sequent) =
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
                                   $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ (X as Free (N,_)) $ _))
-                 => SOME (Variable.revert_fixed ctxt N,
+                 => SOME (Variable.revert_fixed ctxt' N,
                             (Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg1 |> Thm.dest_arg,
                              K (SOME (extract_x_T th))))
              | _ => NONE)
@@ -338,7 +395,7 @@ fun gen_default_process' clean pos (ctxt,sequent) =
             of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ (V as Free (N,_)))
                                   $ X')
-                 => SOME (Variable.revert_fixed ctxt N,
+                 => SOME (Variable.revert_fixed ctxt' N,
                             (Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg1 |> Thm.dest_arg,
                             K (case X' of (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)
                                   => SOME (extract_x_T th)
@@ -353,7 +410,7 @@ fun gen_default_process' clean pos (ctxt,sequent) =
                               #> Useful_Thms.add_thm th)
                   o Phi_Envir.process_useful_lemmata true ctxt) facts)
       end
-  in ctxt
+  in ctxt'
   |> open_value_context args
   |> Context.proof_map (register_value_spec_thms pos rules)
   |> bind_local_vals (binds' @ binds)
@@ -394,7 +451,7 @@ Phi_Envir.Enter_Programming_Environ.add 20 (fn level => fn (ctxt,sequent) =>
 
 
 (*** Other operations about value ***)
-
+(*
 fun extract_and_remove_leading_values num (ctxt,sequent) =
   let
     val mode = Phi_Working_Mode.mode1 ctxt
@@ -408,19 +465,13 @@ fun extract_and_remove_leading_values num (ctxt,sequent) =
                  | NONE => Phi_Reasoner.error "Internal bug #vb7iop23")
    in funpow num extract ([], (ctxt,sequent))
   end
-
+*)
 fun push_values values (ctxt,sequent) =
   let
     val mode = Phi_Working_Mode.mode1 ctxt
-    val rule = @{thm "_rule_push_a_value_"}
-    fun push value (ctxt,sequent) =
-          (ctxt, (value RS rule) RS (sequent COMP #transformation_rule mode))
-            |> Phi_Reasoner.reason NONE
-            |> (fn SOME (ctxt', sequent'') =>
-                      (case HOLogic.conj_elim ctxt' sequent''
-                         of (sequent', _) => (ctxt', sequent'))
-                 | NONE => Phi_Reasoner.error "Internal bug #vb7iop23")
-   in fold push values (ctxt,sequent)
+    val initial = sequent RS #transformation_rule mode
+    val sequent' = fold_rev (fn v => fn th => (v RS @{thm "_rule_push_a_value_"}) RS th) values initial
+   in (ctxt, fst (HOLogic.conj_elim ctxt (@{thm implies_refl} RS sequent')))
   end
 
 fun is_local_value (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true

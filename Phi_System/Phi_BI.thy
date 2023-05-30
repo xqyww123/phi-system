@@ -193,6 +193,12 @@ lemma implies_right_prod:
   "U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<a>\<n>\<d> P \<Longrightarrow> U' * R \<i>\<m>\<p>\<l>\<i>\<e>\<s> U * R \<a>\<n>\<d> P "
   unfolding Imply_def split_paired_All times_set_def by blast
 
+lemma implies_prod_bi_prod:
+  " R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> R \<a>\<n>\<d> P
+\<Longrightarrow> L' \<i>\<m>\<p>\<l>\<i>\<e>\<s> L \<a>\<n>\<d> Q
+\<Longrightarrow> L' * R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> L * R \<a>\<n>\<d> P \<and> Q "
+  unfolding Imply_def split_paired_All times_set_def by blast
+
 lemma assertion_eq_intro:
   \<open> P \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
 \<Longrightarrow> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
@@ -249,6 +255,11 @@ lemma Subjection_Zero[simp]:
   \<open>(0 \<s>\<u>\<b>\<j> P) = 0\<close>
   unfolding set_eq_iff
   by (simp add: Subjection_expn zero_set_def)
+
+lemma Subjection_transformation:
+  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P
+\<Longrightarrow> S \<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<s>\<u>\<b>\<j> Q \<a>\<n>\<d> P\<close>
+  unfolding Imply_def by (simp add: Subjection_expn; blast)
 
 (* lemma (in \<phi>empty) [simp]: "(VAL (S \<s>\<u>\<b>\<j> P)) = (VAL S \<s>\<u>\<b>\<j> P)" by (simp add: \<phi>expns set_eq_iff) blast
 lemma (in \<phi>empty) [simp]: "(OBJ (S \<s>\<u>\<b>\<j> P)) = (OBJ S \<s>\<u>\<b>\<j> P)" by (simp add: \<phi>expns set_eq_iff) *)
@@ -340,6 +351,11 @@ declare ExSet_simps(1)[\<phi>programming_safe_simps]
   \<open>(\<And>c. S c \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P)
 \<Longrightarrow> (ExSet S) \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> P\<close>
   unfolding Imply_def by (simp add: \<phi>expns, blast) *)
+
+lemma ExSet_transformation:
+  \<open>(\<And>x. S x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' x \<a>\<n>\<d> P)
+\<Longrightarrow> ExSet S \<i>\<m>\<p>\<l>\<i>\<e>\<s> ExSet S' \<a>\<n>\<d> P\<close>
+  unfolding Imply_def by (clarsimp simp add: \<phi>expns, blast)
 
 lemma ExSet_imp_I:
   \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' x \<a>\<n>\<d> P

@@ -185,16 +185,16 @@ fun close_parenthesis arg c s0 =
       val mode = Phi_Working_Mode.mode1 (fst s0)
       val (actions, arg_name :: arg_names) = Opr_Stack.get (fst s0)
       val (actions', (ctxt,sequent)) = eval_opr (mode, 0, ("<internal bug>", Position.none)) actions s0
-      val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
+      val (vals, (ctxt',sequent')) = Generic_Variable_Access.extract_values (~1, true) (ctxt,sequent)
    in close (fn acts => fn (ctxt, sequent) =>
                   c (Opr_Stack.put (acts, arg_names) ctxt, sequent))
-            [(arg_name, vals)] actions' (ctxt, sequent')
+            [(arg_name, vals)] actions' (ctxt', sequent')
   end
 
 fun open_parenthesis arg_name (ctxt,sequent) =
-  let val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
+  let val (vals,(ctxt',sequent')) = Generic_Variable_Access.extract_values (~1, true) (ctxt,sequent)
    in (Opr_Stack.map (fn (L, arg_names) =>
-          (Left_Parenthesis vals :: L, arg_name :: arg_names)) ctxt,
+          (Left_Parenthesis vals :: L, arg_name :: arg_names)) ctxt',
        sequent')
   end
 
@@ -247,8 +247,8 @@ fun comma next_arg_name s =
         | chk_actions [] = bad_syntax (",", snd next_arg_name)
       val _ = chk_actions actions
       val (actions', (ctxt,sequent)) = eval_opr (mode, 0, ("",Position.none)) actions s
-      val (sequent', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt sequent
-      val ctxt' = Opr_Stack.put (Comma (arg_name, vals) :: actions', next_arg_name :: arg_names) ctxt
+      val (vals,(ctxt'1,sequent')) = Generic_Variable_Access.extract_values (~1, true) (ctxt,sequent)
+      val ctxt' = Opr_Stack.put (Comma (arg_name, vals) :: actions', next_arg_name :: arg_names) ctxt'1
    in (ctxt', sequent')
   end
 
@@ -256,18 +256,18 @@ fun begin_apply (name, rules) (ctxt,sequent) =
   let val mode = Phi_Working_Mode.mode1 ctxt
       val (actions, arg_names) = Opr_Stack.get ctxt
       val (actions', (ctxt',sequent')) = eval_opr (mode, 900, name) actions (ctxt,sequent)
-      val (sequent'', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt' sequent'
-      val ctxt' = Opr_Stack.put (Apply (name, rules, vals) :: actions', (NONE, snd name) :: arg_names) ctxt'
-   in (ctxt', sequent'')
+      val (vals,(ctxt'',sequent'')) = Generic_Variable_Access.extract_values (~1, true) (ctxt',sequent')
+      val ctxt'3 = Opr_Stack.put (Apply (name, rules, vals) :: actions', (NONE, snd name) :: arg_names) ctxt''
+   in (ctxt'3, sequent'')
   end
 
 fun meta_apply (pos,arg_name) f (ctxt,sequent) =
   let val mode = Phi_Working_Mode.mode1 ctxt
       val (actions, arg_names) = Opr_Stack.get ctxt
       val (actions', (ctxt',sequent')) = eval_opr (mode, 900, pos) actions (ctxt,sequent)
-      val (sequent'', vals) = Generic_Variable_Access.collect_and_clean_value true ctxt' sequent'
-      val ctxt' = Opr_Stack.put (Meta_Apply (f, vals, pos) :: actions', arg_name :: arg_names) ctxt'
-   in (ctxt', sequent'')
+      val (vals,(ctxt'',sequent'')) = Generic_Variable_Access.extract_values (~1, true) (ctxt',sequent')
+      val ctxt'3 = Opr_Stack.put (Meta_Apply (f, vals, pos) :: actions', arg_name :: arg_names) ctxt''
+   in (ctxt'3, sequent'')
   end
 
 fun begin_block pos = Opr_Stack.map (fn (actions, arg_names) =>

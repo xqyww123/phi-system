@@ -151,7 +151,7 @@ fun is_empty (Const (\<^const_name>\<open>Nil\<close>, _)) = true
 
 fun gen_dot_triangle_opr F front_arity ((name, pos), _) (stack, (ctxt0,sequent0)) =
   let val (front_args, (ctxt, sequent)) =
-            Generic_Variable_Access.extract_and_remove_leading_values front_arity (ctxt0,sequent0)
+            Generic_Variable_Access.extract_values (front_arity, true) (ctxt0,sequent0)
       fun collect (ret, Phi_Opr_Stack.Meta_Opr (_, _, ("\<tribullet>", pos), _, _) :: L) = collect (pos :: ret, L)
         | collect ret_L = ret_L
       val (poss, stack') = collect ((if name = "\<tribullet>" then [pos] else []), stack)
@@ -160,7 +160,7 @@ fun gen_dot_triangle_opr F front_arity ((name, pos), _) (stack, (ctxt0,sequent0)
       val _ = if actual < length poss
               then error ("Unbalanced operator stack " ^ Position.here pos) else ()
       val (args', (ctxt',sequent')) =
-              Generic_Variable_Access.extract_and_remove_leading_values (length poss) (ctxt,sequent)
+              Generic_Variable_Access.extract_values (length poss, true) (ctxt,sequent)
       val args = poss ~~ args'
 
       val (idx_input'0, ctxt'2) = mk_element_index_input_internal args ctxt'
@@ -207,7 +207,7 @@ val dot_triangle_opr =
                           |> apfst Generic_Element_Access.enable_report_unprocessed_element_index
                           |> Phi_Apply.apply rules'
                           |> Phi_Processor.process_all_antecedents NONE
-                in process_index (Generic_Element_Access.get_unprocessed_element_index (fst s)) s'
+                in process_index (Generic_Element_Access.get_unprocessed_element_index (fst s')) s'
                end
      in (stack'', process_index idx_input' (ctxt'4, sequent'4))
     end

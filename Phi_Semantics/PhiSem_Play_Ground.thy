@@ -20,7 +20,6 @@ lemma [\<phi>reason]:
   \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<rat>\<close> \<medium_right_bracket> .
 
 declare One_nat_def [simp del]
-declare [[\<phi>trace_reasoning = 0]]
 
 proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
@@ -32,7 +31,7 @@ proc rat_add:
   val denominator \<leftarrow> $q1[1] * $q2[1] ;
   \<lbrace> $numerator, $denominator \<rbrace>
 \<medium_right_bracket> . 
-
+ 
 proc test_ptr:
   input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (tup [tup [aint], aint, aint]), \<int> \<rbrace>\<close>
   output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
@@ -72,7 +71,7 @@ proc
   output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
   is [routine]
   \<medium_left_bracket>
-    if ( \<open>0 < $x\<close> ) \<medium_left_bracket> \<open>$x - 1\<close> \<medium_right_bracket> \<medium_left_bracket> \<open>0\<close> \<medium_right_bracket>
+    if ( 0 < $x ) \<medium_left_bracket> $x - 1 \<medium_right_bracket> \<medium_left_bracket> 0 \<medium_right_bracket>
     (* the cartouche like \<open>0 < $x\<close> invokes a synthesis proce
 ss \<leftarrow>
        to make a value satisfying that specification *)

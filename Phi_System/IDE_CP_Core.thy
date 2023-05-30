@@ -1673,8 +1673,30 @@ lemma "__value_access_0__":
 \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> Void \<brangle> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   by fastforce
 
+lemma implies_prod_right_1:
+  \<open> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<a>\<n>\<d> P
+\<Longrightarrow> L' \<i>\<m>\<p>\<l>\<i>\<e>\<s> L \<a>\<n>\<d> Q
+\<Longrightarrow> L' * R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> L \<a>\<n>\<d> P \<and> Q \<close>
+  for L :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Imply_def split_paired_All times_set_def by fastforce
+
 ML_file \<open>library/system/generic_variable_access.ML\<close>
 
+lemma value_extraction_rule_no_remove:
+  \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)\<close>
+  unfolding Imply_def by (simp add: Val_expn Subjection_expn)
+
+lemma value_extraction_rule_remove:
+  \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Void \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)\<close>
+  unfolding Imply_def by (simp add: Val_expn Subjection_expn)
+
+setup \<open>Context.theory_map (
+  Generic_Variable_Access.add_extraction_rule
+    (\<^const_name>\<open>Val\<close>, (@{thm value_extraction_rule_remove}, @{thm value_extraction_rule_no_remove}))
+)\<close>
+
+hide_fact value_extraction_rule_no_remove value_extraction_rule_remove
+          implies_prod_right_1
 
 (*
 lemma [\<phi>reason 1000]:
@@ -1710,8 +1732,7 @@ ML_file \<open>library/system/modifier.ML\<close>
 ML_file \<open>library/system/toplevel.ML\<close>
 
 
-hide_fact "__value_access_0__" "_rule_extract_and_remove_the_first_value_"
-  "_rule_push_a_value_" "apply_collect_clean_value"
+hide_fact "__value_access_0__" "_rule_push_a_value_"
 
 subsection \<open>Isar Commands \& Attributes\<close>
 

@@ -608,7 +608,7 @@ val statement_clean_values = Attrib.setup_config_bool \<^binding>\<open>\<phi>st
 fun clean_values (ctxt,sequent) =
       if can Phi_Syntax.dest_CurrentConstruction (Thm.prop_of sequent)
          andalso Config.get ctxt statement_clean_values
-      then (ctxt, Generic_Variable_Access.collect_and_clean_value true ctxt sequent |> fst)
+      then snd (Generic_Variable_Access.extract_values (~1,true) (ctxt, sequent))
       else (ctxt, sequent)
 
 fun statement_line_cmd auto_lev =

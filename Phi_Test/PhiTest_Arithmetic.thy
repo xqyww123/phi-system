@@ -45,7 +45,8 @@ declare [[\<phi>trace_reasoning = 0]]
 proc test_prime':
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close>
-  is [routine]
+  is [routine] (*If you don't add this attribute telling the program you are building is a routine,
+                 then the program is just a program fragment and you cannot use \<open>return\<close> *)
 \<medium_left_bracket>
   if \<open>$x \<le> 1\<close> \<medium_left_bracket>
     return (False)

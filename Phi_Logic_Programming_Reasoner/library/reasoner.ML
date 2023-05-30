@@ -491,7 +491,8 @@ fun num_of_protected_prems  _  NONE = 0
 
 fun reason (SOME 0) S = SOME S
   | reason N (ctxt,sequent) =
-      gen_reason' ctxt (num_of_protected_prems sequent N)
+      if Thm.nprems_of sequent = 0 then SOME (ctxt, sequent)
+      else gen_reason' ctxt (num_of_protected_prems sequent N)
                   [[ (Seq.single (enter_reasoning_envir ctxt, sequent))]]
 
 fun reason1 G N stat = case reason N stat of SOME x => x | NONE => error (G ())

@@ -602,21 +602,25 @@ text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> remove
 
 subsection \<open>Value Operations\<close>
 
+
 subsubsection \<open>Operations for a single Value\<close>
 
+(*
 lemma "_rule_extract_and_remove_the_first_value_"[no_atp]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<a>\<n>\<d> P @action ToSA' False
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+*)
 
 lemma "_rule_push_a_value_"[no_atp]:
   \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X * (x \<Ztypecolon> \<v>\<a>\<l>[v] T) \<close>
-  for X :: \<open>'a::sep_magma_1 set\<close>
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B * (x \<Ztypecolon> \<v>\<a>\<l>[v] T) \<close>
+  for A :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
 
-
+(*
 subsubsection \<open>Collects all Values in an Assertion / from the State Sequent\<close>
 
 consts collect_clean_value :: \<open>bool \<Rightarrow> action\<close>
@@ -655,5 +659,5 @@ lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m
 lemma [\<phi>reason 1000 for \<open>?S \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value ?clean\<close>]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> True @action collect_clean_value clean\<close>
   unfolding Action_Tag_def using implies_refl .
-
+*)
 end
