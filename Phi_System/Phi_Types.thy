@@ -78,8 +78,6 @@ lemma \<phi>Fun_expn[\<phi>expns]:
   \<open>v \<in> (x \<Ztypecolon> \<phi>Fun f) \<longleftrightarrow> v = f x \<close>
   unfolding \<phi>Fun_def \<phi>Type_def by simp
 
-declare [[\<phi>trace_reasoning = 2]]
-
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x 
 \<Longrightarrow> v \<Ztypecolon> Identity \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>Fun f\<close> 
@@ -169,8 +167,6 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<Zcomp> U \<a>\<n>\<d> P\<close>
   \<medium_left_bracket> premises Y[unfolded Imply_def Identity_expn, simplified, useful]
     construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket> .
-
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma [\<phi>reason 1200]:
   \<open> is_functional (x \<Ztypecolon> U)
@@ -692,8 +688,6 @@ lemma [\<phi>inhabitance_rule, elim!]: (*TODO: reason this automatically!*)
 
 interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k = k'\<close>
   by (standard, unfold \<phi>MapAt_def, \<phi>reason)
-
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma \<phi>MapAt_separation_functor[\<phi>reason add]:
   \<open>Separation_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k) T U\<close>

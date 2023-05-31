@@ -62,7 +62,7 @@ definition \<r>int_to_suc_nat :: \<open>int \<Rightarrow> nat \<Rightarrow> bool
   where [simp]: \<open>\<r>int_to_suc_nat z n \<longleftrightarrow> z = of_nat n\<close>
 
 \<phi>reasoner_ML \<r>nat_to_suc_nat 1000 (\<open>\<r>nat_to_suc_nat _ _\<close> | \<open>\<r>int_to_suc_nat _ _\<close>) =
-\<open>fn (ctxt,sequent) =>
+\<open>fn (ctxt,sequent0) =>
 let
  exception Not_A_Number
  fun dest_number (Const ("Groups.zero_class.zero", _)) = 0
@@ -71,6 +71,8 @@ let
   | dest_number (Const ("Num.numeral_class.numeral", _) $ t) = HOLogic.dest_numeral t
   | dest_number (Const ("Groups.uminus_class.uminus", _) $ t) = ~ (dest_number t)
   | dest_number t = raise Not_A_Number;
+ val sequent = Conv.gconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+                  Conv.arg_conv (Conv.arg1_conv (Simplifier.rewrite ctxt))) ctxt) 1 sequent0
 in
   case Thm.major_prem_of sequent
     of (_ (*Trueprop*) $ ( _ (*\<r>nat_to_suc_nat*) $ Z $ Var v))
@@ -121,6 +123,7 @@ declare [[
     overloaded_operator_in_synthesis \<open>push_bit\<close>
 ]]
 
+
 declare_\<phi>operator
   infixl 65 +
   infixl 65 -
@@ -132,28 +135,36 @@ declare_\<phi>operator
   infix  50 >
   infix  50 \<ge>
 
+(*
 definition \<open>MK_CONST x \<equiv> x\<close>
 
-lemma overloaded_synthesis_const:
-  \<open>OPTIMAL_SYNTHESIS
-   (\<p>\<r>\<o>\<c> H \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis)
-\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
-  unfolding Optimal_Synthesis_def Action_Tag_def MK_CONST_def .
+lemma synthesis_const:
+  \<open> \<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
+  unfolding Action_Tag_def MK_CONST_def .
+*)
 
-lemma make_overloaded_synthesis_rule_for_const:
+lemma synthesis_const_by_imp:
+  \<open> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> const \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal v] T \<brangle> @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal v) \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
+  unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def \<phi>literal_def Imply_def
+  by (clarsimp simp add: \<phi>expns)
+
+
+(*lemma make_synthesis_rule_for_const:
   \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R\<heavy_comma> E e)
 \<Longrightarrow> PROP Gen_Synthesis_Rule
           (Trueprop (\<forall>vs::unit \<phi>arg. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. const \<Ztypecolon> T ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
           Ant
           (X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<phi>V_none \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<a>\<n>\<d> Any1
        \<Longrightarrow> PROP Ant
-       \<Longrightarrow> \<p>\<r>\<o>\<c> F \<phi>V_none \<lbrace> X' \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
+       \<Longrightarrow> \<p>\<r>\<o>\<c> F \<phi>V_none \<lbrace> X' \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
            @action overloaded_synthesis)\<close>
-  unfolding MK_CONST_def split_paired_All_\<phi>arg_unit
+  unfolding split_paired_All_\<phi>arg_unit
   using make_overloaded_synthesis_rule[where 'a = \<open>unit \<phi>arg\<close> and X' = \<open>\<lambda>_. X'\<close>,
       unfolded split_paired_All_\<phi>arg_unit split_paired_all_\<phi>arg_unit] .
 
-lemma make_overloaded_synthesis_rule'_for_const:
+lemma make_synthesis_rule'_for_const:
   \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R'\<heavy_comma> E e)
 \<Longrightarrow> PROP Gen_Synthesis_Rule
           (Trueprop (\<forall>vs::unit \<phi>arg. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
@@ -161,27 +172,39 @@ lemma make_overloaded_synthesis_rule'_for_const:
           (X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<phi>V_none \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<a>\<n>\<d> Any1
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<p>\<r>\<o>\<c> F \<phi>V_none \<lbrace> X' \<longmapsto> \<lambda>ret. R'\<heavy_comma> R\<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
-           @action overloaded_synthesis)\<close>
+           @action synthesis)\<close>
   unfolding MK_CONST_def split_paired_All_\<phi>arg_unit
-  using make_overloaded_synthesis_rule'[where 'a = \<open>unit \<phi>arg\<close>,
+  using make_synthesis_rule'[where 'a = \<open>unit \<phi>arg\<close>,
       unfolded split_paired_All_\<phi>arg_unit split_paired_all_\<phi>arg_unit] .
 
 
 lemmas [\<phi>reason 160]
-  = overloaded_synthesis_const[where const=\<open>0\<close>]
+  = synthesis_const[where const=\<open>0\<close>]
 lemmas [\<phi>reason 160]
-  = overloaded_synthesis_const[where const=\<open>1\<close>]
+  = synthesis_const[where const=\<open>1\<close>]
 lemmas [\<phi>reason 160]
-  = overloaded_synthesis_const[where const=\<open>numeral x\<close> for x]
+  = synthesis_const[where const=\<open>numeral x\<close> for x]
 lemmas [\<phi>reason 160]
-  = overloaded_synthesis_const[where const=\<open>- numeral x\<close> for x]
+  = synthesis_const[where const=\<open>- numeral x\<close> for x]
+*)
 
+lemmas [\<phi>reason 180]
+  = synthesis_const_by_imp[where const=\<open>0\<close>]
+lemmas [\<phi>reason 180]
+  = synthesis_const_by_imp[where const=\<open>1\<close>]
+lemmas [\<phi>reason 180]
+  = synthesis_const_by_imp[where const=\<open>numeral x\<close> for x]
+lemmas [\<phi>reason 180]
+  = synthesis_const_by_imp[where const=\<open>- numeral x\<close> for x]
+
+(*
 lemmas [\<phi>reason 2000 for \<open>PROP Gen_Synthesis_Rule (
           Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (?var_x::?'x::numeral) \<Ztypecolon> \<v>\<a>\<l>[ret] ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) _ _ \<close>]
-  = make_overloaded_synthesis_rule_for_const [where const = x for x :: \<open>'a::numeral\<close>]
+  = make_synthesis_rule_for_const [where const = x for x :: \<open>'a::numeral\<close>]
 lemmas [\<phi>reason 2010 for \<open>PROP Gen_Synthesis_Rule (
           Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. (?var_x::?'x::numeral) \<Ztypecolon> \<v>\<a>\<l>[ret] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) _ _ \<close>]
-  = make_overloaded_synthesis_rule'_for_const[where const = x for x :: \<open>'a::numeral\<close>]
+  = make_synthesis_rule'_for_const[where const = x for x :: \<open>'a::numeral\<close>]
+*)
 
 lemma [\<phi>reason 200]:
   \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> 1 \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis

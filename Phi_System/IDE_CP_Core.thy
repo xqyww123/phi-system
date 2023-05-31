@@ -526,7 +526,7 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>DoSynthesis term (Trueprop sequent) (Trueprop result) \<equiv> Trueprop (DoSynthesis_embed term sequent result)\<close>
   unfolding DoSynthesis_def DoSynthesis_embed_def atomize_imp .
 
-definition Optimal_Synthesis :: \<open>prop \<Rightarrow> prop\<close> ("OPTIMAL'_SYNTHESIS _" [3] 2)
+(*definition Optimal_Synthesis :: \<open>prop \<Rightarrow> prop\<close> ("OPTIMAL'_SYNTHESIS _" [3] 2)
   where \<open>Optimal_Synthesis P \<equiv> P\<close>
 definition End_Optimal_Synthesis where \<open>End_Optimal_Synthesis \<longleftrightarrow> True\<close>
 
@@ -550,7 +550,7 @@ lemma End_Optimal_Synthesis_I:
   ) (@{thm Do_Optimal_Synthesis} RS sequent)
   |> Seq.map (pair ctxt)
 \<close>
-
+*)
 
 subsubsection \<open>Parse the Term to be Synthesised\<close>
 
@@ -574,7 +574,7 @@ lemma [\<phi>reason 10
            \<open>Synthesis_Parse (?x::assn) ?Y\<close>
            \<open>Synthesis_Parse (?x::?'ret \<Rightarrow> assn) ?Y\<close>
 ]:
-  \<open>Synthesis_Parse x (\<lambda>ret. (x \<Ztypecolon> X ret :: assn))\<close>
+  \<open>Synthesis_Parse x (\<lambda>ret. (x \<Ztypecolon> \<v>\<a>\<l>[ret] X :: assn))\<close>
   \<comment> \<open>The fallback parser recognizes the input to be the abstract object and leaves
       the \<phi>-type unspecified to be arbitrarily anything.\<close>
   unfolding Synthesis_Parse_def ..
@@ -672,9 +672,9 @@ lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S1)) ?RET\<close>
 ]:
   " \<r>CALL Synthesis_Parse X X'
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' v \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> End_Optimal_Synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' v \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
+\<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> Simplify post_synthesis_simp X'' X'
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
 \<Longrightarrow> \<r>Success
@@ -694,8 +694,6 @@ lemma [\<phi>reason 1200
 ]:
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<s>\<h>\<i>\<f>\<t>\<s> S2\<heavy_comma> \<blangle> X' \<brangle> \<a>\<n>\<d> P
-\<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> End_Optimal_Synthesis
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Simplify post_synthesis_simp X'' X'
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -715,8 +713,6 @@ lemma [\<phi>reason 1200
 ]:
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> S2\<heavy_comma> \<blangle> X' \<brangle> \<a>\<n>\<d> P
-\<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> End_Optimal_Synthesis
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Simplify post_synthesis_simp X'' X'
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -756,8 +752,6 @@ lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (PROP ?P \<Longrightarrow> PROP ?Q) ?RET\<close>
 ]:
   " PROP Synthesis_by X (PROP P)
-\<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> End_Optimal_Synthesis
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP DoSynthesis X (PROP P \<Longrightarrow> PROP Q) (PROP Q)"
@@ -775,7 +769,9 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1210]:
   \<open> \<r>CALL Synthesis_Parse X' X
+\<Longrightarrow> Begin_Optimum_Solution
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> X ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
+\<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> Simplify post_synthesis_simp X'' X
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
 \<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> X'' ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' ))\<close>
@@ -783,7 +779,9 @@ lemma [\<phi>reason 1210]:
 
 lemma [\<phi>reason 1200]:
   \<open> \<r>CALL Synthesis_Parse X' X
+\<Longrightarrow> Begin_Optimum_Solution
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> X ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
+\<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> Simplify post_synthesis_simp X'' X
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
 \<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> X'' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' ))\<close>

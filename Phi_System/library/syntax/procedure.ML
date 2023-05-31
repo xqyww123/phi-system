@@ -20,16 +20,29 @@ Translate a term X containing values V (including anonymous values) into (\<lamb
 
 Values of identical name are considered identical. Any anonymous value is considered unique.
 *)
+
 val package_values :
+       string (*name of the lambda variable*)
+        -> bool (*the order for scanning and collecting the values.
+                  true for Right-to-Left (the canonical order);
+                  false for Left-to-Right*)
+        -> term list option (*values cache.
+              If you run package_values by twice in the same context (of variables) and in the same scan order,
+              this argument can be set to the return of the previous run to boost the performance.
+              Set it to None by default*)
+        -> term
+        -> term (*values*) * term (*lambda abstraction*)
+
+val package_values0 :
        string (*name of the lambda variable*)
         -> typ (*type of the return when the spec is 0*)
         -> bool (*the order for scanning and collecting the values.
                   true for Right-to-Left (the canonical order);
                   false for Left-to-Right*)
-        -> term list option (*values to be packed. If not given, will be collected from the
-              expression. If given, the order of scanning is still useful for assigning projection
-              index of anonymous values. If there is no anonymous values, the order then has no
-              influence.*)
+        -> term list option (*values cache.
+              If you run package_values by twice in the same context (of variables) and in the same scan order,
+              this argument can be set to the return of the previous run to boost the performance.
+              Set it to None by default*)
         -> term
         -> term (*values*) * term (*lambda abstraction*)
 
@@ -220,9 +233,9 @@ fun ex_fastype_of TM =
   let val T = fastype_of TM in if T = dummyT then dummyT_sem else T end
   handle TERM _ => dummyT_sem
 
-fun package_values name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
-      = (\<^Const>\<open>\<phi>arg zero_ty\<close> $ \<^Const>\<open>unreachable zero_ty\<close>, Abs (name, \<^Type>\<open>\<phi>arg zero_ty\<close>, term))
-| package_values name _ R2L Vs0 term =
+fun package_values name _ (SOME []) term =
+      (\<^term>\<open>\<phi>V_none\<close>, Abs(name, \<^typ>\<open>unit \<phi>arg\<close>, term))
+  | package_values name R2L Vs0 term =
   let
     val (collect_vals, map_ret) = gen_collect_and_map R2L
     val Vs = case Vs0 of SOME Vs => Vs | NONE => collect_vals [] term
@@ -230,8 +243,12 @@ fun package_values name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.
                                   | L as T'::_ => mk_arg_prodT (T,T') :: L))
               (map ex_fastype_of Vs) []
     val T = if null Tys then \<^typ>\<open>unit \<phi>arg\<close> else hd Tys
-  in (mk_arg_tuple Tys Vs, Abs(name, T, #2(map_ret Tys 0 Vs (0,term))))
+  in (mk_arg_tuple Tys Vs, Abs(name, T, if null Tys then term else #2(map_ret Tys 0 Vs (0,term))))
   end
+
+fun package_values0 name zero_ty _ _ (term as Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, _))
+      = (\<^Const>\<open>\<phi>arg zero_ty\<close> $ \<^Const>\<open>unreachable zero_ty\<close>, Abs (name, \<^Type>\<open>\<phi>arg zero_ty\<close>, term))
+  | package_values0 name _ R2L Vs0 term = package_values name R2L Vs0 term
 
 
 fun translate_ret' (term as (Abs _)) = term
@@ -252,7 +269,7 @@ fun translate_ret' (term as (Abs _)) = term
       =(case translate_ret' X of Abs (N,T,B) => Abs (N, T, Const ("_constrainAbs", ty) $ B $ Y)
                               | B => Const ("_constrainAbs", ty) $ B $ Y)
   | translate_ret' term =
-      snd (package_values "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> true NONE term)
+      snd (package_values0 "\<r>\<e>\<t>" \<^typ>\<open>dummy\<close> true NONE term)
 
 
 (* fun translate_num term =

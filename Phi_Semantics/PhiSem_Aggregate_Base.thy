@@ -274,7 +274,7 @@ lemma [\<phi>reason 900]:
   \<open> is_valid_step_idx_of (AgIdx_S s) TY U
 \<Longrightarrow> parse_element_index_input_by_semantic_type U input sidx unwinded pidx reject
 \<Longrightarrow> parse_element_index_input_by_semantic_type TY
-      ((\<phi>arg.dest (\<phi>arg (\<phi>embed_semantic_symbol s)), S) # input)
+      ((\<phi>arg.dest (\<phi>literal (\<phi>embed_semantic_symbol s)), S) # input)
       (AgIdx_S s # sidx) (AgIdx_S s # unwinded) (AgIdx_S s # pidx) reject \<close>
   unfolding parse_element_index_input_by_semantic_type_def is_valid_step_idx_of_def
   by simp
@@ -289,7 +289,21 @@ lemma [\<phi>reason 850]:
       ((\<phi>arg.dest v, S) # input) (AgIdx_VN v # sidx) (AgIdx_N n # unwinded) (AgIdx_N n' # pidx) reject \<close>
   unfolding parse_element_index_input_by_semantic_type_def Action_Tag_def
             get_logical_nat_from_semantic_int_def AgIdx_VN_def is_valid_step_idx_of_def
+            \<r>nat_to_suc_nat_def
   by (cases v; simp; metis option.sel)
+
+lemma [\<phi>reason 880]:
+  \<open> \<phi>arg.dest (\<phi>literal v) \<in> S @action parse_element_index_input
+\<Longrightarrow> get_logical_nat_from_semantic_int {v} n'
+\<Longrightarrow> \<r>nat_to_suc_nat n' n
+\<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) TY U
+\<Longrightarrow> parse_element_index_input_by_semantic_type U input sidx unwinded pidx reject
+\<Longrightarrow> parse_element_index_input_by_semantic_type TY
+      ((\<phi>arg.dest (\<phi>literal v), S) # input) (AgIdx_N n' # sidx) (AgIdx_N n # unwinded) (AgIdx_N n' # pidx) reject \<close>
+  unfolding parse_element_index_input_by_semantic_type_def Action_Tag_def
+            get_logical_nat_from_semantic_int_def AgIdx_VN_def is_valid_step_idx_of_def
+            \<r>nat_to_suc_nat_def
+  by (simp; metis option.sel)
 
 subsection \<open>Evaluate Index\<close>
 
@@ -510,8 +524,11 @@ let open Phi_Opr_Stack
       | chk_val (Opr (pr,_,_,_) :: L) =
           if pr > 900 then chk_val L else Generic_Element_Access.err_assignment pos
       | chk_val _ = Generic_Element_Access.err_assignment pos
-    val _ = chk_val (lookup_current_opstack (fst s))
- in push_meta_operator ((911,20,SOME 1), ("\<leftarrow>", pos), NONE, Generic_Element_Access.dot_triangle_assignment) s
+    val oprs = lookup_current_opstack (fst s)
+    val _ = chk_val oprs
+    val prio = case oprs of (Meta_Opr (_,_,("$",_),_,_) :: _) => 922
+                          | _ => 911
+ in push_meta_operator ((prio,20,SOME 1), ("\<leftarrow>", pos), NONE, Generic_Element_Access.dot_triangle_assignment) s
 end
 )) \<close>
 

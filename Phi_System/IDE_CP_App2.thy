@@ -8,7 +8,10 @@ subsection \<open>Reasoning Rules\<close>
 
 paragraph \<open>Implication\<close>
 
-lemma Val_transformation [\<phi>reason]:
+lemma Val_transformation [
+    \<phi>reason add for \<open>_ \<Ztypecolon> Val _ _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _\<close>
+                    \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Val _ _ \<a>\<n>\<d> _\<close>
+]:
   \<open> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P
 \<Longrightarrow> y \<Ztypecolon> Val v U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> Val v T \<a>\<n>\<d> P\<close>
   unfolding Imply_def by (simp add: \<phi>expns)

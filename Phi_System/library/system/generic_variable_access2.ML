@@ -139,28 +139,37 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
   val decl = rev decl'
 
   (*apply the assignment procedure*)
-  val (ctxt, proc) = Phi_Apply.apply [rule] (ctxt',sequent)
-        |> apsnd (fn th =>
-            (*find where is the procedural parameter, and permute it to the end*)
-            let
-              fun is_body (Abs (_,_,X)) = is_body X
-                | is_body (\<^const>\<open>Trueprop\<close> $ X) = is_body X
-                | is_body (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_body X
-                | is_body (\<^const>\<open>Pure.imp\<close> $ _ $ X) = is_body X
-                | is_body (X $ _) = is_body X
-                | is_body (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _)) = true
-                | is_body _ = false
-              val delt = 1 + find_index is_body (Thm.prems_of th)
-              val _ = if delt = 0 then error "Internal Bug: Some assignment rule is wrong!" else ()
-            in Thm.permute_prems 0 delt th end)
+  val (ctxt'2, proc'2) = Phi_Apply.apply [rule] (ctxt',sequent)
+  fun is_prem_of P (Abs (_,_,X)) = is_prem_of P X
+    | is_prem_of P (\<^const>\<open>Trueprop\<close> $ X) = is_prem_of P X
+    | is_prem_of P (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_prem_of P X
+    | is_prem_of P (\<^const>\<open>Pure.imp\<close> $ _ $ X) = is_prem_of P X
+    | is_prem_of P X = P X
+  val prems = Thm.prems_of proc'2
+  val i_body = find_index (is_prem_of (fn (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _) => true
+                                        | _ => false)) prems
+  val i_oblg = find_index (is_prem_of (fn (Const (\<^const_name>\<open>Premise\<close>, _) $ Const (\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _ ) => true
+                                        | _ => false)) prems
+  val _ = if i_body = ~1 orelse i_oblg = ~1
+          then error "Internal Bug: Some assignment rule is wrong!" else ()
+  val proc'3 = proc'2
+            |> Thm.permute_prems 0 i_oblg
+            |> Thm.permute_prems 1 (if i_body < i_oblg then i_body else i_body - 1)
+            |> Thm.permute_prems 0 2
+
+
+  val (ctxt, proc) = (ctxt'2, proc'3)
         |> Phi_Reasoner.reason1 (fn _ =>
             "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
-           ) (SOME ~1)
+           ) (SOME (Thm.nprems_of proc'3 - 2))
+        |> Phi_Reasoners.safer_obligation_solver' (fn _ =>
+            error "Fail to solve proof obligations in the assignment automatically. \
+                  \It is a limitation for now that it cannot be proven manually. \
+                  \We are improving this soon.")
         |> apsnd (fn th => th RS @{thm conjunct1})
 
   in if null vterms andalso null decl'
      then (ctxt, @{thm "\<phi>__Return_rule__"[OF view_shift_refl]} RS proc)
-              |> Phi_Sys.accept_proc
      else let
 
       val (rev_hyps, proc_cterm) = Thm.cprem_of proc 1

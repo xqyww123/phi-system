@@ -10,6 +10,8 @@ named_theorems discharging_semantic_debt
 
 subsection \<open>Elementary Constructions for Formalizing Instructions\<close>
 
+definition \<open>\<phi>literal = \<phi>arg\<close>
+
 definition \<phi>M_assert :: \<open>bool \<Rightarrow> unit proc\<close>
   where \<open>\<phi>M_assert P = (\<lambda>s. if P then Return \<phi>V_none s else {Invalid})\<close>
 
@@ -113,8 +115,15 @@ lemma \<phi>M_caseV[intro!]:
 lemma semantic_return_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<in> (y \<Ztypecolon> T))
 \<Longrightarrow> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
   unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
+  by (clarsimp simp add: \<phi>expns)
+
+lemma semantic_literal_\<phi>app:
+  \<open> \<p>\<a>\<r>\<a>\<m> (v \<in> (y \<Ztypecolon> T))
+\<Longrightarrow> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X\<heavy_comma> y \<Ztypecolon> Val (\<phi>literal v) T \<close>
+  unfolding Premise_def Imply_def \<phi>literal_def
   by (clarsimp simp add: \<phi>expns)
 
 lemma semantic_local_value_\<phi>app:

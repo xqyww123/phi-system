@@ -47,6 +47,17 @@ and  zero_aint[simp]: \<open>Zero aint   = Some (V_aint.mk 0)\<close>
 and \<phi>Sem_aint_to_logic_int[simp]: \<open>\<phi>Sem_int_to_logic_int (V_aint.mk i) = Some i\<close>
 and \<phi>Sem_aint_to_logic_nat[simp]: \<open>\<phi>Sem_int_to_logic_nat (V_aint.mk i) = (if 0 \<le> i then Some (nat i) else None)\<close>
 
+lemma [\<phi>reason 1000]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> n
+\<Longrightarrow> get_logical_nat_from_semantic_int {V_aint.mk n} (nat n)\<close>
+  unfolding get_logical_nat_from_semantic_int_def Premise_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> get_logical_int_from_semantic_int {V_aint.mk n} n\<close>
+  unfolding get_logical_int_from_semantic_int_def Premise_def
+  by simp
+
 (*lemma Valid_Types[simp]:
   \<open>Valid_Type aint\<close>
   unfolding Inhabited_def
@@ -121,6 +132,13 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   " x \<Ztypecolon> \<nat> \<i>\<m>\<p>\<l>\<i>\<e>\<s> Int.int x \<Ztypecolon> \<int> @action to \<int> " \<medium_left_bracket> \<medium_right_bracket>.
 
+lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<nat> \<i>\<m>\<p>\<l>\<i>\<e>\<s> Int.int _ \<Ztypecolon> _ \<a>\<n>\<d> _ \<close>]:
+  " x \<Ztypecolon> \<nat> \<i>\<m>\<p>\<l>\<i>\<e>\<s> Int.int x \<Ztypecolon> \<int> " \<medium_left_bracket> \<medium_right_bracket>.
+
+lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<int> \<i>\<m>\<p>\<l>\<i>\<e>\<s> nat _ \<Ztypecolon> _ \<a>\<n>\<d> _ \<close>]:
+  " \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
+\<Longrightarrow> x \<Ztypecolon> \<int> \<i>\<m>\<p>\<l>\<i>\<e>\<s> nat x \<Ztypecolon> \<nat> " \<medium_left_bracket> \<medium_right_bracket>.
+
 lemma \<phi>ANat_elim[elim!,\<phi>inhabitance_rule]:
   "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C" .
 
@@ -140,13 +158,17 @@ lemma [\<phi>reason 1000]:
   unfolding get_logical_nat_from_semantic_int_def Ball_def
   by (clarsimp simp add: \<phi>ANat_expn)
 
+declare [[
+    overloaded_operator_in_synthesis \<open>Int.int\<close>,
+    overloaded_operator_in_synthesis \<open>nat\<close>
+ ]]
 
 section \<open>Instructions\<close>
 
 subsection \<open>Arithmetic Operations\<close>
 
-definition op_const_aint :: "int \<Rightarrow> VAL proc"
-  where "op_const_aint const = Return (\<phi>arg (V_aint.mk const))"
+(* definition op_const_aint :: "int \<Rightarrow> VAL proc"
+  where "op_const_aint const = Return (\<phi>arg (V_aint.mk const))" *)
 
 definition op_aadd :: "(VAL \<times> VAL, VAL) proc'"
   where "op_aadd =
@@ -236,16 +258,17 @@ subsubsection \<open>Constant Integer\<close>
 
 lemma op_const_aint_\<phi>app[\<phi>synthesis 300]:
   \<open> Is_Literal x
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_const_aint x \<lbrace> Void \<longmapsto> \<v>\<a>\<l> x \<Ztypecolon> \<int> \<rbrace>\<close>
-  unfolding op_const_aint_def Premise_def
-  by (rule, simp add: \<phi>expns)
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x)) \<int>\<close>
+\<medium_left_bracket>
+  semantic_literal \<open>V_aint.mk x \<in> (x \<Ztypecolon> \<int>)\<close>
+\<medium_right_bracket> .
 
 lemma op_const_anat_\<phi>app[\<phi>synthesis 300]:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> x' : of_nat x \<comment>\<open>TODO: improve this!\<close>
-\<Longrightarrow> Is_Literal x'
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_const_aint x' \<lbrace> Void \<longmapsto> \<v>\<a>\<l> x \<Ztypecolon> \<nat> \<rbrace>\<close>
-  \<medium_left_bracket> apply_rule op_const_aint[where x=x'] \<medium_right_bracket>.
-
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] x' : of_nat x
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat>\<close>
+\<medium_left_bracket>
+  semantic_literal \<open>V_aint.mk x' \<in> (x \<Ztypecolon> \<nat>)\<close>
+\<medium_right_bracket> .
 
 lemma [\<phi>reason 1210
     for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
@@ -288,8 +311,6 @@ subsubsection \<open>Integer Arithmetic\<close>
 
 paragraph \<open>Addition\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 lemma op_add_aint_\<phi>app
   [\<phi>overload +,
    \<phi>synthesis for _ (100)
@@ -298,7 +319,7 @@ lemma op_add_aint_\<phi>app
   unfolding op_aadd_def Premise_def
   by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
       simp add: \<phi>expns, rule, simp add: \<phi>expns)
-   
+
 lemma op_add_anat_\<phi>app
   [\<phi>overload +,
    \<phi>synthesis for _ (100)

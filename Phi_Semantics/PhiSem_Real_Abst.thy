@@ -79,8 +79,10 @@ section \<open>Instructions\<close>
 
 subsection \<open>Arithmetic Operations\<close>
 
+(*
 definition op_const_areal :: "real \<Rightarrow> VAL proc"
   where "op_const_areal const = Return (\<phi>arg (V_areal.mk const))"
+*)
 
 definition op_add_ar :: "(VAL \<times> VAL, VAL) proc'"
   where "op_add_ar =
@@ -142,10 +144,10 @@ subsubsection \<open>Constant\<close>
 
 lemma op_const_areal_\<phi>app[\<phi>synthesis 300]:
   \<open> Is_Literal x
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_const_areal x \<lbrace> Void \<longmapsto> \<v>\<a>\<l> x \<Ztypecolon> \<real> \<rbrace>\<close>
-  unfolding op_const_areal_def Premise_def
-  by (rule, simp add: \<phi>expns)
-
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real>\<close>
+\<medium_left_bracket>
+  semantic_literal \<open>V_areal.mk x \<in> (x \<Ztypecolon> \<real>)\<close>
+\<medium_right_bracket> .
 
 lemma [\<phi>reason 1210
     for \<open>Synthesis_Parse (numeral ?n::real) (?X :: ?'ret \<Rightarrow> assn)\<close>
@@ -161,7 +163,7 @@ lemma [\<phi>reason 1210
 subsubsection \<open>Integer Arithmetic\<close>
 
 paragraph \<open>Addition\<close>
-
+ 
 lemma op_add_areal_\<phi>app
   [\<phi>overload +,
    \<phi>synthesis for _ (100)

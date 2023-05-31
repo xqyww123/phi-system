@@ -35,6 +35,7 @@ definition op_Za_to_Ra :: \<open>(VAL, VAL) proc'\<close>
     \<phi>M_getV aint V_aint.dest rv (\<lambda>v.
     Return (\<phi>arg (V_areal.mk (real_of_int v))))\<close>
 
+
 declare [[
     overloaded_operator_in_synthesis \<open>real_of_int\<close>,
     overloaded_operator_in_synthesis \<open>real_of_nat\<close>

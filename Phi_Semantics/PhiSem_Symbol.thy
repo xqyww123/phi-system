@@ -1,5 +1,5 @@
 theory PhiSem_Symbol
-  imports Phi_System.PhiSem_Formalization_Tools2
+  imports PhiSem_Base
 begin
 
 text \<open>Semantic symbol type is a literal string which cannot be modified runtime and has fixed range
@@ -31,12 +31,14 @@ text \<open>There is no semantic instruction to make a symbol, because they are 
   known during compilation time.\<close>
 
 lemma "_intro_symbol_\<phi>app":
-  \<open>Void \<i>\<m>\<p>\<l>\<i>\<e>\<s> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>arg (\<phi>embed_semantic_symbol s)] Symbol\<close>
-  unfolding Imply_def by (clarsimp simp add: Symbol_expn Val_expn)
+  \<open>Void \<i>\<m>\<p>\<l>\<i>\<e>\<s> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
+  unfolding Imply_def \<phi>literal_def
+  by (clarsimp simp add: Symbol_expn Val_expn)
 
 lemma "_intro_symbol_":
-  \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S \<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>arg (\<phi>embed_semantic_symbol s)] Symbol\<close>
-  unfolding Imply_def by (clarsimp simp add: Symbol_expn Val_expn)
+  \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S \<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
+  unfolding Imply_def \<phi>literal_def
+  by (clarsimp simp add: Symbol_expn Val_expn)
 
 
 \<phi>processor literal_symbol 8500 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>) \<open>

@@ -161,7 +161,7 @@ fun closure ctxt substT f =
     fun trim ((i as \<^term>\<open>\<phi>V_none\<close>), (x as Abs (_, \<^typ>\<open>unit \<phi>arg\<close>, X)))
           = if Term.is_open X then ([i], x) else ([], X)
       | trim (i,x) = ([i],x)
-    val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" dummyT false NONE f |> trim
+    val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" false NONE f |> trim
     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
                              | _ => I) f'' []
     fun abst i (Var v) =

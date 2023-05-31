@@ -9,7 +9,7 @@ val quantify_args_of_proc_term : bool (*whether to record the names in the quant
 val quantify_args_of_proc_term_meta : bool (*whether to record the names in the quantification*)
                          -> term -> term
 
-(* \<p>\<r>\<o>\<c> f (\<phi>V_pair ?a ?b) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[?b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[?a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
+(* \<p>\<r>\<o>\<c> f ?a ?b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[?b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[?a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 --------------------------------------------------------------------------------------
    \<forall>pack. \<p>\<r>\<o>\<c> f pack \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd pack] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst pack] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE
 *)
@@ -27,19 +27,37 @@ fun quantify_args_of_proc_term' record_name proc =
         | is_var _ = false
       fun is_argT' (Type ("dummy", _)) = true
         | is_argT' T = is_argT T
+      fun is_args Vs =
+          is_argT' (fastype_of Vs) andalso
+          (case try dest_arg_tuple Vs of SOME vs =>
+                  forall (fn Free _ => true | Var _ => true | _ => false) vs
+              | _ => false)
+      fun is_Free_or_Const (Const _) = true
+        | is_Free_or_Const (Free _) = true
+        | is_Free_or_Const _ = false
       val Vs = if is_var f then NONE
-               else case f of _ $ Vs => if is_argT' (fastype_of Vs)
+               else case f of F $ Vs => if is_Free_or_Const (head_of F)
+                                        then if is_args Vs
                                         then SOME (dest_arg_tuple Vs)
                                         else SOME []
-                            | _      => SOME []
-      val (pack, X') = package_values "" \<^typ>\<open>unit\<close> true Vs X
+                                        else NONE
+                            | _      => NONE
+      val (pack, X') = package_values "" true Vs X
       fun parameterize_var (Var (v,T))   = Var (v, fastype_of pack --> T) $ Bound 0
-        | parameterize_var (X $ Bound i) = parameterize_var X $ Bound 0
+        | parameterize_var (X $ Bound i) = parameterize_var X $ Bound (i + 1)
       val f' = if is_var f then parameterize_var f
-               else case f of F $ Vs => if is_argT' (fastype_of Vs)
-                                        then F $ Bound 0
-                                        else f
-                            | _      => f
+               else case f of F $ Vs =>
+                              if is_Free_or_Const (head_of F)
+                              then if is_args Vs
+                              then incr_boundvars 1 F $ Bound 0
+                              else incr_boundvars 1 f
+                              else incr_boundvars 1 (
+                                      snd (package_values "" true (SOME (dest_arg_tuple pack)) f))
+                                   $ Bound 0
+                            | _      =>
+                              incr_boundvars 1 (
+                                snd (package_values "" true (SOME (dest_arg_tuple pack)) f))
+                              $ Bound 0
       val T = fastype_of pack
       val abs1 = Abs ("", T,
             (H $ f' $ (incr_boundvars 1 X' $ Bound 0) $ incr_boundvars 1 Y $ incr_boundvars 1 E))
@@ -49,7 +67,7 @@ fun quantify_args_of_proc_term' record_name proc =
              val names = dest_arg_tuple pack
                       |> map (fn Free (N,_) => N
                                | Var ((N,i),_) => if i = 0 then N else N ^ string_of_int i
-                               | _ => "")
+                               | _ => error "Internal error #2dc7cd58-8e36-4124-b760-a49e5f2abe1c")
              val T2 = Phi_Syntax.mk_namedT T names
               in (T2, Const (\<^const_name>\<open>case_named\<close>, (T --> HOLogic.boolT) --> T2 --> HOLogic.boolT)
                         $ abs1)
@@ -83,7 +101,7 @@ fun quantify_args_of_proc_term record_name (Const (\<^const_name>\<open>Trueprop
 
 
 (*
-    (\<And>a b. \<p>\<r>\<o>\<c> f (\<phi>V_pair a b) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE ) \<Longrightarrow>
+    (\<And>a b. \<p>\<r>\<o>\<c> f a b \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[b] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE ) \<Longrightarrow>
     (\<forall>a. \<p>\<r>\<o>\<c> f a \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_snd a] T\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst a] U\<heavy_comma> BB \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE )
 *)
 fun rule_of_package_arguement ctxt proc =

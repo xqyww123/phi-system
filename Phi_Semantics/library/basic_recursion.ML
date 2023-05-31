@@ -76,7 +76,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
 
     val (_,X,Y,E) = Phi_Syntax.dest_procedure proc0
     (* pack concrete arguments *)
-    val (v,X'0) = Procedure_Syntax.package_values "" \<^typ>\<open>unit\<close> true NONE X
+    val (v,X'0) = Procedure_Syntax.package_values "" true NONE X
     val v' = Thm.cterm_of ctxt v
     val sem_args  = Procedure_Syntax.dest_arg_tuple v
     val names = map (Variable.revert_fixed ctxt o Term.term_name) sem_args

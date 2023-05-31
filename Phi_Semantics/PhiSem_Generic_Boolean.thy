@@ -1,7 +1,7 @@
 chapter \<open>Generic Boolean\<close>
 
 theory PhiSem_Generic_Boolean
-  imports Phi_System.PhiSem_Formalization_Tools2
+  imports PhiSem_Base
 begin
 
 section \<open>Semantics\<close>
@@ -135,6 +135,7 @@ lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
 
 
 subsection \<open>Equal\<close>
+
 
 declare [[
     overloaded_operator_in_synthesis \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<v>\<a>\<l>[v] \<bool>\<close>,

@@ -40,8 +40,6 @@ thm test_prime_def \<comment> \<open>Semantic definition\<close>
 thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
 
 
-declare [[\<phi>trace_reasoning = 0]]
-
 proc test_prime':
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> prime x \<Ztypecolon> \<bool>\<close>

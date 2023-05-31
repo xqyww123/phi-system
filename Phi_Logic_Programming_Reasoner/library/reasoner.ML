@@ -377,7 +377,7 @@ fun get_reasoners thy tactics term =
 
 fun del_reasoners pattern filter ctxt =
   Reasoners.map (fn all_reasoners =>
-    let val to_remove = Net.match_term all_reasoners pattern
+    let val to_remove = Net.unify_term all_reasoners pattern
                      |> List.filter (fn (_,_,_,r) => filter r)
      in fold (fn (c,p,id,R) => Net.delete_term registry_eq (p, (c,p,id,R)))
              to_remove all_reasoners
@@ -657,11 +657,15 @@ fun single_RS rule (ctxt,thm) =
 fun name_of_intro_reasoner rules =
   (*Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ *) Logic.mk_conjunction_list (map Thm.prop_of rules)
 
+fun beta_eta_contract th =
+  if Term.could_beta_eta_contract (Thm.prop_of th)
+  then Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
+  else th
+
 fun intro_reasoner ctxt pos mode (priority:priority) patterns blacklist guard rules =
   let
     val rules = rules
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
-             |> Drule.zero_var_indexes_list
              |> map Thm.trim_context
     val _ = if null rules then error ("No rule is given!") else ()
     val pats = if null patterns
@@ -719,14 +723,6 @@ fun add_intro_rules rules ctxt =
               intro_reasoner ctxt pos mode priority pattern blacklist guard rule) rules) ctxt
 
 
-fun add_intro_rule pos mode priority (pattern,blacklist) guard rules ctxt =
-      add (intro_reasoner ctxt pos mode priority pattern blacklist guard rules) ctxt
-fun add_intro_rules rules ctxt =
-  if null rules then ctxt
-  else adds (map (fn (rule,pos,mode,priority,pattern,blacklist,guard) =>
-              intro_reasoner ctxt pos mode priority pattern blacklist guard rule) rules) ctxt
-
-
 fun attr_add_intro (((((pos, (mode,priority)), additional_rules), action), (pattern, blacklist)), guard) =
   Thm.declaration_attribute (fn rule =>
       let val rules = (rule::additional_rules)
@@ -734,6 +730,8 @@ fun attr_add_intro (((((pos, (mode,priority)), additional_rules), action), (patt
                         th RS (Thm.instantiate (TVars.empty,
                                                 Vars.make [((("A",0),\<^typ>\<open>action\<close>), the action)])
                                   @{thm Action_Tag_I}))
+                   |> map beta_eta_contract
+                   |> Drule.zero_var_indexes_list
        in add_intro_rule pos mode priority (pattern,blacklist) guard rules end)
 
 

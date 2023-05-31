@@ -70,6 +70,17 @@ and \<phi>Sem_machine_int_to_logic_int[simp]:
       \<open>\<phi>Sem_int_to_logic_int (V_int.mk (b,x)) = Some (if x < 2^(b - 1) then of_nat x
                                                       else - of_nat (2^b - x))\<close>
 
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_int_from_semantic_int {V_int.mk (b,x)} (if x < 2^(b - 1) then of_nat x else - of_nat (2^b - x))\<close>
+  unfolding get_logical_int_from_semantic_int_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open>get_logical_nat_from_semantic_int {V_int.mk (b,x)} x\<close>
+  unfolding get_logical_nat_from_semantic_int_def
+  by simp
+
+
 (*lemma Valid_Types[simp]:
   \<open>Valid_Type (T_int.mk n)\<close>
   unfolding Inhabited_def
@@ -408,9 +419,10 @@ lemma [\<phi>reason 1000]:
 
 section \<open>Instructions\<close>
 
+(*
 definition op_const_int :: "nat \<Rightarrow> nat \<Rightarrow> VAL proc"
   where "op_const_int bits const = Return (\<phi>arg (V_int.mk (bits,const)))"
-
+*)
 (* definition op_const_size_t :: "nat \<Rightarrow> (VAL,VAL,'RES_N,'RES) proc"
   where "op_const_size_t c = \<phi>M_assume (c < 2 ^ addrspace_bits)
                           \<ggreater> Return (\<phi>arg (V_int.mk (addrspace_bits,c)))"
@@ -544,27 +556,27 @@ subsection \<open>Arithmetic Operations\<close>
 subsubsection \<open>Constant Integer\<close>
 
 lemma op_const_word_\<phi>app[\<phi>synthesis 300]:
-  \<open> Simplify literal n (unat n')
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_const_int LENGTH('b) n \<lbrace> Void \<longmapsto> \<v>\<a>\<l> n' \<Ztypecolon> Word('b) \<rbrace> \<close>
-  unfolding op_const_int_def Premise_def Simplify_def
-  by (rule, simp add: \<phi>expns)
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n : unat n'
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> n' \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n))] Word('b)\<close>
+\<medium_left_bracket>
+  semantic_literal \<open>V_int.mk (LENGTH('b),n) \<in> (n' \<Ztypecolon> Word('b))\<close>
+\<medium_right_bracket> .
 
-lemma op_const_nat_\<phi>app[\<phi>synthesis 200]:
+lemma op_const_nat_\<phi>app[\<phi>synthesis 300]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n < 2 ^ LENGTH('b)
-\<Longrightarrow> Simplify literal n' n
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<v>\<a>\<l> n \<Ztypecolon> \<nat>('b) \<rbrace> \<close>
-  \<medium_left_bracket>
-     have [simp]: \<open>unat (word_of_nat n :: 'b word) = n\<close> using \<phi> of_nat_inverse by blast
-  ;; apply_rule op_const_word_\<phi>app[where 'b='b and n'=\<open>of_nat n\<close> and n=n']
-     certified by (simp add: \<open>n' = n\<close>)
-  \<medium_right_bracket> .
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n' : n
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n'))] \<nat>('b)\<close>
+\<medium_left_bracket>
+  semantic_literal \<open>V_int.mk (LENGTH('b),n') \<in> (n \<Ztypecolon> \<nat>('b))\<close>
+\<medium_right_bracket> .
 
-lemma op_const_natR_\<phi>app[\<phi>synthesis 120]:
-  \<open> Simplify literal n' (n mod 2 ^ LENGTH('b))
-\<Longrightarrow> \<p>\<r>\<o>\<c> op_const_int LENGTH('b::len) n' \<lbrace> Void \<longmapsto> \<v>\<a>\<l> n \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
-  \<medium_left_bracket> apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified]
-    certified by (simp add: the_\<phi>(1) unat_of_nat)
-  \<medium_right_bracket> certified by (simp add: unat_of_nat) .
+lemma op_const_natR_\<phi>app[\<phi>synthesis 300]:
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n' : n mod 2 ^ LENGTH('b)
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n'))] \<nat>\<^sup>r('b)\<close>
+\<medium_left_bracket>
+  apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified]
+  certified by (simp add: the_\<phi>(2) unat_of_nat)
+\<medium_right_bracket> certified by (simp add: unat_of_nat) .
 
 lemma [\<phi>reason 50
     for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
@@ -869,9 +881,8 @@ proc op_lshr_int
   have t1: \<open>x < 2 ^ (LENGTH('ba) - 1)\<close>
     using One_nat_def the_\<phi>(2) by presburger
   have t2: \<open>nat x < 2 ^ (LENGTH('ba) - 1)\<close>
-    using t1 by fastforce
-note [[\<phi>trace_reasoning = 2]]
-  ;; apply_rule op_lshr_nat_\<phi>app[where 'ba='ba and 'bb='bb] ($v1, $v2)
+    using t1 by fastforce ;;
+   apply_rule op_lshr_nat_\<phi>app[where 'ba='ba and 'bb='bb] ($v1, $v2)
 \<medium_right_bracket> .
 
 paragraph \<open>Left Shift\<close>

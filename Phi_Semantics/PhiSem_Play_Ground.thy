@@ -26,12 +26,14 @@ proc rat_add:
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>
   var q1 \<leftarrow> $q1 destruct\<phi> _ ; \<comment> \<open>The reasoner will not open an abstraction by default\<close>
-  var q2 \<leftarrow> $q2 destruct\<phi> _ ;
+  var q2 \<leftarrow> $q2 destruct\<phi> _ ;; 
   val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1] ;
   val denominator \<leftarrow> $q1[1] * $q2[1] ;
   \<lbrace> $numerator, $denominator \<rbrace>
 \<medium_right_bracket> . 
- 
+
+thm rat_add_def
+
 proc test_ptr:
   input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (tup [tup [aint], aint, aint]), \<int> \<rbrace>\<close>
   output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
@@ -40,12 +42,12 @@ proc test_ptr:
   $1 \<tribullet> $b \<tribullet> $a
 \<medium_right_bracket> .
 
-
+ 
 proc test_agg2:
   input \<open>((a,b), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<int>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
   output \<open>((1,2), x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> \<lbrace> \<nat>, \<int> \<rbrace>, \<int> \<rbrace>\<close>
-\<medium_left_bracket>
-  var v \<leftarrow> $1 ;
+\<medium_left_bracket> 
+  var v \<leftarrow> $1 ;;
   $v \<tribullet> 0 \<tribullet> 1 \<leftarrow> \<open>2 \<Ztypecolon> \<int>\<close> ;
   $v \<tribullet> 0 \<tribullet> 0 \<leftarrow> \<open>1 \<Ztypecolon> \<nat>\<close> ;
   $v
@@ -119,21 +121,23 @@ proc FIB2:
 
 thm FIB2_def
 
+
 proc YYY:
-  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
-  output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<int>\<close>
-  is [routine]
-  \<medium_left_bracket>  \<open>$a + $b + $c\<close> \<medium_right_bracket>.
+  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
+  output \<open>\<v>\<a>\<l> a + of_nat b + c \<Ztypecolon> \<int>\<close>
+  \<medium_left_bracket> \<open>$a + of_nat $b + $c\<close> \<medium_right_bracket>.
 
-thm YYY_def
+proc YYY2:
+  input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
+  premises \<open>0 \<le> a \<and> 0 \<le> c\<close>
+  output \<open>\<v>\<a>\<l> nat a + b + nat c \<Ztypecolon> \<nat>\<close>
+  \<medium_left_bracket> \<open> nat $a + $b + nat $c \<close> \<medium_right_bracket>.
 
-
-declare [[\<phi>trace_reasoning = 2]]
+thm YYY2_def
 
 proc XXXX:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + b * c \<Ztypecolon> \<int>\<close>
-  is [routine_basic]
   \<medium_left_bracket> $a + $b * $c \<medium_right_bracket> .
 
 proc
@@ -147,7 +151,6 @@ proc
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   premises \<open>x < 10\<close>
   output \<open>\<v>\<a>\<l> 10 \<Ztypecolon> \<nat>\<close>
-  is [routine]
 \<medium_left_bracket>
   $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
   while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)

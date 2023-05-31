@@ -15,7 +15,9 @@ structure Phi_Synthesis : PHI_SYNTHESIS = struct
 fun gen_rule ctxt proc_thm0 =
   let val proc_thm = case Thm.concl_of proc_thm0
                        of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>All\<close>, _) $ _) => proc_thm0
-                        | _ => Procedure_Syntax.package_argument ctxt proc_thm0
+                        | _ (*Trueprop*) $ (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _)
+                            => Procedure_Syntax.package_argument ctxt proc_thm0
+                        | _ => proc_thm0
       val idx = Thm.maxidx_of proc_thm + 1
       val rule = Thm.instantiate (TVars.empty,
                                   Vars.make [((("G",0),\<^typ>\<open>prop\<close>), Thm.cprop_of proc_thm),
@@ -54,7 +56,7 @@ fun pack _    f (Abs (N,TY,X)) = Abs (N,TY, f X)
       case Phi_Help.safe_fastype_of term
         of \<^Type>\<open>fun T _\<close> => Abs ("", T, f (term $ Bound 0))
          | _ => if flag
-                then snd (Procedure_Syntax.package_values "" \<^typ>\<open>unit\<close> true NONE (f term))
+                then snd (Procedure_Syntax.package_values "" true NONE (f term))
                 else f term
 
 fun encode_pattern _    No_Pattern = \<^term>\<open>TERM ()\<close>
