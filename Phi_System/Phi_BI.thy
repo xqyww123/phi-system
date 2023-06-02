@@ -116,7 +116,10 @@ definition Imply :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarro
 abbreviation SimpleImply :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool " ("(2_)/ \<i>\<m>\<p>\<l>\<i>\<e>\<s> (2_)" [13,13] 12)
   where \<open>SimpleImply T U \<equiv> Imply T U True\<close>
 
-declare [[\<phi>reason_default_pattern \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> _\<close> (10)]]
+declare [[\<phi>reason_default_pattern
+    \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> _\<close> (10)
+and \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?U \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?U \<a>\<n>\<d> _\<close> (20)
+]]
 
 text \<open>Semantics of antecedent \<^pattern_prop>\<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> ?P\<close>:
   Given the source \<^term>\<open>X\<close> and the target \<^term>\<open>Y\<close>, find a reasoning way to do the transformation,
@@ -129,6 +132,7 @@ abbreviation Remains :: \<open> 'a::{sep_disj,times} set \<Rightarrow> 'a set \<
 
 declare [[\<phi>reason_default_pattern
     \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> (20)
+and \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> (30)
 ]]
 
 text \<open>For antecedent \<^pattern_prop>\<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<a>\<n>\<d> _\<close>, the semantics is slightly different
@@ -152,9 +156,6 @@ lemma implies_refl[simp,
     \<phi>reason 900 for \<open>?A \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?B \<a>\<n>\<d> ?P\<close> \<comment> \<open>Unification can be aggressive.\<close>
 ]:
   "A \<i>\<m>\<p>\<l>\<i>\<e>\<s> A" unfolding Imply_def by fast
-
-lemma implies_refl_ty[\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> _\<close>]:
-  "\<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T" unfolding Imply_def by fast
 
 lemma simple_imply[simp]:
   \<open> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<s>\<u>\<b>\<j> P) \<longleftrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P) \<close>
@@ -206,6 +207,33 @@ lemma assertion_eq_intro:
 \<Longrightarrow> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
 \<Longrightarrow> P = Q\<close>
   unfolding Imply_def by blast
+
+
+subsubsection \<open>Equivalent Object\<close>
+
+definition \<phi>Equiv_Obj :: \<open>('c,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>\<phi>Equiv_Obj T x eq \<longleftrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T))\<close>
+
+declare [[\<phi>reason_default_pattern \<open>\<phi>Equiv_Obj ?T ?x _\<close> \<Rightarrow> \<open>\<phi>Equiv_Obj ?T ?x _\<close> (100) ]]
+
+lemma [\<phi>reason 1 for \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> _ \<a>\<n>\<d> _\<close>
+                 except \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?var_y' \<Ztypecolon> _ \<a>\<n>\<d> _\<close>]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> y  \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> \<phi>Equiv_Obj U y eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> U \<a>\<n>\<d> P \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def by clarsimp
+
+lemma [\<phi>reason 1]:
+  \<open>\<phi>Equiv_Obj T x (=)\<close>
+  unfolding \<phi>Equiv_Obj_def by simp
+
+lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> _\<close>]:
+  " \<phi>Equiv_Obj T x eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y
+\<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T"
+  unfolding \<phi>Equiv_Obj_def Imply_def by clarsimp
+
 
 subsubsection \<open>Inhabitance Reasoning - Part II\<close>
 

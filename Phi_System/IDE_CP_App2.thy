@@ -247,11 +247,11 @@ lemma \<phi>deduce_zero_value:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> (y \<Ztypecolon> U)
 \<Longrightarrow> \<phi>Zero TY U y
-\<Longrightarrow> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T
+\<Longrightarrow> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> Any
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> \<phi>Zero TY T x\<close>
   unfolding ToA_Construction_def \<phi>Zero_def image_iff Inhabited_def Imply_def
-  by (simp, blast)
+  by (clarsimp; blast)
 
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method (Trueprop (\<phi>Zero TY T x)) working_mode_\<phi>Zero
@@ -259,6 +259,16 @@ lemma [\<phi>reason 1000]:
                              (Trueprop True)
                              (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def .
+
+
+subsubsection \<open>Equiv Object\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method (\<And>y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T) M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>Equiv_Obj T x eq)) M D R F\<close>
+  unfolding \<phi>Programming_Method_def \<phi>Equiv_Obj_def Premise_def
+  by clarsimp
+
 
 
 subsubsection \<open>Equality\<close>

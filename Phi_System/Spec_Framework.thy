@@ -375,9 +375,12 @@ lemma view_shift_refl[\<phi>reason 2000 for \<open>?A \<s>\<h>\<i>\<f>\<t>\<s> ?
   "A \<s>\<h>\<i>\<f>\<t>\<s> A"
   by (blast intro: view_shift_by_implication implies_refl)
 
-lemma view_shift_refl_ty[\<phi>reason 30 for \<open>?x \<Ztypecolon> ?T \<s>\<h>\<i>\<f>\<t>\<s> ?y \<Ztypecolon> ?T \<a>\<n>\<d> ?P\<close>]:
-  "\<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y \<Longrightarrow> x \<Ztypecolon> T \<s>\<h>\<i>\<f>\<t>\<s> y \<Ztypecolon> T"
-  by (blast intro: view_shift_by_implication implies_refl_ty)
+lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<s>\<h>\<i>\<f>\<t>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> ?P\<close>]:
+  " \<phi>Equiv_Obj T x eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y
+\<Longrightarrow> x \<Ztypecolon> T \<s>\<h>\<i>\<f>\<t>\<s> y \<Ztypecolon> T"
+  unfolding \<phi>Equiv_Obj_def
+  by (clarsimp, insert view_shift_by_implication, presburger)
 
 lemma view_shift_union[\<phi>reason 800]:
   \<open> A \<s>\<h>\<i>\<f>\<t>\<s> X \<a>\<n>\<d> P
