@@ -35,6 +35,7 @@ locale Union_Functor =
     and Fb :: \<open>('e,'d) \<phi> \<Rightarrow> ('c, 'b) \<phi>\<close>
   assumes union_functor[simp]: \<open>Fa (ExTyp T) = ExTyp (\<lambda>c. Fb (T c))\<close>
 
+
 subsubsection \<open>Separation\<close>
 
 definition \<open>Separation_Homo T \<longleftrightarrow> (\<forall>x y. (x \<Ztypecolon> T) * (y \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x * y \<Ztypecolon> T \<a>\<n>\<d> x ## y )\<close>
@@ -44,6 +45,7 @@ definition \<open>Separation_Functor Ft Fu F3 T U \<longleftrightarrow> Ft(T) \<
 
 definition Scala_Semimodule_Functor :: \<open>('s \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 's::monoid_mult set \<Rightarrow> bool\<close>
   where \<open>Scala_Semimodule_Functor F T D \<longleftrightarrow> (\<forall>s \<in> D. \<forall>t \<in> D. F s (F t T) = F (t * s) T)\<close>
+
 
 subsection \<open>Configurations\<close>
 
