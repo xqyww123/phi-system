@@ -156,7 +156,9 @@ lemma implies_refl[simp,
 lemma implies_refl_ty[\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> _\<close>]:
   "\<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T" unfolding Imply_def by fast
 
-
+lemma simple_imply[simp]:
+  \<open> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<s>\<u>\<b>\<j> P) \<longleftrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P) \<close>
+  unfolding Imply_def by (simp add: Subjection_expn)
 
 lemma implies_union:
   \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P
@@ -301,11 +303,72 @@ lemma ExSet_inhabited[\<phi>inhabitance_rule, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 syntax
-  "_SetcomprNu" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<s>\<u>\<b>\<j>/ _./ _" [14,0,15] 14)
+  "_SetcomprNu" :: "'a \<Rightarrow> pttrns \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<s>\<u>\<b>\<j>/ _./ _" [14,0,15] 14)
 
-translations
-  " X \<s>\<u>\<b>\<j> idts. P " \<rightleftharpoons> "\<exists>* idts. X \<s>\<u>\<b>\<j> P"
-  " X \<s>\<u>\<b>\<j> idts. CONST True " \<rightleftharpoons> "\<exists>* idts. X"
+parse_translation \<open>[
+  (\<^syntax_const>\<open>_SetcomprNu\<close>, fn ctxt => fn [X,idts,P] =>
+  let fun subst l Bs (Free v) =
+            let val i = find_index (fn v' => v = v') Bs
+             in if i = ~1 then Free v else Bound (i+l)
+            end
+        | subst l Bs (A $ B) = subst l Bs A $ subst l Bs B
+        | subst l Bs (Abs(N,T,X)) = Abs(N,T, subst (l+1) Bs X)
+        | subst l Bs X = X
+      fun trans_one (Bs,C) (Const(\<^const_syntax>\<open>Pair\<close>, _)
+                                $ (Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free (A, T) $ Ac)
+                                $ B)
+            = Const(\<^const_syntax>\<open>case_prod\<close>, dummyT) $ (
+                Const(\<^syntax_const>\<open>_constrainAbs\<close>, dummyT)
+                  $ Abs (A, T, trans_one ((A,T)::Bs, C) B)
+                  $ Ac
+              )
+        | trans_one (Bs,C) (Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free (A, T) $ Ac)
+            = Const(\<^syntax_const>\<open>_constrainAbs\<close>, dummyT)
+                  $ Abs (A, T, C ((A,T)::Bs))
+                  $ Ac
+      fun trans (Const (\<^syntax_const>\<open>_pttrns\<close>, _) $ A $ B) Bs
+            = Const (\<^const_syntax>\<open>ExSet\<close>, dummyT) $ trans_one (Bs,trans B) A
+        | trans B Bs
+            = Const (\<^const_syntax>\<open>ExSet\<close>, dummyT) $ trans_one (Bs, (fn Bs =>
+                case P of Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free ("True",_) $ _
+                            => subst 0 Bs X
+                        | Const (\<^const_syntax>\<open>True\<close>, _)
+                            => subst 0 Bs X
+                        | _ => Const (\<^const_syntax>\<open>Subjection\<close>, dummyT) $ subst 0 Bs X $ subst 0 Bs P
+              )) B
+   in trans idts [] end)
+]\<close>
+
+print_translation \<open>[
+  (\<^const_syntax>\<open>ExSet\<close>, fn ctxt => fn [X] =>
+    let fun subst l Bs (Bound i)
+              = if l <= i andalso i-l <= length Bs then List.nth(Bs, i-l) else Bound i
+          | subst l Bs (Abs (N,T,X)) = Abs (N,T, subst (l+1) Bs X)
+          | subst l Bs (A $ B) = subst l Bs A $ subst l Bs B
+          | subst l Bs X = X
+        fun trans (Vs,Bs) (Const(\<^const_syntax>\<open>case_prod\<close>, _) $ Abs (A,T,X))
+              = let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
+                 in trans (bound::Vs, bound::Bs) X
+                end
+          | trans (Vs,Bs) (Abs(A,T, Const(\<^const_syntax>\<open>ExSet\<close>, _) $ X))
+              = let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
+                    val var = fold (fn v => fn v' => Const(\<^const_syntax>\<open>Pair\<close>,dummyT) $ v $ v')
+                                    Vs bound
+                    val (X',idts',P') = trans ([], bound :: Bs) X
+                 in (X', Const(\<^syntax_const>\<open>_pttrns\<close>, dummyT) $ var $ idts', P')
+                end
+          | trans (Vs,Bs0) (Abs(A,T,B))
+              = let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
+                    val var = fold (fn v => fn v' => Const(\<^const_syntax>\<open>Pair\<close>,dummyT) $ v $ v')
+                                    Vs bound
+                    val Bs = bound :: Bs0
+                    val (X,P) = case B of Const(\<^const_syntax>\<open>Subjection\<close>, _) $ X $ P => (X,P)
+                                        | _ => (B, Const(\<^const_syntax>\<open>True\<close>, dummyT))
+                 in (subst 0 Bs X, var, subst 0 Bs P)
+                end
+        val (X',idts',P') = trans ([],[]) X
+     in Const(\<^syntax_const>\<open>_SetcomprNu\<close>, dummyT) $ X' $ idts' $ P' end)
+]\<close>
 
 text \<open>Semantically, an existential quantification in BI actually represents union of resources
   matching the existentially quantified assertion, as shown by the following lemma.\<close>
