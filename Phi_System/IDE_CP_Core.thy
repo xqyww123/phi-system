@@ -150,7 +150,6 @@ datatype label = LABEL_TAG "unit \<Rightarrow> unit"
 
 lemma [cong]: "LABEL_TAG x \<equiv> LABEL_TAG x"  using reflexive .
 lemma label_eq: "x = y" for x :: label by (cases x, cases y) auto
-
 syntax "_LABEL_" :: "idt \<Rightarrow> label" ("LABEL _" [0] 1000)
 translations "LABEL name" == "CONST LABEL_TAG (\<lambda>name. ())"
 
@@ -260,6 +259,9 @@ lemma reason_programming:
 ML_file \<open>library/system/Phi_Working_Mode.ML\<close>
 ML_file \<open>library/system/Phi_Envir.ML\<close>
 
+hide_fact introduce_Ex_ToA_subj_P introduce_Ex_ToA_subj introduce_Ex_ToA
+          introduce_Ex_pending_E introduce_Ex_pending introduce_Ex_subj introduce_Ex
+
 
 subsubsection \<open>Built-in Programming Methods\<close>
 
@@ -272,16 +274,6 @@ lemma [\<phi>reason 1000]:
             (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
             Labelled_def
-  using \<phi>make_implication .
-
-lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P)) _ _ _ _\<close>]:
-  \<open> PROP \<phi>Programming_Method
-            (Trueprop (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y))
-            working_mode_implication
-            (\<And>\<CC>c. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> X) \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> Y \<s>\<u>\<b>\<j> True)
-            (Trueprop True)
-            (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
   using \<phi>make_implication .
 
 lemma [\<phi>reason 1000]:

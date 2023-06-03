@@ -146,8 +146,12 @@ fun introduce_ex_ToA extract rule0 xs (ctxt, sequent) =
     val rule = Thm.incr_indexes idx rule0
     fun generalize x sequent =
       case Phi_Syntax.dest_ToA_Construction (Thm.concl_of sequent) of (_, S)
-            => sequent RS Drule.infer_instantiate ctxt
-                              [(("S",idx), Thm.cterm_of ctxt (absfree x (extract S)))] rule
+            => let val S' = extract S
+                in if Term.exists_subterm (fn Free x' => x = x' | _ => false) S'
+                   then sequent RS Drule.infer_instantiate ctxt
+                              [(("S",idx), Thm.cterm_of ctxt (absfree x S'))] rule
+                   else sequent
+               end
   in fold_rev generalize xs sequent |> pair ctxt
   end
 
@@ -471,12 +475,26 @@ val implication : working_mode = {
     ),
     cast_exception = K (cannot_cast_exception o snd),
     vcg_before_assembling = (fn goal => fn (ctxt,sequent) =>
-        vcg_by_cast (#2 (Phi_Syntax.dest_ToA_Construction_c goal)) (ctxt,sequent)),
+        let val goal' =
+              case Phi_Syntax.dest_ToA_Construction (Thm.term_of goal)
+                of (_, Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ Var v) =>
+                  let val (_, X) = Phi_Syntax.dest_ToA_Construction_c (Thm.cconcl_of sequent)
+                   in case Thm.term_of X
+                       of Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
+                            Thm.instantiate_cterm (TVars.empty, Vars.make [(v, Thm.dest_arg X)]) goal
+                        | _ =>
+                            Thm.instantiate_cterm (TVars.empty, Vars.make [(v, \<^cterm>\<open>True\<close>)]) goal
+                  end
+                 | _ => goal
+         in vcg_by_cast (#2 (Phi_Syntax.dest_ToA_Construction_c goal')) (ctxt,sequent) end),
     introduce_existence = introduce_ex_ToA I @{thm introduce_Ex_ToA},
-    introduce_existence_in_assembling =
+    introduce_existence_in_assembling = (fn vs =>
         introduce_ex_ToA (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
                            | _ => error ("bad form of the finalizing sequent"))
-                         @{thm introduce_Ex_ToA_subj}
+                         @{thm introduce_Ex_ToA_subj} vs
+     #> introduce_ex_ToA (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) => X
+                           | _ => error ("bad form of the finalizing sequent"))
+                         @{thm introduce_Ex_ToA_subj_P} vs)
 }
 end
 

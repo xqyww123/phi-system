@@ -48,8 +48,9 @@ signature PHI_TOPLEVEL = sig
   val begin_block_cmd :   binding list * (Attrib.binding * string list) list
         -> bool -> Proof.state -> Proof.state
 
-  val end_block_cmd : string option -> bool -> Proof.state -> Proof.state
-  val end_block_auto_proof_cmd : string option -> bool -> Proof.state -> Proof.state
+  datatype spec_annot = Spec_Annot of string | Subj_Annot of string
+  val end_block_cmd : spec_annot option -> bool -> Proof.state -> Proof.state
+  val end_block_auto_proof_cmd : spec_annot option -> bool -> Proof.state -> Proof.state
   val end_block : term option (*a spec that the sequent will be transformed to before assembling*)
                -> bool -> Proof.state -> Proof.state
 
@@ -415,7 +416,18 @@ fun gen_finish_proc prep_term qed spec int stat =
   end
 in
 
-val end_block_cmd = gen_finish_proc Syntax.read_term Proof.local_qed
+datatype spec_annot = Spec_Annot of string | Subj_Annot of string
+
+val end_block_cmd = gen_finish_proc (fn ctxt =>
+     (fn (Spec_Annot spec) => Syntax.read_term ctxt spec
+       | (Subj_Annot subj) =>
+            let val term = Syntax.read_term ctxt subj
+                val i = Term.maxidx_of_term term + 1
+             in \<^Const>\<open>Subjection \<open>TVar(("'x", i), [])\<close>\<close>
+                  $ Var(("X",i),\<^Type>\<open>set \<open>TVar(("'x", i), [])\<close>\<close>)
+                  $ term
+            end
+     )) Proof.local_qed
 val end_block = gen_finish_proc (K I) Proof.local_qed
 
 fun repeat_future_proof s =
@@ -777,17 +789,24 @@ datatype end_blk_action = Enter_Proof_Mode | Transparent_Proof of (Proof.state -
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>\<close> "End a \<phi> program block"
-    (option (\<^keyword>\<open>for\<close> |-- term) -- (
+    (option (\<^keyword>\<open>for\<close> |-- term) --
+     option (\<^keyword>\<open>subj\<close> |-- term) -- (
         \<^keyword>\<open>certified\<close> >> K Enter_Proof_Mode ||
         statement_cmd_tail (3,1) >> Transparent_Proof
-  ) >> (fn (spec,act) => Toplevel.proof' (fn int => fn stat =>
-      stat
+  ) >> (fn (spec_subj,act) => Toplevel.proof' (fn int => fn stat =>
+  let val spec = case spec_subj of (SOME _, SOME _) =>
+                                      Exn.error "keyword 'for' and 'subj' should not be given simutaneously."
+                                 | (SOME s, _) => SOME (Spec_Annot s)
+                                 | (_, SOME s) => SOME (Subj_Annot s)
+                                 | _ => NONE
+   in stat
    |> Proof.map_context Phi_ID.next
    |> (case act
          of Enter_Proof_Mode => end_block_cmd spec int
           | Transparent_Proof tail_statement => end_block_auto_proof_cmd spec int
                                              #> Proof.map_context Phi_ID.next
-                                             #> tail_statement))))
+                                             #> tail_statement)
+  end)))
 (*
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_right_bracket>.\<close> "End a \<phi> program block using default tactic"
