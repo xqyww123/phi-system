@@ -182,6 +182,8 @@ lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
   unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_plus by clarify
 
+declare [[\<phi>trace_reasoning = 2]]
+
 lemma [\<phi>reason 1200]:
   \<open> X1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y1 E1
 \<Longrightarrow> X2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y2 E2

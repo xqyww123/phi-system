@@ -384,6 +384,12 @@ lemma introduce_Ex_ToA_subj:
 \<Longrightarrow> ToA_Construction s (ExSet S \<s>\<u>\<b>\<j> Q) \<close>
   by (metis Subjection_Flase Subjection_True introduce_Ex_ToA)
 
+lemma introduce_Ex_ToA_subj_P:
+  \<open> ToA_Construction s (X \<s>\<u>\<b>\<j> S x)
+\<Longrightarrow> ToA_Construction s (X \<s>\<u>\<b>\<j> Ex S) \<close>
+  by (metis Subjection_expn ToA_Construction_def)
+  
+
 
 paragraph \<open>Return\<close>
 
