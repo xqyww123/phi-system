@@ -130,16 +130,17 @@ lemma \<phi>_\<phi>None:
   by (rule \<phi>Type_eqI; simp add: \<phi>expns)
 
 lemma \<phi>_unit:
-  \<open>(1 \<Ztypecolon> \<phi> Identity) = Void\<close>
-  by (clarsimp simp add: set_eq_iff \<phi>_expn Identity_expn)
+  \<open>(1 \<Ztypecolon> \<phi> Itself) = Void\<close>
+  by (clarsimp simp add: set_eq_iff \<phi>_expn Itself_expn)
 
+(*
 lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
   \<open>(x \<Ztypecolon> \<phi> \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None by simp
 
 lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
   \<open>(x \<Ztypecolon> \<phi> \<circle>) = 1 @action clean_automation_waste\<close>
-  unfolding Action_Tag_def \<phi>_\<phi>None by simp
+  unfolding Action_Tag_def \<phi>_\<phi>None by simp*)
 
 
 (*
@@ -157,21 +158,22 @@ lemma \<phi>_cast[\<phi>reason add]:
   unfolding Imply_def by (clarsimp simp add: \<phi>expns)
 
 lemma \<phi>_Structural_Extract:
-  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W) P\<close>
-  unfolding Structural_Extract_def
+  \<open> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<a>\<n>\<d> P @action \<A>SE\<close>
+  unfolding Action_Tag_def
   by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
 
-declare \<phi>_Structural_Extract[THEN SE_clean_waste, \<phi>reason 1200]
+declare \<phi>_Structural_Extract[(*THEN SE_clean_waste,*) \<phi>reason 1200]
 
-lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<phi> T) (r \<Ztypecolon> \<phi> R) (y \<Ztypecolon> \<phi> U) (w \<Ztypecolon> \<phi> W)
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> \<phi> U') (w' \<Ztypecolon> \<phi> W') (x' \<Ztypecolon> \<phi> T') (r' \<Ztypecolon> \<phi> R') P') \<and> P)\<close>
+lemma [(*THEN SE_clean_waste',*) \<phi>reason 1211]:
+  \<open> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> \<phi> U' \<^emph> \<phi> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> \<phi> T' \<^emph> \<phi> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE\<close>
   unfolding Generated_Rule_def Action_Tag_def
-  by (blast intro: \<phi>_Structural_Extract[unfolded Action_Tag_def]
-                   Structural_Extract_imply_P)
+  by (rule implies_weaken, defer_tac,
+      rule \<phi>_Structural_Extract[unfolded Action_Tag_def], assumption,
+      clarify, rule \<phi>_Structural_Extract[unfolded Action_Tag_def], blast)
 
 (*
 lemma [\<phi>reason 1100]:
@@ -182,6 +184,8 @@ lemma [\<phi>reason 1100]:
 
 thm ToSA_by_structural_extraction
     [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> for T U]
+
+declare [[\<phi>trace_reasoning = 1]]
 
 declare ToSA_by_structural_extraction
     [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> for T U,
@@ -204,14 +208,15 @@ lemma [\<phi>reason 1200]:
   unfolding Action_Tag_def using \<phi>_cast .
 
 lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Target
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P @action to Target \<close>
-  unfolding Action_Tag_def using \<phi>_cast .
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Target
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Target \<close>
+  unfolding Action_Tag_def Imply_def
+  by (clarsimp simp add: \<phi>expns)
 
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless (x \<Ztypecolon> T)
-\<Longrightarrow> Is_Stateless (x \<Ztypecolon> \<phi> T) \<close>
+  \<open> Is_Stateless (x \<Ztypecolon> T) P
+\<Longrightarrow> Is_Stateless (x \<Ztypecolon> \<phi> T) P \<close>
   unfolding Is_Stateless_def Imply_def apply (simp add: \<phi>expns)
   using mk_homo_one by blast
 
@@ -236,7 +241,7 @@ lemma \<phi>_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>\<phi>_simp_cong ("x \<Ztypecolon> \<phi> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>_simp_cong} ctxt)
 \<close>
 
 paragraph \<open>Synthesis for moving\<close>
@@ -265,7 +270,7 @@ private lemma from_fictional_refinement':
 \<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction \<Zcomp>\<^sub>\<I> I \<i>\<n> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))\<close>
   unfolding \<phi>Procedure_alt Fictional_Forward_Simulation_def atomize_all Valid_Transition_def
   apply (auto simp add: Image_iff subset_iff Bex_def \<phi>expns Transition_of'_def
           LooseStateSpec_def split_sum_all INTERP_RES_def interp_split R.\<r>_valid_split'
@@ -307,12 +312,12 @@ qed
 
 lemma from_fictional_refinement:
   \<open> Valid_Proc f
-\<Longrightarrow> YY = (\<lambda>v. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v))
-\<Longrightarrow> EE = (\<lambda>e. y \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))
+\<Longrightarrow> YY = (\<lambda>v. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v))
+\<Longrightarrow> EE = (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))
 \<Longrightarrow> (\<And>v. Transition_of' f v \<r>\<e>\<f>\<i>\<n>\<e>\<s> Rel v \<w>.\<r>.\<t> R.basic_fiction \<Zcomp>\<^sub>\<I> I \<i>\<n> D)
 \<Longrightarrow> Valid_Transition Rel
 \<Longrightarrow> x \<in> D
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> YY \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> EE\<close>
   using from_fictional_refinement' by blast
 
 end
@@ -320,7 +325,7 @@ end
 lemma "__getter_rule__":
   \<open> Valid_Proc getter
 \<Longrightarrow> (\<And>ret. Transition_of' getter ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> Id_on ({x} \<s>\<u>\<b>\<j> v. ret = Normal (\<phi>arg v) \<and> P v) \<w>.\<r>.\<t> R.basic_fiction \<Zcomp>\<^sub>\<I> I \<i>\<n> {x})
-\<Longrightarrow> \<p>\<r>\<o>\<c> getter \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> P v \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> getter \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. x \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> P v \<rbrace>\<close>
   by (rule from_fictional_refinement[where Rel = \<open>\<lambda>ret. Id_on ({x} \<s>\<u>\<b>\<j> v. ret = Normal (\<phi>arg v) \<and> P v)\<close>
                                        and D = \<open>{x}\<close>],
      assumption,
@@ -334,7 +339,7 @@ lemma "__setter_rule__":
   \<open> Valid_Proc setter
 \<Longrightarrow> (\<And>ret. Transition_of' setter ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none
             \<w>.\<r>.\<t> R.basic_fiction \<Zcomp>\<^sub>\<I> I \<i>\<n> {x})
-\<Longrightarrow> \<p>\<r>\<o>\<c> setter \<lbrace> x \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>_. y \<Ztypecolon> \<phi> Identity\<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> setter \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>_. y \<Ztypecolon> \<phi> Itself\<rbrace>\<close>
   by (rule from_fictional_refinement
                   [where Rel=\<open>\<lambda>ret. {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
       assumption,
@@ -348,7 +353,7 @@ lemma "__allocator_rule__":
   \<open> Valid_Proc allocator
 \<Longrightarrow> (\<And>ret. Transition_of' allocator ret \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k
             \<w>.\<r>.\<t> R.basic_fiction \<Zcomp>\<^sub>\<I> I \<i>\<n> {1})
-\<Longrightarrow> \<p>\<r>\<o>\<c> allocator \<lbrace> Void \<longmapsto> \<lambda>ret. y k \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> allocator \<lbrace> Void \<longmapsto> \<lambda>ret. y k \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace>\<close>
   by (rule from_fictional_refinement
         [where Rel=\<open>\<lambda>ret. {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k\<close>
            and x=\<open>1\<close> and D=\<open>{1}\<close>, unfolded \<phi>_unit],
@@ -390,7 +395,7 @@ end
 
 
 (*
-subsubsection \<open>Identity Fiction\<close>
+subsubsection \<open>Itself Fiction\<close>
 
 locale identity_fiction =
    R: resource Res
@@ -609,7 +614,7 @@ lemma "__allocate_rule_2__":
   \<open> (\<And>k. P k \<Longrightarrow> Id_on UNIV * {(1, 1(k := u))} \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(1, u' k)} \<w>.\<r>.\<t> I \<i>\<n> {1})
 \<Longrightarrow> \<forall>k. P k \<longrightarrow> 1(k := u) \<in>\<^sub>S\<^sub>H R.domain
 \<Longrightarrow> \<forall>r. r \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. k \<notin> dom1 r \<and> P k)
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry' P u \<lbrace> Void \<longmapsto> \<lambda>ret. u' k \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace> \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry' P u \<lbrace> Void \<longmapsto> \<lambda>ret. u' k \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> k. ret = \<phi>arg k \<and> P k \<rbrace> \<close>
   by (rule "__allocator_rule__",
       rule R.allocator_valid,
       assumption,
@@ -777,7 +782,7 @@ lemmas "__allocate_rule_3__" =
 
 lemma "_getter_rule_2_":
   \<open> refinement_projection (I k) {x} \<subseteq> UNIV * Some ` S
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace> 1(k := x) \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>ret. 1(k := x) \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> RP k \<and> v \<in> S \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace> 1(k := x) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. 1(k := x) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> RP k \<and> v \<in> S \<rbrace>\<close>
 subgoal premises prems
 proof -
   have t1: \<open>{Some u |u. u \<in> S} = Some ` S\<close>
@@ -801,7 +806,7 @@ lemma "_setter_rule_2_":
 \<Longrightarrow> refinement_projection (I k) {v'} \<subseteq> UNIV * Some ` V
 \<Longrightarrow> (\<And>v. v \<in> V \<and> v \<in> RP k \<Longrightarrow> pred_option (\<lambda>x. x \<in> RP k) (f v))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (f o the))
-      \<lbrace> 1(k := v') \<Ztypecolon> \<phi> Identity \<longmapsto> 1(k := F v') \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
+      \<lbrace> 1(k := v') \<Ztypecolon> \<phi> Itself \<longmapsto> 1(k := F v') \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
 subgoal premises prems proof -
   have t1: \<open>Id_on UNIV * (pairself (fun_upd 1 k) ` {(Some v, f v)} \<s>\<u>\<b>\<j> v. ret = Normal \<phi>V_none \<and> v \<in> V \<and> v \<in> RP k)
          = (Id_on UNIV * (pairself (fun_upd 1 k) ` ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k )) \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none)\<close>
@@ -841,7 +846,7 @@ sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambd
 
 lemma setter_rule:
   \<open>(v \<in> P k \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> pred_option (\<lambda>x. x \<in> P k) u) \<Longrightarrow>
-    \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (\<lambda>_. u)) \<lbrace> 1(k \<mapsto> v) \<Ztypecolon> \<phi> Identity \<longmapsto> \<lambda>\<r>\<e>\<t>. 1(k := u) \<Ztypecolon> \<phi> Identity \<rbrace>  \<close>
+    \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (\<lambda>_. u)) \<lbrace> 1(k \<mapsto> v) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>\<r>\<e>\<t>. 1(k := u) \<Ztypecolon> \<phi> Itself \<rbrace>  \<close>
 subgoal premises prems
 proof -
   have [simp]: \<open>(\<lambda>_. u) \<circ> the = (\<lambda>_. u)\<close> for u by auto
@@ -991,8 +996,8 @@ sublocale fiction_base_for_mapping_resource Res \<open>\<F>_pointwise (\<lambda>
 
 lemma "_getter_rule_2_":
   \<open> refinement_projection (I k k2) {x} \<subseteq> UNIV * {Some v}
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k k2 \<lbrace> 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Identity \<longmapsto>
-                                    \<lambda>ret. 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Identity \<s>\<u>\<b>\<j> ret = \<phi>arg v \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k k2 \<lbrace> 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Itself \<longmapsto>
+                                    \<lambda>ret. 1(k := 1(k2 := x)) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> ret = \<phi>arg v \<rbrace>\<close>
   by (rule "__getter_rule__",
       rule R.getter_valid,
       rule sep_refinement_stepwise,
@@ -1008,7 +1013,7 @@ lemma "_setter_rule_2_":
 \<Longrightarrow> refinement_projection (I k k2) {v'} \<subseteq> UNIV * {Some v}
 \<Longrightarrow> \<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m k k2 = Some v \<longrightarrow> map_fun_at k (map_fun_at k2 (\<lambda>_. u)) m \<in>\<^sub>S\<^sub>H R.domain
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (map_fun_at k2 (\<lambda>_. u)))
-      \<lbrace> 1(k := 1(k2 := v')) \<Ztypecolon> \<phi> Identity \<longmapsto> 1(k := 1(k2 := u')) \<Ztypecolon> \<phi> Identity \<rbrace> \<close>
+      \<lbrace> 1(k := 1(k2 := v')) \<Ztypecolon> \<phi> Itself \<longmapsto> 1(k := 1(k2 := u')) \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
   by (rule "__setter_rule__",
       rule R.setter_valid,
       rule sep_refinement_stepwise[

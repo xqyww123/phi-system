@@ -64,7 +64,7 @@ fun extract_implied_facts ctxt statement =
   end
 
 fun is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
-      \<^Const>\<open>Action_Tag\<close> $ (\<^Const>\<open>HOL.implies\<close> $ _ $ _) $ \<^Const>\<open>\<A>_extact_implied_facts\<close>))
+      \<^Const>\<open>Action_Tag\<close> $ (\<^Const>\<open>HOL.implies\<close> $ _ $ _) $ \<^Const>\<open>\<A>EIF\<close>))
     = true
   | is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
       \<^Const>\<open>HOL.implies\<close> $ (\<^Const>\<open>Inhabited _\<close> $ _) $ _))

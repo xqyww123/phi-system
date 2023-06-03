@@ -37,6 +37,8 @@ signature PHI_HELP = sig
   val string_of_term_generic : Context.generic -> term -> string
 
   val tyenv_to_tvars_table : Proof.context -> Type.tyenv -> ctyp TVars.table
+  val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
+  val tyenv_to_tvars_table_generic : Context.generic -> Type.tyenv -> ctyp TVars.table
   val tenv_to_vars_table : Proof.context -> Type.tyenv -> Envir.tenv -> cterm Vars.table
   val env_to_table : Proof.context -> (Type.tyenv * Envir.tenv)
                                    -> (ctyp TVars.table * cterm Vars.table)
@@ -95,6 +97,16 @@ signature PHI_HELP = sig
   val debug_RS : Proof.context -> thm -> thm -> thm
 
   val empty_ctxt : Proof.context
+
+  val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
+  (*For the leading N antecedents only, if it contains any higher-order schematic
+  variable where one of its parameters is always applied to constant argument, then instantiate
+  the schematic variable with \<open>\<lambda>_. ?var\<close>
+
+  N = ~1 means all antecedents, N = ~2 means to consider the conclusion of the thm in addition.
+*)
+
+  val generic_theory_mapping : (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
 
   val list_mk_conj : term list -> term
   val conj_elims : Proof.context -> thm -> thm list
@@ -165,6 +177,16 @@ fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global t
 fun tyenv_to_tvars_table ctxt : Type.tyenv -> ctyp TVars.table
   = Vartab.dest
  #> map (fn (N,(S,T)) => ((N,S), Thm.ctyp_of ctxt T))
+ #> TVars.make
+
+fun tyenv_to_tvars_table_generic generic : Type.tyenv -> ctyp TVars.table
+  = Vartab.dest
+ #> map (fn (N,(S,T)) => ((N,S), Context.cases Thm.global_ctyp_of Thm.ctyp_of generic T))
+ #> TVars.make
+
+val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
+  = Vartab.dest
+ #> map (fn (N,(S,T)) => ((N,S), T))
  #> TVars.make
 
 fun tenv_to_vars_table ctxt tyenv : Envir.tenv -> cterm Vars.table
@@ -372,6 +394,82 @@ fun debug_RS ctxt tha thb =
 
 
 val empty_ctxt = Proof_Context.init_global Pure_Syn.bootstrap_thy
+
+
+fun instantiate_higher_order_schematic_var num ctxt thm =
+  let fun get_concl (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs(_,_,X)) = get_concl X
+        | get_concl (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_concl X
+        | get_concl X = X
+      fun mk_ins ant (escape,ins0) =
+        let
+          fun count ret (X $ _) = count (ret + 1) X
+            | count ret (Var v) = if member (op =) escape (fst v)
+                                  then (ret, NONE)
+                                  else (ret, SOME v)
+            | count ret _ = (ret, NONE)
+          val eq = ((op =) o apply2 fst)
+          fun eq' ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 = b2)
+          fun eqle ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 <= b2)
+          fun sift set (X as _ $ _) =
+               (case count 0 X
+                  of (N, SOME v) =>
+                      let fun visit (set,i) (X $ A) =
+                                if exists_subterm (fn Bound _ => true | _ => false) A
+                                then visit (sift (insert eq' (v,N-i) set) A, i+1) X
+                                else visit (sift set A, i+1) X
+                            | visit (set,_) _ = set
+                       in visit (insert eqle (v, ~1 - N) set,1) X end
+                   | _ =>
+                      let fun visit set (A $ B) = visit (sift set B) A
+                            | visit set X = sift set X
+                       in visit set X end)
+            | sift set (Abs(_,_,X)) = sift set X
+            | sift set (Var v) =
+                  if member (op =) escape (fst v)
+                  then set
+                  else insert eqle (v, ~1) set
+            | sift set _ = set
+          val set = sift [] ant
+          fun calc_arity ret ((v,n)::L) =
+                if n >= 0 orelse AList.defined eq ret v
+                then calc_arity ret L
+                else calc_arity ((v, fold (fn (v',m) => fn n' =>
+                        if fst v' = fst v andalso m < 0 andalso ~1-m < n' then ~1-m else n') L (~1-n)) :: ret) L
+            | calc_arity ret [] = ret
+         val arity = calc_arity [] set
+         fun forall_num n P = n < 0 orelse (P n andalso forall_num (n-1) P)
+         val ins = map_filter (fn (v,n) =>
+                if forall_num (n-1) (fn i => member eq' set (v,i))
+                then NONE
+                else let fun mk_term targs bs 0 T =
+                                fold (fn b => fn X => X $ b) bs
+                                  (Var (fst v, fold (fn a => fn T => \<^Type>\<open>fun a T\<close>) targs T))
+                           | mk_term targs bs i \<^Type>\<open>fun a T\<close> =
+                                if member (op =) set (v,n-i)
+                                then Abs ("", a, mk_term (a::targs) (Bound (i-1) :: bs) (i-1) T)
+                                else Abs ("", a, mk_term targs bs (i-1) T)
+                           | mk_term _ _ _ _ = error "Internal bug #bb923326-bb1c-4ba6-9039-84963749ee92"
+                         val term' = mk_term [] [] n (snd v)
+                      in SOME (v, Thm.cterm_of ctxt term')
+                     end
+             ) arity
+          fun collect_var ret (Var (v,_)) = insert (op =) v ret
+            | collect_var ret (A $ B) = collect_var (collect_var ret A) B
+            | collect_var ret (Abs(_,_,X)) = collect_var ret X
+            | collect_var ret _ = ret
+         in (collect_var escape ant, ins@ins0)
+        end
+      val (_, ins) = fold (fn prem => mk_ins (get_concl prem))
+                          (if num = ~1 then Thm.prems_of thm
+                           else if num = ~2 then Thm.prems_of thm @ [Thm.concl_of thm]
+                           else List.take (Thm.prems_of thm, num))
+                          ([],[])
+  in Thm.instantiate (TVars.empty, Vars.make ins) thm
+ end
+
+fun generic_theory_mapping f =
+  Context.mapping (Context.theory_map (f Morphism.identity))
+                  (Local_Theory.declaration {syntax=false,pervasive=false} f)
 
 fun list_mk_conj [] = \<^const>\<open>True\<close>
   | list_mk_conj L = foldr1 HOLogic.mk_conj L

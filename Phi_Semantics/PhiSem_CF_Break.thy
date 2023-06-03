@@ -54,7 +54,7 @@ definition Brk_Frame :: \<open>RES.brk_label \<Rightarrow> assn\<close>
 
 definition Brking_Frame :: \<open>RES.brk_label \<Rightarrow> ('v::VALs \<phi>arg \<Rightarrow> assn) \<Rightarrow> assn\<close> ("\<^bold>b\<^bold>r\<^bold>o\<^bold>k\<^bold>e\<^bold>n _ \<w>\<i>\<t>\<h> _" [1000,10] 3)
   where \<open>Brking_Frame label S =
-     (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep (\<black_circle> Identity))))\<close>
+     (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep (\<black_circle> Itself))))\<close>
 
 lemma [elim!]:
   \<open>Inhabited (Brk_Frame X) \<Longrightarrow> C \<Longrightarrow> C\<close> .
@@ -63,12 +63,12 @@ lemma [\<phi>inhabitance_rule 1000]:
   \<open>Inhabited (Brk_Frame X) \<longrightarrow> True\<close> by blast
 
 lemma Brk_Frame_eq_identity:
-  \<open>Brk_Frame l = (nosep None \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>Brk_Frame l = (nosep None \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
   unfolding set_eq_iff Brk_Frame_def
   by (simp add: \<phi>expns)
 
 lemma Brking_Frame_eq_identity:
-  \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nosep (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>Brking_Frame l S = (\<exists>*v. S v\<heavy_comma> nosep (Some (to_vals (\<phi>arg.dest v))) \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
   unfolding set_eq_iff Brking_Frame_def
   by (simp add: \<phi>expns)
 

@@ -159,15 +159,15 @@ lemma Var_cast_\<phi>app[\<phi>overload cast]:
   by (clarsimp simp add: \<phi>expns, metis)
 
 lemma Raw_Var_identity_eq:
-  \<open>(raw \<Ztypecolon> Var v Identity) = (1(v \<mapsto> nosep raw) \<Ztypecolon> FIC.Var.\<phi> Identity)\<close>
+  \<open>(raw \<Ztypecolon> Var v Itself) = (1(v \<mapsto> nosep raw) \<Ztypecolon> FIC.Var.\<phi> Itself)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 lemma UnInited_Var_identity_eq:
-  \<open>(\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[v]) = (nosep None \<Ztypecolon> FIC.Var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
+  \<open>(\<u>\<n>\<i>\<n>\<i>\<t>\<e>\<d> \<v>\<a>\<r>[v]) = (nosep None \<Ztypecolon> FIC.Var.\<phi> (v \<^bold>\<rightarrow> \<black_circle> Itself))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 lemma Inited_Var_identity_eq:
-  \<open>(raw \<Ztypecolon> \<v>\<a>\<r>[v] Identity) = (1(v \<mapsto> nosep (Some raw)) \<Ztypecolon> FIC.Var.\<phi> Identity)\<close>
+  \<open>(raw \<Ztypecolon> \<v>\<a>\<r>[v] Itself) = (1(v \<mapsto> nosep (Some raw)) \<Ztypecolon> FIC.Var.\<phi> Itself)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 (* lemma Var_ExTyp[simp]:
@@ -214,7 +214,7 @@ lemma Var_simp_cong:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup Var_simp_cong ("x \<Ztypecolon> Var v T") = \<open>
-  K (Phi_SimpCong.simproc @{thm Var_simp_cong[folded atomize_eq]})
+  K (Phi_SimpProc.cong @{thm Var_simp_cong[folded atomize_eq]})
 \<close>
 
 
@@ -224,16 +224,16 @@ lemma [\<phi>reason 1200 for \<open>PROP Branch_Convergence_Type_Pattern (Var ?v
 
 
 lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Var v T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Var v U \<a>\<n>\<d> P @action to Z \<close>
-  unfolding Action_Tag_def
-  using Var_transformation .
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Z
+\<Longrightarrow> x \<Ztypecolon> Var v T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Var v U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Z \<close>
+  unfolding Action_Tag_def Imply_def
+  by (auto simp add: \<phi>expns, metis)
 
 lemma [\<phi>reason 2100]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Var v T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Var v U \<a>\<n>\<d> P @action to (Var v Z) \<close>
-  unfolding Action_Tag_def
-  using Var_transformation .
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Z
+\<Longrightarrow> x \<Ztypecolon> Var v T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Var v U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to (Var v Z) \<close>
+  unfolding Action_Tag_def Imply_def
+  by (auto simp add: \<phi>expns, metis)
 
 lemma [\<phi>reason 2000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as Z
@@ -300,17 +300,20 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   \<open>pred_option P None @action infer_var_type\<close>
   \<comment> \<open>the output TY can be anything freely\<close>
+  unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason 1020 for \<open>pred_option ((=) ?TY') (Some ?TY) @action infer_var_type\<close>]:
   \<open>pred_option ((=) TY) (Some TY) @action infer_var_type\<close>
   \<comment> \<open>the output TY equals to that TY in \<open>Some TY\<close> exactly.\<close>
+  unfolding Action_Tag_def
   by simp
 
 lemma [\<phi>reason 1000]:
   \<open> P TY
 \<Longrightarrow> pred_option P (Some TY) @action infer_var_type\<close>
   \<comment> \<open>the output TY equals to that TY in \<open>Some TY\<close> exactly.\<close>
+  unfolding Action_Tag_def
   by simp
 
 subsubsection \<open>Aggregate_Mapper that can handle option\<close>
@@ -376,6 +379,8 @@ lemma parse_element_index_input_by_semantic_type_at_least_1_opt_NIL:
 
 subsection \<open>Variable Operations\<close>
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc op_get_var:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<r>[var] T\<close>
   requires [\<phi>reason, unfolded \<phi>SemType_def, useful]: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
@@ -384,10 +389,16 @@ proc op_get_var:
     and [\<phi>reason 10000]: \<open>report_unprocessed_element_index reject\<close>
   output \<open>x \<Ztypecolon> \<v>\<a>\<r>[var] T\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
 \<medium_left_bracket>
-  to Identity
-  unfold Inited_Var_identity_eq
-  FIC.Var.getter_rule
-  semantic_assert \<open>nosep.dest (\<phi>arg.dest \<v>0) \<in> Some ` Well_Type TY\<close>
+  to Itself
+  ;;  unfold Inited_Var_identity_eq
+
+
+
+
+
+thm FIC.Var.getter_rule
+ ;; FIC.Var.getter_rule
+ ;; semantic_assert \<open>nosep.dest (\<phi>arg.dest \<v>0) \<in> Some ` Well_Type TY\<close>
   semantic_return \<open>the (nosep.dest (\<phi>arg.dest \<v>0)) \<in> (x \<Ztypecolon> T)\<close>
   fold Inited_Var_identity_eq
   apply_rule op_get_aggregate[where input_index=input_index and sidx=sidx and unwinded=idx
@@ -416,7 +427,7 @@ proc op_set_var:
   output \<open>f (\<lambda>_. y) x \<Ztypecolon> \<v>\<a>\<r>[var] T'\<close>
 \<medium_left_bracket>
   $y semantic_local_value UY
-  \<open>var\<close> to Identity
+  \<open>var\<close> to Itself
   unfold Raw_Var_identity_eq
   FIC.Var.getter_rule
 
@@ -463,7 +474,7 @@ proc op_free_var:
   input  \<open>x \<Ztypecolon> Var var' T\<close>
   output \<open>Void\<close>
 \<medium_left_bracket>
-  to Identity
+  to Itself
   unfold Raw_Var_identity_eq
   apply_rule FIC.Var.setter_rule[where u=\<open>None\<close> and k=\<open>var\<close>]
 \<medium_right_bracket> .
@@ -540,7 +551,7 @@ proc (nodef) [\<phi>reason 1200]:
   throws E
   @action synthesis
 \<medium_left_bracket>
-  G
+  G  
   S \<rightarrow> val v
   $v apply_rule op_set_var[OF T1 T2 T3 T4 T5 T6 T7 report_unprocessed_element_index_I]
   $v

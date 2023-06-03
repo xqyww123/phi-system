@@ -235,7 +235,7 @@ paragraph \<open>Allocation\<close>
 
 lemma op_obj_allocate:
   \<open>\<p>\<r>\<o>\<c> op_obj_allocate cls
-      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Identity\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
+      \<lbrace> Void \<longmapsto> \<lambda>ret. \<exists>*ref. to_share o initial_value_of_class cls \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Itself\<heavy_comma> ref \<Ztypecolon> Val ret (Ref cls) \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL op_obj_allocate_def
   apply (clarsimp simp add: \<phi>expns del: subsetI)
   apply (rule RES.Objs.\<phi>R_allocate_res_entry)
@@ -260,17 +260,17 @@ paragraph \<open>Load Field\<close>
 lemma op_obj_load_field_raw_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_load_field field TY raw \<lbrace>
-      nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> Identity \<heavy_comma> ref \<Ztypecolon> \<v>\<a>\<l>[raw] (Ref cls)
-  \<longmapsto> nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> Identity \<heavy_comma> \<v>\<a>\<l> v \<Ztypecolon> Identity
+      nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> \<v>\<a>\<l>[raw] (Ref cls)
+  \<longmapsto> nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> Itself \<heavy_comma> \<v>\<a>\<l> v \<Ztypecolon> Itself
 \<rbrace>\<close>
   unfolding op_obj_load_field_def Premise_def
-  by (rule \<phi>M_getV_ref, rule, rule \<phi>SEQ, rule \<phi>M_assert, simp, rule, simp add: Identity_expn)
+  by (rule \<phi>M_getV_ref, rule, rule \<phi>SEQ, rule \<phi>M_assert, simp, rule, simp add: Itself_expn)
    
 proc (nodef) op_obj_load_field:
   requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
   input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
   output \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> \<v>\<a>\<l> x \<Ztypecolon> T\<close>
-\<medium_left_bracket> \<open>obj: _\<close> to Identity \<exists>v
+\<medium_left_bracket> \<open>obj: _\<close> to Itself \<exists>v
   have [simp]: \<open>v \<in> Well_Type TY\<close> using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
   ;; $ref op_obj_load_field_raw[where TY=TY]
 \<medium_right_bracket> certified by (simp add: Nosep_expns the_\<phi>lemmata) .
@@ -282,12 +282,12 @@ lemma op_obj_store_field_raw_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> u \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_store_field field TY (\<phi>V_pair rawu rawref) \<lbrace>
-      nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Identity \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)\<heavy_comma> u \<Ztypecolon> Val rawu Identity
-  \<longmapsto> nosep u \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Identity
+      nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> Val rawref (Ref cls)\<heavy_comma> u \<Ztypecolon> Val rawu Itself
+  \<longmapsto> nosep u \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> Itself
 \<rbrace>\<close>
   unfolding op_obj_store_field_def Premise_def
-  apply (cases rawref; cases rawu; simp, rule, rule, simp add: Identity_expn Premise_def,
-          rule \<phi>M_getV_ref, rule, rule, rule \<phi>M_assert, simp, simp add: Identity_expn)
+  apply (cases rawref; cases rawu; simp, rule, rule, simp add: Itself_expn Premise_def,
+          rule \<phi>M_getV_ref, rule, rule, rule \<phi>M_assert, simp, simp add: Itself_expn)
   apply (rule FIC.OO_share.\<phi>R_set_res[where P="\<lambda>m. field \<in> dom (m ref)"])
    apply (cases ref; clarsimp simp add: map_fun_at_def dom1_def)
   apply (smt (verit, del_insts) Collect_cong dom_1 dom_eq_empty_conv insert_dom option.distinct(1) subsetD domI)
@@ -299,8 +299,8 @@ proc (nodef) op_obj_store_field:
   requires B: \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> T \<heavy_comma> \<v>\<a>\<l> ref \<Ztypecolon> Ref cls \<heavy_comma> \<v>\<a>\<l> y \<Ztypecolon> U\<close>
   output \<open>y \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> \<coercion> U\<close>
-  \<medium_left_bracket> to Identity \<exists>u
-    \<open>obj: _\<close> to Identity \<exists>v
+  \<medium_left_bracket> to Itself \<exists>u
+    \<open>obj: _\<close> to Itself \<exists>v
     op_obj_store_field_raw[where TY=TY]
       certified using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast ;;
       certified using B[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
@@ -313,10 +313,10 @@ lemma op_obj_dispose:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ref \<noteq> Nil
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> dom fields = dom (class.fields_of cls)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_dispose cls rawv
-    \<lbrace> to_share o fields \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Identity \<heavy_comma> ref \<Ztypecolon> Val rawv (Ref cls) \<longmapsto> \<lambda>ret. Void \<rbrace>\<close>
+    \<lbrace> to_share o fields \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Itself \<heavy_comma> ref \<Ztypecolon> Val rawv (Ref cls) \<longmapsto> \<lambda>ret. Void \<rbrace>\<close>
   unfolding op_obj_dispose_def Premise_def
   apply (rule \<phi>M_getV_ref)
-  apply (rule \<phi>SEQ[where B=\<open>\<lambda>_. to_share \<circ> fields \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Identity\<close>])
+  apply (rule \<phi>SEQ[where B=\<open>\<lambda>_. to_share \<circ> fields \<Ztypecolon> obj: ref \<^bold>\<rightarrow> Itself\<close>])
   apply (clarsimp simp add: \<phi>expns zero_set_def \<phi>Procedure_Hybrid_DL del: subsetI)
   apply (rule RES.Objs.\<phi>R_get_res, simp, simp add: dom1_def)
   subgoal premises prems for r res proof -

@@ -33,10 +33,12 @@ fun register_attribute_lthy (i,mandatory,pat,attr) =
 
 fun attribute_of default term ctxt =
   Net.match_term (Data.get ctxt) (Envir.beta_eta_contract term)
+    |> @{print}
     |> map_filter (fn (i,mandatory,pat, attr) =>
           if (default orelse mandatory)
           andalso Pattern.matches (Context.theory_of ctxt) (pat,term)
           then SOME (i,attr) else NONE)
+    |> @{print}
     |> sort (int_ord o apply2 #1)
     |> maps snd
 
@@ -56,7 +58,7 @@ val _ = Theory.setup (
     Scan.lift (Scan.optional (\<^keyword>\<open>?\<close> >> K false) true) --
     Attrib.attribs --| Scan.lift \<^keyword>\<open>for\<close> -- prop_patterns
     >> (fn ((mandatory, attr), pats) => Thm.declaration_attribute (fn _ => fn ctxt =>
-            fold (fn pat => register_attribute (serial(), mandatory, pat, @{print} (chk_attribute ctxt attr)))
+            fold (fn pat => register_attribute (serial(), mandatory, pat, chk_attribute ctxt attr))
                             pats ctxt))
     ) "register attributes applying on premises matching the given pattern, for those premises\
       \ in \<phi>-programming block."

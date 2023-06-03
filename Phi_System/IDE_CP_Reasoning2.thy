@@ -4,7 +4,7 @@ text \<open>The part includes some reasoning processes that can already be defin
   after the IDE-CP is ready.\<close>
 
 theory IDE_CP_Reasoning2
-  imports IDE_CP_Applications1
+  imports Phi_Type_Algebra
 begin
 
 section \<open>Small Reasoning Processes\<close>
@@ -153,54 +153,24 @@ lemma apply_extract_a_value:
   using \<phi>apply_implication . *)
 
 
-subsection \<open>Cleaning to 1\<close>
 
-definition Is_Stateless :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Is_Stateless S \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1)\<close>
 
-subsubsection \<open>Termination\<close>
 
-lemma [\<phi>reason 3000]:
-  \<open>Is_Stateless 0\<close>
-  unfolding Is_Stateless_def by simp
 
-lemma [\<phi>reason 3000]:
-  \<open>Is_Stateless 1\<close>
-  unfolding Is_Stateless_def by simp
-
-subsubsection \<open>Logic Connectives\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless A
-\<Longrightarrow> Is_Stateless B
-\<Longrightarrow> Is_Stateless (A + B)\<close>
-  unfolding Is_Stateless_def
-  using \<phi>CASE_IMP by force
-
-lemma [\<phi>reason 1200]:
-  \<open>(\<And>x. Is_Stateless (A x))
-\<Longrightarrow> Is_Stateless (ExSet A)\<close>
-  unfolding Is_Stateless_def
-  by (metis ExSet_expn Imply_def)
-
-lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless A
-\<Longrightarrow> Is_Stateless (A \<s>\<u>\<b>\<j> P)\<close>
-  unfolding Is_Stateless_def Imply_def
-  by (simp add: Subjection_expn)
-
+(*
 subsubsection \<open>General Reasoning by Algebraic Properties\<close>
 
 lemma Is_Stateless_general_rule:
-  \<open> Is_Stateless (x \<Ztypecolon> T)
+  \<open> Is_Stateless (x \<Ztypecolon> T) P
 \<Longrightarrow> Semi_Unit_Functor F
-\<Longrightarrow> Is_Stateless (x \<Ztypecolon> F T)\<close>
+\<Longrightarrow> Is_Stateless (x \<Ztypecolon> F T) P\<close>
   unfolding Semi_Unit_Functor_def Is_Stateless_def Unit_Homo_def
   by clarsimp
 
 \<phi>reasoner_ML "Is_Stateless_general_rule" 50 (\<open>Is_Stateless (_ \<Ztypecolon> _)\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
   let val _ (*Trueprop*) $ (_ (*Is_Stateless*) $ ( _ (*\<phi>Type*) $ _ $ T)) = Thm.major_prem_of sequent
-   in case Phi_Functor_Detect.detect 1 ctxt T
+   in case Phi_Type_Algebra.detect_type_operator 1 ctxt T
         of SOME [Ft,Tt] => let
             val rule = Drule.infer_instantiate ctxt
                           [(("F",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt)]
@@ -221,22 +191,11 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Is_Stateless (() \<Ztypecolon> T)\<close>
   unfolding Unit_Homo_def Is_Stateless_def \<r>Guard_def Premise_def
   by clarsimp
-
-
-subsubsection \<open>Structural Node\<close>
+*)
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless A
-\<Longrightarrow> Is_Stateless B
-\<Longrightarrow> Is_Stateless (A * B)\<close>
-  for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Is_Stateless_def Imply_def
-  apply (simp add: \<phi>expns)
-  using mult_1_class.mult_1_left by blast
-
-lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless X
-\<Longrightarrow> Is_Stateless (TECHNICAL X)\<close>
+  \<open> Is_Stateless X P
+\<Longrightarrow> Is_Stateless (TECHNICAL X) P\<close>
   unfolding Technical_def .
 
 
@@ -303,13 +262,12 @@ lemma "_ToSA_init_by_focus_": (*[\<phi>reason 2005 for \<open>(?X::?'a::sep_magm
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> \<r>CALL X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Y' \<brangle> \<a>\<n>\<d> P
 \<Longrightarrow> Simplify (assertion_simps undefined) R' R
-\<Longrightarrow> Is_Stateless R'
+\<Longrightarrow> Is_Stateless R' Q
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P \<and> Q\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def Simplify_def \<r>Call_def Is_Stateless_def
-  apply simp
-  by (metis Imply_def implies_right_prod mult_1_class.mult_1_left)
+  by (simp; metis Imply_def implies_right_prod mult_1_class.mult_1_left)
 
 lemma "_ToSA_init_": (*[\<phi>reason 2000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>]:*)
   \<open> Simplify (assertion_simps SOURCE) X' X
@@ -795,6 +753,8 @@ declare [[\<phi>reason 2600 ToSA_cond_target_B' ToSA_cond_target_A'
 
 hide_fact ToSA_cond_target_A' ToSA_cond_target_B'
 
+
+
 subsection \<open>Step-by-Step Searching Procedure\<close>
 
 (*
@@ -883,7 +843,7 @@ lemma [\<phi>reason 2000]:
 lemma [\<phi>reason 2000]:
   \<open> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 * \<blangle> X \<brangle> \<a>\<n>\<d> Reverse_Transformation RP RX \<and> P
 \<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 * \<blangle> SMORPH X \<brangle> \<a>\<n>\<d> Reverse_Transformation RP RX \<and> P\<close>
-  \<comment> \<open>This is the entry point of Reverse_Transformation !\<close>
+  \<comment> \<open>This is the entry point of Automatic_Rule !\<close>
   unfolding SMorphism_def .
 
 

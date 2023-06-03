@@ -21,7 +21,6 @@ abbrevs
   and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
   and "<by>" = "\<^bold>b\<^bold>y"
   and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
-  and "<when>" = "\<^bold>w\<^bold>h\<^bold>e\<^bold>n"
   and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
   and "<obligation>" = "\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n>"
   and ">->" = "\<Zinj>"
@@ -70,7 +69,7 @@ text \<open>See \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> given in \
 
 subsection \<open>Judgement Obligation\<close>
 
-definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where [iff]: "Argument x \<equiv> x"
+definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where "Argument x \<equiv> x"
 
 lemma Argument_I[intro!]: "P \<Longrightarrow> Argument P" unfolding Argument_def .
 
@@ -84,51 +83,6 @@ text \<open>Antecedent \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bol
   will be protected as intact.
 \<close>
 
-subsection \<open>Reasoning Obligation\<close>
-
-definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
-
-text \<open>In a rule, \<^prop>\<open>\<^bold>d\<^bold>o A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
-obtained from the reasoning, instead of a prerequisite condition of applying the rule.
-During the reasoning process,
-
-\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<^bold>d\<^bold>o\<close>, \<^prop>\<open>A\<close> is evaluated immediately
-  and once it fails the search branch backtracks;
-
-\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<^bold>d\<^bold>o A\<close> wrapped by \<open>\<^bold>d\<^bold>o\<close>, it means an obtained
-  reasoning obligation as an outcome of the reasoning,
-  just like \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> meaning an extracted verification condition.
-  So conforming to \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>, no immediate reasoning work is invoked and the antecedent
-  is returned and is given before the \<^schematic_prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots>\<close> in order,
-  as an outcome of the reasoning,.
-
-  For example, if during a reasoning process, two \<^prop>\<open>\<^bold>d\<^bold>o A1\<close> and \<^prop>\<open>\<^bold>d\<^bold>o A2\<close> are encountered in
-  order, and if the reasoning succeeds, the final outcome would be
-  \[ \<^schematic_prop>\<open>\<^bold>d\<^bold>o A1 \<Longrightarrow> \<^bold>d\<^bold>o A2 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots> \<Longrightarrow> Conclusion\<close> \]
-\<close>
-
-lemma Do_I: \<open>PROP P \<Longrightarrow> \<^bold>d\<^bold>o PROP P\<close> unfolding Do_def .
-lemma Do_D: \<open>\<^bold>d\<^bold>o PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
-
-ML_file \<open>library/system/reasoners.ML\<close>
-
-definition Do_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Do_embed X \<equiv> X\<close>
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
-  unfolding Do_def Do_embed_def .
-
-\<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent)
-\<close>
-
-\<phi>reasoner_ML Argument 1000 (\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
-\<close>
-
-\<phi>reasoner_ML Do 1200 (\<open>\<^bold>d\<^bold>o (PROP ?P)\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
-\<close>
 
 subsection \<open>Text Label\<close>
 
@@ -220,9 +174,58 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   unfolding Technical_def Technical_embed_def .
 
 lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited X \<longrightarrow> C
-\<Longrightarrow> Inhabited (TECHNICAL X) \<longrightarrow> C\<close>
+  \<open> Inhabited X \<longrightarrow> C @action \<A>EIF
+\<Longrightarrow> Inhabited (TECHNICAL X) \<longrightarrow> C @action \<A>EIF \<close>
   unfolding Technical_def .
+
+
+subsection \<open>Reasoning Obligation\<close>
+
+definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
+
+text \<open>In a rule, \<^prop>\<open>\<^bold>d\<^bold>o A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
+obtained from the reasoning, instead of a prerequisite condition of applying the rule.
+During the reasoning process,
+
+\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<^bold>d\<^bold>o\<close>, \<^prop>\<open>A\<close> is evaluated immediately
+  and once it fails the search branch backtracks;
+
+\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<^bold>d\<^bold>o A\<close> wrapped by \<open>\<^bold>d\<^bold>o\<close>, it means an obtained
+  reasoning obligation as an outcome of the reasoning,
+  just like \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> meaning an extracted verification condition.
+  So conforming to \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>, no immediate reasoning work is invoked and the antecedent
+  is returned and is given before the \<^schematic_prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots>\<close> in order,
+  as an outcome of the reasoning,.
+
+  For example, if during a reasoning process, two \<^prop>\<open>\<^bold>d\<^bold>o A1\<close> and \<^prop>\<open>\<^bold>d\<^bold>o A2\<close> are encountered in
+  order, and if the reasoning succeeds, the final outcome would be
+  \[ \<^schematic_prop>\<open>\<^bold>d\<^bold>o A1 \<Longrightarrow> \<^bold>d\<^bold>o A2 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots> \<Longrightarrow> Conclusion\<close> \]
+\<close>
+
+lemma Do_I: \<open>PROP P \<Longrightarrow> \<^bold>d\<^bold>o PROP P\<close> unfolding Do_def .
+lemma Do_D: \<open>\<^bold>d\<^bold>o PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
+
+ML_file \<open>library/system/reasoners.ML\<close>
+
+definition Do_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Do_embed X \<equiv> X\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
+  unfolding Do_def Do_embed_def .
+
+\<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent)
+\<close>
+
+\<phi>reasoner_ML Argument 1000 (\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
+\<close>
+
+\<phi>reasoner_ML Do 1200 (\<open>\<^bold>d\<^bold>o (PROP ?P)\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
+\<close>
+
+
 
 section \<open>Mechanisms\<close>
 
@@ -652,7 +655,8 @@ lemma Synthesis_Proc_fallback_VS
   [\<phi>reason 10 for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. _ \<heavy_comma> \<blangle> ?X' ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]:
   \<open> S1 \<s>\<h>\<i>\<f>\<t>\<s> S2\<heavy_comma> \<blangle> X' \<brangle> \<a>\<n>\<d> Any
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' \<brangle> \<rbrace> @action synthesis\<close>
-  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def by simp
+  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def
+  by simp
 
 text \<open>The fallback from VS to IMP is given by @{thm view_shift_by_implication}\<close>
 
@@ -953,17 +957,6 @@ lemma \<phi>apply_user_antecedent:
   | \<open>PROP \<phi>Application (Trueprop (?Prem' \<longrightarrow> ?App')) ?State ?Result\<close> )
 = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let val _ $ app $ _ $ _ = Thm.major_prem_of sequent
-      fun is_user_dependent (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_user_dependent X
-        | is_user_dependent (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _) = true
-        | is_user_dependent (Const(\<^const_name>\<open>Argument\<close>, _) $ _ ) = true
-        | is_user_dependent (Const(\<^const_name>\<open>Do\<close>, _) $ _ ) = true
-        | is_user_dependent (Const(\<^const_name>\<open>ParamTag\<close>, _) $ _ ) = true
-        | is_user_dependent (Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _) = true
-        | is_user_dependent (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = is_user_dependent X
-        | is_user_dependent (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_user_dependent X
-        | is_user_dependent (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = is_user_dependent X
-        | is_user_dependent (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X)) = is_user_dependent X
-        | is_user_dependent _ = false
       val (user_rule, eager_rule) =
                case app of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
                               (@{thm \<phi>apply_user_antecedent}, @{thm \<phi>apply_eager_antecedent})
@@ -971,11 +964,11 @@ lemma \<phi>apply_user_antecedent:
                               (@{thm \<phi>apply_user_antecedent_meta}, @{thm \<phi>apply_eager_antecedent_meta})
       fun process (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) met_sequent = process X met_sequent
         | process (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ X) (met,eager,sequent) =
-            process X (if met > 0 orelse is_user_dependent A
+            process X (if met > 0 orelse Phi_Sys_Reasoner.is_user_dependent_antecedent A
                        then (met + 1, eager, user_rule RS sequent)
                        else (met, eager + 1, eager_rule RS sequent))
         | process (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ A $ X) (met,eager,sequent) =
-            process X (if met > 0 orelse is_user_dependent A
+            process X (if met > 0 orelse Phi_Sys_Reasoner.is_user_dependent_antecedent A
                        then (met + 1, eager, user_rule RS sequent)
                        else (met, eager + 1, eager_rule RS sequent))
         | process _ sequent = sequent
@@ -1131,7 +1124,6 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S'' \<a>\<n>\<d> Any @action ToSA
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<i>\<m>\<p>\<l>\<i>\<e>\<s> T' \<a>\<n>\<d> P))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
@@ -2003,12 +1995,9 @@ let val sequent = case Thm.major_prem_of sequent0
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
               "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
 in if Config.get ctxt Phi_Reasoner.auto_level >= 1
-      andalso (case Thm.major_prem_of sequent
-                 of _ (*Trueprop*) $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>default\<close> $ _) => false
-                  | _ (*Trueprop*) $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_COLLECT\<close> $ _) => false
-                  | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Argument\<close>, _) $ _) => false
-                  | _ (*Trueprop*) $ (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) => false
-                  | _ => true)
+
+      andalso not (Phi_Sys_Reasoner.is_user_dependent_antecedent (Thm.major_prem_of sequent))
+      andalso not (Phi_Sys_Reasoner.is_proof_obligation (Thm.major_prem_of sequent))
    then case Phi_Reasoner.reason (SOME 1) ctxt sequent
           of SOME sequent' => (ctxt, sequent')
            | NONE => raise Bypass (SOME (ctxt,sequent0))
@@ -2024,8 +2013,9 @@ end)\<close>
     case Thm.major_prem_of sequent
       of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _))
          => (ctxt, @{thm Premise_True} RS sequent)
-       | _ => (
-    if Config.get ctxt Phi_Reasoner.auto_level >= 2
+       | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ prop) => (
+    if Config.get ctxt Phi_Toplevel.is_interactive
+    then if Config.get ctxt Phi_Reasoner.auto_level >= 2
     then let val id = Option.map (Phi_ID.encode o Phi_ID.cons proc_id) (Phi_ID.get_if_is_named ctxt)
           in (ctxt, Phi_Sledgehammer_Solver.auto id (ctxt,sequent))
           handle Phi_Reasoners.Automation_Fail err =>
@@ -2034,7 +2024,16 @@ end)\<close>
 (*case Seq.pull (Phi_Reasoners.auto_obligation_solver ctxt sequent)
            of SOME (ret, _) => (ctxt, ret)
             | NONE => raise Bypass NONE *)
-    else raise Bypass NONE))\<close>
+    else raise Bypass NONE
+    else if Term.maxidx_of_term prop >= 0
+    then raise Phi_Toplevel.Schematic
+    else let val sequent' = (@{thm Premise_I} RS sequent)
+                          |> Conv.gconv_rule (Object_Logic.atomize ctxt) 1
+             val ([assm], ctxt') = Assumption.add_assms Assumption.presume_export
+                                        [fst (Thm.dest_implies (Thm.cprop_of sequent'))] ctxt
+          in (ctxt', assm RS sequent')
+         end
+))\<close>
 
 \<phi>processor pure_fact 2000 (\<open>PROP ?P\<close>) \<open>
 let

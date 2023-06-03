@@ -61,6 +61,7 @@ theory Phi_BI
       and "<implies>" = "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
       and "<and>"  = "\<a>\<n>\<d>"
       and "<subj>" = "\<s>\<u>\<b>\<j>"
+      and "<when>" = "\<w>\<h>\<e>\<n>"
       and "<remains>" = "\<r>\<e>\<m>\<a>\<i>\<n>\<s>"
 begin
 
@@ -88,7 +89,7 @@ ML_file \<open>library/tools/simp_congruence.ML\<close>
 
 subsubsection \<open>Embedding of separation conjunction in \<phi>-Type\<close>
 
-definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 55)
+definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 70)
   where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
 
 lemma \<phi>Prod_expn[\<phi>expns]:
@@ -99,11 +100,19 @@ lemma \<phi>Prod_expn':
   \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
+lemma \<phi>Prod_expn'':
+  \<open> NO_MATCH (xx,yy) x
+\<Longrightarrow> (x \<Ztypecolon> A \<^emph> B) = (snd x \<Ztypecolon> B) * (fst x \<Ztypecolon> A)\<close>
+  unfolding set_eq_iff by (cases x; simp add: \<phi>expns)
+
 lemma [\<phi>reason 1000]:
-  \<open> Inhabited (x1 \<Ztypecolon> T1) \<longrightarrow> C1
-\<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<longrightarrow> C2
-\<Longrightarrow> Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longrightarrow> C1 \<and> C2\<close>
-  unfolding Inhabited_def by (simp add: \<phi>Prod_expn, blast)
+  \<open> Inhabited (x1 \<Ztypecolon> T1) \<longrightarrow> C1 @action \<A>EIF
+\<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<longrightarrow> C2 @action \<A>EIF
+\<Longrightarrow> Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longrightarrow> C1 \<and> C2 @action \<A>EIF\<close>
+  unfolding Inhabited_def Action_Tag_def
+  by (simp add: \<phi>Prod_expn, blast)
+
+
 
 
 subsection \<open>Implication\<close>
@@ -178,7 +187,8 @@ lemma implies_trans:
   "A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P
 \<Longrightarrow> (P \<Longrightarrow> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<a>\<n>\<d> Q)
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<a>\<n>\<d> P \<and> Q"
-  unfolding Imply_def by auto
+  unfolding Imply_def Premise_def by auto
+
 
 lemma implies_weaken:
   \<open> P \<longrightarrow> P'
@@ -207,32 +217,6 @@ lemma assertion_eq_intro:
   unfolding Imply_def by blast
 
 
-subsubsection \<open>Equivalent Object\<close>
-
-definition \<phi>Equiv_Obj :: \<open>('c,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool\<close>
-  where \<open>\<phi>Equiv_Obj T x eq \<longleftrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T))\<close>
-
-declare [[\<phi>reason_default_pattern \<open>\<phi>Equiv_Obj ?T ?x _\<close> \<Rightarrow> \<open>\<phi>Equiv_Obj ?T ?x _\<close> (100) ]]
-
-lemma [\<phi>reason 1 for \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> _ \<a>\<n>\<d> _\<close>
-                 except \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?var_y' \<Ztypecolon> _ \<a>\<n>\<d> _\<close>]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> y  \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> \<phi>Equiv_Obj U y eq
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> U \<a>\<n>\<d> P \<close>
-  unfolding \<phi>Equiv_Obj_def Imply_def by clarsimp
-
-lemma [\<phi>reason 1]:
-  \<open>\<phi>Equiv_Obj T x (=)\<close>
-  unfolding \<phi>Equiv_Obj_def by simp
-
-lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> _\<close>]:
-  " \<phi>Equiv_Obj T x eq
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y
-\<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T"
-  unfolding \<phi>Equiv_Obj_def Imply_def by clarsimp
-
-
 subsubsection \<open>Inhabitance Reasoning - Part II\<close>
 
 lemma [\<phi>reason 1100]:
@@ -244,14 +228,15 @@ lemma [\<phi>reason 1000]:
   unfolding Extract_Inhabitance_Rule_def Imply_def Inhabited_def by blast
 
 
-subsection \<open>Specialized Additive Conjunction\<close>
+subsection \<open>Conjunction to a Pure Fact\<close>
 
 declare Subjection_expn[\<phi>expns]
 
 lemma [\<phi>reason 1000]:
-  \<open> Inhabited S \<longrightarrow> C
-\<Longrightarrow> Inhabited (S \<s>\<u>\<b>\<j> P) \<longrightarrow> P \<and> C\<close>
-  unfolding Inhabited_def by (simp add: Subjection_expn)
+  \<open> Inhabited S \<longrightarrow> C @action \<A>EIF
+\<Longrightarrow> Inhabited (S \<s>\<u>\<b>\<j> P) \<longrightarrow> P \<and> C @action \<A>EIF \<close>
+  unfolding Inhabited_def Action_Tag_def
+  by (simp add: Subjection_expn)
 
 lemma Subjection_cong[cong]:
   \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> S \<equiv> S') \<Longrightarrow> (S \<s>\<u>\<b>\<j> P) \<equiv> (S' \<s>\<u>\<b>\<j> P')\<close>
@@ -326,9 +311,10 @@ subsection \<open>Existential Quantification\<close>
 declare ExSet_expn[\<phi>expns]
 
 lemma [\<phi>reason 1000]:
-  \<open> (\<And>x. Inhabited (S x) \<longrightarrow> C x)
-\<Longrightarrow> Inhabited (ExSet S) \<longrightarrow> Ex C \<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns; blast)
+  \<open> (\<And>x. Inhabited (S x) \<longrightarrow> C x @action \<A>EIF)
+\<Longrightarrow> Inhabited (ExSet S) \<longrightarrow> Ex C @action \<A>EIF \<close>
+  unfolding Inhabited_def Action_Tag_def
+  by (simp add: \<phi>expns; blast)
 
 syntax
   "_SetcomprNu" :: "'a \<Rightarrow> pttrns \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<s>\<u>\<b>\<j>/ _./ _" [14,0,15] 14)
@@ -463,6 +449,11 @@ lemma ExSet_plus:
   \<open>ExSet (A + B) = ExSet A + ExSet B\<close>
   unfolding set_eq_iff by (simp_all add: \<phi>expns plus_fun) blast+
 
+ML_file \<open>library/tools/simproc_ExSet_expand_quantifier.ML\<close>
+
+ML \<open>\<^simproc>\<open>ExSet_expand_quantifier\<close>\<close>
+
+
 
 
 subsubsection \<open>Embedding in \<phi>-Type\<close>
@@ -475,9 +466,9 @@ lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
   unfolding set_eq_iff ExTyp_def \<phi>Type_def by (simp add: \<phi>expns)
 
 lemma ExTyp_inhabited[\<phi>reason 1000]:
-  \<open> (\<And>a. Inhabited (x a \<Ztypecolon> T a) \<longrightarrow> C a)
-\<Longrightarrow> Inhabited (x \<Ztypecolon> ExTyp T) \<longrightarrow> Ex C \<close>
-  unfolding ExTyp_expn Inhabited_def
+  \<open> (\<And>a. Inhabited (x a \<Ztypecolon> T a) \<longrightarrow> C a @action \<A>EIF)
+\<Longrightarrow> Inhabited (x \<Ztypecolon> ExTyp T) \<longrightarrow> Ex C @action \<A>EIF \<close>
+  unfolding ExTyp_expn Inhabited_def Action_Tag_def
   by (clarsimp simp add: ExSet_expn, blast)
 
 
@@ -506,8 +497,123 @@ lemma AllSet_trans:
   unfolding AllSet_def
   by (smt (verit) mem_Collect_eq transD transI)
 
+lemma [elim!]:
+  \<open>Inhabited (AllSet S) \<Longrightarrow> (Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def AllSet_def
+  by clarsimp blast
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> Inhabited (S x) \<longrightarrow> C @action \<A>EIF
+\<Longrightarrow> Inhabited (AllSet S) \<longrightarrow> C @action \<A>EIF \<close>
+  unfolding Action_Tag_def
+  by clarsimp blast
 
 
+subsection \<open>Equivalence of Objects\<close>
 
+definition \<phi>Equiv_Obj :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>\<phi>Equiv_Obj T eq \<longleftrightarrow> (\<forall>x y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T))\<close>
+
+declare [[
+    \<phi>reason_default_pattern \<open>\<phi>Equiv_Obj ?T _\<close> \<Rightarrow> \<open>\<phi>Equiv_Obj ?T _\<close> (100),
+    \<phi>premise_attribute? [\<phi>reason add] for \<open>\<phi>Equiv_Obj _ _\<close>
+]]
+
+lemma [\<phi>reason 1 for \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> _ \<a>\<n>\<d> _\<close>
+                 except \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?var_y' \<Ztypecolon> _ \<a>\<n>\<d> _\<close>]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> y  \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> \<phi>Equiv_Obj U eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> U \<a>\<n>\<d> P \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def Premise_def by clarsimp
+
+lemma [\<phi>reason 1]:
+  \<open>\<phi>Equiv_Obj T (=)\<close>
+  unfolding \<phi>Equiv_Obj_def by simp
+
+lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> _\<close>]:
+  " \<phi>Equiv_Obj T eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y
+\<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T"
+  unfolding \<phi>Equiv_Obj_def Imply_def Premise_def by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>a. \<phi>Equiv_Obj (\<lambda>x. S x a) (R a))
+\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>x. ExSet (S x)) (\<lambda>x y. \<forall>a. R a x y) \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  by (clarsimp simp add: ExSet_expn; blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>Equiv_Obj S R
+\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>x. S x \<s>\<u>\<b>\<j> P x) (\<lambda>x y. P x \<longrightarrow> R x y \<and> P y) \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  by (clarsimp simp add: Subjection_expn)
+
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>Equiv_Obj S1 R1
+\<Longrightarrow> \<phi>Equiv_Obj S2 R2
+\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>x. S1 x \<inter> S2 x) (\<lambda>x y. R1 x y \<and> R2 x y) \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>Equiv_Obj S1 R1
+\<Longrightarrow> \<phi>Equiv_Obj S2 R2
+\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>x. S1 x \<union> S2 x) (\<lambda>x y. R1 x y \<and> R2 x y) \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  by clarsimp
+
+(* lemma
+  \<open> (\<And>x. \<phi>Equiv_Obj (R x) (T x))
+\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>x y. T y = T x \<and> R x (f x) (f y)) (\<lambda>x. f x \<Ztypecolon> T x)\<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  by clarsimp *)
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>a. \<phi>Equiv_Obj (\<lambda>x. S x a) (R a))
+\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>x. AllSet (S x)) (\<lambda>x y. \<forall>a. R a x y) \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  by (clarsimp simp add: AllSet_expn; blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>Equiv_Obj S1 R1
+\<Longrightarrow> \<phi>Equiv_Obj S2 R2
+\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>x. S1 x * S2 x) (\<lambda> x y. R1 x y \<and> R2 x y) \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  by (clarsimp simp add: set_mult_expn; blast)
+
+(*
+lemma
+  \<open> (\<And>x y. Rx x y \<longleftrightarrow> (S1 x * S2 x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S1 y * S2 y))
+\<Longrightarrow> (\<And>x y. R1 x y \<longleftrightarrow> (S1 x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S1 y))
+\<Longrightarrow> (\<And>x y. R2 x y \<longleftrightarrow> (S2 x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S2 y))
+\<Longrightarrow> (\<And>x y. Rx x y \<Longrightarrow> R1 x y \<or> R2 x y)\<close>
+  unfolding Imply_def
+  apply (auto simp add: set_mult_expn)*)
+
+lemma
+  \<open> \<phi>Equiv_Obj S1 R1
+\<Longrightarrow> \<phi>Equiv_Obj S2 R2
+\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>x. {p. p \<in> S1 x \<longrightarrow> p \<in> S2 x}) (\<lambda>x y. R1 y x \<and> R2 x y) \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  by (clarsimp simp add: AllSet_expn)
+
+(*
+lemma
+  \<open> (\<And>x y. Rx x y \<longleftrightarrow> ({p. p \<in> S1 x \<longrightarrow> p \<in> S2 x} \<i>\<m>\<p>\<l>\<i>\<e>\<s> {p. p \<in> S1 y \<longrightarrow> p \<in> S2 y}))
+\<Longrightarrow> (\<And>x y. R1 x y \<longleftrightarrow> (S1 x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S1 y))
+\<Longrightarrow> (\<And>x y. R2 x y \<longleftrightarrow> (S2 x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S2 y))
+\<Longrightarrow> (\<And>x y. Rx x y \<Longrightarrow> R1 y x \<and> R2 x y) \<close>
+  unfolding \<phi>Equiv_Obj_def Imply_def \<phi>Type_def
+  apply (auto simp add: AllSet_expn)*)
+
+(*
+lemma
+  \<open> (\<And>x y. Rx x y \<longleftrightarrow> (S1 x \<union> S2 x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S1 y \<inter> S2 y))
+\<Longrightarrow> (\<And>x y. R1 x y \<longleftrightarrow> (S1 x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S1 y))
+\<Longrightarrow> (\<And>x y. R2 x y \<longleftrightarrow> (S2 x \<i>\<m>\<p>\<l>\<i>\<e>\<s> S2 y))
+\<Longrightarrow> (\<And>x y. Rx x y \<Longrightarrow> R1 x y \<and> R2 x y)\<close>
+  unfolding Imply_def
+  apply (auto simp add: Subjection_expn) *)
 
 end

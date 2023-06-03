@@ -1,5 +1,5 @@
 theory Phi_Logic_Programming_Reasoner
-  imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
+  imports PLPR_error_msg "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
   keywords "except" "@action" :: quasi_command
     and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
     and "print_\<phi>reasoners" :: diag
@@ -27,26 +27,28 @@ let
   fun prop mode = Scan.peek (Args.named_term o Syntax.read_prop
                                              o Proof_Context.set_mode mode o Context.proof_of)
 
-in
-   ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
+
+in fn thy => thy
+|>  ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
     (Args.term_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
-#> ML_Antiquotation.inline_embedded \<^binding>\<open>pattern_prop\<close>
+|> ML_Antiquotation.inline_embedded \<^binding>\<open>pattern_prop\<close>
     (prop Proof_Context.mode_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_ctyp\<close> (typ Proof_Context.mode_schematic
+|> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_ctyp\<close> (typ Proof_Context.mode_schematic
       >> (fn T => "Thm.ctyp_of ML_context"  ^ ML_Syntax.atomic (ML_Syntax.print_typ T)))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cterm\<close> (term Proof_Context.mode_schematic
+|> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cterm\<close> (term Proof_Context.mode_schematic
       >> (fn t => "Thm.cterm_of ML_context" ^ ML_Syntax.atomic (ML_Syntax.print_term t)))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cprop\<close> (prop Proof_Context.mode_schematic
+|> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cprop\<close> (prop Proof_Context.mode_schematic
       >> (fn t => "Thm.cterm_of ML_context" ^ ML_Syntax.atomic (ML_Syntax.print_term t)))
-#> basic_entity \<^binding>\<open>schematic_term\<close> (Term_Style.parse -- term Proof_Context.mode_schematic)
+|> basic_entity \<^binding>\<open>schematic_term\<close> (Term_Style.parse -- term Proof_Context.mode_schematic)
                                         pretty_term_style
-#> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_schematic)
+|> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_schematic)
                                         pretty_term_style
-#> basic_entity \<^binding>\<open>pattern_term\<close> (Term_Style.parse -- term Proof_Context.mode_pattern)
+|> basic_entity \<^binding>\<open>pattern_term\<close> (Term_Style.parse -- term Proof_Context.mode_pattern)
                                         pretty_term_style
-#> basic_entity \<^binding>\<open>pattern_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_pattern)
+|> basic_entity \<^binding>\<open>pattern_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_pattern)
                                         pretty_term_style
 end\<close>
+
 
 ML_file \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
@@ -54,9 +56,9 @@ ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
+ML_file \<open>library/tools/ml_thms.ML\<close>
 
-
-definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where [iff]: \<open>\<r>Guard X \<equiv> X\<close>
+definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
     \<comment> \<open>If guards of a rule fail, the rule will be considered not appliable, just like the pattern
         mismatch. It makes difference for cut rule and default 'to-be-overrided' rules.
         If the rule is considered not appliable, the cut will not make effect and it will not
@@ -64,9 +66,8 @@ definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r
 
 typedecl action
 
-
 definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [10,10] 9)
-  where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
+  where \<open>Action_Tag P A \<equiv> P\<close>
 
 lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
@@ -325,8 +326,7 @@ text \<open>\<^emph>\<open>Remark\<close>: Attribute @{attribute \<phi>reason} c
 
 paragraph \<open>Example\<close>
 
-declare conjI[\<phi>reason add 1000] TrueI[\<phi>reason 1000]
-        HOL.refl[\<phi>reason 1000 for \<open>_ = _\<close>]
+declare TrueI[\<phi>reason 1000]
 
 paragraph \<open>\<open>\<r>\<close>Feasible \label{sec:rFeasible}\<close>
 
@@ -531,6 +531,11 @@ The fallback rule may has the following form,
 
 subsubsection \<open>Compact Representation of Antecedents\<close>
 
+declare conjunctionI[\<phi>reason 1000] conjI[\<phi>reason 1000]
+        allI[\<phi>reason 1000] impI[\<phi>reason 1000]
+        HOL.refl[\<phi>reason 1000 for \<open>_ = _\<close>]
+
+(*
 text \<open>Meta-programming is feasible on \<phi>-LPR.
 The reasoning of an antecedent may generate dynamically another antecedent, and assign it to
 an output variable of type \<^typ>\<open>bool\<close>.
@@ -543,6 +548,7 @@ so they can be represented by one output variable of type \<^typ>\<open>bool\<cl
 respectively.
 \<close>
 
+(*TODO: depreciate this!*)
 definition Compact_Antecedent :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
   where [iff]: \<open>Compact_Antecedent = (\<and>)\<close>
 
@@ -558,8 +564,7 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   \<open>(\<And>x. P x) \<Longrightarrow> \<forall>\<^sub>\<r>x. P x\<close>
   unfolding Compact_Forall_def ..
-
-declare conjunctionI[\<phi>reason 1000] \<comment> \<open>Meta-conjunction \<open>P &&& Q\<close> is also a compression.\<close>
+*)
 
 
 subsubsection \<open>Matches\<close>
@@ -632,7 +637,9 @@ text \<open>Antecedent \<open>\<r>Success\<close> terminates the reasoning succe
 the result.\<close>
 
 definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
-lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
+lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
+
+declare [[ML_debugger]]
 
 \<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
   raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
@@ -641,7 +648,7 @@ lemma \<r>Success_I[iff]: \<open>\<r>Success\<close> unfolding \<r>Success_def .
 subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}\<close>
 
 definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,27] 26)
-  where "Premise _ x = x"
+  where "Premise mode x = x"
 
 abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
@@ -717,8 +724,11 @@ text \<open>
 
 lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
 lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma Premise_E[elim!]: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
+lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
+lemma [simp]:
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close>
+  unfolding Premise_def by simp+
 
 subsubsection \<open>Implementation of the reasoners\<close>
 
@@ -739,16 +749,6 @@ lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
   "Premise mode (x = x)"
   unfolding Premise_def ..
 
-(*lemma contract_premise_true:
-  "(True \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode B) "
-  by simp
-
-lemma contract_premise_imp:
-  "(A \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode (A \<longrightarrow> B)) "
-  unfolding Premise_def atomize_imp .
-*)
-declare [[ML_debugger = true]]
-
 ML \<open>
 structure Useful_Thms = Named_Thms (
   val name = \<^binding>\<open>useful\<close>
@@ -762,7 +762,7 @@ setup \<open>Useful_Thms.setup\<close>
 ML_file \<open>library/PLPR_Syntax.ML\<close>
 
 lemma contract_premise_imp:
-  \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
+  \<open>(Premise mode' P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
   unfolding Premise_def by (rule, rule, simp+)
 
 lemma contract_drop_waste:
@@ -770,15 +770,12 @@ lemma contract_drop_waste:
   unfolding Pure.prop_def by simp
 
 lemma contract_obligations:
-  "(Premise mode P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> PROP C) \<equiv> (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q \<Longrightarrow> PROP C)"
+  "(Premise mode' P \<Longrightarrow> Premise mode Q \<Longrightarrow> PROP C) \<equiv> (Premise mode (P \<and> Q) \<Longrightarrow> PROP C)"
   unfolding Premise_def by rule simp+
 
 lemma contract_premise_all:
   "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
   unfolding Premise_def atomize_all .
-
-term Pure.prop
-thm Pure.prop_def
 
 ML_file "library/reasoners.ML"
 
@@ -787,6 +784,8 @@ ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
+
+hide_fact contract_premise_imp contract_drop_waste contract_obligations contract_premise_all
 
 
 subsection \<open>Reasoning Frame\<close>
@@ -1165,6 +1164,23 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Optimum_Among (Trueprop P) \<equiv> Trueprop (Optimum_Among_embed P)\<close>
   unfolding Optimum_Among_embed_def Optimum_Among_def .
 
+
+subsection \<open>Exhaustive Reasoning\<close>
+
+text \<open>\<phi>-LPR is a priority-guided depth-first reasoner giving the first reached solution.
+  This extension enables exhaustive reasoning traverses all branches and combines proof obligations
+  for each branch by disjuntion.\<close>
+
+lemma merge_oblg_divergence:
+  \<open> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<Longrightarrow> C)
+\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pb \<Longrightarrow> C)
+\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<or> Pb \<Longrightarrow> C)\<close>
+  unfolding Pure.prop_def Premise_def by blast
+
+ML_file_debug \<open>library/exhaustive.ML\<close>
+
+hide_fact merge_oblg_divergence
+
 subsection \<open>Environment Variables\<close>
 
 definition Push_Envir_Var :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
@@ -1271,6 +1287,55 @@ ML_file \<open>library/recursion_guard.ML\<close>
 \<phi>reasoner_ML \<r>Recursion_Guard 1000 (\<open>\<r>RECURSION_GUARD(?X) (PROP ?P)\<close>) = \<open>PLPR_Recursion_Guard.reason\<close>
 
 hide_fact Do_\<r>Recursion_Guard
+
+
+subsection \<open>Error Message\<close>
+
+\<phi>reasoner_ML TRACING 1200 (\<open>TRACING ?x\<close>) = \<open>fn (ctxt,sequent) =>
+  if Context_Position.is_really_visible ctxt
+  then let
+         val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>TRACING\<close> $ text)
+               = Thm.major_prem_of sequent
+         val str = Text_Encoding.decode_text_str ctxt text
+         val _ = tracing str
+       in Seq.single (ctxt, @{thm TRACING_I} RS sequent)
+       end
+  else Seq.empty\<close>
+
+\<phi>reasoner_ML WARNING 1200 (\<open>WARNING ?x\<close>) = \<open>fn (ctxt,sequent) =>
+  if Context_Position.is_really_visible ctxt
+  then let
+         val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>WARNING\<close> $ text)
+               = Thm.major_prem_of sequent
+         val str = Text_Encoding.decode_text_str ctxt text
+         val _ = warning str
+       in Seq.single (ctxt, @{thm WARNING_I} RS sequent)
+       end
+  else Seq.empty\<close>
+
+\<phi>reasoner_ML FAIL 1200 (\<open>FAIL ?x\<close> | \<open>PROP FAIL' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
+  if not (Config.get ctxt PLPR_Exhaustive.PLPR_exhaustive_mode) andalso
+     Context_Position.is_really_visible ctxt
+  then let
+         val text = case Thm.major_prem_of sequent
+                      of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ X) => X
+                       | \<^const>\<open>FAIL'\<close> $ X => X
+         val str = Text_Encoding.decode_text_str ctxt text
+         val _ = warning str
+       in Seq.empty
+       end
+  else Seq.empty\<close>
+
+\<phi>reasoner_ML ERROR 1200 (\<open>ERROR ?x\<close> | \<open>PROP ERROR' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
+  let
+    val text = case Thm.major_prem_of sequent
+                 of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>ERROR\<close> $ X) => X
+                  | \<^const>\<open>ERROR'\<close> $ X => X
+    val str = Text_Encoding.decode_text_str ctxt text
+    val _ = error str
+  in Seq.empty
+  end\<close>
+
 
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>

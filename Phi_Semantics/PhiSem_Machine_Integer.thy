@@ -164,7 +164,7 @@ parse_ast_translation \<open>
                 Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
 lemma [\<phi>reason add]:
-  \<open>\<phi>Equiv_Obj \<nat>\<^sup>r('b) x (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
+  \<open>\<phi>Equiv_Obj \<nat>\<^sup>r('b) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
   \<medium_left_bracket>
     destruct\<phi> _
     construct\<phi> \<open>y \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
@@ -629,7 +629,7 @@ lemma op_add_int_\<phi>app[\<phi>overload +,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x + y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<int>('b) \<rbrace> \<close>
   \<medium_left_bracket> apply_rule op_add_word[where 'b='b] \<medium_right_bracket>
-      certified using sint_of_int_eq that(1) by fastforce .
+      certified by (metis atLeastLessThan_iff of_int_add sint_of_int_eq the_\<phi>(5)).
  
 declare op_add_word_\<phi>app[\<phi>overload +]
 

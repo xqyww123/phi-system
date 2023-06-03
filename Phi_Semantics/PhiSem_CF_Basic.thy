@@ -189,6 +189,8 @@ causing it is very difficult to recover the actual abstract guard
 \<open>cond\<close> from the reduced composition \<open>cond x'\<close>.
 *)
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
     and V: "X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) \<a>\<n>\<d> Any @action ToSA"
@@ -225,9 +227,9 @@ proc (nodef) refine_while:
                         metis funpow.simps(2) less_Suc_eq_le nat_less_le o_apply) ;;
 
     have [\<phi>reason]:
-        \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (f ^^ ib) x = While_Combinator.while cond f x
-      \<Longrightarrow> X ((f ^^ ib) x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> X (While_Combinator.while cond f x)\<close>
-      by fastforce
+        \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (f ^^ i) x = While_Combinator.while cond f x
+      \<Longrightarrow> X ((f ^^ i) x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> X (While_Combinator.while cond f x)\<close>
+      by (simp add: Premise_def)
 
   \<medium_right_bracket> certified using \<phi> by (auto simp add: While_Combinator.while_def while_option_def,
                 meson Least_le,

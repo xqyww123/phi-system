@@ -124,7 +124,9 @@ lemma [\<phi>reason 1000]: "SameNuTy A A" \<comment> \<open>The fallback\<close>
   unfolding SameNuTy_def ..
 
 
-subsection \<open>Equation-based Cleaning\<close>
+subsection \<open>Cleaning Waste Generated During Automation\<close>
+
+(*
 
 consts clean_automation_waste :: mode
 
@@ -137,20 +139,25 @@ lemma [\<phi>reason 1]:
   unfolding Action_Tag_def by simp
 
 lemma [\<phi>reason 1200]:
-  \<open>(() \<Ztypecolon> \<phi>None) = 1 @action clean_automation_waste\<close>
+  \<open>(any \<Ztypecolon> \<phi>None) = 1 @action clean_automation_waste\<close>
   unfolding Action_Tag_def by simp
 
-lemma clean_automation_waste_general_rule:
+lemma [\<phi>reason 1200]:
+  \<open>(x \<Ztypecolon> T \<^emph> \<phi>None :: 'a::sep_magma_1 set) = (fst x \<Ztypecolon> T) @action clean_automation_waste\<close>
+  unfolding Action_Tag_def
+  by (cases x; clarsimp simp add: set_eq_iff \<phi>Prod_expn)
+
+(* lemma clean_automation_waste_general_rule:
   \<open> Unit_Functor F
 \<Longrightarrow> (x \<Ztypecolon> F \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
   unfolding Unit_Functor_def Imply_def Action_Tag_def \<phi>None_itself_is_one
-  by (clarsimp simp add: set_eq_iff; rule, insert \<phi>None_expn, blast, blast)
+  by (clarsimp simp add: set_eq_iff; rule, insert \<phi>None_expn, blast, blast) *)
 
 \<phi>reasoner_ML clean_automation_waste_general_rule 50 (\<open>_ = _ @action clean_automation_waste\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
   let val _ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*equal*) $ (_ (*\<phi>Type*) $ _ $ T) $ _) $ _) 
         = Thm.major_prem_of sequent
-   in case Phi_Functor_Detect.detect 1 ctxt T
+   in case Phi_Type_Algebra.detect_type_operator 1 ctxt T
         of SOME [Ft,_] => let
             val rule = Drule.infer_instantiate ctxt [(("F",0), Thm.cterm_of ctxt Ft)]
                           @{thm "clean_automation_waste_general_rule"}
@@ -158,6 +165,19 @@ fn (ctxt,sequent) => Seq.make (fn () =>
          | NONE => NONE
   end)
 \<close>
+
+(*TODO!*)
+lemma clean_automation_waste_general_rule':
+  \<open> Unit_Functor F
+\<Longrightarrow> (x \<Ztypecolon> T \<^emph> F \<circle>) = (x \<Ztypecolon> T \<^emph> \<circle>) @action clean_automation_waste\<close>
+  unfolding Unit_Functor_def Imply_def Action_Tag_def \<phi>None_itself_is_one
+  by (cases x; clarsimp simp add: set_eq_iff \<phi>Prod_expn; rule; insert \<phi>None_expn; blast)
+
+lemma clean_automation_waste_general_rule'':
+  \<open> Unit_Functor F
+\<Longrightarrow> (F \<circle>) = \<circle> @action clean_automation_waste\<close>
+  unfolding Unit_Functor_def Imply_def Action_Tag_def \<phi>None_itself_is_one
+  by (rule \<phi>Type_eqI; clarsimp simp add: set_eq_iff \<phi>Prod_expn; rule; insert \<phi>None_expn; blast)
 
 
 (* (*TESTING... re-enable them for performance*)
@@ -194,19 +214,19 @@ lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> \<circle> \<^emph> ?U
   \<open>((x,y) \<Ztypecolon> \<circle> \<^emph> U) = ((y \<Ztypecolon> U) :: 'b::sep_magma_1 set) @action clean_automation_waste\<close>
   unfolding \<phi>Prod_\<phi>None Action_Tag_def ..
 
-lemma [\<phi>reason 1200 for \<open>((?x,?r) \<Ztypecolon> (?T \<^emph> ?n \<Znrres> \<circle>)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
+lemma [\<phi>reason 1200 for \<open>((?x,?r) \<Ztypecolon> ?T \<^emph> (?n \<Znrres> \<circle>)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
-\<Longrightarrow> ((x,r) \<Ztypecolon> (T \<^emph> n \<Znrres> \<circle>)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
+\<Longrightarrow> ((x,r) \<Ztypecolon> T \<^emph> (n \<Znrres> \<circle>)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
   unfolding set_eq_iff Premise_def Action_Tag_def
   by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>((?r,?x) \<Ztypecolon> (?n \<Znrres> \<circle> \<^emph> ?T)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
+lemma [\<phi>reason 1200 for \<open>((?r,?x) \<Ztypecolon> (?n \<Znrres> \<circle>) \<^emph> ?T) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
-\<Longrightarrow> ((r,x) \<Ztypecolon> (n \<Znrres> \<circle> \<^emph> T)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
+\<Longrightarrow> ((r,x) \<Ztypecolon> (n \<Znrres> \<circle>) \<^emph> T) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
   unfolding set_eq_iff Premise_def Action_Tag_def
   by (simp add: \<phi>expns)
 
-
+*)
 
 
 subsection \<open>Unification of \<lambda>-Abstraction\<close>
@@ -362,12 +382,27 @@ lemma [\<phi>reason 1200 for \<open>Structure_Info (?k \<^bold>\<rightarrow> ?T)
 *)
 *)
 
-subsection \<open>Extract\<close>
+subsection \<open>Structural Extract\<close>
 
 text \<open>The canonical form is where all permission annotation are on leaves.
   It minimizes fragments. (TODO: move this)\<close>
 
-definition Structural_Extract :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
+consts \<A>SE :: action
+
+declare [[\<phi>reason_default_pattern
+      \<open> _ \<Ztypecolon> ?X \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?Y \<^emph> _ \<a>\<n>\<d> _ @action \<A>SE\<close> \<Rightarrow> \<open> _ \<Ztypecolon> ?X \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?Y \<^emph> _ \<a>\<n>\<d> _ @action \<A>SE\<close> (100)
+  and \<open> _ \<Ztypecolon> ?X \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?Y \<^emph> _ \<a>\<n>\<d> (Reverse_Transformation _ _ \<and> _) @action \<A>SE\<close> \<Rightarrow>
+      \<open> _ \<Ztypecolon> ?X \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?Y \<^emph> _ \<a>\<n>\<d> (Reverse_Transformation _ _ \<and> _) @action \<A>SE\<close>   (105)
+  and \<open> Try _ (_ \<Ztypecolon> ?X \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?Y \<^emph> _ \<a>\<n>\<d> _ @action \<A>SE) \<close> \<Rightarrow> \<open> Try _ (_ \<Ztypecolon> ?X \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?Y \<^emph> _ \<a>\<n>\<d> _ @action \<A>SE) \<close> (100)
+  and \<open> Try _ (_ \<Ztypecolon> ?X \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?Y \<^emph> _ \<a>\<n>\<d> (Reverse_Transformation _ _ \<and> _) @action \<A>SE) \<close> \<Rightarrow>
+      \<open> Try _ (_ \<Ztypecolon> ?X \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?Y \<^emph> _ \<a>\<n>\<d> (Reverse_Transformation _ _ \<and> _) @action \<A>SE) \<close>   (105)
+]]
+
+text \<open>Task of Structural Extract \<^prop>\<open>(x,w) \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y,r) \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> P2 @action \<A>SE\<close>,
+  given \<^term>\<open>x \<Ztypecolon> T\<close>, expecting \<^term>\<open>y \<Ztypecolon> U\<close>, the reasoner finds the further element \<^term>\<open>w \<Ztypecolon> W\<close>
+  that needs to be extracted further and the remain \<^term>\<open>r \<Ztypecolon> R\<close> that remains from the extraction.\<close>
+
+(*definition Structural_Extract :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Structural_Extract From Remain To Residual Aux \<longleftrightarrow> (Residual * From \<i>\<m>\<p>\<l>\<i>\<e>\<s> Remain * To \<a>\<n>\<d> Aux)\<close>
   \<comment> \<open>Extract \<open>To\<close> from \<open>From\<close>, remaining \<open>Remain\<close> the unused part in From,
       and leaving \<open>Residual\<close> the part in \<open>To\<close> that fails to be obtained from From, and so needs
@@ -377,13 +412,23 @@ declare [[\<phi>reason_default_pattern
       \<open>Structural_Extract ?X _ ?Y _ _\<close> \<Rightarrow> \<open>Structural_Extract ?X _ ?Y _ _\<close> (100)
   and \<open>Structural_Extract ?X _ ?Y _ (Reverse_Transformation _ _ \<and> _)\<close> \<Rightarrow>
       \<open>Structural_Extract ?X _ ?Y _ (Reverse_Transformation _ _ \<and> _)\<close>          (110)
-]]
+]]*)
 
+(*
 lemma SE_clean_waste:
+  \<open> x \<Ztypecolon> T \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> W \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> R = R' @action clean_automation_waste
+\<Longrightarrow> W = W' @action clean_automation_waste
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> W' \<a>\<n>\<d> P @action \<A>SE\<close>
+  unfolding Action_Tag_def
+  by simp *)
+
+(*lemma SE_clean_waste:
   \<open> Structural_Extract X R Y W P
 \<Longrightarrow> R = R' @action clean_automation_waste
 \<Longrightarrow> W = W' @action clean_automation_waste
 \<Longrightarrow> Structural_Extract X R' Y W' P\<close>
+  unfolding Action_Tag_def
   by simp
 
 lemma SE_clean_waste':
@@ -393,176 +438,143 @@ lemma SE_clean_waste':
 \<Longrightarrow> rR = rR' @action clean_automation_waste
 \<Longrightarrow> rW = rW' @action clean_automation_waste
 \<Longrightarrow> Structural_Extract X R' Y W' (Reverse_Transformation RP (Structural_Extract rY rW' rX rR' rP) \<and> P)\<close>
+  unfolding Action_Tag_def
+  by simp*)
+
+(*
+lemma SE_clean_waste':
+  \<open> x \<Ztypecolon> T \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> W \<a>\<n>\<d> (Reverse_Transformation RP (yr \<Ztypecolon> Ur \<^emph> Wr \<i>\<m>\<p>\<l>\<i>\<e>\<s> xr \<Ztypecolon> Tr \<^emph> Rr \<a>\<n>\<d> Pr) \<and> P) @action \<A>SE
+\<Longrightarrow> R = R' @action clean_automation_waste
+\<Longrightarrow> W = W' @action clean_automation_waste
+\<Longrightarrow> rR = rR' @action clean_automation_waste
+\<Longrightarrow> rW = rW' @action clean_automation_waste
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> W' \<a>\<n>\<d> (Reverse_Transformation RP (yr \<Ztypecolon> Ur \<^emph> Wr \<i>\<m>\<p>\<l>\<i>\<e>\<s> xr \<Ztypecolon> Tr \<^emph> Rr \<a>\<n>\<d> Pr) \<and> P) @action \<A>SE\<close>
+  unfolding Action_Tag_def
   by simp
+*)
 
-
+(*
 lemma Structural_Extract_imply_P:
   \<open> Structural_Extract X R Y W P1
 \<Longrightarrow> P1 \<longrightarrow> P2
 \<Longrightarrow> Structural_Extract X R Y W P2\<close>
   unfolding Structural_Extract_def Imply_def by blast
 
-
 lemma Structural_Extract_reverse_transformation_I[intro?]:
   \<open> Structural_Extract X R Y W P
 \<Longrightarrow> RP \<longrightarrow> RX
 \<Longrightarrow> Structural_Extract X R Y W (Reverse_Transformation RP RX \<and> P)\<close>
   unfolding Generated_Rule_def Structural_Extract_def Imply_def
-  by blast
+  by blast*)
 
-paragraph \<open>Install\<close>
+subsubsection \<open>Installation -- Rules initializing the SE reasoning\<close>
 
 lemma ToSA_by_structural_extraction:
-  " \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> U) R1 (x \<Ztypecolon> T) W P2)
-\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> P1
-\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d> P1 \<and> P2"
-  unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def Try_def \<r>Call_def
-  \<medium_left_bracket> premises SE and A
+  " \<phi>Equiv_Obj T eq
+\<Longrightarrow> \<r>CALL Try Any ((y,w) \<Ztypecolon> U \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> xr \<Ztypecolon> T \<^emph> R \<a>\<n>\<d> P2 @action \<A>SE)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (fst xr) x
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> w \<Ztypecolon> W \<brangle> \<a>\<n>\<d> P1
+\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> snd xr \<Ztypecolon> R\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d> P1 \<and> P2"
+  unfolding FOCUS_TAG_def Try_def \<r>Call_def
+  \<medium_left_bracket> premises _ and SE and _ and A
     apply_rule A[THEN implies_right_prod]
     SE
-  \<medium_right_bracket> certified using \<phi> by simp .
+  \<medium_right_bracket> .
 
 lemma ToSA_by_structural_extraction__reverse_transformation:
-  " \<r>CALL Try Any (Structural_Extract (y \<Ztypecolon> U) R1 (x \<Ztypecolon> T) W
-             (Reverse_Transformation RP2 (Structural_Extract (x' \<Ztypecolon> T') W' (y' \<Ztypecolon> U') R1' P2') \<and> P2))
-\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> W \<brangle> \<a>\<n>\<d> (Reverse_Transformation RP1 (R2'\<heavy_comma> \<blangle> W' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1') \<and> P1)
-\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> R1\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d>
-      (Reverse_Transformation (RP2 \<and>\<^sub>\<r> RP1) (R2'\<heavy_comma> R1'\<heavy_comma> \<blangle> x' \<Ztypecolon> T' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A'\<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P1' \<and> P2')
+  " \<phi>Equiv_Obj T eq
+\<Longrightarrow> \<r>CALL Try Any (
+      (y,w) \<Ztypecolon> U \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> xr \<Ztypecolon> T \<^emph> R \<a>\<n>\<d> (
+        (True \<longrightarrow> Reverse_Transformation RP2 ((x',r') \<Ztypecolon> T' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> yw' \<Ztypecolon> U' \<^emph> W' \<a>\<n>\<d> P2')
+        ) \<and> P2))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (fst xr) x
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> w \<Ztypecolon> W \<brangle> \<a>\<n>\<d> (Reverse_Transformation RP1 (R2'\<heavy_comma> \<blangle> snd yw' \<Ztypecolon> W' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1') \<and> P1)
+\<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> snd xr \<Ztypecolon> R\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d>
+      (Reverse_Transformation (\<phi>Equiv_Obj U' eq' \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq' (fst yw') y') \<and> RP2 \<and> RP1) (
+              R2'\<heavy_comma> r' \<Ztypecolon> R'\<heavy_comma> \<blangle> x' \<Ztypecolon> T' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A'\<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P1' \<and> P2')
           \<and> P1 \<and> P2)"
-  unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def
-            Generated_Rule_def Compact_Antecedent_def Try_def \<r>Call_def
-  \<medium_left_bracket> premises SE and A
+  unfolding FOCUS_TAG_def Generated_Rule_def Try_def \<r>Call_def
+  \<medium_left_bracket> premises _ and SE and _ and A
     apply_rule A[THEN implies_right_prod]
     SE
-  \<medium_right_bracket> certified apply (simp add: \<phi>)
-  \<medium_left_bracket>
-    have A : \<open>R2' \<heavy_comma> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
-    have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> W' \<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp ;;
-    SE
-    apply_rule A[THEN implies_right_prod]
-  \<medium_right_bracket>. .
-
-print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> _\<close> ? ?
-
-
-
-paragraph \<open>Termination\<close>
-
-lemma Structural_Extract_\<phi>None_right [\<phi>reason 3000]:
-  \<comment> \<open>No further extraction is demanded.\<close>
-  \<open>Structural_Extract X X (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
-  using implies_refl .
-
-lemma Structural_Extract_\<phi>None_left [\<phi>reason 3000]:
-  \<comment> \<open>No further extraction is demanded.\<close>
-  \<open>Structural_Extract (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) X X True\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
-  using implies_refl .
-
-lemma Structural_Extract_1_right [\<phi>reason 3000]:
-  \<comment> \<open>No further extraction is demanded.\<close>
-  \<open>Structural_Extract X X 1 1 True\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
-  using implies_refl .
-
-lemma Structural_Extract_1_left [\<phi>reason 3000]:
-  \<comment> \<open>No further extraction is demanded.\<close>
-  \<open>Structural_Extract 1 1 X X True\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
-  using implies_refl .
+  \<medium_right_bracket> certified apply (clarsimp simp add: \<phi>)
+  \<medium_left_bracket> premises _ and _ and [simp] and [simp]
+    have A : \<open>R2' \<heavy_comma> snd yw' \<Ztypecolon> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1'\<close> using \<phi>_previous by simp
+    have SE: \<open>(r' \<Ztypecolon> R' \<heavy_comma> x' \<Ztypecolon> T' \<i>\<m>\<p>\<l>\<i>\<e>\<s> yw' \<Ztypecolon> U' \<^emph> W' \<a>\<n>\<d> P2')\<close> using \<phi>_previous by (simp add: \<phi>Prod_expn') ;;
+    SE 
+    apply_rule A
+  \<medium_right_bracket> . .
 
 
 (*TODO: BUG: need to check the case where Y requires only partial share permission but
     this rule may give it the total.*)
-lemma Structural_Extract_exact:
-  \<comment> \<open>The current object X is exactly what we want to extract.\<close>
-  \<open>Structural_Extract X (() \<Ztypecolon> \<phi>None) X (() \<Ztypecolon> \<phi>None) True\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Structural_Extract_def mult_1_left \<phi>None_itself_is_one mult_1_right Action_Tag_def
+
+subsubsection \<open>Termination\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason 3010]:
+  \<open> x \<Ztypecolon> (T \<^emph> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((), fst x) \<Ztypecolon> (\<circle> \<^emph> T) @action \<A>SE \<close>
+  for T :: \<open>('c::sep_magma_1, 'a) \<phi>\<close>
+  unfolding Action_Tag_def
+  by (cases x; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 3011]:
+  \<open> x \<Ztypecolon> (T \<^emph> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((), fst x) \<Ztypecolon> (\<circle> \<^emph> T) \<a>\<n>\<d> (
+      Reverse_Transformation True (
+        x' \<Ztypecolon> (\<circle> \<^emph> T') \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd x', ()) \<Ztypecolon> (T' \<^emph> \<circle>)) \<and> True) @action \<A>SE \<close>
+  for T :: \<open>('c::sep_magma_1, 'a) \<phi>\<close> and T' :: \<open>('c'::sep_magma_1, 'a') \<phi>\<close>
+  unfolding Action_Tag_def Generated_Rule_def
+  by (cases x; cases x'; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 3000]:
+  \<open> x \<Ztypecolon> (\<circle> \<^emph> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd x, ()) \<Ztypecolon> T \<^emph> \<circle> @action \<A>SE \<close>
+  for T :: \<open>('c::sep_magma_1, 'a) \<phi>\<close>
+  unfolding Action_Tag_def
+  by (cases x; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 3001]:
+  \<open> x \<Ztypecolon> (\<circle> \<^emph> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd x, ()) \<Ztypecolon> T \<^emph> \<circle> \<a>\<n>\<d> (
+      Reverse_Transformation True (
+        x' \<Ztypecolon>  T \<^emph> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((), fst x') \<Ztypecolon> \<circle> \<^emph> T) \<and> True) @action \<A>SE \<close>
+  for T :: \<open>('c::sep_magma_1, 'a) \<phi>\<close> and T' :: \<open>('c'::sep_magma_1, 'a') \<phi>\<close>
+  unfolding Action_Tag_def Generated_Rule_def
+  by (cases x; cases x'; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 3000 for \<open>_ \<Ztypecolon> ?T \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?T' \<^emph> _ \<a>\<n>\<d> _ @action \<A>SE \<close>]:
+  \<open> x \<Ztypecolon> (T \<^emph> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (T \<^emph> \<circle>) @action \<A>SE \<close>
+  unfolding Action_Tag_def
   using implies_refl .
 
-declare Structural_Extract_exact
-  [THEN SE_clean_waste, \<phi>reason 3000 for \<open>Structural_Extract ?X ?R ?Y ?W ?P\<close>]
-
-lemma [
-  THEN SE_clean_waste',
-  \<phi>reason 3011 for \<open>Structural_Extract ?X ?R ?Y ?W (Reverse_Transformation ?RP ?RX \<and> ?P)\<close>
-]: \<comment> \<open>The current object X is exactly what we want to extract.\<close>
-  \<open>Structural_Extract X  (() \<Ztypecolon> \<phi>None) X  (() \<Ztypecolon> \<phi>None)
-    (Reverse_Transformation True (Structural_Extract X' (() \<Ztypecolon> \<phi>None) X' (() \<Ztypecolon> \<phi>None) True) \<and> True)\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding Action_Tag_def
-  by (blast intro: Structural_Extract_exact [unfolded Action_Tag_def]
-                   Structural_Extract_reverse_transformation_I)
+lemma [\<phi>reason 3001 for \<open>_ \<Ztypecolon> ?T \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> ?T' \<^emph> _ \<a>\<n>\<d> _ @action \<A>SE \<close>]:
+  \<open> x \<Ztypecolon> (T \<^emph> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (T \<^emph> \<circle>) \<a>\<n>\<d> (
+      Reverse_Transformation True (
+        x' \<Ztypecolon> (T' \<^emph> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> (T' \<^emph> \<circle>) ) \<and> True) @action \<A>SE \<close>
+  unfolding Action_Tag_def Generated_Rule_def
+  by simp
 
 
-lemma [\<phi>reason 3011]:
-  \<open>Structural_Extract X X (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None)
-   (Reverse_Transformation True (Structural_Extract (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) X' X' True) \<and> True)\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding Action_Tag_def
-  by (blast intro: Structural_Extract_\<phi>None_left [unfolded Action_Tag_def]
-                   Structural_Extract_\<phi>None_right[unfolded Action_Tag_def]
-                   Structural_Extract_reverse_transformation_I)
-
-lemma [\<phi>reason 3011]:
-  \<open>Structural_Extract (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) X X
-    (Reverse_Transformation True (Structural_Extract X' X' (() \<Ztypecolon> \<phi>None) (() \<Ztypecolon> \<phi>None) True) \<and> True)\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding Action_Tag_def
-  by (blast intro: Structural_Extract_\<phi>None_left [unfolded Action_Tag_def]
-                   Structural_Extract_\<phi>None_right[unfolded Action_Tag_def]
-                   Structural_Extract_reverse_transformation_I)
-
-lemma [\<phi>reason 3011]:
-  \<open>Structural_Extract X X 1 1 (Reverse_Transformation True (Structural_Extract 1 1 X' X' True) \<and> True)\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding Action_Tag_def
-  by (blast intro: Structural_Extract_1_left [unfolded Action_Tag_def]
-                   Structural_Extract_1_right[unfolded Action_Tag_def]
-                   Structural_Extract_reverse_transformation_I)
-
-lemma [\<phi>reason 3011]:
-  \<open>Structural_Extract 1 1 X X (Reverse_Transformation True (Structural_Extract X' X' 1 1 True) \<and> True)\<close>
-  for X :: \<open>'a::sep_magma_1 set\<close> and X' :: \<open>'aa::sep_magma_1 set\<close>
-  unfolding Action_Tag_def
-  by (blast intro: Structural_Extract_1_left [unfolded Action_Tag_def]
-                   Structural_Extract_1_right[unfolded Action_Tag_def]
-                   Structural_Extract_reverse_transformation_I)
+subsubsection \<open>Fall back\<close>
 
 
+lemma [\<phi>reason 1]: \<comment> \<open>Structural_Extract_fail\<close>
+  \<open> Try False (x \<Ztypecolon> X \<^emph> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd x, fst x) \<Ztypecolon> Y \<^emph> X @action \<A>SE) \<close>
+  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
+  unfolding \<phi>None_itself_is_one Action_Tag_def Try_def
+  by (cases x; simp add: mult.commute \<phi>Prod_expn')
 
+lemma [\<phi>reason! 2]:
+  \<open> Try False (x \<Ztypecolon> X \<^emph> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd x, fst x) \<Ztypecolon> Y \<^emph> X \<a>\<n>\<d> (
+          Reverse_Transformation True (x' \<Ztypecolon> X' \<^emph> Y' \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd x', fst x') \<Ztypecolon> Y' \<^emph> X') \<and> True) @action \<A>SE) \<close>
+  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close> and X' :: \<open>('a'::sep_ab_semigroup,'b') \<phi>\<close>
+  unfolding \<phi>None_itself_is_one Action_Tag_def Try_def Generated_Rule_def
+  by (cases x; cases x'; simp add: mult.commute \<phi>Prod_expn')
 
-paragraph \<open>Fall back\<close>
-
-
-lemma Structural_Extract_fail
-  [\<phi>reason 1 for \<open>Try ?S (Structural_Extract _ _ _ _ _)\<close>
-             except \<open>Try ?S (Structural_Extract _ _ _ _ (Reverse_Transformation _ _ \<and> _))\<close>]:
-  \<open> Try False (Structural_Extract X X Y Y True) \<close>
-  for X :: \<open>'a::sep_ab_semigroup set\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def Try_def
-  by (simp add: implies_refl mult.commute)
-
-lemma [\<phi>reason 1 for \<open>Try ?S (Structural_Extract _ _ _ _ (Reverse_Transformation _ _ \<and> _))\<close>]:
-  \<open> Try False (Structural_Extract X X Y Y
-      (Reverse_Transformation True (Structural_Extract X' X' Y' Y' True) \<and> True)) \<close>
-  for X :: \<open>'a::sep_ab_semigroup set\<close> and X' :: \<open>'aa::sep_ab_semigroup set\<close>
-  unfolding Action_Tag_def Try_def
-  by (blast intro: Structural_Extract_fail[unfolded Action_Tag_def Try_def]
-                   Structural_Extract_reverse_transformation_I)
-
-
-lemma Structural_Extract_fallback [\<phi>reason 5]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> U) (() \<Ztypecolon> \<phi>None) P\<close>
-  unfolding Structural_Extract_def
-  using implies_left_prod by blast
+lemma [\<phi>reason 3]: \<comment> \<open>Structural_Extract_fallback\<close>
+  \<open> fst x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y, ()) \<Ztypecolon> U \<^emph> \<circle> \<a>\<n>\<d> P @action \<A>SE\<close>
+  for T :: \<open>('a::sep_magma_1,'b) \<phi>\<close>
+  by (cases x; simp add: \<phi>Prod_expn')
 
 (*
 lemma [\<phi>reason 5]:
@@ -575,96 +587,103 @@ lemma [\<phi>reason 5]:
 
 
 
-paragraph \<open>Terminations for Specific Node\<close>
+subsubsection \<open>Terminations for Specific Node\<close>
 
-lemma Structural_Extract_\<phi>Some [\<phi>reason 1200]:
-  \<open> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None) P\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Guard_def
-  using \<phi>Some_cast .
-
-lemma [\<phi>reason 1211]:
-  \<open> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> \<black_circle> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> \<black_circle> U) (() \<Ztypecolon> \<phi>None)
-      (Reverse_Transformation (y' \<Ztypecolon> U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<a>\<n>\<d> P')
-            (Structural_Extract (y' \<Ztypecolon> \<black_circle> U') (() \<Ztypecolon> \<phi>None) (x' \<Ztypecolon> \<black_circle> T') (() \<Ztypecolon> \<phi>None) P')
-      \<and> P)\<close>
+lemma [\<phi>reason 1200]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y, ()) \<Ztypecolon> \<black_circle> U \<^emph> \<circle> \<a>\<n>\<d> P @action \<A>SE\<close>
   unfolding Action_Tag_def \<r>Guard_def
-  by (blast intro: Structural_Extract_\<phi>Some[unfolded Action_Tag_def \<r>Guard_def]
-                   Structural_Extract_reverse_transformation_I)
+  by (cases x; simp add: \<phi>Prod_expn' \<phi>Some_cast)
+
+lemma [\<phi>reason 1201]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y, ()) \<Ztypecolon> \<black_circle> U \<^emph> \<circle> \<a>\<n>\<d> (
+      Reverse_Transformation (fst y' \<Ztypecolon> U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<a>\<n>\<d> P')
+        (y' \<Ztypecolon> \<black_circle> U' \<^emph> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x', ()) \<Ztypecolon> \<black_circle> T' \<^emph> \<circle> \<a>\<n>\<d> P')
+    \<and> P) @action \<A>SE\<close>
+  unfolding Action_Tag_def \<r>Guard_def Generated_Rule_def
+  by (cases x; cases y'; simp add: \<phi>Prod_expn' \<phi>Some_cast)
 
 (*TODO: According to @{thm Agreement_times}, there must be a reasoning mechanism for \<inter>\<^sub>\<phi>
   It scatters information using \<inter>\<^sub>\<phi>
 
 The bellowing reasoning is too weak! *)
 
-
-lemma Structural_Extract_aggrement_to [\<phi>reason 1200]:
-  \<open> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) P\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Guard_def
-  apply (cases C; simp)
+(*TODO!*)
+lemma [\<phi>reason 1200]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<a>\<n>\<d> P @action \<A>SE\<close>
+  unfolding Action_Tag_def \<r>Guard_def
+  apply (cases C; cases x; simp add: \<phi>Prod_expn')
   \<medium_left_bracket> premises A
     dup
     apply_rule Agreement_cast[OF A]
   \<medium_right_bracket>
   using Agreement_cast .
 
-
-lemma Structural_Extract_aggrement_from:
-  \<open> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P
-\<Longrightarrow> Structural_Extract (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>) (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) P\<close>
-  unfolding Structural_Extract_def \<phi>None_itself_is_one mult_1_left Action_Tag_def \<r>Guard_def
-  apply (cases C; simp)
+lemma [\<phi>reason 1211]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
+\<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<a>\<n>\<d> (
+      Reverse_Transformation (fst y' \<Ztypecolon> U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> snd y' \<Ztypecolon> T' \<a>\<n>\<d> P') (
+        y' \<Ztypecolon> Agreement U' \<^emph> (Agreement T' ?\<^sub>\<phi> C) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd y', ()) \<Ztypecolon> Agreement T' \<^emph> \<circle> \<a>\<n>\<d> P')
+    \<and> P) @action \<A>SE \<close>
+  unfolding Action_Tag_def \<r>Guard_def Generated_Rule_def
+  apply (rule implies_weaken[where P=P], defer_tac)
+  apply (cases C; cases x; simp add: \<phi>Prod_expn')
   \<medium_left_bracket> premises A
+    dup
+    apply_rule Agreement_cast[OF A]
+  \<medium_right_bracket>
+  apply (simp add: implies_weaken Agreement_cast)
+  apply (clarsimp; cases C; cases y'; simp add: \<phi>Prod_expn')
+  \<medium_left_bracket> premises _ and _ and A and _
     apply_rule Agreement_cast[OF A]
     Agreement_shrink
   \<medium_right_bracket>
   using Agreement_cast .
 
 
-lemma [\<phi>reason 1211]:
-  \<open> \<g>\<u>\<a>\<r>\<d> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> Agreement T) (x \<Ztypecolon> Agreement T ?\<^sub>\<phi> C) (y \<Ztypecolon> Agreement U) (() \<Ztypecolon> \<circle>)
-      (Reverse_Transformation (y' \<Ztypecolon> U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<a>\<n>\<d> P')
-          (Structural_Extract (y' \<Ztypecolon> Agreement U') (() \<Ztypecolon> \<circle>) (x' \<Ztypecolon> Agreement T') (x' \<Ztypecolon> Agreement T' ?\<^sub>\<phi> C') P')
-      \<and> P)\<close>
-  unfolding Action_Tag_def \<r>Guard_def
-  by (blast intro: Structural_Extract_aggrement_to  [unfolded Action_Tag_def \<r>Guard_def]
-                   Structural_Extract_aggrement_from[unfolded Action_Tag_def \<r>Guard_def]
-                   Structural_Extract_reverse_transformation_I)
 
-
-
-paragraph \<open>Normalize the Target\<close>
-
-lemma Structural_Extract_to_mult:
-  \<open> Try S1 (Structural_Extract A B Y WY P1)
-\<Longrightarrow> Try S2 (Structural_Extract B C X WX P2)
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
-\<Longrightarrow> Structural_Extract A C (X * Y) (WX * WY) (P1 \<and> P2)\<close>
-  for X :: \<open>'a::sep_algebra set\<close>
-  unfolding Structural_Extract_def Simplify_def Action_Tag_def Try_def
-  \<medium_left_bracket> premises L and R
-    apply_rule L[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
-    apply_rule R[THEN implies_right_prod]
-  \<medium_right_bracket> .
-
-declare Structural_Extract_to_mult [THEN SE_clean_waste, \<phi>reason 1200]
+subsubsection \<open>Stepwise of Separations\<close>
 
 lemma Structural_Extract_\<phi>Prod_right:
-  \<open> Try S1 (Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY) P1)
-\<Longrightarrow> Try S2 (Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX) P2)
+  \<open> Try S1 ((fst a, fst (snd a)) \<Ztypecolon> A \<^emph> WY \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> Y \<^emph> B \<a>\<n>\<d> P1 @action \<A>SE)
+\<Longrightarrow> Try S2 ((snd b, snd (snd a)) \<Ztypecolon> B \<^emph> WX \<i>\<m>\<p>\<l>\<i>\<e>\<s> c \<Ztypecolon> X \<^emph> C \<a>\<n>\<d> P2 @action \<A>SE)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
-\<Longrightarrow> Structural_Extract A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX) (P1 \<and> P2)\<close>
-for A :: \<open>'a::sep_algebra set\<close>
-  unfolding \<phi>Prod_expn'
-  using Structural_Extract_to_mult .
+\<Longrightarrow> a \<Ztypecolon> A \<^emph> WY \<^emph> WX \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((fst b, fst c), snd c) \<Ztypecolon> (Y \<^emph> X) \<^emph> C \<a>\<n>\<d> (P1 \<and> P2) @action \<A>SE\<close>
+  for A :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
+  unfolding Action_Tag_def Try_def
+\<medium_left_bracket> premises Y and X
+  Y X
+\<medium_right_bracket> .
 
-declare Structural_Extract_\<phi>Prod_right [THEN SE_clean_waste, \<phi>reason 1200]
+declare Structural_Extract_\<phi>Prod_right [(*THEN SE_clean_waste,*) \<phi>reason 1200]
 
-paragraph \<open>Step by Step\<close>
+lemma [(*THEN SE_clean_waste',*) \<phi>reason 1201]:
+  \<open> Try S1 ((fst a, fst (snd a)) \<Ztypecolon> A \<^emph> WY \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> Y \<^emph> B \<a>\<n>\<d> (
+        Reverse_Transformation RP1 (
+          (fst (fst a'), fst c') \<Ztypecolon> Y' \<^emph> B' \<i>\<m>\<p>\<l>\<i>\<e>\<s> b' \<Ztypecolon> A' \<^emph> WY' \<a>\<n>\<d> P1'
+      ) \<and> P1) @action \<A>SE)
+\<Longrightarrow> Try S2 ((snd b, snd (snd a)) \<Ztypecolon> B \<^emph> WX \<i>\<m>\<p>\<l>\<i>\<e>\<s> c \<Ztypecolon> X \<^emph> C \<a>\<n>\<d> (
+        Reverse_Transformation RP1 (
+          (snd (fst a'), snd a') \<Ztypecolon> X' \<^emph> C' \<i>\<m>\<p>\<l>\<i>\<e>\<s> c' \<Ztypecolon> B' \<^emph> WX' \<a>\<n>\<d> P2'
+      ) \<and> P2) @action \<A>SE)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
+\<Longrightarrow> a \<Ztypecolon> A \<^emph> WY \<^emph> WX \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((fst b, fst c), snd c) \<Ztypecolon> (Y \<^emph> X) \<^emph> C \<a>\<n>\<d> (
+      Reverse_Transformation (RP1 \<and> RP2) (
+        a' \<Ztypecolon> (Y' \<^emph> X') \<^emph> C' \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fst b', snd b', snd c') \<Ztypecolon> A' \<^emph> WY' \<^emph> WX' \<a>\<n>\<d> P1' \<and> P2'
+    ) \<and> P1 \<and> P2) @action \<A>SE\<close>
+  for A :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close> and A' :: \<open>('a'::sep_ab_semigroup,'b') \<phi>\<close>
+  unfolding Action_Tag_def Try_def Generated_Rule_def
+  apply (rule implies_weaken, defer_tac,
+        (rule Structural_Extract_\<phi>Prod_right[unfolded Action_Tag_def Try_def]; assumption),
+        clarsimp)
+  \<medium_left_bracket> premises _ and _ and _ and _ and _ and _ and _ and Y and X
+    X Y
+  \<medium_right_bracket> .
 
+
+(*
 lemma Structural_Extract_from_mult:
   \<open> Try S1 (Structural_Extract X R2 Y Wr P1)
 \<Longrightarrow> Try S2 (Structural_Extract L R Wr Wr2 P2)
@@ -678,116 +697,109 @@ lemma Structural_Extract_from_mult:
     apply_rule R[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
   \<medium_right_bracket> .
 
-declare Structural_Extract_from_mult [THEN SE_clean_waste,  \<phi>reason 1200]
+declare Structural_Extract_from_mult [THEN SE_clean_waste,  \<phi>reason 1200] *)
+
 
 lemma Structural_Extract_\<phi>Prod_left:
-  \<open> Try S1 (Structural_Extract (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) Y W P1)
-\<Longrightarrow> Try S2 (Structural_Extract (y \<Ztypecolon> U) (r \<Ztypecolon> R) W W2 P2)
+  \<open> Try S1 ((fst (fst x), fst w_ru) \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y_rt \<Ztypecolon> Y \<^emph> Rt \<a>\<n>\<d> P1 @action \<A>SE)
+\<Longrightarrow> Try S2 ((snd (fst x), snd x) \<Ztypecolon> U \<^emph> W2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> w_ru \<Ztypecolon> W \<^emph> Ru \<a>\<n>\<d> P2 @action \<A>SE)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
-\<Longrightarrow> Structural_Extract ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2 (P1 \<and> P2)\<close>
-  for T :: \<open>('a::sep_algebra,'b) \<phi>\<close>
-  unfolding Structural_Extract_def \<phi>Prod_expn' Simplify_def Try_def
-  \<medium_left_bracket> premises R and L
-    fold mult.assoc
-    apply_rule L[THEN implies_right_prod]
-    apply_rule R[THEN implies_left_prod, unfolded mult.assoc[symmetric]]
+\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph> W2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fst y_rt, snd y_rt, snd w_ru) \<Ztypecolon> Y \<^emph> (Rt \<^emph> Ru) \<a>\<n>\<d> (P1 \<and> P2) @action \<A>SE\<close>
+  for T :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
+  unfolding Action_Tag_def Try_def
+  \<medium_left_bracket> premises T and U
+    U T
   \<medium_right_bracket> .
 
-declare Structural_Extract_\<phi>Prod_left [THEN SE_clean_waste, \<phi>reason 1200]
+declare Structural_Extract_\<phi>Prod_left [(*THEN SE_clean_waste,*) \<phi>reason 1200]
 
-lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> Try S1 (Structural_Extract A B (y \<Ztypecolon> Y) (wy \<Ztypecolon> WY)
-      (Reverse_Transformation RP1 (Structural_Extract (y' \<Ztypecolon> Y') (wy' \<Ztypecolon> WY') A' B' P1') \<and> P1))
-\<Longrightarrow> Try S2 (Structural_Extract B C (x \<Ztypecolon> X) (wx \<Ztypecolon> WX)
-      (Reverse_Transformation RP2 (Structural_Extract (x' \<Ztypecolon> X') (wx' \<Ztypecolon> WX') B' C' P2') \<and> P2))
+lemma [(*THEN SE_clean_waste',*) \<phi>reason 1201]:
+  \<open> Try S1 ((fst (fst x), fst w_ru) \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y_rt \<Ztypecolon> Y \<^emph> Rt \<a>\<n>\<d> (
+      (Reverse_Transformation RP1 (
+          (fst x', fst (snd x')) \<Ztypecolon> Y' \<^emph> Rt' \<i>\<m>\<p>\<l>\<i>\<e>\<s> ya' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P1'))
+      \<and> P1) @action \<A>SE)
+\<Longrightarrow> Try S2 ((snd (fst x), snd x) \<Ztypecolon> U \<^emph> W2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> w_ru \<Ztypecolon> W \<^emph> Ru \<a>\<n>\<d> (
+      (Reverse_Transformation RP2 (
+          (snd ya', snd (snd x')) \<Ztypecolon> W' \<^emph> Ru' \<i>\<m>\<p>\<l>\<i>\<e>\<s> yb' \<Ztypecolon> U' \<^emph> W2' \<a>\<n>\<d> P2')
+      ) \<and> P2) @action \<A>SE)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
-\<Longrightarrow> Structural_Extract A C ((y,x) \<Ztypecolon> Y \<^emph> X) ((wy, wx) \<Ztypecolon> WY \<^emph> WX)
-      (Reverse_Transformation (RP1 \<and>\<^sub>\<r> RP2)
-        (Structural_Extract ((y',x') \<Ztypecolon> Y' \<^emph> X') ((wy', wx') \<Ztypecolon> WY' \<^emph> WX') A' C' (P1' \<and> P2'))
-      \<and> P1 \<and> P2)\<close>
-  for A :: \<open>'a::sep_algebra set\<close> and A' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Generated_Rule_def Compact_Antecedent_def Try_def
-  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded Action_Tag_def Try_def]
-                   Structural_Extract_\<phi>Prod_left [unfolded Action_Tag_def Try_def]
-                   Structural_Extract_imply_P)
+\<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<^emph> W2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fst y_rt, snd y_rt, snd w_ru) \<Ztypecolon> Y \<^emph> (Rt \<^emph> Ru) \<a>\<n>\<d> (
+      (Reverse_Transformation (RP1 \<and> RP2) (
+          x' \<Ztypecolon> Y' \<^emph> (Rt' \<^emph> Ru') \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((fst ya', fst yb'), snd yb') \<Ztypecolon> (T' \<^emph> U') \<^emph> W2' \<a>\<n>\<d> P1' \<and> P2'))
+      \<and> P1 \<and> P2) @action \<A>SE \<close>
+  for T :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close> and T' :: \<open>('a'::sep_ab_semigroup,'b') \<phi>\<close>
+  unfolding Action_Tag_def Try_def Generated_Rule_def
+  apply (rule implies_weaken, defer_tac,
+        (rule Structural_Extract_\<phi>Prod_left[unfolded Action_Tag_def Try_def]; assumption),
+        clarsimp)
+  \<medium_left_bracket> premises _ and _ and _ and _ and _ and _ and _ and T and U
+    T U
+  \<medium_right_bracket> .
 
-lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> Try S1 (Structural_Extract (x \<Ztypecolon> T) (r2 \<Ztypecolon> R2) Y W
-      (Reverse_Transformation RP1 (Structural_Extract Y' W' (x' \<Ztypecolon> T') (r2' \<Ztypecolon> R2') P1') \<and> P1))
-\<Longrightarrow> Try S2 (Structural_Extract (y \<Ztypecolon> U) (r \<Ztypecolon> R) W W2
-      (Reverse_Transformation RP2 (Structural_Extract W' W2' (y' \<Ztypecolon> U') (r' \<Ztypecolon> R') P2') \<and> P2))
-\<Longrightarrow> Structural_Extract ((x,y) \<Ztypecolon> T \<^emph> U) ((r2,r) \<Ztypecolon> (R2 \<^emph> R)) Y W2
-      (Reverse_Transformation (RP1 \<and>\<^sub>\<r> RP2)
-          (Structural_Extract Y' W2' ((x',y') \<Ztypecolon> T' \<^emph> U') ((r2',r') \<Ztypecolon> (R2' \<^emph> R')) (P1' \<and> P2')) \<and> P1 \<and> P2)\<close>
-  for Y :: \<open>'a::sep_algebra set\<close> and Y' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Generated_Rule_def Compact_Antecedent_def Try_def
-  by (blast intro: Structural_Extract_\<phi>Prod_right[unfolded Action_Tag_def Try_def]
-                   Structural_Extract_\<phi>Prod_left [unfolded Action_Tag_def Try_def]
-                   Structural_Extract_imply_P)
-
-lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> Try S1 (Structural_Extract A B Y WY
-      (Reverse_Transformation RP1 (Structural_Extract Y' WY' A' B' P1') \<and> P1))
-\<Longrightarrow> Try S2 (Structural_Extract B C X WX
-      (Reverse_Transformation RP2 (Structural_Extract X' WX' B' C' P2') \<and> P2))
-\<Longrightarrow> Structural_Extract A C (X * Y) (WX * WY)
-      (Reverse_Transformation (RP1 \<and>\<^sub>\<r> RP2) (Structural_Extract (X' * Y') (WX' * WY') A' C' (P1' \<and> P2')) \<and> P1 \<and> P2)\<close>
-  for X :: \<open>'a::sep_algebra set\<close> and X' :: \<open>'aa::sep_algebra set\<close>
-  unfolding Generated_Rule_def Compact_Antecedent_def Try_def
-  by (blast intro: Structural_Extract_to_mult  [unfolded Action_Tag_def Try_def]
-                   Structural_Extract_from_mult[unfolded Action_Tag_def Try_def]
-                   Structural_Extract_imply_P)
-
-(*TODO
-lemma Structural_Extract_from_mult[\<phi>reason 1200 for
-  \<open>Structural_Extract' (?L * ?X :: 'a::sep_algebra set) ?R ?W ?R2 ?P  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>
-]:
-  \<open> Structural_Extract X R2 Y Wr P1  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract L R Wr Wr2 P2  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Structural_Extract' (L * X) (R * R2) Y Wr2 (P1 \<and> P2)
-    \<and> Reverse_Transformation
-    (RP1 &&& RP2)
-    (Structural_Extract' (X' * Y') (WX' * WY') A' C' (P1' \<and> P2'))
-    \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
-  for X :: \<open>'a::sep_algebra set\<close>
-*)
-
-
-paragraph \<open>General Rules\<close>
-
+subsubsection \<open>Type Algebra\<close>
+ 
 lemma "_Structural_Extract_general_rule_":
-  \<open> Separation_Functor F1 F4 F14 T Ur
-\<Longrightarrow> Separation_Functor F3 F2 F23 U R
-\<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (yr \<Ztypecolon> F4 Ur) P\<close>
-  unfolding Structural_Extract_def
-  \<medium_left_bracket> premises _ and _ and _ and _ and Tr
-    apply_rule apply_Separation_Functor_go[where Fu=F4 and Ft=F1]
-    apply_rule apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
-    simplify(useful)
+  \<open> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 Dz z
+\<Longrightarrow> Sep_Homo_Ty_unzip F3 F2 F23 uz
+\<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> P x @action \<A>SE)
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<a>\<n>\<d> pred_mapper P (z x) @action \<A>SE \<close>
+  \<medium_left_bracket> premises FTF and _ and _ and [\<phi>reason add] and _ and Tr
+    interpret Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
+      using FTF . ;;
+    apply_rule apply_Separation_Functor_zip[where Fu=F4 and Ft=F1]
+    apply_rule functional_transformation[where U=\<open>U \<^emph> R\<close> and f=\<open>f\<close> and P=\<open>P\<close>]
     \<medium_left_bracket> Tr \<medium_right_bracket>
-    apply_Separation_Functor_back
-  \<medium_right_bracket> .
+    apply_Separation_Functor_unzip
+  \<medium_right_bracket> . 
 
-lemma "_Structural_Extract_general_rule'_":
-  \<open> Separation_Functor F1' F4' F14' T' W'
-\<Longrightarrow> Separation_Functor F3' F2' F23' U' R'
-\<Longrightarrow> Transformation_Functor F23' F14' f1' f2'
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1' = (\<lambda>x. x) \<and> f2' = (\<lambda>x. x)
-\<Longrightarrow> Separation_Functor F1 F4 F14 T W
-\<Longrightarrow> Separation_Functor F3 F2 F23 U R
-\<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 T) (r \<Ztypecolon> F2 R) (y \<Ztypecolon> F3 U) (w \<Ztypecolon> F4 W)
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> F3' U') (w' \<Ztypecolon> F4' W') (x' \<Ztypecolon> F1' T') (r' \<Ztypecolon> F2' R') P') \<and> P) \<close>
-  unfolding Generated_Rule_def
-  by (blast intro: "_Structural_Extract_general_rule_"
-                   Structural_Extract_imply_P)
-                  
+declare "_Structural_Extract_general_rule_"[(*THEN SE_clean_waste,*) \<phi>reason_functor_template 80]
+
+lemma "_Structural_Extract_general_rule'_"[(*THEN SE_clean_waste',*) \<phi>reason_functor_template 82]:
+  \<open> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Functional_Transformation_Functor_L F23' F14' Dom' mapper' Prem' pred_mapper' func_mapper'
+\<Longrightarrow> Sep_Homo_Ty_unzip F1' F4' F14' uz'
+\<Longrightarrow> Sep_Homo_Ty_zip F3' F2' F23' Dz' z'
+\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 Dz z
+\<Longrightarrow> Sep_Homo_Ty_unzip F3 F2 F23 uz
+\<Longrightarrow> Type_Variant_of_the_Same_Functor F3 F3'
+\<Longrightarrow> Type_Variant_of_the_Same_Functor F1 F1'
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
+\<Longrightarrow> (\<And>x \<in> Dom (z x). \<And>y''.
+      x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> (
+        (Reverse_Transformation (RP y'') (
+            y'' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> g y'' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P' y''
+          ))
+        \<and> P x) @action \<A>SE)
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<a>\<n>\<d> (
+      (Reverse_Transformation (Prem' \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> y' \<in> Dz') \<and> (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> Dom' (z' y') \<longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> g a \<in> Rng' (z' y')) \<and> RP a)) (
+          y' \<Ztypecolon> F3' U' \<^emph> F2' R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz' (func_mapper' g (z' y')) \<Ztypecolon> F1' T' \<^emph> F4' W' \<a>\<n>\<d> pred_mapper' P' (z' y')))
+      \<and> pred_mapper P (z x)) @action \<A>SE \<close>
+  unfolding Generated_Rule_def meta_Ball_def Premise_def norm_hhf_eq Action_Tag_def
+  subgoal premises prems proof -
+
+    have t12: \<open>(\<And>a. a \<in> Dom (z x) \<Longrightarrow>
+            a \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> (
+             (\<forall>y''. RP y'' \<longrightarrow> (y'' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> g y'' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P' y''))
+             \<and> P a))\<close>
+      using prems(12) by (smt (verit, best))
+
+    show ?thesis
+      by (insert prems(1-11) t12,
+          rule implies_weaken, defer_tac,
+          (rule "_Structural_Extract_general_rule_"[unfolded meta_Ball_def Premise_def norm_hhf_eq Action_Tag_def,
+                where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] ; assumption),
+          clarsimp simp add: Functional_Transformation_Functor_L.pred_mapper_constant,
+          rule "_Structural_Extract_general_rule_"[unfolded meta_Ball_def Premise_def norm_hhf_eq Action_Tag_def,
+            where f=g and uz=uz' and func_mapper=func_mapper' and z=z' and pred_mapper=pred_mapper'], force+)
+  qed  .
+
+
+(* TODO!!!!!
 \<phi>reasoner_ML "Structural_Extract_general_rule" 50 (\<open>Structural_Extract (_ \<Ztypecolon> _) _ (_ \<Ztypecolon> _) _ _\<close>) = \<open>
 
 fn (ctxt,sequent) => Seq.make (fn () =>
@@ -828,6 +840,7 @@ fn (ctxt,sequent) => Seq.make (fn () =>
    end
 )
 \<close>
+*)
 
 (*
 (*use \<open>k \<^bold>\<rightarrow>\<close> to test*)
@@ -855,24 +868,30 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
   unfolding Generated_Rule_def \<r>Guard_def
   by (blast intro: Structural_Extract_\<phi>MapAt[unfolded Action_Tag_def \<r>Guard_def]
                    Structural_Extract_imply_P) *)
-
-
-lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested once we have usable test case*)
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
-\<Longrightarrow> Scala_Semimodule_Functor F3 U D
-\<Longrightarrow> Scala_Semimodule_Functor F4 W D
-\<Longrightarrow> Separation_Functor (F1 a) (F4 a) F14 T (F4 c W)
-\<Longrightarrow> Separation_Functor (F3 a) (F2 a) F23 (F3 c U) R
-\<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> D \<and> b \<in> D \<and> c \<in> D
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> F3 c U) (yr \<Ztypecolon> F4 c W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 a T) (r \<Ztypecolon> F2 a R) (y \<Ztypecolon> F3 b U) (yr \<Ztypecolon> F4 b W) P\<close>
-  unfolding Structural_Extract_def
-  \<medium_left_bracket> premises _ and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
-               and _ and _ and _ and _ and _ and Tr
+ 
+lemma SE_general_Scala_Seminearing_left: (*need test, to be tested once we have usable test case*)
+  \<open> Scala_Semimodule_Functor F3 U Ds
+\<Longrightarrow> Scala_Semimodule_Functor F4 W Ds
+\<Longrightarrow> Sep_Homo_Ty_zip (F1 a) (F4 a) F14 Dz z
+\<Longrightarrow> Sep_Homo_Ty_unzip (F3 a) (F2 a) F23 uz
+\<Longrightarrow> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds
+\<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> F4 c W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> F3 c U \<^emph> R \<a>\<n>\<d> P x @action \<A>SE)
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 b U \<^emph> F2 a R \<a>\<n>\<d> pred_mapper P (z x) @action \<A>SE\<close>
+  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add] and _ and _ and FTF
+             and _ and _ and [\<phi>reason add] and _ and Tr
+    interpret Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
+      using FTF .
     have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
+<<<<<<< HEAD
       by (metis LSF4 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(6))
+=======
+<<<<<<< HEAD
+      by (metis LSF4 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(7))
+>>>>>>> dce1a7d (WIP)
     have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
       by (metis LSF3 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(6))
     ;; unfold F4D
@@ -882,24 +901,44 @@ lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested o
        \<medium_left_bracket> Tr \<medium_right_bracket>
        apply_Separation_Functor_back
        fold F3D
+=======
+      by (metis LSF4 Scala_Semimodule_Functor_def the_\<phi>(3) the_\<phi>(5) the_\<phi>(6))
+    have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
+      by (metis LSF3 Scala_Semimodule_Functor_def the_\<phi>(3) the_\<phi>(5) the_\<phi>(6)) ;;
+    unfold F4D
+    apply_rule apply_Separation_Functor_zip[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
+    apply_rule functional_transformation[where U=\<open>F3 c U \<^emph> R\<close> and f=f and P=P]
+     \<medium_left_bracket> Tr \<medium_right_bracket>
+    apply_rule apply_Separation_Functor_unzip[where x=\<open>func_mapper f (z x)\<close>]
+    fold F3D
+>>>>>>> 820417f (Improve constructions of implication)
   \<medium_right_bracket> .
 
-lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * b = a
-\<Longrightarrow> Scala_Semimodule_Functor F1 T D
-\<Longrightarrow> Scala_Semimodule_Functor F2 R D
-\<Longrightarrow> Separation_Functor (F1 b) (F4 b) F14 (F1 c T) W
-\<Longrightarrow> Separation_Functor (F3 b) (F2 b) F23 U (F2 c R)
-\<Longrightarrow> Transformation_Functor F14 F23 f1 f2
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f1 = (\<lambda>x. x) \<and> f2 = (\<lambda>x. x)
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> D \<and> b \<in> D \<and> c \<in> D
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 c T) (r \<Ztypecolon> F2 c R) (y \<Ztypecolon> U) (yr \<Ztypecolon> W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> F1 a T) (r \<Ztypecolon> F2 a R) (y \<Ztypecolon> F3 b U) (yr \<Ztypecolon> F4 b W) P\<close>
-  unfolding Structural_Extract_def
-  \<medium_left_bracket> premises _ and LSF1[\<phi>reason add] and LSF2[\<phi>reason add]
-               and _ and _ and _ and _ and _ and Tr
+declare SE_general_Scala_Seminearing_left[(*THEN SE_clean_waste,*) \<phi>reason_functor_template add 60]
+
+lemma SE_general_Scala_Seminearing_right: (*need test*)
+  \<open> Scala_Semimodule_Functor F1 T Ds
+\<Longrightarrow> Scala_Semimodule_Functor F2 R Ds
+\<Longrightarrow> Sep_Homo_Ty_zip   (F1 b) (F4 b) F14 Dz z
+\<Longrightarrow> Sep_Homo_Ty_unzip (F3 b) (F2 b) F23 uz
+\<Longrightarrow> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * b = a
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds
+\<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> F1 c T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> U \<^emph> F2 c R \<a>\<n>\<d> P x @action \<A>SE)
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 b U \<^emph> F2 a R \<a>\<n>\<d> pred_mapper P (z x) @action \<A>SE\<close>
+  \<medium_left_bracket> premises LSF1[\<phi>reason add] and LSF2[\<phi>reason add] and _ and _ and FTF
+             and _ and _ and [\<phi>reason add] and _ and Tr
+    interpret Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
+      using FTF .
     have F1D: \<open>F1 a T = F1 b (F1 c T)\<close>
+<<<<<<< HEAD
       by (metis LSF1 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(6))
+=======
+<<<<<<< HEAD
+      by (metis LSF1 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(7))
+>>>>>>> dce1a7d (WIP)
     have F2D: \<open>F2 a R = F2 b (F2 c R)\<close>
       by (metis LSF2 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(6))
     ;; unfold F1D
@@ -909,36 +948,180 @@ lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
        \<medium_left_bracket> Tr \<medium_right_bracket>
        apply_Separation_Functor_back
        fold F2D
+=======
+      by (metis LSF1 Scala_Semimodule_Functor_def the_\<phi>(3) the_\<phi>(4) the_\<phi>(6))
+    have F2D: \<open>F2 a R = F2 b (F2 c R)\<close>
+      by (metis LSF2 Scala_Semimodule_Functor_def the_\<phi>(3) the_\<phi>(4) the_\<phi>(6)) ;;
+    unfold F1D
+    apply_rule apply_Separation_Functor_zip[where Fu=\<open>F4 b\<close> and Ft=\<open>F1 b\<close>]
+    apply_rule functional_transformation[where U=\<open>U \<^emph> F2 c R\<close> and f=f and P=P ]
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+    apply_rule apply_Separation_Functor_unzip[where x=\<open>func_mapper f (z x)\<close>]
+    fold F2D
+  \<medium_right_bracket> .
+
+declare SE_general_Scala_Seminearing_right[(*THEN SE_clean_waste,*) \<phi>reason_functor_template add 60]
+
+
+consts partial_add_split :: action
+       non_trivial_partial_add_split :: action
+
+declare [[
+    \<phi>premise_attribute [unfolded Action_Tag_def] for \<open>_ @action partial_add_split\<close>,
+    \<phi>premise_attribute? [useful] for \<open>_ @action partial_add_split\<close>,
+    \<phi>premise_attribute [unfolded Action_Tag_def] for \<open>_ @action non_trivial_partial_add_split\<close>,
+    \<phi>premise_attribute? [useful] for \<open>_ @action non_trivial_partial_add_split\<close>
+]]
+
+lemma fst_snt_lambda_pair[simp]:
+  \<open>fst o (\<lambda>x. (f x, g x)) = f\<close>
+  \<open>snd o (\<lambda>x. (f x, g x)) = g\<close>
+  by (simp add: fun_eq_iff)+
+
+lemma apfst_apsnd_lambda_x_x[simp]:
+  \<open>apfst (\<lambda>x. x) = (\<lambda>x. x)\<close>
+  \<open>apsnd (\<lambda>x. x) = (\<lambda>x. x)\<close>
+  by (simp add: fun_eq_iff)+
+(*\<Longrightarrow> Dx' T (fst x, fst (snd x))
+\<Longrightarrow> Dx T (fst x) 
+and [\<phi>reason add]*)
+
+
+(* [-----a-----][--d--]
+   [--c--][-----b-----] 
+   Give a, expect b; Need d, remain c.*)
+lemma SE_Near_Semimodule_adcb[(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
+  \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
+\<Longrightarrow> Near_Semimodule_Functor_zip_rev F1 Ds Dx' z
+\<Longrightarrow> Parameter_Variant_of_the_Same_Functor F1 F3
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> a + d = c + b @action non_trivial_partial_add_split
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> c ##\<^sub>+ b \<and> a ##\<^sub>+ d
+\<Longrightarrow> Dx' T (fst x, fst (snd x))
+\<Longrightarrow> Dx T (z a d (fst x, fst (snd x)))
+\<Longrightarrow> (fst (uz c b (z a d (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fst y, snd (uz c b (z a d (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<a>\<n>\<d> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and _ and _ and [useful,simp] and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
+    apply_rule apply_Near_Semimodule_Functor_zip_rev[where t=a and s=d and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
+    apply_rule apply_Near_Semimodule_Functor_unzip[where t=c and s=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+declare [[\<phi>trace_reasoning = 0]]
+
+lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
+      [(*THEN SE_clean_waste',*) \<phi>reason_functor_template add]:
+  \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
+\<Longrightarrow> Near_Semimodule_Functor_zip_rev F1 Ds Dx' z
+\<Longrightarrow> Near_Semimodule_Functor_zip F1' Ds Dx'' z'
+\<Longrightarrow> Near_Semimodule_Functor_unzip F1' Ds Dx'c uz'
+\<Longrightarrow> Parameter_Variant_of_the_Same_Functor F1 F3
+\<Longrightarrow> Parameter_Variant_of_the_Same_Functor F1' F3'
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> a + d = c + b @action non_trivial_partial_add_split
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> c ##\<^sub>+ b \<and> a ##\<^sub>+ d
+\<Longrightarrow> Dx' T (fst x, fst (snd x))
+\<Longrightarrow> Dx T (z a d (fst x, fst (snd x)))
+\<Longrightarrow> (fst (uz c b (z a d (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<a>\<n>\<d> (
+      Reverse_Transformation RP (
+          (fst x', snd (snd x')) \<Ztypecolon> F3' b U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> F1' b T' \<^emph> W' \<a>\<n>\<d> P')
+      \<and> P)
+      @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fst y, snd (uz c b (z a d (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> F1 c T \<^emph> R \<a>\<n>\<d> (
+      Reverse_Transformation (Dx'' T' (fst y', fst (snd x')) \<and> Dx'c T' (z' c b (fst y', fst (snd x'))) \<and> RP) (
+          x' \<Ztypecolon> F3' b U' \<^emph> F1' c T' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd (uz' a d (z' c b (fst y', fst (snd x')))), fst (uz' a d (z' c b (fst y', fst (snd x')))), snd y') \<Ztypecolon> F1' a T' \<^emph> F1' d T' \<^emph> W' \<a>\<n>\<d> P')
+      \<and> P)
+    @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close> and W' :: \<open>('c'::sep_ab_semigroup,'d') \<phi>\<close>
+  unfolding Action_Tag_def
+  apply (rule implies_weaken, defer_tac)
+  apply (rule SE_Near_Semimodule_adcb[of F1, unfolded Action_Tag_def])
+  apply assumption
+  apply assumption
+  apply assumption
+  apply assumption
+  apply assumption
+  apply assumption
+  apply assumption
+  apply assumption
+  apply assumption
+  (*apply simp
+  apply simp*)
+  apply (clarsimp simp add: Generated_Rule_def \<r>Success_def Parameter_Variant_of_the_Same_Functor_def)
+  \<medium_left_bracket> premises _ and _ and _ and _ and [symmetric,simp] and _ and _ and _ and _ and _
+         and [\<phi>reason add] and [\<phi>reason add] and _ and Tr
+    Tr
+    apply_rule apply_Near_Semimodule_Functor_zip[where t=c and s=b and F=F1' and x=\<open>(fst y',fst (snd x'))\<close>]
+    apply_rule apply_Near_Semimodule_Functor_unzip[where t=a and s=d and F=F1']
+  \<medium_right_bracket> .
+
+(* [--d--][-----a-----]
+   [-----b-----][--c--]
+   Give a, expect b; Need d, remain c. *)
+lemma SE_Near_Semimodule_dabc[(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
+  \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
+\<Longrightarrow> Near_Semimodule_Functor_zip F1 Ds Dx' z
+\<Longrightarrow> d + a = b + c @action non_trivial_partial_add_split
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> b ##\<^sub>+ c \<and> d ##\<^sub>+ a
+\<Longrightarrow> Dx' T (fst x,fst (snd x))
+\<Longrightarrow> Dx T (z d a (fst x, fst (snd x)))
+\<Longrightarrow> (snd (uz b c (z d a (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fst y, fst (uz b c (z d a (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> F1 c T \<^emph> R \<a>\<n>\<d> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and [useful,simp] and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
+    apply_rule apply_Near_Semimodule_Functor_zip[where t=d and s=a and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
+    apply_rule apply_Near_Semimodule_Functor_unzip[where t=b and s=c and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+
+(* [---------a---------]
+   [--d--][--b--][--c--]
+   Give a, expect b, remain d, c. *) 
+lemma [(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
+  \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
+\<Longrightarrow> a = d + b + c @action non_trivial_partial_add_split
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> d + b \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> d \<in> Ds \<and> d + b ##\<^sub>+ c \<and> d ##\<^sub>+ b
+\<Longrightarrow> Dx T (fst x)
+\<Longrightarrow> Dx T (snd (uz (d + b) c (fst x)))
+\<Longrightarrow> (fst (uz d b (snd (uz (d + b) c (fst x)))), snd x) \<Ztypecolon> F1 b T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fst y, snd (uz d b (snd (uz (d + b) c (fst x)))), fst (uz (d + b) c (fst x)), snd y) \<Ztypecolon> F3 b U \<^emph> F1 d T \<^emph> F1 c T \<^emph> R \<a>\<n>\<d> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and a and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
+    apply_rule apply_Near_Semimodule_Functor_unzip[where t=\<open>d + b\<close> and s=c and F=F1, folded a]
+    apply_rule apply_Near_Semimodule_Functor_unzip[where t=\<open>d\<close> and s=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(*schematic_goal
+  \<open>A ?x \<Longrightarrow> A ?x \<Longrightarrow> B\<close>
+  ML_val \<open>#goal @{Isar.goal} |> Simplifier.asm_lr_simplify \<^context>\<close> *)
+
+(* [--d--][--a--][--c--]
+   [---------b---------]
+   Give a, expect b, need d, c. *)
+lemma [(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
+  \<open> Near_Semimodule_Functor_zip F1 Ds Dx z
+\<Longrightarrow> Near_Semimodule_Functor_zip_rev F1 Ds Dx' z'
+\<Longrightarrow> d + a + c = b @action non_trivial_partial_add_split
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> d + a \<in> Ds \<and> d ##\<^sub>+ a \<and> d + a ##\<^sub>+ c
+\<Longrightarrow> Dx T (fst x,fst (snd x))
+\<Longrightarrow> Dx' T (z d a (fst x, fst (snd x)), fst (snd (snd x)))
+\<Longrightarrow> (z' (d + a) c (z d a (fst x, fst (snd x)), fst (snd (snd x))), snd (snd (snd x))) \<Ztypecolon> F1 b T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> F1 c T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<a>\<n>\<d> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and [useful,simp] and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
+    apply_rule apply_Near_Semimodule_Functor_zip[where t=d and s=a and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
+    apply_rule apply_Near_Semimodule_Functor_zip_rev[where t=\<open>d+a\<close> and s=c and F=F1 and x=\<open>(z d a (fst x, fst (snd x)), fst (snd (snd x)))\<close>]
+    Tr
+>>>>>>> 820417f (Improve constructions of implication)
   \<medium_right_bracket> .
 
 
 paragraph \<open>Structural Nodes\<close>
 
-lemma Structural_Extract_\<phi>MapAt_L:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ Ur) P\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Premise_def
-  apply (simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric])
-  thm \<phi>MapAt_L_\<phi>Prod[symmetric]
-  by (rule \<phi>MapAt_L_cast)
-
-declare Structural_Extract_\<phi>MapAt_L [THEN SE_clean_waste, \<phi>reason 1200]
-
-lemma [THEN SE_clean_waste', \<phi>reason 1211]:
-  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (yr \<Ztypecolon> Ur)
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (yr' \<Ztypecolon> Ur') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (yr \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ Ur)
-      (Reverse_Transformation RP
-        (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') (yr' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ Ur') (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') (r' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R') P') \<and> P)\<close>
-for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::sep_monoid,'bb) \<phi>\<close>
-  unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def \<r>Guard_def
-  by (blast intro: Structural_Extract_\<phi>MapAt_L[unfolded Action_Tag_def \<r>Guard_def]
-                   Structural_Extract_imply_P)
-
-
+(*discarded, no need
 
 lemma Structural_Extract_\<phi>MapAt_L_pad_left:
   \<open> \<g>\<u>\<a>\<r>\<d>
@@ -950,29 +1133,11 @@ lemma Structural_Extract_\<phi>MapAt_L_pad_left:
   unfolding Structural_Extract_def Premise_def \<r>Guard_def conjunction_imp
   subgoal premises prems
     apply (insert prems(3),
-       simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
+       simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L.sep_homo_type
           \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k kd, unfolded prems(2)])
     by (rule \<phi>MapAt_L_cast) .
 
 declare Structural_Extract_\<phi>MapAt_L_pad_left [THEN SE_clean_waste, \<phi>reason 1180]
-
-
-lemma Structural_Extract_\<phi>MapAt_L_pad_right:
-  \<open> \<g>\<u>\<a>\<r>\<d>
-    \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> length k' < length k
-&&& \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' @ kd = k
-\<Longrightarrow> Structural_Extract  (x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k  \<^bold>\<rightarrow>\<^sub>@ T) (r \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ R) (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) (w \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ W) P\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::sep_monoid,'b) \<phi>\<close>
-  unfolding Structural_Extract_def Premise_def \<r>Guard_def conjunction_imp
-  subgoal premises prems
-    apply (insert prems(3),
-       simp add: \<phi>Prod_expn'[symmetric] \<phi>MapAt_L_\<phi>Prod[symmetric]
-          \<phi>MapAt_L_\<phi>MapAt_L[symmetric, of k' kd, unfolded prems(2)])
-    by (rule \<phi>MapAt_L_cast) .
-
-declare Structural_Extract_\<phi>MapAt_L_pad_right [THEN SE_clean_waste, \<phi>reason 1150]
-
 
 lemma [THEN SE_clean_waste', \<phi>reason 1183]:
   \<open> \<g>\<u>\<a>\<r>\<d>
@@ -1002,41 +1167,46 @@ lemma [THEN SE_clean_waste', \<phi>reason 1153]:
   unfolding Generated_Rule_def Action_Tag_def
   by (blast intro: Structural_Extract_\<phi>MapAt_L_pad_left [unfolded Action_Tag_def]
                    Structural_Extract_\<phi>MapAt_L_pad_right[unfolded Action_Tag_def]
-                   Structural_Extract_imply_P)
+                   Structural_Extract_imply_P)*)
 
 
 lemma Structural_Extract_\<phi>Map_L_norm_right [\<phi>reason 1200]:
-  \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U) W P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) W P\<close>
-  unfolding Structural_Extract_def Premise_def \<phi>MapAt_L_At .
+  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<^emph> R \<a>\<n>\<d> P @action \<A>SE\<close>
+  unfolding Action_Tag_def \<phi>MapAt_L_At .
 
 lemma Structural_Extract_\<phi>Map_L_norm_left [\<phi>reason 1200]:
-  \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) W P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) W P\<close>
-  unfolding Structural_Extract_def Premise_def \<phi>MapAt_L_At .
-
-
-lemma [\<phi>reason 1211]:
-  \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U) W
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow> U) W
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)\<close>
-  unfolding Generated_Rule_def Action_Tag_def
-  by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def]
-                   Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def]
-                   Structural_Extract_imply_P)
+  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<a>\<n>\<d> P @action \<A>SE \<close>
+  unfolding Action_Tag_def \<phi>MapAt_L_At .
 
 lemma [\<phi>reason 1211]:
-  \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) W
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T') R' P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> T) R (y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U) W
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U') W' (x' \<Ztypecolon> k \<^bold>\<rightarrow> T') R' P') \<and> P)\<close>
+  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T' \<^emph> W' \<a>\<n>\<d> P')
+      \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T' \<^emph> W' \<a>\<n>\<d> P')
+      \<and> P) @action \<A>SE\<close>
   unfolding Generated_Rule_def Action_Tag_def
-  by (blast intro: Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def]
-                   Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def]
-                   Structural_Extract_imply_P)
+  by (rule implies_weaken, defer_tac,
+      rule Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def], assumption, clarify,
+      rule Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def], blast)
 
+lemma [\<phi>reason 1211]:
+  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T' \<^emph> W' \<a>\<n>\<d> P')
+      \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow> T' \<^emph> W' \<a>\<n>\<d> P')
+      \<and> P) @action \<A>SE\<close>
+  unfolding Generated_Rule_def Action_Tag_def
+  by (rule implies_weaken, defer_tac,
+      rule Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def], assumption, clarify,
+      rule Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def], blast)
 
+hide_fact Structural_Extract_\<phi>Map_L_norm_left Structural_Extract_\<phi>Map_L_norm_right
+
+(*Discarded, no need any more, replaced by algebraic generation
 
 lemma Structural_Extract_\<phi>insertion:
   \<open> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
@@ -1048,7 +1218,7 @@ lemma Structural_Extract_\<phi>insertion:
                        P\<close>
   unfolding Structural_Extract_def Imply_def \<phi>Sep_Disj_def
   apply (clarsimp simp add: \<phi>expns)
-  by (metis (no_types, lifting) homo_sep_def homo_sep_disj_semi_def homo_sep_mult.homo_mult sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def perm_ins_homo.axioms(1))
+  by (metis (no_types, lifting) homo_sep _def homo_sep_disj_semi_def homo_sep_mult.homo_mult sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def perm_ins_homo.axioms(1))
 
 declare Structural_Extract_\<phi>insertion[THEN SE_clean_waste, \<phi>reason 1200]
 
@@ -1069,8 +1239,9 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
   unfolding Generated_Rule_def Action_Tag_def Compact_Antecedent_def
   by (blast intro: Structural_Extract_\<phi>insertion[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
+*)
 
-
+(* TODO: still required, need repair!
 
 lemma Structural_Extract_\<phi>Optional_left [\<phi>reason 1200]:
   \<open> Structural_Extract (x \<Ztypecolon> T) R Y W P
@@ -1097,7 +1268,7 @@ lemma [\<phi>reason 1211]:
   by (blast intro: Structural_Extract_\<phi>Optional_left [unfolded Action_Tag_def]
                    Structural_Extract_\<phi>Optional_right[unfolded Action_Tag_def]
                    Structural_Extract_imply_P)
-
+*)
 
 
 paragraph \<open>Permission Node\<close>
@@ -1111,6 +1282,8 @@ text \<open>Then, according to the expected permission n and the permission m th
   \<^item> m > n\<close>
 (*
 TODO: re-enable this! *)
+
+(* consider this half tag!!!
 
 lemma Structural_Extract_share_half:
     \<comment> \<open>if only requires a half of the permission, give it a half of that currently we have.\<close>
@@ -1268,126 +1441,125 @@ lemma [THEN SE_clean_waste', \<phi>reason 1173]:
   by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def conjunction_imp \<r>Guard_def]
                    Structural_Extract_share_le[unfolded Action_Tag_def conjunction_imp \<r>Guard_def]
                    Structural_Extract_imply_P)
+*)
 
+subsubsection \<open>Optimization\<close>
 
-paragraph \<open>Normalization for Permission\<close>
-
-subparagraph \<open>Extract each component in a composite structure, step by step\<close>
+text \<open>The below rules are not necessary but reduce fragments in the result of the reasoning.\<close>
 
 lemma [\<phi>reason 2000]:
-  \<open> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W P
-\<Longrightarrow> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P\<close>
+  \<open> x \<Ztypecolon> X \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> X \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> R \<a>\<n>\<d> P @action \<A>SE\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 2000]:
-  \<open> Structural_Extract ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) R Y W P
-\<Longrightarrow> Structural_Extract ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) R Y W P\<close>
+  \<open> x \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Y \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Y \<^emph> R \<a>\<n>\<d> P @action \<A>SE\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 2011]:
-  \<open> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W
-      (Reverse_Transformation RP (Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> T' \<^emph> n \<Znrres> U') W' X' R' P') \<and> P)
-\<Longrightarrow> Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W
-      (Reverse_Transformation RP (Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> (T' \<^emph> U')) W' X' R' P') \<and> P)\<close>
+  \<open> x \<Ztypecolon> X \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> R \<a>\<n>\<d>
+        (Reverse_Transformation RP (x' \<Ztypecolon> (n \<odiv> T' \<^emph> n \<odiv> U') \<^emph> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<a>\<n>\<d> P') \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> X \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> R \<a>\<n>\<d>
+       (Reverse_Transformation RP (x' \<Ztypecolon> (n \<odiv> (T' \<^emph> U')) \<^emph>  W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<a>\<n>\<d> P') \<and> P) @action \<A>SE\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 lemma [\<phi>reason 2011]:
-  \<open> Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> T' \<^emph> n \<Znrres> U') W' X' R'
-      (Reverse_Transformation RP (Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> T \<^emph> n \<Znrres> U) W P) \<and> P')
-\<Longrightarrow> Structural_Extract ((x',y') \<Ztypecolon> n \<Znrres> (T' \<^emph> U')) W' X' R'
-      (Reverse_Transformation RP (Structural_Extract X R ((x,y) \<Ztypecolon> n \<Znrres> (T \<^emph> U)) W P) \<and> P')\<close>
+  \<open> x' \<Ztypecolon> (n \<odiv> T' \<^emph> n \<odiv> U') \<^emph> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<a>\<n>\<d>
+        (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> W \<a>\<n>\<d> P) \<and> P') @action \<A>SE
+\<Longrightarrow> x' \<Ztypecolon> (n \<odiv> (T' \<^emph> U')) \<^emph> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<a>\<n>\<d>
+        (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> W \<a>\<n>\<d> P) \<and> P') @action \<A>SE\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 
 lemma [\<phi>reason 2000]:
-  \<open> Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W P
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P\<close>
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> R \<a>\<n>\<d> P @action \<A>SE \<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
 lemma [\<phi>reason 2000]:
-  \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) R Y W P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) R Y W P\<close>
+  \<open> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>SE \<close>
   for T :: \<open>('a::{share_one,sep_magma},'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
 lemma [\<phi>reason 2011]:
-  \<open> Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W
-      (Reverse_Transformation RP (Structural_Extract (x' \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T') W' X' R' P') \<and> P)
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W
-      (Reverse_Transformation RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T') W' X' R' P') \<and> P)\<close>
-  for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
+  \<open> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> U) \<^emph> R \<a>\<n>\<d>
+        (Reverse_Transformation RP (y' \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> U') \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> U) \<^emph> R \<a>\<n>\<d>
+        (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> U') \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE\<close>
+  for T :: \<open>('k \<Rightarrow> 'a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('k \<Rightarrow> 'aa::share_module_sep,'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
 lemma [\<phi>reason 2011]:
-  \<open> Structural_Extract (x' \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T') W' X' R'
-      (Reverse_Transformation RP (Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow> n \<Znrres> T) W P) \<and> P')
-\<Longrightarrow> Structural_Extract (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T') W' X' R'
-      (Reverse_Transformation RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow> T) W P) \<and> P')\<close>
+  \<open> x' \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T') \<^emph> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Y' \<^emph> R' \<a>\<n>\<d>
+      (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> W \<a>\<n>\<d> P) \<and> P') @action \<A>SE
+\<Longrightarrow> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T') \<^emph> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Y' \<^emph> R' \<a>\<n>\<d>
+      (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> W \<a>\<n>\<d> P) \<and> P') @action \<A>SE \<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
 
 lemma [\<phi>reason 2000]:
-  \<open> Structural_Extract X R (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) W P
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) W P\<close>
+  \<open> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> U) \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ U) \<^emph> R \<a>\<n>\<d> P @action \<A>SE\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt_L .
 
 lemma [\<phi>reason 2011]:
-  \<open> Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) R Y W
-      (Reverse_Transformation RP (Structural_Extract Y' W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T') R' P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W
-      (Reverse_Transformation RP (Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R' P') \<and> P)\<close>
+  \<open> x \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T') \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T') \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
 lemma [\<phi>reason 2011]:
-  \<open> Structural_Extract Y' W' (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T') R'
-      (Reverse_Transformation RP (Structural_Extract (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<Znrres> T) R Y W P) \<and> P')
-\<Longrightarrow> Structural_Extract Y' W' (x' \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T') R'
-      (Reverse_Transformation RP (Structural_Extract (x \<Ztypecolon> n \<Znrres> k \<^bold>\<rightarrow>\<^sub>@ T) R Y W P) \<and> P')\<close>
+  \<open> y' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T') \<^emph> W' \<a>\<n>\<d>
+      (Reverse_Transformation RP (x \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> P) \<and> P') @action \<A>SE
+\<Longrightarrow> y' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T') \<^emph> W' \<a>\<n>\<d>
+      (Reverse_Transformation RP (x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> P) \<and> P') @action \<A>SE\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
 
-
 lemma [\<phi>reason 2000]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> m * n \<Znrres> T) W P
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P\<close>
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> R \<a>\<n>\<d> P @action \<A>SE\<close>
   unfolding Premise_def by simp
 
 lemma [\<phi>reason 2000]:
-  \<open> Structural_Extract (x \<Ztypecolon> m * n \<Znrres> T) R Y W P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) R Y W P\<close>
-  unfolding Structural_Extract_def Action_Tag_def
-  by (metis Imply_def Inhabited_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
+  \<open> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>SE \<close>
+  unfolding Action_Tag_def
+  by (cases x; simp add: \<phi>Prod_expn'; metis Imply_def Inhabited_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
 
 lemma [\<phi>reason 2011]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> m * n \<Znrres> T) W
-      (Reverse_Transformation RP (Structural_Extract (x' \<Ztypecolon> m * n \<Znrres> T') W' X' R' P') \<and> P)
-\<Longrightarrow> Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W
-      (Reverse_Transformation RP (Structural_Extract (x' \<Ztypecolon> n \<Znrres> m \<Znrres> T') W' X' R' P') \<and> P)\<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> ((m * n) \<odiv> U) \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> ((m * n) \<odiv> U') \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> m \<odiv> U) \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> ((n \<odiv> m \<odiv> U') \<^emph> R') \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE\<close>
   unfolding Premise_def by simp
 
 lemma [\<phi>reason 2011]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> Structural_Extract (x' \<Ztypecolon> m * n \<Znrres> T') W' X' R'
-      (Reverse_Transformation RP (Structural_Extract X R (x \<Ztypecolon> m * n \<Znrres> T) W P) \<and> P')
-\<Longrightarrow> Structural_Extract (x' \<Ztypecolon> n \<Znrres> m \<Znrres> T') W' X' R'
-      (Reverse_Transformation RP (Structural_Extract X R (x \<Ztypecolon> n \<Znrres> m \<Znrres> T) W P) \<and> P')\<close>
+\<Longrightarrow> x' \<Ztypecolon> ((m * n) \<odiv> T') \<^emph> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> U' \<^emph> R' \<a>\<n>\<d>
+      (Reverse_Transformation RP (y \<Ztypecolon> U \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> W \<a>\<n>\<d> P) \<and> P') @action \<A>SE
+\<Longrightarrow> x' \<Ztypecolon> (n \<odiv> m \<odiv> T') \<^emph> W' \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> U' \<^emph> R' \<a>\<n>\<d>
+      (Reverse_Transformation RP (y \<Ztypecolon> U \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> W \<a>\<n>\<d> P) \<and> P') @action \<A>SE\<close>
   unfolding Premise_def by simp
 
 
@@ -1397,32 +1569,30 @@ text \<open>After all of these normalization, if we encounter the requirement to
   a total permission.\<close>
 
 lemma Structural_Extract_pad_share_left
-  [\<phi>reason 2000 except \<open>Structural_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W ?P\<close>]:
-  \<open> Structural_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P\<close>
+  [\<phi>reason 2000 except \<open>_ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>SE\<close>]:
+  \<open> x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<a>\<n>\<d> P @action \<A>SE\<close>
   by simp
 
 lemma Structural_Extract_pad_share_right
-  [\<phi>reason 2000 except \<open>Structural_Extract (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R ?P\<close>]:
-  \<open> Structural_Extract (y \<Ztypecolon> n \<Znrres> U) W (x \<Ztypecolon> 1 \<Znrres> T) R P
-\<Longrightarrow> Structural_Extract (y \<Ztypecolon> n \<Znrres> U) W (x \<Ztypecolon> T) R P\<close>
+  [\<phi>reason 2000 except \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<a>\<n>\<d> _ @action \<A>SE\<close>]:
+  \<open> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<a>\<n>\<d> P @action \<A>SE
+\<Longrightarrow> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<^emph> W \<a>\<n>\<d> P @action \<A>SE\<close>
   by simp
 
 
-lemma [\<phi>reason 2011 for \<open>Structural_Extract (?x \<Ztypecolon> ?T) ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (Reverse_Transformation ?RP ?RX \<and> ?P)\<close>
-                 except \<open>Structural_Extract (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (Reverse_Transformation ?RP ?RX \<and> ?P)\<close>]:
-  \<open> Structural_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> 1 \<Znrres> T') R' P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W
-      (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> T') R' P') \<and> P)\<close>
+lemma [\<phi>reason 2011 except \<open>_ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>SE\<close>]:
+  \<open> x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> (1 \<odiv> T') \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<a>\<n>\<d>
+      (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE\<close>
   by simp
 
-lemma [\<phi>reason 2011 for \<open>Structural_Extract (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (?x \<Ztypecolon> ?T) ?R (Reverse_Transformation ?RP ?RX \<and> ?P)\<close>
-                 except \<open>Structural_Extract (?y \<Ztypecolon> ?n \<Znrres> ?U) ?W (?x' \<Ztypecolon> ?m \<Znrres> ?T') ?R (Reverse_Transformation ?RP ?RX \<and> ?P)\<close>]:
-  \<open> Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> 1 \<Znrres> T') R'
-      (Reverse_Transformation RP (Structural_Extract (x \<Ztypecolon> 1 \<Znrres> T) R (y \<Ztypecolon> n \<Znrres> U) W P) \<and> P')
-\<Longrightarrow> Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') W' (x' \<Ztypecolon> T') R'
-      (Reverse_Transformation RP (Structural_Extract (x \<Ztypecolon> T) R (y \<Ztypecolon> n \<Znrres> U) W P) \<and> P')\<close>
+lemma [\<phi>reason 2011 except \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<a>\<n>\<d> _ @action \<A>SE\<close>]:
+  \<open> y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> (1 \<odiv> T') \<^emph> W' \<a>\<n>\<d>
+      (Reverse_Transformation RP (x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<a>\<n>\<d> P) \<and> P') @action \<A>SE
+\<Longrightarrow> y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d>
+      (Reverse_Transformation RP (x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<a>\<n>\<d> P) \<and> P') @action \<A>SE\<close>
   by simp
 
 
@@ -1446,18 +1616,20 @@ text \<open>The procedure transforms \<^term>\<open>(If P A B)\<close> into the 
 
 text \<open>This merging procedure retains the order of the left side.\<close>
 
-consts branch_convergence :: \<open>action\<close>
+consts branch_convergence :: \<open>action\<close> \<comment> \<open>main stage\<close>
+       branch_convergence':: \<open>action\<close> \<comment> \<open>pre stage\<close>
 
 declare [[\<phi>reason_default_pattern
-    \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close> \<Rightarrow> \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close> (100)
-and \<open>If ?P ?A ?B = _ @action branch_convergence\<close> \<Rightarrow> \<open>If ?P ?A ?B = _ @action branch_convergence\<close> (100)
+    \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence \<close> \<Rightarrow> \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence \<close> (100)
+and \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence'\<close> \<Rightarrow> \<open>If ?P ?A ?B \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence'\<close> (100)
+and \<open>If ?P ?A ?B = _ @action branch_convergence \<close> \<Rightarrow> \<open>If ?P ?A ?B = _ @action branch_convergence \<close> (100)
 ]]
 
 lemma [\<phi>reason 3000 for \<open>If _ _ _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action invoke_branch_convergence\<close>]:
-  " Simplify (assertion_simps undefined) A' A
+  \<open> Simplify (assertion_simps undefined) A' A
 \<Longrightarrow> Simplify (assertion_simps undefined) B' B
-\<Longrightarrow> If P A' B' \<i>\<m>\<p>\<l>\<i>\<e>\<s> C @action branch_convergence
-\<Longrightarrow> If P A  B  \<i>\<m>\<p>\<l>\<i>\<e>\<s> C @action invoke_branch_convergence"
+\<Longrightarrow> If P A' B' \<i>\<m>\<p>\<l>\<i>\<e>\<s> C @action branch_convergence'
+\<Longrightarrow> If P A  B  \<i>\<m>\<p>\<l>\<i>\<e>\<s> C @action invoke_branch_convergence \<close>
   unfolding Action_Tag_def Simplify_def
   by blast 
 
@@ -1471,96 +1643,94 @@ lemma [\<phi>reason 3000 for \<open>If _ _ _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @act
   a failure of If P A B means the failure of merging those two assertions A and B, which is
   the failure of the whole merging procedure.\<close> *)
 
-subsubsection \<open>Identity\<close>
-
-lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' = ?X @action branch_convergence\<close>]:
-  "If P A A = A @action branch_convergence"
-  unfolding Action_Tag_def by simp
-
-lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
-  "If P A A \<i>\<m>\<p>\<l>\<i>\<e>\<s> A @action branch_convergence"
-  unfolding Action_Tag_def Imply_def by simp
-
-subsubsection \<open>Zero\<close>
-
-lemma [\<phi>reason 3000]:
-  "If P A 0 \<i>\<m>\<p>\<l>\<i>\<e>\<s> (A \<s>\<u>\<b>\<j> P) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def
-  by (simp add: \<phi>expns zero_set_def)
-
-lemma [\<phi>reason 3000]:
-  "If P 0 A \<i>\<m>\<p>\<l>\<i>\<e>\<s> (A \<s>\<u>\<b>\<j> \<not> P) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def
-  by (simp add: \<phi>expns zero_set_def)
-
 
 subsubsection \<open>Fallback and Termination\<close>
 
 lemma [\<phi>reason 10]:
-  "If P A B = If P A B @action branch_convergence"
+  \<open>If P A B = If P A B @action branch_convergence\<close>
   unfolding Action_Tag_def ..
 
+lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' = ?X @action branch_convergence\<close>]:
+  \<open>If P A A = A @action branch_convergence\<close>
+  unfolding Action_Tag_def by simp
+
 lemma [\<phi>reason 20]:
-  " If P x y = z @action branch_convergence
-\<Longrightarrow> If P T U = Z @action branch_convergence
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence"
+  " If P T U = Z @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P x y \<Ztypecolon> Z) @action branch_convergence"
   unfolding Action_Tag_def by (cases P; simp)
 
 lemma [\<phi>reason 3000 for \<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
-  \<open> If P x y = z @action branch_convergence
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> T) @action branch_convergence\<close>
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P x y \<Ztypecolon> T) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp)
+
+lemma [\<phi>reason 3000 for \<open>If ?P ?A ?A'' \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence'\<close>]:
+  \<open>If P A A \<i>\<m>\<p>\<l>\<i>\<e>\<s> A @action branch_convergence'\<close>
+  unfolding Action_Tag_def Imply_def by simp
+
+
+subsubsection \<open>Zero\<close>
+
+lemma [\<phi>reason 3000]:
+  \<open>If P A 0 \<i>\<m>\<p>\<l>\<i>\<e>\<s> (A \<s>\<u>\<b>\<j> P) @action branch_convergence'\<close>
+  unfolding Action_Tag_def Imply_def
+  by (simp add: \<phi>expns zero_set_def)
+
+lemma [\<phi>reason 3000]:
+  \<open>If P 0 A \<i>\<m>\<p>\<l>\<i>\<e>\<s> (A \<s>\<u>\<b>\<j> \<not> P) @action branch_convergence'\<close>
+  unfolding Action_Tag_def Imply_def
+  by (simp add: \<phi>expns zero_set_def)
+
 
 subsubsection \<open>Subjection\<close>
 
 lemma [\<phi>reason 1400]:
-  \<open> If P (L \<s>\<u>\<b>\<j> Q1 \<and> Q2) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence\<close>
+  \<open> If P (L \<s>\<u>\<b>\<j> Q1 \<and> Q2) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence'
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence' \<close>
   unfolding Subjection_Subjection .
 
 lemma [\<phi>reason 1400]:
-  \<open> If P L (R \<s>\<u>\<b>\<j> Q1 \<and> Q2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence
-\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence\<close>
+  \<open> If P L (R \<s>\<u>\<b>\<j> Q1 \<and> Q2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence'
+\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence' \<close>
   unfolding Subjection_Subjection .
 
-lemma [\<phi>reason 1300]:
-  " If P QL QR = Q @action branch_convergence
-\<Longrightarrow> If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> QL) (R \<s>\<u>\<b>\<j> QR) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> Q) @action branch_convergence"
+lemma [\<phi>reason 1380]:
+  \<open> If P QL QR = Q @action branch_convergence
+\<Longrightarrow> If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence'
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> QL) (R \<s>\<u>\<b>\<j> QR) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> Q) @action branch_convergence'\<close>
   unfolding Action_Tag_def Imply_def by force
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1300]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  " If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> P \<longrightarrow> Q) @action branch_convergence"
+  \<open> If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence'
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> P \<longrightarrow> Q) @action branch_convergence'\<close>
   unfolding Imply_def Action_Tag_def by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1300]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  " If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence
-\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> \<not>P \<longrightarrow> Q) @action branch_convergence"
+  \<open> If P L R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence'
+\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X \<s>\<u>\<b>\<j> \<not>P \<longrightarrow> Q) @action branch_convergence'\<close>
   unfolding Action_Tag_def Imply_def by (simp add: \<phi>expns)
 
 
 subsubsection \<open>Existential\<close>
 
 lemma Conv_Merge_Ex_both_imp:
-  "(\<And>x. If P (L x) (R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> X x @action branch_convergence)
-\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>* x. X x) @action branch_convergence"
+  \<open> (\<And>x. If P (L x) (R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> X x @action branch_convergence')
+\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>* x. X x) @action branch_convergence' \<close>
   unfolding Action_Tag_def Imply_def
   by (cases P; clarsimp simp add: set_eq_iff \<phi>expns; blast)
 
-lemma Conv_Merge_Ex_R_imp
-  [\<phi>reason 1100 for \<open>If ?P ?L (\<exists>* x. ?R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
-  "(\<And>x. If P L (R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> X x @action branch_convergence)
-\<Longrightarrow> If P L (\<exists>* x. R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>* x. X x) @action branch_convergence"
+lemma Conv_Merge_Ex_R_imp [\<phi>reason 1100]:
+  \<open> (\<And>x. If P L (R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> X x @action branch_convergence')
+\<Longrightarrow> If P L (\<exists>* x. R x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>* x. X x) @action branch_convergence' \<close>
   unfolding Action_Tag_def Imply_def
   by (cases P; simp add: set_eq_iff \<phi>expns; blast)
 
-lemma [\<phi>reason 1100 for \<open>If ?P (\<exists>* x. ?L x) ?R \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X @action branch_convergence\<close>]:
-  "(\<And>x. If P (L x) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X x @action branch_convergence)
-\<Longrightarrow> If P (\<exists>* x. L x) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>* x. X x) @action branch_convergence"
-  unfolding Action_Tag_def Imply_def by (cases P; simp add: set_eq_iff \<phi>expns; blast)
+lemma [\<phi>reason 1100]:
+  \<open> (\<And>x. If P (L x) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X x @action branch_convergence)
+\<Longrightarrow> If P (\<exists>* x. L x) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>* x. X x) @action branch_convergence \<close>
+  unfolding Action_Tag_def Imply_def
+  by (cases P; simp add: set_eq_iff \<phi>expns; blast)
 
 text \<open>The merging recognizes two existential quantifier are identical if their type and variable name
   are the same. If so it uses Conv_Merge_Ex_both to merge the quantification,
@@ -1604,24 +1774,23 @@ lemma [\<phi>reason 1200]:
   \<open> PROP Branch_Convergence_Type_Pattern T T'
 \<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * \<blangle> y \<Ztypecolon> T' \<brangle> \<a>\<n>\<d> Any
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T') \<i>\<m>\<p>\<l>\<i>\<e>\<s> Z @action branch_convergence
-\<Longrightarrow> If P L R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence
-\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X * Z @action branch_convergence\<close>
+\<Longrightarrow> If P L R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action branch_convergence'
+\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<i>\<m>\<p>\<l>\<i>\<e>\<s> X * Z @action branch_convergence'\<close>
   unfolding Action_Tag_def FOCUS_TAG_def
   by (smt (z3) Imply_def set_mult_expn)
-  
 
 
 subsubsection \<open>Convergence of Structural Nodes\<close>
 
-lemma [\<phi>reason 1200 for \<open>If ?P (_ \<Ztypecolon> _ \<Znrres> _) (_ \<Ztypecolon> _ \<Znrres> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Z @action branch_convergence\<close>]:
+lemma [\<phi>reason 1200 for \<open>If ?P (_ \<Ztypecolon> _ \<odiv> _) (_ \<Ztypecolon> _ \<odiv> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Z @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
 \<Longrightarrow> If P n m = nm @action branch_convergence
-\<Longrightarrow> If P (x \<Ztypecolon> n \<Znrres> T) (y \<Ztypecolon> m \<Znrres> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> nm \<Znrres> Z) @action branch_convergence\<close>
+\<Longrightarrow> If P (x \<Ztypecolon> n \<odiv> T) (y \<Ztypecolon> m \<odiv> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> nm \<odiv> Z) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp add: \<phi>Share_transformation)
 
 lemma [\<phi>reason 1200 for \<open>If _ ((_,_) \<Ztypecolon> _ \<^emph> _) ((_,_) \<Ztypecolon> _ \<^emph> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
-  \<open> If P (x \<Ztypecolon> T) (x' \<Ztypecolon> T') \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x'' \<Ztypecolon> T'') @action branch_convergence
-\<Longrightarrow> If P (y \<Ztypecolon> U) (y' \<Ztypecolon> U') \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y'' \<Ztypecolon> U'') @action branch_convergence
+  \<open> If P (x \<Ztypecolon> T) (x' \<Ztypecolon> T') \<i>\<m>\<p>\<l>\<i>\<e>\<s> x'' \<Ztypecolon> T'' @action branch_convergence
+\<Longrightarrow> If P (y \<Ztypecolon> U) (y' \<Ztypecolon> U') \<i>\<m>\<p>\<l>\<i>\<e>\<s> y'' \<Ztypecolon> U'' @action branch_convergence
 \<Longrightarrow> If P ((x,y) \<Ztypecolon> T \<^emph> U) ((x',y') \<Ztypecolon> T' \<^emph> U') \<i>\<m>\<p>\<l>\<i>\<e>\<s> ((x'',y'') \<Ztypecolon> T'' \<^emph> U'') @action branch_convergence\<close>
   unfolding Action_Tag_def apply (cases P; simp add: \<phi>Prod_transformation)
    apply (rule \<phi>Prod_transformation[where Pa=True and Pb=True, simplified], assumption, assumption)
@@ -1651,20 +1820,44 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ 
 
 (* fix me!!!
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<black_circle> _) (_ \<Ztypecolon> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> Identity \<a>\<n>\<d> Any
-\<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P (Some x') None \<Ztypecolon> Identity) @action branch_convergence\<close>
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> Itself \<a>\<n>\<d> Any
+\<Longrightarrow> If P (x \<Ztypecolon> \<black_circle> T) (y \<Ztypecolon> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P (Some x') None \<Ztypecolon> Itself) @action branch_convergence\<close>
   unfolding Action_Tag_def     
-  \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Identity\<close>]  
-    cases \<medium_left_bracket> to Identity \<medium_right_bracket>. \<medium_left_bracket> to Identity \<medium_right_bracket>. ;; \<medium_right_bracket>. .
+  \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Itself\<close>]  
+    cases \<medium_left_bracket> to Itself \<medium_right_bracket>. \<medium_left_bracket> to Itself \<medium_right_bracket>. ;; \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypecolon> \<black_circle> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
-  \<open> y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> Identity \<a>\<n>\<d> Any
-\<Longrightarrow> If P (x \<Ztypecolon> \<circle>) (y \<Ztypecolon> \<black_circle> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P None (Some y') \<Ztypecolon> Identity) @action branch_convergence\<close>
+  \<open> y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y' \<Ztypecolon> Itself \<a>\<n>\<d> Any
+\<Longrightarrow> If P (x \<Ztypecolon> \<circle>) (y \<Ztypecolon> \<black_circle> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (If P None (Some y') \<Ztypecolon> Itself) @action branch_convergence\<close>
   unfolding Action_Tag_def     
-  \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Identity\<close>]  
-    cases \<medium_left_bracket> to Identity \<medium_right_bracket>. \<medium_left_bracket> to Identity \<medium_right_bracket>. ;; \<medium_right_bracket>. .
+  \<medium_left_bracket> premises T[\<phi>reason for action \<open>to Itself\<close>]  
+    cases \<medium_left_bracket> to Itself \<medium_right_bracket>. \<medium_left_bracket> to Itself \<medium_right_bracket>. ;; \<medium_right_bracket>. .
 *)
 
+declare [[\<phi>trace_reasoning = 0]]
+
+lemma [\<phi>reason_functor_template add]:
+  \<open> Functional_Transformation_Functor_L Fa Fz Da rma Prem_a pma ma
+\<Longrightarrow> Functional_Transformation_Functor_L Fb Fz Db rmb Prem_b pmb mb
+\<Longrightarrow> (P \<Longrightarrow> Prem_a)
+\<Longrightarrow> (\<not> P \<Longrightarrow> Prem_b)
+\<Longrightarrow> (\<And>x' y'. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> x' \<in> Da x) \<and> (\<not> P \<longrightarrow> y' \<in> Db y) \<Longrightarrow>
+        If P (x' \<Ztypecolon> T) (y' \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> If P (za x') (zb y') \<Ztypecolon> Z @action branch_convergence)
+\<Longrightarrow> If P (x \<Ztypecolon> Fa T) (y \<Ztypecolon> Fb U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> If P (ma za x) (mb zb y) \<Ztypecolon> Fz Z @action branch_convergence \<close>
+  unfolding Action_Tag_def
+  apply (cases P; simp)
+  \<medium_left_bracket> premises FTF_a and FTF_b and _ and Tr and _
+    interpret Functional_Transformation_Functor_L Fa Fz Da rma True pma ma using FTF_a . ;;
+    apply_rule functional_transformation[where T=T and U=Z and f=za]
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises FTF_a and FTF_b and _ and Tr and _
+    interpret Functional_Transformation_Functor_L Fb Fz Db rmb True pmb mb using FTF_b . ;;
+    apply_rule functional_transformation[where T=U and U=Z and f=zb]
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+  \<medium_right_bracket> .
+
+(*
 lemma branch_convergence_general_rule:
   \<open> Transformation_Functor Fa Fb fa fb
 \<Longrightarrow> If P (fa x \<Ztypecolon> T) (fa y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (fb z \<Ztypecolon> Z) @action branch_convergence
@@ -1691,6 +1884,8 @@ fn (ctxt,sequent) => Seq.make (fn () =>
          | _ => NONE
   end)
 \<close>
+*)
+
 
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Nosep _) (_ \<Ztypecolon> Nosep _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
@@ -1977,7 +2172,7 @@ lemma Gen_Synthesis_Rule_transformation_12:
       Ant
       (PROP Ant \<Longrightarrow> R * X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * Yr * \<blangle> Y \<brangle> \<a>\<n>\<d> P @action synthesis) \<close>
   for R :: \<open>'a::sep_semigroup set\<close>
-  unfolding Gen_Synthesis_Rule_def
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by (simp; rule implies_left_prod[where U=\<open>Yr * Y\<close>, simplified mult.assoc[symmetric]]; simp)
 
 lemma Gen_Synthesis_Rule_transformation_11:
@@ -1985,7 +2180,7 @@ lemma Gen_Synthesis_Rule_transformation_11:
       (Trueprop (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P))
       Ant
       (PROP Ant \<Longrightarrow> R * X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Y \<brangle> \<a>\<n>\<d> P @action synthesis) \<close>
-  unfolding Gen_Synthesis_Rule_def
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by (simp; rule implies_left_prod; simp)
 
 lemma Gen_Synthesis_Rule_transformation_10:
@@ -2001,7 +2196,7 @@ lemma Gen_Synthesis_Rule_transformation_01:
       (Trueprop (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Yr * Y \<a>\<n>\<d> P))
       Ant
       (PROP Ant \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Yr * \<blangle> Y \<brangle> \<a>\<n>\<d> P @action synthesis) \<close>
-  unfolding Gen_Synthesis_Rule_def
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by simp
 
 lemma Gen_Synthesis_Rule_transformation_00:
@@ -2009,7 +2204,7 @@ lemma Gen_Synthesis_Rule_transformation_00:
       (Trueprop (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P))
       Ant
       (PROP Ant \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action synthesis) \<close>
-  unfolding Gen_Synthesis_Rule_def
+  unfolding Gen_Synthesis_Rule_def Action_Tag_def
   by simp
 
 \<phi>reasoner_ML Gen_Synthesis_Rule_transformation 10

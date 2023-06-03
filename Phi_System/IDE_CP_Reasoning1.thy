@@ -72,7 +72,7 @@ definition Generated_Rule :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \
 
 (*consts morphism_mode :: mode (*TODO: depreciate*)*)
 
-abbreviation Automatic_Rule :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Rule \<equiv> Generated_Rule (MODE_AUTO default)\<close>
+(*abbreviation Automatic_Rule :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Rule \<equiv> Generated_Rule (MODE_AUTO default)\<close>*)
 
 consts REVERSE_TRANSFORMATION :: mode
 abbreviation Reverse_Transformation :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
@@ -129,6 +129,9 @@ structure Assertion_SS = Simpset (
                        \It is applied before ToSA process."
 )
 
+val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
+      ctxt addsimprocs [Simplifier.the_simproc \<^context> "HOL.NO_MATCH"])))
+
 structure Assertion_SS_Source = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
   val binding = \<^binding>\<open>assertion_simps_source\<close>
@@ -182,7 +185,9 @@ lemmas [assertion_simps] =
   add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
   zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma set\<close>]
   plus_fun[where 'a=\<open>'a::sep_magma set\<close>]
-  Subjection_Zero ExSet_simps(1,4,5,6) distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
+  Subjection_Zero Subjection_times
+  ExSet_simps(1,4,5,6)
+  distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]
   \<phi>V_simps
 
@@ -190,7 +195,9 @@ lemmas [assertion_simps_source] = ExSet_times_left ExSet_times_right
 
 
 
-section \<open>Small Reasoning Process\<close>
+section \<open>Reasoning Process\<close>
+
+subsection \<open>Auxiliaries\<close>
 
 subsubsection \<open>Semantic Expansion of \<phi>-Types\<close>
 
@@ -431,8 +438,8 @@ lemma \<phi>IntroFrameVar'_Yes:
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
     else if Sign.of_sort (Proof_Context.theory_of ctxt) (Ty, \<^sort>\<open>sep_magma_1\<close>)
          then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
-         else Seq.of_list [(ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent),
-                           (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)]
+         else Seq.of_list [(ctxt, @{thm \<phi>IntroFrameVar_Yes}  RS sequent),
+                           (ctxt, @{thm \<phi>IntroFrameVar_No} RS sequent)]
   end\<close>
 
 \<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
@@ -453,14 +460,12 @@ lemma \<phi>IntroFrameVar'_Yes:
 hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes \<phi>IntroFrameVar'_Yes
 
 
-subsection \<open>Embedded Reasoning\<close>
+subsubsection \<open>Embedded Reasoning\<close>
 
 definition Embedded_Reasoning :: \<open>bool \<Rightarrow> bool\<close> where \<open>Embedded_Reasoning X \<longleftrightarrow> X\<close>
 
 text \<open>Annotate a boolean assertion in a proof obligation is actually an embedded reasoning
 antecedent.\<close>
-
-subsubsection \<open>Implementation\<close>
 
 definition Pass_Embedded_Reasoning :: \<open>bool \<Rightarrow> bool\<close>
   where \<open>Pass_Embedded_Reasoning X \<longleftrightarrow> X\<close>
@@ -557,10 +562,177 @@ lemma [\<phi>reason 1200]:
   by clarsimp
 
 
+subsection \<open>Empty-I\&E\<close>
 
-section \<open>Declaration of Large Processes\<close>
+definition Is_Stateless   :: \<open>'a::one set \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Is_Stateless S P \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<a>\<n>\<d> P)\<close>
+definition Demand_Nothing :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Demand_Nothing S \<longleftrightarrow> (1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> S)\<close>
 
-subsection \<open>Transformation of State Abstraction (ToSA)\<close>
+declare [[\<phi>reason_default_pattern \<open>Is_Stateless ?S _\<close> \<Rightarrow> \<open>Is_Stateless ?S _\<close> (100)]]
+
+subsubsection \<open>Termination\<close>
+
+lemma [\<phi>reason 3000]:
+  \<open>Is_Stateless 0 True\<close>
+  unfolding Is_Stateless_def by simp
+
+lemma [\<phi>reason 3000]:
+  \<open>Demand_Nothing 1\<close>
+  unfolding Demand_Nothing_def by simp
+
+lemma [\<phi>reason 3000]:
+  \<open>Is_Stateless 1 True\<close>
+  unfolding Is_Stateless_def by simp
+
+lemma [\<phi>reason 3000 for \<open>Is_Stateless {_} _\<close> ]:
+  \<open>Is_Stateless {1} True\<close>
+  unfolding Is_Stateless_def Imply_def by simp
+
+lemma [\<phi>reason 3000 for \<open>Demand_Nothing {_}\<close>]:
+  \<open>Demand_Nothing {1}\<close>
+  unfolding Demand_Nothing_def Imply_def by simp
+
+
+subsubsection \<open>Logic Connectives\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> Is_Stateless A P1
+\<Longrightarrow> Is_Stateless B P2
+\<Longrightarrow> Is_Stateless (A + B) (P1 \<or> P2)\<close>
+  unfolding Is_Stateless_def
+  using \<phi>CASE_IMP by force
+
+lemma (*The above rule is local complete*)
+  \<open>Is_Stateless (A + B) P \<Longrightarrow> Is_Stateless A P \<and> Is_Stateless B P\<close>
+  unfolding Is_Stateless_def Imply_def
+  by clarsimp
+
+lemma [\<phi>reason 3000]:
+  \<open> Demand_Nothing A
+\<Longrightarrow> Demand_Nothing B
+\<Longrightarrow> Demand_Nothing (A + B)\<close>
+  unfolding Demand_Nothing_def Imply_def
+  by clarsimp
+
+lemma (*The above rule is not local complete*)
+  \<open> Demand_Nothing (A + B) \<Longrightarrow> Demand_Nothing A \<and> Demand_Nothing B\<close>
+  oops
+
+lemma [\<phi>reason 1200]:
+  \<open> Is_Stateless (A x) P
+\<Longrightarrow> Is_Stateless (AllSet A) P\<close>
+  unfolding Is_Stateless_def
+  by (metis AllSet_expn Imply_def)
+(*The rule is not local complete*)
+
+lemma [\<phi>reason 1200]:
+  \<open> (\<And>x. Demand_Nothing (A x))
+\<Longrightarrow> Demand_Nothing (AllSet A)\<close>
+  unfolding Demand_Nothing_def
+  by (metis AllSet_expn Imply_def)
+
+lemma (*The above rule is local complete*)
+  \<open> Demand_Nothing (AllSet A) \<Longrightarrow> Demand_Nothing (A x) \<close>
+  unfolding Demand_Nothing_def Imply_def
+  by (clarsimp simp add: AllSet_expn)
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>x. Is_Stateless (A x) (P x))
+\<Longrightarrow> Is_Stateless (ExSet A) (Ex P)\<close>
+  unfolding Is_Stateless_def
+  by (metis ExSet_expn Imply_def)
+
+lemma (*The above rule is local complete*)
+  \<open>Is_Stateless (ExSet A) P \<Longrightarrow> Is_Stateless (A x) P\<close>
+  unfolding Is_Stateless_def Imply_def
+  by (clarsimp simp add: ExSet_expn; blast)
+
+lemma [\<phi>reason 1200]:
+  \<open> Demand_Nothing (A x)
+\<Longrightarrow> Demand_Nothing (ExSet A)\<close>
+  unfolding Demand_Nothing_def Imply_def
+  by (clarsimp simp add: ExSet_expn; blast)
+
+lemma (*The above rule is not local complete*)
+  \<open>Demand_Nothing (ExSet A) \<Longrightarrow> \<exists>x. Demand_Nothing (A x)\<close>
+  unfolding Demand_Nothing_def Imply_def ExSet_expn
+  by clarsimp
+
+lemma [\<phi>reason 1200]:
+  \<open> (P \<Longrightarrow> Is_Stateless A Q)
+\<Longrightarrow> Is_Stateless (A \<s>\<u>\<b>\<j> P) (P \<and> Q)\<close>
+  unfolding Is_Stateless_def Imply_def
+  by (simp add: Subjection_expn; blast)
+
+lemma
+  \<open> Is_Stateless (A \<s>\<u>\<b>\<j> P) (P \<and> Q) \<Longrightarrow> (P \<Longrightarrow> Is_Stateless A Q)\<close>
+  unfolding Is_Stateless_def Imply_def Inhabited_def
+  by (cases P; clarsimp simp add: Subjection_expn)
+
+lemma [\<phi>reason 1200]:
+  \<open> Demand_Nothing A
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> Demand_Nothing (A \<s>\<u>\<b>\<j> P)\<close>
+  unfolding Demand_Nothing_def Imply_def Premise_def
+  by (clarsimp simp add: Subjection_expn; blast)
+
+lemma (*The above rule is local complete*)
+  \<open> Demand_Nothing (A \<s>\<u>\<b>\<j> P) \<Longrightarrow> P \<and> Demand_Nothing A \<close>
+  unfolding Demand_Nothing_def Imply_def Premise_def
+  by (clarsimp simp add: Subjection_expn; blast)
+
+lemma [\<phi>reason 1200]: 
+  \<open> Is_Stateless A P
+\<Longrightarrow> Is_Stateless B Q
+\<Longrightarrow> Is_Stateless (A * B) (P \<and> Q) \<close>
+  for A :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Is_Stateless_def Imply_def
+  by (clarsimp simp add: set_mult_expn, insert mult_1_class.mult_1_left; blast)
+  (* It is not complete, example: algebra {e,a} where the sep conjunction is only defined
+     on the unit, x ## y \<longleftrightarrow> x = e \<and> y = e.
+     Let A = B = {e,a}, we have A * B = {e}. Both A B are not stateless but A * B is. *)
+
+lemma [\<phi>reason 1200]: 
+  \<open> Demand_Nothing A
+\<Longrightarrow> Demand_Nothing B
+\<Longrightarrow> Demand_Nothing (A * B) \<close>
+  for A :: \<open>'a::sep_magma_1 set\<close>
+  unfolding Demand_Nothing_def Imply_def
+  by (clarsimp, insert times_set_I, fastforce)
+
+lemma (*the above rule is not local complete*)
+  \<open> Demand_Nothing (A * B) \<Longrightarrow> Demand_Nothing A \<and> Demand_Nothing B \<close>
+  for A :: \<open>'a::sep_magma_1 set\<close>
+  oops
+
+lemma [\<phi>reason 1200]: 
+  \<open> Demand_Nothing A
+\<Longrightarrow> Demand_Nothing B
+\<Longrightarrow> Demand_Nothing (A \<inter> B) \<close>
+  unfolding Demand_Nothing_def Imply_def
+  by (clarsimp)
+
+lemma (*the above rule is local complete*)
+  \<open> Demand_Nothing (A \<inter> B) \<Longrightarrow> Demand_Nothing A \<and> Demand_Nothing B \<close>
+  unfolding Demand_Nothing_def Imply_def
+  by (clarsimp)
+
+lemma [\<phi>reason 1200]:
+  \<open> Is_Stateless A P
+\<Longrightarrow> Is_Stateless B Q
+\<Longrightarrow> Is_Stateless (A \<inter> B) (P \<and> Q) \<close>
+  unfolding Is_Stateless_def Imply_def
+  by clarsimp
+
+lemma (*the above rule is not local complete*)
+  \<open> Is_Stateless (A \<inter> B) True \<Longrightarrow> Is_Stateless A True \<and> Is_Stateless B True \<close>
+  oops
+  (* Auto Quickcheck found a counterexample:
+  A = {a\<^sub>1}
+  B = {} *)
+
+
+
+subsection \<open>Declaration of Transformation of State Abstraction (ToSA)\<close>
 
 text \<open>
   Supporting implication \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action ToSA\<close> only,
@@ -594,11 +766,12 @@ lemma [\<phi>reason 3000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X' \<a>\<n>
   \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action ToSA' mode\<close>
   unfolding Action_Tag_def using implies_refl .
 
-subsection \<open>Convergence of Branch\<close>
+subsection \<open>Declaration of Convergence of Branch\<close>
 
 consts invoke_branch_convergence :: \<open>action\<close>
 
-subsection \<open>Removing Values\<close>
+
+subsection \<open>Removing Values\<close> (*TODO: depreciate me*)
 
 definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<i>\<m>\<p>\<l>\<i>\<e>\<s> Output)\<close>
 
@@ -606,7 +779,7 @@ text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> remove
   from the assertion \<open>Input\<close>. Bounded values such the return value of a procedure are not removed.\<close>
 
 
-subsection \<open>Value Operations\<close>
+subsection \<open>Value Operations\<close> (*TODO: depreciate me*)
 
 
 subsubsection \<open>Operations for a single Value\<close>

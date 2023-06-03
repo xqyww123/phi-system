@@ -151,7 +151,7 @@ lemma refinement_ExSet:
 
 subsection \<open>Instances\<close>
 
-subsubsection \<open>Identity\<close>
+subsubsection \<open>Itself\<close>
 
 definition [simp]: "\<F>_it' x = {x}"
 

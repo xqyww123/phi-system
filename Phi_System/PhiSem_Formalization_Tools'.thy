@@ -333,8 +333,8 @@ lemma \<phi>_\<phi>None:
   by (rule \<phi>Type_eqI; simp add: \<phi>expns)
 
 lemma \<phi>_unit:
-  \<open>(1 \<Ztypecolon> \<phi> Identity) = Void\<close>
-  by (clarsimp simp add: set_eq_iff \<phi>_expn Identity_expn)
+  \<open>(1 \<Ztypecolon> \<phi> Itself) = Void\<close>
+  by (clarsimp simp add: set_eq_iff \<phi>_expn Itself_expn)
 
 
 lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
@@ -457,7 +457,7 @@ lemma \<phi>_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>\<phi>_simp_cong ("x \<Ztypecolon> \<phi> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>_simp_cong} ctxt)
 \<close>
 
 paragraph \<open>Synthesis for moving\<close>
@@ -591,7 +591,7 @@ end
 
 
 
-subsubsection \<open>Identity Fiction\<close>
+subsubsection \<open>Itself Fiction\<close>
 
 locale identity_fiction =
    R: resource Res
@@ -882,7 +882,7 @@ lemma raw_unit_assertion_implies[simp]:
 
 end
 
-subsubsection \<open>Identity Fiction\<close>
+subsubsection \<open>Itself Fiction\<close>
 
 locale identity_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
@@ -938,19 +938,19 @@ qed
 
 (* lemma VS_merge_ownership_identity:
   \<open> na + nb \<le> 1
-\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) Identity)\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> na Itself) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Itself) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> (na + nb) Itself)\<close>
   by (rule VS_merge_ownership; simp add: \<phi>expns)
 
 lemma VS_split_ownership_identity:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (0 < n \<longrightarrow> na + nb = n \<and> 0 < na \<and> 0 < nb)
-\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> na Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Identity)\<close>
+\<Longrightarrow> x \<Ztypecolon> \<phi> (share.\<phi> n Itself) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> na Itself) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> nb Itself)\<close>
   by (rule VS_split_ownership; simp add: \<phi>expns sep_disj_fun_def share_fun_def; clarify)
   (* subgoal premises prems for a
     by (insert \<open>\<forall>_. _\<close>[THEN spec[where x=a]], cases \<open>x a\<close>; simp add: share_All prems) . *)
 
 
 lemma VS_divide_ownership:
-  \<open>FIX x \<Ztypecolon> \<phi> (share.\<phi> n Identity) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Identity)\<close>
+  \<open>FIX x \<Ztypecolon> \<phi> (share.\<phi> n Itself) \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Itself) \<heavy_comma> x \<Ztypecolon> \<phi> (share.\<phi> (1/2*n) Itself)\<close>
   unfolding Fix_def
   by (rule VS_split_ownership_identity; simp add: Premise_def)
 *)
@@ -963,8 +963,8 @@ and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
 begin
 
 lemma \<phi>nonsepable_normalize:
-  \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Nosep Identity)))))
- = (nosep x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Identity))))\<close>
+  \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Nosep Itself)))))
+ = (nosep x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Itself))))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 end
@@ -1410,9 +1410,9 @@ context identity_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_get_res_entry_frm[intro!]:
   \<open>\<p>\<r>\<o>\<c> F v
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry key F
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> \<black_circle> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_Hybrid_DL \<phi>Res_Spec_expn_R imp_conjL
             \<phi>Res_Sat_expn_impEx \<phi>Res_Sat_expn_impSubj
   by (clarsimp simp add: \<phi>expns expand; rule R.\<phi>R_get_res_entry[where v=v]; simp)
@@ -1427,9 +1427,9 @@ context share_fiction_for_partial_mapping_resource begin
 
 lemma \<phi>R_get_res_entry_frm[intro!]:
   \<open>\<p>\<r>\<o>\<c> F v
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry key F
-      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+      \<lbrace> R\<heavy_comma> v \<Ztypecolon> \<phi> (key \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_Hybrid_DL
     \<phi>Res_Spec_expn_R \<phi>Res_Sat_expn_impEx \<phi>Res_Sat_expn_impSubj imp_conjL
   apply (clarsimp simp add: \<phi>expns zero_set_def)
@@ -1462,9 +1462,9 @@ lemma (in partial_map_resource2) \<phi>R_get_res_entry[intro!]:
 
 lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[intro!]:
   \<open>\<p>\<r>\<o>\<c> F v
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry k1 k2 F
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> n \<Znrres> \<fish_eye> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_Hybrid_DL
   apply (clarsimp simp add: \<phi>expns zero_set_def)
   apply (rule R.\<phi>R_get_res_entry[where v=v])
@@ -1473,9 +1473,9 @@ lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry[int
 
 lemma (in share_fiction_for_partial_mapping_resource2) \<phi>R_get_res_entry1[intro!]:
   \<open>\<p>\<r>\<o>\<c> F v
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry k1 k2 F
-      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+      \<lbrace> v \<Ztypecolon> \<phi> (k1 \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   using \<phi>R_get_res_entry[where n=1, simplified] .
 
 
@@ -1505,7 +1505,7 @@ lemma \<phi>R_set_res:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. (\<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))}) \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
-         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Itself) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Itself) \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
   apply (clarsimp simp add: \<phi>expns zero_set_def
           expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
@@ -1524,7 +1524,7 @@ lemma \<phi>R_set_res:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k \<mapsto> u) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k \<mapsto> u))
-         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Itself) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Itself) \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
   apply (clarsimp simp add: \<phi>expns zero_set_def
           expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified]
@@ -1552,7 +1552,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_set_res"[THEN \<
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k) m \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k := 1(k2 \<mapsto> v)))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (map_fun_at (map_fun_at (\<lambda>_. Some u) k2) k)
-         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Identity) \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Itself) \<longmapsto> \<lambda>\<r>\<e>\<t>. u \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> k2 \<^bold>\<rightarrow> \<fish_eye> Itself) \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
   apply (clarsimp simp add: \<phi>expns zero_set_def
                             expand[where x=\<open>1(k := 1(k2 \<mapsto> v))\<close>, simplified]
@@ -1578,7 +1578,7 @@ lemma \<phi>R_dispose_res:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
-         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<black_circle> Itself) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified])
   subgoal for r res
@@ -1595,7 +1595,7 @@ lemma \<phi>R_dispose_res:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> P m \<longrightarrow> m(k := None) \<in>\<^sub>S\<^sub>H R.domain)
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k \<mapsto> v))} \<Longrightarrow> P (R.get res))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := None))
-         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
+         \<lbrace> v \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> \<fish_eye> Itself) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k \<mapsto> v)\<close>, simplified])
   subgoal for r res by (rule R.\<phi>R_dispose_res, assumption, simp, simp) .
@@ -1620,7 +1620,7 @@ lemma (in share_fiction_for_partial_mapping_resource2) "\<phi>R_dispose_res"[THE
 \<Longrightarrow> (\<And>res r. \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP r * {R.mk (1(k := f))}
       \<Longrightarrow> P (R.get res) \<and> dom f = dom (R.get res k))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res (\<lambda>f. f(k := 1))
-         \<lbrace> to_share o f \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> Identity) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
+         \<lbrace> to_share o f \<Ztypecolon> \<phi> (k \<^bold>\<rightarrow> Itself) \<longmapsto> \<lambda>_. Void \<rbrace>\<close>
   unfolding \<phi>Procedure_Hybrid_DL
   apply (clarsimp simp add: \<phi>expns zero_set_def expand[where x=\<open>1(k := f)\<close>, simplified])
   subgoal for r res
@@ -1700,7 +1700,7 @@ end
 lemma (in identity_fiction_for_partial_mapping_resource) "\<phi>R_allocate_res_entry"[intro!]:
   \<open> (\<forall>m. m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> (\<exists>k. m k = 1 \<and> P k))
 \<Longrightarrow> (\<forall>k m. P k \<longrightarrow> m \<in>\<^sub>S\<^sub>H R.domain \<longrightarrow> m(k \<mapsto> init) \<in>\<^sub>S\<^sub>H R.domain)
-\<Longrightarrow> (\<And>new. P new \<Longrightarrow> \<p>\<r>\<o>\<c> F new \<lbrace> X \<heavy_comma> init \<Ztypecolon> \<phi> (new \<^bold>\<rightarrow> \<black_circle> Identity) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
+\<Longrightarrow> (\<And>new. P new \<Longrightarrow> \<p>\<r>\<o>\<c> F new \<lbrace> X \<heavy_comma> init \<Ztypecolon> \<phi> (new \<^bold>\<rightarrow> \<black_circle> Itself) \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_allocate_res_entry P (Some init) F \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
  apply (clarsimp simp add: \<phi>expns \<phi>Procedure_Hybrid_DL)
   subgoal for r res c

@@ -1,9 +1,13 @@
 signature PLPR_SYNTAX = sig
+
 val dest_premise_tag : term -> term * term
 val dest_premise_tag_c : cterm -> cterm * cterm
+val add_premise_tag_conv : cterm (*mode*) -> conv
+val premise_tag_conv : conv -> conv
+
 end
 
-structure PLPR_Syntax = struct
+structure PLPR_Syntax : PLPR_SYNTAX = struct
 
 fun has_head c (Const (c', _)) = (c = c')
   | has_head c (h $ _) = has_head c h
@@ -25,5 +29,17 @@ val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
 val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try HOLogic.dest_Trueprop)
 val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
+
+fun add_premise_tag_conv mode =
+  let val rule = Thm.instantiate (TVars.empty, Vars.make [((("mode",0),\<^typ>\<open>mode\<close>),mode)])
+                    @{thm Premise_def[folded atomize_eq,symmetric]}
+   in Conv.rewr_conv rule
+  end
+
+fun premise_tag_conv C ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (premise_tag_conv C) ctm
+     | Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _ => Conv.arg_conv C ctm
+     | _ => raise CTERM ("premise_tag_conv",[ctm])
 
 end

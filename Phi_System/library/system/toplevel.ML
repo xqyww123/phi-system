@@ -12,6 +12,9 @@ signature PHI_TOPLEVEL = sig
   structure Finishing_Modifier_Hooks : HOOKS
   structure Finishing_Construction_Hooks : HOOKS
 
+  val is_interactive : bool Config.T
+  exception Schematic
+
   val name_of_the_building_procedure : Proof.context -> binding option
   val begin_proc_cmd : bool (*whether to define a new constant*)
         -> Attrib.binding (*name*)
@@ -148,8 +151,10 @@ fun reduce_var X =
 fun merge_premises_bindings R [] = map (the_default ((Binding.empty, []),[])) R
   | merge_premises_bindings (NONE::R1) (((B,A2),P2)::R2)
       = ((B,A2),P2) :: merge_premises_bindings R1 R2
-  | merge_premises_bindings ((SOME ((_,A1),P1))::R1) (((B,A2),P2)::R2)
-      = ((B, A1@A2), P1@P2) :: merge_premises_bindings R1 R2
+  | merge_premises_bindings ((SOME ((B1,A1),P1))::R1) (((B2,A2),P2)::R2)
+      = if Binding.name_of B1 = "\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>"
+        then error "Too much premises bindings given"
+        else ((B2, A1@A2), P1@P2) :: merge_premises_bindings R1 R2
   | merge_premises_bindings [] (_::_)
       = error "Too much premises bindings given"
 
@@ -196,9 +201,12 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
       end
     ) stat
 
-    val stat = if is_top
+    val stat =(if is_top
                then Proof.refine_primitive (K (K sequent)) stat
-               else Phi_Envir.set_state_sequent sequent stat
+                    |> Proof.assert_backward
+                    |> Proof.enter_forward
+               else Phi_Envir.set_state_sequent sequent stat)
+               |> Proof.begin_block
 
     (*Assuming the proof state is in the normal hhf, or else the operation fails.*)
     val (vars0, goal) =
@@ -215,9 +223,6 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
             |> reduce_var
     val prems = Logic.strip_imp_prems goal
     val goal'  = Logic.strip_imp_concl goal
-
-    val stat = (if is_top then Proof.enter_forward (Proof.assert_backward stat) else stat)
-                  |> Proof.begin_block
 
     fun after_qed (ctxt',[[th]]) stat0 =
       let val stat = Proof.end_block stat0
@@ -299,7 +304,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
       |> (fn stat => stat
               |> Proof.map_context (fn ctxt => ctxt
                   |> Phi_Working_Mode.set mode
-                  |> Phi_Envir.put_thesis (Thm.cprem_of (#goal (Proof.goal stat)) 1
+                  |> Phi_Envir.put_thesis (Thm.cprem_of (@{print} (#goal (Proof.goal stat))) 1
                                               |> Drule.strip_imp_concl)))
       |> Proof.begin_block
       |> #initialize_sequent mode
@@ -390,6 +395,7 @@ fun gen_finish_proc prep_term qed spec int stat =
           |> Proof.set_facts []
           |> Proof.map_context Phi_Envir.exit_programming_environ
           |> Proof.end_block
+          
         val ctxt'1 = Proof.context_of stat'
         val sequent'1 = singleton (Proof_Context.export ctxt ctxt'1) sequent
         val end_tac = basic_method (fn ctxt' => fn goal' => (
@@ -665,6 +671,8 @@ val _ = Theory.setup (Context.theory_map (
 
 fun previous_statement_is_finished ctxt = Config.get ctxt previous_statement_is_finished'
 
+val is_interactive = Config.declare_bool ("\<phi>Sys.interactive", \<^here>) (K true)
+exception Schematic
 
 (* fun export_LLVM thy =
   let

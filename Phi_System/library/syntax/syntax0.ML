@@ -21,7 +21,10 @@ include PHI_SYNTAX
   val dest_sem_value_T: typ -> typ
   val mk_sem_value_T: typ -> typ
 
+  val mk_phi_type_ty : typ (*abstract*) * typ (*concrete*) -> typ
   val mk_phi_type : term * term -> term
+  val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
+  val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
 
 end
 
@@ -67,9 +70,10 @@ val dest_implication   =
 val dest_implication_c =
          dest_tags_c
       #> dest_triop_c @{const_name "Imply"}
+
 fun implication_conv C_s C_t C_p ctm = (
   dest_implication_c ctm;
-  HOLogic.Trueprop_conv (
+  Phi_Helper_Conv.may_Trueprop_conv (
     Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p) ctm
 )
 
@@ -87,6 +91,15 @@ fun mk_sem_value_T T = Type(\<^type_name>\<open>\<phi>arg\<close>, [T])
 fun mk_phi_type (x,T) =
   let val \<^Type>\<open>fun \<open>a\<close> \<open>\<^Type>\<open>set \<open>b\<close>\<close>\<close>\<close> = Phi_Help.safe_fastype_of  T
    in \<^Const>\<open>\<phi>Type a b\<close> $ x $ T end
+
+fun mk_phi_type_ty (tx, tm) = \<^Type>\<open>fun tx \<^Type>\<open>set tm\<close>\<close>
+
+fun dest_phi_type_ty \<^Type>\<open>fun x \<^Type>\<open>set model\<close>\<close> = (x, model)
+  | dest_phi_type_ty T = raise TYPE ("dest_phi_type_ty", [T], [])
+
+fun dest_phi_type_ty_c T =
+  (dest_phi_type_ty (Thm.typ_of T) ;
+   (Thm.dest_ctyp0 T, dest_ctyp0 (dest_ctyp1 T)))
 
 
 end

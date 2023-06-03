@@ -33,13 +33,17 @@ end
 structure Phi_Apply : PHI_APPLICATION = struct
 open Phi_Help
 
-val expand_appliant =
-  repeat (fn th => th RS @{thm spec}) #>
-  repeat (fn th => th RS @{thm mp}) #>
-  repeat (fn th => th RS @{thm spec})
+fun normalize_app_rule ctxt =
+  Conv.fconv_rule (Phi_Helper_Conv.meta_ball_conv_all (K Conv.all_conv) ctxt)
+
+fun expand_appliant ctxt rule = rule
+  |> repeat (fn th => th RS @{thm spec})
+  |> repeat (fn th => th RS @{thm mp})
+  |> repeat (fn th => th RS @{thm spec})
+  |> normalize_app_rule ctxt
 
 fun apply_proc_naive proc (ctxt,sequent) =
-  (ctxt, expand_appliant proc RS (sequent RS @{thm \<phi>apply_proc}))
+  (ctxt, expand_appliant ctxt proc RS (sequent RS @{thm \<phi>apply_proc}))
 
 fun mk_app_reasoning_normal app sequent =
   let val idx = Thm.maxidx_of sequent + 1
@@ -61,17 +65,17 @@ fun mk_app_reasoning_RS app sequent =
     |> Thm.permute_prems 0 (Thm.nprems_of app)
     |> (fn th => th RS prep_sequent sequent)
 
-fun mk_app_reasoning sequent app =
+fun mk_app_reasoning ctxt sequent app =
   case Thm.prop_of sequent
     of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-            mk_app_reasoning_RS app sequent
-     | _ => mk_app_reasoning_normal app sequent
+            mk_app_reasoning_RS (normalize_app_rule ctxt app) sequent
+     | _ => mk_app_reasoning_normal (normalize_app_rule ctxt app) sequent
 
 fun try_apply [] _ _ = NONE
   | try_apply apps ctxt sequent = (
       Phi_Reasoner.info_print ctxt 2 (fn _ =>
             "Reasoning generic applications..." ^ Position.here \<^here>);
-      PLPR_Optimum_Solution.best_among (ctxt, map (mk_app_reasoning sequent) apps))
+      PLPR_Optimum_Solution.best_among (ctxt, map (mk_app_reasoning ctxt sequent) apps))
 
 fun apply applications ctxt sequent =
   case try_apply applications ctxt sequent

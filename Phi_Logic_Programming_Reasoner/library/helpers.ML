@@ -23,10 +23,12 @@ end
 
 signature PHI_HELPER_CONV = sig
 
+val may_Trueprop_conv : conv -> conv
+
 val inverse_eta_conv : conv
 val quant_conv : string -> (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
-val exhaustive_meta_all_conv : (Proof.context -> conv) -> Proof.context -> conv
+val meta_alls_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 
@@ -35,6 +37,11 @@ end
 
 structure Phi_Helper_Conv : PHI_HELPER_CONV = struct
 open Conv
+
+fun may_Trueprop_conv C ctm =
+  case Thm.term_of ctm
+    of \<^Const>\<open>Trueprop\<close> $ _ => Conv.arg_conv C ctm
+     | _ => C ctm
 
 val inverse_eta = Thm.eta_conversion \<^schematic_cterm>\<open>\<lambda>x. (?f::'a::{} \<Rightarrow> 'b::{}) x\<close>
                |> Thm.symmetric
@@ -52,11 +59,11 @@ fun meta_all_conv cv ctxt ct =
   (case Thm.term_of ct of
     Const ("Pure.all", _) $ Abs _ => arg_conv (abs_conv cv ctxt) ct
   | Const ("Pure.all", _) $ _ => arg_conv (inverse_eta_conv then_conv abs_conv cv ctxt) ct
-  | _ => raise CTERM ("forall_conv", [ct]))
+  | _ => raise CTERM ("meta_all_conv", [ct]))
 
-fun exhaustive_meta_all_conv cv ctxt ctm =
+fun meta_alls_conv cv ctxt ctm =
   case Thm.term_of ctm
-    of Const ("Pure.all", _) $ _ => meta_all_conv (exhaustive_meta_all_conv cv o snd) ctxt ctm
+    of Const ("Pure.all", _) $ _ => meta_all_conv (meta_alls_conv cv o snd) ctxt ctm
      | _ => cv ctxt ctm
 
 fun is_strict_reflexive th = (op =) (Logic.dest_equals (Thm.prop_of th))
@@ -84,7 +91,19 @@ fun quant_conv head cv ctxt ct =
 val hol_all_conv = quant_conv \<^const_name>\<open>All\<close>
 
 fun meta_all_body_conv C ctxt =
-  forall_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt
+  meta_all_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt
   else_conv C ctxt
 
 end
+
+infix 0 RS' RSN'
+
+fun (tha,ctxt) RSN' (i, thb) =
+  (case Seq.chop 2 (Thm.biresolution (SOME ctxt) false [(false, tha)] i thb) of
+    ([th], _) => Thm.solve_constraints th
+  | ([], _) => raise THM ("RSN: no unifiers", i, [tha, thb])
+  | _ => raise THM ("RSN: multiple unifiers", i, [tha, thb]));
+
+(*Resolution: P \<Longrightarrow> Q, Q \<Longrightarrow> R gives P \<Longrightarrow> R*)
+fun (tha, ctxt) RS' thb = (tha,ctxt) RSN' (1,thb);
+
