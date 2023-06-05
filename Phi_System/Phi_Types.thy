@@ -393,6 +393,11 @@ subsection \<open>Prod\<close>
 
 declare \<phi>Prod_expn'[assertion_simps]
 
+lemma \<phi>Prod_expn''[assertion_simps]:
+  \<open> NO_MATCH (xx,yy) x
+\<Longrightarrow> (x \<Ztypecolon> A \<^emph> B) = (snd x \<Ztypecolon> B) * (fst x \<Ztypecolon> A)\<close>
+  unfolding set_eq_iff by (cases x; simp add: \<phi>expns)
+
 (* lemma \<phi>Prod_inhabited_expn[\<phi>inhabited]:
   \<open>Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longleftrightarrow> Inhabited (x1 \<Ztypecolon> T1) \<and> Inhabited (x2 \<Ztypecolon> T2)\<close>
   unfolding Inhabited_def apply (simp add: \<phi>expns) *)

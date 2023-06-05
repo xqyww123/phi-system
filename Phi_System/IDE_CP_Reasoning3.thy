@@ -767,9 +767,7 @@ lemma "_Structural_Extract_general_rule_":
     apply_rule apply_Separation_Functor_go[where Fu=F4 and Ft=F1]
     apply_rule apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
     simplify(useful)
-    \<medium_left_bracket> 
-      note [[\<phi>trace_reasoning = 2]] 
-      ;; Tr \<medium_right_bracket>
+    \<medium_left_bracket> Tr \<medium_right_bracket>
     apply_Separation_Functor_back
   \<medium_right_bracket> .
 

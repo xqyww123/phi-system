@@ -926,7 +926,6 @@ text \<open>A very weak, one-to-one search.\<close>
 lemma [\<phi>reason 70 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]: \<comment> \<open>attempts the immediate cell\<close>
   " H \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P
 \<Longrightarrow> R * H \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> X \<brangle> \<a>\<n>\<d> P"
-  for H :: \<open>'a::sep_semigroup set\<close>
   unfolding FOCUS_TAG_def Imply_def
   by (metis (no_types, lifting) mult.assoc set_mult_expn)
 
