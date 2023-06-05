@@ -1145,7 +1145,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
-  by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
+  by (cases R; simp; meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
 
 
 paragraph \<open>View Shift Methods\<close>
@@ -1193,8 +1193,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
-  using \<phi>apply_implication \<phi>apply_view_shift \<phi>view_shift_intro_frame by blast
-
+  by (cases R; simp, insert \<phi>apply_implication \<phi>apply_view_shift \<phi>view_shift_intro_frame, blast+)
 
 
 paragraph \<open>Procedure Methods\<close>
@@ -1377,7 +1376,7 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
   using implies_left_prod by (metis Imply_def)
 
 lemma [\<phi>reason 100 for \<open>
-  PROP \<phi>Application (Trueprop ((_::?'a::sep_magma_1 set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) ?Result
+  PROP \<phi>Application (Trueprop (_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S'' \<a>\<n>\<d> Any @action ToSA
@@ -1386,21 +1385,7 @@ lemma [\<phi>reason 100 for \<open>
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (meson \<phi>apply_implication_impl implies_left_prod)
-
-lemma [\<phi>reason 90
-  for \<open>PROP \<phi>Application (Trueprop (_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) ?Result\<close>
-  except \<open>PROP \<phi>Application (Trueprop ((_::?'a::sep_magma_1 set) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) ?Result\<close>
-]:
-  " S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> Any @action ToSA
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<i>\<m>\<p>\<l>\<i>\<e>\<s> T \<a>\<n>\<d> P))
-      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P)"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (meson \<phi>apply_implication_impl implies_left_prod)
-
-
+  by (cases R; simp; meson \<phi>apply_implication_impl implies_left_prod)
 
 
 

@@ -376,8 +376,9 @@ consts frame_var_rewrs :: mode
   = \<open>PLPR_Simplifier.simplifier_only (fn ctxt =>
           Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>)\<close>
 
-definition \<phi>IntroFrameVar :: "'a::sep_magma_1 set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool"
-  where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> S' = (R * S) \<and> T' = R * T "
+definition \<phi>IntroFrameVar :: "'a::sep_magma set option \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool"
+  where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> (case R of Some R' \<Rightarrow> S' = (R' * S) \<and> T' = R' * T
+                                                 | None \<Rightarrow> S' = S \<and> T' = T )"
 
 definition \<phi>IntroFrameVar' ::
   "assn \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ret \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> ('ex \<Rightarrow> assn) \<Rightarrow> bool"
@@ -400,7 +401,7 @@ text \<open>Antecedent \<^schematic_prop>\<open>\<phi>IntroFrameVar ?R ?S' S ?T'
 \<close>
 
 lemma \<phi>IntroFrameVar_No:
-  "\<phi>IntroFrameVar 1 S S T T"
+  "\<phi>IntroFrameVar None S S T T"
   unfolding \<phi>IntroFrameVar_def by simp
 
 lemma \<phi>IntroFrameVar'_No:
@@ -408,8 +409,8 @@ lemma \<phi>IntroFrameVar'_No:
   unfolding \<phi>IntroFrameVar'_def by simp
 
 lemma \<phi>IntroFrameVar_Yes:
-  "\<phi>IntroFrameVar R (R * \<blangle> S \<brangle>) S (R * T) T"
-  unfolding \<phi>IntroFrameVar_def FOCUS_TAG_def by blast
+  "\<phi>IntroFrameVar (Some R) (R * \<blangle> S \<brangle>) S (R * T) T"
+  unfolding \<phi>IntroFrameVar_def FOCUS_TAG_def by simp
 
 lemma \<phi>IntroFrameVar'_Yes:
   " \<phi>IntroFrameVar' R (R * \<blangle> S \<brangle>) S (\<lambda>ret. R * T ret) T (\<lambda>ex. R * E ex) E"
@@ -419,7 +420,7 @@ lemma \<phi>IntroFrameVar'_Yes:
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
 \<open>fn (ctxt, sequent) =>
   let
-    val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
+    val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, \<^Type>\<open>fun \<^Type>\<open>option \<^Type>\<open>set Ty\<close>\<close> _\<close>) $ _ $ _ $ S $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
     val tail = hd (Phi_Syntax.strip_separations S)
     fun suppressed (Var _) = true
@@ -428,7 +429,10 @@ lemma \<phi>IntroFrameVar'_Yes:
   in
     if suppressed tail (* andalso fastype_of tail = \<^typ>\<open>assn\<close> *)
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
-    else Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
+    else if Sign.of_sort (Proof_Context.theory_of ctxt) (Ty, \<^sort>\<open>sep_magma_1\<close>)
+         then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
+         else Seq.of_list [(ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent),
+                           (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)]
   end\<close>
 
 \<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
