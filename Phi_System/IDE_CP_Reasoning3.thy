@@ -148,7 +148,7 @@ lemma clean_automation_waste_general_rule:
 
 \<phi>reasoner_ML clean_automation_waste_general_rule 50 (\<open>_ = _ @action clean_automation_waste\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ (*Action_Tag*) $ (_ (*Trueprop*) $ ( _ (*equal*) $ (_ (*\<phi>Type*) $ _ $ T) $ _)) $ _
+  let val _ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*equal*) $ (_ (*\<phi>Type*) $ _ $ T) $ _) $ _) 
         = Thm.major_prem_of sequent
    in case Phi_Functor_Detect.detect 1 ctxt T
         of SOME [Ft,_] => let
@@ -1674,11 +1674,11 @@ lemma branch_convergence_general_rule:
 
 \<phi>reasoner_ML branch_convergence_general_rule 50 (\<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ (*Action_Tag*) $ (_ (*Trueprop*) $ (_ (*Imply*)
+  let val _ (*Trueprop*) $ ( _ (*Action_Tag*) $ (_ (*Imply*)
             $ ( _ (*If*) $ _ $ (_(*\<phi>Type*) $ _ $ T) $ (_(*\<phi>Type*) $ _ $ U))
             $ _
             $ _
-      )) $ _
+      ) $ _ )
         = snd (Phi_Help.varified_leading_antecedent_meta_quantifiers ctxt (Thm.prop_of sequent))
    in case (Phi_Functor_Detect.detect 1 ctxt T,
             Phi_Functor_Detect.detect 1 ctxt U)

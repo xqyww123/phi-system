@@ -323,8 +323,8 @@ lemma "_ToSA_init_": (*[\<phi>reason 2000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>
 \<phi>reasoner_ML ToSA_init 2000 (\<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>) = \<open>
 fn (ctxt0,sequent0) => Seq.make (fn () =>
   let val sequent = @{thm Action_Tag_I} RS sequent0
-      val _ (*Action_Tag*) $ (_ (*Trueprop*) $ (Const(\<^const_name>\<open>Imply\<close>, _) $ _ $ Y $ _))
-                           $ (Const(\<^const_name>\<open>ToSA'\<close>, _) $ deep)
+      val _ (*Trueprop*) $ ( _ (*Action_Tag*) $ (Const(\<^const_name>\<open>Imply\<close>, _) $ _ $ Y $ _)
+                                              $ (Const(\<^const_name>\<open>ToSA'\<close>, _) $ deep))
          = Thm.major_prem_of sequent0
 
       val ctxt = PLPR_Env.push \<^const_name>\<open>ToA_flag_deep\<close> deep ctxt0

@@ -261,8 +261,8 @@ qed
 ML_file \<open>library/tools/elimination_rule.ML\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> PROP Extract_Elimination_Rule (PROP P) OL OR
-\<Longrightarrow> PROP Extract_Elimination_Rule (PROP P @action A) OL OR\<close>
+  \<open> PROP Extract_Elimination_Rule (Trueprop P) OL OR
+\<Longrightarrow> PROP Extract_Elimination_Rule (Trueprop (P @action A)) OL OR\<close>
   unfolding Extract_Elimination_Rule_def Action_Tag_def .
 
 lemma [\<phi>reason 1000]:

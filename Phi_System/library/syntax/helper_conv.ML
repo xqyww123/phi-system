@@ -19,8 +19,6 @@ val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 val leading_antecedent_conv : conv -> conv
 val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
 
-val may_Trueprop_conv : conv -> conv
-
 val rewrite_leading_antecedent : Proof.context -> thm list -> thm -> thm
 val simplify_leading_antecedent : Proof.context -> thm -> thm
 val simplify_leading_antecedent_hhf_concl : Proof.context -> thm -> thm
@@ -88,11 +86,6 @@ fun hhf_concl_conv C ctxt ctm =
      | Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => raise CTERM ("hhf_concl_conv", [ctm])
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.arg_conv (hhf_concl_conv C ctxt) ctm
      | _ => C ctxt ctm
-
-fun may_Trueprop_conv cv ct =
-  (case Thm.term_of ct of
-    Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv cv ct
-  | _ => cv ct)
 
 fun rewrite_leading_antecedent ctxt rules =
   Conv.gconv_rule (Raw_Simplifier.rewrite ctxt true rules) 1

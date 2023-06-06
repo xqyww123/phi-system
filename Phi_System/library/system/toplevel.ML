@@ -554,10 +554,9 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
     val throws = (case throws
                     of SOME thr => parse_term thr
                      | NONE => Const (\<^const_name>\<open>Groups.zero_class.zero\<close>, dummyT))
-    val goal0 = \<^const>\<open>Trueprop\<close> $
-                  (Const (@{const_name \<phi>Procedure}, dummyT) $ v_proc $ arg $ ret $ throws)
-    val goal = (case action of NONE => goal0
-                   | SOME A => \<^Const>\<open>Action_Tag\<close> $ goal0 $ parse_term A)
+    val goal0 = Const (@{const_name \<phi>Procedure}, dummyT) $ v_proc $ arg $ ret $ throws
+    val goal = (case action of NONE => HOLogic.Trueprop $ goal0
+                   | SOME A => HOLogic.Trueprop $ (\<^Const>\<open>Action_Tag\<close> $ goal0 $ parse_term A))
             |> fold_rev (fn (_,(P,_)) => fn X => \<^const>\<open>Pure.imp\<close> $ P $ X) preconds
 
     fun post_process' binding int lthy th =

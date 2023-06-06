@@ -31,7 +31,8 @@ definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r
 
 typedecl action
 
-definition Action_Tag :: \<open>prop \<Rightarrow> action \<Rightarrow> prop\<close> ("_ @action _" [3,4] 3)
+
+definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [10,10] 9)
   where [iff]: \<open>Action_Tag P A \<equiv> P\<close>
 
 lemma Action_Tag_I:
@@ -423,12 +424,6 @@ text \<open>
   not indexed at all, causing the reasoning here becomes searching one by one in linear time!
   Maybe classification should be done by some term-level structure. Let's think when have time!\<close>\<close>
 
-definition Action_Tag_embed :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close>
-  where \<open>Action_Tag_embed P A \<equiv> P\<close>
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>PROP Action_Tag (Trueprop P) A \<equiv> Trueprop (Action_Tag_embed P A)\<close>
-  unfolding Action_Tag_def Action_Tag_embed_def .
 
 lemma Action_Tag_D:
   \<open>P @action A \<Longrightarrow> P\<close>
@@ -836,8 +831,8 @@ typedecl "subgoal"
 
 consts subgoal_context :: \<open>subgoal \<Rightarrow> action\<close>
 
-abbreviation GOAL_CTXT :: "prop \<Rightarrow> subgoal \<Rightarrow> prop"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [2,1000] 2)
-  where "(PROP P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> (PROP P @action subgoal_context G)"
+abbreviation GOAL_CTXT :: "bool \<Rightarrow> subgoal \<Rightarrow> bool"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [26,1000] 26)
+  where "(P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> (P @action subgoal_context G)"
 
 definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
   where "CHK_SUBGOAL X \<longleftrightarrow> True"

@@ -33,11 +33,11 @@ val dest_action_tag_c = dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> 
 
 
 fun dest_tags X = X
-  |> perhaps (try dest_action_tag)
   |> perhaps (try dest_Trueprop)
+  |> perhaps (try dest_action_tag)
 fun dest_tags_c X = X
-  |> perhaps (try dest_action_tag_c)
   |> perhaps (try dest_Trueprop_c)
+  |> perhaps (try dest_action_tag_c)
 
 val dest_procedure   =
      dest_tags
@@ -47,12 +47,12 @@ val dest_procedure_c =
   #> dest_quadop_c @{const_name \<phi>Procedure}
 
 fun proc_monad_conv C =
-  Phi_Helper_Conv.may_action_tag_conv (Phi_Helper_Conv.may_Trueprop_conv (fn ctm =>
+  Phi_Helper_Conv.tag_conv (fn ctm =>
     case Thm.term_of ctm
       of (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _)
            => Conv.fun_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg_conv C))) ctm
        | _ => raise CTERM ("proc_monad_conv", [ctm])
-     ))
+     )
 
 val dest_view_shift    =
          dest_tags

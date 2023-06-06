@@ -1013,7 +1013,7 @@ lemma [\<phi>reason 1200 for \<open>
 
 lemma [\<phi>reason 1200]:
   \<open> PROP \<phi>Application (Trueprop App) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application (App @action Act) State (PROP Result)\<close>
+\<Longrightarrow> PROP \<phi>Application (Trueprop (App @action Act)) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2) prems(3)] . .
 
@@ -1072,13 +1072,13 @@ lemma [\<phi>reason 1200]:
   subgoal premises p using p(1)[THEN p(3), THEN p(2)] . .
 
 lemma [\<phi>reason 1200]:
-  \<open> PROP \<phi>Application_Conv X (PROP Y)
-\<Longrightarrow> PROP \<phi>Application_Conv X (PROP Y @action A)\<close>
+  \<open> PROP \<phi>Application_Conv X (Trueprop Y)
+\<Longrightarrow> PROP \<phi>Application_Conv X (Trueprop (Y @action A))\<close>
   unfolding Action_Tag_def .
 
 lemma [\<phi>reason 1200]:
-  \<open> PROP \<phi>Application_Conv (PROP Y) X
-\<Longrightarrow> PROP \<phi>Application_Conv (PROP Y @action A) X\<close>
+  \<open> PROP \<phi>Application_Conv (Trueprop Y) X
+\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (Y @action A)) X\<close>
   unfolding Action_Tag_def .
 
 

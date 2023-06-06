@@ -61,8 +61,8 @@ fun mk_element_index_input_internal args0 ctxt =
             Thm.concl_of rule1 aconv Thm.concl_of rule2) args0
       fun pattern_of (Trueprop $ ((H1 as Const (\<^const_name>\<open>Set.member\<close>, _)) $ V $ S))
             = let val i = Int.max (maxidx_of_term H1, maxidx_of_term V) + 1
-               in \<^const>\<open>Action_Tag\<close> $ (Trueprop $ (H1 $ V $ Var(("S",i), fastype_of S)))
-                                    $ \<^const>\<open>parse_element_index_input\<close>
+               in Trueprop $ (\<^const>\<open>Action_Tag\<close> $ (H1 $ V $ Var(("S",i), fastype_of S))
+                                                $ \<^const>\<open>parse_element_index_input\<close>)
               end
         | pattern_of X =
             raise TERM ("bad rule #c419df7c-c917-4605-a129-bb914d5716bf", [X])

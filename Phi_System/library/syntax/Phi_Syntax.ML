@@ -49,19 +49,19 @@ val dest_set_member   = dest_tags   #> dest_binop   @{const_name Set.member}
 val dest_set_member_c = dest_tags_c #> dest_binop_c @{const_name Set.member}
 
 fun pending_construction_monad_conv C =
-  Phi_Helper_Conv.may_action_tag_conv (Phi_Helper_Conv.may_Trueprop_conv (fn ctm =>
+  Phi_Helper_Conv.tag_conv (fn ctm =>
     case Thm.term_of ctm
       of (Const (\<^const_name>\<open>PendingConstruction\<close>, _) $ _ $ _ $ _ $ _ $ _)
            => Conv.fun_conv (Conv.fun_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg_conv C)))) ctm
        | _ => raise CTERM ("pending_construction_monad_conv", [ctm])
-     ))
+     )
 fun pending_construction_abnm_conv C =
-  Phi_Helper_Conv.may_action_tag_conv (Phi_Helper_Conv.may_Trueprop_conv (fn ctm =>
+  Phi_Helper_Conv.tag_conv (fn ctm =>
     case Thm.term_of ctm
       of (Const (\<^const_name>\<open>PendingConstruction\<close>, _) $ _ $ _ $ _ $ _ $ _)
            => (Conv.arg_conv C) ctm
        | _ => raise CTERM ("pending_construction_abnm_conv", [ctm])
-     ))
+     )
 
 val dest_CodeBlock   = perhaps (try dest_Trueprop)   #> dest_quadop   \<^const_name>\<open>CodeBlock\<close>
 val dest_CodeBlock_c = perhaps (try dest_Trueprop_c) #> dest_quadop_c \<^const_name>\<open>CodeBlock\<close>
