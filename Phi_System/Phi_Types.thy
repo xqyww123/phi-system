@@ -1164,10 +1164,8 @@ subsubsection \<open>Definition of Properties\<close>
 definition \<phi>Sep_Disj :: \<open>('a::sep_disj,'b1) \<phi> \<Rightarrow> ('a::sep_disj,'b2) \<phi> \<Rightarrow> bool\<close>
   where \<open>\<phi>Sep_Disj T U \<longleftrightarrow> (\<forall>x y u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (y \<Ztypecolon> U) \<longrightarrow> u ## v)\<close>
 
-definition \<phi>Sep_Disj_Identical :: \<open>('a::share_semimodule_sep, 'b) \<phi> \<Rightarrow> bool\<close>
-  where \<open>\<phi>Sep_Disj_Identical T
-    \<longleftrightarrow> (\<forall>x u v. u \<in> (x \<Ztypecolon> T) \<and> v \<in> (x \<Ztypecolon> T) \<and> u ## v \<longrightarrow> u = v)
-      \<and> (\<forall>x u. u \<in> (x \<Ztypecolon> T) \<longrightarrow> u ## u)\<close>
+definition \<phi>Sep_Disj_Inj :: \<open>'a::share_semimodule_sep set \<Rightarrow> bool\<close>
+  where \<open>\<phi>Sep_Disj_Inj S \<longleftrightarrow> (\<forall>u v. u \<in> S \<and> v \<in> S \<and> u ## v \<longrightarrow> u = v) \<and> (\<forall>u. u \<in> S \<longrightarrow> u ## u)\<close>
 
 
 subsubsection \<open>Insertion Functor\<close>
@@ -1357,10 +1355,10 @@ lemma \<phi>Share_\<phi>Share[simp]:
 
 lemma \<phi>Share_share:
   \<open> 0 < n \<and> 0 < m
-\<Longrightarrow> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) * (x \<Ztypecolon> m \<Znrres> T) = (x \<Ztypecolon> n+m \<Znrres> T)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
+  unfolding \<phi>Sep_Disj_Inj_def
   apply (clarsimp simp add: \<phi>expns set_eq_iff; rule; clarsimp)
   using share_sep_left_distrib_0 apply blast
   subgoal for v
@@ -1519,14 +1517,14 @@ subparagraph \<open>Permission\<close>
 
 lemma share_split_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> (x \<Ztypecolon> n+m \<Znrres> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> n \<Znrres> T) * (x \<Ztypecolon> m \<Znrres> T)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   by (simp add: \<phi>Share_share implies_refl Premise_def)
 
 lemma share_merge_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> \<phi>Sep_Disj_Identical T
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) * (x \<Ztypecolon> m \<Znrres> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> n+m \<Znrres> T)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
   by (simp add: \<phi>Share_share implies_refl Premise_def)
@@ -1710,68 +1708,82 @@ lemma [\<phi>reason 1300]:
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
 
 
-subsubsection \<open>\<phi>Sep_Disj_Identical\<close>
+subsubsection \<open>\<phi>Sep_Disj_Inj\<close>
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> \<phi>Sep_Disj_Identical (n \<Znrres> T)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> n \<Znrres> T)\<close>
+  unfolding \<phi>Sep_Disj_Inj_def
   apply (clarsimp simp add: \<phi>expns)
   by force
 
-lemma \<phi>Sep_Disj_Identical_\<phi>MapAt[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow> T)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
+lemma \<phi>Sep_Disj_Inj_\<phi>MapAt[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
+  unfolding \<phi>Sep_Disj_Inj_def
   apply (clarsimp simp add: \<phi>expns)
   by force
 
-lemma \<phi>Sep_Disj_Identical_\<phi>MapAt_L[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> \<phi>Sep_Disj_Identical (k \<^bold>\<rightarrow>\<^sub>@ T)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
+lemma \<phi>Sep_Disj_Inj_\<phi>MapAt_L[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T)\<close>
+  unfolding \<phi>Sep_Disj_Inj_def
   apply (clarsimp simp add: \<phi>expns)
   using push_map_sep_disj by blast
 
-lemma \<phi>Sep_Disj_Identical_Prod[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical T
-\<Longrightarrow> \<phi>Sep_Disj_Identical U
-\<Longrightarrow> \<phi>Sep_Disj_Identical (T \<^emph> U)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
+lemma \<phi>Sep_Disj_Inj_Prod[\<phi>reason 1200]:
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (y \<Ztypecolon> U)
+\<Longrightarrow> \<phi>Sep_Disj_Inj ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
+  unfolding \<phi>Sep_Disj_Inj_def
   apply (clarsimp simp add: \<phi>expns)
   by (metis self_disj_I sep_disj_commute sep_disj_multD2 sep_mult_commute)
 
+lemma [\<phi>reason 1190]:
+  \<open> \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (snd x \<Ztypecolon> U)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T \<^emph> U)\<close>
+  unfolding \<phi>Sep_Disj_Inj_def
+  by (cases x; clarsimp simp add: \<phi>expns; metis self_disj_I sep_disj_multD1 sep_disj_multD2)
+
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>insertion f D T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow> T)) \<close>
-  by (subst \<phi>insertion_MapAt; rule \<phi>Sep_Disj_Identical_\<phi>MapAt)
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion f D T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow> T)) \<close>
+  by (subst \<phi>insertion_MapAt; rule \<phi>Sep_Disj_Inj_\<phi>MapAt)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>insertion ((o) f) (pointwise_set D) T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow>\<^sub>@ T)) \<close>
-  by (subst \<phi>insertion_MapAt_L; rule \<phi>Sep_Disj_Identical_\<phi>MapAt_L)
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion ((o) f) (pointwise_set D) T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow>\<^sub>@ T)) \<close>
+  by (subst \<phi>insertion_MapAt_L; rule \<phi>Sep_Disj_Inj_\<phi>MapAt_L)
+
+lemma [\<phi>reason 1190]:
+  \<open> \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> \<phi>insertion f D T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (snd x \<Ztypecolon> \<phi>insertion f D U)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion f D (T \<^emph> U)) \<close>
+  unfolding \<phi>Sep_Disj_Inj_def
+  by (cases x; simp; smt (verit) Imply_def \<phi>Sep_Disj_Inj_Prod \<phi>Sep_Disj_Inj_def \<phi>insertion_Prod_imply)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>insertion f D T)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>insertion f D U)
-\<Longrightarrow> \<phi>Sep_Disj_Identical (\<phi>insertion f D (T \<^emph> U)) \<close>
-  unfolding \<phi>Sep_Disj_Identical_def
-  by (smt (verit) Imply_def \<phi>Sep_Disj_Identical_Prod \<phi>Sep_Disj_Identical_def \<phi>insertion_Prod_imply)
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion f D T)
+\<Longrightarrow> \<phi>Sep_Disj_Inj (y \<Ztypecolon> \<phi>insertion f D U)
+\<Longrightarrow> \<phi>Sep_Disj_Inj ((x,y) \<Ztypecolon> \<phi>insertion f D (T \<^emph> U)) \<close>
+  unfolding \<phi>Sep_Disj_Inj_def
+  by (smt (verit) Imply_def \<phi>Sep_Disj_Inj_Prod \<phi>Sep_Disj_Inj_def \<phi>insertion_Prod_imply)
 
 lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Identical (\<phi>insertion to_share D (\<phi>Some T))\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
+  \<open>\<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion to_share D (\<phi>Some T))\<close>
+  unfolding \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
 lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Identical (\<phi>insertion to_share D \<phi>None)\<close>
-  unfolding \<phi>Sep_Disj_Identical_def
+  \<open>\<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion to_share D \<phi>None)\<close>
+  unfolding \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Identical (\<phi>None :: ('a::share_module_sep,unit) \<phi>) \<close>
-  unfolding \<phi>Sep_Disj_Identical_def
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>None :: 'a::share_module_sep set) \<close>
+  unfolding \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: \<phi>expns)
 
 

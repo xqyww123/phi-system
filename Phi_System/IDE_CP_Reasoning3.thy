@@ -1114,7 +1114,7 @@ TODO: re-enable this! *)
 
 lemma Structural_Extract_share_half:
     \<comment> \<open>if only requires a half of the permission, give it a half of that currently we have.\<close>
-  \<open> \<phi>Sep_Disj_Identical T
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> half(m / 2) \<Znrres> U) (w \<Ztypecolon> W) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
@@ -1129,7 +1129,7 @@ declare Structural_Extract_share_half[THEN SE_clean_waste,
     \<phi>reason 1300 for \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) _ (?y \<Ztypecolon> half ?mmm \<Znrres> ?U) _ _\<close>]
 
 lemma Structural_Extract_share_half_rev:
-  \<open> \<phi>Sep_Disj_Identical T
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> Structural_Extract (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) P
 \<Longrightarrow> Structural_Extract (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) P\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
@@ -1148,13 +1148,13 @@ lemma
   [THEN SE_clean_waste',
    \<phi>reason 1311 for \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> half ?mmm \<Znrres> ?U) ?R2
       (Reverse_Transformation _ _ \<and> _)\<close>]:
-  \<open> \<phi>Sep_Disj_Identical T
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W)
     (Reverse_Transformation RP
         (Structural_Extract (y' \<Ztypecolon> m / 2 \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m / 2 \<Znrres> T') (r' \<Ztypecolon> R') P')
     \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> half (m / 2) \<Znrres> U) (w \<Ztypecolon> W)
-    (Reverse_Transformation (RP \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
+    (Reverse_Transformation (RP \<and>\<^sub>\<r> \<phi>Sep_Disj_Inj (x' \<Ztypecolon> T'))
         (Structural_Extract (y' \<Ztypecolon> half (m / 2) \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m \<Znrres> T') ((x',r') \<Ztypecolon> m / 2 \<Znrres> T' \<^emph> R') P')
     \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
@@ -1194,7 +1194,7 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
 lemma Structural_Extract_share_ge:
   \<comment> \<open>If requires less than what we have, give it.\<close>
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> n < m
-&&& \<phi>Sep_Disj_Identical T
+&&& \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P\<close>
@@ -1215,7 +1215,7 @@ declare Structural_Extract_share_ge [THEN SE_clean_waste, \<phi>reason 1180]
 lemma Structural_Extract_share_le:
   \<comment> \<open>If requires more than what we have, give all what we can give.\<close>
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m < n
-&&& \<phi>Sep_Disj_Identical U
+&&& \<phi>Sep_Disj_Inj (y \<Ztypecolon> U)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < m
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P\<close>
@@ -1240,12 +1240,12 @@ declare Structural_Extract_share_le[THEN SE_clean_waste, \<phi>reason 1170]
 lemma [THEN SE_clean_waste', \<phi>reason 1183]:
   \<comment> \<open>If requires less than what we have, give it.\<close>
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> n < m
-&&& \<phi>Sep_Disj_Identical T
+&&& \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W)
-      (Reverse_Transformation (RP \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m-n = mn) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical T')
+      (Reverse_Transformation (RP \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m-n = mn) \<and>\<^sub>\<r> \<phi>Sep_Disj_Inj (x' \<Ztypecolon> T'))
         (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> n \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') ((r',x') \<Ztypecolon> (n \<Znrres> R' \<^emph> mn \<Znrres> T')) P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
   unfolding Generated_Rule_def Compact_Antecedent_def Premise_def
@@ -1256,12 +1256,12 @@ lemma [THEN SE_clean_waste', \<phi>reason 1183]:
 
 lemma [THEN SE_clean_waste', \<phi>reason 1173]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m < n
-&&& \<phi>Sep_Disj_Identical U
+&&& \<phi>Sep_Disj_Inj (y \<Ztypecolon> U)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < m
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U)
-      (Reverse_Transformation (RP \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> nm = n - m) \<and>\<^sub>\<r> \<phi>Sep_Disj_Identical U')
+      (Reverse_Transformation (RP \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> nm = n - m) \<and>\<^sub>\<r> \<phi>Sep_Disj_Inj (y' \<Ztypecolon> U'))
         (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') ((w',y') \<Ztypecolon> m \<Znrres> W' \<^emph> nm \<Znrres> U') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)\<close>
   for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
   unfolding Generated_Rule_def Compact_Antecedent_def Premise_def conjunction_imp \<r>Guard_def
