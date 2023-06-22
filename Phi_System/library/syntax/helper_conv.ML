@@ -12,12 +12,15 @@ val expand_aggregated_imps_obj : (Proof.context -> conv) -> Proof.context -> con
 val protect_conv : conv
 val unprotect_conv : conv
 
-val quant_conv : string -> (cterm * Proof.context -> conv) -> Proof.context -> conv
-val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
-val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
-
 val leading_antecedent_conv : conv -> conv
 val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
+val hhf_conv : (Proof.context -> conv) (*premise conv*)
+            -> (Proof.context -> conv) (*concl conv*)
+            -> Proof.context -> conv
+(*for any meta premise or HOL premise, meta quantification or HOL quantification*)
+val premises_conv : (Proof.context -> conv) (*premise conv*)
+                  -> (Proof.context -> conv) (*concl conv*)
+                  -> Proof.context -> conv
 
 val rewrite_leading_antecedent : Proof.context -> thm list -> thm -> thm
 val simplify_leading_antecedent : Proof.context -> thm -> thm
@@ -32,10 +35,21 @@ fun aggregate_imps C c =
   (implies_conv C (aggregate_imps C else_conv rewr_conv @{thm PURE_TOP_imp[symmetric]})
    then_conv rewr_conv @{thm conjunction_imp[symmetric]}) c
 
-fun expand_aggregated_imps C c =
-  (rewr_conv @{thm PURE_TOP_imp} else_conv
-  (rewr_conv @{thm conjunction_imp} then_conv
-   implies_conv C (expand_aggregated_imps C))) c
+fun expand_aggregated_imps C ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _)) $ _ =>
+          rewr_conv @{thm True_implies_equals} ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ Const(\<^const_name>\<open>PURE_TOP\<close>, _) $ _ =>
+          rewr_conv @{thm PURE_TOP_imp} ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Pure.conjunction\<close>, _) $ _ $ _) $ _ =>
+          (rewr_conv @{thm conjunction_imp} then_conv
+           implies_conv C (expand_aggregated_imps C)) ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _)
+          $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>conj\<close>, _) $ _ $ _))
+          $ _ =>
+          (rewr_conv @{thm conj_imp_eq_imp_imp} then_conv
+           implies_conv C (expand_aggregated_imps C)) ctm
+     | _ => implies_conv C Conv.all_conv ctm
 
 fun aggregate_imps_obj C ctxt c =
  ((implies_conv (C ctxt then_conv atomize_conv ctxt)
@@ -43,49 +57,46 @@ fun aggregate_imps_obj C ctxt c =
    then_conv rewr_conv @{thm conj_imp_eq_imp_imp[symmetric]})
   else_conv rewr_conv @{thm True_implies_equals[symmetric]}) c
 
-fun expand_aggregated_imps_obj C ctxt c =
-  (rewr_conv @{thm True_implies_equals} else_conv
-  (rewr_conv @{thm conj_imp_eq_imp_imp} then_conv
-   implies_conv (rulify_conv ctxt then_conv C ctxt)
-                (expand_aggregated_imps_obj C ctxt))) c
+fun expand_aggregated_imps_obj C ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _)) $ _ =>
+          rewr_conv @{thm True_implies_equals} ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+          Const(\<^const_name>\<open>conj\<close>, _) $ _ $ _)) $ _ =>
+            (rewr_conv @{thm conj_imp_eq_imp_imp} then_conv
+             implies_conv (rulify_conv ctxt then_conv C ctxt)
+                          (expand_aggregated_imps_obj C ctxt)) ctm
+     | _ => raise CTERM ("expand_aggregated_imps_obj", [ctm])
 
 
 val protect_conv = rewr_conv @{thm Pure.prop_def[symmetric]}
 val unprotect_conv = rewr_conv @{thm Pure.prop_def}
 
 
-fun is_strict_reflexive th = (op =) (Logic.dest_equals (Thm.prop_of th))
-  handle TERM _ => false;
-
-fun abs_conv cv ctxt ct =
-  (case Thm.term_of ct of
-    Abs (a, _, _) =>
-      let
-        val ((v, ct'), ctxt') = Variable.dest_abs_cterm ct ctxt;
-        val eq = cv (v, ctxt') ct';
-      in if is_strict_reflexive eq then all_conv ct else Thm.abstract_rule a v eq end
-  | _ => raise CTERM ("abs_conv", [ct]));
-
-
-fun quant_conv head cv ctxt ct =
-  (case Thm.term_of ct of Const (N, _) $ Abs _ =>
-      if N = head then Conv.arg_conv (abs_conv cv ctxt) ct
-                  else raise CTERM ("quant_conv", [ct])
-  | _ => raise CTERM ("quant_conv", [ct]))
-
-val hol_all_conv = quant_conv \<^const_name>\<open>All\<close>
-
-fun meta_all_body_conv C ctxt =
-  forall_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt
-  else_conv C ctxt
-
 fun leading_antecedent_conv C = implies_conv C all_conv
 fun hhf_concl_conv C ctxt ctm =
   case Thm.term_of ctm
-    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => Conv.forall_conv (hhf_concl_conv C o snd) ctxt ctm
-     | Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => raise CTERM ("hhf_concl_conv", [ctm])
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (hhf_concl_conv C o snd) ctxt ctm
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.arg_conv (hhf_concl_conv C ctxt) ctm
      | _ => C ctxt ctm
+
+fun hhf_conv Cp Cc ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (hhf_conv Cp Cc o snd) ctxt ctm
+     | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (hhf_conv Cp Cc ctxt) ctm
+     | _ => Cc ctxt ctm
+
+fun premises_conv Cp Cc ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (premises_conv Cp Cc o snd) ctxt ctm
+     | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (premises_conv Cp Cc ctxt) ctm
+     | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => HOLogic.Trueprop_conv (premises_conv Cp Cc ctxt) ctm
+     | Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
+          Conv.combination_conv (Conv.arg_conv (Cp ctxt)) (premises_conv Cp Cc ctxt) ctm
+     | Const (\<^const_name>\<open>HOL.All\<close>, _) $ Abs _ =>
+          Conv.arg_conv (Conv.abs_conv (premises_conv Cp Cc o snd) ctxt) ctm
+     | _ => Cc ctxt ctm
+
 
 fun rewrite_leading_antecedent ctxt rules =
   Conv.gconv_rule (Raw_Simplifier.rewrite ctxt true rules) 1
@@ -95,5 +106,6 @@ fun simplify_leading_antecedent ctxt =
 
 fun simplify_leading_antecedent_hhf_concl ctxt =
   Conv.gconv_rule (hhf_concl_conv Simplifier.rewrite ctxt) 1
+
 
 end

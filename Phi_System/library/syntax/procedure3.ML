@@ -109,7 +109,7 @@ fun rule_of_package_arguement ctxt proc =
                 |> Thm.cterm_of ctxt
       fun expand_quant ctxt c = let open Conv Phi_Helper_Conv in
             try_conv (rewr_conv @{thm split_paired_all_\<phi>arg[folded atomize_eq]}
-                      then_conv forall_conv (expand_quant o snd) ctxt)
+                      then_conv meta_all_conv (expand_quant o snd) ctxt)
           end c
       val ctxt' = Simplifier.init_simpset @{thms \<phi>V_simps[folded atomize_eq]} ctxt
    in packed

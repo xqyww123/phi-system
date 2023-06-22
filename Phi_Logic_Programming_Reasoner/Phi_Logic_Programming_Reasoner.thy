@@ -15,10 +15,43 @@ begin
 
 subsubsection \<open>Prelude Settings\<close>
 
+setup \<open>
+let
+  val basic_entity = Document_Output.antiquotation_pretty_source_embedded
+  fun pretty_term_style ctxt (style, t) = Document_Output.pretty_term ctxt (style t)
+
+  fun typ  mode = Scan.peek (Args.named_typ  o Syntax.read_typ
+                                             o Proof_Context.set_mode mode o Context.proof_of)
+  fun term mode = Scan.peek (Args.named_term o Syntax.read_term
+                                             o Proof_Context.set_mode mode o Context.proof_of)
+  fun prop mode = Scan.peek (Args.named_term o Syntax.read_prop
+                                             o Proof_Context.set_mode mode o Context.proof_of)
+
+in
+   ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
+    (Args.term_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
+#> ML_Antiquotation.inline_embedded \<^binding>\<open>pattern_prop\<close>
+    (prop Proof_Context.mode_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
+#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_ctyp\<close> (typ Proof_Context.mode_schematic
+      >> (fn T => "Thm.ctyp_of ML_context"  ^ ML_Syntax.atomic (ML_Syntax.print_typ T)))
+#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cterm\<close> (term Proof_Context.mode_schematic
+      >> (fn t => "Thm.cterm_of ML_context" ^ ML_Syntax.atomic (ML_Syntax.print_term t)))
+#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cprop\<close> (prop Proof_Context.mode_schematic
+      >> (fn t => "Thm.cterm_of ML_context" ^ ML_Syntax.atomic (ML_Syntax.print_term t)))
+#> basic_entity \<^binding>\<open>schematic_term\<close> (Term_Style.parse -- term Proof_Context.mode_schematic)
+                                        pretty_term_style
+#> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_schematic)
+                                        pretty_term_style
+#> basic_entity \<^binding>\<open>pattern_term\<close> (Term_Style.parse -- term Proof_Context.mode_pattern)
+                                        pretty_term_style
+#> basic_entity \<^binding>\<open>pattern_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_pattern)
+                                        pretty_term_style
+end\<close>
+
 ML_file \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
-ML_file_debug \<open>library/pattern_translation.ML\<close>
+ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 
@@ -705,22 +738,14 @@ lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
   "Premise mode (x = x)"
   unfolding Premise_def ..
 
-lemma contract_obligations:
-  "(Premise mode P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> PROP C) \<equiv> (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q \<Longrightarrow> PROP C)"
-  unfolding Premise_def by rule simp+
-
-lemma contract_premise_true:
+(*lemma contract_premise_true:
   "(True \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode B) "
   by simp
 
 lemma contract_premise_imp:
   "(A \<Longrightarrow> Premise mode B) \<equiv> Trueprop (Premise mode (A \<longrightarrow> B)) "
   unfolding Premise_def atomize_imp .
-
-lemma contract_premise_all:
-  "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
-  unfolding Premise_def atomize_all .
-
+*)
 declare [[ML_debugger = true]]
 
 ML \<open>
@@ -734,6 +759,26 @@ structure Useful_Thms = Named_Thms (
 setup \<open>Useful_Thms.setup\<close>
 
 ML_file \<open>library/PLPR_Syntax.ML\<close>
+
+lemma contract_premise_imp:
+  \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
+  unfolding Premise_def by (rule, rule, simp+)
+
+lemma contract_drop_waste:
+  \<open> PROP P \<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP P) \<close>
+  unfolding Pure.prop_def by simp
+
+lemma contract_obligations:
+  "(Premise mode P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> PROP C) \<equiv> (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q \<Longrightarrow> PROP C)"
+  unfolding Premise_def by rule simp+
+
+lemma contract_premise_all:
+  "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
+  unfolding Premise_def atomize_all .
+
+term Pure.prop
+thm Pure.prop_def
+
 ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)

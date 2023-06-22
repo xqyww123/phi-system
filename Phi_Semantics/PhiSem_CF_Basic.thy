@@ -205,6 +205,8 @@ proc while:
     \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close>
   \<medium_right_bracket> .
 
+declare [[\<phi>trace_reasoning = 2]]
+      
 proc (nodef) refine_while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x \<and> Transition: f x)\<close>
     and V: "X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> (X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> invariant x \<a>\<n>\<d> Any @action ToSA"

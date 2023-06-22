@@ -503,7 +503,7 @@ subsection \<open>Subjection\<close>
 
 lemma [\<phi>reason 3200]:
   " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<a>\<n>\<d> P \<Longrightarrow>
-   (P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
+   (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
     T \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<s>\<u>\<b>\<j> Q \<a>\<n>\<d> P "
   unfolding Imply_def Pass_Embedded_Reasoning_def by (simp add: \<phi>expns)
 
@@ -514,7 +514,7 @@ lemma [\<phi>reason 3210]:
 
 lemma [\<phi>reason 3200]:
   " T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> U \<brangle> \<a>\<n>\<d> P \<Longrightarrow>
-   (P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
+   (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
     T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> U \<s>\<u>\<b>\<j> Q \<brangle> \<a>\<n>\<d> P "
   unfolding Imply_def Pass_Embedded_Reasoning_def by (simp add: \<phi>expns)
 
@@ -524,14 +524,14 @@ lemma [\<phi>reason 3210]:
   unfolding Imply_def Pass_Embedded_Reasoning_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 3200]: (*TODO: add Q in P*)
-  "(Q \<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<a>\<n>\<d> P )
+  "(\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<a>\<n>\<d> P )
 \<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<a>\<n>\<d> P"
-  unfolding Imply_def by (simp add: \<phi>expns) blast
+  unfolding Imply_def Premise_def by (simp add: \<phi>expns) blast
 
 lemma [\<phi>reason 3210]:
-  "(Q \<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> U \<brangle> \<a>\<n>\<d> P)
+  "(\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> U \<brangle> \<a>\<n>\<d> P)
 \<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> (R \<s>\<u>\<b>\<j> Q) * \<blangle> U \<brangle> \<a>\<n>\<d> P"
-  unfolding Imply_def by (simp add: \<phi>expns) blast
+  unfolding Imply_def Premise_def by (simp add: \<phi>expns) blast
 
 
 subsection \<open>Existential\<close>
@@ -835,17 +835,17 @@ lemma [\<phi>reason 2020
 
 lemma [\<phi>reason 30 except \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> _\<close>]:
   " R  \<i>\<m>\<p>\<l>\<i>\<e>\<s> R1 * \<blangle> X \<brangle> \<a>\<n>\<d> P1
-\<Longrightarrow> (P1 \<Longrightarrow> R1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<a>\<n>\<d> P2)
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P1 \<Longrightarrow> R1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<a>\<n>\<d> P2)
 \<Longrightarrow> R  \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 * X \<a>\<n>\<d> P1 \<and> P2"
-  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def
+  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def Premise_def
   by (metis set_mult_expn)
 
 lemma [\<phi>reason 2010]:
   " R  \<i>\<m>\<p>\<l>\<i>\<e>\<s> R1 * \<blangle> X \<brangle> \<a>\<n>\<d> P1
-\<Longrightarrow> (P1 \<Longrightarrow> R1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * \<blangle> R2 \<brangle> \<a>\<n>\<d> P2)
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P1 \<Longrightarrow> R1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * \<blangle> R2 \<brangle> \<a>\<n>\<d> P2)
 \<Longrightarrow> R  \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * \<blangle> R2 * X \<brangle> \<a>\<n>\<d> P1 \<and> P2"
   for R :: \<open>'a::sep_semigroup set\<close>
-  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def
+  unfolding Action_Tag_def FOCUS_TAG_def Imply_def split_paired_All Action_Tag_def Premise_def
   by (metis (no_types, lifting) mult.assoc set_mult_expn)
 
 consts ToA_Annotation :: \<open>'a \<Rightarrow> 'a\<close>

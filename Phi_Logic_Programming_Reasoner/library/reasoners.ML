@@ -171,13 +171,43 @@ fun safer_obligation_solver1 (ctxt,sequent) =
      | _ => raise THM ("auto_obligation_solver1: The leading antecedent of the given sequent \
               \is not a proof obligation.", 1, [sequent])
 
-fun contract_obligations ctxt thm = let open Conv in
-  gconv_rule (bottom_conv (K (try_conv (rewrs_conv
-    @{thms contract_premise_true Action_Tag_def
-           contract_premise_imp contract_premise_all
-     }))) ctxt) 1 thm
-  |> fconv_rule (rewr_conv @{thm contract_obligations})
-end
+fun obligation_conv ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+          Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _)
+          $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _))
+          $ _
+         => (Conv.arg_conv obligation_conv then_conv
+             Conv.rewr_conv @{thm contract_premise_imp}) ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
+         => (Conv.arg_conv obligation_conv then_conv
+             Conv.rewr_conv @{thm conjunction_imp[symmetric]}) ctm
+     | _ => raise CTERM ("unexpected proof obligation form", [ctm])
+
+fun obligation_conv_all ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
+        (Phi_Helper_Conv.meta_all_conv (obligation_conv_all o snd) ctxt then_conv
+          Conv.rewr_conv @{thm contract_premise_all}) ctm
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+          Conv.all_conv ctm
+     | _ => raise CTERM ("internal bug 6733574a-42dc-4592-a08e-ddc223bb6b94", [ctm])
+
+fun contract_obligations ctxt thm = let open Conv
+  val rule1 = gconv_rule (Phi_Helper_Conv.exhaustive_meta_all_conv (K (
+                obligation_conv then_conv Conv.rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
+              ) 1 thm
+  val _ $ (_ $ (_ $ X) $ _) = Thm.major_prem_of rule1
+  val _ = case X
+            of Const(\<^const_name>\<open>True\<close>, _) => ()
+             | _ => warning "!!!"
+  val rule2 = (@{thm contract_drop_waste} RS rule1)
+            |> gconv_rule (obligation_conv_all ctxt) 1
+            |> fconv_rule (rewr_conv @{thm contract_obligations})
+   in rule2
+  end
 
 fun defer_antecedent contract ctxt thm =
   let

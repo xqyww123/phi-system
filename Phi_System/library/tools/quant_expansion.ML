@@ -93,9 +93,9 @@ fun general_expansion binder tag_rule N0 quant_rule names ctxt =
                       then Thm.renamed_prop (eq $ LHS $ (Const (B,T) $ Abs (N,T2,X))) ret
                       else raise CTERM ("QuantExpansion.general_expansion",[ct])
             end
-        | expn (N::L) ctxt ct =
+        | expn (N::L) ctxt' ct =
            (rewr_conv (set_name (N0,N) quant_rule)
-            my_then_conv Phi_Helper_Conv.quant_conv binder (expn L o snd) ctxt) ct
+            my_then_conv Phi_Helper_Conv.quant_conv binder (expn L o snd) ctxt') ct
    in rewr_conv tag_rule
       my_then_conv expn names ctxt
   end

@@ -208,6 +208,8 @@ lemma Brking_Frame_absorb_item[assertion_simps]:
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>.
 
+declare [[\<phi>trace_reasoning = 2]] 
+
 lemma Brking_Frame_absorb_subj[assertion_simps]:
   \<open>((Brking_Frame l Y) \<s>\<u>\<b>\<j> P) = Brking_Frame l (\<lambda>v. Y v \<s>\<u>\<b>\<j> P)\<close>
   unfolding Brking_Frame_def

@@ -1,4 +1,5 @@
 signature PHI_HELPER_CONV = sig
+include PHI_HELPER_CONV
 
 val atomize_conv : Proof.context -> conv
 val rulify_conv  : Proof.context -> conv
@@ -8,6 +9,7 @@ val rulify  : Proof.context -> thm -> thm
 end
 
 structure Phi_Helper_Conv : PHI_HELPER_CONV = struct
+open Phi_Helper_Conv
 
 structure Atomize = Named_Thms(
   val name = \<^binding>\<open>iso_atomize_rules\<close>

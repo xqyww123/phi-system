@@ -155,41 +155,6 @@ ML_file \<open>library/syntax/helper_conv.ML\<close>
 
 
 
-subsection \<open>Helper Antiquotations\<close>
-
-setup \<open>
-let
-  val basic_entity = Document_Output.antiquotation_pretty_source_embedded
-  fun pretty_term_style ctxt (style, t) = Document_Output.pretty_term ctxt (style t)
-
-  fun typ  mode = Scan.peek (Args.named_typ  o Syntax.read_typ
-                                             o Proof_Context.set_mode mode o Context.proof_of)
-  fun term mode = Scan.peek (Args.named_term o Syntax.read_term
-                                             o Proof_Context.set_mode mode o Context.proof_of)
-  fun prop mode = Scan.peek (Args.named_term o Syntax.read_prop
-                                             o Proof_Context.set_mode mode o Context.proof_of)
-
-in
-   ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
-    (Args.term_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
-#> ML_Antiquotation.inline_embedded \<^binding>\<open>pattern_prop\<close>
-    (prop Proof_Context.mode_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_ctyp\<close> (typ Proof_Context.mode_schematic
-      >> (fn T => "Thm.ctyp_of ML_context"  ^ ML_Syntax.atomic (ML_Syntax.print_typ T)))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cterm\<close> (term Proof_Context.mode_schematic
-      >> (fn t => "Thm.cterm_of ML_context" ^ ML_Syntax.atomic (ML_Syntax.print_term t)))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cprop\<close> (prop Proof_Context.mode_schematic
-      >> (fn t => "Thm.cterm_of ML_context" ^ ML_Syntax.atomic (ML_Syntax.print_term t)))
-#> basic_entity \<^binding>\<open>schematic_term\<close> (Term_Style.parse -- term Proof_Context.mode_schematic)
-                                        pretty_term_style
-#> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_schematic)
-                                        pretty_term_style
-#> basic_entity \<^binding>\<open>pattern_term\<close> (Term_Style.parse -- term Proof_Context.mode_pattern)
-                                        pretty_term_style
-#> basic_entity \<^binding>\<open>pattern_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_pattern)
-                                        pretty_term_style
-end\<close>
-
 subsection \<open>Helper Methods\<close>
 
 ML_file \<open>library/tools/where_tac.ML\<close>
