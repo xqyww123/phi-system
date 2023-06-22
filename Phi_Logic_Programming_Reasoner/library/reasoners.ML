@@ -199,10 +199,10 @@ fun contract_obligations ctxt thm = let open Conv
   val rule1 = gconv_rule (Phi_Helper_Conv.exhaustive_meta_all_conv (K (
                 obligation_conv then_conv Conv.rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
               ) 1 thm
-  val _ $ (_ $ (_ $ X) $ _) = Thm.major_prem_of rule1
+(*val _ $ (_ $ (_ $ X) $ _) = Thm.major_prem_of rule1
   val _ = case X
             of Const(\<^const_name>\<open>True\<close>, _) => ()
-             | _ => warning "!!!"
+             | _ => warning "!!!" *)
   val rule2 = (@{thm contract_drop_waste} RS rule1)
             |> gconv_rule (obligation_conv_all ctxt) 1
             |> fconv_rule (rewr_conv @{thm contract_obligations})

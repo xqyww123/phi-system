@@ -52,6 +52,7 @@ signature NU_REASONER = sig
   val disable_success    : int -> string -> Proof.context -> serial * Proof.context
 
   val add : reasoner -> Context.generic -> Context.generic
+  val adds : reasoner list -> Context.generic -> Context.generic
   val add_lthy : reasoner -> local_theory -> local_theory
   val del_reasoners: term (*pattern*)
                   -> (reasoner -> bool) (*filter, returning true to delete one*)
@@ -298,6 +299,11 @@ fun pretty' ctxt (priority, pat, _, (r:reasoner)) =
 
 fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
   let val x = (priority, pat, hash (#name reasoner), reasoner)
+      fun chk pat = case Term.fastype_of pat
+                      of Type(\<^type_name>\<open>prop\<close>, _) => ()
+                       | _ => error "Bad reasoner, the pattern must be a proposition"
+      val _ = List.app (chk o fst) (#pattern reasoner)
+      val _ = List.app chk (#blacklist reasoner)
    in Net.insert_term registry_eq (pat, x) net
       handle Net.INSERT =>
         let val dups = Net.lookup net (Net.key_of_term pat)

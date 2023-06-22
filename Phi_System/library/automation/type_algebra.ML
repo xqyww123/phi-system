@@ -73,17 +73,18 @@ fun gen_obj_equal' (phi : phi_type) eq_hint thy =
       val ((_, T_term, const, _, _), ctxt02) = fix_phi_type true (#const phi) ctxt01
       val insts = (case eq_term of [eq] => [(("eq",0), Thm.cterm_of ctxt02 eq)] | _ => [])
 
-      fun mk_Ants ants (T_term $ (A as Free (_, Ty))) ctxt =
-           (let val ((x_term, A_term, _, x_ty, s_ty), ctxt'1) = fix_phi_type true A ctxt
+      fun mk_Ants ants pats (T_term $ (A as Free (_, Ty))) ctxt =
+           (let val ((_, A_term, _, x_ty, s_ty), ctxt'1) = fix_phi_type true A ctxt
                 val [eq'] = Name.invent (Variable.names_of ctxt) "eq" 1
                 val ([eq],ctxt') = Variable.add_fixes [eq'] ctxt'1
-                val ant = \<^Const>\<open>\<phi>Equiv_Obj x_ty s_ty\<close> $ Free(eq, x_ty --> x_ty --> \<^typ>\<open>bool\<close>)
-                                                      $ A_term
-             in mk_Ants (ant::ants) T_term ctxt'
+                val typ = x_ty --> x_ty --> \<^typ>\<open>bool\<close>
+                val ant = \<^Const>\<open>\<phi>Equiv_Obj x_ty s_ty\<close> $ Free(eq, typ) $ A_term
+                val pat = singleton (Variable.export_terms ctxt' ctxt'1) ant
+             in mk_Ants (ant::ants) (pat::pats) T_term ctxt'
             end
-            handle TYPE _ => (ants, ctxt))
-        | mk_Ants ants _ ctxt = (ants, ctxt)
-      val (ants,ctxt) = mk_Ants [] T_term ctxt02
+            handle TYPE _ => (ants, pats, ctxt))
+        | mk_Ants ants pats _ ctxt = (ants, pats, ctxt)
+      val (ants,pats,ctxt) = mk_Ants [] [] T_term ctxt02
       val ant = Phi_Help.list_mk_conj ants
 
       val rule = Drule.infer_instantiate ctxt
@@ -103,7 +104,16 @@ fun gen_obj_equal' (phi : phi_type) eq_hint thy =
                       Conv.arg1_conv (Conv.rewr_conv @{thm Premise_True[THEN Eq_TrueI]}) then_conv
                       Conv.rewr_conv @{thm simp_thms(15)[folded atomize_eq]})) ctxt)
 
-      val (ctxt',rule') = Phi_Reasoner.reason NONE (ctxt, ind RS rule)
+      val ctxt'r = Context.proof_map (Phi_Reasoner.adds (map (fn pat => {
+                name = \<^term>\<open>Local_\<phi>Equiv_Obj\<close>,
+                pos = \<^here>,
+                mode = Phi_Reasoner.LOCAL_CUT,
+                pattern = [(HOLogic.mk_Trueprop pat, 1000)],
+                blacklist = [],
+                tactic = Phi_Reasoners.wrap (fn ctxt => Thm.assumption (SOME ctxt) 1)
+            }) pats)) ctxt
+
+      val (ctxt',rule') = Phi_Reasoner.reason NONE (ctxt'r, ind RS rule)
               |> (fn SOME ctxt_rule => ctxt_rule
                    | NONE => raise Obj_Eq_Fail)
 
