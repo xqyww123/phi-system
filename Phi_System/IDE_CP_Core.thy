@@ -84,51 +84,6 @@ text \<open>Antecedent \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bol
   will be protected as intact.
 \<close>
 
-subsection \<open>Reasoning Obligation\<close>
-
-definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
-
-text \<open>In a rule, \<^prop>\<open>\<^bold>d\<^bold>o A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
-obtained from the reasoning, instead of a prerequisite condition of applying the rule.
-During the reasoning process,
-
-\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<^bold>d\<^bold>o\<close>, \<^prop>\<open>A\<close> is evaluated immediately
-  and once it fails the search branch backtracks;
-
-\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<^bold>d\<^bold>o A\<close> wrapped by \<open>\<^bold>d\<^bold>o\<close>, it means an obtained
-  reasoning obligation as an outcome of the reasoning,
-  just like \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> meaning an extracted verification condition.
-  So conforming to \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>, no immediate reasoning work is invoked and the antecedent
-  is returned and is given before the \<^schematic_prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots>\<close> in order,
-  as an outcome of the reasoning,.
-
-  For example, if during a reasoning process, two \<^prop>\<open>\<^bold>d\<^bold>o A1\<close> and \<^prop>\<open>\<^bold>d\<^bold>o A2\<close> are encountered in
-  order, and if the reasoning succeeds, the final outcome would be
-  \[ \<^schematic_prop>\<open>\<^bold>d\<^bold>o A1 \<Longrightarrow> \<^bold>d\<^bold>o A2 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots> \<Longrightarrow> Conclusion\<close> \]
-\<close>
-
-lemma Do_I: \<open>PROP P \<Longrightarrow> \<^bold>d\<^bold>o PROP P\<close> unfolding Do_def .
-lemma Do_D: \<open>\<^bold>d\<^bold>o PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
-
-ML_file \<open>library/system/reasoners.ML\<close>
-
-definition Do_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Do_embed X \<equiv> X\<close>
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
-  unfolding Do_def Do_embed_def .
-
-\<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent)
-\<close>
-
-\<phi>reasoner_ML Argument 1000 (\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
-\<close>
-
-\<phi>reasoner_ML Do 1200 (\<open>\<^bold>d\<^bold>o (PROP ?P)\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
-\<close>
 
 subsection \<open>Text Label\<close>
 
@@ -223,6 +178,55 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 lemma [\<phi>inhabitance_rule]:
   \<open>Inhabited (TECHNICAL X) \<Longrightarrow> (Inhabited X \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Technical_def .
+
+
+subsection \<open>Reasoning Obligation\<close>
+
+definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
+
+text \<open>In a rule, \<^prop>\<open>\<^bold>d\<^bold>o A\<close> annotates the antecedent \<^prop>\<open>A\<close> is a reasoning task as a result
+obtained from the reasoning, instead of a prerequisite condition of applying the rule.
+During the reasoning process,
+
+\<^item> once it encounters an antecedent \<^prop>\<open>A\<close> not wrapped by \<open>\<^bold>d\<^bold>o\<close>, \<^prop>\<open>A\<close> is evaluated immediately
+  and once it fails the search branch backtracks;
+
+\<^item> by contrast, once it encounters an antecedent \<^prop>\<open>\<^bold>d\<^bold>o A\<close> wrapped by \<open>\<^bold>d\<^bold>o\<close>, it means an obtained
+  reasoning obligation as an outcome of the reasoning,
+  just like \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> meaning an extracted verification condition.
+  So conforming to \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>, no immediate reasoning work is invoked and the antecedent
+  is returned and is given before the \<^schematic_prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots>\<close> in order,
+  as an outcome of the reasoning,.
+
+  For example, if during a reasoning process, two \<^prop>\<open>\<^bold>d\<^bold>o A1\<close> and \<^prop>\<open>\<^bold>d\<^bold>o A2\<close> are encountered in
+  order, and if the reasoning succeeds, the final outcome would be
+  \[ \<^schematic_prop>\<open>\<^bold>d\<^bold>o A1 \<Longrightarrow> \<^bold>d\<^bold>o A2 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> \<dots> \<Longrightarrow> Conclusion\<close> \]
+\<close>
+
+lemma Do_I: \<open>PROP P \<Longrightarrow> \<^bold>d\<^bold>o PROP P\<close> unfolding Do_def .
+lemma Do_D: \<open>\<^bold>d\<^bold>o PROP P \<Longrightarrow> PROP P\<close> unfolding Do_def .
+
+ML_file \<open>library/system/reasoners.ML\<close>
+
+definition Do_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>Do_embed X \<equiv> X\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>Do (Trueprop P) \<equiv> Trueprop (Do_embed P)\<close>
+  unfolding Do_def Do_embed_def .
+
+\<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent)
+\<close>
+
+\<phi>reasoner_ML Argument 1000 (\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?P\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
+\<close>
+
+\<phi>reasoner_ML Do 1200 (\<open>\<^bold>d\<^bold>o (PROP ?P)\<close>) = \<open>
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
+\<close>
+
+
 
 section \<open>Mechanisms\<close>
 
@@ -1994,6 +1998,7 @@ let val sequent = case Thm.major_prem_of sequent0
               "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
 in if Config.get ctxt Phi_Reasoner.auto_level >= 1
       andalso not (Phi_Sys_Reasoner.is_user_dependent_antecedent (Thm.major_prem_of sequent))
+      andalso not (Phi_Sys_Reasoner.is_proof_obligation (Thm.major_prem_of sequent))
    then case Phi_Reasoner.reason (SOME 1) (ctxt, sequent)
           of SOME (ctxt',sequent') => (ctxt', sequent')
            | NONE => raise Bypass (SOME (ctxt,sequent0))

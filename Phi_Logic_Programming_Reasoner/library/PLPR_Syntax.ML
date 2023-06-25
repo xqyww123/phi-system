@@ -3,6 +3,7 @@ signature PLPR_SYNTAX = sig
 val dest_premise_tag : term -> term * term
 val dest_premise_tag_c : cterm -> cterm * cterm
 val add_premise_tag_conv : cterm (*mode*) -> conv
+val premise_tag_conv : conv -> conv
 
 end
 
@@ -34,5 +35,11 @@ fun add_premise_tag_conv mode =
                     @{thm Premise_def[folded atomize_eq,symmetric]}
    in Conv.rewr_conv rule
   end
+
+fun premise_tag_conv C ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (premise_tag_conv C) ctm
+     | Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _ => Conv.arg_conv C ctm
+     | _ => raise CTERM ("premise_tag_conv",[ctm])
 
 end

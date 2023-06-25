@@ -181,7 +181,8 @@ lemma implies_trans:
   "A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P
 \<Longrightarrow> (P \<Longrightarrow> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<a>\<n>\<d> Q)
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<a>\<n>\<d> P \<and> Q"
-  unfolding Imply_def by auto
+  unfolding Imply_def Premise_def by auto
+
 
 lemma implies_weaken:
   \<open> P \<longrightarrow> P'

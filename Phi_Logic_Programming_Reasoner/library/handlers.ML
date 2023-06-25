@@ -13,7 +13,10 @@ signature PLPR_HANDLERS = sig
 structure Arg : PLPR_HANDLERS_ARG
 
 val push : (Arg.domT -> Arg.retT option) -> Proof.context -> serial * Proof.context
-val push_localctxt : int -> (Arg.domT -> Arg.retT option) -> Proof.context -> serial * Proof.context
+(*delt: 0 for the current reasoning context
+        1 for the sub-calling environment
+        i for the sub-ith environment*)
+val push_localctxt : int (*delt*) -> (Arg.domT -> Arg.retT option) -> Proof.context -> serial * Proof.context
 val remove : serial -> Proof.context -> Proof.context
 val invoke : Proof.context -> Arg.domT -> Arg.retT
 

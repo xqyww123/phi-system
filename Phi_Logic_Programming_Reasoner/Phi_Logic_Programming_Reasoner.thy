@@ -636,6 +636,8 @@ the result.\<close>
 definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
 lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
 
+declare [[ML_debugger]]
+
 \<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
   raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
 
@@ -1158,6 +1160,23 @@ definition Optimum_Among_embed :: \<open>bool \<Rightarrow> bool\<close> where \
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Optimum_Among (Trueprop P) \<equiv> Trueprop (Optimum_Among_embed P)\<close>
   unfolding Optimum_Among_embed_def Optimum_Among_def .
+
+
+subsection \<open>Exhaustive Reasoning\<close>
+
+text \<open>\<phi>-LPR is a priority-guided depth-first reasoner giving the first reached solution.
+  This extension enables exhaustive reasoning traverses all branches and combines proof obligations
+  for each branch by disjuntion.\<close>
+
+lemma merge_oblg_divergence:
+  \<open> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<Longrightarrow> C)
+\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pb \<Longrightarrow> C)
+\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<or> Pb \<Longrightarrow> C)\<close>
+  unfolding Pure.prop_def Premise_def by blast
+
+ML_file_debug \<open>library/exhaustive.ML\<close>
+
+hide_fact merge_oblg_divergence
 
 subsection \<open>Environment Variables\<close>
 

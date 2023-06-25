@@ -225,4 +225,7 @@ fun defer_antecedent contract ctxt thm =
 
 val defer_obligation_tac = defer_antecedent contract_obligations
 
+
+(*fun declare_local_assume_reasoners sequent i *)
+
 end

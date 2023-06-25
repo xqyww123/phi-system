@@ -320,16 +320,34 @@ lemma \<phi>intro_transformation:
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P \<close>
   by simp
 
-lemma unified_cterm_app:
-  \<open>TERM f \<Longrightarrow> TERM x \<Longrightarrow> TERM (f x)\<close> .
-
-
 
 ML_file \<open>library/tools/functor_detect.ML\<close>
+(* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
 
-hide_fact \<phi>inductive_destruction_rule_from_direct_definition
+(*
+datatype yyy = YLeaf nat | YNode nat yyy
+datatype ('a,'b) xxx = Leaf 'a | Node nat \<open>('a,'b) xxx\<close>
+
+term xxx.rel_xxx
+
+datatype 'a zzz = AA
+
+ML \<open>val x = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>xxx\<close>)
+val a = BNF_Def.lives_of_bnf x
+val s = BNF_Def.sets_of_bnf x
+val z = BNF_Def.mk_sets_of_bnf [[],[]] [[\<^typ>\<open>nat\<close>, \<^typ>\<open>int\<close>], [\<^typ>\<open>bool\<close>, \<^typ>\<open>int\<close>]] x\<close>
+
+typ \<open>'a llist\<close>
+ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>yyy\<close>\<close>
+
+ML \<open>val bnf = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>)
+val x = BNF_Def.deads_of_bnf bnf
+val z = BNF_Def.mk_sets_of_bnf [[]] [[\<^typ>\<open>nat\<close>]] bnf\<close>
+ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>option\<close>\<close>
+*)
+(* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
           \<phi>inductive_destruction_rule_from_direct_definition'
-          \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation unified_cterm_app
+          \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
 
 declare conj_imp_eq_imp_imp[simp_for_rule_generation]
         Premise_I[simp_for_rule_generation]
@@ -836,10 +854,39 @@ declare homo_sep_disj_total_push_map [\<phi>reason 1100]
 
 subsection \<open>Auto Generation of Properties\<close>
 
+subsubsection \<open>General Rules\<close>
+
+lemma mk_ToA_rule:
+  \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<a>\<n>\<d> Q
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> Q \<and> P\<close>
+  using implies_trans by blast
+
+lemma mk_ToA_rule':
+  \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> A \<brangle> \<a>\<n>\<d> Q
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> B \<brangle> \<a>\<n>\<d> Q \<and> P\<close>
+  unfolding FOCUS_TAG_def
+  using implies_left_prod mk_ToA_rule by blast
+
+lemma conv_intro_premise:
+  \<open>P \<Longrightarrow> X \<equiv> (P \<longrightarrow> X)\<close>
+  by simp
+
+lemma [fundef_cong]:
+  \<open>T x = T' x' \<Longrightarrow> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')\<close>
+  unfolding \<phi>Type_def by simp
+
+
+subsubsection \<open>Is_Stateless\<close>
+
+lemma
+  \<open>\<close>
+
 subsubsection \<open>\<phi>Equiv_Obj\<close>
 
 lemma \<phi>Equiv_Obj_rule:
-  \<open> (\<And>x y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> Ant \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T)
+  \<open> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
@@ -849,6 +896,10 @@ lemma \<phi>Equiv_Obj_rule:
 
 lemma \<phi>Equiv_Obj_rule_move_all:
   \<open>(\<And>x. P x \<and> Q) \<Longrightarrow> (\<forall>x. P x) \<and> Q\<close>
+  by blast
+
+lemma \<phi>Equiv_Obj_rule_move_all2:
+  \<open>(P \<longrightarrow> (\<forall>x. Q x)) \<and> R \<Longrightarrow> (\<forall>x. P \<longrightarrow> Q x) \<and> R\<close>
   by blast
 
 lemma \<phi>Equiv_Obj_rule_move_set_eq:
@@ -865,9 +916,23 @@ thm simp_thms(15)[folded atomize_eq]
 
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
-hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end
+thm Action_Tag_D[where A = \<open>ToSA\<close>]
 
-term \<open>\<phi>Equiv_Obj\<close>
+hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end
+          \<phi>Equiv_Obj_rule_move_all2
+
+lemmas [\<phi>constraint_expansion] = HOL.simp_thms ex_simps[symmetric]
+          list_all2_Cons1 list_all2_Nil
+lemmas [\<phi>type_algebra_normalize_ToA_ss] = HOL.simp_thms implies_refl
+
+subsubsection \<open>Transformation Functor\<close>
+
+lemma
+  \<open>(\<And>T U x g a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<Longrightarrow> a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)
+\<Longrightarrow> Transformation_Functor F1 F2 D mapper\<close>
+
+thm Transformation_Functor_def
+thm atomize_imp
 
 (* ML_file \<open>library/system/phi_type_definition.ML\<close> *)
 

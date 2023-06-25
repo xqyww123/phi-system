@@ -263,7 +263,7 @@ fun check_term ctxt (Const (\<^const_name>\<open>\<phi>identifier\<close>, _) $ 
         end
   | check_term ctxt (A $ B) = check_term ctxt A $ check_term ctxt B
   | check_term ctxt (Abs (N,TY,X)) = Abs (N,TY, check_term ctxt X)
-  | check_term _ X =  X
+  | check_term _ X = X
 
 val _ = Theory.setup (Context.theory_map (Syntax_Phases.term_check ~110 "\<phi>-System.GVA" (map o check_term)))
 

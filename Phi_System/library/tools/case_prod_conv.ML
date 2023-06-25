@@ -20,8 +20,8 @@ fun prod_case_meta_all_split_conv C ctxt ctm =
             (case has_case_prod X
                of SOME rule =>
                     (Conv.rewr_conv @{thm split_paired_all} then_conv
-                     forall_conv (fn (_,ctxt') =>
-                        forall_conv (K (Conv.rewr_conv rule)) ctxt' then_conv
+                     meta_all_conv (fn (_,ctxt') =>
+                        meta_all_conv (K (Conv.rewr_conv rule)) ctxt' then_conv
                         prod_case_meta_all_split_conv C ctxt') ctxt) ctm
                 | NONE => C ctxt ctm)
          | _ => raise CTERM ("prod_case_meta_all_split_conv: not a meta-all quantification", [ctm])
@@ -31,12 +31,12 @@ fun meta_ball_conv_all C ctxt ctm =
   case Thm.term_of ctm
     of Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ =>
          (Conv.rewr_conv @{thm meta_Ball_def} then_conv
-          prod_case_meta_all_split_conv (forall_conv (fn (_,ctxt') =>
+          prod_case_meta_all_split_conv (meta_all_conv (fn (_,ctxt') =>
               Conv.implies_concl_conv (meta_ball_conv_all C ctxt'))) ctxt
          ) ctm
      | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>Ball\<close>, _) $ _ $ _ ) =>
          (Conv.rewr_conv @{thm Ball_for_reason} then_conv
-          prod_case_meta_all_split_conv (forall_conv (fn (_,ctxt') =>
+          prod_case_meta_all_split_conv (meta_all_conv (fn (_,ctxt') =>
               Conv.implies_concl_conv (meta_ball_conv_all C ctxt'))) ctxt
          ) ctm
      | _ => C ctxt ctm

@@ -385,7 +385,12 @@ proc op_get_var:
   output \<open>x \<Ztypecolon> \<v>\<a>\<r>[var] T\<heavy_comma> f x \<Ztypecolon> \<v>\<a>\<l> U\<close>
 \<medium_left_bracket>
   to Itself
-;;  unfold Inited_Var_identity_eq
+  ;;  unfold Inited_Var_identity_eq
+
+
+
+
+
 thm FIC.Var.getter_rule
  ;; FIC.Var.getter_rule
  ;; semantic_assert \<open>nosep.dest (\<phi>arg.dest \<v>0) \<in> Some ` Well_Type TY\<close>

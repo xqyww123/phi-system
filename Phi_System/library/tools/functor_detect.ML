@@ -48,13 +48,15 @@ datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*))
              | WFREC_DEF  of string (*const name*) * Function.info
 
 type phi_type = {
-  const: term (*of most general type*),
+  term: term (*of most general type*),
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
-  ind_ToA: thm option * thm (*inductively destructive transformation, of form
-                   ... \<Longrightarrow> P a b c x \<longrightarrow> (R * x : T a b c \<longrightarrow> Y)  (*only available for sep-magma*)
-               and ... \<Longrightarrow> P a b c x \<longrightarrow> (x : T a b c \<longrightarrow> Y) *),
+  ind: thm,
+    (*inductively destructive transformation, of form
+     has_R: ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (?R.0 * x : T a b c \<longrightarrow> ?Y.0 and ?Q.0)  (*only available for sep-magma*)
+     full:  ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (x : T a b c \<longrightarrow> ?Y.0 a b c x and ?Q.0 a b c x)
+     dom_only: ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (x : T a b c \<longrightarrow> ?Y.0 and ?Q.0) *)
   intro_ToA: thm list (*introduction transformations*),
   is_recursive: bool,
   is_impredicative: bool (*to be supported*)
@@ -72,8 +74,22 @@ val add_automation_on_def : priority -> automation_on_def -> Context.generic -> 
 
 (* Tools *)
 
-val fix_phi_type : bool -> term -> Proof.context -> (term * term * term * typ * typ) * Proof.context
-val raw_term_name : term -> string
+(*Find the most general instantiation of the given type to meet the given sort*)
+val lift_type_sort : theory -> typ * sort -> Type.tyenv
+
+(*make inductively destruction rule.*)
+val mk_ind_dest_ToA : Proof.context -> phi_type -> (term (*x*) * term (*T*) -> term) -> thm
+
+val fix_phi_type : bool -> phi_type -> Proof.context ->
+        (typ TVars.table * term Vars.table) *
+        (ctyp TVars.table * cterm Vars.table) * phi_type *
+        Proof.context
+
+val fix_phi_term_params : term -> Proof.context ->
+        (term * term * typ * typ list * typ) * Proof.context
+
+val raw_term_name_typ : term -> string * typ
+val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ * typ
 
 end
 
@@ -130,7 +146,7 @@ fun extract_functor_from_property_spec thy k = Symtab.lookup (Property_Kinds.get
 type automation_on_property = term (*functor*) * thm (*property*) -> Context.generic -> Context.generic
 
 fun property_eq ((t1,_,th1),(t2,_,th2)) = (t1 aconv t2) andalso Thm.eq_thm_prop (th1,th2)
-fun property_eq' thy ((t1,th1),(t2,th2)) = (t1 aconv t2) andalso Thm.equiv_thm thy (th1,th2)
+(* fun property_eq' thy ((t1,th1),(t2,th2)) = (t1 aconv t2) andalso Thm.equiv_thm thy (th1,th2) *)
 
 structure Properties = Generic_Data (
   type T = (term (*functor*) * Position.T * thm) Net.net 
@@ -175,11 +191,11 @@ fun list_functors ctxt =
   Net.unify_term (Properties.get ctxt) (encode_functor (Var(("uu",0),TVar(("'uu",0),[]))))
     |> map (fn (tm,_,_) => Logic.incr_indexes ([],[],1) tm)
 
-fun is_a_registered_functor_i thy net the_functor =
+(* fun is_a_registered_functor_i thy net the_functor =
   let val key = encode_functor the_functor
    in Net.match_term net key
         |> exists (fn (pat, _) => Pattern.matches thy (pat, the_functor))
-  end
+  end *)
 
 fun add_property (the_functor,pos,property) ctxt =
   let val thy = Context.theory_of ctxt
@@ -400,11 +416,11 @@ datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*))
              | WFREC_DEF  of string * Function.info
 
 type phi_type = {
-  const: term (*of most general type*),
+  term: term (*of most general type*),
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
-  ind_ToA: thm option * thm (*inductively destructive transformations*),
+  ind: thm,
   intro_ToA: thm list (*introduction transformations*),
   is_recursive: bool,
   is_impredicative: bool (*to be supported*)
@@ -412,11 +428,11 @@ type phi_type = {
 
 fun morphism_phi_type m (phi : phi_type) =
   {
-    const = Morphism.term m (#const phi),
+    term = Morphism.term m (#term phi),
     pos = #pos phi,
     proof_id = #proof_id phi,
     equations = Morphism.fact m (#equations phi),
-    ind_ToA = (Option.map (Morphism.thm m) (fst (#ind_ToA phi)), Morphism.thm m (snd (#ind_ToA phi))),
+    ind = Morphism.thm m (#ind phi),
     intro_ToA = Morphism.fact m (#intro_ToA phi),
     is_recursive = #is_recursive phi,
     is_impredicative = #is_impredicative phi
@@ -457,9 +473,23 @@ fun conv_def_to_equaltion ctxt def =
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
          Const(\<^const_name>\<open>HOL.eq\<close>, Type(\<^type_name>\<open>fun\<close>, [Ty,_])) $ LHS $ RHS) =>
        (case Ty
-          of \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>\<close> => (
-                case RHS of Abs _ => def RS @{thm \<phi>Type_conv_eq_1}
-                          | _ => def RS @{thm \<phi>Type_conv_eq_2})
+          of \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>\<close> =>
+              let val concl = Thm.dest_arg (Thm.cconcl_of def)
+                  val T = Thm.dest_arg1 concl
+                  val U = Thm.dest_arg  concl
+                  val cty = Thm.ctyp_of_cterm T
+                  val ty_a = Thm.dest_ctyp0 cty
+                  val ty_b = Thm.dest_ctyp0 (Thm.dest_ctyp1 cty)
+                  val rule = Thm.instantiate (TVars.make [((("'a",0),\<^sort>\<open>type\<close>),ty_a),
+                                                          ((("'b",0),\<^sort>\<open>type\<close>),ty_b)],
+                                              Vars.make [((("T",0),Thm.typ_of_cterm T),T),
+                                                         ((("U",0),Thm.typ_of_cterm U),U)])
+                             (case RHS of Abs _ => @{thm \<phi>Type_conv_eq_1}
+                                        | _ => @{thm \<phi>Type_conv_eq_2})
+               in Thm.bicompose NONE {flatten=false,match=true,incremented=true}
+                                     (false, def, Thm.nprems_of def) 1 rule
+               |> Seq.hd
+              end
            | \<^Type>\<open>set _\<close> => (
                 case LHS of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => def
                           | _ $ _ => Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
@@ -470,94 +500,77 @@ fun conv_def_to_equaltion ctxt def =
                                                  (("x",0),Thm.dest_arg ctm)]
                                                 @{thm \<phi>Type_def[symmetric, folded atomize_eq]}) ctm)
                                           Conv.all_conv)
-                                     ) ctxt) def)
+                                     ) ctxt) def
+                          | _ => raise THM ("Not a \<phi>-type definition", 0, [def]))
            | _ => raise THM ("Not a \<phi>-type definition", 0, [def]))
      | _ => raise THM ("Not a \<phi>-type definition", 0, [def])
 
-val induct_template = (\<^schematic_cterm>\<open>\<lambda>X::?'a::{sep_disj,times} set. (?R * X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?Q)\<close>,
-                       \<^schematic_cterm>\<open>\<lambda>X::?'a set. (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?Q)\<close>)
+val add_premise_tag = Phi_Helper_Conv.recursive_premises_conv (fn ctxt => fn ctm =>
+      case Thm.term_of ctm
+        of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Imply\<close>, _) $ _ $ _ $ _) =>
+              Conv.all_conv ctm
+         | Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
+            (case Term.head_of X
+               of Var _ => Conv.all_conv ctm
+                | _ => HOLogic.Trueprop_conv (PLPR_Syntax.add_premise_tag_conv \<^cterm>\<open>default\<close>) ctm)
+         | _ => Conv.all_conv ctm)
 
-fun add_premise_tag ctm =
-      if not (can Phi_Syntax.dest_implication (Thm.term_of ctm))
-      then PLPR_Syntax.add_premise_tag_conv \<^cterm>\<open>default\<close> ctm
-      else Conv.all_conv ctm
-
-fun Trueprop_conv C ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-        HOLogic.Trueprop_conv C ctm
-     | _ => C ctm
-
-val add_premise_tag2 =
-      Phi_Helper_Conv.premises_conv
-        (fn ctxt => Trueprop_conv (fn ctm =>
-          case Thm.term_of ctm
-            of Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
-                  Phi_Helper_Conv.premises_conv (K add_premise_tag) (K Conv.all_conv) ctxt ctm
-             | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
-                  Phi_Helper_Conv.premises_conv (K add_premise_tag) (K Conv.all_conv) ctxt ctm
-             | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-                  Phi_Helper_Conv.premises_conv (K (Trueprop_conv add_premise_tag)) (K Conv.all_conv) ctxt ctm
-             | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
-                  Phi_Helper_Conv.premises_conv (K (Trueprop_conv add_premise_tag)) (K Conv.all_conv) ctxt ctm
-             | _ => Trueprop_conv add_premise_tag ctm
-        ))
-        (K Conv.all_conv)
-
-fun unified_cterm_app f x =
-  (Drule.mk_term x RS (Drule.mk_term f RS @{thm unified_cterm_app}))
-    |> Drule.dest_term
-
-fun set_the_P_in_ind_from_direct_def has_R ctxt ind =
-  let val imp = Thm.dest_arg (Thm.dest_arg (Thm.cconcl_of ind)) |> Thm.dest_fun
-      val U = Thm.dest_arg imp
-      val x_T = imp |> Thm.dest_fun |> Thm.dest_arg |> has_R ? Thm.dest_arg
-      val x = Thm.dest_arg1 x_T
-      fun mk_P_typ \<^Type>\<open>set _\<close> = \<^typ>\<open>bool\<close>
-        | mk_P_typ \<^Type>\<open>fun x T\<close> = x --> mk_P_typ T
-      fun mk_P ctm =
-        case try Thm.dest_comb ctm
-          of SOME (f,x) => Thm.apply (mk_P f) x
-           | NONE => Thm.var (("P",0), Thm.ctyp_of ctxt (mk_P_typ (Thm.typ_of_cterm ctm)))
-      val P = Thm.apply (mk_P (Thm.dest_arg x_T)) x
-   in Thm.instantiate (TVars.empty, Vars.make [((("P",0),\<^typ>\<open>bool\<close>),P)]) ind
+(* fun mk_parameterized (arg_tys, x_ty) (name,T) =
+  let val arity = length arg_tys
+   in (fold_index (fn (i,_) => fn X => X $ Bound (arity-i)) arg_tys
+          (Var ((name,0), rev arg_tys ---> x_ty --> T)))
+       $ Bound 0
   end
 
-fun mk_ind_dest_ToA ctxt (const_name,typ) eqs ind = (*not tested*)
-  let fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
+  fun bool_term name = Var((name,0), HOLogic.boolT)
+  fun BI_term name = Var((name,0),\<^Type>\<open>set model_ty\<close>)
+  fun parameterized_BI name = mk_parameterized name \<^Type>\<open>set model_ty\<close>
+*)
+
+fun raw_term_name_typ (Const N_T) = N_T
+  | raw_term_name_typ (Free N_T) = N_T
+  | raw_term_name_typ _ = error "Internal bug"
+
+fun lift_type_sort thy (ty,sort) =
+  let val idx = Term.maxidx_of_typ ty
+   in if Sign.of_sort thy (ty, sort)
+      then Vartab.empty
+      else let val (env0,_) =
+                     Sign.typ_unify thy
+                           (ty, TVar(("_", idx), sort))
+                           (Vartab.empty, idx)
+               val env = Vartab.map (fn N => (fn (S, TVar(_,S')) => (S, TVar(N,S'))
+                                               | X => if N = ("_", 1) then X
+                                                      else error "Internal bug 8bb59e49-9b57-48bc-b310-9da3b8f5ff7f"))
+                         (Vartab.delete ("_", idx) env0)
+                in env
+               end
+           handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
+  end
+
+fun mk_ind_dest_ToA ctxt phi gen_prop = (*not tested*)
+  let val typ = Term.fastype_of (#term phi)
+      fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
         | parse_typ args \<^Type>\<open>fun a r\<close> = parse_typ (a::args) r
-      val (arg_tys, x_ty, model_ty) = parse_typ [] typ
-      val arity = length arg_tys
-      val term_T = fold_index (fn (i,_) => fn X => X $ Bound (arity-i)) arg_tys (Const(const_name,typ))
-      val term_P = fold_index (fn (i,_) => fn X => X $ Bound (arity-i)) arg_tys
-                      (Var (("P",0), arg_tys ---> x_ty --> \<^typ>\<open>bool\<close>)) $ Bound 0
-      val term_xT = Abs("", x_ty, \<^Const>\<open>implies\<close> $ term_P
-                                                 $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ term_T))
-      val goal = Abs ("", \<^Type>\<open>fun \<^Type>\<open>set model_ty\<close> \<^Type>\<open>bool\<close>\<close>,
-                    fold (fn T => fn X => Abs("",T,X)) arg_tys term_xT)
-               |> Thm.cterm_of ctxt
-      val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of ind))
+        | parse_typ _ _ = error "Internal bug"
+      val (rev_arg_tys, x_ty, model_ty) = parse_typ [] typ
+      val x_term = Bound 0
+      val arity = length rev_arg_tys
+      val T_term = fold_index (fn (i,_) => fn X => X $ Bound (arity-i)) rev_arg_tys (#term phi)
+
+      val prop = gen_prop (x_term, T_term)
+              |> (fn X => Abs("",x_ty,X))
+              |> fold (fn T => fn X => Abs("",T,X)) rev_arg_tys
+      val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of (#ind phi)))
                         of Var v => v
                          | _ => error "Bad induction rule")
-      val sctxt = clear_simpset ctxt addsimps eqs
-      val dest1 = try (unified_cterm_app goal) (fst induct_template)
-                |> Option.map (fn fx =>
-                    Thm.instantiate (TVars.empty, Vars.make [(prop_var, fx)]) ind
-                      |> Conv.fconv_rule (Conv.prems_conv ~1 (Simplifier.asm_rewrite sctxt)
-                              then_conv add_premise_tag2 ctxt))
-      val dest2 = Thm.instantiate (TVars.empty,
-                      Vars.make [(prop_var, Thm.apply goal (snd induct_template))]) ind
-                |> Conv.fconv_rule (Conv.prems_conv ~1 (Simplifier.asm_rewrite sctxt)
-                        then_conv add_premise_tag2 ctxt)
-   in (dest1,dest2)
+   in Thm.instantiate (TVars.empty, Vars.make [(prop_var, Thm.cterm_of ctxt prop)]) (#ind phi)
+        |> Phi_Help.beta_eta_contract
   end
-
-fun raw_term_name (Const (N,_)) = N
-  | raw_term_name (Free (N,_)) = N
 
 fun add_type (def, pos, hints) generic =
   let val ctxt = Context.proof_of generic
-      val (idx,(name_ty,const)) =
+      val (idx,(name_ty,term)) =
            (case def of DIRECT_DEF (lhs, _) =>
                           (case Term.head_of lhs of X as Const name_ty => (~1, (name_ty, X))
                                                   | X as Free name_ty => (~1, (name_ty, X))
@@ -594,6 +607,7 @@ fun add_type (def, pos, hints) generic =
                                                \Use partial simplification and induction rules.";
                                        filter_relevant_eqs name (#psimps info))))
               |> map (conv_def_to_equaltion ctxt)
+              |> Drule.zero_var_indexes_list
       val is_recursive = exists (fn eq =>
             case Thm.concl_of eq
               of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ RHS)
@@ -602,37 +616,44 @@ fun add_type (def, pos, hints) generic =
                                       | _ => false) RHS
                | _ => error "Internal bug #fc2042c3-0c46-4ae5-a66e-9697639068a0") eqs
 
-      val ind_ToA =
+      val ind =
             (case def
                of DIRECT_DEF _ =>
-                  let val eq = Thm.incr_indexes 1 (hd eqs)
-                   in (try (fn rule => eq RS rule) @{thm \<phi>inductive_destruction_rule_from_direct_definition}
-                        |> Option.map (Conv.fconv_rule (add_premise_tag2 ctxt)
-                              #> set_the_P_in_ind_from_direct_def true ctxt),
-                       (eq RS @{thm \<phi>inductive_destruction_rule_from_direct_definition'})
-                        |> Conv.fconv_rule (add_premise_tag2 ctxt)
-                        |> set_the_P_in_ind_from_direct_def false ctxt)
+                  let val eq = hd eqs
+                      val LHS = Thm.dest_arg (Thm.cconcl_of eq) |> Thm.dest_arg1
+                      val x = Thm.dest_arg1 LHS
+                      fun mk_P ctm =
+                        case Thm.term_of ctm
+                          of _ $ _ => Thm.apply (mk_P (Thm.dest_fun ctm)) (Thm.dest_arg ctm)
+                           | _ => let val P_ty = (binder_types (Thm.typ_of_cterm ctm) ---> \<^typ>\<open>bool\<close>)
+                                              |> Thm.ctyp_of ctxt
+                                   in Thm.var (("P",1), P_ty)
+                                  end
+                      val T_x = Thm.apply \<^cterm>\<open>Trueprop\<close> (Thm.apply (mk_P (Thm.dest_arg LHS)) x)
+                   in Thm.trivial T_x
                   end
                 | WFREC_DEF (_, info) =>
                     (case #inducts info
-                       of SOME rules => mk_ind_dest_ToA ctxt name_ty eqs (List.nth (rules, idx))
-                        | _ => mk_ind_dest_ToA ctxt name_ty eqs (List.nth (#pinducts info, idx)))
+                       of SOME rules => List.nth (rules, idx)
+                        | _ => List.nth (#pinducts info, idx))
             )
+            |> Conv.fconv_rule (add_premise_tag ctxt)
+            |> Thm.trim_context
 
       val intro_ToA = map (fn eq => (eq RS @{thm \<phi>intro_transformation})
-                                 |> Conv.fconv_rule (add_premise_tag2 ctxt)) eqs
+                                 |> Conv.fconv_rule (add_premise_tag ctxt)) eqs
 
       val proof_id =
-        case const of Const _ => fst name_ty
+        case term of Const _ => fst name_ty
            | Free _ =>
               Context.cases Sign.full_name Local_Theory.full_name generic (Binding.name (fst name_ty))
 
       val phi_type = {
-            const = const,
+            term = term,
             pos = pos,
             proof_id = proof_id,
             equations = eqs,
-            ind_ToA = ind_ToA,
+            ind = ind,
             intro_ToA = intro_ToA,
             is_recursive = is_recursive,
             is_impredicative = false
@@ -641,7 +662,7 @@ fun add_type (def, pos, hints) generic =
    |> Context.mapping
         (Context.theory_map (Phi_Types.map (Symtab.update_new (fst name_ty, phi_type))))
         (Local_Theory.declaration {syntax=false, pervasive=false} (fn m =>
-          Phi_Types.map (Symtab.update_new (raw_term_name (Morphism.term m const),
+          Phi_Types.map (Symtab.update_new (fst (raw_term_name_typ (Morphism.term m term)),
                                             morphism_phi_type m phi_type))))
    |> Phi_Help.generic_theory_mapping (fn m =>
         Phi_Reasoner.add_intro_rules (map (fn rule =>
@@ -653,29 +674,51 @@ fun add_type (def, pos, hints) generic =
 
 (** Interface **)
 
-fun theory_map_result f = apsnd Context.the_theory o f o Context.Theory;
+(*fun theory_map_result f = apsnd Context.the_theory o f o Context.Theory;*)
 
+fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (args, x, c)
+  | dest_parameterized_phi_ty' args \<^Type>\<open>fun a T\<close> = dest_parameterized_phi_ty' (a::args) T
+  | dest_parameterized_phi_ty' _ T = raise TYPE ("not a phi-type",[T],[])
 
-fun fix_phi_type is_open const0 ctxt0 =
-  let val ([const],ctxt) = Variable.import_terms is_open [const0] ctxt0
-      fun collect_types args \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (args, x, c)
-        | collect_types args \<^Type>\<open>fun a T\<close> = collect_types (a::args) T
-        | collect_types args T = raise TYPE ("not a phi-type",[T],[])
-      val (arg_tys, x_ty, c_ty) = collect_types [] (Term.fastype_of const)
+val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
+
+fun fix_phi_term_params phi_term ctxt =
+  let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of phi_term)
+      val arg_tys = rev rev_arg_tys
       val arg_names' = Name.invent (Variable.names_of ctxt) "A" (length arg_tys)
       val [x_name'] = Name.invent (Variable.names_of ctxt) "x" 1
       val (x_name::arg_names, ctxt') = Variable.add_fixes (x_name' :: arg_names') ctxt
       val args = map2 (fn N => fn T => Free(N,T)) arg_names arg_tys
       val x_term = Free(x_name, x_ty)
+      val T_term = fold (fn a => fn X => X $ a) args phi_term
       val ctxt'2 = fold Variable.declare_constraints (x_term :: args) ctxt'
-   in ((x_term, fold_rev (fn a => fn X => X $ a) args const, const, x_ty, c_ty), ctxt'2)
+   in ((x_term, T_term, x_ty, arg_tys, model_ty), ctxt'2)
   end
+
+fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
+  let val (inst, ctxt) = Variable.import_inst is_open [#term phi0] ctxt0
+      val inst' = (TVars.map (K (Thm.ctyp_of ctxt)) (#1 inst),
+                   Vars.map (K (Thm.cterm_of ctxt)) (#2 inst))
+      val phi = {
+          term = Term_Subst.instantiate inst (#term phi0),
+          pos = #pos phi0,
+          proof_id = #proof_id phi0,
+          equations = map (Thm.instantiate inst') (#equations phi0),
+          ind = Thm.instantiate inst' (#ind phi0),
+          intro_ToA = map (Thm.instantiate inst') (#intro_ToA phi0),
+          is_recursive = #is_recursive phi0,
+          is_impredicative = #is_impredicative phi0
+        } : phi_type
+   in (inst, inst', phi, ctxt)
+  end
+
+
 
 local
 
 fun check_algebra_hints ctxt const hints =
   let val ctxt'0 = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
-      val ((_, T_term', _, _, _), ctxt') = fix_phi_type false const ctxt'0
+      val ((_, T_term', _, _, _), ctxt') = fix_phi_term_params const ctxt'0
       val T_term = singleton (Variable.export_terms ctxt' ctxt) T_term'
       fun get_arity ret \<^Type>\<open>fun _ T\<close> = get_arity (ret+1) T
         | get_arity ret \<^Type>\<open>bool\<close> = ret
@@ -685,7 +728,7 @@ fun check_algebra_hints ctxt const hints =
         | head_of X = X
       val hints_arity = map (fn hint =>
             get_arity 0 (Sign.the_const_type (Proof_Context.theory_of ctxt')
-                                             (raw_term_name (head_of hint)))) hints
+                                             (fst (raw_term_name_typ (head_of hint))))) hints
       fun pad_term arity term =
         let fun term_arity ret (Const("_type_constraint_", _) $ X) = term_arity ret X
               | term_arity ret (X $ _) = term_arity (ret+1) X
@@ -697,6 +740,22 @@ fun check_algebra_hints ctxt const hints =
         end
    in Syntax.check_terms ctxt'0 (map2 pad_term hints_arity hints)
   end
+
+(*make (x : T) \<equiv> ...  to T x \<equiv> ...*)
+val dirty_syntax_hack =
+  let fun rewrite ((H as Const (\<^const_name>\<open>Pure.imp\<close>, _)) $ L $ R) =
+            H $ L $ rewrite R
+        | rewrite ((H as Const (\<^const_name>\<open>Pure.all\<close>, _)) $ Abs(N,T,X)) =
+            H $ Abs(N,T, rewrite X)
+        | rewrite ((H as Const (\<^const_name>\<open>Trueprop\<close>, _)) $ X) = H $ rewrite X
+        | rewrite ((H as Const (\<^const_name>\<open>HOL.eq\<close>, _)) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) $ R) =
+            H $ (T $ x) $ R
+        | rewrite ((H as Const (\<^const_name>\<open>Pure.eq\<close>, _)) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) $ R) =
+            H $ (T $ x) $ R
+        | rewrite X = X
+   in map rewrite
+  end
+
 
 local open Function_Lib
 open Function_Common
@@ -724,8 +783,14 @@ fun gen_add_fun pos raw_hints add (generic : generic_theory) =
     val hints = check_algebra_hints (Context.proof_of generic) const raw_hints
    in generic'1
    |> Context.mapping_result (Named_Target.theory_map_result (K I) prove_termination) prove_termination
-   |-> (fn info => add_type (WFREC_DEF (raw_term_name const, info), pos, hints) #> snd)
+   |-> (fn info => add_type (WFREC_DEF (fst (raw_term_name_typ const), info), pos, hints) #> snd)
   end
+
+fun add_function_cmd a b c tac int lthy = lthy
+  |> Context.proof_map (
+        Syntax_Phases.term_check 99 "a dirty hack for rewriting the non-standard \<phi>-type definition"
+          (K dirty_syntax_hack))
+  |> Function.add_function_cmd a b c tac int
 
 in
 
@@ -736,8 +801,9 @@ fun add_fun_cmd a b c hints int generic =
                   (map (Syntax.parse_term ctxt) hints)
                   (fn tac =>
                       Context.mapping_result
-                        (Named_Target.theory_map_result (K I) (Function.add_function_cmd a b c tac int))
-                        (Function.add_function_cmd a b c tac int)) generic
+                        (Named_Target.theory_map_result Function_Common.transform_function_data
+                                                        (add_function_cmd a b c tac int))
+                        (add_function_cmd a b c tac int)) generic
   end
 
 end
@@ -751,14 +817,21 @@ val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- alg
 val def_by_function = (Function_Common.function_parser Function_Common.default_config
       >> (fn (config, (fixes, specs)) => Function.function_cmd fixes specs config))
 
+fun my_definition decl params prems spec int lthy = lthy
+  |> Context.proof_map (
+        Syntax_Phases.term_check 99 "a dirty hack for rewriting the non-standard \<phi>-type definition"
+          (K dirty_syntax_hack))
+  |> Specification.definition_cmd decl params prems spec int
+
 val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec.opt_thm_name ":" -- Parse.prop) --
       Parse_Spec.if_assumes -- Parse.for_fixes -- algebra_hints
-   >> (fn ((((decl, (spec, pos)), prems), params), hints) => fn int =>
+        -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ()))
+   >> (fn (((((decl, (spec, pos)), prems), params), hints), _) => fn int =>
         Context.mapping_result
           (Named_Target.theory_map_result (fn m => fn (tm, (name, def)) =>
                     (Morphism.term m tm, (name, Morphism.thm m def)))
-                (Specification.definition_cmd decl params prems spec int))
-          (Specification.definition_cmd decl params prems spec int)
+                (my_definition decl params prems spec int))
+          (my_definition decl params prems spec int)
            #> (fn (def, generic) =>
                 let val ctxt = Context.proof_of generic
                  in add_type (DIRECT_DEF def, pos,

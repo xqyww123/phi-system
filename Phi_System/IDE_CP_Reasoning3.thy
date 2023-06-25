@@ -1744,10 +1744,10 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Convergence of Structural Nodes\<close>
 
-lemma [\<phi>reason 1200 for \<open>If ?P (_ \<Ztypecolon> _ \<Znrres> _) (_ \<Ztypecolon> _ \<Znrres> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Z @action branch_convergence\<close>]:
+lemma [\<phi>reason 1200 for \<open>If ?P (_ \<Ztypecolon> _ \<odiv> _) (_ \<Ztypecolon> _ \<odiv> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Z @action branch_convergence\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
 \<Longrightarrow> If P n m = nm @action branch_convergence
-\<Longrightarrow> If P (x \<Ztypecolon> n \<Znrres> T) (y \<Ztypecolon> m \<Znrres> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> nm \<Znrres> Z) @action branch_convergence\<close>
+\<Longrightarrow> If P (x \<Ztypecolon> n \<odiv> T) (y \<Ztypecolon> m \<odiv> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> nm \<odiv> Z) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp add: \<phi>Share_transformation)
 
 lemma [\<phi>reason 1200 for \<open>If _ ((_,_) \<Ztypecolon> _ \<^emph> _) ((_,_) \<Ztypecolon> _ \<^emph> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:

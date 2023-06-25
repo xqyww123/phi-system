@@ -52,7 +52,7 @@ fun meta_all_conv cv ctxt ct =
   (case Thm.term_of ct of
     Const ("Pure.all", _) $ Abs _ => arg_conv (abs_conv cv ctxt) ct
   | Const ("Pure.all", _) $ _ => arg_conv (inverse_eta_conv then_conv abs_conv cv ctxt) ct
-  | _ => raise CTERM ("forall_conv", [ct]))
+  | _ => raise CTERM ("meta_all_conv", [ct]))
 
 fun exhaustive_meta_all_conv cv ctxt ctm =
   case Thm.term_of ctm
@@ -84,7 +84,7 @@ fun quant_conv head cv ctxt ct =
 val hol_all_conv = quant_conv \<^const_name>\<open>All\<close>
 
 fun meta_all_body_conv C ctxt =
-  forall_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt
+  meta_all_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt
   else_conv C ctxt
 
 end
