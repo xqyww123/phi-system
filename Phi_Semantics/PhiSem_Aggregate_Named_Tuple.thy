@@ -284,7 +284,7 @@ lemma [\<phi>reason 1201]:
   subgoal premises prems for g g' a b c' v' proof -
     obtain c'f where c'f: \<open>c' = V_named_tup.mk c'f\<close> using V_named_tup_sep_disj_L[OF \<open>c' ## _\<close>] by blast
     show ?thesis
-      by (insert prems, simp add: c'f V_named_tup_mult_cons idx_step_mod_value_named_tupl_cons',
+      by (insert prems, simp add: c'f V_named_tup_mult_cons idx_step_mod_value_named_tupl_cons' \<r>Guard_def,
           metis V_named_tup_sep_disj fmdom_fmupd fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
   qed .
 
@@ -293,7 +293,7 @@ lemma [\<phi>reason 1201]:
 \<Longrightarrow> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) \<lbrace> LOGIC_SYMBOL(s): X \<rbrace> \<lbrace> LOGIC_SYMBOL(s): X' \<rbrace> Y Y' f\<close>
   unfolding \<phi>Aggregate_Mapper_def
-  by (clarsimp simp add: \<phi>expns, metis fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
+  by (clarsimp simp add: \<phi>expns \<r>Guard_def Premise_def, metis fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
 
 lemma [\<phi>reason 1000]:
   \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) [] (named_tup.mk fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>

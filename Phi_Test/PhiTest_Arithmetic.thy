@@ -73,11 +73,11 @@ proc test_prime':
         have \<open>False\<close> if assm: \<open>\<not> prime x\<close>
           proof -
             obtain k where \<open>k dvd x \<and> 1 < k \<and> k < x\<close> by auto_sledgehammer
-            then have \<open>k < ib \<or> x div k < ib\<close> by auto_sledgehammer
+            then have \<open>k < i \<or> x div k < i\<close> by auto_sledgehammer
             then show False by auto_sledgehammer
           qed
         then show \<open>prime x\<close>
-          by fastforce
+          by blast
       qed
   \<medium_right_bracket> \<comment> \<open>Close the top branch\<close>
 \<medium_right_bracket> \<comment> \<open>Close the function body\<close> .

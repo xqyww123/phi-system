@@ -722,6 +722,16 @@ fun add_pass rule_pass =
 
 (** Main Function **)
 
+fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>ERROR\<close>, _) $ text))
+      = (error (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>TRACING\<close>, _) $ text))
+      = (tracing (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>WARNING\<close>, _) $ text))
+      = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>FAIL\<close>, _) $ text))
+      = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule _ _ = true
+
 fun intro_reasoner ctxt0 pos mode (priority:priority) pats0 guard0 rules0 =
   let
     val (rules01, (patterns, blacklist), guard, ctxt) =
@@ -735,7 +745,8 @@ fun intro_reasoner ctxt0 pos mode (priority:priority) pats0 guard0 rules0 =
                       of [rule] =>
                         let val concl = Thm.concl_of rule
                             val pat' = the_default_pattern_of ctxt concl
-                            val pat = case pat' of [] => [concl] | _ => pat'
+                            val pat = case pat' of [] => [concl]
+                                         | L => List.filter (process_error_rule ctxt) pat'
                             val _ = info_pretty_generic ctxt 1 (fn () => Pretty.chunks (
                                     Pretty.str "No pattern is given, use the default pattern:" ::
                                     map (Syntax.pretty_term (Context.proof_of ctxt)) pat

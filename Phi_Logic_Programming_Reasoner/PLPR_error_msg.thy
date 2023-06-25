@@ -5,7 +5,7 @@ It intends to give a rich way with term quotations to represent and report
 *)
 
 theory PLPR_error_msg
-  imports Phi_Logic_Programming_Reasoner
+  imports Main
 begin
 
 section \<open>Error Reporting\<close>
@@ -129,15 +129,6 @@ definition TRACING :: \<open>text \<Rightarrow> bool\<close>
 lemma TRACING_I: \<open>TRACING x\<close>
   unfolding TRACING_def ..
 
-\<phi>reasoner_ML TRACING 1200 (\<open>TRACING ?x\<close>) = \<open>fn (ctxt,sequent) =>
-  let
-    val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>TRACING\<close> $ text)
-          = Thm.major_prem_of sequent
-    val str = Text_Encoding.decode_text_str ctxt text
-    val _ = tracing str
-  in Seq.single (ctxt, @{thm TRACING_I} RS sequent)
-  end\<close>
-
 subsubsection \<open>Warning\<close>
 
 definition WARNING :: \<open>text \<Rightarrow> bool\<close>
@@ -145,15 +136,6 @@ definition WARNING :: \<open>text \<Rightarrow> bool\<close>
 
 lemma WARNING_I: \<open>WARNING x\<close>
   unfolding WARNING_def ..
-
-\<phi>reasoner_ML WARNING 1200 (\<open>WARNING ?x\<close>) = \<open>fn (ctxt,sequent) =>
-  let
-    val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>WARNING\<close> $ text)
-          = Thm.major_prem_of sequent
-    val str = Text_Encoding.decode_text_str ctxt text
-    val _ = warning str
-  in Seq.single (ctxt, @{thm WARNING_I} RS sequent)
-  end\<close>
 
 subsubsection \<open>Fail\<close>
 
@@ -166,16 +148,6 @@ definition FAIL :: \<open>text \<Rightarrow> bool\<close>
 definition FAIL' :: \<open>text \<Rightarrow> prop\<close>
   where [iff]: \<open>FAIL' x \<equiv> (\<And>P. PROP P)\<close>
 
-\<phi>reasoner_ML FAIL 1200 (\<open>FAIL ?x\<close> | \<open>PROP FAIL' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
-  let
-    val text = case Thm.major_prem_of sequent
-                 of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ X) => X
-                  | \<^const>\<open>FAIL'\<close> $ X => X
-    val str = Text_Encoding.decode_text_str ctxt text
-    val _ = warning str
-  in Seq.empty
-  end\<close>
-
 
 subsubsection \<open>Error\<close>
 
@@ -187,14 +159,5 @@ definition ERROR :: \<open>text \<Rightarrow> bool\<close>
 definition ERROR' :: \<open>text \<Rightarrow> prop\<close>
   where [iff]: \<open>ERROR' x \<equiv> (\<And>P. PROP P)\<close>
 
-\<phi>reasoner_ML ERROR 1200 (\<open>ERROR ?x\<close> | \<open>PROP ERROR' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
-  let
-    val text = case Thm.major_prem_of sequent
-                 of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>ERROR\<close> $ X) => X
-                  | \<^const>\<open>ERROR'\<close> $ X => X
-    val str = Text_Encoding.decode_text_str ctxt text
-    val _ = error str
-  in Seq.empty
-  end\<close>
 
 end

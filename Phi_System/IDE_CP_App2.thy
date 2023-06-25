@@ -24,14 +24,16 @@ lemma [\<phi>reason 1200]:
   unfolding Action_Tag_def using Val_transformation .
 
 lemma [\<phi>reason 1200]:
-  \<open> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action to A
-\<Longrightarrow> y \<Ztypecolon> Val v U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> Val v T \<a>\<n>\<d> P @action to A\<close>
-  unfolding Action_Tag_def using Val_transformation .
+  \<open> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. r x \<a>\<n>\<d> P @action to A
+\<Longrightarrow> y \<Ztypecolon> Val v U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> Val v T \<s>\<u>\<b>\<j> x. r x \<a>\<n>\<d> P @action to A\<close>
+  unfolding Action_Tag_def Imply_def
+  by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200]:
-  \<open> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<a>\<n>\<d> P @action as A
-\<Longrightarrow> y \<Ztypecolon> Val v U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> Val v T \<a>\<n>\<d> P @action as A\<close>
-  unfolding Action_Tag_def using Val_transformation .
+  \<open> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. r x \<a>\<n>\<d> P @action as A
+\<Longrightarrow> y \<Ztypecolon> Val v U \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> Val v T \<s>\<u>\<b>\<j> x. r x \<a>\<n>\<d> P @action as A\<close>
+  unfolding Action_Tag_def Imply_def
+  by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D \<a>\<n>\<d> P @action \<A>_destruct\<phi> T'

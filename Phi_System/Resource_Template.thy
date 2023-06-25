@@ -203,9 +203,10 @@ lemma [\<phi>reason 1200]:
   unfolding Action_Tag_def using \<phi>_cast .
 
 lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Target
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P @action to Target \<close>
-  unfolding Action_Tag_def using \<phi>_cast .
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Target
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Target \<close>
+  unfolding Action_Tag_def Imply_def
+  by (clarsimp simp add: \<phi>expns)
 
 
 lemma [\<phi>reason 1200]:

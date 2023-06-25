@@ -1,5 +1,5 @@
 theory Phi_Logic_Programming_Reasoner
-  imports Main "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
+  imports PLPR_error_msg "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
   keywords "except" "@action" :: quasi_command
     and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
     and "print_\<phi>reasoners" :: diag
@@ -1284,6 +1284,48 @@ ML_file \<open>library/recursion_guard.ML\<close>
 \<phi>reasoner_ML \<r>Recursion_Guard 1000 (\<open>\<r>RECURSION_GUARD(?X) (PROP ?P)\<close>) = \<open>PLPR_Recursion_Guard.reason\<close>
 
 hide_fact Do_\<r>Recursion_Guard
+
+
+subsection \<open>Error Message\<close>
+
+\<phi>reasoner_ML TRACING 1200 (\<open>TRACING ?x\<close>) = \<open>fn (ctxt,sequent) =>
+  let
+    val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>TRACING\<close> $ text)
+          = Thm.major_prem_of sequent
+    val str = Text_Encoding.decode_text_str ctxt text
+    val _ = tracing str
+  in Seq.single (ctxt, @{thm TRACING_I} RS sequent)
+  end\<close>
+
+\<phi>reasoner_ML WARNING 1200 (\<open>WARNING ?x\<close>) = \<open>fn (ctxt,sequent) =>
+  let
+    val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>WARNING\<close> $ text)
+          = Thm.major_prem_of sequent
+    val str = Text_Encoding.decode_text_str ctxt text
+    val _ = warning str
+  in Seq.single (ctxt, @{thm WARNING_I} RS sequent)
+  end\<close>
+
+\<phi>reasoner_ML FAIL 1200 (\<open>FAIL ?x\<close> | \<open>PROP FAIL' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
+  let
+    val text = case Thm.major_prem_of sequent
+                 of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ X) => X
+                  | \<^const>\<open>FAIL'\<close> $ X => X
+    val str = Text_Encoding.decode_text_str ctxt text
+    val _ = warning str
+  in Seq.empty
+  end\<close>
+
+\<phi>reasoner_ML ERROR 1200 (\<open>ERROR ?x\<close> | \<open>PROP ERROR' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
+  let
+    val text = case Thm.major_prem_of sequent
+                 of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>ERROR\<close> $ X) => X
+                  | \<^const>\<open>ERROR'\<close> $ X => X
+    val str = Text_Encoding.decode_text_str ctxt text
+    val _ = error str
+  in Seq.empty
+  end\<close>
+
 
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>

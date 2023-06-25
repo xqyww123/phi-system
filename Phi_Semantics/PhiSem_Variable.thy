@@ -219,16 +219,16 @@ lemma [\<phi>reason 1200 for \<open>PROP Branch_Convergence_Type_Pattern (Var ?v
 
 
 lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Var v T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Var v U \<a>\<n>\<d> P @action to Z \<close>
-  unfolding Action_Tag_def
-  using Var_transformation .
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Z
+\<Longrightarrow> x \<Ztypecolon> Var v T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Var v U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Z \<close>
+  unfolding Action_Tag_def Imply_def
+  by (auto simp add: \<phi>expns, metis)
 
 lemma [\<phi>reason 2100]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Var v T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Var v U \<a>\<n>\<d> P @action to (Var v Z) \<close>
-  unfolding Action_Tag_def
-  using Var_transformation .
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Z
+\<Longrightarrow> x \<Ztypecolon> Var v T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Var v U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to (Var v Z) \<close>
+  unfolding Action_Tag_def Imply_def
+  by (auto simp add: \<phi>expns, metis)
 
 lemma [\<phi>reason 2000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action as Z
@@ -546,7 +546,7 @@ proc (nodef) [\<phi>reason 1200]:
   throws E
   @action synthesis
 \<medium_left_bracket>
-  G
+  G  
   S \<rightarrow> val v
   $v apply_rule op_set_var[OF T1 T2 T3 T4 T5 T6 T7 report_unprocessed_element_index_I]
   $v
