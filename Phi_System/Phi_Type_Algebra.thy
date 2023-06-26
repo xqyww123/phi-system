@@ -940,6 +940,7 @@ lemma
   unfolding Transformation_Functor_def
   by simp
 
+term set
 
 subsubsection \<open>Inhabitance\<close>
 
