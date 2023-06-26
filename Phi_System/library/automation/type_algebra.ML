@@ -32,8 +32,34 @@ val _ = Theory.setup (Context.theory_map (
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]})
 ))
 
+fun classify_bnf_dead_live bnf tys =
+  let val btys = snd (Term.dest_Type (BNF_Def.T_of_bnf bnf))
+      val deads = BNF_Def.deads_of_bnf bnf
+   in fold2 (fn t => fn bt => fn (D,L) =>
+        if member (op =) deads bt then (t::D, L) else (D, t::L)
+      ) tys btys ([],[])
+  end
 
-(*** Objective Equal ***)
+fun guess_operator ctxt mk_term known_oprs x_ty =
+  case AList.lookup (op =) known_oprs x_ty
+    of SOME opr => opr
+     | _ => (
+  case x_ty
+    of Type(Tname, Targs) =>
+        (case BNF_Def.bnf_of ctxt Tname
+           of NONE => (warning ("Type " ^ fst (Term.dest_Type x_ty) ^ " is not a known BNF. \
+                                \Fail to guess its abstract operator.");
+                       raise Automation_Fail)
+            | SOME bnf =>
+         let val (D,L) = classify_bnf_dead_live bnf Targs
+             val head = mk_term D L bnf
+             val params = map (guess_operator ctxt mk_term known_oprs) L
+          in fold (fn p => fn X => X $ p) params head
+         end)
+     | T => reason_fail ("Fail to guess the abstract operator for type " ^ Syntax.string_of_typ ctxt T))
+
+
+(*** Equivalence of Abstract Objects ***)
 
 local
 
@@ -97,16 +123,8 @@ fun infer_eq_conv ctm =
          (Conv.arg_conv infer_eq_conv then_conv
           Conv.rewr_conv @{thm imp_conjR[folded atomize_eq, symmetric]}) ctm
      | _ => Conv.all_conv ctm *)
-
-fun classify_bnf_dead_live bnf tys =
-  let val btys = snd (Term.dest_Type (BNF_Def.T_of_bnf bnf))
-      val deads = BNF_Def.deads_of_bnf bnf
-   in fold2 (fn t => fn bt => fn (D,L) =>
-        if member (op =) deads bt then (t::D, L) else (D, t::L)
-      ) tys btys ([],[])
-  end
       
-
+(*
 fun guess_obj_equal ctxt x_ty param_eqs =
   case BNF_Def.bnf_of ctxt (fst (Term.dest_Type x_ty))
     of NONE => (warning ("Type " ^ fst (Term.dest_Type x_ty) ^ " is not a known BNF. \
@@ -129,7 +147,7 @@ fun guess_obj_equal ctxt x_ty param_eqs =
                                 \There are more than one candidates of object equivalence for type " ^
                                 Syntax.string_of_typ ctxt T)) L
          in fold (fn p => fn X => X $ p) params rel
-        end
+        end *)
 
 fun conv_eq_imp ctxt ctm =
   (Conv.rewr_conv @{thm imp_ex[folded atomize_eq]} then_conv
@@ -224,6 +242,16 @@ fun obj_equal_reasoner ctxt sequent0 =
    |> obj_equal_reasoner ctxt
   end
 
+fun generic_auto generate_antecedents (phi0 : phi_type) hint0 thy =
+  let val ctxt0 = Context.proof_of thy
+      val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0
+      val ((x_term, T_term, x_ty, arg_tys, model_ty), ctxt02) = fix_phi_term_params (#term phi) ctxt01
+      val hint = Option.map (Term_Subst.instantiate inst) hint0
+      val arity = length arg_tys
+      val (gen_ants, ctxt) = generate_antecedents ctxt02 (x_ty, arg_tys, model_ty, hint)
+   in ()
+  end
+
 fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
   let val ctxt0 = Context.proof_of thy
       val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0
@@ -242,7 +270,8 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
                             Const(\<^const_name>\<open>All\<close>, (T --> HOLogic.boolT) --> HOLogic.boolT)
                               $ Abs("",T,X)
                            ) rev_arg_tys_A
-             in mk_Ants ctxt rev_arg_tys eq_names (ant::ants) (Free(eq, typ)::param_eqs) T_term
+             in mk_Ants ctxt rev_arg_tys eq_names (ant::ants)
+                        ((x_ty_A, Free(eq, typ))::param_eqs) T_term
             end
             handle TYPE _ => (ants, param_eqs))
         | mk_Ants _ [] [] ants param_eqs _ = (ants, param_eqs)
@@ -254,10 +283,20 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
       val (ants,param_eqs) = mk_Ants ctxt rev_arg_tys rev_eq_names [] [] T_term
       val ant = Phi_Help.list_mk_conj ants
 
+      fun chk_known_oprs [] = ()
+        | chk_known_oprs ((k,_)::L) =
+           (if AList.defined (op =) L k
+            then warning ("More than one \<phi>-type parameter has identical type at abstract domain.\n\
+                          \It affects the guessing of the abstract operators. \
+                          \Giving the operators manually is recommended if the automation fails.")
+            else () ;
+            chk_known_oprs L)
       val (eq_term_given, eq_term, ctxt'v) =
             (case hint of SOME H => (true, H, ctxt)
                 | _ => if #is_recursive phi
-                       then (true, guess_obj_equal ctxt x_ty param_eqs, ctxt)
+                       then (chk_known_oprs param_eqs;
+                             (true, guess_operator ctxt (fn D => fn L => BNF_Def.mk_rel_of_bnf D L L)
+                                                  param_eqs x_ty, ctxt))
                        else let val [eq_name'] = Name.invent (Variable.names_of ctxt) "eq" 1
                                 val ([eq_name], ctxt'v) = Variable.add_fixes [eq_name'] ctxt
                              in (false, Free(eq_name, x_ty --> x_ty --> HOLogic.boolT), ctxt'v)
@@ -283,12 +322,12 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
                             $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T')
                             $ \<^Const>\<open>True\<close>)))
         end)
-      (* val P_term = fold_rev (fn T => fn X => Abs("",T,X)) arg_tys \<^const>\<open>True\<close> *)
-              (* |> Drule.infer_instantiate ctxt [(("P",0), Thm.cterm_of ctxt P_term)]
+      (*val P_term = fold_rev (fn T => fn X => Abs("",T,X)) arg_tys \<^const>\<open>True\<close>*)
+              (*|> Drule.infer_instantiate ctxt [(("P",0), Thm.cterm_of ctxt P_term)]
               |> Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn _ =>
                     HOLogic.Trueprop_conv (
                       Conv.arg1_conv (Conv.rewr_conv @{thm Premise_True[THEN Eq_TrueI]}) then_conv
-                      Conv.rewr_conv @{thm simp_thms(15)[folded atomize_eq]})) ctxt)  *)
+                      Conv.rewr_conv @{thm simp_thms(15)[folded atomize_eq]})) ctxt)*)
       val ind = Conv.fconv_rule (
               Phi_Helper_Conv.hhf_conv (
                 Phi_Helper_Conv.hhf_conv (fn ctxt => fn ctm =>
@@ -336,7 +375,7 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
               |> (fn SOME ctxt_rule => ctxt_rule
                    | NONE => raise Automation_Fail) *)
 
-      (* TODO: simplify the leading premises, expansion of existential quantification *)
+      (*TODO: simplify the leading premises, expansion of existential quantification*)
 
       val rule'2 =
        (if eq_term_given
@@ -365,10 +404,16 @@ fun gen_obj_equal (phi,hints) thy =
       )
   end
 
+end
+
+(*** Transformation Functor ***)
+
+
+
+(*** Install Automation ***)
+
 val _ = Theory.setup (Context.theory_map (
   Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
 ))
-
-end
 
 end

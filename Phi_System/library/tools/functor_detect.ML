@@ -716,6 +716,36 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
 
 local
 
+fun check_algebra_hints ctxt0 phi_term hints =
+  let val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern ctxt0
+      val T_term = singleton (Variable.export_terms ctxt' ctxt) T_term'
+      fun get_arity ret \<^Type>\<open>fun _ T\<close> = get_arity (ret+1) T
+        | get_arity ret \<^Type>\<open>bool\<close> = ret
+        | get_arity _ _ = error "The given hint is not an algebraic property."
+      fun head_of (Const("_type_constraint_", _) $ X) = head_of X
+        | head_of (X $ _) = head_of X
+        | head_of X = X
+      val hints_arity = map (fn hint =>
+            get_arity 0 (Sign.the_const_type (Proof_Context.theory_of ctxt)
+                                             (fst (raw_term_name_typ (head_of hint))))) hints
+      fun pad_term arity (\<^Const>\<open>Pure.imp\<close> $ LHS $ X) =
+            \<^Const>\<open>Pure.imp\<close> $ LHS $ pad_term arity X
+        | pad_term arity term =
+            let fun term_arity ret (Const("_type_constraint_", _) $ X) = term_arity ret X
+                  | term_arity ret (X $ _) = term_arity (ret+1) X
+                  | term_arity ret _ = ret
+                val d = arity - term_arity 0 term
+                val _ = if d < 0 then error "Internal bug 3bc2ce92-edce-427a-a401-24152b11bc81"
+                                 else ()
+                val idx = Term.maxidx_of_term term
+                (* fun subst_dummy () *)
+             in term
+             |> funpow d (fn X => X $ T_term)
+            end
+   in Syntax.check_terms ctxt'0 (map2 pad_term hints_arity hints)
+  end
+
+
 fun check_algebra_hints ctxt const hints =
   let val ctxt'0 = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
       val ((_, T_term', _, _, _), ctxt') = fix_phi_term_params const ctxt'0
@@ -729,15 +759,20 @@ fun check_algebra_hints ctxt const hints =
       val hints_arity = map (fn hint =>
             get_arity 0 (Sign.the_const_type (Proof_Context.theory_of ctxt')
                                              (fst (raw_term_name_typ (head_of hint))))) hints
-      fun pad_term arity term =
-        let fun term_arity ret (Const("_type_constraint_", _) $ X) = term_arity ret X
-              | term_arity ret (X $ _) = term_arity (ret+1) X
-              | term_arity ret _ = ret
-            val d = arity - term_arity 0 term
-            val _ = if d < 0 then error "Internal bug 3bc2ce92-edce-427a-a401-24152b11bc81"
-                             else ()
-         in funpow d (fn X => X $ Logic.incr_indexes ([],[], Term.maxidx_of_term X + 1) T_term) term
-        end
+      fun pad_term arity (\<^Const>\<open>Pure.imp\<close> $ LHS $ X) =
+            \<^Const>\<open>Pure.imp\<close> $ LHS $ pad_term arity X
+        | pad_term arity term =
+            let fun term_arity ret (Const("_type_constraint_", _) $ X) = term_arity ret X
+                  | term_arity ret (X $ _) = term_arity (ret+1) X
+                  | term_arity ret _ = ret
+                val d = arity - term_arity 0 term
+                val _ = if d < 0 then error "Internal bug 3bc2ce92-edce-427a-a401-24152b11bc81"
+                                 else ()
+                val idx = Term.maxidx_of_term term
+                (* fun subst_dummy () *)
+             in term
+             |> funpow d (fn X => X $ Logic.incr_indexes ([],[], Term.maxidx_of_term X + 1) T_term)
+            end
    in Syntax.check_terms ctxt'0 (map2 pad_term hints_arity hints)
   end
 
