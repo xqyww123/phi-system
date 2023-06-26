@@ -40,7 +40,7 @@ fun classify_bnf_dead_live bnf tys =
       ) tys btys ([],[])
   end
 
-fun guess_operator ctxt mk_term known_oprs x_ty =
+fun guess_operator' ctxt mk_term known_oprs x_ty =
   case AList.lookup (op =) known_oprs x_ty
     of SOME opr => opr
      | _ => (
@@ -53,11 +53,23 @@ fun guess_operator ctxt mk_term known_oprs x_ty =
             | SOME bnf =>
          let val (D,L) = classify_bnf_dead_live bnf Targs
              val head = mk_term D L bnf
-             val params = map (guess_operator ctxt mk_term known_oprs) L
+             val params = map (guess_operator' ctxt mk_term known_oprs) L
           in fold (fn p => fn X => X $ p) params head
          end)
      | T => reason_fail ("Fail to guess the abstract operator for type " ^ Syntax.string_of_typ ctxt T))
 
+fun guess_operator ctxt mk_term known_oprs x_ty =
+  let fun chk_known_oprs [] = ()
+        | chk_known_oprs ((k,_)::L) =
+           (if AList.defined (op =) L k
+            then warning ("More than one \<phi>-type parameter has identical type at abstract domain.\n\
+                          \It affects the guessing of the abstract operators. \
+                          \Giving the operators manually is recommended if the automation fails.")
+            else () ;
+            chk_known_oprs L)
+   in chk_known_oprs known_oprs ;
+      guess_operator' ctxt mk_term known_oprs x_ty
+  end
 
 (*** Equivalence of Abstract Objects ***)
 
@@ -242,24 +254,71 @@ fun obj_equal_reasoner ctxt sequent0 =
    |> obj_equal_reasoner ctxt
   end
 
-fun generic_auto generate_antecedents (phi0 : phi_type) hint0 thy =
-  let val ctxt0 = Context.proof_of thy
-      val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0
+(*quants: an array telling how to interpret the quantified variables in the first antecedent of the rule.
+  It is used in generating the induction rule.
+  quants[i] = 0 means interpret the variable as the abstract object
+  quants[i] = i means interpret the variable as the i-th parameter of the \<phi>-type
+  quants[i] = ~1 means interpret it as a fixed variable
+  Note the quants is reversed against the quantified variables*)
+fun mk_rule_by_guess_or_hint (unify_hint,guess_property,quants) rule (phi0 : phi_type) hint ctxt0 =
+  let val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0
       val ((x_term, T_term, x_ty, arg_tys, model_ty), ctxt02) = fix_phi_term_params (#term phi) ctxt01
-      val hint = Option.map (Term_Subst.instantiate inst) hint0
-      val arity = length arg_tys
-      val (gen_ants, ctxt) = generate_antecedents ctxt02 (x_ty, arg_tys, model_ty, hint)
-   in ()
+
+      val (ant, property, ctxt) =
+        case hint of SOME H =>
+              let fun collect_ants (\<^Const>\<open>Pure.imp\<close> $ (\<^Const>\<open>Trueprop\<close> $ L) $ R) = L :: collect_ants R
+                    | collect_ants (\<^Const>\<open>Trueprop\<close> $ _) = []
+                    | collect_ants _ = error "Bad hint"
+                  fun concl_of_hint (\<^Const>\<open>Pure.imp\<close> $ (\<^Const>\<open>Trueprop\<close> $ _) $ R) = concl_of_hint R
+                    | concl_of_hint (X as \<^Const>\<open>Trueprop\<close> $ _) = X
+                    | concl_of_hint _ = error "Bad hint"
+                  val property = concl_of_hint H
+                  val Envir.Envir inst_hint = unify_hint (ctxt02, H) property (x_term, T_term)
+                  val H' = Envir.subst_term (#tyenv inst_hint, #tenv inst_hint) H
+                  val ([H''], ctxt) = Variable.import_terms true [H'] ctxt02
+               in (Phi_Help.list_mk_conj (collect_ants H''), concl_of_hint H'', ctxt)
+              end
+           | _ => guess_property (x_term, T_term, x_ty, arg_tys, model_ty, phi) ctxt02
+      val inst_rule = Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
+                                    (Vartab.empty, Vartab.empty)
+                   |> apsnd (Vartab.update_new (("Ant",0), (\<^typ>\<open>bool\<close>, ant)))
+                   |> Phi_Help.env_to_table ctxt
+      val rule' = Thm.instantiate inst_rule rule
+      
+      fun mk_free_table i ret (X $ Free (N,_)) =
+            mk_free_table (i+1) (Symtab.update_new ((N,i)) ret) X
+        | mk_free_table _ ret _ = ret
+      val free_tabel = mk_free_table 0 Symtab.empty (T_term $ x_term)
+      fun mk_ind_prop lev lambs (X $ Y) = mk_ind_prop lev lambs X $ mk_ind_prop lev lambs Y
+        | mk_ind_prop lev lambs (Bound i) =
+            if i < lev then Bound i else
+           (case try List.nth (quants, i-lev)
+              of NONE => error "The rule contains unspecified quantified variable"
+               | SOME j => if j = ~1
+                           then (case List.nth (lambs, i-lev) of (N,T) => Var((N,1),T)) (*the ind rule is zero-indexed*)
+                           else Bound (lev+j))
+        | mk_ind_prop lev lambs (Abs (N,T,X)) =
+              Abs (N,T, mk_ind_prop (lev+1) ((N,T)::lambs) X)
+        | mk_ind_prop lev lambs (Free (N,T)) =
+           (case Symtab.lookup free_tabel N
+              of SOME i => Bound (lev + i)
+               | NONE => Free (N,T))
+        | mk_ind_prop _ _ X = X
+
+      val ind_prop = mk_ind_prop 0 [] (HOLogic.dest_Trueprop (Thm.major_prem_of rule'))
+      val ind = Phi_Type_Algebra.mk_ind_dest_ToA ctxt phi (K ind_prop)
+   in (rule', ind, phi, ctxt)
   end
 
-fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
-  let val ctxt0 = Context.proof_of thy
-      val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0
-      val ((x_term, T_term, x_ty, arg_tys, model_ty), ctxt02) = fix_phi_term_params (#term phi) ctxt01
-      val hint = Option.map (Term_Subst.instantiate inst) hint0
-      val arity = length arg_tys
+fun unify_hint_obj_eq (ctxt, hint) (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj _ _\<close> $  _ $ T')) (x, T) =
+  Unify.smash_unifiers (Context.Proof ctxt) [(T',T)] Envir.init
+    |> Seq.chop 2
+    |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
+         | ([x], _) => x
+         | _ => error ("Multi-resolution in hint: " ^ Syntax.string_of_term ctxt hint))
 
-      fun mk_Ants ctxt (Ty::rev_arg_tys) (eq::eq_names) ants param_eqs (T_term $ A) =
+fun guess_property_obj_eq (x_term, T_term, x_ty, arg_tys, model_ty, (phi:phi_type)) ctxt0 =
+  let fun mk_Ants ctxt (Ty::rev_arg_tys) (eq::eq_names) ants param_eqs (T_term $ A) =
            (let val (rev_arg_tys_A, x_ty_A, model_ty_A) = dest_parameterized_phi_ty Ty
                 val arity_A = length rev_arg_tys_A
                 val typ = x_ty_A --> x_ty_A --> \<^typ>\<open>bool\<close>
@@ -277,51 +336,31 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
         | mk_Ants _ [] [] ants param_eqs _ = (ants, param_eqs)
         | mk_Ants _ _ _ _ _ _ = raise ListPair.UnequalLengths
 
-      val rev_eq_names' = Name.invent (Variable.names_of ctxt02) "eq" arity
-      val (rev_eq_names, ctxt) = Variable.add_fixes rev_eq_names' ctxt02
+      val arity = length arg_tys
+      val rev_eq_names' = Name.invent (Variable.names_of ctxt0) "eq" arity
+      val (rev_eq_names, ctxt) = Variable.add_fixes rev_eq_names' ctxt0
       val rev_arg_tys = rev arg_tys
       val (ants,param_eqs) = mk_Ants ctxt rev_arg_tys rev_eq_names [] [] T_term
       val ant = Phi_Help.list_mk_conj ants
 
-      fun chk_known_oprs [] = ()
-        | chk_known_oprs ((k,_)::L) =
-           (if AList.defined (op =) L k
-            then warning ("More than one \<phi>-type parameter has identical type at abstract domain.\n\
-                          \It affects the guessing of the abstract operators. \
-                          \Giving the operators manually is recommended if the automation fails.")
-            else () ;
-            chk_known_oprs L)
-      val (eq_term_given, eq_term, ctxt'v) =
-            (case hint of SOME H => (true, H, ctxt)
-                | _ => if #is_recursive phi
-                       then (chk_known_oprs param_eqs;
-                             (true, guess_operator ctxt (fn D => fn L => BNF_Def.mk_rel_of_bnf D L L)
-                                                  param_eqs x_ty, ctxt))
-                       else let val [eq_name'] = Name.invent (Variable.names_of ctxt) "eq" 1
-                                val ([eq_name], ctxt'v) = Variable.add_fixes [eq_name'] ctxt
-                             in (false, Free(eq_name, x_ty --> x_ty --> HOLogic.boolT), ctxt'v)
-                            end)
+      val eq_term =
+             if #is_recursive phi
+             then guess_operator ctxt (fn D => fn L => BNF_Def.mk_rel_of_bnf D L L)
+                                      param_eqs x_ty
+             else Var(("eq", 1), x_ty --> x_ty --> HOLogic.boolT)
+   in (ant, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj x_ty model_ty\<close> $ eq_term $ T_term), ctxt)
+  end
 
-      val insts = (case hint of SOME H => [(("eq",0), Thm.cterm_of ctxt02 H)] | _ => [])
-      val rule = Drule.infer_instantiate ctxt'v
-                  ((("T",0), Thm.cterm_of ctxt'v T_term) ::
-                   (("Ant",0), Thm.cterm_of ctxt'v ant) ::
-                   (("eq",0), Thm.cterm_of ctxt'v eq_term) :: insts)
-                  @{thm \<phi>Equiv_Obj_rule}
+(*
+fun gen_ants_obj_equal ctxt (x_ty, arg_tys, model_ty, hint0) =
+  let fun mk_hint *)
 
-      val ind0 = Phi_Type_Algebra.mk_ind_dest_ToA ctxt'v phi (fn (x,T) =>
-        let val x' = Term.incr_bv (1,0,x)
-            val T' = Term.incr_bv (1,0,T)
-         in \<^Const>\<open>implies\<close>
-              $ Phi_Help.list_mk_conj (fst (mk_Ants ctxt'v rev_arg_tys rev_eq_names [] [] T))
-              $ (Const(\<^const_name>\<open>All\<close>, (x_ty --> HOLogic.boolT) --> HOLogic.boolT) $ Abs ("", x_ty, 
-                    \<^Const>\<open>implies\<close>
-                      $ (eq_term $ x' $ Bound 0)
-                      $ (\<^Const>\<open>Imply model_ty\<close>
-                            $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x' $ T')
-                            $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T')
-                            $ \<^Const>\<open>True\<close>)))
-        end)
+fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
+  let val ctxt0 = Context.proof_of thy
+      val (rule, ind0, phi, ctxt) =
+            mk_rule_by_guess_or_hint (unify_hint_obj_eq, guess_property_obj_eq, [0])
+                                     @{thm \<phi>Equiv_Obj_rule} phi0 hint0 ctxt0
+
       (*val P_term = fold_rev (fn T => fn X => Abs("",T,X)) arg_tys \<^const>\<open>True\<close>*)
               (*|> Drule.infer_instantiate ctxt [(("P",0), Thm.cterm_of ctxt P_term)]
               |> Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn _ =>
@@ -357,10 +396,13 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
                               Simplifier.asm_rewrite (Normalize_ToA.equip ctxt addsimps (#equations phi))
                            ))) ctm
                      | _ => Conv.all_conv ctm)
-              ) (K Conv.all_conv) ctxt'v
+              ) (K Conv.all_conv) ctxt
             ) ind0
 
-      val rule' = obj_equal_reasoner ctxt'v (singleton (Variable.export ctxt'v ctxt) (ind RS rule))
+      val ((inst,[rule't]), ctxt't) = Variable.import true [rule] ctxt
+      val ind't = Thm.instantiate inst ind
+      val rule' = obj_equal_reasoner ctxt (singleton (Variable.export ctxt't ctxt)
+                                            (ind't RS rule't))
 (*
       val ctxt'r = Context.proof_map (Phi_Reasoner.adds (map (fn pat => {
                 name = \<^term>\<open>Local_\<phi>Equiv_Obj\<close>,
@@ -378,7 +420,7 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
       (*TODO: simplify the leading premises, expansion of existential quantification*)
 
       val rule'2 =
-       (if eq_term_given
+       (if is_some hint0 orelse #is_recursive phi
         then Phi_Sledgehammer_Solver.auto (SOME (#proof_id phi ^ "/obj_equal")) (ctxt, rule')
         else (@{thm Premise_I} RS rule')
           |> infer_eq ctxt

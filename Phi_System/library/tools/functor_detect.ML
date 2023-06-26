@@ -79,6 +79,7 @@ val lift_type_sort : theory -> typ * sort -> Type.tyenv
 
 (*make inductively destruction rule.*)
 val mk_ind_dest_ToA : Proof.context -> phi_type -> (term (*x*) * term (*T*) -> term) -> thm
+val mk_ind_dest_ToA_internal : Proof.context -> phi_type -> term -> thm
 
 val fix_phi_type : bool -> phi_type -> Proof.context ->
         (typ TVars.table * term Vars.table) *
@@ -548,6 +549,23 @@ fun lift_type_sort thy (ty,sort) =
            handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
   end
 
+fun mk_ind_dest_ToA_internal ctxt (phi : phi_type) prop0 = (*not tested*)
+  let val typ = Term.fastype_of (#term phi)
+      fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
+        | parse_typ args \<^Type>\<open>fun a r\<close> = parse_typ (a::args) r
+        | parse_typ _ _ = error "Internal bug"
+      val (rev_arg_tys, x_ty, _) = parse_typ [] typ
+
+      val prop = prop0
+              |> (fn X => Abs("",x_ty,X))
+              |> fold (fn T => fn X => Abs("",T,X)) rev_arg_tys
+      val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of (#ind phi)))
+                        of Var v => v
+                         | _ => error "Bad induction rule")
+   in Thm.instantiate (TVars.empty, Vars.make [(prop_var, Thm.cterm_of ctxt prop)]) (#ind phi)
+        |> Phi_Help.beta_eta_contract
+  end
+
 fun mk_ind_dest_ToA ctxt phi gen_prop = (*not tested*)
   let val typ = Term.fastype_of (#term phi)
       fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
@@ -627,7 +645,8 @@ fun add_type (def, pos, hints) generic =
                           of _ $ _ => Thm.apply (mk_P (Thm.dest_fun ctm)) (Thm.dest_arg ctm)
                            | _ => let val P_ty = (binder_types (Thm.typ_of_cterm ctm) ---> \<^typ>\<open>bool\<close>)
                                               |> Thm.ctyp_of ctxt
-                                   in Thm.var (("P",1), P_ty)
+                                      val i = Thm.maxidx_of_cterm ctm + 1
+                                   in Thm.var (("P",i), P_ty)
                                   end
                       val T_x = Thm.apply \<^cterm>\<open>Trueprop\<close> (Thm.apply (mk_P (Thm.dest_arg LHS)) x)
                    in Thm.trivial T_x
@@ -638,6 +657,8 @@ fun add_type (def, pos, hints) generic =
                         | _ => List.nth (#pinducts info, idx))
             )
             |> Conv.fconv_rule (add_premise_tag ctxt)
+            |> Drule.zero_var_indexes
+            |> Phi_Help.beta_eta_contract
             |> Thm.trim_context
 
       val intro_ToA = map (fn eq => (eq RS @{thm \<phi>intro_transformation})
@@ -716,36 +737,6 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
 
 local
 
-fun check_algebra_hints ctxt0 phi_term hints =
-  let val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern ctxt0
-      val T_term = singleton (Variable.export_terms ctxt' ctxt) T_term'
-      fun get_arity ret \<^Type>\<open>fun _ T\<close> = get_arity (ret+1) T
-        | get_arity ret \<^Type>\<open>bool\<close> = ret
-        | get_arity _ _ = error "The given hint is not an algebraic property."
-      fun head_of (Const("_type_constraint_", _) $ X) = head_of X
-        | head_of (X $ _) = head_of X
-        | head_of X = X
-      val hints_arity = map (fn hint =>
-            get_arity 0 (Sign.the_const_type (Proof_Context.theory_of ctxt)
-                                             (fst (raw_term_name_typ (head_of hint))))) hints
-      fun pad_term arity (\<^Const>\<open>Pure.imp\<close> $ LHS $ X) =
-            \<^Const>\<open>Pure.imp\<close> $ LHS $ pad_term arity X
-        | pad_term arity term =
-            let fun term_arity ret (Const("_type_constraint_", _) $ X) = term_arity ret X
-                  | term_arity ret (X $ _) = term_arity (ret+1) X
-                  | term_arity ret _ = ret
-                val d = arity - term_arity 0 term
-                val _ = if d < 0 then error "Internal bug 3bc2ce92-edce-427a-a401-24152b11bc81"
-                                 else ()
-                val idx = Term.maxidx_of_term term
-                (* fun subst_dummy () *)
-             in term
-             |> funpow d (fn X => X $ T_term)
-            end
-   in Syntax.check_terms ctxt'0 (map2 pad_term hints_arity hints)
-  end
-
-
 fun check_algebra_hints ctxt const hints =
   let val ctxt'0 = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
       val ((_, T_term', _, _, _), ctxt') = fix_phi_term_params const ctxt'0
@@ -761,6 +752,8 @@ fun check_algebra_hints ctxt const hints =
                                              (fst (raw_term_name_typ (head_of hint))))) hints
       fun pad_term arity (\<^Const>\<open>Pure.imp\<close> $ LHS $ X) =
             \<^Const>\<open>Pure.imp\<close> $ LHS $ pad_term arity X
+        | pad_term arity (\<^Const>\<open>Trueprop\<close> $ X) =
+            \<^Const>\<open>Trueprop\<close> $ pad_term arity X
         | pad_term arity term =
             let fun term_arity ret (Const("_type_constraint_", _) $ X) = term_arity ret X
                   | term_arity ret (X $ _) = term_arity (ret+1) X
@@ -768,12 +761,11 @@ fun check_algebra_hints ctxt const hints =
                 val d = arity - term_arity 0 term
                 val _ = if d < 0 then error "Internal bug 3bc2ce92-edce-427a-a401-24152b11bc81"
                                  else ()
-                val idx = Term.maxidx_of_term term
                 (* fun subst_dummy () *)
              in term
              |> funpow d (fn X => X $ Logic.incr_indexes ([],[], Term.maxidx_of_term X + 1) T_term)
             end
-   in Syntax.check_terms ctxt'0 (map2 pad_term hints_arity hints)
+   in Syntax.check_props ctxt'0 (map2 pad_term hints_arity hints)
   end
 
 (*make (x : T) \<equiv> ...  to T x \<equiv> ...*)

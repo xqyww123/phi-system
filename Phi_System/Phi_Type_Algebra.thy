@@ -61,12 +61,14 @@ subsubsection \<open>Inhabitance\<close>
 definition \<open>Inhabitance_Functor F f \<longleftrightarrow> (\<forall>T x. Inhabited(x \<Ztypecolon> F T) \<longrightarrow> Inhabited(f x \<Ztypecolon> T))\<close>
 (* definition \<open>Inhabitance_Functor2 F f g \<longleftrightarrow> (\<forall>T U x. Inhabited(x \<Ztypecolon> F T U) \<longrightarrow> Inhabited(f x \<Ztypecolon> T) \<and> Inhabited(g x \<Ztypecolon> U))\<close> *)
 
-subsubsection \<open>Additive Disjunction\<close>
+(* subsubsection \<open>Additive Disjunction\<close>
+
+Is still useful, may need a specific automation, not implied from TF
 
 locale Union_Functor = (*is this necessary?*)
   fixes Fa :: \<open>('e, 'a \<Rightarrow> 'd) \<phi> \<Rightarrow> ('c, 'a \<Rightarrow> 'b) \<phi>\<close>
     and Fb :: \<open>('e,'d) \<phi> \<Rightarrow> ('c, 'b) \<phi>\<close>
-  assumes union_functor[simp]: \<open>Fa (ExTyp T) = ExTyp (\<lambda>c. Fb (T c))\<close>
+  assumes union_functor[simp]: \<open>Fa (ExTyp T) = ExTyp (\<lambda>c. Fb (T c))\<close> *)
 
 
 subsubsection \<open>Separation\<close>
@@ -684,7 +686,8 @@ lemma Transformation_Functor_L_simp_cong:
             THEN spec[where x=\<open>\<lambda>_ c. c = x\<close>], simplified]
     using prems(2) prems(3) by blast
   .
-  
+
+
 
 locale Transformation_Functor_L = \<phi>Type_Functor Fa
   for Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
@@ -913,6 +916,7 @@ thm imp_conjR[folded atomize_eq, symmetric]
 thm simp_thms(17)[folded atomize_eq]
 thm simp_thms(15)[folded atomize_eq]
 
+
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
 thm Action_Tag_D[where A = \<open>ToSA\<close>]
@@ -924,16 +928,47 @@ lemmas [\<phi>constraint_expansion] = HOL.simp_thms ex_simps[symmetric]
           list_all2_Cons1 list_all2_Nil
 lemmas [\<phi>type_algebra_normalize_ToA_ss] = HOL.simp_thms implies_refl
 
+
 subsubsection \<open>Transformation Functor\<close>
 
 lemma
-  \<open>(\<And>T U x g a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<Longrightarrow> a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)
+  \<open>(\<And>T U g x. Ant \<longrightarrow>
+               (\<forall>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b) \<longrightarrow> \<comment> \<open>split D\<close>
+               (x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y))
+\<Longrightarrow> Ant
 \<Longrightarrow> Transformation_Functor F1 F2 D mapper\<close>
+  unfolding Transformation_Functor_def
+  by simp
 
-thm Transformation_Functor_def
-thm atomize_imp
 
-(* ML_file \<open>library/system/phi_type_definition.ML\<close> *)
+subsubsection \<open>Inhabitance\<close>
+
+lemma
+  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x)
+\<Longrightarrow> Ant
+\<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x\<close>
+  by simp
+
+
+subsubsection \<open>Sep\<close>
+
+lemma
+  \<open> (\<And>T U z. Ant \<longrightarrow> (\<forall>x y. z = w(x,y) \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Fc (T \<^emph> U))))
+\<Longrightarrow> Ant
+\<Longrightarrow> Sep_Type_Functor_zip Fa Fb Fc w \<close>
+  unfolding Sep_Type_Functor_zip_def \<phi>Prod_expn'
+  by simp
+
+(*
+lemma
+  \<open> (\<And>T U z. Ant \<longrightarrow> (\<forall>x y. z = w(x,y) \<longrightarrow> (z \<Ztypecolon> Fc (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)))
+\<Longrightarrow> Ant
+\<Longrightarrow> Sep_Type_Functor_unzip Fa Fb Fc w \<close>
+  unfolding Sep_Type_Functor_unzip_def \<phi>Prod_expn'
+  by simp
+
+lemma
+  \<open> Scala_Semimodule_Functor F  \<close> *)
 
 
 end
