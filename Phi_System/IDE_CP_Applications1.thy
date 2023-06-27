@@ -4,7 +4,7 @@ text \<open>In this part, we build simple applications based on IDE-CP directly,
   advanced reasoning processes.\<close>
 
 theory IDE_CP_Applications1
-  imports Phi_Type_Algebra
+  imports IDE_CP_Core Phi_Algebras.Map_of_Tree
   keywords "val" :: quasi_command
   abbrevs "<vals>" = "\<v>\<a>\<l>s"
 begin
@@ -213,6 +213,75 @@ lemma [\<phi>reason 1010]:
   by (simp add: \<phi>expns, blast)
 
 
+subsubsection \<open>Actions for every \<phi>-type item\<close>
+
+consts \<A>_every_item' :: \<open>action \<Rightarrow> action\<close>
+
+abbreviation \<open>\<A>_every_item A \<equiv> \<A>_simple_MTF (\<A>_every_item' A)\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_every_item' _\<close> \<Rightarrow>
+      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action \<A>_every_item' _\<close>    (100)
+  and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<a>\<n>\<d> _ @action \<A>_every_item' _\<close> \<Rightarrow>
+      \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<a>\<n>\<d> _ @action \<A>_every_item' _\<close>    (100)
+]]
+
+
+paragraph \<open>Implication\<close>
+
+lemma [\<phi>reason 1050]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_every_item' A
+\<Longrightarrow> X \<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<s>\<u>\<b>\<j> Q \<a>\<n>\<d> P @action \<A>_every_item' A\<close>
+  unfolding Action_Tag_def
+  using Subjection_transformation .
+
+lemma [\<phi>reason 1050]:
+  \<open> (\<And>c. X c \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y c \<a>\<n>\<d> P @action \<A>_every_item' A)
+\<Longrightarrow> ExSet X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ExSet Y \<a>\<n>\<d> P @action \<A>_every_item' A\<close>
+  unfolding Action_Tag_def
+  using ExSet_transformation .
+
+lemma [\<phi>reason 1050]:
+  \<open> R * X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * Y \<a>\<n>\<d> P @action \<A>_every_item' A
+\<Longrightarrow> R * (X \<s>\<u>\<b>\<j> Q) \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * (Y \<s>\<u>\<b>\<j> Q) \<a>\<n>\<d> P @action \<A>_every_item' A\<close>
+  unfolding Action_Tag_def
+  by (simp add: Subjection_transformation)
+
+lemma [\<phi>reason 1050]:
+  \<open> (\<And>c. R * X c \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * Y c \<a>\<n>\<d> P @action \<A>_every_item' A)
+\<Longrightarrow> R * ExSet X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * ExSet Y \<a>\<n>\<d> P @action \<A>_every_item' A\<close>
+  unfolding Action_Tag_def
+  by (simp add: ExSet_transformation)
+
+lemma [\<phi>reason 1050]:
+  \<open> TECHNICAL X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action \<A>_every_item' A\<close>
+  \<comment> \<open>Never bind technical items\<close>
+  unfolding Action_Tag_def Technical_def by simp
+
+lemma [\<phi>reason 1020]:
+  \<open> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> P @action \<A>_every_item' A
+\<Longrightarrow> R * (TECHNICAL X) \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * (TECHNICAL X) \<a>\<n>\<d> P @action \<A>_every_item' A\<close>
+  \<comment> \<open>Never bind technical items\<close>
+  unfolding Action_Tag_def
+  using implies_right_prod .
+
+lemma [\<phi>reason 1010]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action A
+\<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' \<a>\<n>\<d> Q @action \<A>_every_item' A
+\<Longrightarrow> R * (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> R' * Y \<a>\<n>\<d> P \<and> Q @action \<A>_every_item' A\<close>
+  unfolding Action_Tag_def
+  using implies_prod_bi_prod .
+
+lemma [\<phi>reason 1005]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action A
+\<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_every_item' A\<close>
+  unfolding Action_Tag_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action \<A>_every_item' A\<close>
+  unfolding Action_Tag_def by simp
+
+
 subsubsection \<open>Actions of multi-arity\<close>
 
 text \<open>for transformations containing remainder, of form \<open>?R\<heavy_comma> X \<longmapsto> ?R\<heavy_comma> Y\<close>
@@ -310,27 +379,6 @@ lemma [\<phi>reason 30]:
 \<Longrightarrow> P @action \<A>_structural_2_1 A\<close>
   unfolding Action_Tag_def .
 
-paragraph \<open>Default rules\<close>
-
-lemma (in Transformation_Functor_L)
-      [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action \<A>_structural _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>_structural Act)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. \<forall>b. g a b \<longrightarrow> b \<in> R x)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>_structural Act \<close>
-  unfolding Action_Tag_def
-  using transformation .
-
-lemma (in Functional_Transformation_Functor_L)
-      [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action \<A>_structural _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action \<A>_structural Act)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. f a \<in> R x)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action \<A>_structural Act \<close>
-  unfolding Action_Tag_def
-  using functional_transformation[unfolded Argument_def] .
-
-
 
 section \<open>Basic Applications\<close>
 
@@ -366,7 +414,7 @@ lemma [\<phi>reason 10]:
   unfolding Action_Tag_def .
 
 lemma [\<phi>reason 1]:
-  \<open> ERROR TEXT(\<open>Fail to transform\<close> X \<open>to\<close> S)
+  \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> S)
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action as S\<close>
   unfolding Action_Tag_def by blast
 
@@ -374,23 +422,6 @@ lemma [\<phi>reason 5000]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action as X\<close>
   unfolding Action_Tag_def using implies_refl .
 
-lemma (in Transformation_Functor_L)
-      [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action as _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action as Z)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a\<in>D x. \<forall>b. g a b \<longrightarrow> b \<in> R x)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action as Z \<close>
-  unfolding Action_Tag_def
-  using transformation .
-
-lemma (in Functional_Transformation_Functor_L)
-      [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action as _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action as Z)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a\<in>D x. f a \<in> R x)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action as Z \<close>
-  unfolding Action_Tag_def
-  using functional_transformation[unfolded Argument_def] .
 
 
 subsubsection \<open>To\<close>
@@ -419,7 +450,7 @@ lemma destruct_\<phi>app:
   unfolding Do_def Action_Tag_def .
 
 lemma [\<phi>reason 1]:
-  \<open> ERROR TEXT(\<open>Fail to transform\<close> X \<open>to \<phi>-type\<close> T)
+  \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to \<phi>-type\<close> T)
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action to T\<close>
   unfolding Action_Tag_def by blast
 
@@ -432,37 +463,6 @@ lemma [\<phi>reason 5000]:
   \<open> (x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x) @action to T\<close>
   unfolding Action_Tag_def by simp
 
-lemma (in Transformation_Functor_L)
-      [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action to _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to (Fb Z) \<close>
-  unfolding Action_Tag_def
-  using transformation .
-
-lemma (in Transformation_Functor_L)
-      [\<phi>reason default 36 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action to _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to Z \<close>
-  unfolding Action_Tag_def
-  using transformation .
-
-lemma (in Functional_Transformation_Functor_L)
-      [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action to Z)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action to (Fb Z) \<close>
-  unfolding Action_Tag_def
-  using functional_transformation[unfolded Argument_def] .
-
-lemma (in Functional_Transformation_Functor_L)
-      [\<phi>reason default 31 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action to Z)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action to Z \<close>
-  unfolding Action_Tag_def
-  using functional_transformation[unfolded Argument_def] .
 
 
 subsection \<open>Case Analysis\<close>

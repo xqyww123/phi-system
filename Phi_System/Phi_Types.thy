@@ -677,7 +677,7 @@ paragraph \<open>Simplification\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>Prod_simp_cong ("(x,y) \<Ztypecolon> (T \<^emph> U)") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Prod_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>Prod_simp_cong} ctxt)
 \<close>*)
 
 lemma [simp]:
@@ -784,13 +784,21 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-         
+
+term prod
+
+declare  [[\<phi>trace_reasoning = 2]]
+                                        
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
+ 
+\<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
+  where \<open>([] \<Ztypecolon> List2 T) = Void\<close>
+      | \<open>(x # l \<Ztypecolon> List2 T) = (prod (\<lambda>x. x \<Ztypecolon> T) (set x)\<heavy_comma> l \<Ztypecolon> List2 T)\<close>
 
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
-         
+          
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
 
@@ -878,7 +886,7 @@ lemma \<phi>MapAt_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>MapAt_simp_cong ("(x \<Ztypecolon> k \<^bold>\<rightarrow> T)") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>MapAt_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>MapAt_simp_cong} ctxt)
 \<close> *)
 
 paragraph \<open>Implication \& Action rules\<close>
@@ -1032,7 +1040,7 @@ lemma \<phi>MapAt_L_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>MapAt_L_simp_cong ("x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>MapAt_L_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>MapAt_L_simp_cong} ctxt)
 \<close>*)
 
 lemma \<phi>MapAt_L_At:
@@ -1360,7 +1368,7 @@ lemma \<phi>insertion_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>insertion_simp_cong ("x \<Ztypecolon> \<phi>insertion \<psi> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>insertion_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>insertion_simp_cong} ctxt)
 \<close>
 *)
 
@@ -1630,7 +1638,7 @@ lemma \<phi>Share_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>Share_simp_cong ("x \<Ztypecolon> n \<Znrres> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Share_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>Share_simp_cong} ctxt)
 \<close>*)
 
 
@@ -1778,7 +1786,7 @@ lemma [simp]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>Some_simp_cong ("x \<Ztypecolon> \<black_circle> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Some_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>Some_simp_cong} ctxt)
 \<close>*)
 
 lemma [\<phi>reason 1200]:

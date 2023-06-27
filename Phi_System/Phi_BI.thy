@@ -439,6 +439,11 @@ lemma ExSet_plus:
   \<open>ExSet (A + B) = ExSet A + ExSet B\<close>
   unfolding set_eq_iff by (simp_all add: \<phi>expns plus_fun) blast+
 
+ML_file \<open>library/tools/simproc_ExSet_expand_quantifier.ML\<close>
+
+ML \<open>\<^simproc>\<open>ExSet_expand_quantifier\<close>\<close>
+
+
 
 
 subsubsection \<open>Embedding in \<phi>-Type\<close>

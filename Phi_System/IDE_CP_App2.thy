@@ -58,7 +58,7 @@ lemma \<phi>Val_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>Val_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>Val_simp_cong} ctxt)
 \<close>
 
 subsection \<open>Algebraic Properties\<close>

@@ -1,5 +1,5 @@
 theory Phi_Type_Algebra
-  imports IDE_CP_Core Phi_Algebras.Map_of_Tree
+  imports IDE_CP_Applications1
   keywords "\<phi>type_def" :: thy_defn
 begin
 
@@ -326,18 +326,24 @@ lemma \<phi>intro_transformation:
 ML_file \<open>library/tools/functor_detect.ML\<close>
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
 
-(*
+
 datatype yyy = YLeaf nat | YNode nat yyy
 datatype ('a,'b) xxx = Leaf 'a | Node nat \<open>('a,'b) xxx\<close>
 
 term xxx.rel_xxx
+thm xxx.set
 
 datatype 'a zzz = AA
 
 ML \<open>val x = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>xxx\<close>)
 val a = BNF_Def.lives_of_bnf x
 val s = BNF_Def.sets_of_bnf x
-val z = BNF_Def.mk_sets_of_bnf [[],[]] [[\<^typ>\<open>nat\<close>, \<^typ>\<open>int\<close>], [\<^typ>\<open>bool\<close>, \<^typ>\<open>int\<close>]] x\<close>
+val z = BNF_Def.mk_sets_of_bnf [[],[]] [[\<^typ>\<open>nat\<close>, \<^typ>\<open>int\<close>], [\<^typ>\<open>bool\<close>, \<^typ>\<open>int\<close>]] x
+val d = BNF_Def.set_transfer_of_bnf x\<close>
+
+ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))\<close>
+
+ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
 typ \<open>'a llist\<close>
 ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>yyy\<close>\<close>
@@ -346,7 +352,7 @@ ML \<open>val bnf = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<cl
 val x = BNF_Def.deads_of_bnf bnf
 val z = BNF_Def.mk_sets_of_bnf [[]] [[\<^typ>\<open>nat\<close>]] bnf\<close>
 ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>option\<close>\<close>
-*)
+
 (* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
           \<phi>inductive_destruction_rule_from_direct_definition'
           \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
@@ -717,12 +723,42 @@ declaration \<open>fn m => fn ctxt =>
          in Simplifier.map_ss (fn ctxt =>
               ctxt addsimprocs [Simplifier.cert_simproc thy "Transformation_Functor_L.\<phi>simp_cong" {
                 lhss = [LHS],
-                proc = K (Phi_SimpCong.simproc rule')
+                proc = K (Phi_SimpProc.cong rule')
               }]
             ) ctxt
         end
       else ctxt
   end\<close>
+
+lemma [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action \<A>_structural _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>_structural Act)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. \<forall>b. g a b \<longrightarrow> b \<in> R x)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>_structural Act \<close>
+  unfolding Action_Tag_def
+  using transformation .
+
+lemma [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action as _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action as Z)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a\<in>D x. \<forall>b. g a b \<longrightarrow> b \<in> R x)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action as Z \<close>
+  unfolding Action_Tag_def
+  using transformation .
+
+lemma [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action to _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to (Fb Z) \<close>
+  unfolding Action_Tag_def
+  using transformation .
+
+lemma [\<phi>reason default 36 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action to _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to Z \<close>
+  unfolding Action_Tag_def
+  using transformation .
 
 end
 
@@ -774,6 +810,37 @@ lemma functional_transformation:
           THEN spec[where x=\<open>(\<lambda>a b. b = f a \<and> P a)\<close>], unfolded functional_mapper,
           simplified]
   by blast
+
+lemma [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action \<A>_structural _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action \<A>_structural Act)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. f a \<in> R x)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action \<A>_structural Act \<close>
+  unfolding Action_Tag_def
+  using functional_transformation[unfolded Argument_def] .
+
+lemma [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action as _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action as Z)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a\<in>D x. f a \<in> R x)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action as Z \<close>
+  unfolding Action_Tag_def
+  using functional_transformation[unfolded Argument_def] .
+
+lemma [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action to Z)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action to (Fb Z) \<close>
+  unfolding Action_Tag_def
+  using functional_transformation[unfolded Argument_def] .
+
+lemma [\<phi>reason default 31 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action to Z)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action to Z \<close>
+  unfolding Action_Tag_def
+  using functional_transformation[unfolded Argument_def] .
+
 
 end
 
@@ -916,31 +983,40 @@ thm imp_conjR[folded atomize_eq, symmetric]
 thm simp_thms(17)[folded atomize_eq]
 thm simp_thms(15)[folded atomize_eq]
 
+ML \<open>\<^term>\<open>{x}\<close>\<close>
+term Set.bind
 
-ML_file \<open>library/automation/type_algebra.ML\<close>
+
+
 
 thm Action_Tag_D[where A = \<open>ToSA\<close>]
-
-hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end
-          \<phi>Equiv_Obj_rule_move_all2
-
-lemmas [\<phi>constraint_expansion] = HOL.simp_thms ex_simps[symmetric]
-          list_all2_Cons1 list_all2_Nil
-lemmas [\<phi>type_algebra_normalize_ToA_ss] = HOL.simp_thms implies_refl
 
 
 subsubsection \<open>Transformation Functor\<close>
 
-lemma
+consts \<phi>TA_ind_target :: action
+
+lemma \<phi>TA_TF_rule:
   \<open>(\<And>T U g x. Ant \<longrightarrow>
                (\<forall>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b) \<longrightarrow> \<comment> \<open>split D\<close>
-               (x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y))
+               (x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Transformation_Functor F1 F2 D mapper\<close>
-  unfolding Transformation_Functor_def
+  unfolding Transformation_Functor_def Action_Tag_def
   by simp
 
+lemma \<phi>TA_TF_rule_step:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X' \<a>\<n>\<d> Any @action \<A>_every_item (to U)
+\<Longrightarrow> X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action ToSA
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y\<close>
+  unfolding Action_Tag_def
+  by (simp add: Imply_def)
+  
+
 term set
+term to
 
 subsubsection \<open>Inhabitance\<close>
 
@@ -955,10 +1031,48 @@ subsubsection \<open>Sep\<close>
 
 lemma
   \<open> (\<And>T U z. Ant \<longrightarrow> (\<forall>x y. z = w(x,y) \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Fc (T \<^emph> U))))
+\<Longrightarrow> \<r>Success
 \<Longrightarrow> Ant
 \<Longrightarrow> Sep_Type_Functor_zip Fa Fb Fc w \<close>
   unfolding Sep_Type_Functor_zip_def \<phi>Prod_expn'
   by simp
+
+
+lemma Ball_set_cons:
+  \<open>(\<forall>a \<in> set (x # l). P a) \<longleftrightarrow> (\<forall>a \<in> set l. P a) \<and> P x\<close>
+  by auto
+
+
+ML_file \<open>library/automation/type_algebra.ML\<close>
+
+hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end
+          \<phi>Equiv_Obj_rule_move_all2
+
+lemmas [\<phi>constraint_expansion] = HOL.simp_thms ex_simps[symmetric]
+          ExSet_simps
+          FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
+          list_all2_Cons1 list_all2_Nil Ball_set_cons
+
+lemmas [\<phi>type_algebra_normalize_ToA_ss] = HOL.simp_thms implies_refl
+
+thm FSet.ball_simps
+thm FSet.ball_simps(5-7)
+thm Set.ball_simps
+thm Set.ball_simps(5-7,9)
+
+lemma
+  \<open>Ball (x insert S) \<close>
+
+thm set_simps
+thm list.set
+
+
+ML \<open>\<^simproc>\<open>defined_Ex\<close>\<close>
+ML \<open>Quantifier1.rearrange_Ex\<close>
+thm ExSet_simps
+thm ex_simps
+
+
 
 (*
 lemma

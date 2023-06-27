@@ -236,7 +236,7 @@ lemma \<phi>_simp_cong[folded atomize_eq]:
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
 simproc_setup \<phi>\<phi>_simp_cong ("x \<Ztypecolon> \<phi> T") = \<open>
-  K (fn ctxt => Phi_SimpCong.simproc @{thm \<phi>_simp_cong} ctxt)
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>_simp_cong} ctxt)
 \<close>
 
 paragraph \<open>Synthesis for moving\<close>

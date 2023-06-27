@@ -4,7 +4,7 @@ text \<open>The part includes some reasoning processes that can already be defin
   after the IDE-CP is ready.\<close>
 
 theory IDE_CP_Reasoning2
-  imports IDE_CP_Applications1
+  imports Phi_Type_Algebra
 begin
 
 section \<open>Small Reasoning Processes\<close>

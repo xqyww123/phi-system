@@ -496,10 +496,17 @@ fun conv_def_to_equaltion ctxt def =
                           | _ $ _ => Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
                                         HOLogic.Trueprop_conv (HOLogic.eq_conv
                                           (fn ctm =>
-                                            Conv.rewr_conv (Drule.infer_instantiate ctxt
-                                                [(("T",0),Thm.dest_fun ctm),
-                                                 (("x",0),Thm.dest_arg ctm)]
-                                                @{thm \<phi>Type_def[symmetric, folded atomize_eq]}) ctm)
+                                            let val T = Thm.dest_fun ctm
+                                                val x = Thm.dest_arg ctm
+                                                val (b,a) = Phi_Syntax.dest_phi_type_ty_c (Thm.ctyp_of_cterm T)
+                                                val rule = Thm.instantiate
+                                                              (TVars.make [((("'b",0),\<^sort>\<open>type\<close>),b),
+                                                                           ((("'a",0),\<^sort>\<open>type\<close>),a)],
+                                                               Vars.make [((("T",0),Thm.typ_of_cterm T),T),
+                                                                          ((("x",0),Thm.typ_of_cterm x),x)])
+                                                              @{thm \<phi>Type_def[symmetric, folded atomize_eq]}
+                                             in Conv.rewr_conv rule ctm
+                                            end)
                                           Conv.all_conv)
                                      ) ctxt) def
                           | _ => raise THM ("Not a \<phi>-type definition", 0, [def]))
@@ -809,7 +816,9 @@ fun gen_add_fun pos raw_hints add (generic : generic_theory) =
                    | NONE => error "No \<phi>-type is defined.")
     val hints = check_algebra_hints (Context.proof_of generic) const raw_hints
    in generic'1
-   |> Context.mapping_result (Named_Target.theory_map_result (K I) prove_termination) prove_termination
+   |> Context.mapping_result (
+        Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
+      ) prove_termination
    |-> (fn info => add_type (WFREC_DEF (fst (raw_term_name_typ const), info), pos, hints) #> snd)
   end
 
