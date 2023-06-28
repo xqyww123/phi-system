@@ -97,7 +97,7 @@ lemma [\<phi>inhabitance_rule]:
 lemma \<phi>Fun_expn[\<phi>expns]:
   \<open>v \<in> (x \<Ztypecolon> \<phi>Fun f) \<longleftrightarrow> v = f x \<close>
   unfolding \<phi>Fun_def Itself_def \<phi>Type_def by simp
- 
+  
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x 
 \<Longrightarrow> v \<Ztypecolon> Itself \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>Fun f\<close> 
@@ -789,7 +789,7 @@ subsubsection \<open>By Key\<close>
 term prod
 
 declare  [[\<phi>trace_reasoning = 1]]
-                                          
+                                                
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -797,26 +797,31 @@ declare  [[\<phi>trace_reasoning = 1]]
 
 print_\<phi>reasoners \<open>xaa \<Ztypecolon> List T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to U\<close> ?
 
-declare  [[\<phi>trace_reasoning = 3]]
- 
+declare  [[\<phi>trace_reasoning = 1]]
+   
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
 
+(* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List2 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List2 T) = (prod (\<lambda>x. x \<Ztypecolon> T) (set x)\<heavy_comma> l \<Ztypecolon> List2 T)\<close>
-
+*)
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
           
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
 
-    
+declare [[\<phi>trace_reasoning = 3, ML_print_depth = 1000]]
+ 
+ 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-   subj \<open>\<phi>Equiv_Obj (=)\<close>
+  subj \<open>\<phi>Equiv_Obj (=)\<close>
 
+print_\<phi>reasoners \<open>Functional_Transformation_Functor_L ((\<Zcomp>) _) ((\<Zcomp>) _) _ _ _ _ _\<close> ?
+ 
 lemma [\<phi>inhabitance_rule, elim!]: (*TODO: reason this automatically!*)
   \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)

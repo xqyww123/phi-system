@@ -617,19 +617,20 @@ declaration \<open>fn m => fn ctxt =>
                | _ => mk_rules ctm @ ret
       val ctm = Morphism.cterm m \<^cterm>\<open>F\<close>
       val rules = collect_rules [] ctm
-      val _ = Phi_Reasoner.info_pretty_generic ctxt 0 (fn () => let open Pretty in
+    (* val _ = Phi_Reasoner.info_pretty_generic ctxt 0 (fn () => let open Pretty in
                   chunks (str "Generated reasoning rules: " ::
                           map (fn rule => item [Syntax.pretty_term ctxt' (Thm.prop_of rule)]) rules)
-                end)
+                end) *)
    in Phi_Reasoner.add_intro_rules (
         map (fn rule => ([rule], \<^here>, Phi_Reasoner.LOCAL_CUT, 1000, [], [], NONE)) rules
         ) ctxt
   end
 \<close>
 
+(*
 lemma [\<phi>reason add!]:
   \<open>Type_Variant_of_the_Same_Functor F F\<close>
-  unfolding Type_Variant_of_the_Same_Functor_def ..
+  unfolding Type_Variant_of_the_Same_Functor_def ..*)
 
 (*priority of the 2-arity functor: 32
   priority of the n-arity functor: 3n
@@ -693,8 +694,22 @@ lemma Transformation_Functor_L_simp_cong:
     using prems(2) prems(3) by blast
   .
 
+attribute_setup \<phi>TA_internal_simplify_special_cases = \<open>Scan.succeed (
+  let fun rule_attribute f (x, th) =
+            if Thm.is_free_dummy th
+            then (NONE, NONE)
+            else (SOME x, SOME (f x th))
+   in rule_attribute (fn generic => fn rule =>
+        let val ctxt = Context.proof_of generic
+            val sctxt = Simplifier.clear_simpset ctxt addsimps @{thms meta_Ball_simp}
+            val rule' = Simplifier.full_simplify sctxt rule
+                      |> Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt
+         in rule'
+        end)
+  end
+)\<close>
 
-
+ 
 locale Transformation_Functor_L = \<phi>Type_Functor Fa
   for Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
 + fixes Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
@@ -705,7 +720,8 @@ locale Transformation_Functor_L = \<phi>Type_Functor Fa
     \<open>Prem \<Longrightarrow> Transformation_Functor Fa Fb D mapper\<close>
 begin
 
-lemma transformation[\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Fb _ \<s>\<u>\<b>\<j> y. _\<close>]:
+lemma transformation[\<phi>TA_internal_simplify_special_cases,
+                     \<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Fb _ \<s>\<u>\<b>\<j> y. _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y\<close>
@@ -730,30 +746,32 @@ declaration \<open>fn m => fn ctxt =>
       else ctxt
   end\<close>
 
-lemma [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action \<A>_structural _\<close>]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action \<A>_structural _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>_structural Act)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. \<forall>b. g a b \<longrightarrow> b \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>_structural Act \<close>
   unfolding Action_Tag_def
   using transformation .
 
-lemma [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action as _\<close>]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action as _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action as Z)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a\<in>D x. \<forall>b. g a b \<longrightarrow> b \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action as Z \<close>
   unfolding Action_Tag_def
   using transformation .
 
-lemma [\<phi>reason default 40]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 40]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to (Fb Z) \<close>
   unfolding Action_Tag_def
   using transformation .
 
-lemma [\<phi>reason default 36]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 36]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to Z \<close>
@@ -788,10 +806,10 @@ lemma [\<phi>reason add]:
   \<open>Functional_Transformation_Functor_L Fa Fb D mapper Prem pred_mapper func_mapper\<close>
   by (simp add: Functional_Transformation_Functor_L_axioms)
 
-lemma [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Fb _ \<a>\<n>\<d> _\<close>]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Fb _ \<a>\<n>\<d> _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. f a \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x\<close>
   unfolding meta_Ball_def Premise_def
   using Transformation_Functor[unfolded Transformation_Functor_def,
@@ -811,30 +829,32 @@ lemma functional_transformation:
           simplified]
   by blast
 
-lemma [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action \<A>_structural _\<close>]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action \<A>_structural _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action \<A>_structural Act)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. f a \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action \<A>_structural Act \<close>
   unfolding Action_Tag_def
   using functional_transformation[unfolded Argument_def] .
 
-lemma [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action as _\<close>]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action as _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action as Z)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a\<in>D x. f a \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action as Z \<close>
   unfolding Action_Tag_def
   using functional_transformation[unfolded Argument_def] .
 
-lemma [\<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action to Z)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action to (Fb Z) \<close>
   unfolding Action_Tag_def
   using functional_transformation[unfolded Argument_def] .
 
-lemma [\<phi>reason default 31 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 31 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action to Z)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action to Z \<close>
@@ -994,23 +1014,32 @@ thm Action_Tag_D[where A = \<open>ToSA\<close>]
 
 subsubsection \<open>Transformation Functor\<close>
 
-consts \<phi>TA_ind_target :: action
+consts \<phi>TA_ind_target :: \<open>action \<Rightarrow> action\<close>
 
 lemma \<phi>TA_TF_rule:
   \<open>(\<And>T U g x. Ant \<longrightarrow>
-               (\<forall>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b) \<longrightarrow> \<comment> \<open>split D\<close>
-               (x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target)
+               (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<longrightarrow> (a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)) \<longrightarrow> \<comment> \<open>split D\<close>
+               (x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (to U))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Transformation_Functor F1 F2 D mapper\<close>
-  unfolding Transformation_Functor_def Action_Tag_def
+  unfolding Transformation_Functor_def Action_Tag_def Ball_def Premise_def
   by simp
+
+lemma \<phi>TA_TF_rewr:
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x. P x \<longrightarrow> A2 x) \<longrightarrow> C @action \<phi>TA_ind_target A)
+\<equiv> (Ant \<Longrightarrow> (\<And>x. P x \<Longrightarrow> A2 x @action A) \<Longrightarrow> C @action A)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all .
+
+lemma \<phi>TA_TF_pattern_IH:
+  \<open> a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action A
+\<Longrightarrow> PROP Pure.term (\<And>a \<in> S. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Any a \<a>\<n>\<d> Any' a @action A)\<close> .
 
 lemma \<phi>TA_TF_rule_step:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X' \<a>\<n>\<d> Any @action \<A>_every_item (to U)
 \<Longrightarrow> X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action ToSA
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y\<close>
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action to U\<close>
   unfolding Action_Tag_def
   by (simp add: Imply_def)
   
@@ -1042,7 +1071,7 @@ lemma Ball_set_cons:
   \<open>(\<forall>a \<in> set (x # l). P a) \<longleftrightarrow> (\<forall>a \<in> set l. P a) \<and> P x\<close>
   by auto
 
-
+                                    
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
 hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end

@@ -759,7 +759,7 @@ setup \<open>Useful_Thms.setup\<close>
 ML_file \<open>library/PLPR_Syntax.ML\<close>
 
 lemma contract_premise_imp:
-  \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
+  \<open>(Premise mode' P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
   unfolding Premise_def by (rule, rule, simp+)
 
 lemma contract_drop_waste:
@@ -767,7 +767,7 @@ lemma contract_drop_waste:
   unfolding Pure.prop_def by simp
 
 lemma contract_obligations:
-  "(Premise mode P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> PROP C) \<equiv> (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q \<Longrightarrow> PROP C)"
+  "(Premise mode' P \<Longrightarrow> Premise mode Q \<Longrightarrow> PROP C) \<equiv> (Premise mode (P \<and> Q) \<Longrightarrow> PROP C)"
   unfolding Premise_def by rule simp+
 
 lemma contract_premise_all:

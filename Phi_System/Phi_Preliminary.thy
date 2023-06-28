@@ -271,6 +271,11 @@ subsubsection \<open>Meta Ball\<close>
 definition meta_Ball :: \<open>'a set \<Rightarrow> ('a \<Rightarrow> prop) \<Rightarrow> prop\<close>
   where \<open>meta_Ball S P \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)\<close>
 
+lemma meta_Ball_D:
+  \<open> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)
+\<Longrightarrow> PROP meta_Ball S P\<close>
+  unfolding meta_Ball_def .
+
 definition meta_case_prod :: \<open>('a \<Rightarrow> 'b \<Rightarrow> prop) \<Rightarrow> ('a \<times> 'b \<Rightarrow> prop)\<close>
   where \<open>meta_case_prod f \<equiv> (\<lambda>x. f (fst x) (snd x))\<close>
 
@@ -297,6 +302,7 @@ lemma meta_Ball_simp[simp]:
 lemma Ball_for_reason:
   \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> A \<Longrightarrow> P x)\<close>
   unfolding atomize_imp atomize_all Ball_def Premise_def .
+  
 
 ML_file \<open>library/tools/case_prod_conv.ML\<close>
 

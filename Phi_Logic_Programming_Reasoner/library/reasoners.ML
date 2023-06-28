@@ -108,6 +108,66 @@ fun context_tactic_to_state_transition_opt tac (ctxt, sequent) =
     of SOME (th', _) => SOME (ctxt, th')
      | NONE => NONE
 
+(*** Defer ***)
+
+fun obligation_collect ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+          Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _)
+          $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _))
+          $ _
+         => (Conv.arg_conv obligation_collect then_conv
+             Conv.rewr_conv @{thm contract_premise_imp}) ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _)
+          $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _) $ _))
+          $ _
+         => (Conv.arg_conv obligation_collect then_conv
+             Conv.rewr_conv @{thm contract_premise_imp}) ctm
+     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
+         => (Conv.arg_conv obligation_collect then_conv
+             Conv.rewr_conv @{thm conjunction_imp[symmetric]}) ctm
+     | _ => raise CTERM ("unexpected proof obligation form", [ctm])
+
+fun obligation_conv_all ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
+        (Phi_Helper_Conv.meta_all_conv (obligation_conv_all o snd) ctxt then_conv
+          Conv.rewr_conv @{thm contract_premise_all}) ctm
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+          Conv.all_conv ctm
+     | _ => raise CTERM ("internal bug 6733574a-42dc-4592-a08e-ddc223bb6b94", [ctm])
+
+fun collect_obligation_premises ctxt thm = let open Conv
+  val rule1 = gconv_rule (Phi_Helper_Conv.meta_alls_conv (K (
+                obligation_collect then_conv Conv.rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
+              ) 1 thm
+   in (@{thm contract_drop_waste} RS rule1)
+   |> gconv_rule (obligation_conv_all ctxt) 1
+  end
+
+fun contract_obligations ctxt thm =
+  collect_obligation_premises ctxt thm
+    |> Conv.fconv_rule (Conv.rewr_conv @{thm contract_obligations})
+
+fun defer_antecedent contract ctxt thm =
+  let
+    val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
+          case tm of (_ $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _)) => true
+                   | _ => false)
+  in
+    if idx = ~1
+    then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
+    else Thm.permute_prems 1 idx thm
+      |> contract ctxt
+      |> Thm.permute_prems 0 (~idx)
+      |> Seq.single
+  end
+
+val defer_obligation_tac = defer_antecedent contract_obligations
+
 (*** Premise tac ***)
 
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
@@ -144,12 +204,14 @@ fun auto_obligation_solver1 (ctxt,sequent) =  (
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-fun safer_obligation_solver ctxt th =
-  case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
-    of SOME (_, \<^const>\<open>True\<close>) => Seq.single (@{thm Premise_True} RS th)
-     | SOME _ => apply ctxt (fn (ctxt,pre,aux,_) =>
-                    pre THEN HEADGOAL (Clasimp.clarsimp_tac (ctxt addsimps aux))) Safe_Solver th
-     | NONE => Seq.single th
+fun safer_obligation_solver ctxt th0 =
+  let val th = collect_obligation_premises ctxt th0
+   in case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
+        of SOME (_, \<^const>\<open>True\<close>) => Seq.single (@{thm Premise_True} RS th)
+         | SOME _ => apply ctxt (fn (ctxt,pre,aux,_) =>
+                        pre THEN HEADGOAL (fn s => fn x => Clasimp.clarsimp_tac (ctxt addsimps aux) s x)) Safe_Solver th
+         | NONE => Seq.single th
+  end
 
 val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver
 val safer_obligation_solver_opt = context_tactic_to_state_transition_opt safer_obligation_solver
@@ -171,59 +233,6 @@ fun safer_obligation_solver1 (ctxt,sequent) =
      | _ => raise THM ("auto_obligation_solver1: The leading antecedent of the given sequent \
               \is not a proof obligation.", 1, [sequent])
 
-fun obligation_conv ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-          Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
-     | Const(\<^const_name>\<open>Pure.imp\<close>, _)
-          $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _))
-          $ _
-         => (Conv.arg_conv obligation_conv then_conv
-             Conv.rewr_conv @{thm contract_premise_imp}) ctm
-     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
-         => (Conv.arg_conv obligation_conv then_conv
-             Conv.rewr_conv @{thm conjunction_imp[symmetric]}) ctm
-     | _ => raise CTERM ("unexpected proof obligation form", [ctm])
-
-fun obligation_conv_all ctxt ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
-        (Phi_Helper_Conv.meta_all_conv (obligation_conv_all o snd) ctxt then_conv
-          Conv.rewr_conv @{thm contract_premise_all}) ctm
-     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-          Conv.all_conv ctm
-     | _ => raise CTERM ("internal bug 6733574a-42dc-4592-a08e-ddc223bb6b94", [ctm])
-
-fun contract_obligations ctxt thm = let open Conv
-  val rule1 = gconv_rule (Phi_Helper_Conv.exhaustive_meta_all_conv (K (
-                obligation_conv then_conv Conv.rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
-              ) 1 thm
-(*val _ $ (_ $ (_ $ X) $ _) = Thm.major_prem_of rule1
-  val _ = case X
-            of Const(\<^const_name>\<open>True\<close>, _) => ()
-             | _ => warning "!!!" *)
-  val rule2 = (@{thm contract_drop_waste} RS rule1)
-            |> gconv_rule (obligation_conv_all ctxt) 1
-            |> fconv_rule (rewr_conv @{thm contract_obligations})
-   in rule2
-  end
-
-fun defer_antecedent contract ctxt thm =
-  let
-    val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
-          case tm of (_ $ (@{term Proof_Obligation} $ _)) => true
-                   | _ => false)
-  in
-    if idx = ~1
-    then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
-    else Thm.permute_prems 1 idx thm
-      |> contract ctxt
-      |> Thm.permute_prems 0 (~idx)
-      |> Seq.single
-  end
-
-val defer_obligation_tac = defer_antecedent contract_obligations
 
 
 (*fun declare_local_assume_reasoners sequent i *)

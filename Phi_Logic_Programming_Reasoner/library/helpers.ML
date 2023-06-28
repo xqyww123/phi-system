@@ -23,10 +23,12 @@ end
 
 signature PHI_HELPER_CONV = sig
 
+val may_Trueprop_conv : conv -> conv
+
 val inverse_eta_conv : conv
 val quant_conv : string -> (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
-val exhaustive_meta_all_conv : (Proof.context -> conv) -> Proof.context -> conv
+val meta_alls_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 
@@ -35,6 +37,11 @@ end
 
 structure Phi_Helper_Conv : PHI_HELPER_CONV = struct
 open Conv
+
+fun may_Trueprop_conv C ctm =
+  case Thm.term_of ctm
+    of \<^Const>\<open>Trueprop\<close> $ _ => Conv.arg_conv C ctm
+     | _ => C ctm
 
 val inverse_eta = Thm.eta_conversion \<^schematic_cterm>\<open>\<lambda>x. (?f::'a::{} \<Rightarrow> 'b::{}) x\<close>
                |> Thm.symmetric
@@ -54,9 +61,9 @@ fun meta_all_conv cv ctxt ct =
   | Const ("Pure.all", _) $ _ => arg_conv (inverse_eta_conv then_conv abs_conv cv ctxt) ct
   | _ => raise CTERM ("meta_all_conv", [ct]))
 
-fun exhaustive_meta_all_conv cv ctxt ctm =
+fun meta_alls_conv cv ctxt ctm =
   case Thm.term_of ctm
-    of Const ("Pure.all", _) $ _ => meta_all_conv (exhaustive_meta_all_conv cv o snd) ctxt ctm
+    of Const ("Pure.all", _) $ _ => meta_all_conv (meta_alls_conv cv o snd) ctxt ctm
      | _ => cv ctxt ctm
 
 fun is_strict_reflexive th = (op =) (Logic.dest_equals (Thm.prop_of th))

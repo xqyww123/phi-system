@@ -113,7 +113,7 @@ fun premises_conv Cp Cc ctxt ctm =
   case Thm.term_of ctm
     of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (premises_conv Cp Cc o snd) ctxt ctm
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (premises_conv Cp Cc ctxt) ctm
-     | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => HOLogic.Trueprop_conv (premises_conv Cp Cc ctxt) ctm
+     | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (premises_conv Cp Cc ctxt) ctm
      | Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
           Conv.combination_conv (Conv.arg_conv (Cp ctxt)) (premises_conv Cp Cc ctxt) ctm
      | Const (\<^const_name>\<open>HOL.All\<close>, _) $ Abs _ =>

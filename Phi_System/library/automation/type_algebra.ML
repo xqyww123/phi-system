@@ -530,7 +530,7 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
       val rules = mk_rule_by_guess_or_hint (unify_hint_obj_eq, guess_property_obj_eq, [0], ind_conv)
                                      @{thm \<phi>Equiv_Obj_rule} phi0 hint0 ctxt0
                |> Seq.map (fn (rule, phi, ctxt) =>
-            let val rule' = obj_equal_reasoner ctxt rule
+            let val rule' = obj_equal_reasoner (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt) rule
              in (if is_some hint0 orelse #is_recursive phi
                  then Phi_Sledgehammer_Solver.auto (SOME (#proof_id phi ^ "/obj_equal")) (ctxt, rule')
                  else (@{thm Premise_I} RS rule')
@@ -571,8 +571,8 @@ local
 fun is_TF ty =
   (case dest_parameterized_phi_ty ty
      of ([],_,_) => false
-      | (arg_tys,_,_) => (
-   case dest_parameterized_phi_ty (Phi_Help.last arg_tys)
+      | ((arg_ty::_),_,_) => (
+   case dest_parameterized_phi_ty arg_ty
      of ([],_,_) => true
       | _ => false)
    handle TYPE _ => false)
@@ -647,10 +647,7 @@ fun TF_reasoner ctxt sequent0 =
       val (focus, lsequent) = Subgoal.focus ctxt 1 NONE sequent
       val ctxt' = #context focus
 
-      val len = length (#prems focus)
-      val constraint = List.nth (#prems focus, len - 1)
-      val ant = List.nth (#prems focus, len - 2)
-      val (_, term_U) = List.nth (#params focus, 1)
+      (*val (_, term_U) = List.nth (#params focus, 1)
       val (name_U, _) = Term.dest_Free (Thm.term_of term_U)
       val term_to = (Const(\<^const_name>\<open>to\<close>, Phi_Syntax.mk_phi_type_ty (
                         Phi_Syntax.dest_phi_type_ty (Thm.typ_of_cterm term_U))
@@ -659,9 +656,8 @@ fun TF_reasoner ctxt sequent0 =
                   |> Thm.cterm_of ctxt
       val rule_to = Thm.instantiate (TVars.empty,
                                      Vars.make [((("A",0),\<^typ>\<open>action\<close>),term_to)])
-                                    @{thm Action_Tag_I}
-      val rule_step = Drule.infer_instantiate ctxt [(("U",0),term_U)] @{thm \<phi>TA_TF_rule_step}
-
+                                    @{thm Action_Tag_I} *)
+(*
       fun instantiate_ToA ToA =
         case Thm.concl_of ToA
           of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_ind_target\<close>)
@@ -685,19 +681,27 @@ fun TF_reasoner ctxt sequent0 =
                         else ()
                in insts
               end
-           | _ => []
+           | _ => []*)
 
-      val ToAs = maps instantiate_ToA (List.take (#prems focus, len - 2))
-      val ants'1 = Phi_Help.conj_elims ctxt ant
+(*      val ToAs = maps instantiate_ToA (List.take (#prems focus, len - 2))*)
+      val len = length (#prems focus)
+      val ants'1 = Phi_Help.conj_elims ctxt (List.nth (#prems focus, len - 2))
+                 @ List.take (#prems focus, len - 2)
       fun is_Premis (\<^Const>\<open>Premise\<close> $ _ $ _) = true
         | is_Premis (\<^Const>\<open>Trueprop\<close> $ X) = is_Premis X
         | is_Premis _ = false
       val prem_ants = filter (is_Premis o Thm.concl_of) ants'1
-      val ants = filter (not o is_Premis o Thm.concl_of) ants'1
+      val param_ToA = List.nth (#prems focus, len - 1)
+      val ants = param_ToA :: filter (not o is_Premis o Thm.concl_of) ants'1
+      
+      val param_ToA_meta_ball_pattern =
+            case Thm.concl_of (param_ToA RS @{thm \<phi>TA_TF_pattern_IH})
+              of \<^Const>\<open>Pure.term _\<close> $ pattern => pattern
+               | _ => error "Internal bug"
 
-      fun chk_U_ToA (\<^Const>\<open>times _\<close> $ X $ Y) = chk_U_ToA X andalso chk_U_ToA Y
+    (*fun chk_U_ToA (\<^Const>\<open>times _\<close> $ X $ Y) = chk_U_ToA X andalso chk_U_ToA Y
         | chk_U_ToA (\<^Const>\<open>\<phi>Type _ _\<close> $ Var _ $ Free (N, _)) = N <> name_U
-        | chk_U_ToA (\<^Const>\<open>ExSet _ _\<close> $ X) = chk_U_ToA X
+         | chk_U_ToA (\<^Const>\<open>ExSet _ _\<close> $ X) = chk_U_ToA X
         | chk_U_ToA (\<^Const>\<open>Subjection _\<close> $ X $ _) = chk_U_ToA X
         | chk_U_ToA (Abs(_,_,X)) = chk_U_ToA X
         | chk_U_ToA (X $ _) = chk_U_ToA X
@@ -705,15 +709,15 @@ fun TF_reasoner ctxt sequent0 =
       val U_ToAs = Simplifier.simplify (Simps.equip ctxt) constraint
                 |> @{print}
                 |> HOLogic.conj_elims ctxt
-                |> map (Phi_Help.repeat (fn th => th RS @{thm spec})
-                     #> Phi_Help.repeat (fn th => th RS @{thm mp}))
+                |> map ( Phi_Help.repeat (fn th => th RS @{thm spec})
+                      #> Phi_Help.repeat (fn th => th RS @{thm mp}))
                 |> map_filter (fn th =>
                       case Thm.concl_of th
                         of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Imply _\<close> $ src $ _ $ _) =>
                                 if chk_U_ToA src
                                 then SOME (th RS rule_to)
                                 else NONE
-                         | _ => NONE)
+                         | _ => NONE)*)
 
 (* filter (fn th =>
               case Thm.prop_of th of Const(\<^const_name>\<open>Trueprop\<close>, _)
@@ -721,13 +725,15 @@ fun TF_reasoner ctxt sequent0 =
                                    | _ => false) prems *)
 
       val ctxt'' = ctxt'
+          (* |> Context.proof_map (Phi_Reasoner.add_intro_rules (
+                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [], [], NONE)) (U_ToAs @ ToAs))) *)
             |> Context.proof_map (Phi_Reasoner.add_intro_rules (
-                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [], [], NONE)) (U_ToAs @ ToAs)))
-            |> Context.proof_map (Phi_Reasoner.add_intro_rules (
-                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [], [], NONE)) ants))
+                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [], [], NONE)) ants)
+               #> Phi_Reasoner.add_intro_rule Position.none Phi_Reasoner.LOCAL_CUT 10000
+                    ([(param_ToA_meta_ball_pattern,NONE)],[]) NONE @{thms meta_Ball_D})
 
-      val lsequent'1 = (rule_step RS lsequent)
-                    |> Method.insert_tac ctxt' prem_ants 1
+      val lsequent'1 = (@{thm \<phi>TA_TF_rule_step} RS lsequent)
+                    |> ALLGOALS (Method.insert_tac ctxt' prem_ants)
                     |> Seq.hd
 
       val lsequent' = PLPR_Exhaustive.reason_exhaustively (SOME 2) (ctxt'', lsequent'1)
@@ -753,26 +759,21 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
               Phi_Helper_Conv.hhf_conv (
                 Phi_Helper_Conv.hhf_conv (fn ctxt => fn ctm =>
                   case Thm.term_of ctm
-                    of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_ind_target\<close>)
-                        => (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Action_Tag_def}) then_conv
-                            Conv.rewr_conv @{thm atomize_imp[symmetric]} then_conv
-                            Conv.implies_concl_conv (Conv.rewr_conv @{thm atomize_imp[symmetric]} then_conv
-                            Conv.implies_concl_conv (HOLogic.Trueprop_conv (
-                                Conv.rewr_conv @{thm Action_Tag_def[symmetric, where A=\<phi>TA_ind_target]})))) ctm
+                    of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
+                        => (Conv.rewr_conv @{thm \<phi>TA_TF_rewr}) ctm
                      | _ => Conv.all_conv ctm
                 ) (fn ctxt => fn ctm =>
                   case Thm.term_of ctm
-                    of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_ind_target\<close>)
-                        => (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Action_Tag_def}) then_conv
-                            Conv.rewr_conv @{thm atomize_imp[symmetric]} then_conv
-                            Conv.implies_concl_conv (Conv.rewr_conv @{thm atomize_imp[symmetric]} then_conv
-                            Conv.implies_concl_conv (
+                    of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
+                        => (Conv.rewr_conv @{thm \<phi>TA_TF_rewr} then_conv
+                            Conv.implies_concl_conv (Conv.implies_concl_conv (
+                                  HOLogic.Trueprop_conv (Phi_Helper_Conv.action_tag_conv (
                               Phi_Syntax.implication_conv
                               (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)) then_conv
                                chk_unfolded phi)
                               (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)) then_conv
                                chk_unfolded phi)
-                              Conv.all_conv))) ctm
+                              Conv.all_conv))))) ctm
                      | _ => Conv.all_conv ctm)
               ) (K Conv.all_conv) ctxt
       val rules = mk_rule_by_guess_or_hint (unify_hint_TF, guess_property_TF, [0,~1,~1,~1], ind_conv)
@@ -811,7 +812,7 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
                 case Thm.concl_of locale_rule
                   of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor_L\<close>, _)
                         $ Fa $ Fb $ D $ m $ Pr) =>
-                cmd ([(\<^locale>\<open>Transformation_Functor_L\<close>, (("",false),
+                cmd ([(\<^locale>\<open>Transformation_Functor_L\<close>, ((Term.term_name (#term phi0), true),
                       (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME m,
                                               SOME (case Pr of Var _ => \<^Const>\<open>True\<close> | _ => Pr)],
                        [])))], []) [] lthy
@@ -819,8 +820,8 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
                   |> Proof.global_done_proof
                   
            in generic
-           |> Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
-                                          ([],[]) NONE [rule'']
+         (* |> Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
+                                          ([],[]) NONE [rule''] *)
            |> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
                               (setup_locale Interpretation.sublocale)
           end)

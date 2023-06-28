@@ -70,9 +70,10 @@ val dest_implication   =
 val dest_implication_c =
          dest_tags_c
       #> dest_triop_c @{const_name "Imply"}
+
 fun implication_conv C_s C_t C_p ctm = (
   dest_implication_c ctm;
-  HOLogic.Trueprop_conv (
+  Phi_Helper_Conv.may_Trueprop_conv (
     Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p) ctm
 )
 

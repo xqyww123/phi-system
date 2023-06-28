@@ -96,10 +96,13 @@ signature PHI_HELP = sig
 
   val empty_ctxt : Proof.context
 
-  val instantiate_higher_order_schematic_var : int -> Proof.context -> thm -> thm
-  (*For the leading antecedent only, if it contains any higher-order schematic
+  val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
+  (*For the leading N antecedents only, if it contains any higher-order schematic
   variable where one of its parameters is always applied to constant argument, then instantiate
-  the schematic variable with \<open>\<lambda>_. ?var\<close>*)
+  the schematic variable with \<open>\<lambda>_. ?var\<close>
+
+  N = ~1 means all antecedents, N = ~2 means to consider the conclusion of the thm in addition.
+*)
 
   val generic_theory_mapping : (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
 
@@ -444,7 +447,9 @@ fun instantiate_higher_order_schematic_var num ctxt thm =
          in (collect_var escape ant, ins@ins0)
         end
       val (_, ins) = fold (fn prem => mk_ins (get_concl prem))
-                          (if num = ~1 then Thm.prems_of thm else List.take (Thm.prems_of thm, num))
+                          (if num = ~1 then Thm.prems_of thm
+                           else if num = ~2 then Thm.prems_of thm @ [Thm.concl_of thm]
+                           else List.take (Thm.prems_of thm, num))
                           ([],[])
   in Thm.instantiate (TVars.empty, Vars.make ins) thm
  end
