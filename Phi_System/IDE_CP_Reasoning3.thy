@@ -740,12 +740,13 @@ subsubsection \<open>Type Algebra\<close>
  
 lemma "_Structural_Extract_general_rule_":
   \<open> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
-\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 z
+\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 Dz z
 \<Longrightarrow> Sep_Homo_Ty_unzip F3 F2 F23 uz
 \<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
 \<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> P x @action \<A>SE)
 \<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<a>\<n>\<d> pred_mapper P (z x) @action \<A>SE \<close>
-  \<medium_left_bracket> premises FTF and _ and _ and [\<phi>reason add] and Tr
+  \<medium_left_bracket> premises FTF and _ and _ and [\<phi>reason add] and _ and Tr
     interpret Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
       using FTF . ;;
     apply_rule apply_Separation_Functor_zip[where Fu=F4 and Ft=F1]
@@ -760,13 +761,14 @@ lemma "_Structural_Extract_general_rule'_"[(*THEN SE_clean_waste',*) \<phi>reaso
   \<open> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Functional_Transformation_Functor_L F23' F14' Dom' mapper' Prem' pred_mapper' func_mapper'
 \<Longrightarrow> Sep_Homo_Ty_unzip F1' F4' F14' uz'
-\<Longrightarrow> Sep_Homo_Ty_zip F3' F2' F23' z'
-\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 z
+\<Longrightarrow> Sep_Homo_Ty_zip F3' F2' F23' Dz' z'
+\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 Dz z
 \<Longrightarrow> Sep_Homo_Ty_unzip F3 F2 F23 uz
 \<Longrightarrow> Type_Variant_of_the_Same_Functor F3 F3'
 \<Longrightarrow> Type_Variant_of_the_Same_Functor F1 F1'
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
 \<Longrightarrow> (\<And>x \<in> Dom (z x). \<And>y''.
       x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> (
         (Reverse_Transformation (RP y'') (
@@ -774,20 +776,20 @@ lemma "_Structural_Extract_general_rule'_"[(*THEN SE_clean_waste',*) \<phi>reaso
           ))
         \<and> P x) @action \<A>SE)
 \<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<a>\<n>\<d> (
-      (Reverse_Transformation (Prem' \<and> (\<forall>a. a \<in> Dom' (z' y') \<longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> g a \<in> Rng' (z' y')) \<and> RP a)) (
+      (Reverse_Transformation (Prem' \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> y' \<in> Dz') \<and> (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> Dom' (z' y') \<longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> g a \<in> Rng' (z' y')) \<and> RP a)) (
           y' \<Ztypecolon> F3' U' \<^emph> F2' R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz' (func_mapper' g (z' y')) \<Ztypecolon> F1' T' \<^emph> F4' W' \<a>\<n>\<d> pred_mapper' P' (z' y')))
       \<and> pred_mapper P (z x)) @action \<A>SE \<close>
   unfolding Generated_Rule_def meta_Ball_def Premise_def norm_hhf_eq Action_Tag_def
   subgoal premises prems proof -
 
-    have t11: \<open>(\<And>a. a \<in> Dom (z x) \<Longrightarrow>
+    have t12: \<open>(\<And>a. a \<in> Dom (z x) \<Longrightarrow>
             a \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> (
              (\<forall>y''. RP y'' \<longrightarrow> (y'' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> g y'' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P' y''))
              \<and> P a))\<close>
-      using prems(11) by (smt (verit, best))
+      using prems(12) by (smt (verit, best))
 
     show ?thesis
-      by (insert prems(1-10) t11,
+      by (insert prems(1-11) t12,
           rule implies_weaken, defer_tac,
           (rule "_Structural_Extract_general_rule_"[unfolded meta_Ball_def Premise_def norm_hhf_eq Action_Tag_def,
                 where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] ; assumption),
@@ -870,22 +872,23 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
 lemma SE_general_Scala_Seminearing_left: (*need test, to be tested once we have usable test case*)
   \<open> Scala_Semimodule_Functor F3 U Ds
 \<Longrightarrow> Scala_Semimodule_Functor F4 W Ds
-\<Longrightarrow> Sep_Homo_Ty_zip (F1 a) (F4 a) F14 z
+\<Longrightarrow> Sep_Homo_Ty_zip (F1 a) (F4 a) F14 Dz z
 \<Longrightarrow> Sep_Homo_Ty_unzip (F3 a) (F2 a) F23 uz
 \<Longrightarrow> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds
 \<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
 \<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> F4 c W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> F3 c U \<^emph> R \<a>\<n>\<d> P x @action \<A>SE)
 \<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 b U \<^emph> F2 a R \<a>\<n>\<d> pred_mapper P (z x) @action \<A>SE\<close>
   \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add] and _ and _ and FTF
-             and _ and _ and [\<phi>reason add] and Tr
+             and _ and _ and [\<phi>reason add] and _ and Tr
     interpret Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
       using FTF .
     have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
-      by (metis LSF4 Scala_Semimodule_Functor_def the_\<phi>(2) the_\<phi>(4) the_\<phi>(5))
+      by (metis LSF4 Scala_Semimodule_Functor_def the_\<phi>(3) the_\<phi>(5) the_\<phi>(6))
     have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
-      by (metis LSF3 Scala_Semimodule_Functor_def the_\<phi>(2) the_\<phi>(4) the_\<phi>(5)) ;;
+      by (metis LSF3 Scala_Semimodule_Functor_def the_\<phi>(3) the_\<phi>(5) the_\<phi>(6)) ;;
     unfold F4D
     apply_rule apply_Separation_Functor_zip[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
     apply_rule functional_transformation[where U=\<open>F3 c U \<^emph> R\<close> and f=f and P=P]
@@ -899,22 +902,23 @@ declare SE_general_Scala_Seminearing_left[(*THEN SE_clean_waste,*) \<phi>reason_
 lemma SE_general_Scala_Seminearing_right: (*need test*)
   \<open> Scala_Semimodule_Functor F1 T Ds
 \<Longrightarrow> Scala_Semimodule_Functor F2 R Ds
-\<Longrightarrow> Sep_Homo_Ty_zip   (F1 b) (F4 b) F14 z
+\<Longrightarrow> Sep_Homo_Ty_zip   (F1 b) (F4 b) F14 Dz z
 \<Longrightarrow> Sep_Homo_Ty_unzip (F3 b) (F2 b) F23 uz
 \<Longrightarrow> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * b = a
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds
 \<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
 \<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> F1 c T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> U \<^emph> F2 c R \<a>\<n>\<d> P x @action \<A>SE)
 \<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 b U \<^emph> F2 a R \<a>\<n>\<d> pred_mapper P (z x) @action \<A>SE\<close>
   \<medium_left_bracket> premises LSF1[\<phi>reason add] and LSF2[\<phi>reason add] and _ and _ and FTF
-             and _ and _ and [\<phi>reason add] and Tr
+             and _ and _ and [\<phi>reason add] and _ and Tr
     interpret Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
       using FTF .
     have F1D: \<open>F1 a T = F1 b (F1 c T)\<close>
-      by (metis LSF1 Scala_Semimodule_Functor_def the_\<phi>(2) the_\<phi>(3) the_\<phi>(5))
+      by (metis LSF1 Scala_Semimodule_Functor_def the_\<phi>(3) the_\<phi>(4) the_\<phi>(6))
     have F2D: \<open>F2 a R = F2 b (F2 c R)\<close>
-      by (metis LSF2 Scala_Semimodule_Functor_def the_\<phi>(2) the_\<phi>(3) the_\<phi>(5)) ;;
+      by (metis LSF2 Scala_Semimodule_Functor_def the_\<phi>(3) the_\<phi>(4) the_\<phi>(6)) ;;
     unfold F1D
     apply_rule apply_Separation_Functor_zip[where Fu=\<open>F4 b\<close> and Ft=\<open>F1 b\<close>]
     apply_rule functional_transformation[where U=\<open>U \<^emph> F2 c R\<close> and f=f and P=P ]

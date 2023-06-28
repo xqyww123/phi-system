@@ -218,8 +218,50 @@ fun zip_typ _ ((a as TFree _), (b as TFree _)) = \<^Type>\<open>prod a b\<close>
        in Type (Tname, Targs_merge)
       end
 
+fun occur_subtyp T T' =
+  if T = T' then true
+  else case T' of Type (_, args) => exists (occur_subtyp T) args
+                | _ => false
+
 (*flag=true for zip, flag=false for unzip*)
-fun guess_zip flag ctxt (Type(Tname, Targs), Type(Tname', Targs')) =
+fun guess_zip_guided flag ctxt (target,target') (T,T') =
+  let val occur = occur_subtyp target T
+      val occur' = occur_subtyp target' T'
+   in if occur andalso occur'
+      then if T = target andalso T' = target'
+      then (Abs("x", T, Abs("y", T', \<^Const>\<open>True\<close>)),
+            Abs("x", \<^Type>\<open>prod T T'\<close>, Bound 0))
+      else case (T,T')
+            of (Type(Tname, Targs), Type(Tname', Targs')) =>
+                let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
+                    val bnf = get_bnf ctxt Tname
+                    val (deads,lives) = classify_bnf_dead_live bnf Targs
+                    val (deads',lives') = classify_bnf_dead_live bnf Targs'
+                    val _ = if deads = deads' then () else raise TYPE ("guess_zip", [], [])
+                    val fp_more = case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) Tname
+                                    of SOME x => x | NONE => raise Automation_Fail
+                    val zip = (if flag then BNF_FP_Sugar_More.mk_zip
+                                       else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
+                    val args = map2 (fn t1 => fn t2 =>
+                                  guess_zip_guided flag ctxt (target,target') (t1,t2)) lives lives'
+                    val map_tys = map (fn (_,z) => case Term.fastype_of z
+                                                     of \<^Type>\<open>fun a b\<close> => (a,b)) args
+                                |> split_list
+                    val mp = BNF_Def.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
+                    val rl = BNF_Def.mk_rel_of_bnf deads lives lives' bnf
+                 in (Term.list_comb (rl, map fst args),
+                     Abs("x", domain_type (Term.fastype_of zip),
+                             if flag then Term.list_comb (mp, map snd args) $ (zip $ Bound 0)
+                                     else zip $ (Term.list_comb (mp, map snd args) $ Bound 0)))
+                end
+      else if not occur andalso not occur'
+        then if T = T'
+          then (\<^Const>\<open>HOL.eq T\<close>, \<^Const>\<open>fst T T\<close>)
+          else error "Only the target can vary in guided guess_zip"
+        else error "Internal bug #a1dd0817-f55a-468e-ba79-95183f145380"
+  end
+
+fun guess_zip flag ctxt (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs')) =
       let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
           val bnf = get_bnf ctxt Tname
           val (deads,lives) = classify_bnf_dead_live bnf Targs
@@ -230,11 +272,15 @@ fun guess_zip flag ctxt (Type(Tname, Targs), Type(Tname', Targs')) =
           val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                              else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
           val args = map2 (fn t1 => fn t2 => guess_zip flag ctxt (t1,t2)) lives lives'
-       in Term.list_comb (zip, args)
+          val map_tys = map (fn z => case Term.fastype_of z
+                                       of \<^Type>\<open>fun a b\<close> => (a,b)) args
+                      |> split_list
+          val mp = BNF_Def.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
+       in Abs("x", domain_type (Term.fastype_of zip),
+                   Term.list_comb (mp, args) $ (zip $ Bound 0))
       end
-  | guess_zip flag _ ((a as TFree _), (b as TFree _)) = Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0)
-  | guess_zip flag _ (a,b) = raise TYPE ("guess_zip", [a,b], [])
-
+  | guess_zip _ _ ((a as TFree _), (b as TFree _)) = Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0)
+  | guess_zip _ _ (a,b) = raise TYPE ("guess_zip", [a,b], [])
 
 (** Select Hint **)
 
@@ -936,8 +982,10 @@ fun guess_property_SH flag phi_term0
                       (x_term, FT_term, x_ty, arg_tys, model_ty, (phi:phi_type)) ctxt =
   let val T_ty = Phi_Help.last arg_tys
       val ([],element_ty, ele_model) = dest_parameterized_phi_ty T_ty
-      val (ele_a_ty, ele_b_ty) = unzip_typ ctxt element_ty
-      val zip = guess_zip flag ctxt (unzip_typ ctxt x_ty)
+      val target = case element_ty
+                     of \<^Type>\<open>prod a b\<close> => (a,b)
+                      | _ => error "Internal bug #8522d8e9-57a1-4ad9-800e-1c1222fcabfc"
+      val (dom,zip) = guess_zip_guided flag ctxt target (unzip_typ ctxt x_ty)
       val F_term = (case FT_term of F $ _ => F
                                   | _ => error "Internal bug: Not a Type Operator")
 
@@ -947,22 +995,27 @@ fun guess_property_SH flag phi_term0
                    of Type(Tname, targs) => Type(Tname, map (subst_ty residue) targs)
                     | t' => t'
 
-      val Fa = Term.map_types (subst_ty ele_a_ty) F_term
-      val Fb = Term.map_types (subst_ty ele_b_ty) F_term
+      val Fa = Term.map_types (subst_ty (fst target)) F_term
+      val Fb = Term.map_types (subst_ty (snd target)) F_term
       val SH = (case (Term.fastype_of Fa, Term.fastype_of Fb)
                   of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                       \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
-                    (if flag then \<^Const>\<open>Sep_Homo_Ty_zip a b c d e f x_ty\<close>
-                             else \<^Const>\<open>Sep_Homo_Ty_unzip a b c d e f x_ty\<close>)
-                       $ Fa $ Fb $ F_term $ zip
+                    (if flag
+                     then \<^Const>\<open>Sep_Homo_Ty_zip a b c d e f x_ty\<close>
+                       $ Fa $ Fb $ F_term
+                       $ (\<^Const>\<open>Collect \<^Type>\<open>prod c f\<close>\<close> $ (\<^Const>\<open>case_prod c f \<^Type>\<open>bool\<close>\<close> $ dom))
+                       $ zip
+                     else \<^Const>\<open>Sep_Homo_Ty_unzip a b c d e f x_ty\<close>
+                       $ Fa $ Fb $ F_term $ zip)
                    | _ => error "Internal bug")
    in Seq.single (\<^Const>\<open>True\<close>, SH, ctxt)
   end
 
 fun make_phi_for_pair ctxt0 (phi0 : phi_type) =
-  let val (rev_ty_args, ty_x, ty_model) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+  let val (rev_ty_args, _, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val ([],element_ty,_) = dest_parameterized_phi_ty (hd rev_ty_args)
       val idx = phi_maxidx_of phi0 ~1 + 1
-      val ty_x'dest = Term.add_tvarsT ty_x []
+      val ty_x'dest = Term.add_tvarsT element_ty []
       val thy0 = Context.theory_of ctxt0
       val SS = map (Sign.arity_sorts thy0 \<^type_name>\<open>prod\<close> o snd) ty_x'dest
       val instTy = fold_index (fn (i, (K, [S1,S2])) =>
@@ -1005,9 +1058,10 @@ fun gen_SH flag (phi,hints) thy =
 (*** Install Automation ***)
 
 val _ = Theory.setup (Context.theory_map (
- (* Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
+   (*Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
 #> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
-#>*) Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)
+#> Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)*)
+Phi_Type_Algebra.add_automation_on_def 121 (gen_SH false)
 ))
 
 end

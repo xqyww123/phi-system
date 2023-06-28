@@ -231,19 +231,19 @@ interpretation \<phi>Composition: Functional_Transformation_Functor_L
       blast)
 
 lemma \<phi>Composition_separatio_functor_zip[\<phi>reason add]:
-  \<open> Separation_Homo B
-\<Longrightarrow> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
+  \<open> Separation_Homo B UNIV
+\<Longrightarrow> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) UNIV (\<lambda>x. x)\<close>
   unfolding Sep_Homo_Ty_zip_def Imply_def Separation_Homo_def
   by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn, insert times_set_I, blast)
 
-lemma (*The above rule is revertible*)
-  \<open> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo B \<close>
+lemma (*The above rule is revertible. requiring the sep homo domain being the univ is already the weakest.*)
+  \<open> S \<noteq> {} \<Longrightarrow> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x) \<Longrightarrow> Separation_Homo B UNIV \<close>
   unfolding Sep_Homo_Ty_zip_def Separation_Homo_def Imply_def
   apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y u v
-    by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
-               prems(2-4), blast) .
+    by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
+               prems(1,3-5), auto) .
 
 
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason add]:
@@ -787,9 +787,9 @@ subsubsection \<open>By Key\<close>
 
 
 term prod
-
+ 
 declare  [[\<phi>trace_reasoning = 1]]
-                                                           
+                                                                   
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
