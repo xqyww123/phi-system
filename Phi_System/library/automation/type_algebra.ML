@@ -36,12 +36,27 @@ val _ = Theory.setup (Context.theory_map (
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]})
 ))
 
+(** Guess Abstract Operators from BNF **)
+
 fun classify_bnf_dead_live bnf tys =
   let val btys = snd (Term.dest_Type (BNF_Def.T_of_bnf bnf))
       val deads = BNF_Def.deads_of_bnf bnf
-   in fold2 (fn t => fn bt => fn (D,L) =>
-        if member (op =) deads bt then (t::D, L) else (D, t::L)
-      ) tys btys ([],[])
+      fun classify (t::tys) (bt::btys) =
+           (case classify tys btys
+              of (D,L) => if member (op =) deads bt then (t::D, L) else (D, t::L))
+        | classify [] [] = ([],[])
+   in classify tys btys
+  end
+
+fun burrow_bnf_dead_live bnf deads_lives = 
+  let val btys = snd (Term.dest_Type (BNF_Def.T_of_bnf bnf))
+      val deads' = BNF_Def.deads_of_bnf bnf
+      fun burrow (deads,lives) (bt::btys) =
+            if member (op =) deads' bt then hd deads :: burrow (tl deads, lives) btys
+                                       else hd lives :: burrow (deads, tl lives) btys
+        | burrow ([],[]) [] = []
+        | burrow _ _ = error "Internal bug: burrow_bnf_dead_live"
+   in burrow deads_lives btys
   end
 
 fun guess__get_bnf ctxt Tname =
@@ -49,9 +64,15 @@ fun guess__get_bnf ctxt Tname =
     of NONE => (warning ("Type " ^ Tname ^ " is not a known BNF."); Seq.empty)
      | SOME bnf => Seq.single bnf
 
-fun permute_seq (s::L) =
+fun get_bnf ctxt Tname =
+  case BNF_Def.bnf_of ctxt Tname
+    of NONE => (warning ("Type " ^ Tname ^ " is not a known BNF."); raise Automation_Fail)
+     | SOME bnf => bnf
+
+
+(* fun permute_seq (s::L) =
       Seq.maps (fn s' => permute_seq L |> Seq.map (fn L' => s'::L')) s
-  | permute_seq [] = Seq.single []
+  | permute_seq [] = Seq.single [] *)
 
 fun guess_operator' ctxt mk_term known_oprs x_ty =
   case map_filter (fn (ty', term) => if ty' = x_ty then SOME term else NONE)
@@ -174,6 +195,48 @@ fun guess_rel_mapper target_ty ctxt ty element_ty =
    |> Seq.map (fn (rel_term', ctxt) =>
         (Abs("", g_ty, Term.abstract_over (g_term, rel_term')), ctxt))
   end
+
+fun unzip_typ _ (\<^Type>\<open>prod \<open>a as TFree _\<close> \<open>b as TFree _\<close>\<close>) = (a,b)
+  | unzip_typ ctxt (Type(Tname, Targs)) =
+      let val bnf = get_bnf ctxt Tname
+          val (deads,lives) = classify_bnf_dead_live bnf Targs
+          val lives' = map (unzip_typ ctxt) lives
+                    |> split_list
+       in (Type (Tname,burrow_bnf_dead_live bnf (deads, fst lives')),
+           Type (Tname,burrow_bnf_dead_live bnf (deads, snd lives')))
+      end
+
+fun zip_typ _ ((a as TFree _), (b as TFree _)) = \<^Type>\<open>prod a b\<close>
+  | zip_typ ctxt (Type(Tname, Targs), Type(Tname', Targs')) =
+      let val _ = if Tname = Tname' then () else raise TYPE ("zip_typ", [], [])
+          val bnf = get_bnf ctxt Tname
+          val (deads,lives) = classify_bnf_dead_live bnf Targs
+          val (deads',lives') = classify_bnf_dead_live bnf Targs'
+          val _ = if deads = deads' then () else raise TYPE ("zip_typ", [], [])
+          val lives_merge = map2 (fn t1 => fn t2 => zip_typ ctxt (t1,t2)) lives lives'
+          val Targs_merge = burrow_bnf_dead_live bnf (deads, lives_merge)
+       in Type (Tname, Targs_merge)
+      end
+
+(*flag=true for zip, flag=false for unzip*)
+fun guess_zip flag ctxt (Type(Tname, Targs), Type(Tname', Targs')) =
+      let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
+          val bnf = get_bnf ctxt Tname
+          val (deads,lives) = classify_bnf_dead_live bnf Targs
+          val (deads',lives') = classify_bnf_dead_live bnf Targs'
+          val _ = if deads = deads' then () else raise TYPE ("guess_zip", [], [])
+          val fp_more = case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) Tname
+                          of SOME x => x | NONE => raise Automation_Fail
+          val zip = (if flag then BNF_FP_Sugar_More.mk_zip
+                             else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
+          val args = map2 (fn t1 => fn t2 => guess_zip flag ctxt (t1,t2)) lives lives'
+       in Term.list_comb (zip, args)
+      end
+  | guess_zip flag _ ((a as TFree _), (b as TFree _)) = Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0)
+  | guess_zip flag _ (a,b) = raise TYPE ("guess_zip", [a,b], [])
+
+
+(** Select Hint **)
 
 fun select_one_hint prop_name hints =
   let fun is_the_hint (\<^Const>\<open>Trueprop\<close> $ X) = is_the_hint X
@@ -566,9 +629,7 @@ end
 
 (*** Transformation Functor ***)
 
-local
-
-fun is_TF ty =
+fun is_Type_Opr ty =
   (case dest_parameterized_phi_ty ty
      of ([],_,_) => false
       | ((arg_ty::_),_,_) => (
@@ -576,6 +637,8 @@ fun is_TF ty =
      of ([],_,_) => true
       | _ => false)
    handle TYPE _ => false)
+
+local
 
 fun unify_hint_TF (ctxt, hint) (\<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _)
                                                       $ F1 $ _ $ _ $ _)) (x, F' $ _) =
@@ -590,7 +653,7 @@ fun guess_property_TF (x_term, FT_term, x_ty, arg_tys, model_ty, (phi:phi_type))
   let val T_ty = Phi_Help.last arg_tys
       val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
       val F_term = (case FT_term of F $ _ => F
-                                  | _ => error "Internal bug: Not a TF")
+                                  | _ => error "Internal bug: Not a Type Operator")
 
       val param_typs = Term.add_tfreesT element_ty []
       val (param_typs', ctxt'1) = Variable.invent_types (map snd param_typs) ctxt
@@ -830,7 +893,7 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
 in
 
 fun gen_TF (phi,hints) thy =
-  if is_TF (Term.fastype_of (#term phi))
+  if is_Type_Opr (Term.fastype_of (#term phi))
   then let val hints = select_hints \<^const_name>\<open>Transformation_Functor\<close> hints
         in (case hints
               of [] => gen_TF' phi NONE thy
@@ -850,25 +913,101 @@ fun gen_TF (phi,hints) thy =
 
 end
 
-(*
-fun gen_TF (phi,hints) thy =
-  if is_TF (Term.fastype_of (#term phi))
-  then let val hint = select_hint \<^const_name>\<open>Transformation_Functor\<close> hints    
-        in gen_obj_equal' phi hint thy
+(*** Separation Hom ***)
+
+
+fun unify_hint_SH (ctxt, hint) (\<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Sep_Homo_Ty_zip\<close>, _)
+                                  $ _ $ _ $ F $ _)) (x, F' $ _) =
+      Unify.smash_unifiers (Context.Proof ctxt) [(F,F')] Envir.init
+        |> Seq.chop 2
+        |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
+             | ([x], _) => x
+             | _ => error ("Multi-resolution in hint: " ^ Syntax.string_of_term ctxt hint))
+  | unify_hint_SH (ctxt, hint) (\<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Sep_Homo_Ty_unzip\<close>, _)
+                                  $ _ $ _ $ F $ _)) (x, F' $ _) =
+      Unify.smash_unifiers (Context.Proof ctxt) [(F,F')] Envir.init
+        |> Seq.chop 2
+        |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
+             | ([x], _) => x
+             | _ => error ("Multi-resolution in hint: " ^ Syntax.string_of_term ctxt hint))
+  | unify_hint_SH (ctxt, hint) _ _ = error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
+
+fun guess_property_SH flag phi_term0
+                      (x_term, FT_term, x_ty, arg_tys, model_ty, (phi:phi_type)) ctxt =
+  let val T_ty = Phi_Help.last arg_tys
+      val ([],element_ty, ele_model) = dest_parameterized_phi_ty T_ty
+      val (ele_a_ty, ele_b_ty) = unzip_typ ctxt element_ty
+      val zip = guess_zip flag ctxt (unzip_typ ctxt x_ty)
+      val F_term = (case FT_term of F $ _ => F
+                                  | _ => error "Internal bug: Not a Type Operator")
+
+      fun subst_ty residue t =
+            if t = element_ty then residue
+            else case t
+                   of Type(Tname, targs) => Type(Tname, map (subst_ty residue) targs)
+                    | t' => t'
+
+      val Fa = Term.map_types (subst_ty ele_a_ty) F_term
+      val Fb = Term.map_types (subst_ty ele_b_ty) F_term
+      val SH = (case (Term.fastype_of Fa, Term.fastype_of Fb)
+                  of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
+                      \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
+                    (if flag then \<^Const>\<open>Sep_Homo_Ty_zip a b c d e f x_ty\<close>
+                             else \<^Const>\<open>Sep_Homo_Ty_unzip a b c d e f x_ty\<close>)
+                       $ Fa $ Fb $ F_term $ zip
+                   | _ => error "Internal bug")
+   in Seq.single (\<^Const>\<open>True\<close>, SH, ctxt)
+  end
+
+fun make_phi_for_pair ctxt0 (phi0 : phi_type) =
+  let val (rev_ty_args, ty_x, ty_model) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val idx = phi_maxidx_of phi0 ~1 + 1
+      val ty_x'dest = Term.add_tvarsT ty_x []
+      val thy0 = Context.theory_of ctxt0
+      val SS = map (Sign.arity_sorts thy0 \<^type_name>\<open>prod\<close> o snd) ty_x'dest
+      val instTy = fold_index (fn (i, (K, [S1,S2])) =>
+                      TVars.add (K, \<^Type>\<open>prod \<open>TVar(("xa",idx+i),S1)\<close> \<open>TVar(("xb",idx+i),S2)\<close>\<close>)
+                   ) (ty_x'dest ~~ SS) TVars.empty
+      val instTy'= TVars.map (K (Thm.global_ctyp_of thy0)) instTy
+      val phi = instantiate_phi ((instTy, Vars.empty), (instTy', Vars.empty)) phi0
+   in phi
+  end
+
+fun gen_SH' flag (phi0 : phi_type) hint0 generic =
+  let val ctxt0 = Context.proof_of generic
+      val phi0pr = make_phi_for_pair generic phi0
+      val rules = mk_rule_by_guess_or_hint (unify_hint_SH, guess_property_SH flag phi0,
+                                            [0,~1,~1], K (K Conv.all_conv))
+                                            @{thm \<phi>TA_TF_rule} phi0pr hint0 ctxt0
+   in generic
+  end
+
+fun gen_SH flag (phi,hints) thy =
+  if is_Type_Opr (Term.fastype_of (#term phi))
+  then let val hints = select_hints (if flag then \<^const_name>\<open>Sep_Homo_Ty_zip\<close>
+                                             else \<^const_name>\<open>Sep_Homo_Ty_unzip\<close>) hints
+        in (case hints
+              of [] => gen_SH' flag phi NONE thy
+               | _ => fold (fn H => fn thy =>
+                        gen_SH' flag phi (SOME H) thy
+                        handle Automation_Fail => (
+                          error ("Fail to reason the Separation Homomorphism:\n" ^
+                                 Context.cases Syntax.string_of_term_global Syntax.string_of_term thy H))
+                      ) hints thy)
            handle Automation_Fail => (
-             warning "Fail to reason the equivelance between abstract objects." ;
-             (if is_some hint then () else
-               warning "You may want to annotate it by \<open>is \<open>\<phi>Equiv_Obj eq\<close>\<close>");
+             warning "Fail to reason the property of Separation Homomorphism." ;
+             (if null hints then warning "You may want to annotate it by \<open>is \<open>Sep_Homo_Ty_zip \<dots>\<close>\<close>" else ());
              thy
-            )
+           )
        end
-  else thy *)
+  else thy
 
 (*** Install Automation ***)
 
 val _ = Theory.setup (Context.theory_map (
-   Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
+ (* Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
 #> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
+#>*) Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)
 ))
 
 end

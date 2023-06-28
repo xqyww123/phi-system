@@ -60,9 +60,18 @@ type phi_type = {
   intro_ToA: thm list (*introduction transformations*),
   is_recursive: bool,
   is_impredicative: bool (*to be supported*)
-}
+} (*rules and terms inside must be zero-indexed*)
+
+val map_phi_type : (term -> term) * (thm list -> thm list) -> phi_type -> phi_type
+val fold_phi_type : (term -> 'a -> 'a) * (thm -> 'a -> 'a) -> phi_type -> 'a -> 'a
 
 val morphism_phi_type : morphism -> phi_type -> phi_type
+val instantiate_phi : (typ TVars.table * term Vars.table) * (ctyp TVars.table * cterm Vars.table)
+                   -> phi_type -> phi_type
+val phi_trim_context : phi_type -> phi_type
+val phi_transfer : theory -> phi_type -> phi_type
+val phi_maxidx_of : phi_type -> int -> int
+
 
 type algebra_hints = term list
 
@@ -427,17 +436,28 @@ type phi_type = {
   is_impredicative: bool (*to be supported*)
 }
 
-fun morphism_phi_type m (phi : phi_type) =
+fun map_phi_type (mtm,mth) (phi : phi_type) =
   {
-    term = Morphism.term m (#term phi),
+    term = mtm (#term phi),
     pos = #pos phi,
     proof_id = #proof_id phi,
-    equations = Morphism.fact m (#equations phi),
-    ind = Morphism.thm m (#ind phi),
-    intro_ToA = Morphism.fact m (#intro_ToA phi),
+    equations = mth (#equations phi),
+    ind = singleton mth (#ind phi),
+    intro_ToA = mth (#intro_ToA phi),
     is_recursive = #is_recursive phi,
     is_impredicative = #is_impredicative phi
   } : phi_type
+
+fun fold_phi_type (fold_tm, fold_thm) (phi : phi_type) x = x
+  |> fold_tm (#term phi)
+  |> fold fold_thm (#equations phi)
+  |> fold_thm (#ind phi)
+  |> fold fold_thm (#intro_ToA phi)
+
+fun morphism_phi_type m = map_phi_type (Morphism.term m, Morphism.fact m)
+val phi_trim_context = map_phi_type (I, map (Thm.trim_context))
+fun phi_transfer thy = map_phi_type (I, map (Thm.transfer thy))
+val phi_maxidx_of = fold_phi_type (Term.maxidx_term, Thm.maxidx_thm)
 
 type algebra_hints = term list
 type automation_on_def = phi_type * algebra_hints -> generic_theory -> generic_theory
@@ -454,7 +474,8 @@ structure Automation_on_Def = Generic_Data (
   val merge = PriorityTab.merge (K false)
 )
 
-val get_type_info = Symtab.lookup o Phi_Types.get
+fun get_type_info ctxt k =
+      Option.map (phi_transfer (Context.theory_of ctxt)) (Symtab.lookup (Phi_Types.get ctxt) k)
 
 fun add_automation_on_def priority automation ctxt =
   Automation_on_Def.map (PriorityTab.update_new (
@@ -593,6 +614,16 @@ fun mk_ind_dest_ToA ctxt phi gen_prop = (*not tested*)
         |> Phi_Help.beta_eta_contract
   end
 
+fun chk_zero_index_thm thm =
+  if Thm.maxidx_of thm <= 0
+  then thm
+  else error "Internal bug: not zero-indexed!"
+
+fun chk_zero_index_term term =
+  if Term.maxidx_of_term term <= 0
+  then term
+  else error "Internal bug: not zero-indexed!"
+
 fun add_type (def, pos, hints) generic =
   let val ctxt = Context.proof_of generic
       val (idx,(name_ty,term)) =
@@ -631,8 +662,9 @@ fun add_type (def, pos, hints) generic =
                             | NONE => (warning "Termination of the definition is not proven. \
                                                \Use partial simplification and induction rules.";
                                        filter_relevant_eqs name (#psimps info))))
-              |> map (conv_def_to_equaltion ctxt)
-              |> Drule.zero_var_indexes_list
+              |> map (conv_def_to_equaltion ctxt
+                   #> Phi_Help.beta_eta_contract)
+
       val is_recursive = exists (fn eq =>
             case Thm.concl_of eq
               of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ RHS)
@@ -657,6 +689,7 @@ fun add_type (def, pos, hints) generic =
                                   end
                       val T_x = Thm.apply \<^cterm>\<open>Trueprop\<close> (Thm.apply (mk_P (Thm.dest_arg LHS)) x)
                    in Thm.trivial T_x
+                   |> Drule.zero_var_indexes
                   end
                 | WFREC_DEF (_, info) =>
                     (case #inducts info
@@ -664,12 +697,12 @@ fun add_type (def, pos, hints) generic =
                         | _ => List.nth (#pinducts info, idx))
             )
             |> Conv.fconv_rule (add_premise_tag ctxt)
-            |> Drule.zero_var_indexes
             |> Phi_Help.beta_eta_contract
-            |> Thm.trim_context
 
       val intro_ToA = map (fn eq => (eq RS @{thm \<phi>intro_transformation})
-                                 |> Conv.fconv_rule (add_premise_tag ctxt)) eqs
+                                 |> Conv.fconv_rule (add_premise_tag ctxt)
+                                 |> Drule.zero_var_indexes
+                                 |> Phi_Help.beta_eta_contract) eqs
 
       val proof_id =
         case term of Const _ => fst name_ty
@@ -677,21 +710,21 @@ fun add_type (def, pos, hints) generic =
               Context.cases Sign.full_name Local_Theory.full_name generic (Binding.name (fst name_ty))
 
       val phi_type = {
-            term = term,
+            term = chk_zero_index_term term,
             pos = pos,
             proof_id = proof_id,
-            equations = eqs,
-            ind = ind,
-            intro_ToA = intro_ToA,
+            equations = map chk_zero_index_thm eqs,
+            ind = chk_zero_index_thm ind,
+            intro_ToA = map chk_zero_index_thm intro_ToA,
             is_recursive = is_recursive,
             is_impredicative = false
           } : phi_type
    in generic
    |> Context.mapping
-        (Context.theory_map (Phi_Types.map (Symtab.update_new (fst name_ty, phi_type))))
+        (Context.theory_map (Phi_Types.map (Symtab.update_new (fst name_ty, phi_trim_context phi_type))))
         (Local_Theory.declaration {syntax=false, pervasive=false} (fn m =>
           Phi_Types.map (Symtab.update_new (fst (raw_term_name_typ (Morphism.term m term)),
-                                            morphism_phi_type m phi_type))))
+                                            morphism_phi_type m (phi_trim_context phi_type)))))
    |> Phi_Help.generic_theory_mapping (fn m =>
         Phi_Reasoner.add_intro_rules (map (fn rule =>
             ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 40, [], [], NONE)
@@ -726,23 +759,16 @@ fun fix_phi_term_params phi_term ctxt =
    in ((x_term, T_term, x_ty, arg_tys, model_ty), ctxt'2)
   end
 
+fun instantiate_phi (inst,inst') =
+      map_phi_type (Term_Subst.instantiate inst, map (Thm.instantiate inst'))
+
 fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
   let val (inst, ctxt) = Variable.import_inst is_open [#term phi0] ctxt0
       val inst' = (TVars.map (K (Thm.ctyp_of ctxt)) (#1 inst),
                    Vars.map (K (Thm.cterm_of ctxt)) (#2 inst))
-      val phi = {
-          term = Term_Subst.instantiate inst (#term phi0),
-          pos = #pos phi0,
-          proof_id = #proof_id phi0,
-          equations = map (Thm.instantiate inst') (#equations phi0),
-          ind = Thm.instantiate inst' (#ind phi0),
-          intro_ToA = map (Thm.instantiate inst') (#intro_ToA phi0),
-          is_recursive = #is_recursive phi0,
-          is_impredicative = #is_impredicative phi0
-        } : phi_type
+      val phi = instantiate_phi (inst,inst') phi0
    in (inst, inst', phi, ctxt)
   end
-
 
 
 local

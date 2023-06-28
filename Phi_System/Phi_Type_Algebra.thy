@@ -79,10 +79,10 @@ definition Separation_Homo :: \<open>('b::sep_magma, 'a::sep_magma) \<phi> \<Rig
 
 definition \<open>Separation_Homo_unzip T \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> ( (x * y \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x \<Ztypecolon> T) * (y \<Ztypecolon> T) ))\<close>
 
-definition \<open>Sep_Type_Functor_zip Ft Fu F3 z \<longleftrightarrow>
+definition \<open>Sep_Homo_Ty_zip Ft Fu F3 z \<longleftrightarrow>
               (\<forall>T U x y. (x,y) \<Ztypecolon> Ft(T) \<^emph> Fu(U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z (x,y) \<Ztypecolon> F3 (T \<^emph> U))\<close>
 
-definition \<open>Sep_Type_Functor_unzip Ft Fu F3 un \<longleftrightarrow>
+definition \<open>Sep_Homo_Ty_unzip Ft Fu F3 un \<longleftrightarrow>
               (\<forall>T U z. z \<Ztypecolon> F3 (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)\<close>
 
 definition Scala_Semimodule_Functor :: \<open>('s \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> 's::semigroup_mult set \<Rightarrow> bool\<close>
@@ -156,36 +156,36 @@ declare [[
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Inhabitance_Functor _ _\<close>,
   (*\<phi>premise_attribute? [\<phi>reason add] for \<open>Inhabitance_Functor2 _ _ _\<close>,*)
 
-  \<phi>reason_default_pattern_ML \<open>Sep_Type_Functor_zip ?Ft ?Fu _ _\<close> \<Rightarrow>
+  \<phi>reason_default_pattern_ML \<open>Sep_Homo_Ty_zip ?Ft ?Fu _ _\<close> \<Rightarrow>
     \<open>fn generic => fn term =>
       let val ctxt = Context.proof_of generic
           val [term'] = Variable.exportT_terms ctxt Phi_Help.empty_ctxt [term]
           val Trueprop $ (_ (*Separation_Functor*) $ F1 $ F2 $ F3 $ f) = term'
           val ind = Int.max (maxidx_of_term F1, Int.max (maxidx_of_term F2, maxidx_of_term F3)) + 1
           fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
-          val H = Const(\<^const_name>\<open>Sep_Type_Functor_zip\<close>, TVar(("'SF",ind),[]))
+          val H = Const(\<^const_name>\<open>Sep_Homo_Ty_zip\<close>, TVar(("'SF",ind),[]))
        in [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3" $ var "z" "'z"),
            Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3" $ var "z" "'z"),
            Trueprop $ (H $ var "F1" "'F1" $ var "F2" "'F2" $ F3 $ var "z" "'z")]
       end
     \<close> (100),
 
-  \<phi>reason_default_pattern_ML \<open>Sep_Type_Functor_unzip ?Ft ?Fu _ _\<close> \<Rightarrow>
+  \<phi>reason_default_pattern_ML \<open>Sep_Homo_Ty_unzip ?Ft ?Fu _ _\<close> \<Rightarrow>
     \<open>fn generic => fn term =>
       let val ctxt = Context.proof_of generic
           val [term'] = Variable.exportT_terms ctxt Phi_Help.empty_ctxt [term]
           val Trueprop $ (_ (*Separation_Functor*) $ F1 $ F2 $ F3 $ f) = term'
           val ind = Int.max (maxidx_of_term F1, Int.max (maxidx_of_term F2, maxidx_of_term F3)) + 1
           fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
-          val H = Const(\<^const_name>\<open>Sep_Type_Functor_unzip\<close>, TVar(("'SF",ind),[]))
+          val H = Const(\<^const_name>\<open>Sep_Homo_Ty_unzip\<close>, TVar(("'SF",ind),[]))
        in [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3" $ var "z" "'z"),
            Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3" $ var "z" "'z"),
            Trueprop $ (H $ var "F1" "'F1" $ var "F2" "'F2" $ F3 $ var "z" "'z")]
       end
     \<close> (100),
 
-  \<phi>premise_attribute? [\<phi>reason add] for \<open>Sep_Type_Functor_zip _ _ _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason add] for \<open>Sep_Type_Functor_unzip _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Sep_Homo_Ty_zip _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Sep_Homo_Ty_unzip _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Near_Semimodule_Functor_zip _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Near_Semimodule_Functor_zip_rev _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Near_Semimodule_Functor_unzip _ _ _ _\<close>,
@@ -213,15 +213,15 @@ lemma apply_sep_homo_unzip:
   unfolding Separation_Homo_unzip_def Premise_def by blast
 
 lemma apply_Separation_Functor_zip:
-  \<open> Sep_Type_Functor_zip Ft Fu Fc z
+  \<open> Sep_Homo_Ty_zip Ft Fu Fc z
 \<Longrightarrow> x \<Ztypecolon> Ft(T) \<^emph> Fu(U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z x \<Ztypecolon> Fc(T \<^emph> U)\<close>
-  unfolding Sep_Type_Functor_zip_def
+  unfolding Sep_Homo_Ty_zip_def
   by (cases x; simp)
 
 lemma apply_Separation_Functor_unzip:
-  \<open> Sep_Type_Functor_unzip Ft Fu Fc un
+  \<open> Sep_Homo_Ty_unzip Ft Fu Fc un
 \<Longrightarrow> x \<Ztypecolon> Fc(T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> un x \<Ztypecolon> Ft(T) \<^emph> Fu(U)\<close>
-  unfolding Sep_Type_Functor_unzip_def \<phi>Prod_expn'[symmetric]
+  unfolding Sep_Homo_Ty_unzip_def \<phi>Prod_expn'[symmetric]
   by simp
 
 lemma apply_Near_Semimodule_Functor_zip:
@@ -372,9 +372,9 @@ in Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>funct
   \ matching the patter"
 #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Transformation_Functor\<close>
       (fn (_ $ F $ _ $ _ $ _) => F)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Sep_Type_Functor_zip\<close>
+#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Sep_Homo_Ty_zip\<close>
       (fn (_ $ F $ _ $ _ $ _ ) => F)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Sep_Type_Functor_unzip\<close>
+#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Sep_Homo_Ty_unzip\<close>
       (fn (_ $ F $ _ $ _ $ _ ) => F)
 #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Scala_Semimodule_Functor\<close>
       (fn (_ $ F $ _ $ _ ) => attach_var F)
@@ -435,16 +435,16 @@ subsubsection \<open>Separation Homo / Functor\<close>
 
 
 (*Separation_Homo is necessary at least for composition \<phi>-type
-Separation_Homo B \<longleftrightarrow> Sep_Type_Functor_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)
+Separation_Homo B \<longleftrightarrow> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)
 *)
 lemma Separation_Homo_functor:
   \<open> (\<And>x y z. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (m (\<lambda>(a, b) c. c = b * a \<and> b ## a \<and> (a, b) \<in> D (x, y)) (x, y) z
                         \<longrightarrow> z = y * x \<and> y ## x))
-\<Longrightarrow> Sep_Type_Functor_zip F F F' (\<lambda>x. x)
+\<Longrightarrow> Sep_Homo_Ty_zip F F F' (\<lambda>x. x)
 \<Longrightarrow> Transformation_Functor F' F D m
 \<Longrightarrow> Separation_Homo T
 \<Longrightarrow> Separation_Homo (F T)\<close>
-  unfolding Separation_Homo_def Transformation_Functor_def Sep_Type_Functor_zip_def Premise_def
+  unfolding Separation_Homo_def Transformation_Functor_def Sep_Homo_Ty_zip_def Premise_def
   apply (clarsimp simp add: \<phi>Prod_split[symmetric])
   subgoal premises prems for x y
   proof -
@@ -471,11 +471,11 @@ lemma Separation_Homo_functor:
 lemma Separation_Homo_eq_functor:
   \<open> (\<And>x y z. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (m (\<lambda>(a, b) c. c = a * b \<and> a ## b \<and> (a, b) \<in> D (x, y)) (x, y) z
                         \<longrightarrow> z = x * y \<and> x ## y))
-\<Longrightarrow> Sep_Type_Functor F F F' T T
+\<Longrightarrow> Sep_Homo_Ty F F F' T T
 \<Longrightarrow> Transformation_Functor F F' pred mapper
 \<Longrightarrow> Separation_Homo_eq T
 \<Longrightarrow> Separation_Homo_eq (F T)\<close>
-  unfolding Separation_Homo_eq_def Transformation_Functor_def Sep_Type_Functor_def
+  unfolding Separation_Homo_eq_def Transformation_Functor_def Sep_Homo_Ty_def
             Separation_Homo_def
   apply (clarsimp simp add: \<phi>Prod_split[symmetric])
   subgoal premises prems for x y
@@ -878,12 +878,12 @@ locale Sep_Homo_Type_Functor_L =
 begin
 
 lemma [\<phi>reason add]:
-  \<open>Prem \<Longrightarrow> Sep_Type_Functor_zip Ft Fu Fc (\<lambda>x. x)\<close>
-  unfolding Sep_Type_Functor_zip_def sep_homo_type by simp
+  \<open>Prem \<Longrightarrow> Sep_Homo_Ty_zip Ft Fu Fc (\<lambda>x. x)\<close>
+  unfolding Sep_Homo_Ty_zip_def sep_homo_type by simp
 
 lemma [\<phi>reason add]:
-  \<open>Prem \<Longrightarrow> Sep_Type_Functor_unzip Ft Fu Fc (\<lambda>x. x)\<close>
-  unfolding Sep_Type_Functor_unzip_def sep_homo_type by simp
+  \<open>Prem \<Longrightarrow> Sep_Homo_Ty_unzip Ft Fu Fc (\<lambda>x. x)\<close>
+  unfolding Sep_Homo_Ty_unzip_def sep_homo_type by simp
 
 end
 
@@ -942,6 +942,26 @@ declare homo_sep_disj_total_push_map [\<phi>reason 1100]
 
 
 subsection \<open>Auto Generation of Properties\<close>
+
+subsubsection \<open>Extension of BNF-FP\<close>
+
+ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
+
+setup \<open>Context.theory_map(
+  BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>list\<close>, {
+      deads = [],
+      lives = [\<^typ>\<open>'a\<close>],
+      lives'= [\<^typ>\<open>'b\<close>],
+      zip = \<^pattern>\<open>case_prod zip\<close>,
+      unzip = \<^pattern>\<open>(\<lambda>l. (map fst l, map snd l))\<close>,
+      zip_simps = [],
+      unzip_simps = [] (*what I need to give?*)
+  })
+)\<close>
+
+(* ML \<open>\<^pattern>\<open>case_prod zip\<close>\<close>
+ML \<open>\<^pattern>\<open>(\<lambda>l. (map fst l, map snd l))\<close>\<close> *)
+
 
 subsubsection \<open>General Rules\<close>
 
@@ -1042,14 +1062,11 @@ lemma \<phi>TA_TF_rule_step:
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action to U\<close>
   unfolding Action_Tag_def
   by (simp add: Imply_def)
-  
 
-term set
-term to
 
 subsubsection \<open>Inhabitance\<close>
 
-lemma
+lemma 
   \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x)
 \<Longrightarrow> Ant
 \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x\<close>
@@ -1058,24 +1075,27 @@ lemma
 
 subsubsection \<open>Sep\<close>
 
-lemma
+lemma \<phi>TA_SH_rule:
   \<open> (\<And>T U z. Ant \<longrightarrow> (\<forall>x y. z = w(x,y) \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Fc (T \<^emph> U))))
 \<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> Sep_Type_Functor_zip Fa Fb Fc w \<close>
-  unfolding Sep_Type_Functor_zip_def \<phi>Prod_expn'
+\<Longrightarrow> Sep_Homo_Ty_zip Fa Fb Fc w \<close>
+  unfolding Sep_Homo_Ty_zip_def \<phi>Prod_expn'
   by simp
 
 
-lemma Ball_set_cons:
-  \<open>(\<forall>a \<in> set (x # l). P a) \<longleftrightarrow> (\<forall>a \<in> set l. P a) \<and> P x\<close>
-  by auto
 
                                     
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
+
+ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\<open>times\<close>\<close>
+
 hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end
           \<phi>Equiv_Obj_rule_move_all2
+
+          \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH \<phi>TA_TF_rule_step
 
 lemmas [\<phi>constraint_expansion] = HOL.simp_thms ex_simps[symmetric]
           ExSet_simps
@@ -1107,8 +1127,8 @@ thm ex_simps
 lemma
   \<open> (\<And>T U z. Ant \<longrightarrow> (\<forall>x y. z = w(x,y) \<longrightarrow> (z \<Ztypecolon> Fc (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)))
 \<Longrightarrow> Ant
-\<Longrightarrow> Sep_Type_Functor_unzip Fa Fb Fc w \<close>
-  unfolding Sep_Type_Functor_unzip_def \<phi>Prod_expn'
+\<Longrightarrow> Sep_Homo_Ty_unzip Fa Fb Fc w \<close>
+  unfolding Sep_Homo_Ty_unzip_def \<phi>Prod_expn'
   by simp
 
 lemma

@@ -232,13 +232,13 @@ interpretation \<phi>Composition: Functional_Transformation_Functor_L
 
 lemma \<phi>Composition_separatio_functor_zip[\<phi>reason add]:
   \<open> Separation_Homo B
-\<Longrightarrow> Sep_Type_Functor_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
-  unfolding Sep_Type_Functor_zip_def Imply_def Separation_Homo_def
+\<Longrightarrow> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
+  unfolding Sep_Homo_Ty_zip_def Imply_def Separation_Homo_def
   by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn, insert times_set_I, blast)
 
 lemma (*The above rule is revertible*)
-  \<open> Sep_Type_Functor_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo B \<close>
-  unfolding Sep_Type_Functor_zip_def Separation_Homo_def Imply_def
+  \<open> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo B \<close>
+  unfolding Sep_Homo_Ty_zip_def Separation_Homo_def Imply_def
   apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y u v
@@ -248,14 +248,14 @@ lemma (*The above rule is revertible*)
 
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason add]:
   \<open> Separation_Homo_unzip B
-\<Longrightarrow> Sep_Type_Functor_unzip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
+\<Longrightarrow> Sep_Homo_Ty_unzip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
   for B :: \<open>('d::sep_magma,'e::sep_magma) \<phi>\<close>
-  unfolding Sep_Type_Functor_unzip_def Imply_def Separation_Homo_unzip_def
+  unfolding Sep_Homo_Ty_unzip_def Imply_def Separation_Homo_unzip_def
   by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn; blast)
 
 lemma (*The above rule is revertible*)
-  \<open> Sep_Type_Functor_unzip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo_unzip B \<close>
-  unfolding Sep_Type_Functor_unzip_def Separation_Homo_unzip_def Imply_def
+  \<open> Sep_Homo_Ty_unzip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo_unzip B \<close>
+  unfolding Sep_Homo_Ty_unzip_def Separation_Homo_unzip_def Imply_def
   apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y v
@@ -789,7 +789,7 @@ subsubsection \<open>By Key\<close>
 term prod
 
 declare  [[\<phi>trace_reasoning = 1]]
-                                                
+                                                           
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -809,7 +809,7 @@ declare  [[\<phi>trace_reasoning = 1]]
       | \<open>(x # l \<Ztypecolon> List2 T) = (prod (\<lambda>x. x \<Ztypecolon> T) (set x)\<heavy_comma> l \<Ztypecolon> List2 T)\<close>
 *)
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
-          
+           
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
 
@@ -826,9 +826,6 @@ lemma [\<phi>inhabitance_rule, elim!]: (*TODO: reason this automatically!*)
   \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)
 
-interpretation \<phi>MapAt: Functional_Transformation_Functor_L
-    \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k = k'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
-  sorry 
 (*  by (standard, clarsimp simp add: \<phi>MapAt_def Premise_def, \<phi>reason) *)
 
 interpretation \<phi>MapAt: Sep_Homo_Type_Functor_L
