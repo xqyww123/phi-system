@@ -281,11 +281,12 @@ lemma \<phi>Composition_unit_functor[\<phi>reason add]:
   unfolding Unit_Functor_def Unit_Homo_def
   by (auto simp add: \<phi>Composition_expn) *)
 
+(*
 lemma \<phi>Composition_union_functor[\<phi>reason add]:
   \<open>Union_Functor ((\<Zcomp>) B) ((\<Zcomp>) B)\<close>
   unfolding Union_Functor_def
   by (clarify, rule \<phi>Type_eqI, simp add: \<phi>expns \<phi>Composition_expn; blast)
-
+*)
 
 section \<open>Logical Connectives\<close>
 
@@ -397,8 +398,8 @@ lemma [\<phi>reason 1000]:
   unfolding Rewrite_into_\<phi>Type_def by (simp add: ExTyp_expn, metis)
 
 lemma [\<phi>reason 1000]:
-  \<open> (\<And>x. \<phi>Equiv_Obj (R x) (T x))
-\<Longrightarrow> \<phi>Equiv_Obj (\<lambda>f g. \<forall>x. R x (f x) (g x)) (ExTyp T)\<close>
+  \<open> (\<And>x. \<phi>Equiv_Obj (T x) (R x))
+\<Longrightarrow> \<phi>Equiv_Obj (ExTyp T) (\<lambda>f g. \<forall>x. R x (f x) (g x)) \<close>
   unfolding \<phi>Equiv_Obj_def ExTyp_expn Imply_def
   by (clarsimp simp add: ExSet_expn; blast)
 
@@ -787,12 +788,21 @@ subsubsection \<open>By Key\<close>
 
 term prod
 
-declare  [[\<phi>trace_reasoning = 2]]
-                                        
+declare  [[\<phi>trace_reasoning = 1]]
+                                          
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
+   subj \<open>Transformation_Functor set list_all2\<close>
+
+print_\<phi>reasoners \<open>xaa \<Ztypecolon> List T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to U\<close> ?
+
+declare  [[\<phi>trace_reasoning = 3]]
  
+\<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
+  where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
+      | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
+
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List2 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List2 T) = (prod (\<lambda>x. x \<Ztypecolon> T) (set x)\<heavy_comma> l \<Ztypecolon> List2 T)\<close>
@@ -802,10 +812,10 @@ consts Nat :: \<open>(nat,nat) \<phi>\<close>
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
 
-
+    
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-
+   subj \<open>\<phi>Equiv_Obj (=)\<close>
 
 lemma [\<phi>inhabitance_rule, elim!]: (*TODO: reason this automatically!*)
   \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -1686,7 +1696,7 @@ interpretation \<phi>Share: Sep_Homo_Type_Functor_L
 lemma [\<phi>reason add]:
   \<open> Near_Semimodule_Functor_zip ((\<odiv>) :: _ \<Rightarrow> ('a::share_semimodule_sep,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
-        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> \<phi>Equiv_Obj eq T \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
+        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> \<phi>Equiv_Obj T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
         (\<lambda>_ _. fst) \<close>
   unfolding Near_Semimodule_Functor_zip_def \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: Imply_def \<phi>Prod_expn \<phi>Equiv_Obj_def \<phi>Share_expn Premise_def;
@@ -1695,7 +1705,7 @@ lemma [\<phi>reason add]:
 lemma [\<phi>reason add]:
   \<open> Near_Semimodule_Functor_zip_rev ((\<odiv>) :: _ \<Rightarrow> ('a::share_semimodule_sep,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
-        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> \<phi>Equiv_Obj eq T \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
+        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> \<phi>Equiv_Obj T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
         (\<lambda>_ _. fst) \<close>
   unfolding Near_Semimodule_Functor_zip_rev_def \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: Imply_def \<phi>Prod_expn \<phi>Equiv_Obj_def \<phi>Share_expn Premise_def;

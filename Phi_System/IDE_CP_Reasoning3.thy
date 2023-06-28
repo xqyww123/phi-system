@@ -470,7 +470,7 @@ lemma Structural_Extract_reverse_transformation_I[intro?]:
 subsubsection \<open>Installation -- Rules initializing the SE reasoning\<close>
 
 lemma ToSA_by_structural_extraction:
-  " \<phi>Equiv_Obj eq T
+  " \<phi>Equiv_Obj T eq
 \<Longrightarrow> \<r>CALL Try Any ((y,w) \<Ztypecolon> U \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> xr \<Ztypecolon> T \<^emph> R \<a>\<n>\<d> P2 @action \<A>SE)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (fst xr) x
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> w \<Ztypecolon> W \<brangle> \<a>\<n>\<d> P1
@@ -482,7 +482,7 @@ lemma ToSA_by_structural_extraction:
   \<medium_right_bracket> .
 
 lemma ToSA_by_structural_extraction__reverse_transformation:
-  " \<phi>Equiv_Obj eq T
+  " \<phi>Equiv_Obj T eq
 \<Longrightarrow> \<r>CALL Try Any (
       (y,w) \<Ztypecolon> U \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> xr \<Ztypecolon> T \<^emph> R \<a>\<n>\<d> (
         (True \<longrightarrow> Reverse_Transformation RP2 ((x',r') \<Ztypecolon> T' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> yw' \<Ztypecolon> U' \<^emph> W' \<a>\<n>\<d> P2')
@@ -490,7 +490,7 @@ lemma ToSA_by_structural_extraction__reverse_transformation:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (fst xr) x
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2 \<heavy_comma> \<blangle> w \<Ztypecolon> W \<brangle> \<a>\<n>\<d> (Reverse_Transformation RP1 (R2'\<heavy_comma> \<blangle> snd yw' \<Ztypecolon> W' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A' \<a>\<n>\<d> P1') \<and> P1)
 \<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> R2\<heavy_comma> snd xr \<Ztypecolon> R\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<a>\<n>\<d>
-      (Reverse_Transformation (\<phi>Equiv_Obj eq' U' \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq' (fst yw') y') \<and> RP2 \<and> RP1) (
+      (Reverse_Transformation (\<phi>Equiv_Obj U' eq' \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq' (fst yw') y') \<and> RP2 \<and> RP1) (
               R2'\<heavy_comma> r' \<Ztypecolon> R'\<heavy_comma> \<blangle> x' \<Ztypecolon> T' \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> A'\<heavy_comma> y' \<Ztypecolon> U' \<a>\<n>\<d> P1' \<and> P2')
           \<and> P1 \<and> P2)"
   unfolding FOCUS_TAG_def Generated_Rule_def Try_def \<r>Call_def

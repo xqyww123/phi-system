@@ -1,8 +1,13 @@
 signature PLPR_EXHAUSTIVE = sig
+
+val PLPR_exhaustive_mode : bool Config.T
 val reason_exhaustively : int option (*limits of the goals to be reasoned*) -> context_state -> thm option
+
 end
 
 structure PLPR_Exhaustive : PLPR_EXHAUSTIVE = struct
+
+val PLPR_exhaustive_mode = Config.declare_bool ("PLPR_exhaustive_mode", \<^here>) (K false)
 
 structure Reached_Branches = Proof_Data (
   type T = thm list Synchronized.var list
@@ -51,6 +56,7 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
      val sequent' = Conv.fconv_rule (objectize_after_n ctxt (n+2)) sequent''
      val branches : thm list Synchronized.var = Synchronized.var "PLPR_Exhaustive.branches" []
      val (_, ctxt') = ctxt
+              |> Config.put PLPR_exhaustive_mode true
               |> Reached_Branches.map (fn L => branches :: L)
               |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn (ctxt,sequent) => (
                     Synchronized.change (hd (Reached_Branches.get ctxt)) (fn L => sequent :: L) ;

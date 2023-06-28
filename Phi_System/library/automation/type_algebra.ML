@@ -271,7 +271,7 @@ fun set_last_schematic_var ctxt rule0 =
   let val rule = Phi_Reasoner.beta_eta_contract rule0
       val (t1,t2,tm) =
         case Thm.concl_of rule
-          of _ (*Trueprop*) $ (_ (*\<phi>Equal_Obj*) $ Abs (_, t1, Abs (_, t2, tm)) $ _)
+          of _ (*Trueprop*) $ (_ (*\<phi>Equiv_Obj*) $ _ $ Abs (_, t1, Abs (_, t2, tm)))
               => (t1,t2,tm)
            | _ => error "Internal bug cb9504e4-7db1-45f8-b1f6-ec37a5b75105"
       fun get_the_last_var (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ X) = get_the_last_var X
@@ -449,7 +449,7 @@ fun obj_equal_reasoner ctxt sequent0 =
 
       
 
-fun unify_hint_obj_eq (ctxt, hint) (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj _ _\<close> $  _ $ T')) (x, T) =
+fun unify_hint_obj_eq (ctxt, hint) (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj _ _\<close> $ T' $ _)) (x, T) =
   Unify.smash_unifiers (Context.Proof ctxt) [(T',T)] Envir.init
     |> Seq.chop 2
     |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
@@ -463,7 +463,7 @@ fun guess_property_obj_eq (x_term, T_term, x_ty, arg_tys, model_ty, (phi:phi_typ
                 val typ = x_ty_A --> x_ty_A --> \<^typ>\<open>bool\<close>
                 val ant = (Term.incr_bv (arity_A, 0, A))
                         |> fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A          
-                        |> (fn X => \<^Const>\<open>\<phi>Equiv_Obj x_ty_A model_ty_A\<close> $ Free(eq, typ) $ X)
+                        |> (fn X => \<^Const>\<open>\<phi>Equiv_Obj x_ty_A model_ty_A\<close> $ X $ Free(eq, typ))
                         |> fold (fn T => fn X =>
                             Const(\<^const_name>\<open>All\<close>, (T --> HOLogic.boolT) --> HOLogic.boolT)
                               $ Abs("",T,X)
@@ -488,7 +488,7 @@ fun guess_property_obj_eq (x_term, T_term, x_ty, arg_tys, model_ty, (phi:phi_typ
              else Seq.single (Var(("eq", 1), x_ty --> x_ty --> HOLogic.boolT), ctxt)
    in eq_terms
    |> Seq.map (fn (eq_term, ctxt') =>
-        (ant, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj x_ty model_ty\<close> $ eq_term $ T_term), ctxt'))
+        (ant, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj x_ty model_ty\<close> $ T_term $ eq_term), ctxt'))
   end
 
 (*
@@ -747,10 +747,8 @@ fun TF_reasoner ctxt sequent0 =
    |> TF_reasoner ctxt
   end
 
-
-
-fun gen_TF' (phi0 : phi_type) hint0 thy =
-  let val ctxt0 = Context.proof_of thy
+fun gen_TF' (phi0 : phi_type) hint0 generic =
+  let val ctxt0 = Context.proof_of generic
       fun ind_conv ctxt phi =
               Phi_Helper_Conv.hhf_conv (
                 Phi_Helper_Conv.hhf_conv (fn ctxt => fn ctm =>
@@ -780,7 +778,8 @@ fun gen_TF' (phi0 : phi_type) hint0 thy =
       val rules = mk_rule_by_guess_or_hint (unify_hint_TF, guess_property_TF, [0,~1,~1,~1], ind_conv)
                                             @{thm \<phi>TA_TF_rule} phi0 hint0 ctxt0
                 |> Seq.map (fn (rule, phi, ctxt) =>
-                      (TF_reasoner ctxt rule, ctxt))
+                      (TF_reasoner (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt) rule,
+                       ctxt))
                (*|> Seq.map (fn (rule, phi, ctxt) =>
             let val rule' = obj_equal_reasoner ctxt rule
              in (if is_some hint0 orelse #is_recursive phi
@@ -794,14 +793,37 @@ fun gen_TF' (phi0 : phi_type) hint0 thy =
           )*)
    in Seq.chop 2 rules
    |> (fn ([], _) => raise Automation_Fail
-        | ([(rule',ctxt)], _) =>
+        | ((rule',ctxt)::_ , _) =>
           let val rule'' = Phi_Sledgehammer_Solver.auto (SOME (#proof_id phi0 ^ "/TF"))
                                                         (ctxt, rule')
-           in Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
-                                          ([],[]) NONE [rule''] thy
-          end
-        | (rules,_) => (warning "More than one property instances are inferred.";
-                        raise Automation_Fail))
+                        |> (fn th => case Thm.major_prem_of th
+                                       of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
+                                            @{thm Premise_True} RS th
+                                        | \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> =>
+                                            @{thm TrueI} RS th
+                                        | _ => th)
+              val locale_rule = (rule'' RS @{thm Transformation_Functor_L.intro})
+                              |> (fn th => case Thm.nprems_of th
+                                             of 0 => th
+                                              | 1 => Seq.hd (Thm.assumption (SOME ctxt) 1 th)
+                                              | _ => error "Internal bug")
+              fun setup_locale cmd lthy =
+                case Thm.concl_of locale_rule
+                  of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor_L\<close>, _)
+                        $ Fa $ Fb $ D $ m $ Pr) =>
+                cmd ([(\<^locale>\<open>Transformation_Functor_L\<close>, (("",false),
+                      (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME m,
+                                              SOME (case Pr of Var _ => \<^Const>\<open>True\<close> | _ => Pr)],
+                       [])))], []) [] lthy
+                  |> Proof.refine_primitive (fn _ => fn th => locale_rule RS th)
+                  |> Proof.global_done_proof
+                  
+           in generic
+           |> Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
+                                          ([],[]) NONE [rule'']
+           |> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
+                              (setup_locale Interpretation.sublocale)
+          end)
   end
 
 in
@@ -818,8 +840,8 @@ fun gen_TF (phi,hints) thy =
                                  Context.cases Syntax.string_of_term_global Syntax.string_of_term thy H))
                       ) hints thy)
            handle Automation_Fail => (
-             warning "Fail to reason the equivelance between abstract objects." ;
-             (if null hints then warning "You may want to annotate it by \<open>is \<open>\<phi>Equiv_Obj eq\<close>\<close>" else ());
+             warning "Fail to reason the property of transformation functor." ;
+             (if null hints then warning "You may want to annotate it by \<open>is \<open>Transformation_Functor \<dots>\<close>\<close>" else ());
              thy
            )
        end

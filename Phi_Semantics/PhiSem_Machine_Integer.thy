@@ -161,7 +161,7 @@ parse_ast_translation \<open>
                 Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
 lemma [\<phi>reason add]:
-  \<open>\<phi>Equiv_Obj (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b)) \<nat>\<^sup>r('b)\<close>
+  \<open>\<phi>Equiv_Obj \<nat>\<^sup>r('b) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
   \<medium_left_bracket>
     destruct\<phi> _
     construct\<phi> \<open>y \<Ztypecolon> \<nat>\<^sup>r('b)\<close>

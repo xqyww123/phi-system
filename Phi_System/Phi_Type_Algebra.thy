@@ -528,7 +528,7 @@ subsubsection \<open>Equiv Object\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method (\<And>x y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T) M D R F
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>Equiv_Obj eq T)) M D R F\<close>
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>Equiv_Obj T eq)) M D R F\<close>
   unfolding \<phi>Programming_Method_def \<phi>Equiv_Obj_def Premise_def
   by clarsimp
 
@@ -746,14 +746,14 @@ lemma [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\
   unfolding Action_Tag_def
   using transformation .
 
-lemma [\<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action to _\<close>]:
+lemma [\<phi>reason default 40]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to (Fb Z) \<close>
   unfolding Action_Tag_def
   using transformation .
 
-lemma [\<phi>reason default 36 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<s>\<u>\<b>\<j> y. _ @action to _\<close>]:
+lemma [\<phi>reason default 36]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to Z \<close>
@@ -959,7 +959,7 @@ lemma \<phi>Equiv_Obj_rule:
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> \<phi>Equiv_Obj eq T \<close>
+\<Longrightarrow> \<phi>Equiv_Obj T eq \<close>
   unfolding \<phi>Equiv_Obj_def Premise_def
   by blast
 
@@ -1050,19 +1050,19 @@ hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>E
 
 lemmas [\<phi>constraint_expansion] = HOL.simp_thms ex_simps[symmetric]
           ExSet_simps
-          FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
+          FSet.ball_simps(5-7) Set.ball_simps(5-7,9) Set.ball_Un
+          Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
           list_all2_Cons1 list_all2_Nil Ball_set_cons
 
 lemmas [\<phi>type_algebra_normalize_ToA_ss] = HOL.simp_thms implies_refl
 
-thm FSet.ball_simps
-thm FSet.ball_simps(5-7)
-thm Set.ball_simps
-thm Set.ball_simps(5-7,9)
 
-lemma
-  \<open>Ball (x insert S) \<close>
+lemma Set_bind_insert[simp, \<phi>constraint_expansion]:
+  \<open>Set.bind (insert x S) f = f x \<union> Set.bind S f\<close>
+  unfolding Set.bind_def
+  by auto
 
+thm Set.ball_Un
 thm set_simps
 thm list.set
 

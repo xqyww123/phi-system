@@ -380,7 +380,7 @@ lemma view_shift_refl[\<phi>reason 2000 for \<open>?A \<s>\<h>\<i>\<f>\<t>\<s> ?
   by (blast intro: view_shift_by_implication implies_refl)
 
 lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<s>\<h>\<i>\<f>\<t>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> ?P\<close>]:
-  " \<phi>Equiv_Obj eq T
+  " \<phi>Equiv_Obj T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y
 \<Longrightarrow> x \<Ztypecolon> T \<s>\<h>\<i>\<f>\<t>\<s> y \<Ztypecolon> T"
   unfolding \<phi>Equiv_Obj_def Premise_def

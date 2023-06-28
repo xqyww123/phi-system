@@ -696,7 +696,10 @@ fun add_type (def, pos, hints) generic =
         Phi_Reasoner.add_intro_rules (map (fn rule =>
             ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 40, [], [], NONE)
         ) intro_ToA))
+   |> Context.mapping (Context_Position.set_visible_global false)
+                      (Context_Position.set_visible false)
    |> invoke_automations_on_def (phi_type, hints)
+   |> Context_Position.restore_visible_generic generic
    |> pair phi_type
   end
 
@@ -748,29 +751,32 @@ fun check_algebra_hints ctxt const hints =
   let val ctxt'0 = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
       val ((_, T_term', _, _, _), ctxt') = fix_phi_term_params const ctxt'0
       val T_term = singleton (Variable.export_terms ctxt' ctxt) T_term'
-      fun get_arity ret \<^Type>\<open>fun _ T\<close> = get_arity (ret+1) T
+                |> Term.map_types (K Term.dummyT)
+      fun get_arity ret \<^Type>\<open>fun a T\<close> = get_arity (a::ret) T
         | get_arity ret \<^Type>\<open>bool\<close> = ret
         | get_arity _ _ = error "The given hint is not an algebraic property."
       fun head_of (Const("_type_constraint_", _) $ X) = head_of X
         | head_of (X $ _) = head_of X
         | head_of X = X
       val hints_arity = map (fn hint =>
-            get_arity 0 (Sign.the_const_type (Proof_Context.theory_of ctxt')
+            get_arity [] (Sign.the_const_type (Proof_Context.theory_of ctxt')
                                              (fst (raw_term_name_typ (head_of hint))))) hints
       fun pad_term arity (\<^Const>\<open>Pure.imp\<close> $ LHS $ X) =
             \<^Const>\<open>Pure.imp\<close> $ LHS $ pad_term arity X
         | pad_term arity (\<^Const>\<open>Trueprop\<close> $ X) =
-            \<^Const>\<open>Trueprop\<close> $ pad_term arity X
+            pad_term arity X
         | pad_term arity term =
-            let fun term_arity ret (Const("_type_constraint_", _) $ X) = term_arity ret X
-                  | term_arity ret (X $ _) = term_arity (ret+1) X
-                  | term_arity ret _ = ret
-                val d = arity - term_arity 0 term
-                val _ = if d < 0 then error "Internal bug 3bc2ce92-edce-427a-a401-24152b11bc81"
-                                 else ()
-                (* fun subst_dummy () *)
-             in term
-             |> funpow d (fn X => X $ Logic.incr_indexes ([],[], Term.maxidx_of_term X + 1) T_term)
+            let val i = Term.maxidx_of_term term + 1
+                val k = Term.maxidx_of_term T_term + 1
+                fun trim \<^Type>\<open>fun _ \<open>T as \<^Type>\<open>fun _ _\<close>\<close>\<close> (X $ _) = trim T X
+                  | trim _ X = X
+                fun pad _ [] X = X
+                  | pad j (T::tys) X =
+                      pad (i+1) tys X $ trim T (Logic.incr_indexes ([],[], i+j*k) T_term)
+                fun pass ar (X as (Const("_type_constraint_", _) $ _)) = pad 0 ar X
+                  | pass (_::ar) (X $ Y) = pass ar X $ Y
+                  | pass ar X = pad 0 ar X                
+             in \<^Const>\<open>Trueprop\<close> $ pass arity term
             end
    in Syntax.check_props ctxt'0 (map2 pad_term hints_arity hints)
   end
@@ -814,7 +820,8 @@ fun gen_add_fun pos raw_hints add (generic : generic_theory) =
     val const = find_first (is_phi_type o Term.fastype_of) (#fs info)
               |> (fn SOME x => x
                    | NONE => error "No \<phi>-type is defined.")
-    val hints = check_algebra_hints (Context.proof_of generic) const raw_hints
+    val ctxt'1 = Context.proof_of generic'1
+    val hints = check_algebra_hints ctxt'1 const (map (Syntax.parse_term ctxt'1) raw_hints)
    in generic'1
    |> Context.mapping_result (
         Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
@@ -833,8 +840,7 @@ in
 (* fun add_fun a b c = gen_add_fun (Function.add_function a b c) *)
 fun add_fun_cmd a b c hints int generic =
   let val ctxt = Context.proof_of generic
-   in gen_add_fun (Binding.pos_of (#1 (hd a)))
-                  (map (Syntax.parse_term ctxt) hints)
+   in gen_add_fun (Binding.pos_of (#1 (hd a))) hints
                   (fn tac =>
                       Context.mapping_result
                         (Named_Target.theory_map_result Function_Common.transform_function_data
@@ -845,7 +851,7 @@ fun add_fun_cmd a b c hints int generic =
 end
 
 
-val algebra_hints = Scan.repeat (\<^keyword>\<open>is\<close> |-- Parse.term)
+val algebra_hints = Scan.repeat (\<^keyword>\<open>subj\<close> |-- Parse.term)
 
 val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- algebra_hints
       >> (fn ((config, (fixes, specs)), algebras) => add_fun_cmd fixes specs config algebras))
