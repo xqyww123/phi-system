@@ -481,7 +481,7 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
                           Conv.rewr_conv ((pure_info, ctxt'') RS' @{thm' conv_intro_premise}))) 1
                           lsequent'
 
-   in Subgoal.retrofit ctxt'' ctxt (#params focus) (#asms focus) 1 lsequent'' sequent
+   in Subgoal.retrofit ctxt'' ctxt0 (#params focus) (#asms focus) 1 lsequent'' sequent
    |> Seq.hd
    |> Phi_Reasoners.defer_obligation_tac ctxt
    |> Seq.hd
@@ -1207,33 +1207,39 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
             end
   end
 
-fun gen_SH flag (phi,hints) thy =
-  if is_Type_Opr (Term.fastype_of (#term phi))
-  then let val hints = select_hints (if flag then \<^const_name>\<open>Sep_Homo_Ty_zip\<close>
-                                             else \<^const_name>\<open>Sep_Homo_Ty_unzip\<close>) hints
-        in (case hints
-              of [] => gen_SH' flag phi NONE thy
-               | _ => fold (fn H => fn thy =>
-                        gen_SH' flag phi (SOME H) thy
-                        handle Automation_Fail => (
-                          error ("Fail to reason the Separation Homomorphism:\n" ^
-                                 Context.cases Syntax.string_of_term_global Syntax.string_of_term thy H))
-                      ) hints thy)
-           handle Automation_Fail => (
-             warning "Fail to reason the property of Separation Homomorphism." ;
-             (if null hints then warning "You may want to annotate it by \<open>is \<open>Sep_Homo_Ty_zip \<dots>\<close>\<close>" else ());
-             thy
-           )
-       end
+fun gen_SH flag (phi00,hints) thy =
+  if is_Type_Opr (Term.fastype_of (#term phi00))
+  then
+     let val (_,_,model_ty00) = dest_parameterized_phi_ty (Term.fastype_of (#term phi00))
+         val inst0  = lift_type_sort (Context.theory_of thy) (model_ty00, \<^sort>\<open>sep_magma\<close>)
+         val inst = Phi_Help.tyenv_to_tvars_table_no_c inst0
+         val inst' = TVars.map (K (Context.cases Thm.global_ctyp_of Thm.ctyp_of thy)) inst
+         val phi = instantiate_phi ((inst,Vars.empty),(inst',Vars.empty)) phi00
+         val hints = select_hints (if flag then \<^const_name>\<open>Sep_Homo_Ty_zip\<close>
+                                           else \<^const_name>\<open>Sep_Homo_Ty_unzip\<close>) hints
+      in (case hints
+            of [] => gen_SH' flag phi NONE thy
+             | _ => fold (fn H => fn thy =>
+                      gen_SH' flag phi (SOME H) thy
+                      handle Automation_Fail => (
+                        error ("Fail to reason the Separation Homomorphism:\n" ^
+                               Context.cases Syntax.string_of_term_global Syntax.string_of_term thy H))
+                    ) hints thy)
+         handle Automation_Fail => (
+           warning "Fail to reason the property of Separation Homomorphism." ;
+           (if null hints then warning "You may want to annotate it by \<open>is \<open>Sep_Homo_Ty_zip \<dots>\<close>\<close>" else ());
+           thy
+         )
+     end
   else thy
 
 (*** Install Automation ***)
 
 val _ = Theory.setup (Context.theory_map (
-   Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
-(*#> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
-#>*) (*Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)*)
-(*#> Phi_Type_Algebra.add_automation_on_def 121 (gen_SH false)*)
+   (* Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
+#> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
+#>*) Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)
+(* Phi_Type_Algebra.add_automation_on_def 121 (gen_SH true) *)
 ))
 
 end

@@ -1122,16 +1122,14 @@ lemma \<phi>TA_SHz_rule:
   unfolding Sep_Homo_Ty_zip_def \<phi>Prod_expn' Action_Tag_def
   by simp
 
-(* lemma \<phi>TA_SHu_rule:
-  \<open> (\<And>T U z. Ant \<longrightarrow>
-        (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
-            \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Fc (T \<^emph> U))) @action \<phi>TA_ind_target undefined)
+lemma \<phi>TA_SHu_rule:
+  \<open> (\<And>T U z. Ant \<longrightarrow> (z \<Ztypecolon> Fc (T \<^emph> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> uz z \<Ztypecolon> Ft T \<^emph> Fu U) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> Sep_Homo_Ty_unzip Fa Fb Fc D uz \<close>
-  unfolding Sep_Homo_Ty_zip_def \<phi>Prod_expn' Action_Tag_def
-  by simp *)
+\<Longrightarrow> Sep_Homo_Ty_unzip Ft Fu Fc uz \<close>
+  unfolding Sep_Homo_Ty_unzip_def \<phi>Prod_expn' Action_Tag_def
+  by simp
 
 lemma \<phi>TA_SHz_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> Q x y) @action \<phi>TA_ind_target undefined)

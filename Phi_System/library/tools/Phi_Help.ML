@@ -37,6 +37,8 @@ signature PHI_HELP = sig
   val string_of_term_generic : Context.generic -> term -> string
 
   val tyenv_to_tvars_table : Proof.context -> Type.tyenv -> ctyp TVars.table
+  val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
+  val tyenv_to_tvars_table_generic : Context.generic -> Type.tyenv -> ctyp TVars.table
   val tenv_to_vars_table : Proof.context -> Type.tyenv -> Envir.tenv -> cterm Vars.table
   val env_to_table : Proof.context -> (Type.tyenv * Envir.tenv)
                                    -> (ctyp TVars.table * cterm Vars.table)
@@ -174,6 +176,16 @@ fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global t
 fun tyenv_to_tvars_table ctxt : Type.tyenv -> ctyp TVars.table
   = Vartab.dest
  #> map (fn (N,(S,T)) => ((N,S), Thm.ctyp_of ctxt T))
+ #> TVars.make
+
+fun tyenv_to_tvars_table_generic generic : Type.tyenv -> ctyp TVars.table
+  = Vartab.dest
+ #> map (fn (N,(S,T)) => ((N,S), Context.cases Thm.global_ctyp_of Thm.ctyp_of generic T))
+ #> TVars.make
+
+val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
+  = Vartab.dest
+ #> map (fn (N,(S,T)) => ((N,S), T))
  #> TVars.make
 
 fun tenv_to_vars_table ctxt tyenv : Envir.tenv -> cterm Vars.table

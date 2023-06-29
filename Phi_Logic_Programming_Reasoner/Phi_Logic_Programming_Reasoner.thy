@@ -58,9 +58,6 @@ ML_file \<open>library/tools/simpset.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/tools/ml_thms.ML\<close>
 
-ML \<open>\<^Const>\<open>True\<close>\<close>
-ML \<open>@{thm' \<open>\<^context>\<close> TrueI}\<close>
-
 definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
     \<comment> \<open>If guards of a rule fail, the rule will be considered not appliable, just like the pattern
         mismatch. It makes difference for cut rule and default 'to-be-overrided' rules.

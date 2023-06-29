@@ -809,13 +809,13 @@ declare  [[\<phi>trace_reasoning = 1]]
       | \<open>(x # l \<Ztypecolon> List2 T) = (prod (\<lambda>x. x \<Ztypecolon> T) (set x)\<heavy_comma> l \<Ztypecolon> List2 T)\<close>
 *)
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
-           
+
+declare [[\<phi>trace_reasoning = 2, ML_print_depth = 1000]]
+   
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
 
-declare [[\<phi>trace_reasoning = 3, ML_print_depth = 1000]]
- 
- 
+   
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
   subj \<open>\<phi>Equiv_Obj (=)\<close>
