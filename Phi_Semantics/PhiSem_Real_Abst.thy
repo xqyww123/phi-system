@@ -57,9 +57,14 @@ lemma \<phi>AReal_expn[\<phi>expns]:
   "p \<in> (x \<Ztypecolon> \<real>) \<longleftrightarrow> p = V_areal.mk x"
   unfolding \<phi>Type_def by (simp add: \<phi>AReal_def)
 
-lemma \<phi>AReal_inhabited[elim!,\<phi>inhabitance_rule]:
+lemma \<phi>AReal_inhabited[elim!]:
   "Inhabited (x \<Ztypecolon> \<real>) \<Longrightarrow> C \<Longrightarrow> C"
   unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma [\<phi>inhabitance_rule 1000]:
+  "Inhabited (x \<Ztypecolon> \<real>) \<longrightarrow> True"
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<real> (\<lambda>x y. True) (=)"

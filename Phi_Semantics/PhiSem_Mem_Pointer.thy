@@ -516,8 +516,12 @@ lemma RawPointer_expn[\<phi>expns]:
   "v \<in> (p \<Ztypecolon> RawPointer) \<longleftrightarrow> v = V_pointer.mk p \<and> valid_rawaddr p"
   by (simp add: \<phi>Type_def RawPointer_def \<phi>expns)
 
-lemma RawPointer_inhabited[elim!, \<phi>inhabitance_rule]:
+lemma RawPointer_inhabited[elim!]:
   "Inhabited (p \<Ztypecolon> RawPointer) \<Longrightarrow> (valid_rawaddr p \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma [\<phi>inhabitance_rule 1000]:
+  " Inhabited (p \<Ztypecolon> RawPointer) \<longrightarrow> valid_rawaddr p "
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma RawPointer_zero[\<phi>reason 1200]:
@@ -545,9 +549,13 @@ lemma Ptr_expn[\<phi>expns]:
       v = V_pointer.mk (logaddr_to_raw addr) \<and> valid_logaddr addr \<and> logaddr_type addr = TY"
   unfolding \<phi>Type_def by (simp add: Ptr_def Subjection_expn)
 
-lemma Ptr_inhabited[elim!, \<phi>inhabitance_rule]:
+lemma Ptr_inhabited[elim!]:
   "Inhabited (addr \<Ztypecolon> Ptr TY) \<Longrightarrow>
       (valid_logaddr addr \<and> logaddr_type addr = TY \<Longrightarrow> C) \<Longrightarrow> C"
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma [\<phi>inhabitance_rule 1000]:
+  " Inhabited (addr \<Ztypecolon> Ptr TY) \<longrightarrow> valid_logaddr addr \<and> logaddr_type addr = TY "
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:

@@ -77,7 +77,7 @@ fun the_implication i ctxt =
 fun reason_programming_implication' mode ctxt sequent =
   let val inhabited_rule = #inhabited_rule mode
       val thm = sequent RS inhabited_rule
-   in Phi_Inhabitance_Rules.implications_of_inhabitance ctxt thm
+   in Phi_Reasoners.extract_implied_facts ctxt thm
   end handle THM _ => []
 
 fun reason_programming_implication ctxt =

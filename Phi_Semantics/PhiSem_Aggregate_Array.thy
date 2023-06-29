@@ -64,10 +64,15 @@ lemma Array_expns[\<phi>expns]:
     (\<exists>vs. length l = N \<and> v = V_array.mk vs \<and> list_all2 (\<lambda>v x. v \<in> (x \<Ztypecolon> T)) vs l )\<close>
   unfolding Array_def \<phi>Type_def by simp blast
 
-lemma Array_inhabited[\<phi>inhabitance_rule, elim!]:
+lemma Array_inhabited[elim!]:
   \<open> Inhabited (l \<Ztypecolon> Array N T)
 \<Longrightarrow> (length l = N \<Longrightarrow> (\<And>i. i < length l \<Longrightarrow> Inhabited (l!i \<Ztypecolon> T)) \<Longrightarrow> C)
 \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth) blast
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> (\<And>i. \<p>\<r>\<e>\<m>\<i>\<s>\<e> length l = N \<and> i < N \<Longrightarrow> Inhabited (l!i \<Ztypecolon> T) \<longrightarrow> C i)
+\<Longrightarrow> Inhabited (l \<Ztypecolon> Array N T) \<longrightarrow> length l = N \<and> (\<forall>i < N. C i)\<close>
   unfolding Inhabited_def by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth) blast
 
 lemma Array_semty[\<phi>reason 1000]:

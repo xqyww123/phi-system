@@ -65,7 +65,7 @@ lemma \<phi>Bool_expn[\<phi>expns]:
   " p \<in> (x \<Ztypecolon> \<bool>) \<longleftrightarrow> p = V_bool.mk x"
   unfolding \<phi>Type_def \<phi>Bool_def by simp
 
-lemma \<phi>Bool_inhabited[\<phi>inhabitance_rule, elim!]:
+lemma \<phi>Bool_inhabited[elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<bool>) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:

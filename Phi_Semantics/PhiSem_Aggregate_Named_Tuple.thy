@@ -141,8 +141,13 @@ lemma Named_Tuple_Field_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) \<longleftrightarrow> (\<exists>v. p = V_named_tup.mk (fmupd s v fmempty) \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding Named_Tuple_Field_def \<phi>Type_def by simp
 
-lemma Named_Tuple_Field_inhabited[elim!,\<phi>inhabitance_rule]:
+lemma Named_Tuple_Field_inhabited[elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
+\<Longrightarrow> Inhabited (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) \<longrightarrow> C \<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma Empty_Tuple_reduce[simp]:

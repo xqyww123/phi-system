@@ -27,8 +27,9 @@ lemma Val_expn [\<phi>expns]:
   \<open>(x \<Ztypecolon> Val val T) = (1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<in> (x \<Ztypecolon> T))\<close>
   unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma Val_inhabited [\<phi>inhabitance_rule]:
-  \<open>Inhabited (x \<Ztypecolon> Val val T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma [\<phi>reason 1000]:
+  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
+\<Longrightarrow> Inhabited (x \<Ztypecolon> Val val T) \<longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns) blast
 
 lemma Val_inhabited_rewr:

@@ -60,7 +60,6 @@ text \<open>Antecedent \<^prop>\<open>\<p>\<a>\<r>\<a>\<m> x\<close> asks users 
   \<phi>-Processor `set_param` processes this antecedent.\<close>
 
 lemma ParamTag: "\<p>\<a>\<r>\<a>\<m> x" for x :: "'a::{}" unfolding ParamTag_def using TrueI .
-lemma [elim!,\<phi>inhabitance_rule]: "\<p>\<a>\<r>\<a>\<m> x \<Longrightarrow> C \<Longrightarrow> C" .
 lemma [cong]: "\<p>\<a>\<r>\<a>\<m> x \<longleftrightarrow> \<p>\<a>\<r>\<a>\<m> x" \<comment> \<open>Disable simplification on parameters\<close> ..
 
 ML_file \<open>library/syntax/param.ML\<close>
@@ -163,7 +162,6 @@ text \<open>The \<^term>\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x\<
   The \<phi>-processor `set_label` processes the \<^term>\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x\<close> antecedent.\<close>
 
 lemma LabelTag: "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x" unfolding LabelTag_def ..
-lemma [elim!,\<phi>inhabitance_rule]: "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l x \<Longrightarrow> C \<Longrightarrow> C" by auto
 
 
 paragraph \<open>Label Binding of Objects\<close>
@@ -221,8 +219,9 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Technical (Trueprop P) \<equiv> Trueprop (Technical_embed P)\<close>
   unfolding Technical_def Technical_embed_def .
 
-lemma [\<phi>inhabitance_rule]:
-  \<open>Inhabited (TECHNICAL X) \<Longrightarrow> (Inhabited X \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> Inhabited X \<longrightarrow> C
+\<Longrightarrow> Inhabited (TECHNICAL X) \<longrightarrow> C\<close>
   unfolding Technical_def .
 
 section \<open>Mechanisms\<close>

@@ -56,8 +56,11 @@ definition Brking_Frame :: \<open>RES.brk_label \<Rightarrow> ('v::VALs \<phi>ar
   where \<open>Brking_Frame label S =
      (\<exists>*v. S v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> FIC.brk_frame.\<phi> (label \<^bold>\<rightarrow> \<black_circle> (Nosep (\<black_circle> Identity))))\<close>
 
-lemma [\<phi>inhabitance_rule]:
+lemma [elim!]:
   \<open>Inhabited (Brk_Frame X) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open>Inhabited (Brk_Frame X) \<longrightarrow> True\<close> by blast
 
 lemma Brk_Frame_eq_identity:
   \<open>Brk_Frame l = (nosep None \<Ztypecolon> FIC.brk_frame.\<phi> (l \<^bold>\<rightarrow> \<black_circle> Identity))\<close>
@@ -209,8 +212,6 @@ lemma Brking_Frame_absorb_item[assertion_simps]:
   unfolding Brking_Frame_def
   apply (intro assertion_eq_intro)
   \<medium_left_bracket> \<medium_right_bracket> \<medium_left_bracket> \<medium_right_bracket>.
-
-declare [[\<phi>trace_reasoning = 2]] 
 
 lemma Brking_Frame_absorb_subj[assertion_simps]:
   \<open>((Brking_Frame l Y) \<s>\<u>\<b>\<j> P) = Brking_Frame l (\<lambda>v. Y v \<s>\<u>\<b>\<j> P)\<close>

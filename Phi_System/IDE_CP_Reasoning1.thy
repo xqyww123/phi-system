@@ -547,12 +547,14 @@ lemma [\<phi>reason 1200]:
 lemma [\<phi>reason 1200]:
   \<open>(\<And>x. \<phi>_Have_Types (\<lambda>ret. (S ret) x) TYs)
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. ExSet (S ret)) TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def Inhabited_def ExSet_expn
+  by clarsimp blast
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>x. \<phi>_Have_Types (\<lambda>ret. S ret) TYs)
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>ret. S ret \<s>\<u>\<b>\<j> P ret) TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def Inhabited_def Subjection_expn
+  by clarsimp
 
 
 

@@ -318,11 +318,11 @@ subsection \<open>Misc\<close>
 paragraph \<open>Inhabitance\<close>
 
 lemma ToA_Construction_Inhabited_rule:
-  \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S \<Longrightarrow> Inhabited S\<close>
   unfolding ToA_Construction_def Inhabited_def by blast
 
 lemma CurrentConstruction_Inhabited_rule:
-  "CurrentConstruction mode s H T \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C"
+  "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
   using CurrentConstruction_D by blast
 
 

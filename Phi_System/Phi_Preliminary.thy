@@ -201,56 +201,82 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Some very Early Reasoning\<close>
 
-subsubsection \<open>Extract Elimination Rule - Part I\<close>
-
-definition Extract_Elimination_Rule :: \<open>prop \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> prop\<close>
-  where \<open>Extract_Elimination_Rule IN OUT_L OUT_R \<equiv> (PROP IN \<Longrightarrow> OUT_L \<Longrightarrow> OUT_R)\<close>
-
-declare [[\<phi>reason_default_pattern \<open>PROP Extract_Elimination_Rule ?I _ _\<close>
-                                \<Rightarrow> \<open>PROP Extract_Elimination_Rule ?I _ _\<close> (100) ]]
-
-lemma Do_Extract_Elimination_Rule:
-  \<open> PROP IN
-\<Longrightarrow> PROP Extract_Elimination_Rule IN OUT_L OUT_R
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> OUT_L \<Longrightarrow> (OUT_R \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Extract_Elimination_Rule_def
-proof -
-  assume IN: \<open>PROP IN\<close>
-    and  RL: \<open>PROP IN \<Longrightarrow> OUT_L \<Longrightarrow> OUT_R\<close>
-    and  OL: \<open>OUT_L\<close>
-    and  OR: \<open>OUT_R \<Longrightarrow> C\<close>
-  from OR[OF RL[OF IN OL]] show \<open>C\<close> .
-qed
-
-ML_file \<open>library/tools/elimination_rule.ML\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP Extract_Elimination_Rule (Trueprop P) OL OR
-\<Longrightarrow> PROP Extract_Elimination_Rule (Trueprop (P @action A)) OL OR\<close>
-  unfolding Extract_Elimination_Rule_def Action_Tag_def .
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP Q
-\<Longrightarrow> PROP Extract_Elimination_Rule (PROP P) OL OR
-\<Longrightarrow> PROP Extract_Elimination_Rule (PROP Q \<Longrightarrow> PROP P) OL OR\<close>
-  unfolding Extract_Elimination_Rule_def Action_Tag_def
-  subgoal premises P using P(2)[OF P(3)[OF P(1)] P(4)] . .
-
-lemma [\<phi>reason 2000]:
-  \<open> PROP Extract_Elimination_Rule (PROP P) OL OR
-\<Longrightarrow> PROP Extract_Elimination_Rule (\<r>Success \<Longrightarrow> PROP P) OL OR\<close>
-  unfolding Extract_Elimination_Rule_def Action_Tag_def \<r>Success_def
-  subgoal premises P using P(1)[OF P(2)[OF TrueI] P(3)] . .
-
 subsubsection \<open>Inhabitance Reasoning - Part I\<close>
 
-text \<open>is by a set of General Elimination rules~\cite{elim_resolution} that extracts pure facts from
-  an inhabited BI assertion, i.e., of a form like
-  \[ \<open>Inhabited X \<Longrightarrow> (Pure1 \<Longrightarrow> Pure2 \<Longrightarrow> \<dots> \<Longrightarrow> C) \<Longrightarrow> \<dots> \<Longrightarrow> C\<close> \]
-\<close>
+definition Extract_Inhabitance_Rule :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Extract_Inhabitance_Rule IN OUT_L OUT_R \<longleftrightarrow> (IN \<longrightarrow> OUT_L \<longrightarrow> OUT_R)\<close>
 
+consts \<A>_extact_implied_facts :: action
+
+declare [[\<phi>reason_default_pattern \<open>Extract_Inhabitance_Rule ?I _ _\<close>
+                                \<Rightarrow> \<open>Extract_Inhabitance_Rule ?I _ _\<close> (100)
+             and \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>Inhabited ?X \<longrightarrow> _\<close> (100)
+             and \<open>?X \<longrightarrow> _ @action \<A>_extact_implied_facts\<close>
+              \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>_extact_implied_facts\<close> (100)
+             and \<open>_ @action \<A>_extact_implied_facts\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (10)]]
+
+lemma Do_Extract_Inhabitance_Rule:
+  \<open> IN
+\<Longrightarrow> Extract_Inhabitance_Rule IN OUT_L OUT_R
+\<Longrightarrow> OUT_R \<longrightarrow> C @action \<A>_extact_implied_facts
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> OUT_L \<longrightarrow> C\<close>
+  unfolding Extract_Inhabitance_Rule_def Action_Tag_def
+  by blast
+
+lemma Do_Extract_Implied_Facts:
+  \<open> P
+\<Longrightarrow> P \<longrightarrow> C @action \<A>_extact_implied_facts
+\<Longrightarrow> C\<close>
+  unfolding Action_Tag_def
+  by blast
+
+(* ML_file \<open>library/tools/elimination_rule.ML\<close> *)
 ML_file \<open>library/tools/inhabited_rule.ML\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> Extract_Inhabitance_Rule P OL OR
+\<Longrightarrow> Extract_Inhabitance_Rule (P @action A) OL OR\<close>
+  unfolding Extract_Inhabitance_Rule_def Action_Tag_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> Inhabited X \<longrightarrow> C
+\<Longrightarrow> Inhabited X \<longrightarrow> C @action \<A>_extact_implied_facts \<close>
+  unfolding Action_Tag_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> A \<longrightarrow> A' @action \<A>_extact_implied_facts
+\<Longrightarrow> B \<longrightarrow> B' @action \<A>_extact_implied_facts
+\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>_extact_implied_facts \<close>
+  unfolding Action_Tag_def by blast
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> Inhabited X \<longrightarrow> A
+\<Longrightarrow> Inhabited Y \<longrightarrow> B
+\<Longrightarrow> Inhabited (X * Y) \<longrightarrow> A \<and> B\<close>
+  using set_mult_inhabited by blast
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> Inhabited X \<longrightarrow> A
+\<Longrightarrow> Inhabited Y \<longrightarrow> B
+\<Longrightarrow> Inhabited (X + Y) \<longrightarrow> A \<or> B\<close>
+  using set_mult_inhabited by blast
+
+lemma Inhabited_fallback_True:
+  \<open> Inhabited X \<longrightarrow> True \<close>
+  by blast
+
+\<phi>reasoner_ML Inhabited_fallback 1 (\<open>Inhabited _ \<longrightarrow> _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
+  then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Inhabited_fallback_True} RS sequent), Seq.empty)
+)\<close>
+
+lemma Extact_implied_facts_Iden[\<phi>reason 1]:
+  \<open> A \<longrightarrow> A @action \<A>_extact_implied_facts \<close>
+  unfolding Action_Tag_def by blast
+
+(*
 
 declare (* disjE[\<phi>inhabitance_rule] *) (*I don't like divergence!*)
         conjE[\<phi>inhabitance_rule]
@@ -258,10 +284,17 @@ declare (* disjE[\<phi>inhabitance_rule] *) (*I don't like divergence!*)
         set_plus_inhabited[\<phi>inhabitance_rule]
 
 lemma [\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .
+  \<open>Inhabited 1 \<Longrightarrow> C \<Longrightarrow> C\<close> .*)
 
+(*TODO:
 lemma Membership_E_Inhabitance:
   \<open>x \<in> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by blast*)
+
+lemma Membership_E_Inhabitance:
+  \<open> x \<in> S
+\<Longrightarrow> Inhabited S \<longrightarrow> C
+\<Longrightarrow> C\<close>
   unfolding Inhabited_def by blast
 
 

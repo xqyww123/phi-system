@@ -137,8 +137,13 @@ lemma [\<phi>reason 2000 for
 
 subsubsection \<open>Properties\<close>
 
-lemma Var_inhabited[\<phi>inhabitance_rule,elim!]:
+lemma Var_inhabited[elim!]:
   \<open>Inhabited (x \<Ztypecolon> Var vname T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
+\<Longrightarrow> Inhabited (x \<Ztypecolon> Var vname T) \<longrightarrow> C \<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma Var_transformation:

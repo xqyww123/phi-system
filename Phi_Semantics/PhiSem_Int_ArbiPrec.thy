@@ -77,9 +77,12 @@ lemma \<phi>AInt_expn[\<phi>expns]:
   "p \<in> (x \<Ztypecolon> \<int>) \<longleftrightarrow> p = V_aint.mk x"
   unfolding \<phi>Type_def by (simp add: \<phi>AInt_def)
 
-lemma \<phi>AInt_inhabited[elim!,\<phi>inhabitance_rule]:
-  "Inhabited (x \<Ztypecolon> \<int>) \<Longrightarrow> C \<Longrightarrow> C"
-  .
+lemma \<phi>AInt_inhabited[elim!]:
+  "Inhabited (x \<Ztypecolon> \<int>) \<Longrightarrow> C \<Longrightarrow> C" .
+
+lemma [\<phi>inhabitance_rule 1000]:
+  "Inhabited (x \<Ztypecolon> \<int>) \<longrightarrow> True"
+  by blast
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
@@ -138,8 +141,12 @@ lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<int> \<i>\<m>\<p>\<l>\<i>
   " \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
 \<Longrightarrow> x \<Ztypecolon> \<int> \<i>\<m>\<p>\<l>\<i>\<e>\<s> nat x \<Ztypecolon> \<nat> " \<medium_left_bracket> \<medium_right_bracket>.
 
-lemma \<phi>ANat_elim[elim!,\<phi>inhabitance_rule]:
+lemma \<phi>ANat_inhabited[elim!]:
   "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C" .
+
+lemma [\<phi>inhabitance_rule 1000]:
+  "Inhabited (n \<Ztypecolon> \<nat>) \<longrightarrow> True "
+  by blast
 
 lemma [\<phi>reason 1000]: \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>.
 

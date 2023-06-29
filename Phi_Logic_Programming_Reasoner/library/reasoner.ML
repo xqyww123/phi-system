@@ -11,6 +11,8 @@ signature NU_REASONER = sig
   type pattern = term
   type name = term
   type reasoners
+  type ML_guard = context_state -> bool
+  type action = cterm
   datatype mode = NORMAL (*can backtrack*) | LOCAL_CUT | GLOBAL_CUT | TO_BE_OVERRIDE
  (* TO_BE_OVERRIDE : A reasoner can be 'TO_BE_OVERRIDE' such that once there is appliable
        reasoner of higher priority than it and returning non-empty, the
@@ -116,6 +118,15 @@ signature NU_REASONER = sig
   val single_RS' : thm (*rule*) -> context_state -> context_state option
   val single_RS  : thm (*rule*) -> context_state -> context_state Seq.seq
         (*The resolution that returns at most one solution.*)
+
+  val gen_attribute :
+      (Position.T * mode * priority * thm list (*additional rules*) * action option
+        * ((pattern * priority option) list * pattern list) * ML_guard option
+       -> attribute)
+     -> attribute context_parser
+
+   val gen_attr_add_rule : (thm list * Context.generic -> thm list * Context.generic) ->  attribute context_parser
+
 end
 
 (*A special name to prevent someone overriding this structure, whose visibility is essential
@@ -133,6 +144,8 @@ structure Phi_Reasoner : NU_REASONER = struct
 type priority = int
 type pattern = term
 type name = term
+type ML_guard = context_state -> bool
+type action = cterm
 
 datatype mode = NORMAL (*can backtrack*) | LOCAL_CUT | GLOBAL_CUT | TO_BE_OVERRIDE
 (*TO_BE_OVERRIDE: The rule is applied only when no rules of higher priority are matched.*)
@@ -723,8 +736,41 @@ fun add_intro_rules rules ctxt =
               intro_reasoner ctxt pos mode priority pattern blacklist guard rule) rules) ctxt
 
 
-fun attr_add_intro (((((pos, (mode,priority)), additional_rules), action), (pattern, blacklist)), guard) =
-  Thm.declaration_attribute (fn rule =>
+fun gen_attribute gen =
+  let open Args Scan Parse
+    fun read_term_mode mode' ctxt tm = Syntax.read_term (Proof_Context.set_mode mode' ctxt) tm
+    val read_term_pattern = read_term_mode Proof_Context.mode_pattern
+    val term_pattern = Scan.peek (named_term o read_term_pattern o Context.proof_of)
+  
+    fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
+    val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
+    val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
+    fun cterm (ctxt,toks) = let val (term,ret) = term_pattern (ctxt,toks)
+                             in (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term, ret) end
+    val pos_parser = Phi_Reasoner_Helpers.pos_parser "\<phi>reasoner"
+    val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
+         let val ctxt = Context.Proof (Context.proof_of ctxt0)
+              |> ML_Context.expression (Input.pos_of src)
+                (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put (" @
+                 ML_Lex.read_source src @
+                 ML_Lex.read "))")
+         in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
+       ))
+    val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
+  in
+    lift pos_parser
+    -- lift (option add |-- mode_and_priority)
+    -- Attrib.thms
+    -- option (lift (\<^keyword>\<open>for\<close> |-- Args.$$$ "action") |-- cterm)
+    -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
+      -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
+    -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
+    >> (fn (((((pos, (mode,priority)), additional_rules), action), (pattern, blacklist)), guard) =>
+          gen (pos, mode, priority, additional_rules, action, (pattern, blacklist), guard))
+  end
+
+fun gen_attr_add_intro' pass (pos, mode, priority, additional_rules, action, (pattern, blacklist), guard) =
+  Thm.declaration_attribute (fn rule => fn ctxt =>
       let val rules = (rule::additional_rules)
                    |> is_some action ? map (fn th =>
                         th RS (Thm.instantiate (TVars.empty,
@@ -732,50 +778,25 @@ fun attr_add_intro (((((pos, (mode,priority)), additional_rules), action), (patt
                                   @{thm Action_Tag_I}))
                    |> map beta_eta_contract
                    |> Drule.zero_var_indexes_list
-       in add_intro_rule pos mode priority (pattern,blacklist) guard rules end)
+          val (rules', ctxt') = pass (rules, ctxt)
+       in add_intro_rule pos mode priority (pattern,blacklist) guard rules' ctxt' end)
+
+fun gen_attr_add_rule pass = gen_attribute (gen_attr_add_intro' pass)
+
+val attr_add_rule = gen_attr_add_rule I
 
 
 
-
-val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>reason\<close>
-(let open Args Scan Parse
-  fun read_term_mode mode' ctxt tm = Syntax.read_term (Proof_Context.set_mode mode' ctxt) tm
-  val read_term_pattern = read_term_mode Proof_Context.mode_pattern
-  val term_pattern = Scan.peek (named_term o read_term_pattern o Context.proof_of)
-
-  fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
-  val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
-  val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
-  fun cterm (ctxt,toks) = let val (term,ret) = term_pattern (ctxt,toks)
-                           in (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term, ret) end
-  val pos_parser = Phi_Reasoner_Helpers.pos_parser "\<phi>reasoner"
-  val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
-       let val ctxt = Context.Proof (Context.proof_of ctxt0)
-            |> ML_Context.expression (Input.pos_of src)
-              (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put (" @
-               ML_Lex.read_source src @
-               ML_Lex.read "))")
-       in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
-     ))
-  val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
-in
-  (lift pos_parser
-  -- lift (option add |-- mode_and_priority)
-  -- Attrib.thms
-  -- option (lift (\<^keyword>\<open>for\<close> |-- Args.$$$ "action") |-- cterm)
-  -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
-    -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
-  -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
-  >> attr_add_intro)
-end)
-"Decalre or remove introduction rules in \<phi>-LPR."
+val _ = Theory.setup (
+  Attrib.setup \<^binding>\<open>\<phi>reason\<close> attr_add_rule
+    "Decalre or remove introduction rules in \<phi>-LPR."
 
 #> Method.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Scan Parse in
   Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
-               Method.modifier (attr_add_intro (((((pos,(NORMAL,100)),[]),NONE),([],[])),NONE)) \<^here>)
+               Method.modifier (gen_attr_add_intro' I (pos,NORMAL,100,[],NONE,([],[]),NONE)) \<^here>)
 ] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."

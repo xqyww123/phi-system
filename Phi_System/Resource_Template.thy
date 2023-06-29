@@ -110,8 +110,13 @@ lemma \<phi>_expn[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = mk v \<and> v \<in> (x \<Ztypecolon> T))\<close>
   unfolding \<phi>Type_def \<phi>_def by simp
 
-lemma \<phi>_inhabited[\<phi>inhabitance_rule, elim!]:
+lemma \<phi>_inhabited[elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>expns)
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
+\<Longrightarrow> Inhabited (x \<Ztypecolon> \<phi> T) \<longrightarrow> C\<close>
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma \<phi>_Prod:

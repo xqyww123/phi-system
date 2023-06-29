@@ -20,9 +20,12 @@ lemma Symbol_expn[\<phi>expns]:
   \<open>p \<in> (s \<Ztypecolon> Symbol) \<longleftrightarrow> p = \<phi>embed_semantic_symbol s\<close>
   unfolding \<phi>Type_def by (simp add: Symbol_def)
 
-lemma Symbol_inhabited[elim!,\<phi>inhabitance_rule]:
-  "Inhabited (x \<Ztypecolon> Symbol) \<Longrightarrow> C \<Longrightarrow> C"
-  .
+lemma Symbol_inhabited[elim!]:
+  "Inhabited (x \<Ztypecolon> Symbol) \<Longrightarrow> C \<Longrightarrow> C" .
+
+lemma [\<phi>inhabitance_rule 1000]:
+  "Inhabited (x \<Ztypecolon> Symbol) \<longrightarrow> True"
+  by blast
 
 
 section \<open>Instructions\<close>

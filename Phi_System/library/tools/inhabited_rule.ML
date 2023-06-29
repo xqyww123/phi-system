@@ -1,13 +1,8 @@
-signature PHI_INHABITANCE_RULES = sig
+signature PHI_REASONERS = sig
+include PHI_REASONERS
 
-  val extract_elim_rule : Proof.context -> thm -> thm
-  val member: Proof.context -> thm -> bool
-  val get: Proof.context -> thm list
-  val add_thm: thm -> Context.generic -> Context.generic
-  val del_thm: thm -> Context.generic -> Context.generic
-
-  val implications_of_inhabitance': thm list -> Proof.context -> thm -> thm list
-  val implications_of_inhabitance : Proof.context -> thm -> thm list
+val extract_implied_facts : Proof.context -> thm -> thm list
+val mode_generate_extraction_rule : bool Config.T
 
 end
 
@@ -18,9 +13,13 @@ structure Inhabitance_SS = Simpset (
 )
 
 
-structure Phi_Inhabitance_Rules : PHI_INHABITANCE_RULES = struct
+structure Phi_Reasoners : PHI_REASONERS = struct
+open Phi_Reasoners
 
-structure Data = Generic_Data
+val mode_generate_extraction_rule =
+      Attrib.setup_config_bool \<^binding>\<open>\<phi>mode_generate_extraction_rule\<close> (K false)
+
+(*structure Data = Generic_Data
 (
   type T = thm Item_Net.T;
   val empty = Thm.item_net;
@@ -43,12 +42,72 @@ fun add_thm thm ctxt =
 fun del_thm thm ctxt =
   Data.map (Item_Net.remove (extract_elim_rule (Context.proof_of ctxt) thm)) ctxt
 
-val add = Thm.declaration_attribute add_thm;
-val del = Thm.declaration_attribute del_thm;
+
+)
+*)
+(*sequent should be in shape \<open>(Inhabited X \<Longrightarrow> C) \<Longrightarrow> C\<close>.
+  returns all facts implied in the inhabitance. *)
+
+fun extract_implied_facts ctxt statement =
+  let val _ = case Thm.prop_of statement
+                of \<^Const>\<open>Trueprop\<close> $ _ => ()
+                 | _ => error "extract_implied_facts: must be a statement in the object logic"
+      val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
+              Pretty.str "Extracting implied pure facts from:",
+              Syntax.pretty_term ctxt (Thm.prop_of statement)
+          ])
+   in (ctxt, statement RS @{thm Do_Extract_Implied_Facts})
+   |> Phi_Reasoner.reason1 (K "fail to extract implied fact. It is an internal error and some reasonig rules are miss-configured.")
+                           (SOME 1)
+   |-> (Simplifier.simplify o Inhabitance_SS.enhance)
+   |> HOLogic.conj_elims ctxt
+  end
+
+fun is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
+      \<^Const>\<open>Action_Tag\<close> $ (\<^Const>\<open>HOL.implies\<close> $ _ $ _) $ \<^Const>\<open>\<A>_extact_implied_facts\<close>))
+    = true
+  | is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
+      \<^Const>\<open>HOL.implies\<close> $ (\<^Const>\<open>Inhabited _\<close> $ _) $ _))
+    = true
+  | is_extraction_rule _ = false
+
+fun generate_extraction_rule ctxt0 thm0 =
+  if is_extraction_rule (Thm.concl_of thm0)
+  then thm0
+  else let
+    val ((_,[thm]),ctxt) = Variable.import true [thm0] ctxt0
+    val _ = Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.chunks [
+              Pretty.str "Generating inhabitance rule from:",
+              Syntax.pretty_term ctxt0 (Thm.prop_of thm0)
+          ])
+    val n = Thm.nprems_of thm
+    val state = (thm RS @{thm Do_Extract_Inhabitance_Rule})
+              |> Thm.permute_prems 0 n
+              |> Thm.permute_prems 2 (~n)
+   in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE
+                           (Config.put mode_generate_extraction_rule true ctxt, state)
+   |-> (fn ctxt =>
+      Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+        HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite (Inhabitance_SS.enhance ctxt)))) ctxt))
+   |> singleton (Variable.export ctxt ctxt0)
+   |> (fn rule => (
+      Phi_Reasoner.info_pretty ctxt0 0 (fn _ => Pretty.chunks [
+              Pretty.str "Obtain inhabitance rule:",
+              Syntax.pretty_term ctxt0 (Thm.prop_of rule)
+          ]);
+      rule))
+  end
+
+(*
+val add = Thm.declaration_attribute (fn rule =>
+      Phi_Reasoner.add_intro_rule )
+val del = Thm.declaration_attribute del_thm; *)
+
 
 val _ = Theory.setup (
-    Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>inhabitance_rule\<close>, content)
-#>  Attrib.setup \<^binding>\<open>\<phi>inhabitance_rule\<close> (Attrib.add_del add del)
+Attrib.setup \<^binding>\<open>\<phi>inhabitance_rule\<close>
+            (Phi_Reasoner.gen_attr_add_rule (fn (rules,ctxt) =>
+                (map (generate_extraction_rule (Context.proof_of ctxt)) rules, ctxt)))
     "declare the rule to be an inhabited rule in \<phi>-System so that we can extract pure facts\
     \ from a \<phi>-BI assertion. Ideally the rule should be in a General Elimination form, but we\
     \ can recognize most of rules having a meaning of destruction (like an implication \<open>X \<longrightarrow> Y\<close>\
@@ -56,23 +115,10 @@ val _ = Theory.setup (
     \ them."
 )
 
-(*sequent should be in shape \<open>(Inhabited X \<Longrightarrow> C) \<Longrightarrow> C\<close>.
-  returns all facts implied in the inhabitance. *)
-fun implications_of_inhabitance' erules ctxt sequent =
-  let
-    val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
-                "extracting implied pure facts..." ^ Position.here \<^here>)
-    val sctxt = Raw_Simplifier.put_simpset
-                    (Raw_Simplifier.merge_ss (Raw_Simplifier.simpset_of ctxt,
-                                              Inhabitance_SS.get' ctxt))  ctxt
-    open Tactical Tactic                      (* v eresolve_tac is inefficient! improve it! *)
-  in rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt erules))) sequent
-  |> Simplifier.asm_full_simplify sctxt
-  |> rule_by_tactic ctxt (REPEAT_DETERM (HEADGOAL (eresolve_tac ctxt @{thms conjE})))
-  |> Phi_Reasoners.conv_GE_to_plain_conjunction ctxt
-  end
-
-fun implications_of_inhabitance ctxt = implications_of_inhabitance' (get ctxt) ctxt
-
+(*
+val _ = Theory.setup (
+  Attrib.setup \<^binding>\<open>\<phi>inhabitance_rule\<close> (Attrib.add_del add del)
+    
+) *)
 
 end

@@ -99,13 +99,11 @@ lemma \<phi>Prod_expn':
   \<open>((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
 
-lemma \<phi>Prod_inhabited[elim!,\<phi>inhabitance_rule]:
-  "Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<Longrightarrow> (Inhabited (x1 \<Ztypecolon> T1) \<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns, blast)
-
-lemma \<phi>Prod_split: "((a,b) \<Ztypecolon> A \<^emph> B) = (b \<Ztypecolon> B) * (a \<Ztypecolon> A)"
-  by (simp add: \<phi>expns set_eq_iff)
-
+lemma [\<phi>reason 1000]:
+  \<open> Inhabited (x1 \<Ztypecolon> T1) \<longrightarrow> C1
+\<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<longrightarrow> C2
+\<Longrightarrow> Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longrightarrow> C1 \<and> C2\<close>
+  unfolding Inhabited_def by (simp add: \<phi>Prod_expn, blast)
 
 
 subsection \<open>Implication\<close>
@@ -238,20 +236,21 @@ lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\
 subsubsection \<open>Inhabitance Reasoning - Part II\<close>
 
 lemma [\<phi>reason 1100]:
-  \<open>PROP Extract_Elimination_Rule (Trueprop (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y)) (Inhabited X) (Inhabited Y) \<close>
-  unfolding Extract_Elimination_Rule_def Imply_def Inhabited_def by blast
+  \<open> Extract_Inhabitance_Rule (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y) (Inhabited X) (Inhabited Y) \<close>
+  unfolding Extract_Inhabitance_Rule_def Imply_def Inhabited_def by blast
 
 lemma [\<phi>reason 1000]:
-  \<open>PROP Extract_Elimination_Rule (Trueprop (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P)) (Inhabited X) (Inhabited Y \<and> P) \<close>
-  unfolding Extract_Elimination_Rule_def Imply_def Inhabited_def by blast
+  \<open> Extract_Inhabitance_Rule (X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P) (Inhabited X) (Inhabited Y \<and> P) \<close>
+  unfolding Extract_Inhabitance_Rule_def Imply_def Inhabited_def by blast
 
 
 subsection \<open>Specialized Additive Conjunction\<close>
 
 declare Subjection_expn[\<phi>expns]
 
-lemma Subjection_inhabited[elim!,\<phi>inhabitance_rule]:
-  \<open>Inhabited (S \<s>\<u>\<b>\<j> P) \<Longrightarrow> (P \<Longrightarrow> Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma [\<phi>reason 1000]:
+  \<open> Inhabited S \<longrightarrow> C
+\<Longrightarrow> Inhabited (S \<s>\<u>\<b>\<j> P) \<longrightarrow> P \<and> C\<close>
   unfolding Inhabited_def by (simp add: Subjection_expn)
 
 lemma Subjection_cong[cong]:
@@ -326,8 +325,9 @@ subsection \<open>Existential Quantification\<close>
 
 declare ExSet_expn[\<phi>expns]
 
-lemma ExSet_inhabited[\<phi>inhabitance_rule, elim!]:
-  \<open>Inhabited (ExSet S) \<Longrightarrow> (\<And>x. Inhabited (S x) \<Longrightarrow> C) \<Longrightarrow> C\<close>
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. Inhabited (S x) \<longrightarrow> C x)
+\<Longrightarrow> Inhabited (ExSet S) \<longrightarrow> Ex C \<close>
   unfolding Inhabited_def by (simp add: \<phi>expns; blast)
 
 syntax
@@ -474,9 +474,11 @@ lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
   \<open>(x \<Ztypecolon> ExTyp T) = (\<exists>*a. x a \<Ztypecolon> T a)\<close>
   unfolding set_eq_iff ExTyp_def \<phi>Type_def by (simp add: \<phi>expns)
 
-lemma ExTyp_inhabited[elim!, \<phi>inhabitance_rule]:
-  \<open>Inhabited (x \<Ztypecolon> ExTyp T) \<Longrightarrow> (Inhabited (\<exists>*a. x a \<Ztypecolon> T a) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding ExTyp_expn .
+lemma ExTyp_inhabited[\<phi>reason 1000]:
+  \<open> (\<And>a. Inhabited (x a \<Ztypecolon> T a) \<longrightarrow> C a)
+\<Longrightarrow> Inhabited (x \<Ztypecolon> ExTyp T) \<longrightarrow> Ex C \<close>
+  unfolding ExTyp_expn Inhabited_def
+  by (clarsimp simp add: ExSet_expn, blast)
 
 
 subsection \<open>Universal Quantification\<close>

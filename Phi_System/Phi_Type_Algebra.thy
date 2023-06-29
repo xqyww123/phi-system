@@ -213,7 +213,7 @@ lemma Separation_Homo_functor:
 \<Longrightarrow> Separation_Homo T
 \<Longrightarrow> Separation_Homo (F T)\<close>
   unfolding Separation_Homo_def Transformation_Functor_def Separation_Functor_def
-  by (simp; metis \<phi>Prod_split)
+  by (simp; metis \<phi>Prod_expn')
 
 lemma Separation_Homo_eq_functor:
   \<open> Separation_Functor F F F' T T
@@ -224,7 +224,7 @@ lemma Separation_Homo_eq_functor:
   unfolding Separation_Homo_eq_def
   apply simp
   unfolding Transformation_Functor_def Separation_Functor_def
-  by (simp; metis \<phi>Prod_split)
+  by (simp; metis \<phi>Prod_expn')
 
 \<phi>reasoner_ML Separation_Homo_functor 50 (\<open>Separation_Homo _\<close>) = \<open>
 fn (ctxt, sequent) => Seq.make (fn () =>

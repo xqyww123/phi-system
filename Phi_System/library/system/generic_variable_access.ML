@@ -403,8 +403,9 @@ fun gen_default_process' clean pos (ctxt,sequent) =
              | _ => NONE)
 
     fun setup_lemmata ctxt =
-      let val facts = maps (fn rule => (rule COMP @{thm Membership_E_Inhabitance})
-                                    |> Phi_Inhabitance_Rules.implications_of_inhabitance ctxt) rules
+      let val facts = maps (fn thm =>
+                        Phi_Reasoners.extract_implied_facts ctxt (thm RS @{thm Inhabited_I})
+                      ) rules
        in ctxt |> Context.proof_map (
             fold (fold (fn th => Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th
                               #> Useful_Thms.add_thm th)

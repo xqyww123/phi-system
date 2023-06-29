@@ -326,6 +326,7 @@ text \<open>\<^emph>\<open>Remark\<close>: Attribute @{attribute \<phi>reason} c
 paragraph \<open>Example\<close>
 
 declare conjI[\<phi>reason add 1000] TrueI[\<phi>reason 1000]
+        HOL.refl[\<phi>reason 1000 for \<open>_ = _\<close>]
 
 paragraph \<open>\<open>\<r>\<close>Feasible \label{sec:rFeasible}\<close>
 
