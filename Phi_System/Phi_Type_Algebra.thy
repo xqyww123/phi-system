@@ -343,16 +343,23 @@ val s = BNF_Def.sets_of_bnf x
 val z = BNF_Def.mk_sets_of_bnf [[],[]] [[\<^typ>\<open>nat\<close>, \<^typ>\<open>int\<close>], [\<^typ>\<open>bool\<close>, \<^typ>\<open>int\<close>]] x
 val d = BNF_Def.set_transfer_of_bnf x\<close>
 
-ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))\<close>
+ML \<open>#fp_res (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))
+|> #ctor_injects\<close>
+
+ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
+|> #ctr_sugar
+|> #split
+\<close>
 
 ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
 typ \<open>'a llist\<close>
 ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>yyy\<close>\<close>
 
-ML \<open>val bnf = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>)
+ML \<open>local val bnf = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>) in
 val x = BNF_Def.deads_of_bnf bnf
-val z = BNF_Def.mk_sets_of_bnf [[]] [[\<^typ>\<open>nat\<close>]] bnf\<close>
+val z = BNF_Def.mk_sets_of_bnf [[]] [[\<^typ>\<open>nat\<close>]] bnf
+end\<close>
 ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>option\<close>\<close>
 
 (* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
@@ -950,6 +957,19 @@ subsubsection \<open>Extension of BNF-FP\<close>
 
 ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
 
+lemma zip_eq_Cons_ex:
+  \<open>zip a b = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. a = ah # al \<and> b = bh # bl \<and> (ah,bh) = h \<and> zip al bl = l)\<close>
+  by (induct b; cases a; simp)
+
+lemma zip_eq_Nil_eq_len:
+  \<open>length a = length b \<Longrightarrow> (zip a b = []) \<longleftrightarrow> a = [] \<and> b = []\<close>
+  by (induct b; cases a; simp)
+
+lemma zip_eq_Nil_with_rel:
+  \<open>list_all2 P a b \<and> zip a b = [] \<longleftrightarrow> a = [] \<and> b = []\<close>
+  by (induct b; cases a; simp)
+
+
 setup \<open>Context.theory_map(
   BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>list\<close>, {
       deads = [],
@@ -957,7 +977,7 @@ setup \<open>Context.theory_map(
       lives'= [\<^typ>\<open>'b\<close>],
       zip = \<^term>\<open>case_prod zip\<close>,
       unzip = \<^term>\<open>(\<lambda>l. (map fst l, map snd l))\<close>,
-      zip_simps = [],
+      zip_simps = @{thms zip_eq_Cons_ex},
       unzip_simps = [] (*what I need to give?*)
   })
 )\<close>
@@ -967,6 +987,9 @@ ML \<open>\<^pattern>\<open>(\<lambda>l. (map fst l, map snd l))\<close>\<close>
 
 
 subsubsection \<open>General Rules\<close>
+
+consts \<phi>TA_ind_target :: \<open>action \<Rightarrow> action\<close>
+       \<phi>TA_IH_ToA :: action
 
 lemma mk_ToA_rule:
   \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P
@@ -998,13 +1021,25 @@ lemma
 subsubsection \<open>\<phi>Equiv_Obj\<close>
 
 lemma \<phi>Equiv_Obj_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T)))
+  \<open> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> \<phi>Equiv_Obj T eq \<close>
-  unfolding \<phi>Equiv_Obj_def Premise_def
+  unfolding \<phi>Equiv_Obj_def Premise_def Action_Tag_def
   by blast
+
+lemma \<phi>TA_EO_rewr_IH:
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> Q y) @action \<phi>TA_ind_target undefined)
+\<equiv> (\<And>y. Ant \<Longrightarrow> P y \<Longrightarrow> Q y @action \<phi>TA_IH_ToA)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
+
+lemma \<phi>TA_EO_rewr_C:
+  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target undefined)
+\<equiv> (Ant \<Longrightarrow> P)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
+
+
 
 lemma \<phi>Equiv_Obj_rule_move_all:
   \<open>(\<And>x. P x \<and> Q) \<Longrightarrow> (\<forall>x. P x) \<and> Q\<close>
@@ -1036,8 +1071,6 @@ thm Action_Tag_D[where A = \<open>ToSA\<close>]
 
 
 subsubsection \<open>Transformation Functor\<close>
-
-consts \<phi>TA_ind_target :: \<open>action \<Rightarrow> action\<close>
 
 lemma \<phi>TA_TF_rule:
   \<open>(\<And>T U g x. Ant \<longrightarrow>
@@ -1078,14 +1111,44 @@ lemma
 
 subsubsection \<open>Sep\<close>
 
-lemma \<phi>TA_SH_rule:
-  \<open> (\<And>T U z. Ant \<longrightarrow> (\<forall>x y. (x,y) \<in> D \<and> z = w(x,y) \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Fc (T \<^emph> U))))
+lemma \<phi>TA_SHz_rule:
+  \<open> (\<And>T U z. Ant \<longrightarrow>
+        (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
+            \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Fc (T \<^emph> U))) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Sep_Homo_Ty_zip Fa Fb Fc D w \<close>
-  unfolding Sep_Homo_Ty_zip_def \<phi>Prod_expn'
+  unfolding Sep_Homo_Ty_zip_def \<phi>Prod_expn' Action_Tag_def
   by simp
+
+(* lemma \<phi>TA_SHu_rule:
+  \<open> (\<And>T U z. Ant \<longrightarrow>
+        (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
+            \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Fc (T \<^emph> U))) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Sep_Homo_Ty_unzip Fa Fb Fc D uz \<close>
+  unfolding Sep_Homo_Ty_zip_def \<phi>Prod_expn' Action_Tag_def
+  by simp *)
+
+lemma \<phi>TA_SHz_rewr_IH:
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> Q x y) @action \<phi>TA_ind_target undefined)
+\<equiv> (\<And>x y. Ant \<Longrightarrow> P x y \<Longrightarrow> Q x y @action \<phi>TA_IH_ToA)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all
+  by (rule; blast)
+
+lemma \<phi>TA_SHz_rewr_C:
+  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target undefined)
+\<equiv> (Ant \<Longrightarrow> P)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all
+  by (rule; blast)
+
+
+(* lemma \<phi>TA_ind_target_proctector_cong:
+  \<open> P @action \<phi>TA_ind_target A \<equiv> P @action \<phi>TA_ind_target A\<close> . *)
+
 
 
 
@@ -1101,11 +1164,16 @@ hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>E
 
           \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH \<phi>TA_TF_rule_step
 
-lemmas [\<phi>constraint_expansion] = HOL.simp_thms ex_simps[symmetric]
+lemmas [\<phi>constraint_expansion] =
+          HOL.simp_thms ex_simps[symmetric] prod.case mem_Collect_eq imp_ex
           ExSet_simps
           FSet.ball_simps(5-7) Set.ball_simps(5-7,9) Set.ball_Un
           Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
-          list_all2_Cons1 list_all2_Nil
+          list_all2_Cons list_all2_Cons1 list_all2_Nil zip_eq_Cons_ex zip_eq_Nil_eq_len list_all2_lengthD
+              map_ident list.inject
+
+thm zip_eq_Nil_eq_len zip_eq_Cons_ex
+
 
 lemmas [\<phi>type_algebra_normalize_ToA_ss] = HOL.simp_thms implies_refl
 

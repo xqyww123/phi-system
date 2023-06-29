@@ -27,26 +27,28 @@ let
   fun prop mode = Scan.peek (Args.named_term o Syntax.read_prop
                                              o Proof_Context.set_mode mode o Context.proof_of)
 
-in
-   ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
+
+in fn thy => thy
+|>  ML_Antiquotation.inline_embedded \<^binding>\<open>pattern\<close>
     (Args.term_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
-#> ML_Antiquotation.inline_embedded \<^binding>\<open>pattern_prop\<close>
+|> ML_Antiquotation.inline_embedded \<^binding>\<open>pattern_prop\<close>
     (prop Proof_Context.mode_pattern >> (ML_Syntax.atomic o ML_Syntax.print_term))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_ctyp\<close> (typ Proof_Context.mode_schematic
+|> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_ctyp\<close> (typ Proof_Context.mode_schematic
       >> (fn T => "Thm.ctyp_of ML_context"  ^ ML_Syntax.atomic (ML_Syntax.print_typ T)))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cterm\<close> (term Proof_Context.mode_schematic
+|> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cterm\<close> (term Proof_Context.mode_schematic
       >> (fn t => "Thm.cterm_of ML_context" ^ ML_Syntax.atomic (ML_Syntax.print_term t)))
-#> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cprop\<close> (prop Proof_Context.mode_schematic
+|> ML_Antiquotation.value_embedded \<^binding>\<open>schematic_cprop\<close> (prop Proof_Context.mode_schematic
       >> (fn t => "Thm.cterm_of ML_context" ^ ML_Syntax.atomic (ML_Syntax.print_term t)))
-#> basic_entity \<^binding>\<open>schematic_term\<close> (Term_Style.parse -- term Proof_Context.mode_schematic)
+|> basic_entity \<^binding>\<open>schematic_term\<close> (Term_Style.parse -- term Proof_Context.mode_schematic)
                                         pretty_term_style
-#> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_schematic)
+|> basic_entity \<^binding>\<open>schematic_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_schematic)
                                         pretty_term_style
-#> basic_entity \<^binding>\<open>pattern_term\<close> (Term_Style.parse -- term Proof_Context.mode_pattern)
+|> basic_entity \<^binding>\<open>pattern_term\<close> (Term_Style.parse -- term Proof_Context.mode_pattern)
                                         pretty_term_style
-#> basic_entity \<^binding>\<open>pattern_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_pattern)
+|> basic_entity \<^binding>\<open>pattern_prop\<close> (Term_Style.parse -- prop Proof_Context.mode_pattern)
                                         pretty_term_style
 end\<close>
+
 
 ML_file \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
@@ -54,7 +56,10 @@ ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
+ML_file \<open>library/tools/ml_thms.ML\<close>
 
+ML \<open>\<^Const>\<open>True\<close>\<close>
+ML \<open>@{thm' \<open>\<^context>\<close> TrueI}\<close>
 
 definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
     \<comment> \<open>If guards of a rule fail, the rule will be considered not appliable, just like the pattern
