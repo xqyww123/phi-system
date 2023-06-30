@@ -102,12 +102,12 @@ signature NU_REASONER = sig
                     -> Context.generic -> Context.generic
 
   type rule_pass = Position.T
-              -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
-              -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+              -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+              -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
   val get_passes : Context.generic -> term list -> (string * term * rule_pass) list
   val run_passes : Position.T
-                -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
-                -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+                -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+                -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
   val add_pass : string * term * rule_pass -> Context.generic -> Context.generic
 
   val setup_cmd : (((string (*name term*) * Position.T) * (mode * priority (*default priority*)))
@@ -119,11 +119,6 @@ signature NU_REASONER = sig
 
   (* Default Pattern of Reasoning Rule *)
   structure Default_Pattern : PATTERN_REWRITE
-  val add_default_pattern :
-                  (int (*priority*) * term (*pattern P*) * Default_Pattern.rewrite (*the default pattern X*)) list
-               -> Context.generic -> Context.generic
-      (*The default pattern of an introduction rule whose conclusion matches P is X.*)
-  val remove_default_pattern : int * term * Default_Pattern.rewrite -> Context.generic -> Context.generic
   val the_default_pattern_of : Context.generic -> term -> term list
 
   (* Helpful Tools *)
@@ -234,7 +229,7 @@ val nested_level = Environ.get
 
 exception Success    of context_state
 exception Global_Cut of context_state
-exception Local_Cut  of (priority * Position.T * context_state Seq.seq)
+(* exception Local_Cut  of (priority * Position.T * context_state Seq.seq) *)
 
 structure Global_Cut_Handlers = Local_Handlers(
   type domT = context_state
@@ -424,10 +419,11 @@ fun gen_call_reasoners trace score tactics ctxt th =
   Thm.major_prem_of th
     |> Envir.beta_eta_contract
     |> get_reasoners' (Proof_Context.theory_of ctxt) tactics
-    |> (if 3 <= trace
-        then (fn rs => (List.app (debug ctxt) rs; rs))
-        else I)
-    |> map_filter (fn (priority, _, _, r : reasoner) =>
+    |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
+    |> map (fn (priority, _, _, r : reasoner) =>
+          (priority + score, #pos r, #mode r,
+                    Seq.make (fn () => Seq.pull (#tactic r (ctxt,th)))))
+    (*|> map_filter (fn (priority, _, _, r : reasoner) =>
         case #mode r
           of GLOBAL_CUT =>
                (case Seq.pull (#tactic r (ctxt,th))
@@ -449,7 +445,7 @@ fun gen_call_reasoners trace score tactics ctxt th =
        | Success s => Success_Handlers.invoke (fst s) s
                    |> map (fn (x,y) => (score,x,false,y))
        | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
-                      |> map (fn (x,y) => (score,x,false,y))
+                      |> map (fn (x,y) => (score,x,false,y))*)
 
 fun call_reasoners' trace score N ctxt tactics th =
   if Thm.nprems_of th <= N
@@ -459,12 +455,11 @@ fun call_reasoners' trace score N ctxt tactics th =
 (*fun call_reasoners (ctxt,th) =
   gen_call_reasoners (Config.get ctxt trace) (Reasoners.get (Context.Proof ctxt)) ctxt th *)
 
-
 fun gen_reason _ _ _ _ _ _ [] = NONE
   | gen_reason N trace limit iter _ tactics ([]::L) =
       (if 2 <= trace then tracing ("Backtracking...") else ();
        gen_reason N trace limit iter true tactics L)
-  | gen_reason N trace limit iter backtracking tactics (((score,pos,to_be_override,seq)::L')::L) =
+  | gen_reason N trace limit iter backtracking tactics (((score,pos,mode,seq)::L')::L) =
   let 
     val _ = if iter > limit
             then error "The reasoning reaches the limit of the number of reasoning steps.\n\
@@ -473,10 +468,10 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
                        \if it is too small."
             else ()
   in
-  if to_be_override andalso backtracking
+  if mode = TO_BE_OVERRIDE andalso backtracking
   then gen_reason N trace limit iter backtracking tactics (L'::L)
   else
-    case Seq.pull seq
+   (case Seq.pull seq
       of SOME ((ctxt,th), seq') =>
           (let
             val _ = if 2 <= trace
@@ -485,24 +480,35 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
                     else ()
             val _ = if score = 16020 then () else ()
             val Z = (call_reasoners' trace score N ctxt tactics th)
-                  |> (fn Z => Z::(
-                        let val t = if pointer_eq (seq',Seq.empty) then L'
-                                    else (score,pos,to_be_override,seq')::L'
-                        in if null t then L else t::L end))
-                handle Success ret => raise Success ret
-                     | Global_Cut stat =>
-                        let
-                          val _ = if 2 <= trace
-                                  then tracing ("\<phi>reasoning cut:\n"
-                                          ^ Thm.string_of_thm ctxt (snd stat))
-                                  else ()
-                        in
-                          [[(0,pos,false, Seq.single stat)]]
-                        end
+                  |> (fn Z =>
+                        case mode
+                          of GLOBAL_CUT => let val _ = if 2 <= trace
+                                                       then tracing ("\<phi>reasoning cut:\n" ^ Thm.string_of_thm ctxt th)
+                                                       else ()
+                                            in [[(score, pos, NORMAL, Seq.single (ctxt,th))]]
+                                           end
+                           | LOCAL_CUT => Z :: (
+                                            if pointer_eq (seq',Seq.empty) then L
+                                            else [(score,pos,mode,seq')]::L)
+                           | NORMAL => Z :: (
+                                  let val t = if pointer_eq (seq',Seq.empty) then L'
+                                              else (score,pos,mode,seq')::L'
+                                  in if null t then L else t::L end)
+                           | TO_BE_OVERRIDE => Z :: (
+                                  let val t = if pointer_eq (seq',Seq.empty) then L'
+                                              else (score,pos,mode,seq')::L'
+                                  in if null t then L else t::L end)
+                     )
           in
             gen_reason N trace limit (iter+1) false tactics Z
           end)
-       | NONE => gen_reason N trace limit iter backtracking tactics (L'::L)
+       | NONE => gen_reason N trace limit iter backtracking tactics (L'::L) )
+    handle Success s => Success_Handlers.invoke (fst s) s
+                     |> map (fn (x,y) => (score,x,NORMAL,y))
+                     |> (fn Z => gen_reason N trace limit (iter+1) false tactics (Z :: L))
+         | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
+                     |> map (fn (x,y) => (score,x,NORMAL,y))
+                     |> (fn Z => gen_reason N trace limit (iter+1) false tactics (Z :: L))
   end
 
 (*Entry point*)
@@ -510,7 +516,7 @@ fun gen_reason' ctxt N states =
   Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (fn () =>
      (gen_reason N (Config.get ctxt trace) (Config.get ctxt step_limit)
                  0 false (Reasoners.get (Context.Proof ctxt))
-                 (map (map (fn seq => (0, Position.none, false, seq))) states)
+                 (map (map (fn seq => (0, Position.none, NORMAL, seq))) states)
       handle Success ret => SOME ret)
      |> Option.map (apfst exit_reasoning_envir)
   )
@@ -706,8 +712,6 @@ structure Default_Pattern = Pattern_Translation (
                                 \\<open>\<phi>reason for \<open>pattern\<close>\<close>"
 )
 
-val add_default_pattern = Default_Pattern.add
-val remove_default_pattern = Default_Pattern.remove
 val the_default_pattern_of = Default_Pattern.translate
 
 val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>reason_default_pattern\<close>
@@ -716,8 +720,8 @@ val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>re
 (** Reasoning Rule Pass **)
 
 type rule_pass = Position.T
-              -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
-              -> thm list (*rules*) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+              -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+              -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
 
 fun rule_pass_eq ((n1,_,_),(n2,_,_)) = (n1 = n2)
 structure Rule_Pass = Generic_Data (
@@ -734,7 +738,7 @@ fun get_passes ctxt terms =
    in fold (fn TM => union rule_pass_eq (get TM)) terms []
   end
 
-fun run_passes pos (data as (rules, _, _, ctxt)) =
+fun run_passes pos (data as (rules, mode, _, _, ctxt)) =
   fold (fn (_,_,f) => f pos) (get_passes ctxt (map Thm.concl_of rules)) data
 
 fun add_pass rule_pass =
@@ -745,7 +749,7 @@ fun add_pass rule_pass =
 (** Main Function **)
 
 fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>ERROR\<close>, _) $ text))
-      = (error (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+      = (Exn.error (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
   | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>TRACING\<close>, _) $ text))
       = (tracing (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
   | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>WARNING\<close>, _) $ text))
@@ -754,10 +758,10 @@ fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
       = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
   | process_error_rule _ _ = true
 
-fun intro_reasoner ctxt0 pos mode (priority:priority) pats0 guard0 rules0 =
+fun intro_reasoner ctxt0 pos mode0 (priority:priority) pats0 guard0 rules0 =
   let
-    val (rules01, (patterns, blacklist), guard, ctxt) =
-            run_passes pos (rules0, pats0, guard0, ctxt0)
+    val (rules01, mode, (patterns, blacklist), guard, ctxt) =
+            run_passes pos (rules0, mode0, pats0, guard0, ctxt0)
     val rules = rules01
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
              |> map Thm.trim_context
@@ -768,7 +772,7 @@ fun intro_reasoner ctxt0 pos mode (priority:priority) pats0 guard0 rules0 =
                         let val concl = Thm.concl_of rule
                             val pat' = the_default_pattern_of ctxt concl
                             val pat = case pat' of [] => [concl]
-                                         | L => List.filter (process_error_rule ctxt) pat'
+                                         | _ => List.filter (process_error_rule ctxt) pat'
                           (* val _ = info_pretty_generic ctxt 1 (fn () => Pretty.chunks (
                                     Pretty.str "No pattern is given, use the default pattern:" ::
                                     map (Syntax.pretty_term (Context.proof_of ctxt)) pat
@@ -841,9 +845,9 @@ fun gen_attribute gen =
     val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
          let val ctxt = Context.Proof (Context.proof_of ctxt0)
               |> ML_Context.expression (Input.pos_of src)
-                (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put (" @
+                (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put ((" @
                  ML_Lex.read_source src @
-                 ML_Lex.read "))")
+                 ML_Lex.read ") : context_state -> bool))")
          in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
        ))
     val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))

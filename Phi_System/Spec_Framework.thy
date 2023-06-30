@@ -151,6 +151,7 @@ definition \<phi>Equal :: "(VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close> \<Rightarrow> \<open>\<phi>Equal ?TY _ _\<close> (100) ]]
 
+
 subsection \<open>Functional\<close>
 
 definition is_functional :: \<open>'a set \<Rightarrow> bool\<close>
@@ -174,16 +175,47 @@ lemma is_functional_imp:
   unfolding Imply_def is_functional_def
   by blast
 
+lemma [\<phi>reason 1]:
+  \<open> FAIL TEXT(\<open>Fail to prove\<close> S \<open>is functional\<close>)
+\<Longrightarrow> is_functional S\<close>
+  by blast
+
+lemma [\<phi>reason 1200]:
+  \<open>is_functional (v \<Ztypecolon> Itself)\<close>
+  by (clarsimp simp add: Itself_expn)
+
+lemma [\<phi>reason 1200]:
+  \<open>is_functional (any \<Ztypecolon> \<phi>None)\<close>
+  by clarsimp
+
+lemma [\<phi>reason 1200]:
+  \<open> is_functional (x \<Ztypecolon> T)
+\<Longrightarrow> is_functional (y \<Ztypecolon> U)
+\<Longrightarrow> is_functional ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
+  unfolding is_functional_def set_eq_iff
+  by (simp add: \<phi>expns, blast)
+
+lemma [\<phi>reason 1200]:
+  \<open> is_functional A
+\<Longrightarrow> is_functional B
+\<Longrightarrow> is_functional (A * B)\<close>
+  unfolding is_functional_def set_eq_iff
+  by (simp add: set_mult_expn, blast)
+
+
+
+subsection \<open>Singleton\<close>
+
 lemma is_singletonI'':
   \<open> \<exists>p. p \<in> A \<comment> \<open>TODO: model this\<close>
 \<Longrightarrow> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
 \<Longrightarrow> is_singleton A\<close>
   by (metis equals0D is_singletonI')
 
-lemma [\<phi>reason 1]:
-  \<open> FAIL TEXT(\<open>Fail to prove\<close> S \<open>is functional\<close>)
-\<Longrightarrow> is_functional S\<close>
-  by blast
+lemma Itself_functional[\<phi>reason 1000]:
+  \<open>is_singleton (x \<Ztypecolon> Itself)\<close>
+  by (rule is_singletonI''; simp add: \<phi>expns)
+
 
 section \<open>Specification of Monadic States\<close>
 
@@ -359,6 +391,13 @@ definition View_Shift
 abbreviation Simple_View_Shift
     :: "assn \<Rightarrow> assn \<Rightarrow> bool" ("(2_/ \<s>\<h>\<i>\<f>\<t>\<s> _)"  [13,13] 12)
   where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
+
+declare [[\<phi>reason_default_pattern
+    \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<a>\<n>\<d> _\<close> (10)
+and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<a>\<n>\<d> _\<close> (20)
+and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> (20)
+and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> (30)
+]]
 
 lemma View_Shift_imply_P:
   \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P1

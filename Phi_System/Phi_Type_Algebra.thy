@@ -330,10 +330,13 @@ ML_file \<open>library/tools/functor_detect.ML\<close>
 
 
 datatype yyy = YLeaf nat | YNode nat yyy
-datatype ('a,'b) xxx = Leaf 'a | Node nat \<open>('a,'b) xxx\<close>
+datatype ('a,'b) xxx = Leaf 'a | LeafB 'b | Node nat \<open>('a,'b) xxx\<close>
 
 term xxx.rel_xxx
 thm xxx.set
+
+
+
 
 datatype 'a zzz = AA
 
@@ -346,10 +349,38 @@ val d = BNF_Def.set_transfer_of_bnf x\<close>
 ML \<open>#fp_res (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))
 |> #ctor_injects\<close>
 
-ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
+declare [[ML_print_depth = 1000]]
+
+ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))
 |> #ctr_sugar
-|> #split
 \<close>
+
+
+ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
+|> #ctr_sugar\<close>
+
+
+ML \<open>
+val ths = #fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
+|> #ctr_sugar
+|> #disc_thmss
+|> flat
+val ((_,ths2),_) = Variable.import true ths \<^context>
+val xxx = ths2
+|> map (Simplifier.asm_simplify (Simplifier.clear_simpset \<^context> addsimps @{thms HOL.simp_thms ex_simps[symmetric]}))
+|> filter (fn th => (case Thm.concl_of th of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => false | _ => true))
+|> distinct (Thm.equiv_thm \<^theory>)
+\<close>
+
+ML \<open>    
+    val equal_binding = \<^binding>\<open>=\<close>;
+
+fun is_disc_binding_valid b =
+      not (Binding.is_empty b orelse Binding.eq_name (b, equal_binding));
+\<close>
+
+thm list.collapse
+
 
 ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
@@ -1010,6 +1041,7 @@ lemma conv_intro_premise:
 lemma [fundef_cong]:
   \<open>T x = T' x' \<Longrightarrow> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')\<close>
   unfolding \<phi>Type_def by simp
+
 
 
 subsubsection \<open>\<phi>Equiv_Obj\<close>

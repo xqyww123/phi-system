@@ -72,8 +72,9 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
           contract (SOME (hb RS (ha RS @{thm merge_oblg_divergence})
                           handle THM _ => error "The conclusion in exhaustive \<phi>-LPR reasoning diverges between branches.")
                    ) L
-   in contract NONE (Synchronized.value branches)
-   |> Option.map (Conv.fconv_rule (Phi_Helper_Conv.rulify_conv ctxt))
+   in contract NONE (map (Goal.protect 0) (Synchronized.value branches))
+   |> Option.map (Goal.conclude
+               #> Conv.fconv_rule (Phi_Helper_Conv.rulify_conv ctxt))
   end
 
 end

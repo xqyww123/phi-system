@@ -53,7 +53,7 @@ end\<close>
 ML_file \<open>library/pattern.ML\<close>
 ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
-ML_file \<open>library/pattern_translation.ML\<close>
+ML_file_debug \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/tools/ml_thms.ML\<close>
@@ -788,6 +788,24 @@ ML_file "library/reasoners.ML"
 hide_fact contract_premise_imp contract_drop_waste contract_obligations contract_premise_all
 
 
+subsection \<open>Exhaustive Reasoning\<close>
+
+text \<open>\<phi>-LPR is a priority-guided depth-first reasoner giving the first reached solution.
+  This extension enables exhaustive reasoning traverses all branches and combines proof obligations
+  for each branch by disjuntion.\<close>
+
+lemma merge_oblg_divergence:
+  \<open> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<Longrightarrow> C)
+\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pb \<Longrightarrow> C)
+\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<or> Pb \<Longrightarrow> C)\<close>
+  unfolding Pure.prop_def Premise_def by blast
+
+ML_file_debug \<open>library/exhaustive.ML\<close>
+
+hide_fact merge_oblg_divergence
+
+
+
 subsection \<open>Reasoning Frame\<close>
 
 definition \<open>\<r>BEGIN \<longleftrightarrow> True\<close>
@@ -799,8 +817,7 @@ resembling a subroutine for specific reasoning tasks or problems.
 The scoped antecedents should be regarded as a \<^emph>\<open>unit antecedent\<close>
 invoking a nested \<phi>-LPR reasoning process and returning \<^emph>\<open>only\<close> the first reached solution (
 just as the behaviour of \<phi>-LPR engine).
-During backtracking, search branches before the unit will be backtracked but sub-optimal solutions
-of the unit are not backtracked.
+Backtracking passes through the scoped antecedents to the earlier branches but NOT inside the scope.
 In addition, cut is confined among the search paths in the scope as a unit.
 Because of the cut and the reduced backtrack behavior, the performance is improved.
 
@@ -828,25 +845,21 @@ belongs. \<^prop>\<open>\<r>Success\<close> is prohibited in the nested scope be
 the remain antecedents after the \<^prop>\<open>\<r>Success\<close> and how to return them into the outer scope.
 \<close>
 
-definition \<r>Call :: \<open>prop \<Rightarrow> prop\<close> ("\<r>CALL _" [3] 2)
-  where \<open>\<r>Call P \<equiv> PROP P\<close>
+consts \<A>frame :: action
+
+abbreviation \<r>Call :: \<open>bool \<Rightarrow> bool\<close> ("\<r>CALL _" [9] 8)
+  where \<open>\<r>Call P \<equiv> P @action \<A>frame\<close>
   \<comment> \<open>Call the antecedent \<^prop>\<open>P\<close> in a frame\<close>
 
 lemma \<r>BEGIN_I: \<open>\<r>BEGIN\<close> unfolding \<r>BEGIN_def ..
 lemma \<r>END_I: \<open>\<r>END\<close> unfolding \<r>END_def ..
-lemma \<r>Call_I: \<open>PROP P \<Longrightarrow> \<r>CALL PROP P\<close> unfolding \<r>Call_def .
 
 ML_file \<open>library/nested.ML\<close>
 
 \<phi>reasoner_ML \<r>BEGIN 1000 (\<open>\<r>BEGIN\<close>) = \<open>PLPR_Nested_Reasoning.enter_scope\<close>
 \<phi>reasoner_ML \<r>END 1000 (\<open>\<r>END\<close>) = \<open>PLPR_Nested_Reasoning.exit_scope\<close>
-\<phi>reasoner_ML \<r>Call 1000 (\<open>PROP \<r>Call _\<close>) = \<open>PLPR_Nested_Reasoning.call\<close>
+\<phi>reasoner_ML \<r>Call 1000 (\<open>\<r>CALL _\<close>) = \<open>PLPR_Nested_Reasoning.call\<close>
 
-definition \<r>Call_embed :: \<open>bool \<Rightarrow> bool\<close> where \<open>\<r>Call_embed P \<equiv> P\<close>
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>\<r>Call (Trueprop P) \<equiv> Trueprop (\<r>Call_embed P)\<close>
-  unfolding \<r>Call_def \<r>Call_embed_def .
 
 subsection \<open>Pruning\<close>
 
@@ -1164,22 +1177,6 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Optimum_Among (Trueprop P) \<equiv> Trueprop (Optimum_Among_embed P)\<close>
   unfolding Optimum_Among_embed_def Optimum_Among_def .
 
-
-subsection \<open>Exhaustive Reasoning\<close>
-
-text \<open>\<phi>-LPR is a priority-guided depth-first reasoner giving the first reached solution.
-  This extension enables exhaustive reasoning traverses all branches and combines proof obligations
-  for each branch by disjuntion.\<close>
-
-lemma merge_oblg_divergence:
-  \<open> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<Longrightarrow> C)
-\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pb \<Longrightarrow> C)
-\<Longrightarrow> PROP Pure.prop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Pa \<or> Pb \<Longrightarrow> C)\<close>
-  unfolding Pure.prop_def Premise_def by blast
-
-ML_file_debug \<open>library/exhaustive.ML\<close>
-
-hide_fact merge_oblg_divergence
 
 subsection \<open>Environment Variables\<close>
 

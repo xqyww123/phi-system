@@ -190,6 +190,7 @@ lemmas [assertion_simps] =
   distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]
   \<phi>V_simps
+  \<phi>Prod_expn'' \<phi>Prod_expn'
 
 lemmas [assertion_simps_source] = ExSet_times_left ExSet_times_right
 
@@ -423,7 +424,6 @@ lemma \<phi>IntroFrameVar'_Yes:
   " \<phi>IntroFrameVar' R (R * \<blangle> S \<brangle>) S (\<lambda>ret. R * T ret) T (\<lambda>ex. R * E ex) E"
   unfolding \<phi>IntroFrameVar'_def FOCUS_TAG_def by blast
 
-(*TODO*)
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
 \<open>fn (ctxt, sequent) =>
   let
@@ -704,6 +704,24 @@ lemma (*the above rule is not local complete*)
   for A :: \<open>'a::sep_magma_1 set\<close>
   oops
 
+lemma [\<phi>reason 1200]:
+  \<open> Is_Stateless (x \<Ztypecolon> T) P
+\<Longrightarrow> Is_Stateless (y \<Ztypecolon> U) Q
+\<Longrightarrow> Is_Stateless ((x,y) \<Ztypecolon> T \<^emph> U) (P \<and> Q)\<close>
+  for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
+  unfolding Is_Stateless_def \<phi>Prod_expn' Imply_def
+  apply (simp add: \<phi>expns)
+  using mult_1_class.mult_1_left by blast
+
+lemma [\<phi>reason 1200]: 
+  \<open> Demand_Nothing (x \<Ztypecolon> T)
+\<Longrightarrow> Demand_Nothing (y \<Ztypecolon> U)
+\<Longrightarrow> Demand_Nothing ((x,y) \<Ztypecolon> T \<^emph> U) \<close>
+  for T :: \<open>'a \<Rightarrow> 'b::sep_magma_1 set\<close>
+  unfolding Demand_Nothing_def Imply_def
+  by (clarsimp simp add: \<phi>Prod_expn', insert set_mult_expn, fastforce)
+
+
 lemma [\<phi>reason 1200]: 
   \<open> Demand_Nothing A
 \<Longrightarrow> Demand_Nothing B
@@ -729,6 +747,24 @@ lemma (*the above rule is not local complete*)
   (* Auto Quickcheck found a counterexample:
   A = {a\<^sub>1}
   B = {} *)
+
+lemma [\<phi>reason 1200]:
+  \<open>Is_Stateless (1 \<Ztypecolon> Itself) True\<close>
+  unfolding Is_Stateless_def Imply_def Itself_expn
+  by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>Demand_Nothing (1 \<Ztypecolon> Itself)\<close>
+  unfolding Demand_Nothing_def Imply_def Itself_expn
+  by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>Is_Stateless (any \<Ztypecolon> \<phi>None) True\<close>
+  unfolding Is_Stateless_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>Demand_Nothing (any \<Ztypecolon> \<phi>None)\<close>
+  unfolding Demand_Nothing_def by simp
 
 
 
@@ -762,7 +798,7 @@ the reasoning is weaker.
 
 abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
 
-lemma [\<phi>reason 3000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X' \<a>\<n>\<d> ?P @action ToSA' ?mode\<close>]:
+lemma [\<phi>reason 3000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X \<a>\<n>\<d> ?P @action ToSA' ?mode\<close>]:
   \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action ToSA' mode\<close>
   unfolding Action_Tag_def using implies_refl .
 

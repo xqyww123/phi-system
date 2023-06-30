@@ -134,6 +134,9 @@ fun fp_sugar_of ctxt bnf =
     of Type(N, _) => BNF_FP_Def_Sugar.fp_sugar_of ctxt N
      | _ => NONE
 
+fun ctr_sugar_simps (ctr : Ctr_Sugar.ctr_sugar) =
+  #injects ctr @ #distincts ctr @ #case_thms ctr @ flat (#sel_thmss ctr)
+
 (*
 fun guess_operator' ctxt mk_term known_oprs x_ty =
   case AList.lookup (op =) known_oprs x_ty
@@ -176,9 +179,11 @@ fun guess_set_opr ctxt ty element_ty =
                     val sets = BNF_Def.mk_sets_of_bnf tys1 tys2 bnf
                     val bnf_fp = BNF_FP_Def_Sugar.fp_sugar_of ctxt Tname
                     val ctxt' = case bnf_fp of NONE => ctxt
-                                   | SOME fp =>
-                                        Context.proof_map (Simps.map (fn ctxt =>
-                                                ctxt addsimps #set_thms (#fp_bnf_sugar fp))) ctxt
+                                   | SOME fp => Context.proof_map (Simps.map (fn ctxt =>
+                                        ctxt addsimps (
+                                            #set_thms (#fp_bnf_sugar fp)
+                                          @ ctr_sugar_simps (#ctr_sugar (#fp_ctr_sugar fp))
+                                        ))) ctxt
                  in Seq.of_list sets
                  |> Seq.maps (fn s =>
                       case Term.fastype_of s
@@ -197,7 +202,7 @@ fun guess_self_rel ctxt
   = guess_operator ctxt (fn (ctxt, D, L, bnf) =>
       let val ctxt' = case fp_sugar_of ctxt bnf
                         of NONE => ctxt
-                         | SOME _ => ctxt (*TODO somthing maybe #fp_bnf_sugar fp*)
+                         | SOME fp => ctxt addsimps (ctr_sugar_simps (#ctr_sugar (#fp_ctr_sugar fp)))
        in Seq.single (BNF_Def.mk_rel_of_bnf D L L bnf, ctxt')
       end)
 
@@ -211,7 +216,7 @@ fun guess_rel_mapper target_ty ctxt ty element_ty =
    in guess_operator ctxt' (fn (ctxt, D, L, bnf) =>
         let val ctxt' = case fp_sugar_of ctxt bnf
                           of NONE => ctxt
-                           | SOME fp => ctxt (*TODO somthing maybe #fp_bnf_sugar fp*)
+                           | SOME fp => ctxt addsimps (ctr_sugar_simps (#ctr_sugar (#fp_ctr_sugar fp)))
          in Seq.single (BNF_Def.mk_rel_of_bnf D L (target_ty L) bnf, ctxt')
         end
       ) known_rels ty
@@ -247,13 +252,14 @@ fun occur_subtyp T T' =
                 | _ => false
 
 (*flag=true for zip, flag=false for unzip*)
-fun guess_zip_guided flag ctxt (target,target') (T,T') =
+fun guess_zip_guided flag (target,target') (T,T') ctxt =
   let val occur = occur_subtyp target T
       val occur' = occur_subtyp target' T'
    in if occur andalso occur'
       then if T = target andalso T' = target'
-      then (Abs("x", T, Abs("y", T', \<^Const>\<open>True\<close>)),
-            Abs("x", \<^Type>\<open>prod T T'\<close>, Bound 0))
+      then ((Abs("x", T, Abs("y", T', \<^Const>\<open>True\<close>)),
+             Abs("x", \<^Type>\<open>prod T T'\<close>, Bound 0)),
+           ctxt)
       else case (T,T')
             of (Type(Tname, Targs), Type(Tname', Targs')) =>
                 let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
@@ -265,26 +271,31 @@ fun guess_zip_guided flag ctxt (target,target') (T,T') =
                                     of SOME x => x | NONE => raise Automation_Fail
                     val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                                        else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
-                    val args = map2 (fn t1 => fn t2 =>
-                                  guess_zip_guided flag ctxt (target,target') (t1,t2)) lives lives'
+                    val simps = (case Ctr_Sugar.ctr_sugar_of ctxt Tname
+                                   of SOME cs => ctr_sugar_simps cs
+                                    | _ => [])
+                    val (args, ctxt') = ctxt addsimps simps
+                          |> fold_map (guess_zip_guided flag (target,target'))
+                                      (lives ~~ lives')
                     val map_tys = map (fn (_,z) => case Term.fastype_of z
                                                      of \<^Type>\<open>fun a b\<close> => (a,b)) args
                                 |> split_list
                     val mp = BNF_Def.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
                     val rl = BNF_Def.mk_rel_of_bnf deads lives lives' bnf
-                 in (Term.list_comb (rl, map fst args),
+                 in((Term.list_comb (rl, map fst args),
                      Abs("x", domain_type (Term.fastype_of zip),
                              if flag then Term.list_comb (mp, map snd args) $ (zip $ Bound 0)
-                                     else zip $ (Term.list_comb (mp, map snd args) $ Bound 0)))
+                                     else zip $ (Term.list_comb (mp, map snd args) $ Bound 0))),
+                    ctxt')
                 end
       else if not occur andalso not occur'
         then if T = T'
-          then (\<^Const>\<open>HOL.eq T\<close>, \<^Const>\<open>fst T T\<close>)
+          then ((\<^Const>\<open>HOL.eq T\<close>, \<^Const>\<open>fst T T\<close>), ctxt)
           else error "Only the target can vary in guided guess_zip"
         else error "Internal bug #a1dd0817-f55a-468e-ba79-95183f145380"
   end
 
-fun guess_zip flag ctxt (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs')) =
+fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs')) ctxt =
       let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
           val bnf = get_bnf ctxt Tname
           val (deads,lives) = classify_bnf_dead_live bnf Targs
@@ -294,16 +305,21 @@ fun guess_zip flag ctxt (*(target,target')*) (Type(Tname, Targs), Type(Tname', T
                           of SOME x => x | NONE => raise Automation_Fail
           val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                              else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
-          val args = map2 (fn t1 => fn t2 => guess_zip flag ctxt (t1,t2)) lives lives'
+          val simps = (case Ctr_Sugar.ctr_sugar_of ctxt Tname
+                                   of SOME cs => ctr_sugar_simps cs
+                                    | _ => [])
+          val (args, ctxt') = ctxt addsimps simps
+                  |> fold_map (guess_zip flag) (lives ~~ lives')
           val map_tys = map (fn z => case Term.fastype_of z
                                        of \<^Type>\<open>fun a b\<close> => (a,b)) args
                       |> split_list
           val mp = BNF_Def.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
-       in Abs("x", domain_type (Term.fastype_of zip),
-                   Term.list_comb (mp, args) $ (zip $ Bound 0))
+       in (Abs("x", domain_type (Term.fastype_of zip),
+                    Term.list_comb (mp, args) $ (zip $ Bound 0)),
+           ctxt')
       end
-  | guess_zip _ _ ((a as TFree _), (b as TFree _)) = Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0)
-  | guess_zip _ _ (a,b) = raise TYPE ("guess_zip", [a,b], [])
+  | guess_zip _ ((a as TFree _), (b as TFree _)) ctxt = (Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0), ctxt)
+  | guess_zip _ (a,b) _ = raise TYPE ("guess_zip", [a,b], [])
 
 (** Select Hint **)
 
@@ -468,8 +484,13 @@ fun instantiate_ToA (Ant,pure_info,ctxt) ToA =
                   |> simplify_distinct ctxt |> @{print}
                   |> maps (fn th => let val th' = (Goal.conclude th, ctxt) RS' ToA'
                                         val th2 = (th', ctxt) RS' @{thm' Action_Tag_D}
-                                     in [(th2, ctxt) RS' @{thm' mk_ToA_rule},
-                                         (th2, ctxt) RS' @{thm' mk_ToA_rule'}]
+                                        fun rewr_pat (\<^Const>\<open>Trueprop\<close> $ (\<^Const_>\<open>Imply ty\<close> $ X $ Y $ _)) =
+                                              (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Imply ty\<close> $ X $ Y
+                                                  $ Var(("P", Term.maxidx_term X (Term.maxidx_term Y ~1) + 1), \<^Type>\<open>bool\<close>)))
+                                        val ToA1 = (th2, ctxt) RS' @{thm' mk_ToA_rule}
+                                        val ToA2 = (th2, ctxt) RS' @{thm' mk_ToA_rule'}
+                                     in [(rewr_pat (Thm.concl_of ToA1), ToA1),
+                                         (rewr_pat (Thm.concl_of ToA2), ToA2)]
                                     end)
           val _ = if length insts > 20
                   then warning "I find more than 20 instantiations which is very abnormal.\
@@ -507,11 +528,12 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
       val prem_ants = filter (is_Premis o Thm.concl_of) ants'1
       val ants = filter ((fn term => not (is_Premis term) andalso not (is_TA_IH_ToA term))
                          o Thm.concl_of) ants'1
-               @ ToAs
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_intro_rules (
-                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [], [], NONE)) ants))
+                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [], [], NONE)) ants)
+              #> Phi_Reasoner.add_intro_rules (map (fn (pat,rule) =>
+                    ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs))
 
       val lsequent' = lsequent
                     |> ALLGOALS (Method.insert_tac ctxt'' prem_ants)
@@ -681,7 +703,11 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
       val rules = mk_rule_by_guess_or_hint (unify_hint, guess_property_obj_eq, [0], ind_conv)
                                      @{thm \<phi>Equiv_Obj_rule} phi0 hint0 ctxt0
                |> Seq.map (fn (rule, phi, ctxt) =>
-            let val rule' = abstract_constraint_guided_reasoning phi ctxt rule
+            let val ctxt' = Context.proof_map (Phi_Reasoner.add_pass (
+                                "\<phi>TA.OE", \<^pattern_prop>\<open>\<phi>Equiv_Obj _ _\<close>,
+                                fn _ => fn (rules, _, pats, guard, ctxt) =>
+                                           (rules, Phi_Reasoner.LOCAL_CUT, pats, guard, ctxt))) ctxt
+                val rule' = abstract_constraint_guided_reasoning phi ctxt' rule
              in (if is_some hint0 orelse #is_recursive phi
                  then Phi_Sledgehammer_Solver.auto (SOME (#proof_id phi ^ "/obj_equal")) (ctxt, rule')
                  else ((@{thm' Premise_I}, ctxt) RS' rule')
@@ -985,7 +1011,7 @@ fun guess_property_SH flag phi_term0
       val target = case element_ty
                      of \<^Type>\<open>prod a b\<close> => (a,b)
                       | _ => error "Internal bug #8522d8e9-57a1-4ad9-800e-1c1222fcabfc"
-      val (dom,zip) = guess_zip_guided flag ctxt target (unzip_typ ctxt x_ty)
+      val ((dom,zip), ctxt) = guess_zip_guided flag target (unzip_typ ctxt x_ty) ctxt
       val F_term = (case FT_term of F $ _ => F
                                   | _ => error "Internal bug: Not a Type Operator")
 
@@ -1124,10 +1150,10 @@ fun gen_SH flag (phi00,hints) thy =
 (*** Install Automation ***)
 
 val _ = Theory.setup (Context.theory_map (
-  Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
+ (* Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
 #> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
-(*#> Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true) 
- Phi_Type_Algebra.add_automation_on_def 121 (gen_SH true) *)
+#>*) I (* Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true) *)
+(* Phi_Type_Algebra.add_automation_on_def 121 (gen_SH true) *)
 ))
 
 end

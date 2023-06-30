@@ -163,7 +163,7 @@ lemma "__DoWhile__rule_\<phi>app":
   
 proc (nodef) do_while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X' x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
-       and V: \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<a>\<n>\<d> Any @action ToSA\<close>
+       and V: \<open>\<r>CALL X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ( X' x \<s>\<u>\<b>\<j> x. invariant x \<and> cond x) \<a>\<n>\<d> Any @action ToSA\<close>
        and B: \<open>\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> cond x \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> invariant x
       \<longrightarrow> \<p>\<r>\<o>\<c> body \<lbrace> X' x \<longmapsto> (X' x'\<heavy_comma> \<v>\<a>\<l> cond x' \<Ztypecolon> \<bool> \<s>\<u>\<b>\<j> x'. invariant x') \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   input  \<open>X\<close>

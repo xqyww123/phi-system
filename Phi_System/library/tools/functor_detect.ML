@@ -314,8 +314,8 @@ fun add_property_kind k extract thy =
    in thy
    |> Property_Kinds.map (Symtab.update_new (k, extract))
    |> Context.theory_map (
-        Phi_Reasoner.add_pass ("\<phi>functor$" ^ k, pat, fn pos => fn (rules, pats, guard, ctxt) =>
-          (rules, pats, guard, add_prop pos rules ctxt)))
+        Phi_Reasoner.add_pass ("\<phi>functor$" ^ k, pat, fn pos => fn (rules, mode, pats, guard, ctxt) =>
+          (rules, mode, pats, guard, add_prop pos rules ctxt)))
   end
 
 

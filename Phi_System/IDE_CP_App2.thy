@@ -137,7 +137,7 @@ lemma [\<phi>reason 1200 for \<open>?S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S2\<heavy_
 \<Longrightarrow> report_unprocessed_element_index path
 \<Longrightarrow> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[raw] T \<brangle>\<close>
   unfolding Action_Tag_def
-  by (cases raw; simp add: Val_expn implies_refl)
+  by (cases raw; simp add: Val_expn)
 
 lemma [\<phi>reason 1200 for
     \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
@@ -210,7 +210,7 @@ lemma "__fast_assign_val__":
 
 lemma "__fast_assign_val_0__":
   \<open> R\<heavy_comma> \<blangle> Void \<brangle> \<i>\<m>\<p>\<l>\<i>\<e>\<s> R \<close>
-  by (simp add: implies_refl)
+  by simp
 
 ML_file \<open>library/additions/local_value.ML\<close>
 
