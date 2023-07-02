@@ -108,7 +108,7 @@ declare [[\<phi>reason_default_pattern
 paragraph \<open>Implication\<close>
 
 lemma [\<phi>reason 1010]:
-  \<open> (Q \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_simple_MTF A)
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P @action \<A>_simple_MTF A)
 \<Longrightarrow> X \<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<s>\<u>\<b>\<j> Q \<a>\<n>\<d> P @action \<A>_simple_MTF A\<close>
   unfolding Action_Tag_def Imply_def
   by (simp add: Subjection_expn, blast)
@@ -122,7 +122,7 @@ lemma [\<phi>reason 1010]:
 paragraph \<open>View Shift\<close>
 
 lemma [\<phi>reason 1010]:
-  \<open> (Q \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P @action \<A>_simple_MTF A)
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P @action \<A>_simple_MTF A)
 \<Longrightarrow> X \<s>\<u>\<b>\<j> Q \<s>\<h>\<i>\<f>\<t>\<s> Y \<s>\<u>\<b>\<j> Q \<a>\<n>\<d> P @action \<A>_simple_MTF A\<close>
   unfolding Action_Tag_def View_Shift_def
   by (simp add: \<phi>expns, blast)

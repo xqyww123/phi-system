@@ -655,11 +655,13 @@ val _ =
             val reasoners = case power
                               of 0 => get_reasoners' (Proof_Context.theory_of ctxt) all_reasoners pattern
                                | 1 => Net.match_term all_reasoners pattern
+                                        |> distinct (fn (a,b) => #3 a = #3 b)
                                         |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
                                | 2 => Net.entries all_reasoners
                                         |> filter (fn (_,x,_,_) =>
                                               Pattern.matches (Proof_Context.theory_of ctxt)
                                                               (pattern,x))
+                                        |> distinct (fn (a,b) => #3 a = #3 b)
                                         |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
          in if null reasoners
             then writeln "No reasoner found."

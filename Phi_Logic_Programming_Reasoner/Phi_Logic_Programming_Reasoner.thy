@@ -77,6 +77,8 @@ ML_file_debug \<open>library/reasoner.ML\<close>
 
 lemma \<r>Guard_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Guard P\<close> unfolding \<r>Guard_def .
 
+ML \<open>@{thm' equal_elim_rule2} RS @{thm equal_elim_rule2}\<close>
+
 section \<open>Introduction\<close>
 
 text \<open>
@@ -416,6 +418,11 @@ definition pure_all_embed :: \<open>('a \<Rightarrow> bool) \<Rightarrow> bool\<
   where \<open>pure_all_embed \<equiv> (All)\<close>
 definition \<open>pure_conj_embed \<equiv> (\<and>)\<close>
 definition \<open>pure_prop_embed x \<equiv> x\<close>
+definition \<open>pure_eq_embed \<equiv> (=)\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(X \<equiv> Y) \<equiv> Trueprop (pure_eq_embed X Y)\<close>
+  unfolding pure_eq_embed_def atomize_eq .
 
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>(P \<Longrightarrow> Q) \<equiv> Trueprop (pure_imp_embed P Q)\<close>

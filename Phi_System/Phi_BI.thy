@@ -104,9 +104,7 @@ declare [[
         let val idx = Term.maxidx_term X (Term.maxidx_term y (Term.maxidx_term U ~1)) + 1
             val P  = Var(("P", idx), HOLogic.boolT)
             val y' = Var(("var_y", idx), Term.fastype_of y)
-         in if is_Var X then ( Trueprop $ (Imply $ X $ (PhiTyp $ y $ U) $ P) ) ::
-                             ( if is_Var y then []
-                               else [Trueprop $ (Imply $ X $ (PhiTyp $ y' $ U) $ P)] )
+         in if is_Var X then [Trueprop $ (Imply $ X $ (PhiTyp $ y  $ U) $ P)]
                         else [Trueprop $ (Imply $ X $ (PhiTyp $ y' $ U) $ P)]
         end\<close> (20)
 ]]
@@ -644,13 +642,14 @@ lemma \<phi>Prod_transformation:
 \<Longrightarrow> (x,y) \<Ztypecolon> N \<^emph> M \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x',y') \<Ztypecolon> N' \<^emph> M' \<a>\<n>\<d> Pa \<and> Pb"
   unfolding Imply_def by (simp add: \<phi>expns) blast
 
+declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason 1000]:
   " A \<i>\<m>\<p>\<l>\<i>\<e>\<s> (snd x \<Ztypecolon> M) * (fst x \<Ztypecolon> N) \<a>\<n>\<d> P
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> N \<^emph> M \<a>\<n>\<d> P"
   unfolding Imply_def by (cases x; simp add: \<phi>expns)
 
-lemma [\<phi>reason 1001]:
+lemma [\<phi>reason 1001 for \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> (_,_) \<Ztypecolon> _ \<^emph> _ \<a>\<n>\<d> _\<close> \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?var_y \<Ztypecolon> _ \<^emph> _ \<a>\<n>\<d> _\<close>]:
   " A \<i>\<m>\<p>\<l>\<i>\<e>\<s> (y \<Ztypecolon> M) * (x \<Ztypecolon> N) \<a>\<n>\<d> P
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> (x,y) \<Ztypecolon> N \<^emph> M \<a>\<n>\<d> P"
   unfolding Imply_def by (simp add: \<phi>expns)

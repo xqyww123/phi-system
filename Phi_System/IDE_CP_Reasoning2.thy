@@ -282,7 +282,7 @@ lemma "_ToSA_init_":
 
 \<phi>reasoner_ML ToSA_init 2000 (\<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>) = \<open>
 fn (ctxt0,sequent0) => Seq.make (fn () =>
-  let val sequent = (@{thm' Action_Tag_I}, ctxt0) RS' sequent0
+  let val sequent = @{thm' Action_Tag_I} RS sequent0
       val _ (*Trueprop*) $ ( _ (*Action_Tag*) $ (Const(\<^const_name>\<open>Imply\<close>, _) $ _ $ Y $ _)
                                               $ (Const(\<^const_name>\<open>ToSA'\<close>, _) $ deep))
          = Thm.major_prem_of sequent0
@@ -532,6 +532,23 @@ subsection \<open>Existential\<close>
 
 declare ToA_ex_intro [\<phi>reason 2600]
 declare ToA_ex_intro'[\<phi>reason 2600]
+
+(*
+\<phi>reasoner_ML ToA_ex_intro 2600 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> ExSet _ \<a>\<n>\<d> _\<close> | \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ExSet _ \<brangle> \<a>\<n>\<d> _\<close>) = \<open>
+fn (ctxt,sequent) =>
+  let val (_, X'', _) = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
+      val (has_focus, X) = case X''
+                             of Const(\<^const_name>\<open>ExSet\<close>, _) $ X => (false, X)
+                              | Const(\<^const_name>\<open>times\<close>, _) $ _ $ (Const(\<^const_name>\<open>FOCUS_TAG\<close>, _) $ X)
+                                  => (false, X)
+      fun ex_var_is_in_obj_only i (Abs(_,_,X)) = ex_var_is_in_obj_only (i+1) X
+        | ex_var_is_in_obj_only i (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) = ex_var_is_in_obj_only T
+        | ex_var_is_in_obj_only i (Bound j) = j <> i
+        | ex_var_is_in_obj_only i (X $ Y) = ex_var_is_in_obj_only i X andalso ex_var_is_in_obj_only i Y
+        | ex_var_is_in_obj_only i _ = true
+   in 
+        
+\<close>*)
 
 lemma [\<phi>reason 2800]:
   "(\<And>x.  T x \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<a>\<n>\<d> P)

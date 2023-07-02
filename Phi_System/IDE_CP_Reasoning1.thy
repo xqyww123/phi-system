@@ -591,8 +591,23 @@ lemma [\<phi>reason 3000 for \<open>Demand_Nothing {_}\<close>]:
   \<open>Demand_Nothing {1}\<close>
   unfolding Demand_Nothing_def Imply_def by simp
 
-
 subsubsection \<open>Logic Connectives\<close>
+
+lemma [\<phi>reason 1 except \<open>Is_Stateless (?var_x \<Ztypecolon> _) _\<close>]:
+  \<open> Is_Stateless (z \<Ztypecolon> T) P
+\<Longrightarrow> \<phi>Equiv_Obj T eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x z
+\<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) P \<close>
+  unfolding Is_Stateless_def \<phi>Equiv_Obj_def Premise_def
+  using implies_trans by fastforce
+
+lemma [\<phi>reason 1 except \<open>Demand_Nothing (?var_x \<Ztypecolon> _)\<close>]:
+  \<open> Demand_Nothing (z \<Ztypecolon> T)
+\<Longrightarrow> \<phi>Equiv_Obj T eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq z x
+\<Longrightarrow> Demand_Nothing (x \<Ztypecolon> T) \<close>
+  unfolding Demand_Nothing_def \<phi>Equiv_Obj_def Premise_def
+  using implies_trans by fastforce
 
 lemma [\<phi>reason 1200]:
   \<open> Is_Stateless A P1
@@ -658,7 +673,7 @@ lemma (*The above rule is not local complete*)
   by clarsimp
 
 lemma [\<phi>reason 1200]:
-  \<open> (P \<Longrightarrow> Is_Stateless A Q)
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Stateless A Q)
 \<Longrightarrow> Is_Stateless (A \<s>\<u>\<b>\<j> P) (P \<and> Q)\<close>
   unfolding Is_Stateless_def Imply_def
   by (simp add: Subjection_expn; blast)

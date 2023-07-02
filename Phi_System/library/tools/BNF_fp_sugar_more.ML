@@ -16,6 +16,10 @@ val get_fp_more : Context.generic -> string -> fp_more option
 val mk_zip : typ list -> typ list -> typ list -> fp_more -> term
 val mk_unzip : typ list -> typ list -> typ list -> fp_more -> term
 
+val export : Context.generic -> Context.generic -> Context.generic
+
+val unit : typ -> Context.generic -> thm list * Context.generic
+
 end
 
 structure BNF_FP_Sugar_More : BNF_FP_SUGAR_MORE = struct
@@ -66,5 +70,78 @@ fun mk_unzip Ds Ts Us fp_more =
         ((#deads fp_more ~~ Ds) @ (#lives fp_more ~~ Ts) @ (#lives' fp_more ~~ Us)) (#unzip fp_more)
 
 
+(*** Cache ***)
+
+structure Properties = Generic_Data (
+  type T = (typ * thm) list Symreltab.table
+  val empty = Symreltab.empty
+  val merge = Symreltab.merge (K true)
+)
+
+fun export from to = Properties.put (Properties.get from) to
+
+fun gen_property kind gen (typ as Type(Tname,_)) generic =
+  let val ctxt = Context.proof_of generic
+      val thy = Context.theory_of generic
+      val mpf = map_filter (fn (ty',ths) =>
+                  let val env = Sign.typ_match thy (ty', typ) Vartab.empty
+                      val inst = Phi_Help.tyenv_to_tvars_table ctxt env
+                   in SOME (Thm.instantiate (inst, Vars.empty) ths)
+                  end handle TYPE_MATCH => NONE)
+   in case Symreltab.lookup (Properties.get generic) (Tname,kind)
+        of SOME ths =>
+            (map (Thm.transfer'' generic) (mpf ths), generic)
+         | NONE =>
+            let val res = gen Tname generic
+             in (mpf res, Properties.map (Symreltab.update_new (
+                              (Tname,kind), res)) generic)
+            end
+  end
+  | gen_property _ _ typ _ =
+      raise TYPE ("Not a Type constant", [typ], [])
+
+
+
+fun made_of_ctrs chk_ctrs (Const(N,_)) = chk_ctrs N
+  | made_of_ctrs chk_ctrs (X $ Y) = made_of_ctrs chk_ctrs X andalso made_of_ctrs chk_ctrs Y
+  | made_of_ctrs chk_ctrs (Abs(_,_,X)) = made_of_ctrs chk_ctrs X
+  | made_of_ctrs _ _ = true
+
+fun chk_search_result1 ctxt pattern [] =
+      error ("No existing theorems found for " ^ Syntax.string_of_term ctxt pattern)
+  | chk_search_result1 _ _ [x] = [x]
+  | chk_search_result1 ctxt pattern L = let open Pretty in
+        error (string_of (chunks (
+            block [str "More than one existing theorems found for ", Syntax.pretty_term ctxt pattern] ::
+            map (fn th => item [Syntax.pretty_term ctxt (Thm.prop_of th)]) L
+          )))
+      end
+
+fun gen_unit_simps Tname generic =
+  let val sorts = Sign.arity_sorts (Context.theory_of generic) Tname \<^sort>\<open>one\<close>
+      val ctxt = Context.proof_of generic
+      val ty_args = map_index (fn (i,S) => TVar(("x",i),S)) sorts
+      val ty = Type(Tname, ty_args)
+      val pattern = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>HOL.eq ty\<close> $ \<^Const>\<open>one_class.one ty\<close> $ Var(("uu",0),ty))
+      val ctrs =(case Context.cases Ctr_Sugar.ctr_sugar_of_global Ctr_Sugar.ctr_sugar_of generic Tname
+                   of SOME c => fold (fn Const(N,_) => Symtab.insert_set N) (#ctrs c) Symtab.empty
+                    | NONE => Symtab.empty)
+              |> Symtab.defined
+   in Find_Theorems.find_theorems ctxt NONE NONE true [(true, Find_Theorems.Pattern pattern)]
+   |> snd
+   |> map_filter (fn (_, th) => case Thm.prop_of th
+                                  of _ (*Trueprop*) $ (_ (*eq*) $ _ $ RHS) =>
+                                      if made_of_ctrs ctrs RHS
+                                      then SOME th
+                                      else NONE
+                                   | _ => NONE)
+   |> chk_search_result1 ctxt pattern
+   |> map (fn th => case Thm.concl_of th
+                      of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) =>
+                          (Term.fastype_of LHS, th))
+  end
+
+fun unit Tname generic =
+      gen_property "one" gen_unit_simps Tname generic
 
 end

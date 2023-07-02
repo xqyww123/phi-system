@@ -98,12 +98,12 @@ end
 
 infix 0 RS' RSN'
 
-fun (tha,ctxt) RSN' (i, thb) =
+fun tha RSN' (ctxt, i, thb) =
   (case Seq.chop 2 (Thm.biresolution (SOME ctxt) false [(false, tha)] i thb) of
     ([th], _) => Thm.solve_constraints th
   | ([], _) => raise THM ("RSN: no unifiers", i, [tha, thb])
   | _ => raise THM ("RSN: multiple unifiers", i, [tha, thb]));
 
 (*Resolution: P \<Longrightarrow> Q, Q \<Longrightarrow> R gives P \<Longrightarrow> R*)
-fun (tha, ctxt) RS' thb = (tha,ctxt) RSN' (1,thb);
+fun tha RS' (ctxt, thb) = tha RSN' (ctxt, 1,thb);
 

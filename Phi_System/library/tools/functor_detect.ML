@@ -72,6 +72,7 @@ val phi_trim_context : phi_type -> phi_type
 val phi_transfer : theory -> phi_type -> phi_type
 val phi_maxidx_of : phi_type -> int -> int
 
+val note_properties : phi_type -> (bstring * thm list) list -> Context.generic -> Context.generic
 
 type algebra_hints = term list
 
@@ -84,7 +85,7 @@ val add_automation_on_def : priority -> automation_on_def -> Context.generic -> 
 (* Tools *)
 
 (*Find the most general instantiation of the given type to meet the given sort*)
-val lift_type_sort : theory -> typ * sort -> Type.tyenv
+val lift_type_sort : theory -> typ * sort -> Type.tyenv -> Type.tyenv
 
 (*make inductively destruction rule.*)
 val mk_ind_dest_ToA : Proof.context -> phi_type -> (term (*x*) * term (*T*) -> term) -> thm
@@ -424,6 +425,9 @@ val _ = Theory.setup (
 
 (*** \<phi>-Type Definition \& Infos ***)
 
+val introN = "intro"
+val unfoldN = "unfold"
+
 datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
              | WFREC_DEF  of string * Function.info
 
@@ -562,18 +566,18 @@ fun raw_term_name_typ (Const N_T) = N_T
   | raw_term_name_typ (Free N_T) = N_T
   | raw_term_name_typ _ = error "Internal bug"
 
-fun lift_type_sort thy (ty,sort) =
+fun lift_type_sort thy (ty,sort) env00 =
   let val idx = Term.maxidx_of_typ ty
    in if Sign.of_sort thy (ty, sort)
       then Vartab.empty
       else let val (env0,_) =
                      Sign.typ_unify thy
                            (ty, TVar(("_", idx), sort))
-                           (Vartab.empty, idx)
+                           (env00, idx)
                val env = Vartab.map (fn N => (fn (S, TVar(_,S')) => (S, TVar(N,S'))
                                                | X => if N = ("_", 1) then X
                                                       else error "Internal bug 8bb59e49-9b57-48bc-b310-9da3b8f5ff7f"))
-                         (Vartab.delete ("_", idx) env0)
+                         (Vartab.delete_safe ("_", idx) env0)
                 in env
                end
            handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
@@ -626,6 +630,14 @@ fun chk_zero_index_term term =
   then term
   else error "Internal bug: not zero-indexed!"
 
+fun note_properties (phi : phi_type) notes =
+  let val short_name = Term.term_name (#term phi)
+      fun mk_binding name = Binding.make (name, (#pos phi))
+                         |> Binding.qualify true short_name
+   in Context.mapping (fold (fn (N,Th) => snd o Global_Theory.note_thms "" ((mk_binding N, []), [(Th,[])])) notes)
+                      (fold (fn (N,Th) => snd o Local_Theory.note ((mk_binding N, []), Th)) notes)
+  end
+
 fun add_type (def, pos, hints) generic =
   let val ctxt = Context.proof_of generic
       val (idx,(name_ty,term)) =
@@ -642,6 +654,7 @@ fun add_type (def, pos, hints) generic =
                             of SOME idx_name_X => idx_name_X
                              | _ => error "Bad Function.info, the expected function is not\
                                           \ given inside.")
+
       fun filter_relevant_eqs name =
             filter (fn eq =>
               case Thm.concl_of eq
@@ -729,8 +742,9 @@ fun add_type (def, pos, hints) generic =
                                             morphism_phi_type m (phi_trim_context phi_type)))))
    |> Phi_Help.generic_theory_mapping (fn m =>
         Phi_Reasoner.add_intro_rules (map (fn rule =>
-            ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 40, [], [], NONE)
+            ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 30, [], [], NONE)
         ) intro_ToA))
+   |> note_properties phi_type [(unfoldN, eqs), (introN, intro_ToA)]
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)
    |> invoke_automations_on_def (phi_type, hints)

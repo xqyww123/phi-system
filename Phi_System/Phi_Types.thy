@@ -149,7 +149,9 @@ lemma UNIV_subty [\<phi>reason 1000]:
 
 subsection \<open>Stepwise Abstraction\<close>
 
-definition \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
+declare [[\<phi>trace_reasoning = 3]]
+              
+\<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U))\<close>
 
 lemma [\<phi>reason 1200]:
@@ -231,9 +233,9 @@ lemma (*The above rule is revertible*)
                prems(2-3), blast) .
 
 
-(*interpretation Unit_Functor_L \<open>Unit_Homo B\<close> \<open>((\<Zcomp>) B)\<close>
+interpretation Unit_Functor_L \<open>Unit_Homo B\<close> \<open>((\<Zcomp>) B)\<close>
   unfolding Unit_Functor_L_def Unit_Functor_def Imply_def Unit_Homo_def
-  by (auto simp add: \<phi>Composition_expn) *)
+  by (auto simp add: \<phi>Composition_expn) 
 
 lemma [\<phi>reason 1000]:
   \<open> Is_Stateless (1 \<Ztypecolon> B) P
@@ -676,20 +678,21 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[ML_print_depth = 1000]]
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
 
-                                                                                                                     
+                                                                                                                         
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
    subj \<open>Transformation_Functor set list_all2\<close>
 
-print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _\<close> ? ?
 print_\<phi>reasoners \<open>xaa \<Ztypecolon> List T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to U\<close> ?
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
+
+thm List3.obj_eq
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -698,10 +701,13 @@ print_\<phi>reasoners \<open>xaa \<Ztypecolon> List T \<i>\<m>\<p>\<l>\<i>\<e>\<
 *)
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
 
-declare [[\<phi>trace_reasoning = 2, ML_print_depth = 1000]]
+declare [[\<phi>trace_reasoning = 3, ML_print_depth = 1000]]
     
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
+
+thm List.intro
+thm List.unfold
 
 print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _\<close> ? ?
 
@@ -709,8 +715,8 @@ print_\<phi>reasoners \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _\<cl
 lemma [\<phi>reason 10000]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 * \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
-  sorry *)
- 
+  sorry  *)
+            
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
   (* subj \<open>\<phi>Equiv_Obj (=)\<close> *)

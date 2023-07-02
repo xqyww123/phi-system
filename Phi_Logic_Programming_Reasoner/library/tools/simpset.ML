@@ -18,6 +18,7 @@ val equip : Proof.context -> Proof.context
 val enhance : Proof.context -> Proof.context
 
 val map : (Proof.context -> Proof.context) -> Context.generic -> Context.generic
+val map' : (Proof.context -> Proof.context) -> Proof.context -> Proof.context
 val print : Proof.context -> bool -> unit
 val simp_rules: Proof.context -> thm list
 
@@ -65,6 +66,7 @@ fun enhance ctxt =
   Simplifier.put_simpset (Simplifier.merge_ss (Simplifier.simpset_of ctxt, get' ctxt)) ctxt
 
 fun map f generic = Data.map (Raw_Simplifier.simpset_map (Context.proof_of generic) f) generic
+fun map' f = Context.proof_map (map f)
 fun map_with_result f generic =
   let val ss = Data.get generic
       val (result,ctxt') = Raw_Simplifier.put_simpset ss (Context.proof_of generic) |> f

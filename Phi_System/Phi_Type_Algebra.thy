@@ -271,6 +271,14 @@ lemma apply_Transformation_Functor:
 
 subsection \<open>Reasoning\<close>
 
+subsubsection \<open>Convention\<close>
+
+text \<open>
+Priority:
+\<^item> 30: inductively introduction ToA
+
+\<close>
+
 subsubsection \<open>Framework\<close>
 
 definition Type_Variant_of_the_Same_Functor :: \<open> 'a \<Rightarrow> 'b \<Rightarrow> bool \<close>
@@ -359,6 +367,7 @@ ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_n
 ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
 |> #ctr_sugar\<close>
 
+ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
 ML \<open>
 val ths = #fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
@@ -987,6 +996,7 @@ subsubsection \<open>Extension of BNF-FP\<close>
 
 ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
 
+
 lemma zip_eq_Cons_ex:
   \<open>zip a b = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. a = ah # al \<and> b = bh # bl \<and> (ah,bh) = h \<and> zip al bl = l)\<close>
   by (induct b; cases a; simp)
@@ -1042,6 +1052,25 @@ lemma [fundef_cong]:
   \<open>T x = T' x' \<Longrightarrow> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')\<close>
   unfolding \<phi>Type_def by simp
 
+
+subsubsection \<open>Unit Left \& Right\<close>
+
+lemma \<phi>TA_1L_rule:
+  \<open> (Ant \<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) Any @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Any \<longrightarrow> P
+\<Longrightarrow> Ant
+\<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) P\<close>
+  unfolding Action_Tag_def Is_Stateless_def
+  using implies_weaken by blast
+
+lemma \<phi>TA_1R_rule:
+  \<open> (Ant \<Longrightarrow> Demand_Nothing (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Demand_Nothing (x \<Ztypecolon> T)\<close>
+  unfolding Action_Tag_def .
 
 
 subsubsection \<open>\<phi>Equiv_Obj\<close>
@@ -1184,7 +1213,7 @@ lemmas \<phi>TA_SHu_rewr = \<phi>TA_SHz_rewr_C
 
 
 
-                                    
+
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
 term case_prod
@@ -1201,10 +1230,10 @@ lemmas [\<phi>constraint_expansion] =
           ExSet_simps
           FSet.ball_simps(5-7) Set.ball_simps(5-7,9) Set.ball_Un
           Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
-          list_all2_Cons list_all2_Cons1 list_all2_Nil zip_eq_Cons_ex zip_eq_Nil_eq_len list_all2_lengthD
-              map_ident list.inject list.set
+          list_all2_Cons1 list_all2_Nil zip_eq_Cons_ex zip_eq_Nil_eq_len list_all2_lengthD
+              map_ident
 
-thm list.set
+thm map_ident
 thm zip_eq_Nil_eq_len zip_eq_Cons_ex
 
 
