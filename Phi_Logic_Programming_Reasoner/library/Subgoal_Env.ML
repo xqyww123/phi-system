@@ -52,7 +52,8 @@ fun subgoal (ctxt,sequent) =
       | chk_no_goal (Abs(_,_,X)) = chk_no_goal X
       | chk_no_goal _ = true
     fun chk_no_goal' term =
-      if chk_no_goal term then error "Goal ctxt tag is going to be exported out!" else ()
+      if chk_no_goal term then ()
+      else error "Goal ctxt tag is going to be exported out!"
     val (_, ctxt') = Assumption.add_assms (fn _ => fn _ =>
                           (fn th => (chk_no_goal' (Thm.prop_of th); th),
                            fn term => (chk_no_goal' term; term)))

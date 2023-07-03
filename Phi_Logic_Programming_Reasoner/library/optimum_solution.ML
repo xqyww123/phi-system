@@ -132,7 +132,7 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
 fun internal_start (ctxt,sequent) = gen_start ctxt [sequent]
 
 fun best_among (_, []) = NONE
-  | best_among (ctxt, [thm]) = Phi_Reasoner.reasonXXX NONE ctxt thm
+  | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE ctxt thm
   | best_among (ctxt,candidates) =
     ( Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.chunks (
           Pretty.str "PLPR_Optimum_Solution: reasoning the optimal solution from candidates:" ::

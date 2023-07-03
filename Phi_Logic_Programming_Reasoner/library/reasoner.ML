@@ -71,7 +71,7 @@ signature NU_REASONER = sig
        to attack all if it is None;
        to attack until a sequent remains at most |N| premises, if N is negative*)
   val internal_reason  : int option (*N*) -> context_state -> context_state option
-  val reasonXXX  : int option (*N*) -> Proof.context -> thm -> thm option
+  val reason  : int option (*N*) -> Proof.context -> thm -> thm option
   val reason1 : (unit -> string) (*error message*)
              -> int option (*N*) -> Proof.context -> thm -> thm
   val internal_reason_s : Proof.context (*the context for accessing reasoner db*)
@@ -512,14 +512,14 @@ fun internal_reason (SOME 0) S = SOME S
       else gen_reason' ctxt (num_of_protected_prems sequent N)
                   [[ (Seq.single (enter_reasoning_envir ctxt, sequent))]]
 
-fun reasonXXX num ctxt sequent =
+fun reason num ctxt sequent =
   case internal_reason num (ctxt,sequent)
     of SOME (ctxt', sequent') =>
                SOME (singleton (Proof_Context.export ctxt' ctxt) sequent')
      | NONE => NONE
 
 fun reason1 G N ctxt sequent =
-  case reasonXXX N ctxt sequent of SOME x => x | NONE => error (G ())
+  case reason N ctxt sequent of SOME x => x | NONE => error (G ())
 
 fun internal_reason_s ctxt seqs =
   let val (ret,seqs') = seqs (enter_reasoning_envir ctxt)

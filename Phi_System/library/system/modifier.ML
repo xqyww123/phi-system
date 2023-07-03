@@ -11,7 +11,7 @@ structure Phi_Modifier : PHI_MODIFIER = struct
 
 fun by_rule rule s =
   case Phi_Reasoners.wrap' (Phi_Reasoner.single_RS' rule) s
-    |> Option.mapPartial (Phi_Reasoners.wrap' (Phi_Reasoner.reasonXXX (SOME (Thm.nprems_of rule))))
+    |> Option.mapPartial (Phi_Reasoners.wrap' (Phi_Reasoner.reason (SOME (Thm.nprems_of rule))))
     of NONE => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
           Pretty.para "Fail to apply modifier rule:",
           Thm.pretty_thm (fst s) rule

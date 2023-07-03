@@ -370,7 +370,7 @@ lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<i>\<m>\<p>\<l>\<i
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x < 2 ^ (LENGTH('b)-1)
 \<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<i>\<m>\<p>\<l>\<i>\<e>\<s> of_nat x \<Ztypecolon> \<int>('b) @action to \<int>(_) \<close>
   \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket>
-      certified using int_eq_sint the_\<phi>(3) by blast .
+      certified using int_eq_sint the_\<phi>(2) by blast .
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> \<int>(_) \<a>\<n>\<d> _ \<close>]:
   \<open> Threshold_Cost 5
@@ -569,7 +569,7 @@ lemma op_const_natR_\<phi>app[\<phi>synthesis 300]:
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n'))] \<nat>\<^sup>r('b)\<close>
 \<medium_left_bracket>
   apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified]
-  certified by (simp add: the_\<phi>(2) unat_of_nat)
+  certified by (simp add: the_\<phi>(1) unat_of_nat)
 \<medium_right_bracket> certified by (simp add: unat_of_nat) .
 
 lemma [\<phi>reason 50
@@ -650,7 +650,7 @@ lemma op_sub_nat_\<phi>app[\<phi>overload -,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_sub_word[where 'b='b] \<medium_right_bracket>
-      certified by (metis of_nat_mono_maybe_le the_\<phi>(4) the_\<phi>lemmata(1) the_\<phi>lemmata(2) unat_of_nat_eq unat_sub) .
+      certified by (metis of_nat_mono_maybe_le the_\<phi>(3) the_\<phi>lemmata(1) the_\<phi>lemmata(2) unat_of_nat_eq unat_sub) .
 
 lemma op_sub_natR_\<phi>app[\<phi>overload -,
                        \<phi>synthesis for _ (100)
@@ -658,7 +658,7 @@ lemma op_sub_natR_\<phi>app[\<phi>overload -,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>\<^sup>r('b) \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_sub_word[where 'b='b] \<medium_right_bracket>
-      certified by (metis mod_less of_nat_diff the_\<phi>(2) unat_of_nat unsigned_less) .
+      certified by (metis mod_less of_nat_diff the_\<phi>(1) unat_of_nat unsigned_less) .
 
 lemma op_sub_int_\<phi>app[\<phi>overload -,
                       \<phi>synthesis for _ (100)
@@ -666,7 +666,7 @@ lemma op_sub_int_\<phi>app[\<phi>overload -,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x - y \<in> {- (2 ^ (LENGTH('b)-1)) ..< 2 ^ (LENGTH('b)-1) }
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_sub_word[where 'b='b] \<medium_right_bracket>
-      certified using sint_of_int_eq the_\<phi>(6) by fastforce .
+      certified using sint_of_int_eq the_\<phi>(5) by fastforce .
 
 declare op_sub_word_\<phi>app[\<phi>overload -]
 
@@ -689,7 +689,7 @@ lemma op_mul_nat_\<phi>app[\<phi>overload *,
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<nat>('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_mul_word[where 'b='b] \<medium_right_bracket>
-      certified by (simp add: the_\<phi>(4) unat_eq_of_nat) .
+      certified by (simp add: the_\<phi>(3) unat_eq_of_nat) .
 
 lemma op_mul_natR_\<phi>app[\<phi>overload *,
                        \<phi>synthesis for _ (100)
@@ -706,7 +706,7 @@ lemma op_mul_int_\<phi>app[\<phi>overload *,
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_mul_word[where 'b='b] \<medium_right_bracket>
-      certified by (metis atLeastLessThan_iff of_int_mult sint_of_int_eq the_\<phi>(6)) .
+      certified by (metis atLeastLessThan_iff of_int_mult sint_of_int_eq the_\<phi>(5)) .
 
 declare op_mul_word_\<phi>app[\<phi>overload *]
 
@@ -749,7 +749,8 @@ lemma op_div_int_\<phi>app[\<phi>synthesis for _ (100)
     op_sdiv_word
     certified using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by force
   \<medium_right_bracket>
-    certified unfolding sdiv_word_def by (metis One_nat_def sdiv_word_max' sdiv_word_min' sint_int_min sint_of_int_eq the_\<phi>(2) the_\<phi>(4) the_\<phi>(7) the_\<phi>lemmata(1) the_\<phi>lemmata(3)) .
+    certified unfolding sdiv_word_def
+    by (metis One_nat_def sdiv_word_max' sdiv_word_min' sint_int_min sint_of_int_eq the_\<phi>(1) the_\<phi>(3) the_\<phi>(6) the_\<phi>lemmata(1) the_\<phi>lemmata(3))  .
 
 
 lemma op_div_int_fail[\<phi>synthesis for _ (100)
@@ -801,7 +802,8 @@ lemma op_mod_int_\<phi>app
   \<medium_left_bracket> 
     op_smod_word certified using sint_of_int_eq the_\<phi>(3) the_\<phi>(4) the_\<phi>(5) by fastforce
   \<medium_right_bracket> 
-  certified by (metis One_nat_def signed_take_bit_int_eq_self sint_sbintrunc' smod_word_def smod_word_max smod_word_min the_\<phi>(2) the_\<phi>lemmata(1) the_\<phi>lemmata(2) the_\<phi>lemmata(3)) .
+  certified
+    by (metis One_nat_def signed_take_bit_int_eq_self sint_sbintrunc' smod_word_def smod_word_max smod_word_min the_\<phi>(1) the_\<phi>lemmata(1) the_\<phi>lemmata(2) the_\<phi>lemmata(3))  .
 
 lemma op_mod_int_fail[\<phi>synthesis 100]:
   \<open> FAIL TEXT(\<open>About integers, there is no rule available for unsigned modulo\<close> (mod)
@@ -888,7 +890,7 @@ lemma op_lshl_nat_\<phi>app
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v1] \<nat>('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] \<nat>('bb) \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<nat>('ba) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_lshl_word_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
       certified unfolding push_bit_nat_def
-        by (metis le_less_trans n_less_equal_power_2 nat_less_le of_nat_inverse take_bit_nat_eq_self_iff the_\<phi>(3) the_\<phi>lemmata unsigned_push_bit_eq word_eqI_folds(1)) .
+      by (metis dual_order.strict_trans n_less_equal_power_2 of_nat_push_bit push_bit_eq_mult the_\<phi>(2) unat_eq_of_nat) .
 
 lemma op_lshl_natR_\<phi>app
   [\<phi>synthesis for _ (100)
@@ -939,7 +941,7 @@ lemma op_slt_int_\<phi>app
   \<open>\<p>\<r>\<o>\<c> op_slt TYPE('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_slt_word[where 'b='b] \<medium_right_bracket>
-      certified by (simp add: sint_of_int_eq the_\<phi>(2) the_\<phi>lemmata(1) the_\<phi>lemmata(2) the_\<phi>lemmata(3) word_sless_alt) .
+      certified by (simp add: sint_of_int_eq the_\<phi>(1) the_\<phi>lemmata(1) the_\<phi>lemmata(2) the_\<phi>lemmata(3) word_sless_alt) .
 
 
 paragraph \<open>Unsigned Less Equal\<close>
@@ -1012,14 +1014,14 @@ lemma op_upcast_nat_\<phi>app:
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] \<nat>('ba) \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> \<nat>('bb) \<rbrace>\<close>
   \<medium_left_bracket> have [useful]: \<open>x < 2 ^ LENGTH('ba)\<close> using \<phi> by blast
   ;; apply_rule op_cast_nat[where 'bb='bb] ($v) \<medium_right_bracket>
-      certified by (metis antisym take_bit_nat_eq_self_iff take_bit_nat_less_eq_self take_bit_tightened_less_eq_nat the_\<phi>(2) the_\<phi>(3)) .
+      certified by (metis take_bit_nat_eq_self_iff take_bit_nat_less_eq_self take_bit_tightened_less_eq_nat the_\<phi>(1) the_\<phi>(2) verit_la_disequality) .
 
 lemma op_upcast_int_\<phi>app:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> LENGTH('ba) \<le> LENGTH('bb)
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_cast_int TYPE('ba) TYPE('bb) v
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] \<int>('ba) \<longmapsto> x \<Ztypecolon> \<v>\<a>\<l> \<int>('bb) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_cast_int_word[where 'bb='bb] \<medium_right_bracket>
-      certified by (simp add: is_up sint_of_int_eq sint_up_scast the_\<phi>(2) the_\<phi>(4) the_\<phi>lemmata(1)) .
+      certified by (simp add: is_up.rep_eq sint_of_int_eq sint_up_scast the_\<phi>(1) the_\<phi>(3) the_\<phi>lemmata(1)) .
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
 

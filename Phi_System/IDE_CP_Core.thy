@@ -2009,7 +2009,7 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
                   | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Argument\<close>, _) $ _) => false
                   | _ (*Trueprop*) $ (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) => false
                   | _ => true)
-   then case Phi_Reasoner.reasonXXX (SOME 1) ctxt sequent
+   then case Phi_Reasoner.reason (SOME 1) ctxt sequent
           of SOME sequent' => (ctxt, sequent')
            | NONE => raise Bypass (SOME (ctxt,sequent0))
    else raise Bypass NONE

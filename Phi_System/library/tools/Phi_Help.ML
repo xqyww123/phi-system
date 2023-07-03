@@ -96,6 +96,10 @@ signature PHI_HELP = sig
 
   val empty_ctxt : Proof.context
 
+  val list_mk_conj : term list -> term
+  val conj_elims : Proof.context -> thm -> thm list
+
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -368,6 +372,14 @@ fun debug_RS ctxt tha thb =
 
 
 val empty_ctxt = Proof_Context.init_global Pure_Syn.bootstrap_thy
+
+fun list_mk_conj [] = \<^const>\<open>True\<close>
+  | list_mk_conj L = foldr1 HOLogic.mk_conj L
+
+fun conj_elims ctxt th =
+  case Thm.prop_of th
+    of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => []
+     | _ => HOLogic.conj_elims ctxt th
 
 end
 

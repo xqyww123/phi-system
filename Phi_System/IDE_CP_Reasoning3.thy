@@ -872,9 +872,9 @@ lemma Structural_Extract_general_LeSeminearing_left: (*need test, to be tested o
   \<medium_left_bracket> premises _ and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
                and _ and _ and _ and _ and _ and Tr
     have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
-      by (metis LSF4 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(7))
+      by (metis LSF4 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(6))
     have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
-      by (metis LSF3 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(7))
+      by (metis LSF3 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(6))
     ;; unfold F4D
        apply_rule apply_Separation_Functor_go[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
        apply_rule apply_Transformation_Functor[where Fa=F14 and U=\<open>F3 c U \<^emph> R\<close> and y=\<open>(y,r)\<close> and Q=P]
@@ -899,9 +899,9 @@ lemma Structural_Extract_general_LeSeminearing_right: (*need test*)
   \<medium_left_bracket> premises _ and LSF1[\<phi>reason add] and LSF2[\<phi>reason add]
                and _ and _ and _ and _ and _ and Tr
     have F1D: \<open>F1 a T = F1 b (F1 c T)\<close>
-      by (metis LSF1 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(7))
+      by (metis LSF1 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(6))
     have F2D: \<open>F2 a R = F2 b (F2 c R)\<close>
-      by (metis LSF2 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(7))
+      by (metis LSF2 Scala_Semimodule_Functor_def \<open>a \<in> D \<and> b \<in> D \<and> c \<in> D\<close> the_\<phi>(6))
     ;; unfold F1D
        apply_rule apply_Separation_Functor_go[where Fu=\<open>F4 b\<close> and Ft=\<open>F1 b\<close>]
        apply_rule apply_Transformation_Functor[where Fa=F14 and U=\<open>U \<^emph> F2 c R\<close> and y=\<open>(y,r)\<close> and Q=P]
