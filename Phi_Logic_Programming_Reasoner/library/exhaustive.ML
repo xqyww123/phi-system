@@ -58,8 +58,9 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
      val (_, ctxt') = ctxt
               |> Config.put PLPR_exhaustive_mode true
               |> Reached_Branches.map (fn L => branches :: L)
-              |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn (ctxt,sequent) => (
-                    Synchronized.change (hd (Reached_Branches.get ctxt)) (fn L => sequent :: L) ;
+              |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn (ctxt',sequent) => (
+                    Synchronized.change (hd (Reached_Branches.get ctxt'))
+                              (fn L => singleton (Proof_Context.export ctxt' ctxt) sequent :: L) ;
                     SOME []
                ))
      val _ = Phi_Reasoner.reason NONE ctxt' sequent'
