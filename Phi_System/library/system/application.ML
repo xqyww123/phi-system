@@ -18,8 +18,8 @@ signature PHI_APPLICATION = sig
 (*Depending on application rules, most of the resulted sequent (except resolution) has
 an additional obligation antecedent at the last of the antecedent list,
 storing proof obligations generated during ToSA, no matter whether the obligations are trivial.*)
-  val try_apply : thm list (*applied rules*) -> context_state (*sequent*) -> context_state option
-  val apply : thm list (*rules to be applied*) -> context_state (*sequent*) -> context_state
+  val try_apply : thm list (*applied rules*) -> Proof.context -> thm (*sequent*) -> thm option
+  val apply : thm list (*rules to be applied*) -> Proof.context -> thm (*sequent*) -> thm
 
 (*
   (*Advanced Modus Pones using logic programming about antecedent \<^term>\<open>\<phi>Application_Conv\<close>
@@ -67,16 +67,16 @@ fun mk_app_reasoning sequent app =
             mk_app_reasoning_RS app sequent
      | _ => mk_app_reasoning_normal app sequent
 
-fun try_apply [] _ = NONE
-  | try_apply apps (ctxt,sequent) = (
+fun try_apply [] _ _ = NONE
+  | try_apply apps ctxt sequent = (
       Phi_Reasoner.info_print ctxt 2 (fn _ =>
             "Reasoning generic applications..." ^ Position.here \<^here>);
       PLPR_Optimum_Solution.best_among (ctxt, map (mk_app_reasoning sequent) apps))
 
-fun apply applications stat =
-  case try_apply applications stat
+fun apply applications ctxt sequent =
+  case try_apply applications ctxt sequent
     of SOME stat' => stat'
-     | NONE => raise THM ("Application Fail", 0, (snd stat)::applications)
+     | NONE => raise THM ("Application Fail", 0, sequent::applications)
 
 (*
 fun comp_no_flatten_matched (th, n) i rule =

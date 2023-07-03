@@ -144,13 +144,13 @@ fun bad_syntax (name, pos) =
 
 fun eval_opr _ (acts as (Apply _ :: _)) s = (acts, s)
   | eval_opr _ (acts as (Begin_Block :: _)) s = (acts, s)
-  | eval_opr (mode, limit, name') (acts as (Opr (pr, arity, name, rules) :: aR)) s
-      = if pr < limit then (acts, s)
+  | eval_opr (mode, limit, name') (acts as (Opr (pr, arity, name, rules) :: aR)) (ctxt,sequent)
+      = if pr < limit then (acts, (ctxt,sequent))
         else if pr = limit then bad_syntax name'
         else (
-          chk_arity_constraint arity mode name s;
+          chk_arity_constraint arity mode name (ctxt,sequent);
           eval_opr (mode, limit, name') aR (
-            Phi_Processor.process_all_antecedents NONE (Phi_Apply.apply rules s)))
+            Phi_Processor.process_all_antecedents NONE (ctxt, Phi_Apply.apply rules ctxt sequent)))
   | eval_opr (mode, limit, name') (acts as (Meta_Opr (pr, arity, name, param, meta) :: aR)) s
       = if pr < limit then (acts, s)
         else if pr = limit then bad_syntax name'
@@ -166,7 +166,7 @@ fun eval_opr _ (acts as (Apply _ :: _)) s = (acts, s)
 
 fun close_parenthesis arg c s0 =
   let fun close c args (Apply (_, rules, vals_before) :: acts) s =
-            c acts (Phi_Apply.apply rules (
+            c acts (Phi_Reasoners.wrap'' (Phi_Apply.apply rules) (
                       Generic_Variable_Access.push_values (vals_before @ chk_no_name args) s))
         | close c args (Begin_Block :: acts) s =
             raise Phi_Processor.Process_State_Call (
@@ -233,7 +233,7 @@ fun end_expression precedence s =
 fun do_application rules stat =
       stat
    |> end_expression 900
-   |> Phi_Apply.apply rules
+   |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules)
 
 fun comma next_arg_name s =
   let val mode = Phi_Working_Mode.mode1 (fst s)

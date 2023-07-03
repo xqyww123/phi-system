@@ -8,14 +8,13 @@ val dest_Zero_c = Phi_Syntax.dest_tags_c #> Phi_Help.dest_triop_c \<^const_name>
 
 (* Zero Value *)
 
-fun make_zero_value goal ctxt =
+fun make_zero_value ctxt goal =
   let val (TY,T,x) = dest_Zero_c goal
       val idx = Thm.maxidx_of_cterm goal + 1
   in @{thm \<phi>deduce_zero_value}
   |> Thm.incr_indexes idx
   |> Drule.infer_instantiate ctxt [(("TY",idx),TY), (("T",idx),T), (("x",idx),x)]
-  |> pair ctxt
-  |> Phi_Reasoner.reason (SOME 1)
+  |> Phi_Reasoner.reasonXXX (SOME 1) ctxt
   |> (fn SOME s => s
        | NONE => error (Pretty.string_of (Pretty.block [
            Pretty.str "The rule of the semantic type of ",
@@ -25,7 +24,7 @@ fun make_zero_value goal ctxt =
   end
 
 val make_zero_value' =
-  Proof.map_context_result (fn c => make_zero_value (Phi_Envir.get_thesis c) c |> swap)
+  Proof.map_context_result (fn c => (make_zero_value c (Phi_Envir.get_thesis c), c))
 
 val zero_value : Phi_Working_Mode.working_mode = {
   name = \<^const_name>\<open>working_mode_\<phi>Zero\<close>,

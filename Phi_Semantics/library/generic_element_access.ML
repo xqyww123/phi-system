@@ -86,7 +86,7 @@ fun gen_access named_thm_of_rules pos_and_first_args stat =
         let val (idx_input, ctxt') = mk_element_index_input_internal args ctxt
             val rules = Named_Theorems.get ctxt' rules_name
                       |> map (Drule.infer_instantiate ctxt' [(("input_index", 0), Thm.cterm_of ctxt' idx_input)])
-         in (opstack, Phi_Apply.apply rules (ctxt', sequent))
+         in (opstack, Phi_Reasoners.wrap'' (Phi_Apply.apply rules) (ctxt', sequent))
         end
       fun invoke' (args, SOME Bracket_Opr_Read) (opstack, stat) =
             invoke (map chk_arg args, fst named_thm_of_rules) (opstack, stat)
@@ -131,17 +131,14 @@ fun gen_constructor kind pos_and_first_args stat =
                   maps (fn ((_, pos), rules) =>
                     map (fn rule => (rule,pos,Phi_Reasoner.LOCAL_CUT,1000)) rules) args0
             val ctxt'' = Context.proof_map (Phi_Local_Value.add_reasoning_rules reasoning_rules) ctxt'
-            val (ctxt'3, rule') =
+            val rule' =
                 @{thm op_construct_aggregate_\<phi>app}
                   |> Thm.instantiate (TVars.empty, Vars.make [
                         ((("constructor", 0), \<^typ>\<open>VAL \<phi>arg list \<Rightarrow> VAL\<close>), ctor),
                         ((("args", 0), \<^typ>\<open>VAL \<phi>arg list\<close>), args)
                       ])
-                  |> pair ctxt''
-                  |> Phi_Reasoner.reason (SOME 1)
-                  |> (fn SOME ret => ret
-                       | NONE => error ("Fail to construct " ^ kind'))
-         in (oprs, Phi_Apply.apply [rule'] (ctxt'3, sequent))
+                  |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') (SOME 1) ctxt''
+         in (oprs, (ctxt'', Phi_Apply.apply [rule'] ctxt'' sequent))
         end
         | invoke _ _ = error "internal bug #5330d2f8-c5e3-46ae-9b45-5ae9550f037d"
    in Phi_Opr_Stack.meta_apply pos_and_first_args invoke stat
@@ -194,8 +191,9 @@ val dot_triangle_opr =
           case stack'
             of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), SOME (Phi_Opr_Stack.String_Param vname), _) :: stack'')
                 => let val ctxt'3' = Generic_Element_Access.enable_report_unprocessed_element_index ctxt'3
-                       val (ctxt'4, sequent'4) = Generic_Variable_Access.get_value vname idx_input  (ctxt'3', sequent'3)
-                                              |> Phi_Processor.process_all_antecedents NONE
+                       val (ctxt'4, sequent'4) = (ctxt'3', sequent'3)
+                              |> Phi_Reasoners.wrap'' (Generic_Variable_Access.get_value vname idx_input)
+                              |> Phi_Processor.process_all_antecedents NONE
                        val idx_input' = Generic_Element_Access.get_unprocessed_element_index ctxt'4
                     in (idx_input', ctxt'4, sequent'4, stack'')
                    end
@@ -208,7 +206,7 @@ val dot_triangle_opr =
           else let val rules' = map (Drule.infer_instantiate ctxt'4 [(("input_index", 0), idx)]) rules
                    val s' = s
                           |> apfst Generic_Element_Access.enable_report_unprocessed_element_index
-                          |> Phi_Apply.apply rules'
+                          |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules')
                           |> Phi_Processor.process_all_antecedents NONE
                 in process_index (Generic_Element_Access.get_unprocessed_element_index (fst s')) s'
                end

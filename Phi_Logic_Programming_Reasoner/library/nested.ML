@@ -22,7 +22,7 @@ fun enter_scope (ctxt,sequent) =
   val sequent' = @{thm \<r>BEGIN_I} RS sequent
   val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
             "entering nested \<phi>-LPR reasoning " ^ string_of_int S ^ Position.here \<^here>)
-  in case Phi_Reasoner.reason NONE (ctxt',sequent')
+  in case Phi_Reasoner.internal_reason NONE (ctxt',sequent')
        of SOME (ctxt'',sequent'') =>
           if Scope.get ctxt'' = S
           then (Phi_Reasoner.info_print ctxt 2 (fn _ => "exiting nested \<phi>-LPR reasoning");
@@ -41,7 +41,7 @@ fun exit_scope (ctxt,sequent) = (
 )
 
 fun call (ctxt,sequent) = Seq.make (fn () =>
-  Phi_Reasoner.reason (SOME 1) (ctxt, @{thm \<r>Call_I} RS sequent)
+  Phi_Reasoner.internal_reason (SOME 1) (ctxt, @{thm \<r>Call_I} RS sequent)
     |> Option.map (rpair Seq.empty)
 )
 end

@@ -46,8 +46,17 @@ fun subgoal (ctxt,sequent) =
     val (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>SUBGOAL\<close> $ father' $ _))
           = Thm.major_prem_of sequent
     val cnt = Subgoal.get ctxt |> #2
-    val ([name], ctxt') = Proof_Context.add_fixes
-              [(Binding.name ("\<r>GOAL"^string_of_int cnt), SOME \<^typ>\<open>subgoal\<close>, NoSyn)] ctxt
+    val ([name], ctxt't) = Variable.add_fixes [("\<r>GOAL"^string_of_int cnt)] ctxt
+    fun chk_no_goal (Free(N,_)) = name <> N
+      | chk_no_goal (X $ Y) = chk_no_goal X andalso chk_no_goal Y
+      | chk_no_goal (Abs(_,_,X)) = chk_no_goal X
+      | chk_no_goal _ = true
+    fun chk_no_goal' term =
+      if chk_no_goal term then error "Goal ctxt tag is going to be exported out!" else ()
+    val (_, ctxt') = Assumption.add_assms (fn _ => fn _ =>
+                          (fn th => (chk_no_goal' (Thm.prop_of th); th),
+                           fn term => (chk_no_goal' term; term)))
+                     [] ctxt't
     val father = fetch_goal ctxt father'
     val _ = if chk_goal father
             then error ("Attempt to open a sub-goal under a solved father goal "

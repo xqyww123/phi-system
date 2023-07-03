@@ -373,7 +373,7 @@ qed
       val rule = @{thm \<phi>Programming_Method_All}
       val rule' = case P of Abs (N,_,_) => Thm.renamed_prop (rename N (Thm.prop_of rule)) rule
                           | _ => rule
-  in Phi_Reasoner.single_RS rule' (ctxt,sequent)
+  in Phi_Reasoners.wrap (Phi_Reasoner.single_RS rule') (ctxt,sequent)
   end
 \<close>
 
@@ -387,7 +387,7 @@ qed
       val rule = @{thm \<phi>Programming_Method_ALL}
       val rule' = case P of Abs (N,_,_) => Thm.renamed_prop (rename N (Thm.prop_of rule)) rule
                           | _ => rule
-  in Phi_Reasoner.single_RS rule' (ctxt,sequent)
+  in Phi_Reasoners.wrap (Phi_Reasoner.single_RS rule') (ctxt,sequent)
   end
 \<close>
 
@@ -639,7 +639,7 @@ structure Post_Synthesis_SS = Simpset (
 consts post_synthesis_simp :: mode
 
 \<phi>reasoner_ML post_synthesis_simp 1200 (\<open>Simplify post_synthesis_simp ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier_by_ss' Post_Synthesis_SS.get'\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' Post_Synthesis_SS.get')\<close>
 
 subsubsection \<open>Synthesis Operations\<close>
 
@@ -1865,9 +1865,10 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 \<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
   \<open>fn (ctxt, sequent) => Phi_App_Rules.parser >> (fn thm => fn _ =>
     let open Phi_Envir
-    val apps = Phi_App_Rules.app_rules ctxt [thm]
-    val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
-    in Phi_Apply.apply apps (ctxt,sequent) end)\<close>
+        val apps = Phi_App_Rules.app_rules ctxt [thm]
+        val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
+     in Phi_Reasoners.wrap'' (Phi_Apply.apply apps) (ctxt,sequent)
+    end)\<close>
 
 (* case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
          of SOME (th, _) => (ctxt,th)
@@ -1893,17 +1894,17 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
                   |> Thm.cterm_of ctxt
    in case Thm.prop_of sequent
         of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-              Phi_Sys.synthesis term (ctxt, sequent)
+              Phi_Reasoners.wrap'' (Phi_Sys.synthesis term) (ctxt, sequent)
          | _ =>
               Phi_Opr_Stack.push_meta_operator ((920,921,SOME 0), ("<synthesis>", pos), NONE,
-                  (K (apsnd (Phi_Sys.synthesis term)))) (ctxt, sequent)
+                  (K (apsnd (Phi_Reasoners.wrap'' (Phi_Sys.synthesis term))))) (ctxt, sequent)
   end)\<close>
 
 (*access local value or variable or any generic variables*)
 \<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)  \<open>
   fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.position (Parse.short_ident || Parse.long_ident || Parse.number)
   >> (fn (var,pos) => fn _ =>
-    let val get = Generic_Variable_Access.get_value var Generic_Element_Access.empty_input
+    let val get = Phi_Reasoners.wrap'' (Generic_Variable_Access.get_value var Generic_Element_Access.empty_input)
     in case Thm.prop_of sequent
          of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => get (ctxt,sequent)
           | _ =>
@@ -2008,8 +2009,8 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
                   | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Argument\<close>, _) $ _) => false
                   | _ (*Trueprop*) $ (Const (\<^const_name>\<open>ParamTag\<close>, _) $ _) => false
                   | _ => true)
-   then case Phi_Reasoner.reason (SOME 1) (ctxt, sequent)
-          of SOME (ctxt',sequent') => (ctxt', sequent')
+   then case Phi_Reasoner.reasonXXX (SOME 1) ctxt sequent
+          of SOME sequent' => (ctxt, sequent')
            | NONE => raise Bypass (SOME (ctxt,sequent0))
    else raise Bypass NONE
 end)\<close>

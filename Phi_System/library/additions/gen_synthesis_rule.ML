@@ -23,10 +23,8 @@ fun gen_rule ctxt proc_thm0 =
                                   Vars.make [((("G",0),\<^typ>\<open>prop\<close>), Thm.cprop_of proc_thm),
                                              ((("R",0),\<^typ>\<open>prop\<close>), Thm.var (("R", idx), \<^ctyp>\<open>prop\<close>))])
                      @{thm Gen_Synthesis_Rule}
-   in (ctxt, Thm.implies_elim rule proc_thm)
-   |> Phi_Reasoner.reason NONE
-   |> (fn SOME (_, sequent) => sequent
-        | NONE => Phi_Reasoner.error "Fail to extract the synthesis rule.")
+   in Thm.implies_elim rule proc_thm
+   |> Phi_Reasoner.reason1 (fn () => "Fail to extract the synthesis rule.") NONE ctxt
    |> Raw_Simplifier.rewrite_rule ctxt @{thms conjunction_imp PURE_TOP_imp}
    |> Thm.solve_constraints
    |> (fn sequent => (

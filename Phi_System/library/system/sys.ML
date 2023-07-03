@@ -6,8 +6,8 @@
 
 signature PHI_SYS = sig
   (** Basic Operations **)
-  val cast : cterm -> Proof.context * thm -> Proof.context * thm
-  val cast_exception : cterm -> Proof.context * thm -> Proof.context * thm
+  val cast : cterm -> Proof.context -> thm -> thm
+  val cast_exception : cterm -> Proof.context -> thm -> thm
   val move_lemmata : context_state -> context_state
   val apply_automatic_morphism : context_state -> context_state
 
@@ -17,7 +17,7 @@ signature PHI_SYS = sig
   val set_param_cmd : string -> context_state -> context_state
   val set_label : string -> context_state -> context_state
 
-  val synthesis : cterm -> context_state -> context_state
+  val synthesis : cterm -> Proof.context -> thm -> thm
 
   val obligation_proof :  (Proof.context -> (string * string) * (string * thm list) list -> unit)
         -> Proof_Context.mode -> string -> Method.text option
@@ -52,17 +52,17 @@ val _ = Theory.setup (Global_Theory.add_thms_dynamic (\<^binding>\<open>\<phi>ge
 val cast = Phi_Working_Mode.cast
 val cast_exception = Phi_Working_Mode.cast_exception
 
-fun apply_automatic_morphism' _ [] _ = raise Empty
-  | apply_automatic_morphism' R (M::L) stat =
+fun apply_automatic_morphism' _ [] _ _ = raise Empty
+  | apply_automatic_morphism' R (M::L) ctxt sequent =
       case Thm.concl_of M
         of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Generated_Rule\<close>, _) $
                                   (Const (\<^const_name>\<open>MODE_AUTO\<close>, _) $ _) $ _ $ _)
-             => (rev R @ L, Phi_Apply.apply [M] stat)
-         | _ => apply_automatic_morphism' (M::R) L stat
+             => (rev R @ L, Phi_Apply.apply [M] ctxt sequent)
+         | _ => apply_automatic_morphism' (M::R) L ctxt sequent
 
-fun apply_automatic_morphism (ctxt,sequent) =
-  case apply_automatic_morphism' [] (Generated_Rules.get ctxt) (ctxt,sequent)
-    of (R, stat') => apfst (Generated_Rules.put R) stat'
+fun apply_automatic_morphism (ctxt, sequent) =
+  case apply_automatic_morphism' [] (Generated_Rules.get ctxt) ctxt sequent
+    of (R, stat') => (Generated_Rules.put R ctxt, stat')
 
 fun simplify_morphisms _   [] = []
   | simplify_morphisms ctxt L =
@@ -286,7 +286,7 @@ fun set_label name (ctxt,sequent) = (ctxt, Phi_Syntax.mk_label_thm name RS seque
 
 
 
-fun synthesis term (ctxt, sequent) =
+fun synthesis term ctxt sequent =
   let
     val i_s = Thm.maxidx_of sequent + 1
     val i_t = Thm.maxidx_of_cterm term + 1
@@ -296,10 +296,9 @@ fun synthesis term (ctxt, sequent) =
                                            (("sequent",i_s + i_t), Thm.cprop_of sequent)]
           |> (fn rule => Thm.implies_elim rule sequent)
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ => "reasoning synthesis..." ^ Position.here \<^here>)
-  in
-    case Phi_Reasoner.reason NONE (ctxt, sequent')
-      of SOME ret => ret
-       | NONE => error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
+  in Phi_Reasoner.reason1 (fn () =>
+        error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
+      ) NONE ctxt sequent'
   end
 
 

@@ -115,7 +115,7 @@ datatype fail_reason = Too_Many_Subgoals | Timeout | Application_Fails | Unknown
 exception Auto_Fail of fail_reason
 
 fun eval_prf_str timeout "" (ctxt,sequent) =
-     (Timeout.apply timeout (Timing.timing Phi_Reasoners.auto_obligation_solver1)
+     (Timeout.apply timeout (Timing.timing (Phi_Reasoners.wrap'' Phi_Reasoners.auto_obligation_solver1))
                                   (ctxt,sequent) |> apfst (fn {elapsed=time,...} => (time,""))
               handle Phi_Reasoners.Automation_Fail _ => raise Auto_Fail Application_Fails
                   |  Timeout.TIMEOUT _               => raise Auto_Fail Timeout
@@ -412,7 +412,7 @@ if no_cache
 
 fun auto id (ctxt,sequent) =
   wrapper (case id of SOME id' => auto' id'
-                    | NONE => Phi_Reasoners.auto_obligation_solver1 #> snd) (ctxt,sequent)
+                    | NONE => Phi_Reasoners.wrap'' Phi_Reasoners.auto_obligation_solver1 #> snd) (ctxt,sequent)
   handle Auto_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))
        | Phi_Reasoners.Automation_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))
 

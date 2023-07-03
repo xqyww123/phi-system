@@ -284,13 +284,16 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
       val _ = if #is_on_going_construction mode (Thm.prop_of sequent)
               then ()
               else raise THM ("Not a ready on-going construction", 0, [sequent])
-      fun gen_rule num (ctxt,thm) =
-        if num = 0 then (ctxt, @{thm implies_refl} RS thm) else
+      fun gen_rule_err rule () =
+             error ("Fail to extract a value from the sequent. A extraction rule fails: \n" ^
+                    Thm.string_of_thm ctxt rule)
+      fun gen_rule num thm =
+        if num = 0 then (@{thm implies_refl} RS thm) else
         case Phi_Syntax.dest_implication (Thm.major_prem_of thm)
           of (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ ,_,_)
-                => gen_rule num (ctxt, @{thm Subjection_transformation} RS thm)
+                => gen_rule num (@{thm Subjection_transformation} RS thm)
            | (Const (\<^const_name>\<open>ExSet\<close>, _) $ _ $ _ ,_,_)
-                => gen_rule num (ctxt, @{thm ExSet_transformation} RS thm)
+                => gen_rule num (@{thm ExSet_transformation} RS thm)
            | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm) ,_,_)
                 => (case head_of tm
                       of Const (C,_) => (
@@ -303,18 +306,15 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                                                @{thm implies_prod_right_1}
                                            | _ => @{thm implies_prod_bi_prod}
                                   val m = Thm.nprems_of rule
-                               in (ctxt, rule RS (bi_prod_rule RS thm))
-                               |> Phi_Reasoner.reason (SOME m)
-                               |> (fn SOME ret => gen_rule (num - 1) ret
-                                    | NONE => error ("Fail to extract a value from the sequent. \
-                                        \A extraction rule fails: \n" ^
-                                        Thm.string_of_thm ctxt rule))
+                               in (rule RS (bi_prod_rule RS thm))
+                               |> Phi_Reasoner.reason1 (gen_rule_err rule) (SOME m) ctxt
+                               |> gen_rule (num - 1)
                               end
-                              | _ => gen_rule num (ctxt, @{thm implies_right_prod} RS thm))
-                       | _ => gen_rule num (ctxt, @{thm implies_right_prod} RS thm)
+                              | _ => gen_rule num (@{thm implies_right_prod} RS thm))
+                       | _ => gen_rule num (@{thm implies_right_prod} RS thm)
                       )
            | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _ , _, _)
-                => gen_rule num (ctxt, @{thm implies_right_prod} RS thm)
+                => gen_rule num (@{thm implies_right_prod} RS thm)
            | (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm, _ , _)
                 => (case head_of tm
                       of Const (C,_) => (
@@ -322,19 +322,15 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                             of SOME (remove_rule, no_remove_rule) =>
                               let val rule = if remove then remove_rule else no_remove_rule
                                   val m = Thm.nprems_of rule
-                               in (ctxt, rule RS thm)
-                               |> Phi_Reasoner.reason (SOME m)
-                               |> (fn SOME ret => ret
-                                    | NONE => error ("Fail to extract a value from the sequent. \
-                                        \A extraction rule fails: \n" ^
-                                        Thm.string_of_thm ctxt rule))
+                               in (rule RS thm)
+                               |> Phi_Reasoner.reason1 (gen_rule_err rule) (SOME m) ctxt
                               end
-                              | _ => (ctxt, @{thm implies_refl} RS thm))
-                       | _ => (ctxt, @{thm implies_refl} RS thm)
+                              | _ => @{thm implies_refl} RS thm)
+                       | _ => @{thm implies_refl} RS thm
                       )
-           | _ => (ctxt, @{thm implies_refl} RS thm)
+           | _ => @{thm implies_refl} RS thm
       val initial = sequent RS #transformation_rule mode
-      val (ctxt',rule) = gen_rule num_limit (ctxt,initial)
+      val rule = gen_rule num_limit initial
       val (sequent', vals) = rule
                 |> HOLogic.conj_elim ctxt
                 |> apsnd (fn th => th |> HOLogic.conj_elims ctxt |> rev
@@ -342,7 +338,7 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                                            | (H::L) => case Thm.prop_of H
                                                          of _ $ (Const (\<^const_name>\<open>True\<close>, _)) => L
                                                           | _ => H::L))
-   in (vals, (ctxt', sequent'))
+   in (vals, (ctxt, sequent'))
   end
   
 

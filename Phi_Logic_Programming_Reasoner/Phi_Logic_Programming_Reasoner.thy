@@ -1009,7 +1009,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>PLPR_Simplifier.simplifier I\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier I)\<close>
 
 
 (* subsection \<open>Exhaustive Divergence\<close>
@@ -1137,17 +1137,17 @@ ML_file_debug \<open>library/optimum_solution.ML\<close>
 
 \<phi>reasoner_ML Optimum_Solution 1000 (\<open>PROP Optimum_Solution _\<close>) = \<open>
    apsnd (fn th => @{thm Do_Optimum_Solution} RS th)
-#> PLPR_Optimum_Solution.start
+#> PLPR_Optimum_Solution.internal_start
 \<close>
 
 \<phi>reasoner_ML Begin_Optimum_Solution 1000 (\<open>Begin_Optimum_Solution\<close>) = \<open>
    apsnd (fn th => @{thm Begin_Optimum_Solution_I} RS th)
-#> PLPR_Optimum_Solution.start
+#> PLPR_Optimum_Solution.internal_start
 \<close>
 
 \<phi>reasoner_ML End_Optimum_Solution 1000 (\<open>End_Optimum_Solution\<close>) = \<open>
    apsnd (fn th => @{thm End_Optimum_Solution_I} RS th)
-#> PLPR_Optimum_Solution.finish
+#> PLPR_Optimum_Solution.internal_finish
 \<close>
 
 (*\<phi>reasoner_ML \<r>Choice 1000 (\<open>PROP \<r>Choice _\<close>) = \<open>fn (ctxt,sequent) =>

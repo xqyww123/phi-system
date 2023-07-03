@@ -1,12 +1,12 @@
 signature PLPR_OPTIMUM_SOLUTION = sig
 
-val start  : context_state -> context_state Seq.seq
-val finish : context_state -> context_state Seq.seq
+val internal_start  : context_state -> context_state Seq.seq
+val internal_finish : context_state -> context_state Seq.seq
 (* val choices: context_state -> context_state Seq.seq *)
 val report_cost : int (*incremental-distance*) * int (*maximal-distance*)
               -> context_state -> context_state Seq.seq
 
-val best_among : (Proof.context * thm list) -> context_state option
+val best_among : (Proof.context * thm list) -> thm option
 
 end
 
@@ -87,7 +87,7 @@ fun gen_finish reach (ctxt,sequent) = Seq.make (fn _ => (
         end
 ))
 
-val finish = gen_finish REACH
+val internal_finish = gen_finish REACH
 
 fun gen_start ctxt candidates = Seq.make (fn () =>
   let val var = Synchronized.var "PLPR_Optimum_Solution" (0, Candidates.empty)
@@ -118,7 +118,7 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
                 "PLPR_Optimum_Solution: all choices are traversed, no solution found.");
               NONE)
            | SOME s =>
-               (case Phi_Reasoner.reason NONE s
+               (case Phi_Reasoner.internal_reason NONE s
                   of NONE => (Phi_Reasoner.info_print ctxt 2 (fn _ =>
                                 "PLPR_Optimum_Solution: the search branch fails, try another");
                               next_candidate ())
@@ -129,16 +129,16 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
    end
 )
 
-fun start (ctxt,sequent) = gen_start ctxt [sequent]
+fun internal_start (ctxt,sequent) = gen_start ctxt [sequent]
 
 fun best_among (_, []) = NONE
-  | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE (ctxt,thm)
+  | best_among (ctxt, [thm]) = Phi_Reasoner.reasonXXX NONE ctxt thm
   | best_among (ctxt,candidates) =
     ( Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.chunks (
           Pretty.str "PLPR_Optimum_Solution: reasoning the optimal solution from candidates:" ::
           map (fn th => Pretty.item [Thm.pretty_thm ctxt th]) candidates
         ));
-      Phi_Reasoner.reason_s ctxt (fn ctxt => ((), gen_start ctxt candidates))
+      Phi_Reasoner.reason_sXXX ctxt (fn ctxt => ((), gen_start ctxt candidates))
         |> snd)
 
 end

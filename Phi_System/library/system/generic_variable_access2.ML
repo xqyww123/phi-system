@@ -3,7 +3,7 @@ include GENERIC_VARIABLE_ACCESS
 
 (** Get **)
 
-val get_value : string -> cterm -> context_state -> context_state
+val get_value : string -> cterm -> Proof.context -> thm -> thm
 
 (** Assignment **)
 
@@ -37,7 +37,7 @@ open Generic_Variable_Access
 
 (*** Get Value ***)
 
-fun get_value name element_index (ctxt,sequent) =
+fun get_value name element_index ctxt sequent =
   let val vname = translate_value1 ctxt (Free (name, dummyT))
       val idx = Int.max (Thm.maxidx_of_cterm vname, Thm.maxidx_of_cterm element_index) + 1
       val Ty = TVar(("'x",idx), \<^sort>\<open>type\<close>)
@@ -53,7 +53,7 @@ fun get_value name element_index (ctxt,sequent) =
                                     $ Var (("x",idx), Ty)))
               vname)
               element_index
-   in Phi_Sys.synthesis target (ctxt,sequent)
+   in Phi_Sys.synthesis target ctxt sequent
   end
 
 (*** Assignment ***)
@@ -129,7 +129,7 @@ fun strip_imp_prems_rev ret ct =
 fun default_assignment (name_assigner:((binding * element_index_input) * assigner) list) (ctxt,sequent) =
   let
   (*make the assignment procedure*)
-  val (rule', ctxt', vterms', decl') = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
+  val (rule', ctxt, vterms', decl') = (Thm.trivial (Thm.var (("init",0),\<^ctyp>\<open>prop\<close>)),ctxt,[],[])
         |> fold (fn (name_idx,(_,f)) => fn (proc, ctxt, vterms, Asm) =>
               let val (rule, ctxt', vterms', Asm') = f name_idx  (ctxt,sequent)
                in (rule RS proc, ctxt', rev vterms' @ vterms, rev Asm' @ Asm) end
@@ -139,7 +139,7 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
   val decl = rev decl'
 
   (*apply the assignment procedure*)
-  val (ctxt'2, proc'2) = Phi_Apply.apply [rule] (ctxt',sequent)
+  val proc'2 = Phi_Apply.apply [rule] ctxt sequent
   fun is_prem_of P (Abs (_,_,X)) = is_prem_of P X
     | is_prem_of P (\<^const>\<open>Trueprop\<close> $ X) = is_prem_of P X
     | is_prem_of P (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_prem_of P X
@@ -158,15 +158,15 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
             |> Thm.permute_prems 0 2
 
 
-  val (ctxt, proc) = (ctxt'2, proc'3)
-        |> Phi_Reasoner.reason1 (fn _ =>
+  val proc =
+           Phi_Reasoner.reason1 (fn _ =>
             "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
-           ) (SOME (Thm.nprems_of proc'3 - 2))
+           ) (SOME (Thm.nprems_of proc'3 - 2)) ctxt proc'3
         |> Phi_Reasoners.safer_obligation_solver' (fn _ =>
             error "Fail to solve proof obligations in the assignment automatically. \
                   \It is a limitation for now that it cannot be proven manually. \
-                  \We are improving this soon.")
-        |> apsnd (fn th => th RS @{thm conjunct1})
+                  \We are improving this soon.") ctxt
+        |> (fn th => th RS @{thm conjunct1})
 
   in if null vterms andalso null decl'
      then (ctxt, @{thm "\<phi>__Return_rule__"[OF view_shift_refl]} RS proc)
@@ -239,11 +239,10 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
                         val thy = Proof_Context.theory_of ctxt
                         val sequentx1 = if Pattern.matches thy (Thm.term_of ret_spec, Y)
                                         then sequentx
-                                        else snd (Phi_Sys.cast ret_spec (ctxt,sequentx))
+                                        else Phi_Sys.cast ret_spec ctxt sequentx
                         val sequentx2 =
-                              #cast_exception Phi_Working_Mode.programming E_spec (ctxt, sequentx1)
-                                    |> Phi_Reasoners.safer_obligation_solver1
-                                    |> snd
+                              #cast_exception Phi_Working_Mode.programming E_spec ctxt sequentx1
+                                    |> Phi_Reasoners.safer_obligation_solver1 ctxt
                          in sequentx2
                         end),
                  I)) [] ctxt

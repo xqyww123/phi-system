@@ -280,9 +280,8 @@ let val redex_residue = Morphism.cterm morph \<^schematic_cterm>\<open>(Fa (?T \
 in fn ctxt => fn cterm =>
   let val s = Thm.first_order_match (redex, cterm)
       val Fa = Thm.instantiate_cterm s residue
-   in (ctxt, Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
-         |> Phi_Reasoner.reason (SOME 1)
-         |> Option.map snd
+   in (Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
+         |> Phi_Reasoner.reasonXXX (SOME 1) ctxt
   end
 end
 \<close>

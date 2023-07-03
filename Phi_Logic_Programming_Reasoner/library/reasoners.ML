@@ -4,16 +4,18 @@ signature PHI_REASONERS = sig
   val error_message : (Proof.context * thm) option -> string
 
   val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
+  val wrap': (Proof.context -> thm -> thm option) -> (context_state -> context_state option)
+  val wrap'': (Proof.context -> thm -> thm) -> (context_state -> context_state)
+
   val auto_obligation_solver : Proof.context -> thm -> thm Seq.seq
-  val auto_obligation_solver_opt :  Proof.context * thm -> (Proof.context * thm) option
-  val auto_obligation_solver' : (Proof.context * thm -> Proof.context * thm) (*failure callback*)
-                              -> Proof.context * thm -> Proof.context * thm
-  val auto_obligation_solver1 : Proof.context * thm -> Proof.context * thm
+  val auto_obligation_solver' : (Proof.context -> thm -> thm) (*failure callback*)
+                              -> Proof.context -> thm -> thm
+  val auto_obligation_solver1 : Proof.context -> thm -> thm
 
   val safer_obligation_solver : Proof.context -> thm -> thm Seq.seq
-  val safer_obligation_solver': (Proof.context * thm -> Proof.context * thm) (*failure callback*)
-                              -> Proof.context * thm -> Proof.context * thm
-  val safer_obligation_solver1: Proof.context * thm -> Proof.context * thm
+  val safer_obligation_solver': (Proof.context -> thm -> thm) (*failure callback*)
+                              -> Proof.context -> thm -> thm
+  val safer_obligation_solver1: Proof.context -> thm -> thm
 
   (*defer the leading antecedent to the nearest obligation and call the contract*)
   val defer_antecedent : (Proof.context -> thm -> thm) (*contract*)
@@ -45,6 +47,8 @@ fun error_message err =
 
 
 fun wrap tac (ctxt,thm) = tac ctxt thm |> Seq.map (pair ctxt)
+fun wrap' tac (ctxt,thm) = tac ctxt thm |> Option.map (pair ctxt)
+fun wrap'' tac (ctxt,thm) = tac ctxt thm |> pair ctxt
 
 (*fun print_dbg' th = Seq.make (fn () => (@{print} th; NONE))
 fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME (th, Seq.empty))) *)
@@ -98,15 +102,15 @@ fun head_only tac th =
 
   If the schematic variables are not able to be chosen arbitrarily, additional mechanisms have
   to be applied previously.*)
-fun context_tactic_to_state_transition tac fail (ctxt, sequent) =
+fun context_tactic_to_state_transition tac fail ctxt sequent =
   case Seq.pull (tac ctxt sequent)
-    of SOME (th', _) => (ctxt, th')
-     | NONE => fail (ctxt, sequent)
+    of SOME (th', _) => th'
+     | NONE => fail ctxt sequent
 
-fun context_tactic_to_state_transition_opt tac (ctxt, sequent) =
+(*fun context_tactic_to_state_transition_opt tac (ctxt, sequent) =
   case Seq.pull (tac ctxt sequent)
     of SOME (th', _) => SOME (ctxt, th')
-     | NONE => NONE
+     | NONE => NONE *)
 
 (*** Premise tac ***)
 
@@ -124,9 +128,8 @@ fun auto_obligation_solver ctxt th =
                     THEN Clasimp.auto_tac ctxt) Agressive_Solver) th
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
-val auto_obligation_solver_opt = context_tactic_to_state_transition_opt auto_obligation_solver
 
-fun auto_obligation_solver1 (ctxt,sequent) =  (
+fun auto_obligation_solver1 ctxt sequent =  (
         Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
             Pretty.str "Solving the following goal using \<open>auto\<close> method...",
             Syntax.pretty_term ctxt (Thm.major_prem_of sequent),
@@ -138,7 +141,7 @@ fun auto_obligation_solver1 (ctxt,sequent) =  (
               Pretty.str "Fail to solve the proof obligation automatically:",
               Syntax.pretty_term ctxt Goal
             ])) *)
-        ) (ctxt,sequent)
+        ) ctxt sequent
      )
 
 
@@ -152,9 +155,8 @@ fun safer_obligation_solver ctxt th =
      | NONE => Seq.single th
 
 val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver
-val safer_obligation_solver_opt = context_tactic_to_state_transition_opt safer_obligation_solver
 
-fun safer_obligation_solver1 (ctxt,sequent) =
+fun safer_obligation_solver1 ctxt sequent =
   case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
         Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
@@ -166,7 +168,7 @@ fun safer_obligation_solver1 (ctxt,sequent) =
           error (Pretty.string_of (Pretty.chunks [
               Pretty.str "Fail to solve the proof obligation automatically:",
               Syntax.pretty_term ctxt Goal
-        ]))) (ctxt addsimps @{thms Premise_def},sequent)
+        ]))) (ctxt addsimps @{thms Premise_def}) sequent
      )
      | _ => raise THM ("auto_obligation_solver1: The leading antecedent of the given sequent \
               \is not a proof obligation.", 1, [sequent])

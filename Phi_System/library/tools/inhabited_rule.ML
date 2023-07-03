@@ -56,10 +56,10 @@ fun extract_implied_facts ctxt statement =
               Pretty.str "Extracting implied pure facts from:",
               Syntax.pretty_term ctxt (Thm.prop_of statement)
           ])
-   in (ctxt, statement RS @{thm Do_Extract_Implied_Facts})
+   in (statement RS @{thm Do_Extract_Implied_Facts})
    |> Phi_Reasoner.reason1 (K "fail to extract implied fact. It is an internal error and some reasonig rules are miss-configured.")
-                           (SOME 1)
-   |-> (Simplifier.simplify o Inhabitance_SS.enhance)
+                           (SOME 1) ctxt
+   |> Simplifier.simplify (Inhabitance_SS.enhance ctxt)
    |> HOLogic.conj_elims ctxt
   end
 
@@ -85,10 +85,10 @@ fun generate_extraction_rule ctxt0 thm0 =
               |> Thm.permute_prems 0 n
               |> Thm.permute_prems 2 (~n)
    in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE
-                           (Config.put mode_generate_extraction_rule true ctxt, state)
-   |-> (fn ctxt =>
-      Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
-        HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite (Inhabitance_SS.enhance ctxt)))) ctxt))
+                           (Config.put mode_generate_extraction_rule true ctxt)
+                           state
+   |> Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+        HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite (Inhabitance_SS.enhance ctxt)))) ctxt)
    |> singleton (Variable.export ctxt ctxt0)
    |> (fn rule => (
       Phi_Reasoner.info_pretty ctxt0 0 (fn _ => Pretty.chunks [

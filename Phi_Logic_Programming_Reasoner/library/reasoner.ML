@@ -70,12 +70,16 @@ signature NU_REASONER = sig
   (*N: number of premises to be attacked at most, if it is positive;
        to attack all if it is None;
        to attack until a sequent remains at most |N| premises, if N is negative*)
-  val reason  : int option (*N*) -> context_state -> context_state option
+  val internal_reason  : int option (*N*) -> context_state -> context_state option
+  val reasonXXX  : int option (*N*) -> Proof.context -> thm -> thm option
   val reason1 : (unit -> string) (*error message*)
-             -> int option (*N*) -> context_state -> context_state
-  val reason_s : Proof.context (*the context for accessing reasoner db*)
+             -> int option (*N*) -> Proof.context -> thm -> thm
+  val internal_reason_s : Proof.context (*the context for accessing reasoner db*)
               -> (Proof.context -> 'a * context_state Seq.seq)
               -> 'a * context_state option
+  val reason_sXXX : Proof.context (*the context for accessing reasoner db*)
+              -> (Proof.context -> 'a * context_state Seq.seq)
+              -> 'a * thm option
   (*Note it returns at most one state in the returned sequence.*)
   val reason_tac : int option (*N*)
                 -> Proof.context (*the context for accessing reasoner db*)
@@ -115,8 +119,8 @@ signature NU_REASONER = sig
   (* Helpful Tools *)
   val chop_seq_head' : 'a Seq.seq -> 'a option
   val chop_seq_head  : 'a Seq.seq -> 'a Seq.seq
-  val single_RS' : thm (*rule*) -> context_state -> context_state option
-  val single_RS  : thm (*rule*) -> context_state -> context_state Seq.seq
+  val single_RS' : thm (*rule*) -> Proof.context -> thm -> thm option
+  val single_RS  : thm (*rule*) -> Proof.context -> thm -> thm Seq.seq
         (*The resolution that returns at most one solution.*)
 
   val gen_attribute :
@@ -502,18 +506,31 @@ fun num_of_protected_prems  _  NONE = 0
   | num_of_protected_prems thm (SOME N) =
       if N >= 0 then Thm.nprems_of thm - N else ~N
 
-fun reason (SOME 0) S = SOME S
-  | reason N (ctxt,sequent) =
+fun internal_reason (SOME 0) S = SOME S
+  | internal_reason N (ctxt,sequent) =
       if Thm.nprems_of sequent = 0 then SOME (ctxt, sequent)
       else gen_reason' ctxt (num_of_protected_prems sequent N)
                   [[ (Seq.single (enter_reasoning_envir ctxt, sequent))]]
 
-fun reason1 G N stat = case reason N stat of SOME x => x | NONE => error (G ())
+fun reasonXXX num ctxt sequent =
+  case internal_reason num (ctxt,sequent)
+    of SOME (ctxt', sequent') =>
+               SOME (singleton (Proof_Context.export ctxt' ctxt) sequent')
+     | NONE => NONE
 
-fun reason_s ctxt seqs =
+fun reason1 G N ctxt sequent =
+  case reasonXXX N ctxt sequent of SOME x => x | NONE => error (G ())
+
+fun internal_reason_s ctxt seqs =
   let val (ret,seqs') = seqs (enter_reasoning_envir ctxt)
    in (ret, gen_reason' ctxt 0 [[ seqs' ]])
   end
+
+fun reason_sXXX ctxt seqs =
+  case internal_reason_s ctxt seqs
+    of (ret, SOME ( ctxt', sequent')) =>
+               (ret, SOME (singleton (Proof_Context.export ctxt' ctxt) sequent'))
+     | (ret, NONE) => (ret, NONE)
 
 fun reason_tac N ctxt stat = Seq.make (fn () =>
       gen_reason' ctxt (num_of_protected_prems (snd stat) N)
@@ -658,13 +675,12 @@ fun chop_seq_head' seq =
 fun chop_seq_head seq =
   Seq.make (fn _ => Option.map (rpair Seq.empty) (chop_seq_head' seq))
 
-fun single_RS' rule (ctxt,thm) =
+fun single_RS' rule ctxt thm =
   Thm.biresolution (SOME ctxt) false [(false,rule)] 1 thm
     |> chop_seq_head'
-    |> Option.map (pair ctxt)
 
-fun single_RS rule (ctxt,thm) =
-  Seq.make (fn _ => Option.map (rpair Seq.empty) (single_RS' rule (ctxt,thm)))
+fun single_RS rule ctxt thm =
+  Seq.make (fn _ => Option.map (rpair Seq.empty) (single_RS' rule ctxt thm))
 
 
 fun name_of_intro_reasoner rules =
@@ -708,11 +724,15 @@ fun intro_reasoner ctxt pos mode (priority:priority) patterns blacklist guard ru
       end) rules
 
     fun tactic [] _ = Seq.empty
-      | tactic ((rule, has_semantic_guard)::R) s = Seq.make (fn _ =>
-          single_RS' rule s
-            |> has_semantic_guard ? Option.mapPartial (reason (SOME 1))
-            |> (fn NONE => Seq.pull (tactic R s)
-                 | SOME ret => SOME (ret, tactic R s))
+      | tactic ((rule, has_semantic_guard)::R) (ctxt,sequent) = Seq.make (fn _ =>
+          case single_RS' rule ctxt sequent
+            of NONE => Seq.pull (tactic R (ctxt,sequent))
+             | SOME sequent' =>
+                if has_semantic_guard
+                then (case internal_reason (SOME 1) (ctxt, sequent')
+                        of SOME s' => SOME (s', tactic R (ctxt,sequent))
+                         | NONE => Seq.pull (tactic R (ctxt,sequent)))
+                else SOME ((ctxt, sequent'), tactic R (ctxt,sequent))
         )
     fun guarded_tac rules =
       case guard of NONE => tactic rules

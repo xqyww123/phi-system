@@ -318,7 +318,7 @@ structure Eval_Sem_Idx_SS = Simpset (
 
 \<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] ?X' : ?X\<close>
                                       | \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] ?P\<close> )
-  = \<open>PLPR_Simplifier.simplifier_by_ss' Eval_Sem_Idx_SS.get'\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' Eval_Sem_Idx_SS.get')\<close>
 
 
 lemmas [eval_aggregate_path] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms

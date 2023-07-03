@@ -252,7 +252,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                     (*This beta eta contraction may be not good, cuz it may remove names of quantified
                       variables but I cannot find a better and simpler way to do this implication
                       elimination.*)
-                val (ctxt'3, sequent'3) = Phi_Reasoner.reason (SOME 1) (ctxt, sequent'')
+                val sequent'3 = Phi_Reasoner.reasonXXX (SOME 1) ctxt sequent''
                        |> (fn SOME X => X
                             | NONE => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
                                   Pretty.str "Fail to reason the finalization reasoning tasks:",
@@ -262,11 +262,11 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                                   of Const (\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>True\<close>, _)
                                       => @{thm TrueI} RS sequent'3
                                    | _ => sequent'3
-             in (ctxt'3, sequent'4)
+             in (ctxt, sequent'4)
              end
              handle Internal_Match_Fail msg =>
-              (case Phi_Apply.try_apply [th2] (ctxt,sequent)
-                 of SOME s' => s'
+              (case Phi_Apply.try_apply [th2] ctxt sequent
+                 of SOME s' => (ctxt, s')
                   | _ => error msg)
       in if is_top
          then stat
@@ -328,29 +328,29 @@ fun gen_finish_proc prep_term qed spec int stat =
     val goal = Phi_Envir.get_thesis ctxt_
     val mode = Phi_Working_Mode.mode1 ctxt_
   in stat
-  |> Proof.map_context_result (fn ctxt_pre1 =>
+  |> Proof.map_context_result (fn ctxt =>
       let
-        val sequent_pre1 = Phi_Envir.the_programming_sequent' ctxt_pre1
-        val (ctxt,sequent) =
+        val sequent_pre1 = Phi_Envir.the_programming_sequent' ctxt
+        val sequent =
           if Thm.no_prems sequent_pre1
-          then (ctxt_pre1,sequent_pre1)
+          then sequent_pre1
           else let
-            val _ = Phi_Reasoner.info_print ctxt_pre1 2 (fn _ =>
+            val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
                       "solving pending antecedents before closing the programming block..."
                       ^ Position.here \<^here>)
-            fun attack_obligations (ctxt,sequent) =
+            fun attack_obligations ctxt sequent =
               case try Thm.major_prem_of sequent
                 of SOME (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ _)) =>
-                    attack_obligations (Phi_Reasoners.auto_obligation_solver1 (ctxt,sequent))
-                 | _ => (ctxt,sequent)
-            val (ctxt_pre2, sequent_pre2) = attack_obligations (ctxt_pre1, sequent_pre1)
+                    attack_obligations ctxt (Phi_Reasoners.auto_obligation_solver1 ctxt sequent)
+                 | _ => sequent
+            val sequent_pre2 = attack_obligations ctxt sequent_pre1
             in Phi_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
                     Pretty.str "Fail to solve pending antecedents:",
-                    Thm.pretty_thm ctxt_pre2 sequent_pre2
-               ])) NONE (ctxt_pre2,sequent_pre2)
+                    Thm.pretty_thm ctxt sequent_pre2
+               ])) NONE ctxt sequent_pre2
             end
         val (ctxt',sequent') = Phi_Sys.move_lemmata (ctxt, sequent)
-        val (ctxt'',sequent'') = (ctxt',sequent')
+        val (ctxt'',sequent'') = sequent'
               |> (case spec
                     of NONE => I
                      | SOME term =>
@@ -361,8 +361,8 @@ fun gen_finish_proc prep_term qed spec int stat =
                                Syntax.pretty_term ctxt'' (Thm.term_of aim),
                                Pretty.block (Pretty.here \<^here>)
                             ])
-                        in Phi_Sys.cast aim
-                        #> Phi_Reasoners.auto_obligation_solver' (fn (ctxt,sequent) =>
+                        in Phi_Sys.cast aim ctxt'
+                        #> Phi_Reasoners.auto_obligation_solver' (fn ctxt => fn sequent =>
                              error (Pretty.string_of (Pretty.chunks [
                                Pretty.str ("Fail to solve the proof obligation generated during "^
                                            "the cast towards the given specification:"),
@@ -373,8 +373,9 @@ fun gen_finish_proc prep_term qed spec int stat =
                                  "proof obligations. More complicated transformation should use "),
                                  Pretty.keyword2 "assert", Pretty.str "command instead."
                                ]
-                           ])))
+                           ]))) ctxt'
                         end)
+              |> pair ctxt'
               |> #vcg_before_assembling mode goal
       in (sequent'', ctxt'')
         (*The transformation shall generate a poof obligation*)
@@ -403,8 +404,8 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Thm.pretty_thm ctxt' sequent',
                     Pretty.block (Pretty.here \<^here>)
                   ]))
-                val (_,result) = Phi_Apply.apply [sequent'] (ctxt',goal')
-                              |> Phi_Reasoners.safer_obligation_solver1
+                val result = Phi_Apply.apply [sequent'] ctxt' goal'
+                          |> Phi_Reasoners.safer_obligation_solver1 ctxt'
               in result end
               handle E => raise (@{print} E)
             ))
