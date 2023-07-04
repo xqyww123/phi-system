@@ -435,8 +435,13 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,quants,ind_conv,rea
 
 (* Default Hint Unifier *)
 
+local
+fun extract_hhf ext (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extract_hhf ext X
+  | extract_hhf ext (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_hhf ext X
+  | extract_hhf ext X = ext X
+in
 fun hint_unify_by_type extract_type (ctxt, hint) property (_, T') =
-    ( Unify.smash_unifiers (Context.Proof ctxt) [(extract_type property, T')] Envir.init
+    ( Unify.smash_unifiers (Context.Proof ctxt) [(extract_hhf extract_type property, T')] Envir.init
         |> Seq.chop 2
         |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
              | ([x], _) => x
@@ -447,7 +452,7 @@ fun hint_unify_by_type extract_type (ctxt, hint) property (_, T') =
 
 fun hint_unify_by_type_operator extract_type_operator (ctxt, hint) property (_, F_term $ _) =
     ( Unify.smash_unifiers (Context.Proof ctxt)
-                           [(extract_type_operator property, F_term)] Envir.init
+                           [(extract_hhf extract_type_operator property, F_term)] Envir.init
         |> Seq.chop 2
         |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
              | ([x], _) => x
@@ -456,6 +461,7 @@ fun hint_unify_by_type_operator extract_type_operator (ctxt, hint) property (_, 
            | Match  => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
     )
   | hint_unify_by_type_operator _ (ctxt, hint) _ _ = error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
+end
 
 (* Default Conversion of the Induction Rule *)
 
@@ -526,6 +532,15 @@ fun is_Premis (\<^Const>\<open>Premise\<close> $ _ $ _) = true
   | is_Premis (\<^Const>\<open>Trueprop\<close> $ X) = is_Premis X
   | is_Premis _ = false
 
+fun extract_rewr ctxt th =
+  case Thm.prop_of th
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _
+          $ (Const(\<^const_name>\<open>HOL.eq\<close>, \<^Type>\<open>fun Ty _\<close>) $ _ $ _)) =>
+        if can Phi_Syntax.dest_phi_type_ty Ty
+        then SOME ((th RS' (ctxt, @{thm' Premise_D})) RS' (ctxt, @{thm' eq_reflection}))
+        else NONE
+     | _ => NONE
+
 fun varify_subgoal mk ctxt sequent =
   let val LHS = Thm.major_prem_of sequent
    in case mk LHS of SOME (LHSS, gen_RHSS) =>
@@ -571,9 +586,11 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
       val ants'1 = Phi_Help.conj_elims ctxt (List.nth (#prems focus, len - 2))
                  @ List.take (#prems focus, len - 2)
       val prem_ants = filter (is_Premis o Thm.concl_of) ants'1
+      val rewrs = map_filter (extract_rewr ctxt) ants'1
       val ants = filter ((fn term => not (is_Premis term) andalso not (is_TA_IH_ToA term))
                          o Thm.concl_of) ants'1
                @ ToAs
+               |> map (Simplifier.rewrite_rule ctxt rewrs)
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_intro_rules (
@@ -584,6 +601,7 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
       val lsequent' = lsequent
                     |> ALLGOALS (Method.insert_tac ctxt'' prem_ants)
                     |> Seq.hd
+                    |> Simplifier.rewrite_goals_rule ctxt rewrs
                     |> reasoner ctxt''
 
       val lsequent'' = Conv.gconv_rule (PLPR_Syntax.premise_tag_conv (
@@ -769,8 +787,7 @@ fun OE_reasoning phi ctxt rule =
 
 fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
   let val ctxt0 = Context.proof_of thy
-      val unify_hint = hint_unify_by_type (
-              fn \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj _ _\<close> $ T' $ _) => T')
+      val unify_hint = hint_unify_by_type (fn (\<^Const>\<open>\<phi>Equiv_Obj _ _\<close> $ T' $ _) => T')
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_EO_rewr_IH})),
                        fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_EO_rewr_C} then_conv
                             Conv.implies_concl_conv (
@@ -875,7 +892,7 @@ fun TF_reasoning _ ctxt =
 fun gen_TF' (phi0 : phi_type) hint0 generic =
   let val ctxt0 = Context.proof_of generic
       val unify_hint = hint_unify_by_type_operator (
-            fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _) => F1)
+              fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _) => F1)
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr})),
                         fn ctxt => fn phi =>
                           Conv.rewr_conv @{thm \<phi>TA_TF_rewr} then_conv
@@ -1019,8 +1036,8 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
   let val ctxt0 = Context.proof_of generic
       val phi0pr = make_phi_for_pair generic phi0
       val unify_hint_SH = hint_unify_by_type_operator (
-            fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Sep_Homo_Ty_zip\<close>, _) $ _ $ _ $ F $ _ ) => F
-             | \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Sep_Homo_Ty_unzip\<close>, _) $ _ $ _ $ F $ _ ) => F
+            fn Const(\<^const_name>\<open>Sep_Homo_Ty_zip\<close>, _) $ _ $ _ $ F $ _ => F
+             | Const(\<^const_name>\<open>Sep_Homo_Ty_unzip\<close>, _) $ _ $ _ $ F $ _ => F
              | _ => raise TERM ("",[]))
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn phi =>
@@ -1077,8 +1094,11 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
 fun gen_SH flag (phi00,hints) thy =
   if is_Type_Opr (Term.fastype_of (#term phi00))
   then
-     let val (_,_,model_ty00) = dest_parameterized_phi_ty (Term.fastype_of (#term phi00))
-         val inst0  = lift_type_sort (Context.theory_of thy) (model_ty00, \<^sort>\<open>sep_magma\<close>) Vartab.empty
+     let val (T_ty :: _, _, model_ty00) = dest_parameterized_phi_ty (Term.fastype_of (#term phi00))
+         val ([],element_ty, ele_model) = dest_parameterized_phi_ty T_ty
+         val inst0  = Vartab.empty
+                    |> lift_type_sort (Context.theory_of thy) (model_ty00, \<^sort>\<open>sep_magma\<close>)
+                    |> lift_type_sort (Context.theory_of thy) (ele_model, \<^sort>\<open>sep_magma\<close>)
                       handle TYPE _ => raise Automation_Fail
          val inst = Phi_Help.tyenv_to_tvars_table_no_c inst0
          val inst' = TVars.map (K (Context.cases Thm.global_ctyp_of Thm.ctyp_of thy)) inst
@@ -1154,9 +1174,9 @@ fun guess_property_unit is_left (x_term, T_term, x_ty, arg_tys, model_ty, (phi:p
 fun gen_U is_left (phi0 : phi_type) hint0 generic =
   let val ctxt0 = Context.proof_of generic 
       val name = if is_left then "1L" else "1R"
-      val unify_hint_U = hint_unify_by_type_operator (
-            fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Is_Stateless\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ ) => T
-             | \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Demand_Nothing\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) ) => T
+      val unify_hint_U = hint_unify_by_type (
+            fn Const(\<^const_name>\<open>Is_Stateless\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ => T
+             | Const(\<^const_name>\<open>Demand_Nothing\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) => T
              | _ => raise TERM ("",[]))
       val ind_conv = default_ind_conv (K (K Conv.all_conv),
                        fn ctxt => fn _ =>
@@ -1192,11 +1212,11 @@ fun gen_Unit is_left (phi00, hints) thy =
 (*** Install Automation ***)
 
 val _ = Theory.setup (Context.theory_map (
-(* Phi_Type_Algebra.add_automation_on_def 100 (gen_Unit true) *)
-   Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
+   Phi_Type_Algebra.add_automation_on_def 100 (gen_Unit true)
+   (*Phi_Type_Algebra.add_automation_on_def 100 gen_obj_equal
 #> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
 #> Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)
-(* Phi_Type_Algebra.add_automation_on_def 121 (gen_SH true) *)
+ Phi_Type_Algebra.add_automation_on_def 121 (gen_SH true) *)
 ))
 
 end

@@ -3,6 +3,7 @@ signature PHI_HELP = sig
 val pos_parser : string -> Position.T parser
 val beta_eta_contract : thm -> thm
 val beta_eta_contract_cterm : cterm -> cterm
+val lambda_normalization_ctac : ('a * thm -> 'b) -> ('a * thm -> 'b)
 val lambda_normalization_conv : conv -> conv
 val lambda_normalization_rule : (thm -> thm) -> thm -> thm
 
@@ -31,6 +32,12 @@ fun beta_eta_contract th =
 
 fun beta_eta_contract_cterm x =
   Thm.dest_arg (Thm.cprop_of (Drule.beta_eta_conversion x));
+
+fun lambda_normalization_ctac S s =
+  S s
+  handle CTERM _ => S (apsnd beta_eta_contract s)
+       | TERM _  => S (apsnd beta_eta_contract s)
+       | THM _   => S (apsnd beta_eta_contract s)
 
 fun lambda_normalization_conv C ctm =
   C ctm

@@ -798,14 +798,16 @@ fun check_algebra_hints ctxt const hints =
         | get_arity ret \<^Type>\<open>bool\<close> = ret
         | get_arity _ _ = error "The given hint is not an algebraic property."
       fun head_of (Const("_type_constraint_", _) $ X) = head_of X
+        | head_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = head_of X
+        | head_of (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = head_of X
         | head_of (X $ _) = head_of X
         | head_of X = X
       val hints_arity = map (fn hint =>
             get_arity [] (Sign.the_const_type (Proof_Context.theory_of ctxt')
                                              (fst (raw_term_name_typ (head_of hint))))) hints
-      fun pad_term arity (\<^Const>\<open>Pure.imp\<close> $ LHS $ X) =
-            \<^Const>\<open>Pure.imp\<close> $ LHS $ pad_term arity X
-        | pad_term arity (\<^Const>\<open>Trueprop\<close> $ X) =
+      fun pad_term arity ((H as Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _) $ X) =
+            H $ pad_term arity X
+        | pad_term arity (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) =
             pad_term arity X
         | pad_term arity term =
             let val i = Term.maxidx_of_term term + 1
@@ -820,7 +822,9 @@ fun check_algebra_hints ctxt const hints =
                   | pass ar X = pad 0 ar X                
              in \<^Const>\<open>Trueprop\<close> $ pass arity term
             end
-   in Syntax.check_props ctxt'0 (map2 pad_term hints_arity hints)
+      val props = Syntax.check_props ctxt'0 (map2 pad_term hints_arity hints)
+      val ctxt'1 = fold Variable.add_fixes_implicit props (Variable.set_body false ctxt'0)
+   in Variable.export_terms ctxt'1 ctxt props
   end
 
 (*make (x : T) \<equiv> ...  to T x \<equiv> ...*)

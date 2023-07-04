@@ -895,6 +895,14 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   using functional_transformation[unfolded Argument_def] .
 
 lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 36 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action \<c>\<o>\<n>\<v>\<e>\<r>\<t> _ \<t>\<o> Fb _\<close>]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action \<c>\<o>\<n>\<v>\<e>\<r>\<t> Z \<t>\<o> Z')
+\<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f x \<Ztypecolon> Fb U \<a>\<n>\<d> pred_mapper P x @action \<c>\<o>\<n>\<v>\<e>\<r>\<t> Fa Z \<t>\<o> Fb Z' \<close>
+  unfolding Action_Tag_def
+  using functional_transformation[unfolded Argument_def] .
+
+lemma [\<phi>TA_internal_simplify_special_cases,
        \<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action to _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> f a \<Ztypecolon> U \<a>\<n>\<d> P a @action to Z)
@@ -1130,7 +1138,7 @@ subsubsection \<open>Transformation Functor\<close>
 lemma \<phi>TA_TF_rule:
   \<open>(\<And>T U g x. Ant \<longrightarrow>
                (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<longrightarrow> (a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)) \<longrightarrow> \<comment> \<open>split D\<close>
-               (x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (to U))
+               (x \<Ztypecolon> F1 T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (\<c>\<o>\<n>\<v>\<e>\<r>\<t> T \<t>\<o> U))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
@@ -1148,9 +1156,9 @@ lemma \<phi>TA_TF_pattern_IH:
 \<Longrightarrow> PROP Pure.term (\<And>a \<in> S. a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Any a \<a>\<n>\<d> Any' a @action A)\<close> .
 
 lemma \<phi>TA_TF_rule_step:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X' \<a>\<n>\<d> Any @action \<A>_every_item (to U)
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X' \<a>\<n>\<d> Any @action \<A>_every_item A
 \<Longrightarrow> X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action ToSA
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action to U\<close>
+\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action A\<close>
   unfolding Action_Tag_def
   by (simp add: Imply_def)
 
