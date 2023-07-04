@@ -1220,10 +1220,10 @@ term case_prod
 
 ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\<open>times\<close>\<close>
 
-hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end
+(* hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end
           \<phi>Equiv_Obj_rule_move_all2
 
-          \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH (*\<phi>TA_TF_rule_step*)
+          \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH (*\<phi>TA_TF_rule_step*) *)
 
 lemmas [\<phi>constraint_expansion] =
           HOL.simp_thms ex_simps[symmetric] prod.case mem_Collect_eq imp_ex

@@ -60,7 +60,7 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
           |> apfst (Is_Recursive.put true)
     val sequent = sequent0
                   (*first pack all premises*)
-              |> Conv.gconv_rule (let open Phi_Helper_Conv Conv in
+              |> Conv.gconv_rule (let open Phi_Conv Conv in
                    meta_all_body_conv (fn ctxt =>
                                 aggregate_imps_obj (K all_conv) ctxt
                       then_conv protect_conv
@@ -139,10 +139,10 @@ fun basic_recursive_mod prep_vars binding raw_vars (ctxt01,sequent01) =
             |> spec
             |> singleton (Proof_Context.export ctxt ctxt0)
 
-    val norm_sequent = Phi_Helper_Conv.simplify_leading_antecedent simp_ctxt sequent
+    val norm_sequent = Phi_Conv.simplify_leading_antecedent simp_ctxt sequent
     val sequent1 = (rule RS norm_sequent)
                    (*unpack compressed premises*)
-                |> Conv.gconv_rule (let open Phi_Helper_Conv Conv in
+                |> Conv.gconv_rule (let open Phi_Conv Conv in
                     meta_all_body_conv (fn ctxt =>
                         implies_conv all_conv (implies_conv (
                             Phi_Syntax.labelled_conv (arg_conv (meta_all_body_conv (

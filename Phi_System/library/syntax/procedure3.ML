@@ -107,7 +107,7 @@ fun quantify_args_of_proc_term record_name (Const (\<^const_name>\<open>Trueprop
 fun rule_of_package_arguement ctxt proc =
   let val packed = quantify_args_of_proc_term false proc
                 |> Thm.cterm_of ctxt
-      fun expand_quant ctxt c = let open Conv Phi_Helper_Conv in
+      fun expand_quant ctxt c = let open Conv Phi_Conv in
             try_conv (rewr_conv @{thm split_paired_all_\<phi>arg[folded atomize_eq]}
                       then_conv meta_all_conv (expand_quant o snd) ctxt)
           end c

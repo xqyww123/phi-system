@@ -179,7 +179,7 @@ fun closure ctxt substT f =
   end
 
 fun rule_proc_F C ctxt =
-      Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (K
+      Conv.fconv_rule (Phi_Conv.hhf_concl_conv (K
               (  Phi_Syntax.proc_monad_conv C
        else_conv Phi_Syntax.pending_construction_monad_conv C)) ctxt)
 

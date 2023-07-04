@@ -328,7 +328,7 @@ structure Gen_Rule_SS = Simpset (
 
 fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
   let val thy = Context.theory_of ctxt
-      val rule = Phi_Reasoner.beta_eta_contract rule0
+      val rule = Phi_Help.beta_eta_contract rule0
               |> Drule.zero_var_indexes
       fun get_prop_kinds (TM::L) =
            (case try (Term.head_of o HOLogic.dest_Trueprop) TM
@@ -369,7 +369,7 @@ fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
                                                     Thm.string_of_thm ctxt' rule'2); x))
                           |> Phi_Help.instantiate_higher_order_schematic_var ~1 ctxt'
                           |> singleton (simplify ctxt') 
-                          |> Phi_Reasoner.beta_eta_contract
+                          |> Phi_Help.beta_eta_contract
                           |> Drule.zero_var_indexes
                 val _ = Phi_Reasoner.info_pretty ctxt' 0 (fn () => let open Pretty in
                           item [chunks [
@@ -497,7 +497,7 @@ fun conv_def_to_equaltion ctxt def =
   case Thm.concl_of def
     of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _ =>
         conv_def_to_equaltion ctxt
-          (Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv Object_Logic.atomize ctxt) def)
+          (Conv.fconv_rule (Phi_Conv.hhf_concl_conv Object_Logic.atomize ctxt) def)
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
          Const(\<^const_name>\<open>HOL.eq\<close>, Type(\<^type_name>\<open>fun\<close>, [Ty,_])) $ LHS $ RHS) =>
        (case Ty
@@ -520,7 +520,7 @@ fun conv_def_to_equaltion ctxt def =
               end
            | \<^Type>\<open>set _\<close> => (
                 case LHS of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => def
-                          | _ $ _ => Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+                          | _ $ _ => Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                                         HOLogic.Trueprop_conv (HOLogic.eq_conv
                                           (fn ctm =>
                                             let val T = Thm.dest_fun ctm
@@ -540,7 +540,7 @@ fun conv_def_to_equaltion ctxt def =
            | _ => raise THM ("Not a \<phi>-type definition", 0, [def]))
      | _ => raise THM ("Not a \<phi>-type definition", 0, [def])
 
-val add_premise_tag = Phi_Helper_Conv.recursive_premises_conv (fn ctxt => fn ctm =>
+val add_premise_tag = Phi_Conv.recursive_premises_conv (fn ctxt => fn ctm =>
       case Thm.term_of ctm
         of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Imply\<close>, _) $ _ $ _ $ _) =>
               Conv.all_conv ctm

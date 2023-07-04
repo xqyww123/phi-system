@@ -135,7 +135,6 @@ signature NU_REASONER = sig
      -> attribute context_parser
 
   val gen_attr_add_rule : (thm list * Context.generic -> thm list * Context.generic) ->  attribute context_parser
-  val beta_eta_contract : thm -> thm
 
 end
 
@@ -697,11 +696,6 @@ fun single_RS rule ctxt thm =
 fun name_of_intro_reasoner rules =
   (*Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ *) Logic.mk_conjunction_list (map Thm.prop_of rules)
 
-fun beta_eta_contract th =
-  if Term.could_beta_eta_contract (Thm.prop_of th)
-  then Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
-  else th
-
 type guard = context_state -> bool
 
 (** Default Pattern **)
@@ -843,7 +837,7 @@ fun gen_attribute gen =
     val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
     fun cterm (ctxt,toks) = let val (term,ret) = term_pattern (ctxt,toks)
                              in (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term, ret) end
-    val pos_parser = Phi_Reasoner_Helpers.pos_parser "\<phi>reasoner"
+    val pos_parser = Phi_Help.pos_parser "\<phi>reasoner"
     val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
          let val ctxt = Context.Proof (Context.proof_of ctxt0)
               |> ML_Context.expression (Input.pos_of src)
@@ -872,7 +866,7 @@ fun gen_attr_add_intro' pass (pos, mode, priority, additional_rules, action, (pa
                         th RS (Thm.instantiate (TVars.empty,
                                                 Vars.make [((("A",0),\<^typ>\<open>action\<close>), the action)])
                                   @{thm Action_Tag_I}))
-                   |> map beta_eta_contract
+                   |> map Phi_Help.beta_eta_contract
                    |> Drule.zero_var_indexes_list
           val (rules', ctxt') = pass (rules, ctxt)
        in add_intro_rule pos mode priority (pattern,blacklist) guard rules' ctxt' end)

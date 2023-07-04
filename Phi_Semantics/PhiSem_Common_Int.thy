@@ -71,7 +71,7 @@ let
   | dest_number (Const ("Num.numeral_class.numeral", _) $ t) = HOLogic.dest_numeral t
   | dest_number (Const ("Groups.uminus_class.uminus", _) $ t) = ~ (dest_number t)
   | dest_number t = raise Not_A_Number;
- val sequent = Conv.gconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+ val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   Conv.arg_conv (Conv.arg1_conv (Simplifier.rewrite ctxt))) ctxt) 1 sequent0
 in
   case Thm.major_prem_of sequent

@@ -338,7 +338,7 @@ fn (ctxt0,sequent0) => Seq.make (fn () =>
                 Conv.fun_conv (Conv.arg_conv (add_focus_tag' ctxt)) ctm
 
       fun add_focus_tag ctxt =
-        Phi_Helper_Conv.leading_antecedent_conv (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+        Phi_Conv.leading_antecedent_conv (Phi_Conv.hhf_concl_conv (fn ctxt =>
           Phi_Syntax.implication_conv Conv.all_conv (add_focus_tag' ctxt) Conv.all_conv
         ) ctxt)
 
@@ -535,8 +535,6 @@ subsection \<open>Existential\<close>
 declare ToA_ex_intro
 declare ToA_ex_intro'
 
-thm ToA_ex_intro[where c=\<open>id c\<close> for c]
-
 \<phi>reasoner_ML ToA_ex_intro 2600 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> ExSet _ \<a>\<n>\<d> _\<close> | \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> ExSet _ \<brangle> \<a>\<n>\<d> _\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
   let val (_, X'', _) = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
@@ -655,7 +653,7 @@ subsection \<open>Zero\<close>
       val sequent' = Drule.infer_instantiate ctxt
                         (collect [] X |> map (apsnd (Thm.cterm_of ctxt))) sequent
       val sequent'2 = (@{thm zero_implies_any} RS sequent')
-                   |> Phi_Helper_Conv.rewrite_leading_antecedent ctxt @{thms zero_fun[folded atomize_eq]}
+                   |> Phi_Conv.rewrite_leading_antecedent ctxt @{thms zero_fun[folded atomize_eq]}
    in SOME ((ctxt, sequent'2), Seq.empty) end)
 \<close>
 

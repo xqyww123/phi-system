@@ -339,9 +339,9 @@ ML_file \<open>library/tools/case_prod_conv.ML\<close>
 
 \<phi>reasoner_ML meta_case_prod_in_meta_Ball !1 (\<open>PROP meta_Ball _ _\<close>) = \<open>
   fn (ctxt,sequent) => Seq.make (fn () =>
-  let val sequent' = Conv.gconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 Conv.rewr_conv @{thm meta_Ball_def} then_conv
-                Phi_Helper_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
+                Phi_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
             ) ctxt) 1 sequent
    in SOME ((ctxt, sequent'), Seq.empty)
   end)
@@ -349,9 +349,9 @@ ML_file \<open>library/tools/case_prod_conv.ML\<close>
 
 \<phi>reasoner_ML case_prod_in_Ball !1 (\<open>Ball _ _\<close>) = \<open>
   fn (ctxt,sequent) => Seq.make (fn () =>
-  let val sequent' = Conv.gconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 Conv.rewr_conv @{thm Ball_for_reason} then_conv
-                Phi_Helper_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
+                Phi_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
             ) ctxt) 1 sequent
    in SOME ((ctxt, sequent'), Seq.empty)
   end)

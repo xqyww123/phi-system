@@ -9,6 +9,7 @@ structure Phi_Kind = struct
 end
 
 signature PHI_HELP = sig
+include PHI_HELP
 
 (**** Basic Operations ****)
   val last : 'a list -> 'a
@@ -43,7 +44,6 @@ signature PHI_HELP = sig
   val env_to_table : Proof.context -> (Type.tyenv * Envir.tenv)
                                    -> (ctyp TVars.table * cterm Vars.table)
 
-  val beta_eta_contract : thm -> thm
   val beta_eta_contract_leading_antecedent : thm -> thm
 
   val safe_fastype_of : term -> typ (*improved Term.fastype_of which considers dummyT*)
@@ -115,6 +115,7 @@ signature PHI_HELP = sig
 end
 
 structure Phi_Help : PHI_HELP = struct
+open Phi_Help
 
 fun last [] = raise Fail "last"
   | last [x] = x

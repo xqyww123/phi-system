@@ -1,5 +1,5 @@
-signature PHI_HELPER_CONV = sig
-include PHI_HELPER_CONV
+signature PHI_CONV = sig
+include PHI_CONV
 
 val action_tag_conv : conv -> conv
 val may_action_tag_conv : conv -> conv
@@ -9,8 +9,8 @@ val pure_imp_antecedents_conv : conv -> conv
 
 end
 
-structure Phi_Helper_Conv : PHI_HELPER_CONV = struct
-open Phi_Helper_Conv
+structure Phi_Conv : PHI_CONV = struct
+open Phi_Conv
 
 fun action_tag_conv C ctm =
   case Thm.term_of ctm

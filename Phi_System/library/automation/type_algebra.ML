@@ -460,8 +460,8 @@ fun hint_unify_by_type_operator extract_type_operator (ctxt, hint) property (_, 
 (* Default Conversion of the Induction Rule *)
 
 fun default_ind_conv (conv_IH, conv_CL) ctxt (phi:phi_type) =
-  Conv.fconv_rule (Phi_Helper_Conv.hhf_conv (
-      Phi_Helper_Conv.hhf_conv (fn ctxt => fn ctm =>
+  Conv.fconv_rule (Phi_Conv.hhf_conv (
+      Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
         case Thm.term_of ctm
           of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
               => conv_IH ctxt phi ctm
@@ -645,7 +645,7 @@ fun abstract_constraint_guided_reasoning varify phi ctxt =
 
 fun conv_eq_imp ctxt ctm =
   (Conv.rewr_conv @{thm imp_ex[folded atomize_eq]} then_conv
-   Phi_Helper_Conv.hol_all_conv (conv_eq_imp o snd) ctxt) ctm
+   Phi_Conv.hol_all_conv (conv_eq_imp o snd) ctxt) ctm
   handle CTERM _ => Conv.all_conv ctm
        | THM _ => Conv.all_conv ctm *)
 
@@ -654,7 +654,7 @@ fun conv_eq_imp ctxt ctm =
 local
 
 fun set_last_schematic_var ctxt rule0 =
-  let val rule = Phi_Reasoner.beta_eta_contract rule0
+  let val rule = Phi_Help.beta_eta_contract rule0
       val (t1,t2,tm) =
         case Thm.concl_of rule
           of _ (*Trueprop*) $ (_ (*\<phi>Equiv_Obj*) $ _ $ Abs (_, t1, Abs (_, t2, tm)))
@@ -669,7 +669,7 @@ fun set_last_schematic_var ctxt rule0 =
   end
 
 fun set_eq_when_it_is_constant_true ctxt rule0 =
-  let val rule = Phi_Reasoner.beta_eta_contract rule0
+  let val rule = Phi_Help.beta_eta_contract rule0
       val v = case Thm.concl_of rule
                 of _ (*Trueprop*) $ (_ (*\<phi>Equal_Obj*) $ Var v $ _) => v
                  | _ => error "Internal bug 5d769e14-74ca-4afb-8d43-672e0afc5470"
@@ -679,6 +679,7 @@ fun set_eq_when_it_is_constant_true ctxt rule0 =
    in Thm.instantiate (TVars.empty, Vars.make [(v, Thm.cterm_of ctxt P)]) rule
   end
 
+(*must be beta-eta normalized*)
 fun infer_eq ctxt rule =
   let fun is_free_bound lev (Abs(_,_,X)) = is_free_bound (lev+1) X
         | is_free_bound lev (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ X $ _) = is_free_bound lev X
@@ -688,7 +689,21 @@ fun infer_eq ctxt rule =
       fun is_free_bound' (Abs(_,_,X)) = is_free_bound 0 X
         | is_free_bound' _ = true
    in (case Thm.major_prem_of rule
-        of _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ (Const(\<^const_name>\<open>All\<close>, _) $ X ) $ _) =>
+        of _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ (
+                  Const(\<^const_name>\<open>Ex\<close>, _) $ (Abs(_,_, Const(\<^const_name>\<open>All\<close>, _) $ _)) ) $ _) =>
+            Conv.fconv_rule (Phi_Conv.leading_antecedent_conv (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                HOLogic.Trueprop_conv (
+                  HOLogic.conj_conv (Phi_Conv.move_Ex_inside_All ctxt) Conv.all_conv
+              )) ctxt)) rule
+            |> infer_eq ctxt
+         | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ (
+                  Const(\<^const_name>\<open>Ex\<close>, _) $ (Abs(_,_, Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ )) ) $ _) =>
+            Conv.fconv_rule (Phi_Conv.leading_antecedent_conv (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                HOLogic.Trueprop_conv (
+                  HOLogic.conj_conv (Conv.rewr_conv @{thm' HOL.ex_simps(6)[folded atomize_eq]}) Conv.all_conv
+              )) ctxt)) rule
+            |> infer_eq ctxt
+         | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ (Const(\<^const_name>\<open>All\<close>, _) $ X ) $ _) =>
             infer_eq ctxt (if is_free_bound' X
                            then @{thm' \<phi>Equiv_Obj_rule_move_all2} RS rule
                            else @{thm' \<phi>Equiv_Obj_rule_move_all} RS rule)
@@ -701,7 +716,11 @@ fun infer_eq ctxt rule =
             (@{thm' TrueI} RS rule)
               |> set_eq_when_it_is_constant_true ctxt
          | _ => error "internal bug 7147bf3f-9e7d-4ffc-a40b-aa621a4fca21")
-      handle THM _ => raise Automation_Fail
+      handle THM _ => (
+        warning ("Fail to infer the object equivelance from the obtained obligation\n" ^
+                 Thm.string_of_thm ctxt rule);
+        raise Automation_Fail
+      )
   end
 
 
@@ -761,9 +780,10 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
       fun infer (phi, ctxt, rule) =
             if is_some hint0 orelse #is_recursive phi then NONE
             else (@{thm' Premise_I} RS rule)
+                   |> Phi_Help.beta_eta_contract
                    |> infer_eq ctxt
                    |> SOME
-      fun simp (phi, ctxt) = Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv 
+      fun simp (phi, ctxt) = Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
                                  (K (Conv.arg_conv (Conv.arg_conv (Simplifier.rewrite ctxt)))) ctxt)
       val rules = mk_rule_by_guess_or_hint ("/obj_equal", unify_hint, guess_property_obj_eq, [0],
                                             ind_conv, OE_reasoning, infer, simp)
@@ -860,7 +880,7 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
                         fn ctxt => fn phi =>
                           Conv.rewr_conv @{thm \<phi>TA_TF_rewr} then_conv
                             Conv.implies_concl_conv (Conv.implies_concl_conv (
-                                  HOLogic.Trueprop_conv (Phi_Helper_Conv.action_tag_conv (
+                                  HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                               Phi_Syntax.implication_conv
                               (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)) then_conv
                                conv_chk_unfolded phi)
@@ -869,7 +889,7 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
                               Conv.all_conv)))))
       fun simp (phi, ctxt) =
             Conv.fconv_rule (
-              Phi_Helper_Conv.hhf_concl_conv (K (
+              Phi_Conv.hhf_concl_conv (K (
                   Conv.arg_conv (Conv.combination_conv
                     (Conv.arg_conv (Simplifier.rewrite ctxt))
                     (Simplifier.rewrite ctxt))
@@ -1005,7 +1025,7 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn phi =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_IH}) then_conv
-                Phi_Helper_Conv.meta_alls_conv (fn ctxt =>
+                Phi_Conv.meta_alls_conv (fn ctxt =>
                 Conv.implies_concl_conv (Conv.implies_conv (
                   Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
                 ) Conv.all_conv
@@ -1035,7 +1055,7 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
       val ind_conv = ind_conv_z (*if flag then ind_conv_z else ind_conv_u*)
       fun simp (phi, ctxt) =
             Conv.fconv_rule (
-              Phi_Helper_Conv.hhf_concl_conv (K (
+              Phi_Conv.hhf_concl_conv (K (
                   Conv.arg_conv (Conv.combination_conv
                     (Conv.arg_conv (Simplifier.rewrite ctxt))
                     (Simplifier.rewrite ctxt))

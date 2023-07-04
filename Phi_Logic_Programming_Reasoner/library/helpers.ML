@@ -1,10 +1,14 @@
-signature PHI_REASONER_HELPERS = sig
+signature PHI_HELP = sig
 
 val pos_parser : string -> Position.T parser
+val beta_eta_contract : thm -> thm
+val beta_eta_contract_cterm : cterm -> cterm
+val lambda_normalization_conv : conv -> conv
+val lambda_normalization_rule : (thm -> thm) -> thm -> thm
 
 end
 
-structure Phi_Reasoner_Helpers : PHI_REASONER_HELPERS = struct
+structure Phi_Help : PHI_HELP = struct
 
 fun pos_parser name =
   let val msg = name ^ " cannot capture the position of your rule \
@@ -19,9 +23,30 @@ fun pos_parser name =
                            else ()
                in (pos,x) end
   end
+
+fun beta_eta_contract th =
+  if Term.could_beta_eta_contract (Thm.prop_of th)
+  then Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
+  else th
+
+fun beta_eta_contract_cterm x =
+  Thm.dest_arg (Thm.cprop_of (Drule.beta_eta_conversion x));
+
+fun lambda_normalization_conv C ctm =
+  C ctm
+  handle CTERM _ => (Drule.beta_eta_conversion then_conv C) ctm
+       | TERM _  => (Drule.beta_eta_conversion then_conv C) ctm
+       | THM _   => (Drule.beta_eta_conversion then_conv C) ctm
+
+fun lambda_normalization_rule R thm =
+  R thm
+  handle CTERM _ => R (beta_eta_contract thm)
+       | THM _   => R (beta_eta_contract thm)
+       | TERM _  => R (beta_eta_contract thm)
+
 end
 
-signature PHI_HELPER_CONV = sig
+signature PHI_CONV = sig
 
 val may_Trueprop_conv : conv -> conv
 
@@ -32,10 +57,11 @@ val meta_alls_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 
+val move_Ex_inside_All : Proof.context -> conv
 
 end
 
-structure Phi_Helper_Conv : PHI_HELPER_CONV = struct
+structure Phi_Conv : PHI_CONV = struct
 open Conv
 
 fun may_Trueprop_conv C ctm =
@@ -93,6 +119,21 @@ val hol_all_conv = quant_conv \<^const_name>\<open>All\<close>
 fun meta_all_body_conv C ctxt =
   meta_all_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt
   else_conv C ctxt
+
+fun move_Ex_inside_All ctxt ctm =
+  Phi_Help.lambda_normalization_conv (fn ctm =>
+    let val (Ex, ctm1) = Thm.dest_comb ctm
+        val ( f, ctm2) = Thm.dest_abs_global ctm1
+        val (Al, ctm3) = Thm.dest_comb ctm2
+        val ( x, body) = Thm.dest_abs_global ctm3
+        val fx = Thm.apply f x
+        val Q = Thm.lambda x (Thm.lambda fx body)
+        val rule = Drule.infer_instantiate ctxt [(("Q",0),Q)]
+                      @{thm' choice_iff[folded atomize_eq, symmetric]}
+     in Conv.rewr_conv rule ctm
+    end
+  ) ctm
+
 
 end
 

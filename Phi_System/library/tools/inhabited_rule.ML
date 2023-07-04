@@ -87,7 +87,7 @@ fun generate_extraction_rule ctxt0 thm0 =
    in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE
                            (Config.put mode_generate_extraction_rule true ctxt)
                            state
-   |> Conv.fconv_rule (Phi_Helper_Conv.hhf_concl_conv (fn ctxt =>
+   |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
         HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite (Inhabitance_SS.enhance ctxt)))) ctxt)
    |> singleton (Variable.export ctxt ctxt0)
    |> (fn rule => (

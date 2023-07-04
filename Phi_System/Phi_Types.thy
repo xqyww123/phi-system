@@ -150,9 +150,11 @@ lemma UNIV_subty [\<phi>reason 1000]:
 subsection \<open>Stepwise Abstraction\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
-              
+                            
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U))\<close>
+
+thm choice_iff[folded atomize_eq, symmetric]
 
 lemma [\<phi>reason 1200]:
   \<open>x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U) @action to RAW\<close>

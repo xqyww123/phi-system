@@ -67,7 +67,7 @@ fun routine_mod mk_F_Ty mk_F_Tm routine_rule (ctxt01,sequent) =
             |> Simplifier.full_simplify simp_ctxt
             |> singleton (Proof_Context.export ctxt ctxt0)
 
-    val norm_sequent = Phi_Helper_Conv.simplify_leading_antecedent_hhf_concl simp_ctxt sequent
+    val norm_sequent = Phi_Conv.simplify_leading_antecedent_hhf_concl simp_ctxt sequent
     val sequent1 = (rule RS norm_sequent)
     val ctxt' = Context.proof_map (
                         Generic_Variable_Access.Process_of_Argument.put

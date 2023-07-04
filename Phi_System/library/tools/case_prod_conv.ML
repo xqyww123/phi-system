@@ -1,13 +1,13 @@
-signature PHI_HELPER_CONV = sig
-include PHI_HELPER_CONV
+signature PHI_CONV = sig
+include PHI_CONV
 
 val prod_case_meta_all_split_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_ball_conv_all : (Proof.context -> conv) -> Proof.context -> conv
 
 end
 
-structure Phi_Helper_Conv : PHI_HELPER_CONV = struct
-open Phi_Helper_Conv
+structure Phi_Conv : PHI_CONV = struct
+open Phi_Conv
 
 fun prod_case_meta_all_split_conv C ctxt ctm =
   let fun has_case_prod (Const (\<^const_name>\<open>meta_case_prod\<close>, _)) = SOME @{thm meta_case_prod_simp}

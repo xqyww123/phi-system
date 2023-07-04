@@ -1819,7 +1819,7 @@ attribute_setup \<phi>synthesis = \<open>
                                                   Phi_Synthesis.Arg_and_Ret (a',b')))
                    || (Parse.term >> (singleton read_term #> Phi_Synthesis.Ret_only))
         val priority = Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>)
-     in Phi_Reasoner_Helpers.pos_parser "\<phi>synthesis" --| Scan.option Args.add --
+     in Phi_Help.pos_parser "\<phi>synthesis" --| Scan.option Args.add --
         Scan.optional Parse.int 100 --
        (Scan.optional (\<^keyword>\<open>for\<close> |-- Parse.and_list1 (pattern -- priority)) [] --
         Scan.optional (\<^keyword>\<open>except\<close> |-- Parse.and_list1 pattern) [] )

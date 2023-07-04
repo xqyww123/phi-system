@@ -115,41 +115,70 @@ fun context_tactic_to_state_transition tac fail ctxt sequent =
 (*** Defer ***)
 
 fun obligation_collect ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-          Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
-     | Const(\<^const_name>\<open>Pure.imp\<close>, _)
-          $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _))
-          $ _
-         => (Conv.arg_conv obligation_collect then_conv
-             Conv.rewr_conv @{thm contract_premise_imp}) ctm
-     | Const(\<^const_name>\<open>Pure.imp\<close>, _)
-          $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _) $ _))
-          $ _
-         => (Conv.arg_conv obligation_collect then_conv
-             Conv.rewr_conv @{thm contract_premise_imp}) ctm
-     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
-         => (Conv.arg_conv obligation_collect then_conv
-             Conv.rewr_conv @{thm conjunction_imp[symmetric]}) ctm
-     | _ => raise CTERM ("unexpected proof obligation form", [ctm])
+  Phi_Help.lambda_normalization_conv (fn ctm =>
+    case Thm.term_of ctm
+      of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+            Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
+       | Const(\<^const_name>\<open>Pure.imp\<close>, _)
+            $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                  Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _))
+            $ _
+           => (Conv.arg_conv obligation_collect then_conv
+               Conv.rewr_conv @{thm contract_premise_imp}) ctm
+       | Const(\<^const_name>\<open>Pure.imp\<close>, _)
+            $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                  Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _) $ _))
+            $ _
+           => (Conv.arg_conv obligation_collect then_conv
+               Conv.rewr_conv @{thm contract_premise_imp}) ctm
+       | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
+           => (Conv.arg_conv obligation_collect then_conv
+               Conv.rewr_conv @{thm conjunction_imp[symmetric]}) ctm
+       | _ => raise CTERM ("unexpected proof obligation form", [ctm])
+  ) ctm
 
 fun obligation_conv_all ctxt ctm =
+  Phi_Help.lambda_normalization_conv (fn ctm =>
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
-        (Phi_Helper_Conv.meta_all_conv (obligation_conv_all o snd) ctxt then_conv
+        (Phi_Conv.meta_all_conv (obligation_conv_all o snd) ctxt then_conv
           Conv.rewr_conv @{thm contract_premise_all}) ctm
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
           Conv.all_conv ctm
      | _ => raise CTERM ("internal bug 6733574a-42dc-4592-a08e-ddc223bb6b94", [ctm])
+  ) ctm
+
+fun obligation_intro_Ex_conv ctxt thm =
+  Phi_Help.lambda_normalization_rule (fn thm =>
+    let fun dest' (\<^Const>\<open>Pure.imp\<close> $ (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (
+                        Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ P)) $ Q) = (P,Q)
+          | dest' tm = raise TERM ("obligation_intro_Ex", [tm])
+        fun dest ctm = dest' (Thm.term_of ctm)
+        fun dest_c ctm =
+              (dest ctm; (Thm.dest_arg (Thm.dest_arg1 ctm), Thm.dest_arg ctm))
+  
+        val (P,Q) = dest (Thm.cprop_of thm)
+        val vars = Term.add_vars Q []
+        fun collect_var ret (Var v) = if member (op =) vars v then ret
+                                      else insert (op =) v ret
+          | collect_var ret (A $ B) = collect_var (collect_var ret A) B
+          | collect_var ret (Abs(_,_,X)) = collect_var ret X
+          | collect_var ret _ = ret
+        val vars' = collect_var [] P
+                  |> map (fn (N,T) => Thm.var (N, Thm.ctyp_of ctxt T))
+        fun intro_Ex v thm =
+              Conv.fconv_rule (Conv.rewr_conv @{thm' contract_intro_Ex}) (Thm.forall_intr v thm)
+     in fold intro_Ex vars' thm
+    end
+  ) thm
 
 fun collect_obligation_premises ctxt thm = let open Conv
-  val rule1 = gconv_rule (Phi_Helper_Conv.meta_alls_conv (K (
+  val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (K (
                 obligation_collect then_conv Conv.rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
               ) 1 thm
    in (@{thm contract_drop_waste} RS rule1)
    |> gconv_rule (obligation_conv_all ctxt) 1
+   |> obligation_intro_Ex_conv ctxt
   end
 
 fun contract_obligations ctxt thm =

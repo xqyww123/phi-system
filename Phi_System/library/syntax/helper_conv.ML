@@ -1,5 +1,5 @@
-signature PHI_HELPER_CONV = sig
-include PHI_HELPER_CONV
+signature PHI_CONV = sig
+include PHI_CONV
 
 (*Converting \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<dots> \<Longrightarrow> An \<Longrightarrow> C\<close> to \<open>A1 &&& A2 &&& \<dots> &&& An &&& PURE_TOP \<Longrightarrow> C\<close>*)
 val aggregate_imps : conv -> conv
@@ -34,8 +34,8 @@ val simplify_leading_antecedent_hhf_concl : Proof.context -> thm -> thm
 
 end
 
-structure Phi_Helper_Conv : PHI_HELPER_CONV = struct
-open Phi_Helper_Conv Conv
+structure Phi_Conv : PHI_CONV = struct
+open Phi_Conv Conv
 
 fun aggregate_imps C c =
   (implies_conv C (aggregate_imps C else_conv rewr_conv @{thm PURE_TOP_imp[symmetric]})

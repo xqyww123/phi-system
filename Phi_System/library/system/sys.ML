@@ -241,7 +241,7 @@ fun set_param raw_term (ctxt,sequent) =
             let val sequent' = set_param' ctxt_parse
                                     (\<^Const>\<open>ExSet \<^typ>\<open>unit\<close> \<open>ty\<close>\<close> $ Abs ("", \<^typ>\<open>unit\<close>, SP)) sequent
                             |> Conv.fconv_rule (
-                                  Phi_Helper_Conv.pure_imp_antecedents_conv (
+                                  Phi_Conv.pure_imp_antecedents_conv (
                                     Conv.try_conv (Conv.rewr_conv @{thm unit_all_eq1})))
              in (ctxt, sequent') end
          | _ =>

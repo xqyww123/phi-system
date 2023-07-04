@@ -50,7 +50,7 @@ val dest_procedure_c =
   #> dest_quadop_c @{const_name \<phi>Procedure}
 
 fun proc_monad_conv C =
-  Phi_Helper_Conv.tag_conv (fn ctm =>
+  Phi_Conv.tag_conv (fn ctm =>
     case Thm.term_of ctm
       of (Const (\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _)
            => Conv.fun_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg_conv C))) ctm
@@ -73,7 +73,7 @@ val dest_implication_c =
 
 fun implication_conv C_s C_t C_p ctm = (
   dest_implication_c ctm;
-  Phi_Helper_Conv.may_Trueprop_conv (
+  Phi_Conv.may_Trueprop_conv (
     Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p) ctm
 )
 

@@ -50,13 +50,13 @@ in fn thy => thy
 end\<close>
 
 
+ML_file \<open>library/tools/ml_thms.ML\<close>
 ML_file \<open>library/pattern.ML\<close>
-ML_file \<open>library/helpers.ML\<close>
+ML_file_debug \<open>library/helpers.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 ML_file_debug \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
-ML_file \<open>library/tools/ml_thms.ML\<close>
 
 definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
     \<comment> \<open>If guards of a rule fail, the rule will be considered not appliable, just like the pattern
@@ -783,6 +783,17 @@ lemma contract_obligations:
 lemma contract_premise_all:
   "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "
   unfolding Premise_def atomize_all .
+
+lemma contract_intro_Ex:
+  \<open>(\<And>x. Premise mode (P x) \<Longrightarrow> PROP Q) \<equiv> (Premise mode (Ex P) \<Longrightarrow> PROP Q)\<close>
+  for P :: \<open>'a \<Rightarrow> bool\<close>
+  unfolding Premise_def
+  apply rule
+  subgoal premises prems
+    using prems(1)[OF someI_ex[OF prems(2)]] .
+  subgoal premises prems for x
+    using prems(1)[OF exI[where P=P, OF prems(2)]] .
+  done
 
 ML_file "library/reasoners.ML"
 
