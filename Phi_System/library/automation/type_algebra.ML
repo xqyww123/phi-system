@@ -350,27 +350,36 @@ fun err_prove hint thy =
 
 in
 
-fun select_one_hint prop_name hints action thy =
+fun select_one_hint prop_name action (hints,thy) =
   case (filter (is_the_hint prop_name) hints, filter (is_deriving_hint prop_name) hints)
     of ([hint], []) => (
-          action (SOME hint) thy
+          (filter_out (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints,
+           action (SOME hint) thy)
           handle Automation_Fail => err_prove hint thy)
      | ([], [_]) => (
-          action NONE thy
-          handle Automation_Fail => err_derive prop_name)
-     | ([], []) => thy
+          (filter_out (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints,
+           action NONE thy)
+          (* handle Automation_Fail => err_derive prop_name *))
+     | ([], []) => (hints, thy)
      | _ => error ("More than one hint of "^ prop_name ^ " are given!")
 
-fun select_hints prop_name hints action thy =
+fun select_hints prop_name action (hints,thy) =
   case (filter (is_the_hint prop_name) hints, filter (is_deriving_hint prop_name) hints)
-    of ([], []) => thy
+    of ([], []) => (hints, thy)
      | ([], [_]) => (
-          action NONE thy
+          (filter_out (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints,
+           action NONE thy)
           handle Automation_Fail => err_derive prop_name)
      | ([], _) => error ("It is enough to just give me one hint to derive "^ prop_name)
      | (hints, _) => (
+          filter_out (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints,
           fold (fn hint => action (SOME hint)
                 handle Automation_Fail => err_prove hint thy) hints thy)
+
+fun chk_no_hints prop_name (hints, thy) =
+  case filter (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints
+    of [] => (hints, thy)
+     | _ => error ("Property " ^ prop_name ^ " is not supported on the \<phi>-type.")
 
 end
 
@@ -714,7 +723,7 @@ fun conv_eq_imp ctxt ctm =
   handle CTERM _ => Conv.all_conv ctm
        | THM _ => Conv.all_conv ctm *)
 
-(*** Equivalence of Abstract Objects ***)
+(*** Object Equivalence ***)
 
 local
 
@@ -865,8 +874,8 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
 
 in
 
-fun gen_obj_equal (phi,hints) thy =
-  select_one_hint \<^const_name>\<open>Obj_Equivalence\<close> hints (gen_obj_equal' phi) thy
+fun gen_obj_equal phi hints_thy =
+  select_one_hint \<^const_name>\<open>Obj_Equivalence\<close> (gen_obj_equal' phi) hints_thy
 
 end
 
@@ -991,10 +1000,10 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
 
 in
 
-fun gen_TF (phi,hints) thy =
+fun gen_TF phi hints_thy =
   if is_Type_Opr (Term.fastype_of (#term phi))
-  then select_hints \<^const_name>\<open>Transformation_Functor\<close> hints (gen_TF' phi) thy
-  else thy
+  then select_hints \<^const_name>\<open>Transformation_Functor\<close> (gen_TF' phi) hints_thy
+  else chk_no_hints \<^const_name>\<open>Transformation_Functor\<close> hints_thy
 
 end
 
@@ -1004,8 +1013,8 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
   let val (T_ty0 :: _, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val ([],element_ty0, ele_model0) = dest_parameterized_phi_ty T_ty0
       val inst0  = Vartab.empty
-                |> lift_type_sort (Proof_Context.theory_of ctxt) (model_ty0, \<^sort>\<open>sep_magma\<close>)
-                |> lift_type_sort (Proof_Context.theory_of ctxt) (ele_model0, \<^sort>\<open>sep_magma\<close>)
+                |> Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (model_ty0, \<^sort>\<open>sep_magma\<close>)
+                |> Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (ele_model0, \<^sort>\<open>sep_magma\<close>)
                    handle TYPE _ => raise Automation_Fail
       val inst = Phi_Help.tyenv_to_tvars_table_no_c inst0
       val inst' = TVars.map (K (Thm.ctyp_of ctxt)) inst
@@ -1131,36 +1140,38 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
             end
   end
 
-fun gen_SH flag (phi0,hints) thy =
-  if is_Type_Opr (Term.fastype_of (#term phi0))
-  then select_hints (if flag then \<^const_name>\<open>Sep_Homo_Ty_zip\<close>
-                             else \<^const_name>\<open>Sep_Homo_Ty_unzip\<close>) hints
-                    (gen_SH' flag phi0)
-                    thy
-  else thy
+fun gen_SH flag phi0 hints_thy =
+  let val prop_name = (if flag then \<^const_name>\<open>Sep_Homo_Ty_zip\<close>
+                               else \<^const_name>\<open>Sep_Homo_Ty_unzip\<close>)
+   in if is_Type_Opr (Term.fastype_of (#term phi0))
+      then select_hints prop_name (gen_SH' flag phi0) hints_thy
+      else chk_no_hints prop_name hints_thy
+  end
 
-(*** Unit Left \& Right ***)
+(*** Identity Element Intro \& Elim ***)
 
-fun guess_unit (typ as TFree (_, S)) ctxt =
+fun guess_id_ele (typ as TFree (_, S)) tyenv ctxt =
       if Sign.subsort (Proof_Context.theory_of ctxt) (S, \<^sort>\<open>one\<close>)
-      then (\<^Const>\<open>one_class.one typ\<close>, ctxt)
+      then (tyenv, \<^Const>\<open>one_class.one typ\<close>, ctxt)
       else raise Automation_Fail
-  | guess_unit (typ as TVar (_, S)) ctxt =
-      if Sign.subsort (Proof_Context.theory_of ctxt) (S, \<^sort>\<open>one\<close>)
-      then (\<^Const>\<open>one_class.one typ\<close>, ctxt)
-      else raise Automation_Fail
-  | guess_unit typ ctxt =
+  | guess_id_ele (typ as TVar (_, S)) tyenv ctxt =
+      let val env' = lift_type_sort (Proof_Context.theory_of ctxt) (typ, \<^sort>\<open>one\<close>) tyenv
+                     handle TYPE _ => raise Automation_Fail
+          val typ' = Envir.norm_type env' typ
+       in (env', \<^Const>\<open>one_class.one typ'\<close>, ctxt)
+      end
+  | guess_id_ele typ ctxt tyenv =
   let val (unit_simps, ctxt') = BNF_FP_Sugar_More.unit typ (Context.Proof ctxt)
       val unit = case Thm.concl_of (List.hd unit_simps)
                    of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => LHS
    in (unit, Context.the_proof (Simps.map (fn ctxt => ctxt addsimps unit_simps) ctxt'))
   end
 
-fun guess_property_unit is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
+fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
   let val (_,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val inst0  = Vartab.empty
-                |> lift_type_sort (Proof_Context.theory_of ctxt) (x_ty0, \<^sort>\<open>one\<close>)
-                |> lift_type_sort (Proof_Context.theory_of ctxt) (model_ty0, \<^sort>\<open>one\<close>)
+                |> Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (x_ty0, \<^sort>\<open>one\<close>)
+                |> Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (model_ty0, \<^sort>\<open>one\<close>)
                    handle TYPE _ => raise Automation_Fail
       val inst = Phi_Help.tyenv_to_tvars_table_no_c inst0
       val inst' = TVars.map (K (Thm.ctyp_of ctxt)) inst
@@ -1169,7 +1180,7 @@ fun guess_property_unit is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
       val (x_term, T_term) = (subst x_term0, subst T_term0)
 
       val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
-      val (unit, ctxt) = guess_unit x_ty ctxt
+      val (unit, ctxt) = guess_id_ele x_ty ctxt
       fun mk_P ctxt = if is_left
                       then Variable.add_fixes (Name.invent (Variable.names_of ctxt) "P" 1) ctxt
                       else ([""], ctxt)
@@ -1183,8 +1194,8 @@ fun guess_property_unit is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
                   val xA = \<^Const>\<open>\<phi>Type x_ty_A model_ty_A\<close> $ \<^Const>\<open>one_class.one x_ty_A\<close> $ A
                   val ant = (Term.incr_bv (arity_A, 0, xA))
                           |> fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A
-                          |> (fn X => (if is_left then \<^Const>\<open>Is_Stateless model_ty_A\<close> $ X $ Free(P, HOLogic.boolT)
-                                                  else \<^Const>\<open>Demand_Nothing model_ty_A\<close> $ X))
+                          |> (fn X => (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty_A\<close> $ X $ Free(P, HOLogic.boolT)
+                                                  else \<^Const>\<open>Identity_Element\<^sub>E model_ty_A\<close> $ X))
                           |> fold (fn T => fn X =>
                                   Const(\<^const_name>\<open>All\<close>, (T --> HOLogic.boolT) --> HOLogic.boolT)
                                     $ Abs("",T,X)
@@ -1199,29 +1210,29 @@ fun guess_property_unit is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
       val ant = Phi_Help.list_mk_conj ants
       val xT = \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ unit $ T_term
    in Seq.single (ant, \<^Const>\<open>Trueprop\<close> $ (
-        (if is_left then \<^Const>\<open>Is_Stateless model_ty\<close> $ xT $ Var(("P", 0), HOLogic.boolT)
-                    else \<^Const>\<open>Demand_Nothing model_ty\<close> $ xT)),
+        (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty\<close> $ xT $ Var(("P", 0), HOLogic.boolT)
+                    else \<^Const>\<open>Identity_Element\<^sub>E model_ty\<close> $ xT)),
         x_term, T_term, phi,
         ctxt)
   end
 
-fun gen_U is_left (phi0 : phi_type) hint0 generic =
+fun gen_id_ele is_left (phi0 : phi_type) hint0 generic =
   let val ctxt0 = Context.proof_of generic 
       val name = if is_left then "1L" else "1R"
       val unify_hint_U = hint_unify_by_type (
-            fn Const(\<^const_name>\<open>Is_Stateless\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ => T
-             | Const(\<^const_name>\<open>Demand_Nothing\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) => T
+            fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ => T
+             | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) => T
              | _ => raise TERM ("",[]))
       val ind_conv = default_ind_conv (K (K Conv.all_conv),
                        fn ctxt => fn _ =>
                             HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Action_Tag_def}) then_conv
                             Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)))
       val varify_subgoal = if is_left
-            then (fn Trueprop $ (Is_Stateless $ S $ P) =>
-                        SOME ([P], fn [P'] => Trueprop $ (Is_Stateless $ S $ P')))
+            then (fn Trueprop $ (Identity_Element $ S $ P) =>
+                        SOME ([P], fn [P'] => Trueprop $ (Identity_Element $ S $ P')))
             else K NONE
       fun reasoning _ = gen_abstract_constraint_guided_reasoning varify_subgoal (PLPR_reasoner (SOME 1))
-      val rules = mk_rule_by_guess_or_hint (name, unify_hint_U, guess_property_unit is_left, [],
+      val rules = mk_rule_by_guess_or_hint (name, unify_hint_U, guess_property_id_ele is_left, [],
                                             ind_conv, reasoning, K NONE, K I)
                                            (if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule})
                                            phi0 hint0 ctxt0
@@ -1229,17 +1240,18 @@ fun gen_U is_left (phi0 : phi_type) hint0 generic =
    generic
   end
 
-fun gen_Unit is_left (phi, hints) thy =
-  select_one_hint (if is_left then \<^const_name>\<open>Is_Stateless\<close>
-                              else \<^const_name>\<open>Demand_Nothing\<close>) hints
-                  (gen_U is_left phi)
-                  thy
+fun gen_identity_element is_left phi hints_thy =
+  select_one_hint (if is_left then \<^const_name>\<open>Identity_Element\<^sub>I\<close>
+                              else \<^const_name>\<open>Identity_Element\<^sub>E\<close>)
+                  (gen_id_ele is_left phi)
+                  hints_thy
 
 (*** Install Automation ***)
 
 val _ = Theory.setup (Context.theory_map (
-   Phi_Type_Algebra.add_automation_on_def 100 (gen_Unit true)
-#> Phi_Type_Algebra.add_automation_on_def 101 gen_obj_equal
+   Phi_Type_Algebra.add_automation_on_def 100 (gen_identity_element true)
+#> Phi_Type_Algebra.add_automation_on_def 101 (gen_identity_element false)
+#> Phi_Type_Algebra.add_automation_on_def 105 gen_obj_equal
 #> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
 #> Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)
 (* Phi_Type_Algebra.add_automation_on_def 121 (gen_SH true) *)

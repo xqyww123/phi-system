@@ -34,28 +34,46 @@ fun beta_eta_contract_cterm x =
   Thm.dest_arg (Thm.cprop_of (Drule.beta_eta_conversion x));
 
 fun lambda_normalization_ctac S s =
-  S s
-  handle CTERM _ => S (apsnd beta_eta_contract s)
-       | TERM _  => S (apsnd beta_eta_contract s)
-       | THM _   => S (apsnd beta_eta_contract s)
+  let fun fallback exn =
+        if Term.could_beta_eta_contract (Thm.prop_of (snd s))
+        then S (apsnd beta_eta_contract s)
+        else Exn.reraise exn
+   in S s
+      handle e as CTERM _ => fallback e
+           | e as TERM _  => fallback e
+           | e as THM _   => fallback e
+  end
 
 fun lambda_normalization_conv C ctm =
-  C ctm
-  handle CTERM _ => (Drule.beta_eta_conversion then_conv C) ctm
-       | TERM _  => (Drule.beta_eta_conversion then_conv C) ctm
-       | THM _   => (Drule.beta_eta_conversion then_conv C) ctm
+  let fun fallback exn =
+        if Term.could_beta_eta_contract (Thm.term_of ctm)
+        then (Drule.beta_eta_conversion then_conv C) ctm
+        else Exn.reraise exn
+   in C ctm
+      handle e as CTERM _ => fallback e
+           | e as TERM _  => fallback e
+           | e as THM _   => fallback e
+  end
 
 fun lambda_normalization_rule R thm =
-  R thm
-  handle CTERM _ => R (beta_eta_contract thm)
-       | THM _   => R (beta_eta_contract thm)
-       | TERM _  => R (beta_eta_contract thm)
+  let fun fallback exn =
+        if Term.could_beta_eta_contract (Thm.prop_of thm)
+        then R (beta_eta_contract thm)
+        else Exn.reraise exn
+   in R thm
+      handle e as CTERM _ => fallback e
+           | e as THM _   => fallback e
+           | e as TERM _  => fallback e
+  end
 
 end
 
 signature PHI_CONV = sig
 
 val may_Trueprop_conv : conv -> conv
+
+val protect_conv : conv
+val unprotect_conv : conv
 
 val inverse_eta_conv : conv
 val quant_conv : string -> (cterm * Proof.context -> conv) -> Proof.context -> conv
@@ -64,7 +82,20 @@ val meta_alls_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 
-val move_Ex_inside_All : Proof.context -> conv
+val leading_antecedent_conv : conv -> conv
+val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
+val hhf_conv : (Proof.context -> conv) (*premise conv*)
+            -> (Proof.context -> conv) (*concl conv*)
+            -> Proof.context -> conv
+(*for any meta premise or HOL premise, meta quantification or HOL quantification*)
+val premises_conv : (Proof.context -> conv) (*premise conv*)
+                  -> (Proof.context -> conv) (*concl conv*)
+                  -> Proof.context -> conv
+val recursive_premises_conv : (Proof.context -> conv) -> Proof.context -> conv
+
+val rewrite_leading_antecedent : Proof.context -> thm list -> thm -> thm
+val simplify_leading_antecedent : Proof.context -> thm -> thm
+val simplify_leading_antecedent_hhf_concl : Proof.context -> thm -> thm
 
 end
 
@@ -75,6 +106,11 @@ fun may_Trueprop_conv C ctm =
   case Thm.term_of ctm
     of \<^Const>\<open>Trueprop\<close> $ _ => Conv.arg_conv C ctm
      | _ => C ctm
+
+val protect_conv = rewr_conv @{thm Pure.prop_def[symmetric]}
+val unprotect_conv = rewr_conv @{thm Pure.prop_def}
+
+
 
 val inverse_eta = Thm.eta_conversion \<^schematic_cterm>\<open>\<lambda>x. (?f::'a::{} \<Rightarrow> 'b::{}) x\<close>
                |> Thm.symmetric
@@ -127,20 +163,52 @@ fun meta_all_body_conv C ctxt =
   meta_all_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt
   else_conv C ctxt
 
-fun move_Ex_inside_All ctxt ctm =
-  Phi_Help.lambda_normalization_conv (fn ctm =>
-    let val (Ex, ctm1) = Thm.dest_comb ctm
-        val ( f, ctm2) = Thm.dest_abs_global ctm1
-        val (Al, ctm3) = Thm.dest_comb ctm2
-        val ( x, body) = Thm.dest_abs_global ctm3
-        val fx = Thm.apply f x
-        val Q = Thm.lambda x (Thm.lambda fx body)
-        val rule = Drule.infer_instantiate ctxt [(("Q",0),Q)]
-                      @{thm' choice_iff[folded atomize_eq, symmetric]}
-     in Conv.rewr_conv rule ctm
-    end
-  ) ctm
 
+fun leading_antecedent_conv C = implies_conv C all_conv
+fun hhf_concl_conv C ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (hhf_concl_conv C o snd) ctxt ctm
+     | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.arg_conv (hhf_concl_conv C ctxt) ctm
+     | _ => C ctxt ctm
+
+fun hhf_conv Cp Cc ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (hhf_conv Cp Cc o snd) ctxt ctm
+     | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (hhf_conv Cp Cc ctxt) ctm
+     | _ => Cc ctxt ctm
+
+fun premises_conv Cp Cc ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (premises_conv Cp Cc o snd) ctxt ctm
+     | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (premises_conv Cp Cc ctxt) ctm
+     | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (premises_conv Cp Cc ctxt) ctm
+     | Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
+          Conv.combination_conv (Conv.arg_conv (Cp ctxt)) (premises_conv Cp Cc ctxt) ctm
+     | Const (\<^const_name>\<open>HOL.All\<close>, _) $ Abs _ =>
+          Conv.arg_conv (Conv.abs_conv (premises_conv Cp Cc o snd) ctxt) ctm
+     | _ => Cc ctxt ctm
+
+fun recursive_premises_conv C ctxt ctm =
+  premises_conv (fn ctxt => fn ctm =>
+      case Thm.term_of ctm
+        of Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => recursive_premises_conv C ctxt ctm
+         | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => recursive_premises_conv C ctxt ctm
+         | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.All\<close>, _) $ _ ) =>
+              recursive_premises_conv C ctxt ctm
+         | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ ) =>
+              recursive_premises_conv C ctxt ctm
+         | _ => C ctxt ctm)
+    (K Conv.all_conv) ctxt ctm
+
+
+fun rewrite_leading_antecedent ctxt rules =
+  Conv.gconv_rule (Raw_Simplifier.rewrite ctxt true rules) 1
+
+fun simplify_leading_antecedent ctxt =
+  Conv.gconv_rule (Simplifier.rewrite ctxt) 1
+
+fun simplify_leading_antecedent_hhf_concl ctxt =
+  Conv.gconv_rule (hhf_concl_conv Simplifier.rewrite ctxt) 1
 
 end
 

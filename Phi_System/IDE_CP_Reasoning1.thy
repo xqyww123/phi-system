@@ -562,227 +562,227 @@ lemma [\<phi>reason 1200]:
   by clarsimp
 
 
-subsection \<open>Empty-I\&E\<close>
+subsection \<open>Identity Element I\&E\<close>
 
-definition Is_Stateless   :: \<open>'a::one set \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Is_Stateless S P \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<a>\<n>\<d> P)\<close>
-definition Demand_Nothing :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Demand_Nothing S \<longleftrightarrow> (1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> S)\<close>
+definition Identity_Element\<^sub>I :: \<open>'a::one set \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>I S P \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<a>\<n>\<d> P)\<close>
+definition Identity_Element\<^sub>E :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>E S \<longleftrightarrow> (1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> S)\<close>
 
 declare [[ \<phi>reason_default_pattern
-      \<open>Is_Stateless ?S _\<close> \<Rightarrow> \<open>Is_Stateless ?S _\<close> (100)
-  and \<open>Is_Stateless (_ \<Ztypecolon> ?T) _\<close> \<Rightarrow> \<open>Is_Stateless (_ \<Ztypecolon> ?T) _\<close> (110)
+      \<open>Identity_Element\<^sub>I ?S _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I ?S _\<close> (100)
+  and \<open>Identity_Element\<^sub>I (_ \<Ztypecolon> ?T) _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I (_ \<Ztypecolon> ?T) _\<close> (110)
 ]]
 
 subsubsection \<open>Termination\<close>
 
 lemma [\<phi>reason 3000]:
-  \<open>Is_Stateless 0 True\<close>
-  unfolding Is_Stateless_def by simp
+  \<open>Identity_Element\<^sub>I 0 True\<close>
+  unfolding Identity_Element\<^sub>I_def by simp
 
 lemma [\<phi>reason 3000]:
-  \<open>Demand_Nothing 1\<close>
-  unfolding Demand_Nothing_def by simp
+  \<open>Identity_Element\<^sub>E 1\<close>
+  unfolding Identity_Element\<^sub>E_def by simp
 
 lemma [\<phi>reason 3000]:
-  \<open>Is_Stateless 1 True\<close>
-  unfolding Is_Stateless_def by simp
+  \<open>Identity_Element\<^sub>I 1 True\<close>
+  unfolding Identity_Element\<^sub>I_def by simp
 
-lemma [\<phi>reason 3000 for \<open>Is_Stateless {_} _\<close> ]:
-  \<open>Is_Stateless {1} True\<close>
-  unfolding Is_Stateless_def Imply_def by simp
+lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>I {_} _\<close> ]:
+  \<open>Identity_Element\<^sub>I {1} True\<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def by simp
 
-lemma [\<phi>reason 3000 for \<open>Demand_Nothing {_}\<close>]:
-  \<open>Demand_Nothing {1}\<close>
-  unfolding Demand_Nothing_def Imply_def by simp
+lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>E {_}\<close>]:
+  \<open>Identity_Element\<^sub>E {1}\<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def by simp
 
 subsubsection \<open>Logic Connectives\<close>
 
-lemma [\<phi>reason 1 except \<open>Is_Stateless (?var_x \<Ztypecolon> _) _\<close>]:
-  \<open> Is_Stateless (z \<Ztypecolon> T) P
+lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolon> _) _\<close>]:
+  \<open> Identity_Element\<^sub>I (z \<Ztypecolon> T) P
 \<Longrightarrow> Obj_Equivalence T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x z
-\<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) P \<close>
-  unfolding Is_Stateless_def Obj_Equivalence_def Premise_def
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<close>
+  unfolding Identity_Element\<^sub>I_def Obj_Equivalence_def Premise_def
   using implies_trans by fastforce
 
-lemma [\<phi>reason 1 except \<open>Demand_Nothing (?var_x \<Ztypecolon> _)\<close>]:
-  \<open> Demand_Nothing (z \<Ztypecolon> T)
+lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>E (?var_x \<Ztypecolon> _)\<close>]:
+  \<open> Identity_Element\<^sub>E (z \<Ztypecolon> T)
 \<Longrightarrow> Obj_Equivalence T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq z x
-\<Longrightarrow> Demand_Nothing (x \<Ztypecolon> T) \<close>
-  unfolding Demand_Nothing_def Obj_Equivalence_def Premise_def
+\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<close>
+  unfolding Identity_Element\<^sub>E_def Obj_Equivalence_def Premise_def
   using implies_trans by fastforce
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless A P1
-\<Longrightarrow> Is_Stateless B P2
-\<Longrightarrow> Is_Stateless (A + B) (P1 \<or> P2)\<close>
-  unfolding Is_Stateless_def
+  \<open> Identity_Element\<^sub>I A P1
+\<Longrightarrow> Identity_Element\<^sub>I B P2
+\<Longrightarrow> Identity_Element\<^sub>I (A + B) (P1 \<or> P2)\<close>
+  unfolding Identity_Element\<^sub>I_def
   using \<phi>CASE_IMP by force
 
 lemma (*The above rule is local complete*)
-  \<open>Is_Stateless (A + B) P \<Longrightarrow> Is_Stateless A P \<and> Is_Stateless B P\<close>
-  unfolding Is_Stateless_def Imply_def
+  \<open>Identity_Element\<^sub>I (A + B) P \<Longrightarrow> Identity_Element\<^sub>I A P \<and> Identity_Element\<^sub>I B P\<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def
   by clarsimp
 
 lemma [\<phi>reason 3000]:
-  \<open> Demand_Nothing A
-\<Longrightarrow> Demand_Nothing B
-\<Longrightarrow> Demand_Nothing (A + B)\<close>
-  unfolding Demand_Nothing_def Imply_def
+  \<open> Identity_Element\<^sub>E A
+\<Longrightarrow> Identity_Element\<^sub>E B
+\<Longrightarrow> Identity_Element\<^sub>E (A + B)\<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def
   by clarsimp
 
 lemma (*The above rule is not local complete*)
-  \<open> Demand_Nothing (A + B) \<Longrightarrow> Demand_Nothing A \<and> Demand_Nothing B\<close>
+  \<open> Identity_Element\<^sub>E (A + B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B\<close>
   oops
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless (A x) P
-\<Longrightarrow> Is_Stateless (AllSet A) P\<close>
-  unfolding Is_Stateless_def
+  \<open> Identity_Element\<^sub>I (A x) P
+\<Longrightarrow> Identity_Element\<^sub>I (AllSet A) P\<close>
+  unfolding Identity_Element\<^sub>I_def
   by (metis AllSet_expn Imply_def)
 (*The rule is not local complete*)
 
 lemma [\<phi>reason 1200]:
-  \<open> (\<And>x. Demand_Nothing (A x))
-\<Longrightarrow> Demand_Nothing (AllSet A)\<close>
-  unfolding Demand_Nothing_def
+  \<open> (\<And>x. Identity_Element\<^sub>E (A x))
+\<Longrightarrow> Identity_Element\<^sub>E (AllSet A)\<close>
+  unfolding Identity_Element\<^sub>E_def
   by (metis AllSet_expn Imply_def)
 
 lemma (*The above rule is local complete*)
-  \<open> Demand_Nothing (AllSet A) \<Longrightarrow> Demand_Nothing (A x) \<close>
-  unfolding Demand_Nothing_def Imply_def
+  \<open> Identity_Element\<^sub>E (AllSet A) \<Longrightarrow> Identity_Element\<^sub>E (A x) \<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def
   by (clarsimp simp add: AllSet_expn)
 
 lemma [\<phi>reason 1200]:
-  \<open>(\<And>x. Is_Stateless (A x) (P x))
-\<Longrightarrow> Is_Stateless (ExSet A) (Ex P)\<close>
-  unfolding Is_Stateless_def
+  \<open>(\<And>x. Identity_Element\<^sub>I (A x) (P x))
+\<Longrightarrow> Identity_Element\<^sub>I (ExSet A) (Ex P)\<close>
+  unfolding Identity_Element\<^sub>I_def
   by (metis ExSet_expn Imply_def)
 
 lemma (*The above rule is local complete*)
-  \<open>Is_Stateless (ExSet A) P \<Longrightarrow> Is_Stateless (A x) P\<close>
-  unfolding Is_Stateless_def Imply_def
+  \<open>Identity_Element\<^sub>I (ExSet A) P \<Longrightarrow> Identity_Element\<^sub>I (A x) P\<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def
   by (clarsimp simp add: ExSet_expn; blast)
 
 lemma [\<phi>reason 1200]:
-  \<open> Demand_Nothing (A x)
-\<Longrightarrow> Demand_Nothing (ExSet A)\<close>
-  unfolding Demand_Nothing_def Imply_def
+  \<open> Identity_Element\<^sub>E (A x)
+\<Longrightarrow> Identity_Element\<^sub>E (ExSet A)\<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def
   by (clarsimp simp add: ExSet_expn; blast)
 
 lemma (*The above rule is not local complete*)
-  \<open>Demand_Nothing (ExSet A) \<Longrightarrow> \<exists>x. Demand_Nothing (A x)\<close>
-  unfolding Demand_Nothing_def Imply_def ExSet_expn
+  \<open>Identity_Element\<^sub>E (ExSet A) \<Longrightarrow> \<exists>x. Identity_Element\<^sub>E (A x)\<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def ExSet_expn
   by clarsimp
 
 lemma [\<phi>reason 1200]:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Stateless A Q)
-\<Longrightarrow> Is_Stateless (A \<s>\<u>\<b>\<j> P) (P \<and> Q)\<close>
-  unfolding Is_Stateless_def Imply_def
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>I A Q)
+\<Longrightarrow> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q)\<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def
   by (simp add: Subjection_expn; blast)
 
 lemma
-  \<open> Is_Stateless (A \<s>\<u>\<b>\<j> P) (P \<and> Q) \<Longrightarrow> (P \<Longrightarrow> Is_Stateless A Q)\<close>
-  unfolding Is_Stateless_def Imply_def Inhabited_def
+  \<open> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q) \<Longrightarrow> (P \<Longrightarrow> Identity_Element\<^sub>I A Q)\<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def Inhabited_def
   by (cases P; clarsimp simp add: Subjection_expn)
 
 lemma [\<phi>reason 1200]:
-  \<open> Demand_Nothing A
+  \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
-\<Longrightarrow> Demand_Nothing (A \<s>\<u>\<b>\<j> P)\<close>
-  unfolding Demand_Nothing_def Imply_def Premise_def
+\<Longrightarrow> Identity_Element\<^sub>E (A \<s>\<u>\<b>\<j> P)\<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def Premise_def
   by (clarsimp simp add: Subjection_expn; blast)
 
 lemma (*The above rule is local complete*)
-  \<open> Demand_Nothing (A \<s>\<u>\<b>\<j> P) \<Longrightarrow> P \<and> Demand_Nothing A \<close>
-  unfolding Demand_Nothing_def Imply_def Premise_def
+  \<open> Identity_Element\<^sub>E (A \<s>\<u>\<b>\<j> P) \<Longrightarrow> P \<and> Identity_Element\<^sub>E A \<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def Premise_def
   by (clarsimp simp add: Subjection_expn; blast)
 
 lemma [\<phi>reason 1200]: 
-  \<open> Is_Stateless A P
-\<Longrightarrow> Is_Stateless B Q
-\<Longrightarrow> Is_Stateless (A * B) (P \<and> Q) \<close>
+  \<open> Identity_Element\<^sub>I A P
+\<Longrightarrow> Identity_Element\<^sub>I B Q
+\<Longrightarrow> Identity_Element\<^sub>I (A * B) (P \<and> Q) \<close>
   for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Is_Stateless_def Imply_def
+  unfolding Identity_Element\<^sub>I_def Imply_def
   by (clarsimp simp add: set_mult_expn, insert mult_1_class.mult_1_left; blast)
   (* It is not complete, example: algebra {e,a} where the sep conjunction is only defined
      on the unit, x ## y \<longleftrightarrow> x = e \<and> y = e.
      Let A = B = {e,a}, we have A * B = {e}. Both A B are not stateless but A * B is. *)
 
 lemma [\<phi>reason 1200]: 
-  \<open> Demand_Nothing A
-\<Longrightarrow> Demand_Nothing B
-\<Longrightarrow> Demand_Nothing (A * B) \<close>
+  \<open> Identity_Element\<^sub>E A
+\<Longrightarrow> Identity_Element\<^sub>E B
+\<Longrightarrow> Identity_Element\<^sub>E (A * B) \<close>
   for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Demand_Nothing_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Imply_def
   by (clarsimp, insert times_set_I, fastforce)
 
 lemma (*the above rule is not local complete*)
-  \<open> Demand_Nothing (A * B) \<Longrightarrow> Demand_Nothing A \<and> Demand_Nothing B \<close>
+  \<open> Identity_Element\<^sub>E (A * B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B \<close>
   for A :: \<open>'a::sep_magma_1 set\<close>
   oops
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless (x \<Ztypecolon> T) P
-\<Longrightarrow> Is_Stateless (y \<Ztypecolon> U) Q
-\<Longrightarrow> Is_Stateless ((x,y) \<Ztypecolon> T \<^emph> U) (P \<and> Q)\<close>
+  \<open> Identity_Element\<^sub>I (x \<Ztypecolon> T) P
+\<Longrightarrow> Identity_Element\<^sub>I (y \<Ztypecolon> U) Q
+\<Longrightarrow> Identity_Element\<^sub>I ((x,y) \<Ztypecolon> T \<^emph> U) (P \<and> Q)\<close>
   for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding Is_Stateless_def \<phi>Prod_expn' Imply_def
+  unfolding Identity_Element\<^sub>I_def \<phi>Prod_expn' Imply_def
   apply (simp add: \<phi>expns)
   using mult_1_class.mult_1_left by blast
 
 lemma [\<phi>reason 1200]: 
-  \<open> Demand_Nothing (x \<Ztypecolon> T)
-\<Longrightarrow> Demand_Nothing (y \<Ztypecolon> U)
-\<Longrightarrow> Demand_Nothing ((x,y) \<Ztypecolon> T \<^emph> U) \<close>
+  \<open> Identity_Element\<^sub>E (x \<Ztypecolon> T)
+\<Longrightarrow> Identity_Element\<^sub>E (y \<Ztypecolon> U)
+\<Longrightarrow> Identity_Element\<^sub>E ((x,y) \<Ztypecolon> T \<^emph> U) \<close>
   for T :: \<open>'a \<Rightarrow> 'b::sep_magma_1 set\<close>
-  unfolding Demand_Nothing_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Imply_def
   by (clarsimp simp add: \<phi>Prod_expn', insert set_mult_expn, fastforce)
 
 
 lemma [\<phi>reason 1200]: 
-  \<open> Demand_Nothing A
-\<Longrightarrow> Demand_Nothing B
-\<Longrightarrow> Demand_Nothing (A \<inter> B) \<close>
-  unfolding Demand_Nothing_def Imply_def
+  \<open> Identity_Element\<^sub>E A
+\<Longrightarrow> Identity_Element\<^sub>E B
+\<Longrightarrow> Identity_Element\<^sub>E (A \<inter> B) \<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def
   by (clarsimp)
 
 lemma (*the above rule is local complete*)
-  \<open> Demand_Nothing (A \<inter> B) \<Longrightarrow> Demand_Nothing A \<and> Demand_Nothing B \<close>
-  unfolding Demand_Nothing_def Imply_def
+  \<open> Identity_Element\<^sub>E (A \<inter> B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B \<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def
   by (clarsimp)
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless A P
-\<Longrightarrow> Is_Stateless B Q
-\<Longrightarrow> Is_Stateless (A \<inter> B) (P \<and> Q) \<close>
-  unfolding Is_Stateless_def Imply_def
+  \<open> Identity_Element\<^sub>I A P
+\<Longrightarrow> Identity_Element\<^sub>I B Q
+\<Longrightarrow> Identity_Element\<^sub>I (A \<inter> B) (P \<and> Q) \<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def
   by clarsimp
 
 lemma (*the above rule is not local complete*)
-  \<open> Is_Stateless (A \<inter> B) True \<Longrightarrow> Is_Stateless A True \<and> Is_Stateless B True \<close>
+  \<open> Identity_Element\<^sub>I (A \<inter> B) True \<Longrightarrow> Identity_Element\<^sub>I A True \<and> Identity_Element\<^sub>I B True \<close>
   oops
   (* Auto Quickcheck found a counterexample:
   A = {a\<^sub>1}
   B = {} *)
 
 lemma [\<phi>reason 1200]:
-  \<open>Is_Stateless (1 \<Ztypecolon> Itself) True\<close>
-  unfolding Is_Stateless_def Imply_def Itself_expn
+  \<open>Identity_Element\<^sub>I (1 \<Ztypecolon> Itself) True\<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def Itself_expn
   by simp
 
 lemma [\<phi>reason 1200]:
-  \<open>Demand_Nothing (1 \<Ztypecolon> Itself)\<close>
-  unfolding Demand_Nothing_def Imply_def Itself_expn
+  \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> Itself)\<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def Itself_expn
   by simp
 
 lemma [\<phi>reason 1200]:
-  \<open>Is_Stateless (any \<Ztypecolon> \<phi>None) True\<close>
-  unfolding Is_Stateless_def by simp
+  \<open>Identity_Element\<^sub>I (any \<Ztypecolon> \<phi>None) True\<close>
+  unfolding Identity_Element\<^sub>I_def by simp
 
 lemma [\<phi>reason 1200]:
-  \<open>Demand_Nothing (any \<Ztypecolon> \<phi>None)\<close>
-  unfolding Demand_Nothing_def by simp
+  \<open>Identity_Element\<^sub>E (any \<Ztypecolon> \<phi>None)\<close>
+  unfolding Identity_Element\<^sub>E_def by simp
 
 
 

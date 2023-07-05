@@ -160,21 +160,21 @@ lemma apply_extract_a_value:
 (*
 subsubsection \<open>General Reasoning by Algebraic Properties\<close>
 
-lemma Is_Stateless_general_rule:
-  \<open> Is_Stateless (x \<Ztypecolon> T) P
+lemma Identity_Element\<^sub>I_general_rule:
+  \<open> Identity_Element\<^sub>I (x \<Ztypecolon> T) P
 \<Longrightarrow> Semi_Unit_Functor F
-\<Longrightarrow> Is_Stateless (x \<Ztypecolon> F T) P\<close>
-  unfolding Semi_Unit_Functor_def Is_Stateless_def Unit_Homo_def
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> F T) P\<close>
+  unfolding Semi_Unit_Functor_def Identity_Element\<^sub>I_def Unit_Homo_def
   by clarsimp
 
-\<phi>reasoner_ML "Is_Stateless_general_rule" 50 (\<open>Is_Stateless (_ \<Ztypecolon> _)\<close>) = \<open>
+\<phi>reasoner_ML "Identity_Element\<^sub>I_general_rule" 50 (\<open>Identity_Element\<^sub>I (_ \<Ztypecolon> _)\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ (*Trueprop*) $ (_ (*Is_Stateless*) $ ( _ (*\<phi>Type*) $ _ $ T)) = Thm.major_prem_of sequent
+  let val _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ ( _ (*\<phi>Type*) $ _ $ T)) = Thm.major_prem_of sequent
    in case Phi_Type_Algebra.detect_type_operator 1 ctxt T
         of SOME [Ft,Tt] => let
             val rule = Drule.infer_instantiate ctxt
                           [(("F",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt)]
-                          @{thm "Is_Stateless_general_rule"}
+                          @{thm "Identity_Element\<^sub>I_general_rule"}
              in SOME ((ctxt, rule RS sequent), Seq.empty) end
          | _ => NONE
   end)
@@ -182,20 +182,20 @@ fn (ctxt,sequent) => Seq.make (fn () =>
 
 lemma [\<phi>reason 1200]:
   \<open> Unit_Homo T
-\<Longrightarrow> Is_Stateless (1 \<Ztypecolon> T)\<close>
-  unfolding Unit_Homo_def Is_Stateless_def \<r>Guard_def Premise_def
+\<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T)\<close>
+  unfolding Unit_Homo_def Identity_Element\<^sub>I_def \<r>Guard_def Premise_def
   by clarsimp
 
 lemma [\<phi>reason 1200]:
   \<open> Unit_Homo T
-\<Longrightarrow> Is_Stateless (() \<Ztypecolon> T)\<close>
-  unfolding Unit_Homo_def Is_Stateless_def \<r>Guard_def Premise_def
+\<Longrightarrow> Identity_Element\<^sub>I (() \<Ztypecolon> T)\<close>
+  unfolding Unit_Homo_def Identity_Element\<^sub>I_def \<r>Guard_def Premise_def
   by clarsimp
 *)
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless X P
-\<Longrightarrow> Is_Stateless (TECHNICAL X) P\<close>
+  \<open> Identity_Element\<^sub>I X P
+\<Longrightarrow> Identity_Element\<^sub>I (TECHNICAL X) P\<close>
   unfolding Technical_def .
 
 
@@ -264,11 +264,11 @@ lemma "_ToSA_init_by_focus_":
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * \<blangle> Y' \<brangle> \<a>\<n>\<d> P
 \<Longrightarrow> Simplify (assertion_simps undefined) R' R
-\<Longrightarrow> Is_Stateless R' Q
+\<Longrightarrow> Identity_Element\<^sub>I R' Q
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P \<and> Q\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def Simplify_def Is_Stateless_def
+  unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def
   by (simp; metis Imply_def implies_right_prod mult_1_class.mult_1_left) *)
 
 lemma "_ToSA_init_":
@@ -277,7 +277,7 @@ lemma "_ToSA_init_":
 \<Longrightarrow> X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y' \<a>\<n>\<d> P
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
-  unfolding Action_Tag_def Simplify_def Is_Stateless_def
+  unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def
   by simp
 
 \<phi>reasoner_ML ToSA_init 2000 (\<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?var_P @action ToSA' _\<close>) = \<open>
@@ -898,10 +898,10 @@ consts ToA_Annotation :: \<open>'a \<Rightarrow> 'a\<close>
 
 (* lemma [\<phi>reason 25 except \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> _ \<brangle> \<a>\<n>\<d> _\<close>]:
   " \<r>RECURSION_GUARD(ToA_Annotation X) (R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R1 * \<blangle> X \<brangle> \<a>\<n>\<d> P)
-\<Longrightarrow> Is_Stateless R1
+\<Longrightarrow> Identity_Element\<^sub>I R1
 \<Longrightarrow> R  \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> P"
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding FOCUS_TAG_def Imply_def split_paired_All Is_Stateless_def \<r>Recursion_Guard_def
+  unfolding FOCUS_TAG_def Imply_def split_paired_All Identity_Element\<^sub>I_def \<r>Recursion_Guard_def
   by (metis mult_1_class.mult_1_left set_mult_expn) *)
 
 (* lemma [\<phi>reason 1050 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> \<blangle> ?Y \<brangle> \<a>\<n>\<d> ?P @action reason_ToSA True ?G\<close>

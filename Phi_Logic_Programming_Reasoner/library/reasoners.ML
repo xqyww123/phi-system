@@ -1,5 +1,7 @@
 signature PHI_REASONERS = sig
 
+  include PHI_REASONERS
+
   exception Automation_Fail of (Proof.context * thm) option
   val error_message : (Proof.context * thm) option -> string
 
@@ -26,8 +28,9 @@ signature PHI_REASONERS = sig
 
 end
 
+
 structure Phi_Reasoners : PHI_REASONERS = struct
-open Thm Term
+open Thm Term Phi_Reasoners
 
 (** Preliminary **)
 
@@ -166,8 +169,22 @@ fun obligation_intro_Ex_conv ctxt thm =
           | collect_var ret _ = ret
         val vars' = collect_var [] P
                   |> map (fn (N,T) => Thm.var (N, Thm.ctyp_of ctxt T))
+        val mode = Config.get ctxt existential_obligation = 2
+        val contract_Ex_rule = if mode then @{thm' contract_intro_sp_Ex}
+                                       else @{thm' contract_intro_Ex}
+        val mv_Ex_All = if mode then Phi_Conv.move_sp_Ex_inside_All_exhausitive
+                                else Phi_Conv.move_Ex_inside_All_exhausitive
+        val mv_Ex_Disj = if mode then Phi_Conv.move_sp_Ex_downto_Disj_exhaustive
+                                 else Phi_Conv.move_Ex_downto_Disj_exhaustive
         fun intro_Ex v thm =
-              Conv.fconv_rule (Conv.rewr_conv @{thm' contract_intro_Ex}) (Thm.forall_intr v thm)
+              Conv.fconv_rule (
+                  Conv.rewr_conv contract_Ex_rule then_conv
+                  Phi_Conv.leading_antecedent_conv (
+                    PLPR_Syntax.premise_tag_conv (mv_Ex_All (fn _ =>
+                      mv_Ex_Disj Conv.all_conv
+                    ) ctxt)
+                  )
+              ) (Thm.forall_intr v thm)
      in fold intro_Ex vars' thm
     end
   ) thm
@@ -178,7 +195,7 @@ fun collect_obligation_premises ctxt thm = let open Conv
               ) 1 thm
    in (@{thm contract_drop_waste} RS rule1)
    |> gconv_rule (obligation_conv_all ctxt) 1
-   |> obligation_intro_Ex_conv ctxt
+   |> Config.get ctxt existential_obligation > 0 ? obligation_intro_Ex_conv ctxt
   end
 
 fun contract_obligations ctxt thm =
@@ -223,8 +240,7 @@ fun auto_obligation_solver ctxt th =
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>True\<close>, _) =>
           Seq.single (@{thm TrueI} RS th)
      | _ => head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
-                pre THEN (Seq.single o intro_all_leading_ex 1)
-                    THEN HEADGOAL (Method.insert_tac ctxt aux)
+                pre THEN HEADGOAL (Method.insert_tac ctxt aux)
                     THEN Clasimp.auto_tac ctxt) Agressive_Solver) th
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver

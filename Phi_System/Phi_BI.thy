@@ -685,7 +685,7 @@ lemma ToA_by_Equive_Class'
   unfolding Obj_Equivalence_def Imply_def Premise_def FOCUS_TAG_def
   by (clarsimp, meson Imply_def implies_left_prod)
 
-lemma [\<phi>reason 1]:
+lemma [\<phi>reason default 1]:
   \<open>Obj_Equivalence T (=)\<close>
   unfolding Obj_Equivalence_def by simp
 

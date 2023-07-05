@@ -79,13 +79,10 @@ type algebra_hints = term list
 val get_type_info : Context.generic -> string (*const name*) -> phi_type option
 val add_type : def * Position.T * algebra_hints -> generic_theory -> phi_type * generic_theory
 
-type automation_on_def = phi_type * algebra_hints -> generic_theory -> generic_theory
+type automation_on_def = phi_type -> algebra_hints * generic_theory -> algebra_hints * generic_theory
 val add_automation_on_def : priority -> automation_on_def -> Context.generic -> Context.generic
 
 (* Tools *)
-
-(*Find the most general instantiation of the given type to meet the given sort*)
-val lift_type_sort : theory -> typ * sort -> Type.tyenv -> Type.tyenv
 
 (*make inductively destruction rule.*)
 val mk_ind_dest_ToA : Proof.context -> phi_type -> (term (*x*) * term (*T*) -> term) -> thm
@@ -467,7 +464,7 @@ fun phi_transfer thy = map_phi_type (I, map (Thm.transfer thy))
 val phi_maxidx_of = fold_phi_type (Term.maxidx_term, Thm.maxidx_thm)
 
 type algebra_hints = term list
-type automation_on_def = phi_type * algebra_hints -> generic_theory -> generic_theory
+type automation_on_def = phi_type -> algebra_hints * generic_theory -> algebra_hints * generic_theory
 
 structure Phi_Types = Generic_Data (
   type T = phi_type Symtab.table
@@ -488,8 +485,16 @@ fun add_automation_on_def priority automation ctxt =
   Automation_on_Def.map (PriorityTab.update_new (
       (priority, Context.theory_long_name (Context.theory_of ctxt)), automation)) ctxt
 
-fun invoke_automations_on_def phi_type_and_hints ctxt =
-  PriorityTab.fold (fn (_,s) => s phi_type_and_hints) (Automation_on_Def.get ctxt) ctxt
+fun invoke_automations_on_def (phi,hints) ctxt =
+  case PriorityTab.fold (fn (_,s) => s phi) (Automation_on_Def.get ctxt) (hints, ctxt)
+    of ([], ctxt') => ctxt'
+     | (hints, ctxt') => let open Pretty in
+          error (string_of (chunks (
+            (str "Do not know how to derive the properties:") ::
+            map (fn H =>
+              item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt' H]
+            ) hints)))
+       end
 
 
 (** Impl of Basic Conversions **)
@@ -566,23 +571,6 @@ val add_premise_tag = Phi_Conv.recursive_premises_conv (fn ctxt => fn ctm =>
 fun raw_term_name_typ (Const N_T) = N_T
   | raw_term_name_typ (Free N_T) = N_T
   | raw_term_name_typ _ = error "Internal bug"
-
-fun lift_type_sort thy (ty,sort) env00 =
-  let val idx = Term.maxidx_of_typ ty
-   in if Sign.of_sort thy (ty, sort)
-      then Vartab.empty
-      else let val (env0,_) =
-                     Sign.typ_unify thy
-                           (ty, TVar(("_", idx), sort))
-                           (env00, idx)
-               val env = Vartab.map (fn N => (fn (S, TVar(_,S')) => (S, TVar(N,S'))
-                                               | X => if N = ("_", 1) then X
-                                                      else error "Internal bug 8bb59e49-9b57-48bc-b310-9da3b8f5ff7f"))
-                         (Vartab.delete_safe ("_", idx) env0)
-                in env
-               end
-           handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
-  end
 
 fun mk_ind_dest_ToA_internal ctxt (phi : phi_type) prop0 = (*not tested*)
   let val typ = Term.fastype_of (#term phi)

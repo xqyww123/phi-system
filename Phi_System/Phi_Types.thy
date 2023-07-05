@@ -238,10 +238,10 @@ interpretation Unit_Functor_L \<open>Unit_Homo B\<close> \<open>((\<Zcomp>) B)\<
   by (auto simp add: \<phi>Composition_expn) 
 
 lemma [\<phi>reason 1000]:
-  \<open> Is_Stateless (1 \<Ztypecolon> B) P
-\<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) Q
-\<Longrightarrow> Is_Stateless (x \<Ztypecolon> B \<Zcomp> T) (P \<and> Q)\<close>
-  unfolding Is_Stateless_def Imply_def
+  \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> B) P
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) Q
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> B \<Zcomp> T) (P \<and> Q)\<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def
   by (clarsimp simp add: \<phi>Composition_expn; blast)
 
 (*
@@ -646,9 +646,9 @@ lemma [simp]:
 
 subsubsection \<open>Rules\<close>
 
-lemma [\<phi>reason 3000 for \<open>Is_Stateless (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C) _\<close>]:
-  \<open> Is_Stateless (x \<Ztypecolon> T ?\<^sub>\<phi> False) True\<close>
-  unfolding Is_Stateless_def by simp
+lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>I (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C) _\<close>]:
+  \<open> Identity_Element\<^sub>I (x \<Ztypecolon> T ?\<^sub>\<phi> False) True\<close>
+  unfolding Identity_Element\<^sub>I_def by simp
 
 
 
@@ -704,21 +704,24 @@ subsubsection \<open>By Key\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
 
-                                                                                                                              
+                                                                                                                                 
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Is_Stateless
+  deriving Identity_Element\<^sub>I
+       and Identity_Element\<^sub>E
        and Obj_Equivalence
        and Transformation_Functor
        and Sep_Homo_Ty_zip
-    (* and \<open>Transformation_Functor set list_all2\<close> *)
-
-print_\<phi>reasoners \<open>xaa \<Ztypecolon> List T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to U\<close> ?
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
+  deriving Identity_Element\<^sub>I
+       and Identity_Element\<^sub>E
+       and Obj_Equivalence
+       and Transformation_Functor
+
 
 thm List3.obj_eq
 
@@ -729,10 +732,10 @@ thm List3.obj_eq
 *)
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
 
-declare [[\<phi>trace_reasoning = 3, ML_print_depth = 1000]]
     
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
+  deriving Obj_Equivalence
 
 thm List.intro
 thm List.unfold
@@ -744,10 +747,15 @@ lemma [\<phi>reason 10000]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P
 \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 * \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
   sorry  *)
-            
+
+declare [[\<phi>trace_reasoning = 3, ML_print_depth = 1000]]
+  
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-  (* subj \<open>Obj_Equivalence (=)\<close> *)
+  deriving Identity_Element\<^sub>I
+       and Identity_Element\<^sub>E
+       and Obj_Equivalence
+       and Transformation_Functor
 
 
 

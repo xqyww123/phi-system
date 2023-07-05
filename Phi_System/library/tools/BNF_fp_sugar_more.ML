@@ -80,24 +80,24 @@ structure Properties = Generic_Data (
 
 fun export from to = Properties.put (Properties.get from) to
 
-fun gen_property kind gen (typ as Type(Tname,_)) generic =
+fun gen_property match kind gen (typ as Type(Tname,_)) generic =
   let val ctxt = Context.proof_of generic
       val thy = Context.theory_of generic
       val mpf = map_filter (fn (ty',ths) =>
-                  let val env = Sign.typ_match thy (ty', typ) Vartab.empty
+                  let val env = match thy (ty', typ) Vartab.empty
                       val inst = Phi_Help.tyenv_to_tvars_table ctxt env
-                   in SOME (Thm.instantiate (inst, Vars.empty) ths)
+                   in SOME (inst, Thm.instantiate (inst, Vars.empty) ths)
                   end handle TYPE_MATCH => NONE)
    in case Symreltab.lookup (Properties.get generic) (Tname,kind)
         of SOME ths =>
-            (map (Thm.transfer'' generic) (mpf ths), generic)
+            (map (apsnd (Thm.transfer'' generic)) (mpf ths), generic)
          | NONE =>
             let val res = gen Tname generic
              in (mpf res, Properties.map (Symreltab.update_new (
                               (Tname,kind), res)) generic)
             end
   end
-  | gen_property _ _ typ _ =
+  | gen_property _ _ _ typ _ =
       raise TYPE ("Not a Type constant", [typ], [])
 
 

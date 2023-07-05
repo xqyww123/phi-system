@@ -1065,20 +1065,20 @@ lemma [fundef_cong]:
 subsubsection \<open>Unit Left \& Right\<close>
 
 lemma \<phi>TA_1L_rule:
-  \<open> (Ant \<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) Any @action \<phi>TA_ind_target undefined)
+  \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) Any @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (Any \<longrightarrow> P)
 \<Longrightarrow> Ant
-\<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) P\<close>
-  unfolding Action_Tag_def Is_Stateless_def Premise_def
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
+  unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
   using implies_weaken by blast
 
 lemma \<phi>TA_1R_rule:
-  \<open> (Ant \<Longrightarrow> Demand_Nothing (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+  \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> Demand_Nothing (x \<Ztypecolon> T)\<close>
+\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)\<close>
   unfolding Action_Tag_def .
 
 

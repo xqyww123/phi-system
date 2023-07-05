@@ -795,6 +795,26 @@ lemma contract_intro_Ex:
     using prems(1)[OF exI[where P=P, OF prems(2)]] .
   done
 
+text \<open>PLPR can infer existentially quantified obligation. However, the built-in automation of Isabelle
+  seems to be not good for handling them. Therefore we introduce a special existential quantifier
+  having the irreversible \<open>\<exists>\<^sub>I\<close> rule configured into the automation, in order to enhance the
+  deficiency in Isabelle's automation.\<close>
+
+definition special_Ex (binder "\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R" 10)
+  where \<open>special_Ex \<equiv> Ex\<close>
+
+lemma [intro!]:
+  \<open>P x \<Longrightarrow> special_Ex P\<close>
+  unfolding special_Ex_def
+  by rule
+
+lemma contract_intro_sp_Ex:
+  \<open>(\<And>x. Premise mode (P x) \<Longrightarrow> PROP Q) \<equiv> (Premise mode (special_Ex P) \<Longrightarrow> PROP Q)\<close>
+  for P :: \<open>'a \<Rightarrow> bool\<close>
+  unfolding special_Ex_def
+  using contract_intro_Ex .
+
+ML_file "library/tools/patch_for_Ex.ML"
 ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
@@ -803,8 +823,9 @@ ML_file "library/reasoners.ML"
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
 
+(*
 hide_fact contract_premise_imp contract_drop_waste contract_obligations contract_premise_all
-
+*)
 
 subsection \<open>Exhaustive Reasoning\<close>
 

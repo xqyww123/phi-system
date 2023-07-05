@@ -37,6 +37,9 @@ include PHI_HELP
 
   val string_of_term_generic : Context.generic -> term -> string
 
+  (*Find the most general instantiation of the given type to meet the given sort*)
+  val lift_type_sort : theory -> typ * sort -> Type.tyenv -> Type.tyenv
+
   val tyenv_to_tvars_table : Proof.context -> Type.tyenv -> ctyp TVars.table
   val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
   val tyenv_to_tvars_table_generic : Context.generic -> Type.tyenv -> ctyp TVars.table
@@ -178,6 +181,23 @@ fun varified_leading_antecedent_meta_quantifiers ctxt sequent =
 fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global thy
   | string_of_term_generic (Context.Proof ctxt) = Syntax.string_of_term ctxt
 
+
+fun lift_type_sort thy (ty,sort) env00 =
+  let val idx = Term.maxidx_of_typ ty
+   in if Sign.of_sort thy (ty, sort)
+      then Vartab.empty
+      else let val (env0,_) =
+                     Sign.typ_unify thy
+                           (ty, TVar(("_", idx), sort))
+                           (env00, idx)
+               val env = Vartab.map (fn N => (fn (S, TVar(_,S')) => (S, TVar(N,S'))
+                                               | X => if N = ("_", 1) then X
+                                                      else error "Internal bug 8bb59e49-9b57-48bc-b310-9da3b8f5ff7f"))
+                         (Vartab.delete_safe ("_", idx) env0)
+                in env
+               end
+           handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
+  end
 
 fun tyenv_to_tvars_table ctxt : Type.tyenv -> ctyp TVars.table
   = Vartab.dest

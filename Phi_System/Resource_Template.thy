@@ -215,9 +215,9 @@ lemma [\<phi>reason 1200]:
 
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Stateless (x \<Ztypecolon> T) P
-\<Longrightarrow> Is_Stateless (x \<Ztypecolon> \<phi> T) P \<close>
-  unfolding Is_Stateless_def Imply_def apply (simp add: \<phi>expns)
+  \<open> Identity_Element\<^sub>I (x \<Ztypecolon> T) P
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi> T) P \<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def apply (simp add: \<phi>expns)
   using mk_homo_one by blast
 
 lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<phi> _) (_ \<Ztypecolon> \<phi> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
