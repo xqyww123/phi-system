@@ -49,6 +49,7 @@ include PHI_HELP
   val env_to_table : Proof.context -> (Type.tyenv * Envir.tenv)
                                    -> (ctyp TVars.table * cterm Vars.table)
   val table_to_env : (ctyp TVars.table * cterm Vars.table) -> (Type.tyenv * Envir.tenv)
+  val ty_table_no_c : ctyp TVars.table -> typ TVars.table
   val table_no_c : (ctyp TVars.table * cterm Vars.table) -> (typ TVars.table * term Vars.table)
 
   val beta_eta_contract_leading_antecedent : thm -> thm
@@ -233,6 +234,8 @@ fun env_to_table ctxt (TY,TM) =
 
 fun table_to_env (TY,TM) =
       (tvars_table_to_tyenv TY, vars_table_to_tenv TM)
+
+fun ty_table_no_c tvars = TVars.map (K Thm.typ_of) tvars
 
 fun table_no_c (tvars,vars) =
   (TVars.map (K Thm.typ_of) tvars, Vars.map (K Thm.term_of) vars)

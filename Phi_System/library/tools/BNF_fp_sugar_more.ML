@@ -18,7 +18,8 @@ val mk_unzip : typ list -> typ list -> typ list -> fp_more -> term
 
 val export : Context.generic -> Context.generic -> Context.generic
 
-val unit : typ -> Context.generic -> thm list * Context.generic
+val identity_element : typ -> Context.generic -> (ctyp TVars.table * thm) list * Context.generic
+val identity_element_unify : typ -> Context.generic -> (ctyp TVars.table * thm) list * Context.generic
 
 end
 
@@ -80,11 +81,13 @@ structure Properties = Generic_Data (
 
 fun export from to = Properties.put (Properties.get from) to
 
-fun gen_property match kind gen (typ as Type(Tname,_)) generic =
+fun gen_property match kind gen (typ0 as Type(Tname,_)) generic =
   let val ctxt = Context.proof_of generic
       val thy = Context.theory_of generic
+      val typ = Term.map_atyps (fn TVar ((N,i),S) => TVar ((N,~i),S) | T => T) typ0
       val mpf = map_filter (fn (ty',ths) =>
-                  let val env = match thy (ty', typ) Vartab.empty
+                  let val i = Term.maxidx_of_typ ty'
+                      val (env, _) = match thy (ty', typ) (Vartab.empty, i)
                       val inst = Phi_Help.tyenv_to_tvars_table ctxt env
                    in SOME (inst, Thm.instantiate (inst, Vars.empty) ths)
                   end handle TYPE_MATCH => NONE)
@@ -141,6 +144,8 @@ fun gen_unit_simps Tname generic =
                           (Term.fastype_of LHS, th))
   end
 
-fun unit typ generic = gen_property "one" gen_unit_simps typ generic
+fun match' thy TU (tenv,i) = (Sign.typ_match thy TU tenv, i)
+fun identity_element typ generic = gen_property match' "one" gen_unit_simps typ generic
+fun identity_element_unify typ generic = gen_property Sign.typ_unify "one" gen_unit_simps typ generic
 
 end

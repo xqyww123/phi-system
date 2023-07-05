@@ -570,6 +570,8 @@ definition Identity_Element\<^sub>E :: \<open>'a::one set \<Rightarrow> bool\<cl
 declare [[ \<phi>reason_default_pattern
       \<open>Identity_Element\<^sub>I ?S _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I ?S _\<close> (100)
   and \<open>Identity_Element\<^sub>I (_ \<Ztypecolon> ?T) _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I (_ \<Ztypecolon> ?T) _\<close> (110)
+  and \<open>Identity_Element\<^sub>E ?S\<close> \<Rightarrow> \<open>Identity_Element\<^sub>E ?S\<close> (100)
+  and \<open>Identity_Element\<^sub>E (_ \<Ztypecolon> ?T)\<close> \<Rightarrow> \<open>Identity_Element\<^sub>E (_ \<Ztypecolon> ?T)\<close> (110)
 ]]
 
 subsubsection \<open>Termination\<close>
@@ -595,6 +597,16 @@ lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>E {_}\<close>]:
   unfolding Identity_Element\<^sub>E_def Imply_def by simp
 
 subsubsection \<open>Logic Connectives\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> Itself) True \<close>
+  unfolding Identity_Element\<^sub>I_def Imply_def
+  by (clarsimp simp add: Itself_expn)
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>E (1 \<Ztypecolon> Itself) \<close>
+  unfolding Identity_Element\<^sub>E_def Imply_def
+  by (clarsimp simp add: Itself_expn)
 
 lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolon> _) _\<close>]:
   \<open> Identity_Element\<^sub>I (z \<Ztypecolon> T) P
