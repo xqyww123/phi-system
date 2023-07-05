@@ -223,6 +223,7 @@ fun guess_rel_mapper target_ty ctxt ty element_ty =
 (* Zip \& Unzip *)
 
 fun unzip_typ _ (\<^Type>\<open>prod \<open>a as TFree _\<close> \<open>b as TFree _\<close>\<close>) = (a,b)
+  | unzip_typ _ (\<^Type>\<open>prod \<open>a as TVar _\<close> \<open>b as TVar _\<close>\<close>) = (a,b)
   | unzip_typ ctxt (Type(Tname, Targs)) =
       let val bnf = get_bnf ctxt Tname
           val (deads,lives) = classify_bnf_dead_live bnf Targs
@@ -233,6 +234,7 @@ fun unzip_typ _ (\<^Type>\<open>prod \<open>a as TFree _\<close> \<open>b as TFr
       end
 
 fun zip_typ _ ((a as TFree _), (b as TFree _)) = \<^Type>\<open>prod a b\<close>
+  | zip_typ _ ((a as TVar _), (b as TVar _)) = \<^Type>\<open>prod a b\<close>
   | zip_typ ctxt (Type(Tname, Targs), Type(Tname', Targs')) =
       let val _ = if Tname = Tname' then () else raise TYPE ("zip_typ", [], [])
           val bnf = get_bnf ctxt Tname
@@ -321,6 +323,7 @@ fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs'
            ctxt')
       end
   | guess_zip _ ((a as TFree _), (b as TFree _)) ctxt = (Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0), ctxt)
+  | guess_zip _ ((a as TVar _), (b as TVar _)) ctxt = (Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0), ctxt)
   | guess_zip _ (a,b) _ = raise TYPE ("guess_zip", [a,b], [])
 
 
@@ -371,24 +374,40 @@ fun oblg_solver proof_id ctxt sequent =
   Note the quants is reversed against the quantified variables*)
 fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,quants,ind_conv,reasoning,solver,simp)
                              rule (phi0 : phi_type) hint ctxt0 =
-  let val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0
-      val ((x_term, T_term, x_ty, arg_tys, model_ty), ctxt02) = fix_phi_term_params (#term phi) ctxt01
-   in (case hint of SOME H =>
+  let (*val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0*)
+      val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0
+   in (case hint of SOME H0 =>
               let fun collect_ants (\<^Const>\<open>Pure.imp\<close> $ (\<^Const>\<open>Trueprop\<close> $ L) $ R) = L :: collect_ants R
                     | collect_ants (\<^Const>\<open>Trueprop\<close> $ _) = []
                     | collect_ants _ = error "Bad hint"
                   fun concl_of_hint (\<^Const>\<open>Pure.imp\<close> $ (\<^Const>\<open>Trueprop\<close> $ _) $ R) = concl_of_hint R
                     | concl_of_hint (X as \<^Const>\<open>Trueprop\<close> $ _) = X
                     | concl_of_hint _ = error "Bad hint"
+                  val idx = Phi_Type_Algebra.phi_maxidx_of phi0 ~1 + 1
+                  val H = Logic.incr_indexes ([],[],idx) H0
                   val property = concl_of_hint H
-                  val Envir.Envir inst_hint = unify_hint (ctxt02, H) property (x_term, T_term)
-                  val H' = Envir.subst_term (#tyenv inst_hint, #tenv inst_hint) H
-                  val ([H''], ctxt) = Variable.import_terms true [H'] ctxt02
-               in Seq.single (Phi_Help.list_mk_conj (collect_ants H''), concl_of_hint H'', ctxt)
+                  val Envir.Envir inst_hint = unify_hint (ctxt01, H) property (x_term0, T_term0)
+                  val inst01 = Phi_Help.env_to_table ctxt01 (#tyenv inst_hint, #tenv inst_hint)
+                  val phi01 = Phi_Type_Algebra.instantiate_phi inst01 phi0
+                  val (inst, phi, ctxt) = fix_phi_type true phi01 ctxt01
+                  val subst = Envir.subst_term (#tyenv inst_hint, #tenv inst_hint)
+                           #> Envir.subst_term (Phi_Help.table_to_env inst)
+                  val (x_term0', T_term0', H0') = (subst x_term0, subst T_term0, subst H)
+                  val ([x_term, T_term, H''], ctxt) =
+                          Variable.import_terms true [x_term0', T_term0', H0'] ctxt01
+               in Seq.single (Phi_Help.list_mk_conj (collect_ants H''), concl_of_hint H'',
+                              x_term, T_term, phi, ctxt)
               end
-           | _ => guess_property (x_term, T_term, x_ty, arg_tys, model_ty, phi) ctxt02)
-   |> Seq.map (fn (ant, property, ctxt) => 
-  let val inst_rule = Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
+           | _ => guess_property (x_term0, T_term0, phi0) ctxt01)
+   |> Seq.map (fn (ant0, property0, x_term0, T_term0, phi0, ctxt0) => 
+  let val (ant, property, x_term, T_term, phi, ctxt) =
+        if is_phi_type_fixed phi0
+        then (ant0, property0, x_term0, T_term0, phi0, ctxt0)
+        else let val (inst, phi, ctxt) = fix_phi_type true phi0 ctxt0
+                 val subst = Envir.subst_term (Phi_Help.table_to_env inst)
+              in (subst ant0, subst property0, subst x_term0, subst T_term0, phi, ctxt)
+             end
+      val inst_rule = Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
                                     (Vartab.empty, Vartab.empty)
                    |> apsnd (Vartab.update_new (("Ant",0), (\<^typ>\<open>bool\<close>, ant)))
                    |> Phi_Help.env_to_table ctxt
@@ -742,8 +761,9 @@ fun infer_eq ctxt rule =
   end
 
 
-fun guess_property_obj_eq (_, T_term, x_ty, arg_tys, model_ty, (phi:phi_type)) ctxt0 =
-  let fun mk_Ants ctxt (Ty::rev_arg_tys) (eq::eq_names) ants param_eqs (T_term $ A) =
+fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
+  let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi)) 
+      fun mk_Ants ctxt (Ty::rev_arg_tys) (eq::eq_names) ants param_eqs (T_term $ A) =
            (let val (rev_arg_tys_A, x_ty_A, model_ty_A) = dest_parameterized_phi_ty Ty
                 val arity_A = length rev_arg_tys_A
                 val typ = x_ty_A --> x_ty_A --> \<^typ>\<open>bool\<close>
@@ -761,10 +781,9 @@ fun guess_property_obj_eq (_, T_term, x_ty, arg_tys, model_ty, (phi:phi_type)) c
         | mk_Ants _ [] [] ants param_eqs _ = (ants, param_eqs)
         | mk_Ants _ _ _ _ _ _ = raise ListPair.UnequalLengths
 
-      val arity = length arg_tys
+      val arity = length rev_arg_tys
       val rev_eq_names' = Name.invent (Variable.names_of ctxt0) "eq" arity
       val (rev_eq_names, ctxt) = Variable.add_fixes rev_eq_names' ctxt0
-      val rev_arg_tys = rev arg_tys
       val (ants,param_eqs) = mk_Ants ctxt rev_arg_tys rev_eq_names [] [] T_term
       val ant = Phi_Help.list_mk_conj ants
 
@@ -774,7 +793,8 @@ fun guess_property_obj_eq (_, T_term, x_ty, arg_tys, model_ty, (phi:phi_type)) c
              else Seq.single (Var(("eq", 1), x_ty --> x_ty --> HOLogic.boolT), ctxt)
    in eq_terms
    |> Seq.map (fn (eq_term, ctxt') =>
-        (ant, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj x_ty model_ty\<close> $ T_term $ eq_term), ctxt'))
+        (ant, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>\<phi>Equiv_Obj x_ty model_ty\<close> $ T_term $ eq_term),
+         x_Term, T_term, phi, ctxt'))
   end
 
 fun OE_reasoning phi ctxt rule =

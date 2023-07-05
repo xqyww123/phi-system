@@ -66,7 +66,7 @@ val map_phi_type : (term -> term) * (thm list -> thm list) -> phi_type -> phi_ty
 val fold_phi_type : (term -> 'a -> 'a) * (thm -> 'a -> 'a) -> phi_type -> 'a -> 'a
 
 val morphism_phi_type : morphism -> phi_type -> phi_type
-val instantiate_phi : (typ TVars.table * term Vars.table) * (ctyp TVars.table * cterm Vars.table)
+val instantiate_phi : (ctyp TVars.table * cterm Vars.table)
                    -> phi_type -> phi_type
 val phi_trim_context : phi_type -> phi_type
 val phi_transfer : theory -> phi_type -> phi_type
@@ -91,13 +91,14 @@ val lift_type_sort : theory -> typ * sort -> Type.tyenv -> Type.tyenv
 val mk_ind_dest_ToA : Proof.context -> phi_type -> (term (*x*) * term (*T*) -> term) -> thm
 val mk_ind_dest_ToA_internal : Proof.context -> phi_type -> term -> thm
 
+val is_phi_type_fixed : phi_type -> bool
+
 val fix_phi_type : bool -> phi_type -> Proof.context ->
-        (typ TVars.table * term Vars.table) *
         (ctyp TVars.table * cterm Vars.table) * phi_type *
         Proof.context
 
 val fix_phi_term_params : term -> Proof.context ->
-        (term * term * typ * typ list * typ) * Proof.context
+        (term * term) * Proof.context (*only fix the terms but no types*)
 
 val raw_term_name_typ : term -> string * typ
 val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ * typ
@@ -771,19 +772,23 @@ fun fix_phi_term_params phi_term ctxt =
       val args = map2 (fn N => fn T => Free(N,T)) arg_names arg_tys
       val x_term = Free(x_name, x_ty)
       val T_term = fold (fn a => fn X => X $ a) args phi_term
-      val ctxt'2 = fold Variable.declare_constraints (x_term :: args) ctxt'
-   in ((x_term, T_term, x_ty, arg_tys, model_ty), ctxt'2)
+   in ((x_term, T_term), ctxt')
   end
 
-fun instantiate_phi (inst,inst') =
-      map_phi_type (Term_Subst.instantiate inst, map (Thm.instantiate inst'))
+fun instantiate_phi inst' =
+  let val inst = (TVars.map (K Thm.typ_of) (#1 inst'),
+                  Vars.map (K Thm.term_of) (#2 inst'))
+   in map_phi_type (Term_Subst.instantiate inst, map (Thm.instantiate inst'))
+  end
+
+fun is_phi_type_fixed phi = null (Term.add_tvars (#term phi) [])
 
 fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
   let val (inst, ctxt) = Variable.import_inst is_open [#term phi0] ctxt0
       val inst' = (TVars.map (K (Thm.ctyp_of ctxt)) (#1 inst),
                    Vars.map (K (Thm.cterm_of ctxt)) (#2 inst))
-      val phi = instantiate_phi (inst,inst') phi0
-   in (inst, inst', phi, ctxt)
+      val phi = instantiate_phi inst' phi0
+   in (inst', phi, ctxt)
   end
 
 
@@ -791,7 +796,8 @@ local
 
 fun check_algebra_hints ctxt const hints =
   let val ctxt'0 = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
-      val ((_, T_term', _, _, _), ctxt') = fix_phi_term_params const ctxt'0
+      val ((x_term, T_term'), ctxt'1) = fix_phi_term_params const ctxt'0
+      val ctxt' = fold Variable.declare_constraints [x_term,T_term'] ctxt'1
       val T_term = singleton (Variable.export_terms ctxt' ctxt) T_term'
                 |> Term.map_types (K Term.dummyT)
       fun get_arity ret \<^Type>\<open>fun a T\<close> = get_arity (a::ret) T

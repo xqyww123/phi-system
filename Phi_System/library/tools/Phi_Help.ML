@@ -40,9 +40,12 @@ include PHI_HELP
   val tyenv_to_tvars_table : Proof.context -> Type.tyenv -> ctyp TVars.table
   val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
   val tyenv_to_tvars_table_generic : Context.generic -> Type.tyenv -> ctyp TVars.table
+  val tvars_table_to_tyenv : ctyp TVars.table -> Type.tyenv
   val tenv_to_vars_table : Proof.context -> Type.tyenv -> Envir.tenv -> cterm Vars.table
+  val vars_table_to_tenv : cterm Vars.table -> Envir.tenv
   val env_to_table : Proof.context -> (Type.tyenv * Envir.tenv)
                                    -> (ctyp TVars.table * cterm Vars.table)
+  val table_to_env : (ctyp TVars.table * cterm Vars.table) -> (Type.tyenv * Envir.tenv)
 
   val beta_eta_contract_leading_antecedent : thm -> thm
 
@@ -190,6 +193,13 @@ val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
  #> map (fn (N,(S,T)) => ((N,S), T))
  #> TVars.make
 
+fun tvars_table_to_tyenv tab =
+  Vartab.build (TVars.fold (fn ((N,S),T) => Vartab.insert (op =) (N,(S, Thm.typ_of T))) tab)
+
+fun vars_table_to_tenv tab =
+  Vartab.build (Vars.fold (fn ((N,S),T) => Vartab.insert (op =) (N,(S, Thm.term_of T))) tab)
+
+
 fun tenv_to_vars_table ctxt tyenv : Envir.tenv -> cterm Vars.table
   = Vartab.dest
  #> map (fn (N,(TY,TM)) => ((N, Envir.subst_type tyenv TY),
@@ -197,9 +207,12 @@ fun tenv_to_vars_table ctxt tyenv : Envir.tenv -> cterm Vars.table
                                             |> Envir.eta_contract)))
  #> Vars.make
 
-fun env_to_table ctxt (TY,TM)
-  = (tyenv_to_tvars_table ctxt TY,
-     tenv_to_vars_table ctxt TY TM)
+fun env_to_table ctxt (TY,TM) =
+      (tyenv_to_tvars_table ctxt TY, tenv_to_vars_table ctxt TY TM)
+
+fun table_to_env (TY,TM) =
+      (tvars_table_to_tyenv TY, vars_table_to_tenv TM)
+      
 
 fun beta_eta_contract th =
   if Term.could_beta_eta_contract (Thm.prop_of th)
