@@ -1,6 +1,7 @@
 theory Phi_Type_Algebra
   imports IDE_CP_Applications1
   keywords "\<phi>type_def" :: thy_defn
+       and "deriving" :: quasi_command
 begin
 
 section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
@@ -577,8 +578,8 @@ subsubsection \<open>Equiv Object\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method (\<And>x y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T) M D R F
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>Equiv_Obj T eq)) M D R F\<close>
-  unfolding \<phi>Programming_Method_def \<phi>Equiv_Obj_def Premise_def
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Obj_Equivalence T eq)) M D R F\<close>
+  unfolding \<phi>Programming_Method_def Obj_Equivalence_def Premise_def
   by clarsimp
 
 subsubsection \<open>Transformation Functor\<close>
@@ -1066,10 +1067,10 @@ subsubsection \<open>Unit Left \& Right\<close>
 lemma \<phi>TA_1L_rule:
   \<open> (Ant \<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) Any @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Any \<longrightarrow> P
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (Any \<longrightarrow> P)
 \<Longrightarrow> Ant
 \<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) P\<close>
-  unfolding Action_Tag_def Is_Stateless_def
+  unfolding Action_Tag_def Is_Stateless_def Premise_def
   using implies_weaken by blast
 
 lemma \<phi>TA_1R_rule:
@@ -1081,15 +1082,15 @@ lemma \<phi>TA_1R_rule:
   unfolding Action_Tag_def .
 
 
-subsubsection \<open>\<phi>Equiv_Obj\<close>
+subsubsection \<open>Obj_Equivalence\<close>
 
-lemma \<phi>Equiv_Obj_rule:
+lemma Obj_Equivalence_rule:
   \<open> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> \<phi>Equiv_Obj T eq \<close>
-  unfolding \<phi>Equiv_Obj_def Premise_def Action_Tag_def
+\<Longrightarrow> Obj_Equivalence T eq \<close>
+  unfolding Obj_Equivalence_def Premise_def Action_Tag_def
   by blast
 
 lemma \<phi>TA_EO_rewr_IH:
@@ -1104,19 +1105,19 @@ lemma \<phi>TA_EO_rewr_C:
 
 
 
-lemma \<phi>Equiv_Obj_rule_move_all:
+lemma Obj_Equivalence_rule_move_all:
   \<open>(\<And>x. P x \<and> Q) \<Longrightarrow> (\<forall>x. P x) \<and> Q\<close>
   by blast
 
-lemma \<phi>Equiv_Obj_rule_move_all2:
+lemma Obj_Equivalence_rule_move_all2:
   \<open>(P \<longrightarrow> (\<forall>x. Q x)) \<and> R \<Longrightarrow> (\<forall>x. P \<longrightarrow> Q x) \<and> R\<close>
   by blast
 
-lemma \<phi>Equiv_Obj_rule_move_set_eq:
+lemma Obj_Equivalence_rule_move_set_eq:
   \<open>RR \<Longrightarrow> (R \<and> P \<and> R2 \<longrightarrow> P) \<and> RR\<close>
   by blast
 
-lemma \<phi>Equiv_Obj_rule_move_set_eq_end:
+lemma Obj_Equivalence_rule_move_set_eq_end:
   \<open>(P \<and> R \<longrightarrow> P)\<close>
   by blast
 
@@ -1228,8 +1229,8 @@ term case_prod
 
 ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\<open>times\<close>\<close>
 
-(* hide_fact \<phi>Equiv_Obj_rule_move_all \<phi>Equiv_Obj_rule_move_set_eq \<phi>Equiv_Obj_rule_move_set_eq_end
-          \<phi>Equiv_Obj_rule_move_all2
+(* hide_fact Obj_Equivalence_rule_move_all Obj_Equivalence_rule_move_set_eq Obj_Equivalence_rule_move_set_eq_end
+          Obj_Equivalence_rule_move_all2
 
           \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH (*\<phi>TA_TF_rule_step*) *)
 

@@ -46,6 +46,7 @@ include PHI_HELP
   val env_to_table : Proof.context -> (Type.tyenv * Envir.tenv)
                                    -> (ctyp TVars.table * cterm Vars.table)
   val table_to_env : (ctyp TVars.table * cterm Vars.table) -> (Type.tyenv * Envir.tenv)
+  val table_no_c : (ctyp TVars.table * cterm Vars.table) -> (typ TVars.table * term Vars.table)
 
   val beta_eta_contract_leading_antecedent : thm -> thm
 
@@ -127,7 +128,7 @@ fun front [] = raise Fail "front"
   | front [x] = []
   | front (h::ls) = h :: front ls
 
-fun repeat f x = repeat f (f x) handle TERM _ => x | THM _ => x
+fun repeat f x = repeat f (f x) handle TERM _ => x | CTERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
 
@@ -212,7 +213,9 @@ fun env_to_table ctxt (TY,TM) =
 
 fun table_to_env (TY,TM) =
       (tvars_table_to_tyenv TY, vars_table_to_tenv TM)
-      
+
+fun table_no_c (tvars,vars) =
+  (TVars.map (K Thm.typ_of) tvars, Vars.map (K Thm.term_of) vars)
 
 fun beta_eta_contract th =
   if Term.could_beta_eta_contract (Thm.prop_of th)

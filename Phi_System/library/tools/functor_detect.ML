@@ -828,7 +828,12 @@ fun check_algebra_hints ctxt const hints =
                   | pass ar X = pad 0 ar X                
              in \<^Const>\<open>Trueprop\<close> $ pass arity term
             end
-      val props = Syntax.check_props ctxt'0 (map2 pad_term hints_arity hints)
+      fun is_driving_flag (Const _) = true
+        | is_driving_flag (Const("_type_constraint_",_) $ X) = is_driving_flag X
+        | is_driving_flag _ = false
+      val props = Syntax.check_props ctxt'0 (map2 (fn ar => fn H =>
+            if is_driving_flag H then Logic.mk_term H
+            else pad_term ar H) hints_arity hints)
       val ctxt'1 = fold Variable.add_fixes_implicit props (Variable.set_body false ctxt'0)
    in Variable.export_terms ctxt'1 ctxt props
   end
@@ -903,7 +908,7 @@ fun add_fun_cmd a b c hints int generic =
 end
 
 
-val algebra_hints = Scan.repeat (\<^keyword>\<open>subj\<close> |-- Parse.term)
+val algebra_hints = Scan.repeat (\<^keyword>\<open>deriving\<close> |-- Parse.and_list Parse.term) >> flat
 
 val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- algebra_hints
       >> (fn ((config, (fixes, specs)), algebras) => add_fun_cmd fixes specs config algebras))

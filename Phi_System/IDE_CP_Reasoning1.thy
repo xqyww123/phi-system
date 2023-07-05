@@ -567,7 +567,10 @@ subsection \<open>Empty-I\&E\<close>
 definition Is_Stateless   :: \<open>'a::one set \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Is_Stateless S P \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<a>\<n>\<d> P)\<close>
 definition Demand_Nothing :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Demand_Nothing S \<longleftrightarrow> (1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> S)\<close>
 
-declare [[\<phi>reason_default_pattern \<open>Is_Stateless ?S _\<close> \<Rightarrow> \<open>Is_Stateless ?S _\<close> (100)]]
+declare [[ \<phi>reason_default_pattern
+      \<open>Is_Stateless ?S _\<close> \<Rightarrow> \<open>Is_Stateless ?S _\<close> (100)
+  and \<open>Is_Stateless (_ \<Ztypecolon> ?T) _\<close> \<Rightarrow> \<open>Is_Stateless (_ \<Ztypecolon> ?T) _\<close> (110)
+]]
 
 subsubsection \<open>Termination\<close>
 
@@ -595,18 +598,18 @@ subsubsection \<open>Logic Connectives\<close>
 
 lemma [\<phi>reason 1 except \<open>Is_Stateless (?var_x \<Ztypecolon> _) _\<close>]:
   \<open> Is_Stateless (z \<Ztypecolon> T) P
-\<Longrightarrow> \<phi>Equiv_Obj T eq
+\<Longrightarrow> Obj_Equivalence T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x z
 \<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) P \<close>
-  unfolding Is_Stateless_def \<phi>Equiv_Obj_def Premise_def
+  unfolding Is_Stateless_def Obj_Equivalence_def Premise_def
   using implies_trans by fastforce
 
 lemma [\<phi>reason 1 except \<open>Demand_Nothing (?var_x \<Ztypecolon> _)\<close>]:
   \<open> Demand_Nothing (z \<Ztypecolon> T)
-\<Longrightarrow> \<phi>Equiv_Obj T eq
+\<Longrightarrow> Obj_Equivalence T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq z x
 \<Longrightarrow> Demand_Nothing (x \<Ztypecolon> T) \<close>
-  unfolding Demand_Nothing_def \<phi>Equiv_Obj_def Premise_def
+  unfolding Demand_Nothing_def Obj_Equivalence_def Premise_def
   using implies_trans by fastforce
 
 lemma [\<phi>reason 1200]:

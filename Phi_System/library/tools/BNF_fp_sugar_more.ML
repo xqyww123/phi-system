@@ -141,7 +141,6 @@ fun gen_unit_simps Tname generic =
                           (Term.fastype_of LHS, th))
   end
 
-fun unit Tname generic =
-      gen_property "one" gen_unit_simps Tname generic
+fun unit typ generic = gen_property "one" gen_unit_simps typ generic
 
 end

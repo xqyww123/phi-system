@@ -150,14 +150,9 @@ lemma UNIV_subty [\<phi>reason 1000]:
 subsection \<open>Stepwise Abstraction\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
-                                                      
+                                                                      
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U))\<close>
-  subj \<open>  Is_Stateless (1 \<Ztypecolon> B) P
-      \<Longrightarrow> Is_Stateless (x \<Ztypecolon> T) Q
-      \<Longrightarrow> Is_Stateless (x \<Ztypecolon> B \<Zcomp> T) (P \<and> Q)\<close>
-
-thm choice_iff[folded atomize_eq, symmetric]
 
 lemma [\<phi>reason 1200]:
   \<open>x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U) @action to RAW\<close>
@@ -380,9 +375,9 @@ lemma [\<phi>reason 1000]:
   unfolding Rewrite_into_\<phi>Type_def by (simp add: ExTyp_expn, metis)
 
 lemma [\<phi>reason 1000]:
-  \<open> (\<And>x. \<phi>Equiv_Obj (T x) (R x))
-\<Longrightarrow> \<phi>Equiv_Obj (ExTyp T) (\<lambda>f g. \<forall>x. R x (f x) (g x)) \<close>
-  unfolding \<phi>Equiv_Obj_def ExTyp_expn Imply_def
+  \<open> (\<And>x. Obj_Equivalence (T x) (R x))
+\<Longrightarrow> Obj_Equivalence (ExTyp T) (\<lambda>f g. \<forall>x. R x (f x) (g x)) \<close>
+  unfolding Obj_Equivalence_def ExTyp_expn Imply_def
   by (clarsimp simp add: ExSet_expn; blast)
 
 
@@ -678,6 +673,30 @@ lemma [\<phi>inhabitance_rule 1000]:
   unfolding Inhabited_def Action_Tag_def
   by (simp add: \<phi>Mapping_expn, blast)
 
+(*
+lemma
+  \<open>(\<exists>c ca w cb cc wa.
+             \<forall>T U g x Ta xa l.
+                True \<longrightarrow>
+                True \<longrightarrow>
+                (\<forall>xb xaa.
+                    True \<longrightarrow>
+                    list_all2 g l xb \<longrightarrow>
+                    g xa xaa \<longrightarrow> (True \<and> True) \<and> True \<longrightarrow> g xa (id (c T U g x Ta xa l xb xaa)) \<and> list_all2 g l (id (ca T U g x Ta xa l xb xaa))) \<and>
+                (\<forall>xb xaa. True \<longrightarrow> list_all2 g l xb \<longrightarrow> g xa xaa \<longrightarrow> True \<and> True \<longrightarrow> xaa = id (c T U g x Ta xa l xb xaa)) \<and>
+                (\<forall>xb xaa. True \<longrightarrow> list_all2 g l xb \<longrightarrow> g xa xaa \<longrightarrow> fst (xb, w T U g x Ta xa l xb xaa) = id (ca T U g x Ta xa l xb xaa)) \<and>
+                (True \<longrightarrow> xa \<in> set (xa # l)) \<and> (\<forall>a. True \<longrightarrow> a \<in> set l \<longrightarrow> a \<in> set (xa # l)) \<and> True \<or>
+                (\<forall>xb xaa.
+                    True \<longrightarrow>
+                    list_all2 g l xb \<longrightarrow>
+                    g xa xaa \<longrightarrow> (True \<and> True) \<and> True \<longrightarrow> g xa (id (cb T U g x Ta xa l xb xaa)) \<and> list_all2 g l (id (cc T U g x Ta xa l xb xaa))) \<and>
+                (\<forall>xb xaa. True \<longrightarrow> list_all2 g l xb \<longrightarrow> g xa xaa \<longrightarrow> True \<and> True \<longrightarrow> xaa = id (cb T U g x Ta xa l xb xaa)) \<and>
+                (\<forall>xb xaa. True \<longrightarrow> list_all2 g l xb \<longrightarrow> g xa xaa \<longrightarrow> list_all2 (=) (fst (xb, wa T U g x Ta xa l xb xaa)) (id (cc T U g x Ta xa l xb xaa))) \<and>
+                (True \<longrightarrow> xa \<in> set (xa # l)) \<and> (\<forall>a. True \<longrightarrow> a \<in> set l \<longrightarrow> a \<in> set (xa # l)) \<and> True) \<and>
+         (\<forall>T U g x Ta. True \<longrightarrow> True \<longrightarrow> True) \<and> True \<close>
+  apply (((rule conjI)+ ; ((rule exI)+)?), auto) *)
+
+
 
 subsection \<open>Point on a Mapping\<close>
 
@@ -685,11 +704,15 @@ subsubsection \<open>By Key\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
 
-                                                                                                                         
+                                                                                                                              
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-   subj \<open>Transformation_Functor set list_all2\<close>
+  deriving Is_Stateless
+       and Obj_Equivalence
+       and Transformation_Functor
+       and Sep_Homo_Ty_zip
+    (* and \<open>Transformation_Functor set list_all2\<close> *)
 
 print_\<phi>reasoners \<open>xaa \<Ztypecolon> List T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<a>\<n>\<d> _ @action to U\<close> ?
 
@@ -724,7 +747,7 @@ lemma [\<phi>reason 10000]:
             
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-  (* subj \<open>\<phi>Equiv_Obj (=)\<close> *)
+  (* subj \<open>Obj_Equivalence (=)\<close> *)
 
 
 
@@ -1649,19 +1672,19 @@ interpretation \<phi>Share: Sep_Homo_Type_Functor_L
 lemma [\<phi>reason add]:
   \<open> Near_Semimodule_Functor_zip ((\<odiv>) :: _ \<Rightarrow> ('a::share_semimodule_sep,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
-        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> \<phi>Equiv_Obj T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
+        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Obj_Equivalence T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
         (\<lambda>_ _. fst) \<close>
   unfolding Near_Semimodule_Functor_zip_def \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: Imply_def \<phi>Prod_expn \<phi>Equiv_Obj_def \<phi>Share_expn Premise_def;
+  by (clarsimp simp add: Imply_def \<phi>Prod_expn Obj_Equivalence_def \<phi>Share_expn Premise_def;
       metis share_sep_left_distrib_0)
 
 lemma [\<phi>reason add]:
   \<open> Near_Semimodule_Functor_zip_rev ((\<odiv>) :: _ \<Rightarrow> ('a::share_semimodule_sep,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
-        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> \<phi>Equiv_Obj T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
+        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Obj_Equivalence T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
         (\<lambda>_ _. fst) \<close>
   unfolding Near_Semimodule_Functor_zip_rev_def \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: Imply_def \<phi>Prod_expn \<phi>Equiv_Obj_def \<phi>Share_expn Premise_def;
+  by (clarsimp simp add: Imply_def \<phi>Prod_expn Obj_Equivalence_def \<phi>Share_expn Premise_def;
       metis add.commute share_sep_left_distrib_0)
 
 lemma [\<phi>reason add]:
@@ -1670,7 +1693,7 @@ lemma [\<phi>reason add]:
         (\<lambda>T x. \<phi>Sep_Disj_Inj (x \<Ztypecolon> T))
         (\<lambda>_ _ x. (x,x)) \<close>
   unfolding Near_Semimodule_Functor_unzip_def \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: Imply_def \<phi>Prod_expn \<phi>Equiv_Obj_def \<phi>Share_expn;
+  by (clarsimp simp add: Imply_def \<phi>Prod_expn Obj_Equivalence_def \<phi>Share_expn;
       metis share_sep_disj_left share_sep_disj_right share_sep_left_distrib_0)
 
 

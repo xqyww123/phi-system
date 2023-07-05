@@ -203,6 +203,16 @@ val defer_obligation_tac = defer_antecedent contract_obligations
 
 (*** Premise tac ***)
 
+fun intro_all_leading_ex i thm =
+  if i > Thm.nprems_of thm
+  then thm
+  else case Logic.concl_of_goal (Thm.prop_of thm) i
+         of _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
+              intro_all_leading_ex i (@{thm' conjI} RSN (i, thm))
+          | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.Ex\<close>, _) $ _ ) =>
+              intro_all_leading_ex i (@{thm' exI} RSN (i, thm))
+          | _ => intro_all_leading_ex (i+1) thm
+
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
 fun auto_obligation_solver ctxt th =
@@ -213,7 +223,8 @@ fun auto_obligation_solver ctxt th =
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>True\<close>, _) =>
           Seq.single (@{thm TrueI} RS th)
      | _ => head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
-                pre THEN HEADGOAL (Method.insert_tac ctxt aux)
+                pre THEN (Seq.single o intro_all_leading_ex 1)
+                    THEN HEADGOAL (Method.insert_tac ctxt aux)
                     THEN Clasimp.auto_tac ctxt) Agressive_Solver) th
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
