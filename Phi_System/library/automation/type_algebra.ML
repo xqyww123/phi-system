@@ -545,26 +545,42 @@ fun timed_chop timeout n xq =
     | SOME (x, xq') => apfst (Basics.cons x) (timed_chop timeout (n - 1) xq'))
     handle Timeout.TIMEOUT _ => ([], Seq.empty)
 
-fun simplify_distinct ctxt ths =
-  map (Simplifier.simplify ctxt) ths
-    |> distinct (Thm.equiv_thm (Proof_Context.theory_of ctxt))
-
 fun instantiate_ToA (Ant,pure_info,ctxt) ToA =
   case Thm.concl_of ToA
     of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_IH_ToA\<close>)
         => let
           val ToA' = Ant RS (Thm.permute_prems 0 ~2 ToA)
           val prem = Thm.cprop_of ToA' |> Thm.dest_arg1
-          val insts = Goal.init prem
-                  |> Method.insert_tac ctxt [pure_info] 1
+          val vars = Drule.add_vars_cterm prem Cterms.empty
+          val prem' = Cterms.fold ( curry Conjunction.mk_conjunction
+                                  o Thm.cprop_of o Drule.mk_term
+                                  o fst) vars prem
+          fun elim_conj ret thm =
+                case Thm.prop_of thm
+                  of Const(\<^const_name>\<open>Pure.conjunction\<close>, _) $ _ $ _ =>
+                        let val (L,R) = Conjunction.elim thm
+                         in elim_conj (L::ret) R
+                        end
+                   | _ => (ret, thm)
+          fun simplify_distinct ctxt ths =
+                map (elim_conj []) ths
+                  |> distinct (fn ((thsa,_),(thsb,_)) =>
+                                  eq_list (Thm.equiv_thm (Proof_Context.theory_of ctxt)) (thsa, thsb))
+                  |> map snd
+          val insts = Goal.init prem'
+                  |>(REPEAT_DETERM_N (Cterms.size vars) (
+                        resolve_tac ctxt [Conjunction.conjunctionI] 1 THEN
+                        resolve_tac ctxt [Drule.termI] 1)
+                     THEN Method.insert_tac ctxt [pure_info] 1)
                   |> Seq.hd
                   (*|> @{print}
                   |> Simplifier.full_simp_tac (Simps.equip ctxt') 1 |> Seq.hd
                   |> @{print} *)
                   |> Clasimp.fast_force_tac (Simps.equip ctxt) 1
                   |> timed_chop (Time.fromMilliseconds 50) 21 |> fst
-                  |> simplify_distinct ctxt |> @{print}
-                  |> maps (fn th => let val th' = (Goal.conclude th) RS ToA'
+                  |> map Goal.conclude
+                  |> simplify_distinct ctxt
+                  |> maps (fn th => let val th' = th RS ToA'
                                         val th2 = th' RS' (ctxt, @{thm' Action_Tag_D})
                                         (*fun rewr_pat (\<^Const>\<open>Trueprop\<close> $ (\<^Const_>\<open>Imply ty\<close> $ X $ Y $ _)) =
                                               (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Imply ty\<close> $ X $ Y
@@ -1007,7 +1023,7 @@ fun gen_TF phi hints_thy =
 
 end
 
-(*** Separation Hom ***)
+(*** Separation Homo ***)
 
 fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
   let val (T_ty0 :: _, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
@@ -1044,11 +1060,11 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
                   of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                       \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
                     (if flag
-                     then \<^Const>\<open>Sep_Homo_Ty_zip a b c d e f x_ty\<close>
+                     then \<^Const>\<open>Separation_Homo\<^sub>I a b c d e f x_ty\<close>
                        $ Fa $ Fb $ F_term
                        $ (\<^Const>\<open>Collect \<^Type>\<open>prod c f\<close>\<close> $ (\<^Const>\<open>case_prod c f \<^Type>\<open>bool\<close>\<close> $ dom))
                        $ zip
-                     else \<^Const>\<open>Sep_Homo_Ty_unzip a b c d e f x_ty\<close>
+                     else \<^Const>\<open>Separation_Homo\<^sub>E a b c d e f x_ty\<close>
                        $ Fa $ Fb $ F_term $ zip)
                    | _ => error "Internal bug")
    in Seq.single (\<^Const>\<open>True\<close>, HOLogic.Trueprop $ SH,
@@ -1070,23 +1086,31 @@ fun make_phi_for_pair ctxt0 (phi0 : phi_type) =
    in phi
   end
 
-fun SH_reasoning phi =
+fun SHu_reasoner ctxt sequent =
+  case PLPR_Exhaustive.reason_exhaustively (SOME 2)
+            (ctxt, @{thm' \<phi>TA_SHu_rule_step} RS sequent)
+    of SOME th => th
+     | NONE => raise Automation_Fail
+
+fun SH_reasoning is_intro phi =
       gen_abstract_constraint_guided_reasoning (K NONE) (fn ctxt => fn sequent => (
          (case Thm.major_prem_of sequent
             of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Imply\<close>, _)
                         $ (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) $ _ $ _)
                  => (chk_unfolded phi X1; chk_unfolded phi X2)
              | _ => ()) ;
-          ToA_reasoner phi ctxt sequent
+          if is_intro
+          then ToA_reasoner phi ctxt sequent
+          else SHu_reasoner ctxt sequent
       ))
       o (Config.map Phi_Reasoner.trace (fn i=>i-1))
 
-fun gen_SH' flag (phi0 : phi_type) hint0 generic =
+fun gen_SH' is_intro (phi0 : phi_type) hint0 generic =
   let val ctxt0 = Context.proof_of generic
       val phi0pr = make_phi_for_pair generic phi0
       val unify_hint_SH = hint_unify_by_type_operator (
-            fn Const(\<^const_name>\<open>Sep_Homo_Ty_zip\<close>, _) $ _ $ _ $ F $ _ => F
-             | Const(\<^const_name>\<open>Sep_Homo_Ty_unzip\<close>, _) $ _ $ _ $ F $ _ => F
+            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ => F
              | _ => raise TERM ("",[]))
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn phi =>
@@ -1103,13 +1127,17 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
                   Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
                 ))
             )
-      fun ind_conv_u_impl ctxt phi =
-            Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr}) then_conv
-            Conv.implies_concl_conv (
-              Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
+      val ind_conv_u = default_ind_conv (
+            fn ctxt => fn phi =>
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr_IH}),
+            fn ctxt => fn phi =>
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr_C}) then_conv
+                Conv.implies_concl_conv (
+                  HOLogic.Trueprop_conv (
+                  Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
+                ))
             )
-      val ind_conv_u = default_ind_conv (ind_conv_u_impl, ind_conv_u_impl)
-      val ind_conv = if flag then ind_conv_z else ind_conv_u
+      val ind_conv = if is_intro then ind_conv_z else ind_conv_u
       fun simp (phi, ctxt) =
             Conv.fconv_rule (
               Phi_Conv.hhf_concl_conv (K (
@@ -1118,22 +1146,24 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
                     (Simplifier.rewrite ctxt))
              )) ctxt)
 
-      val rules = mk_rule_by_guess_or_hint ("/SH", unify_hint_SH, guess_property_SH flag, [0,~1,~1],
-                                            ind_conv, SH_reasoning, K NONE, simp)
-                                           (if flag then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule})
+      val rules = mk_rule_by_guess_or_hint (if is_intro then "/SHz" else "/SHu",
+                                            unify_hint_SH, guess_property_SH is_intro, [0,~1,~1],
+                                            ind_conv, SH_reasoning is_intro, K NONE, simp)
+                                           (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule})
                                            phi0pr hint0 ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail
          | SOME (rule', _) =>
             let 
              in generic
-             |> Phi_Type_Algebra.note_properties phi0 [("sep_homo", [rule'])]
+             |> Phi_Type_Algebra.note_properties phi0
+                    [(if is_intro then "sep_homo\<^sub>I" else "sep_homo\<^sub>E", [rule'])]
             end
   end
 
 fun gen_SH flag phi0 hints_thy =
-  let val prop_name = (if flag then \<^const_name>\<open>Sep_Homo_Ty_zip\<close>
-                               else \<^const_name>\<open>Sep_Homo_Ty_unzip\<close>)
+  let val prop_name = (if flag then \<^const_name>\<open>Separation_Homo\<^sub>I\<close>
+                               else \<^const_name>\<open>Separation_Homo\<^sub>E\<close>)
    in if is_Type_Opr (Term.fastype_of (#term phi0))
       then select_hints prop_name (gen_SH' flag phi0) hints_thy
       else chk_no_hints prop_name hints_thy

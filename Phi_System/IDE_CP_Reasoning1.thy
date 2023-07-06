@@ -186,7 +186,7 @@ lemmas [assertion_simps] =
   zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma set\<close>]
   plus_fun[where 'a=\<open>'a::sep_magma set\<close>]
   Subjection_Zero Subjection_times
-  ExSet_simps(1,4,5,6)
+  ExSet_simps(1,3,4,5,6)
   distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]
   \<phi>V_simps

@@ -264,6 +264,10 @@ lemma Subjection_transformation:
 \<Longrightarrow> S \<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<s>\<u>\<b>\<j> Q \<a>\<n>\<d> P\<close>
   unfolding Imply_def by (simp add: Subjection_expn; blast)
 
+lemma Subjection_transformation_expn:
+  \<open> (A \<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P) \<longleftrightarrow> (Q \<longrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P))\<close>
+  unfolding Imply_def by (simp add: Subjection_expn; blast)
+
 (* lemma (in \<phi>empty) [simp]: "(VAL (S \<s>\<u>\<b>\<j> P)) = (VAL S \<s>\<u>\<b>\<j> P)" by (simp add: \<phi>expns set_eq_iff) blast
 lemma (in \<phi>empty) [simp]: "(OBJ (S \<s>\<u>\<b>\<j> P)) = (OBJ S \<s>\<u>\<b>\<j> P)" by (simp add: \<phi>expns set_eq_iff) *)
 
@@ -475,8 +479,10 @@ lemma ExSet_plus:
 
 ML_file \<open>library/tools/simproc_ExSet_expand_quantifier.ML\<close>
 
-ML \<open>\<^simproc>\<open>ExSet_expand_quantifier\<close>\<close>
-
+lemma Ex_transformation_expn:
+  \<open>((\<exists>*x. A x) \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P) \<longleftrightarrow> (\<forall>x. A x \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P)\<close>
+  unfolding Imply_def ExSet_expn
+  by blast
 
 
 

@@ -369,7 +369,7 @@ fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
                           |> singleton (simplify ctxt') 
                           |> Phi_Help.beta_eta_contract
                           |> Drule.zero_var_indexes
-                val _ = Phi_Reasoner.info_pretty ctxt' 0 (fn () => let open Pretty in
+                val _ = Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
                           item [chunks [
                             block [str "Instantiate reasoning rule for functor ",
                                    Syntax.pretty_term ctxt' (Logic.incr_indexes ([],[],1) the_functor)],

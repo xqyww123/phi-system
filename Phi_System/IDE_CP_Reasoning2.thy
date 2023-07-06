@@ -1380,8 +1380,8 @@ paragraph \<open>Transformation Functor\<close>
 
 lemma "_Structural_Extract_general_rule_":
   \<open> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
-\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 Dz z
-\<Longrightarrow> Sep_Homo_Ty_unzip F3 F2 F23 uz
+\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
 \<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
 \<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> P x @action \<A>SE)
@@ -1400,10 +1400,10 @@ declare "_Structural_Extract_general_rule_"[(*THEN SE_clean_waste,*) \<phi>reaso
 lemma "_Structural_Extract_general_rule'_"[(*THEN SE_clean_waste',*) \<phi>reason_functor_template 82]:
   \<open> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Functional_Transformation_Functor_L F23' F14' Dom' mapper' Prem' pred_mapper' func_mapper'
-\<Longrightarrow> Sep_Homo_Ty_unzip F1' F4' F14' uz'
-\<Longrightarrow> Sep_Homo_Ty_zip F3' F2' F23' Dz' z'
-\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 Dz z
-\<Longrightarrow> Sep_Homo_Ty_unzip F3 F2 F23 uz
+\<Longrightarrow> Separation_Homo\<^sub>E F1' F4' F14' uz'
+\<Longrightarrow> Separation_Homo\<^sub>I F3' F2' F23' Dz' z'
+\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
 \<Longrightarrow> Type_Variant_of_the_Same_Functor F3 F3'
 \<Longrightarrow> Type_Variant_of_the_Same_Functor F1 F1'
 \<Longrightarrow> \<r>Success
@@ -1440,7 +1440,7 @@ lemma "_Structural_Extract_general_rule'_"[(*THEN SE_clean_waste',*) \<phi>reaso
 
 lemma "_Structural_Extract_general_rule_b_":
   \<open> Functional_Transformation_Functor_L F14 F3 Dom mapper Prem pred_mapper func_mapper
-\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz
 \<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> f x \<Ztypecolon> U \<a>\<n>\<d> P x @action \<A>SEb)
@@ -1458,8 +1458,8 @@ declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>rea
 lemma "_Structural_Extract_general_rule'_b_"[(*THEN SE_clean_waste',*) \<phi>reason_functor_template 82]:
   \<open> Functional_Transformation_Functor_L F14 F3 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Functional_Transformation_Functor_L F23' F1' Dom' mapper' Prem' pred_mapper' func_mapper'
-\<Longrightarrow> Sep_Homo_Ty_zip F3' F2' F23' Dz' z'
-\<Longrightarrow> Sep_Homo_Ty_zip F1 F4 F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>I F3' F2' F23' Dz' z'
+\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Type_Variant_of_the_Same_Functor F3 F3'
 \<Longrightarrow> Type_Variant_of_the_Same_Functor F1 F1'
 \<Longrightarrow> \<r>Success
@@ -1500,8 +1500,8 @@ paragraph \<open>Seminearing\<close>
 lemma SE_general_Scala_Seminearing_left: (*need test, to be tested once we have usable test case*)
   \<open> Scala_Semimodule_Functor F3 U Ds
 \<Longrightarrow> Scala_Semimodule_Functor F4 W Ds
-\<Longrightarrow> Sep_Homo_Ty_zip (F1 a) (F4 a) F14 Dz z
-\<Longrightarrow> Sep_Homo_Ty_unzip (F3 a) (F2 a) F23 uz
+\<Longrightarrow> Separation_Homo\<^sub>I (F1 a) (F4 a) F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>E (F3 a) (F2 a) F23 uz
 \<Longrightarrow> Functional_Transformation_Functor_L F14 F23 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds
@@ -1530,7 +1530,7 @@ declare SE_general_Scala_Seminearing_left[(*THEN SE_clean_waste,*) \<phi>reason_
 lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we have usable test case*)
   \<open> Scala_Semimodule_Functor F3 U Ds
 \<Longrightarrow> Scala_Semimodule_Functor F4 W Ds
-\<Longrightarrow> Sep_Homo_Ty_zip (F1 a) (F4 a) F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>I (F1 a) (F4 a) F14 Dz z
 \<Longrightarrow> Functional_Transformation_Functor_L F14 (F3 a) Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds

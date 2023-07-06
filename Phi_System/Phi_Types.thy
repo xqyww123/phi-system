@@ -93,8 +93,8 @@ subsubsection \<open>Algebraic Properties\<close>
 lemma [\<phi>reason add]:
   \<open> homo_sep_disj_total f
 \<Longrightarrow> homo_sep_mult f
-\<Longrightarrow> Separation_Homo (\<phi>Fun f) UNIV \<close>
-  unfolding Separation_Homo_def Imply_def
+\<Longrightarrow> Separation_Homo_Obj (\<phi>Fun f) UNIV \<close>
+  unfolding Separation_Homo_Obj_def Imply_def
   by (clarsimp simp add: set_mult_expn \<phi>Fun_expn homo_sep_disj_total.sep_disj_homo
                          homo_sep_mult.homo_mult)
 
@@ -203,14 +203,14 @@ interpretation \<phi>Composition: Functional_Transformation_Functor_L
       blast)
 
 lemma \<phi>Composition_separatio_functor_zip[\<phi>reason add]:
-  \<open> Separation_Homo B UNIV
-\<Longrightarrow> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) UNIV (\<lambda>x. x)\<close>
-  unfolding Sep_Homo_Ty_zip_def Imply_def Separation_Homo_def
+  \<open> Separation_Homo_Obj B UNIV
+\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) UNIV (\<lambda>x. x)\<close>
+  unfolding Separation_Homo\<^sub>I_def Imply_def Separation_Homo_Obj_def
   by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn, insert times_set_I, blast)
 
 lemma (*The above rule is revertible. requiring the sep homo domain being the univ is already the weakest.*)
-  \<open> S \<noteq> {} \<Longrightarrow> Sep_Homo_Ty_zip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x) \<Longrightarrow> Separation_Homo B UNIV \<close>
-  unfolding Sep_Homo_Ty_zip_def Separation_Homo_def Imply_def
+  \<open> S \<noteq> {} \<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x) \<Longrightarrow> Separation_Homo_Obj B UNIV \<close>
+  unfolding Separation_Homo\<^sub>I_def Separation_Homo_Obj_def Imply_def
   apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y u v
@@ -220,14 +220,14 @@ lemma (*The above rule is revertible. requiring the sep homo domain being the un
 
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason add]:
   \<open> Separation_Homo_unzip B
-\<Longrightarrow> Sep_Homo_Ty_unzip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
+\<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
   for B :: \<open>('d::sep_magma,'e::sep_magma) \<phi>\<close>
-  unfolding Sep_Homo_Ty_unzip_def Imply_def Separation_Homo_unzip_def
+  unfolding Separation_Homo\<^sub>E_def Imply_def Separation_Homo_unzip_def
   by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn; blast)
 
 lemma (*The above rule is revertible*)
-  \<open> Sep_Homo_Ty_unzip ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo_unzip B \<close>
-  unfolding Sep_Homo_Ty_unzip_def Separation_Homo_unzip_def Imply_def
+  \<open> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo_unzip B \<close>
+  unfolding Separation_Homo\<^sub>E_def Separation_Homo_unzip_def Imply_def
   apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y v
@@ -711,18 +711,30 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 3]]
-
-                                                                                                                                       
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
+  
+                                                                                                                                                       
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving (* Identity_Element\<^sub>I
+  deriving Identity_Element\<^sub>I
        and Identity_Element\<^sub>E
        and Object_Equiv
        and Transformation_Functor
-       and Sep_Homo_Ty_zip
-       and *) Sep_Homo_Ty_unzip
+       and Separation_Homo\<^sub>I
+       and Separation_Homo\<^sub>E
+
+
+
+thm List.sep_homo\<^sub>I
+
+
+
+
+
+
+
+
 
 
 
@@ -771,7 +783,7 @@ declare [[\<phi>trace_reasoning = 0, ML_print_depth = 1000]]
        and Identity_Element\<^sub>E
        and Object_Equiv
        and Transformation_Functor
-       and Sep_Homo_Ty_zip
+       and Separation_Homo\<^sub>I
 
 
 
