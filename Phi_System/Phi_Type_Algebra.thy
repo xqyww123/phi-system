@@ -578,8 +578,8 @@ subsubsection \<open>Equiv Object\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method (\<And>x y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T) M D R F
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Obj_Equivalence T eq)) M D R F\<close>
-  unfolding \<phi>Programming_Method_def Obj_Equivalence_def Premise_def
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Object_Equiv T eq)) M D R F\<close>
+  unfolding \<phi>Programming_Method_def Object_Equiv_def Premise_def
   by clarsimp
 
 subsubsection \<open>Transformation Functor\<close>
@@ -1082,15 +1082,15 @@ lemma \<phi>TA_1R_rule:
   unfolding Action_Tag_def .
 
 
-subsubsection \<open>Obj_Equivalence\<close>
+subsubsection \<open>Object_Equiv\<close>
 
-lemma Obj_Equivalence_rule:
+lemma Object_Equiv_rule:
   \<open> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> Obj_Equivalence T eq \<close>
-  unfolding Obj_Equivalence_def Premise_def Action_Tag_def
+\<Longrightarrow> Object_Equiv T eq \<close>
+  unfolding Object_Equiv_def Premise_def Action_Tag_def
   by blast
 
 lemma \<phi>TA_EO_rewr_IH:
@@ -1105,19 +1105,19 @@ lemma \<phi>TA_EO_rewr_C:
 
 
 
-lemma Obj_Equivalence_rule_move_all:
+lemma Object_Equiv_rule_move_all:
   \<open>(\<And>x. P x \<and> Q) \<Longrightarrow> (\<forall>x. P x) \<and> Q\<close>
   by blast
 
-lemma Obj_Equivalence_rule_move_all2:
+lemma Object_Equiv_rule_move_all2:
   \<open>(P \<longrightarrow> (\<forall>x. Q x)) \<and> R \<Longrightarrow> (\<forall>x. P \<longrightarrow> Q x) \<and> R\<close>
   by blast
 
-lemma Obj_Equivalence_rule_move_set_eq:
+lemma Object_Equiv_rule_move_set_eq:
   \<open>RR \<Longrightarrow> (R \<and> P \<and> R2 \<longrightarrow> P) \<and> RR\<close>
   by blast
 
-lemma Obj_Equivalence_rule_move_set_eq_end:
+lemma Object_Equiv_rule_move_set_eq_end:
   \<open>(P \<and> R \<longrightarrow> P)\<close>
   by blast
 
@@ -1207,12 +1207,6 @@ lemma \<phi>TA_SHz_rewr_C:
   unfolding Action_Tag_def atomize_imp atomize_all
   by (rule; blast)
 
-lemma \<phi>TA_SHu_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target undefined)
-\<equiv> (Ant \<Longrightarrow> P)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)
-
 lemmas \<phi>TA_SHu_rewr = \<phi>TA_SHz_rewr_C
 
 
@@ -1224,25 +1218,27 @@ lemmas \<phi>TA_SHu_rewr = \<phi>TA_SHz_rewr_C
 
 
 ML_file \<open>library/automation/type_algebra.ML\<close>
-
+                                   
 term case_prod
 
 ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\<open>times\<close>\<close>
 
-(* hide_fact Obj_Equivalence_rule_move_all Obj_Equivalence_rule_move_set_eq Obj_Equivalence_rule_move_set_eq_end
-          Obj_Equivalence_rule_move_all2
+(* hide_fact Object_Equiv_rule_move_all Object_Equiv_rule_move_set_eq Object_Equiv_rule_move_set_eq_end
+          Object_Equiv_rule_move_all2
 
           \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH (*\<phi>TA_TF_rule_step*) *)
 
 lemmas [\<phi>constraint_expansion] =
-          HOL.simp_thms ex_simps[symmetric] prod.case mem_Collect_eq imp_ex
+          HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
+          prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv
           ExSet_simps
+          \<phi>Prod_expn' \<phi>Prod_expn''
           FSet.ball_simps(5-7) Set.ball_simps(5-7,9) Set.ball_Un
           Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
           list_all2_Cons1 list_all2_Nil zip_eq_Cons_ex zip_eq_Nil_eq_len list_all2_lengthD
               map_ident
 
-thm map_ident
+thm prod.map_ident
 thm zip_eq_Nil_eq_len zip_eq_Cons_ex
 
 

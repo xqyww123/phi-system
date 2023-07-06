@@ -610,18 +610,18 @@ lemma [\<phi>reason 1000]:
 
 lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolon> _) _\<close>]:
   \<open> Identity_Element\<^sub>I (z \<Ztypecolon> T) P
-\<Longrightarrow> Obj_Equivalence T eq
+\<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x z
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<close>
-  unfolding Identity_Element\<^sub>I_def Obj_Equivalence_def Premise_def
+  unfolding Identity_Element\<^sub>I_def Object_Equiv_def Premise_def
   using implies_trans by fastforce
 
 lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>E (?var_x \<Ztypecolon> _)\<close>]:
   \<open> Identity_Element\<^sub>E (z \<Ztypecolon> T)
-\<Longrightarrow> Obj_Equivalence T eq
+\<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq z x
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<close>
-  unfolding Identity_Element\<^sub>E_def Obj_Equivalence_def Premise_def
+  unfolding Identity_Element\<^sub>E_def Object_Equiv_def Premise_def
   using implies_trans by fastforce
 
 lemma [\<phi>reason 1200]:

@@ -48,12 +48,12 @@ end *)
 val _ = Theory.setup (Context.theory_map (
    Normalize_ToA.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
-                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*)])
+                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>])
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
       |> Simplifier.add_cong @{thm HOL.conj_cong})
 #> Simps.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
-                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*)])
+                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>])
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
       |> Simplifier.add_cong @{thm HOL.conj_cong})
 ))
@@ -480,7 +480,7 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,quants,ind_conv,rea
                 |> simp (phi,ctxt)
                 |> singleton (Proof_Context.export ctxt ctxt0)
    in Phi_Reasoner.info_pretty ctxt 0 (fn () => let open Pretty in
-        block [str "Generated: ", Thm.pretty_thm ctxt rule'4]
+        block [str "Derived: ", Thm.pretty_thm ctxt rule'4]
       end) ;
       rule'4
   end)
@@ -731,7 +731,7 @@ fun set_last_schematic_var ctxt rule0 =
   let val rule = Phi_Help.beta_eta_contract rule0
       val (t1,t2,tm) =
         case Thm.concl_of rule
-          of _ (*Trueprop*) $ (_ (*Obj_Equivalence*) $ _ $ Abs (_, t1, Abs (_, t2, tm)))
+          of _ (*Trueprop*) $ (_ (*Object_Equiv*) $ _ $ Abs (_, t1, Abs (_, t2, tm)))
               => (t1,t2,tm)
            | _ => error "Internal bug cb9504e4-7db1-45f8-b1f6-ec37a5b75105"
       fun get_the_last_var (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ X) = get_the_last_var X
@@ -779,13 +779,13 @@ fun infer_eq ctxt rule =
             |> infer_eq ctxt
          | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ (Const(\<^const_name>\<open>All\<close>, _) $ X ) $ _) =>
             infer_eq ctxt (if is_free_bound' X
-                           then @{thm' Obj_Equivalence_rule_move_all2} RS rule
-                           else @{thm' Obj_Equivalence_rule_move_all} RS rule)
+                           then @{thm' Object_Equiv_rule_move_all2} RS rule
+                           else @{thm' Object_Equiv_rule_move_all} RS rule)
          | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ Const(\<^const_name>\<open>True\<close>, _)) =>
-            (@{thm Obj_Equivalence_rule_move_set_eq_end} RS (@{thm' simp_thms(21)[THEN iffD2]} RS rule))
+            (@{thm Object_Equiv_rule_move_set_eq_end} RS (@{thm' simp_thms(21)[THEN iffD2]} RS rule))
               |> set_last_schematic_var ctxt
          | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ _) =>
-            infer_eq ctxt (@{thm' Obj_Equivalence_rule_move_set_eq} RS rule)
+            infer_eq ctxt (@{thm' Object_Equiv_rule_move_set_eq} RS rule)
          | _ (*Trueprop*) $ Const(\<^const_name>\<open>True\<close>, _) =>
             (@{thm' TrueI} RS rule)
               |> set_eq_when_it_is_constant_true ctxt
@@ -806,7 +806,7 @@ fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
                 val typ = x_ty_A --> x_ty_A --> \<^typ>\<open>bool\<close>
                 val ant = (Term.incr_bv (arity_A, 0, A))
                         |> fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A          
-                        |> (fn X => \<^Const>\<open>Obj_Equivalence x_ty_A model_ty_A\<close> $ X $ Free(eq, typ))
+                        |> (fn X => \<^Const>\<open>Object_Equiv x_ty_A model_ty_A\<close> $ X $ Free(eq, typ))
                         |> fold (fn T => fn X =>
                             Const(\<^const_name>\<open>All\<close>, (T --> HOLogic.boolT) --> HOLogic.boolT)
                               $ Abs("",T,X)
@@ -830,13 +830,13 @@ fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
              else Seq.single (Var(("eq", 1), x_ty --> x_ty --> HOLogic.boolT), ctxt)
    in eq_terms
    |> Seq.map (fn (eq_term, ctxt') =>
-        (ant, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Obj_Equivalence x_ty model_ty\<close> $ T_term $ eq_term),
+        (ant, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close> $ T_term $ eq_term),
          x_Term, T_term, phi, ctxt'))
   end
 
 fun OE_reasoning phi ctxt rule =
   let val ctxt' = Context.proof_map (Phi_Reasoner.add_pass (
-            "\<phi>TA.OE", \<^pattern_prop>\<open>Obj_Equivalence _ _\<close>,
+            "\<phi>TA.OE", \<^pattern_prop>\<open>Object_Equiv _ _\<close>,
             fn _ => fn (rules, _, pats, guard, ctxt) =>
                        (rules, Phi_Reasoner.LOCAL_CUT, pats, guard, ctxt))) ctxt
    in abstract_constraint_guided_reasoning (K NONE) phi ctxt' rule
@@ -844,7 +844,7 @@ fun OE_reasoning phi ctxt rule =
 
 fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
   let val ctxt0 = Context.proof_of thy
-      val unify_hint = hint_unify_by_type (fn (\<^Const>\<open>Obj_Equivalence _ _\<close> $ T' $ _) => T')
+      val unify_hint = hint_unify_by_type (fn (\<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _) => T')
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_EO_rewr_IH})),
                        fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_EO_rewr_C} then_conv
                             Conv.implies_concl_conv (
@@ -861,7 +861,7 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
                                  (K (Conv.arg_conv (Conv.arg_conv (Simplifier.rewrite ctxt)))) ctxt)
       val rules = mk_rule_by_guess_or_hint ("/obj_equal", unify_hint, guess_property_obj_eq, [0],
                                             ind_conv, OE_reasoning, infer, simp)
-                                     @{thm Obj_Equivalence_rule} phi0 hint0 ctxt0
+                                     @{thm Object_Equiv_rule} phi0 hint0 ctxt0
    in Seq.chop 2 rules
    |> (fn ([], _) => raise Automation_Fail
         | ([rule'], _) => thy
@@ -875,7 +875,7 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
 in
 
 fun gen_obj_equal phi hints_thy =
-  select_one_hint \<^const_name>\<open>Obj_Equivalence\<close> (gen_obj_equal' phi) hints_thy
+  select_one_hint \<^const_name>\<open>Object_Equiv\<close> (gen_obj_equal' phi) hints_thy
 
 end
 
@@ -1103,22 +1103,13 @@ fun gen_SH' flag (phi0 : phi_type) hint0 generic =
                   Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
                 ))
             )
-    (* val ind_conv_u = default_ind_conv (
-            fn ctxt => fn phi =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr}) then_conv
-                Conv.implies_concl_conv (Conv.implies_conv (
-                  Phi_Syntax.implication_conv
-                  Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
-                ) Conv.all_conv
-               ),
-            fn ctxt => fn phi =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr}) then_conv
-                Conv.implies_concl_conv (
-                  HOLogic.Trueprop_conv (
-                  Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
-                ))
-            )*)
-      val ind_conv = ind_conv_z (*if flag then ind_conv_z else ind_conv_u*)
+      fun ind_conv_u_impl ctxt phi =
+            Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr}) then_conv
+            Conv.implies_concl_conv (
+              Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
+            )
+      val ind_conv_u = default_ind_conv (ind_conv_u_impl, ind_conv_u_impl)
+      val ind_conv = if flag then ind_conv_z else ind_conv_u
       fun simp (phi, ctxt) =
             Conv.fconv_rule (
               Phi_Conv.hhf_concl_conv (K (
@@ -1268,7 +1259,7 @@ val _ = Theory.setup (Context.theory_map (
 #> Phi_Type_Algebra.add_automation_on_def 105 gen_obj_equal
 #> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
 #> Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)
-(* Phi_Type_Algebra.add_automation_on_def 121 (gen_SH true) *)
+#> Phi_Type_Algebra.add_automation_on_def 121 (gen_SH false)
 ))
 
 end

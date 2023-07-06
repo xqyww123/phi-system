@@ -345,11 +345,11 @@ fun sledgehammer (ctxt,sequent0) =
 fun auto' id (ctxt,sequent') =
   let
     val thy = Proof_Context.theory_of ctxt
-    val _ = tracing (Pretty.string_of (Pretty.chunks [
+    val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
                         Pretty.block [ Pretty.str "auto sledgehammer for ",
                                        Pretty.str id],
                         Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent')
-                    ]))
+                    ])
     val sequent = @{thm Premise_I} RS sequent' handle THM _ => sequent'
 
     fun try_cached_proof fallback =
@@ -395,8 +395,8 @@ fun auto' id (ctxt,sequent') =
           val prf_result =
                 case prf_result' of SOME ret => ret
                    | NONE => (if no_cache
-                              then (tracing ("Proof cache miss, " ^ id))
-                              else (warning "The cached proof fails. Re-searching proofs...";
+                              then (Phi_Reasoner.info_print ctxt 2 (fn _ => "Proof cache miss, " ^ id))
+                              else (warning "A cached proof fails. Re-searching proofs...";
                                     Phi_Cache_DB.invalidate_proof_cache (not no_cache) id thy) ;
                               find_proof ())
            in update_cache hash prf_result
