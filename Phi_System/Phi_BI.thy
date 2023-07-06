@@ -308,6 +308,11 @@ lemma [\<phi>reason 1000]:
 syntax
   "_SetcomprNu" :: "'a \<Rightarrow> pttrns \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<s>\<u>\<b>\<j>/ _./ _" [14,0,15] 14)
 
+term \<open>\<lambda>(a::nat). x\<close>
+term \<open>{(x::nat). x > 0}\<close>
+term Collect
+ML \<open>@{term \<open>{(x::nat). x > 0}\<close>}\<close>
+
 notation top ("\<top>")
 
 parse_translation \<open>[
@@ -319,13 +324,34 @@ parse_translation \<open>[
         | subst l Bs (A $ B) = subst l Bs A $ subst l Bs B
         | subst l Bs (Abs(N,T,X)) = Abs(N,T, subst (l+1) Bs X)
         | subst l Bs X = X
-      fun trans_one (Bs,C) (Const(\<^const_syntax>\<open>Pair\<close>, _)
+      fun trans_one (Bs,C) (Const(\<^syntax_const>\<open>_unit\<close>, _))
+            = Abs ("", \<^Type>\<open>unit\<close>, C [])
+        | trans_one (Bs,C) (Const(\<^const_syntax>\<open>Pair\<close>, _)
                                 $ (Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free (A, T) $ Ac)
                                 $ B)
             = Const(\<^const_syntax>\<open>case_prod\<close>, dummyT) $ (
                 Const(\<^syntax_const>\<open>_constrainAbs\<close>, dummyT)
                   $ Abs (A, T, trans_one ((A,T)::Bs, C) B)
                   $ Ac
+              )
+        | trans_one (Bs,C) (Const(\<^const_syntax>\<open>Pair\<close>, _)
+                                $ (Const (\<^syntax_const>\<open>_constrain\<close>, _)
+                                      $ (Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free (A, T) $ T') $ Ac)
+                                $ B)
+            = Const(\<^const_syntax>\<open>case_prod\<close>, dummyT) $ (
+                Const(\<^syntax_const>\<open>_constrainAbs\<close>, dummyT)
+                  $ (Const(\<^syntax_const>\<open>_constrainAbs\<close>, dummyT)
+                      $ Abs (A, T, trans_one ((A,T)::Bs, C) B)
+                      $ T')
+                  $ Ac
+              )
+        | trans_one (Bs,C) (Const(\<^const_syntax>\<open>Pair\<close>, _)
+                                $ Const (\<^syntax_const>\<open>_unit\<close>, _)
+                                $ B)
+            = Const(\<^const_syntax>\<open>case_prod\<close>, dummyT) $ (
+                Const(\<^syntax_const>\<open>_constrainAbs\<close>, dummyT)
+                  $ Abs ("", dummyT, trans_one (Bs, C) B)
+                  $ Const(\<^type_syntax>\<open>unit\<close>, dummyT)
               )
         | trans_one (Bs,C) (Const (\<^syntax_const>\<open>_constrain\<close>, _) $ Free (A, T) $ Ac)
             = Const(\<^syntax_const>\<open>_constrainAbs\<close>, dummyT)
@@ -344,6 +370,8 @@ parse_translation \<open>[
    in trans idts [] end)
 ]\<close>
 
+
+
 print_translation \<open>[
   (\<^const_syntax>\<open>ExSet\<close>, fn ctxt => fn [X] =>
     let fun subst l Bs (Bound i)
@@ -352,9 +380,11 @@ print_translation \<open>[
           | subst l Bs (A $ B) = subst l Bs A $ subst l Bs B
           | subst l Bs X = X
         fun trans (Vs,Bs) (Const(\<^const_syntax>\<open>case_prod\<close>, _) $ Abs (A,T,X))
-              = let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
-                 in trans (bound::Vs, bound::Bs) X
-                end
+              = if T = \<^Type>\<open>unit\<close> andalso A = ""
+                then trans (Const(\<^syntax_const>\<open>_unit\<close>, dummyT) :: Vs, Bs) X
+                else let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
+                      in trans (bound::Vs, bound::Bs) X
+                     end
           | trans (Vs,Bs) (Abs(A,T, Const(\<^const_syntax>\<open>ExSet\<close>, _) $ X))
               = let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
                     val var = fold (fn v => fn v' => Const(\<^const_syntax>\<open>Pair\<close>,dummyT) $ v $ v')
@@ -364,8 +394,11 @@ print_translation \<open>[
                 end
           | trans (Vs,Bs0) (Abs(A,T,B))
               = let val bound = Const(\<^syntax_const>\<open>_bound\<close>, dummyT) $ Free(A,T)
+                    val v' = if T = \<^Type>\<open>unit\<close> andalso A = ""
+                             then Const(\<^syntax_const>\<open>_unit\<close>, dummyT)
+                             else bound
                     val var = fold (fn v => fn v' => Const(\<^const_syntax>\<open>Pair\<close>,dummyT) $ v $ v')
-                                    Vs bound
+                                    Vs v'
                     val Bs = bound :: Bs0
                     val (X,P) = case B of Const(\<^const_syntax>\<open>Subjection\<close>, _) $ X $ P => (X,P)
                                         | _ => (B, Const(\<^const_syntax>\<open>top\<close>, dummyT))
