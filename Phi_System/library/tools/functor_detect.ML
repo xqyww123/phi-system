@@ -76,13 +76,40 @@ val phi_maxidx_of : phi_type -> int -> int
 
 val note_properties : phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
 
-type algebra_hints = term list
+type hints = term list
 
 val get_type_info : Context.generic -> string (*const name*) -> phi_type option
-val add_type : def * Position.T * algebra_hints -> generic_theory -> phi_type * generic_theory
+val add_type : def * Position.T * hints -> generic_theory -> phi_type * generic_theory
 
-type automation_on_def = phi_type -> algebra_hints * generic_theory -> algebra_hints * generic_theory
-val add_automation_on_def : priority -> automation_on_def -> Context.generic -> Context.generic
+(* Property Deriver from \<phi>-Type Definition*)
+
+type priority = int
+type deriver_name = string
+type deriver = {
+  priority: priority,
+  dependends: deriver_name list,
+  derive: hints -> generic_theory -> generic_theory
+}
+
+val get_deriver : Context.generic -> deriver_name -> deriver
+val check_deriver : Context.generic -> xstring * Position.T -> deriver_name * deriver
+val deriver_name_space : Context.generic -> deriver Name_Space.table
+val define_deriver : binding -> deriver -> local_theory -> string * local_theory
+val define_deriver_global : binding -> deriver -> theory -> string * theory
+
+type pattern = term
+val bind_derivers_on_patterns : (pattern * deriver_name) list -> Context.generic -> Context.generic
+val match_deriver : Context.generic -> term -> deriver option
+val get_derivers_from_hints : Context.generic -> hints -> (hints * deriver_name) list
+
+structure Derivings : TABLE
+type derivings = (hints * deriver) Derivings.table
+val add_deriver_dependence : deriver_name -> derivings -> derivings
+val chk_all_derived : deriver_name -> unit
+
+(*no need to call it explicitly. It is invoked by `add_type` *)
+val derive_properties : phi_type -> derivings * generic_theory -> derivings * generic_theory
+
 
 (* Tools *)
 
@@ -451,8 +478,7 @@ val phi_trim_context = map_phi_type (I, map (Thm.trim_context))
 fun phi_transfer thy = map_phi_type (I, map (Thm.transfer thy))
 val phi_maxidx_of = fold_phi_type (Term.maxidx_term, Thm.maxidx_thm)
 
-type algebra_hints = term list
-type automation_on_def = phi_type -> algebra_hints * generic_theory -> algebra_hints * generic_theory
+type hints = term list
 
 structure Phi_Types = Generic_Data (
   type T = phi_type Symtab.table
@@ -460,15 +486,10 @@ structure Phi_Types = Generic_Data (
   val merge = Symtab.merge (K true)
 )
 
-structure Automation_on_Def = Generic_Data (
-  type T = automation_on_def PriorityTab.table
-  val empty = PriorityTab.empty
-  val merge = PriorityTab.merge (K false)
-)
-
 fun get_type_info ctxt k =
       Option.map (phi_transfer (Context.theory_of ctxt)) (Symtab.lookup (Phi_Types.get ctxt) k)
 
+(*
 fun add_automation_on_def priority automation ctxt =
   Automation_on_Def.map (PriorityTab.update_new (
       (priority, Context.theory_long_name (Context.theory_of ctxt)), automation)) ctxt
@@ -483,6 +504,7 @@ fun invoke_automations_on_def (phi,hints) ctxt =
               item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt' H]
             ) hints)))
        end
+*)
 
 
 (** Impl of Basic Conversions **)
@@ -614,6 +636,72 @@ fun note_properties (phi : phi_type) notes =
    in Context.mapping (fold (fn (N,Th) => snd o Global_Theory.note_thms "" ((mk_binding N, []), [(Th,[])])) notes)
                       (fold (fn (N,Th) => snd o Local_Theory.note ((mk_binding N, []), Th)) notes)
   end
+
+(*** Deriving Properties ***)
+
+type priority = int
+type deriver_name = string
+type deriver = {
+  priority: priority,
+  name: deriver_name,
+  dependends: deriver_name list,
+  derive: hints -> generic_theory -> generic_theory
+}
+
+structure Derivers = Generic_Data (
+  type T = deriver Name_Space.table
+  val empty = Name_Space.empty_table "\<phi>deriver"
+  val merge = Name_Space.merge_tables
+)
+
+structure Derivings = Table (type key = priority * deriver_name; val ord = prod_ord int_ord string_ord)
+
+type pattern = term
+structure Deriver_Bindings = Generic_Data (
+  type T = (pattern * deriver_name) Net.net
+  val empty = Net.empty
+  val merge = Net.merge (op =)
+)
+
+val deriver_name_space = Derivers.get
+val get_deriver = Name_Space.get o Derivers.get
+val deriver_ops = { get_data = Derivers.get, put_data = Derivers.put }
+val define_deriver = Entity.define deriver_ops
+val define_deriver_global = Entity.define_global deriver_ops
+fun check_deriver ctxt = Name_Space.check ctxt (Derivers.get ctxt)
+
+fun bind_derivers_on_patterns pat_derivers =
+  Deriver_Bindings.map (fold (fn (pat, deriver) =>
+      let val pat' = Envir.beta_eta_contract pat
+       in Net.insert_term (op =) (pat', (pat', deriver))
+      end
+    ) pat_derivers)
+
+fun match_deriver ctxt term =
+  let val net = Deriver_Bindings.get ctxt
+      val thy = Context.theory_of ctxt
+   in Net.match_term net term
+   |> map_filter (fn (pat, deriver) =>
+        if Pattern.matches thy (pat, term)
+        then SOME (get_deriver ctxt deriver)
+        else NONE)
+   |> sort (fn (a,b) => int_ord (#priority b, #priority a))
+   |> (fn [] => NONE
+        | (h :: _) => SOME h)
+  end
+
+(*
+fun get_derivers_from_hints ctxt hints =
+  fold (fn hint =>
+    
+  ) hints *)
+
+
+(*fun get_derivers_from_constant_name ctxt =
+  *)
+
+
+(*** \<phi>-Type Definition Part II ***)
 
 fun add_type (def, pos, hints) generic =
   let val ctxt = Context.proof_of generic
@@ -770,7 +858,7 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
 
 local
 
-fun check_algebra_hints ctxt const hints =
+fun check_property_hints ctxt const hints =
   let val ctxt'0 = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
       val ((x_term, T_term'), ctxt'1) = fix_phi_term_params const ctxt'0
       val ctxt' = fold Variable.declare_constraints [x_term,T_term'] ctxt'1
@@ -854,7 +942,7 @@ fun gen_add_fun pos raw_hints add (generic : generic_theory) =
               |> (fn SOME x => x
                    | NONE => error "No \<phi>-type is defined.")
     val ctxt'1 = Context.proof_of generic'1
-    val hints = check_algebra_hints ctxt'1 const (map (Syntax.parse_term ctxt'1) raw_hints)
+    val hints = check_property_hints ctxt'1 const (map (Syntax.parse_term ctxt'1) raw_hints)
    in generic'1
    |> Context.mapping_result (
         Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
@@ -884,9 +972,9 @@ fun add_fun_cmd a b c hints int generic =
 end
 
 
-val algebra_hints = Scan.repeat (\<^keyword>\<open>deriving\<close> |-- Parse.and_list Parse.term) >> flat
+val property_hints = Scan.repeat (\<^keyword>\<open>deriving\<close> |-- Parse.and_list Parse.term) >> flat
 
-val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- algebra_hints
+val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- property_hints
       >> (fn ((config, (fixes, specs)), algebras) => add_fun_cmd fixes specs config algebras))
 
 val def_by_function = (Function_Common.function_parser Function_Common.default_config
@@ -899,7 +987,7 @@ fun my_definition decl params prems spec int lthy = lthy
   |> Specification.definition_cmd decl params prems spec int
 
 val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec.opt_thm_name ":" -- Parse.prop) --
-      Parse_Spec.if_assumes -- Parse.for_fixes -- algebra_hints
+      Parse_Spec.if_assumes -- Parse.for_fixes -- property_hints
         -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ()))
    >> (fn (((((decl, (spec, pos)), prems), params), hints), _) => fn int =>
         Context.mapping_result
@@ -910,7 +998,7 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
            #> (fn (def, generic) =>
                 let val ctxt = Context.proof_of generic
                  in add_type (DIRECT_DEF def, pos,
-                              check_algebra_hints ctxt (fst def) (map (Syntax.parse_term ctxt) hints))
+                              check_property_hints ctxt (fst def) (map (Syntax.parse_term ctxt) hints))
                          generic
                  |> snd
                 end)

@@ -1059,7 +1059,9 @@ setup \<open>Context.theory_map(
 ML \<open>\<^pattern>\<open>(\<lambda>l. (map fst l, map snd l))\<close>\<close> *)
 
 
-subsubsection \<open>General Rules\<close>
+subsubsection \<open>Deriver Framework\<close>
+
+ML_file \<open>library/phi_type_algebra/deriver.ML\<close>
 
 consts \<phi>TA_ind_target :: \<open>action \<Rightarrow> action\<close>
        \<phi>TA_IH_ToA :: action
