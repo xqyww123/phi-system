@@ -1,12 +1,14 @@
 theory Phi_Type_Algebra
   imports IDE_CP_Applications1
-  keywords "\<phi>type_def" :: thy_defn
+  keywords "\<phi>type_def" "\<phi>property_deriver" :: thy_defn
        and "deriving" :: quasi_command
 begin
 
 section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
 
 subsection \<open>Definitions\<close>
+
+
 
 (*
 subsubsection \<open>Unit\<close>

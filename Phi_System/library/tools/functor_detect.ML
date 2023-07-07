@@ -79,7 +79,6 @@ val note_properties : phi_type -> (bstring * thm list) list -> generic_theory ->
 type hints = term list
 
 val get_type_info : Context.generic -> string (*const name*) -> phi_type option
-val add_type : def * Position.T * hints -> generic_theory -> phi_type * generic_theory
 
 (* Property Deriver from \<phi>-Type Definition*)
 
@@ -87,8 +86,8 @@ type priority = int
 type deriver_name = string
 type deriver = {
   priority: priority,
-  dependends: deriver_name list,
-  derive: hints -> generic_theory -> generic_theory
+  dependences: deriver_name list,
+  derive: hints -> phi_type -> generic_theory -> generic_theory
 }
 
 val get_deriver : Context.generic -> deriver_name -> deriver
@@ -99,17 +98,25 @@ val define_deriver_global : binding -> deriver -> theory -> string * theory
 
 type pattern = term
 val bind_derivers_on_patterns : (pattern * deriver_name) list -> Context.generic -> Context.generic
-val match_deriver : Context.generic -> term -> deriver option
-val get_derivers_from_hints : Context.generic -> hints -> (hints * deriver_name) list
+val match_deriver : Context.generic -> term -> (deriver_name * deriver) option
+exception Unknown_Hint of term
+val match_deriver1 : Context.generic -> term -> deriver_name * deriver
 
 structure Derivings : TABLE
 type derivings = (hints * deriver) Derivings.table
-val add_deriver_dependence : deriver_name -> derivings -> derivings
-val chk_all_derived : deriver_name -> unit
+val add_deriver : hints * (deriver_name * deriver) -> derivings -> derivings
+val add_derivers_from_hint : Context.generic -> term -> derivings -> derivings
+
+val add_deriver_dependences : Context.generic -> deriver_name list -> derivings -> derivings
+val complete_deriver_dependences : Context.generic -> derivings -> derivings
 
 (*no need to call it explicitly. It is invoked by `add_type` *)
-val derive_properties : phi_type -> derivings * generic_theory -> derivings * generic_theory
+val derive_properties : derivings -> phi_type -> generic_theory -> generic_theory
+val add_type : def * Position.T * derivings -> generic_theory -> phi_type * generic_theory
 
+type deriving_ast
+val deriving_parser : deriving_ast list parser
+val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 (* Tools *)
 
@@ -128,6 +135,10 @@ val fix_phi_term_params : term -> Proof.context ->
 
 val raw_term_name_typ : term -> string * typ
 val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ * typ
+
+(* Internal Technical stuffs *)
+
+val ML_sender : (hints -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
 
 end
 
@@ -619,6 +630,219 @@ fun mk_ind_dest_ToA ctxt phi gen_prop = (*not tested*)
         |> Phi_Help.beta_eta_contract
   end
 
+(** Tools **)
+
+fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (args, x, c)
+  | dest_parameterized_phi_ty' args \<^Type>\<open>fun a T\<close> = dest_parameterized_phi_ty' (a::args) T
+  | dest_parameterized_phi_ty' _ T = raise TYPE ("not a phi-type",[T],[])
+
+val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
+
+fun fix_phi_term_params phi_term ctxt =
+  let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of phi_term)
+      val arg_tys = rev rev_arg_tys
+      val arg_names' = Name.invent (Variable.names_of ctxt) "A" (length arg_tys)
+      val [x_name'] = Name.invent (Variable.names_of ctxt) "x" 1
+      val (x_name::arg_names, ctxt') = Variable.add_fixes (x_name' :: arg_names') ctxt
+      val args = map2 (fn N => fn T => Free(N,T)) arg_names arg_tys
+      val x_term = Free(x_name, x_ty)
+      val T_term = fold (fn a => fn X => X $ a) args phi_term
+   in ((x_term, T_term), ctxt')
+  end
+
+(*** Deriving Properties ***)
+
+type priority = int
+type deriver_name = string
+type deriver = {
+  priority: priority,
+  dependences: deriver_name list,
+  derive: hints -> phi_type -> generic_theory -> generic_theory
+}
+
+structure Derivers = Generic_Data (
+  type T = deriver Name_Space.table
+  val empty = Name_Space.empty_table "\<phi>deriver"
+  val merge = Name_Space.merge_tables
+)
+
+structure Derivings = Table (type key = priority * deriver_name; val ord = prod_ord int_ord string_ord)
+type derivings = (hints * deriver) Derivings.table
+
+type pattern = term
+structure Deriver_Bindings = Generic_Data (
+  type T = (pattern * deriver_name) Net.net
+  val empty = Net.empty
+  val merge = Net.merge (op =)
+)
+
+fun chk_deriver ctxt (derv : deriver) =
+  let val names = Derivers.get ctxt
+   in #dependences derv
+   |> map (Name_Space.get names)
+   |> forall (fn der' => #priority der' > #priority derv)
+   |> (fn True => derv
+        | False => error "The priority of the deriver must be larger than its dependences.")
+  end
+
+val deriver_name_space = Derivers.get
+val get_deriver = Name_Space.get o Derivers.get
+val deriver_ops = { get_data = Derivers.get, put_data = Derivers.put }
+
+fun define_deriver bind derv ctxt =
+      Entity.define deriver_ops bind (chk_deriver (Context.Proof ctxt) derv) ctxt
+fun define_deriver_global bind derv ctxt =
+      Entity.define_global deriver_ops bind (chk_deriver (Context.Theory ctxt) derv) ctxt
+
+fun check_deriver ctxt = Name_Space.check ctxt (Derivers.get ctxt)
+
+fun bind_derivers_on_patterns pat_derivers =
+  Deriver_Bindings.map (fold (fn (pat, deriver) =>
+      let val pat' = Envir.beta_eta_contract pat
+       in Net.insert_term (op =) (pat', (pat', deriver))
+      end
+    ) pat_derivers)
+
+fun match_deriver ctxt term =
+  let val net = Deriver_Bindings.get ctxt
+      val thy = Context.theory_of ctxt
+   in Net.match_term net term
+   |> map_filter (fn (pat, deriver) =>
+        if Pattern.matches thy (pat, term)
+        then SOME (deriver, get_deriver ctxt deriver)
+        else NONE)
+   |> sort (fn (a,b) => int_ord (#priority (snd b), #priority (snd a)))
+   |> (fn [] => NONE
+        | (h :: _) => SOME h)
+  end
+
+exception Unknown_Hint of term
+fun match_deriver1 ctxt term =
+  case match_deriver ctxt term
+    of SOME ret => ret
+     | NONE => raise Unknown_Hint term
+
+fun add_deriver (hints,(derv_name, derv)) dervs =
+  Derivings.map_default ((#priority derv, derv_name), ([],derv))
+                        (fn (hints', der') => (hints @ hints', der')) dervs
+
+fun add_derivers_from_hint ctxt hint ders =
+  add_deriver ([hint], match_deriver1 ctxt (Logic.strip_imp_concl hint)) ders
+
+fun add_deriver_dependences ctxt [] dervs = dervs
+  | add_deriver_dependences ctxt (dep::remain_deps) dervs =
+      if Derivings.exists (fn ((_,name),_) => name = dep) dervs
+      then add_deriver_dependences ctxt remain_deps dervs
+      else let val derv = get_deriver ctxt dep
+            in add_deriver_dependences ctxt remain_deps
+                  (add_deriver_dependences ctxt (#dependences derv) dervs)
+           end
+
+fun complete_deriver_dependences ctxt dervs =
+  Derivings.fold (fn (_,(_,derv)) =>
+      add_deriver_dependences ctxt (#dependences derv)) dervs dervs
+
+fun derive_properties dervs phityp =
+  Derivings.fold (fn (_,(hints,derv)) => #derive derv hints phityp) dervs
+
+(*fun get_derivers_from_constant_name ctxt =
+  *)
+
+(* Syntax *)
+
+datatype deriving_ast = Derv_By_Name of xstring * Position.T | Derv_By_Term of string
+
+val deriving_name = Parse.position (
+        Parse.group (fn () => "name") (Parse.short_ident || Parse.long_ident))
+val deriving_parser = Scan.repeat (
+        \<^keyword>\<open>deriving\<close> |-- Parse.and_list ( deriving_name >> Derv_By_Name
+                                             || Parse.term >> Derv_By_Term)
+      ) >> flat
+
+(*
+fun check_property_hint ctxt phi_typ_const hint =
+  let val ctxt'0 = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
+      val ((x_term, T_term'), ctxt'1) = fix_phi_term_params phi_typ_const ctxt'0
+      val ctxt' = fold Variable.declare_constraints [x_term,T_term'] ctxt'1
+      val T_term = singleton (Variable.export_terms ctxt' ctxt) T_term'
+                |> Term.map_types (K Term.dummyT)
+      fun get_arity ret \<^Type>\<open>fun a T\<close> = get_arity (a::ret) T
+        | get_arity ret \<^Type>\<open>bool\<close> = ret
+        | get_arity _ _ = error "The given hint is not an algebraic property."
+      fun head_of (Const("_type_constraint_", _) $ X) = head_of X
+        | head_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = head_of X
+        | head_of (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = head_of X
+        | head_of (X $ _) = head_of X
+        | head_of X = X
+      val hint_arity = get_arity [] (Sign.the_const_type (Proof_Context.theory_of ctxt')
+                                    (fst (raw_term_name_typ (head_of hint))))
+      fun pad_term arity ((H as Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _) $ X) =
+            H $ pad_term arity X
+        | pad_term arity (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) =
+            pad_term arity X
+        | pad_term arity term =
+            let val i = Term.maxidx_of_term term + 1
+                val k = Term.maxidx_of_term T_term + 1
+                fun trim \<^Type>\<open>fun _ \<open>T as \<^Type>\<open>fun _ _\<close>\<close>\<close> (X $ _) = trim T X
+                  | trim _ X = X
+                fun pad _ [] X = X
+                  | pad j (T::tys) X =
+                      pad (i+1) tys X $ trim T (Logic.incr_indexes ([],[], i+j*k) T_term)
+                fun pass ar (X as (Const("_type_constraint_", _) $ _)) = pad 0 ar X
+                  | pass (_::ar) (X $ Y) = pass ar X $ Y
+                  | pass ar X = pad 0 ar X                
+             in \<^Const>\<open>Trueprop\<close> $ pass arity term
+            end
+      val props = Syntax.check_props ctxt'0 [pad_term hint_arity hint]
+      val ctxt'1 = fold Variable.add_fixes_implicit props (Variable.set_body false ctxt'0)
+   in hd (Variable.export_terms ctxt'1 ctxt props)
+  end*)
+
+fun check_deriving_ast ctxt derv_ast =
+  let val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of ctxt)
+   in Derivings.empty
+   |> fold (fn Derv_By_Name name => add_deriver ([], check_deriver ctxt name)
+             | Derv_By_Term term => Syntax.parse_prop ctxt_parse term
+                                 |> Syntax.check_prop ctxt_parse
+                                 |> add_derivers_from_hint ctxt
+           ) derv_ast
+   |> complete_deriver_dependences ctxt
+  end
+
+(* Interface for Deriver *)
+
+val ML_sender_locker = Synchronized.var "\<phi>TA.ML_sender_locker" ()
+val ML_sender : (hints -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
+  = Unsynchronized.ref NONE
+
+val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |-- Parse.and_list (Scan.repeat deriving_name) >> flat) []
+val patterns_parse = Scan.optional (\<^keyword>\<open>for\<close> |-- \<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> ) []
+val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<close>
+          "declare deriver deriving properties when defining a \<phi>-type"
+    (Parse.binding -- Parse.int -- dependences_parse -- patterns_parse --| \<^keyword>\<open>=\<close> -- Parse.ML_source
+ >> (fn ((((name,priority),deps),binding_terms),ML) => Toplevel.theory (fn thy =>
+   let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := ((" @
+                  ML_Lex.read_source ML @
+                  ML_Lex.read "): term list -> Phi_Type_Algebra.phi_type -> generic_theory -> generic_theory)"
+       val derive = Synchronized.change_result ML_sender_locker (fn () => let
+              val _ = ML_Context.expression (Input.pos_of ML) expr (Context.Theory thy)
+              val ret = the (!ML_sender)
+               in (ret, ML_sender := NONE)
+              end)
+       val deriver = {
+          priority = priority,
+          dependences = map (fn dep => fst (check_deriver (Context.Theory thy) dep)) deps,
+          derive = derive
+        } : deriver
+    in define_deriver_global name deriver thy |> snd
+   end
+   )))
+
+
+(*** \<phi>-Type Definition Part II ***)
+
+(** Tools **)
+
 fun chk_zero_index_thm thm =
   if Thm.maxidx_of thm <= 0
   then thm
@@ -637,73 +861,9 @@ fun note_properties (phi : phi_type) notes =
                       (fold (fn (N,Th) => snd o Local_Theory.note ((mk_binding N, []), Th)) notes)
   end
 
-(*** Deriving Properties ***)
+(** Main **)
 
-type priority = int
-type deriver_name = string
-type deriver = {
-  priority: priority,
-  name: deriver_name,
-  dependends: deriver_name list,
-  derive: hints -> generic_theory -> generic_theory
-}
-
-structure Derivers = Generic_Data (
-  type T = deriver Name_Space.table
-  val empty = Name_Space.empty_table "\<phi>deriver"
-  val merge = Name_Space.merge_tables
-)
-
-structure Derivings = Table (type key = priority * deriver_name; val ord = prod_ord int_ord string_ord)
-
-type pattern = term
-structure Deriver_Bindings = Generic_Data (
-  type T = (pattern * deriver_name) Net.net
-  val empty = Net.empty
-  val merge = Net.merge (op =)
-)
-
-val deriver_name_space = Derivers.get
-val get_deriver = Name_Space.get o Derivers.get
-val deriver_ops = { get_data = Derivers.get, put_data = Derivers.put }
-val define_deriver = Entity.define deriver_ops
-val define_deriver_global = Entity.define_global deriver_ops
-fun check_deriver ctxt = Name_Space.check ctxt (Derivers.get ctxt)
-
-fun bind_derivers_on_patterns pat_derivers =
-  Deriver_Bindings.map (fold (fn (pat, deriver) =>
-      let val pat' = Envir.beta_eta_contract pat
-       in Net.insert_term (op =) (pat', (pat', deriver))
-      end
-    ) pat_derivers)
-
-fun match_deriver ctxt term =
-  let val net = Deriver_Bindings.get ctxt
-      val thy = Context.theory_of ctxt
-   in Net.match_term net term
-   |> map_filter (fn (pat, deriver) =>
-        if Pattern.matches thy (pat, term)
-        then SOME (get_deriver ctxt deriver)
-        else NONE)
-   |> sort (fn (a,b) => int_ord (#priority b, #priority a))
-   |> (fn [] => NONE
-        | (h :: _) => SOME h)
-  end
-
-(*
-fun get_derivers_from_hints ctxt hints =
-  fold (fn hint =>
-    
-  ) hints *)
-
-
-(*fun get_derivers_from_constant_name ctxt =
-  *)
-
-
-(*** \<phi>-Type Definition Part II ***)
-
-fun add_type (def, pos, hints) generic =
+fun add_type (def, pos, dervs) generic =
   let val ctxt = Context.proof_of generic
       val (idx,(name_ty,term)) =
            (case def of DIRECT_DEF (lhs, _) =>
@@ -812,7 +972,7 @@ fun add_type (def, pos, hints) generic =
    |> note_properties phi_type [(unfoldN, eqs), (introN, intro_ToA)]
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)
-   |> invoke_automations_on_def (phi_type, hints)
+   |> derive_properties dervs phi_type
    |> Context_Position.restore_visible_generic generic
    |> pair phi_type
   end
@@ -820,24 +980,6 @@ fun add_type (def, pos, hints) generic =
 (** Interface **)
 
 (*fun theory_map_result f = apsnd Context.the_theory o f o Context.Theory;*)
-
-fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (args, x, c)
-  | dest_parameterized_phi_ty' args \<^Type>\<open>fun a T\<close> = dest_parameterized_phi_ty' (a::args) T
-  | dest_parameterized_phi_ty' _ T = raise TYPE ("not a phi-type",[T],[])
-
-val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
-
-fun fix_phi_term_params phi_term ctxt =
-  let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of phi_term)
-      val arg_tys = rev rev_arg_tys
-      val arg_names' = Name.invent (Variable.names_of ctxt) "A" (length arg_tys)
-      val [x_name'] = Name.invent (Variable.names_of ctxt) "x" 1
-      val (x_name::arg_names, ctxt') = Variable.add_fixes (x_name' :: arg_names') ctxt
-      val args = map2 (fn N => fn T => Free(N,T)) arg_names arg_tys
-      val x_term = Free(x_name, x_ty)
-      val T_term = fold (fn a => fn X => X $ a) args phi_term
-   in ((x_term, T_term), ctxt')
-  end
 
 fun instantiate_phi inst' =
   let val inst = (TVars.map (K Thm.typ_of) (#1 inst'),
@@ -858,49 +1000,7 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
 
 local
 
-fun check_property_hints ctxt const hints =
-  let val ctxt'0 = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
-      val ((x_term, T_term'), ctxt'1) = fix_phi_term_params const ctxt'0
-      val ctxt' = fold Variable.declare_constraints [x_term,T_term'] ctxt'1
-      val T_term = singleton (Variable.export_terms ctxt' ctxt) T_term'
-                |> Term.map_types (K Term.dummyT)
-      fun get_arity ret \<^Type>\<open>fun a T\<close> = get_arity (a::ret) T
-        | get_arity ret \<^Type>\<open>bool\<close> = ret
-        | get_arity _ _ = error "The given hint is not an algebraic property."
-      fun head_of (Const("_type_constraint_", _) $ X) = head_of X
-        | head_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = head_of X
-        | head_of (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = head_of X
-        | head_of (X $ _) = head_of X
-        | head_of X = X
-      val hints_arity = map (fn hint =>
-            get_arity [] (Sign.the_const_type (Proof_Context.theory_of ctxt')
-                                             (fst (raw_term_name_typ (head_of hint))))) hints
-      fun pad_term arity ((H as Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _) $ X) =
-            H $ pad_term arity X
-        | pad_term arity (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) =
-            pad_term arity X
-        | pad_term arity term =
-            let val i = Term.maxidx_of_term term + 1
-                val k = Term.maxidx_of_term T_term + 1
-                fun trim \<^Type>\<open>fun _ \<open>T as \<^Type>\<open>fun _ _\<close>\<close>\<close> (X $ _) = trim T X
-                  | trim _ X = X
-                fun pad _ [] X = X
-                  | pad j (T::tys) X =
-                      pad (i+1) tys X $ trim T (Logic.incr_indexes ([],[], i+j*k) T_term)
-                fun pass ar (X as (Const("_type_constraint_", _) $ _)) = pad 0 ar X
-                  | pass (_::ar) (X $ Y) = pass ar X $ Y
-                  | pass ar X = pad 0 ar X                
-             in \<^Const>\<open>Trueprop\<close> $ pass arity term
-            end
-      fun is_driving_flag (Const _) = true
-        | is_driving_flag (Const("_type_constraint_",_) $ X) = is_driving_flag X
-        | is_driving_flag _ = false
-      val props = Syntax.check_props ctxt'0 (map2 (fn ar => fn H =>
-            if is_driving_flag H then Logic.mk_term H
-            else pad_term ar H) hints_arity hints)
-      val ctxt'1 = fold Variable.add_fixes_implicit props (Variable.set_body false ctxt'0)
-   in Variable.export_terms ctxt'1 ctxt props
-  end
+
 
 (*make (x : T) \<equiv> ...  to T x \<equiv> ...*)
 val dirty_syntax_hack =
@@ -926,7 +1026,7 @@ fun is_phi_type \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>
   | is_phi_type \<^Type>\<open>fun _ T\<close> = is_phi_type T
   | is_phi_type _ = false
 
-fun gen_add_fun pos raw_hints add (generic : generic_theory) =
+fun gen_add_fun pos derv_ast add (generic : generic_theory) =
   let
     fun pat_completeness_auto ctxt =
       Pat_Completeness.pat_completeness_tac ctxt 1
@@ -942,12 +1042,12 @@ fun gen_add_fun pos raw_hints add (generic : generic_theory) =
               |> (fn SOME x => x
                    | NONE => error "No \<phi>-type is defined.")
     val ctxt'1 = Context.proof_of generic'1
-    val hints = check_property_hints ctxt'1 const (map (Syntax.parse_term ctxt'1) raw_hints)
+    val dervs = check_deriving_ast generic'1 derv_ast
    in generic'1
    |> Context.mapping_result (
         Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
       ) prove_termination
-   |-> (fn info => add_type (WFREC_DEF (fst (raw_term_name_typ const), info), pos, hints) #> snd)
+   |-> (fn info => add_type (WFREC_DEF (fst (raw_term_name_typ const), info), pos, dervs) #> snd)
   end
 
 fun add_function_cmd a b c tac int lthy = lthy
@@ -972,9 +1072,7 @@ fun add_fun_cmd a b c hints int generic =
 end
 
 
-val property_hints = Scan.repeat (\<^keyword>\<open>deriving\<close> |-- Parse.and_list Parse.term) >> flat
-
-val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- property_hints
+val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- deriving_parser
       >> (fn ((config, (fixes, specs)), algebras) => add_fun_cmd fixes specs config algebras))
 
 val def_by_function = (Function_Common.function_parser Function_Common.default_config
@@ -987,21 +1085,16 @@ fun my_definition decl params prems spec int lthy = lthy
   |> Specification.definition_cmd decl params prems spec int
 
 val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec.opt_thm_name ":" -- Parse.prop) --
-      Parse_Spec.if_assumes -- Parse.for_fixes -- property_hints
+      Parse_Spec.if_assumes -- Parse.for_fixes -- deriving_parser
         -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ()))
-   >> (fn (((((decl, (spec, pos)), prems), params), hints), _) => fn int =>
+   >> (fn (((((decl, (spec, pos)), prems), params), deriving), _) => fn int =>
         Context.mapping_result
           (Named_Target.theory_map_result (fn m => fn (tm, (name, def)) =>
                     (Morphism.term m tm, (name, Morphism.thm m def)))
                 (my_definition decl params prems spec int))
           (my_definition decl params prems spec int)
            #> (fn (def, generic) =>
-                let val ctxt = Context.proof_of generic
-                 in add_type (DIRECT_DEF def, pos,
-                              check_property_hints ctxt (fst def) (map (Syntax.parse_term ctxt) hints))
-                         generic
-                 |> snd
-                end)
+                add_type (DIRECT_DEF def, pos, check_deriving_ast generic deriving) generic |> snd)
         ))
 in
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "define \<phi>-types"
