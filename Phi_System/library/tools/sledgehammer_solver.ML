@@ -133,6 +133,7 @@ fun eval_prf_str timeout "" (ctxt,sequent) =
              of ({elapsed=time,...}, SOME (Seq.Result ret, _)) => ((time,prf), ret)
               | _ => raise Auto_Fail Application_Fails
       end handle Timeout.TIMEOUT _ => raise Auto_Fail Timeout
+               | Auto_Fail err => Exn.reraise (Auto_Fail err)
                | err => (tracing ("Unexpected error, maybe a bug: " ^ Runtime.exn_message err);
                           raise Auto_Fail Unknown)
 
@@ -374,9 +375,11 @@ fun auto' id (ctxt,sequent') =
         tracing "Proof search by default tactic is time out. Invoking sledgehammer...";
         sledgehammer (ctxt, sequent) )
 
-     fun update_cache hash (prf', (_, sequent')) = (
-           tracing ("Find proof (" ^ id ^ ", time: " ^ Value.print_time (fst prf') ^ "): " ^
-                      (if snd prf' = "" then "default automation" else "\n" ^ snd prf')) ;
+     fun update_cache hash (prf', (ctxt, sequent')) = (
+           Phi_Reasoner.info_print ctxt 1 (fn () =>
+              "Find proof (" ^ id ^ ", time: " ^ Value.print_time (fst prf') ^ "): " ^
+               (if snd prf' = "" then "default automation" else "\n" ^ snd prf')
+           ) ;
            update_hash_cache hash prf';
            Phi_Cache_DB.update_cached_proof thy (id, prf') ;
            sequent')

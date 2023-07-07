@@ -368,7 +368,14 @@ ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_n
 ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
 |> #ctr_sugar\<close>
 
-ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
+ML \<open>local val bnf = (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))
+in 
+val xx = BNF_Def.rel_eq_of_bnf bnf
+end\<close>
+
+thm list.rel_eq
+
+ML \<open>(the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
 ML \<open>
 val ths = #fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
@@ -406,8 +413,8 @@ ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>option\<close>\<close>
           \<phi>inductive_destruction_rule_from_direct_definition'
           \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
 
-declare conj_imp_eq_imp_imp[simp_for_rule_generation]
-        Premise_I[simp_for_rule_generation]
+declare conj_imp_eq_imp_imp[simp_for_\<phi>TA_rule_generation]
+        Premise_I[simp_for_\<phi>TA_rule_generation]
 
 
 setup \<open>
@@ -416,10 +423,10 @@ let fun attach_var F =
        in case fastype_of F of \<^Type>\<open>fun T _\<close> => F $ Var(("uu",i),T)
                              | _ => error "Impossible #8da16473-84ef-4bd8-9a96-331bcff88011"
       end
-in Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\<close>
+in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\<close>
   "set the pattern rewrite to parse the functor part and the argument part from a term\
   \ matching the patter"
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Transformation_Functor\<close>
+#>*) Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Transformation_Functor\<close>
       (fn (_ $ F $ _ $ _ $ _) => F)
 #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>I\<close>
       (fn (_ $ F $ _ $ _ $ _ $ _ ) => F)
@@ -631,7 +638,7 @@ locale \<phi>Type_Functor =
   fixes F :: \<open>('c,'a) \<phi> \<Rightarrow> ('c1,'a1) \<phi>\<close>
 begin
  
-declare [[\<phi>functor_of \<open>F ?T\<close> \<Rightarrow> \<open>F\<close> \<open>?T\<close> (31)]]
+(* declare [[\<phi>functor_of \<open>F ?T\<close> \<Rightarrow> \<open>F\<close> \<open>?T\<close> (31)]] *)
 
 declaration \<open>fn m => fn ctxt =>
   let val ctxt' = Context.proof_of ctxt
@@ -859,7 +866,7 @@ lemma [\<phi>reason default 1]:
   unfolding Action_Tag_def by simp
 
 
-locale Functional_Transformation_Functor_L =
+locale Functional_Transformation_Functor =
   Transformation_Functor_L Fa Fb D mapper Prem
   for Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
   and Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
@@ -873,15 +880,15 @@ locale Functional_Transformation_Functor_L =
   and pred_mapper_constant:
       \<open>pred_mapper (\<lambda>x. Q \<and> P x) x \<longleftrightarrow> Q \<and> pred_mapper P x\<close>
 
-setup \<open>Phi_Type_Algebra.add_property_kind "Phi_Type_Algebra.Functional_Transformation_Functor_L"
+setup \<open>Phi_Type_Algebra.add_property_kind "Phi_Type_Algebra.Functional_Transformation_Functor"
             (fn (_ $ F $ _ $ _ $ _ $ _ $ _ $ _) => F)\<close>
 
-context Functional_Transformation_Functor_L
+context Functional_Transformation_Functor
 begin
  
 lemma [\<phi>reason add]:
-  \<open>Functional_Transformation_Functor_L Fa Fb D mapper Prem pred_mapper func_mapper\<close>
-  by (simp add: Functional_Transformation_Functor_L_axioms)
+  \<open>Functional_Transformation_Functor Fa Fb D mapper Prem pred_mapper func_mapper\<close>
+  by (simp add: Functional_Transformation_Functor_axioms)
 
 lemma [\<phi>TA_internal_simplify_special_cases,
        \<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<Ztypecolon> Fb _ \<a>\<n>\<d> _\<close>]:
@@ -1079,7 +1086,7 @@ lemma [fundef_cong]:
   unfolding \<phi>Type_def by simp
 
 
-subsubsection \<open>Unit Left \& Right\<close>
+subsubsection \<open>Identity Element Intro \& Elim\<close>
 
 lemma \<phi>TA_1L_rule:
   \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) Any @action \<phi>TA_ind_target undefined)

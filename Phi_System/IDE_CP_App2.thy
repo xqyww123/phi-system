@@ -63,7 +63,7 @@ simproc_setup Val_simp_cong ("x \<Ztypecolon> Val v T") = \<open>
 
 subsection \<open>Algebraic Properties\<close>
 
-interpretation Val: Functional_Transformation_Functor_L \<open>Val v\<close> \<open>Val v'\<close>
+interpretation Val: Functional_Transformation_Functor \<open>Val v\<close> \<open>Val v'\<close>
       \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v = v'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
   by (standard; clarsimp simp add: Transformation_Functor_def Imply_def ExSet_expn Premise_def
       Subjection_expn Val_expn)

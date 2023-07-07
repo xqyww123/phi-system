@@ -14,25 +14,27 @@ is the last operand i.e. the A3.
 
 signature PHI_TYPE_ALGEBRA = sig
 
-(* Detect Type Operator from a Lambda Application *)
+(* depreciated: Detect Type Operator from a Lambda Application *)
 
-structure Detection_Rewr : PATTERN_REWRITE
+(*structure Detection_Rewr : PATTERN_REWRITE
 
 val detect_type_operator  : int -> Proof.context -> term -> term list option
-val detect_type_operator1 : int -> Proof.context -> term -> term list
+val detect_type_operator1 : int -> Proof.context -> term -> term list*)
 
-(* Algebraic Property *)
+(* Algebraic Properties *)
 
 type property_name = string
 
 val is_a_kind_of_property : theory -> property_name -> bool
 val add_property_kind : property_name -> (term -> term) -> theory -> theory
 
-val lookup_property_exact : Context.generic -> term (*pattern of the type operator*) -> property_name -> thm option
-val lookup_property_match : Context.generic -> term -> property_name -> (term * Position.T * thm) list
-val lookup_property_unify : Context.generic -> term -> property_name -> (term * Position.T * thm) list
+val lookup_property_exact : Context.generic -> term (*pattern of the type operator*) -> property_name -> (term * Position.T * thm) list
+val lookup_property_match : Context.generic -> term (*same as the above*) -> property_name -> (term * Position.T * thm) list
+val lookup_property_unify : Context.generic -> term (*same as the above*) -> property_name -> (term * Position.T * thm) list
 val add_property : term * Position.T * thm -> Context.generic -> Context.generic
-val list_functors : Context.generic -> term list
+(*val list_functors : Context.generic -> term list*)
+
+structure Gen_Rule_SS : SIMPSET (*simpset for generating reasoning rules*)
 
 (* Automation based on Algebraic Property *)
 
@@ -72,7 +74,7 @@ val phi_trim_context : phi_type -> phi_type
 val phi_transfer : theory -> phi_type -> phi_type
 val phi_maxidx_of : phi_type -> int -> int
 
-val note_properties : phi_type -> (bstring * thm list) list -> Context.generic -> Context.generic
+val note_properties : phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
 
 type algebra_hints = term list
 
@@ -111,7 +113,7 @@ type property_name = string
 
 (*** Detect Functor from a lambda application ***)
 
-structure Detection_Rewr = Pattern_Translation (
+(*structure Detection_Rewr = Pattern_Translation (
   val parse_pattern = Syntax.parse_term
   val check_pattern = Syntax.check_terms
   val multi_translation_err_msg = "Cannot determine which is the functor and which is the argument\
@@ -135,7 +137,7 @@ fun detect_type_operator1 arity ctxt term =
   case detect_type_operator arity ctxt term
     of SOME ret => ret
      | NONE => error ("Fail to detect the functor part and the argument part from term\n"^
-                      Syntax.string_of_term ctxt term)
+                      Syntax.string_of_term ctxt term)*)
 
 (*** Algebraic Property & Automation ***)
 
@@ -148,17 +150,16 @@ structure Property_Kinds = Theory_Data (
 )
 
 fun is_a_kind_of_property thy k = Symtab.defined (Property_Kinds.get thy) k
-fun extract_functor_from_property_spec thy k = Symtab.lookup (Property_Kinds.get thy) k
+fun extract_type_operator_from_property thy k = Symtab.lookup (Property_Kinds.get thy) k
 
 (** Property DB **)
 
-type automation_on_property = term (*functor*) * thm (*property*) -> Context.generic -> Context.generic
+type automation_on_property = term (*\<phi>-type or type operator*) * thm (*property*) -> Context.generic -> Context.generic
 
 fun property_eq ((t1,_,th1),(t2,_,th2)) = (t1 aconv t2) andalso Thm.eq_thm_prop (th1,th2)
-(* fun property_eq' thy ((t1,th1),(t2,th2)) = (t1 aconv t2) andalso Thm.equiv_thm thy (th1,th2) *)
 
 structure Properties = Generic_Data (
-  type T = (term (*functor*) * Position.T * thm) Net.net 
+  type T = (term (*\<phi>type*) * Position.T * thm) Net.net 
   val empty = Net.empty
   val merge = Net.merge property_eq
 )
@@ -169,89 +170,75 @@ structure Automation_on_Property = Generic_Data (
   val merge = PriorityTab.merge (K false)
 )
 
-fun encode_property_key (the_functor,property_name) =
+fun net_encode_property_key (the_functor, property_name) =
   Const("P", dummyT) $ the_functor $ Const(property_name, dummyT)
 
-fun encode_functor the_functor = Const("F", dummyT) $ the_functor
+(*fun net_encode_phityp phityp = Const("F", dummyT) $ phityp*)
 
 fun get_property_name thm =
   fst (Term.dest_Const (Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of thm))))
 
-fun lookup_property_exact ctxt the_functor property_name =
+fun lookup_property_exact ctxt phityp property_name =
   let val thy = Context.theory_of ctxt
-   in Net.match_term (Properties.get ctxt) (encode_property_key (the_functor, property_name))
-      |> filter (fn (tm, _, _) => Pattern.equiv thy (tm, the_functor))
-      |> (fn ((_,_,x)::_) => SOME x
-           | [] => NONE)
+   in Net.match_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
+      |> filter (fn (tm, _, _) => Pattern.equiv thy (tm, phityp))
   end
 
-fun lookup_property_match ctxt the_functor property_name =
-  Net.match_term (Properties.get ctxt) (encode_property_key (the_functor, property_name))
-    |> filter (fn (tm, _, _) => Pattern.matches (Context.theory_of ctxt) (tm, the_functor))
+fun lookup_property_match ctxt phityp property_name =
+  Net.match_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
+    |> filter (fn (tm, _, _) => Pattern.matches (Context.theory_of ctxt) (tm, phityp))
 
-fun lookup_property_unify ctxt the_functor property_name =
-  Net.unify_term (Properties.get ctxt) (encode_property_key (the_functor, property_name))
-    |> filter (fn (tm, _, _) => can (Pattern.unify ctxt (tm, the_functor)) Envir.init)
+fun lookup_property_unify ctxt phityp property_name =
+  Net.unify_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
+    |> filter (fn (tm, _, _) => can (Pattern.unify ctxt (tm, phityp)) Envir.init)
 
-fun invoke_automations_on_property the_functor_and_property ctxt =
-  PriorityTab.fold (fn (_,s) => s the_functor_and_property) (Automation_on_Property.get ctxt) ctxt
+fun invoke_automations_on_property phityp ctxt =
+  PriorityTab.fold (fn (_,s) => s phityp) (Automation_on_Property.get ctxt) ctxt
 
-fun list_functors ctxt =
-  Net.unify_term (Properties.get ctxt) (encode_functor (Var(("uu",0),TVar(("'uu",0),[]))))
-    |> map (fn (tm,_,_) => Logic.incr_indexes ([],[],1) tm)
+(*fun list_functors ctxt =
+  Net.unify_term (Properties.get ctxt) (net_encode_phityp (Var(("uu",0),TVar(("'uu",0),[]))))
+    |> map (fn (tm,_,_) => Logic.incr_indexes ([],[],1) tm)*)
 
 (* fun is_a_registered_functor_i thy net the_functor =
-  let val key = encode_functor the_functor
+  let val key = net_encode_phityp the_functor
    in Net.match_term net key
         |> exists (fn (pat, _) => Pattern.matches thy (pat, the_functor))
   end *)
 
-fun add_property (the_functor,pos,property) ctxt =
+fun add_property (phityp0,pos,property) ctxt =
   let val thy = Context.theory_of ctxt
-      val the_functor'' = the_functor
+      val phityp' = phityp0
                   |> Envir.beta_eta_contract
                   |> Term_Subst.zero_var_indexes 
-      val the_functor' = the_functor''
                   |> Logic.incr_indexes ([],[],~1)
       val property_name = get_property_name property
-      val key = encode_property_key (the_functor', property_name)
-      val key_functor = encode_functor the_functor'
-      fun insert_term warn (k''', (k,pos,v)) net =
-        let val super = Net.match_term net k'''
-                      |> filter (fn (k', _, _) => Pattern.matches thy (k',k))
-         in if null super
-            then net
-                  |> Net.delete_term_safe (fn ((),(k',pos,rule)) =>
-                        let val ret = Pattern.matches thy (k,k')
-                         in if ret andalso warn
-                            then (warning ("The property overrides an existing property rule!" ^
-                                    Position.here pos ^ "\n" ^ Thm.string_of_thm (Context.proof_of ctxt) rule)
-                               ; true)
-                            else ret
-                        end) (k''',())
-                  |> Net.insert_term property_eq (k''', (k,pos,v))
-            else (
-              if warn
-              then
-                let open Pretty
-                    val ctxt' = Context.proof_of ctxt
-                 in error (string_of (chunks (
-                       block [str "The property ", str property_name, str " of functor ",
-                              Syntax.pretty_term ctxt' the_functor,
-                              str " has been covered by existing rules"] ::
-                       map (fn (_,pos,rule) => block (
-                           here pos @ [Syntax.pretty_term ctxt' (Thm.prop_of rule)]
-                         )) super
-                     )))
-                end
-              else ()
-            ; net)
+      val key = net_encode_property_key (phityp', property_name)
+      (*val key_phityp = net_encode_phityp phityp'*)
+      fun insert_term (k''', (k,pos,v)) net =
+        let val clashes = Net.unify_term net k'''
+                       |> filter (fn (k', _, _) => Pattern.matches thy (k',k) orelse Pattern.matches thy (k,k'))
+            val _ = if null clashes then ()
+                    else let open Pretty
+                        val ctxt' = Context.proof_of ctxt
+                     in error (string_of (chunks (
+                           block [str "The property ", str property_name, str " of \<phi>-type ",
+                                  Syntax.pretty_term ctxt' phityp0,
+                                  str " either covers or is covered by other existing rules."] ::
+                           str "We prohibit redundancy of \<phi>-type properties because it causes\
+                               \a great number of redundancy in the generated reasoning rules. \
+                               \Instead, you should provide the most general rule and, if you want, \
+                               \specialized (branched) reasoning on its antecedents." ::
+                           map (fn (_,pos,rule) => block (
+                               here pos @ [Syntax.pretty_term ctxt' (Thm.prop_of rule)]
+                             )) clashes
+                         )))
+                    end
+         in Net.insert_term property_eq (k''', (k,pos,v)) net
         end
    in ctxt
-    |> Properties.map (fn net => net
-                    |> insert_term true (key, (the_functor',pos,property))
-                    |> insert_term false (key_functor, (the_functor',pos,Drule.dummy_thm)))
-    |> invoke_automations_on_property (the_functor,property)
+    |> Properties.map (insert_term (key, (phityp',pos,property)))
+                    (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
+    |> invoke_automations_on_property (phityp0,property)
  (* handle Net.INSERT => let open Pretty
       val term = Context.cases Syntax.pretty_term_global Syntax.pretty_term
        in error (string_of (chunks [
@@ -265,15 +252,38 @@ fun add_property (the_functor,pos,property) ctxt =
 fun add_property' pos property ctxt =
   let val thy = Context.theory_of ctxt
       val prop_spec = HOLogic.dest_Trueprop (Thm.concl_of property)
-      val the_functor =
+      val type_operator =
             case Term.strip_comb prop_spec
               of (Const(N, _), _) =>
-                 (case extract_functor_from_property_spec thy N
+                 (case extract_type_operator_from_property thy N
                     of SOME extract => extract prop_spec
-                     | _ => error (N ^ " is not a known functor property. Please use ML function \
+                     | _ => error (N ^ " is not a known \<phi>-type property. Please use ML function \
                                        \\<open>Phi_Type_Algebra.add_property_kind\<close> to register it.") )
-               | _ => error "The theorem is not a valid functor property."
-   in add_property (the_functor,pos,property) ctxt
+               | _ => error "The theorem is not a valid \<phi>-type property."
+   in add_property (type_operator,pos,property) ctxt
+  end
+
+fun add_property_kind k extract thy =
+  let val ty = case Sign.const_type thy k
+                 of SOME T => T
+                  | NONE => error (k ^ " is not a constant")
+      fun mk_term ret i (Type ("fun", [T, U])) =
+            mk_term (ret $ Var ((string_of_int i, 0),T)) (i+1) U
+        | mk_term ret _ _ = ret
+      val pat = HOLogic.Trueprop $ mk_term (Const(k,ty)) 0 ty
+      fun add_prop pos rules ctxt =
+        let val rules' =
+              filter (fn rule => case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
+                                   of Const (k', _) => k = k'
+                                    | _ => false) rules
+         in fold (add_property' pos) rules' ctxt
+        end
+   in thy
+   |> Property_Kinds.map (Symtab.update_new (k, extract))
+   |> Context.theory_map (
+        Phi_Reasoner.add_pass ("\<phi>type-operator$" ^ k, pat,
+          fn pos => fn (rules, mode, pats, guard, ctxt) =>
+                       (rules, mode, pats, guard, add_prop pos rules ctxt)))
   end
 
 fun add_automation_on_property priority automation ctxt =
@@ -295,32 +305,10 @@ fun property_dependent_setup deps automation (the_functor,property) ctxt =
       handle Dep => ctxt
   end
 
-fun add_property_kind k extract thy =
-  let val ty = case Sign.const_type thy k
-                 of SOME T => T
-                  | NONE => error (k ^ " is not a declared constant")
-      fun mk_term ret i (Type ("fun", [T, U])) =
-            mk_term (ret $ Var ((string_of_int i, 0),T)) (i+1) U
-        | mk_term ret _ _ = ret
-      val pat = HOLogic.Trueprop $ mk_term (Const(k,ty)) 0 ty
-      fun add_prop pos rules ctxt =
-        let val rules' =
-              filter (fn rule => case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
-                                   of Const (k', _) => k = k'
-                                    | _ => false) rules
-         in fold (add_property' pos) rules' ctxt
-        end
-   in thy
-   |> Property_Kinds.map (Symtab.update_new (k, extract))
-   |> Context.theory_map (
-        Phi_Reasoner.add_pass ("\<phi>functor$" ^ k, pat, fn pos => fn (rules, mode, pats, guard, ctxt) =>
-          (rules, mode, pats, guard, add_prop pos rules ctxt)))
-  end
-
 
 structure Gen_Rule_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = \<^binding>\<open>simp_for_rule_generation\<close>
+  val binding = \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
   val comment = "Rules simplifying the generated \<phi>functor reasoning rules."
 )
 
@@ -371,7 +359,7 @@ fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
                           |> Drule.zero_var_indexes
                 val _ = Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
                           item [chunks [
-                            block [str "Instantiate reasoning rule for functor ",
+                            block [str "Instantiate reasoning rule for \<phi>-type operator ",
                                    Syntax.pretty_term ctxt' (Logic.incr_indexes ([],[],1) the_functor)],
                             Syntax.pretty_term ctxt' (Thm.prop_of rule')
                           ]] end)
@@ -381,7 +369,7 @@ fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
 
       val properties = Properties.get ctxt
       val existing_rules = map (fn pk =>
-              Net.unify_term properties (encode_property_key (Var(("uu",0),TVar(("uu",0),[])), pk))
+              Net.unify_term properties (net_encode_property_key (Var(("uu",0),TVar(("uu",0),[])), pk))
             ) prop_kinds
       fun cross_product aa bb =
             maps (fn (ta,_,ra) =>
@@ -406,8 +394,8 @@ fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
 
 val _ = Theory.setup (
 
-  Attrib.setup \<^binding>\<open>\<phi>functor_property\<close> (Scan.succeed (Thm.declaration_attribute (add_property' Position.none)))
-    "Declare a functor property that will be used to instantiate automation"
+  Attrib.setup \<^binding>\<open>\<phi>type_property\<close> (Scan.succeed (Thm.declaration_attribute (add_property' Position.none)))
+    "Declare a \<phi>-type property that will be used to instantiate automation"
 
 #>Attrib.setup \<^binding>\<open>\<phi>reason_functor_template\<close> (
     Phi_Reasoner.gen_attribute (

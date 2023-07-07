@@ -1537,8 +1537,8 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypec
 declare [[\<phi>trace_reasoning = 0]]
 
 lemma [\<phi>reason_functor_template add]:
-  \<open> Functional_Transformation_Functor_L Fa Fz Da rma Prem_a pma ma
-\<Longrightarrow> Functional_Transformation_Functor_L Fb Fz Db rmb Prem_b pmb mb
+  \<open> Functional_Transformation_Functor Fa Fz Da rma Prem_a pma ma
+\<Longrightarrow> Functional_Transformation_Functor Fb Fz Db rmb Prem_b pmb mb
 \<Longrightarrow> (P \<Longrightarrow> Prem_a)
 \<Longrightarrow> (\<not> P \<Longrightarrow> Prem_b)
 \<Longrightarrow> (\<And>x' y'. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> x' \<in> Da x) \<and> (\<not> P \<longrightarrow> y' \<in> Db y) \<Longrightarrow>
@@ -1547,12 +1547,12 @@ lemma [\<phi>reason_functor_template add]:
   unfolding Action_Tag_def
   apply (cases P; simp)
   \<medium_left_bracket> premises FTF_a and FTF_b and _ and Tr and _
-    interpret Functional_Transformation_Functor_L Fa Fz Da rma True pma ma using FTF_a . ;;
+    interpret Functional_Transformation_Functor Fa Fz Da rma True pma ma using FTF_a . ;;
     apply_rule functional_transformation[where T=T and U=Z and f=za]
     \<medium_left_bracket> Tr \<medium_right_bracket>
   \<medium_right_bracket>
   \<medium_left_bracket> premises FTF_a and FTF_b and _ and Tr and _
-    interpret Functional_Transformation_Functor_L Fb Fz Db rmb True pmb mb using FTF_b . ;;
+    interpret Functional_Transformation_Functor Fb Fz Db rmb True pmb mb using FTF_b . ;;
     apply_rule functional_transformation[where T=U and U=Z and f=zb]
     \<medium_left_bracket> Tr \<medium_right_bracket>
   \<medium_right_bracket> .

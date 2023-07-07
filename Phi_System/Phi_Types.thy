@@ -193,7 +193,7 @@ subsubsection \<open>Algebraic Properties\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-interpretation \<phi>Composition: Functional_Transformation_Functor_L
+interpretation \<phi>Composition: Functional_Transformation_Functor
       \<open>(\<Zcomp>) B\<close> \<open>(\<Zcomp>) B'\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
   by (standard,
       ( unfold Transformation_Functor_def Premise_def,
@@ -299,14 +299,14 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Algebraic Properties\<close>
 
-declare [[\<phi>functor_of \<open>?T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<Rightarrow> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<open>?T\<close> (100) ]]
+(* declare [[\<phi>functor_of \<open>?T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<Rightarrow> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<open>?T\<close> (100) ]] *)
 
 (* lemma SubjectionTY_unit_functor[\<phi>reason add]:
   \<open> Semi_Unit_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) \<close>
   unfolding Semi_Unit_Functor_def Imply_def
   by (clarsimp simp add: SubjectionTY_expn Subjection_expn set_eq_iff) *)
  
-interpretation SubjectionTY: Functional_Transformation_Functor_L
+interpretation SubjectionTY: Functional_Transformation_Functor
     \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>True\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
   by (standard, clarsimp simp add: Transformation_Functor_def Imply_def SubjectionTY_expn
           Subjection_expn, blast, blast)
@@ -711,9 +711,8 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
-  
-                                                                                                                                                       
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
+                                                                                                                                             
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -724,9 +723,10 @@ declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
        and Separation_Homo\<^sub>I
        and Separation_Homo\<^sub>E
 
-
+ML \<open>Phi_Type_Algebra.list_functors (Context.Proof \<^context>)\<close>
 
 thm List.sep_homo\<^sub>I
+thm list.rel_eq
 
 
 
@@ -805,7 +805,7 @@ lemma [\<phi>inhabitance_rule 1000]:
 interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k = k'\<close>
   by (standard, unfold \<phi>MapAt_def, \<phi>reason)
 =======
-print_\<phi>reasoners \<open>Functional_Transformation_Functor_L ((\<Zcomp>) _) ((\<Zcomp>) _) _ _ _ _ _\<close> ?
+print_\<phi>reasoners \<open>Functional_Transformation_Functor ((\<Zcomp>) _) ((\<Zcomp>) _) _ _ _ _ _\<close> ?
  
 lemma [\<phi>inhabitance_rule, elim!]: (*TODO: reason this automatically!*)
   \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -1099,7 +1099,7 @@ lemma [simp]:
 
 paragraph \<open>Algebraic Properties\<close>
  
-interpretation \<phi>MapAt_L: Functional_Transformation_Functor_L
+interpretation \<phi>MapAt_L: Functional_Transformation_Functor
     \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k'\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k = k'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
   by (standard, clarsimp simp add: Transformation_Functor_def Imply_def ExSet_expn Premise_def
       Subjection_expn \<phi>MapAt_L_expns; blast)
@@ -1698,7 +1698,7 @@ lemma \<phi>Share_void_functor[\<phi>reason add]:
   unfolding Unit_Functor_def Imply_def Premise_def
   by (clarsimp simp add: \<phi>Share_expn, insert share_right_one, blast)*)
  
-interpretation \<phi>Share: Functional_Transformation_Functor_L
+interpretation \<phi>Share: Functional_Transformation_Functor
     \<open>(\<odiv>) n\<close> \<open>(\<odiv>) n'\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> n = n'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
   by (standard, clarsimp simp add: Transformation_Functor_def Imply_def ExSet_expn Premise_def
       Subjection_expn \<phi>Share_expn; blast)
@@ -1833,7 +1833,7 @@ lemma [\<phi>reason 1200]:
 
 paragraph \<open>Algebraic Properties\<close>
 
-interpretation \<phi>Some: Functional_Transformation_Functor_L \<phi>Some \<phi>Some
+interpretation \<phi>Some: Functional_Transformation_Functor \<phi>Some \<phi>Some
       \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> True \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
   by (standard, clarsimp simp add: Transformation_Functor_def Imply_def ExSet_expn
       Subjection_expn \<phi>Some_expn; blast)

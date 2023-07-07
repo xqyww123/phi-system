@@ -139,22 +139,28 @@ fun fp_sugar_of ctxt bnf =
 fun ctr_sugar_simps (ctr : Ctr_Sugar.ctr_sugar) =
   #injects ctr @ #distincts ctr @ #case_thms ctr @ flat (#sel_thmss ctr)
 
-fun simps_of_ctr (fp : BNF_FP_Def_Sugar.fp_sugar) =
+fun simps_of_ctr_fp (fp : BNF_FP_Def_Sugar.fp_sugar) =
       ctr_sugar_simps (#ctr_sugar (#fp_ctr_sugar fp))
 
-fun simps_of_map (fp : BNF_FP_Def_Sugar.fp_sugar) =
+fun simps_of_map_fp (fp : BNF_FP_Def_Sugar.fp_sugar) =
       #map_thms (#fp_bnf_sugar fp)
 
-fun simps_of_pred (fp : BNF_FP_Def_Sugar.fp_sugar) =
+fun simps_of_pred_fp (fp : BNF_FP_Def_Sugar.fp_sugar) =
       #pred_injects (#fp_bnf_sugar fp)
 
-fun simps_of_rel (fp : BNF_FP_Def_Sugar.fp_sugar) =
+fun simps_of_rel_fp (fp : BNF_FP_Def_Sugar.fp_sugar) =
       #rel_distincts (#fp_bnf_sugar fp)
     @ #rel_injects (#fp_bnf_sugar fp)
+
+fun global_simps_of_rel (bnf : BNF_Def.bnf) =
+      [BNF_Def.rel_eq_of_bnf bnf]
 
 fun simps_of_set (fp : BNF_FP_Def_Sugar.fp_sugar) =
       #set_thms (#fp_bnf_sugar fp)
 
+fun add_global_simps thms ctxt = ctxt
+  |> Simps.map' (fn ctxt => ctxt addsimps thms)
+  |> (fn ctxt => ctxt addsimps thms)
 
 (* Set *)
 
@@ -172,7 +178,7 @@ fun guess_set_opr ctxt ty element_ty =
                     val bnf_fp = BNF_FP_Def_Sugar.fp_sugar_of ctxt Tname
                     val ctxt' = case bnf_fp of NONE => ctxt
                                    | SOME fp => Simps.map' (fn ctxt =>
-                                        ctxt addsimps (simps_of_set fp @ simps_of_ctr fp)
+                                        ctxt addsimps (simps_of_set fp @ simps_of_ctr_fp fp)
                                       ) ctxt
                  in Seq.of_list sets
                  |> Seq.maps (fn s =>
@@ -192,11 +198,13 @@ fun guess_set_opr ctxt ty element_ty =
 
 fun guess_self_rel ctxt 
   = guess_operator ctxt (fn (ctxt, D, L, bnf) =>
-      let val ctxt' = case fp_sugar_of ctxt bnf
-                        of NONE => ctxt
+      let val ctxt' = ctxt
+                   |>(case fp_sugar_of ctxt bnf
+                        of NONE => I
                          | SOME fp => Simps.map' (fn ctxt =>
-                                        ctxt addsimps (simps_of_rel fp @ simps_of_ctr fp)
-                                      ) ctxt
+                                        ctxt addsimps ( simps_of_rel_fp fp
+                                                      @ simps_of_ctr_fp fp)))
+                   |> add_global_simps (global_simps_of_rel bnf)
        in Seq.single (BNF_Def.mk_rel_of_bnf D L L bnf, ctxt')
       end)
 
@@ -208,11 +216,12 @@ fun guess_rel_mapper target_ty ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_rels = [(element_ty, g_term)]
    in guess_operator ctxt' (fn (ctxt, D, L, bnf) =>
-        let val ctxt' = case fp_sugar_of ctxt bnf
-                          of NONE => ctxt
+        let val ctxt' = ctxt
+                     |>(case fp_sugar_of ctxt bnf
+                          of NONE => I
                            | SOME fp => Simps.map' (fn ctxt =>
-                                ctxt addsimps (simps_of_rel fp @ simps_of_map fp @ simps_of_ctr fp)
-                              ) ctxt
+                                ctxt addsimps ( simps_of_rel_fp fp @ simps_of_map_fp fp @ simps_of_ctr_fp fp)))
+                     |> add_global_simps (global_simps_of_rel bnf)
          in Seq.single (BNF_Def.mk_rel_of_bnf D L (target_ty L) bnf, ctxt')
         end
       ) known_rels ty
@@ -261,7 +270,7 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
              Abs("x", \<^Type>\<open>prod T T'\<close>, Bound 0)),
            ctxt)
       else case (T,T')
-            of (Type(Tname, Targs), Type(Tname', Targs')) =>
+             of (Type(Tname, Targs), Type(Tname', Targs')) =>
                 let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
                     val bnf = get_bnf ctxt Tname
                     val (deads,lives) = classify_bnf_dead_live bnf Targs
@@ -271,13 +280,15 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
                                     of SOME x => x | NONE => raise Automation_Fail
                     val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                                        else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
-                    val ctxt'' = (case fp_sugar_of ctxt bnf
-                                    of NONE => ctxt
+                    val ctxt'' = ctxt
+                              |> (case fp_sugar_of ctxt bnf
+                                    of NONE => I
                                      | SOME fp => Simps.map' (fn ctxt =>
                                             ctxt addsimps (
                                                 (if flag then #zip_simps fp_more else #unzip_simps fp_more)
-                                                @ simps_of_rel fp @ simps_of_map fp @ simps_of_ctr fp)
-                                          ) ctxt)
+                                                @ simps_of_rel_fp fp @ simps_of_map_fp fp
+                                                @ simps_of_ctr_fp fp)))
+                              |> add_global_simps (global_simps_of_rel bnf)
                     val (args, ctxt') = ctxt''
                           |> fold_map (guess_zip_guided flag (target,target'))
                                       (lives ~~ lives')
@@ -292,6 +303,7 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
                                      else zip $ (Term.list_comb (mp, map snd args) $ Bound 0))),
                     ctxt')
                 end
+              | _ => error "Internal bug #928dccd3-7497-4f2c-867c-4b7407fcfdef"
       else if not occur andalso not occur'
         then if T = T'
           then ((\<^Const>\<open>HOL.eq T\<close>, \<^Const>\<open>fst T T\<close>), ctxt)
@@ -686,7 +698,7 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
    |> varify_subgoal_finale
    |> abstract_constraint_guided_reasoning ctxt
   end
-in abstract_constraint_guided_reasoning
+in fn ctxt => abstract_constraint_guided_reasoning (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
 end
 
 fun chk_unfolded (phi : phi_type) term =
@@ -727,8 +739,7 @@ fun ToA_reasoner phi ctxt sequent =
   end
 
 fun abstract_constraint_guided_reasoning varify phi ctxt =
-      gen_abstract_constraint_guided_reasoning varify (ToA_reasoner phi)
-          (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
+      gen_abstract_constraint_guided_reasoning varify (ToA_reasoner phi) ctxt
 
 
 (* (** Misc **)
@@ -881,8 +892,9 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
    in Seq.chop 2 rules
    |> (fn ([], _) => raise Automation_Fail
         | ([rule'], _) => thy
-            |> Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
-                                           ([],[]) NONE [rule']
+            |> Phi_Help.generic_theory_mapping (fn m =>
+                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
+                                              ([],[]) NONE [Morphism.thm m rule'])
             |> Phi_Type_Algebra.note_properties phi0 [("obj_eq", [rule'])]
         | (_,_) => (warning "More than one property instances are inferred.";
                         raise Automation_Fail))
@@ -952,8 +964,7 @@ fun TF_reasoner ctxt sequent =
      | NONE => raise Automation_Fail
 
 fun TF_reasoning _ ctxt =
-      gen_abstract_constraint_guided_reasoning (K NONE) TF_reasoner
-          (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
+      gen_abstract_constraint_guided_reasoning (K NONE) TF_reasoner ctxt
 
 fun gen_TF' (phi0 : phi_type) hint0 generic =
   let val ctxt0 = Context.proof_of generic
@@ -993,6 +1004,30 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
                                              of 0 => set_prem_to_True th
                                               | 1 => Seq.hd (Thm.assumption (SOME ctxt0) 1 th)
                                               | _ => error "Internal bug")
+
+              exception GIVE_UP
+              fun setup_functional_TF cmd lthy =
+                let val locale_rule_FTF = (@{thm' Functional_Transformation_Functor_axioms.intro}
+                                              RS (locale_rule RS' (lthy, @{thm' Functional_Transformation_Functor.intro})))
+                                        |> (SOLVED' (Clasimp.fast_force_tac lthy) 1
+                                            THEN SOLVED' (Clasimp.fast_force_tac lthy) 1)
+                                        |> Seq.pull
+                                        |> (fn SOME (ret, _) => ret
+                                             | NONE => raise GIVE_UP)
+                    val ((_,[locale_rule_FTF']), _) = Variable.import true [locale_rule_FTF] lthy
+                 in case Thm.concl_of locale_rule_FTF'
+                      of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _)
+                            $ Fa $ Fb $ D $ m $ Pr $ pm $ fm) =>
+                    cmd ([(\<^locale>\<open>Transformation_Functor_L\<close>, ((Term.term_name (#term phi0), true),
+                          (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME m,
+                                                  SOME (case Pr of Var _ => \<^Const>\<open>True\<close> | _ => Pr),
+                                                  SOME pm, SOME fm],
+                           [])))], []) [] lthy
+                      |> Proof.refine_primitive (fn _ => fn th => locale_rule_FTF' RS th)
+                      |> Proof.global_done_proof
+                end
+                handle GIVE_UP => lthy
+                
               fun setup_locale cmd lthy =
                 let val ((_,[locale_rule']), _) = Variable.import true [locale_rule] lthy
                  in case Thm.concl_of locale_rule'
@@ -1006,11 +1041,11 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
                       |> Proof.global_done_proof
                 end
            in generic
-         (* |> Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
-                                          ([],[]) NONE [rule''] *)
            |> Phi_Type_Algebra.note_properties phi0 [("transformation_functor", [rule'])]
            |> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
                               (setup_locale Interpretation.sublocale)
+         (*|> Context.mapping (Named_Target.theory_map (setup_functional_TF Interpretation.global_interpretation))
+                              (setup_functional_TF Interpretation.sublocale)*)
           end)
   end
 
@@ -1092,7 +1127,7 @@ fun SHu_reasoner ctxt sequent =
     of SOME th => th
      | NONE => raise Automation_Fail
 
-fun SH_reasoning is_intro phi =
+fun SH_reasoning is_intro phi ctxt =
       gen_abstract_constraint_guided_reasoning (K NONE) (fn ctxt => fn sequent => (
          (case Thm.major_prem_of sequent
             of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Imply\<close>, _)
@@ -1102,8 +1137,7 @@ fun SH_reasoning is_intro phi =
           if is_intro
           then ToA_reasoner phi ctxt sequent
           else SHu_reasoner ctxt sequent
-      ))
-      o (Config.map Phi_Reasoner.trace (fn i=>i-1))
+      )) ctxt
 
 fun gen_SH' is_intro (phi0 : phi_type) hint0 generic =
   let val ctxt0 = Context.proof_of generic
@@ -1153,12 +1187,12 @@ fun gen_SH' is_intro (phi0 : phi_type) hint0 generic =
                                            phi0pr hint0 ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail
-         | SOME (rule', _) =>
-            let 
-             in generic
+         | SOME (rule', _) => generic
              |> Phi_Type_Algebra.note_properties phi0
                     [(if is_intro then "sep_homo\<^sub>I" else "sep_homo\<^sub>E", [rule'])]
-            end
+             |> Phi_Help.generic_theory_mapping (fn m =>
+                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL 40 ([],[]) NONE
+                                              [Morphism.thm m rule'])
   end
 
 fun gen_SH flag phi0 hints_thy =
@@ -1261,8 +1295,15 @@ fun gen_id_ele is_left (phi0 : phi_type) hint0 generic =
                         SOME ([P], fn [P'] => Trueprop $ (Identity_Element $ S $ P')))
             else K NONE
       fun reasoning _ = gen_abstract_constraint_guided_reasoning varify_subgoal (PLPR_reasoner (SOME 1))
+      fun simp (phi, ctxt) = Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+            HOLogic.Trueprop_conv (
+              if is_left
+              then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite ctxt))
+                                         (Simplifier.rewrite ctxt)
+              else Conv.arg_conv (Simplifier.rewrite ctxt)
+            )) ctxt)
       val rules = mk_rule_by_guess_or_hint (name, unify_hint_U, guess_property_id_ele is_left, [],
-                                            ind_conv, reasoning, K NONE, K I)
+                                            ind_conv, reasoning, K NONE, simp)
                                            (if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule})
                                            phi0 hint0 ctxt0
    in case Seq.pull rules
