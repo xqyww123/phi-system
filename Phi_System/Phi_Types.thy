@@ -59,7 +59,7 @@ lemma [\<phi>reason 1200]:
 
 
 subsection \<open>Func\<close>
- 
+
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -711,7 +711,7 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
                                                                                                                                              
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
@@ -722,8 +722,6 @@ declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
        and Transformation_Functor
        and Separation_Homo\<^sub>I
        and Separation_Homo\<^sub>E
-
-ML \<open>Phi_Type_Algebra.list_functors (Context.Proof \<^context>)\<close>
 
 thm List.sep_homo\<^sub>I
 thm list.rel_eq
@@ -748,6 +746,7 @@ thm list.rel_eq
        and Identity_Element\<^sub>E
        and Object_Equiv
        and Transformation_Functor
+       
 
 
 thm List3.obj_eq
@@ -784,7 +783,7 @@ declare [[\<phi>trace_reasoning = 0, ML_print_depth = 1000]]
        and Object_Equiv
        and Transformation_Functor
        and Separation_Homo\<^sub>I
-
+       and Separation_Homo\<^sub>E
 
 
 

@@ -84,10 +84,11 @@ val get_type_info : Context.generic -> string (*const name*) -> phi_type option
 
 type priority = int
 type deriver_name = string
+type derive = hints -> phi_type -> generic_theory -> generic_theory
 type deriver = {
   priority: priority,
   dependences: deriver_name list,
-  derive: hints -> phi_type -> generic_theory -> generic_theory
+  derive: derive
 }
 
 val get_deriver : Context.generic -> deriver_name -> deriver
@@ -654,6 +655,7 @@ fun fix_phi_term_params phi_term ctxt =
 
 type priority = int
 type deriver_name = string
+type derive = hints -> phi_type -> generic_theory -> generic_theory
 type deriver = {
   priority: priority,
   dependences: deriver_name list,
@@ -802,11 +804,20 @@ fun check_deriving_ast ctxt derv_ast =
   let val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of ctxt)
    in Derivings.empty
    |> fold (fn Derv_By_Name name => add_deriver ([], check_deriver ctxt name)
-             | Derv_By_Term term => Syntax.parse_prop ctxt_parse term
-                                 |> Syntax.check_prop ctxt_parse
-                                 |> add_derivers_from_hint ctxt
+             | Derv_By_Term term =>
+                let val term' = Syntax.parse_prop ctxt_parse term
+                             |> Syntax.check_prop ctxt_parse
+                    val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
+                    val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
+                 in add_derivers_from_hint ctxt term'1
+                end
            ) derv_ast
    |> complete_deriver_dependences ctxt
+   handle Unknown_Hint term =>
+      error (Pretty.string_of (Pretty.chunks [
+          Pretty.str "Do not know how to derive from the given hint:",
+          Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term
+        ]))
   end
 
 (* Interface for Deriver *)
@@ -820,10 +831,10 @@ val patterns_parse = Scan.optional (\<^keyword>\<open>for\<close> |-- \<^keyword
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<close>
           "declare deriver deriving properties when defining a \<phi>-type"
     (Parse.binding -- Parse.int -- dependences_parse -- patterns_parse --| \<^keyword>\<open>=\<close> -- Parse.ML_source
- >> (fn ((((name,priority),deps),binding_terms),ML) => Toplevel.theory (fn thy =>
-   let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := ((" @
+ >> (fn ((((name,priority),deps),raw_binding_terms),ML) => Toplevel.theory (fn thy =>
+   let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := SOME ((" @
                   ML_Lex.read_source ML @
-                  ML_Lex.read "): term list -> Phi_Type_Algebra.phi_type -> generic_theory -> generic_theory)"
+                  ML_Lex.read "): Phi_Type_Algebra.derive)"
        val derive = Synchronized.change_result ML_sender_locker (fn () => let
               val _ = ML_Context.expression (Input.pos_of ML) expr (Context.Theory thy)
               val ret = the (!ML_sender)
@@ -834,7 +845,12 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
           dependences = map (fn dep => fst (check_deriver (Context.Theory thy) dep)) deps,
           derive = derive
         } : deriver
-    in define_deriver_global name deriver thy |> snd
+       val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern (Proof_Context.init_global thy)
+       val binding_props = map (Syntax.parse_prop ctxt_parser) raw_binding_terms
+                        |> Syntax.check_props ctxt_parser
+    in define_deriver_global name deriver thy
+    |-> (fn der_name => Context.theory_map (
+              bind_derivers_on_patterns (map (rpair der_name) binding_props)))
    end
    )))
 

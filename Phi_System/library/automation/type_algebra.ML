@@ -1,12 +1,50 @@
-signature PHI_TYPE_ALGEBRA = sig
-include PHI_TYPE_ALGEBRA
+signature PHI_TYPE_ALGEBRA_TOOLS = sig
 
-val gen_obj_equal : automation_on_def
-val guess_set_opr : Proof.context -> typ -> typ -> (term * Proof.context) Seq.seq
+type hint = term
+type unify_hint = (Proof.context * hint -> term (*property*) -> term (*fixed term x*) * term (*fixed term T*) -> Envir.env)
+  (*Given the `property` and `x : T`, *)
+
+val mk_rule_by_guess_or_hint :
+      string (*name of the proof cache, e.g. "/object_equive"*)
+    * unify_hint
+    *
+    (term * term * Phi_Type_Algebra.phi_type ->
+       Proof.context ->
+         (term * term * term * term *
+          Phi_Type_Algebra.phi_type * Proof.context
+         )
+         Seq.seq)
+    *
+    int list *
+    (Proof.context ->
+       Phi_Type_Algebra.phi_type -> thm -> thm)
+    *
+    (Phi_Type_Algebra.phi_type ->
+       Proof.context -> thm -> thm)
+    *
+    (Phi_Type_Algebra.phi_type * Proof.context * thm ->
+       thm option)
+    *
+    (Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm)
+      ->
+      thm ->
+        Phi_Type_Algebra.phi_type ->
+          term option -> Proof.context -> thm Seq.seq
+
+(* Predefined Derivers *)
+
+val identity_element_I : Phi_Type_Algebra.derive
+val identity_element_E : Phi_Type_Algebra.derive
+val object_equiv : Phi_Type_Algebra.derive
+val transformation_functor : Phi_Type_Algebra.derive
+val separation_homo_I : Phi_Type_Algebra.derive
+val separation_homo_E : Phi_Type_Algebra.derive
 
 end
 
-structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
+(**** Implementation ****)
+
+structure Phi_Type_Algebra_Tools : PHI_TYPE_ALGEBRA_TOOLS = struct
 open Phi_Type_Algebra
 
 (*** Library ***)
@@ -21,11 +59,11 @@ structure Simps = Simpset (
   val comment = "Rules to expand constraints and conditions in \<phi>-type algebra automation"
 )
 
-structure Normalize_ToA = Simpset (
+(*structure Normalize_ToA = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = \<^binding>\<open>\<phi>type_algebra_normalize_ToA_ss\<close>
   val comment = "Internal simplification set to normalize ToA in \<phi>-type algebra automation"
-)
+)*)
 
 (*
 local
@@ -46,12 +84,13 @@ in val eq_simproc = Simplifier.make_simproc \<^context> "Phi_Type_Algebra.eq" {
 end *)
 
 val _ = Theory.setup (Context.theory_map (
-   Normalize_ToA.map (fn ctxt =>
+   (*Normalize_ToA.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>])
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
       |> Simplifier.add_cong @{thm HOL.conj_cong})
-#> Simps.map (fn ctxt =>
+#>*)
+  Simps.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>])
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
@@ -342,6 +381,30 @@ fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs'
 
 (** Select Hint **)
 
+local open Pretty
+
+fun err_derive prop_name =
+      error ("Fail to derive the property " ^ prop_name)
+
+fun err_prove hint thy =
+      error ("Fail to show the given property automatically:\n" ^
+      Context.cases Syntax.string_of_term_global Syntax.string_of_term thy hint)
+
+in
+
+fun accept_one prop_name gen [] phityp thy = (gen NONE phityp thy
+                    handle Automation_Fail => err_derive prop_name)
+  | accept_one _ gen [H] phityp thy = (gen (SOME H) phityp thy
+             handle Automation_Fail => err_prove H thy)
+  | accept_one prop_name _ hints _ thy =
+         error (string_of (chunks (
+           block [str prop_name, str " only derives one reasoning rule, but multiple hints are given"] ::
+           map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints)))
+        
+
+end
+
+(*depreciated:*)
 local
 
 fun is_the_hint prop_name (\<^Const>\<open>Trueprop\<close> $ X) = is_the_hint prop_name X
@@ -505,6 +568,10 @@ fun extract_hhf ext (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = 
   | extract_hhf ext (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_hhf ext X
   | extract_hhf ext X = ext X
 in
+
+type hint = term
+type unify_hint = (Proof.context * term -> term -> term * term -> Envir.env)
+
 fun hint_unify_by_type extract_type (ctxt, hint) property (_, T') =
     ( Unify.smash_unifiers (Context.Proof ctxt) [(extract_hhf extract_type property, T')] Envir.init
         |> Seq.chop 2
@@ -869,7 +936,7 @@ fun OE_reasoning phi ctxt rule =
    in abstract_constraint_guided_reasoning (K NONE) phi ctxt' rule
   end
 
-fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
+fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type (fn (\<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _) => T')
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_EO_rewr_IH})),
@@ -902,8 +969,7 @@ fun gen_obj_equal' (phi0 : phi_type) hint0 thy =
 
 in
 
-fun gen_obj_equal phi hints_thy =
-  select_one_hint \<^const_name>\<open>Object_Equiv\<close> (gen_obj_equal' phi) hints_thy
+val object_equiv = accept_one "Object_Equiv" gen_obj_equal'
 
 end
 
@@ -917,6 +983,10 @@ fun is_Type_Opr ty =
      of ([],_,_) => true
       | _ => false)
    handle TYPE _ => false)
+
+fun assert_Type_Opr prop_name ty =
+  if is_Type_Opr ty then ()
+  else error ("Fail to derive " ^ prop_name ^ " : Not a \<phi>-type operator!")
 
 local
 
@@ -966,8 +1036,9 @@ fun TF_reasoner ctxt sequent =
 fun TF_reasoning _ ctxt =
       gen_abstract_constraint_guided_reasoning (K NONE) TF_reasoner ctxt
 
-fun gen_TF' (phi0 : phi_type) hint0 generic =
-  let val ctxt0 = Context.proof_of generic
+fun gen_TF hint0 (phi0 : phi_type) generic =
+  let val _ = assert_Type_Opr "Transformation_Functor" (Term.fastype_of (#term phi0))
+      val ctxt0 = Context.proof_of generic
       val unify_hint = hint_unify_by_type_operator (
               fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _) => F1)
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr})),
@@ -1051,10 +1122,7 @@ fun gen_TF' (phi0 : phi_type) hint0 generic =
 
 in
 
-fun gen_TF phi hints_thy =
-  if is_Type_Opr (Term.fastype_of (#term phi))
-  then select_hints \<^const_name>\<open>Transformation_Functor\<close> (gen_TF' phi) hints_thy
-  else chk_no_hints \<^const_name>\<open>Transformation_Functor\<close> hints_thy
+val transformation_functor = accept_one "Transformation_Functor" gen_TF
 
 end
 
@@ -1139,8 +1207,9 @@ fun SH_reasoning is_intro phi ctxt =
           else SHu_reasoner ctxt sequent
       )) ctxt
 
-fun gen_SH' is_intro (phi0 : phi_type) hint0 generic =
-  let val ctxt0 = Context.proof_of generic
+fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
+  let val _ = assert_Type_Opr "Separation_Homo" (Term.fastype_of (#term phi0))
+      val ctxt0 = Context.proof_of generic
       val phi0pr = make_phi_for_pair generic phi0
       val unify_hint_SH = hint_unify_by_type_operator (
             fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ => F
@@ -1195,13 +1264,8 @@ fun gen_SH' is_intro (phi0 : phi_type) hint0 generic =
                                               [Morphism.thm m rule'])
   end
 
-fun gen_SH flag phi0 hints_thy =
-  let val prop_name = (if flag then \<^const_name>\<open>Separation_Homo\<^sub>I\<close>
-                               else \<^const_name>\<open>Separation_Homo\<^sub>E\<close>)
-   in if is_Type_Opr (Term.fastype_of (#term phi0))
-      then select_hints prop_name (gen_SH' flag phi0) hints_thy
-      else chk_no_hints prop_name hints_thy
-  end
+val separation_homo_I = accept_one "Separation_Homo\<^sub>I" (gen_SH true)
+val separation_homo_E = accept_one "Separation_Homo\<^sub>E" (gen_SH false)
 
 (*** Identity Element Intro \& Elim ***)
 
@@ -1279,7 +1343,7 @@ fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
         ctxt)
   end
 
-fun gen_id_ele is_left (phi0 : phi_type) hint0 generic =
+fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic 
       val name = if is_left then "1L" else "1R"
       val unify_hint_U = hint_unify_by_type (
@@ -1316,21 +1380,37 @@ fun gen_id_ele is_left (phi0 : phi_type) hint0 generic =
                                               [Morphism.thm m rule'])
   end
 
+val identity_element_I = accept_one "Identity_Element\<^sub>I" (gen_id_ele true)
+val identity_element_E = accept_one "Identity_Element\<^sub>E" (gen_id_ele false)
+
+(* fun gen_identity_element is_left hints phi thy =
+  case hints of [] => gen_id_ele is_left phi NONE thy
+
 fun gen_identity_element is_left phi hints_thy =
   select_one_hint (if is_left then \<^const_name>\<open>Identity_Element\<^sub>I\<close>
                               else \<^const_name>\<open>Identity_Element\<^sub>E\<close>)
                   (gen_id_ele is_left phi)
-                  hints_thy
+                  hints_thy *)
 
+(*
 (*** Install Automation ***)
 
-val _ = Theory.setup (Context.theory_map (
+val _ = Theory.setup (
+  Phi_Type_Algebra.define_deriver_global \<^binding>\<open>Identity_Element\<^sub>I\<close> {
+      priority = 100,
+      dependences = [],
+      derive = accept_one "Identity_Element\<^sub>I" (gen_id_ele true)
+    } #-> (fn name => Context.theory_map (
+      Phi_Type_Algebra.bind_derivers_on_patterns [(\<^pattern_prop>\<open>Identity_Element\<^sub>I _ _\<close>, name)]))
+)*)
+
+(* val _ = Theory.setup (Context.theory_map (
    Phi_Type_Algebra.add_automation_on_def 100 (gen_identity_element true)
 #> Phi_Type_Algebra.add_automation_on_def 101 (gen_identity_element false)
 #> Phi_Type_Algebra.add_automation_on_def 105 gen_obj_equal
 #> Phi_Type_Algebra.add_automation_on_def 110 gen_TF
 #> Phi_Type_Algebra.add_automation_on_def 120 (gen_SH true)
 #> Phi_Type_Algebra.add_automation_on_def 121 (gen_SH false)
-))
+)) *)
 
 end

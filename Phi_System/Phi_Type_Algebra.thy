@@ -1063,7 +1063,6 @@ ML \<open>\<^pattern>\<open>(\<lambda>l. (map fst l, map snd l))\<close>\<close>
 
 subsubsection \<open>Deriver Framework\<close>
 
-ML_file \<open>library/phi_type_algebra/deriver.ML\<close>
 
 consts \<phi>TA_ind_target :: \<open>action \<Rightarrow> action\<close>
        \<phi>TA_IH_ToA :: action
@@ -1258,7 +1257,40 @@ lemmas \<phi>TA_SHu_rule_step = \<phi>TA_TF_rule_step
 
 
 ML_file \<open>library/automation/type_algebra.ML\<close>
-                                   
+
+
+\<phi>property_deriver Identity_Element\<^sub>I 100 for (\<open>Identity_Element\<^sub>I _ _\<close>) = \<open>
+  Phi_Type_Algebra_Tools.identity_element_I
+\<close>
+
+\<phi>property_deriver Identity_Element\<^sub>E 101 for (\<open>Identity_Element\<^sub>E _\<close>) = \<open>
+  Phi_Type_Algebra_Tools.identity_element_E
+\<close>
+
+\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) = \<open>
+  Phi_Type_Algebra_Tools.object_equiv
+\<close>
+
+\<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _\<close>) = \<open>
+  Phi_Type_Algebra_Tools.transformation_functor
+\<close>
+
+\<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _\<close>) = \<open>
+  Phi_Type_Algebra_Tools.separation_homo_I
+\<close>
+
+\<phi>property_deriver Separation_Homo\<^sub>E 121 for (\<open>Separation_Homo\<^sub>E _ _ _ _\<close>) = \<open>
+  Phi_Type_Algebra_Tools.separation_homo_E
+\<close>
+
+
+
+
+
+
+
+
+
 term case_prod
 
 ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\<open>times\<close>\<close>
@@ -1281,8 +1313,6 @@ lemmas [\<phi>constraint_expansion] =
 thm prod.map_ident
 thm zip_eq_Nil_eq_len zip_eq_Cons_ex
 
-
-lemmas [\<phi>type_algebra_normalize_ToA_ss] = HOL.simp_thms implies_refl
 
 
 lemma Set_bind_insert[simp, \<phi>constraint_expansion]:
