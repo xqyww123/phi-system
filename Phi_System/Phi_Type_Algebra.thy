@@ -366,13 +366,13 @@ ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_n
 |> #ctr_sugar
 \<close>
 
+ML \<open>BNF_Def.map_def_of_bnf (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
-ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
-|> #ctr_sugar\<close>
+ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
 ML \<open>local val bnf = (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))
 in 
-val xx = BNF_Def.rel_eq_of_bnf bnf
+val xx = BNF_Def.pred_mono_of_bnf bnf
 end\<close>
 
 thm list.rel_eq
@@ -878,9 +878,9 @@ locale Functional_Transformation_Functor =
 + fixes pred_mapper :: \<open>('a \<Rightarrow> bool) \<Rightarrow> 'c \<Rightarrow> bool\<close>
     and func_mapper :: \<open>('a \<Rightarrow> 'e) \<Rightarrow> 'c \<Rightarrow> 'f\<close>
   assumes functional_mapper:
-      \<open>mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = func_mapper f a' \<and> pred_mapper P a')\<close>
+      \<open>Prem \<Longrightarrow> mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = func_mapper f a' \<and> pred_mapper P a')\<close>
   and pred_mapper_constant:
-      \<open>pred_mapper (\<lambda>x. Q \<and> P x) x \<longleftrightarrow> Q \<and> pred_mapper P x\<close>
+      \<open>Prem \<Longrightarrow> pred_mapper (\<lambda>x. Q \<and> P x) x \<longleftrightarrow> Q \<and> pred_mapper P x\<close>
 
 setup \<open>Phi_Type_Algebra.add_property_kind "Phi_Type_Algebra.Functional_Transformation_Functor"
             (fn (_ $ F $ _ $ _ $ _ $ _ $ _ $ _) => F)\<close>
@@ -900,7 +900,7 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   unfolding meta_Ball_def Premise_def
   using Transformation_Functor[unfolded Transformation_Functor_def,
           THEN spec[where x=T], THEN spec[where x=U], THEN spec[where x=x],
-          THEN spec[where x=\<open>(\<lambda>a b. b = f a \<and> P a)\<close>], unfolded functional_mapper,
+          THEN spec[where x=\<open>(\<lambda>a b. b = f a \<and> P a)\<close>], simplified functional_mapper,
           simplified]
   by blast
 
@@ -911,7 +911,7 @@ lemma functional_transformation:
   unfolding meta_Ball_def Argument_def Premise_def
   using Transformation_Functor[unfolded Transformation_Functor_def,
           THEN spec[where x=T], THEN spec[where x=U], THEN spec[where x=x],
-          THEN spec[where x=\<open>(\<lambda>a b. b = f a \<and> P a)\<close>], unfolded functional_mapper,
+          THEN spec[where x=\<open>(\<lambda>a b. b = f a \<and> P a)\<close>], simplified functional_mapper,
           simplified]
   by blast
 
@@ -1191,6 +1191,21 @@ lemma \<phi>TA_TF_rule_step:
   by (simp add: Imply_def)
 
 
+subsubsection \<open>Functional Transformation Functor\<close>
+
+lemma \<phi>TA_FTF_rule:
+  \<open> (Ant \<Longrightarrow> Prem \<Longrightarrow> Transformation_Functor F1 F2 D mapper)
+\<Longrightarrow> (Ant \<Longrightarrow> Prem \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ((\<forall>f P. mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = fm f a' \<and> pm P a'))
+                              \<and> (\<forall>Q P x. pm (\<lambda>x. Q \<and> P x) x = (Q \<and> pm P x))))
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Functional_Transformation_Functor F1 F2 D mapper Prem pm fm\<close>
+  unfolding Functional_Transformation_Functor_def Premise_def fun_eq_iff
+            Functional_Transformation_Functor_axioms_def Transformation_Functor_L_def
+  by blast
+
+
 subsubsection \<open>Inhabitance\<close>
 
 lemma 
@@ -1273,6 +1288,10 @@ ML_file \<open>library/automation/type_algebra.ML\<close>
 
 \<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _\<close>) = \<open>
   Phi_Type_Algebra_Tools.transformation_functor
+\<close>
+
+\<phi>property_deriver Functional_Transformation_Functor 110 for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>) = \<open>
+  Phi_Type_Algebra_Tools.functional_transformation_functor
 \<close>
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _\<close>) = \<open>
