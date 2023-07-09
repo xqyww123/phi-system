@@ -1253,28 +1253,6 @@ fun gen_TF hint0 (phi0 : phi_type) generic =
                                               | 1 => Seq.hd (Thm.assumption (SOME ctxt0) 1 th)
                                               | _ => error "Internal bug")
 
-              exception GIVE_UP
-              fun setup_functional_TF cmd lthy =
-                let val locale_rule_FTF = (@{thm' Functional_Transformation_Functor_axioms.intro}
-                                              RS (locale_rule RS' (lthy, @{thm' Functional_Transformation_Functor.intro})))
-                                        |> (SOLVED' (Clasimp.fast_force_tac lthy) 1
-                                            THEN SOLVED' (Clasimp.fast_force_tac lthy) 1)
-                                        |> Seq.pull
-                                        |> (fn SOME (ret, _) => ret
-                                             | NONE => raise GIVE_UP)
-                    val ((_,[locale_rule_FTF']), _) = Variable.import true [locale_rule_FTF] lthy
-                 in case Thm.concl_of locale_rule_FTF'
-                      of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _)
-                            $ Fa $ Fb $ D $ m $ Pr $ pm $ fm) =>
-                    cmd ([(\<^locale>\<open>Transformation_Functor_L\<close>, ((Term.term_name (#term phi0), true),
-                          (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME m,
-                                                  SOME (case Pr of Var _ => \<^Const>\<open>True\<close> | _ => Pr),
-                                                  SOME pm, SOME fm],
-                           [])))], []) [] lthy
-                      |> Proof.refine_primitive (fn _ => fn th => locale_rule_FTF' RS th)
-                      |> Proof.global_done_proof
-                end
-                handle GIVE_UP => lthy
                 
               fun setup_locale cmd lthy =
                 let val ((_,[locale_rule']), _) = Variable.import true [locale_rule] lthy
@@ -1356,8 +1334,35 @@ fun gen_FTF hint0 (phi0 : phi_type) thy =
                                             @{thm' \<phi>TA_FTF_rule}, [],
                                             NONE, K reasoning, K NONE, simp)
                                             phi0 hint0 ctxt0
-   in Seq.pull rules;
-      thy
+   in Seq.pull rules
+   |> (fn NONE => raise Automation_Fail
+        | SOME (rule'0, _) =>
+          let fun set_prem_to_True rule =
+                case Thm.prop_of rule
+                  of _ (*Trueprop*) $ (_ $ Var v $ _ $ _) =>
+                      Thm.instantiate (TVars.empty, Vars.make [(v, \<^cterm>\<open>True\<close>)]) rule
+                   | _ => rule
+              val rule' = set_prem_to_True rule'0
+              
+              fun setup_functional_TF cmd lthy =
+                let val ((_,[locale_rule']), _) = Variable.import true [rule'] lthy
+                 in case Thm.concl_of locale_rule'
+                      of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _)
+                            $ Fa $ Fb $ D $ m $ Pr $ pm $ fm) =>
+                          cmd ([(\<^locale>\<open>Functional_Transformation_Functor\<close>,
+                                ((Term.term_name (#term phi0), true),
+                                (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME m,
+                                                        SOME (case Pr of Var _ => \<^Const>\<open>True\<close> | _ => Pr),
+                                                        SOME pm, SOME fm],
+                                 [])))], []) [] lthy
+                            |> Proof.refine_primitive (fn _ => fn th => locale_rule' RS th)
+                            |> Proof.global_done_proof
+                end
+           in thy
+           |> Phi_Type_Algebra.note_properties phi0 [("functional_transformation_functor", [rule'])]
+           |> Context.mapping (Named_Target.theory_map (setup_functional_TF Interpretation.global_interpretation))
+                              (setup_functional_TF Interpretation.sublocale)
+          end)
   end
 
 val functional_transformation_functor = accept_one "Functional_Transformation_Functor" gen_FTF

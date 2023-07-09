@@ -50,12 +50,20 @@ lemma Transformation_Functor_sub_dom:
   unfolding Transformation_Functor_def
   by (clarsimp simp add: subset_iff; blast)
 
+lemma Transformation_Functor_sub_mapper:
+  \<open> ma \<le> mb
+\<Longrightarrow> Transformation_Functor F1 F2 D ma
+\<Longrightarrow> Transformation_Functor F1 F2 D mb\<close>
+  unfolding Transformation_Functor_def
+  by (clarsimp simp add: le_fun_def Imply_def Ball_def ExSet_expn Subjection_expn, blast)
+
 lemma apply_Transformation_Functor:
   \<open> Transformation_Functor Fa Fb D mapper
 \<Longrightarrow> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<Longrightarrow> a \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y \<close>
   unfolding Transformation_Functor_def Premise_def
   by simp
+
 
 
 subsubsection \<open>Inhabitance\<close>
@@ -879,15 +887,13 @@ locale Functional_Transformation_Functor =
     and func_mapper :: \<open>('a \<Rightarrow> 'e) \<Rightarrow> 'c \<Rightarrow> 'f\<close>
   assumes functional_mapper:
       \<open>Prem \<Longrightarrow> mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = func_mapper f a' \<and> pred_mapper P a')\<close>
-  and pred_mapper_covariant:
-      \<open>Prem \<Longrightarrow> (\<And>x. P x \<Longrightarrow> P' x) \<Longrightarrow> pred_mapper P x \<Longrightarrow> pred_mapper P' x\<close>
 
 setup \<open>Phi_Type_Algebra.add_property_kind "Phi_Type_Algebra.Functional_Transformation_Functor"
             (fn (_ $ F $ _ $ _ $ _ $ _ $ _ $ _) => F)\<close>
 
 context Functional_Transformation_Functor
 begin
- 
+
 lemma [\<phi>reason add]:
   \<open>Functional_Transformation_Functor Fa Fb D mapper Prem pred_mapper func_mapper\<close>
   by (simp add: Functional_Transformation_Functor_axioms)
@@ -1202,7 +1208,7 @@ lemma \<phi>TA_FTF_rule:
 \<Longrightarrow> Functional_Transformation_Functor F1 F2 D mapper Prem pm fm\<close>
   unfolding Functional_Transformation_Functor_def Premise_def fun_eq_iff
             Functional_Transformation_Functor_axioms_def Transformation_Functor_L_def
-  by blas
+  by blast
 
 
 subsubsection \<open>Inhabitance\<close>
@@ -1281,6 +1287,9 @@ ML_file \<open>library/automation/type_algebra.ML\<close>
   Phi_Type_Algebra_Tools.identity_element_E
 \<close>
 
+\<phi>property_deriver Identity_Element 102
+  requires Identity_Element\<^sub>I and Identity_Element\<^sub>E = \<open>K (K I)\<close>
+
 \<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) = \<open>
   Phi_Type_Algebra_Tools.object_equiv
 \<close>
@@ -1303,6 +1312,8 @@ ML_file \<open>library/automation/type_algebra.ML\<close>
   Phi_Type_Algebra_Tools.separation_homo_E
 \<close>
 
+\<phi>property_deriver Separation_Homo 122
+  requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E = \<open>K (K I)\<close>
 
 
 

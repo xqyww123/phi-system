@@ -711,22 +711,15 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-                                                                                                                                                 
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
+                                                                                                                                                   
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Identity_Element\<^sub>I
-       and Identity_Element\<^sub>E
+  deriving Identity_Element
        and Object_Equiv
        and Functional_Transformation_Functor
-       and Separation_Homo\<^sub>I
-       and Separation_Homo\<^sub>E
-
-thm List.sep_homo\<^sub>I
-thm list.rel_eq
-
-
+       and Separation_Homo
 
 
 
@@ -746,7 +739,6 @@ thm list.rel_eq
        and Identity_Element\<^sub>E
        and Object_Equiv
        and Transformation_Functor
-       
 
 
 thm List3.obj_eq
@@ -778,12 +770,10 @@ declare [[\<phi>trace_reasoning = 0, ML_print_depth = 1000]]
          
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-  deriving Identity_Element\<^sub>I
-       and Identity_Element\<^sub>E
+  deriving Identity_Element
        and Object_Equiv
        and Transformation_Functor
        and Separation_Homo\<^sub>I
-       and Separation_Homo\<^sub>E
 
 
 

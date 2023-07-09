@@ -412,7 +412,7 @@ text \<open>
 \<^item> 13: Remains
 \<^item> 14: ExSet
 \<^item> 15: Comma, Subjection
-\<^item> 16: SMorphism, SYNTHESIS
+\<^item> 16: Struct Tag, SYNTHESIS
 \<^item> 18: Assertion_Matches
 \<^item> 20: \<phi>-type colon
 \<close>

@@ -185,6 +185,11 @@ lemma implies_weaken:
 \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P'\<close>
   unfolding Imply_def by simp
 
+lemma implies_intro_inhab:
+  \<open> (Inhabited A \<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P)
+\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P \<close>
+  unfolding Imply_def Inhabited_def by blast
+
 lemma implies_left_prod:
   "U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> U \<a>\<n>\<d> P \<Longrightarrow> R * U' \<i>\<m>\<p>\<l>\<i>\<e>\<s> R * U \<a>\<n>\<d> P "
   unfolding Imply_def split_paired_All times_set_def by blast

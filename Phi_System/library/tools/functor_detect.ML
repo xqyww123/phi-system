@@ -396,12 +396,8 @@ fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
                           |> singleton (simplify ctxt') 
                           |> Phi_Help.beta_eta_contract
                           |> Drule.zero_var_indexes
-                val _ = Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
-                          item [chunks [
-                            block [str "Instantiate reasoning rule for \<phi>-type operator ",
-                                   Syntax.pretty_term ctxt' (Logic.incr_indexes ([],[],1) the_functor)],
-                            Syntax.pretty_term ctxt' (Thm.prop_of rule')
-                          ]] end)
+                val _ = Phi_Reasoner.info_print ctxt' 1 (fn () =>
+                            "Instantiate reasoning rule for \<phi>-type operator ")
              in Phi_Reasoner.add_intro_rule pos mode priority pats guard [rule'] ctxt
             end
       val automation = property_dependent_setup prop_kinds impl

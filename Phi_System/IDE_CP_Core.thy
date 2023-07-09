@@ -67,14 +67,14 @@ subsection \<open>Proof Obligation\<close>
 
 text \<open>See \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> given in \<open>\<phi>\<close>-Logic Programming Reasoner.\<close>
 
-subsection \<open>Judgement Obligation\<close>
+subsection \<open>Tag of User Input\<close>
 
 definition Argument :: "'a::{} \<Rightarrow> 'a" ("\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _" [11] 10) where "Argument x \<equiv> x"
 
 lemma Argument_I[intro!]: "P \<Longrightarrow> Argument P" unfolding Argument_def .
 
 text \<open>Antecedent \<^prop>\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t P\<close> represents the wrapped antecedent \<^prop>\<open>P\<close>
-  is a problem intended to be solved by users. Different with \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close> where
+  is intended to be given or solved by users. Different with \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close> where
   boolean \<^prop>\<open>Q\<close> is a pure assertion being a verification condition,
   the wrapped \<^prop>\<open>P\<close> is a judgement in the programming, such as a transformation of abstraction
   or a view shift or any others representing specific properties.
@@ -179,7 +179,7 @@ lemma [\<phi>inhabitance_rule 1000]:
   unfolding Technical_def .
 
 
-subsection \<open>Reasoning Obligation\<close>
+subsection \<open>Pended Reasoning\<close>
 
 definition Do  :: \<open>prop \<Rightarrow> prop\<close> ("\<^bold>d\<^bold>o _"   [3] 2) where [iff]: \<open>Do  X \<equiv> X\<close>
 
@@ -226,8 +226,30 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 \<close>
 
 
+subsection \<open>Annotations on \<phi>-Types\<close>
 
-section \<open>Mechanisms\<close>
+typedecl struct_tag
+
+definition Struct_Tag :: \<open>'a set \<Rightarrow> struct_tag \<Rightarrow> 'a set\<close> ("_\<lblbrace>_\<rblbrace>" [17,17] 16)
+  where \<open>Struct_Tag S tg \<equiv> S\<close>
+
+text \<open>In a ToA like \<^term>\<open>x \<Ztypecolon> T\<lblbrace>A\<rblbrace>\<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U\<lblbrace>A\<rblbrace>\<close> , \<^term>\<open>x \<Ztypecolon> T\<lblbrace>A\<rblbrace>\<close> represents the
+  \<^term>\<open>x \<Ztypecolon> T\<close> may come from a larger structure \<open>A\<close> containing it, and after the transformation,
+  it hints the system to put \<^term>\<open>y \<Ztypecolon> U\<close> back to the original position of \<^term>\<open>x \<Ztypecolon> T\<close> in \<open>A\<close>.
+
+  It is useful when we access or modify a field in a complex structure, and the original structure
+  of \<open>A\<close> will not be broken after the access.
+\<close>
+
+subsubsection \<open>Implementation\<close>
+
+definition Changes_To :: \<open>'a set \<Rightarrow> ('b,'c) \<phi> \<Rightarrow> 'a set\<close> (infix "<changes-to>" 16)
+  where \<open>(S <changes-to> _) = S\<close>
+
+definition Auto_Transform_Hint :: \<open>'b set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+  where \<open>Auto_Transform_Hint residue result = True\<close>
+
+
 
 subsection \<open>Programming Modes\<close>
 

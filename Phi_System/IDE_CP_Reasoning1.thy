@@ -63,10 +63,10 @@ text \<open>Annotate a rule generated during the programming, to differentiate f
 (*TODO: explain*)
 (*TODO: polish*)
 
-definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [17] 16) (*TODO: rename it, maybe like SP standing for 
+(*definition SMorphism :: \<open>'a \<Rightarrow> 'a\<close> ("SMORPH _" [17] 16) (*TODO: rename it, maybe like SP standing for 
                                                           Structural Preserving*)
   where [iff]: \<open>SMorphism X = X\<close>
-
+*)
 definition Generated_Rule :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Generated_Rule _ embedded_prems stuff = (embedded_prems \<longrightarrow> stuff)\<close>
 
@@ -74,9 +74,10 @@ definition Generated_Rule :: \<open>mode \<Rightarrow> bool \<Rightarrow> bool \
 
 (*abbreviation Automatic_Rule :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Automatic_Rule \<equiv> Generated_Rule (MODE_AUTO default)\<close>*)
 
-consts REVERSE_TRANSFORMATION :: mode
+(*consts REVERSE_TRANSFORMATION :: mode
 abbreviation Reverse_Transformation :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Reverse_Transformation \<equiv> Generated_Rule (MODE_AUTO REVERSE_TRANSFORMATION)\<close>
+*)
 
 text \<open>
 Note, the argument here means any \<phi>-Type in the pre-condition, not necessary argument value.
@@ -108,12 +109,14 @@ Note, the argument here means any \<phi>-Type in the pre-condition, not necessar
     \<phi>-BI specification and so possibly not able to be applied any more.
 \<close>
 
+(*
 declare [[\<phi>reason_default_pattern
       \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
       \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close>    (110)
   and \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
       \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close>    (120)
 ]]
+*)
 
 
 section \<open>Normalization of Assertions\<close>
@@ -222,7 +225,7 @@ subsubsection \<open>Name tag by type\<close>
 
 (*TODO: elaborate this*)
 
-datatype ('x, 'name) named (infix "<named>" 30) = tag 'x
+datatype ('x, 'name) named (infix "<named>" 30) = tag 'x (*TODO: rename!!*)
 
 syntax "__named__" :: \<open>logic \<Rightarrow> tuple_args \<Rightarrow> logic\<close> (infix "<<named>>" 25)
 
