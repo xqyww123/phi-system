@@ -879,8 +879,8 @@ locale Functional_Transformation_Functor =
     and func_mapper :: \<open>('a \<Rightarrow> 'e) \<Rightarrow> 'c \<Rightarrow> 'f\<close>
   assumes functional_mapper:
       \<open>Prem \<Longrightarrow> mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = func_mapper f a' \<and> pred_mapper P a')\<close>
-  and pred_mapper_constant:
-      \<open>Prem \<Longrightarrow> pred_mapper (\<lambda>x. Q \<and> P x) x \<longleftrightarrow> Q \<and> pred_mapper P x\<close>
+  and pred_mapper_covariant:
+      \<open>Prem \<Longrightarrow> (\<And>x. P x \<Longrightarrow> P' x) \<Longrightarrow> pred_mapper P x \<Longrightarrow> pred_mapper P' x\<close>
 
 setup \<open>Phi_Type_Algebra.add_property_kind "Phi_Type_Algebra.Functional_Transformation_Functor"
             (fn (_ $ F $ _ $ _ $ _ $ _ $ _ $ _) => F)\<close>
@@ -1195,15 +1195,14 @@ subsubsection \<open>Functional Transformation Functor\<close>
 
 lemma \<phi>TA_FTF_rule:
   \<open> (Ant \<Longrightarrow> Prem \<Longrightarrow> Transformation_Functor F1 F2 D mapper)
-\<Longrightarrow> (Ant \<Longrightarrow> Prem \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> ((\<forall>f P. mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = fm f a' \<and> pm P a'))
-                              \<and> (\<forall>Q P x. pm (\<lambda>x. Q \<and> P x) x = (Q \<and> pm P x))))
+\<Longrightarrow> (Ant \<Longrightarrow> Prem \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P. mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = fm f a' \<and> pm P a')))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Functional_Transformation_Functor F1 F2 D mapper Prem pm fm\<close>
   unfolding Functional_Transformation_Functor_def Premise_def fun_eq_iff
             Functional_Transformation_Functor_axioms_def Transformation_Functor_L_def
-  by blast
+  by blas
 
 
 subsubsection \<open>Inhabitance\<close>
@@ -1290,7 +1289,9 @@ ML_file \<open>library/automation/type_algebra.ML\<close>
   Phi_Type_Algebra_Tools.transformation_functor
 \<close>
 
-\<phi>property_deriver Functional_Transformation_Functor 110 for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>) = \<open>
+\<phi>property_deriver Functional_Transformation_Functor 111
+  requires Transformation_Functor
+  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>) = \<open>
   Phi_Type_Algebra_Tools.functional_transformation_functor
 \<close>
 
@@ -1305,7 +1306,15 @@ ML_file \<open>library/automation/type_algebra.ML\<close>
 
 
 
+lemma list_all2_reduct_rel[simp]:
+  \<open>list_all2 (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = map f a' \<and> list_all P a')\<close>
+  apply (clarsimp simp add: fun_eq_iff)
+  subgoal for x y by (induct x arbitrary: y; simp; case_tac y; simp; blast) .
 
+(*
+lemma
+  \<open>list_all (\<lambda>x. Q \<and> P x) x = (Q \<and> list_all P x)\<close>
+  apply (induct x; simp) *)
 
 
 

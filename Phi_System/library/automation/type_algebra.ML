@@ -1151,8 +1151,11 @@ fun assert_Type_Opr prop_name ty =
   if is_Type_Opr ty then ()
   else error ("Fail to derive " ^ prop_name ^ " : Not a \<phi>-type operator!")
 
-fun mk_TF's_two_instantiations ctxt (x_term, FT_term, phi) =
-  let val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+fun mk_TF's_two_instantiations ctxt0 (_, FT_term0, phi0) =
+  let val (inst0, phi, ctxt) = fix_phi_type true phi0 ctxt0
+      val FT_term = Term_Subst.instantiate (Phi_Help.table_no_c inst0) FT_term0
+
+      val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
       val F_term = (case FT_term of F $ _ => F
                                   | _ => error "Internal bug: Not a Type Operator")
@@ -1173,14 +1176,14 @@ fun mk_TF's_two_instantiations ctxt (x_term, FT_term, phi) =
                       \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_SIMP\<close> $ (\<^Const>\<open>HOL.eq T\<close> $ Free(N,T) $ p')
                  ) params params'
 
-   in (ants, F_term, F'_term, inst_ty, ctxt')
+   in (ants, F_term, F'_term, inst_ty, phi, ctxt')
   end
 
-fun guess_property_TF (x_term, FT_term, phi) ctxt =
-  let val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+fun guess_property_TF (x_term, FT_term, phi0) ctxt =
+  let val (ants, F_term, F'_term, inst_ty, phi, ctxt') = mk_TF's_two_instantiations ctxt (x_term, FT_term, phi0)
+      val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
 
-      val (ants, F_term, F'_term, inst_ty, ctxt') = mk_TF's_two_instantiations ctxt (x_term, FT_term, phi)
       val TF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
                        of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                            \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
@@ -1303,24 +1306,24 @@ end
 (** Functional Transformation Functor **)
 
 
-fun guess_property_FTF (x_term, FT_term, phi) ctxt =
-  let val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
+  let val (ants, F_term, F'_term, inst_ty, phi, ctxt) = mk_TF's_two_instantiations ctxt0 (x_term, FT_term, phi0)
+      val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
-
-      val (ants, F_term, F'_term, inst_ty, ctxt') = mk_TF's_two_instantiations ctxt (x_term, FT_term, phi)
+      
       val ant = Phi_Help.list_mk_conj ants
       val FTF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
                         of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                             \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
                            \<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F_term $ F'_term
                               $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
-                              $ Var(("mapper",0), (a --> b --> \<^Type>\<open>bool\<close>) --> c --> f --> \<^Type>\<open>bool\<close>)
+                              $ Var(("mapper",0), (a --> e --> \<^Type>\<open>bool\<close>) --> c --> f --> \<^Type>\<open>bool\<close>)
                               $ ant
                          | _ => error "Internal bug")
       val target_ty = map (Term_Subst.instantiateT_frees inst_ty)
    in guess_func_mapper target_ty ctxt x_ty element_ty
    |> Seq.maps (fn (fm, ctxt'2) =>
-        guess_pred_mapper ctxt x_ty element_ty
+        guess_pred_mapper ctxt'2 x_ty element_ty
      |> Seq.map (fn (pm, ctxt'3) =>
           (ants, \<^Const>\<open>Trueprop\<close> $ (FTF_head $ pm $ fm), x_term, FT_term, phi, ctxt'3)))
   end

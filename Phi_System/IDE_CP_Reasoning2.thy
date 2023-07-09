@@ -1472,7 +1472,7 @@ lemma "_Structural_Extract_general_rule'_b_"[(*THEN SE_clean_waste',*) \<phi>rea
           ))
         \<and> P x) @action \<A>SEb)
 \<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper f (z x) \<Ztypecolon> F3 U \<a>\<n>\<d> (
-      (Reverse_Transformation (Prem' \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> y' \<in> Dz') \<and> (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> Dom' (z' y') \<longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> g a \<in> Rng' (z' y')) \<and> RP a)) (
+      (Reverse_Transformation (Prem' \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> y' \<in> Dz') \<and> (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> Dom' (z' y') \<longrightarrow> RP a)) (
           y' \<Ztypecolon> F3' U' \<^emph> F2' R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> func_mapper' g (z' y') \<Ztypecolon> F1' T' \<a>\<n>\<d> pred_mapper' P' (z' y')))
       \<and> pred_mapper P (z x)) @action \<A>SEb \<close>
   unfolding Generated_Rule_def meta_Ball_def Premise_def norm_hhf_eq Action_Tag_def
@@ -1485,6 +1485,11 @@ lemma "_Structural_Extract_general_rule'_b_"[(*THEN SE_clean_waste',*) \<phi>rea
       using prems(10) by (smt (verit, best))
 
     show ?thesis
+      apply (insert prems(1-9) t10,
+          rule implies_weaken, defer_tac,
+          (rule "_Structural_Extract_general_rule_b_"[unfolded meta_Ball_def Premise_def norm_hhf_eq Action_Tag_def,
+              where f=f and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] ; assumption))
+      apply (clarify, rule, clarify)
       by (insert prems(1-9) t10,
           rule implies_weaken, defer_tac,
           (rule "_Structural_Extract_general_rule_b_"[unfolded meta_Ball_def Premise_def norm_hhf_eq Action_Tag_def,

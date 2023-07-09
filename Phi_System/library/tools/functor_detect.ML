@@ -682,9 +682,9 @@ fun chk_deriver ctxt (derv : deriver) =
   let val names = Derivers.get ctxt
    in #dependences derv
    |> map (Name_Space.get names)
-   |> forall (fn der' => #priority der' > #priority derv)
-   |> (fn True => derv
-        | False => error "The priority of the deriver must be larger than its dependences.")
+   |> forall (fn der' => #priority derv > #priority der')
+   |> (fn true => derv
+        | false => error "The priority of the deriver must be larger than its dependences.")
   end
 
 val deriver_name_space = Derivers.get
@@ -731,13 +731,15 @@ fun add_deriver (hints,(derv_name, derv)) dervs =
 fun add_derivers_from_hint ctxt hint ders =
   add_deriver ([hint], match_deriver1 ctxt (Logic.strip_imp_concl hint)) ders
 
-fun add_deriver_dependences ctxt [] dervs = dervs
+fun add_deriver_dependences _ [] dervs = dervs
   | add_deriver_dependences ctxt (dep::remain_deps) dervs =
       if Derivings.exists (fn ((_,name),_) => name = dep) dervs
       then add_deriver_dependences ctxt remain_deps dervs
       else let val derv = get_deriver ctxt dep
-            in add_deriver_dependences ctxt remain_deps
-                  (add_deriver_dependences ctxt (#dependences derv) dervs)
+            in dervs
+            |> Derivings.update_new ((#priority derv, dep), ([], derv))
+            |> add_deriver_dependences ctxt (#dependences derv)
+            |> add_deriver_dependences ctxt remain_deps
            end
 
 fun complete_deriver_dependences ctxt dervs =
@@ -1057,7 +1059,6 @@ fun gen_add_fun pos derv_ast add (generic : generic_theory) =
     val const = find_first (is_phi_type o Term.fastype_of) (#fs info)
               |> (fn SOME x => x
                    | NONE => error "No \<phi>-type is defined.")
-    val ctxt'1 = Context.proof_of generic'1
     val dervs = check_deriving_ast generic'1 derv_ast
    in generic'1
    |> Context.mapping_result (
@@ -1076,14 +1077,12 @@ in
 
 (* fun add_fun a b c = gen_add_fun (Function.add_function a b c) *)
 fun add_fun_cmd a b c hints int generic =
-  let val ctxt = Context.proof_of generic
-   in gen_add_fun (Binding.pos_of (#1 (hd a))) hints
-                  (fn tac =>
-                      Context.mapping_result
-                        (Named_Target.theory_map_result Function_Common.transform_function_data
-                                                        (add_function_cmd a b c tac int))
-                        (add_function_cmd a b c tac int)) generic
-  end
+  gen_add_fun (Binding.pos_of (#1 (hd a))) hints
+    (fn tac =>
+        Context.mapping_result
+          (Named_Target.theory_map_result Function_Common.transform_function_data
+                                          (add_function_cmd a b c tac int))
+          (add_function_cmd a b c tac int)) generic
 
 end
 
