@@ -106,7 +106,7 @@ val del = Thm.declaration_attribute del_thm; *)
 
 val _ = Theory.setup (
 Attrib.setup \<^binding>\<open>\<phi>inhabitance_rule\<close>
-            (Phi_Reasoner.gen_attr_add_rule (fn (rules,ctxt) =>
+            (Phi_Reasoner.attr_rule_syntax (fn (rules,ctxt) =>
                 (map (generate_extraction_rule (Context.proof_of ctxt)) rules, ctxt)))
     "declare the rule to be an inhabited rule in \<phi>-System so that we can extract pure facts\
     \ from a \<phi>-BI assertion. Ideally the rule should be in a General Elimination form, but we\

@@ -438,11 +438,30 @@ consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
 abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close>
 
 declare [[\<phi>reason_default_pattern
-    \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> _ @action to ?T\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to ?T\<close> (100)
-and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _ @action to ?T\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form of the To transformation\<close> (?y \<Ztypecolon> ?U) \<open>should be a set. Use\<close> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. y = ?y) \<open>instead\<close>)\<close> (1000)
-and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (?f y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> _ @action to _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form of the To transformation. The set must be in form \<open>y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. ?R y\<close>, meaning your\<close> ?f \<open>should be \<lambda>x. x\<close>)\<close> (99)
-and \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to ?T\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form of the To transformation\<close>)\<close> (98)
+    \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> ?P @action to ?T\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to ?T\<close> (100)
+and \<open>?X @action to ?A\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form: \<close> (?X @action to ?A) \<newline>
+                                      \<open>Expect: \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?Y \<s>\<u>\<b>\<j> y. ?r y) @action to _\<close>\<close>)\<close> (1)
+and \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. ?rel x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _ @action \<A>\<T>split_step\<close> \<Rightarrow>
+    \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. ?rel x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _ \<w>\<i>\<t>\<h> _ @action \<A>\<T>split_step\<close> (100)
+and \<open>?X @action \<A>\<T>split_step\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form: \<close> (?X @action \<A>\<T>split_step))\<close> (1)
 ]]
+
+lemma [cong]:
+  \<open> X \<equiv> X'
+\<Longrightarrow> U \<equiv> U'
+\<Longrightarrow> r \<equiv> r'
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y) @action to A
+ \<equiv> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. r' y) @action to A\<close>
+  by simp
+
+lemma [cong]:
+  \<open> T \<equiv> T'
+\<Longrightarrow> f \<equiv> f'
+\<Longrightarrow> U \<equiv> U'
+\<Longrightarrow> g \<equiv> g'
+\<Longrightarrow> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. f x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. g y @action \<A>\<T>split_step
+ \<equiv> x \<Ztypecolon> T' \<s>\<u>\<b>\<j> x. f' x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. g' y @action \<A>\<T>split_step\<close>
+  by simp
 
 lemma to_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> T

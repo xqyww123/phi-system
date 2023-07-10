@@ -1,6 +1,6 @@
 signature PATTERN_REWRITE = sig
 
-datatype rewrite = By_Pattern of term list | By_ML of (Context.generic -> term -> term list)
+datatype rewrite = By_Pattern of term list | By_ML of (Context.generic -> term -> term list option)
 val rewrite_eq : rewrite * rewrite -> bool
 
 type rewr = int * term * Position.T * rewrite
@@ -19,8 +19,8 @@ val print_rewrites : Context.generic -> unit
 end
 
 structure PLP_Reasoner_Pattern_Parse_Sender_Qiyuan_Xu = Proof_Data (
-  type T = (Context.generic -> term -> term list)
-  val init = K (K (K []))
+  type T = (Context.generic -> term -> term list option)
+  val init = K (K (K NONE))
 )
 
 functor Pattern_Translation (Config : sig
@@ -29,7 +29,7 @@ functor Pattern_Translation (Config : sig
   val multi_translation_err_msg : string
 end) : PATTERN_REWRITE = struct
 
-datatype rewrite = By_Pattern of term list | By_ML of (Context.generic -> term -> term list)
+datatype rewrite = By_Pattern of term list | By_ML of (Context.generic -> term -> term list option)
 type rewr = int * term * Position.T * rewrite
 
 fun rewrite_eq (By_Pattern tms1, By_Pattern tms2) = eq_list (op aconv) (tms1, tms2)
@@ -85,7 +85,7 @@ fun calculate ctxt term (n, pat0, _, By_Pattern pat_ret0) =
        in (SOME (n, map (Envir.subst_term s) pat_ret))
       end handle Pattern.MATCH => NONE)
   | calculate ctxt term (n, _, _, By_ML rewr) =
-      (SOME (n, rewr ctxt term))
+      Option.map (pair n) (rewr ctxt term)
 
 fun calculate_by_unify ctxt term (n, pat0, _, By_Pattern pat_ret0) =
      (let val ind = Term.maxidx_of_term term + 1
@@ -102,7 +102,7 @@ fun calculate_by_unify ctxt term (n, pat0, _, By_Pattern pat_ret0) =
                         ])))
       end handle Pattern.MATCH => NONE)
   | calculate_by_unify ctxt term (n, _, _, By_ML rewr) =
-      (SOME (n, rewr ctxt term))
+      Option.map (pair n) (rewr ctxt term)
 
 
 fun rewr_clash ctxt (_,ret) (_,ret2) =
@@ -170,20 +170,20 @@ val pat_ML = (Args.context -- term_pattern -- Scan.lift ((\<^keyword>\<open>=>\<
   >> (fn ((ctxt,(p1',pos)),(src,n)) =>
     let val ctxt' = Context.Proof ctxt
             |> ML_Context.expression (Input.pos_of src)
-              (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Pattern_Parse_Sender_Qiyuan_Xu.put (" @
+              (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Pattern_Parse_Sender_Qiyuan_Xu.put ((" @
                ML_Lex.read_source src @
-               ML_Lex.read "))")
+               ML_Lex.read ") : Context.generic -> term -> term list option))")
      in (n,p1',pos, By_ML (PLP_Reasoner_Pattern_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt')))
      end)
 
 fun setup_attribute binding comment =
       Attrib.setup binding
-        (Args.context -- Parse.enum1' "and" pat2 >> (fn (_,pats) =>
+        (Args.context -- Parse.and_list' pat2 >> (fn (_,pats) =>
                 Thm.declaration_attribute (K (fn ctxt' =>
                     add pats ctxt'
                     )))) comment
    #> Attrib.setup (Binding.suffix_name "_ML" binding)
-        (Args.context -- Parse.enum1' "and" pat_ML >> (fn (ctxt,pats) =>
+        (Args.context -- Parse.and_list' pat_ML >> (fn (ctxt,pats) =>
                 Thm.declaration_attribute (K (fn ctxt' =>
                     let val ctxt'' = Context.proof_of ctxt'
                      in add (map (export_rewrite ctxt ctxt'') pats) ctxt' end)))) comment

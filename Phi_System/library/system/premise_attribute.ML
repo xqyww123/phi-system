@@ -33,12 +33,10 @@ fun register_attribute_lthy (i,mandatory,pat,attr) =
 
 fun attribute_of default term ctxt =
   Net.match_term (Data.get ctxt) (Envir.beta_eta_contract term)
-    |> @{print}
     |> map_filter (fn (i,mandatory,pat, attr) =>
           if (default orelse mandatory)
           andalso Pattern.matches (Context.theory_of ctxt) (pat,term)
           then SOME (i,attr) else NONE)
-    |> @{print}
     |> sort (int_ord o apply2 #1)
     |> maps snd
 

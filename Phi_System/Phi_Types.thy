@@ -121,8 +121,11 @@ lemma \<phi>Fun_unit_homo[\<phi>reason add]:
 
 subsection \<open>Any\<close>
 
-definition \<phi>Any :: \<open>('x, unit) \<phi>\<close>
+\<phi>type_def \<phi>Any :: \<open>('x, unit) \<phi>\<close>
   where \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
+  deriving Basic
+
+thm \<phi>Any.intro
 
 lemma \<phi>Any_expns[\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> \<phi>Any)\<close>
@@ -130,7 +133,7 @@ lemma \<phi>Any_expns[\<phi>expns]:
 
 lemma \<phi>Any_cast [\<phi>reason 1200]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>Any\<close>
-  unfolding Transformation_def by (simp add: \<phi>expns)
+  \<medium_left_bracket> \<medium_right_bracket>
 
 
 
@@ -199,7 +202,6 @@ interpretation \<phi>Composition: Functional_Transformation_Functor
       ( unfold Transformation_Functor_def Premise_def,
         clarsimp simp add: \<phi>Composition_expn Transformation_def ExSet_expn Subjection_expn ,
         blast),
-      blast,
       blast)
 
 lemma \<phi>Composition_separatio_functor_zip[\<phi>reason add]:
@@ -208,7 +210,7 @@ lemma \<phi>Composition_separatio_functor_zip[\<phi>reason add]:
   unfolding Separation_Homo\<^sub>I_def Transformation_def Separation_Homo_Obj_def
   by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn, insert times_set_I, blast)
 
-lemma (*The above rule is revertible. requiring the sep homo domain being the univ is already the weakest.*)
+lemma (*The above rule is reversible. requiring the sep homo domain being the univ is already the weakest.*)
   \<open> S \<noteq> {} \<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x) \<Longrightarrow> Separation_Homo_Obj B UNIV \<close>
   unfolding Separation_Homo\<^sub>I_def Separation_Homo_Obj_def Transformation_def
   apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
@@ -225,7 +227,7 @@ lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason add]:
   unfolding Separation_Homo\<^sub>E_def Transformation_def Separation_Homo_unzip_def
   by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn; blast)
 
-lemma (*The above rule is revertible*)
+lemma (*The above rule is reversible*)
   \<open> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo_unzip B \<close>
   unfolding Separation_Homo\<^sub>E_def Separation_Homo_unzip_def Transformation_def
   apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
@@ -234,10 +236,10 @@ lemma (*The above rule is revertible*)
     by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
                prems(2-3), blast) .
 
-
+(*
 interpretation Unit_Functor_L \<open>Unit_Homo B\<close> \<open>((\<Zcomp>) B)\<close>
   unfolding Unit_Functor_L_def Unit_Functor_def Transformation_def Unit_Homo_def
-  by (auto simp add: \<phi>Composition_expn) 
+  by (auto simp add: \<phi>Composition_expn) *)
 
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> B) P
@@ -309,7 +311,7 @@ subsubsection \<open>Algebraic Properties\<close>
 interpretation SubjectionTY: Functional_Transformation_Functor
     \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>True\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
   by (standard, clarsimp simp add: Transformation_Functor_def Transformation_def SubjectionTY_expn
-          Subjection_expn, blast, blast)
+          Subjection_expn, blast)
 
 lemma SubjectionTY_inhabitance_functor[\<phi>reason add]:
   \<open> Inhabitance_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) id \<close>
@@ -711,7 +713,7 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
                                                                                                                                                                         
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
@@ -756,77 +758,26 @@ lemma [\<phi>reason 10000]:
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
 
-declare [[\<phi>trace_reasoning = 3, ML_print_depth = 1000]]
+declare [[\<phi>trace_reasoning = 0, ML_print_depth = 1000]]
                 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
   deriving Basic and Identity_Element
        and Functional_Transformation_Functor
-       and Separation_Homo\<^sub>I
-       and Separation_Homo\<^sub>E
+       and Separation_Homo
 
 
-
-
-
-
-term
-<<<<<<< HEAD
-lemma \<phi>MapAt_inhabited[elim!]: (*TODO: reason this automatically!*)
-  \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
-\<Longrightarrow> Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow> T) \<longrightarrow> C\<close>
-  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)
-
-interpretation \<phi>MapAt: Transformation_Functor_L \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k'\<close> \<open>(\<lambda>x. x)\<close> \<open>(\<lambda>x. x)\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k = k'\<close>
-  by (standard, unfold \<phi>MapAt_def, \<phi>reason)
-=======
-print_\<phi>reasoners \<open>Functional_Transformation_Functor ((\<Zcomp>) _) ((\<Zcomp>) _) _ _ _ _ _\<close> ?
- 
-lemma [\<phi>inhabitance_rule, elim!]: (*TODO: reason this automatically!*)
-  \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)
-
-(*  by (standard, clarsimp simp add: \<phi>MapAt_def Premise_def, \<phi>reason) *)
->>>>>>> 820417f (Improve constructions of implication)
-
-interpretation \<phi>MapAt: Sep_Homo_Type_Functor_L
-    \<open>(\<^bold>\<rightarrow>) k :: ('a::sep_magma_1,'b) \<phi> \<Rightarrow> _\<close> \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k\<close> True
-  by (standard, rule \<phi>Type_eqI, clarsimp simp add: \<phi>expns,
-      metis (mono_tags, opaque_lifting) fun_1upd_homo_right1 fun_sep_disj_1_fupdt(2))
-
-(*
-lemma \<phi>MapAt_void_functor[\<phi>reason 1100]:
-  \<open>Unit_Functor ((\<^bold>\<rightarrow>) k)\<close>
-  unfolding \<phi>MapAt_def
-  by \<phi>reason
-
-interpretation \<phi>MapAt: Union_Functor \<open>(\<^bold>\<rightarrow>) k\<close> \<open>(\<^bold>\<rightarrow>) k\<close>
-  unfolding \<phi>MapAt_def
-  by \<phi>reason
-
-lemma [\<phi>reason 1000]:
-  \<open>Functors_of_the_Same_Parameters ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k)\<close>
-  unfolding Functors_of_the_Same_Parameters_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open>Type_Variant_of_the_Same_Functor ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k)\<close>
-  unfolding Type_Variant_of_the_Same_Functor_def ..
-*)
 
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> k = k'
 \<Longrightarrow> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> T \<w>\<i>\<t>\<h> P
 \<Longrightarrow> 1(k := v) \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> k' \<^bold>\<rightarrow> T \<w>\<i>\<t>\<h> P\<close>
-  by (clarsimp simp add: \<phi>expns Transformation_def \<phi>MapAt_def, blast)
+  by (clarsimp simp add: \<phi>expns Transformation_def, blast)
 
 lemma [\<phi>reason 1200]:
   \<open> is_functional (x \<Ztypecolon> T)
 \<Longrightarrow> is_functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
-  by (clarsimp simp add: \<phi>expns is_functional_def \<phi>MapAt_def, blast)  
+  by (clarsimp simp add: \<phi>expns is_functional_def, blast)  
 
 
 

@@ -1346,7 +1346,7 @@ hide_fact enter_SE enter_SEb
 subsection \<open>Type Algebra\<close>
 
 paragraph \<open>Transformation Functor\<close>
-
+ 
 lemma "_Structural_Extract_general_rule_":
   \<open> Functional_Transformation_Functor F14 F23 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z

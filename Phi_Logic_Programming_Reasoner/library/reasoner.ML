@@ -128,13 +128,14 @@ signature NU_REASONER = sig
   val single_RS  : thm (*rule*) -> Proof.context -> thm -> thm Seq.seq
         (*The resolution that returns at most one solution.*)
 
-  val gen_attribute :
-      (Position.T * mode * priority * thm list (*additional rules*) * action option
+  val attr_syntax :
+      ('ext context_parser) (*extension*) ->
+      (Position.T * mode * priority * 'ext * action option
         * ((pattern * priority option) list * pattern list) * ML_guard option
        -> attribute)
      -> attribute context_parser
 
-  val gen_attr_add_rule : (thm list * Context.generic -> thm list * Context.generic) ->  attribute context_parser
+  val attr_rule_syntax : (thm list * Context.generic -> thm list * Context.generic) ->  attribute context_parser
 
 end
 
@@ -826,7 +827,40 @@ fun add_intro_rules rules ctxt =
 
 (** Interfaces **)
 
-fun gen_attribute gen =
+fun attr_syntax ext gen =
+  let open Args Scan Parse
+    fun read_term_mode mode' ctxt tm = Syntax.read_term (Proof_Context.set_mode mode' ctxt) tm
+    val read_term_pattern = read_term_mode Proof_Context.mode_pattern
+    val term_pattern = Scan.peek (named_term o read_term_pattern o Context.proof_of)
+  
+    fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
+    val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
+    val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
+    fun cterm (ctxt,toks) = let val (term,ret) = term_pattern (ctxt,toks)
+                             in (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term, ret) end
+    val pos_parser = Phi_Help.pos_parser "\<phi>reasoner"
+    val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
+         let val ctxt = Context.Proof (Context.proof_of ctxt0)
+              |> ML_Context.expression (Input.pos_of src)
+                (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put ((" @
+                 ML_Lex.read_source src @
+                 ML_Lex.read ") : context_state -> bool))")
+         in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
+       ))
+    val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
+  in
+    lift pos_parser
+    -- lift (option add |-- mode_and_priority)
+    -- ext
+    -- option (lift (\<^keyword>\<open>for\<close> |-- Args.$$$ "action") |-- cterm)
+    -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
+      -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
+    -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
+    >> (fn (((((pos, (mode,priority)), ext), action), (pattern, blacklist)), guard) =>
+          gen (pos, mode, priority, ext, action, (pattern, blacklist), guard))
+  end
+
+(*fun attr_syntax gen =
   let open Args Scan Parse
     fun read_term_mode mode' ctxt tm = Syntax.read_term (Proof_Context.set_mode mode' ctxt) tm
     val read_term_pattern = read_term_mode Proof_Context.mode_pattern
@@ -858,6 +892,7 @@ fun gen_attribute gen =
     >> (fn (((((pos, (mode,priority)), additional_rules), action), (pattern, blacklist)), guard) =>
           gen (pos, mode, priority, additional_rules, action, (pattern, blacklist), guard))
   end
+*)
 
 fun gen_attr_add_intro' pass (pos, mode, priority, additional_rules, action, (pattern, blacklist), guard) =
   Thm.declaration_attribute (fn rule => fn ctxt =>
@@ -871,9 +906,9 @@ fun gen_attr_add_intro' pass (pos, mode, priority, additional_rules, action, (pa
           val (rules', ctxt') = pass (rules, ctxt)
        in add_intro_rule pos mode priority (pattern,blacklist) guard rules' ctxt' end)
                                     
-fun gen_attr_add_rule pass = gen_attribute (gen_attr_add_intro' pass)
+fun attr_rule_syntax pass = attr_syntax Attrib.thms (gen_attr_add_intro' pass)
 
-val attr_add_rule = gen_attr_add_rule I
+val attr_add_rule = attr_rule_syntax I
 
 
 val _ = Theory.setup (

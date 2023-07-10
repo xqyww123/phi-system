@@ -209,15 +209,19 @@ definition Generate_Implication_Reasoning :: \<open>bool \<Rightarrow> bool \<Ri
 
 consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts\<close>
 
-declare [[\<phi>reason_default_pattern \<open>Generate_Implication_Reasoning ?I _ _\<close>
-                                \<Rightarrow> \<open>Generate_Implication_Reasoning ?I _ _\<close> (100)
-             and \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
-             and \<open>?X \<longrightarrow> _ @action \<A>EIF\<close>
-              \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
-             and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (10)]]
-
 abbreviation Inhabitance_Implication :: \<open>'a set \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>" 19)
   where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> Inhabited S \<longrightarrow> P @action \<A>EIF\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>Generate_Implication_Reasoning ?I _ _\<close>
+                        \<Rightarrow> \<open>Generate_Implication_Reasoning ?I _ _\<close> (100)
+  and \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
+  and \<open>?X \<longrightarrow> _ @action \<A>EIF\<close>
+   \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
+  and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (10)
+]]
+
+
 
 lemma Do_Generate_Implication_Reasoning:
   \<open> IN

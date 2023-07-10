@@ -26,6 +26,7 @@ val detect_type_operator1 : int -> Proof.context -> term -> term list*)
 type property_name = string
 
 val is_a_kind_of_property : theory -> property_name -> bool
+val assert_property_kind : theory -> property_name -> unit
 val add_property_kind : property_name -> (term -> term) -> theory -> theory
 
 val lookup_property_exact : Context.generic -> term (*pattern of the type operator*) -> property_name -> (term * Position.T * thm) list
@@ -42,7 +43,7 @@ type automation_on_property =
         term (*type operator*) * thm (*property*) -> Context.generic -> Context.generic
 val add_automation_on_property : priority -> automation_on_property -> Context.generic -> Context.generic
 val invoke_automations_on_property : term * thm -> Context.generic -> Context.generic
-val property_dependent_setup : string list -> (thm list -> automation_on_property) -> automation_on_property
+val property_dependent_setup : string list * string list -> (thm list -> automation_on_property) -> automation_on_property
 
 (* \<phi>-Type Definition \& Infos *)
 
@@ -189,7 +190,18 @@ structure Property_Kinds = Theory_Data (
 )
 
 fun is_a_kind_of_property thy k = Symtab.defined (Property_Kinds.get thy) k
+
+fun err_not_a_property_kind k =
+      error (k ^ " is not a known \<phi>-type property. Please use ML function \
+                 \\<open>Phi_Type_Algebra.add_property_kind\<close> to register it.")
+
+fun assert_property_kind thy k =
+      if is_a_kind_of_property thy k then () else err_not_a_property_kind k
+
 fun extract_type_operator_from_property thy k = Symtab.lookup (Property_Kinds.get thy) k
+fun extract_type_operator_from_property1 thy k =
+      case extract_type_operator_from_property thy k of SOME ret => ret
+         | NONE => err_not_a_property_kind k
 
 (** Property DB **)
 
@@ -293,11 +305,8 @@ fun add_property' pos property ctxt =
       val prop_spec = HOLogic.dest_Trueprop (Thm.concl_of property)
       val type_operator =
             case Term.strip_comb prop_spec
-              of (Const(N, _), _) =>
-                 (case extract_type_operator_from_property thy N
-                    of SOME extract => extract prop_spec
-                     | _ => error (N ^ " is not a known \<phi>-type property. Please use ML function \
-                                       \\<open>Phi_Type_Algebra.add_property_kind\<close> to register it.") )
+              of (Const(N, _), _)
+                   => extract_type_operator_from_property1 thy N prop_spec
                | _ => error "The theorem is not a valid \<phi>-type property."
    in add_property (type_operator,pos,property) ctxt
   end
@@ -329,15 +338,19 @@ fun add_automation_on_property priority automation ctxt =
   Automation_on_Property.map (PriorityTab.update_new (
       (priority, Context.theory_long_name (Context.theory_of ctxt)), automation)) ctxt
 
-fun property_dependent_setup deps automation (the_functor,property) ctxt =
+fun property_dependent_setup (deps,no_rule_deps) automation (the_functor,property) ctxt =
   let exception Dep
-   in(if Thm.is_dummy property orelse member (op =) deps (get_property_name property)
-      then let val rules = map (fn dep =>
-                  case lookup_property_match ctxt the_functor dep
-                    of [(_,_,x)] => x
-                     | [] => raise Dep
-                     | ((_,_,x)::_) => (warning ("multiple match for " ^ Syntax.string_of_term (Context.proof_of ctxt) the_functor); x)
-                ) deps
+      val prop_name = get_property_name property
+   in(if Thm.is_dummy property orelse member (op =) deps prop_name
+                               orelse member (op =) no_rule_deps prop_name
+      then let fun get_rules deps = map (fn dep =>
+                      case lookup_property_match ctxt the_functor dep
+                        of [(_,_,x)] => x
+                         | [] => raise Dep
+                         | ((_,_,x)::_) => (warning ("multiple match for " ^ Syntax.string_of_term (Context.proof_of ctxt) the_functor); x)
+                    ) deps
+               val rules = get_rules deps
+               val _ = get_rules no_rule_deps
             in automation rules (the_functor,property) ctxt
            end
       else ctxt)
@@ -351,7 +364,7 @@ structure Gen_Rule_SS = Simpset (
   val comment = "Rules simplifying the generated \<phi>functor reasoning rules."
 )
 
-fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
+fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 ctxt =
   let val thy = Context.theory_of ctxt
       val rule = Phi_Help.beta_eta_contract rule0
               |> Drule.zero_var_indexes
@@ -364,6 +377,7 @@ fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
                | _ => [])
         | get_prop_kinds [] = []
       val prop_kinds = get_prop_kinds (Thm.prems_of rule)
+      val _ = List.app (assert_property_kind thy) additional_props
       fun impl props (the_functor, _) ctxt =
             let val ctxt' = Context.proof_of ctxt
                 fun do_reason rule =
@@ -400,7 +414,7 @@ fun setup_rule_generation (pos,mode,priority,pats,guard) rule0 ctxt =
                             "Instantiate reasoning rule for \<phi>-type operator ")
              in Phi_Reasoner.add_intro_rule pos mode priority pats guard [rule'] ctxt
             end
-      val automation = property_dependent_setup prop_kinds impl
+      val automation = property_dependent_setup (prop_kinds, additional_props) impl
 
       val properties = Properties.get ctxt
       val existing_rules = map (fn pk =>
@@ -433,14 +447,14 @@ val _ = Theory.setup (
     "Declare a \<phi>-type property that will be used to instantiate automation"
 
 #>Attrib.setup \<^binding>\<open>\<phi>reason_functor_template\<close> (
-    Phi_Reasoner.gen_attribute (
-      fn (pos, mode, priority, additional_rules, action, pats, guard) =>
-        let val _ = if null additional_rules then ()
-                    else error "Bad syntax of \<phi>reason_functor"
-            val _ = case action of NONE => ()
-                                 | _ => error "Bad syntax of \<phi>reason_functor"
-         in Thm.declaration_attribute (setup_rule_generation (pos,mode,priority,pats,guard))
-        end)) ""
+    Phi_Reasoner.attr_syntax
+      (Scan.optional (
+          Scan.lift (\<^keyword>\<open>requires\<close>) |-- (Parse.and_list' (Scan.repeat (Args.const {proper=true,strict=true})) >> flat)) [])
+      (fn (pos, mode, priority, additional_props, action, pats, guard) =>
+          let val _ = case action of NONE => ()
+                                   | _ => error "Bad syntax of \<phi>reason_functor"
+           in Thm.declaration_attribute (setup_rule_generation (pos,mode,priority,additional_props,pats,guard))
+          end)) ""
 )
 
 

@@ -139,8 +139,8 @@ declare [[
               val ind = Int.max (maxidx_of_term F1, maxidx_of_term F2) + 1
               fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
               val H = Const(\<^const_name>\<open>Transformation_Functor\<close>, TVar(("'TF",ind),[]))
-           in [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "D" "'D" $ var "M" "'M"),
-               Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "D" "'D" $ var "Ma" "'M")]
+           in SOME [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "D" "'D" $ var "M" "'M"),
+                    Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "D" "'D" $ var "Ma" "'M")]
           end\<close> (100)
 ]]
 
@@ -175,9 +175,9 @@ declare [[
           val ind = Int.max (maxidx_of_term F1, Int.max (maxidx_of_term F2, maxidx_of_term F3)) + 1
           fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
           val H = Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, TVar(("'SF",ind),[]))
-       in [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3" $ var "D" "'d" $ var "z" "'z"),
-           Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3" $ var "D" "'d" $ var "z" "'z"),
-           Trueprop $ (H $ var "F1" "'F1" $ var "F2" "'F2" $ F3 $ var "D" "'d" $ var "z" "'z")]
+       in SOME [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3" $ var "D" "'d" $ var "z" "'z"),
+                Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3" $ var "D" "'d" $ var "z" "'z"),
+                Trueprop $ (H $ var "F1" "'F1" $ var "F2" "'F2" $ F3 $ var "D" "'d" $ var "z" "'z")]
       end
     \<close> (100),
 
@@ -189,9 +189,9 @@ declare [[
           val ind = Int.max (maxidx_of_term F1, Int.max (maxidx_of_term F2, maxidx_of_term F3)) + 1
           fun var name1 name2 = Var((name1,ind), TVar((name2,ind), []))
           val H = Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, TVar(("'SF",ind),[]))
-       in [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3" $ var "z" "'z"),
-           Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3" $ var "z" "'z"),
-           Trueprop $ (H $ var "F1" "'F1" $ var "F2" "'F2" $ F3 $ var "z" "'z")]
+       in SOME [Trueprop $ (H $ F1 $ var "F2" "'F2" $ var "F3" "'F3" $ var "z" "'z"),
+                Trueprop $ (H $ var "F1" "'F1" $ F2 $ var "F3" "'F3" $ var "z" "'z"),
+                Trueprop $ (H $ var "F1" "'F1" $ var "F2" "'F2" $ F3 $ var "z" "'z")]
       end
     \<close> (100),
 
@@ -854,8 +854,8 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   using transformation .
 
 end
-
-lemma (*TODO!!!*)[\<phi>reason_functor_template 50]:
+  
+lemma [\<phi>reason_functor_template default 53 requires Separation_Homo\<^sub>E]:
   \<open> Transformation_Functor Fa Fb D mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to (\<s>\<p>\<l>\<i>\<t> Z))
 \<Longrightarrow> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> FcU \<s>\<u>\<b>\<j> z. g' x z @action \<A>\<T>split_step
@@ -863,15 +863,23 @@ lemma (*TODO!!!*)[\<phi>reason_functor_template 50]:
   unfolding Action_Tag_def meta_Ball_def Premise_def Transformation_Functor_def Ball_def
   by (rule implies_trans[where P=True and Q=True and B=\<open>y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y\<close>, simplified], blast)
 
-lemma (*TODO*)
+lemma [\<phi>reason_functor_template default 50 requires Separation_Homo\<^sub>E]:
+  \<open> Transformation_Functor Fa Fb D mapper
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to (\<s>\<p>\<l>\<i>\<t> Z))
+\<Longrightarrow> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> FcU \<s>\<u>\<b>\<j> z. g' x z @action \<A>\<T>split_step
+\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> FcU \<s>\<u>\<b>\<j> z. g' x z @action to (\<s>\<p>\<l>\<i>\<t> Z) \<close>
+  unfolding Action_Tag_def meta_Ball_def Premise_def Transformation_Functor_def Ball_def
+  by (rule implies_trans[where P=True and Q=True and B=\<open>y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y\<close>, simplified], blast)
+
+lemma [\<phi>reason_functor_template default 50]:
   \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb un
-\<Longrightarrow> y \<Ztypecolon> Fb (U\<^sub>L \<^emph> U\<^sub>R) \<s>\<u>\<b>\<j> y. mapper g x y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> z. (\<exists>z'. z = un z' \<and> mapper g x z') @action \<A>\<T>split_step\<close> (*TODO: this syntactic priority*)
+\<Longrightarrow> y \<Ztypecolon> Fb (U\<^sub>L \<^emph> U\<^sub>R) \<s>\<u>\<b>\<j> y. r y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> z. (\<exists>z'. z = un z' \<and> r z') @action \<A>\<T>split_step\<close> (*TODO: this syntactic priority*)
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def
   by (clarsimp simp add: Subjection_transformation_expn Ex_transformation_expn
                   intro!: ExSet_imp_I Subjection_imp_I,
       rule implies_weaken[where P=True], blast, blast)
 
-lemma [\<phi>reason default 1]:
+lemma [\<phi>reason default 1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>\<T>split_step\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>\<T>split_step \<close>
   unfolding Action_Tag_def by simp
 

@@ -88,7 +88,15 @@ lemma \<phi>Type_eqI:
 
 ML_file \<open>library/tools/simp_congruence.ML\<close>
 
-declare [[ML_print_depth = 1000]]
+declare [[
+  \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
+    fn _ => fn _ (*Trueprop*) $ (_ (*Action_Tag*) $ (_ (*imp*) $ (
+                _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _) =>
+      if is_Var x then NONE
+      else error "Bad form: In \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> the x must be a schematic variable."\<close> (1000)
+]]
+
+
 
 subsection \<open>Implication\<close>
 
@@ -105,8 +113,8 @@ declare [[
         let val idx = Term.maxidx_term X (Term.maxidx_term y (Term.maxidx_term U ~1)) + 1
             val P  = Var(("P", idx), HOLogic.boolT)
             val y' = Var(("var_y", idx), Term.fastype_of y)
-         in if is_Var X then [Trueprop $ (Transformation $ X $ (PhiTyp $ y  $ U) $ P)]
-                        else [Trueprop $ (Transformation $ X $ (PhiTyp $ y' $ U) $ P)]
+         in if is_Var X then SOME [Trueprop $ (Transformation $ X $ (PhiTyp $ y  $ U) $ P)]
+                        else SOME [Trueprop $ (Transformation $ X $ (PhiTyp $ y' $ U) $ P)]
         end\<close> (20)
 ]]
 
@@ -127,8 +135,8 @@ declare [[
           val P  = Var(("P", idx), HOLogic.boolT)
           val R' = Var(("R", idx), Term.fastype_of R)
           val y' = Var(("var_y", idx), Term.fastype_of y)
-       in if is_Var X then [Trueprop $ (Transformation $ X $ (Times $ R' $ (FOCUS $ (PhiTyp $ y  $ U))) $ P)]
-                      else [Trueprop $ (Transformation $ X $ (Times $ R' $ (FOCUS $ (PhiTyp $ y' $ U))) $ P)]
+       in if is_Var X then SOME [Trueprop $ (Transformation $ X $ (Times $ R' $ (FOCUS $ (PhiTyp $ y  $ U))) $ P)]
+                      else SOME [Trueprop $ (Transformation $ X $ (Times $ R' $ (FOCUS $ (PhiTyp $ y' $ U))) $ P)]
       end\<close> (30)
 ]]
    
@@ -500,7 +508,7 @@ definition ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a,
 lemma ExTyp_expn[\<phi>expns,\<phi>programming_simps]:
   \<open>(x \<Ztypecolon> ExTyp T) = (\<exists>*a. x a \<Ztypecolon> T a)\<close>
   unfolding set_eq_iff ExTyp_def \<phi>Type_def by (simp add: \<phi>expns)
-
+ 
 lemma ExTyp_inhabited[\<phi>reason 1000]:
   \<open> (\<And>a. Inhabited (x a \<Ztypecolon> T a) \<longrightarrow> C a @action \<A>EIF)
 \<Longrightarrow> Inhabited (x \<Ztypecolon> ExTyp T) \<longrightarrow> Ex C @action \<A>EIF \<close>
@@ -667,11 +675,11 @@ lemma \<phi>Prod_expn'':
   unfolding set_eq_iff by (cases x; simp add: \<phi>expns)
 
 lemma [\<phi>reason 1000]:
-  \<open> Inhabited (x1 \<Ztypecolon> T1) \<longrightarrow> C1 @action \<A>EIF
-\<Longrightarrow> Inhabited (x2 \<Ztypecolon> T2) \<longrightarrow> C2 @action \<A>EIF
-\<Longrightarrow> Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longrightarrow> C1 \<and> C2 @action \<A>EIF\<close>
+  \<open> Inhabited (fst x \<Ztypecolon> T1) \<longrightarrow> C1 @action \<A>EIF
+\<Longrightarrow> Inhabited (snd x \<Ztypecolon> T2) \<longrightarrow> C2 @action \<A>EIF
+\<Longrightarrow> Inhabited (x \<Ztypecolon> T1 \<^emph> T2) \<longrightarrow> C1 \<and> C2 @action \<A>EIF\<close>
   unfolding Inhabited_def Action_Tag_def
-  by (simp add: \<phi>Prod_expn, blast)
+  by (cases x; simp add: \<phi>Prod_expn, blast)
 
 lemma \<phi>Prod_\<phi>None:
   \<open>((x',y) \<Ztypecolon> \<circle> \<^emph> U) = ((y \<Ztypecolon> U) :: 'a::sep_magma_1 set)\<close>
