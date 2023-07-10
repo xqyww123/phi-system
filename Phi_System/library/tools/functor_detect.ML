@@ -135,7 +135,7 @@ val fix_phi_term_params : term -> Proof.context ->
         (term * term) * Proof.context (*only fix the terms but no types*)
 
 val raw_term_name_typ : term -> string * typ
-val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ * typ
+val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*x*) * typ (*concrete*)
 
 (* Internal Technical stuffs *)
 

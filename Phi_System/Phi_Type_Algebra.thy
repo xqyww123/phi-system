@@ -1213,12 +1213,32 @@ lemma \<phi>TA_FTF_rule:
 
 subsubsection \<open>Inhabitance\<close>
 
-lemma 
-  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x)
+lemma \<phi>TA_Inh_rule:
+  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x\<close>
+  unfolding Action_Tag_def
   by simp
 
+lemma \<phi>TA_Inh_rewr:
+  \<open>Trueprop (Ant \<longrightarrow> XX @action \<phi>TA_ind_target A)
+ \<equiv> (Ant \<Longrightarrow> XX @action A)\<close>
+  unfolding Action_Tag_def atomize_imp .
+
+lemma \<phi>TA_Inh_step:
+  \<open> Inh \<longrightarrow> Any @action \<A>EIF
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any \<longrightarrow> P)
+\<Longrightarrow> Inh \<longrightarrow> P @action \<A>EIF\<close>
+  unfolding Action_Tag_def Premise_def
+  by blast
+
+lemma \<phi>TA_Inh_inst_P:
+  \<open> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> others
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (Any \<longrightarrow> Any) \<and> others\<close>
+  unfolding Premise_def
+  by blast
 
 subsubsection \<open>Sep\<close>
 
@@ -1278,6 +1298,9 @@ lemmas \<phi>TA_SHu_rule_step = \<phi>TA_TF_rule_step
 
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
+\<phi>property_deriver Inhabited 90 for (\<open>Inhabited _ \<longrightarrow> _ @action \<A>EIF\<close>) = \<open>
+  Phi_Type_Algebra_Tools.inhabitance
+\<close>
 
 \<phi>property_deriver Identity_Element\<^sub>I 100 for (\<open>Identity_Element\<^sub>I _ _\<close>) = \<open>
   Phi_Type_Algebra_Tools.identity_element_I

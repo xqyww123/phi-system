@@ -111,6 +111,7 @@ val transformation_functor : Phi_Type_Algebra.derive
 val functional_transformation_functor : Phi_Type_Algebra.derive
 val separation_homo_I : Phi_Type_Algebra.derive
 val separation_homo_E : Phi_Type_Algebra.derive
+val inhabitance : Phi_Type_Algebra.derive
 
 end
 
@@ -215,7 +216,7 @@ fun get_bnf ctxt Tname =
       Seq.maps (fn s' => permute_seq L |> Seq.map (fn L' => s'::L')) s
   | permute_seq [] = Seq.single [] *)
 
-fun gen_guess_operator mk_term is_live mk_operator_for_dead =
+fun gen_guess_operator mk_term is_live mk_operator_for_dead atom_opr =
   let fun guess_operator' ctxt known_oprs x_ty =
         case map_filter (fn (ty', term) => if ty' = x_ty then SOME term else NONE)
                         known_oprs
@@ -227,7 +228,8 @@ fun gen_guess_operator mk_term is_live mk_operator_for_dead =
                     in mk_term (ctxt, D, L, bnf)
                     |> Seq.maps (fn (head,ctxt') =>
                         let fun mk_params ctxt (ty::L) =
-                                  (if is_live ty then guess_operator' ctxt known_oprs ty
+                                  (if not (AList.defined (op =) known_oprs ty) orelse is_live ty
+                                   then guess_operator' ctxt known_oprs ty
                                    else Seq.single (mk_operator_for_dead ty ctxt))
                                     |> Seq.maps (fn (opr, ctxt') =>
                                           mk_params ctxt' L
@@ -238,16 +240,16 @@ fun gen_guess_operator mk_term is_live mk_operator_for_dead =
                               (fold (fn p => fn X => X $ p) params' head, ctxt'3))
                         end)
                    end)
-               | _ => Seq.empty)
+               | _ => atom_opr x_ty ctxt)
            | L => Seq.of_list L
                |> Seq.map (rpair ctxt)
    in guess_operator'
   end
 
-fun guess_operator mk_term is_live mk_operator_for_dead =
+fun guess_operator mk_term is_live mk_operator_for_dead atom_opr =
   let fun guess ctxt known_oprs x_ty =
             Seq.make (fn () =>
-              case Seq.pull (gen_guess_operator mk_term is_live mk_operator_for_dead ctxt known_oprs x_ty)
+              case Seq.pull (gen_guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt known_oprs x_ty)
                 of NONE => (warning ("Fail to guess the abstract operator for type " ^ Syntax.string_of_typ ctxt x_ty) ;
                             NONE)
                  | some => some )
@@ -339,8 +341,31 @@ val guess_self_rel =
         end
       val is_live = K true
       fun mk_operator_for_dead _ _ = error "Internal bug"
-   in guess_operator mk_term is_live mk_operator_for_dead
+      fun atom_opr ty ctxt =
+            Seq.single (Abs("", ty, Abs("", ty, \<^Const>\<open>True\<close>)), ctxt)
+   in guess_operator mk_term is_live mk_operator_for_dead atom_opr
   end
+
+(* Predicator *)
+
+val guess_predicate =
+  let fun mk_term (ctxt, D, L, bnf) =
+        let val ctxt' = ctxt
+                     |>(case fp_sugar_of ctxt bnf
+                          of NONE => I
+                           | SOME fp => Simps.map' (fn ctxt =>
+                                          ctxt addsimps ( simps_of_pred_fp fp
+                                                        @ simps_of_ctr_fp fp)))
+                     |> add_global_simps (global_simps_of_pred bnf)
+         in Seq.single (BNF_Def.mk_pred_of_bnf D L bnf, ctxt')
+        end
+      val is_live = K true
+      fun mk_operator_for_dead ty ctxt = (Abs("", ty, \<^Const>\<open>True\<close>), ctxt)
+      fun atom_opr ty ctxt = Seq.single (mk_operator_for_dead ty ctxt)
+   in guess_operator mk_term is_live mk_operator_for_dead atom_opr
+  end
+
+(* Mapper *)
 
 (*ty: container_ty*)
 fun guess_rel_mapper target_ty ctxt ty element_ty =
@@ -361,7 +386,9 @@ fun guess_rel_mapper target_ty ctxt ty element_ty =
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
       fun mk_operator_for_dead typ ctxt = (\<^Const>\<open>HOL.eq typ\<close>, ctxt)
-   in guess_operator mk_term is_live mk_operator_for_dead ctxt' known_rels ty
+      fun atom_opr ty ctxt =
+            Seq.single (Abs("", ty, Abs ("", singleton target_ty ty, \<^Const>\<open>True\<close>)), ctxt)
+   in guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt' known_rels ty
    |> Seq.map (fn (rel_term', ctxt) =>
         (Abs("", g_ty, Term.abstract_over (g_term, rel_term')), ctxt))
   end
@@ -384,7 +411,8 @@ fun guess_func_mapper target_ty ctxt ty element_ty =
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
       fun mk_operator_for_dead typ ctxt = (Abs("", typ, Bound 0), ctxt)
-   in guess_operator mk_term is_live mk_operator_for_dead ctxt' known_mappers ty
+      fun atom_opr ty ctxt = Seq.single (mk_operator_for_dead ty ctxt)
+   in guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt' known_mappers ty
    |> Seq.map (fn (map_term', ctxt) =>
         (Abs("", g_ty, Term.abstract_over (g_term, map_term')), ctxt))
   end
@@ -406,7 +434,8 @@ fun guess_pred_mapper ctxt ty element_ty =
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
       fun mk_operator_for_dead typ ctxt = (Abs("", typ, \<^Const>\<open>True\<close>), ctxt)
-   in guess_operator mk_term is_live mk_operator_for_dead ctxt' known_mappers ty
+      fun atom_opr ty ctxt = Seq.single (mk_operator_for_dead ty ctxt)
+   in guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt' known_mappers ty
    |> Seq.map (fn (map_term', ctxt) =>
         (Abs("", g_ty, Term.abstract_over (g_term, map_term')), ctxt))
   end
@@ -893,8 +922,20 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
 
       val ToAs = maps (instantiate_ToA (Ant,pure_info,ctxt)) (List.take (#prems focus, len - 2))
 
-      val ants'1 = Phi_Help.conj_elims ctxt (List.nth (#prems focus, len - 2))
-                 @ List.take (#prems focus, len - 2)
+      fun pass_conj_ants ant = ant
+            |> Phi_Help.conj_elims ctxt
+            |> map ( Thm.forall_elim_vars (Thm.maxidx_of lsequent)
+                   o Phi_Help.repeat (fn th => th RS' (ctxt, @{thm' spec})))
+      val ant'0 = List.nth (#prems focus, len - 2)
+      fun pass_ind_ants ant =
+        case Thm.prop_of ant
+          of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ _ =>
+              if A aconv (Thm.prop_of ant'0)
+              then ant'0 RS ant
+              else ant
+           | _ => ant
+      val ants'1 = pass_conj_ants ant'0
+                 @ map pass_ind_ants (List.take (#prems focus, len - 2))
       val prem_ants = filter (is_Premis o Thm.concl_of) ants'1
       val rewrs = map_filter (extract_rewr ctxt) ants'1
       val ants = filter ((fn term => not (is_Premis term) andalso not (is_TA_IH_ToA term))
@@ -1471,9 +1512,9 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
                 ))
             )
       val ind_conv_u = default_ind_conv (
-            fn ctxt => fn phi =>
+            fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr_IH}),
-            fn ctxt => fn phi =>
+            fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr_C}) then_conv
                 Conv.implies_concl_conv (
                   HOLogic.Trueprop_conv (
@@ -1481,7 +1522,7 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
                 ))
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u
-      fun simp (phi, ctxt) =
+      fun simp (_, ctxt) =
         if is_some hint0
         then Conv.fconv_rule (
               Phi_Conv.hhf_concl_conv (K (
@@ -1515,7 +1556,7 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
       if Sign.subsort (Proof_Context.theory_of ctxt) (S, \<^sort>\<open>one\<close>)
       then (TVars.empty, \<^Const>\<open>one_class.one typ\<close>, ctxt)
       else raise Automation_Fail
-  | guess_id_ele (typ as TVar (_, S)) ctxt =
+  | guess_id_ele (typ as TVar _) ctxt =
       let val env  = Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (typ, \<^sort>\<open>one\<close>) Vartab.empty
                      handle TYPE _ => raise Automation_Fail
           val inst = Phi_Help.tyenv_to_tvars_table ctxt env
@@ -1600,7 +1641,7 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                         SOME ([P], fn [P'] => Trueprop $ (Identity_Element $ S $ P')))
             else K NONE
       fun reasoning _ = gen_abstract_constraint_guided_reasoning varify_subgoal (PLPR_reasoner (SOME 1))
-      fun simp (phi, ctxt) =
+      fun simp (_, ctxt) =
         if is_some hint0
         then Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 HOLogic.Trueprop_conv (
@@ -1626,6 +1667,94 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
 
 val identity_element_I = accept_one "Identity_Element\<^sub>I" (gen_id_ele true)
 val identity_element_E = accept_one "Identity_Element\<^sub>E" (gen_id_ele false)
+
+
+(*** Inhabitance ***)
+
+fun guess_property_inhab_tyop (x_term, T_term, (phi:phi_type)) ctxt =
+  let val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      fun collect_params ret [] _  = ret
+        | collect_params ret (arg_ty :: rev_arg_tys) (F' $ T') =
+            case try dest_parameterized_phi_ty arg_ty
+              of SOME dest => collect_params ((dest,T') :: ret) rev_arg_tys F'
+               | NONE => collect_params ret rev_arg_tys F'
+      val T_params = collect_params [] rev_arg_tys T_term
+      val x_ttys = map (#2 o #1) T_params
+      val preds = Name.invent_names (Variable.names_of ctxt) "Pr"
+                                     (map (fn T => T --> HOLogic.boolT) x_ttys)
+      val ctxt = Variable.add_fixes_direct (map fst preds) ctxt
+      val preds = x_ttys ~~ map Free preds
+      val Inh = \<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x_term $ T_term)
+      val ants = map2 (fn ((rev_args, x, m), T'h) => fn (_, pred) =>
+            let val arity = length rev_args
+                val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - i)) rev_args T'h
+                val inh = \<^Const>\<open>Inhabited m\<close> $ (\<^Const>\<open>\<phi>Type x m\<close> $ Bound 0 $ T')
+                val body = \<^Const>\<open>Action_Tag\<close>
+                              $ (HOLogic.imp $ inh $ (pred $ Bound 0))
+                              $ \<^Const>\<open>\<A>EIF\<close>
+             in HOLogic.all_const x $ Abs("x", x, body)
+             |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs("A", ty, X)) rev_args
+            end
+          ) T_params preds
+   in guess_predicate ctxt preds x_ty
+   |> Seq.map (fn (pred, ctxt) =>
+        (ants, HOLogic.Trueprop $ (HOLogic.imp $ Inh $ (pred $ x_term)),
+         x_term, T_term, phi, ctxt))
+  end
+
+fun guess_property_inhab_atom (x_term, T_term, (phi:phi_type)) ctxt =
+  let val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      val Inh = \<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x_term $ T_term)
+      val idx = phi_maxidx_of phi ~1 + 1
+      val Prop = \<^Const>\<open>HOL.implies\<close> $ Inh $ Var(("Pr",idx), HOLogic.boolT)
+   in Seq.single ([], Prop, x_term, T_term, phi, ctxt)
+  end
+
+fun gen_inhab hint0 (phi0 : phi_type) thy =
+  let val ctxt0 = Context.proof_of thy
+      val guess_property = if is_Type_Opr (Term.fastype_of (#term phi0))
+                           then guess_property_inhab_tyop
+                           else guess_property_inhab_atom
+      val mode_infer = not (is_some hint0 orelse is_Type_Opr (Term.fastype_of (#term phi0)))
+
+      val unify_hint_U = hint_unify_by_type (
+            fn Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (
+                  Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) $ _
+                 => T
+             | _ => raise TERM ("",[]))
+      val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr})),
+                                       K (K (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr})))
+      fun Inh_reasoner ctxt sequent =
+        case PLPR_Exhaustive.reason_exhaustively (SOME 2)
+                  (ctxt, @{thm' \<phi>TA_Inh_step} RS sequent)
+          of SOME th => th
+           | NONE => raise Automation_Fail      
+      fun varify_subgoal (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
+            SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
+        | varify_subgoal X = error ""
+      fun Inh_reasoning _ ctxt = gen_abstract_constraint_guided_reasoning
+            (if mode_infer then varify_subgoal else K NONE) Inh_reasoner ctxt
+
+      val solver = if mode_infer
+                   then (fn (_,_,sequent) => SOME (@{thm' \<phi>TA_Inh_inst_P} RS sequent))
+                   else K NONE
+      fun simp (_, ctxt) =
+        if is_some hint0
+        then Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
+                  Conv.arg_conv (Simplifier.rewrite ctxt)
+                ))) ctxt)
+        else I
+      val rules = mk_rule_by_guess_or_hint ("/Inh", unify_hint_U, guess_property,
+                                            @{thm' \<phi>TA_Inh_rule}, [0], SOME ind_conv,
+                                            Inh_reasoning, solver, simp)
+                                           phi0 hint0 ctxt0
+   in Seq.pull rules ;
+      thy
+  end
+
+val inhabitance = accept_one "Inhabited" gen_inhab
+
 
 (* fun gen_identity_element is_left hints phi thy =
   case hints of [] => gen_id_ele is_left phi NONE thy

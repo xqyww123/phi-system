@@ -711,12 +711,13 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
-                                                                                                                                                   
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 3]]
+                                                                                                                                                                   
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Identity_Element
+  deriving Inhabited
+       and Identity_Element
        and Object_Equiv
        and Functional_Transformation_Functor
        and Separation_Homo
