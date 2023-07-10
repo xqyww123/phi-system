@@ -71,7 +71,7 @@ fun expand_aggregated_imps_hol Cp Cc ctm =
              implies_conv Cp (expand_aggregated_imps_hol Cp Cc)) ctm
      | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
             (implies_conv Cp Cc) ctm
-     | _ => raise CTERM ("expand_aggregated_imps_obj", [ctm])
+     | _ => Cc ctm
 
 
 

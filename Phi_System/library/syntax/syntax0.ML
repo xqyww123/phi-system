@@ -66,10 +66,10 @@ val dest_view_shift_c  =
 
 val dest_implication   =
          dest_tags
-      #> dest_triop @{const_name "Imply"}
+      #> dest_triop @{const_name "Transformation"}
 val dest_implication_c =
          dest_tags_c
-      #> dest_triop_c @{const_name "Imply"}
+      #> dest_triop_c @{const_name "Transformation"}
 
 fun implication_conv C_s C_t C_p ctm = (
   dest_implication_c ctm;

@@ -148,24 +148,24 @@ section \<open>Reasoning Processes\<close>
 subsection \<open>sift brking frame\<close>
 
 declare [[\<phi>reason_default_pattern
-     \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' ?l ?Y ?E \<a>\<n>\<d> ?Any\<close>
-  \<Rightarrow> \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' ?l _ _ \<a>\<n>\<d> _\<close> (100)
- and \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame ?l ?Y ?E \<a>\<n>\<d> ?Any\<close>
-  \<Rightarrow> \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame ?l _ _ \<a>\<n>\<d> _\<close>  (100)]]
+     \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' ?l ?Y ?E \<w>\<i>\<t>\<h> ?Any\<close>
+  \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' ?l _ _ \<w>\<i>\<t>\<h> _\<close> (100)
+ and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?Y ?E \<w>\<i>\<t>\<h> ?Any\<close>
+  \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l _ _ \<w>\<i>\<t>\<h> _\<close>  (100)]]
 
 
-lemma [\<phi>reason 1010 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame ?l ?var_Y' ?var_E'\<close>]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y E
+lemma [\<phi>reason 1010 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame ?l ?var_Y' ?var_E'\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps undefined] Y' : Y
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps undefined] E' : E
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame  l Y' E'\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y E
-\<Longrightarrow> (\<And>v. Y v \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y' v @action ToSA)
-\<Longrightarrow> E \<i>\<m>\<p>\<l>\<i>\<e>\<s> E' @action ToSA
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame  l Y' E'\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E
+\<Longrightarrow> (\<And>v. Y v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' v @action ToSA)
+\<Longrightarrow> E \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' @action ToSA
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
            Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
@@ -174,9 +174,9 @@ lemma [\<phi>reason 1000]:
   \<medium_right_bracket>.
 
 
-lemma [\<phi>reason 3000 for \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ * \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<a>\<n>\<d> _\<close>]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame l Y E
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 * \<blangle> sift_brking_frame l Y E \<brangle> \<a>\<n>\<d> True\<close>
+lemma [\<phi>reason 3000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> sift_brking_frame ?l ?Y ?E \<brangle> \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame l Y E
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> sift_brking_frame l Y E \<brangle> \<w>\<i>\<t>\<h> True\<close>
   unfolding FOCUS_TAG_def Action_Tag_def
   by simp
 
@@ -188,9 +188,9 @@ lemma Brking_Frame_plus:
 declare [[\<phi>trace_reasoning = 2]]
 
 lemma [\<phi>reason 1200]:
-  \<open> X1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y1 E1
-\<Longrightarrow> X2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y2 E2
-\<Longrightarrow> (X1 + X2) \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
+  \<open> X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y1 E1
+\<Longrightarrow> X2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y2 E2
+\<Longrightarrow> (X1 + X2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l (Y1 + Y2) (E1 + E2)\<close>
   unfolding sift_brking_frame'_def Brking_Frame_plus distrib_right
   \<medium_left_bracket> premises X1 and X2
     cases \<medium_left_bracket> X2 \<medium_right_bracket> for \<open>Brking_Frame l Y1 + Brking_Frame l Y2 + ((E1 \<heavy_comma> TECHNICAL Brk_Frame l) + (E2 \<heavy_comma> TECHNICAL Brk_Frame l))\<close>
@@ -198,13 +198,13 @@ lemma [\<phi>reason 1200]:
   \<medium_right_bracket>.
 
 (* lemma [\<phi>reason 1200]:
-  \<open> X1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y E
-\<Longrightarrow> X2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y E
-\<Longrightarrow> X1 + X2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y E\<close>
+  \<open> X1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E
+\<Longrightarrow> X2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E
+\<Longrightarrow> X1 + X2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E\<close>
   using \<phi>CASE_IMP by fastforce *)
 
 lemma [\<phi>reason 1200]:
-  \<open>Brking_Frame l Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y 0\<close>
+  \<open>Brking_Frame l Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y 0\<close>
   unfolding sift_brking_frame'_def \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma Brking_Frame_absorb_item[assertion_simps]:
@@ -229,13 +229,13 @@ lemma [\<phi>reason 1180]:
   \<open> NO_MATCH TYPE('a) TYPE('b)
 \<Longrightarrow> ERROR TEXT(\<open>The exits of scope\<close> l \<open>mismach in return type. One is\<close>
                     TYPE('a) \<open>while another is\<close> TYPE('b))
-\<Longrightarrow> Brking_Frame l Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l Y' 0\<close>
+\<Longrightarrow> Brking_Frame l Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y' 0\<close>
   for Y :: \<open>'a::VALs \<phi>arg \<Rightarrow> _\<close> and Y' :: \<open>'b::VALs \<phi>arg \<Rightarrow> _\<close>
   by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> E\<heavy_comma> \<blangle> TECHNICAL Brk_Frame l \<brangle> \<a>\<n>\<d> Any
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> sift_brking_frame' l 0 E\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E\<heavy_comma> \<blangle> TECHNICAL Brk_Frame l \<brangle> \<w>\<i>\<t>\<h> Any
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l 0 E\<close>
   unfolding sift_brking_frame'_def FOCUS_TAG_def Technical_def
   \<medium_left_bracket> premises X
     X
@@ -248,8 +248,8 @@ subsection \<open>ToSA through Brking_Frame\<close>
 
 lemma [\<phi>reason 2200]:
   (*The priority must override Void Padding*)
-  \<open> (\<And>v. S v \<i>\<m>\<p>\<l>\<i>\<e>\<s> R v \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P)
-\<Longrightarrow> Brking_Frame l S \<i>\<m>\<p>\<l>\<i>\<e>\<s> Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
+  \<open> (\<And>v. S v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R v \<heavy_comma> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> Brking_Frame l S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   unfolding Brking_Frame_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
     apply_rule X[THEN implies_right_prod]
@@ -257,8 +257,8 @@ lemma [\<phi>reason 2200]:
 
 lemma [\<phi>reason 2201]:
   (*The priority must override Void Padding*)
-  \<open> (\<And>v. S v \<i>\<m>\<p>\<l>\<i>\<e>\<s> R v \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P)
-\<Longrightarrow> TECHNICAL Brking_Frame l S \<i>\<m>\<p>\<l>\<i>\<e>\<s> TECHNICAL Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<a>\<n>\<d> P\<close>
+  \<open> (\<And>v. S v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R v \<heavy_comma> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> TECHNICAL Brking_Frame l S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   unfolding Brking_Frame_def FOCUS_TAG_def Technical_def
   \<medium_left_bracket> premises X
     apply_rule X[THEN implies_right_prod]

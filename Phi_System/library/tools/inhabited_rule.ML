@@ -81,7 +81,7 @@ fun generate_extraction_rule ctxt0 thm0 =
               Syntax.pretty_term ctxt0 (Thm.prop_of thm0)
           ])
     val n = Thm.nprems_of thm
-    val state = (thm RS @{thm Do_Extract_Inhabitance_Rule})
+    val state = (thm RS @{thm Do_Generate_Implication_Reasoning})
               |> Thm.permute_prems 0 n
               |> Thm.permute_prems 2 (~n)
    in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE

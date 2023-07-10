@@ -126,14 +126,14 @@ val _ = Theory.setup (Sign.typed_print_translation [
        if TY = Type("",[]) then raise Match (*A trick to prevent infinite loop*)
        else may_translation ctxt Phi_Kind.View_Shift [S,T] (fn [S',T'] =>
               Const (\<^const_syntax>\<open>Simple_View_Shift\<close>, Type("",[])) $ S' $ T'))),
-    (\<^const_syntax>\<open>Imply\<close>, (fn ctxt => fn TY => fn [S,T,P] =>
+    (\<^const_syntax>\<open>Transformation\<close>, (fn ctxt => fn TY => fn [S,T,P] =>
        if TY = Type("",[]) then raise Match (*A trick to prevent infinite loop*)
        else may_translation ctxt Phi_Kind.Implication [S,T] (fn [S',T'] =>
-              Const (\<^const_syntax>\<open>Imply\<close>, Type("",[])) $ S' $ T' $ P))),
-    (\<^const_syntax>\<open>SimpleImply\<close>, (fn ctxt => fn TY => fn [S,T] =>
+              Const (\<^const_syntax>\<open>Transformation\<close>, Type("",[])) $ S' $ T' $ P))),
+    (\<^const_syntax>\<open>SimpleTransformation\<close>, (fn ctxt => fn TY => fn [S,T] =>
        if TY = Type("",[]) then raise Match (*A trick to prevent infinite loop*)
        else may_translation ctxt Phi_Kind.Implication [S,T] (fn [S',T'] =>
-              Const (\<^const_syntax>\<open>SimpleImply\<close>, Type("",[])) $ S' $ T'))),
+              Const (\<^const_syntax>\<open>SimpleTransformation\<close>, Type("",[])) $ S' $ T'))),
     (\<^const_syntax>\<open>CurrentConstruction\<close>, (fn ctxt => fn TY => fn [m,s,R,S] =>
        if TY = Type("",[]) then raise Match (*A trick to prevent infinite loop*)
        else may_translation ctxt Phi_Kind.Construction [S] (fn [S'] =>

@@ -81,6 +81,7 @@ val meta_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_alls_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
+val hol_alls_to_meta_alls: (Proof.context -> conv) -> Proof.context -> conv
 
 val leading_antecedent_conv : conv -> conv
 val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
@@ -162,6 +163,14 @@ val hol_all_conv = quant_conv \<^const_name>\<open>All\<close>
 fun meta_all_body_conv C ctxt =
   meta_all_conv (fn (_, ctxt) => meta_all_body_conv C ctxt) ctxt
   else_conv C ctxt
+
+fun hol_alls_to_meta_alls C ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>All\<close>, _) $ _) =>
+         (Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
+          meta_all_conv (hol_alls_to_meta_alls C o snd) ctxt) ctm
+     | _ => C ctxt ctm
+
 
 
 fun leading_antecedent_conv C = implies_conv C all_conv

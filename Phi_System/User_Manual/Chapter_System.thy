@@ -9,8 +9,8 @@ section \<open>Specifications on Fictional \<phi>-SL\<close>
 
 text \<open>\begin{remark}[Source \& Target]
 As both ToA and view shift constitutes a morphism,
-\[ \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close> \]
-\[ \<open>X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P\<close> \]
+\[ \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> \]
+\[ \<open>X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P\<close> \]
 we name the above \<open>X\<close> and \<open>Y\<close> as \<^emph>\<open>source\<close> and \<^emph>\<open>target\<close> respectively.
 We also name the \<open>P\<close> \<^emph>\<open>side fact\<close> as it is a side effect generated during the transformation.
 \end{remark}\<close>
@@ -136,7 +136,7 @@ and premises of each antecedent give us, figuratively speaking,
 available \<^emph>\<open>resources\<close> to complete the job.
 
 To illustrate, a job can be either of
-\<^item> a transformation of abstraction demanded to be reasoned, denoted by \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close>
+\<^item> a transformation of abstraction demanded to be reasoned, denoted by \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
 \<^item> a proof obligation intended to be solved by users, denoted by \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P\<close>
 \<^item> a parameter expected to be given by users, denoted by \<open>\<p>\<a>\<r>\<a>\<m> ?x\<close>
 \<^item> a specification of a sub-procedure waiting for users programming it,
@@ -168,8 +168,8 @@ are indeed specialized proof goal statement like command @{command lemma} and @{
 which initiates a standard Isabelle proof context having for examples the following proof states
 corresponding to the three construction mode,
 \[ \<open>\<p>\<r>\<o>\<c> ?F \<lbrace> X \<longmapsto> Y \<t>\<h>\<r>\<o>\<w>\<s> E \<rbrace> \<Longrightarrow> \<p>\<r>\<o>\<c> ?F \<lbrace> X \<longmapsto> Y \<t>\<h>\<r>\<o>\<w>\<s> E \<rbrace>\<close> \]
-\[ \<open>X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P\<close> \]
-\[ \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P\<close> \]
+\[ \<open>X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P\<close> \]
+\[ \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close> \]
 where the only subgoal is exact the desired conclusion,
 and the subgoal is meantime also an antecedent job
 asking users respectively to program some procedure \<open>?F\<close> satisfying the specification,
@@ -230,13 +230,13 @@ like @{command lemma} and @{command theorem}, where the desired transformation o
 is given in the goal statement directly together with any assumptions as antecedents.\<close>
 
 lemma example:
-  assumes A: \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P\<close>
-    and   B: \<open>y \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Z \<a>\<n>\<d> Q\<close>
-  shows \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Z \<a>\<n>\<d> P \<and> Q\<close>
+  assumes A: \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P\<close>
+    and   B: \<open>y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<w>\<i>\<t>\<h> Q\<close>
+  shows \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<w>\<i>\<t>\<h> P \<and> Q\<close>
   \<medium_left_bracket> A B \<medium_right_bracket>. .
 
 text \<open>Recalling the sequent of the Isar proof state
-\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Z \<a>\<n>\<d> P \<and> Q \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> z \<Ztypecolon> Z \<a>\<n>\<d> P \<and> Q\<close>
+\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<w>\<i>\<t>\<h> P \<and> Q \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<w>\<i>\<t>\<h> P \<and> Q\<close>
 where the only sub-goal is also an antecedent, the sub-goal as an antecedent is opened by
 @{command \<medium_left_bracket>} by which we enter the programming mode where we can deduce the transformation
 forwardly and stepwisely by applying the transformation \<open>A\<close> first and then \<open>B\<close>.

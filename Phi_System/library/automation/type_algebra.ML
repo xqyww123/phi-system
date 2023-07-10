@@ -420,7 +420,7 @@ fun guess_func_mapper target_ty ctxt ty element_ty =
 fun guess_pred_mapper ctxt ty element_ty =
   let val [g'] = Name.invent (Variable.names_of ctxt) "g" 1
       val ([g], ctxt') = Variable.add_fixes [g'] ctxt
-      val g_ty = (element_ty --> HOLogic.boolT) --> ty --> HOLogic.boolT
+      val g_ty = element_ty --> HOLogic.boolT
       val g_term = Free(g, g_ty)
       val known_mappers = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
@@ -637,13 +637,17 @@ end
 type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
 
 fun oblg_solver proof_id ctxt sequent =
-  Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt, sequent)
-    |> (fn th => case Thm.major_prem_of th
-                   of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
-                        @{thm' Premise_True} RS th
-                    | \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> =>
-                        @{thm' TrueI} RS th
-                    | _ => th)
+  (*case Thm.major_prem_of sequent
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+          Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
+        Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt, sequent)
+          |> (fn th => case Thm.major_prem_of th
+                         of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
+                              @{thm' Premise_True} RS th
+                          | \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> =>
+                              @{thm' TrueI} RS th
+                          | _ => th)
+     (*| _ => sequent*)
 
 (* The Framework *)
 
@@ -731,11 +735,15 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,rule,quants,ind_con
       val rule'3 = reasoning phi ctxt rule'2
       val rule'4 =(case solver (phi, ctxt, rule'3)
                      of SOME ret => ret
-                      | NONE => oblg_solver (#proof_id phi ^ name) ctxt rule'3)
+                      | NONE => oblg_solver (#proof_id phi ^ "/" ^ name) ctxt rule'3)
                 |> simp (phi,ctxt)
+                |> Conv.fconv_rule (
+                      Phi_Conv.expand_aggregated_imps_hol 
+                          (Phi_Conv.hol_alls_to_meta_alls (K Conv.all_conv) ctxt)
+                          Conv.all_conv)
                 |> singleton (Proof_Context.export ctxt ctxt0)
    in Phi_Reasoner.info_pretty ctxt 0 (fn () => let open Pretty in
-        block [str "Derived: ", Thm.pretty_thm ctxt rule'4]
+        block [str name, str " : ", Thm.pretty_thm ctxt rule'4]
       end) ;
       rule'4
   end)
@@ -846,8 +854,8 @@ fun instantiate_ToA (Ant,pure_info,ctxt) ToA =
                   |> simplify_distinct ctxt
                   |> maps (fn th => let val th' = th RS ToA'
                                         val th2 = th' RS' (ctxt, @{thm' Action_Tag_D})
-                                        (*fun rewr_pat (\<^Const>\<open>Trueprop\<close> $ (\<^Const_>\<open>Imply ty\<close> $ X $ Y $ _)) =
-                                              (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Imply ty\<close> $ X $ Y
+                                        (*fun rewr_pat (\<^Const>\<open>Trueprop\<close> $ (\<^Const_>\<open>Transformation ty\<close> $ X $ Y $ _)) =
+                                              (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Transformation ty\<close> $ X $ Y
                                                   $ Var(("P", Term.maxidx_term X (Term.maxidx_term Y ~1) + 1), \<^Type>\<open>bool\<close>))) *)
                                         val ToA1 = th2 RS' (ctxt, @{thm' mk_ToA_rule})
                                         val ToA2 = th2 RS' (ctxt, @{thm' mk_ToA_rule'})
@@ -999,7 +1007,7 @@ fun PLPR_reasoner num ctxt sequent =
 
 fun ToA_reasoner phi ctxt sequent =
   let val sequent'1 = (case Thm.major_prem_of sequent
-                         of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Imply\<close>, _) $ X $ Y $ _)
+                         of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _)
                               => (chk_unfolded phi X; chk_unfolded phi Y;
                                   @{thm' Action_Tag_D[where A = \<open>ToSA\<close>]} RS sequent)
                           | _ => sequent)
@@ -1151,12 +1159,12 @@ fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
                    |> Phi_Help.beta_eta_contract
                    |> infer_eq ctxt
                    |> SOME
-      fun simp (phi, ctxt) =
-        if is_some hint0
-        then Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
-               (K (Conv.arg_conv (Conv.arg_conv (Simplifier.rewrite ctxt)))) ctxt)
-        else I
-      val rules = mk_rule_by_guess_or_hint ("/obj_equal", unify_hint, guess_property_obj_eq,
+      fun simp (_, ctxt) =
+        if is_some hint0 then I
+        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
+               (K (Conv.arg_conv (Conv.arg_conv (
+                  Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))))) ctxt)
+      val rules = mk_rule_by_guess_or_hint ("Object_Equiv", unify_hint, guess_property_obj_eq,
                                             @{thm' Object_Equiv_rule}, [0],
                                             SOME ind_conv, OE_reasoning, infer, simp)
                                            phi0 hint0 ctxt0
@@ -1267,16 +1275,17 @@ fun gen_TF hint0 (phi0 : phi_type) generic =
                               (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)) then_conv
                                conv_chk_unfolded phi)
                               Conv.all_conv)))))
-      fun simp (phi, ctxt) =
-        if is_some hint0
-        then Conv.fconv_rule (
-              Phi_Conv.hhf_concl_conv (K (
-                  HOLogic.Trueprop_conv (Conv.combination_conv
-                    (Conv.arg_conv (Simplifier.rewrite ctxt))
-                    (Simplifier.rewrite ctxt))
-             )) ctxt)
-        else I
-      val rules = mk_rule_by_guess_or_hint ("/TF", unify_hint, guess_property_TF,
+      fun simp (_, ctxt) =
+        if is_some hint0 then I
+        else Conv.fconv_rule (
+                Phi_Conv.hhf_concl_conv (fn ctxt =>
+                  let val sctxt = ctxt addsimps @{thms special_Ex_def}
+                   in HOLogic.Trueprop_conv (Conv.combination_conv
+                        (Conv.arg_conv (Simplifier.rewrite sctxt))
+                        (Simplifier.rewrite sctxt))
+                  end
+               ) ctxt)
+      val rules = mk_rule_by_guess_or_hint ("Transformation_Functor", unify_hint, guess_property_TF,
                                             @{thm' \<phi>TA_TF_rule}, [0,~1,~1,~1],
                                             SOME ind_conv, TF_reasoning, K NONE, simp)
                                            phi0 hint0 ctxt0
@@ -1308,7 +1317,7 @@ fun gen_TF hint0 (phi0 : phi_type) generic =
                       |> Proof.global_done_proof
                 end
            in generic
-           |> Phi_Type_Algebra.note_properties phi0 [("transformation_functor", [rule'])]
+         (*|> Phi_Type_Algebra.note_properties phi0 [("Transformation_Functor", [rule'])] *)
            |> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
                               (setup_locale Interpretation.sublocale)
          (*|> Context.mapping (Named_Target.theory_map (setup_functional_TF Interpretation.global_interpretation))
@@ -1344,7 +1353,7 @@ fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
    |> Seq.maps (fn (fm, ctxt'2) =>
         guess_pred_mapper ctxt'2 x_ty element_ty
      |> Seq.map (fn (pm, ctxt'3) =>
-          (ants, \<^Const>\<open>Trueprop\<close> $ (FTF_head $ pm $ fm), x_term, FT_term, phi, ctxt'3)))
+          ([], \<^Const>\<open>Trueprop\<close> $ (FTF_head $ pm $ fm), x_term, FT_term, phi, ctxt'3)))
   end
 
 fun gen_FTF hint0 (phi0 : phi_type) thy =
@@ -1352,26 +1361,18 @@ fun gen_FTF hint0 (phi0 : phi_type) thy =
       val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type_operator (
             fn (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ ) => F1)
-      fun simp (phi, ctxt) =
-        if is_some hint0
-        then Conv.fconv_rule (
-                Phi_Conv.hhf_concl_conv (K (
-                  HOLogic.Trueprop_conv (Conv.combination_conv
-                    (Conv.arg_conv (Simplifier.rewrite ctxt))
-                    (Simplifier.rewrite ctxt))
-             )) ctxt)
-        else I
       val reasoning = PLPR_reasoner NONE
-      fun simp (phi, ctxt) =
-        if is_some hint0
-        then Conv.fconv_rule (
-              Phi_Conv.hhf_concl_conv (K (
-                  HOLogic.Trueprop_conv (Conv.combination_conv
-                    (Conv.arg_conv (Simplifier.rewrite ctxt))
-                    (Simplifier.rewrite ctxt))
-             )) ctxt)
-        else I
-      val rules = mk_rule_by_guess_or_hint ("/FTF", unify_hint, guess_property_FTF,
+      fun simp (_, ctxt) thm =
+        if is_some hint0 then thm
+        else Conv.fconv_rule (
+                Phi_Conv.hhf_concl_conv (fn ctxt => 
+                  let val sctxt = ctxt addsimps @{thms special_Ex_def}
+                   in HOLogic.Trueprop_conv (Conv.combination_conv
+                        (Conv.arg_conv (Simplifier.rewrite sctxt))
+                        (Simplifier.rewrite sctxt))
+                  end
+             ) ctxt) thm
+      val rules = mk_rule_by_guess_or_hint ("Functional_Transformation_Functor", unify_hint, guess_property_FTF,
                                             @{thm' \<phi>TA_FTF_rule}, [],
                                             NONE, K reasoning, K NONE, simp)
                                             phi0 hint0 ctxt0
@@ -1400,7 +1401,7 @@ fun gen_FTF hint0 (phi0 : phi_type) thy =
                             |> Proof.global_done_proof
                 end
            in thy
-           |> Phi_Type_Algebra.note_properties phi0 [("functional_transformation_functor", [rule'])]
+           |> Phi_Type_Algebra.note_properties phi0 [("Functional_Transformation_Functor", [rule'])]
            |> Context.mapping (Named_Target.theory_map (setup_functional_TF Interpretation.global_interpretation))
                               (setup_functional_TF Interpretation.sublocale)
           end)
@@ -1479,7 +1480,7 @@ fun SHu_reasoner ctxt sequent =
 fun SH_reasoning is_intro phi ctxt =
       gen_abstract_constraint_guided_reasoning (K NONE) (fn ctxt => fn sequent => (
          (case Thm.major_prem_of sequent
-            of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Imply\<close>, _)
+            of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _)
                         $ (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) $ _ $ _)
                  => (chk_unfolded phi X1; chk_unfolded phi X2)
              | _ => ()) ;
@@ -1523,16 +1524,17 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u
       fun simp (_, ctxt) =
-        if is_some hint0
-        then Conv.fconv_rule (
-              Phi_Conv.hhf_concl_conv (K (
-                  Conv.arg_conv (Conv.combination_conv
-                    (Conv.arg_conv (Simplifier.rewrite ctxt))
-                    (Simplifier.rewrite ctxt))
-             )) ctxt)
-        else I
+        if is_some hint0 then I
+        else Conv.fconv_rule (
+               Phi_Conv.hhf_concl_conv (fn ctxt =>
+                 let val sctxt = ctxt addsimps @{thms special_Ex_def}
+                  in Conv.arg_conv (Conv.combination_conv
+                        (Conv.arg_conv (Simplifier.rewrite sctxt))
+                        (Simplifier.rewrite sctxt))
+                 end
+             ) ctxt)
 
-      val rules = mk_rule_by_guess_or_hint (if is_intro then "/SHz" else "/SHu",
+      val rules = mk_rule_by_guess_or_hint (if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E",
                                             unify_hint_SH, guess_property_SH is_intro,
                                             (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule}), [0,~1,~1],
                                             SOME ind_conv, SH_reasoning is_intro, K NONE, simp)
@@ -1541,7 +1543,7 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
         of NONE => raise Automation_Fail
          | SOME (rule', _) => generic
              |> Phi_Type_Algebra.note_properties phi0
-                    [(if is_intro then "sep_homo\<^sub>I" else "sep_homo\<^sub>E", [rule'])]
+                    [(if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E", [rule'])]
              |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL 40 ([],[]) NONE
                                               [Morphism.thm m rule'])
@@ -1627,7 +1629,7 @@ fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
 
 fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic 
-      val name = if is_left then "1L" else "1R"
+      val name = if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"
       val unify_hint_U = hint_unify_by_type (
             fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ => T
              | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) => T
@@ -1642,15 +1644,15 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
             else K NONE
       fun reasoning _ = gen_abstract_constraint_guided_reasoning varify_subgoal (PLPR_reasoner (SOME 1))
       fun simp (_, ctxt) =
-        if is_some hint0
-        then Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                HOLogic.Trueprop_conv (
-                  if is_left
-                  then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite ctxt))
-                                             (Simplifier.rewrite ctxt)
-                  else Conv.arg_conv (Simplifier.rewrite ctxt)
-                )) ctxt)
-        else I
+        if is_some hint0 then I
+        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+              let val sctxt = ctxt addsimps @{thms special_Ex_def}
+               in HOLogic.Trueprop_conv (
+                    if is_left
+                    then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite sctxt))
+                                               (Simplifier.rewrite sctxt)
+                    else Conv.arg_conv (Simplifier.rewrite sctxt))
+              end) ctxt)
       val rules = mk_rule_by_guess_or_hint (name, unify_hint_U, guess_property_id_ele is_left,
                                             (if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}), [],
                                             SOME ind_conv, reasoning, K NONE, simp)
@@ -1659,7 +1661,7 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
         of NONE => raise Automation_Fail
          | SOME (rule', _) => generic
             |> Phi_Type_Algebra.note_properties phi0
-                  [((if is_left then "identity_element\<^sub>I" else "identity_element\<^sub>E"), [rule'])]
+                  [((if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"), [rule'])]
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL 40 ([],[]) NONE
                                               [Morphism.thm m rule'])
@@ -1684,7 +1686,6 @@ fun guess_property_inhab_tyop (x_term, T_term, (phi:phi_type)) ctxt =
                                      (map (fn T => T --> HOLogic.boolT) x_ttys)
       val ctxt = Variable.add_fixes_direct (map fst preds) ctxt
       val preds = x_ttys ~~ map Free preds
-      val Inh = \<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x_term $ T_term)
       val ants = map2 (fn ((rev_args, x, m), T'h) => fn (_, pred) =>
             let val arity = length rev_args
                 val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - i)) rev_args T'h
@@ -1698,15 +1699,22 @@ fun guess_property_inhab_tyop (x_term, T_term, (phi:phi_type)) ctxt =
           ) T_params preds
    in guess_predicate ctxt preds x_ty
    |> Seq.map (fn (pred, ctxt) =>
-        (ants, HOLogic.Trueprop $ (HOLogic.imp $ Inh $ (pred $ x_term)),
+        (ants, HOLogic.Trueprop $ (HOLogic.all_const x_ty $ Abs ("x", x_ty, \<^Const>\<open>Action_Tag\<close>
+                    $ (HOLogic.imp
+                        $ (\<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T_term))
+                        $ (pred $ Bound 0))
+                    $ \<^Const>\<open>\<A>EIF\<close>)),
          x_term, T_term, phi, ctxt))
   end
 
 fun guess_property_inhab_atom (x_term, T_term, (phi:phi_type)) ctxt =
   let val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
-      val Inh = \<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x_term $ T_term)
       val idx = phi_maxidx_of phi ~1 + 1
-      val Prop = \<^Const>\<open>HOL.implies\<close> $ Inh $ Var(("Pr",idx), HOLogic.boolT)
+      val Prop = HOLogic.Trueprop $ (HOLogic.all_const x_ty $ Abs ("x", x_ty, \<^Const>\<open>Action_Tag\<close>
+                    $ (\<^Const>\<open>HOL.implies\<close>
+                        $ (\<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T_term))
+                        $ (Var(("Pr",idx), x_ty --> HOLogic.boolT) $ Bound 0))
+                    $ \<^Const>\<open>\<A>EIF\<close>))
    in Seq.single ([], Prop, x_term, T_term, phi, ctxt)
   end
 
@@ -1723,7 +1731,11 @@ fun gen_inhab hint0 (phi0 : phi_type) thy =
                  => T
              | _ => raise TERM ("",[]))
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr})),
-                                       K (K (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr})))
+              fn ctxt => fn _ =>
+                  Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr} then_conv
+                  Conv.implies_concl_conv (HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
+                    Conv.arg1_conv (Conv.arg_conv (
+                      Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0))))))))
       fun Inh_reasoner ctxt sequent =
         case PLPR_Exhaustive.reason_exhaustively (SOME 2)
                   (ctxt, @{thm' \<phi>TA_Inh_step} RS sequent)
@@ -1735,25 +1747,56 @@ fun gen_inhab hint0 (phi0 : phi_type) thy =
       fun Inh_reasoning _ ctxt = gen_abstract_constraint_guided_reasoning
             (if mode_infer then varify_subgoal else K NONE) Inh_reasoner ctxt
 
-      val solver = if mode_infer
-                   then (fn (_,_,sequent) => SOME (@{thm' \<phi>TA_Inh_inst_P} RS sequent))
-                   else K NONE
-      fun simp (_, ctxt) =
-        if is_some hint0
-        then Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
-                  Conv.arg_conv (Simplifier.rewrite ctxt)
-                ))) ctxt)
-        else I
-      val rules = mk_rule_by_guess_or_hint ("/Inh", unify_hint_U, guess_property,
+
+      val solver =
+        if mode_infer
+        then (fn (phi,ctxt,sequent) =>
+           let fun inst_Pr context (Const(\<^const_name>\<open>conj\<close>, _) $ X $ _)
+                      = inst_Pr context X
+                 | inst_Pr (vars,prems) (Const(\<^const_name>\<open>All\<close>, _) $ Abs (N,ty,X))
+                      = inst_Pr ((N,ty)::vars, map (Term.incr_boundvars 1) prems) X
+                 | inst_Pr (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
+                      = inst_Pr (vars, P::prems) X
+                 | inst_Pr (vars,prems) (Var (v as (("Pr",_), \<^Type>\<open>fun tyv _\<close>)) $ Bound j)
+                      = Phi_Help.list_mk_conj prems
+                          |> fold_index (fn (k, (N, ty)) => fn X =>
+                                if k = j then Abs (N, ty, X) $ Bound (length vars - 1 - k)
+                                else HOLogic.all_const ty $ Abs(N, ty, X)
+                             ) vars
+                          |> (fn X => Abs ("x", tyv, X))
+                          |> (fn X => Thm.instantiate (TVars.empty, Vars.make [(v, Thm.cterm_of ctxt X)]))
+            in case Thm.prop_of sequent
+                 of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _)
+                      $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ X)) $ _
+                      => SOME (inst_Pr ([],[]) X sequent
+                                |> oblg_solver (#proof_id phi ^ "/Inh") ctxt)
+                  | _ => error "Internal bug"
+           end)
+(*(fn (_,_,sequent) => SOME (@{thm' \<phi>TA_Inh_inst_P} RS sequent))*)
+        else K NONE
+      fun simp (_, ctxt) rule0 =
+        let val rule = rule0 RS' (ctxt, @{thm' spec})
+         in if is_some hint0
+            then rule
+            else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                    HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
+                      Conv.arg_conv (Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
+                    ))) ctxt) rule
+        end
+      val rules = mk_rule_by_guess_or_hint ("Implication", unify_hint_U, guess_property,
                                             @{thm' \<phi>TA_Inh_rule}, [0], SOME ind_conv,
                                             Inh_reasoning, solver, simp)
                                            phi0 hint0 ctxt0
-   in Seq.pull rules ;
-      thy
+   in case Seq.pull rules
+        of NONE => raise Automation_Fail
+         | SOME (rule', _) => thy
+            |> Phi_Type_Algebra.note_properties phi0 [("Implication", [rule'])]
+            |> Phi_Help.generic_theory_mapping (fn m =>
+                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL 90 ([],[]) NONE
+                                              [Morphism.thm m rule'])
   end
 
-val inhabitance = accept_one "Inhabited" gen_inhab
+val inhabitance = accept_one "Implication" gen_inhab
 
 
 (* fun gen_identity_element is_left hints phi thy =

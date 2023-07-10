@@ -566,7 +566,7 @@ fun conv_def_to_equaltion ctxt def =
 
 val add_premise_tag = Phi_Conv.recursive_premises_conv (fn ctxt => fn ctm =>
       case Thm.term_of ctm
-        of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Imply\<close>, _) $ _ $ _ $ _) =>
+        of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _) =>
               Conv.all_conv ctm
          | Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
             (case Term.head_of X

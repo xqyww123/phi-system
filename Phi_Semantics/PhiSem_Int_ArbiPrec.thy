@@ -120,26 +120,26 @@ lemma \<phi>ANat_expn[\<phi>expns]:
 lemma [\<phi>reason 1000]:
   " Threshold_Cost 4
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
-\<Longrightarrow> x \<Ztypecolon> \<int> \<i>\<m>\<p>\<l>\<i>\<e>\<s> nat x \<Ztypecolon> \<nat>"
+\<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat>"
   \<medium_left_bracket> construct\<phi> \<open>nat x \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
-\<Longrightarrow> x \<Ztypecolon> \<int> \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<nat> \<s>\<u>\<b>\<j> y. y = nat x @action to \<nat>\<close> \<medium_left_bracket> \<medium_right_bracket>.
+\<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat> \<s>\<u>\<b>\<j> y. y = nat x @action to \<nat>\<close> \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
   " Threshold_Cost 2
-\<Longrightarrow> x \<Ztypecolon> \<nat> \<i>\<m>\<p>\<l>\<i>\<e>\<s> Int.int x \<Ztypecolon> \<int>" \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>.
+\<Longrightarrow> x \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Int.int x \<Ztypecolon> \<int>" \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
-  " x \<Ztypecolon> \<nat> \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<int> \<s>\<u>\<b>\<j> y. y = Int.int x @action to \<int> " \<medium_left_bracket> \<medium_right_bracket>.
+  " x \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<int> \<s>\<u>\<b>\<j> y. y = Int.int x @action to \<int> " \<medium_left_bracket> \<medium_right_bracket>.
 
-lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<nat> \<i>\<m>\<p>\<l>\<i>\<e>\<s> Int.int _ \<Ztypecolon> _ \<a>\<n>\<d> _ \<close>]:
-  " x \<Ztypecolon> \<nat> \<i>\<m>\<p>\<l>\<i>\<e>\<s> Int.int x \<Ztypecolon> \<int> " \<medium_left_bracket> \<medium_right_bracket>.
+lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Int.int _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ \<close>]:
+  " x \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Int.int x \<Ztypecolon> \<int> " \<medium_left_bracket> \<medium_right_bracket>.
 
-lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<int> \<i>\<m>\<p>\<l>\<i>\<e>\<s> nat _ \<Ztypecolon> _ \<a>\<n>\<d> _ \<close>]:
+lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ \<close>]:
   " \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
-\<Longrightarrow> x \<Ztypecolon> \<int> \<i>\<m>\<p>\<l>\<i>\<e>\<s> nat x \<Ztypecolon> \<nat> " \<medium_left_bracket> \<medium_right_bracket>.
+\<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat> " \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma \<phi>ANat_inhabited[elim!]:
   "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C" .
@@ -266,14 +266,14 @@ subsubsection \<open>Constant Integer\<close>
 
 lemma op_const_aint_\<phi>app[\<phi>synthesis 300]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x)) \<int>\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x)) \<int>\<close>
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x \<in> (x \<Ztypecolon> \<int>)\<close>
 \<medium_right_bracket> .
 
 lemma op_const_anat_\<phi>app[\<phi>synthesis 300]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] x' : of_nat x
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat>\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat>\<close>
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x' \<in> (x \<Ztypecolon> \<nat>)\<close>
 \<medium_right_bracket> .

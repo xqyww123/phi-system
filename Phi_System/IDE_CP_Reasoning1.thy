@@ -26,11 +26,11 @@ text \<open>The annotation marking on a target \<^term>\<open>Y <matches> A\<clo
   restricts that the source have to first match pattern \<open>A\<close>.\<close>
 
 lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P \<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> (Y <matches> A) \<a>\<n>\<d> P\<close>
+  \<open>Matches X A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (Y <matches> A) \<w>\<i>\<t>\<h> P\<close>
   unfolding Assertion_Matches_def .
 
 lemma [\<phi>reason 2000]:
-  \<open>Matches X A \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> (Y <matches> A) \<a>\<n>\<d> P\<close>
+  \<open>Matches X A \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P \<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> (Y <matches> A) \<w>\<i>\<t>\<h> P\<close>
   unfolding Assertion_Matches_def .
 
 subsubsection \<open>Useless Tag\<close>
@@ -111,10 +111,10 @@ Note, the argument here means any \<phi>-Type in the pre-condition, not necessar
 
 (*
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close>    (110)
-  and \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
-      \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ *  \<blangle> ?Y \<brangle> \<a>\<n>\<d> Reverse_Transformation _ _ \<and> _\<close>    (120)
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> Reverse_Transformation _ _ \<and> _\<close>    (110)
+  and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ *  \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> Reverse_Transformation _ _ \<and> _\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ *  \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> Reverse_Transformation _ _ \<and> _\<close>    (120)
 ]]
 *)
 
@@ -567,8 +567,8 @@ lemma [\<phi>reason 1200]:
 
 subsection \<open>Identity Element I\&E\<close>
 
-definition Identity_Element\<^sub>I :: \<open>'a::one set \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>I S P \<longleftrightarrow> (S \<i>\<m>\<p>\<l>\<i>\<e>\<s> 1 \<a>\<n>\<d> P)\<close>
-definition Identity_Element\<^sub>E :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>E S \<longleftrightarrow> (1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> S)\<close>
+definition Identity_Element\<^sub>I :: \<open>'a::one set \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>I S P \<longleftrightarrow> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)\<close>
+definition Identity_Element\<^sub>E :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>E S \<longleftrightarrow> (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S)\<close>
 
 declare [[ \<phi>reason_default_pattern
       \<open>Identity_Element\<^sub>I ?S _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I ?S _\<close> (100)
@@ -593,22 +593,22 @@ lemma [\<phi>reason 3000]:
 
 lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>I {_} _\<close> ]:
   \<open>Identity_Element\<^sub>I {1} True\<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def by simp
+  unfolding Identity_Element\<^sub>I_def Transformation_def by simp
 
 lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>E {_}\<close>]:
   \<open>Identity_Element\<^sub>E {1}\<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def by simp
+  unfolding Identity_Element\<^sub>E_def Transformation_def by simp
 
 subsubsection \<open>Logic Connectives\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> Itself) True \<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def
+  unfolding Identity_Element\<^sub>I_def Transformation_def
   by (clarsimp simp add: Itself_expn)
 
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>E (1 \<Ztypecolon> Itself) \<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp simp add: Itself_expn)
 
 lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolon> _) _\<close>]:
@@ -636,14 +636,14 @@ lemma [\<phi>reason 1200]:
 
 lemma (*The above rule is local complete*)
   \<open>Identity_Element\<^sub>I (A + B) P \<Longrightarrow> Identity_Element\<^sub>I A P \<and> Identity_Element\<^sub>I B P\<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def
+  unfolding Identity_Element\<^sub>I_def Transformation_def
   by clarsimp
 
 lemma [\<phi>reason 3000]:
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> Identity_Element\<^sub>E B
 \<Longrightarrow> Identity_Element\<^sub>E (A + B)\<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def
   by clarsimp
 
 lemma (*The above rule is not local complete*)
@@ -654,63 +654,63 @@ lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>I (A x) P
 \<Longrightarrow> Identity_Element\<^sub>I (AllSet A) P\<close>
   unfolding Identity_Element\<^sub>I_def
-  by (metis AllSet_expn Imply_def)
+  by (metis AllSet_expn Transformation_def)
 (*The rule is not local complete*)
 
 lemma [\<phi>reason 1200]:
   \<open> (\<And>x. Identity_Element\<^sub>E (A x))
 \<Longrightarrow> Identity_Element\<^sub>E (AllSet A)\<close>
   unfolding Identity_Element\<^sub>E_def
-  by (metis AllSet_expn Imply_def)
+  by (metis AllSet_expn Transformation_def)
 
 lemma (*The above rule is local complete*)
   \<open> Identity_Element\<^sub>E (AllSet A) \<Longrightarrow> Identity_Element\<^sub>E (A x) \<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp simp add: AllSet_expn)
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>x. Identity_Element\<^sub>I (A x) (P x))
 \<Longrightarrow> Identity_Element\<^sub>I (ExSet A) (Ex P)\<close>
   unfolding Identity_Element\<^sub>I_def
-  by (metis ExSet_expn Imply_def)
+  by (metis ExSet_expn Transformation_def)
 
 lemma (*The above rule is local complete*)
   \<open>Identity_Element\<^sub>I (ExSet A) P \<Longrightarrow> Identity_Element\<^sub>I (A x) P\<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def
+  unfolding Identity_Element\<^sub>I_def Transformation_def
   by (clarsimp simp add: ExSet_expn; blast)
 
 lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>E (A x)
 \<Longrightarrow> Identity_Element\<^sub>E (ExSet A)\<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp simp add: ExSet_expn; blast)
 
 lemma (*The above rule is not local complete*)
   \<open>Identity_Element\<^sub>E (ExSet A) \<Longrightarrow> \<exists>x. Identity_Element\<^sub>E (A x)\<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def ExSet_expn
+  unfolding Identity_Element\<^sub>E_def Transformation_def ExSet_expn
   by clarsimp
 
 lemma [\<phi>reason 1200]:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>I A Q)
 \<Longrightarrow> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q)\<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def
+  unfolding Identity_Element\<^sub>I_def Transformation_def
   by (simp add: Subjection_expn; blast)
 
 lemma
   \<open> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q) \<Longrightarrow> (P \<Longrightarrow> Identity_Element\<^sub>I A Q)\<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def Inhabited_def
+  unfolding Identity_Element\<^sub>I_def Transformation_def Inhabited_def
   by (cases P; clarsimp simp add: Subjection_expn)
 
 lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
 \<Longrightarrow> Identity_Element\<^sub>E (A \<s>\<u>\<b>\<j> P)\<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def Premise_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def Premise_def
   by (clarsimp simp add: Subjection_expn; blast)
 
 lemma (*The above rule is local complete*)
   \<open> Identity_Element\<^sub>E (A \<s>\<u>\<b>\<j> P) \<Longrightarrow> P \<and> Identity_Element\<^sub>E A \<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def Premise_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def Premise_def
   by (clarsimp simp add: Subjection_expn; blast)
 
 lemma [\<phi>reason 1200]: 
@@ -718,7 +718,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Identity_Element\<^sub>I B Q
 \<Longrightarrow> Identity_Element\<^sub>I (A * B) (P \<and> Q) \<close>
   for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def
+  unfolding Identity_Element\<^sub>I_def Transformation_def
   by (clarsimp simp add: set_mult_expn, insert mult_1_class.mult_1_left; blast)
   (* It is not complete, example: algebra {e,a} where the sep conjunction is only defined
      on the unit, x ## y \<longleftrightarrow> x = e \<and> y = e.
@@ -729,7 +729,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Identity_Element\<^sub>E B
 \<Longrightarrow> Identity_Element\<^sub>E (A * B) \<close>
   for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp, insert times_set_I, fastforce)
 
 lemma (*the above rule is not local complete*)
@@ -742,7 +742,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Identity_Element\<^sub>I (y \<Ztypecolon> U) Q
 \<Longrightarrow> Identity_Element\<^sub>I ((x,y) \<Ztypecolon> T \<^emph> U) (P \<and> Q)\<close>
   for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding Identity_Element\<^sub>I_def \<phi>Prod_expn' Imply_def
+  unfolding Identity_Element\<^sub>I_def \<phi>Prod_expn' Transformation_def
   apply (simp add: \<phi>expns)
   using mult_1_class.mult_1_left by blast
 
@@ -751,7 +751,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Identity_Element\<^sub>E (y \<Ztypecolon> U)
 \<Longrightarrow> Identity_Element\<^sub>E ((x,y) \<Ztypecolon> T \<^emph> U) \<close>
   for T :: \<open>'a \<Rightarrow> 'b::sep_magma_1 set\<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp simp add: \<phi>Prod_expn', insert set_mult_expn, fastforce)
 
 
@@ -759,19 +759,19 @@ lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> Identity_Element\<^sub>E B
 \<Longrightarrow> Identity_Element\<^sub>E (A \<inter> B) \<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp)
 
 lemma (*the above rule is local complete*)
   \<open> Identity_Element\<^sub>E (A \<inter> B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B \<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def
+  unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp)
 
 lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>I A P
 \<Longrightarrow> Identity_Element\<^sub>I B Q
 \<Longrightarrow> Identity_Element\<^sub>I (A \<inter> B) (P \<and> Q) \<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def
+  unfolding Identity_Element\<^sub>I_def Transformation_def
   by clarsimp
 
 lemma (*the above rule is not local complete*)
@@ -783,12 +783,12 @@ lemma (*the above rule is not local complete*)
 
 lemma [\<phi>reason 1200]:
   \<open>Identity_Element\<^sub>I (1 \<Ztypecolon> Itself) True\<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def Itself_expn
+  unfolding Identity_Element\<^sub>I_def Transformation_def Itself_expn
   by simp
 
 lemma [\<phi>reason 1200]:
   \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> Itself)\<close>
-  unfolding Identity_Element\<^sub>E_def Imply_def Itself_expn
+  unfolding Identity_Element\<^sub>E_def Transformation_def Itself_expn
   by simp
 
 lemma [\<phi>reason 1200]:
@@ -804,7 +804,7 @@ lemma [\<phi>reason 1200]:
 subsection \<open>Declaration of Transformation of State Abstraction (ToSA)\<close>
 
 text \<open>
-  Supporting implication \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y @action ToSA\<close> only,
+  Supporting implication \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action ToSA\<close> only,
   ToSA is a reasoning process of Transformation of Abstraction (ToA) for
   assertions of (fictional) computation state.
 \<close>
@@ -815,7 +815,7 @@ consts ToSA' :: \<open>bool \<comment> \<open>whether to reason deeper transform
               \<Rightarrow> mode\<close>
 
 text \<open>The boolean flag indicates whether to reason the transformation of \<phi>-types in depth.
-For \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y\<^sub>1 * \<cdots> * Y\<^sub>m @action ToSA' ?flag\<close>,
+For \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<^sub>1 * \<cdots> * Y\<^sub>m @action ToSA' ?flag\<close>,
 
 \<^item> If the flag is turned on, for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close>, the reasoner
   infers in depth whether some source \<phi>-Type \<^term>\<open>X\<^sub>j\<close> can be transformed into \<^term>\<open>Y\<^sub>i\<close>,
@@ -831,8 +831,8 @@ the reasoning is weaker.
 
 abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
 
-lemma [\<phi>reason 3000 for \<open>?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?X \<a>\<n>\<d> ?P @action ToSA' ?mode\<close>]:
-  \<open>X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X @action ToSA' mode\<close>
+lemma [\<phi>reason 3000 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action ToSA' ?mode\<close>]:
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action ToSA' mode\<close>
   unfolding Action_Tag_def using implies_refl .
 
 subsection \<open>Declaration of Convergence of Branch\<close>
@@ -842,7 +842,7 @@ consts invoke_branch_convergence :: \<open>action\<close>
 
 subsection \<open>Removing Values\<close> (*TODO: depreciate me*)
 
-definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<i>\<m>\<p>\<l>\<i>\<e>\<s> Output)\<close>
+definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Output)\<close>
 
 text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> removes value assertions \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
   from the assertion \<open>Input\<close>. Bounded values such the return value of a procedure are not removed.\<close>
@@ -855,18 +855,18 @@ subsubsection \<open>Operations for a single Value\<close>
 
 (*
 lemma "_rule_extract_and_remove_the_first_value_"[no_atp]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<a>\<n>\<d> P @action ToSA' False
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> P @action ToSA' False
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
 *)
 
 lemma "_rule_push_a_value_"[no_atp]:
   \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
-\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B
-\<Longrightarrow> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B * (x \<Ztypecolon> \<v>\<a>\<l>[v] T) \<close>
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B * (x \<Ztypecolon> \<v>\<a>\<l>[v] T) \<close>
   for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
 
 (*
 subsubsection \<open>Collects all Values in an Assertion / from the State Sequent\<close>
@@ -874,38 +874,38 @@ subsubsection \<open>Collects all Values in an Assertion / from the State Sequen
 consts collect_clean_value :: \<open>bool \<Rightarrow> action\<close>
 
 lemma apply_collect_clean_value[no_atp]:
-  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value WHETHER_CLEAN
-\<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V\<close>
+  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> V @action collect_clean_value WHETHER_CLEAN
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> V\<close>
   unfolding Action_Tag_def .
 
-lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value True\<close>]:
-  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value True
-\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> V @action collect_clean_value True\<close>
-  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value True\<close>]:
+  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> V @action collect_clean_value True
+\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> V @action collect_clean_value True\<close>
+  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value False\<close>]:
-  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value False
-\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> V
+lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value False\<close>]:
+  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> V @action collect_clean_value False
+\<Longrightarrow> S \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> V
     @action collect_clean_value False\<close>
-  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1100 for \<open>?S\<heavy_comma> ?X \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value ?CLEAN\<close>]:
-  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S' \<a>\<n>\<d> V @action collect_clean_value CLEAN
-\<Longrightarrow> S\<heavy_comma> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> S'\<heavy_comma> X \<a>\<n>\<d> V @action collect_clean_value CLEAN\<close>
+lemma [\<phi>reason 1100 for \<open>?S\<heavy_comma> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value ?CLEAN\<close>]:
+  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> V @action collect_clean_value CLEAN
+\<Longrightarrow> S\<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'\<heavy_comma> X \<w>\<i>\<t>\<h> V @action collect_clean_value CLEAN\<close>
   unfolding Action_Tag_def using implies_right_prod .
 
-lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value True\<close>]:
-  \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Void \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True
+lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value True\<close>]:
+  \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True
     @action collect_clean_value True\<close>
-  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value False\<close>]:
-  \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<a>\<n>\<d> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True
+lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value False\<close>]:
+  \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True
     @action collect_clean_value False\<close>
-  unfolding Action_Tag_def Imply_def by (clarsimp simp add: \<phi>expns)
+  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1000 for \<open>?S \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?S' \<a>\<n>\<d> ?V @action collect_clean_value ?clean\<close>]:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<a>\<n>\<d> True @action collect_clean_value clean\<close>
+lemma [\<phi>reason 1000 for \<open>?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value ?clean\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> True @action collect_clean_value clean\<close>
   unfolding Action_Tag_def using implies_refl .
 *)
 end

@@ -26,14 +26,14 @@ lemma [\<phi>inhabitance_rule, elim!]:
   unfolding Inhabited_def
   by (simp add: \<phi>expns)
 
-lemma Currency_D[\<phi>reason on \<open>?x \<Ztypecolon> Currency \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?y \<Ztypecolon> \<nat>[?b] \<a>\<n>\<d> ?P\<close>]:
+lemma Currency_D[\<phi>reason on \<open>?x \<Ztypecolon> Currency \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<nat>[?b] \<w>\<i>\<t>\<h> ?P\<close>]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
-\<Longrightarrow> x \<Ztypecolon> Currency \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> \<nat>[256] \<a>\<n>\<d> x \<le> Total_Supply\<close>
+\<Longrightarrow> x \<Ztypecolon> Currency \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<nat>[256] \<w>\<i>\<t>\<h> x \<le> Total_Supply\<close>
   unfolding Currency_expn \<medium_left_bracket> \<medium_right_bracket>. .
 
-lemma Currency_I[\<phi>reason on \<open>?y \<Ztypecolon> \<nat>[?b] \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?x \<Ztypecolon> Currency \<a>\<n>\<d> ?P\<close>]:
+lemma Currency_I[\<phi>reason on \<open>?y \<Ztypecolon> \<nat>[?b] \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> Currency \<w>\<i>\<t>\<h> ?P\<close>]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<le> Total_Supply \<and> x = x'
-\<Longrightarrow> x \<Ztypecolon> \<nat>[256] \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> Currency\<close>
+\<Longrightarrow> x \<Ztypecolon> \<nat>[256] \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> Currency\<close>
   unfolding Currency_expn \<medium_left_bracket> \<medium_right_bracket>. .
 
 lemma [\<phi>reason 1000]:

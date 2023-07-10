@@ -31,7 +31,7 @@ fun extract_elim_rule ctxt0 erules thm0 =
                   Pretty.str "Going to extract elimination rule from:",
                   Syntax.pretty_term ctxt0 (Thm.prop_of thm0)
               ])
-     in (ctxt, Drule.compose (thm, 1, @{thm Do_Extract_Inhabitance_Rule}))
+     in (ctxt, Drule.compose (thm, 1, @{thm Do_Generate_Implication_Reasoning}))
       |> Phi_Reasoner.reason NONE
       |> (fn SOME (ctxt', ret) =>
             let val ret' = Tactical.REPEAT_DETERM (Thm.biresolution (SOME ctxt') false

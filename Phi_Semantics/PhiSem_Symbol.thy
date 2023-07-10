@@ -34,13 +34,13 @@ text \<open>There is no semantic instruction to make a symbol, because they are 
   known during compilation time.\<close>
 
 lemma "_intro_symbol_\<phi>app":
-  \<open>Void \<i>\<m>\<p>\<l>\<i>\<e>\<s> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
-  unfolding Imply_def \<phi>literal_def
+  \<open>Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
+  unfolding Transformation_def \<phi>literal_def
   by (clarsimp simp add: Symbol_expn Val_expn)
 
 lemma "_intro_symbol_":
-  \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S \<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
-  unfolding Imply_def \<phi>literal_def
+  \<open>S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
+  unfolding Transformation_def \<phi>literal_def
   by (clarsimp simp add: Symbol_expn Val_expn)
 
 

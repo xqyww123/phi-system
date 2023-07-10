@@ -8,6 +8,7 @@ theory Phi_Preliminary
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
   keywords "optional_translations" :: thy_decl
        and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl
+  abbrevs "<implies>" = "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
 begin
 
 declare [ [ML_debugger, ML_exception_debugger]]
@@ -203,25 +204,28 @@ subsection \<open>Some very Early Reasoning\<close>
 
 subsubsection \<open>Inhabitance Reasoning - Part I\<close>
 
-definition Extract_Inhabitance_Rule :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
-  where \<open>Extract_Inhabitance_Rule IN OUT_L OUT_R \<longleftrightarrow> (IN \<longrightarrow> OUT_L \<longrightarrow> OUT_R)\<close>
+definition Generate_Implication_Reasoning :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Generate_Implication_Reasoning IN OUT_L OUT_R \<longleftrightarrow> (IN \<longrightarrow> OUT_L \<longrightarrow> OUT_R)\<close>
 
 consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts\<close>
 
-declare [[\<phi>reason_default_pattern \<open>Extract_Inhabitance_Rule ?I _ _\<close>
-                                \<Rightarrow> \<open>Extract_Inhabitance_Rule ?I _ _\<close> (100)
+declare [[\<phi>reason_default_pattern \<open>Generate_Implication_Reasoning ?I _ _\<close>
+                                \<Rightarrow> \<open>Generate_Implication_Reasoning ?I _ _\<close> (100)
              and \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
              and \<open>?X \<longrightarrow> _ @action \<A>EIF\<close>
               \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
              and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (10)]]
 
-lemma Do_Extract_Inhabitance_Rule:
+abbreviation Inhabitance_Implication :: \<open>'a set \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>" 19)
+  where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> Inhabited S \<longrightarrow> P @action \<A>EIF\<close>
+
+lemma Do_Generate_Implication_Reasoning:
   \<open> IN
-\<Longrightarrow> Extract_Inhabitance_Rule IN OUT_L OUT_R
+\<Longrightarrow> Generate_Implication_Reasoning IN OUT_L OUT_R
 \<Longrightarrow> OUT_R \<longrightarrow> C @action \<A>EIF
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> OUT_L \<longrightarrow> C\<close>
-  unfolding Extract_Inhabitance_Rule_def Action_Tag_def
+  unfolding Generate_Implication_Reasoning_def Action_Tag_def
   by blast
 
 lemma Do_Extract_Implied_Facts:
@@ -235,9 +239,9 @@ lemma Do_Extract_Implied_Facts:
 ML_file \<open>library/tools/inhabited_rule.ML\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> Extract_Inhabitance_Rule P OL OR
-\<Longrightarrow> Extract_Inhabitance_Rule (P @action A) OL OR\<close>
-  unfolding Extract_Inhabitance_Rule_def Action_Tag_def .
+  \<open> Generate_Implication_Reasoning P OL OR
+\<Longrightarrow> Generate_Implication_Reasoning (P @action A) OL OR\<close>
+  unfolding Generate_Implication_Reasoning_def Action_Tag_def .
 
 lemma [\<phi>reason 1000]:
   \<open> A \<longrightarrow> A' @action \<A>EIF
@@ -263,14 +267,14 @@ lemma Inhabited_fallback_True:
   \<open> Inhabited X \<longrightarrow> True @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast
 
-\<phi>reasoner_ML Inhabited_fallback !2 (\<open>Inhabited _ \<longrightarrow> _ @action \<A>EIF\<close>) =
+\<phi>reasoner_ML Inhabited_fallback default 2 (\<open>Inhabited _ \<longrightarrow> _ @action \<A>EIF\<close>) =
 \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
   else SOME ((ctxt, @{thm Inhabited_fallback_True} RS sequent), Seq.empty)
 )\<close>
 
-lemma Extact_implied_facts_Iden[\<phi>reason !1]:
+lemma Extact_implied_facts_Iden[\<phi>reason default 1]:
   \<open> A \<longrightarrow> A @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast
 
@@ -408,7 +412,7 @@ subsection \<open>Convention of Syntax Priority\<close>
 text \<open>
 \<^item> 10: Labelled, Programming_CurrentConstruction, View_Shift_CurrentConstruction
       PendingConstruction, ToA_Construction, Argument tag
-\<^item> 12: View_Shift, Imply
+\<^item> 12: View_Shift, Transformation
 \<^item> 13: Remains
 \<^item> 14: ExSet
 \<^item> 15: Comma, Subjection

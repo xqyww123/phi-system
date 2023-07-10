@@ -169,10 +169,10 @@ lemma is_functional_I[intro!]:
   unfolding is_functional_def by blast
 
 lemma is_functional_imp:
-  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> S'
+  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'
 \<Longrightarrow> is_functional S'
 \<Longrightarrow> is_functional S\<close>
-  unfolding Imply_def is_functional_def
+  unfolding Transformation_def is_functional_def
   by blast
 
 lemma [\<phi>reason 1]:
@@ -385,7 +385,7 @@ ML_file \<open>library/syntax/procedure.ML\<close>
 section \<open>View Shift\<close>
 
 definition View_Shift
-    :: "assn \<Rightarrow> assn \<Rightarrow> bool \<Rightarrow> bool" ("(2_/ \<s>\<h>\<i>\<f>\<t>\<s> _/ \<a>\<n>\<d> _)" [13,13,13] 12)
+    :: "assn \<Rightarrow> assn \<Rightarrow> bool \<Rightarrow> bool" ("(2_/ \<s>\<h>\<i>\<f>\<t>\<s> _/ \<w>\<i>\<t>\<h> _)" [13,13,13] 12)
   where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<in> INTERP_SPEC (R * T) \<longrightarrow> x \<in> INTERP_SPEC (R * U) \<and> P)"
 
 abbreviation Simple_View_Shift
@@ -393,34 +393,34 @@ abbreviation Simple_View_Shift
   where \<open>Simple_View_Shift T U \<equiv> View_Shift T U True\<close>
 
 declare [[\<phi>reason_default_pattern
-    \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<a>\<n>\<d> _\<close> (10)
-and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<a>\<n>\<d> _\<close> (20)
-and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> (20)
-and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<a>\<n>\<d> _\<close> (30)
+    \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> _\<close> (10)
+and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> _\<close> (20)
+and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> (20)
+and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> (30)
 ]]
 
 lemma View_Shift_imply_P:
-  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P1
+  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> (P1 \<longrightarrow> P2)
-\<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P2\<close>
+\<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P2\<close>
   unfolding View_Shift_def
   by blast
 
 lemma view_shift_by_implication[intro?, \<phi>reason 10]:
-  \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> B \<a>\<n>\<d> P
-\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> B \<a>\<n>\<d> P\<close>
-  unfolding Imply_def View_Shift_def INTERP_SPEC_def
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P\<close>
+  unfolding Transformation_def View_Shift_def INTERP_SPEC_def
   by (clarsimp, metis set_mult_expn)
 
-lemma view_shift_0[\<phi>reason 2000 for \<open>0 \<s>\<h>\<i>\<f>\<t>\<s> ?X \<a>\<n>\<d> ?P\<close>]:
+lemma view_shift_0[\<phi>reason 2000 for \<open>0 \<s>\<h>\<i>\<f>\<t>\<s> ?X \<w>\<i>\<t>\<h> ?P\<close>]:
   \<open>0 \<s>\<h>\<i>\<f>\<t>\<s> X\<close>
   by (blast intro: view_shift_by_implication zero_implies_any)
 
-lemma view_shift_refl[\<phi>reason 2000 for \<open>?A \<s>\<h>\<i>\<f>\<t>\<s> ?B \<a>\<n>\<d> ?P\<close>]:
+lemma view_shift_refl[\<phi>reason 2000 for \<open>?A \<s>\<h>\<i>\<f>\<t>\<s> ?B \<w>\<i>\<t>\<h> ?P\<close>]:
   "A \<s>\<h>\<i>\<f>\<t>\<s> A"
   by (blast intro: view_shift_by_implication implies_refl)
 
-lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<s>\<h>\<i>\<f>\<t>\<s> ?y \<Ztypecolon> ?T' \<a>\<n>\<d> ?P\<close>]:
+lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<s>\<h>\<i>\<f>\<t>\<s> ?y \<Ztypecolon> ?T' \<w>\<i>\<t>\<h> ?P\<close>]:
   " Object_Equiv T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y
 \<Longrightarrow> x \<Ztypecolon> T \<s>\<h>\<i>\<f>\<t>\<s> y \<Ztypecolon> T"
@@ -428,30 +428,30 @@ lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<s>\<h>\<i>\<f>\<t>\<s> 
   by (insert view_shift_by_implication, presburger)
 
 lemma view_shift_union[\<phi>reason 800]:
-  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> X \<a>\<n>\<d> P
-\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> X + Y \<a>\<n>\<d> P\<close>
-  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P
-\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> X + Y \<a>\<n>\<d> P\<close>
+  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> X \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> X + Y \<w>\<i>\<t>\<h> P\<close>
+  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> X + Y \<w>\<i>\<t>\<h> P\<close>
   by (simp add: View_Shift_def distrib_left)+
 
 lemma \<phi>view_shift_trans:
-  "A \<s>\<h>\<i>\<f>\<t>\<s> B \<a>\<n>\<d> P
-    \<Longrightarrow> (P \<Longrightarrow> B \<s>\<h>\<i>\<f>\<t>\<s> C \<a>\<n>\<d> Q)
-    \<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> C \<a>\<n>\<d> P \<and> Q"
+  "A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P
+    \<Longrightarrow> (P \<Longrightarrow> B \<s>\<h>\<i>\<f>\<t>\<s> C \<w>\<i>\<t>\<h> Q)
+    \<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> C \<w>\<i>\<t>\<h> P \<and> Q"
   unfolding View_Shift_def by blast
 
 lemma \<phi>frame_view:
-  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> B \<a>\<n>\<d> P
-\<Longrightarrow> R * A \<s>\<h>\<i>\<f>\<t>\<s> R * B \<a>\<n>\<d> P\<close>
+  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * A \<s>\<h>\<i>\<f>\<t>\<s> R * B \<w>\<i>\<t>\<h> P\<close>
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc)
 
 lemma \<phi>view_shift_intro_frame:
-  "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<a>\<n>\<d> P \<Longrightarrow> R * U' \<s>\<h>\<i>\<f>\<t>\<s> R * U \<a>\<n>\<d> P "
+  "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> R * U' \<s>\<h>\<i>\<f>\<t>\<s> R * U \<w>\<i>\<t>\<h> P "
   by (simp add: \<phi>frame_view)
 
 lemma \<phi>view_shift_intro_frame_R:
-  "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<a>\<n>\<d> P \<Longrightarrow> U' * R \<s>\<h>\<i>\<f>\<t>\<s> U * R \<a>\<n>\<d> P "
+  "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> U' * R \<s>\<h>\<i>\<f>\<t>\<s> U * R \<w>\<i>\<t>\<h> P "
   by (simp add: \<phi>frame_view mult.commute)
 
 
@@ -487,22 +487,22 @@ lemma \<phi>Inhabited:
 subsubsection \<open>View Shift\<close>
 
 lemma \<phi>frame_view_right:
-  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> B \<a>\<n>\<d> P
-\<Longrightarrow> A * R \<s>\<h>\<i>\<f>\<t>\<s> B * R \<a>\<n>\<d> P\<close>
+  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A * R \<s>\<h>\<i>\<f>\<t>\<s> B * R \<w>\<i>\<t>\<h> P\<close>
   unfolding View_Shift_def
   by (metis (no_types, lifting) mult.assoc mult.commute)
 
 lemma \<phi>view_trans:
-  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> B \<a>\<n>\<d> P1
-\<Longrightarrow> (P1 \<Longrightarrow> B \<s>\<h>\<i>\<f>\<t>\<s> C \<a>\<n>\<d> P2)
-\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> C \<a>\<n>\<d> P1 \<and> P2\<close>
+  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P1
+\<Longrightarrow> (P1 \<Longrightarrow> B \<s>\<h>\<i>\<f>\<t>\<s> C \<w>\<i>\<t>\<h> P2)
+\<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> C \<w>\<i>\<t>\<h> P1 \<and> P2\<close>
   unfolding View_Shift_def by blast
 
 lemma \<phi>CONSEQ:
    "\<p>\<r>\<o>\<c> f \<lbrace> A  \<longmapsto> B  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> A' \<s>\<h>\<i>\<f>\<t>\<s> A \<a>\<n>\<d> Any1
-\<Longrightarrow> (\<And>ret. B ret \<s>\<h>\<i>\<f>\<t>\<s> B' ret \<a>\<n>\<d> Any2)
-\<Longrightarrow> (\<And>ex.  E ex \<s>\<h>\<i>\<f>\<t>\<s> E' ex \<a>\<n>\<d> Any3)
+\<Longrightarrow> A' \<s>\<h>\<i>\<f>\<t>\<s> A \<w>\<i>\<t>\<h> Any1
+\<Longrightarrow> (\<And>ret. B ret \<s>\<h>\<i>\<f>\<t>\<s> B' ret \<w>\<i>\<t>\<h> Any2)
+\<Longrightarrow> (\<And>ex.  E ex \<s>\<h>\<i>\<f>\<t>\<s> E' ex \<w>\<i>\<t>\<h> Any3)
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A' \<longmapsto> B' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' "
   unfolding \<phi>Procedure_def View_Shift_def subset_iff
   apply clarsimp
@@ -515,7 +515,7 @@ lemma \<phi>frame0:
   using \<phi>frame[where E=0, simplified, folded zero_fun_def] .
 
 lemma \<phi>CONSEQ'E:
-   "(\<And>v. E v \<s>\<h>\<i>\<f>\<t>\<s> E' v \<a>\<n>\<d> P3)
+   "(\<And>v. E v \<s>\<h>\<i>\<f>\<t>\<s> E' v \<w>\<i>\<t>\<h> P3)
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A  \<longmapsto> B  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A \<longmapsto> B \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' "
   using \<phi>CONSEQ view_shift_refl by blast
@@ -532,17 +532,17 @@ lemma \<phi>CASE:
   by (simp add: distrib_left)
 
 lemma \<phi>CASE_VS:
-  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P1
-\<Longrightarrow> B \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P2
-\<Longrightarrow> B + A \<s>\<h>\<i>\<f>\<t>\<s> Y \<a>\<n>\<d> P2 \<or> P1\<close>
+  \<open> A \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P1
+\<Longrightarrow> B \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> B + A \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P2 \<or> P1\<close>
   unfolding View_Shift_def
   by (simp add: distrib_left)
 
 lemma \<phi>CASE_IMP:
-  \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P1
-\<Longrightarrow> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P2
-\<Longrightarrow> B + A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Y \<a>\<n>\<d> P2 \<or> P1\<close>
-  unfolding Imply_def
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> B + A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P2 \<or> P1\<close>
+  unfolding Transformation_def
   by (simp add: distrib_left)
 
 

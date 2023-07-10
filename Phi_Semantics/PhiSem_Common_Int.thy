@@ -145,9 +145,9 @@ lemma synthesis_const:
 *)
 
 lemma synthesis_const_by_imp:
-  \<open> R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R\<heavy_comma> \<blangle> const \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal v] T \<brangle> @action synthesis
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> const \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal v] T \<brangle> @action synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal v) \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
-  unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def \<phi>literal_def Imply_def
+  unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def \<phi>literal_def Transformation_def
   by (clarsimp simp add: \<phi>expns)
 
 
@@ -156,7 +156,7 @@ lemma synthesis_const_by_imp:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
           (Trueprop (\<forall>vs::unit \<phi>arg. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. const \<Ztypecolon> T ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
           Ant
-          (X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<phi>V_none \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<a>\<n>\<d> Any1
+          (X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<phi>V_none \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> Any1
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<p>\<r>\<o>\<c> F \<phi>V_none \<lbrace> X' \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
            @action overloaded_synthesis)\<close>
@@ -169,7 +169,7 @@ lemma make_synthesis_rule'_for_const:
 \<Longrightarrow> PROP Gen_Synthesis_Rule
           (Trueprop (\<forall>vs::unit \<phi>arg. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
           Ant
-          (X' \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<phi>V_none \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<a>\<n>\<d> Any1
+          (X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<phi>V_none \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> Any1
        \<Longrightarrow> PROP Ant
        \<Longrightarrow> \<p>\<r>\<o>\<c> F \<phi>V_none \<lbrace> X' \<longmapsto> \<lambda>ret. R'\<heavy_comma> R\<heavy_comma> \<blangle> MK_CONST const \<Ztypecolon> T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
            @action synthesis)\<close>

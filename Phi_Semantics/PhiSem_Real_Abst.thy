@@ -149,7 +149,7 @@ subsubsection \<open>Constant\<close>
 
 lemma op_const_areal_\<phi>app[\<phi>synthesis 300]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real>\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real>\<close>
 \<medium_left_bracket>
   semantic_literal \<open>V_areal.mk x \<in> (x \<Ztypecolon> \<real>)\<close>
 \<medium_right_bracket> .

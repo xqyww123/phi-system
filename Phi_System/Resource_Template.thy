@@ -144,8 +144,8 @@ lemma [\<phi>reason 1300 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @ac
 
 
 (*
-lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?P @action (?Act::?'act::simplification action)\<close>]:
-  \<open>(x \<Ztypecolon> \<phi> \<circle>) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (() \<Ztypecolon> \<circle>) @action Act\<close>
+lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action (?Act::?'act::simplification action)\<close>]:
+  \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (() \<Ztypecolon> \<circle>) @action Act\<close>
   for Act :: \<open>'act::simplification action\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None
   by (simp add: implies_refl) *)
@@ -153,23 +153,23 @@ lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<i>\<m>\
 paragraph \<open>Reasoning Rules\<close>
 
 lemma \<phi>_cast[\<phi>reason add]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P\<close>
-  unfolding Imply_def by (clarsimp simp add: \<phi>expns)
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<w>\<i>\<t>\<h> P\<close>
+  unfolding Transformation_def by (clarsimp simp add: \<phi>expns)
 
 lemma \<phi>_Structural_Extract:
-  \<open> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> R \<a>\<n>\<d> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<a>\<n>\<d> P @action \<A>SE\<close>
+  \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
   unfolding Action_Tag_def
   by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
 
 declare \<phi>_Structural_Extract[(*THEN SE_clean_waste,*) \<phi>reason 1200]
 
 lemma [(*THEN SE_clean_waste',*) \<phi>reason 1211]:
-  \<open> x \<Ztypecolon> T \<^emph> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<^emph> R \<a>\<n>\<d>
-      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> T' \<^emph> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<a>\<n>\<d>
-      (Reverse_Transformation RP (y' \<Ztypecolon> \<phi> U' \<^emph> \<phi> R' \<i>\<m>\<p>\<l>\<i>\<e>\<s> x' \<Ztypecolon> \<phi> T' \<^emph> \<phi> W' \<a>\<n>\<d> P') \<and> P) @action \<A>SE\<close>
+  \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
+      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<w>\<i>\<t>\<h>
+      (Reverse_Transformation RP (y' \<Ztypecolon> \<phi> U' \<^emph> \<phi> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<phi> T' \<^emph> \<phi> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE\<close>
   unfolding Generated_Rule_def Action_Tag_def
   by (rule implies_weaken, defer_tac,
       rule \<phi>_Structural_Extract[unfolded Action_Tag_def], assumption,
@@ -196,33 +196,33 @@ declare ToSA_by_structural_extraction__reverse_transformation
      \<phi>reason 83 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
 
 
-lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<a>\<n>\<d> _\<close> ]:
-  " R \<i>\<m>\<p>\<l>\<i>\<e>\<s> R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d> P
-\<Longrightarrow> R \<heavy_comma> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<a>\<n>\<d> P"
+lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<w>\<i>\<t>\<h> _\<close> ]:
+  " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R \<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<w>\<i>\<t>\<h> P"
   unfolding Action_Tag_def FOCUS_TAG_def split_paired_All Action_Tag_def
   by (metis ab_semigroup_mult_class.mult_ac(1) implies_left_prod mult.commute)
 
 lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<a>\<n>\<d> P @action \<A>_structural Act
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<a>\<n>\<d> P @action \<A>_structural Act \<close>
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act \<close>
   unfolding Action_Tag_def using \<phi>_cast .
 
 lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Target
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> y \<Ztypecolon> \<phi> U \<s>\<u>\<b>\<j> y. r y \<a>\<n>\<d> P @action to Target \<close>
-  unfolding Action_Tag_def Imply_def
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Target
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Target \<close>
+  unfolding Action_Tag_def Transformation_def
   by (clarsimp simp add: \<phi>expns)
 
 
 lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>I (x \<Ztypecolon> T) P
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi> T) P \<close>
-  unfolding Identity_Element\<^sub>I_def Imply_def apply (simp add: \<phi>expns)
+  unfolding Identity_Element\<^sub>I_def Transformation_def apply (simp add: \<phi>expns)
   using mk_homo_one by blast
 
-lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<phi> _) (_ \<Ztypecolon> \<phi> _) \<i>\<m>\<p>\<l>\<i>\<e>\<s> _ @action branch_convergence\<close>]:
-  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> Z) @action branch_convergence
-\<Longrightarrow> If P (x \<Ztypecolon> \<phi> T) (y \<Ztypecolon> \<phi> U) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (z \<Ztypecolon> \<phi> Z) @action branch_convergence\<close>
+lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<phi> _) (_ \<Ztypecolon> \<phi> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action branch_convergence\<close>]:
+  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Z) @action branch_convergence
+\<Longrightarrow> If P (x \<Ztypecolon> \<phi> T) (y \<Ztypecolon> \<phi> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> \<phi> Z) @action branch_convergence\<close>
   unfolding Action_Tag_def by (cases P; simp add: \<phi>_cast)
 
 paragraph \<open>Conversion\<close>
@@ -254,7 +254,7 @@ lemma [\<phi>reason 1200 for
 
 (* lemma [\<phi>reason for \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?S1 \<longmapsto> \<lambda>ret. ?S2\<heavy_comma>  \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E\<close>]:
   \<open> SUBGOAL G G'
-\<Longrightarrow> S1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle>
+\<Longrightarrow> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle>
 \<Longrightarrow> SOLVE_SUBGOAL G'
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>_. S2\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<rbrace>\<close>
   unfolding FOCUS_TAG_def Synthesis_def Action_Tag_def
@@ -451,16 +451,16 @@ sublocale basic_fiction Res \<open>\<F>_optionwise \<F>_agree\<close> Fic
   by (standard; simp add: raw_domain)
 
 lemma double:
-  \<open>{mk x |x. P x} \<i>\<m>\<p>\<l>\<i>\<e>\<s> {mk x |x. P x} * {mk x |x. P x}\<close>
-  unfolding Imply_def
+  \<open>{mk x |x. P x} \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {mk x |x. P x} * {mk x |x. P x}\<close>
+  unfolding Transformation_def
   apply (clarsimp simp add: \<phi>expns mk_homo_mult[symmetric])
   subgoal for x'
     apply (rule exI[where x=\<open>mk x'\<close>], rule exI[where x=\<open>mk x'\<close>])
     by (cases x'; simp add: mk_homo_mult[symmetric]) .
 
 lemma contract:
-  \<open>{mk x |x. P x} * {mk x |x. P x} \<i>\<m>\<p>\<l>\<i>\<e>\<s> {mk x |x. P x} \<close>
-  unfolding Imply_def
+  \<open>{mk x |x. P x} * {mk x |x. P x} \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {mk x |x. P x} \<close>
+  unfolding Transformation_def
   apply (clarsimp simp add: \<phi>expns)
   subgoal for x y by (cases x; cases y; simp add: mk_homo_mult[symmetric]) .
 
@@ -476,7 +476,7 @@ declare ToSA_by_structural_extraction__reverse_transformation
 *)
 
 lemma \<phi>_double_\<phi>app:
-  \<open>x \<Ztypecolon> \<phi>_ag T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>
+  \<open>x \<Ztypecolon> \<phi>_ag T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T\<close>
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)
@@ -487,7 +487,7 @@ proof -
 qed
 
 lemma \<phi>_contract_\<phi>app:
-  \<open>x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<phi>_ag T\<close>
+  \<open>x \<Ztypecolon> \<phi>_ag T \<heavy_comma> x \<Ztypecolon> \<phi>_ag T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>_ag T\<close>
 proof -
   have \<open>\<exists>P. (x \<Ztypecolon> \<phi>_ag T) = {mk x |x. P x}\<close>
     unfolding set_eq_iff apply (simp add: \<phi>expns)

@@ -122,8 +122,8 @@ lemma semantic_return_\<phi>app:
 lemma semantic_literal_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<in> (y \<Ztypecolon> T))
 \<Longrightarrow> <\<phi>expn> v \<in> (y \<Ztypecolon> T)
-\<Longrightarrow> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> X\<heavy_comma> y \<Ztypecolon> Val (\<phi>literal v) T \<close>
-  unfolding Premise_def Imply_def \<phi>literal_def
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X\<heavy_comma> y \<Ztypecolon> Val (\<phi>literal v) T \<close>
+  unfolding Premise_def Transformation_def \<phi>literal_def
   by (clarsimp simp add: \<phi>expns)
 
 lemma semantic_local_value_\<phi>app:
@@ -135,14 +135,14 @@ lemma semantic_local_value_\<phi>app:
 
 subsection \<open>Drop & Duplicate Value\<close>
 
-lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?P @action action_dup\<close>]:
-  \<open>x \<Ztypecolon> Val raw T \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @action action_dup\<close>
-  unfolding Imply_def Action_Tag_def
+lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action action_dup\<close>]:
+  \<open>x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @action action_dup\<close>
+  unfolding Transformation_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> ?Y \<a>\<n>\<d> ?P @action action_drop\<close>]:
-  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Void @action action_drop\<close>
-  unfolding Imply_def Action_Tag_def
+lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action action_drop\<close>]:
+  \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @action action_drop\<close>
+  unfolding Transformation_def Action_Tag_def
   by (clarsimp simp add: \<phi>expns)
 
 
@@ -156,18 +156,18 @@ lemma throw_reduce_tail[procedure_simps,simp]:
   unfolding throw_def bind_def det_lift_def by simp
 
 lemma "__throw_rule__"[intro!]:
-  \<open> (\<And>a. X a \<i>\<m>\<p>\<l>\<i>\<e>\<s> X' a)
+  \<open> (\<And>a. X a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' a)
 \<Longrightarrow> \<p>\<r>\<o>\<c> (throw excep :: 'ret proc) \<lbrace> X excep \<longmapsto> Any \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> X'\<close>
-  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Imply_def
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Transformation_def
   apply clarsimp
-  by (meson Imply_def View_Shift_def view_shift_by_implication)
+  by (meson Transformation_def View_Shift_def view_shift_by_implication)
 
 lemma throw_\<phi>app:
   \<open> (\<And>v. Remove_Values (X v) (X' v))
 \<Longrightarrow> \<p>\<r>\<o>\<c> throw excep \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> X' \<close>
-  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Imply_def
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Transformation_def
   apply clarsimp
-  by (meson Imply_def View_Shift_def view_shift_by_implication)
+  by (meson Transformation_def View_Shift_def view_shift_by_implication)
 
 definition op_try :: "'ret proc \<Rightarrow> (ABNM \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'}

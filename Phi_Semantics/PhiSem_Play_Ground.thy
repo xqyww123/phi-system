@@ -16,7 +16,7 @@ begin
 
 lemma [\<phi>reason]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> of_int n / of_int d = x \<and> d \<noteq> 0
-\<Longrightarrow> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<i>\<m>\<p>\<l>\<i>\<e>\<s> x \<Ztypecolon> \<rat>\<close>
+\<Longrightarrow> (n,d) \<Ztypecolon> \<lbrace> \<int>, \<int> \<rbrace> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<rat>\<close>
   \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<rat>\<close> \<medium_right_bracket> .
 
 declare One_nat_def [simp del]
