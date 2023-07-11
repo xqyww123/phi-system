@@ -133,7 +133,7 @@ lemma \<phi>Any_expns[\<phi>expns]:
 
 lemma \<phi>Any_cast [\<phi>reason 1200]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>Any\<close>
-  \<medium_left_bracket> \<medium_right_bracket>
+  \<medium_left_bracket> \<medium_right_bracket>.
 
 
 

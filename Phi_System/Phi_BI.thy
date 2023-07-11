@@ -90,10 +90,12 @@ ML_file \<open>library/tools/simp_congruence.ML\<close>
 
 declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
-    fn _ => fn _ (*Trueprop*) $ (_ (*Action_Tag*) $ (_ (*imp*) $ (
-                _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _) =>
-      if is_Var x then NONE
-      else error "Bad form: In \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> the x must be a schematic variable."\<close> (1000)
+    fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ (_ (*imp*) $ (
+                            _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _)) =>
+      if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
+      then NONE
+      else error("Bad form: In \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> the x must be a schematic variable. But it gives\n" ^
+                 Context.cases Syntax.string_of_term_global Syntax.string_of_term ctxt tm)\<close> (1000)
 ]]
 
 

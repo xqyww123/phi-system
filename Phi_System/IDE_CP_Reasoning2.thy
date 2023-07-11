@@ -217,6 +217,7 @@ text \<open>Priority Convention:
 \<^item> 2600: Disjunction in target part; Default normalization in target part
         Divergence happens here!
         Existentially quantified variables are fixed here!
+\<^item> 2550: Universe
 \<^item> 2100: Padding void holes after the last item. Rules capturing the whole items including
         the last item in the \<open>\<^emph>\<close>-sequence should have priority higher than this.
 \<^item> 2000: Step-by-step searching
@@ -839,6 +840,31 @@ declare [[\<phi>reason 2600 ToSA_cond_target_B' ToSA_cond_target_A'
 
 hide_fact ToSA_cond_target_A' ToSA_cond_target_B'
 
+
+subsection \<open>Universe\<close>
+
+lemma [\<phi>reason 2550]:
+  \<open>Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<top>\<close>
+  unfolding Transformation_def by blast
+
+lemma [\<phi>reason 2555 if \<open>fn (ctxt,sequent) =>
+          case Thm.major_prem_of sequent
+            of _ (*Trueprop*) $ (_ (*transformation*) $ _ $ (_ (*times*) $ R $ _) $ _)
+               => let fun chk (Const(\<^const_name>\<open>times\<close>, _) $ X $ Const(\<^const_name>\<open>top\<close>, _)) = chk X
+                        | chk (Const(\<^const_name>\<open>top\<close>, _)) = false
+                        | chk _ = true
+                   in chk R
+                  end\<close>]:
+  \<open> Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<top> * R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<top> \<w>\<i>\<t>\<h> P\<close>
+  for Any :: \<open>'a::sep_ab_semigroup set\<close>
+  by (simp add: mult.commute)
+
+lemma [\<phi>reason 2549]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * UNIV \<w>\<i>\<t>\<h> P\<close>
+  unfolding Transformation_def
+  by (metis UNIV_I set_mult_expn)
 
 
 subsection \<open>Step-by-Step Searching Procedure\<close>
