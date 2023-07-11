@@ -289,7 +289,7 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                     Thm.string_of_thm ctxt rule)
       fun gen_rule num thm =
         if num = 0 then (@{thm implies_refl} RS thm) else
-        case Phi_Syntax.dest_implication (Thm.major_prem_of thm)
+        case Phi_Syntax.dest_transformation (Thm.major_prem_of thm)
           of (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ ,_,_)
                 => gen_rule num (@{thm Subjection_transformation} RS thm)
            | (Const (\<^const_name>\<open>ExSet\<close>, _) $ _ $ _ ,_,_)
@@ -301,7 +301,7 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                             of SOME (remove_rule, no_remove_rule) =>
                               let val rule = if remove then remove_rule else no_remove_rule
                                   val bi_prod_rule =
-                                        case Phi_Syntax.dest_implication (Thm.concl_of rule)
+                                        case Phi_Syntax.dest_transformation (Thm.concl_of rule)
                                           of (_,Const(\<^const_name>\<open>one_class.one\<close>,_),_) =>
                                                @{thm implies_prod_right_1}
                                            | _ => @{thm implies_prod_bi_prod}

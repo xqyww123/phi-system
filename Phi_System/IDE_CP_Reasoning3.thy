@@ -690,7 +690,7 @@ and [\<phi>reason add]*)
 (* [-----a-----][--d--]
    [--c--][-----b-----] 
    Give a, expect b; Need d, remain c.*)
-lemma SE_Near_Semimodule_adcb[(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
+lemma SE_Near_Semimodule_adcb[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
   \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
 \<Longrightarrow> Near_Semimodule_Functor_zip_rev F1 Ds Dx' z
 \<Longrightarrow> Parameter_Variant_of_the_Same_Functor F1 F3
@@ -711,7 +711,7 @@ lemma SE_Near_Semimodule_adcb[(*THEN SE_clean_waste,*) \<phi>reason_functor_temp
 declare [[\<phi>trace_reasoning = 0]]
 
 lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
-      [(*THEN SE_clean_waste',*) \<phi>reason_functor_template add]:
+      [(*THEN SE_clean_waste',*) \<phi>reason_template add]:
   \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
 \<Longrightarrow> Near_Semimodule_Functor_zip_rev F1 Ds Dx' z
 \<Longrightarrow> Near_Semimodule_Functor_zip F1' Ds Dx'' z'
@@ -759,7 +759,7 @@ lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
 (* [--d--][-----a-----]
    [-----b-----][--c--]
    Give a, expect b; Need d, remain c. *)
-lemma SE_Near_Semimodule_dabc[(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
+lemma SE_Near_Semimodule_dabc[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
   \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
 \<Longrightarrow> Near_Semimodule_Functor_zip F1 Ds Dx' z
 \<Longrightarrow> d + a = b + c @action non_trivial_partial_add_split
@@ -779,7 +779,7 @@ lemma SE_Near_Semimodule_dabc[(*THEN SE_clean_waste,*) \<phi>reason_functor_temp
 (* [---------a---------]
    [--d--][--b--][--c--]
    Give a, expect b, remain d, c. *) 
-lemma [(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
+lemma [(*THEN SE_clean_waste,*) \<phi>reason_template add]:
   \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
 \<Longrightarrow> a = d + b + c @action non_trivial_partial_add_split
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> d + b \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> d \<in> Ds \<and> d + b ##\<^sub>+ c \<and> d ##\<^sub>+ b
@@ -801,7 +801,7 @@ lemma [(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
 (* [--d--][--a--][--c--]
    [---------b---------]
    Give a, expect b, need d, c. *)
-lemma [(*THEN SE_clean_waste,*) \<phi>reason_functor_template add]:
+lemma [(*THEN SE_clean_waste,*) \<phi>reason_template add]:
   \<open> Near_Semimodule_Functor_zip F1 Ds Dx z
 \<Longrightarrow> Near_Semimodule_Functor_zip_rev F1 Ds Dx' z'
 \<Longrightarrow> d + a + c = b @action non_trivial_partial_add_split
@@ -1441,7 +1441,7 @@ text \<open>The merging recognizes two existential quantifier are identical if t
   let
     val ((Const (\<^const_name>\<open>If\<close>, _) $ _ $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exa,tya,_))
                                          $ (Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs (exb,tyb,_))), _, _)
-        = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
+        = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
     val sequent' = if exa = exb andalso tya = tyb
                    then @{thm Conv_Merge_Ex_both_imp} RS sequent
                    else @{thm Conv_Merge_Ex_R_imp} RS sequent
@@ -1536,7 +1536,7 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypec
 
 declare [[\<phi>trace_reasoning = 0]]
 
-lemma [\<phi>reason_functor_template add]:
+lemma [\<phi>reason_template add]:
   \<open> Functional_Transformation_Functor Fa Fz Da rma Prem_a pma ma
 \<Longrightarrow> Functional_Transformation_Functor Fb Fz Db rmb Prem_b pmb mb
 \<Longrightarrow> (P \<Longrightarrow> Prem_a)

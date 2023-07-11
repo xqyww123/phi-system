@@ -217,12 +217,11 @@ text \<open>Priority Convention:
 \<^item> 2600: Disjunction in target part; Default normalization in target part
         Divergence happens here!
         Existentially quantified variables are fixed here!
-\<^item> 2550: Universe
+\<^item> 2550: Top
 \<^item> 2100: Padding void holes after the last item. Rules capturing the whole items including
         the last item in the \<open>\<^emph>\<close>-sequence should have priority higher than this.
 \<^item> 2000: Step-by-step searching
-\<^item> \<le> 1999: Rules for searching specific object like value, variable, etc.
-\<^item> 1000: starts Structural Extraction
+\<^item> 1000 - 1999: Confident rules or shortcuts for specific \<phi>-types
 \<^item> 800:  Disjunction in target part
 \<^item> \<le> 80: Rules for general searching. This feature is disabled in view shift
           because most of the global-state-level components are configured
@@ -321,7 +320,7 @@ fn (ctxt0,sequent0) => Seq.make (fn () =>
         | scan1 ret (Var v) = (false, mk_one v :: ret)
         | scan1 _ _  = (false, [])
 
-      val (X,Y,P) = Phi_Syntax.dest_implication (Thm.major_prem_of sequent1)
+      val (X,Y,P) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent1)
       val (_, void_tails) = scan1 [] Y
       val sequent2 = (case void_tails of [] => sequent1 (*remove redundant void tails*)
                          | (_::voids') => Thm.instantiate (TVars.empty, Vars.make voids') sequent1)
@@ -340,7 +339,7 @@ fn (ctxt0,sequent0) => Seq.make (fn () =>
 
       fun add_focus_tag ctxt =
         Phi_Conv.leading_antecedent_conv (Phi_Conv.hhf_concl_conv (fn ctxt =>
-          Phi_Syntax.implication_conv Conv.all_conv (add_focus_tag' ctxt) Conv.all_conv
+          Phi_Syntax.transformation_conv Conv.all_conv (add_focus_tag' ctxt) Conv.all_conv
         ) ctxt)
 
       val sequent3 = if null void_tails then sequent2
@@ -384,7 +383,7 @@ ML \<open>
 fun ToSA_to_wild_card ctxt thm =
   let val (vs, _, goal) = Phi_Help.leading_antecedent (Thm.prop_of thm)
       val N = length vs
-      val (X,Y0,_) = Phi_Syntax.dest_implication goal
+      val (X,Y0,_) = Phi_Syntax.dest_transformation goal
       val Y = case Y0 of Const(\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ x) => x
                        | _ => Y0
       val \<^Type>\<open>set \<open>TY\<close>\<close> = Term.fastype_of Y
@@ -538,7 +537,7 @@ declare ToA_ex_intro'
 
 \<phi>reasoner_ML ToA_ex_intro 2600 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ExSet _ \<brangle> \<w>\<i>\<t>\<h> _\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
-  let val (_, X'', _) = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
+  let val (_, X'', _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
       fun parse (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) = (false, ty, X)
         | parse (Const(\<^const_name>\<open>times\<close>, _) $ _ $ (
                     Const(\<^const_name>\<open>FOCUS_TAG\<close>, _) $ (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X)))
@@ -650,7 +649,7 @@ subsection \<open>Zero\<close>
         | collect L (Var (V, T)) = AList.update (op =) (V, Const (\<^const_name>\<open>zero_class.zero\<close>, T)) L
         | collect L (X $ _) = collect L X
         | collect L _ = L
-      val (_,X,_) = Phi_Syntax.dest_implication (Thm.major_prem_of sequent)
+      val (_,X,_) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
       val sequent' = Drule.infer_instantiate ctxt
                         (collect [] X |> map (apsnd (Thm.cterm_of ctxt))) sequent
       val sequent'2 = (@{thm zero_implies_any} RS sequent')
@@ -841,7 +840,7 @@ declare [[\<phi>reason 2600 ToSA_cond_target_B' ToSA_cond_target_A'
 hide_fact ToSA_cond_target_A' ToSA_cond_target_B'
 
 
-subsection \<open>Universe\<close>
+subsection \<open>Top\<close>
 
 lemma [\<phi>reason 2550]:
   \<open>Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<top>\<close>
@@ -860,11 +859,19 @@ lemma [\<phi>reason 2555 if \<open>fn (ctxt,sequent) =>
   for Any :: \<open>'a::sep_ab_semigroup set\<close>
   by (simp add: mult.commute)
 
-lemma [\<phi>reason 2549]:
+lemma [\<phi>reason 2550]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * UNIV \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<top> \<w>\<i>\<t>\<h> P\<close>
   unfolding Transformation_def
   by (metis UNIV_I set_mult_expn)
+
+lemma [\<phi>reason 2551]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<top> \<w>\<i>\<t>\<h> P\<close>
+  for A :: \<open>'a::sep_monoid set\<close>
+  unfolding Transformation_def
+  by (metis UNIV_I mult_1_class.mult_1_right set_mult_expn)
+  
 
 
 subsection \<open>Step-by-Step Searching Procedure\<close>
@@ -938,8 +945,9 @@ consts ToA_Annotation :: \<open>'a \<Rightarrow> 'a\<close>
       a fallback here handles it.\<close>
   unfolding FOCUS_TAG_def Action_Tag_def . *)
 
+subsection \<open>Confident Rules for Specific \<phi>-Types\<close>
 
-subsection \<open>Annotations\<close>
+subsubsection \<open>FOCUS_TAG\<close>
 
 lemma [\<phi>reason 2000]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 * \<blangle> X \<brangle> \<w>\<i>\<t>\<h> P
@@ -953,7 +961,7 @@ lemma [\<phi>reason 2000]:
   by (simp add: \<phi>expns)
 
 
-subsection \<open>Value\<close>
+subsubsection \<open>Value\<close>
 
 text \<open>The rules require the same values are alpha-beta-eta-conversible. \<close>
 text \<open>Priority shouldn't exceed 2000.\<close>
@@ -1155,6 +1163,7 @@ lemma [\<phi>reason 3001 for \<open>_ \<Ztypecolon> ?T \<^emph> _ \<t>\<r>\<a>\<
   by (cases x; simp add: \<phi>Prod_expn')
 
 
+
 subsection \<open>Fall back\<close>
 
 (*
@@ -1307,9 +1316,8 @@ lemma [(*THEN SE_clean_waste',*) \<phi>reason 1201]:
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using Structural_Extract_\<phi>Prod_left_b .
 
-subsection \<open>Entry Point\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+subsection \<open>Entry Point\<close>
    
 lemma enter_SE [\<phi>reason !81 for \<open> _ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ \<close>]:
   \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P1 @action \<A>SE
@@ -1322,7 +1330,6 @@ lemma enter_SE [\<phi>reason !81 for \<open> _ * (_ \<Ztypecolon> _) \<t>\<r>\<a
 
 declare enter_SE [THEN ToA_by_Equive_Class',
                   \<phi>reason !80 for \<open> _ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ \<close>]
-
 
 lemma [\<phi>reason 2000]:
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 * \<blangle> X \<brangle> \<w>\<i>\<t>\<h> Auto_Transform_Hint (y \<Ztypecolon> Y) Ret \<and> P
@@ -1390,9 +1397,9 @@ lemma "_Structural_Extract_general_rule_":
     apply_Separation_Functor_unzip
   \<medium_right_bracket> . 
  
-declare "_Structural_Extract_general_rule_"[(*THEN SE_clean_waste,*) \<phi>reason_functor_template 80]
+declare "_Structural_Extract_general_rule_"[(*THEN SE_clean_waste,*) \<phi>reason_template 80]
 
-lemma "_Structural_Extract_general_rule'_"[(*THEN SE_clean_waste',*) \<phi>reason_functor_template 82]:
+lemma "_Structural_Extract_general_rule'_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
   \<open> Functional_Transformation_Functor F14 F23 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
@@ -1424,9 +1431,9 @@ lemma "_Structural_Extract_general_rule_b_":
     \<medium_left_bracket> Tr \<medium_right_bracket>
   \<medium_right_bracket> .
 
-declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>reason_functor_template 80]
+declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>reason_template 80]
 
-lemma "_Structural_Extract_general_rule'_b_"[(*THEN SE_clean_waste',*) \<phi>reason_functor_template 82]:
+lemma "_Structural_Extract_general_rule'_b_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
   \<open> Functional_Transformation_Functor F14 F3 Dom mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Type_Variant_of_the_Same_Functor F3 F3'
@@ -1472,7 +1479,7 @@ lemma SE_general_Scala_Seminearing_left: (*need test, to be tested once we have 
     fold F3D
   \<medium_right_bracket> .
 
-declare SE_general_Scala_Seminearing_left[(*THEN SE_clean_waste,*) \<phi>reason_functor_template add 60]
+declare SE_general_Scala_Seminearing_left[(*THEN SE_clean_waste,*) \<phi>reason_template add 60]
 
 lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we have usable test case*)
   \<open> Scala_Semimodule_Functor F3 U Ds
@@ -1500,7 +1507,7 @@ lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we hav
     fold F3D
   \<medium_right_bracket> .
 
-declare SE_general_Scala_Seminearing_left_b[(*THEN SE_clean_waste,*) \<phi>reason_functor_template add 60]
+declare SE_general_Scala_Seminearing_left_b[(*THEN SE_clean_waste,*) \<phi>reason_template add 60]
 
 
 

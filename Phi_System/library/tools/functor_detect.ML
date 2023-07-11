@@ -85,11 +85,11 @@ val get_type_info : Context.generic -> string (*const name*) -> phi_type option
 
 type priority = int
 type deriver_name = string
-type derive = hints -> phi_type -> generic_theory -> generic_theory
+type derive = phi_type -> generic_theory -> generic_theory
 type deriver = {
   priority: priority,
   dependences: deriver_name list,
-  derive: derive
+  derive: hints -> derive
 }
 
 val get_deriver : Context.generic -> deriver_name -> deriver
@@ -121,6 +121,9 @@ val deriving_parser : deriving_ast list parser
 val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 (* Tools *)
+
+val is_Type_Opr : typ -> bool
+val assert_Type_Opr : string -> typ -> unit
 
 (*make inductively destruction rule.*)
 val mk_ind_dest_ToA : Proof.context -> phi_type -> (term (*x*) * term (*T*) -> term) -> thm
@@ -378,7 +381,8 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
         | get_prop_kinds [] = []
       val prop_kinds = get_prop_kinds (Thm.prems_of rule)
       val _ = List.app (assert_property_kind thy) additional_props
-      fun impl props (the_functor, _) ctxt =
+      exception Inst_Fail
+      fun impl props _ ctxt =
             let val ctxt' = Context.proof_of ctxt
                 fun do_reason rule =
                       if exists (fn _ $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => true | _ => false)
@@ -395,7 +399,16 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
                        in Variable.export ctxt'1 ctxt
                             (map (Simplifier.asm_lr_simplify ctxt's) rules'1)
                       end
-                val rule'2 = (rule OF props)
+                val rule'1 = (rule OF props)
+                      handle THM _ => let open Pretty in
+                          Phi_Reasoner.info_pretty ctxt' 2 (fn () =>
+                            chunks (block (str "Mismatch in instantiating a reasoning rule " :: here pos) ::
+                              item [Thm.pretty_thm ctxt' rule] ::
+                              map (fn rule => item [Thm.pretty_thm ctxt' rule]) props
+                            )) ;
+                          raise Inst_Fail
+                        end
+                val rule'2 = rule'1
                           |> do_reason
                           |> singleton (simplify ctxt') 
                 val rule' = rule'2
@@ -414,6 +427,7 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
                             "Instantiate reasoning rule for \<phi>-type operator ")
              in Phi_Reasoner.add_intro_rule pos mode priority pats guard [rule'] ctxt
             end
+            handle Inst_Fail => ctxt
       val automation = property_dependent_setup (prop_kinds, additional_props) impl
 
       val properties = Properties.get ctxt
@@ -446,7 +460,7 @@ val _ = Theory.setup (
   Attrib.setup \<^binding>\<open>\<phi>type_property\<close> (Scan.succeed (Thm.declaration_attribute (add_property' Position.none)))
     "Declare a \<phi>-type property that will be used to instantiate automation"
 
-#>Attrib.setup \<^binding>\<open>\<phi>reason_functor_template\<close> (
+#>Attrib.setup \<^binding>\<open>\<phi>reason_template\<close> (
     Phi_Reasoner.attr_syntax
       (Scan.optional (
           Scan.lift (\<^keyword>\<open>requires\<close>) |-- (Parse.and_list' (Scan.repeat (Args.const {proper=true,strict=true})) >> flat)) [])
@@ -462,6 +476,7 @@ val _ = Theory.setup (
 
 val introN = "intro"
 val unfoldN = "unfold"
+val expansionN = "expansion"
 
 datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
              | WFREC_DEF  of string * Function.info
@@ -665,11 +680,11 @@ fun fix_phi_term_params phi_term ctxt =
 
 type priority = int
 type deriver_name = string
-type derive = hints -> phi_type -> generic_theory -> generic_theory
+type derive = phi_type -> generic_theory -> generic_theory
 type deriver = {
   priority: priority,
   dependences: deriver_name list,
-  derive: hints -> phi_type -> generic_theory -> generic_theory
+  derive: hints -> derive
 }
 
 structure Derivers = Generic_Data (
@@ -842,16 +857,21 @@ val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |-- Pa
 val patterns_parse = Scan.optional (\<^keyword>\<open>for\<close> |-- \<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> ) []
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<close>
           "declare deriver deriving properties when defining a \<phi>-type"
-    (Parse.binding -- Parse.int -- dependences_parse -- patterns_parse --| \<^keyword>\<open>=\<close> -- Parse.ML_source
- >> (fn ((((name,priority),deps),raw_binding_terms),ML) => Toplevel.theory (fn thy =>
-   let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := SOME ((" @
-                  ML_Lex.read_source ML @
-                  ML_Lex.read "): Phi_Type_Algebra.derive)"
-       val derive = Synchronized.change_result ML_sender_locker (fn () => let
-              val _ = ML_Context.expression (Input.pos_of ML) expr (Context.Theory thy)
-              val ret = the (!ML_sender)
-               in (ret, ML_sender := NONE)
-              end)
+    (Parse.binding -- Parse.int -- dependences_parse -- patterns_parse -- (Scan.option (\<^keyword>\<open>=\<close> |-- Parse.ML_source))
+ >> (fn ((((name,priority),deps),raw_binding_terms),ML') => Toplevel.theory (fn thy =>
+   let 
+       val derive =
+            case ML' of SOME ML =>
+                let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := SOME ((" @
+                               ML_Lex.read_source ML @
+                               ML_Lex.read "): Phi_Type_Algebra.hints -> Phi_Type_Algebra.derive)"
+                 in Synchronized.change_result ML_sender_locker (fn () => let
+                      val _ = ML_Context.expression (Input.pos_of ML) expr (Context.Theory thy)
+                      val ret = the (!ML_sender)
+                       in (ret, ML_sender := NONE)
+                      end)
+                end
+              | NONE => K (K I)
        val deriver = {
           priority = priority,
           dependences = map (fn dep => fst (check_deriver (Context.Theory thy) dep)) deps,
@@ -870,6 +890,20 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
 (*** \<phi>-Type Definition Part II ***)
 
 (** Tools **)
+
+fun is_Type_Opr ty =
+  (case dest_parameterized_phi_ty ty
+     of ([],_,_) => false
+      | ((arg_ty::_),_,_) => (
+   case dest_parameterized_phi_ty arg_ty
+     of ([],_,_) => true
+      | _ => false)
+   handle TYPE _ => false)
+
+fun assert_Type_Opr prop_name ty =
+  if is_Type_Opr ty then ()
+  else error ("Fail to derive " ^ prop_name ^ " : Not a \<phi>-type operator!")
+
 
 fun chk_zero_index_thm thm =
   if Thm.maxidx_of thm <= 0
@@ -967,10 +1001,21 @@ fun add_type (def, pos, dervs) generic =
             |> Conv.fconv_rule (add_premise_tag ctxt)
             |> Phi_Help.beta_eta_contract
 
-      val intro_ToA = map (fn eq => (eq RS @{thm \<phi>intro_transformation})
-                                 |> Conv.fconv_rule (add_premise_tag ctxt)
-                                 |> Drule.zero_var_indexes
-                                 |> Phi_Help.beta_eta_contract) eqs
+      fun gen_from_eqs rule f =
+            map (fn eq => (eq RS' (ctxt, rule))
+                       |> f
+                       |> Drule.zero_var_indexes
+                       |> Phi_Help.beta_eta_contract) eqs
+      val intro_ToA = gen_from_eqs @{thm' \<phi>intro_transformation}
+                              (Conv.fconv_rule (add_premise_tag ctxt))
+      val intro'R_ToA = gen_from_eqs @{thm' \<phi>intro'_transformation}
+                              (Conv.fconv_rule (add_premise_tag ctxt))
+                        handle THM _ => []
+      val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
+                              (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                                  Conv.arg_conv (Simplifier.rewrite (
+                                      Phi_Expansions.enhance (Simplifier.clear_simpset ctxt)))
+                                ) ctxt))
 
       val proof_id =
         case term of Const _ => fst name_ty
@@ -996,8 +1041,10 @@ fun add_type (def, pos, dervs) generic =
    |> Phi_Help.generic_theory_mapping (fn m =>
         Phi_Reasoner.add_intro_rules (map (fn rule =>
             ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 30, [], [], NONE)
-        ) intro_ToA))
-   |> note_properties phi_type [(unfoldN, eqs), (introN, intro_ToA)]
+        ) (intro'R_ToA @ intro_ToA))
+     #> Phi_Expansions.add_simps (Morphism.fact m expansions)
+     #> Simplifier.map_ss (fn ctxt => ctxt addsimps expansions))
+   |> note_properties phi_type [(unfoldN, eqs), (introN, intro_ToA), (expansionN, expansions)]
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)
    |> derive_properties dervs phi_type

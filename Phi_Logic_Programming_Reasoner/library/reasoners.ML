@@ -117,26 +117,30 @@ fun context_tactic_to_state_transition tac fail ctxt sequent =
 
 (*** Defer ***)
 
-fun obligation_collect ctm =
+structure Is_Premise_of_Obligation = Handlers ( type arg = term; type ret = bool )
+structure Local_Premises_of_Obligation = Named_Thms (
+  val name = \<^binding>\<open>__local_premise_of_obligation__\<close>
+  val description = "Facts inside will be added as premises into proof obligations"
+)
+
+fun is_premise_of_obligation ctxt tm =
+  case Is_Premise_of_Obligation.invoke (Context.Proof ctxt) tm
+    of SOME ret => ret
+     | NONE => (case tm of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _) => true
+                         | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _) $ _) => true
+                         | _ => false)
+
+fun obligation_collect filter ctm =
   Phi_Help.lambda_normalization_conv (fn ctm =>
     case Thm.term_of ctm
       of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
             Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
-       | Const(\<^const_name>\<open>Pure.imp\<close>, _)
-            $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                  Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _))
-            $ _
-           => (Conv.arg_conv obligation_collect then_conv
-               Conv.rewr_conv @{thm contract_premise_imp}) ctm
-       | Const(\<^const_name>\<open>Pure.imp\<close>, _)
-            $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                  Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _) $ _))
-            $ _
-           => (Conv.arg_conv obligation_collect then_conv
-               Conv.rewr_conv @{thm contract_premise_imp}) ctm
-       | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
-           => (Conv.arg_conv obligation_collect then_conv
-               Conv.rewr_conv @{thm conjunction_imp[symmetric]}) ctm
+       | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ Pr $ _
+           => if filter Pr
+              then (Conv.arg_conv (obligation_collect filter) then_conv
+                    Conv.rewr_conv @{thm' contract_premise_imp}) ctm
+              else (Conv.arg_conv (obligation_collect filter) then_conv
+                    Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm
        | _ => raise CTERM ("unexpected proof obligation form", [ctm])
   ) ctm
 
@@ -190,9 +194,16 @@ fun obligation_intro_Ex_conv ctxt thm =
   ) thm
 
 fun collect_obligation_premises ctxt thm = let open Conv
+  val filter = is_premise_of_obligation ctxt
   val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (K (
-                obligation_collect then_conv Conv.rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
+                obligation_collect filter then_conv
+                rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
               ) 1 thm
+           |> fold (fn prem => fn sequent =>
+                let val prem' = fconv_rule (rewr_conv @{thm Pure.prop_def[symmetric]}) prem
+                 in prem' RS (@{thm' contract_add_additional_prems} RS sequent)
+                end
+              ) (Local_Premises_of_Obligation.get ctxt)
    in (@{thm contract_drop_waste} RS rule1)
    |> gconv_rule (obligation_conv_all ctxt) 1
    |> Config.get ctxt existential_obligation > 0 ? obligation_intro_Ex_conv ctxt

@@ -15,6 +15,7 @@ open Phi_Conv
 fun action_tag_conv C ctm =
   case Thm.term_of ctm
     of Const (\<^const_name>\<open>Action_Tag\<close> , _) $ _ $ _ => Conv.arg1_conv C ctm
+     | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (Conv.arg1_conv C) ctm
      | _ => raise CTERM ("action_tag_conv", [ctm])
 
 fun may_action_tag_conv C ctm =

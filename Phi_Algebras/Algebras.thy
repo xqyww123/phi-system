@@ -1811,7 +1811,7 @@ definition "times_set P Q = { x * y | x y. x \<in> P \<and> y \<in> Q \<and> x #
 instance ..
 end
 
-lemma times_set_I:
+lemma times_set_I[simp]: (*TODO: dangerous? ? I just added this to simp*)
   \<open>x \<in> P \<Longrightarrow> y \<in> Q \<Longrightarrow> x ## y \<Longrightarrow> x * y \<in> P * Q\<close>
   unfolding times_set_def by simp blast
 

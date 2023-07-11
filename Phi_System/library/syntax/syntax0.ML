@@ -11,9 +11,9 @@ include PHI_SYNTAX
   val dest_view_shift   : term  -> term * term * term
   val dest_view_shift_c : cterm -> cterm * cterm * cterm
 
-  val dest_implication   : term  -> term * term * term
-  val dest_implication_c : cterm -> cterm * cterm * cterm
-  val implication_conv : conv -> conv -> conv -> conv
+  val dest_transformation   : term  -> term * term * term
+  val dest_transformation_c : cterm -> cterm * cterm * cterm
+  val transformation_conv : conv -> conv -> conv -> conv
 
   val strip_separations : term -> term list
   val mk_separations : term list -> term
@@ -25,6 +25,9 @@ include PHI_SYNTAX
   val mk_phi_type : term * term -> term
   val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
   val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
+
+  val ExSet_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
+  val Subjection_conv : conv -> conv -> conv
 
 end
 
@@ -64,15 +67,15 @@ val dest_view_shift_c  =
          dest_tags_c
       #> dest_triop_c @{const_name View_Shift}
 
-val dest_implication   =
+val dest_transformation   =
          dest_tags
       #> dest_triop @{const_name "Transformation"}
-val dest_implication_c =
+val dest_transformation_c =
          dest_tags_c
       #> dest_triop_c @{const_name "Transformation"}
 
-fun implication_conv C_s C_t C_p ctm = (
-  dest_implication_c ctm;
+fun transformation_conv C_s C_t C_p ctm = (
+  dest_transformation_c ctm;
   Phi_Conv.may_Trueprop_conv (
     Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p) ctm
 )
@@ -101,5 +104,12 @@ fun dest_phi_type_ty_c T =
   (dest_phi_type_ty (Thm.typ_of T) ;
    (Thm.dest_ctyp0 T, dest_ctyp0 (dest_ctyp1 T)))
 
+val ExSet_conv = Phi_Conv.quant_conv \<^const_name>\<open>ExSet\<close>
+fun Subjection_conv CX CP ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ =>
+       (Conv.arg1_conv CX then_conv
+        Conv.arg_conv CP) ctm
+     | _ => raise CTERM ("Subjection_conv", [ctm])
 
 end

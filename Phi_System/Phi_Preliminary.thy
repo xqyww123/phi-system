@@ -15,7 +15,11 @@ declare [ [ML_debugger, ML_exception_debugger]]
 
 subsection \<open>Named Theorems\<close>
 
-named_theorems \<phi>expns \<open>Semantics Expansions, used to expand assertions semantically.\<close>
+ML \<open>structure Phi_Expansions = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = \<^binding>\<open>\<phi>expns\<close>
+  val comment = "Semantics Expansions, used to expand assertions semantically."
+)\<close>
 
 declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 
@@ -268,10 +272,10 @@ lemma [\<phi>inhabitance_rule 1000]:
   using set_mult_inhabited by blast
 
 lemma Inhabited_fallback_True:
-  \<open> Inhabited X \<longrightarrow> True @action \<A>EIF \<close>
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
   unfolding Action_Tag_def by blast
 
-\<phi>reasoner_ML Inhabited_fallback default 2 (\<open>Inhabited _ \<longrightarrow> _ @action \<A>EIF\<close>) =
+\<phi>reasoner_ML Inhabited_fallback default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) =
 \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)

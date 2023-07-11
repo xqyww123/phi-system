@@ -74,7 +74,8 @@ translations
 definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
 
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
-  unfolding CurrentConstruction_def Inhabited_def by (clarsimp simp add: \<phi>expns; blast)
+  unfolding CurrentConstruction_def Inhabited_def 
+  by (clarsimp simp add: INTERP_SPEC set_mult_expn; blast)
 
 definition ToA_Construction :: \<open>'a \<Rightarrow> 'a set \<Rightarrow> bool\<close> ("\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>'(_') \<i>\<s> _" [11,11] 10)
   where \<open>ToA_Construction = (\<in>)\<close>
@@ -177,7 +178,7 @@ lemma \<phi>make_view_shift:
   \<open> (\<And>s R. \<v>\<i>\<e>\<w> s [R] \<i>\<s> S \<Longrightarrow> (\<v>\<i>\<e>\<w> s [R] \<i>\<s> S' \<s>\<u>\<b>\<j> P))
 \<Longrightarrow> S \<s>\<h>\<i>\<f>\<t>\<s> S' \<w>\<i>\<t>\<h> P\<close>
   unfolding CurrentConstruction_def View_Shift_def
-  by (simp add: INTERP_SPEC_subj Subjection_expn)
+  by (simp add: INTERP_SPEC_subj)
 
 
 subsection \<open>Construct Implication\<close>
@@ -185,7 +186,7 @@ subsection \<open>Construct Implication\<close>
 lemma "\<phi>make_implication":
   \<open>(\<And>x. \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T \<s>\<u>\<b>\<j> P) \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P\<close>
   unfolding Transformation_def ToA_Construction_def
-  by (simp add: Subjection_expn)
+  by simp
 
 subsection \<open>Cast\<close>
 
@@ -194,7 +195,7 @@ lemma \<phi>apply_view_shift:
 \<Longrightarrow> S \<s>\<h>\<i>\<f>\<t>\<s> S' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
   unfolding CurrentConstruction_def View_Shift_def
-  by (simp_all add: split_paired_all \<phi>expns)
+  by (simp_all add: split_paired_all)
 
 lemmas \<phi>apply_implication = \<phi>apply_view_shift[OF _ view_shift_by_implication]
 
@@ -203,14 +204,14 @@ lemma \<phi>apply_view_shift_pending:
 \<Longrightarrow> (\<And>x. T x \<s>\<h>\<i>\<f>\<t>\<s> T' x \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> PendingConstruction f blk H T' E"
   unfolding PendingConstruction_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_comp_All)
+  by (clarsimp simp add: LooseStateSpec_expn' subset_iff split_comp_All)
 
 lemma \<phi>apply_view_shift_pending_E:
   " PendingConstruction f blk H T E
 \<Longrightarrow> (\<And>x. E x \<s>\<h>\<i>\<f>\<t>\<s> E' x \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> PendingConstruction f blk H T E'"
   unfolding PendingConstruction_def View_Shift_def
-  by (clarsimp simp add: \<phi>expns LooseStateSpec_expn' subset_iff split_comp_All)
+  by (clarsimp simp add: LooseStateSpec_expn' subset_iff split_comp_All)
 
 lemmas \<phi>apply_implication_pending =
   \<phi>apply_view_shift_pending[OF _ view_shift_by_implication]
@@ -330,7 +331,7 @@ paragraph \<open>Fact Store\<close>
 
 lemma [\<phi>programming_simps]:
   "CurrentConstruction mode s H (T \<s>\<u>\<b>\<j> P) \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> P"
-  unfolding CurrentConstruction_def by (simp_all add: \<phi>expns split_paired_all)
+  unfolding CurrentConstruction_def by (simp_all add: INTERP_SPEC_subj split_paired_all)
 
 lemma [\<phi>programming_simps]:
   "(CurrentConstruction mode s H T \<and> B) \<and> C \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> (B \<and> C)"
@@ -338,7 +339,7 @@ lemma [\<phi>programming_simps]:
 
 lemma [\<phi>programming_simps]:
   \<open>(\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T \<s>\<u>\<b>\<j> P) \<longleftrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P\<close>
-  unfolding ToA_Construction_def by (simp add: Subjection_expn)
+  unfolding ToA_Construction_def by simp
 
 lemma [\<phi>programming_simps]:
   \<open>((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> B) \<and> C \<longleftrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> (B \<and> C)\<close>
@@ -348,11 +349,11 @@ paragraph \<open>Fixing Existentially Quantified Variable\<close>
 
 lemma \<phi>ExTyp_strip:
   "(CurrentConstruction mode p H (ExSet T)) \<equiv> (\<exists>c. CurrentConstruction mode p H (T c))"
-  unfolding CurrentConstruction_def atomize_eq by (simp_all add: \<phi>expns split_paired_all)
+  unfolding CurrentConstruction_def atomize_eq by (simp_all add: INTERP_SPEC_ex split_paired_all)
 
 lemma \<phi>ExTyp_strip_imp:
   \<open>ToA_Construction s (ExSet T) \<equiv> (\<exists>c. ToA_Construction s (T c))\<close>
-  unfolding ToA_Construction_def by (simp add: \<phi>expns)
+  unfolding ToA_Construction_def by simp
 
 paragraph \<open>Introducing Existential Quantification\<close>
 
@@ -382,7 +383,7 @@ lemma introduce_Ex_ToA:
 lemma introduce_Ex_ToA_subj:
   \<open> ToA_Construction s (S x \<s>\<u>\<b>\<j> Q)
 \<Longrightarrow> ToA_Construction s (ExSet S \<s>\<u>\<b>\<j> Q) \<close>
-  by (metis Subjection_Flase Subjection_True introduce_Ex_ToA)
+  by (metis (full_types) Subjection_Flase Subjection_True introduce_Ex_ToA)
 
 lemma introduce_Ex_ToA_subj_P:
   \<open> ToA_Construction s (X \<s>\<u>\<b>\<j> S x)
@@ -398,12 +399,12 @@ lemma \<phi>M_Success[intro!]: (*depreciated?*)
   \<open> v \<in> (y \<Ztypecolon> T)
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
-  by (clarsimp simp add: \<phi>expns)
+  by (clarsimp simp add: Val_expn)
 
 declare \<phi>M_Success[where X=1, simplified, intro!]
 
 lemma \<phi>M_Success'[intro!]:
   \<open> \<p>\<r>\<o>\<c> Return vs \<lbrace> X vs \<longmapsto> X \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
-  unfolding Return_def \<phi>Procedure_def det_lift_def by (clarsimp simp add: \<phi>expns)
+  unfolding Return_def \<phi>Procedure_def det_lift_def by clarsimp
 
 end

@@ -290,13 +290,15 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
               end) prems
   in
     stat
+      |> Proof.map_context (Config.put phi_allow_source_object_to_be_not_variable true)
       |> Proof.internal_goal (print_results int) Proof_Context.mode_schematic true
           "" NONE after_qed []
           (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems)
           [(Binding.empty_atts, [(goal',[])])] |> #2
-      |> Proof.map_context (
-               Proof_Context.set_mode Proof_Context.mode_default
-            #> Phi_ID.step_in)
+      |> Proof.map_context (fn ctxt => ctxt
+            |> Proof_Context.set_mode Proof_Context.mode_default
+            |> Config.restore phi_allow_source_object_to_be_not_variable (Proof.context_of stat)
+            |> Phi_ID.step_in)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC all_tac), Position.no_range))
       |> Seq.the_result "never fail"

@@ -214,7 +214,7 @@ abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>ex
   Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (fn ctxt =>
                             ctxt addsimps (Useful_Thms.get ctxt))),
   Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (fn ctxt =>
-        ctxt addsimps (Useful_Thms.get ctxt @ Named_Theorems.get ctxt \<^named_theorems>\<open>\<phi>expns\<close>))))
+        Phi_Expansions.enhance (ctxt addsimps (Useful_Thms.get ctxt)))))
 \<close>
 
 
@@ -258,7 +258,7 @@ proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
 next fix x :: "'a <named> 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
 qed
 
-lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists \<phi>expns)
+lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists)
 
 
 subsubsection \<open>Expansion of Quantification\<close>
@@ -604,12 +604,12 @@ subsubsection \<open>Logic Connectives\<close>
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> Itself) True \<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
-  by (clarsimp simp add: Itself_expn)
+  by clarsimp
 
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>E (1 \<Ztypecolon> Itself) \<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
-  by (clarsimp simp add: Itself_expn)
+  by clarsimp
 
 lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolon> _) _\<close>]:
   \<open> Identity_Element\<^sub>I (z \<Ztypecolon> T) P
@@ -677,13 +677,13 @@ lemma [\<phi>reason 1200]:
 lemma (*The above rule is local complete*)
   \<open>Identity_Element\<^sub>I (ExSet A) P \<Longrightarrow> Identity_Element\<^sub>I (A x) P\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
-  by (clarsimp simp add: ExSet_expn; blast)
+  by (clarsimp; blast)
 
 lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>E (A x)
 \<Longrightarrow> Identity_Element\<^sub>E (ExSet A)\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
-  by (clarsimp simp add: ExSet_expn; blast)
+  by (clarsimp; blast)
 
 lemma (*The above rule is not local complete*)
   \<open>Identity_Element\<^sub>E (ExSet A) \<Longrightarrow> \<exists>x. Identity_Element\<^sub>E (A x)\<close>
@@ -694,24 +694,24 @@ lemma [\<phi>reason 1200]:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>I A Q)
 \<Longrightarrow> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q)\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
-  by (simp add: Subjection_expn; blast)
+  by (simp; blast)
 
 lemma
   \<open> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q) \<Longrightarrow> (P \<Longrightarrow> Identity_Element\<^sub>I A Q)\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def Inhabited_def
-  by (cases P; clarsimp simp add: Subjection_expn)
+  by (cases P; clarsimp)
 
 lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
 \<Longrightarrow> Identity_Element\<^sub>E (A \<s>\<u>\<b>\<j> P)\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def Premise_def
-  by (clarsimp simp add: Subjection_expn; blast)
+  by (clarsimp; blast)
 
 lemma (*The above rule is local complete*)
   \<open> Identity_Element\<^sub>E (A \<s>\<u>\<b>\<j> P) \<Longrightarrow> P \<and> Identity_Element\<^sub>E A \<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def Premise_def
-  by (clarsimp simp add: Subjection_expn; blast)
+  by (clarsimp; blast)
 
 lemma [\<phi>reason 1200]: 
   \<open> Identity_Element\<^sub>I A P
@@ -743,7 +743,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Identity_Element\<^sub>I ((x,y) \<Ztypecolon> T \<^emph> U) (P \<and> Q)\<close>
   for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
   unfolding Identity_Element\<^sub>I_def \<phi>Prod_expn' Transformation_def
-  apply (simp add: \<phi>expns)
+  apply (simp add: set_mult_expn)
   using mult_1_class.mult_1_left by blast
 
 lemma [\<phi>reason 1200]: 
@@ -866,7 +866,7 @@ lemma "_rule_push_a_value_"[no_atp]:
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B * (x \<Ztypecolon> \<v>\<a>\<l>[v] T) \<close>
   for A :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
+  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: Val_expn)
 
 (*
 subsubsection \<open>Collects all Values in an Assertion / from the State Sequent\<close>

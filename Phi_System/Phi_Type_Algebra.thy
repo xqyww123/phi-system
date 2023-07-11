@@ -161,7 +161,8 @@ declare [[
 declare [[
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Transformation_Functor _ _ _ _\<close>,
   \<phi>reason_default_pattern
-      \<open>Inhabitance_Functor ?F _\<close> \<Rightarrow> \<open>Inhabitance_Functor ?F _\<close> (100),
+      \<open>Inhabitance_Functor ?F _\<close> \<Rightarrow> \<open>Inhabitance_Functor ?F _\<close> (100)
+  and \<open>Separation_Homo_Obj ?T _\<close> \<Rightarrow> \<open>Separation_Homo_Obj ?T _\<close> (100),
   (*\<phi>reason_default_pattern
       \<open>Inhabitance_Functor2 ?F _ _\<close> \<Rightarrow> \<open>Inhabitance_Functor2 ?F _ _\<close> (100),*)
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Inhabitance_Functor _ _\<close>,
@@ -343,6 +344,21 @@ lemma \<phi>intro_transformation:
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> P \<close>
   by simp
 
+lemma \<phi>intro'_transformation:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * (x \<Ztypecolon> T) \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma \<phi>gen_expansion:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> p \<in> (x \<Ztypecolon> T) \<equiv> p \<in> U \<close>
+  by simp
+
+
+
+
+
 
 ML_file \<open>library/tools/functor_detect.ML\<close>
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
@@ -499,35 +515,39 @@ fn (ctxt,sequent) => Seq.make (fn () =>
 
 subsubsection \<open>Separation Homo / Functor\<close>
 
+lemma Separation_Homo_Obj_subdom[\<phi>reason default 1]:
+  \<open> Separation_Homo_Obj T Da
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Db \<subseteq> Da
+\<Longrightarrow> Separation_Homo_Obj T Db\<close>
+  unfolding Separation_Homo_Obj_def Premise_def subset_iff
+  by blast
 
 (*Separation_Homo_Obj is necessary at least for composition \<phi>-type
 Separation_Homo_Obj B \<longleftrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)
 *)
-lemma Separation_Homo_functor:
-  \<open> (\<And>x y z. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (m (\<lambda>(a, b) c. c = b * a \<and> b ## a \<and> (a, b) \<in> D (x, y)) (x, y) z
-                        \<longrightarrow> z = y * x \<and> y ## x))
-\<Longrightarrow> Separation_Homo\<^sub>I F F F' Ds (\<lambda>x. x)
+
+lemma Separation_Homo_functor[\<phi>reason_template 50]:
+  \<open> Separation_Homo\<^sub>I F F F' Ds (\<lambda>x. x) \<comment> \<open>TODO: isn't this \<open>(\<lambda>x. x)\<close> too strong?\<close>
 \<Longrightarrow> Transformation_Functor F' F D m
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y z. m (\<lambda>(a, b) c. c = b * a \<and> b ## a \<and> (a, b) \<in> D (x, y)) (x, y) z
+                        \<longrightarrow> z = y * x \<and> y ## x)
 \<Longrightarrow> Separation_Homo_Obj T (Set.bind Ds D)
 \<Longrightarrow> Separation_Homo_Obj (F T) Ds\<close>
   unfolding Separation_Homo_Obj_def Transformation_Functor_def Separation_Homo\<^sub>I_def Premise_def
   apply (clarsimp simp add: \<phi>Prod_expn'[symmetric])
   subgoal premises prems for x y
   proof -
-    thm prems(5)
-    thm prems(3)[THEN spec[where x=\<open>T \<^emph> T\<close>], THEN spec[where x=T],
-                 THEN spec[where x=x], THEN spec[where x=y]]
     have t1: \<open>\<forall>a\<in>D (y, x). a \<Ztypecolon> T \<^emph> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> T \<s>\<u>\<b>\<j> b. (case a of (b, a) \<Rightarrow> \<lambda>c. c = a * b \<and> a ## b \<and> (b, a) \<in> D (y, x)) b\<close>
       by (clarsimp, insert prems(4,5), blast)
-    from prems(3)[THEN spec[where x=\<open>T \<^emph> T\<close>], THEN spec[where x=T],
+    from prems(2)[THEN spec[where x=\<open>T \<^emph> T\<close>], THEN spec[where x=T],
                  THEN spec[where x=y], THEN spec[where x=x],
                  THEN spec[where x=\<open>\<lambda>(b,a) c. c = a * b \<and> a ## b \<and> (b,a) \<in> D (y,x)\<close>],
                  THEN mp, OF t1]
-         prems(1)[of y x]
-         prems(2)
+         prems(3)[THEN spec[where x=y], THEN spec[where x=x]]
+         prems(1)
          prems(5)
     show ?thesis
-      by (clarsimp simp add: Transformation_def ExSet_expn Subjection_expn, blast)
+      by (clarsimp simp add: Transformation_def, blast)
   qed .
 
 
@@ -750,7 +770,7 @@ lemma Transformation_Functor_L_simp_cong:
 \<Longrightarrow> (x \<Ztypecolon> T) \<equiv> (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> Fa T) \<equiv> (x' \<Ztypecolon> Fa T')\<close>
   unfolding Transformation_Functor_def Transformation_def atomize_eq
-  apply (auto simp add: \<phi>expns set_eq_iff)
+  apply (auto simp add: set_eq_iff)
   subgoal premises prems for xa
     using prems(1)[THEN spec[where x=T], THEN spec[where x=T'], THEN spec[where x=x],
             THEN spec[where x=\<open>\<lambda>_ c. c = x'\<close>], simplified]
@@ -855,7 +875,7 @@ lemma [\<phi>TA_internal_simplify_special_cases,
 
 end
   
-lemma [\<phi>reason_functor_template default 53 requires Separation_Homo\<^sub>E]:
+lemma [\<phi>reason_template default 53 requires Separation_Homo\<^sub>E]:
   \<open> Transformation_Functor Fa Fb D mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to (\<s>\<p>\<l>\<i>\<t> Z))
 \<Longrightarrow> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> FcU \<s>\<u>\<b>\<j> z. g' x z @action \<A>\<T>split_step
@@ -863,7 +883,7 @@ lemma [\<phi>reason_functor_template default 53 requires Separation_Homo\<^sub>E
   unfolding Action_Tag_def meta_Ball_def Premise_def Transformation_Functor_def Ball_def
   by (rule implies_trans[where P=True and Q=True and B=\<open>y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y\<close>, simplified], blast)
 
-lemma [\<phi>reason_functor_template default 50 requires Separation_Homo\<^sub>E]:
+lemma [\<phi>reason_template default 50 requires Separation_Homo\<^sub>E]:
   \<open> Transformation_Functor Fa Fb D mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to (\<s>\<p>\<l>\<i>\<t> Z))
 \<Longrightarrow> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> FcU \<s>\<u>\<b>\<j> z. g' x z @action \<A>\<T>split_step
@@ -871,7 +891,7 @@ lemma [\<phi>reason_functor_template default 50 requires Separation_Homo\<^sub>E
   unfolding Action_Tag_def meta_Ball_def Premise_def Transformation_Functor_def Ball_def
   by (rule implies_trans[where P=True and Q=True and B=\<open>y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y\<close>, simplified], blast)
 
-lemma [\<phi>reason_functor_template default 50]:
+lemma [\<phi>reason_template default 50]:
   \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb un
 \<Longrightarrow> y \<Ztypecolon> Fb (U\<^sub>L \<^emph> U\<^sub>R) \<s>\<u>\<b>\<j> y. r y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> z. (\<exists>z'. z = un z' \<and> r z') @action \<A>\<T>split_step\<close> (*TODO: this syntactic priority*)
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def
@@ -1102,6 +1122,46 @@ lemma [fundef_cong]:
   \<open>T x = T' x' \<Longrightarrow> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')\<close>
   unfolding \<phi>Type_def by simp
 
+ML_file \<open>library/automation/type_algebra.ML\<close>
+
+
+subsubsection \<open>Implication\<close>
+
+lemma \<phi>TA_Inh_rule:
+  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> \<forall>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma \<phi>TA_Inh_rewr:
+  \<open>Trueprop (Ant \<longrightarrow> XX @action \<phi>TA_ind_target A)
+ \<equiv> (Ant \<Longrightarrow> XX @action A)\<close>
+  unfolding Action_Tag_def atomize_imp .
+
+lemma \<phi>TA_Inh_step:
+  \<open> Inh \<longrightarrow> Any @action \<A>EIF
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any \<longrightarrow> P)
+\<Longrightarrow> Inh \<longrightarrow> P @action \<A>EIF\<close>
+  unfolding Action_Tag_def Premise_def
+  by blast
+
+lemma \<phi>TA_Inh_inst_P:
+  \<open> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Ant \<longrightarrow> others
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Ant \<longrightarrow> ((Any \<longrightarrow> Ant \<and> Any) \<and> others)\<close>
+  unfolding Premise_def
+  by blast
+
+ML_file \<open>library/phi_type_algebra/implication.ML\<close>
+
+hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step \<phi>TA_Inh_inst_P
+
+\<phi>property_deriver Implication 90 for (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.inhabitance
+\<close>
+
 
 subsubsection \<open>Identity Element Intro \& Elim\<close>
 
@@ -1114,6 +1174,15 @@ lemma \<phi>TA_1L_rule:
   unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
   using implies_weaken by blast
 
+lemma \<phi>TA_1L_rule':
+  \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
+  unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
+  using implies_weaken by blast
+
 lemma \<phi>TA_1R_rule:
   \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
@@ -1121,6 +1190,20 @@ lemma \<phi>TA_1R_rule:
 \<Longrightarrow> Ant
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)\<close>
   unfolding Action_Tag_def .
+
+ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
+
+hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
+
+\<phi>property_deriver Identity_Element\<^sub>I 100 for (\<open>Identity_Element\<^sub>I _ _\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.identity_element_I
+\<close>
+
+\<phi>property_deriver Identity_Element\<^sub>E 101 for (\<open>Identity_Element\<^sub>E _\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.identity_element_E
+\<close>
+
+\<phi>property_deriver Identity_Element 102 requires Identity_Element\<^sub>I and Identity_Element\<^sub>E
 
 
 subsubsection \<open>Object_Equiv\<close>
@@ -1144,8 +1227,6 @@ lemma \<phi>TA_EO_rewr_C:
 \<equiv> (Ant \<Longrightarrow> P)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
 
-
-
 lemma Object_Equiv_rule_move_all:
   \<open>(\<And>x. P x \<and> Q) \<Longrightarrow> (\<forall>x. P x) \<and> Q\<close>
   by blast
@@ -1162,17 +1243,17 @@ lemma Object_Equiv_rule_move_set_eq_end:
   \<open>(P \<and> R \<longrightarrow> P)\<close>
   by blast
 
-thm imp_conjR[folded atomize_eq, symmetric]
-thm simp_thms(17)[folded atomize_eq]
-thm simp_thms(15)[folded atomize_eq]
+ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
+(*
+hide_fact Object_Equiv_rule \<phi>TA_EO_rewr_IH \<phi>TA_EO_rewr_C Object_Equiv_rule_move_all
+          Object_Equiv_rule_move_all2 Object_Equiv_rule_move_set_eq
+          Object_Equiv_rule_move_set_eq_end *)
 
-ML \<open>\<^term>\<open>{x}\<close>\<close>
-term Set.bind
+\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.object_equiv
+\<close>
 
-
-
-
-thm Action_Tag_D[where A = \<open>ToSA\<close>]
+\<phi>property_deriver Basic 109 requires Object_Equiv and Implication
 
 
 subsubsection \<open>Transformation Functor\<close>
@@ -1218,35 +1299,20 @@ lemma \<phi>TA_FTF_rule:
             Functional_Transformation_Functor_axioms_def Transformation_Functor_L_def
   by blast
 
+ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 
-subsubsection \<open>Inhabitance\<close>
+\<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.transformation_functor
+\<close>
 
-lemma \<phi>TA_Inh_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
-\<Longrightarrow> \<forall>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x\<close>
-  unfolding Action_Tag_def
-  by simp
+\<phi>property_deriver Functional_Transformation_Functor 111
+  requires Transformation_Functor
+  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.functional_transformation_functor
+\<close>
 
-lemma \<phi>TA_Inh_rewr:
-  \<open>Trueprop (Ant \<longrightarrow> XX @action \<phi>TA_ind_target A)
- \<equiv> (Ant \<Longrightarrow> XX @action A)\<close>
-  unfolding Action_Tag_def atomize_imp .
+hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
 
-lemma \<phi>TA_Inh_step:
-  \<open> Inh \<longrightarrow> Any @action \<A>EIF
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any \<longrightarrow> P)
-\<Longrightarrow> Inh \<longrightarrow> P @action \<A>EIF\<close>
-  unfolding Action_Tag_def Premise_def
-  by blast
-
-lemma \<phi>TA_Inh_inst_P:
-  \<open> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Ant \<longrightarrow> others
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Ant \<longrightarrow> ((Any \<longrightarrow> Ant \<and> Any) \<and> others)\<close>
-  unfolding Premise_def
-  by blast
 
 subsubsection \<open>Sep\<close>
 
@@ -1296,59 +1362,52 @@ lemma \<phi>TA_SHu_rewr_C:
 
 lemmas \<phi>TA_SHu_rule_step = \<phi>TA_TF_rule_step
 
+ML_file \<open>library/phi_type_algebra/separation_homo.ML\<close>
 
-(* lemma \<phi>TA_ind_target_proctector_cong:
-  \<open> P @action \<phi>TA_ind_target A \<equiv> P @action \<phi>TA_ind_target A\<close> . *)
-
-
-
-
-
-ML_file \<open>library/automation/type_algebra.ML\<close>
-
-\<phi>property_deriver Implication 90 for (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) = \<open>
-  Phi_Type_Algebra_Tools.inhabitance
-\<close>
-
-\<phi>property_deriver Identity_Element\<^sub>I 100 for (\<open>Identity_Element\<^sub>I _ _\<close>) = \<open>
-  Phi_Type_Algebra_Tools.identity_element_I
-\<close>
-
-\<phi>property_deriver Identity_Element\<^sub>E 101 for (\<open>Identity_Element\<^sub>E _\<close>) = \<open>
-  Phi_Type_Algebra_Tools.identity_element_E
-\<close>
-
-\<phi>property_deriver Identity_Element 102
-  requires Identity_Element\<^sub>I and Identity_Element\<^sub>E = \<open>K (K I)\<close>
-
-\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) = \<open>
-  Phi_Type_Algebra_Tools.object_equiv
-\<close>
-
-\<phi>property_deriver Basic 109 requires Object_Equiv and Implication = \<open>K (K I)\<close>
-
-\<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Tools.transformation_functor
-\<close>
-
-\<phi>property_deriver Functional_Transformation_Functor 111
-  requires Transformation_Functor
-  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Tools.functional_transformation_functor
-\<close>
+hide_fact \<phi>TA_SHz_rule \<phi>TA_SHu_rule \<phi>TA_SHz_rewr_IH \<phi>TA_SHz_rewr_C
+          \<phi>TA_SHu_rewr_IH \<phi>TA_SHu_rewr_C \<phi>TA_SHu_rule_step
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Tools.separation_homo_I
+  Phi_Type_Algebra_Derivers.separation_homo_I
 \<close>
 
 \<phi>property_deriver Separation_Homo\<^sub>E 121 for (\<open>Separation_Homo\<^sub>E _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Tools.separation_homo_E
+  Phi_Type_Algebra_Derivers.separation_homo_E
 \<close>
 
 \<phi>property_deriver Separation_Homo 122
   requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E = \<open>K (K I)\<close>
 
 
+
+subsubsection \<open>Transform to Raw Abstraction (the Itself \<phi>-type)\<close>
+
+lemma \<phi>TA_TrRA_rule:
+  \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target (to Itself))
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma \<phi>TA_TrRA_rewr:
+  \<open> Trueprop (Ant \<longrightarrow> X @action \<phi>TA_ind_target A) \<equiv> (Ant \<Longrightarrow> X @action A) \<close>
+  unfolding Action_Tag_def atomize_imp .
+
+
+ML_file \<open>library/phi_type_algebra/trans_to_raw_abst.ML\<close>
+
+\<phi>property_deriver Trans_to_Raw_Abst 100 for (\<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.trans_to_raw_abst
+\<close>
+
+(* lemma \<phi>TA_ind_target_proctector_cong:
+  \<open> P @action \<phi>TA_ind_target A \<equiv> P @action \<phi>TA_ind_target A\<close> . *)
+
+
+
+subsubsection \<open>System\<close>
 
 lemma list_all2_reduct_rel[simp]:
   \<open>list_all2 (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = map f a' \<and> list_all P a')\<close>

@@ -455,7 +455,7 @@ in
 val implication : working_mode = {
     name = \<^const_name>\<open>working_mode_implication\<close>,
     domain = (fn tm => can Phi_Syntax.dest_ToA_Construction tm orelse
-                       can Phi_Syntax.dest_implication tm),
+                       can Phi_Syntax.dest_transformation tm),
     is_on_going_construction = can Phi_Syntax.dest_ToA_Construction,
     spec_of   = #2 o Phi_Syntax.dest_ToA_Construction,
     spec_of_c = #2 o Phi_Syntax.dest_ToA_Construction_c,

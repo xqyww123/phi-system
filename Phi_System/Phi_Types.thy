@@ -6,75 +6,32 @@ begin
 
 section \<open>Basics\<close>
 
-subsection \<open>Syntax Sugars\<close>
+subsection \<open>Preliminary Sugars\<close>
 
-text \<open>Sometimes, we do not want to verbosely write a semantic type if it is known syntactically.
+consts \<phi>coercion :: \<open>('c1,'a) \<phi> \<Rightarrow> ('c2,'a) \<phi>\<close> ("\<coercion> _" [61] 60)
+  \<comment> \<open>merely a syntax sugar to be overloaded.\<close>
+
+(*reconsider this! may depreciate it!*)
+text \<open>A semantic type is not always required to be annotated if it is known syntactically.
   We use syntax translation to achieve a sugar to do this.
 
 This is a planning feature has not been implemented\<close>
 
 syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_\<phi>")
 
-consts \<phi>coercion :: \<open>('c1,'a) \<phi> \<Rightarrow> ('c2,'a) \<phi>\<close> ("\<coercion> _" [61] 60)
-  \<comment> \<open>A syntax sugar to be overloaded!\<close>
-
-subsection \<open>Itself\<close>
-
-
-
-
-
-
-
-
-(*lemma [simp]:
-  \<open> v \<in> Well_Type TY
-\<Longrightarrow> SemTyp_Of (v \<Ztypecolon> Itself) = TY\<close>
-  unfolding \<phi>Type_def Itself_def
-  by (simp add: \<phi>SemType_def)*)
-
-
-
-lemma [\<phi>reason 1000]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y
-\<Longrightarrow> x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> y \<Ztypecolon> Itself \<brangle> \<close>
-  for x :: \<open>'a :: sep_magma_1 \<close>
-  unfolding FOCUS_TAG_def Premise_def
-  by simp
-
-
-
-
-(*
-lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = v'
-\<Longrightarrow> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {v'}\<close>
-  unfolding Transformation_def Itself_expn Premise_def by simp
-
-lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = v'
-\<Longrightarrow> {v'} \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself\<close>
-  unfolding Transformation_def Itself_expn Premise_def by simp *)
-
 
 
 subsection \<open>Func\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
-
-lemma \<phi>Fun_expn[\<phi>expns]:
-  \<open>v \<in> (x \<Ztypecolon> \<phi>Fun f) \<longleftrightarrow> v = f x \<close>
-  unfolding \<phi>Fun_def Itself_def \<phi>Type_def by simp
+       and Basic
 
 declare [[\<phi>trace_reasoning = 2]]
-
-lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v = f x 
-\<Longrightarrow> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>Fun f\<close> 
-  \<medium_left_bracket> construct\<phi> \<open>x \<Ztypecolon> \<phi>Fun f\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y
@@ -119,7 +76,7 @@ lemma \<phi>Fun_unit_homo[\<phi>reason add]:
   by (simp add: \<phi>Fun_expn set_eq_iff) *)
 
 
-subsection \<open>Any\<close>
+subsection \<open>\<phi>-Type Embedding of \<open>\<top>\<close>\<close>
 
 \<phi>type_def \<phi>Any :: \<open>('x, unit) \<phi>\<close>
   where \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
@@ -134,6 +91,7 @@ lemma \<phi>Any_expns[\<phi>expns]:
 lemma \<phi>Any_cast [\<phi>reason 1200]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>Any\<close>
   \<medium_left_bracket> \<medium_right_bracket>.
+
 
 
 
@@ -154,8 +112,8 @@ lemma UNIV_subty [\<phi>reason 1000]:
 
 subsection \<open>Stepwise Abstraction\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-                                                                      
+declare [[\<phi>trace_reasoning = 1]]
+                                                                        
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<in> (x \<Ztypecolon> U))\<close>
 
@@ -375,10 +333,10 @@ parse_ast_translation \<open>
                          | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
   in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
 \<close>
-
+(*
 lemma Action_to_Itself[\<phi>reason 25]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v \<in> X) @action to Itself\<close>
-  unfolding Action_Tag_def Transformation_def by (simp add: \<phi>expns)
+  unfolding Action_Tag_def Transformation_def by (simp add: \<phi>expns)*)
 
 lemma [\<phi>reason 1000]:
   \<open> (\<And>a. Rewrite_into_\<phi>Type (S a) (x a \<Ztypecolon> T a))
@@ -713,7 +671,7 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
                                                                                                                                                                         
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
@@ -758,13 +716,22 @@ lemma [\<phi>reason 10000]:
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
 
-declare [[\<phi>trace_reasoning = 0, ML_print_depth = 1000]]
-                
+declare [[\<phi>trace_reasoning = 3, ML_print_depth = 1000]]
+  
+\<phi>type_def \<phi>MapAt2 :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
+  where [\<phi>defs]: \<open>(x \<Ztypecolon> \<phi>MapAt2 k T) = (1(k := v) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v \<in> (x \<Ztypecolon> T))\<close>
+  deriving Identity_Element\<^sub>I
+
+thm \<phi>MapAt2.expansion
+
+
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-  deriving Basic and Identity_Element
+  deriving Object_Equiv
+(*Basic and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
+       and Trans_to_Raw_Abst*)
 
 
 

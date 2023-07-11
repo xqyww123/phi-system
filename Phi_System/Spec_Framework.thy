@@ -25,17 +25,17 @@ definition Val :: \<open>VAL \<phi>arg \<Rightarrow> (VAL, 'a) \<phi> \<Rightarr
 
 lemma Val_expn [\<phi>expns]:
   \<open>(x \<Ztypecolon> Val val T) = (1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<in> (x \<Ztypecolon> T))\<close>
-  unfolding Val_def \<phi>Type_def by (simp add: \<phi>expns)
+  unfolding Val_def \<phi>Type_def by simp
 
 lemma [\<phi>reason 1000]:
   \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF
 \<Longrightarrow> Inhabited (x \<Ztypecolon> Val val T) \<longrightarrow> C @action \<A>EIF \<close>
   unfolding Inhabited_def Action_Tag_def
-  by (simp add: \<phi>expns) blast
+  by (simp add: Val_expn) blast
 
 lemma Val_inhabited_rewr:
   \<open>Inhabited (x \<Ztypecolon> Val val T) \<longleftrightarrow> \<phi>arg.dest val \<in> (x \<Ztypecolon> T)\<close>
-  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns)
+  unfolding Inhabited_def by (clarsimp simp add: Val_expn)
 
 paragraph \<open>Syntax\<close>
 
@@ -70,8 +70,12 @@ definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
   where \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
   \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
 
-abbreviation \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> TY \<Rightarrow> bool"
+abbreviation \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> TY \<Rightarrow> bool" (*where this is required?*)
   where \<open>\<phi>\<phi>SemType T TY \<equiv> (\<forall>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>\<phi>SemType ?S _\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close> (100)
+]]
 
 (*lemma \<phi>SemType_unique:
   \<open> S \<noteq> {}
@@ -97,6 +101,38 @@ lemma [\<phi>reason 100]:
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
   .. *)
 
+lemma [\<phi>reason 1]:
+  \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
+\<Longrightarrow> \<phi>SemType X Any\<close>
+  by blast
+
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>SemType X TY1
+\<Longrightarrow> \<phi>SemType Y TY2
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> TY1 = TY2
+\<Longrightarrow> \<phi>SemType (X + Y) TY1\<close>
+  unfolding \<phi>SemType_def subset_iff Premise_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<phi>SemType X TY
+\<Longrightarrow> \<phi>SemType (X \<s>\<u>\<b>\<j> P) TY\<close>
+  unfolding \<phi>SemType_def subset_iff
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. \<phi>SemType (X x) TY)
+\<Longrightarrow> \<phi>SemType (ExSet X) TY\<close>
+  unfolding \<phi>SemType_def subset_iff by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
+\<Longrightarrow> \<phi>SemType (v \<Ztypecolon> Itself) TY \<close>
+  unfolding Premise_def \<phi>SemType_def subset_iff
+  by simp
+
+
+
 
 subsubsection \<open>Multiple Values\<close>
 
@@ -109,30 +145,6 @@ definition \<phi>_Have_Types :: \<open>('a::VALs \<phi>arg \<Rightarrow> assn) \
 declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<Rightarrow> \<open>\<phi>_Have_Types ?S _\<close> (100)]]
 
 
-subsubsection \<open>Reasoning Rules\<close>
-
-declare [[\<phi>reason_default_pattern \<open>\<phi>SemType ?S ?TY\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close> (100) ]]
-
-lemma [\<phi>reason 1]:
-  \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
-\<Longrightarrow> \<phi>SemType X Any\<close>
-  by blast
-
-lemma [\<phi>reason 1000]:
-  \<open> \<phi>SemType X TY
-\<Longrightarrow> \<phi>SemType Y TY
-\<Longrightarrow> \<phi>SemType (X + Y) TY\<close>
-  unfolding \<phi>SemType_def subset_iff by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> \<phi>SemType X TY
-\<Longrightarrow> \<phi>SemType (X \<s>\<u>\<b>\<j> P) TY\<close>
-  unfolding \<phi>SemType_def subset_iff by (simp add: Subjection_expn)
-
-lemma [\<phi>reason 1000]:
-  \<open> (\<And>x. \<phi>SemType (X x) TY)
-\<Longrightarrow> \<phi>SemType (ExSet X) TY\<close>
-  unfolding \<phi>SemType_def subset_iff by (clarsimp simp add: ExSet_expn)
 
 
 subsection \<open>Zero Value\<close>
@@ -141,6 +153,8 @@ definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Ri
   where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>Zero ?TY ?T ?x\<close> \<Rightarrow> \<open>\<phi>Zero ?TY ?T _\<close> (100) ]]
+
+
 
 subsection \<open>Equality\<close>
 
@@ -154,7 +168,7 @@ declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close
 
 subsection \<open>Functional\<close>
 
-definition is_functional :: \<open>'a set \<Rightarrow> bool\<close>
+definition  is_functional :: \<open>'a set \<Rightarrow> bool\<close>
   where \<open>is_functional S \<longleftrightarrow> (\<forall>x y. x \<in> S \<and> y \<in> S \<longrightarrow> x = y)\<close>
 
 declare [[\<phi>reason_default_pattern \<open>is_functional ?S\<close> \<Rightarrow> \<open>is_functional ?S\<close> (100)]]
@@ -182,7 +196,7 @@ lemma [\<phi>reason 1]:
 
 lemma [\<phi>reason 1200]:
   \<open>is_functional (v \<Ztypecolon> Itself)\<close>
-  by (clarsimp simp add: Itself_expn)
+  by clarsimp
 
 lemma [\<phi>reason 1200]:
   \<open>is_functional (any \<Ztypecolon> \<phi>None)\<close>
@@ -193,7 +207,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> is_functional (y \<Ztypecolon> U)
 \<Longrightarrow> is_functional ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
   unfolding is_functional_def set_eq_iff
-  by (simp add: \<phi>expns, blast)
+  by (simp, blast)
 
 lemma [\<phi>reason 1200]:
   \<open> is_functional A
@@ -214,7 +228,7 @@ lemma is_singletonI'':
 
 lemma Itself_functional[\<phi>reason 1000]:
   \<open>is_singleton (x \<Ztypecolon> Itself)\<close>
-  by (rule is_singletonI''; simp add: \<phi>expns)
+  by (rule is_singletonI''; simp)
 
 
 section \<open>Specification of Monadic States\<close>
@@ -336,11 +350,11 @@ declare INTERP_SPEC[\<phi>expns]
 
 lemma  INTERP_SPEC_subj[\<phi>expns]:
   \<open> INTERP_SPEC (S \<s>\<u>\<b>\<j> P) = (INTERP_SPEC S \<s>\<u>\<b>\<j> P) \<close>
-  unfolding INTERP_SPEC_def by (simp add: \<phi>expns set_eq_iff, blast)
+  unfolding INTERP_SPEC_def by (simp add: set_eq_iff, blast)
 
 lemma  INTERP_SPEC_ex[\<phi>expns]:
   \<open> INTERP_SPEC (ExSet S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
-  unfolding INTERP_SPEC_def by (simp add: \<phi>expns set_eq_iff, blast)
+  unfolding INTERP_SPEC_def by (simp add: set_eq_iff, blast)
 
 abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [15,16] 15)
   where \<open>COMMA \<equiv> (*)\<close>
@@ -550,13 +564,13 @@ subsubsection \<open>Normalization in Precondition\<close>
 
 lemma norm_precond_conj:
   "(\<p>\<r>\<o>\<c> f \<lbrace> T \<s>\<u>\<b>\<j> P \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) = (P \<longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> T \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )"
-  unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
+  unfolding \<phi>Procedure_def by (simp add: INTERP_SPEC_subj) blast
 
 lemmas norm_precond_conj_metaeq[unfolded atomize_eq[symmetric]] = norm_precond_conj
 
 lemma norm_precond_ex:
   "(\<p>\<r>\<o>\<c> f \<lbrace> ExSet X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) = (\<forall>x. \<p>\<r>\<o>\<c> f \<lbrace> X x \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)"
-  unfolding \<phi>Procedure_def by (simp add: \<phi>expns) blast
+  unfolding \<phi>Procedure_def by (simp add: INTERP_SPEC_ex) blast
 
 
 ML_file \<open>library/syntax/syntax0.ML\<close>

@@ -53,10 +53,10 @@ end\<close>
 ML_file \<open>library/tools/ml_thms.ML\<close>
 ML_file \<open>library/pattern.ML\<close>
 ML_file_debug \<open>library/helpers.ML\<close>
+ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 ML_file_debug \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
-ML_file \<open>library/tools/Hook.ML\<close>
 
 definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
     \<comment> \<open>If guards of a rule fail, the rule will be considered not appliable, just like the pattern
@@ -772,6 +772,12 @@ lemma contract_premise_imp:
   \<open>(Premise mode' P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
   unfolding Premise_def by (rule, rule, simp+)
 
+lemma contract_add_additional_prems:
+  \<open> PROP Pure.prop Q
+\<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP Q \<Longrightarrow> PROP P)
+\<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP P) \<close>
+  unfolding Pure.prop_def .
+
 lemma contract_drop_waste:
   \<open> PROP P \<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP P) \<close>
   unfolding Pure.prop_def by simp
@@ -823,8 +829,9 @@ ML_file "library/reasoners.ML"
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
 
-(*
+(* TODO: reenable!
 hide_fact contract_premise_imp contract_drop_waste contract_obligations contract_premise_all
+          contract_add_additional_prems
 *)
 
 subsection \<open>Exhaustive Reasoning\<close>

@@ -38,6 +38,7 @@ signature NU_REASONER = sig
   val info_print : Proof.context -> int (*level*) -> (unit -> string) -> unit
   val info_pretty: Proof.context -> int (*level*) -> (unit -> Pretty.T) -> unit
   val info_pretty_generic : Context.generic -> int (*level*) -> (unit -> Pretty.T) -> unit
+  val warn_pretty: Proof.context -> int (*level*) -> (unit -> Pretty.T) -> unit
   val error : string -> 'a
   val bad_config : string -> 'a
 
@@ -207,6 +208,11 @@ fun info_print ctxt level G = info_pretty ctxt level (G #> Pretty.str)
 fun info_pretty_generic ctxt level G =
   if level <= Config.get_generic ctxt trace
   then tracing (Pretty.string_of (G ()))
+  else ()
+
+fun warn_pretty ctxt level G =
+  if level <= Config.get ctxt trace
+  then warning (Pretty.string_of (G ()))
   else ()
 
 
@@ -421,8 +427,8 @@ fun gen_call_reasoners trace score tactics ctxt th =
     |> get_reasoners' (Proof_Context.theory_of ctxt) tactics
     |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
     |> map (fn (priority, _, _, r : reasoner) =>
-          (priority + score, #pos r, #mode r,
-                    Seq.make (fn () => Seq.pull (#tactic r (ctxt,th)))))
+          (priority + score, #pos r, #mode r, #tactic r (ctxt,th)
+                    (* Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))) *)))
     (*|> map_filter (fn (priority, _, _, r : reasoner) =>
         case #mode r
           of GLOBAL_CUT =>
