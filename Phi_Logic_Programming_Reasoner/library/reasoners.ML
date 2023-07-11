@@ -24,7 +24,16 @@ signature PHI_REASONERS = sig
                                  -> Proof.context -> thm -> thm Seq.seq
   val defer_obligation_tac : Proof.context -> thm -> thm Seq.seq
 
-  structure Tactic_Configures : HOOKS
+  structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
+      context before applying either the automatic solving*)
+
+  structure Is_Premise_of_Obligation : HANDLERS
+      (*Tell me what antecedents are considered premise of a proof obligation to be reported,
+        and what are not so that to be ignored.*)
+  val is_premise_of_obligation : Context.generic -> term -> bool
+
+  structure Local_Premises_of_Obligation : NAMED_THMS
+      (*You can add any facts to be reported as premises of a proof obligation*)
 
 end
 
@@ -124,7 +133,7 @@ structure Local_Premises_of_Obligation = Named_Thms (
 )
 
 fun is_premise_of_obligation ctxt tm =
-  case Is_Premise_of_Obligation.invoke (Context.Proof ctxt) tm
+  case Is_Premise_of_Obligation.invoke ctxt tm
     of SOME ret => ret
      | NONE => (case tm of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _) => true
                          | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _) $ _) => true
@@ -138,7 +147,10 @@ fun obligation_collect filter ctm =
        | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ Pr $ _
            => if filter Pr
               then (Conv.arg_conv (obligation_collect filter) then_conv
-                    Conv.rewr_conv @{thm' contract_premise_imp}) ctm
+                    Conv.rewr_conv (case Pr
+                                      of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) =>
+                                              @{thm' contract_premise_imp}
+                                       | _ => @{thm' contract_premise_imp_general})) ctm
               else (Conv.arg_conv (obligation_collect filter) then_conv
                     Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm
        | _ => raise CTERM ("unexpected proof obligation form", [ctm])
@@ -194,16 +206,17 @@ fun obligation_intro_Ex_conv ctxt thm =
   ) thm
 
 fun collect_obligation_premises ctxt thm = let open Conv
-  val filter = is_premise_of_obligation ctxt
+  val filter = is_premise_of_obligation (Context.Proof ctxt)
   val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (K (
                 obligation_collect filter then_conv
                 rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
               ) 1 thm
-           |> fold (fn prem => fn sequent =>
-                let val prem' = fconv_rule (rewr_conv @{thm Pure.prop_def[symmetric]}) prem
-                 in prem' RS (@{thm' contract_add_additional_prems} RS sequent)
-                end
-              ) (Local_Premises_of_Obligation.get ctxt)
+  val rule2 = case Local_Premises_of_Obligation.get ctxt
+                of [] => rule1
+                 | L => let val fact = map (Conv.fconv_rule (Object_Logic.atomize ctxt)) L
+                                    |> foldl1 (uncurry (HOLogic.conj_intr ctxt))
+                         in fact RS (@{thm' contract_add_additional_prems} RS rule1)
+                        end
    in (@{thm contract_drop_waste} RS rule1)
    |> gconv_rule (obligation_conv_all ctxt) 1
    |> Config.get ctxt existential_obligation > 0 ? obligation_intro_Ex_conv ctxt

@@ -911,10 +911,6 @@ fun instantiate_ToA (Ant,pure_info,ctxt) ToA =
         end
      | _ => []
 
-fun is_Premis (\<^Const>\<open>Premise\<close> $ _ $ _) = true
-  | is_Premis (\<^Const>\<open>Trueprop\<close> $ X) = is_Premis X
-  | is_Premis _ = false
-
 fun extract_rewr ctxt th =
   case Thm.prop_of th
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _
@@ -986,9 +982,10 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
            | _ => ant
       val ants'1 = pass_conj_ants ant'0
                  @ map pass_ind_ants (List.take (#prems focus, len - 2))
-      val prem_ants = filter (is_Premis o Thm.concl_of) ants'1
+      val is_Premise = Phi_Reasoners.is_premise_of_obligation (Context.Proof ctxt)
+      val prem_ants = filter (is_Premise o Thm.concl_of) ants'1
       val rewrs = map_filter (extract_rewr ctxt) ants'1
-      val ants = filter ((fn term => not (is_Premis term) andalso not (is_TA_IH_ToA term))
+      val ants = filter ((fn term => not (is_Premise term) andalso not (is_TA_IH_ToA term))
                          o Thm.concl_of) ants'1
                @ ToAs
                |> map (Simplifier.rewrite_rule ctxt rewrs)

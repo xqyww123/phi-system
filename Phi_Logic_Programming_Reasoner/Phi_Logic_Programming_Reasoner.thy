@@ -772,9 +772,13 @@ lemma contract_premise_imp:
   \<open>(Premise mode' P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
   unfolding Premise_def by (rule, rule, simp+)
 
+lemma contract_premise_imp_general:
+  \<open>(P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
+  unfolding Premise_def by (rule, rule, simp+)
+
 lemma contract_add_additional_prems:
-  \<open> PROP Pure.prop Q
-\<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP Q \<Longrightarrow> PROP P)
+  \<open> Q
+\<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> Q \<Longrightarrow> PROP P)
 \<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP P) \<close>
   unfolding Pure.prop_def .
 

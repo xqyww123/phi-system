@@ -85,7 +85,12 @@ fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
   end
 
 fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
-  let val ctxt0 = Context.proof_of generic 
+  let val ctxt0 = Context.proof_of generic
+               |> Context.proof_map (
+                    Phi_Reasoners.Is_Premise_of_Obligation.add 123
+                      (fn \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Identity_Element\<^sub>I _\<close> $ _ $ _) => SOME true
+                        | \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Identity_Element\<^sub>E _\<close> $ _) => SOME true
+                        | _ => NONE))
       val name = if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"
       val unify_hint_U = hint_unify_by_type (
             fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ => T

@@ -710,6 +710,15 @@ thm List.unfold
 
 print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> ? ?
 
+lemma
+  " (\<forall>x xa xb xc.
+             \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
+                A = Ab \<longrightarrow>
+                True \<longrightarrow>
+                (\<forall>xd. \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruua. A = Ab \<longrightarrow> xd \<in> (xc \<Ztypecolon> x) \<longrightarrow> True \<longrightarrow> id (uu xd) \<in> (id uua \<Ztypecolon> xa) \<and> xb xc (id uua)) \<and>
+                (\<forall>xa. A = Ab \<longrightarrow> xa \<in> (xc \<Ztypecolon> x) \<longrightarrow> 1(A := xa) = 1(Ab := id (uu xa))) \<and> True) "
+  apply auto
+
 (*
 lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
@@ -717,11 +726,12 @@ lemma [\<phi>reason 10000]:
   sorry  *)
 
 declare [[\<phi>trace_reasoning = 3, ML_print_depth = 1000]]
-  
+    
 \<phi>type_def \<phi>MapAt2 :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs]: \<open>(x \<Ztypecolon> \<phi>MapAt2 k T) = (1(k := v) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v \<in> (x \<Ztypecolon> T))\<close>
-  deriving Identity_Element\<^sub>I
-
+  deriving (*\<open>Identity_Element\<^sub>I (1 \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> k \<^bold>\<rightarrow> T) P \<close>
+       and Identity_Element
+       and*) Transformation_Functor
 thm \<phi>MapAt2.expansion
 
 
