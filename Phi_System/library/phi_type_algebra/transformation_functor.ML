@@ -68,8 +68,13 @@ fun TF_reasoner ctxt sequent =
     of SOME th => th
      | NONE => raise Automation_Fail
 
-fun TF_reasoning _ ctxt =
-      gen_abstract_constraint_guided_reasoning (K NONE) TF_reasoner ctxt
+fun TF_reasoning phi ctxt =
+  let val extract_prem =
+        if def_contains_satisfaction phi
+        then extract_pure_prem_by_RS @{thms' \<phi>TA_TF_extract_prem}
+        else K (K [])
+   in gen_abstract_constraint_guided_reasoning (K NONE) extract_prem TF_reasoner ctxt
+  end
 
 fun gen_TF hint0 (phi0 : phi_type) generic =
   let val _ = assert_first_parameter_is_type "Transformation_Functor" (Term.fastype_of (#term phi0))

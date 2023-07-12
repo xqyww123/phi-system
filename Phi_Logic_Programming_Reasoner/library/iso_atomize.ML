@@ -1,10 +1,13 @@
 signature PHI_CONV = sig
 include PHI_CONV
 
+val iso_atomize_conv : Proof.context -> conv
+val iso_rulify_conv  : Proof.context -> conv
+val iso_atomize : Proof.context -> thm -> thm
+val iso_rulify  : Proof.context -> thm -> thm
+
 val atomize_conv : Proof.context -> conv
-val rulify_conv  : Proof.context -> conv
 val atomize : Proof.context -> thm -> thm
-val rulify  : Proof.context -> thm -> thm
 
 end
 
@@ -32,9 +35,12 @@ fun chk rule =
      | _ (*Pure.eq*) $ LHS $ _ => raise TERM ("atomize or rulify fails", [LHS])
      | _ => error "Internal bug"
 
-fun atomize_conv ctxt ctm = chk (Raw_Simplifier.rewrite ctxt true (Atomize.get ctxt) ctm)
-fun rulify_conv  ctxt = Raw_Simplifier.rewrite ctxt true (Rulify.get ctxt)
+fun iso_atomize_conv ctxt ctm = chk (Raw_Simplifier.rewrite ctxt true (Atomize.get ctxt) ctm)
+fun iso_rulify_conv  ctxt = Raw_Simplifier.rewrite ctxt true (Rulify.get ctxt)
+val iso_atomize = Conv.fconv_rule o iso_atomize_conv
+val iso_rulify  = Conv.fconv_rule o iso_rulify_conv
+
+fun atomize_conv ctxt = chk o Object_Logic.atomize ctxt
 val atomize = Conv.fconv_rule o atomize_conv
-val rulify  = Conv.fconv_rule o rulify_conv
 
 end

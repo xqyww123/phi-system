@@ -128,9 +128,11 @@ val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehamm
 (*`reasoning` specifies how to solve the induction goals in detail.*)
 
 type varifier = term -> (term list * (term list -> term)) option
+type extract_pure_prems = Proof.context -> thm -> thm list
+
 type PLPR_reasoner = Proof.context -> thm -> thm
 val gen_abstract_constraint_guided_reasoning :
-        varifier -> PLPR_reasoner -> reasoning
+        varifier -> extract_pure_prems -> PLPR_reasoner -> reasoning
   (*It is a general framework using \<phi>-LPR and Isar subgoal tool.
     Because it uses Isar subgoal, it fixes all schematic variables. Users may expect the reasoning
     to infer some schematic variables. If so, `varifier` is used.
@@ -139,6 +141,8 @@ val gen_abstract_constraint_guided_reasoning :
 
 val PLPR_reasoner : int option -> PLPR_reasoner
 val ToA_reasoner : Phi_Type_Algebra.phi_type -> PLPR_reasoner (*reason using ToSA*)
+
+val extract_pure_prem_by_RS : thm list (*RS rules*) -> extract_pure_prems
 
 (** Other Misc Tools **)
 
@@ -948,8 +952,9 @@ fun varify_subgoal_finale sequent =
 type reasoning = Proof.context -> thm -> thm
 type varifier = term -> (term list * (term list -> term)) option
 type PLPR_reasoner = Proof.context -> thm -> thm
+type extract_pure_prems = Proof.context -> thm -> thm list
 
-fun gen_abstract_constraint_guided_reasoning varify reasoner =
+fun gen_abstract_constraint_guided_reasoning varify extract_prems reasoner =
 let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
   case Thm.major_prem_of sequent0
     of _ $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
@@ -988,7 +993,11 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
         | is_real_Premise (Const(\<^const_name>\<open>default\<close>, _)) = true
         | is_real_Premise (Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)) = true
         | is_real_Premise _ = false
-      val prem_ants = filter (Phi_Reasoners.is_premise_of_obligation (Context.Proof ctxt) o Thm.concl_of) ants'1
+      val prem_ants = maps (fn th =>
+            case extract_prems ctxt th
+              of [] => if is_real_Premise (Thm.concl_of th) then [th] else []
+               | some => some
+            ) ants'1
       val rewrs = map_filter (extract_rewr ctxt) ants'1
       val ants = filter ((fn term => not (is_real_Premise term) andalso not (is_TA_IH_ToA term))
                          o Thm.concl_of) ants'1
@@ -1057,6 +1066,16 @@ fun ToA_reasoner phi ctxt sequent =
                           | _ => sequent)
    in PLPR_reasoner (SOME 1) ctxt sequent'1
   end
+
+fun extract_pure_prem_by_RS rules ctxt thm =
+  map_filter (fn rule =>
+    try (fn x => thm RS' x) (ctxt, rule)
+      |> Option.map (fn thm => thm
+          |> Simplifier.rewrite_rule ctxt @{thms' Premise_def[where mode=default] Premise_def[where mode=MODE_SIMP]}
+          |> Thm.forall_intr_vars
+          |> Phi_Conv.atomize ctxt
+          |> (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=default]})))
+  ) rules
 
 
 (* (** Misc **)

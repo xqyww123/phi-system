@@ -78,11 +78,20 @@ fun gen_inhab hint0 (phi0 : phi_type) thy =
                   (ctxt, @{thm' \<phi>TA_Inh_step} RS sequent)
           of SOME th => th
            | NONE => raise Automation_Fail      
+
       fun varify_subgoal (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
             SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
         | varify_subgoal X = error ""
-      fun Inh_reasoning _ ctxt = gen_abstract_constraint_guided_reasoning
-            (if mode_infer then varify_subgoal else K NONE) Inh_reasoner ctxt
+
+      val extract_pure_prems =
+        if def_contains_satisfaction phi0
+        then extract_pure_prem_by_RS @{thms' \<phi>TA_Inh_extract_prem}
+        else K (K [])
+
+      fun Inh_reasoning _ ctxt =
+            gen_abstract_constraint_guided_reasoning
+                (if mode_infer then varify_subgoal else K NONE) extract_pure_prems
+                Inh_reasoner ctxt
 
 
       val solver =

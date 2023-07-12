@@ -78,7 +78,7 @@ fun SHu_reasoner ctxt sequent =
      | NONE => raise Automation_Fail
 
 fun SH_reasoning is_intro phi ctxt =
-      gen_abstract_constraint_guided_reasoning (K NONE) (fn ctxt => fn sequent => (
+  gen_abstract_constraint_guided_reasoning (K NONE) (K (K [])) (fn ctxt => fn sequent => (
          (case Thm.major_prem_of sequent
             of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _)
                         $ (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) $ _ $ _)

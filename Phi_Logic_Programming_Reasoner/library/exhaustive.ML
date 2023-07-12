@@ -15,7 +15,7 @@ structure Reached_Branches = Proof_Data (
 )
 
 fun objectize_after_n ctxt n ctm =
-  if n = 0 then Phi_Conv.atomize_conv ctxt ctm
+  if n = 0 then Phi_Conv.iso_atomize_conv ctxt ctm
   else Conv.implies_concl_conv (objectize_after_n ctxt (n-1)) ctm
 
 (*Given a sequent \<open>Antecedents \<Longrightarrow> \<r>Success \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<Longrightarrow> C\<close>
@@ -75,7 +75,7 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
                    ) L
    in contract NONE (map (Goal.protect 0) (Synchronized.value branches))
    |> Option.map (Goal.conclude
-               #> Conv.fconv_rule (Phi_Conv.rulify_conv ctxt))
+               #> Conv.fconv_rule (Phi_Conv.iso_rulify_conv ctxt))
   end
 
 end

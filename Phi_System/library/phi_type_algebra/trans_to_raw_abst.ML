@@ -41,7 +41,11 @@ fun guess_property  (x_term, T_term, (phi:phi_type)) ctxt =
   end
 
 fun reasoning phi ctxt =
-      gen_abstract_constraint_guided_reasoning (K NONE) (fn ctxt => fn sequent => (
+  let (*val extract_prem =
+        if def_contains_satisfaction phi
+        then (fn _ => fn th => [])
+        else K (K [])*)
+   in gen_abstract_constraint_guided_reasoning (K NONE) (K (K [])) (fn ctxt => fn sequent => (
          (case Thm.major_prem_of sequent
             of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ (
                     Const(\<^const_name>\<open>Transformation\<close>, _)
@@ -52,6 +56,7 @@ fun reasoning phi ctxt =
             of SOME th => th
              | NONE => raise Automation_Fail
       )) ctxt
+  end
 
 fun gen_trans_to_raw_abst hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy

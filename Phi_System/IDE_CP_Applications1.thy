@@ -611,6 +611,11 @@ lemma [\<phi>reason default 2]:
   by simp
 
 lemma [\<phi>reason 1200]:
+  \<open>x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v = x @action to Itself\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp
+
+lemma [\<phi>reason 1200]:
   \<open>() \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> x. x = 1 @action to Itself\<close>
   unfolding Action_Tag_def Transformation_def \<phi>None_expn
   by simp

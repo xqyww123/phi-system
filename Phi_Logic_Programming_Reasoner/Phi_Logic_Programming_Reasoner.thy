@@ -768,6 +768,8 @@ setup \<open>Useful_Thms.setup\<close>
 
 ML_file \<open>library/PLPR_Syntax.ML\<close>
 
+paragraph \<open>Contract Premises for Reporting Obligation\<close>
+
 lemma contract_premise_imp:
   \<open>(Premise mode' P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
   unfolding Premise_def by (rule, rule, simp+)
@@ -810,13 +812,15 @@ text \<open>PLPR can infer existentially quantified obligation. However, the bui
   having the irreversible \<open>\<exists>\<^sub>I\<close> rule configured into the automation, in order to enhance the
   deficiency in Isabelle's automation.\<close>
 
-definition special_Ex (binder "\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R" 10)
-  where \<open>special_Ex \<equiv> Ex\<close>
+paragraph \<open>A Special Ex-quantifier Patching the Reasoning\<close>
 
-lemma [intro!]:
+definition special_Ex (binder "\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R" 10)
+  where [iff]: \<open>special_Ex \<equiv> Ex\<close>
+
+(*lemma [intro]:
   \<open>P x \<Longrightarrow> special_Ex P\<close>
   unfolding special_Ex_def
-  by rule
+  by rule*)
 
 lemma contract_intro_sp_Ex:
   \<open>(\<And>x. Premise mode (P x) \<Longrightarrow> PROP Q) \<equiv> (Premise mode (special_Ex P) \<Longrightarrow> PROP Q)\<close>
@@ -825,6 +829,22 @@ lemma contract_intro_sp_Ex:
   using contract_intro_Ex .
 
 ML_file "library/tools/patch_for_Ex.ML"
+
+simproc_setup move_sp_Ex_inside_All (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Rf. \<forall>x. Q x f\<close>) = \<open>
+  fn _ => fn ctxt => fn ctm =>
+    SOME (Phi_Conv.move_sp_Ex_inside_All ctxt ctm)
+    handle CTERM _ => NONE
+\<close>
+
+(*lemmas [simp] =
+  HOL.ex_disj_distrib[folded special_Ex_def]
+  ex_simps[folded special_Ex_def]
+  simp_thms(36, 39-40)[folded special_Ex_def]*)
+
+
+
+paragraph \<open>Setup\<close>
+
 ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)

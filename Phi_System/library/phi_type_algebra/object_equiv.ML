@@ -124,7 +124,11 @@ fun OE_reasoning phi ctxt rule =
             "\<phi>TA.OE", \<^pattern_prop>\<open>Object_Equiv _ _\<close>,
             fn _ => fn (rules, _, pats, guard, ctxt) =>
                        (rules, Phi_Reasoner.LOCAL_CUT, pats, guard, ctxt))) ctxt
-   in gen_abstract_constraint_guided_reasoning (K NONE) (ToA_reasoner phi) ctxt' rule
+      val extract_prem =
+        if def_contains_satisfaction phi
+        then extract_pure_prem_by_RS @{thms' \<phi>TA_OE_extract_prem}
+        else K (K [])
+   in gen_abstract_constraint_guided_reasoning (K NONE) extract_prem (ToA_reasoner phi) ctxt' rule
   end
 
 fun gen_obj_equal' hint0 (phi0 : phi_type) thy =

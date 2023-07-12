@@ -219,7 +219,7 @@ fun collect_obligation_premises ctxt thm = let open Conv
                                     |> foldl1 (uncurry (HOLogic.conj_intr ctxt))
                          in fact RS (@{thm' contract_add_additional_prems} RS rule1)
                         end
-   in (@{thm contract_drop_waste} RS rule1)
+   in (@{thm contract_drop_waste} RS rule2)
    |> gconv_rule (obligation_conv_all ctxt) 1
    |> Config.get ctxt existential_obligation > 0 ? obligation_intro_Ex_conv ctxt
   end

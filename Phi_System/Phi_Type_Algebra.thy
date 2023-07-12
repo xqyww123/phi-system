@@ -1127,7 +1127,7 @@ ML_file \<open>library/automation/type_algebra.ML\<close>
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
 \<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn [] => fn phi => fn thy => (
-  if @{print} (Phi_Type_Algebra.is_Type_Opr (Term.fastype_of (#term (@{print} phi)))) andalso
+  if Phi_Type_Algebra.is_Type_Opr (Term.fastype_of (#term phi)) andalso
      Phi_Type_Algebra.def_contains_satisfaction phi
   then warning ("The \<phi>-type definition contains satisfaction operator (\<Turnstile>).\n\
                 \When a \<phi>-type is specified by satisfaction in a boolean assertion, it looses the ability to guide the reasoning.\n\
@@ -1164,6 +1164,10 @@ lemma \<phi>TA_Inh_inst_P:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Ant \<longrightarrow> ((Any \<longrightarrow> Ant \<and> Any) \<and> others)\<close>
   unfolding Premise_def
   by blast
+
+lemma \<phi>TA_Inh_extract_prem:
+  \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> (\<exists>v. v \<Turnstile> (x \<Ztypecolon> T)) \<longrightarrow> P\<close>
+  unfolding Action_Tag_def Inhabited_def .
 
 ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
@@ -1202,6 +1206,16 @@ lemma \<phi>TA_1R_rule:
 \<Longrightarrow> Ant
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)\<close>
   unfolding Action_Tag_def .
+
+lemma \<phi>TA_Ident_I_extract_prem:
+  \<open>Identity_Element\<^sub>I S P \<Longrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P)\<close>
+  unfolding Identity_Element\<^sub>I_def Transformation_def
+  by blast
+
+lemma \<phi>TA_Ident_E_extract_prem:
+  \<open>Identity_Element\<^sub>E S \<Longrightarrow> (1 \<Turnstile> S)\<close>
+  unfolding Identity_Element\<^sub>E_def Transformation_def
+  by blast
 
 ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
@@ -1255,6 +1269,12 @@ lemma Object_Equiv_rule_move_set_eq_end:
   \<open>(P \<and> R \<longrightarrow> P)\<close>
   by blast
 
+lemma \<phi>TA_OE_extract_prem:
+  \<open>Object_Equiv T eq \<Longrightarrow> (\<forall>x y v. eq x y \<longrightarrow> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<Turnstile> (y \<Ztypecolon> T))\<close>
+  unfolding Object_Equiv_def Transformation_def
+  by blast
+
+
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 (*
 hide_fact Object_Equiv_rule \<phi>TA_EO_rewr_IH \<phi>TA_EO_rewr_C Object_Equiv_rule_move_all
@@ -1297,6 +1317,11 @@ lemma \<phi>TA_TF_rule_step:
   unfolding Action_Tag_def
   by (simp add: Transformation_def)
 
+lemma \<phi>TA_TF_extract_prem:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. r b @action to what_ever
+\<Longrightarrow> (\<forall>v. v \<Turnstile> X \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> r b))\<close>
+  unfolding Transformation_def Action_Tag_def
+  by blast
 
 subsubsection \<open>Functional Transformation Functor\<close>
 

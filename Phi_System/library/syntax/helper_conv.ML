@@ -40,7 +40,7 @@ fun expand_aggregated_imps C ctm =
      | _ => implies_conv C Conv.all_conv ctm
 
 fun aggregate_imps_obj C ctxt c =
- ((implies_conv (C ctxt then_conv atomize_conv ctxt)
+ ((implies_conv (C ctxt then_conv iso_atomize_conv ctxt)
                 (aggregate_imps_obj C ctxt)
    then_conv rewr_conv @{thm conj_imp_eq_imp_imp[symmetric]})
   else_conv rewr_conv @{thm True_implies_equals[symmetric]}) c
@@ -52,7 +52,7 @@ fun expand_aggregated_imps_obj C ctxt ctm =
      | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>conj\<close>, _) $ _ $ _)) $ _ =>
             (rewr_conv @{thm conj_imp_eq_imp_imp} then_conv
-             implies_conv (rulify_conv ctxt then_conv C ctxt)
+             implies_conv (iso_rulify_conv ctxt then_conv C ctxt)
                           (expand_aggregated_imps_obj C ctxt)) ctm
      | _ => raise CTERM ("expand_aggregated_imps_obj", [ctm])
 
