@@ -85,8 +85,8 @@ fun remove (priority,thy) = remove' (priority, Thy_Info.get_theory thy)
 
 val clean = Data.map (K PriorityTab.empty)
 
-fun invoke ctxt arg s =
-      PriorityTab.fold (fn (_,f) => fn s => f arg s) (Data.get ctxt) s
+fun invoke ctxt arg =
+      PriorityTab.fold (fn (_,f) => fn s => f arg s) (Data.get ctxt)
 
 exception Success of state
 

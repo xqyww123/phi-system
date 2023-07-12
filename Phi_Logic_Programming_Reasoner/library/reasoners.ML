@@ -132,12 +132,14 @@ structure Local_Premises_of_Obligation = Named_Thms (
   val description = "Facts inside will be added as premises into proof obligations"
 )
 
-fun is_premise_of_obligation ctxt tm =
-  case Is_Premise_of_Obligation.invoke ctxt tm
+fun is_premise_of_obligation ctxt =
+  let val ivk = Is_Premise_of_Obligation.invoke ctxt
+   in fn tm => case ivk tm
     of SOME ret => ret
      | NONE => (case tm of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _) => true
                          | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _) $ _) => true
                          | _ => false)
+  end
 
 fun obligation_collect filter ctm =
   Phi_Help.lambda_normalization_conv (fn ctm =>
