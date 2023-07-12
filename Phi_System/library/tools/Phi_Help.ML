@@ -117,6 +117,7 @@ include PHI_HELP
   val generic_theory_mapping : (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
 
   val list_mk_conj : term list -> term
+  val list_mk_disj : term list -> term
   val conj_elims : Proof.context -> thm -> thm list
 
 
@@ -513,6 +514,9 @@ fun generic_theory_mapping f =
 
 fun list_mk_conj [] = \<^const>\<open>True\<close>
   | list_mk_conj L = foldr1 HOLogic.mk_conj L
+
+fun list_mk_disj [] = \<^const>\<open>True\<close>
+  | list_mk_disj L = foldr1 HOLogic.mk_disj L
 
 fun conj_elims ctxt th =
   case Thm.prop_of th

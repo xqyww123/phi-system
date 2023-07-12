@@ -58,6 +58,90 @@ fun reasoning phi ctxt =
       )) ctxt
   end
 
+fun instantiate_the_var var ctxt sequent =
+  let val oblg = case Thm.prop_of sequent
+                   of \<^Const>\<open>Pure.imp\<close> $ (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_COLLECT\<close> $ X)) $ _
+                        => X
+                    | _ => error "BUG zfkezUm3Rm62IQTK0kglKQ"
+      val (x_ty, y_ty) = case snd var
+                           of \<^Type>\<open>fun x_ty \<^Type>\<open>fun y_ty \<^Type>\<open>bool\<close>\<close>\<close> => (x_ty, y_ty)
+                            | _ => error "BUG qC2wYScnQXiFvdGaUF/mBA"
+      val [x,y] = Name.invent_names (Variable.names_of ctxt) "x" [x_ty, y_ty]
+               |> map Free
+
+      fun mk_disj_inst (quants, prems) =
+        fold (fn (N,ty) => fn X => HOLogic.exists_const ty $ Abs(N,ty,X))
+          quants (Phi_Help.list_mk_conj prems)
+
+      fun mk_conj_inst concls (quants, prems) =
+        Phi_Help.list_mk_conj concls
+          |> fold (fn P => fn X => HOLogic.imp $ P $ X) prems
+          |> fold (fn (N,ty) => fn X => HOLogic.exists_const ty $ Abs(N,ty,X)) quants
+      fun mk_conj_inst' [] _ rets = rets
+        | mk_conj_inst' concls qp rets = mk_conj_inst concls qp :: rets
+
+      val has_the_var = Term.exists_subterm (fn Var v' => v' = var | _ => false)
+
+      fun inst_body (disj, conj) concls qp (Var v' $ _ $ _)
+            = if v' = var then (mk_disj_inst qp :: disj, mk_conj_inst' concls qp conj)
+                          else error "BUG 2+kAV8fFSSaBQ3U0iDok+A"
+        | inst_body (disj, conj) concls qp (\<^Const>\<open>conj\<close> $ (Var v' $ _ $ _) $ X)
+            = if v' = var then inst_body (mk_disj_inst qp :: disj, conj) concls qp X
+                          else error "BUG 2+kAV8fFSSaBQ3U0iDok+A"
+        | inst_body ret concls qp (\<^Const>\<open>conj\<close> $ P $ X)
+            = if has_the_var P
+              then inst_body (inst_body ret [] qp P) concls qp X
+              else inst_body ret (P::concls) qp X
+        | inst_body ret concls (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
+            = inst_body ret concls (quants, P::prems) X
+        | inst_body ret concls (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
+            = inst_body ret concls ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
+        | inst_body (disj, conj) concls qp P
+            = (disj, mk_conj_inst' (P::concls) qp conj)
+
+      fun inst_single ret (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
+            = inst_single ret (quants, P::prems) X
+        | inst_single ret (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
+            = inst_single ret ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
+        | inst_single ret qp (\<^Const>\<open>special_Ex _\<close> $ Abs (_, ty, X))
+            = if ty = y_ty
+              then inst_body ret [] qp (Term.subst_bounds ([y], X))
+              else error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
+        | inst_single (disj, conj) qp P
+            = (disj, mk_conj_inst [P] qp :: conj)
+
+      fun inst_toplevel ret (\<^Const>\<open>conj\<close> $ (\<^Const>\<open>HOL.All _\<close> $ Abs (_, ty, X)) $ Y)
+            = if ty = x_ty
+              then inst_toplevel (inst_single ret ([],[]) (Term.subst_bounds ([x], X))) Y
+              else error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
+        | inst_toplevel ret (\<^Const>\<open>HOL.All _\<close> $ Abs (_, ty, X))
+            = if ty = x_ty
+              then inst_single ret ([],[]) (Term.subst_bounds ([x], X))
+              else error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
+        | inst_toplevel ret \<^Const>\<open>True\<close> = ret
+        | inst_toplevel _ _ = error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
+
+      val (disj,conj) = inst_toplevel ([],[]) oblg
+      val inst = Term.lambda x (Term.lambda y (
+                    Phi_Help.list_mk_conj (Phi_Help.list_mk_disj disj :: conj)))
+              |> Thm.cterm_of ctxt
+   in Thm.instantiate (TVars.empty, Vars.make [(var, inst)]) sequent
+  end
+
+fun solver (phi, ctxt, sequent) =
+  case Thm.concl_of sequent
+    of _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ Abs (_, _, \<^Const>\<open>Action_Tag\<close> $
+           (\<^Const>\<open>Transformation _\<close> $ _
+               $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _,
+                   \<^Const>\<open>Subjection _\<close> $ _ $ (X $ Bound 1 $ Bound 0) ))
+               $ _)
+           $ _))
+         => (case X of Var v => SOME ( instantiate_the_var v ctxt sequent
+                                    |> oblg_solver (#proof_id phi ^ "/Trans_to_Raw_Abst") ctxt)
+                     | _ => NONE)
+     | _ => error "Internal bug"
+
+
 fun gen_trans_to_raw_abst hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type_operator (
@@ -86,7 +170,7 @@ fun gen_trans_to_raw_abst hint0 (phi0 : phi_type) thy =
             )) ctxt)
       val rules = mk_rule_by_guess_or_hint ("Trans_to_Raw_Abst", unify_hint, guess_property,
                                             @{thm' \<phi>TA_TrRA_rule}, [0],
-                                            SOME ind_conv, reasoning, K NONE, simp)
+                                            SOME ind_conv, reasoning, solver, simp)
                                            phi0 hint0 ctxt0
    in Seq.pull rules; thy
   end
