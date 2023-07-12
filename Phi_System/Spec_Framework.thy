@@ -13,28 +13,28 @@ declare Valid_Proc_bind[\<phi>reason 1200]
 
 section \<open>Specification of Value\<close>
 
-type_synonym rassn = \<open>resource set\<close>
-type_synonym vassn = \<open>VAL set\<close>
+type_synonym rassn = \<open>resource BI\<close>
+type_synonym vassn = \<open>VAL BI\<close>
 
 subsection \<open>Primitive \<phi>-Types\<close>
 
 subsubsection \<open>Value\<close>
 
 definition Val :: \<open>VAL \<phi>arg \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<v>\<a>\<l>[_] _" [22,22] 21)
-  where \<open>Val val T = (\<lambda>x. 1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<in> (x \<Ztypecolon> T))\<close>
+  where \<open>Val val T = (\<lambda>x. 1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T))\<close>
 
 lemma Val_expn [\<phi>expns]:
-  \<open>(x \<Ztypecolon> Val val T) = (1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<in> (x \<Ztypecolon> T))\<close>
+  \<open>(x \<Ztypecolon> Val val T) = (1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T))\<close>
   unfolding Val_def \<phi>Type_def by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> Inhabited (x \<Ztypecolon> Val val T) \<longrightarrow> C @action \<A>EIF \<close>
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C
+\<Longrightarrow> x \<Ztypecolon> Val val T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<close>
   unfolding Inhabited_def Action_Tag_def
   by (simp add: Val_expn) blast
 
 lemma Val_inhabited_rewr:
-  \<open>Inhabited (x \<Ztypecolon> Val val T) \<longleftrightarrow> \<phi>arg.dest val \<in> (x \<Ztypecolon> T)\<close>
+  \<open>Inhabited (x \<Ztypecolon> Val val T) \<longleftrightarrow> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
   unfolding Inhabited_def by (clarsimp simp add: Val_expn)
 
 paragraph \<open>Syntax\<close>
@@ -67,7 +67,7 @@ subsection \<open>Semantic Type\<close>
 subsubsection \<open>Single Value\<close>
 
 definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
-  where \<open>\<phi>SemType S TY \<longleftrightarrow> S \<subseteq> Well_Type TY\<close>
+  where \<open>\<phi>SemType S TY \<longleftrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)\<close>
   \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
 
 abbreviation \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> TY \<Rightarrow> bool" (*where this is required?*)
@@ -168,17 +168,17 @@ declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close
 
 subsection \<open>Functional\<close>
 
-definition  is_functional :: \<open>'a set \<Rightarrow> bool\<close>
-  where \<open>is_functional S \<longleftrightarrow> (\<forall>x y. x \<in> S \<and> y \<in> S \<longrightarrow> x = y)\<close>
+definition  is_functional :: \<open>'a BI \<Rightarrow> bool\<close>
+  where \<open>is_functional S \<longleftrightarrow> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)\<close>
 
 declare [[\<phi>reason_default_pattern \<open>is_functional ?S\<close> \<Rightarrow> \<open>is_functional ?S\<close> (100)]]
 
-lemma is_functional_alt:
+(* lemma is_functional_alt:
   \<open>is_functional S \<longleftrightarrow> (S = {} \<or> (\<exists>x. S = {x}))\<close>
-  unfolding is_functional_def by blast
+  unfolding is_functional_def by blast *)
 
 lemma is_functional_I[intro!]:
-  \<open> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
+  \<open> (\<And>x y. x \<Turnstile> A \<Longrightarrow> y \<Turnstile> A \<Longrightarrow> x = y)
 \<Longrightarrow> is_functional A \<close>
   unfolding is_functional_def by blast
 
@@ -218,17 +218,21 @@ lemma [\<phi>reason 1200]:
 
 
 
-subsection \<open>Singleton\<close>
+subsection \<open>Injective\<close>
 
-lemma is_singletonI'':
-  \<open> \<exists>p. p \<in> A \<comment> \<open>TODO: model this\<close>
-\<Longrightarrow> (\<And>x y. x \<in> A \<Longrightarrow> y \<in> A \<Longrightarrow> x = y)
-\<Longrightarrow> is_singleton A\<close>
-  by (metis equals0D is_singletonI')
+definition Is_Injective :: \<open>'a BI \<Rightarrow> bool\<close>
+  where \<open>Is_Injective = is_singleton\<close>
 
-lemma Itself_functional[\<phi>reason 1000]:
-  \<open>is_singleton (x \<Ztypecolon> Itself)\<close>
-  by (rule is_singletonI''; simp)
+lemma Is_Injective_I:
+  \<open> Inhabited A
+\<Longrightarrow> (\<And>x y. x \<Turnstile> A \<Longrightarrow> y \<Turnstile> A \<Longrightarrow> x = y)
+\<Longrightarrow> Is_Injective A\<close>
+  unfolding Is_Injective_def Satisfaction_def Inhabited_def
+  by (metis empty_iff is_singletonI')
+  
+lemma Itself_inj[\<phi>reason 1000]:
+  \<open>Is_Injective (x \<Ztypecolon> Itself)\<close>
+  by (rule Is_Injective_I; simp)
 
 
 section \<open>Specification of Monadic States\<close>
@@ -320,6 +324,7 @@ lemma LooseStateSpec_introByStrict:
 lemma StrictStateSpec_subset:
   \<open>(\<And>v. A v \<subseteq> A' v) \<Longrightarrow> (\<And>v. E v \<subseteq> E' v) \<Longrightarrow> !\<S> A E \<subseteq> !\<S> A' E'\<close>
   unfolding subset_iff StrictStateSpec_def by simp
+
 lemma StrictStateSpec_subset'[intro]:
   \<open>(\<And>v. \<forall>s. s \<in> A v \<longrightarrow> s \<in> A' v) \<Longrightarrow> (\<And>v. \<forall>s. s \<in> E v \<longrightarrow> s \<in> E' v) \<Longrightarrow> s \<in> !\<S> A E \<Longrightarrow> s \<in> !\<S> A' E'\<close>
   unfolding StrictStateSpec_def by (cases s; simp)
@@ -350,11 +355,11 @@ declare INTERP_SPEC[\<phi>expns]
 
 lemma  INTERP_SPEC_subj[\<phi>expns]:
   \<open> INTERP_SPEC (S \<s>\<u>\<b>\<j> P) = (INTERP_SPEC S \<s>\<u>\<b>\<j> P) \<close>
-  unfolding INTERP_SPEC_def by (simp add: set_eq_iff, blast)
+  unfolding INTERP_SPEC_def by (simp add: set_eq_iff Subjection_expn_set, blast)
 
 lemma  INTERP_SPEC_ex[\<phi>expns]:
   \<open> INTERP_SPEC (ExSet S) = (\<exists>\<^sup>s x. INTERP_SPEC (S x)) \<close>
-  unfolding INTERP_SPEC_def by (simp add: set_eq_iff, blast)
+  unfolding INTERP_SPEC_def by (simp add: set_eq_iff ExSet_expn_set, blast)
 
 abbreviation COMMA :: \<open>assn \<Rightarrow> assn \<Rightarrow> assn\<close> ("_\<heavy_comma>/ _" [15,16] 15)
   where \<open>COMMA \<equiv> (*)\<close>
@@ -400,7 +405,7 @@ section \<open>View Shift\<close>
 
 definition View_Shift
     :: "assn \<Rightarrow> assn \<Rightarrow> bool \<Rightarrow> bool" ("(2_/ \<s>\<h>\<i>\<f>\<t>\<s> _/ \<w>\<i>\<t>\<h> _)" [13,13,13] 12)
-  where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<in> INTERP_SPEC (R * T) \<longrightarrow> x \<in> INTERP_SPEC (R * U) \<and> P)"
+  where "View_Shift T U P \<longleftrightarrow> (\<forall>x R. x \<Turnstile> INTERP_SPEC (R * T) \<longrightarrow> x \<Turnstile> INTERP_SPEC (R * U) \<and> P)"
 
 abbreviation Simple_View_Shift
     :: "assn \<Rightarrow> assn \<Rightarrow> bool" ("(2_/ \<s>\<h>\<i>\<f>\<t>\<s> _)"  [13,13] 12)
@@ -423,8 +428,8 @@ lemma View_Shift_imply_P:
 lemma view_shift_by_implication[intro?, \<phi>reason 10]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
 \<Longrightarrow> A \<s>\<h>\<i>\<f>\<t>\<s> B \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def View_Shift_def INTERP_SPEC_def
-  by (clarsimp, metis set_mult_expn)
+  unfolding Transformation_def View_Shift_def INTERP_SPEC_def Satisfaction_def
+  by (clarsimp simp add: set_mult_expn) blast
 
 lemma view_shift_0[\<phi>reason 2000 for \<open>0 \<s>\<h>\<i>\<f>\<t>\<s> ?X \<w>\<i>\<t>\<h> ?P\<close>]:
   \<open>0 \<s>\<h>\<i>\<f>\<t>\<s> X\<close>
@@ -495,8 +500,8 @@ lemma \<phi>frame:
 lemma \<phi>Inhabited:
   \<open>(Inhabited X \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  unfolding \<phi>Procedure_def Inhabited_def
-  by (meson INTERP_SPEC set_mult_expn)
+  unfolding \<phi>Procedure_def Inhabited_def Satisfaction_def
+  by (metis INTERP_SPEC set_mult_expn)
 
 subsubsection \<open>View Shift\<close>
 
@@ -518,7 +523,7 @@ lemma \<phi>CONSEQ:
 \<Longrightarrow> (\<And>ret. B ret \<s>\<h>\<i>\<f>\<t>\<s> B' ret \<w>\<i>\<t>\<h> Any2)
 \<Longrightarrow> (\<And>ex.  E ex \<s>\<h>\<i>\<f>\<t>\<s> E' ex \<w>\<i>\<t>\<h> Any3)
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> A' \<longmapsto> B' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' "
-  unfolding \<phi>Procedure_def View_Shift_def subset_iff
+  unfolding \<phi>Procedure_def View_Shift_def subset_iff Satisfaction_def
   apply clarsimp
   by (smt (verit, del_insts) LooseStateSpec_expn')
 
@@ -564,13 +569,15 @@ subsubsection \<open>Normalization in Precondition\<close>
 
 lemma norm_precond_conj:
   "(\<p>\<r>\<o>\<c> f \<lbrace> T \<s>\<u>\<b>\<j> P \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) = (P \<longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> T \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )"
-  unfolding \<phi>Procedure_def by (simp add: INTERP_SPEC_subj) blast
+  unfolding \<phi>Procedure_def
+  by (simp add: INTERP_SPEC_subj Subjection_expn_set) blast
 
 lemmas norm_precond_conj_metaeq[unfolded atomize_eq[symmetric]] = norm_precond_conj
 
 lemma norm_precond_ex:
   "(\<p>\<r>\<o>\<c> f \<lbrace> ExSet X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E) = (\<forall>x. \<p>\<r>\<o>\<c> f \<lbrace> X x \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)"
-  unfolding \<phi>Procedure_def by (simp add: INTERP_SPEC_ex) blast
+  unfolding \<phi>Procedure_def
+  by (simp add: INTERP_SPEC_ex ExSet_expn_set) blast
 
 
 ML_file \<open>library/syntax/syntax0.ML\<close>

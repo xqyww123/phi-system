@@ -32,7 +32,7 @@ fun mk_exp' thy has_R arity =
        val goal' = Thm.cterm_of ctxt0 goal
                 |> Goal.init
        val ((_, [goal'']), ctxt) = Variable.import true [goal'] ctxt0
-       val tac = Local_Defs.unfold_tac ctxt @{thms set_eq_iff ExSet_expn Subjection_expn atomize_eq}
+       val tac = Local_Defs.unfold_tac ctxt @{thms BI_eq_iff ExSet_expn Subjection_expn atomize_eq}
                  THEN Blast.blast_tac ctxt 1
    in case Seq.pull (tac goal'')
         of NONE => error "Internal bug #1fa65324-1ec8-4708-859d-04bb31733ca8"

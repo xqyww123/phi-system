@@ -43,7 +43,7 @@ consts programming_mode :: mode
        view_shift_mode  :: mode
 
 definition CurrentConstruction :: " mode \<Rightarrow> resource \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool "
-  where "CurrentConstruction mode s R S \<longleftrightarrow> s \<in> (INTERP_SPEC (R * S))"
+  where "CurrentConstruction mode s R S \<longleftrightarrow> s \<Turnstile> INTERP_SPEC (R * S)"
 
 abbreviation Programming_CurrentConstruction ("\<c>\<u>\<r>\<r>\<e>\<n>\<t> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _" [1000,1000,11] 10)
   where \<open>Programming_CurrentConstruction \<equiv> CurrentConstruction programming_mode\<close>
@@ -74,11 +74,11 @@ translations
 definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
 
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
-  unfolding CurrentConstruction_def Inhabited_def 
+  unfolding CurrentConstruction_def Inhabited_def Satisfaction_def
   by (clarsimp simp add: INTERP_SPEC set_mult_expn; blast)
 
-definition ToA_Construction :: \<open>'a \<Rightarrow> 'a set \<Rightarrow> bool\<close> ("\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>'(_') \<i>\<s> _" [11,11] 10)
-  where \<open>ToA_Construction = (\<in>)\<close>
+definition ToA_Construction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> ("\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>'(_') \<i>\<s> _" [11,11] 10)
+  where \<open>ToA_Construction = (\<Turnstile>)\<close>
 
 
 section \<open>Rules for Constructing Programs\<close>
@@ -89,7 +89,8 @@ lemma \<phi>apply_proc:
   "(\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S)
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> S \<longmapsto> T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow>(\<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E)"
-  unfolding \<phi>Procedure_def CurrentConstruction_def PendingConstruction_def bind_def by (auto 0 5)
+  unfolding \<phi>Procedure_def CurrentConstruction_def PendingConstruction_def bind_def Satisfaction_def
+  by (auto 0 5)
 
 lemma
   \<open> (\<exists>s' x. CodeBlock s  s'  f x \<and> CodeBlock s' s'' (g x) y)
@@ -119,14 +120,14 @@ lemma \<phi>accept_proc:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> CodeBlock s s' f ret
 \<Longrightarrow> \<c>\<u>\<r>\<r>\<e>\<n>\<t> s' [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T ret\<close>
-  unfolding PendingConstruction_def bind_def subset_iff CurrentConstruction_def CodeBlock_def
+  unfolding PendingConstruction_def bind_def subset_iff CurrentConstruction_def CodeBlock_def Satisfaction_def
   by blast
 
 lemma \<phi>accept_proc_optimize_return_v:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (Return v) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T v\<close>
   unfolding PendingConstruction_def bind_def subset_iff CurrentConstruction_def Return_def
-            det_lift_def
+            det_lift_def Satisfaction_def
   by simp
 
 
@@ -157,19 +158,19 @@ lemma \<phi>return:
   " \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T'
 \<Longrightarrow> T' = T ret
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> (Return ret) \<o>\<n> s [R] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> 0"
-  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff
+  unfolding CurrentConstruction_def PendingConstruction_def bind_def Return_def det_lift_def subset_iff Satisfaction_def
   by simp+
 
 lemma \<phi>reassemble_proc_final:
   "(\<And>s H. \<c>\<u>\<r>\<r>\<e>\<n>\<t> s [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> g \<o>\<n> s [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> g \<lbrace> S \<longmapsto> T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E"
-  unfolding CurrentConstruction_def PendingConstruction_def \<phi>Procedure_def bind_def split_paired_all
+  unfolding CurrentConstruction_def PendingConstruction_def \<phi>Procedure_def bind_def split_paired_all Satisfaction_def
   by blast
 
 lemma "\<phi>__Return_rule__":
   \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> X \<longmapsto> \<lambda>_::unit \<phi>arg. Y \<rbrace>\<close>
-  unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def
+  unfolding \<phi>Procedure_def Return_def View_Shift_def subset_iff det_lift_def Satisfaction_def
   by clarsimp
 
 subsection \<open>Construct View Shift\<close>
@@ -177,8 +178,8 @@ subsection \<open>Construct View Shift\<close>
 lemma \<phi>make_view_shift:
   \<open> (\<And>s R. \<v>\<i>\<e>\<w> s [R] \<i>\<s> S \<Longrightarrow> (\<v>\<i>\<e>\<w> s [R] \<i>\<s> S' \<s>\<u>\<b>\<j> P))
 \<Longrightarrow> S \<s>\<h>\<i>\<f>\<t>\<s> S' \<w>\<i>\<t>\<h> P\<close>
-  unfolding CurrentConstruction_def View_Shift_def
-  by (simp add: INTERP_SPEC_subj)
+  unfolding CurrentConstruction_def View_Shift_def Satisfaction_def
+  by (simp add: INTERP_SPEC_subj Subjection_expn_set)
 
 
 subsection \<open>Construct Implication\<close>
@@ -194,7 +195,7 @@ lemma \<phi>apply_view_shift:
   " CurrentConstruction mode blk R S
 \<Longrightarrow> S \<s>\<h>\<i>\<f>\<t>\<s> S' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> (CurrentConstruction mode blk R S') \<and> P"
-  unfolding CurrentConstruction_def View_Shift_def
+  unfolding CurrentConstruction_def View_Shift_def Satisfaction_def
   by (simp_all add: split_paired_all)
 
 lemmas \<phi>apply_implication = \<phi>apply_view_shift[OF _ view_shift_by_implication]
@@ -203,14 +204,14 @@ lemma \<phi>apply_view_shift_pending:
   " PendingConstruction f blk H T E
 \<Longrightarrow> (\<And>x. T x \<s>\<h>\<i>\<f>\<t>\<s> T' x \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> PendingConstruction f blk H T' E"
-  unfolding PendingConstruction_def View_Shift_def
+  unfolding PendingConstruction_def View_Shift_def Satisfaction_def
   by (clarsimp simp add: LooseStateSpec_expn' subset_iff split_comp_All)
 
 lemma \<phi>apply_view_shift_pending_E:
   " PendingConstruction f blk H T E
 \<Longrightarrow> (\<And>x. E x \<s>\<h>\<i>\<f>\<t>\<s> E' x \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> PendingConstruction f blk H T E'"
-  unfolding PendingConstruction_def View_Shift_def
+  unfolding PendingConstruction_def View_Shift_def Satisfaction_def
   by (clarsimp simp add: LooseStateSpec_expn' subset_iff split_comp_All)
 
 lemmas \<phi>apply_implication_pending =
@@ -396,7 +397,7 @@ paragraph \<open>Return\<close>
 
 
 lemma \<phi>M_Success[intro!]: (*depreciated?*)
-  \<open> v \<in> (y \<Ztypecolon> T)
+  \<open> v \<Turnstile> (y \<Ztypecolon> T)
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val_expn)

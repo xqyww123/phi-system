@@ -213,19 +213,13 @@ definition Generate_Implication_Reasoning :: \<open>bool \<Rightarrow> bool \<Ri
 
 consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts\<close>
 
-abbreviation Inhabitance_Implication :: \<open>'a set \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>" 19)
-  where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> Inhabited S \<longrightarrow> P @action \<A>EIF\<close>
-
 declare [[
   \<phi>reason_default_pattern \<open>Generate_Implication_Reasoning ?I _ _\<close>
                         \<Rightarrow> \<open>Generate_Implication_Reasoning ?I _ _\<close> (100)
-  and \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
   and \<open>?X \<longrightarrow> _ @action \<A>EIF\<close>
    \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
   and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (10)
 ]]
-
-
 
 lemma Do_Generate_Implication_Reasoning:
   \<open> IN
@@ -244,7 +238,6 @@ lemma Do_Extract_Implied_Facts:
   by blast
 
 (* ML_file \<open>library/tools/elimination_rule.ML\<close> *)
-ML_file \<open>library/tools/inhabited_rule.ML\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> Generate_Implication_Reasoning P OL OR
@@ -256,31 +249,6 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> B \<longrightarrow> B' @action \<A>EIF
 \<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited X \<longrightarrow> A @action \<A>EIF
-\<Longrightarrow> Inhabited Y \<longrightarrow> B @action \<A>EIF
-\<Longrightarrow> Inhabited (X * Y) \<longrightarrow> A \<and> B @action \<A>EIF\<close>
-  unfolding Action_Tag_def
-  using set_mult_inhabited by blast
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited X \<longrightarrow> A @action \<A>EIF
-\<Longrightarrow> Inhabited Y \<longrightarrow> B @action \<A>EIF
-\<Longrightarrow> Inhabited (X + Y) \<longrightarrow> A \<or> B @action \<A>EIF\<close>
-  unfolding Action_Tag_def
-  using set_mult_inhabited by blast
-
-lemma Inhabited_fallback_True:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
-  unfolding Action_Tag_def by blast
-
-\<phi>reasoner_ML Inhabited_fallback default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) =
-\<open>fn (ctxt,sequent) => Seq.make (fn () =>
-  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
-  then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
-  else SOME ((ctxt, @{thm Inhabited_fallback_True} RS sequent), Seq.empty)
-)\<close>
 
 lemma Extact_implied_facts_Iden[\<phi>reason default 1]:
   \<open> A \<longrightarrow> A @action \<A>EIF \<close>
@@ -300,12 +268,6 @@ lemma [\<phi>inhabitance_rule, elim!]:
 lemma Membership_E_Inhabitance:
   \<open>x \<in> S \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def by blast*)
-
-lemma Membership_E_Inhabitance:
-  \<open> x \<in> S
-\<Longrightarrow> Inhabited S \<longrightarrow> C
-\<Longrightarrow> C\<close>
-  unfolding Inhabited_def by blast
 
 
 
@@ -395,13 +357,13 @@ lemma [\<phi>reason 1010]:
 lemma [\<phi>reason 1000]:
   \<open> (Q \<Longrightarrow> (\<And>x \<in> S. PROP P x))
 \<Longrightarrow> (\<And>x \<in> S \<s>\<u>\<b>\<j> Q. PROP P x)\<close>
-  unfolding meta_Ball_def Premise_def Subjection_expn
+  unfolding meta_Ball_def Premise_def Subjection_expn_set
   by (clarsimp simp add: atomize_conj[symmetric] conjunction_imp norm_hhf_eq)
 
 lemma [\<phi>reason 1000]:
   \<open> (Q \<Longrightarrow> \<forall>x \<in> S. P x)
 \<Longrightarrow> (\<forall>x \<in> S \<s>\<u>\<b>\<j> Q. P x)\<close>
-  unfolding Ball_def Subjection_expn
+  unfolding Ball_def Subjection_expn_set
   by simp
 
 

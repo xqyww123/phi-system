@@ -59,7 +59,7 @@ fun mk_element_index_input_internal args0 ctxt =
       val args = distinct (fn ((_,rule1),(_,rule2)) =>
             pointer_eq (rule1, rule2) orelse
             Thm.concl_of rule1 aconv Thm.concl_of rule2) args0
-      fun pattern_of (Trueprop $ ((H1 as Const (\<^const_name>\<open>Set.member\<close>, _)) $ V $ S))
+      fun pattern_of (Trueprop $ ((H1 as Const (\<^const_name>\<open>Satisfaction\<close>, _)) $ V $ S))
             = let val i = Int.max (maxidx_of_term H1, maxidx_of_term V) + 1
                in Trueprop $ (\<^const>\<open>Action_Tag\<close> $ (H1 $ V $ Var(("S",i), fastype_of S))
                                                 $ \<^const>\<open>parse_element_index_input\<close>)

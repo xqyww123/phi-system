@@ -352,10 +352,10 @@ fun register_value_spec_thms pos rules =
       val i = maxidx_of_term (Thm.prop_of rule) + 1
       val pattern =
             (case Thm.prop_of rule
-               of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
+               of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
                                   $ TM )
-                => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
+                => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
                                    $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
                                    $ Var (("spec",i), fastype_of TM) )
             | _ => raise THM ("Not a specification theorem of a value!", 0, [rule]))
@@ -368,7 +368,7 @@ fun gen_default_process' clean pos (ctxt,sequent) =
     val (rules, (ctxt',sequent')) = extract_values (~1, clean) (ctxt,sequent)
     val args = rules |> map (fn th =>
           case Thm.prop_of th
-            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
                                   $ _)                                
                  => Thm.cprop_of th |> Thm.dest_arg |> Thm.dest_arg1 |> Thm.dest_arg
@@ -379,7 +379,7 @@ fun gen_default_process' clean pos (ctxt,sequent) =
       end
     val binds = rules |> map_filter (fn th =>
           case Thm.prop_of th
-            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
                                   $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ (X as Free (N,_)) $ _))
                  => SOME (Variable.revert_fixed ctxt' N,
@@ -388,7 +388,7 @@ fun gen_default_process' clean pos (ctxt,sequent) =
              | _ => NONE)
     val binds'= rules |> map_filter (fn th =>
           case Thm.prop_of th
-            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+            of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, _)
                                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ (V as Free (N,_)))
                                   $ X')
                  => SOME (Variable.revert_fixed ctxt' N,

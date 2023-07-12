@@ -12,8 +12,6 @@ include PHI_SYNTAX
   val dest_PendingConstruction_c : cterm -> cterm * cterm * cterm * cterm * cterm
   val pending_construction_monad_conv : conv -> conv
   val pending_construction_abnm_conv : conv -> conv
-  val dest_set_member   :  term ->  term * term
-  val dest_set_member_c : cterm -> cterm * cterm
 
   val block_var_of_Constuction : term  -> term
   val block_var_of_Constuction_c : cterm  -> cterm
@@ -45,8 +43,6 @@ val dest_PendingConstruction   =
       perhaps (try dest_Trueprop)   #> dest_quinop   @{const_name PendingConstruction}
 val dest_PendingConstruction_c =
       perhaps (try dest_Trueprop_c) #> dest_quinop_c @{const_name PendingConstruction}
-val dest_set_member   = dest_tags   #> dest_binop   @{const_name Set.member}
-val dest_set_member_c = dest_tags_c #> dest_binop_c @{const_name Set.member}
 
 fun pending_construction_monad_conv C =
   Phi_Conv.tag_conv (fn ctm =>
@@ -99,7 +95,7 @@ val dest_ToA_Construction_c =
       #> dest_binop_c @{const_name ToA_Construction}
 
 val dest_satisfaction =
-      dest_tags #> dest_binop \<^const_name>\<open>Set.member\<close>
+      dest_tags #> dest_binop \<^const_name>\<open>Satisfaction\<close>
 
 
 end

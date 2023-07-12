@@ -982,10 +982,15 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
            | _ => ant
       val ants'1 = pass_conj_ants ant'0
                  @ map pass_ind_ants (List.take (#prems focus, len - 2))
-      val is_Premise = Phi_Reasoners.is_premise_of_obligation (Context.Proof ctxt)
-      val prem_ants = filter (is_Premise o Thm.concl_of) ants'1
+      fun is_real_Premise (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_real_Premise X
+        | is_real_Premise (Const(\<^const_name>\<open>Premise\<close>, _) $ X $ _) = is_real_Premise X
+        | is_real_Premise (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+        | is_real_Premise (Const(\<^const_name>\<open>default\<close>, _)) = true
+        | is_real_Premise (Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)) = true
+        | is_real_Premise _ = false
+      val prem_ants = filter (Phi_Reasoners.is_premise_of_obligation (Context.Proof ctxt) o Thm.concl_of) ants'1
       val rewrs = map_filter (extract_rewr ctxt) ants'1
-      val ants = filter ((fn term => not (is_Premise term) andalso not (is_TA_IH_ToA term))
+      val ants = filter ((fn term => not (is_real_Premise term) andalso not (is_TA_IH_ToA term))
                          o Thm.concl_of) ants'1
                @ ToAs
                |> map (Simplifier.rewrite_rule ctxt rewrs)

@@ -40,7 +40,7 @@ fun internal_name_of ctxt xname =
 
 fun get_raw_val_in_rule rule =
    case Thm.prop_of rule
-     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, _)
             $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _) $ V)
             $ _)
            => V
@@ -49,11 +49,11 @@ fun get_raw_val_in_rule rule =
 fun pattern_of' mk_var rule =
   let val i = 1 + Thm.maxidx_of rule
   in case Thm.prop_of rule
-       of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>,
+       of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>,
                                 (T1 as Type ("fun", [_, Type ("fun", [T,_])])))
               $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ V)
               $ _)
-             => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, T1)
+             => \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, T1)
                   $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, T2) $ mk_var (i,V))
                   $ Var (("out", i), T))
          | _ => raise THM ("Bad Rule", 0, [rule])
@@ -97,7 +97,7 @@ fun extract_x_T th =
 
 fun dest_rule rule =
   case Thm.prop_of rule
-    of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Set.member\<close>, _)
+    of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Satisfaction\<close>, _)
           $ (Const (\<^const_name>\<open>\<phi>arg.dest\<close>, _)
                        $ (Const (\<^const_name>\<open>Value_of\<close>, _)
                             $ _ $ Free (vname, T) $ Const (\<^const_name>\<open>Nil\<close>, _)))

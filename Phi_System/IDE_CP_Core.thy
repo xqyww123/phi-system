@@ -230,7 +230,7 @@ subsection \<open>Annotations on \<phi>-Types\<close>
 
 typedecl struct_tag
 
-definition Struct_Tag :: \<open>'a set \<Rightarrow> struct_tag \<Rightarrow> 'a set\<close> ("_\<lblbrace>_\<rblbrace>" [17,17] 16)
+definition Struct_Tag :: \<open>'a BI \<Rightarrow> struct_tag \<Rightarrow> 'a BI\<close> ("_\<lblbrace>_\<rblbrace>" [17,17] 16)
   where \<open>Struct_Tag S tg \<equiv> S\<close>
 
 text \<open>In a ToA like \<^term>\<open>x \<Ztypecolon> T\<lblbrace>A\<rblbrace>\<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<lblbrace>A\<rblbrace>\<close> , \<^term>\<open>x \<Ztypecolon> T\<lblbrace>A\<rblbrace>\<close> represents the
@@ -243,10 +243,10 @@ text \<open>In a ToA like \<^term>\<open>x \<Ztypecolon> T\<lblbrace>A\<rblbrace
 
 subsubsection \<open>Implementation\<close>
 
-definition Changes_To :: \<open>'a set \<Rightarrow> ('b,'c) \<phi> \<Rightarrow> 'a set\<close> (infix "<changes-to>" 16)
+definition Changes_To :: \<open>'a BI \<Rightarrow> ('b,'c) \<phi> \<Rightarrow> 'a BI\<close> (infix "<changes-to>" 16)
   where \<open>(S <changes-to> _) = S\<close>
 
-definition Auto_Transform_Hint :: \<open>'b set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+definition Auto_Transform_Hint :: \<open>'b BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
   where \<open>Auto_Transform_Hint residue result = True\<close>
 
 
@@ -619,7 +619,7 @@ lemma [\<phi>reason 20 for \<open>Synthesis_Parse (?T :: (fiction,?'x) \<phi>) (
 
 subsubsection \<open>Tagging the target of a synthesis rule\<close>
 
-(* definition Synthesis :: \<open>'a set \<Rightarrow> 'a set\<close> ("SYNTHESIS _" [17] 16) where [iff]: \<open>Synthesis S = S\<close> *)
+(* definition Synthesis :: \<open>'a BI \<Rightarrow> 'a BI\<close> ("SYNTHESIS _" [17] 16) where [iff]: \<open>Synthesis S = S\<close> *)
 
 consts synthesis :: action
 
@@ -673,7 +673,7 @@ lemma Synthesis_Proc_fallback_VS
   [\<phi>reason 10 for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. _ \<heavy_comma> \<blangle> ?X' ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]:
   \<open> S1 \<s>\<h>\<i>\<f>\<t>\<s> S2\<heavy_comma> \<blangle> X' \<brangle> \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' \<brangle> \<rbrace> @action synthesis\<close>
-  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def
+  unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def Satisfaction_def
   by simp
 
 text \<open>The fallback from VS to IMP is given by @{thm view_shift_by_implication}\<close>
@@ -1537,7 +1537,7 @@ subsection \<open>Generic Element Access\<close>
 
 subsubsection \<open>Get Element of Abstract Object\<close>
 
-type_synonym element_index_input = \<open>(VAL \<times> VAL set) list\<close>
+type_synonym element_index_input = \<open>(VAL \<times> VAL BI) list\<close>
 
 definition Get_Abstract_Element :: \<open>'x \<Rightarrow> ('val,'x) \<phi> \<Rightarrow> element_index_input \<Rightarrow> 'y \<Rightarrow> bool\<close>
   where \<open>Get_Abstract_Element x T path y \<longleftrightarrow> True\<close>
@@ -1661,18 +1661,18 @@ lemma implies_prod_right_1:
   \<open> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P
 \<Longrightarrow> L' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> L \<w>\<i>\<t>\<h> Q
 \<Longrightarrow> L' * R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> L \<w>\<i>\<t>\<h> P \<and> Q \<close>
-  for L :: \<open>'a::sep_magma_1 set\<close>
-  unfolding Transformation_def split_paired_All times_set_def by fastforce
+  for L :: \<open>'a::sep_magma_1 BI\<close>
+  unfolding Transformation_def split_paired_All by fastforce
 
 ML_file \<open>library/system/generic_variable_access.ML\<close>
 
 lemma value_extraction_rule_no_remove:
-  \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)\<close>
-  unfolding Transformation_def by (simp add: Val_expn Subjection_expn)
+  \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
+  unfolding Transformation_def by (simp add: Val_expn)
 
 lemma value_extraction_rule_remove:
-  \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)\<close>
-  unfolding Transformation_def by (simp add: Val_expn Subjection_expn)
+  \<open>x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)\<close>
+  unfolding Transformation_def by (simp add: Val_expn)
 
 setup \<open>Context.theory_map (
   Generic_Variable_Access.add_extraction_rule

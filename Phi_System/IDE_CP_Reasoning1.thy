@@ -19,7 +19,7 @@ subsection \<open>Small Annotations\<close>
 
 subsubsection \<open>Matches\<close>
 
-definition Assertion_Matches :: \<open>'a set \<Rightarrow> 'a set \<Rightarrow> 'a set\<close> (infixl "<matches>" 18)
+definition Assertion_Matches :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI\<close> (infixl "<matches>" 18)
   where \<open>(S <matches> pattern) = S\<close>
 
 text \<open>The annotation marking on a target \<^term>\<open>Y <matches> A\<close> in a ToA or a view shift
@@ -182,16 +182,16 @@ structure Assertion_SS_Abnormal = Simpset (
         Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse}))\<close>
 
 lemmas [assertion_simps] =
-  mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
-  mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>]
-  mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
-  add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
-  zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma set\<close>]
-  plus_fun[where 'a=\<open>'a::sep_magma set\<close>]
+  mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>]
+  mult_1_right[where 'a=\<open>'a::sep_magma_1 BI\<close>]
+  mult_1_left[where 'a=\<open>'a::sep_magma_1 BI\<close>]
+  add_0_right[where 'a=\<open>'a::sep_magma BI\<close>] add_0_left[where 'a=\<open>'a::sep_magma BI\<close>]
+  zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
+  plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
   Subjection_Zero Subjection_times
   ExSet_simps(1,3,4,5,6)
-  distrib_right[where 'a=\<open>'a::sep_semigroup set\<close>]
-  mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup set\<close>]
+  distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
+  mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
   \<phi>V_simps
   \<phi>Prod_expn'' \<phi>Prod_expn'
 
@@ -258,7 +258,7 @@ proof fix x assume "(\<And>x. PROP P x)" then show "PROP P (tag x)" .
 next fix x :: "'a <named> 'b" assume "(\<And>x. PROP P (tag x))" from \<open>PROP P (tag (case x of tag x \<Rightarrow> x))\<close> show "PROP P x" by simp
 qed
 
-lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (auto simp add: named_exists)
+lemma named_ExSet: "(ExSet T) = (\<exists>*c. T (tag c) )" by (clarsimp simp add: named_exists BI_eq_iff)
 
 
 subsubsection \<open>Expansion of Quantification\<close>
@@ -291,7 +291,7 @@ simproc_setup named_ex_expansion ("Ex (P :: 'a <named> 'names \<Rightarrow> bool
           (fn Type(\<^type_name>\<open>\<phi>arg\<close>, _) => QuantExpansion.exists_expansion_arg_encoding
             | _ => QuantExpansion.exists_expansion))\<close>
 
-simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow> 'b set)") =
+simproc_setup named_exSet_expansion ("ExSet (P :: 'a <named> 'names \<Rightarrow> 'b BI)") =
   \<open>K (QuantExpansion.simproc_of (K QuantExpansion.ExNu_expansion))\<close>
 
 simproc_setup named_metaAll_expansion ("Pure.all (P :: 'a <named> 'names \<Rightarrow> prop)") =
@@ -387,7 +387,7 @@ consts frame_var_rewrs :: mode
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_only (fn ctxt =>
           Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>))\<close>
 
-definition \<phi>IntroFrameVar :: "'a::sep_magma set option \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool"
+definition \<phi>IntroFrameVar :: "'a::sep_magma BI option \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool"
   where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> (case R of Some R' \<Rightarrow> S' = (R' * S) \<and> T' = R' * T
                                                  | None \<Rightarrow> S' = S \<and> T' = T )"
 
@@ -567,8 +567,8 @@ lemma [\<phi>reason 1200]:
 
 subsection \<open>Identity Element I\&E\<close>
 
-definition Identity_Element\<^sub>I :: \<open>'a::one set \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>I S P \<longleftrightarrow> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)\<close>
-definition Identity_Element\<^sub>E :: \<open>'a::one set \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>E S \<longleftrightarrow> (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S)\<close>
+definition Identity_Element\<^sub>I :: \<open>'a::one BI \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>I S P \<longleftrightarrow> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)\<close>
+definition Identity_Element\<^sub>E :: \<open>'a::one BI \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>E S \<longleftrightarrow> (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S)\<close>
 
 declare [[ \<phi>reason_default_pattern
       \<open>Identity_Element\<^sub>I ?S _\<close> \<Rightarrow> \<open>Identity_Element\<^sub>I ?S _\<close> (100)
@@ -593,11 +593,11 @@ lemma [\<phi>reason 3000]:
 
 lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>I {_} _\<close> ]:
   \<open>Identity_Element\<^sub>I {1} True\<close>
-  unfolding Identity_Element\<^sub>I_def Transformation_def by simp
+  unfolding Identity_Element\<^sub>I_def one_set_def by simp
 
 lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>E {_}\<close>]:
   \<open>Identity_Element\<^sub>E {1}\<close>
-  unfolding Identity_Element\<^sub>E_def Transformation_def by simp
+  unfolding Identity_Element\<^sub>E_def one_set_def by simp
 
 subsubsection \<open>Logic Connectives\<close>
 
@@ -666,7 +666,7 @@ lemma [\<phi>reason 1200]:
 lemma (*The above rule is local complete*)
   \<open> Identity_Element\<^sub>E (AllSet A) \<Longrightarrow> Identity_Element\<^sub>E (A x) \<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
-  by (clarsimp simp add: AllSet_expn)
+  by clarsimp
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>x. Identity_Element\<^sub>I (A x) (P x))
@@ -717,7 +717,7 @@ lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>I A P
 \<Longrightarrow> Identity_Element\<^sub>I B Q
 \<Longrightarrow> Identity_Element\<^sub>I (A * B) (P \<and> Q) \<close>
-  for A :: \<open>'a::sep_magma_1 set\<close>
+  for A :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by (clarsimp simp add: set_mult_expn, insert mult_1_class.mult_1_left; blast)
   (* It is not complete, example: algebra {e,a} where the sep conjunction is only defined
@@ -728,13 +728,13 @@ lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> Identity_Element\<^sub>E B
 \<Longrightarrow> Identity_Element\<^sub>E (A * B) \<close>
-  for A :: \<open>'a::sep_magma_1 set\<close>
+  for A :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
-  by (clarsimp, insert times_set_I, fastforce)
+  by (clarsimp, insert mult_1_class.mult_1_left sep_magma_1_left, blast)
 
 lemma (*the above rule is not local complete*)
   \<open> Identity_Element\<^sub>E (A * B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B \<close>
-  for A :: \<open>'a::sep_magma_1 set\<close>
+  for A :: \<open>'a::sep_magma_1 BI\<close>
   oops
 
 lemma [\<phi>reason 1200]:
@@ -750,7 +750,7 @@ lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>E (x \<Ztypecolon> T)
 \<Longrightarrow> Identity_Element\<^sub>E (y \<Ztypecolon> U)
 \<Longrightarrow> Identity_Element\<^sub>E ((x,y) \<Ztypecolon> T \<^emph> U) \<close>
-  for T :: \<open>'a \<Rightarrow> 'b::sep_magma_1 set\<close>
+  for T :: \<open>'a \<Rightarrow> 'b::sep_magma_1 BI\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp simp add: \<phi>Prod_expn', insert set_mult_expn, fastforce)
 
@@ -758,24 +758,24 @@ lemma [\<phi>reason 1200]:
 lemma [\<phi>reason 1200]: 
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> Identity_Element\<^sub>E B
-\<Longrightarrow> Identity_Element\<^sub>E (A \<inter> B) \<close>
+\<Longrightarrow> Identity_Element\<^sub>E (A \<and>\<^sub>B\<^sub>I B) \<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp)
 
 lemma (*the above rule is local complete*)
-  \<open> Identity_Element\<^sub>E (A \<inter> B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B \<close>
+  \<open> Identity_Element\<^sub>E (A \<and>\<^sub>B\<^sub>I B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B \<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp)
 
 lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>I A P
 \<Longrightarrow> Identity_Element\<^sub>I B Q
-\<Longrightarrow> Identity_Element\<^sub>I (A \<inter> B) (P \<and> Q) \<close>
+\<Longrightarrow> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) (P \<and> Q) \<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by clarsimp
 
 lemma (*the above rule is not local complete*)
-  \<open> Identity_Element\<^sub>I (A \<inter> B) True \<Longrightarrow> Identity_Element\<^sub>I A True \<and> Identity_Element\<^sub>I B True \<close>
+  \<open> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) True \<Longrightarrow> Identity_Element\<^sub>I A True \<and> Identity_Element\<^sub>I B True \<close>
   oops
   (* Auto Quickcheck found a counterexample:
   A = {a\<^sub>1}
@@ -857,15 +857,15 @@ subsubsection \<open>Operations for a single Value\<close>
 lemma "_rule_extract_and_remove_the_first_value_"[no_atp]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> P @action ToSA' False
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<close>
-  for X :: \<open>'a::sep_magma_1 set\<close>
+  for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
 *)
 
 lemma "_rule_push_a_value_"[no_atp]:
-  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B * (x \<Ztypecolon> \<v>\<a>\<l>[v] T) \<close>
-  for A :: \<open>'a::sep_magma_1 set\<close>
+  for A :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def Transformation_def by (clarsimp simp add: Val_expn)
 
 (*

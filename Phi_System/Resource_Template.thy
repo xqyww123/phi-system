@@ -104,20 +104,20 @@ lemma [\<phi>inhabitance_rule, elim!]:
 
 definition \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
     \<comment> \<open>\<phi>Type for level-1 mapping\<close>
-  where \<open>\<phi> T = (\<lambda>x. { mk v |v. v \<in> (x \<Ztypecolon> T) })\<close>
+  where \<open>\<phi> T = (\<lambda>x. { mk v |v. v \<Turnstile> (x \<Ztypecolon> T) })\<close>
 
-lemma \<phi>_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = mk v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Type_def \<phi>_def by simp
+lemma \<phi>_expn[simp, \<phi>expns]:
+  \<open>p \<Turnstile> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = mk v \<and> v \<Turnstile> (x \<Ztypecolon> T))\<close>
+  unfolding \<phi>Type_def \<phi>_def Satisfaction_def by simp
 
 lemma \<phi>_inhabited[elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  unfolding Inhabited_def by simp
 
 lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
-\<Longrightarrow> Inhabited (x \<Ztypecolon> \<phi> T) \<longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<close>
+  unfolding Inhabited_def by simp
 
 lemma \<phi>_Prod:
   \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>
@@ -131,7 +131,7 @@ lemma \<phi>_\<phi>None:
 
 lemma \<phi>_unit:
   \<open>(1 \<Ztypecolon> \<phi> Itself) = Void\<close>
-  by (clarsimp simp add: set_eq_iff \<phi>_expn Itself_expn)
+  by (clarsimp simp add: BI_eq_iff \<phi>_expn Itself_expn)
 
 (*
 lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:
@@ -165,6 +165,8 @@ lemma \<phi>_Structural_Extract:
 
 declare \<phi>_Structural_Extract[(*THEN SE_clean_waste,*) \<phi>reason 1200]
 
+(* TODO!!!!
+
 lemma [(*THEN SE_clean_waste',*) \<phi>reason 1211]:
   \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
       (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE
@@ -173,7 +175,7 @@ lemma [(*THEN SE_clean_waste',*) \<phi>reason 1211]:
   unfolding Generated_Rule_def Action_Tag_def
   by (rule implies_weaken, defer_tac,
       rule \<phi>_Structural_Extract[unfolded Action_Tag_def], assumption,
-      clarify, rule \<phi>_Structural_Extract[unfolded Action_Tag_def], blast)
+      clarify, rule \<phi>_Structural_Extract[unfolded Action_Tag_def], blast)*)
 
 (*
 lemma [\<phi>reason 1100]:
@@ -182,6 +184,7 @@ lemma [\<phi>reason 1100]:
   unfolding Structure_Info_def
   by blast *)
 
+(* TODO!!!!
 thm ToSA_by_structural_extraction
     [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> for T U]
 
@@ -194,7 +197,7 @@ declare ToSA_by_structural_extraction
 declare ToSA_by_structural_extraction__reverse_transformation
     [where T=\<open>\<phi> T\<close> and U=\<open>\<phi> U\<close> and T'=\<open>\<phi> T'\<close> and U'=\<open>\<phi> U'\<close> for T T' U U',
      \<phi>reason 83 if \<open>PLPR_Env.boolean_flag \<^const_name>\<open>ToA_flag_deep\<close> true o fst\<close>]
-
+*)
 
 lemma ToSA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<heavy_comma> \<blangle> ?x \<Ztypecolon> \<phi> ?T \<brangle> \<w>\<i>\<t>\<h> _\<close> ]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<w>\<i>\<t>\<h> P
@@ -231,6 +234,7 @@ lemma [simp]:
   \<open>(\<phi> (ExTyp T)) = (\<exists>\<phi> c. \<phi> (T c))\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
+(* TODO!!!!
 lemma [simp]:
   \<open>(\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<phi> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
@@ -243,6 +247,7 @@ lemma \<phi>_simp_cong[folded atomize_eq]:
 simproc_setup \<phi>\<phi>_simp_cong ("x \<Ztypecolon> \<phi> T") = \<open>
   K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>_simp_cong} ctxt)
 \<close>
+*)
 
 paragraph \<open>Synthesis for moving\<close>
 
@@ -272,7 +277,10 @@ private lemma from_fictional_refinement':
 \<Longrightarrow> x \<in> D
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> x \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>v. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Normal v) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. y \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> y. (x,y) \<in> Rel (Abnm e))\<close>
   unfolding \<phi>Procedure_alt Fictional_Forward_Simulation_def atomize_all Valid_Transition_def
-  apply (auto simp add: Image_iff subset_iff Bex_def \<phi>expns Transition_of'_def
+  apply (auto simp add: Image_iff subset_iff Bex_def
+          INTERP_SPEC_subj INTERP_SPEC_ex
+          \<phi>_expn[unfolded Satisfaction_def] Itself_expn[unfolded Satisfaction_def] set_mult_expn INTERP_SPEC
+          Satisfaction_def Subjection_expn_set ExSet_expn_set Transition_of'_def
           LooseStateSpec_def split_sum_all INTERP_RES_def interp_split R.\<r>_valid_split'
           R.inj.sep_insertion inj.sep_insertion prj.homo_mult eval_stat_forall split: eval_stat.split)
   subgoal premises prems for r u y v y' rr
@@ -287,7 +295,7 @@ private lemma from_fictional_refinement':
             THEN mp, OF this]
     then show ?thesis
     apply clarsimp
-    subgoal for yy ya
+      subgoal for yy ya
       apply (rule exI[where x=yy], clarsimp simp add: inj.homo_mult[symmetric] prems prj.homo_mult, rule)
       apply (metis R.resource_kind_axioms Valid_Proc_def prems(1) prems(14) resource_kind.\<r>_valid_split t2 times_fupdt_1_apply_sep)
       using prems(10) by blast .
@@ -329,7 +337,7 @@ lemma "__getter_rule__":
   by (rule from_fictional_refinement[where Rel = \<open>\<lambda>ret. Id_on ({x} \<s>\<u>\<b>\<j> v. ret = Normal (\<phi>arg v) \<and> P v)\<close>
                                        and D = \<open>{x}\<close>],
      assumption,
-     clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExSet_expn fun_eq_iff,
+     clarsimp simp add: set_eq_iff Subjection_expn_set Id_on_iff ExSet_expn_set fun_eq_iff,
      simp add: Id_on_iff zero_set_def zero_fun_def,
      assumption,
      simp add: Valid_Transition_def zero_set_def,
@@ -343,7 +351,7 @@ lemma "__setter_rule__":
   by (rule from_fictional_refinement
                   [where Rel=\<open>\<lambda>ret. {(x,y)} \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none\<close> and D = \<open>{x}\<close>],
       assumption,
-      clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExSet_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
+      clarsimp simp add: set_eq_iff Id_on_iff \<phi>arg_All fun_eq_iff \<phi>V_none_def,
       simp add: Id_on_iff zero_set_def zero_fun_def,
       assumption,
       simp add: Valid_Transition_def zero_set_def,
@@ -358,7 +366,7 @@ lemma "__allocator_rule__":
         [where Rel=\<open>\<lambda>ret. {(1,y k)} \<s>\<u>\<b>\<j> k. ret = Normal (\<phi>arg k) \<and> P k\<close>
            and x=\<open>1\<close> and D=\<open>{1}\<close>, unfolded \<phi>_unit],
       assumption,
-      clarsimp simp add: set_eq_iff Subjection_expn Id_on_iff ExSet_expn \<phi>arg_All fun_eq_iff \<phi>V_none_def,
+      clarsimp simp add: set_eq_iff Subjection_expn_set Id_on_iff \<phi>arg_All fun_eq_iff \<phi>V_none_def,
       simp add: Id_on_iff zero_set_def zero_fun_def,
       assumption,
       simp add: Valid_Transition_def zero_set_def,
@@ -579,7 +587,7 @@ lemma allocator_refinement:
    \<w>.\<r>.\<t> basic_fiction \<i>\<n> {1}\<close>
   apply (rule refinement_sub_fun[OF allocator_transition], assumption, assumption)
   unfolding Fictional_Forward_Simulation_def
-  apply (cases ret; clarsimp simp add: set_mult_expn Subjection_expn mk_homo_mult)
+  apply (cases ret; clarsimp simp add: set_mult_expn Subjection_expn_set mk_homo_mult)
   subgoal premises prems for r R u k
   proof -
     have [simp]: \<open>r ## 1(k := init)\<close>
@@ -689,7 +697,7 @@ lemma getter_refinement:
    \<w>.\<r>.\<t> basic_fiction \<i>\<n> fun_upd 1 k ` Some ` S\<close>
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: set_mult_expn Id_on_iff
-                              Subjection_expn prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
+                              Subjection_expn_set prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
                               inj.sep_insertion[simplified] in_invariant)
   by (smt (verit, ccfv_threshold) domI fun_upd_same image_iff mult_1_class.mult_1_left one_option_def option.sel sep_disj_fun_nonsepable(2) times_fun)
  
@@ -712,7 +720,7 @@ lemma setter_refinement:
 
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at k (F o the)\<close>]])
   unfolding Fictional_Forward_Simulation_def
-  apply (clarsimp simp add: set_mult_expn Subjection_expn ExSet_expn
+  apply (clarsimp simp add: set_mult_expn Subjection_expn_set ExSet_expn_set
             prj.homo_mult \<r>_valid_split' inj.sep_insertion[simplified])
   subgoal premises prems for r R x' u v
   proof -
@@ -812,7 +820,7 @@ subgoal premises prems proof -
          = (Id_on UNIV * (pairself (fun_upd 1 k) ` ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k )) \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none)\<close>
     for ret
     by (unfold Subjection_Id_on Subjection_times ExSet_Id_on ExSet_times_right ExSet_image
-                  Subjection_image; simp add: set_eq_iff Subjection_expn ExSet_expn; blast)
+                  Subjection_image; simp add: set_eq_iff Subjection_expn_set ExSet_expn_set; blast)
   show ?thesis
     by (insert prems,
       rule "__setter_rule__",

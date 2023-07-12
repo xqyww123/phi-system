@@ -124,6 +124,9 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 val is_Type_Opr : typ -> bool
 val assert_Type_Opr : string -> typ -> unit
+val assert_first_parameter_is_type : string -> typ -> unit
+
+val def_contains_satisfaction : phi_type -> bool
 
 (*make inductively destruction rule.*)
 val mk_ind_dest_ToA : Proof.context -> phi_type -> (term (*x*) * term (*T*) -> term) -> thm
@@ -658,6 +661,21 @@ fun mk_ind_dest_ToA ctxt phi gen_prop = (*not tested*)
 
 (** Tools **)
 
+fun def_contains_satisfaction phi =
+  let val contains_sat = Term.exists_subterm (fn Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
+                                               | _ => false)
+      fun phi_contains_sat (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = phi_contains_sat X
+        | phi_contains_sat (Abs(_,_,X)) = phi_contains_sat X
+        | phi_contains_sat (Const(\<^const_name>\<open>Subjection\<close>, _) $ A $ P) = contains_sat P orelse phi_contains_sat A
+        | phi_contains_sat _ = false
+      fun eq_contains_sat (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = eq_contains_sat X
+        | eq_contains_sat (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ X) = phi_contains_sat X
+        | eq_contains_sat (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ X) = phi_contains_sat X
+        | eq_contains_sat (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = eq_contains_sat X
+        | eq_contains_sat X = raise TERM ("def_contains_satisfaction", [X])
+   in exists (eq_contains_sat o Thm.prop_of) (#equations phi)
+  end
+
 fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>set c\<close>\<close>\<close> = (args, x, c)
   | dest_parameterized_phi_ty' args \<^Type>\<open>fun a T\<close> = dest_parameterized_phi_ty' (a::args) T
   | dest_parameterized_phi_ty' _ T = raise TYPE ("not a phi-type",[T],[])
@@ -857,8 +875,8 @@ val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |-- Pa
 val patterns_parse = Scan.optional (\<^keyword>\<open>for\<close> |-- \<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> ) []
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<close>
           "declare deriver deriving properties when defining a \<phi>-type"
-    (Parse.binding -- Parse.int -- dependences_parse -- patterns_parse -- (Scan.option (\<^keyword>\<open>=\<close> |-- Parse.ML_source))
- >> (fn ((((name,priority),deps),raw_binding_terms),ML') => Toplevel.theory (fn thy =>
+    (Parse.binding -- Parse.int -- patterns_parse -- dependences_parse-- (Scan.option (\<^keyword>\<open>=\<close> |-- Parse.ML_source))
+ >> (fn ((((name,priority),raw_binding_terms),deps),ML') => Toplevel.theory (fn thy =>
    let 
        val derive =
             case ML' of SOME ML =>
@@ -892,18 +910,26 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
 (** Tools **)
 
 fun is_Type_Opr ty =
-  (case dest_parameterized_phi_ty ty
-     of ([],_,_) => false
-      | ((arg_ty::_),_,_) => (
-   case dest_parameterized_phi_ty arg_ty
-     of ([],_,_) => true
-      | _ => false)
-   handle TYPE _ => false)
+  case dest_parameterized_phi_ty ty
+    of ([],_,_) => false
+     | (args,_,_) => exists (can dest_parameterized_phi_ty) args
 
 fun assert_Type_Opr prop_name ty =
   if is_Type_Opr ty then ()
   else error ("Fail to derive " ^ prop_name ^ " : Not a \<phi>-type operator!")
 
+fun is_first_parameter_a_type ty =
+  case dest_parameterized_phi_ty ty
+    of ([],_,_) => false
+     | (ty' :: _,_,_) => (
+  case dest_parameterized_phi_ty ty'
+    of ([],_,_) => true
+     | _ => false
+  handle TYPE _ => false)
+
+fun assert_first_parameter_is_type prop_name ty =
+  if is_first_parameter_a_type ty then ()
+  else error ("Fail to derive " ^ prop_name ^ " : Not a \<phi>-type operator!")
 
 fun chk_zero_index_thm thm =
   if Thm.maxidx_of thm <= 0

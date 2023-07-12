@@ -72,8 +72,12 @@ fun TF_reasoning _ ctxt =
       gen_abstract_constraint_guided_reasoning (K NONE) TF_reasoner ctxt
 
 fun gen_TF hint0 (phi0 : phi_type) generic =
-  let val _ = assert_Type_Opr "Transformation_Functor" (Term.fastype_of (#term phi0))
+  let val _ = assert_first_parameter_is_type "Transformation_Functor" (Term.fastype_of (#term phi0))
       val ctxt0 = Context.proof_of generic
+            |> def_contains_satisfaction phi0 ? Context.proof_map (
+                    Phi_Reasoners.Is_Premise_of_Obligation.add 123
+                      (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
+                        | X => NONE))
       val unify_hint = hint_unify_by_type_operator (
               fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _) => F1)
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr})),
@@ -169,7 +173,7 @@ fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
   end
 
 fun gen_FTF hint0 (phi0 : phi_type) thy =
-  let val _ = assert_Type_Opr "Functional_Transformation_Functor" (Term.fastype_of (#term phi0))
+  let val _ = assert_first_parameter_is_type "Functional_Transformation_Functor" (Term.fastype_of (#term phi0))
       val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type_operator (
             fn (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ ) => F1)

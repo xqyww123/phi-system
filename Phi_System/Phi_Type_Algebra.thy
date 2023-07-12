@@ -352,7 +352,7 @@ lemma \<phi>intro'_transformation:
 
 lemma \<phi>gen_expansion:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> p \<in> (x \<Ztypecolon> T) \<equiv> p \<in> U \<close>
+\<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
 
@@ -770,7 +770,7 @@ lemma Transformation_Functor_L_simp_cong:
 \<Longrightarrow> (x \<Ztypecolon> T) \<equiv> (x' \<Ztypecolon> T')
 \<Longrightarrow> (x \<Ztypecolon> Fa T) \<equiv> (x' \<Ztypecolon> Fa T')\<close>
   unfolding Transformation_Functor_def Transformation_def atomize_eq
-  apply (auto simp add: set_eq_iff)
+  apply (auto simp add: BI_eq_iff)
   subgoal premises prems for xa
     using prems(1)[THEN spec[where x=T], THEN spec[where x=T'], THEN spec[where x=x],
             THEN spec[where x=\<open>\<lambda>_ c. c = x'\<close>], simplified]
@@ -1124,6 +1124,17 @@ lemma [fundef_cong]:
 
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
+subsubsection \<open>Warn if the Def contains Sat\<close>
+
+\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn [] => fn phi => fn thy => (
+  if @{print} (Phi_Type_Algebra.is_Type_Opr (Term.fastype_of (#term (@{print} phi)))) andalso
+     Phi_Type_Algebra.def_contains_satisfaction phi
+  then warning ("The \<phi>-type definition contains satisfaction operator (\<Turnstile>).\n\
+                \When a \<phi>-type is specified by satisfaction in a boolean assertion, it looses the ability to guide the reasoning.\n\
+                \The deriving may fail. It is recommended to use composition operator (\<Zcomp>) to replace the (\<Turnstile>) if possible.")
+  else () ;
+  thy
+)\<close>
 
 subsubsection \<open>Implication\<close>
 
@@ -1167,8 +1178,9 @@ subsubsection \<open>Identity Element Intro \& Elim\<close>
 
 lemma \<phi>TA_1L_rule:
   \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) Any @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any \<longrightarrow> P))
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (Any \<longrightarrow> P)
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
   unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
@@ -1195,13 +1207,13 @@ ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
 hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
 
-\<phi>property_deriver Identity_Element\<^sub>I 100 for (\<open>Identity_Element\<^sub>I _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.identity_element_I
-\<close>
+\<phi>property_deriver Identity_Element\<^sub>I 100 for (\<open>Identity_Element\<^sub>I _ _\<close>)
+    requires Warn_if_contains_Sat
+  = \<open>Phi_Type_Algebra_Derivers.identity_element_I\<close>
 
-\<phi>property_deriver Identity_Element\<^sub>E 101 for (\<open>Identity_Element\<^sub>E _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.identity_element_E
-\<close>
+\<phi>property_deriver Identity_Element\<^sub>E 101 for (\<open>Identity_Element\<^sub>E _\<close>)
+    requires Warn_if_contains_Sat
+  = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
 
 \<phi>property_deriver Identity_Element 102 requires Identity_Element\<^sub>I and Identity_Element\<^sub>E
 
@@ -1306,10 +1318,9 @@ ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 \<close>
 
 \<phi>property_deriver Functional_Transformation_Functor 111
+  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>)
   requires Transformation_Functor
-  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.functional_transformation_functor
-\<close>
+    = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor\<close>
 
 hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
 

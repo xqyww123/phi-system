@@ -1781,15 +1781,6 @@ instance unit :: sep_cancel by standard simp
 
 subsection \<open>Set\<close>
 
-definition Inhabited :: " 'a set \<Rightarrow> bool" where  "Inhabited S = (\<exists>p. p \<in> S)"
-
-lemma Inhabited_I:
-  \<open>x \<in> S \<Longrightarrow> Inhabited S\<close>
-  unfolding Inhabited_def ..
-
-lemma Inhabited_cong[cong]:
-  \<open>X \<equiv> X \<Longrightarrow> Inhabited X \<equiv> Inhabited X\<close> .
-
 
 instantiation set :: (type) zero begin
 definition zero_set where "zero_set = {}"
@@ -1824,10 +1815,6 @@ lemma set_mult_single: \<open>A ## B \<Longrightarrow> {A} * {B} = {A * B}\<clos
 lemma set_mult_expn:
   \<open>uv \<in> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<in> S \<and> v \<in> T \<and> u ## v)\<close>
   unfolding times_set_def by simp
-
-lemma set_mult_inhabited[elim!]:
-  \<open>Inhabited (S * T) \<Longrightarrow> (Inhabited S \<Longrightarrow> Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def times_set_def by (simp, blast)
 
 lemma times_set_subset[intro, simp]:
   \<open>B \<subseteq> B' \<Longrightarrow> A * B \<subseteq> A * B'\<close>
@@ -1894,10 +1881,6 @@ lemma plus_set_in_iff[iff]:
   \<open>x \<in> A + B \<longleftrightarrow> x \<in> A \<or> x \<in> B\<close> unfolding plus_set_def by simp
 
 lemma plus_set_S_S [simp]: \<open>S + S = S\<close> for S :: \<open>'a set\<close> unfolding plus_set_def by simp
-
-lemma set_plus_inhabited[elim!]:
-  \<open>Inhabited (S + T) \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def times_set_def by (simp, blast)
 
 instantiation set :: (sep_semigroup) ordered_semiring_0 begin
 instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
@@ -2445,7 +2428,7 @@ hide_const (open) dest
 lemma split_nosep_all: \<open>All P \<longleftrightarrow> (\<forall>x. P (nosep x))\<close> by (metis nosep.exhaust)
 lemma split_nosep_ex : \<open>Ex P \<longleftrightarrow> (\<exists>x. P (nosep x))\<close> by (metis nosep.exhaust)
 lemma split_nosep_ExSet: \<open>ExSet P = (\<exists>*x. P (nosep x))\<close>
-  unfolding set_eq_iff ExSet_expn split_nosep_ex by simp
+  unfolding set_eq_iff ExSet_expn_set split_nosep_ex by simp
 lemma split_nosep_meta_all: \<open>Pure.all P \<equiv> (\<And>x. PROP P (nosep x))\<close>
 proof
   fix x

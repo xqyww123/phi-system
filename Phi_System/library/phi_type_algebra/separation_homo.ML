@@ -90,7 +90,7 @@ fun SH_reasoning is_intro phi ctxt =
       )) ctxt
 
 fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
-  let val _ = assert_Type_Opr "Separation_Homo" (Term.fastype_of (#term phi0))
+  let val _ = assert_first_parameter_is_type "Separation_Homo" (Term.fastype_of (#term phi0))
       val ctxt0 = Context.proof_of generic
       val phi0pr = make_phi_for_pair generic phi0
       val unify_hint_SH = hint_unify_by_type_operator (
