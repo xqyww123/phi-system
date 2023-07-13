@@ -429,7 +429,6 @@ lemma [\<phi>reason 5000]:
 subsection \<open>To\<close>
 
 consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
-       RAW :: \<open>('a,'b) \<phi>\<close> \<comment> \<open>destruct whom TODO! WIP!\<close>
        \<A>subst :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> (infixl "\<f>\<o>\<r>" 10)
           \<comment> \<open>\<^term>\<open>to (A \<f>\<o>\<r> B)\<close> means, substitute A for B\<close>
        \<A>split :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> ("\<s>\<p>\<l>\<i>\<t>")
@@ -469,10 +468,11 @@ lemma to_\<phi>app:
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
   unfolding Do_def Action_Tag_def .
 
+(*depreciated
 lemma destruct_\<phi>app:
   \<open> \<^bold>d\<^bold>o X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to RAW
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
-  unfolding Do_def Action_Tag_def .
+  unfolding Do_def Action_Tag_def .*)
 
 lemma [\<phi>reason 0 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
   \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> T)
@@ -605,6 +605,11 @@ lemma [\<phi>reason 1210 for \<open>_ \<Ztypecolon> _ \<^emph> _ \<t>\<r>\<a>\<n
 
 subsubsection \<open>To Itself\<close>
 
+declare [[\<phi>reason_default_pattern
+    \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _) \<w>\<i>\<t>\<h> _ @action to Itself\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to Itself\<close> (200)
+      \<comment> \<open>Here we varify the type of the \<open>Itself\<close> \<close>
+]]
+
 lemma [\<phi>reason default 2]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v \<Turnstile> (x \<Ztypecolon> T) @action to Itself\<close>
   unfolding Action_Tag_def Transformation_def
@@ -628,15 +633,25 @@ lemma [\<phi>reason 1200]:
   by (cases x; simp; blast)
 
 
+subsubsection \<open>Open Abstraction\<close>
+
+consts OPEN_ABSTRACTION :: \<open>('a,'b) \<phi>\<close> \<comment> \<open>destruct whom TODO! WIP!\<close>
+
+lemma open_abstraction_\<phi>app:
+  \<open> Friendly_Help TEXT(\<open>Just tell me which \<phi>-type you want to open.\<close> \<newline>
+      \<open>Input a lambda abstraction e.g. \<open>\<lambda>x. List (Box x)\<close> as a pattern where the lambda variable is the \<phi>-type you want to destruct.\<close>
+      \<open>I will match\<close> T \<open>with the pattern.\<close> \<newline>
+      \<open>You can also use an underscore to denote the target \<phi>-type in this pattern so you don't need to write a lambda abstraction, e.g. \<open>List (Box _)\<close>\<close>)
+\<Longrightarrow> \<p>\<a>\<r>\<a>\<m> target
+\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to (target OPEN_ABSTRACTION)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  unfolding Do_def Action_Tag_def .
+
+
+
 subsection \<open>Case Analysis\<close>
 
 consts \<A>case :: action
-
-
-lemma "_cases_app_rule_":
-  \<open>Call_Action (\<A>_view_shift_or_imp \<A>case)\<close> ..
-
-thm list.induct
 
 ML \<open>fun mk_pattern_for_cases_analysis ctxt term =
   let val idx = Term.maxidx_of_term term + 1
@@ -656,7 +671,12 @@ declare [[
   \<phi>reason_default_pattern \<open> ?X @action \<A>case \<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad Form\<close> (?X @action \<A>case))\<close> (0)
 ]]
 
+lemma "_cases_app_rule_":
+  \<open>Call_Action (\<A>_view_shift_or_imp \<A>case)\<close> ..
+
 ML_file \<open>library/tools/induct_analysis.ML\<close>
+
+hide_fact "_cases_app_rule_"
 
 \<phi>processor case_analysis 5000 (\<open>_\<close>) \<open> IDECP_Induct_Analysis.case_analysis_processor \<close>
 

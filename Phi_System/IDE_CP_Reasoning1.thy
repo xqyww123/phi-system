@@ -508,6 +508,58 @@ lemma [\<phi>reason 1000]:
   unfolding Pass_Embedded_Reasoning'_def by blast
 
 
+subsection \<open>Embed BI Assertion into \<phi>-Type\<close>
+
+lemma \<phi>Type_conv_eq_1:
+  \<open>T = U \<Longrightarrow> (x \<Ztypecolon> T) = U x\<close>
+  unfolding \<phi>Type_def by simp
+
+lemma \<phi>Type_conv_eq_2:
+  \<open>T = U \<Longrightarrow> (x \<Ztypecolon> T) = (x \<Ztypecolon> U)\<close>
+  unfolding \<phi>Type_def by simp
+
+ML_file \<open>library/phi_type_algebra/helps.ML\<close>
+
+ML \<open>structure Embed_into_Phi_Type = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS_configure (
+        let fun chk_rewr ctxt thm =
+              case Thm.prop_of thm
+                of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) => thm
+                 | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) => thm
+                 | Const(\<^const_name>\<open>Pure.eq\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) $ _ => Thm.symmetric thm
+                 | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) $ _) =>
+                        thm RS' (ctxt, @{thm' HOL.sym})
+                 | _ => raise THM ("Not a rewrite rule embedding BI assertions into \<phi>-types", 0, [thm])
+            fun chk2 ctxt thm =
+              let val (X,Y) = case Thm.prop_of thm
+                                of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ Y => (X,Y)
+                                 | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y) => (X,Y)
+                  val vars_X = Term.add_vars X []
+                  val bads = subtract (op =) vars_X (Term.add_vars Y [] )
+               in if null bads then thm
+                  else Thm.instantiate (TVars.empty,
+                          Vars.make (map (fn (v,t) =>
+                            ((v,t), Thm.cterm_of ctxt (Const(\<^const_name>\<open>undefined\<close>, t)))) bads)) thm
+              end
+            fun chk_rewr' ctxt thm = (chk_rewr ctxt thm
+                  handle THM _ => chk_rewr ctxt (Phi_Type_Algebra.conv_def_to_equaltion ctxt thm))
+                    |> chk2 ctxt
+         in Simplifier.set_mksimps (fn ctxt => fn thm => thm
+                |> chk_rewr' ctxt
+                |> Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
+        end)
+  val binding = \<^binding>\<open>embed_into_\<phi>type\<close>
+  val comment = "Declare a rewrite rule that rewrites BI assertions into \<phi>-type embedding"
+)\<close>
+
+consts mode_embed_into_\<phi>type :: mode
+
+\<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] _ : _\<close>)
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (fn ctxt => Embed_into_Phi_Type.equip ctxt))\<close>
+ 
+lemmas [embed_into_\<phi>type] = \<phi>None_itself_is_one[where any=\<open>()\<close>] \<phi>Prod_expn' 
+
+
 subsection \<open>Semantic Type of Multiple Values\<close>
 
 lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?R vs\<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] ?T) _\<close>]:

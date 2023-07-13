@@ -134,7 +134,7 @@ fun OE_reasoning phi ctxt rule =
 fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type (
-            fn _ (*Trueprop*) $ (\<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _) => T')
+            fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_EO_rewr_IH})),
                        fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_EO_rewr_C} then_conv
                             Conv.implies_concl_conv (

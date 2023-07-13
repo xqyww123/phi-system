@@ -23,7 +23,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
                 
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
@@ -32,6 +32,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Basic
        and Is_Functional
        and Trans_to_Raw_Abst
+
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -65,31 +66,129 @@ lemma \<phi>Fun_unit_homo[\<phi>reason add]:
 
 
 subsection \<open>\<phi>-Type Embedding of \<open>\<top>\<close>\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
-
+   
 \<phi>type_def \<phi>Any :: \<open>('x, unit) \<phi>\<close>
-  where \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
+  where [embed_into_\<phi>type]: \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
   deriving Basic
 
 lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> \<phi>Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
   \<medium_left_bracket> to Itself \<medium_right_bracket>.
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
+
+lemma
+  \<open>(\<forall>x. \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu. True \<longrightarrow> (\<forall>xa. Aa \<longrightarrow> xa \<Turnstile> (x \<Ztypecolon> A) \<longrightarrow> True \<longrightarrow> r x (id (uu xa)) \<and> Aa) \<and> (\<forall>xa. Aa \<longrightarrow> xa \<Turnstile> (x \<Ztypecolon> A) \<longrightarrow> xa = id (uu xa)) \<and> True) \<and>
+         True \<close>
+  apply auto
 
 
+
+
+
+ 
+subsection \<open>Embedding Subjection into Type\<close>
+                     
+\<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
+  where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
+  deriving (*Basic
+       and \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x \<and> Q \<close>
+       and*) \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
+                    x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<and> P @action to Itself \<close>
+
+thm SubjectionTY.intro
+
+translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
+
+lemma SubjectionTY_expn[\<phi>programming_simps, \<phi>expns]:
+  \<open>(x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) = (x \<Ztypecolon> T \<s>\<u>\<b>\<j> P)\<close>
+  unfolding set_eq_iff SubjectionTY_def \<phi>Type_def by simp
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF)
+\<Longrightarrow> Inhabited (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<longrightarrow> P \<and> C @action \<A>EIF\<close>
+  unfolding SubjectionTY_expn Premise_def Inhabited_def Subjection_expn Action_Tag_def
+  by blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Rewrite_into_\<phi>Type S (x \<Ztypecolon> T)
+\<Longrightarrow> Rewrite_into_\<phi>Type (S \<s>\<u>\<b>\<j> P) (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  unfolding Rewrite_into_\<phi>Type_def by (simp add: SubjectionTY_expn)
+
+lemma [\<phi>reason 1200]:
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T))
+\<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  \<medium_left_bracket> premises [\<phi>reason add] ;; \<medium_right_bracket> .
+
+
+subsubsection \<open>Algebraic Properties\<close>
+
+(* declare [[\<phi>functor_of \<open>?T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<Rightarrow> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<open>?T\<close> (100) ]] *)
+
+(* lemma SubjectionTY_unit_functor[\<phi>reason add]:
+  \<open> Semi_Unit_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) \<close>
+  unfolding Semi_Unit_Functor_def Transformation_def
+  by (clarsimp simp add: SubjectionTY_expn Subjection_expn set_eq_iff) *)
+ 
+interpretation SubjectionTY: Functional_Transformation_Functor
+    \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>True\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
+  by (standard, clarsimp simp add: Transformation_Functor_def Transformation_def SubjectionTY_expn
+          Subjection_expn, blast)
+
+lemma SubjectionTY_inhabitance_functor[\<phi>reason add]:
+  \<open> Inhabitance_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) id \<close>
+  unfolding Inhabitance_Functor_def Inhabited_def
+  by (clarsimp simp add: SubjectionTY_expn)
+
+interpretation SubjectionTY: Sep_Homo_Type_Functor_L
+      \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> True
+  by (standard, rule \<phi>Type_eqI, clarsimp simp add:
+      set_eq_iff SubjectionTY_expn Subjection_expn set_mult_expn \<phi>Prod_expn; blast)
+
+lemma \<phi>\<s>\<u>\<b>\<j>_simp:
+  \<open> Transformation_Functor Fa Fa D mapper
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ((\<forall>x y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P))
+\<Longrightarrow> (Fa (T \<phi>\<s>\<u>\<b>\<j> P)) \<equiv> (Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def
+  by (rule \<phi>Type_eqI; clarsimp simp add: SubjectionTY_expn Subjection_expn ExSet_expn subset_iff,
+      smt (z3) SubjectionTY_expn Subjection_expn \<phi>Type_eqI
+
+simproc_setup (in Transformation_Functor_L) \<phi>\<s>\<u>\<b>\<j>_simp (\<open>Fa (T \<phi>\<s>\<u>\<b>\<j> P)\<close>) = \<open>
+fn morph => 
+let val redex_residue = Morphism.cterm morph \<^schematic_cterm>\<open>(Fa (?T \<phi>\<s>\<u>\<b>\<j> ?k), Fa)\<close>
+    val redex = Thm.dest_arg1 redex_residue
+    val residue = Thm.dest_arg redex_residue
+in fn ctxt => fn cterm =>
+  let val s = Thm.first_order_match (redex, cterm)
+      val Fa = Thm.instantiate_cterm s residue
+<<<<<<< HEAD
+   in (Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
+         |> Phi_Reasoner.reason (SOME 1) ctxt
+=======
+   in (ctxt, Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
+         |> Phi_Reasoner.reason (SOME 2)
+         |> Option.map snd
+>>>>>>> dce1a7d (WIP)
+  end
+end
+\<close>
+
+
+
+(*
 lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
   for x :: \<open>nat\<close>
-  \<medium_left_bracket> case_analysis
+  \<medium_left_bracket> case_analysis *)
 
 subsection \<open>Stepwise Abstraction\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 2]]
                                                                         
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
+
+thm \<phi>Composition
 
 lemma [\<phi>reason 1200]:
   \<open>x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U) @action to RAW\<close>
@@ -202,86 +301,6 @@ lemma \<phi>Composition_union_functor[\<phi>reason add]:
 *)
 
 section \<open>Logical Connectives\<close>
-
-subsection \<open>Embedding Subjection into Type\<close>
-
-definition SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
-  where \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
-
-translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
-
-lemma SubjectionTY_expn[\<phi>programming_simps, \<phi>expns]:
-  \<open>(x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) = (x \<Ztypecolon> T \<s>\<u>\<b>\<j> P)\<close>
-  unfolding set_eq_iff SubjectionTY_def \<phi>Type_def by simp
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF)
-\<Longrightarrow> Inhabited (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<longrightarrow> P \<and> C @action \<A>EIF\<close>
-  unfolding SubjectionTY_expn Premise_def Inhabited_def Subjection_expn Action_Tag_def
-  by blast
-
-lemma [\<phi>reason 1000]:
-  \<open> Rewrite_into_\<phi>Type S (x \<Ztypecolon> T)
-\<Longrightarrow> Rewrite_into_\<phi>Type (S \<s>\<u>\<b>\<j> P) (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  unfolding Rewrite_into_\<phi>Type_def by (simp add: SubjectionTY_expn)
-
-lemma [\<phi>reason 1200]:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T))
-\<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  \<medium_left_bracket> premises [\<phi>reason add] ;; \<medium_right_bracket> .
-
-
-subsubsection \<open>Algebraic Properties\<close>
-
-(* declare [[\<phi>functor_of \<open>?T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<Rightarrow> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P\<close> \<open>?T\<close> (100) ]] *)
-
-(* lemma SubjectionTY_unit_functor[\<phi>reason add]:
-  \<open> Semi_Unit_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) \<close>
-  unfolding Semi_Unit_Functor_def Transformation_def
-  by (clarsimp simp add: SubjectionTY_expn Subjection_expn set_eq_iff) *)
- 
-interpretation SubjectionTY: Functional_Transformation_Functor
-    \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>True\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
-  by (standard, clarsimp simp add: Transformation_Functor_def Transformation_def SubjectionTY_expn
-          Subjection_expn, blast)
-
-lemma SubjectionTY_inhabitance_functor[\<phi>reason add]:
-  \<open> Inhabitance_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P) id \<close>
-  unfolding Inhabitance_Functor_def Inhabited_def
-  by (clarsimp simp add: SubjectionTY_expn)
-
-interpretation SubjectionTY: Sep_Homo_Type_Functor_L
-      \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> \<open>\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> P\<close> True
-  by (standard, rule \<phi>Type_eqI, clarsimp simp add:
-      set_eq_iff SubjectionTY_expn Subjection_expn set_mult_expn \<phi>Prod_expn; blast)
-
-lemma \<phi>\<s>\<u>\<b>\<j>_simp:
-  \<open> Transformation_Functor Fa Fa D mapper
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ((\<forall>x y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P))
-\<Longrightarrow> (Fa (T \<phi>\<s>\<u>\<b>\<j> P)) \<equiv> (Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def
-  by (rule \<phi>Type_eqI; clarsimp simp add: SubjectionTY_expn Subjection_expn ExSet_expn subset_iff,
-      smt (z3) SubjectionTY_expn Subjection_expn \<phi>Type_eqI
-
-simproc_setup (in Transformation_Functor_L) \<phi>\<s>\<u>\<b>\<j>_simp (\<open>Fa (T \<phi>\<s>\<u>\<b>\<j> P)\<close>) = \<open>
-fn morph => 
-let val redex_residue = Morphism.cterm morph \<^schematic_cterm>\<open>(Fa (?T \<phi>\<s>\<u>\<b>\<j> ?k), Fa)\<close>
-    val redex = Thm.dest_arg1 redex_residue
-    val residue = Thm.dest_arg redex_residue
-in fn ctxt => fn cterm =>
-  let val s = Thm.first_order_match (redex, cterm)
-      val Fa = Thm.instantiate_cterm s residue
-<<<<<<< HEAD
-   in (Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
-         |> Phi_Reasoner.reason (SOME 1) ctxt
-=======
-   in (ctxt, Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
-         |> Phi_Reasoner.reason (SOME 2)
-         |> Option.map snd
->>>>>>> dce1a7d (WIP)
-  end
-end
-\<close>
 
 
 

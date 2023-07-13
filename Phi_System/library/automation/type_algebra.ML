@@ -165,7 +165,7 @@ val chk_unfolded : Phi_Type_Algebra.phi_type -> term -> unit
 val conv_chk_unfolded : Phi_Type_Algebra.phi_type -> conv
       (*roughly check if a phi-type expression is expanded, and warn if not*)
 
-val quantifies_abstract_object : Proof.context -> (term -> term) (*get the abstract object*) -> (term -> term)
+val quantifies_abstract_object : bool -> Proof.context -> (term -> term) (*get the abstract object*) -> (term -> term)
 
 end
 
@@ -805,9 +805,10 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,rule,quants,ind_con
 (* Default Hint Unifier *)
 
 local
-fun extract_hhf ext (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extract_hhf ext X
-  | extract_hhf ext (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_hhf ext X
-  | extract_hhf ext X = ext X
+fun extract_hhf (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extract_hhf X
+  | extract_hhf (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_hhf X
+  | extract_hhf (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = extract_hhf X
+  | extract_hhf X = Envir.beta_eta_contract X
 in
 
 type hint = term
@@ -815,7 +816,7 @@ type unify_hint = (Proof.context -> hint -> term * term -> Envir.env)
 
 fun hint_unify_by_type extract_type ctxt hint (_, T') =
     ( Unify.smash_unifiers (Context.Proof ctxt)
-                           [(extract_type (Logic.strip_imp_concl hint), T')]
+                           [(extract_type (extract_hhf hint), T')]
                            Envir.init
         |> Seq.chop 2
         |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
@@ -827,7 +828,7 @@ fun hint_unify_by_type extract_type ctxt hint (_, T') =
 
 fun hint_unify_by_type_operator extract_type_operator ctxt hint (_, F_term $ _) =
     ( Unify.smash_unifiers (Context.Proof ctxt)
-                           [(extract_hhf extract_type_operator (Logic.strip_imp_concl hint), F_term)]
+                           [(extract_type_operator (extract_hhf hint), F_term)]
                            Envir.init
         |> Seq.chop 2
         |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
@@ -1100,20 +1101,23 @@ fun make_forall_quantified_property_for_parameters_of_a_phi_type mk (F $ T) =
          | NONE => make_forall_quantified_property_for_parameters_of_a_phi_type mk F)
   | make_forall_quantified_property_for_parameters_of_a_phi_type mk _ = []
 
-fun quantifies_abstract_object ctxt get_x =
-  let fun add_qunat ((H as Const(\<^const_name>\<open>Pure.imp\<close>,_) $ _) $ X)
+fun quantifies_abstract_object enter_tag ctxt get_x =
+  let fun mk Prop =
+          (case get_x Prop
+             of X as Free (N,ty) => HOLogic.all_const ty $ Abs (N, ty, Term.abstract_over (X, Prop))
+              | X as Var ((N,_),ty) => HOLogic.all_const ty $ Abs (N, ty, Term.abstract_over (X, Prop))
+              | X => error ("The abstract object must be a variable\n" ^
+                             Syntax.string_of_term ctxt Prop ^ "\n\
+                            \But given " ^ Syntax.string_of_term ctxt X ))
+          handle Match => error ("Unrecogniziable Hint:\n" ^ Syntax.string_of_term ctxt Prop)
+      fun add_qunat ((H as Const(\<^const_name>\<open>Pure.imp\<close>,_) $ _) $ X)
             = H $ add_qunat X
         | add_qunat ((H as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X)
             = H $ add_qunat X
-        | add_qunat ((H as Const(\<^const_name>\<open>Action_Tag\<close>, _)) $ X $ A)
-            = H $ add_qunat X $ A
-        | add_qunat Prop =
-            (case get_x Prop
-               of X as Free (N,ty) => HOLogic.all_const ty $ Abs (N, ty, Term.lambda X Prop)
-                | X => error ("The abstract object must be a variable\n" ^
-                               Syntax.string_of_term ctxt Prop ^ "\n\
-                              \But given " ^ Syntax.string_of_term ctxt X ))
-            handle Match => error ("Unrecogniziable Hint:\n" ^ Syntax.string_of_term ctxt Prop)
+        | add_qunat (X as (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _)) = X
+        | add_qunat (Prop as ((H as Const(\<^const_name>\<open>Action_Tag\<close>, _)) $ X $ A))
+            = if enter_tag then H $ add_qunat X $ A else mk Prop
+        | add_qunat Prop = mk Prop
    in add_qunat
   end
 

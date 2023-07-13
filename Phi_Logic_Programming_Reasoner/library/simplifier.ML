@@ -12,13 +12,18 @@ end
 
 structure PLPR_Simplifier : PLPR_SIMPLIFIER = struct
 
-fun simplification F ctxt sequent =
+fun simplification F ctxt sequent = Seq.make (fn () =>
   sequent
-    |> Tactical.HEADGOAL (Simplifier.simp_tac (F ctxt))
+    |> Conv.gconv_rule (HOLogic.Trueprop_conv (Conv.arg_conv (
+          Simplifier.rewrite (F ctxt)))) 1
+    |> (fn th => Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
+                  |> Option.map (rpair Seq.empty))
+)
+(*    |> Tactical.HEADGOAL (Simplifier.simp_tac (F ctxt))
     |> Seq.map_filter (fn th =>
-          case Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
-            of NONE => Phi_Reasoner.single_RS' @{thm End_Simplification'} ctxt th
-             | some => some)
+          (*case*) Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
+          (*of NONE => Phi_Reasoner.single_RS' @{thm End_Simplification'} ctxt th
+             | some => some*))*)
 
 fun simp_premis F ctxt sequent =
   (@{thm Premise_I} RS sequent)

@@ -20,7 +20,7 @@ fun guess_property (x_term, FT_term, (phi:phi_type)) ctxt =
 fun gen_is_functional hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type (
-            fn _ (*Trueprop*) $ (\<^Const>\<open>Is_Functional _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T)) => T )
+            fn \<^Const>\<open>Is_Functional _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) => T )
 
       val ind_conv = default_ind_conv (
             fn ctxt => fn phi =>

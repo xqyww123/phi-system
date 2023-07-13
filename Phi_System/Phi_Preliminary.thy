@@ -176,7 +176,10 @@ ML_file \<open>library/tools/the_friendly_character.ML\<close>
 
 definition Friendly_Help :: \<open>text \<Rightarrow> bool\<close> where [iff]: \<open>Friendly_Help _ \<longleftrightarrow> True\<close>
 
-lemma Friendly_Help_I: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_def ..
+lemma Friendly_Help_I[intro!]: \<open>Friendly_Help ANY\<close> unfolding Friendly_Help_def ..
+lemma Friendly_Help_E[elim!]: \<open>Friendly_Help ANY \<Longrightarrow> C \<Longrightarrow> C\<close> .
+
+(*TODO: move this to \<phi>processor so that the help is displayed only when the IDECP ends at that*)
 
 \<phi>reasoner_ML Friendly_Help 1000 (\<open>Friendly_Help _\<close>) = \<open>fn (ctxt,sequent) =>
  (if Config.get ctxt Phi_The_Friendly_Character.enable

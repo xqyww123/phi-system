@@ -57,13 +57,16 @@ fun guess_property_inhab_atom (x_term, T_term, (phi:phi_type)) ctxt =
 
 fun gen_inhab hint00 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val hint0 = Option.map (quantifies_abstract_object ctxt0 (
-            fn Const(\<^const_name>\<open>HOL.implies\<close>, _)
-                $ (Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ X $ T))
-                $ _ =>
-                if Term.exists_subterm (fn x => x = X) T
-                then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
-                else X
+      val hint0 = Option.map (quantifies_abstract_object false ctxt0 (
+            let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
+                  | target (Const(\<^const_name>\<open>HOL.implies\<close>, _)
+                              $ (Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ X $ T))
+                              $ _) =
+                        if Term.exists_subterm (fn x => x = X) T
+                        then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
+                        else X
+             in target
+            end
             )) hint00
 
       val guess_property = if is_Type_Opr (Term.fastype_of (#term phi0))
@@ -72,8 +75,11 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
       val mode_infer = not (is_some hint0 orelse is_Type_Opr (Term.fastype_of (#term phi0)))
 
       val unify_hint_U = hint_unify_by_type (
-            fn _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (
-                  Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) $ _)
+            fn Const(\<^const_name>\<open>HOL.All\<close>, _) $ (Abs (_,_,
+                  Const(\<^const_name>\<open>Action_Tag\<close>, _) $ 
+                    (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (
+                       Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) $ _)
+                    $ _ ))
                  => T)
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr})),
               fn ctxt => fn _ =>
