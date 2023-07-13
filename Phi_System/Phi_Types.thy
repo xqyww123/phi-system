@@ -23,7 +23,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
              
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
@@ -35,15 +35,7 @@ declare [[\<phi>trace_reasoning = 0]]
 declare [[\<phi>trace_reasoning = 2]]
 
 lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = y
-\<Longrightarrow> x \<Ztypecolon> \<phi>Fun f \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself\<close>
-  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket> .
-
-lemma [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> \<phi>Fun f \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. y = f x @action to Itself\<close> \<medium_left_bracket> \<medium_right_bracket> .
-
-lemma [\<phi>reason 1200]:
-  \<open>is_functional (x \<Ztypecolon> \<phi>Fun f)\<close>
+  \<open>Is_Functional (x \<Ztypecolon> \<phi>Fun f)\<close>
   \<medium_left_bracket> to Itself \<medium_right_bracket> .
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -111,10 +103,10 @@ lemma [\<phi>reason 1200]:
     construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
-  \<open> is_functional (x \<Ztypecolon> U)
+  \<open> Is_Functional (x \<Ztypecolon> U)
 \<Longrightarrow> y \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<w>\<i>\<t>\<h> P\<close>
-  \<medium_left_bracket> premises [unfolded is_functional_def, useful] and [unfolded satisfication_encoding, useful]
+  \<medium_left_bracket> premises [unfolded Is_Functional_def, useful] and [unfolded satisfication_encoding, useful]
     destruct \<medium_right_bracket> .
 
 lemma \<phi>Composition_expn[iff, \<phi>expns]:
@@ -235,8 +227,8 @@ lemma [\<phi>reason 1000]:
   unfolding Rewrite_into_\<phi>Type_def by (simp add: SubjectionTY_expn)
 
 lemma [\<phi>reason 1200]:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> is_functional (x \<Ztypecolon> T))
-\<Longrightarrow> is_functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T))
+\<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   \<medium_left_bracket> premises [\<phi>reason add] ;; \<medium_right_bracket> .
 
 
@@ -722,9 +714,9 @@ lemma [\<phi>reason 1200]:
   by (clarsimp simp add: \<phi>expns Transformation_def, blast)
 
 lemma [\<phi>reason 1200]:
-  \<open> is_functional (x \<Ztypecolon> T)
-\<Longrightarrow> is_functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
-  by (clarsimp simp add: \<phi>expns is_functional_def, blast)  
+  \<open> Is_Functional (x \<Ztypecolon> T)
+\<Longrightarrow> Is_Functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
+  by (clarsimp simp add: \<phi>expns Is_Functional_def, blast)  
 
 
 
@@ -821,9 +813,9 @@ lemma [\<phi>reason 1200]:
   by (clarsimp simp add: \<phi>expns Transformation_def, blast)
 
 lemma [\<phi>reason 1200]:
-  \<open> is_functional (x \<Ztypecolon> T)
-\<Longrightarrow> is_functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
-  by (clarsimp simp add: \<phi>expns is_functional_def, blast)
+  \<open> Is_Functional (x \<Ztypecolon> T)
+\<Longrightarrow> Is_Functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
+  by (clarsimp simp add: \<phi>expns Is_Functional_def, blast)
 
 paragraph \<open>Algebraic Properties\<close>
 
@@ -1704,9 +1696,9 @@ lemma [\<phi>reason 1200]:
   by (clarsimp simp add: \<phi>expns Transformation_def)
 
 lemma [\<phi>reason 1200]:
-  \<open> is_functional (x \<Ztypecolon> T)
-\<Longrightarrow> is_functional (x \<Ztypecolon> \<black_circle> T)\<close>
-  by (clarsimp simp add: \<phi>expns is_functional_def)
+  \<open> Is_Functional (x \<Ztypecolon> T)
+\<Longrightarrow> Is_Functional (x \<Ztypecolon> \<black_circle> T)\<close>
+  by (clarsimp simp add: \<phi>expns Is_Functional_def)
 
 paragraph \<open>Algebraic Properties\<close>
 

@@ -1758,7 +1758,7 @@ declare [[\<phi>premise_attribute  [elim_Do_tag] for \<open>\<^bold>d\<^bold>o P
           \<phi>premise_attribute? [\<phi>reason] for \<open>\<phi>SemType _ _\<close> \<open>\<^bold>d\<^bold>o \<phi>SemType _ _\<close>,
           \<phi>premise_attribute  [elim_Simplify_tag] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>,
           \<phi>premise_attribute? [useful] for \<open>Simplify _ _ _\<close> \<open>\<^bold>d\<^bold>o Simplify _ _ _\<close>,
-          \<phi>premise_attribute? [\<phi>reason 200] for \<open>is_functional ?S\<close>,
+          \<phi>premise_attribute? [\<phi>reason 200] for \<open>Is_Functional ?S\<close>,
           \<phi>premise_attribute? [\<phi>reason 200] for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
 ]]
 

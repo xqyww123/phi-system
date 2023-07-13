@@ -162,17 +162,24 @@ fun gen_trans_to_raw_abst hint0 (phi0 : phi_type) thy =
         (rule RS' (ctxt, @{thm' spec}))
          |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (
               Phi_Conv.action_tag_conv (Phi_Syntax.transformation_conv Conv.all_conv
-                (Phi_Syntax.ExSet_conv (fn (_, ctxt) =>
-                    Phi_Syntax.Subjection_conv Conv.all_conv (
-                        Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def})
-                      )) ctxt)
+                (Phi_Syntax.ExSet_conv (fn (bvar, ctxt) =>
+                  let val turn_bvar_eq = Drule.infer_instantiate ctxt [(("b",0),bvar)] @{thm' HOL.eq_commute}
+                   in Phi_Syntax.Subjection_conv Conv.all_conv (
+                        Simplifier.rewrite (ctxt addsimps [turn_bvar_eq, @{thm special_Ex_def}]))
+                  end) ctxt)
                 Conv.all_conv)
             )) ctxt)
       val rules = mk_rule_by_guess_or_hint ("Trans_to_Raw_Abst", unify_hint, guess_property,
                                             @{thm' \<phi>TA_TrRA_rule}, [0],
                                             SOME ind_conv, reasoning, solver, simp)
                                            phi0 hint0 ctxt0
-   in Seq.pull rules; thy
+   in case Seq.pull rules
+   of SOME (rule, _) => thy
+        |> Phi_Help.generic_theory_mapping (fn m =>
+                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 90
+                                              ([],[]) NONE [Morphism.thm m rule])
+        |> Phi_Type_Algebra.note_properties phi0 [("Trans_to_Raw_Abst", [rule])]
+    | _ => raise Automation_Fail
   end
 
 val trans_to_raw_abst = accept_one "Trans_to_Raw_Abst" gen_trans_to_raw_abst

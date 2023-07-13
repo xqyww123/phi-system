@@ -1517,21 +1517,21 @@ section \<open>Programming Methods\<close>
 
 subsection \<open>Functional\<close>
 
-lemma is_functional_imp'':
-  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> is_functional S'
-\<Longrightarrow> is_functional S\<close>
-  unfolding Transformation_def is_functional_def
+lemma Is_Functional_imp'':
+  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Is_Functional S'
+\<Longrightarrow> Is_Functional S\<close>
+  unfolding Transformation_def Is_Functional_def
   by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Embedded_Reasoning (is_functional S'))) M D R F
+  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Embedded_Reasoning (Is_Functional S'))) M D R F
 \<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show\<close> S \<open>is functional\<close>
       \<open>Now you entered the programming mode and you need to transform the specification to\<close>
       \<open>someone which is functional, so that we can verify your claim.\<close>)
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (is_functional S)) M D R F\<close>
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Is_Functional S)) M D R F\<close>
   unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
             Embedded_Reasoning_def
-  by (rule is_functional_imp''[where S'=S']; simp)
+  by (rule Is_Functional_imp''[where S'=S']; simp)
 
 
 

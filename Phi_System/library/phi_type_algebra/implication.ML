@@ -55,8 +55,30 @@ fun guess_property_inhab_atom (x_term, T_term, (phi:phi_type)) ctxt =
    in Seq.single ([], Prop, x_term, T_term, phi, ctxt)
   end
 
-fun gen_inhab hint0 (phi0 : phi_type) thy =
+fun gen_inhab hint00 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
+      fun add_quantifier_to_hint ((H as Const(\<^const_name>\<open>Pure.imp\<close>,_) $ _) $ X)
+            = H $ add_quantifier_to_hint X
+        | add_quantifier_to_hint ((H as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X)
+            = H $ add_quantifier_to_hint X
+        | add_quantifier_to_hint ((H as Const(\<^const_name>\<open>Action_Tag\<close>, _)) $ X $ A)
+            = H $ add_quantifier_to_hint X $ A
+        | add_quantifier_to_hint (Prop as (
+              Const(\<^const_name>\<open>HOL.implies\<close>, _)
+                $ (Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ X $ T))
+                $ _))
+            = (case X of Free (N,ty) =>
+                let val _ = if Term.exists_subterm (fn x => x = X) T
+                            then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
+                            else ()
+                 in HOLogic.all_const ty $ Abs (N, ty, Term.lambda X Prop)
+                end
+                  | _ => error ("The abstract object must be a variable\n" ^
+                                Syntax.string_of_term ctxt0 X)
+              )
+        | add_quantifier_to_hint X = error ("Unrecognizable hint\n" ^ Syntax.string_of_term ctxt0 X)
+      val hint0 = Option.map add_quantifier_to_hint hint00
+
       val guess_property = if is_Type_Opr (Term.fastype_of (#term phi0))
                            then guess_property_inhab_tyop
                            else guess_property_inhab_atom

@@ -1221,15 +1221,15 @@ ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
 hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
 
-\<phi>property_deriver Identity_Element\<^sub>I 100 for (\<open>Identity_Element\<^sub>I _ _\<close>)
+\<phi>property_deriver Identity_Element\<^sub>I 101 for (\<open>Identity_Element\<^sub>I _ _\<close>)
     requires Warn_if_contains_Sat
   = \<open>Phi_Type_Algebra_Derivers.identity_element_I\<close>
 
-\<phi>property_deriver Identity_Element\<^sub>E 101 for (\<open>Identity_Element\<^sub>E _\<close>)
+\<phi>property_deriver Identity_Element\<^sub>E 102 for (\<open>Identity_Element\<^sub>E _\<close>)
     requires Warn_if_contains_Sat
   = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
 
-\<phi>property_deriver Identity_Element 102 requires Identity_Element\<^sub>I and Identity_Element\<^sub>E
+\<phi>property_deriver Identity_Element 103 requires Identity_Element\<^sub>I and Identity_Element\<^sub>E
 
 
 subsubsection \<open>Object_Equiv\<close>
@@ -1434,12 +1434,26 @@ lemma \<phi>TA_TrRA_rewr:
 
 ML_file \<open>library/phi_type_algebra/trans_to_raw_abst.ML\<close>
 
-\<phi>property_deriver Trans_to_Raw_Abst 100 for (\<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.trans_to_raw_abst
-\<close>
+\<phi>property_deriver Trans_to_Raw_Abst 100 for (\<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>)
+  requires Warn_if_contains_Sat
+    = \<open> Phi_Type_Algebra_Derivers.trans_to_raw_abst \<close>
 
-(* lemma \<phi>TA_ind_target_proctector_cong:
-  \<open> P @action \<phi>TA_ind_target A \<equiv> P @action \<phi>TA_ind_target A\<close> . *)
+(*hide_fact \<phi>TA_TrRA_rule \<phi>TA_TrRA_rewr*)
+
+subsubsection \<open>Is_Functional\<close>
+
+lemma \<phi>TA_IsFunc_rule:
+  \<open> (\<And>x. Ant \<longrightarrow> Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> \<forall>x. Is_Functional (x \<Ztypecolon> T) \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
+
+
 
 
 

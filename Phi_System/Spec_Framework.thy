@@ -168,52 +168,52 @@ declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close
 
 subsection \<open>Functional\<close>
 
-definition  is_functional :: \<open>'a BI \<Rightarrow> bool\<close>
-  where \<open>is_functional S \<longleftrightarrow> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)\<close>
+definition Is_Functional :: \<open>'a BI \<Rightarrow> bool\<close>
+  where \<open>Is_Functional S \<longleftrightarrow> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)\<close>
 
-declare [[\<phi>reason_default_pattern \<open>is_functional ?S\<close> \<Rightarrow> \<open>is_functional ?S\<close> (100)]]
+declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightarrow> \<open>Is_Functional ?S\<close> (100)]]
 
-(* lemma is_functional_alt:
-  \<open>is_functional S \<longleftrightarrow> (S = {} \<or> (\<exists>x. S = {x}))\<close>
-  unfolding is_functional_def by blast *)
+(* lemma Is_Functional_alt:
+  \<open>Is_Functional S \<longleftrightarrow> (S = {} \<or> (\<exists>x. S = {x}))\<close>
+  unfolding Is_Functional_def by blast *)
 
-lemma is_functional_I[intro!]:
+lemma Is_Functional_I[intro!]:
   \<open> (\<And>x y. x \<Turnstile> A \<Longrightarrow> y \<Turnstile> A \<Longrightarrow> x = y)
-\<Longrightarrow> is_functional A \<close>
-  unfolding is_functional_def by blast
+\<Longrightarrow> Is_Functional A \<close>
+  unfolding Is_Functional_def by blast
 
-lemma is_functional_imp:
+lemma Is_Functional_imp:
   \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'
-\<Longrightarrow> is_functional S'
-\<Longrightarrow> is_functional S\<close>
-  unfolding Transformation_def is_functional_def
+\<Longrightarrow> Is_Functional S'
+\<Longrightarrow> Is_Functional S\<close>
+  unfolding Transformation_def Is_Functional_def
   by blast
 
 lemma [\<phi>reason 1]:
   \<open> FAIL TEXT(\<open>Fail to prove\<close> S \<open>is functional\<close>)
-\<Longrightarrow> is_functional S\<close>
+\<Longrightarrow> Is_Functional S\<close>
   by blast
 
 lemma [\<phi>reason 1200]:
-  \<open>is_functional (v \<Ztypecolon> Itself)\<close>
+  \<open>Is_Functional (v \<Ztypecolon> Itself)\<close>
   by clarsimp
 
 lemma [\<phi>reason 1200]:
-  \<open>is_functional (any \<Ztypecolon> \<phi>None)\<close>
+  \<open>Is_Functional (any \<Ztypecolon> \<phi>None)\<close>
   by clarsimp
 
 lemma [\<phi>reason 1200]:
-  \<open> is_functional (x \<Ztypecolon> T)
-\<Longrightarrow> is_functional (y \<Ztypecolon> U)
-\<Longrightarrow> is_functional ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
-  unfolding is_functional_def set_eq_iff
+  \<open> Is_Functional (x \<Ztypecolon> T)
+\<Longrightarrow> Is_Functional (y \<Ztypecolon> U)
+\<Longrightarrow> Is_Functional ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
+  unfolding Is_Functional_def set_eq_iff
   by (simp, blast)
 
 lemma [\<phi>reason 1200]:
-  \<open> is_functional A
-\<Longrightarrow> is_functional B
-\<Longrightarrow> is_functional (A * B)\<close>
-  unfolding is_functional_def set_eq_iff
+  \<open> Is_Functional A
+\<Longrightarrow> Is_Functional B
+\<Longrightarrow> Is_Functional (A * B)\<close>
+  unfolding Is_Functional_def set_eq_iff
   by (simp add: set_mult_expn, blast)
 
 
