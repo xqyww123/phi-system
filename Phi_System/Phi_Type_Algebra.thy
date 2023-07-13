@@ -350,6 +350,7 @@ lemma \<phi>intro'_transformation:
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * (x \<Ztypecolon> T) \<w>\<i>\<t>\<h> P \<close>
   by simp
 
+
 lemma \<phi>gen_expansion:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
@@ -362,7 +363,7 @@ lemma \<phi>gen_expansion:
 
 ML_file \<open>library/tools/functor_detect.ML\<close>
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
-
+term \<open>HOL.eq\<close>
 
 datatype yyy = YLeaf nat | YNode nat yyy
 datatype ('a,'b) xxx = Leaf 'a | LeafB 'b | Node nat \<open>('a,'b) xxx\<close>
@@ -434,6 +435,21 @@ val x = BNF_Def.deads_of_bnf bnf
 val z = BNF_Def.mk_sets_of_bnf [[]] [[\<^typ>\<open>nat\<close>]] bnf
 end\<close>
 ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>option\<close>\<close>
+
+
+fun fib :: \<open>int \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat\<close>
+  where \<open>fib a 0 c = 1+c\<close> | \<open>fib a (Suc 0) c = 1+c\<close> | \<open>fib a (Suc (Suc n)) c = fib a (Suc n) c + fib (a+1) n c\<close>
+
+ML \<open>Function_Common.retrieve_function_data \<^context> \<^term>\<open>fib\<close>\<close>
+
+
+
+
+
+
+
+
+
 
 (* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
           \<phi>inductive_destruction_rule_from_direct_definition'

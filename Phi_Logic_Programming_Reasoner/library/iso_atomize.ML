@@ -8,6 +8,7 @@ val iso_rulify  : Proof.context -> thm -> thm
 
 val atomize_conv : Proof.context -> conv
 val atomize : Proof.context -> thm -> thm
+val rulify : Proof.context -> thm -> thm
 
 end
 
@@ -42,5 +43,6 @@ val iso_rulify  = Conv.fconv_rule o iso_rulify_conv
 
 fun atomize_conv ctxt = chk o Object_Logic.atomize ctxt
 val atomize = Conv.fconv_rule o atomize_conv
+val rulify = Object_Logic.rulify
 
 end

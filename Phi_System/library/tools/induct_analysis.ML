@@ -48,18 +48,8 @@ val case_synt = Scan.lift (Args.mode Induct.no_simpN) --
 
 end
 
-fun case_analysis_phityp (SOME target) (ctxt,sequent) =
-      let val act_rule = Thm.instantiate
-                            (TVars.make [((("'a",0),\<^sort>\<open>type\<close>), Thm.ctyp_of_cterm target)],
-                              Vars.make [((("target",0), Thm.typ_of_cterm target), target)])
-                            @{thm' "_cases_app_rule_"}
-       in Phi_Apply.apply [act_rule] ctxt sequent
-      end
-  | case_analysis_phityp NONE (ctxt,sequent) =
+fun case_analysis_phityp (ctxt,sequent) =
       Phi_Apply.apply [@{thm' "_cases_app_rule_"}] ctxt sequent
-
-fun case_analysis_phityp' target stat =
-      case_analysis_phityp (Option.map (Thm.cterm_of (fst stat)) target) stat
 
 fun case_analysis_system (no_simp, (insts, opt_rule)) (ctxt,sequent) =
   let val mode = Phi_Working_Mode.mode1 ctxt
@@ -80,13 +70,9 @@ fun case_analysis_system (no_simp, (insts, opt_rule)) (ctxt,sequent) =
 
 fun case_analysis (no_simp, (insts, opt_rule)) stat =
   case insts
-    of [[]] => case_analysis_phityp' NONE stat
-     | [] => case_analysis_phityp' NONE stat
-     | [[NONE]] => case_analysis_phityp' NONE stat
-     | [[SOME term]] => (case Term.fastype_of term
-                           of \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close> => case_analysis_phityp' (SOME term) stat
-                            | \<^Type>\<open>set _\<close> => case_analysis_phityp' (SOME term) stat
-                            | _ => case_analysis_system (no_simp, (insts, opt_rule)) stat)
+    of [[]] => case_analysis_phityp stat
+     | [] => case_analysis_phityp stat
+     | [[NONE]] => case_analysis_phityp stat
      | _ => case_analysis_system (no_simp, (insts, opt_rule)) stat
 
 fun case_analysis_processor (ctxt,sequent) =

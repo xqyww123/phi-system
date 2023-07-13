@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-              
+                
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -78,10 +78,11 @@ lemma [\<phi>reason 1000]:
 
 declare [[\<phi>trace_reasoning = 0]]
 
+
 lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
-  for x :: \<open>'a \<times> 'b\<close>
-  \<medium_left_bracket> case_analysis 
+  for x :: \<open>nat\<close>
+  \<medium_left_bracket> case_analysis
 
 subsection \<open>Stepwise Abstraction\<close>
 
@@ -647,7 +648,7 @@ subsubsection \<open>By Key\<close>
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
-                                                                                                                                                                        
+                                                                                                                                                                                             
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
