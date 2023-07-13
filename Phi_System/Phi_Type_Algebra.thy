@@ -1443,16 +1443,24 @@ ML_file \<open>library/phi_type_algebra/trans_to_raw_abst.ML\<close>
 subsubsection \<open>Is_Functional\<close>
 
 lemma \<phi>TA_IsFunc_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+  \<open> Ant \<longrightarrow> Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> \<forall>x. Is_Functional (x \<Ztypecolon> T) \<close>
+\<Longrightarrow> Is_Functional (x \<Ztypecolon> T) \<close>
   unfolding Action_Tag_def
   by simp
 
+lemma \<phi>TA_IsFunc_rewr:
+  \<open> Trueprop (Ant \<longrightarrow> Is_Functional S @action Any)
+ \<equiv> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)) \<close>
+  unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
 
 
+ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
+
+\<phi>property_deriver Is_Functional 100 for (\<open>Is_Functional (_ \<Ztypecolon> _)\<close>)
+    = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
 
 
 

@@ -84,7 +84,7 @@ fun gen_TF hint0 (phi0 : phi_type) generic =
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
                         | X => NONE))
       val unify_hint = hint_unify_by_type_operator (
-              fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _) => F1)
+              fn (_ (*Trueprop*) $ Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _) => F1)
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr})),
                         fn ctxt => fn phi =>
                           Conv.rewr_conv @{thm \<phi>TA_TF_rewr} then_conv
@@ -181,7 +181,7 @@ fun gen_FTF hint0 (phi0 : phi_type) thy =
   let val _ = assert_first_parameter_is_type "Functional_Transformation_Functor" (Term.fastype_of (#term phi0))
       val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type_operator (
-            fn (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ ) => F1)
+            fn (_ (*Trueprop*) $ Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ ) => F1)
       val reasoning = PLPR_reasoner NONE
       fun simp (_, ctxt) thm =
         if is_some hint0 then thm

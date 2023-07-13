@@ -11,7 +11,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 fun guess_property  (x_term, T_term, (phi:phi_type)) ctxt =
   let val _ = if #is_recursive phi
               then error "Trans_to_Raw_Abst: I cannot guess the rule for a recursive \<phi>-type\n\
-                         \Please manually annotate the rule."
+                         \Please manually annotate the expression."
               else ()
       val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun collect_params ret [] _  = ret
@@ -144,11 +144,11 @@ fun solver (phi, ctxt, sequent) =
 
 fun gen_trans_to_raw_abst hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val unify_hint = hint_unify_by_type_operator (
-            fn _ (*All*) $ (Abs (_, _,
-                  _ (*Action_Tag*) $ (_ (*trans*) $ (_ (*\<phi>-Type*) $ _ $ T) $ _ $ _) $ _))
-                 => T
-             | _ => raise TERM ("",[]))
+      val unify_hint = hint_unify_by_type (
+            fn _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ (Abs (_, _, \<^Const>\<open>Action_Tag\<close>
+                      $ (\<^Const>\<open>Transformation _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ $ _)
+                      $ _)))
+                 => T)
       val ind_conv = default_ind_conv (
             fn ctxt => fn phi =>
                 Conv.rewr_conv @{thm' \<phi>TA_TrRA_rewr},

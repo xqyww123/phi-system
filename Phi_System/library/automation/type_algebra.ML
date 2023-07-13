@@ -71,6 +71,13 @@ val guess_zip_guided : bool (*true for zip, false for unzip*) ->
                                         * term (*the zip or the unzip*))
                                         * Proof.context
 
+val make_forall_quantified_property : (typ (*x_ty*) * typ (*model_ty*) * term (*x*) * term (*T*) -> term (*the property*))
+                                   -> term (*the \<phi>-type operator*)
+                                   -> term
+val make_forall_quantified_property_for_parameters_of_a_phi_type :
+        (typ (*x_ty*) * typ (*model_ty*) * term (*x*) * term (*T*) -> term (*the property*))
+     -> term -> term list
+
 (** The framework **)
 
 type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
@@ -158,14 +165,14 @@ val chk_unfolded : Phi_Type_Algebra.phi_type -> term -> unit
 val conv_chk_unfolded : Phi_Type_Algebra.phi_type -> conv
       (*roughly check if a phi-type expression is expanded, and warn if not*)
 
+val quantifies_abstract_object : Proof.context -> (term -> term) (*get the abstract object*) -> (term -> term)
+
 end
 
 (**** Implementation ****)
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra
-
-(*** Library ***)
 
 exception Automation_Fail
 
@@ -808,7 +815,7 @@ type unify_hint = (Proof.context -> hint -> term * term -> Envir.env)
 
 fun hint_unify_by_type extract_type ctxt hint (_, T') =
     ( Unify.smash_unifiers (Context.Proof ctxt)
-                           [(extract_hhf extract_type (Logic.strip_imp_concl hint), T')]
+                           [(extract_type (Logic.strip_imp_concl hint), T')]
                            Envir.init
         |> Seq.chop 2
         |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
@@ -1076,6 +1083,40 @@ fun extract_pure_prem_by_RS rules ctxt thm =
           |> Phi_Conv.atomize ctxt
           |> (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=default]})))
   ) rules
+
+(** Other Tools **)
+
+fun make_forall_quantified_property mk phi =
+  let val (rev_args_ty, x_ty, m_ty) = dest_parameterized_phi_ty (Term.fastype_of phi)
+      val arity = length rev_args_ty
+      val T = fold_index (fn (i,_) => fn X => X $ Bound (arity - i)) rev_args_ty phi
+   in (HOLogic.all_const x_ty $ Abs ("x", x_ty, mk (x_ty, m_ty, Bound 0, T)))
+   |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs ("a", ty, X)) rev_args_ty
+  end
+
+fun make_forall_quantified_property_for_parameters_of_a_phi_type mk (F $ T) =
+     (case try (make_forall_quantified_property mk) T
+        of SOME ret => ret :: make_forall_quantified_property_for_parameters_of_a_phi_type mk F
+         | NONE => make_forall_quantified_property_for_parameters_of_a_phi_type mk F)
+  | make_forall_quantified_property_for_parameters_of_a_phi_type mk _ = []
+
+fun quantifies_abstract_object ctxt get_x =
+  let fun add_qunat ((H as Const(\<^const_name>\<open>Pure.imp\<close>,_) $ _) $ X)
+            = H $ add_qunat X
+        | add_qunat ((H as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X)
+            = H $ add_qunat X
+        | add_qunat ((H as Const(\<^const_name>\<open>Action_Tag\<close>, _)) $ X $ A)
+            = H $ add_qunat X $ A
+        | add_qunat Prop =
+            (case get_x Prop
+               of X as Free (N,ty) => HOLogic.all_const ty $ Abs (N, ty, Term.lambda X Prop)
+                | X => error ("The abstract object must be a variable\n" ^
+                               Syntax.string_of_term ctxt Prop ^ "\n\
+                              \But given " ^ Syntax.string_of_term ctxt X ))
+            handle Match => error ("Unrecogniziable Hint:\n" ^ Syntax.string_of_term ctxt Prop)
+   in add_qunat
+  end
+
 
 
 (* (** Misc **)

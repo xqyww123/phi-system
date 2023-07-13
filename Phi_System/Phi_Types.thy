@@ -23,20 +23,15 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-             
+declare [[\<phi>trace_reasoning = 0]]
+              
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Basic
+       and Is_Functional
        and Trans_to_Raw_Abst
-
-declare [[\<phi>trace_reasoning = 2]]
-
-lemma [\<phi>reason 1200]:
-  \<open>Is_Functional (x \<Ztypecolon> \<phi>Fun f)\<close>
-  \<medium_left_bracket> to Itself \<medium_right_bracket> .
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -71,18 +66,15 @@ lemma \<phi>Fun_unit_homo[\<phi>reason add]:
 
 subsection \<open>\<phi>-Type Embedding of \<open>\<top>\<close>\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Any :: \<open>('x, unit) \<phi>\<close>
   where \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
   deriving Basic
 
-lemma \<phi>Any_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Any)\<close>
-  unfolding \<phi>Any_def \<phi>Type_def by simp
-
-lemma \<phi>Any_cast [\<phi>reason 1200]:
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi>Any\<close>
-  \<medium_left_bracket> \<medium_right_bracket>.
-
+lemma [\<phi>reason 1000]:
+  \<open>x \<Ztypecolon> \<phi>Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
+  \<medium_left_bracket> to Itself \<medium_right_bracket>.
 
 
 subsection \<open>Stepwise Abstraction\<close>
