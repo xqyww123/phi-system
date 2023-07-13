@@ -168,7 +168,8 @@ type reasoner = {name: term,
                  blacklist: term list,
                  tactic: (context_state -> context_state Seq.seq)}
 
-val trick = map_aterms (fn Var ((s,i),T) => Var ((s, if String.isPrefix "var_" s then ~i - 1 else i),T)
+val trick = map_aterms (fn Var ((s,i),T) => Var ((s, if String.isPrefix "var_" s orelse s = "var"
+                                                     then ~i - 1 else i),T)
                          | X => X)
 
 fun normalize_reasoner f ({name,pos,mode,pattern,blacklist,tactic}:reasoner) =
@@ -906,7 +907,7 @@ fun gen_attr_add_intro' pass (pos, mode, priority, additional_rules, action, (pa
                    |> is_some action ? map (fn th =>
                         th RS (Thm.instantiate (TVars.empty,
                                                 Vars.make [((("A",0),\<^typ>\<open>action\<close>), the action)])
-                                  @{thm Action_Tag_I}))
+                                  (Thm.transfer'' ctxt @{thm' Action_Tag_I})))
                    |> map Phi_Help.beta_eta_contract
                    |> Drule.zero_var_indexes_list
           val (rules', ctxt') = pass (rules, ctxt)

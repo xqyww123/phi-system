@@ -49,7 +49,6 @@ in fn thy => thy
                                         pretty_term_style
 end\<close>
 
-
 ML_file \<open>library/tools/ml_thms.ML\<close>
 ML_file \<open>library/pattern.ML\<close>
 ML_file_debug \<open>library/helpers.ML\<close>

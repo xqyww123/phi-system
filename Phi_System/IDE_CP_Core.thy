@@ -1476,13 +1476,13 @@ text \<open>There are two way to activate the construction of an action.
 
 paragraph \<open>First way, by Application\<close>
 
-definition Call_Action :: \<open>action \<Rightarrow> prop\<close> where \<open>Call_Action \<equiv> Pure.term\<close>
+definition Call_Action :: \<open>action \<Rightarrow> bool\<close> where \<open>Call_Action _ \<equiv> True\<close>
 
-lemma Call_Action_I[intro!]: \<open>PROP Call_Action XX\<close> unfolding Call_Action_def term_def .
+lemma Call_Action_I[intro!]: \<open>Call_Action Act\<close> unfolding Call_Action_def ..
 
 lemma [\<phi>reason 2000]:
   \<open> PROP Do_Action action sequent result
-\<Longrightarrow> PROP \<phi>Application (Call_Action action) sequent result\<close>
+\<Longrightarrow> PROP \<phi>Application (Trueprop (Call_Action action)) sequent result\<close>
   unfolding \<phi>Application_def Do_Action_def .
 
 paragraph \<open>Second way, by Synthesis\<close>

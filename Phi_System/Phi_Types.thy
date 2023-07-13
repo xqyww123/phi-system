@@ -76,6 +76,12 @@ lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> \<phi>Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
   \<medium_left_bracket> to Itself \<medium_right_bracket>.
 
+declare [[\<phi>trace_reasoning = 0]]
+
+lemma [\<phi>reason 1000]:
+  \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
+  for x :: \<open>'a \<times> 'b\<close>
+  \<medium_left_bracket> case_analysis 
 
 subsection \<open>Stepwise Abstraction\<close>
 

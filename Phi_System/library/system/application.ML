@@ -37,19 +37,19 @@ fun normalize_app_rule ctxt =
   Conv.fconv_rule (Phi_Conv.meta_ball_conv_all (K Conv.all_conv) ctxt)
 
 fun expand_appliant ctxt rule = rule
-  |> repeat (fn th => th RS @{thm spec})
-  |> repeat (fn th => th RS @{thm mp})
-  |> repeat (fn th => th RS @{thm spec})
+  |> repeat (fn th => th RS' (ctxt, @{thm' spec}))
+  |> repeat (fn th => th RS' (ctxt, @{thm' mp}))
+  |> repeat (fn th => th RS' (ctxt, @{thm' spec}))
   |> normalize_app_rule ctxt
 
 fun apply_proc_naive proc (ctxt,sequent) =
-  (ctxt, expand_appliant ctxt proc RS (sequent RS @{thm \<phi>apply_proc}))
+  (ctxt, expand_appliant ctxt proc RS (sequent RS' (ctxt, @{thm' \<phi>apply_proc})))
 
 fun mk_app_reasoning_normal app sequent =
   let val idx = Thm.maxidx_of sequent + 1
       val app = Thm.incr_indexes idx app
       val idx = Thm.maxidx_of app + 1
-      val rule = @{thm \<phi>application}
+      val rule = @{thm' \<phi>application}
               |> Thm.incr_indexes idx
               |> Thm.instantiate (TVars.empty,
                                   Vars.make [((("Apps",idx),propT),  Thm.cprop_of app),
@@ -57,18 +57,18 @@ fun mk_app_reasoning_normal app sequent =
   in Thm.implies_elim (Thm.implies_elim rule app) sequent
   end
 
-fun prep_sequent sequent = prep_sequent (@{thm allI} RS sequent)
+fun prep_sequent sequent = prep_sequent (@{thm' allI} RS sequent)
                            handle THM _ => sequent
 
-fun mk_app_reasoning_RS app sequent =
-  (app RS @{thm \<phi>Application_Conv})
+fun mk_app_reasoning_RS ctxt app sequent =
+  (app RS' (ctxt, @{thm' \<phi>Application_Conv}))
     |> Thm.permute_prems 0 (Thm.nprems_of app)
     |> (fn th => th RS prep_sequent sequent)
 
 fun mk_app_reasoning ctxt sequent app =
   case Thm.prop_of sequent
     of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-            mk_app_reasoning_RS (normalize_app_rule ctxt app) sequent
+            mk_app_reasoning_RS ctxt (normalize_app_rule ctxt app) sequent
      | _ => mk_app_reasoning_normal (normalize_app_rule ctxt app) sequent
 
 fun try_apply [] _ _ = NONE
