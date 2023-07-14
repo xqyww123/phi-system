@@ -186,7 +186,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
             end
             )) hint00
 
-      val unify_hint = hint_unify_by_type (
+      val unify_hint = hint_unify_by_type (SOME @{thm' \<phi>TA_TrRA_rule}) (
             fn \<^Const>\<open>All _\<close> $ (Abs (_, _, \<^Const>\<open>Action_Tag\<close>
                       $ (\<^Const>\<open>Transformation _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ $ _)
                       $ _))
@@ -200,17 +200,18 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                   Phi_Syntax.transformation_conv
                     (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))
                     Conv.all_conv Conv.all_conv)))
-      fun simp (_, ctxt) rule =
-        (rule RS' (ctxt, @{thm' spec}))
-         |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (
+      fun simp (_, ctxt) rule = rule
+         |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (Phi_Conv.hol_all_conv (fn (_, ctxt) =>
               Phi_Conv.action_tag_conv (Phi_Syntax.transformation_conv Conv.all_conv
-                (Phi_Syntax.ExSet_conv (fn (bvar, ctxt) =>
-                  let val turn_bvar_eq = Drule.infer_instantiate ctxt [(("b",0),bvar)] @{thm' HOL.eq_commute}
+                (Phi_Syntax.ExSet_conv (fn (bvar, ctxtxx) =>
+                  let val turn_bvar_eq = Drule.infer_instantiate ctxtxx [(("b",0),bvar)] @{thm' HOL.eq_commute}
                    in Phi_Syntax.Subjection_conv Conv.all_conv (
-                        Simplifier.rewrite (ctxt addsimps [turn_bvar_eq, @{thm special_Ex_def}]))
+                        Simplifier.rewrite (ctxtxx addsimps [turn_bvar_eq, @{thm special_Ex_def}]
+                                              |> Simplifier.add_cong @{thm HOL.conj_cong}))
                   end) ctxt)
                 Conv.all_conv)
-            )) ctxt)
+            ) ctxt)) ctxt)
+         |> (fn rule => (rule RS' (ctxt, @{thm' spec})))
       val rules = mk_rule_by_guess_or_hint ("Trans_to_Raw_Abst", unify_hint, guess_property,
                                             @{thm' \<phi>TA_TrRA_rule}, [0],
                                             SOME ind_conv, reasoning, solver, simp)

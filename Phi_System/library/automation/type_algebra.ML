@@ -10,7 +10,7 @@ type unify_hint = (Proof.context -> hint (*property*) -> term (*fixed term x*) *
 
 (* Common choices of the unification *)
 
-val hint_unify_by_type : (term -> term) (*f*) -> unify_hint
+val hint_unify_by_type : thm option -> (term -> term) (*f*) -> unify_hint
       (*use `f` to extract the \<phi>-type part of the (conclusion part of the) property, then
         do the usual unification with the `T`*)
 val hint_unify_by_type_operator : (term -> term) (*f*) -> unify_hint
@@ -814,17 +814,25 @@ in
 type hint = term
 type unify_hint = (Proof.context -> hint -> term * term -> Envir.env)
 
-fun hint_unify_by_type extract_type ctxt hint (_, T') =
-    ( Unify.smash_unifiers (Context.Proof ctxt)
-                           [(extract_type (extract_hhf hint), T')]
+
+fun hint_unify_by_type rule extract_type ctxt hint (_, T') =
+  let val idx = Term.maxidx_of_term hint + 1
+      val unify_targets =
+            case rule of SOME rule' => Thm.concl_of rule'
+                                    |> Logic.incr_indexes ([],[],idx)
+                                    |> (fn X => [(Logic.strip_imp_concl hint, X)])
+               | _ => []
+   in ( Unify.smash_unifiers (Context.Proof ctxt)
+                           ((extract_type (extract_hhf hint), T') :: unify_targets)
                            Envir.init
         |> Seq.chop 2
         |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
              | ([x], _) => x
-             | _ => error ("Multi-resolution in hint: " ^ Syntax.string_of_term ctxt hint))
+             | _ => error ("Multi-unification in hint: " ^ Syntax.string_of_term ctxt hint))
       handle TERM _ => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
            | Match  => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
     )
+  end
 
 fun hint_unify_by_type_operator extract_type_operator ctxt hint (_, F_term $ _) =
     ( Unify.smash_unifiers (Context.Proof ctxt)

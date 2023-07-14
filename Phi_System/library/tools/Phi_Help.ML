@@ -201,20 +201,17 @@ fun lift_type_sort thy (ty,sort) env00 =
            handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
   end
 
-fun tyenv_to_tvars_table ctxt : Type.tyenv -> ctyp TVars.table
-  = Vartab.dest
- #> map (fn (N,(S,T)) => ((N,S), Thm.ctyp_of ctxt T))
- #> TVars.make
+fun tyenv_to_tvars_table ctxt tyenv
+  = TVars.build (Vartab.fold (fn (N,(S,T)) =>
+        TVars.add ((N,S), Thm.ctyp_of ctxt (Envir.norm_type tyenv T))) tyenv)
 
-fun tyenv_to_tvars_table_generic generic : Type.tyenv -> ctyp TVars.table
-  = Vartab.dest
- #> map (fn (N,(S,T)) => ((N,S), Context.cases Thm.global_ctyp_of Thm.ctyp_of generic T))
- #> TVars.make
+fun tyenv_to_tvars_table_generic ctxt tyenv
+  = TVars.build (Vartab.fold (fn (N,(S,T)) =>
+        TVars.add ((N,S), Context.cases Thm.global_ctyp_of Thm.ctyp_of ctxt (Envir.norm_type tyenv T))) tyenv)
 
-val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
-  = Vartab.dest
- #> map (fn (N,(S,T)) => ((N,S), T))
- #> TVars.make
+fun tyenv_to_tvars_table_no_c tyenv
+  = TVars.build (Vartab.fold (fn (N,(S,T)) =>
+        TVars.add ((N,S), Envir.norm_type tyenv T)) tyenv)
 
 fun tvars_table_to_tyenv tab =
   Vartab.build (TVars.fold (fn ((N,S),T) => Vartab.insert (op =) (N,(S, Thm.typ_of T))) tab)

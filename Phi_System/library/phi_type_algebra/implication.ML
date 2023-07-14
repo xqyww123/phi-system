@@ -74,7 +74,7 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                            else guess_property_inhab_atom
       val mode_infer = not (is_some hint0 orelse is_Type_Opr (Term.fastype_of (#term phi0)))
 
-      val unify_hint_U = hint_unify_by_type (
+      val unify_hint_U = hint_unify_by_type NONE (
             fn Const(\<^const_name>\<open>HOL.All\<close>, _) $ (Abs (_,_,
                   Const(\<^const_name>\<open>Action_Tag\<close>, _) $ 
                     (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (

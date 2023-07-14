@@ -75,26 +75,18 @@ lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> \<phi>Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
   \<medium_left_bracket> to Itself \<medium_right_bracket>.
 
-declare [[\<phi>trace_reasoning = 3]]
-
-lemma
-  \<open>(\<forall>x. \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu. True \<longrightarrow> (\<forall>xa. Aa \<longrightarrow> xa \<Turnstile> (x \<Ztypecolon> A) \<longrightarrow> True \<longrightarrow> r x (id (uu xa)) \<and> Aa) \<and> (\<forall>xa. Aa \<longrightarrow> xa \<Turnstile> (x \<Ztypecolon> A) \<longrightarrow> xa = id (uu xa)) \<and> True) \<and>
-         True \<close>
-  apply auto
-
-
-
+declare [[\<phi>trace_reasoning = 0]]
 
 
  
 subsection \<open>Embedding Subjection into Type\<close>
-                     
+                                   
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving (*Basic
        and \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x \<and> Q \<close>
-       and*) \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
-                    x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<and> P @action to Itself \<close>
+       and*) \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to (Itself::('b,'b) \<phi>)) \<Longrightarrow>
+                    x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<and> P @action to (Itself::('b,'b) \<phi>) \<close>
 
 thm SubjectionTY.intro
 

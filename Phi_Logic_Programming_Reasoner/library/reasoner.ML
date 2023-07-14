@@ -485,7 +485,7 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
                     then tracing ("\<phi>reasoning("^string_of_int score^"):"^
                                   Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                     else ()
-            val _ = if score = 16020 then () else ()
+            val _ = if score = 3015 then () else ()
             val Z = (call_reasoners' trace score N ctxt tactics th)
                   |> (fn Z =>
                         case mode
