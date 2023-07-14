@@ -37,7 +37,7 @@ lemma [\<phi>reason 1200]:
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> D \<w>\<i>\<t>\<h> P @action \<A>_destruct\<phi> T'
-\<Longrightarrow> Rewrite_into_\<phi>Type D (y \<Ztypecolon> U)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] (y \<Ztypecolon> U) : D
 \<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<v>\<a>\<l>[v] U \<w>\<i>\<t>\<h> P @action \<A>_destruct\<phi> T'\<close>
   unfolding Action_Tag_def Rewrite_into_\<phi>Type_def
   by (rule Val_transformation, simp)

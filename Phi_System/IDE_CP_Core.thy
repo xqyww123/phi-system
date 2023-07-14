@@ -660,7 +660,7 @@ structure Post_Synthesis_SS = Simpset (
 consts post_synthesis_simp :: mode
 
 \<phi>reasoner_ML post_synthesis_simp 1200 (\<open>Simplify post_synthesis_simp ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' Post_Synthesis_SS.get')\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Post_Synthesis_SS.get')\<close>
 
 subsubsection \<open>Synthesis Operations\<close>
 

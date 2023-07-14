@@ -82,7 +82,7 @@ fun calculate ctxt term (n, pat0, _, By_Pattern pat_ret0) =
           val pat = Logic.incr_indexes ([],[],ind) pat0
           val pat_ret = map (Logic.incr_indexes ([],[],ind)) pat_ret0
           val s = PLPR_Pattern.match (Context.theory_of ctxt) (pat, term) (Vartab.empty, Vartab.empty)
-       in (SOME (n, map (Envir.subst_term s) pat_ret))
+       in (SOME (n, map (Envir.norm_term (Envir.Envir {maxidx = ~1, tyenv = #1 s, tenv = #2 s})) pat_ret))
       end handle Pattern.MATCH => NONE)
   | calculate ctxt term (n, _, _, By_ML rewr) =
       Option.map (pair n) (rewr ctxt term)
@@ -94,7 +94,7 @@ fun calculate_by_unify ctxt term (n, pat0, _, By_Pattern pat_ret0) =
        in Unify.unifiers (ctxt, Envir.empty (Term.maxidx_of_term pat), [(pat, term)])
                |> Seq.chop 2
                |> (fn ([],_) => NONE
-                    | ([(s,_)],_) => SOME (n, map (Envir.subst_term (Envir.type_env s, Envir.term_env s)) pat_ret)
+                    | ([(s,_)],_) => SOME (n, map (Envir.norm_term s) pat_ret)
                     | _ => error (Pretty.string_of (Pretty.chunks [
                             Pretty.str "Multiple unifiers between:",
                             Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pat,

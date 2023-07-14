@@ -101,19 +101,6 @@ lemma [\<phi>reason 1000]:
   unfolding Remove_Values_def
   by simp
 
-
-subsection \<open>Rewrite into \<phi>-Type\<close>
-
-definition Rewrite_into_\<phi>Type :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
-  where \<open>Rewrite_into_\<phi>Type IN OUT \<longleftrightarrow> IN = OUT\<close>
-
-declare [[\<phi>reason_default_pattern \<open>Rewrite_into_\<phi>Type ?X _\<close> \<Rightarrow> \<open>Rewrite_into_\<phi>Type ?X _\<close> (100)]]
-
-lemma [\<phi>reason 3000]:
-  \<open>Rewrite_into_\<phi>Type (x \<Ztypecolon> T) (x \<Ztypecolon> T)\<close>
-  unfolding Rewrite_into_\<phi>Type_def ..
-
-
 (*
 subsection \<open>Extract a Value\<close>
 
@@ -1219,7 +1206,7 @@ lemma [\<phi>reason default 3]: \<comment> \<open>Structural_Extract_fallback\<c
 
 
 subsection \<open>Stepwise of Separations\<close>
-
+  
 lemma Structural_Extract_\<phi>Prod_right:
   \<open> Try S1 ((fst a, fst (snd a)) \<Ztypecolon> A \<^emph> WY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Y \<^emph> B \<w>\<i>\<t>\<h> P1 @action \<A>SE)
 \<Longrightarrow> Try S2 ((snd b, snd (snd a)) \<Ztypecolon> B \<^emph> WX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> c \<Ztypecolon> X \<^emph> C \<w>\<i>\<t>\<h> P2 @action \<A>SE)

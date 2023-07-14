@@ -19,7 +19,7 @@ fun guess_property (x_term, FT_term, (phi:phi_type)) ctxt =
 
 fun gen_is_functional hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val unify_hint = hint_unify_by_type NONE (
+      val unify_hint = hint_unify_by_type (
             fn \<^Const>\<open>Is_Functional _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) => T )
 
       val ind_conv = default_ind_conv (
@@ -27,8 +27,11 @@ fun gen_is_functional hint0 (phi0 : phi_type) thy =
                 Conv.rewr_conv @{thm' \<phi>TA_IsFunc_rewr},
             fn ctxt => fn phi =>
                 Conv.rewr_conv @{thm' \<phi>TA_IsFunc_rewr} then_conv
-                Conv.implies_concl_conv (PLPR_Syntax.premise_tag_conv (
-                  Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))))
+                Conv.implies_conv
+                  (HOLogic.Trueprop_conv (Phi_Conv.conj_sequence_conv (
+                    Conv.try_conv (Raw_Simplifier.rewrite ctxt true @{thms' \<phi>TA_IsFunc_rewr_ants}))))
+                  (PLPR_Syntax.premise_tag_conv (
+                    Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))))
       val reasoning = gen_abstract_constraint_guided_reasoning (K NONE) (K (K [])) (PLPR_reasoner (SOME 1))
 
       val rules = mk_rule_by_guess_or_hint ("Is_Functional", unify_hint, guess_property,

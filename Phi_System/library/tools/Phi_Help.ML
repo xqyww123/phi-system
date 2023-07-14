@@ -219,13 +219,11 @@ fun tvars_table_to_tyenv tab =
 fun vars_table_to_tenv tab =
   Vartab.build (Vars.fold (fn ((N,S),T) => Vartab.insert (op =) (N,(S, Thm.term_of T))) tab)
 
-
-fun tenv_to_vars_table ctxt tyenv : Envir.tenv -> cterm Vars.table
-  = Vartab.dest
- #> map (fn (N,(TY,TM)) => ((N, Envir.subst_type tyenv TY),
-                            Thm.cterm_of ctxt (Envir.subst_term_types tyenv TM
-                                            |> Envir.eta_contract)))
- #> Vars.make
+fun tenv_to_vars_table ctxt tyenv tenv =
+  Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
+      Vars.add ((N, Envir.norm_type tyenv TY),
+                Thm.cterm_of ctxt (Envir.norm_term (Envir.Envir {maxidx = ~1, tenv=tenv,tyenv=tyenv}) TM
+                                |> Envir.eta_contract))) tenv)
 
 fun env_to_table ctxt (TY,TM) =
       (tyenv_to_tvars_table ctxt TY, tenv_to_vars_table ctxt TY TM)

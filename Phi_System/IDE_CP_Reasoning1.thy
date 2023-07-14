@@ -157,28 +157,28 @@ structure Assertion_SS_Abnormal = Simpset (
 
 \<phi>reasoner_ML assertion_simp_source 1300
   (\<open>Simplify (assertion_simps SOURCE) ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (fn ctxt =>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
       Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Source.get' ctxt)))\<close>
 
 \<phi>reasoner_ML assertion_simp_target 1300
   (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (fn ctxt =>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
       Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt)))\<close>
 
 \<phi>reasoner_ML assertion_simp_abnormal 1300
   (\<open>Simplify (assertion_simps ABNORMAL) ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (fn ctxt =>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
       Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Abnormal.get' ctxt)))\<close>
 
 \<phi>reasoner_ML assertion_simp 1200
   (\<open>Premise (assertion_simps _) _\<close> | \<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close>
      )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' Assertion_SS.get')\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Assertion_SS.get')\<close>
 
 \<phi>reasoner_ML semantic_simps 1200
   (\<open>Premise semantic_mode _\<close> | \<open>Simplify semantic_mode ?X' ?X\<close>
      )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (fn ctxt =>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
         Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse}))\<close>
 
 lemmas [assertion_simps] =
@@ -211,9 +211,9 @@ abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>ex
 
 \<phi>reasoner_ML \<phi>expn_Premise 10 (\<open><\<phi>expn> ?P\<close>) = \<open>
   Seq.ORELSE (
-  Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (fn ctxt =>
+  Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
                             ctxt addsimps (Useful_Thms.get ctxt))),
-  Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (fn ctxt =>
+  Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
         Phi_Expansions.enhance (ctxt addsimps (Useful_Thms.get ctxt)))))
 \<close>
 
@@ -384,7 +384,7 @@ declare mult.assoc[symmetric, frame_var_rewrs]
 consts frame_var_rewrs :: mode
 
 \<phi>reasoner_ML Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_only (fn ctxt =>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_only (K Seq.empty) (fn ctxt =>
           Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>))\<close>
 
 definition \<phi>IntroFrameVar :: "'a::sep_magma BI option \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool"
@@ -555,7 +555,7 @@ ML \<open>structure Embed_into_Phi_Type = Simpset (
 consts mode_embed_into_\<phi>type :: mode
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] _ : _\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (fn ctxt => Embed_into_Phi_Type.equip ctxt))\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt => Embed_into_Phi_Type.equip ctxt))\<close>
  
 lemmas [embed_into_\<phi>type] = \<phi>None_itself_is_one[where any=\<open>()\<close>] \<phi>Prod_expn' 
 

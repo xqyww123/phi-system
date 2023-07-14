@@ -186,11 +186,23 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
             end
             )) hint00
 
-      val unify_hint = hint_unify_by_type (SOME @{thm' \<phi>TA_TrRA_rule}) (
-            fn \<^Const>\<open>All _\<close> $ (Abs (_, _, \<^Const>\<open>Action_Tag\<close>
-                      $ (\<^Const>\<open>Transformation _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ $ _)
-                      $ _))
-                 => T)
+      val unify_hint = hint_unify_general (fn hint => fn (_,T) =>
+            let fun extract (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract X
+                  | extract (Const(\<^const_name>\<open>All\<close>, _) $ X) = extract X
+                  | extract (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = extract X
+                  | extract (Abs (_, _, X)) = extract X
+                  | extract (\<^Const>\<open>Action_Tag\<close>
+                              $ (\<^Const>\<open>Transformation _\<close>
+                                  $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T)
+                                  $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _, (\<^Const>\<open>Subjection _\<close>
+                                        $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ itself')
+                                        $ _)))
+                                  $ _)
+                              $ (\<^Const>\<open>to _ _\<close> $ itself))
+                      = (T, (itself, itself'))
+                val (T', pair) = extract (Logic.strip_imp_concl hint)
+             in (T',T) :: pair :: (map (snd o extract) (Logic.strip_imp_prems hint))
+            end)
       val ind_conv = default_ind_conv (
             fn ctxt => fn phi =>
                 Conv.rewr_conv @{thm' \<phi>TA_TrRA_rewr},

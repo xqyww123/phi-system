@@ -98,6 +98,9 @@ val rewrite_leading_antecedent : Proof.context -> thm list -> thm -> thm
 val simplify_leading_antecedent : Proof.context -> thm -> thm
 val simplify_leading_antecedent_hhf_concl : Proof.context -> thm -> thm
 
+val conj_sequence_conv : conv -> conv
+      (*applies the conv to every element in a HOL.conj sequent (or a tree)*)
+
 end
 
 structure Phi_Conv : PHI_CONV = struct
@@ -218,6 +221,13 @@ fun simplify_leading_antecedent ctxt =
 
 fun simplify_leading_antecedent_hhf_concl ctxt =
   Conv.gconv_rule (hhf_concl_conv Simplifier.rewrite ctxt) 1
+
+fun conj_sequence_conv C ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+       Conv.combination_conv (Conv.arg_conv (conj_sequence_conv C)) (conj_sequence_conv C) ctm
+     | _ => C ctm
+
 
 end
 

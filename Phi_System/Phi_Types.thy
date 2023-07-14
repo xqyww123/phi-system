@@ -23,7 +23,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
                 
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
@@ -75,42 +75,24 @@ lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> \<phi>Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
   \<medium_left_bracket> to Itself \<medium_right_bracket>.
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
 
 
  
 subsection \<open>Embedding Subjection into Type\<close>
-                                   
+                                                 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving (*Basic
-       and \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x \<and> Q \<close>
-       and*) \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to (Itself::('b,'b) \<phi>)) \<Longrightarrow>
-                    x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<and> P @action to (Itself::('b,'b) \<phi>) \<close>
+       and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
+       and*) \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
+       (*and \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
+             x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<and> P @action to Itself \<close>*)
 
-thm SubjectionTY.intro
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
-lemma SubjectionTY_expn[\<phi>programming_simps, \<phi>expns]:
-  \<open>(x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) = (x \<Ztypecolon> T \<s>\<u>\<b>\<j> P)\<close>
-  unfolding set_eq_iff SubjectionTY_def \<phi>Type_def by simp
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF)
-\<Longrightarrow> Inhabited (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<longrightarrow> P \<and> C @action \<A>EIF\<close>
-  unfolding SubjectionTY_expn Premise_def Inhabited_def Subjection_expn Action_Tag_def
-  by blast
-
-lemma [\<phi>reason 1000]:
-  \<open> Rewrite_into_\<phi>Type S (x \<Ztypecolon> T)
-\<Longrightarrow> Rewrite_into_\<phi>Type (S \<s>\<u>\<b>\<j> P) (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  unfolding Rewrite_into_\<phi>Type_def by (simp add: SubjectionTY_expn)
-
-lemma [\<phi>reason 1200]:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T))
-\<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  \<medium_left_bracket> premises [\<phi>reason add] ;; \<medium_right_bracket> .
+declare SubjectionTY.unfold[\<phi>programming_simps]
 
 
 subsubsection \<open>Algebraic Properties\<close>

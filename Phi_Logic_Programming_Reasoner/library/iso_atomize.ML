@@ -41,7 +41,10 @@ fun iso_rulify_conv  ctxt = Raw_Simplifier.rewrite ctxt true (Rulify.get ctxt)
 val iso_atomize = Conv.fconv_rule o iso_atomize_conv
 val iso_rulify  = Conv.fconv_rule o iso_rulify_conv
 
-fun atomize_conv ctxt = chk o Object_Logic.atomize ctxt
+fun atomize_conv ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.all_conv ctm
+     | _ => chk (Object_Logic.atomize ctxt ctm)
 val atomize = Conv.fconv_rule o atomize_conv
 val rulify = Object_Logic.rulify
 

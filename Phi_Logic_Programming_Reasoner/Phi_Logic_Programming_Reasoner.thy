@@ -654,7 +654,7 @@ declare [[ML_debugger]]
 subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}\<close>
 
 definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,27] 26)
-  where "Premise mode x = x"
+  where "Premise mode x \<equiv> x"
 
 abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
@@ -770,10 +770,6 @@ ML_file \<open>library/PLPR_Syntax.ML\<close>
 paragraph \<open>Contract Premises for Reporting Obligation\<close>
 
 lemma contract_premise_imp:
-  \<open>(Premise mode' P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
-  unfolding Premise_def by (rule, rule, simp+)
-
-lemma contract_premise_imp_general:
   \<open>(P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
   unfolding Premise_def by (rule, rule, simp+)
 
@@ -784,8 +780,12 @@ lemma contract_add_additional_prems:
   unfolding Pure.prop_def .
 
 lemma contract_drop_waste:
-  \<open> PROP P \<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP P) \<close>
+  \<open> PROP Pure.prop P \<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP P) \<close>
   unfolding Pure.prop_def by simp
+
+lemma contract_drop_waste_end:
+  \<open> PROP P \<Longrightarrow> PROP Pure.prop P \<close>
+  unfolding Pure.prop_def .
 
 lemma contract_obligations:
   "(Premise mode' P \<Longrightarrow> Premise mode Q \<Longrightarrow> PROP C) \<equiv> (Premise mode (P \<and> Q) \<Longrightarrow> PROP C)"
@@ -847,7 +847,7 @@ paragraph \<open>Setup\<close>
 ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
-  = \<open>Phi_Reasoners.wrap Phi_Reasoners.defer_obligation_tac\<close>
+  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.defer_obligation_tac true)\<close>
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
@@ -1090,7 +1090,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier I)\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I)\<close>
 
 
 (* subsection \<open>Exhaustive Divergence\<close>

@@ -378,7 +378,7 @@ fun auto' id (ctxt,sequent') =
      fun update_cache hash (prf', (ctxt, sequent')) = (
            Phi_Reasoner.info_print ctxt 1 (fn () =>
               "Find proof (" ^ id ^ ", time: " ^ Value.print_time (fst prf') ^ "): " ^
-               (if snd prf' = "" then "default automation" else "\n" ^ snd prf')
+               (if snd prf' = "" then "classical automation" else "\n" ^ snd prf')
            ) ;
            update_hash_cache hash prf';
            Phi_Cache_DB.update_cached_proof thy (id, prf') ;

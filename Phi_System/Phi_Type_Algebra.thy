@@ -1452,7 +1452,7 @@ lemma "_all_simps_plus_":
 
 ML_file \<open>library/phi_type_algebra/trans_to_raw_abst.ML\<close>
 
-\<phi>property_deriver Trans_to_Raw_Abst 100 for ( \<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>
+\<phi>property_deriver Trans_to_Raw_Abst 100 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
                                             | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
     = \<open> Phi_Type_Algebra_Derivers.trans_to_raw_abst \<close>
@@ -1475,6 +1475,9 @@ lemma \<phi>TA_IsFunc_rewr:
  \<equiv> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)) \<close>
   unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
 
+lemma \<phi>TA_IsFunc_rewr_ants:
+  \<open>Is_Functional S \<equiv> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v)\<close>
+  unfolding Premise_def Is_Functional_def by simp
 
 ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 

@@ -22,7 +22,8 @@ signature PHI_REASONERS = sig
   (*defer the leading antecedent to the nearest obligation and call the contract*)
   val defer_antecedent : (Proof.context -> thm -> thm) (*contract*)
                                  -> Proof.context -> thm -> thm Seq.seq
-  val defer_obligation_tac : Proof.context -> thm -> thm Seq.seq
+  val defer_obligation_tac : bool (*whether to collect premises of the obligation*) ->
+                Proof.context -> thm -> thm Seq.seq
 
   structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
       context before applying either the automatic solving*)
@@ -134,26 +135,35 @@ structure Local_Premises_of_Obligation = Named_Thms (
 
 fun is_premise_of_obligation ctxt =
   let val ivk = Is_Premise_of_Obligation.invoke ctxt
+      fun default (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = default M
+        | default (Const(\<^const_name>\<open>default\<close>, _)) = true
+        | default (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+        | default (Abs (_,_,X)) = default X
+        | default (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = default X
+        | default (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = default X
+        | default (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = default X
+        | default (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = default X
+        | default (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = default X
+        | default _ = false
    in fn tm => case ivk tm
     of SOME ret => ret
-     | NONE => (case tm of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>default\<close>, _) $ _) => true
-                         | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _) $ _) => true
-                         | _ => false)
+     | NONE => default tm
   end
 
-fun obligation_collect filter ctm =
+fun obligation_collect ctxt filter ctm =
   Phi_Help.lambda_normalization_conv (fn ctm =>
     case Thm.term_of ctm
       of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
             Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
        | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ Pr $ _
            => if filter Pr
-              then (Conv.arg_conv (obligation_collect filter) then_conv
-                    Conv.rewr_conv (case Pr
-                                      of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) =>
-                                              @{thm' contract_premise_imp}
-                                       | _ => @{thm' contract_premise_imp_general})) ctm
-              else (Conv.arg_conv (obligation_collect filter) then_conv
+              then (Conv.implies_conv
+                      (Phi_Conv.atomize_conv ctxt then_conv
+                       Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
+                                                                Premise_def[where mode=MODE_SIMP]})
+                      (obligation_collect ctxt filter) then_conv
+                    Conv.rewr_conv @{thm' contract_premise_imp}) ctm
+              else (Conv.arg_conv (obligation_collect ctxt filter) then_conv
                     Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm
        | _ => raise CTERM ("unexpected proof obligation form", [ctm])
   ) ctm
@@ -207,25 +217,38 @@ fun obligation_intro_Ex_conv ctxt thm =
     end
   ) thm
 
-fun collect_obligation_premises ctxt thm = let open Conv
+fun collect_obligation_premises collect_premises ctxt thm = let open Conv
   val filter = is_premise_of_obligation (Context.Proof ctxt)
   val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (K (
-                obligation_collect filter then_conv
+                (if collect_premises then obligation_collect ctxt filter
+                                     else Conv.all_conv) then_conv
                 rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
               ) 1 thm
-  val rule2 = case Local_Premises_of_Obligation.get ctxt
+
+  val rule2 = if collect_premises
+              then case Local_Premises_of_Obligation.get ctxt
                 of [] => rule1
                  | L => let val fact = map (Conv.fconv_rule (Object_Logic.atomize ctxt)) L
                                     |> foldl1 (uncurry (HOLogic.conj_intr ctxt))
                          in fact RS (@{thm' contract_add_additional_prems} RS rule1)
                         end
-   in (@{thm contract_drop_waste} RS rule2)
+              else rule1
+
+  fun drop_wastes thm =
+    case Thm.major_prem_of thm
+      of Const(\<^const_name>\<open>Pure.prop\<close>, _) $ X => (
+          case X of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
+                      => drop_wastes (@{thm' contract_drop_waste} RS thm)
+                  | _ => @{thm' contract_drop_waste_end} RS thm)
+       | _ => error "BUG nhtCAsmjS+Oj4YsI8qtXQw"
+
+   in drop_wastes rule2
    |> gconv_rule (obligation_conv_all ctxt) 1
    |> Config.get ctxt existential_obligation > 0 ? obligation_intro_Ex_conv ctxt
   end
 
-fun contract_obligations ctxt thm =
-  collect_obligation_premises ctxt thm
+fun contract_obligations collect_premises ctxt thm = thm
+    |> collect_obligation_premises collect_premises ctxt
     |> Conv.fconv_rule (Conv.rewr_conv @{thm contract_obligations})
 
 fun defer_antecedent contract ctxt thm =
@@ -242,7 +265,7 @@ fun defer_antecedent contract ctxt thm =
       |> Seq.single
   end
 
-val defer_obligation_tac = defer_antecedent contract_obligations
+val defer_obligation_tac = defer_antecedent o contract_obligations
 
 (*** Premise tac ***)
 
@@ -290,7 +313,7 @@ fun auto_obligation_solver1 ctxt sequent =  (
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
 fun safer_obligation_solver ctxt th0 =
-  let val th = collect_obligation_premises ctxt th0
+  let val th = collect_obligation_premises true ctxt th0
    in case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
         of SOME (_, \<^const>\<open>True\<close>) => Seq.single (@{thm Premise_True} RS th)
          | SOME _ => apply ctxt (fn (ctxt,pre,aux,_) =>

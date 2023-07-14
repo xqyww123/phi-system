@@ -813,6 +813,7 @@ fun check_deriving_ast ctxt derv_ast =
              | Derv_By_Term term =>
                 let val term' = Syntax.parse_prop ctxt_parse term
                              |> Syntax.check_prop ctxt_parse
+                             |> Envir.beta_eta_contract
                     val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
                     val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
                  in add_derivers_from_hint ctxt term'1

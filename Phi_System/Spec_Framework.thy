@@ -220,19 +220,16 @@ lemma [\<phi>reason 1200]:
 
 subsection \<open>Injective\<close>
 
-definition Is_Injective :: \<open>'a BI \<Rightarrow> bool\<close>
-  where \<open>Is_Injective = is_singleton\<close>
-
-lemma Is_Injective_I:
+lemma is_singleton_I''[\<phi>reason 1000]:
   \<open> Inhabited A
-\<Longrightarrow> (\<And>x y. x \<Turnstile> A \<Longrightarrow> y \<Turnstile> A \<Longrightarrow> x = y)
-\<Longrightarrow> Is_Injective A\<close>
-  unfolding Is_Injective_def Satisfaction_def Inhabited_def
+\<Longrightarrow> Is_Functional A
+\<Longrightarrow> is_singleton A\<close>
+  unfolding Satisfaction_def Inhabited_def Is_Functional_def
   by (metis empty_iff is_singletonI')
   
-lemma Itself_inj[\<phi>reason 1000]:
-  \<open>Is_Injective (x \<Ztypecolon> Itself)\<close>
-  by (rule Is_Injective_I; simp)
+lemma [\<phi>reason 1000]:
+  \<open>is_singleton (x \<Ztypecolon> Itself)\<close>
+  by (rule is_singleton_I''; simp add: Is_Functional_def)
 
 
 section \<open>Specification of Monadic States\<close>
