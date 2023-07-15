@@ -1173,6 +1173,11 @@ fun add_type (def, pos, dervs) generic =
                                       warning "Fail to reason the rule of openning abstraction";
                                       raise Auto_Fail))
                                   (SOME 1) ctxt)
+                          |> Option.map (map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                                HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
+                                    Phi_Syntax.transformation_conv Conv.all_conv
+                                        (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
+                                        Conv.all_conv))) ctxt)))
 
       val proof_id =
         case term of Const _ => fst name_ty

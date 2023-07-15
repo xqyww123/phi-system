@@ -85,6 +85,15 @@ translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_o
 
 declare SubjectionTY.unfold[\<phi>programming_simps]
 
+lemma [gen_open_abstraction_simps]:
+  \<open>y \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> y. r y \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. r y \<and> P\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
+
+lemma \<phi>\<s>\<u>\<b>\<j>_\<phi>\<s>\<u>\<b>\<j>[gen_open_abstraction_simps, simp]:
+  \<open>(T \<phi>\<s>\<u>\<b>\<j> P \<phi>\<s>\<u>\<b>\<j> Q) = (T \<phi>\<s>\<u>\<b>\<j> P \<and> Q)\<close>
+  by (rule \<phi>Type_eqI; clarsimp)
+
 (*
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -162,12 +171,23 @@ parse_ast_translation \<open>
   in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
 \<close>
 
+subsubsection \<open>Rules\<close>
+
+lemma [gen_open_abstraction_simps]:
+  \<open>f \<Ztypecolon> ExTyp (\<lambda>_. T) \<s>\<u>\<b>\<j> f. r f \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. (\<exists>c f. r f \<and> y = f c)\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
+
+lemma [gen_open_abstraction_simps]:
+  \<open>f \<Ztypecolon> (\<exists>\<phi>c. T \<phi>\<s>\<u>\<b>\<j> P c) \<s>\<u>\<b>\<j> f. r f \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. (\<exists>c f. r f \<and> y = f c \<and> P c)\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
 
 
 subsection \<open>Stepwise Abstraction\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-
+ 
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
 
@@ -177,15 +197,9 @@ text \<open>It is too basic and our reasoner can barely do little about \<phi>-t
 
 thm \<phi>Composition.open_abstraction
 
-lemma
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> y. r y \<equiv> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. r y \<and> P\<close>
-  unfolding atomize_eq Transformation_def
-  by clarsimp blast
+ML \<open>Gen_Open_Abstraction_SS.print \<^context> true\<close>
 
-lemma
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f \<Ztypecolon> ExTyp (\<lambda>_. T) \<s>\<u>\<b>\<j> f. r f \<equiv> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. (\<exists>c f. r f \<and> y = f c)\<close>
-  unfolding atomize_eq Transformation_def
-  by clarsimp blast
+term ExSet
 
 
 lemma [\<phi>reason 1000]:

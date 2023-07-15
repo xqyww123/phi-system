@@ -638,6 +638,18 @@ lemma open_abstraction_\<phi>app:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
   unfolding Do_def Action_Tag_def .
 
+ML \<open>
+structure Gen_Open_Abstraction_SS = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = \<^binding>\<open>gen_open_abstraction_simps\<close>
+  val comment = "Simplification rules used when generating open-abstraction rules"
+)
+\<close>
+
+setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
+          ctxt addsimprocs [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]
+               addsimps @{thms' HOL.simp_thms}))\<close>
+
 
 
 subsection \<open>Case Analysis\<close>
