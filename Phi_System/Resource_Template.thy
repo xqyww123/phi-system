@@ -148,7 +148,7 @@ lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\
   \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (() \<Ztypecolon> \<circle>) @action Act\<close>
   for Act :: \<open>'act::simplification action\<close>
   unfolding Action_Tag_def \<phi>_\<phi>None
-  by (simp add: implies_refl) *)
+  by (simp add: transformation_refl) *)
 
 paragraph \<open>Reasoning Rules\<close>
 

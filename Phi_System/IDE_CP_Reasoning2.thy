@@ -24,7 +24,7 @@ declare [[\<phi>reason_default_pattern \<open>Remove_Values ?X _\<close> \<Right
 
 (* lemma [\<phi>reason for \<open>Remove_Values ?ex ?var_X ?Z\<close>]:
   \<open>Remove_Values ex X X\<close>
-  unfolding Remove_Values_def using implies_refl . *)
+  unfolding Remove_Values_def using transformation_refl . *)
 
 lemma [\<phi>reason 1200]:
   \<open>(\<And>c. Remove_Values (T c) (T' c))
@@ -223,7 +223,7 @@ subsection \<open>Initialization\<close>
 
 lemma [\<phi>reason 2100 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action ToSA' ?mode\<close>]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action ToSA' mode\<close>
-  unfolding Action_Tag_def using implies_refl .
+  unfolding Action_Tag_def using transformation_refl .
 
 lemma [\<phi>reason 2100 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<s>\<u>\<b>\<j> True \<w>\<i>\<t>\<h> ?P @action ToSA' ?mode\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action ToSA' mode
@@ -363,7 +363,7 @@ lemma ToA_ex_intro':
 lemma ToSA_finish': "X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> X \<brangle>"
   for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding mult_1_left FOCUS_TAG_def Action_Tag_def
-  using implies_refl by this+
+  using transformation_refl by this+
 
 ML \<open>
 (* X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P *)
@@ -402,7 +402,7 @@ fun ToSA_to_wild_card ctxt thm =
             else Thm.instantiate (TVars.empty, Vars.make [(V, Thm.cterm_of ctxt Y'3)]) thm
       val tac = TRY (HEADGOAL (resolve0_tac @{thms Action_Tag_I}))
                 THEN REPEAT_DETERM_N N_bads (HEADGOAL (resolve0_tac @{thms ToA_ex_intro ToA_ex_intro'}))
-                THEN (HEADGOAL (resolve0_tac @{thms implies_refl ToSA_finish'}))
+                THEN (HEADGOAL (resolve0_tac @{thms transformation_refl ToSA_finish'}))
    in tac thm'
   end
 \<close>
@@ -495,22 +495,22 @@ lemma [\<phi>reason 3210]:
     T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<s>\<u>\<b>\<j> True \<brangle> \<w>\<i>\<t>\<h> P "
   unfolding Transformation_def Pass_Embedded_Reasoning_def by simp
 
-lemma [\<phi>reason 3200]: (*THINK: add Q in P, is good or not?*)
+lemma [\<phi>reason 3220]: (*THINK: add Q in P, is good or not?*)
   "(\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P )
 \<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P"
   unfolding Transformation_def Premise_def by simp blast
 
-lemma [\<phi>reason 3210]:
+lemma [\<phi>reason 3230]:
   "(\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<brangle> \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> T \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (R \<s>\<u>\<b>\<j> Q) * \<blangle> U \<brangle> \<w>\<i>\<t>\<h> P"
   unfolding Transformation_def Premise_def by simp blast
 
-lemma [\<phi>reason 3200]:
+lemma [\<phi>reason 3220]:
   \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> W * T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P )
 \<Longrightarrow> W * (T \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<close>
   unfolding Transformation_def Premise_def by simp blast
 
-lemma [\<phi>reason 3210]:
+lemma [\<phi>reason 3230]:
   "(\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> W * T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<brangle> \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> W * (T \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (R \<s>\<u>\<b>\<j> Q) * \<blangle> U \<brangle> \<w>\<i>\<t>\<h> P"
   unfolding Transformation_def Premise_def by simp blast
@@ -1128,13 +1128,13 @@ lemma [\<phi>reason 3001]:
 lemma [\<phi>reason 3000 for \<open>_ \<Ztypecolon> ?T \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T' \<^emph> _ \<w>\<i>\<t>\<h> _ @action \<A>SE \<close>]:
   \<open> x \<Ztypecolon> (T \<^emph> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (T \<^emph> \<circle>) @action \<A>SE \<close>
   unfolding Action_Tag_def
-  using implies_refl .
+  using transformation_refl .
 
 lemma [\<phi>reason 3001 for \<open>_ \<Ztypecolon> ?T \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T' \<^emph> _ \<w>\<i>\<t>\<h> (Auto_Transform_Hint _ _ \<and> _) @action \<A>SE \<close>]:
   \<open> x \<Ztypecolon> (T \<^emph> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (T \<^emph> \<circle>) \<w>\<i>\<t>\<h> (Auto_Transform_Hint (y' \<Ztypecolon> T' \<^emph> \<circle>) (x'' \<Ztypecolon> T' \<^emph> \<circle>) \<and> True) @action \<A>SE \<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   unfolding Action_Tag_def
-  using implies_refl .
+  using transformation_refl .
 
 
 

@@ -130,6 +130,12 @@ include PHI_HELP
   val conj_elims : Proof.context -> thm -> thm list
 
 
+  (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
+  The stuffs here improve it, but they still require that loose bounds do not occur in the redex*)
+  val abstract_over : term * term -> term
+  val lambda_name : string * term -> term -> term
+  val lambda : term -> term -> term
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -223,7 +229,7 @@ fun uncertify_vars (ty, tm) = (uncertify_tyvars ty, uncertify_tmvars tm)
 fun lift_type_sort thy (ty,sort) env00 =
   let val idx = Term.maxidx_of_typ ty
    in if Sign.of_sort thy (ty, sort)
-      then Vartab.empty
+      then env00
       else let val (env0,_) =
                      Sign.typ_unify thy
                            (ty, TVar(("_", idx), sort))
@@ -238,8 +244,10 @@ fun lift_type_sort thy (ty,sort) env00 =
   end
 
 fun lift_type_sort' thy ty_sorts =
-  fold (lift_type_sort thy) ty_sorts Vartab.empty
-    |> norm_tyenv
+  fold (fn (T,S) => fn env =>
+    lift_type_sort thy (Envir.subst_type env T, S) env
+  ) ty_sorts Vartab.empty
+    |> subst_tyenv
 
 (*
 fun tvars_table_to_tyenv tab =
@@ -529,6 +537,28 @@ fun conj_elims ctxt th =
   case Thm.prop_of th
     of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => []
      | _ => HOLogic.conj_elims ctxt th
+
+(*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
+  This version improves it, but it still requires that loose bounds do not occur in `v`*)
+fun abstract_over (v, body) =
+  let
+    fun abs lev tm =
+      if v aconv tm then Bound lev
+      else
+        (case tm of
+          Abs (a, T, t) => Abs (a, T, abs (lev + 1) t)
+        | t $ u =>
+            (abs lev t $ (abs lev u handle Same.SAME => u)
+              handle Same.SAME => t $ abs lev u)
+        | Bound j => if j >= lev then Bound (j+1) else Bound j
+        | _ => raise Same.SAME);
+  in abs 0 body handle Same.SAME => body end;
+
+fun lambda_name (x, v) t =
+  Abs (if x = "" then Term.term_name v else x, fastype_of v, abstract_over (v, t));
+
+fun lambda v t = lambda_name ("", v) t;
+
 
 end
 

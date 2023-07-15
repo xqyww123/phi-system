@@ -245,9 +245,7 @@ lemma \<phi>Type_eqI_imp:
   unfolding \<phi>Type_def Transformation_def Satisfaction_def
   by auto
 
-lemma implies_refl[simp,
-    \<phi>reason 4000 for \<open>?A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A \<w>\<i>\<t>\<h> ?P\<close> \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _\<close>
-]:
+lemma transformation_refl[simp]:
   "A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A" unfolding Transformation_def by fast
 
 lemma implies_trans:
@@ -277,20 +275,34 @@ lemma assertion_eq_intro:
 
 subsubsection \<open>Reasoning Setup - II\<close>
 
-declare implies_refl [
-    \<phi>reason 900 for \<open>?A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?B \<w>\<i>\<t>\<h> ?P\<close> if \<open>fn (ctxt, sequent) =>
-        let val _ (*Trueprop*) $ (_ (*Transformation*) $ X $ Y $ _) = Thm.major_prem_of sequent
-            fun chk (Free _) = true
+declare transformation_refl [\<phi>reason 4000 for \<open>?A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A \<w>\<i>\<t>\<h> ?P\<close> \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _\<close>]
+declare transformation_refl [
+    \<phi>reason 900 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> if \<open>fn (ctxt, sequent) =>
+        let val _ (*Trueprop*) $ (_ (*Transformation*) $ A $ B $ _) = Thm.major_prem_of sequent
+            fun chk_var (Var _) = true
+              | chk_var (X $ _) = chk_var X
+              | chk_var _ = false
+            (*check if is an atom BI assertion, or a \<phi>-type whose abstract object is schematic var.
+              If so, we will try to apply `transformation_refl` with backtrack*)
+            fun chk (Const(\<^const_name>\<open>times\<close>, _)) = false
               | chk (Var _) = true
+              | chk (Free _) = true
+              | chk (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) = chk_var x
+              | chk (X $ _) = chk X
+              | chk (Const(\<^const_name>\<open>plus\<close>, _)) = false
               | chk (Const(\<^const_name>\<open>Subjection\<close>, _)) = false
               | chk (Const(\<^const_name>\<open>ExSet\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>times\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>\<phi>Type\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>plus\<close>, _)) = false
               | chk (Const(\<^const_name>\<open>inf\<close>, _)) = false
               | chk (Const(\<^const_name>\<open>sup\<close>, _)) = false
-              | chk _ = true
-         in chk (Term.head_of Y) orelse chk (Term.head_of X)
+              | chk (Const(\<^const_name>\<open>top\<close>, _)) = false
+              | chk (Const(\<^const_name>\<open>bot\<close>, _)) = false
+              | chk (Abs _) = raise Phi_Help.REQUIRE_LAMBDA_NORMLAIZTION
+              | chk (Const _) = true
+              | chk _ = false
+         in chk B
+         handle Phi_Help.REQUIRE_LAMBDA_NORMLAIZTION => (
+            chk (Envir.beta_eta_contract B)
+            handle Phi_Help.REQUIRE_LAMBDA_NORMLAIZTION => false)
         end \<close>]
 
 ML \<open>fun check_ToA_rule rule =
@@ -836,24 +848,6 @@ lemma [\<phi>reason 1001 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (
   by (simp add: \<phi>Prod_expn')
 
 
-subsubsection \<open>Embedding of Existence\<close>
-
-definition ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
-  where \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
-
-lemma ExTyp_expn'[\<phi>programming_simps]:
-  \<open>(x \<Ztypecolon> ExTyp T) = (\<exists>*a. x a \<Ztypecolon> T a)\<close>
-  unfolding set_eq_iff ExTyp_def \<phi>Type_def by simp
-
-lemma ExTyp_expn[\<phi>expns,simp]:
-  \<open>p \<Turnstile> (x \<Ztypecolon> ExTyp T) \<longleftrightarrow> (\<exists>a. p \<Turnstile> (x a \<Ztypecolon> T a))\<close>
-  unfolding set_eq_iff ExTyp_def \<phi>Type_def by simp
- 
-lemma ExTyp_implication[\<phi>reason 1000]:
-  \<open> (\<And>a. x a \<Ztypecolon> T a \<i>\<m>\<p>\<l>\<i>\<e>\<s> C a)
-\<Longrightarrow> x \<Ztypecolon> ExTyp T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ex C \<close>
-  unfolding Inhabited_def Action_Tag_def
-  by simp blast
 
 
 

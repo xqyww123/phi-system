@@ -66,12 +66,6 @@ lemma apply_Transformation_Functor:
 
 
 
-subsubsection \<open>Inhabitance\<close>
-
-(*depreciated!*)
-definition \<open>Inhabitance_Functor F f \<longleftrightarrow> (\<forall>T x. Inhabited(x \<Ztypecolon> F T) \<longrightarrow> Inhabited(f x \<Ztypecolon> T))\<close>
-(* definition \<open>Inhabitance_Functor2 F f g \<longleftrightarrow> (\<forall>T U x. Inhabited(x \<Ztypecolon> F T U) \<longrightarrow> Inhabited(f x \<Ztypecolon> T) \<and> Inhabited(g x \<Ztypecolon> U))\<close> *)
-
 (* subsubsection \<open>Additive Disjunction\<close>
 
 Is still useful, may need a specific automation, not implied from TF
@@ -163,10 +157,6 @@ declare [[
   \<phi>reason_default_pattern
       \<open>Inhabitance_Functor ?F _\<close> \<Rightarrow> \<open>Inhabitance_Functor ?F _\<close> (100)
   and \<open>Separation_Homo_Obj ?T _\<close> \<Rightarrow> \<open>Separation_Homo_Obj ?T _\<close> (100),
-  (*\<phi>reason_default_pattern
-      \<open>Inhabitance_Functor2 ?F _ _\<close> \<Rightarrow> \<open>Inhabitance_Functor2 ?F _ _\<close> (100),*)
-  \<phi>premise_attribute? [\<phi>reason add] for \<open>Inhabitance_Functor _ _\<close>,
-  (*\<phi>premise_attribute? [\<phi>reason add] for \<open>Inhabitance_Functor2 _ _ _\<close>,*)
 
   \<phi>reason_default_pattern_ML \<open>Separation_Homo\<^sub>I ?Ft ?Fu _ _ _\<close> \<Rightarrow>
     \<open>fn generic => fn term =>

@@ -3,6 +3,8 @@ signature PHI_HELP = sig
 val pos_parser : string -> Position.T parser
 val beta_eta_contract : thm -> thm
 val beta_eta_contract_cterm : cterm -> cterm
+
+exception REQUIRE_LAMBDA_NORMLAIZTION
 val lambda_normalization_ctac : ('a * thm -> 'b) -> ('a * thm -> 'b)
 val lambda_normalization_conv : conv -> conv
 val lambda_normalization_rule : (thm -> thm) -> thm -> thm
@@ -10,6 +12,8 @@ val lambda_normalization_rule : (thm -> thm) -> thm -> thm
 end
 
 structure Phi_Help : PHI_HELP = struct
+
+exception REQUIRE_LAMBDA_NORMLAIZTION
 
 fun pos_parser name =
   let val msg = name ^ " cannot capture the position of your rule \
@@ -39,7 +43,8 @@ fun lambda_normalization_ctac S s =
         then S (apsnd beta_eta_contract s)
         else Exn.reraise exn
    in S s
-      handle e as CTERM _ => fallback e
+      handle REQUIRE_LAMBDA_NORMLAIZTION => fallback (Fail "Internal Bug: is already normalized")
+           | e as CTERM _ => fallback e
            | e as TERM _  => fallback e
            | e as THM _   => fallback e
   end
@@ -50,7 +55,8 @@ fun lambda_normalization_conv C ctm =
         then (Drule.beta_eta_conversion then_conv C) ctm
         else Exn.reraise exn
    in C ctm
-      handle e as CTERM _ => fallback e
+      handle REQUIRE_LAMBDA_NORMLAIZTION => fallback (Fail "Internal Bug: is already normalized")
+           | e as CTERM _ => fallback e
            | e as TERM _  => fallback e
            | e as THM _   => fallback e
   end
@@ -61,7 +67,8 @@ fun lambda_normalization_rule R thm =
         then R (beta_eta_contract thm)
         else Exn.reraise exn
    in R thm
-      handle e as CTERM _ => fallback e
+      handle REQUIRE_LAMBDA_NORMLAIZTION => fallback (Fail "Internal Bug: is already normalized")
+           | e as CTERM _ => fallback e
            | e as THM _   => fallback e
            | e as TERM _  => fallback e
   end

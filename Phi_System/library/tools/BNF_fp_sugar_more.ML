@@ -103,10 +103,13 @@ fun gen_property match kind gen (typ0 as Type(Tname,_)) generic =
 
 
 
-fun made_of_ctrs chk_ctrs (Const(N,_)) = chk_ctrs N
-  | made_of_ctrs chk_ctrs (X $ Y) = made_of_ctrs chk_ctrs X andalso made_of_ctrs chk_ctrs Y
-  | made_of_ctrs chk_ctrs (Abs(_,_,X)) = made_of_ctrs chk_ctrs X
-  | made_of_ctrs _ _ = true
+fun made_of_ctrs ty chk_ctrs (Const(N, TY)) =
+     (case body_type TY
+        of Type (TN, _) => if TN = ty then chk_ctrs N else true
+         | _ => true)
+  | made_of_ctrs ty chk_ctrs (X $ Y) = made_of_ctrs ty chk_ctrs X andalso made_of_ctrs ty chk_ctrs Y
+  | made_of_ctrs ty chk_ctrs (Abs(_,_,X)) = made_of_ctrs ty chk_ctrs X
+  | made_of_ctrs _ _ _ = true
 
 fun chk_search_result1 ctxt pattern [] =
       error ("No existing theorems found for " ^ Syntax.string_of_term ctxt pattern)
@@ -132,11 +135,11 @@ fun gen_unit_simps Tname generic =
    |> snd
    |> map_filter (fn (_, th) => case Thm.prop_of th
                                   of _ (*Trueprop*) $ (_ (*eq*) $ _ $ RHS) =>
-                                      if made_of_ctrs ctrs RHS
+                                      if made_of_ctrs Tname ctrs RHS
                                       then SOME th
                                       else NONE
                                    | _ => NONE)
-   |> chk_search_result1 ctxt pattern
+   (*|> chk_search_result1 ctxt pattern*)
    |> map (fn th => case Thm.concl_of th
                       of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) =>
                           (Term.fastype_of LHS, th))

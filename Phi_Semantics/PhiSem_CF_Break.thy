@@ -132,7 +132,7 @@ lemma brk_scope:
   apply (rule)
   apply (simp only: Brk_Frame_eq_identity, rule, simp, rule)
   apply (rule \<phi>CONSEQ'E0, rule FIC.brk_frame.\<phi>R_dispose_res_frm[where P=\<open>\<lambda>_. True\<close>]; simp)
-  by (rule, rule implies_refl)
+  by (rule, rule transformation_refl)
 
 lemma "_op_break_rule_":
   \<open>\<p>\<r>\<o>\<c> op_break l vs \<lbrace> S vs\<heavy_comma> TECHNICAL Brk_Frame l \<longmapsto> 0 \<rbrace>

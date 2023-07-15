@@ -885,7 +885,7 @@ abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
 
 lemma [\<phi>reason 3000 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action ToSA' ?mode\<close>]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action ToSA' mode\<close>
-  unfolding Action_Tag_def using implies_refl .
+  unfolding Action_Tag_def using transformation_refl .
 
 subsection \<open>Declaration of Convergence of Branch\<close>
 
@@ -958,6 +958,6 @@ lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<t>\<r
 
 lemma [\<phi>reason 1000 for \<open>?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value ?clean\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> True @action collect_clean_value clean\<close>
-  unfolding Action_Tag_def using implies_refl .
+  unfolding Action_Tag_def using transformation_refl .
 *)
 end

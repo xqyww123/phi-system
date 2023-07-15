@@ -67,7 +67,7 @@ fun TF_reasoner ctxt sequent =
   case PLPR_Exhaustive.reason_exhaustively (SOME 2)
             (ctxt, @{thm' \<phi>TA_TF_rule_step} RS sequent)
     of SOME th => th
-     | NONE => raise Automation_Fail
+     | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
 
 fun TF_reasoning phi ctxt =
   let val extract_prem =
@@ -111,7 +111,7 @@ fun gen_TF hint0 (phi0 : phi_type) generic =
                                             SOME ind_conv, TF_reasoning, K NONE, simp)
                                            phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail
+   |> (fn NONE => raise Automation_Fail ""
         | SOME (rule', _) =>
           let fun set_prem_to_True rule =
                 case Thm.prop_of rule
@@ -197,7 +197,7 @@ fun gen_FTF hint0 (phi0 : phi_type) thy =
                                             NONE, K reasoning, K NONE, simp)
                                             phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail
+   |> (fn NONE => raise Automation_Fail ""
         | SOME (rule'0, _) =>
           let fun set_prem_to_True rule =
                 case Thm.prop_of rule

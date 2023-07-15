@@ -11,19 +11,59 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 (*** Separation Homo ***)
 
+(*
+fun make_phi_for_pair ctxt0 (x_term0, FT_term0, (phi0:phi_type)) =
+  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
+    |> Seq.map (fn (T_term, F_term) =>
+  let val (rev_ty_args, _, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val ([],element_ty,_) = dest_parameterized_phi_ty (hd rev_ty_args)
+      val idx = phi_maxidx_of phi0 ~1 + 1
+      val ty_x'dest = Term.add_tvarsT element_ty []
+      val thy0 = Context.theory_of ctxt0
+      val SS = map (Sign.arity_sorts thy0 \<^type_name>\<open>prod\<close> o snd) ty_x'dest
+      val instTy = fold_index (fn (i, (K, [S1,S2])) =>
+                      TVars.add (K, \<^Type>\<open>prod \<open>TVar(("xa",idx+i),S1)\<close> \<open>TVar(("xb",idx+i),S2)\<close>\<close>)
+                   ) (ty_x'dest ~~ SS) TVars.empty
+      val instTy'= TVars.map (K (Thm.global_ctyp_of thy0)) instTy
+      val phi = instantiate_phi (instTy', Vars.empty) phi0
+   in phi
+  end)*)
+
 fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
   Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
     |> Seq.maps (fn (T_term0, F_term0) =>
   let val (_, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
-      val ([],_, ele_model0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
-      val inst  = Phi_Help.lift_type_sort' (Proof_Context.theory_of ctxt)
-                                            [(model_ty0, \<^sort>\<open>sep_magma\<close>), (ele_model0, \<^sort>\<open>sep_magma\<close>)]
-                   handle TYPE _ => raise Automation_Fail
+      val ([], element_ty0, ele_model0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
+
+      (*make_phi_for_pair*)
+      val idx = phi_maxidx_of phi0 ~1 + 1
+      val ty_x'dest = Term.add_tvarsT element_ty0 []
+      val thy = Proof_Context.theory_of ctxt
+      val SS = map (Sign.arity_sorts thy \<^type_name>\<open>prod\<close> o snd) ty_x'dest
+      val instTy = fold_index (fn (i, (K, [S1,S2])) =>
+                      TVars.add (K, \<^Type>\<open>prod \<open>TVar(("xa",idx+i),S1)\<close> \<open>TVar(("xb",idx+i),S2)\<close>\<close>)
+                   ) (ty_x'dest ~~ SS) TVars.empty
+      val instTy'= TVars.map (K (Thm.global_ctyp_of thy)) instTy
+      val phi'1 = instantiate_phi (instTy', Vars.empty) phi0
+      val (model_ty'1, ele_model'1) = (
+              Term_Subst.instantiateT instTy model_ty0,
+              Term_Subst.instantiateT instTy ele_model0
+            )
+      
+      val inst  = Phi_Help.lift_type_sort' thy [(model_ty'1, \<^sort>\<open>sep_magma\<close>), (ele_model'1, \<^sort>\<open>sep_magma\<close>)]
+                  handle TYPE _ => raise Automation_Fail ("Fail to guess the property because fail to \
+                                    \constrain the type " ^ Syntax.string_of_typ ctxt model_ty'1 ^ " and "
+                                    ^ Syntax.string_of_typ ctxt ele_model'1 ^ " by sort \<open>sep_magma\<close>")
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
-      val phi = instantiate_phi (inst',Vars.empty) phi0
-      val subst = Term_Subst.instantiate (inst, Vars.empty)
+
+      val phi = instantiate_phi (inst',Vars.empty) phi'1
+      val subst = Term_Subst.instantiate (instTy, Vars.empty)
+               #> Term_Subst.instantiate (inst, Vars.empty)
+
       val (x_term, FT_term, F_term, T_term) = (subst x_term0, subst FT_term0, subst F_term0, subst T_term0)
-      val x_ty = Term_Subst.instantiateT inst x_ty0
+      val x_ty = x_ty0
+              |> Term_Subst.instantiateT instTy
+              |> Term_Subst.instantiateT inst
 
       val ([], element_ty, _) = dest_parameterized_phi_ty (Term.fastype_of T_term)
 
@@ -51,29 +91,17 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
                      else \<^Const>\<open>Separation_Homo\<^sub>E a b c d e f x_ty\<close>
                        $ Fa $ Fb $ F_term $ zip)
                    | _ => error "Internal bug")
+
    in Seq.single ([], HOLogic.Trueprop $ SH, x_term, FT_term, phi, ctxt)
   end)
 
-fun make_phi_for_pair ctxt0 (phi0 : phi_type) =
-  let val (rev_ty_args, _, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
-      val ([],element_ty,_) = dest_parameterized_phi_ty (hd rev_ty_args)
-      val idx = phi_maxidx_of phi0 ~1 + 1
-      val ty_x'dest = Term.add_tvarsT element_ty []
-      val thy0 = Context.theory_of ctxt0
-      val SS = map (Sign.arity_sorts thy0 \<^type_name>\<open>prod\<close> o snd) ty_x'dest
-      val instTy = fold_index (fn (i, (K, [S1,S2])) =>
-                      TVars.add (K, \<^Type>\<open>prod \<open>TVar(("xa",idx+i),S1)\<close> \<open>TVar(("xb",idx+i),S2)\<close>\<close>)
-                   ) (ty_x'dest ~~ SS) TVars.empty
-      val instTy'= TVars.map (K (Thm.global_ctyp_of thy0)) instTy
-      val phi = instantiate_phi (instTy', Vars.empty) phi0
-   in phi
-  end
+
 
 fun SHu_reasoner ctxt sequent =
   case PLPR_Exhaustive.reason_exhaustively (SOME 2)
             (ctxt, @{thm' \<phi>TA_SHu_rule_step} RS sequent)
     of SOME th => th
-     | NONE => raise Automation_Fail
+     | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
 
 fun SH_reasoning is_intro phi ctxt =
   gen_abstract_constraint_guided_reasoning (K NONE) (K (K [])) (fn ctxt => fn sequent => (
@@ -89,7 +117,7 @@ fun SH_reasoning is_intro phi ctxt =
 
 fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
-      val phi0pr = make_phi_for_pair generic phi0
+      (*val phi0pr = make_phi_for_pair generic phi0*)
       val unify_hint_SH = hint_unify_by_type_operator (
             fn _ (*Trueprop*) $ (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _) => F
              | _ (*Trueprop*) $ (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _) => F
@@ -135,9 +163,9 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
                                             unify_hint_SH, guess_property_SH is_intro,
                                             (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule}), [0,~1,~1],
                                             SOME ind_conv, SH_reasoning is_intro, K NONE, simp)
-                                           phi0pr hint0 ctxt0
+                                           phi0 hint0 ctxt0
    in case Seq.pull rules
-        of NONE => raise Automation_Fail
+        of NONE => raise Automation_Fail ""
          | SOME (rule', _) => generic
              |> Phi_Type_Algebra.note_properties phi0
                     [(if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E", [rule'])]

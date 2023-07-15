@@ -125,13 +125,15 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 (* Tools *)
 
-exception Automation_Fail
+exception Automation_Fail of string
 
 val is_Type_Opr : typ -> bool
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
 val separate_type_operator_and_its_parameter : term -> (term (*T*) * term (*F*)) list
 val separate_type_operator_and_its_non_parameterized_parameter : term -> (term (*T*) * term (*F*)) list
+val separate_type_operator_and_its_parameter_safe : term -> (term (*T*) * term (*F*)) list
+val separate_type_operator_and_its_non_parameterized_parameter_safe : term -> (term (*T*) * term (*F*)) list
 
 val def_contains_satisfaction : phi_type -> bool
 
@@ -290,8 +292,8 @@ fun add_property (phityp0,pos,property) ctxt =
                            block [str "The property ", str property_name, str " of \<phi>-type ",
                                   Syntax.pretty_term ctxt' phityp0,
                                   str " either covers or is covered by other existing rules."] ::
-                           str "We prohibit redundancy of \<phi>-type properties because it causes\
-                               \a great number of redundancy in the generated reasoning rules. \
+                           str "We prohibit redundancy of \<phi>-type properties because it causes \
+                               \a great amount of redundancy in the generated reasoning rules. \
                                \Instead, you should provide the most general rule and, if you want, \
                                \specialized (branched) reasoning on its antecedents." ::
                            map (fn (_,pos,rule) => block (
@@ -617,10 +619,12 @@ fun mk_ind_dest_ToA ctxt phi gen_prop = (*not tested*)
       val prop = gen_prop (x_term, T_term)
               |> (fn X => Abs("",x_ty,X))
               |> fold (fn T => fn X => Abs("",T,X)) rev_arg_tys
-      val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of (#ind phi)))
+      val idx = Term.maxidx_of_term prop + 1
+      val ind = Thm.incr_indexes idx (#ind phi)
+      val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of ind))
                         of Var v => v
                          | _ => error "Bad induction rule")
-   in Thm.instantiate (TVars.empty, Vars.make [(prop_var, Thm.cterm_of ctxt prop)]) (#ind phi)
+   in Thm.instantiate (TVars.empty, Vars.make [(prop_var, Thm.cterm_of ctxt prop)]) ind
         |> Phi_Help.beta_eta_contract
   end
 
@@ -661,7 +665,7 @@ fun fix_phi_term_params phi_term ctxt =
 
 (*** Deriving Properties ***)
 
-exception Automation_Fail
+exception Automation_Fail of string
 
 type priority = int
 type deriver_name = string
@@ -884,7 +888,7 @@ fun is_Type_Opr ty =
 
 fun assert_Type_Opr ty =
   if is_Type_Opr ty then ()
-  else (warning "Not a \<phi>-type operator!" ; raise Automation_Fail)
+  else raise Automation_Fail "Not a \<phi>-type operator!"
 
 fun is_first_parameter_a_type ty =
   case dest_parameterized_phi_ty ty
@@ -897,7 +901,7 @@ fun is_first_parameter_a_type ty =
 
 fun assert_first_parameter_is_type ty =
   if is_first_parameter_a_type ty then ()
-  else (warning "Not a \<phi>-type operator!" ; raise Automation_Fail)
+  else raise Automation_Fail "Not a \<phi>-type operator!"
 
 fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
   let fun split prevs (F $ T) =
@@ -913,15 +917,25 @@ fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
    in split [] FT_term
   end
 
-val separate_type_operator_and_its_parameter =
+val separate_type_operator_and_its_parameter_safe =
   gen_separate_type_operator_and_its_non_parameter (can dest_parameterized_phi_ty o Term.fastype_of)
 
-val separate_type_operator_and_its_non_parameterized_parameter =
+val separate_type_operator_and_its_non_parameterized_parameter_safe =
   gen_separate_type_operator_and_its_non_parameter (fn tm =>
     case try dest_parameterized_phi_ty (Term.fastype_of tm)
       of SOME ([],_,_) => true
        | _ => false)
 
+fun warn_separate_type_operator f FT_term =
+  case f FT_term
+    of [] => raise Automation_Fail ("Fail to parse " ^ Term.term_name (Term.head_of FT_term) ^
+                                    " as a type operator.")
+     | ret => ret
+
+val separate_type_operator_and_its_parameter =
+      warn_separate_type_operator separate_type_operator_and_its_parameter_safe
+val separate_type_operator_and_its_non_parameterized_parameter =
+      warn_separate_type_operator separate_type_operator_and_its_non_parameterized_parameter_safe
 
 fun chk_zero_index_thm thm =
   if Thm.maxidx_of thm <= 0

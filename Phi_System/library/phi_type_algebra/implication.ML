@@ -91,7 +91,7 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
         case PLPR_Exhaustive.reason_exhaustively (SOME 2)
                   (ctxt, @{thm' \<phi>TA_Inh_step} RS sequent)
           of SOME th => th
-           | NONE => raise Automation_Fail      
+           | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
 
       fun varify_subgoal (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
             SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
@@ -148,7 +148,7 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                                             Inh_reasoning, solver, simp)
                                            phi0 hint0 ctxt0
    in case Seq.pull rules
-        of NONE => raise Automation_Fail
+        of NONE => raise Automation_Fail ""
          | SOME (rule', _) => thy
             |> Phi_Type_Algebra.note_properties phi0 [("Implication", [rule'])]
             |> Phi_Help.generic_theory_mapping (fn m =>

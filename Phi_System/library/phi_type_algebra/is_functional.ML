@@ -44,7 +44,7 @@ fun gen_is_functional hint0 (phi0 : phi_type) thy =
                   Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 90
                                               ([],[]) NONE [Morphism.thm m rule])
         |> Phi_Type_Algebra.note_properties phi0 [("Is_Functional", [rule])]
-    | _ => raise Automation_Fail
+    | _ => raise Automation_Fail ""
   end
 
 val is_functional = accept_one "Is_Functional" gen_is_functional

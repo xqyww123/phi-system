@@ -387,7 +387,7 @@ section \<open>Basic Applications\<close>
 subsection \<open>Is \& Assert\<close>
 
 lemma is_\<phi>app: "\<p>\<a>\<r>\<a>\<m> x' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x' \<Longrightarrow> x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> N"
-  unfolding Premise_def using implies_refl by force
+  unfolding Premise_def using transformation_refl by force
 
 lemma assert_\<phi>app:
   \<open>\<p>\<a>\<r>\<a>\<m> Y \<Longrightarrow> \<^bold>d\<^bold>o X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action ToSA \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close>
@@ -422,7 +422,7 @@ lemma [\<phi>reason 1]:
 
 lemma [\<phi>reason 5000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action as X\<close>
-  unfolding Action_Tag_def using implies_refl .
+  unfolding Action_Tag_def using transformation_refl .
 
 
 

@@ -288,7 +288,7 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
              error ("Fail to extract a value from the sequent. A extraction rule fails: \n" ^
                     Thm.string_of_thm ctxt rule)
       fun gen_rule num thm =
-        if num = 0 then (@{thm implies_refl} RS thm) else
+        if num = 0 then (@{thm transformation_refl} RS thm) else
         case Phi_Syntax.dest_transformation (Thm.major_prem_of thm)
           of (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ ,_,_)
                 => gen_rule num (@{thm Subjection_transformation} RS thm)
@@ -325,10 +325,10 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                                in (rule RS thm)
                                |> Phi_Reasoner.reason1 (gen_rule_err rule) (SOME m) ctxt
                               end
-                              | _ => @{thm implies_refl} RS thm)
-                       | _ => @{thm implies_refl} RS thm
+                              | _ => @{thm transformation_refl} RS thm)
+                       | _ => @{thm transformation_refl} RS thm
                       )
-           | _ => @{thm implies_refl} RS thm
+           | _ => @{thm transformation_refl} RS thm
       val initial = sequent RS #transformation_rule mode
       val rule = gen_rule num_limit initial
       val (sequent', vals) = rule
@@ -468,7 +468,7 @@ fun push_values values (ctxt,sequent) =
     val mode = Phi_Working_Mode.mode1 ctxt
     val initial = sequent RS #transformation_rule mode
     val sequent' = fold_rev (fn v => fn th => (v RS @{thm "_rule_push_a_value_"}) RS th) values initial
-   in (ctxt, fst (HOLogic.conj_elim ctxt (@{thm implies_refl} RS sequent')))
+   in (ctxt, fst (HOLogic.conj_elim ctxt (@{thm transformation_refl} RS sequent')))
   end
 
 fun is_local_value (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true

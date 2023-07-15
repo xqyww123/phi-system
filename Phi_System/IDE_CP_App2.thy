@@ -130,7 +130,7 @@ lemma [\<phi>reason 1200 for \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
 \<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> SYNTHESIS x \<Ztypecolon> \<v>\<a>\<l>[raw] T\<close>
   unfolding Action_Tag_def
-  by (cases raw; simp add: Val_expn implies_refl) *)
+  by (cases raw; simp add: Val_expn transformation_refl) *)
 
 lemma [\<phi>reason 1200 for \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S2\<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T \<brangle> \<w>\<i>\<t>\<h> _\<close>]:
   \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)

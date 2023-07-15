@@ -21,22 +21,26 @@ fun guess_property  (x_term, T_term, (phi:phi_type)) ctxt =
                | NONE => collect_params ret rev_arg_tys F'
       val T_params = collect_params [] rev_arg_tys T_term
       fun mk_prop r_term ((rev_arg_tys, x_ty, model_ty), T_term) =
-            HOLogic.all_const x_ty $ Abs ("x", x_ty,
+        let val arity = length rev_arg_tys
+            val T'_term = fold_index (fn (i,_) => fn X => X $ Bound (arity - i)) rev_arg_tys T_term
+         in (HOLogic.all_const x_ty $ Abs ("x", x_ty,
               \<^Const>\<open>Action_Tag\<close>
                 $ (\<^Const>\<open>Transformation model_ty\<close>
-                    $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T_term)
+                    $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T'_term)
                     $ (\<^Const>\<open>ExSet model_ty model_ty\<close> $ Abs ("y", model_ty,
                           \<^Const>\<open>Subjection model_ty\<close>
                             $ (\<^Const>\<open>\<phi>Type model_ty model_ty\<close> $ Bound 0 $ \<^Const>\<open>Itself model_ty\<close>)
                             $ (r_term $ Bound 1 $ Bound 0)))
                     $ \<^Const>\<open>True\<close>)
-                $ (\<^Const>\<open>to model_ty model_ty\<close> $ \<^Const>\<open>Itself model_ty\<close>))
+                $ (\<^Const>\<open>to model_ty model_ty\<close> $ \<^Const>\<open>Itself model_ty\<close>)))
+         |> fold (fn T => fn X => HOLogic.all_const T $ Abs ("A", T, X)) rev_arg_tys
+        end
       val r_types = map (fn ((_,x,m),_) => x --> m --> HOLogic.boolT) T_params
       val r_fixes = Name.invent_names (Variable.names_of ctxt) "r" r_types
       val ctxt' = Variable.add_fixes_direct (map fst r_fixes) ctxt
       val ants = map2 (mk_prop o Free) r_fixes T_params 
       val idx = phi_maxidx_of phi ~1 + 1
-      val prop = mk_prop (Var(("r",idx), x_ty --> model_ty --> HOLogic.boolT)) ((rev_arg_tys, x_ty, model_ty), T_term)
+      val prop = mk_prop (Var(("r",idx), x_ty --> model_ty --> HOLogic.boolT)) (([], x_ty, model_ty), T_term)
    in Seq.single (ants, HOLogic.Trueprop $ prop, x_term, T_term, phi, ctxt')
   end
 
@@ -54,7 +58,7 @@ fun reasoning phi ctxt =
              | _ => ()) ;
           case PLPR_Exhaustive.reason_exhaustively (SOME 2) (ctxt, @{thm' \<phi>TA_TF_rule_step} RS sequent)
             of SOME th => th
-             | NONE => raise Automation_Fail
+             | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
       )) ctxt
   end
 
@@ -234,7 +238,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                   Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 90
                                               ([],[]) NONE [Morphism.thm m rule])
         |> Phi_Type_Algebra.note_properties phi0 [("Trans_to_Raw_Abst", [rule])]
-    | _ => raise Automation_Fail
+    | _ => raise Automation_Fail ""
   end
 
 val trans_to_raw_abst = accept_one "Trans_to_Raw_Abst" gen_trans_to_raw_abst

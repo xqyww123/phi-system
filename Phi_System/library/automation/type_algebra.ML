@@ -154,7 +154,7 @@ val extract_pure_prem_by_RS : thm list (*RS rules*) -> extract_pure_prems
 
 (** Other Misc Tools **)
 
-exception Automation_Fail
+exception Automation_Fail of string
 structure Simps : SIMPSET (*The standard simpset for deriving*)
 
 val accept_one : string (*name for printing*) ->
@@ -259,7 +259,7 @@ fun guess__get_bnf ctxt Tname =
 
 fun get_bnf ctxt Tname =
   case BNF_Def.bnf_of ctxt Tname
-    of NONE => (warning ("Type " ^ Tname ^ " is not a known BNF."); raise Automation_Fail)
+    of NONE => (raise Automation_Fail ("Type " ^ Tname ^ " is not a known BNF."))
      | SOME bnf => bnf
 
 
@@ -540,7 +540,8 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
                     val (deads',lives') = classify_bnf_dead_live bnf Targs'
                     val _ = if deads = deads' then () else raise TYPE ("guess_zip", [], [])
                     val fp_more = case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) Tname
-                                    of SOME x => x | NONE => raise Automation_Fail
+                                    of SOME x => x
+                                     | NONE => raise Automation_Fail ("Fail to guess the zip operator for type " ^ Tname)
                     val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                                        else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
                     val ctxt'' = ctxt
@@ -581,7 +582,8 @@ fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs'
           val (deads',lives') = classify_bnf_dead_live bnf Targs'
           val _ = if deads = deads' then () else raise TYPE ("guess_zip", [], [])
           val fp_more = case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) Tname
-                          of SOME x => x | NONE => raise Automation_Fail
+                          of SOME x => x
+                           | NONE => raise Automation_Fail ("Fail to guess the zip operator for type " ^ Tname)
           val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                              else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
           val simps = (case Ctr_Sugar.ctr_sugar_of ctxt Tname
@@ -607,19 +609,27 @@ fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs'
 
 local open Pretty
 
-fun err_derive prop_name =
-      error ("Fail to derive the property " ^ prop_name)
+fun err_derive prop_name msg has_hint =
+      error ("Fail to derive the property " ^ prop_name ^
+        (if msg = "" then "" else "\n" ^ msg) ^
+        (if has_hint then ""
+         else "\nThe guessed property may be wrong, and you may provide the \
+              \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."))
 
-fun err_prove hint thy =
-      error ("Fail to show the given property automatically:\n" ^
-      Context.cases Syntax.string_of_term_global Syntax.string_of_term thy hint)
+fun err_prove hint thy msg has_hint =
+      error ("Fail to derive the given property:\n" ^
+      Context.cases Syntax.string_of_term_global Syntax.string_of_term thy hint ^ "\n" ^
+        (if msg = "" then "" else "\n" ^ msg) ^
+        (if has_hint then ""
+         else "\nThe guessed property may be wrong, and you may provide the \
+              \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."))
 
 in
 
 fun accept_one prop_name gen [] phityp thy = (gen NONE phityp thy
-                    handle Automation_Fail => err_derive prop_name)
+                handle Automation_Fail msg => err_derive prop_name msg false)
   | accept_one _ gen [H] phityp thy = (gen (SOME H) phityp thy
-             handle Automation_Fail => err_prove H thy)
+         handle Automation_Fail msg => err_prove H thy msg true)
   | accept_one prop_name _ hints _ thy =
          error (string_of (chunks (
            block [str prop_name, str " only derives one reasoning rule, but multiple hints are given"] ::
@@ -644,7 +654,7 @@ fun err_derive prop_name =
       error ("Fail to derive the property " ^ prop_name)
 
 fun err_prove hint thy =
-      error ("Fail to show the given property automatically:\n" ^
+      error ("Fail to derive the given property:\n" ^
       Context.cases Syntax.string_of_term_global Syntax.string_of_term thy hint)
 
 in
@@ -654,7 +664,7 @@ fun select_one_hint prop_name action (hints,thy) =
     of ([hint], []) => (
           (filter_out (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints,
            action (SOME hint) thy)
-          handle Automation_Fail => err_prove hint thy)
+          handle Automation_Fail msg => err_prove hint thy msg)
      | ([], [_]) => (
           (filter_out (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints,
            action NONE thy)
@@ -668,12 +678,13 @@ fun select_hints prop_name action (hints,thy) =
      | ([], [_]) => (
           (filter_out (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints,
            action NONE thy)
-          handle Automation_Fail => err_derive prop_name)
+          handle Automation_Fail msg => err_derive prop_name msg)
      | ([], _) => error ("It is enough to just give me one hint to derive "^ prop_name)
      | (hints, _) => (
           filter_out (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints,
           fold (fn hint => action (SOME hint)
-                handle Automation_Fail => err_prove hint thy) hints thy)
+                handle Automation_Fail msg => err_prove hint thy msg)
+               hints thy)
 
 fun chk_no_hints prop_name (hints, thy) =
   case filter (fn H => is_the_hint prop_name H orelse is_deriving_hint prop_name H) hints
@@ -1006,7 +1017,8 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
       val ants = filter ((fn term => not (is_real_Premise term) andalso not (is_TA_IH_ToA term))
                          o Thm.concl_of) ants'1
                @ ToAs
-               |> map (Simplifier.rewrite_rule ctxt rewrs)
+               |> map (Simplifier.rewrite_rule ctxt rewrs
+                    #> Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt)
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_intro_rules (
@@ -1062,7 +1074,7 @@ fun conv_chk_unfolded (phi : phi_type) ctm = (chk_unfolded phi (Thm.term_of ctm)
 fun PLPR_reasoner num ctxt sequent =
   case PLPR_Exhaustive.reason_exhaustively num (ctxt, sequent)
     of SOME th => th
-     | NONE => raise Automation_Fail
+     | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
    
 
 fun ToA_reasoner phi ctxt sequent =
@@ -1111,8 +1123,10 @@ fun quantifies_abstract_object get_x hint =
             \<^Const>\<open>Pure.imp\<close> $ lambda data A $ lambda data B
         | lambda data (\<^Const>\<open>Pure.all ty\<close> $ X) = \<^Const>\<open>Pure.all ty\<close> $ lambda data X
         | lambda data (Abs(N,Ty,X)) = Abs(N,Ty, lambda data X)
-        | lambda (N,Ty,v) (\<^Const>\<open>Trueprop\<close> $ X) =
-            \<^Const>\<open>Trueprop\<close> $ (HOLogic.all_const Ty $ Abs(N,Ty, Term.abstract_over (v, X)))
+        | lambda (N,Ty,v) (XX as (\<^Const>\<open>Trueprop\<close> $ X)) =
+            if Term.exists_subterm (fn x => x = v) X
+            then \<^Const>\<open>Trueprop\<close> $ (HOLogic.all_const Ty $ Abs(N,Ty, Phi_Help.abstract_over (v, X)))
+            else XX
         | lambda _ X = X
                  
    in case get_x' hint

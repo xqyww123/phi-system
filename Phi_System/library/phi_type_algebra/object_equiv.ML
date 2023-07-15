@@ -76,11 +76,9 @@ fun infer_eq ctxt rule =
             (@{thm' TrueI} RS rule)
               |> set_eq_when_it_is_constant_true ctxt
          | _ => error "internal bug 7147bf3f-9e7d-4ffc-a40b-aa621a4fca21")
-      handle THM _ => (
-        warning ("Fail to infer the object equivelance from the obtained obligation\n" ^
-                 Thm.string_of_thm ctxt rule);
-        raise Automation_Fail
-      )
+      handle THM _ =>
+        raise Automation_Fail ("Fail to infer the object equivelance from the obtained obligation\n" ^
+                 Thm.string_of_thm ctxt rule)
   end
 
 
@@ -157,15 +155,13 @@ fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
                                             @{thm' Object_Equiv_rule}, [0],
                                             SOME ind_conv, OE_reasoning, infer, simp)
                                            phi0 hint0 ctxt0
-   in Seq.chop 2 rules
-   |> (fn ([], _) => raise Automation_Fail
-        | ([rule'], _) => thy
+   in Seq.pull rules
+   |> (fn NONE => raise Automation_Fail ""
+        | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
                                               ([],[]) NONE [Morphism.thm m rule'])
-            |> Phi_Type_Algebra.note_properties phi0 [("obj_eq", [rule'])]
-        | (_,_) => (warning "More than one property instances are inferred.";
-                        raise Automation_Fail))
+            |> Phi_Type_Algebra.note_properties phi0 [("obj_eq", [rule'])])
   end
 
 in
