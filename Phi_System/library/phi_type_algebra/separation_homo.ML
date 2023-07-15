@@ -119,9 +119,8 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
       (*val phi0pr = make_phi_for_pair generic phi0*)
       val unify_hint_SH = hint_unify_by_type_operator (
-            fn _ (*Trueprop*) $ (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _) => F
-             | _ (*Trueprop*) $ (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _) => F
-             | _ => raise TERM ("",[]))
+            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ => F)
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn phi =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_IH}) then_conv

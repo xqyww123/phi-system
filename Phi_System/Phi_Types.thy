@@ -139,7 +139,7 @@ end
 declare [[\<phi>trace_reasoning = 0]]
  
 subsection \<open>Embedding Existential Quantification\<close>
-                  
+                   
 \<phi>type_def ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
   where [embed_into_\<phi>type]: \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
   deriving Basic
@@ -147,6 +147,29 @@ subsection \<open>Embedding Existential Quantification\<close>
        and Identity_Element
        and \<open>(\<And>A x. x \<Ztypecolon> T A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
                x \<Ztypecolon> ExTyp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>a b. y = b \<and> r (a x) b) @action to Itself \<close>
+
+lemma
+  \<open>Transformation_Functor (\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c)) (\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c))
+      (\<lambda>f. {f x |x. P x}) (\<lambda>r f g. \<forall>y. P y \<longrightarrow> (\<exists>x. P x \<and> r (f x) (g y)))\<close>
+    \<comment> \<open>Given a source set \<open>P\<close>, if we have a transformation \<open>r\<close> that maps every element in \<open>S\<close> to
+       some elements, then the minimal range of the transformation \<open>r\<close> over \<open>S\<close> is
+       \<open>{ r x | x \<in> P }\<close>. \<close>
+  unfolding Transformation_Functor_def Transformation_def
+  apply auto
+  
+  subgoal premises prems for T U x g v a proof -
+    thm prems
+    from prems(1) have \<open>\<exists>y. \<forall>a. v \<Turnstile> (x a \<Ztypecolon> T) \<longrightarrow> (v \<Turnstile> (y a \<Ztypecolon> U) \<and> g (x a) (y a))\<close>
+      by meson
+    then obtain y where y: \<open>\<forall>a. v \<Turnstile> (x a \<Ztypecolon> T) \<longrightarrow> (v \<Turnstile> (y a \<Ztypecolon> U) \<and> g (x a) (y a))\<close> by blast
+    then show ?thesis
+      by (meson prems(2))
+      
+      by (metis Do_Extract_Implied_Facts \<phi>TA_Inh_extract_prem typing_inhabited)
+    thm prems
+  apply blast
+
+  term range
 
 subsubsection \<open>Syntax\<close>
 
