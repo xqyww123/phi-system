@@ -488,10 +488,6 @@ lemma [\<phi>reason 5000]:
   \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x) @action to T\<close>
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<circle> \<s>\<u>\<b>\<j> x. x = () @action to Target \<close>
-  unfolding Action_Tag_def by simp
-
 
 subsubsection \<open>Termination\<close>
 
@@ -621,15 +617,10 @@ lemma [\<phi>reason 1200]:
   by simp
 
 lemma [\<phi>reason 1200]:
-  \<open>() \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> x. x = 1 @action to Itself\<close>
-  unfolding Action_Tag_def Transformation_def \<phi>None_expn
-  by simp
-
-lemma [\<phi>reason 1200]:
   \<open> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> x. ra x @action to Itself
 \<Longrightarrow> snd x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> x. rb x @action to Itself
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> x. (\<exists>b a. x = b * a \<and> b ## a \<and> rb b \<and> ra a) @action to Itself \<close>
-  unfolding Action_Tag_def Transformation_def \<phi>None_expn
+  unfolding Action_Tag_def Transformation_def
   by (cases x; simp; blast)
 
 

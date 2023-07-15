@@ -52,17 +52,6 @@ lemma [\<phi>reason add]:
   by (clarsimp simp add: set_mult_expn homo_sep_disj_total.sep_disj_homo
                          homo_sep_mult.homo_mult)
 
-(*
-interpretation \<phi>Fun: Unit_Homo_L \<open>homo_one f\<close> \<open>\<phi>Fun f\<close>
-  apply standard
-  unfolding Unit_Homo_def homo_one_def Transformation_def
-  by (simp add: \<phi>Fun_expn set_eq_iff)
-
-lemma \<phi>Fun_unit_homo[\<phi>reason add]:
-  \<open> homo_one f
-\<Longrightarrow> Unit_Homo (\<phi>Fun f) \<close>
-  unfolding Unit_Homo_def homo_one_def Transformation_def
-  by (simp add: \<phi>Fun_expn set_eq_iff) *)
 
 
 subsection \<open>\<phi>-Type Embedding of \<open>\<top>\<close>\<close>
@@ -76,7 +65,6 @@ lemma [\<phi>reason 1000]:
   \<medium_left_bracket> to Itself \<medium_right_bracket>.
 
 
-declare [[ \<phi>trace_reasoning = 3]]
 
 subsection \<open>Embedding Subjection into Type\<close>
                                                                                         
@@ -178,14 +166,34 @@ parse_ast_translation \<open>
 
 subsection \<open>Stepwise Abstraction\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-                                                                         
+declare [[\<phi>trace_reasoning = 1]]
+
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
 
-ML \<open>Embed_into_Phi_Type.print \<^context> false\<close>
+text \<open>It is too basic and our reasoner can barely do little about \<phi>-types embedded in a
+  satisfaction statement because it as a pure proposition loses the type structure to guide our
+  reasoner. As a consequence, almost every property of the \<phi>-type has to be proven manually.\<close>
 
-thm \<phi>Composition
+thm \<phi>Composition.open_abstraction
+
+lemma
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> y. r y \<equiv> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. r y \<and> P\<close>
+  unfolding atomize_eq Transformation_def
+  by clarsimp blast
+
+lemma
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f \<Ztypecolon> ExTyp (\<lambda>_. T) \<s>\<u>\<b>\<j> f. r f \<equiv> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. (\<exists>c f. r f \<and> y = f c)\<close>
+  unfolding atomize_eq Transformation_def
+  by clarsimp blast
+
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rU x y @action to Itself)
+\<Longrightarrow> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rT x y @action to Itself)
+\<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>m. rT m y \<and> rU x m) @action to Itself\<close>
+  unfolding Transformation_def Action_Tag_def
+  by clarsimp  blast
 
 lemma [\<phi>reason 1200]:
   \<open>x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U) @action to RAW\<close>
