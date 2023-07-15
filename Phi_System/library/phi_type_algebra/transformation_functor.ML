@@ -31,6 +31,7 @@ fun mk_TF's_two_instantiations ctxt0 (_, FT_term0, phi0) =
       val params' = map2 (fn N => fn (_,T) => Free(N,T)) param_names' params
       val inst = Frees.make (params ~~ params')
       val F'_term = Term_Subst.instantiate_frees (TFrees.empty, inst) F'1_term
+      
 
       val ants = map2 (fn (N,T) => fn p' =>
                       \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_SIMP\<close> $ (\<^Const>\<open>HOL.eq T\<close> $ Free(N,T) $ p')
@@ -52,11 +53,12 @@ fun guess_property_TF (x_term, FT_term, phi0) ctxt =
                           \<^Const>\<open>Transformation_Functor a b c d e f\<close> $ F_term $ F'_term
                         | _ => error "Internal bug")
       val target_ty = Term_Subst.instantiateT_frees inst_ty
+      val Rng = Abs("_", x_ty, \<^Const>\<open>top \<^Type>\<open>set \<open>target_ty element_ty\<close>\<close>\<close>)
    in guess_set_opr ctxt' x_ty element_ty
    |> Seq.maps (fn (D_term, ctxt'2) =>
         guess_rel_mapper target_ty ctxt'2 x_ty element_ty
      |> Seq.map (fn (rel_mapper, ctxt'3) =>
-          (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ rel_mapper),
+          (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ Rng $ rel_mapper),
            x_term, FT_term, phi, ctxt'3)))
   end)
 
@@ -84,7 +86,7 @@ fun gen_TF hint0 (phi0 : phi_type) generic =
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
                         | X => NONE)) *)
       val unify_hint = hint_unify_by_type_operator (
-              fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _) => F1)
+              fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _) => F1)
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr})),
                         fn ctxt => fn phi =>
                           Conv.rewr_conv @{thm \<phi>TA_TF_rewr} then_conv
@@ -129,9 +131,9 @@ fun gen_TF hint0 (phi0 : phi_type) generic =
                 let val ((_,[locale_rule']), _) = Variable.import true [locale_rule] lthy
                  in case Thm.concl_of locale_rule'
                       of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor_L\<close>, _)
-                            $ Fa $ Fb $ D $ m $ Pr) =>
+                            $ Fa $ Fb $ D $ R $ m $ Pr) =>
                     cmd ([(\<^locale>\<open>Transformation_Functor_L\<close>, ((Term.term_name (#term phi0), true),
-                          (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME m,
+                          (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME R, SOME m,
                                                   SOME (case Pr of Var _ => \<^Const>\<open>True\<close> | _ => Pr)],
                            [])))], []) [] lthy
                       |> Proof.refine_primitive (fn _ => fn th => locale_rule' RS th)
@@ -166,6 +168,7 @@ fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
                             \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
                            \<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F_term $ F'_term
                               $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
+                              $ Var(("R",0), c --> \<^Type>\<open>set e\<close>)
                               $ Var(("mapper",0), (a --> e --> \<^Type>\<open>bool\<close>) --> c --> f --> \<^Type>\<open>bool\<close>)
                               $ ant
                          | _ => error "Internal bug")
@@ -180,7 +183,7 @@ fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
 fun gen_FTF hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type_operator (
-            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ => F1)
+            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
       val reasoning = PLPR_reasoner NONE
       fun simp (_, ctxt) thm =
         if is_some hint0 then thm
@@ -210,10 +213,10 @@ fun gen_FTF hint0 (phi0 : phi_type) thy =
                 let val ((_,[locale_rule']), _) = Variable.import true [rule'] lthy
                  in case Thm.concl_of locale_rule'
                       of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _)
-                            $ Fa $ Fb $ D $ m $ Pr $ pm $ fm) =>
+                            $ Fa $ Fb $ D $ R $ m $ Pr $ pm $ fm) =>
                           cmd ([(\<^locale>\<open>Functional_Transformation_Functor\<close>,
                                 ((Term.term_name (#term phi0), true),
-                                (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME m,
+                                (Expression.Positional [SOME Fa, SOME Fb, SOME D, SOME R, SOME m,
                                                         SOME (case Pr of Var _ => \<^Const>\<open>True\<close> | _ => Pr),
                                                         SOME pm, SOME fm],
                                  [])))], []) [] lthy
