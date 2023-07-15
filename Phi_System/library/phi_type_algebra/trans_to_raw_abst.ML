@@ -176,12 +176,12 @@ fun solver (phi, ctxt, sequent) =
 
 fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val hint0 = Option.map (quantifies_abstract_object false ctxt0 (
+      val hint0 = Option.map (quantifies_abstract_object (
             let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
                   | target (\<^Const>\<open>Transformation _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ X $ T) $ _ $ _) =
                         if Term.exists_subterm (fn x => x = X) T
                         then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
-                        else X
+                        else SOME X
              in target
             end
             )) hint00

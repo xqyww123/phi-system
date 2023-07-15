@@ -39,18 +39,27 @@ include PHI_HELP
 
   (*Find the most general instantiation of the given type to meet the given sort*)
   val lift_type_sort : theory -> typ * sort -> Type.tyenv -> Type.tyenv
+  val lift_type_sort' : theory -> (typ * sort) list -> typ TVars.table
 
-  val tyenv_to_tvars_table : Proof.context -> Type.tyenv -> ctyp TVars.table
-  val tyenv_to_tvars_table_no_c : Type.tyenv -> typ TVars.table
-  val tyenv_to_tvars_table_generic : Context.generic -> Type.tyenv -> ctyp TVars.table
-  val tvars_table_to_tyenv : ctyp TVars.table -> Type.tyenv
-  val tenv_to_vars_table : Proof.context -> Type.tyenv -> Envir.tenv -> cterm Vars.table
-  val vars_table_to_tenv : cterm Vars.table -> Envir.tenv
-  val env_to_table : Proof.context -> (Type.tyenv * Envir.tenv)
-                                   -> (ctyp TVars.table * cterm Vars.table)
-  val table_to_env : (ctyp TVars.table * cterm Vars.table) -> (Type.tyenv * Envir.tenv)
-  val ty_table_no_c : ctyp TVars.table -> typ TVars.table
-  val table_no_c : (ctyp TVars.table * cterm Vars.table) -> (typ TVars.table * term Vars.table)
+  (*For tyenv/tenv given from Pattern.match*)
+  val subst_tyenv : Type.tyenv -> typ TVars.table
+  val subst_tenv  : Type.tyenv -> Envir.tenv -> term Vars.table
+  val subst_env : Type.tyenv * Envir.tenv -> typ TVars.table * term Vars.table
+
+  (*For tyenv/tenv given from Pattern.unify*)
+  val norm_tyenv : Type.tyenv -> typ TVars.table
+  val norm_tenv  : Type.tyenv -> Envir.tenv -> term Vars.table
+  val norm_env : Type.tyenv * Envir.tenv -> typ TVars.table * term Vars.table
+
+  val certify_tyvars : Context.generic -> typ TVars.table -> ctyp TVars.table
+  val certify_tmvars : Context.generic -> term Vars.table -> cterm Vars.table
+  val certify_vars : Context.generic -> typ TVars.table * term Vars.table -> ctyp TVars.table * cterm Vars.table
+  val uncertify_tyvars : ctyp TVars.table -> typ TVars.table
+  val uncertify_tmvars : cterm Vars.table -> term Vars.table
+  val uncertify_vars   : ctyp TVars.table * cterm Vars.table -> typ TVars.table * term Vars.table
+
+  (*val tvars_table_to_tyenv : ctyp TVars.table -> Type.tyenv
+    val vars_table_to_tenv : cterm Vars.table -> Envir.tenv*)
 
   val beta_eta_contract_leading_antecedent : thm -> thm
 
@@ -184,6 +193,33 @@ fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global t
   | string_of_term_generic (Context.Proof ctxt) = Syntax.string_of_term ctxt
 
 
+fun subst_tyenv tyenv
+  = TVars.build (Vartab.fold (fn (N,(S,T)) => TVars.add ((N,S), T)) tyenv)
+
+fun norm_tyenv tyenv
+  = TVars.build (Vartab.fold (fn (N,(S,T)) => TVars.add ((N,S), Envir.norm_type tyenv T)) tyenv)
+
+fun subst_tenv tyenv tenv =
+  Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
+      Vars.add ((N, Envir.subst_type tyenv TY), Envir.eta_contract TM)) tenv)
+
+fun norm_tenv tyenv tenv =
+  Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
+      Vars.add ((N, Envir.norm_type tyenv TY),
+                    Envir.norm_term (Envir.Envir {maxidx = ~1, tenv=tenv,tyenv=tyenv}) TM
+                                |> Envir.eta_contract)) tenv)
+
+fun subst_env (TY,TM) = (subst_tyenv TY, subst_tenv TY TM)
+fun norm_env (TY,TM) = (norm_tyenv TY, norm_tenv TY TM)
+
+fun certify_tyvars ctxt = TVars.map (K (Context.cases Thm.global_ctyp_of Thm.ctyp_of ctxt))
+fun certify_tmvars ctxt = Vars.map (K (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt))
+fun certify_vars ctxt (ty, tm) = (certify_tyvars ctxt ty, certify_tmvars ctxt tm)
+val uncertify_tyvars = TVars.map (K Thm.typ_of)
+val uncertify_tmvars = Vars.map (K Thm.term_of)
+fun uncertify_vars (ty, tm) = (uncertify_tyvars ty, uncertify_tmvars tm)
+
+
 fun lift_type_sort thy (ty,sort) env00 =
   let val idx = Term.maxidx_of_typ ty
    in if Sign.of_sort thy (ty, sort)
@@ -201,40 +237,16 @@ fun lift_type_sort thy (ty,sort) env00 =
            handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
   end
 
-fun tyenv_to_tvars_table ctxt tyenv
-  = TVars.build (Vartab.fold (fn (N,(S,T)) =>
-        TVars.add ((N,S), Thm.ctyp_of ctxt (Envir.norm_type tyenv T))) tyenv)
+fun lift_type_sort' thy ty_sorts =
+  fold (lift_type_sort thy) ty_sorts Vartab.empty
+    |> norm_tyenv
 
-fun tyenv_to_tvars_table_generic ctxt tyenv
-  = TVars.build (Vartab.fold (fn (N,(S,T)) =>
-        TVars.add ((N,S), Context.cases Thm.global_ctyp_of Thm.ctyp_of ctxt (Envir.norm_type tyenv T))) tyenv)
-
-fun tyenv_to_tvars_table_no_c tyenv
-  = TVars.build (Vartab.fold (fn (N,(S,T)) =>
-        TVars.add ((N,S), Envir.norm_type tyenv T)) tyenv)
-
+(*
 fun tvars_table_to_tyenv tab =
   Vartab.build (TVars.fold (fn ((N,S),T) => Vartab.insert (op =) (N,(S, Thm.typ_of T))) tab)
 
 fun vars_table_to_tenv tab =
-  Vartab.build (Vars.fold (fn ((N,S),T) => Vartab.insert (op =) (N,(S, Thm.term_of T))) tab)
-
-fun tenv_to_vars_table ctxt tyenv tenv =
-  Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
-      Vars.add ((N, Envir.norm_type tyenv TY),
-                Thm.cterm_of ctxt (Envir.norm_term (Envir.Envir {maxidx = ~1, tenv=tenv,tyenv=tyenv}) TM
-                                |> Envir.eta_contract))) tenv)
-
-fun env_to_table ctxt (TY,TM) =
-      (tyenv_to_tvars_table ctxt TY, tenv_to_vars_table ctxt TY TM)
-
-fun table_to_env (TY,TM) =
-      (tvars_table_to_tyenv TY, vars_table_to_tenv TM)
-
-fun ty_table_no_c tvars = TVars.map (K Thm.typ_of) tvars
-
-fun table_no_c (tvars,vars) =
-  (TVars.map (K Thm.typ_of) tvars, Vars.map (K Thm.term_of) vars)
+  Vartab.build (Vars.fold (fn ((N,S),T) => Vartab.insert (op =) (N,(S, Thm.term_of T))) tab)*)
 
 fun beta_eta_contract th =
   if Term.could_beta_eta_contract (Thm.prop_of th)
@@ -301,7 +313,7 @@ fun dest_binop_ty_c const ty = (dest_binop_ty const (Thm.typ_of ty);
 fun strip_bin_r_assoc strip tm =
   case try strip tm of SOME (a,b) => a :: (strip_bin_r_assoc strip b) | _ => [tm]
 fun strip_bin_r_assoc_last strip tm =
-  case try strip tm of SOME (a,b) => strip_bin_r_assoc_last strip b | _ => tm
+  case try strip tm of SOME (_,b) => strip_bin_r_assoc_last strip b | _ => tm
 
 val strip_binop_r   = strip_bin_r_assoc o dest_binop
 val strip_binop_r_last = strip_bin_r_assoc_last o dest_binop
@@ -345,7 +357,7 @@ fun dest_quinop_c const tm =
         val (f,a4) = Thm.dest_comb f
         val (f,a3) = Thm.dest_comb f
         val (f,a2) = Thm.dest_comb f
-        val (f,a1) = Thm.dest_comb f
+        val (_,a1) = Thm.dest_comb f
       in (a1,a2,a3,a4,a5) end
 
 fun mk_Trueprop (tm as (Const (@{const_name Trueprop}, _) $ _)) = tm
@@ -394,7 +406,7 @@ val strip_binder_c = strip_binder_nc ~1 *)
 fun strip_binder_vars binder (Const (binder', _) $ Abs (name, ty, body))
       = if binder' = binder then (name,ty) :: strip_binder_vars binder body else []
   | strip_binder_vars _ _ = []
-fun strip_binder_raw_body binder (tm as (Const (binder', _) $ Abs (name, ty, body)))
+fun strip_binder_raw_body binder (tm as (Const (binder', _) $ Abs (_, _, body)))
       = if binder' = binder then strip_binder_raw_body binder body else tm
   | strip_binder_raw_body _ tm = tm
 fun strip_binder_raw binder tm =

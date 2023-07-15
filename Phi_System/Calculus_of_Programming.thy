@@ -223,7 +223,7 @@ lemmas \<phi>apply_implication_pending_E =
 lemma \<phi>ex_quantify_E:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> (E ret)
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. ExSet (\<lambda>x. E x e))\<close>
-  using \<phi>apply_implication_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
+  using \<phi>apply_implication_pending_E[OF _ ExSet_transformation_I[OF implies_refl]] .
 
 lemma \<phi>apply_implication_impl:
   \<open> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(s) \<i>\<s> S
@@ -360,7 +360,7 @@ paragraph \<open>Introducing Existential Quantification\<close>
 
 lemma introduce_Ex:
   \<open>CurrentConstruction mode blk H (S x) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S)\<close>
-  using \<phi>apply_implication[OF _ ExSet_imp_I[OF implies_refl], THEN conjunct1] .
+  using \<phi>apply_implication[OF _ ExSet_transformation_I[OF implies_refl], THEN conjunct1] .
 
 lemma introduce_Ex_subj:
   \<open>CurrentConstruction mode blk H (S x \<s>\<u>\<b>\<j> Q) \<Longrightarrow> CurrentConstruction mode blk H (ExSet S \<s>\<u>\<b>\<j> Q)\<close>
@@ -369,12 +369,12 @@ lemma introduce_Ex_subj:
 lemma introduce_Ex_pending:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. Q x v) \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. \<exists>*x. Q x v) \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  using \<phi>apply_implication_pending[OF _ ExSet_imp_I[OF implies_refl]] .
+  using \<phi>apply_implication_pending[OF _ ExSet_transformation_I[OF implies_refl]] .
 
 lemma introduce_Ex_pending_E:
   \<open> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. E x v)
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Q \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>v. \<exists>*x. E x v)\<close>
-  using \<phi>apply_implication_pending_E[OF _ ExSet_imp_I[OF implies_refl]] .
+  using \<phi>apply_implication_pending_E[OF _ ExSet_transformation_I[OF implies_refl]] .
 
 lemma introduce_Ex_ToA:
   \<open> ToA_Construction s (S x)

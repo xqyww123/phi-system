@@ -125,9 +125,13 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 (* Tools *)
 
+exception Automation_Fail
+
 val is_Type_Opr : typ -> bool
-val assert_Type_Opr : string -> typ -> unit
-val assert_first_parameter_is_type : string -> typ -> unit
+val assert_Type_Opr : typ -> unit
+val assert_first_parameter_is_type : typ -> unit
+val separate_type_operator_and_its_parameter : term -> (term (*T*) * term (*F*)) list
+val separate_type_operator_and_its_non_parameterized_parameter : term -> (term (*T*) * term (*F*)) list
 
 val def_contains_satisfaction : phi_type -> bool
 
@@ -657,6 +661,8 @@ fun fix_phi_term_params phi_term ctxt =
 
 (*** Deriving Properties ***)
 
+exception Automation_Fail
+
 type priority = int
 type deriver_name = string
 type derive = phi_type -> generic_theory -> generic_theory
@@ -876,22 +882,46 @@ fun is_Type_Opr ty =
     of ([],_,_) => false
      | (args,_,_) => exists (can dest_parameterized_phi_ty) args
 
-fun assert_Type_Opr prop_name ty =
+fun assert_Type_Opr ty =
   if is_Type_Opr ty then ()
-  else error ("Fail to derive " ^ prop_name ^ " : Not a \<phi>-type operator!")
+  else (warning "Not a \<phi>-type operator!" ; raise Automation_Fail)
 
 fun is_first_parameter_a_type ty =
   case dest_parameterized_phi_ty ty
     of ([],_,_) => false
      | (ty' :: _,_,_) => (
-  case dest_parameterized_phi_ty ty'
+  (case dest_parameterized_phi_ty ty'
     of ([],_,_) => true
-     | _ => false
+     | _ => false)
   handle TYPE _ => false)
 
-fun assert_first_parameter_is_type prop_name ty =
+fun assert_first_parameter_is_type ty =
   if is_first_parameter_a_type ty then ()
-  else error ("Fail to derive " ^ prop_name ^ " : Not a \<phi>-type operator!")
+  else (warning "Not a \<phi>-type operator!" ; raise Automation_Fail)
+
+fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
+  let fun split prevs (F $ T) =
+            if chk T
+            then F
+              |> not (null prevs) ? (fn F =>
+                      (F $ Bound 0)
+                   |> fold (fn a => fn X => X $ a) prevs 
+                   |> (fn X => Abs("T", Term.fastype_of T, X)))
+              |> (fn X => (T, X) :: split (T :: prevs) F )
+            else split (T :: prevs) F
+        | split _ _ = []
+   in split [] FT_term
+  end
+
+val separate_type_operator_and_its_parameter =
+  gen_separate_type_operator_and_its_non_parameter (can dest_parameterized_phi_ty o Term.fastype_of)
+
+val separate_type_operator_and_its_non_parameterized_parameter =
+  gen_separate_type_operator_and_its_non_parameter (fn tm =>
+    case try dest_parameterized_phi_ty (Term.fastype_of tm)
+      of SOME ([],_,_) => true
+       | _ => false)
+
 
 fun chk_zero_index_thm thm =
   if Thm.maxidx_of thm <= 0

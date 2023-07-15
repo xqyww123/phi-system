@@ -183,7 +183,7 @@ lemma [\<phi>reason 3000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _
 
 lemma Brking_Frame_plus:
   \<open>Brking_Frame l (Y1 + Y2) = Brking_Frame l Y1 + Brking_Frame l Y2\<close>
-  unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_plus by clarify
+  unfolding set_eq_iff Brking_Frame_def plus_fun_def distrib_right ExSet_additive_disj by clarify
 
 declare [[\<phi>trace_reasoning = 2]]
 

@@ -5,6 +5,20 @@ signature PHI_REASONERS = sig
   exception Automation_Fail of (Proof.context * thm) option
   val error_message : (Proof.context * thm) option -> string
 
+  type contraction_mode = bool * bool * int
+  (*contraction_mode = (collect_premises, conv_all, conv_schematic)
+
+    collect_premises: if collect premises into the reported proof oblgiation
+    conv_all: if convert all meta-all into hol-all inside the reported obligation
+    conv_schematic: if replace feasible schematic variables by existential quantified variables.
+      0: do not generate existence in obligations, leaving them schematic variables
+      1: generate existence in obligations
+      2: generate existence in obligations and apply a special patch on them to enhance the automation
+         of Isabelle for solving them (using introduction rules)
+      ~1: take \<open>Config.get existential_obligation\<close>
+  *)
+  val collect_obligation_premises : contraction_mode -> Proof.context -> thm -> thm
+
   val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
   val wrap': (Proof.context -> thm -> thm option) -> (context_state -> context_state option)
   val wrap'': (Proof.context -> thm -> thm) -> (context_state -> context_state)
@@ -22,19 +36,18 @@ signature PHI_REASONERS = sig
   (*defer the leading antecedent to the nearest obligation and call the contract*)
   val defer_antecedent : (Proof.context -> thm -> thm) (*contract*)
                                  -> Proof.context -> thm -> thm Seq.seq
-  val defer_obligation_tac : bool (*whether to collect premises of the obligation*) ->
-                Proof.context -> thm -> thm Seq.seq
+  val defer_obligation_tac : contraction_mode -> Proof.context -> thm -> thm Seq.seq
 
   structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
       context before applying either the automatic solving*)
 
-  structure Is_Premise_of_Obligation : HANDLERS
+  (*structure Is_Premise_of_Obligation : HANDLERS
       (*Tell me what antecedents are considered premise of a proof obligation to be reported,
-        and what are not so that to be ignored.*)
-  val is_premise_of_obligation : Context.generic -> term -> bool
+        and what are not so that to be ignored.*)*)
+  val is_premise_of_obligation : (*Context.generic ->*) term -> bool
 
-  structure Local_Premises_of_Obligation : NAMED_THMS
-      (*You can add any facts to be reported as premises of a proof obligation*)
+  (*structure Local_Premises_of_Obligation : NAMED_THMS
+      (*You can add any facts to be reported as premises of a proof obligation*)*)
 
 end
 
@@ -127,12 +140,27 @@ fun context_tactic_to_state_transition tac fail ctxt sequent =
 
 (*** Defer ***)
 
-structure Is_Premise_of_Obligation = Handlers ( type arg = term; type ret = bool )
+(*structure Is_Premise_of_Obligation = Handlers ( type arg = term; type ret = bool )
 structure Local_Premises_of_Obligation = Named_Thms (
   val name = \<^binding>\<open>__local_premise_of_obligation__\<close>
   val description = "Facts inside will be added as premises into proof obligations"
-)
+)*)
 
+val is_premise_of_obligation =
+  let fun default (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = default M
+        | default (Const(\<^const_name>\<open>default\<close>, _)) = true
+        | default (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+        | default (Abs (_,_,X)) = default X
+        | default (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = default X
+        | default (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = default X
+        | default (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = default X
+        | default (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = default X
+        | default (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = default X
+        | default _ = false
+   in default
+  end
+
+(*
 fun is_premise_of_obligation ctxt =
   let val ivk = Is_Premise_of_Obligation.invoke ctxt
       fun default (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = default M
@@ -149,6 +177,7 @@ fun is_premise_of_obligation ctxt =
     of SOME ret => ret
      | NONE => default tm
   end
+*)
 
 fun obligation_collect ctxt filter ctm =
   Phi_Help.lambda_normalization_conv (fn ctm =>
@@ -179,7 +208,7 @@ fun obligation_conv_all ctxt ctm =
      | _ => raise CTERM ("internal bug 6733574a-42dc-4592-a08e-ddc223bb6b94", [ctm])
   ) ctm
 
-fun obligation_intro_Ex_conv ctxt thm =
+fun obligation_intro_Ex_conv conv_schematic ctxt thm =
   Phi_Help.lambda_normalization_rule (fn thm =>
     let fun dest' (\<^Const>\<open>Pure.imp\<close> $ (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (
                         Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ P)) $ Q) = (P,Q)
@@ -197,7 +226,7 @@ fun obligation_intro_Ex_conv ctxt thm =
           | collect_var ret _ = ret
         val vars' = collect_var [] P
                   |> map (fn (N,T) => Thm.var (N, Thm.ctyp_of ctxt T))
-        val mode = Config.get ctxt existential_obligation = 2
+        val mode = conv_schematic = 2
         val contract_Ex_rule = if mode then @{thm' contract_intro_sp_Ex}
                                        else @{thm' contract_intro_Ex}
         val mv_Ex_All = if mode then Phi_Conv.move_sp_Ex_inside_All_exhausitive
@@ -217,22 +246,27 @@ fun obligation_intro_Ex_conv ctxt thm =
     end
   ) thm
 
-fun collect_obligation_premises collect_premises ctxt thm = let open Conv
-  val filter = is_premise_of_obligation (Context.Proof ctxt)
+type contraction_mode = bool * bool * int
+fun chk_option ctxt (a,b,~1) = (a,b,Config.get ctxt existential_obligation)
+  | chk_option _ option = option
+
+fun collect_obligation_premises option ctxt thm = let open Conv
+  val (collect_premises,conv_all,conv_schematic) = chk_option ctxt option
+  val filter = is_premise_of_obligation (*(Context.Proof ctxt)*)
   val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (K (
                 (if collect_premises then obligation_collect ctxt filter
                                      else Conv.all_conv) then_conv
                 rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
               ) 1 thm
 
-  val rule2 = if collect_premises
+  (*val rule2 = if collect_premises
               then case Local_Premises_of_Obligation.get ctxt
                 of [] => rule1
                  | L => let val fact = map (Conv.fconv_rule (Object_Logic.atomize ctxt)) L
                                     |> foldl1 (uncurry (HOLogic.conj_intr ctxt))
                          in fact RS (@{thm' contract_add_additional_prems} RS rule1)
                         end
-              else rule1
+              else rule1*)
 
   fun drop_wastes thm =
     case Thm.major_prem_of thm
@@ -242,13 +276,15 @@ fun collect_obligation_premises collect_premises ctxt thm = let open Conv
                   | _ => @{thm' contract_drop_waste_end} RS thm)
        | _ => error "BUG nhtCAsmjS+Oj4YsI8qtXQw"
 
-   in drop_wastes rule2
-   |> gconv_rule (obligation_conv_all ctxt) 1
-   |> Config.get ctxt existential_obligation > 0 ? obligation_intro_Ex_conv ctxt
+   in drop_wastes rule1
+   |> conv_all ? gconv_rule (obligation_conv_all ctxt) 1
+   |> conv_schematic > 0 ? obligation_intro_Ex_conv conv_schematic ctxt
   end
 
-fun contract_obligations collect_premises ctxt thm = thm
-    |> collect_obligation_premises collect_premises ctxt
+(*Config.get ctxt existential_obligation*)
+
+fun contract_obligations mode ctxt thm = thm
+    |> collect_obligation_premises mode ctxt
     |> Conv.fconv_rule (Conv.rewr_conv @{thm contract_obligations})
 
 fun defer_antecedent contract ctxt thm =
@@ -313,7 +349,7 @@ fun auto_obligation_solver1 ctxt sequent =  (
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
 fun safer_obligation_solver ctxt th0 =
-  let val th = collect_obligation_premises true ctxt th0
+  let val th = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th0
    in case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
         of SOME (_, \<^const>\<open>True\<close>) => Seq.single (@{thm Premise_True} RS th)
          | SOME _ => apply ctxt (fn (ctxt,pre,aux,_) =>

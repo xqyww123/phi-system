@@ -14,8 +14,7 @@ structure PLPR_Simplifier : PLPR_SIMPLIFIER = struct
 
 fun simplification fallback F ctxt sequent = Seq.make (fn () =>
   sequent
-    |> Conv.gconv_rule (HOLogic.Trueprop_conv (Conv.arg_conv (
-          Simplifier.rewrite (F ctxt)))) 1
+    |> Conv.gconv_rule (Simplifier.asm_rewrite (F ctxt)) 1
     |> (fn th => case Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
                    of SOME ret => SOME (ret, Seq.empty)
                     | NONE => Seq.pull (fallback th))

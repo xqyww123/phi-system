@@ -12,27 +12,25 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 (*** Separation Homo ***)
 
 fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
-  let val (T_ty0 :: _, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
-      val ([],element_ty0, ele_model0) = dest_parameterized_phi_ty T_ty0
-      val inst0  = Vartab.empty
-                |> Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (model_ty0, \<^sort>\<open>sep_magma\<close>)
-                |> Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (ele_model0, \<^sort>\<open>sep_magma\<close>)
+  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
+    |> Seq.maps (fn (T_term0, F_term0) =>
+  let val (_, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val ([],_, ele_model0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
+      val inst  = Phi_Help.lift_type_sort' (Proof_Context.theory_of ctxt)
+                                            [(model_ty0, \<^sort>\<open>sep_magma\<close>), (ele_model0, \<^sort>\<open>sep_magma\<close>)]
                    handle TYPE _ => raise Automation_Fail
-      val inst = Phi_Help.tyenv_to_tvars_table_no_c inst0
-      val inst' = TVars.map (K (Thm.ctyp_of ctxt)) inst
+      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi = instantiate_phi (inst',Vars.empty) phi0
       val subst = Term_Subst.instantiate (inst, Vars.empty)
-      val (x_term, FT_term) = (subst x_term0, subst FT_term0)
+      val (x_term, FT_term, F_term, T_term) = (subst x_term0, subst FT_term0, subst F_term0, subst T_term0)
+      val x_ty = Term_Subst.instantiateT inst x_ty0
 
-      val (T_ty :: _, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
-      val ([], element_ty, _) = dest_parameterized_phi_ty T_ty
+      val ([], element_ty, _) = dest_parameterized_phi_ty (Term.fastype_of T_term)
 
       val target = case element_ty
                      of \<^Type>\<open>prod a b\<close> => (a,b)
                       | _ => error "Internal bug #8522d8e9-57a1-4ad9-800e-1c1222fcabfc"
       val ((dom,zip), ctxt) = guess_zip_guided flag target (unzip_typ ctxt x_ty) ctxt
-      val F_term = (case FT_term of F $ _ => F
-                                  | _ => error "Internal bug: Not a Type Operator")
 
       fun subst_ty residue t =
             if t = element_ty then residue
@@ -54,7 +52,7 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
                        $ Fa $ Fb $ F_term $ zip)
                    | _ => error "Internal bug")
    in Seq.single ([], HOLogic.Trueprop $ SH, x_term, FT_term, phi, ctxt)
-  end
+  end)
 
 fun make_phi_for_pair ctxt0 (phi0 : phi_type) =
   let val (rev_ty_args, _, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
@@ -90,8 +88,7 @@ fun SH_reasoning is_intro phi ctxt =
       )) ctxt
 
 fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
-  let val _ = assert_first_parameter_is_type "Separation_Homo" (Term.fastype_of (#term phi0))
-      val ctxt0 = Context.proof_of generic
+  let val ctxt0 = Context.proof_of generic
       val phi0pr = make_phi_for_pair generic phi0
       val unify_hint_SH = hint_unify_by_type_operator (
             fn _ (*Trueprop*) $ (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _) => F

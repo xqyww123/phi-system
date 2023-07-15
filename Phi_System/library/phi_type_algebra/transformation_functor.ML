@@ -14,12 +14,11 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun mk_TF's_two_instantiations ctxt0 (_, FT_term0, phi0) =
   let val (inst0, phi, ctxt) = fix_phi_type true phi0 ctxt0
-      val FT_term = Term_Subst.instantiate (Phi_Help.table_no_c inst0) FT_term0
-
-      val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      val FT_term = Term_Subst.instantiate (Phi_Help.uncertify_vars inst0) FT_term0
+   in Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term)
+   |> Seq.map (fn (T_term, F_term) => let
+      val T_ty = Term.fastype_of T_term
       val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
-      val F_term = (case FT_term of F $ _ => F
-                                  | _ => error "Internal bug: Not a Type Operator")
 
       val param_typs = Term.add_tfreesT element_ty []
       val (param_typs', ctxt'1) = Variable.invent_types (map snd param_typs) ctxt
@@ -37,13 +36,15 @@ fun mk_TF's_two_instantiations ctxt0 (_, FT_term0, phi0) =
                       \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_SIMP\<close> $ (\<^Const>\<open>HOL.eq T\<close> $ Free(N,T) $ p')
                  ) params params'
 
-   in (ants, F_term, F'_term, inst_ty, phi, ctxt')
+   in (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt')
+  end)
   end
 
 fun guess_property_TF (x_term, FT_term, phi0) ctxt =
-  let val (ants, F_term, F'_term, inst_ty, phi, ctxt') = mk_TF's_two_instantiations ctxt (x_term, FT_term, phi0)
-      val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
-      val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
+  mk_TF's_two_instantiations ctxt (x_term, FT_term, phi0)
+    |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt') =>
+  let val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
 
       val TF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
                        of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
@@ -57,7 +58,7 @@ fun guess_property_TF (x_term, FT_term, phi0) ctxt =
      |> Seq.map (fn (rel_mapper, ctxt'3) =>
           (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ rel_mapper),
            x_term, FT_term, phi, ctxt'3)))
-  end
+  end)
 
 
 local
@@ -77,12 +78,11 @@ fun TF_reasoning phi ctxt =
   end
 
 fun gen_TF hint0 (phi0 : phi_type) generic =
-  let val _ = assert_first_parameter_is_type "Transformation_Functor" (Term.fastype_of (#term phi0))
-      val ctxt0 = Context.proof_of generic
-            |> def_contains_satisfaction phi0 ? Context.proof_map (
+  let val ctxt0 = Context.proof_of generic
+            (*|> def_contains_satisfaction phi0 ? Context.proof_map (
                     Phi_Reasoners.Is_Premise_of_Obligation.add 123
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
-                        | X => NONE))
+                        | X => NONE)) *)
       val unify_hint = hint_unify_by_type_operator (
               fn (_ (*Trueprop*) $ Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _) => F1)
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr})),
@@ -154,11 +154,11 @@ end
 
 (** Functional Transformation Functor **)
 
-
 fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
-  let val (ants, F_term, F'_term, inst_ty, phi, ctxt) = mk_TF's_two_instantiations ctxt0 (x_term, FT_term, phi0)
-      val (T_ty :: rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
-      val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
+  mk_TF's_two_instantiations ctxt0 (x_term, FT_term, phi0)
+    |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt) => let
+      val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
       
       val ant = Phi_Help.list_mk_conj ants
       val FTF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
@@ -175,11 +175,10 @@ fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
         guess_pred_mapper ctxt'2 x_ty element_ty
      |> Seq.map (fn (pm, ctxt'3) =>
           ([], \<^Const>\<open>Trueprop\<close> $ (FTF_head $ pm $ fm), x_term, FT_term, phi, ctxt'3)))
-  end
+  end)
 
 fun gen_FTF hint0 (phi0 : phi_type) thy =
-  let val _ = assert_first_parameter_is_type "Functional_Transformation_Functor" (Term.fastype_of (#term phi0))
-      val ctxt0 = Context.proof_of thy
+  let val ctxt0 = Context.proof_of thy
       val unify_hint = hint_unify_by_type_operator (
             fn (_ (*Trueprop*) $ Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ ) => F1)
       val reasoning = PLPR_reasoner NONE

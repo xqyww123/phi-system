@@ -238,7 +238,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                       PLPR_Pattern.match (Proof_Context.theory_of ctxt'')
                                     (Phi_Help.leading_antecedent' sequent, Thm.prop_of th2)
                                     (Vartab.empty, Vartab.empty)
-                      |> Phi_Help.env_to_table ctxt''
+                      |> Phi_Help.subst_env
+                      |> Phi_Help.certify_vars (Context.Proof ctxt)
                 handle Pattern.MATCH =>
                   raise Internal_Match_Fail (
                     Pretty.string_of (Pretty.chunks [

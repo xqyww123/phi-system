@@ -246,8 +246,8 @@ lemma [\<phi>reason 1050]:
 lemma [\<phi>reason 1050]:
   \<open> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
 \<Longrightarrow> R * (X \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * (Y \<s>\<u>\<b>\<j> Q) \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
-  unfolding Action_Tag_def
-  by (simp add: Subjection_transformation)
+  unfolding Action_Tag_def Transformation_def
+  by simp blast
 
 lemma [\<phi>reason 1050]:
   \<open> (\<And>c. R * X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * Y c \<w>\<i>\<t>\<h> P @action \<A>_every_item' A)

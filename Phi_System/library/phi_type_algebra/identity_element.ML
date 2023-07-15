@@ -16,11 +16,11 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
       then (TVars.empty, \<^Const>\<open>one_class.one typ\<close>, ctxt)
       else raise Automation_Fail
   | guess_id_ele (typ as TVar _) ctxt =
-      let val env  = Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (typ, \<^sort>\<open>one\<close>) Vartab.empty
-                     handle TYPE _ => raise Automation_Fail
-          val inst = Phi_Help.tyenv_to_tvars_table ctxt env
-          val typ' = Term_Subst.instantiateT (Phi_Help.ty_table_no_c inst) typ
-       in (inst, \<^Const>\<open>one_class.one typ'\<close>, ctxt)
+      let val inst  = (Phi_Help.lift_type_sort' (Proof_Context.theory_of ctxt) [(typ, \<^sort>\<open>one\<close>)]
+                       handle TYPE _ => raise Automation_Fail)
+          val typ' = Term_Subst.instantiateT inst typ
+       in (Phi_Help.certify_tyvars (Context.Proof ctxt) inst,
+           \<^Const>\<open>one_class.one typ'\<close>, ctxt)
       end
   | guess_id_ele typ ctxt =
   let val ((inst, unit_simp) :: _, ctxt') =
@@ -33,19 +33,17 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
 
 fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
   let val (_,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
-      val inst0  = Vartab.empty
-                |> Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (x_ty0, \<^sort>\<open>one\<close>)
-                |> Phi_Help.lift_type_sort (Proof_Context.theory_of ctxt) (model_ty0, \<^sort>\<open>one\<close>)
-                   handle TYPE _ => raise Automation_Fail
-      val inst = Phi_Help.tyenv_to_tvars_table_no_c inst0
-      val inst' = TVars.map (K (Thm.ctyp_of ctxt)) inst
+      val inst  = (Phi_Help.lift_type_sort' (Proof_Context.theory_of ctxt)
+                                            [(x_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>one\<close>)]
+                  handle TYPE _ => raise Automation_Fail)
+      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi01 = instantiate_phi (inst',Vars.empty) phi0
       val subst = Term_Subst.instantiate (inst, Vars.empty)
       val (x_term01, T_term01) = (subst x_term0, subst T_term0)
 
       val (_, x_ty01, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi01))
       val (inst01, unit, ctxt) = guess_id_ele x_ty01 ctxt
-      val subst01 = Term_Subst.instantiate (Phi_Help.ty_table_no_c inst01, Vars.empty)
+      val subst01 = Term_Subst.instantiate (Phi_Help.uncertify_tyvars inst01, Vars.empty)
       val phi = instantiate_phi (inst01, Vars.empty) phi01
       val (x_term, T_term) = (subst01 x_term01, subst01 T_term01)
 

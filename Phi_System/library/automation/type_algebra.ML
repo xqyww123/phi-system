@@ -5,7 +5,7 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 (** Component: unify_hint **)
 
 type hint = term
-type unify_hint = (Proof.context -> hint (*property*) -> term (*fixed term x*) * term (*fixed term T*) -> Envir.env)
+type unify_hint = (Proof.context -> hint (*property*) -> term (*fixed term x*) * term (*fixed term T*) -> ctyp TVars.table * cterm Vars.table)
   (*Given the `hint` and the `x \<Ztypecolon> T` that will be used in the reasoning, unify them two *)
 
 (* Common choices of the unification *)
@@ -166,7 +166,7 @@ val chk_unfolded : Phi_Type_Algebra.phi_type -> term -> unit
 val conv_chk_unfolded : Phi_Type_Algebra.phi_type -> conv
       (*roughly check if a phi-type expression is expanded, and warn if not*)
 
-val quantifies_abstract_object : bool -> Proof.context -> (term -> term option) (*get the abstract object*) -> (term -> term)
+val quantifies_abstract_object : (term -> term option) (*get the abstract object*) -> (term -> term)
 
 end
 
@@ -174,8 +174,6 @@ end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra
-
-exception Automation_Fail
 
 type guess_property =
         term (*x*) * term (*T*) * Phi_Type_Algebra.phi_type ->
@@ -718,12 +716,11 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,rule,quants,ind_con
    in (case hint of SOME H0 =>
               let val idx = Phi_Type_Algebra.phi_maxidx_of phi0 ~1 + 1
                   val H = Logic.incr_indexes ([],[],idx) H0
-                  val Envir.Envir inst_hint = unify_hint ctxt01 H (x_term0, T_term0)
-                  val inst01 = Phi_Help.env_to_table ctxt01 (#tyenv inst_hint, #tenv inst_hint)
+                  val inst01 = unify_hint ctxt01 H (x_term0, T_term0)
                   val phi01 = Phi_Type_Algebra.instantiate_phi inst01 phi0
                   val (inst, phi, ctxt) = fix_phi_type true phi01 ctxt01
-                  val subst = Term_Subst.instantiate (Phi_Help.table_no_c inst01)
-                           #> Term_Subst.instantiate (Phi_Help.table_no_c inst)
+                  val subst = Term_Subst.instantiate (Phi_Help.uncertify_vars inst01)
+                           #> Term_Subst.instantiate (Phi_Help.uncertify_vars inst)
                   val (x_term0', T_term0', H0') = (subst x_term0, subst T_term0, subst H)
                   val ([x_term, T_term, H''], ctxt) =
                           Variable.import_terms true [x_term0', T_term0', H0'] ctxt
@@ -736,7 +733,7 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,rule,quants,ind_con
         if is_phi_type_fixed phi01
         then (ants01, property01, x_term01, T_term01, phi01, ctxt01)
         else let val (inst, phi, ctxt) = fix_phi_type true phi01 ctxt01
-                 val subst = Term_Subst.instantiate (Phi_Help.table_no_c inst)
+                 val subst = Term_Subst.instantiate (Phi_Help.uncertify_vars inst)
               in (map subst ants01, subst property01, subst x_term01, subst T_term01, phi, ctxt)
              end
       fun chk_ant (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = X
@@ -749,7 +746,8 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,rule,quants,ind_con
       val inst_rule = Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
                                     (Vartab.empty, Vartab.empty)
                    |> apsnd (Vartab.update_new (("Ant",0), (\<^typ>\<open>bool\<close>, ant)))
-                   |> Phi_Help.env_to_table ctxt
+                   |> Phi_Help.subst_env
+                   |> Phi_Help.certify_vars (Context.Proof ctxt)
       val rule' = Thm.instantiate inst_rule rule
       
       val rule'2 =
@@ -813,7 +811,7 @@ fun extract_hhf (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extr
 in
 
 type hint = term
-type unify_hint = (Proof.context -> hint -> term * term -> Envir.env)
+type unify_hint = (Proof.context -> hint -> term * term -> ctyp TVars.table * cterm Vars.table)
 
 fun hint_unify_general extract_pairs ctxt hint (x', T') =
   Unify.smash_unifiers (Context.Proof ctxt)
@@ -821,7 +819,8 @@ fun hint_unify_general extract_pairs ctxt hint (x', T') =
                        Envir.init
     |> Seq.chop 2
     |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
-         | ([x], _) => x
+         | ([Envir.Envir x], _) => Phi_Help.norm_env (#tyenv x, #tenv x)
+                                |> Phi_Help.certify_vars (Context.Proof ctxt)
          | _ => error ("Multi-unification in hint: " ^ Syntax.string_of_term ctxt hint))
   handle TERM _ => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
        | Match  => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
@@ -1030,7 +1029,7 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
 
    in Subgoal.retrofit ctxt'' ctxt0 (#params focus) (#asms focus) 1 lsequent'' sequent
    |> Seq.hd
-   |> Phi_Reasoners.defer_obligation_tac false ctxt
+   |> Phi_Reasoners.defer_obligation_tac (false, true, ~1) ctxt
    |> Seq.hd
    |> varify_subgoal_finale
    |> abstract_constraint_guided_reasoning ctxt
@@ -1101,7 +1100,7 @@ fun make_forall_quantified_property_for_parameters_of_a_phi_type mk (F $ T) =
          | NONE => make_forall_quantified_property_for_parameters_of_a_phi_type mk F)
   | make_forall_quantified_property_for_parameters_of_a_phi_type mk _ = []
 
-fun quantifies_abstract_object enter_tag ctxt get_x hint =
+fun quantifies_abstract_object get_x hint =
   let fun get_x' (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_x' X
         | get_x' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = get_x' X
         | get_x' (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = get_x' X
@@ -1111,28 +1110,16 @@ fun quantifies_abstract_object enter_tag ctxt get_x hint =
       fun lambda data (\<^Const>\<open>Pure.imp\<close> $ A $ B) =
             \<^Const>\<open>Pure.imp\<close> $ lambda data A $ lambda data B
         | lambda data (\<^Const>\<open>Pure.all ty\<close> $ X) = \<^Const>\<open>Pure.all ty\<close> $ lambda data X
-
-      val x = case get_x' hint
-                of SOME (X as Free _) => X
-
-      fun mk Prop =
-          (case get_x Prop
-             of SOME (X as Free (N,ty)) => HOLogic.all_const ty $ Abs (N, ty, Term.abstract_over (X, Prop))
-              | SOME (X as Var ((N,_),ty)) => HOLogic.all_const ty $ Abs (N, ty, Term.abstract_over (X, Prop))
-              | SOME (Bound _) => Prop
-              | NONE => Prop
-              | SOME X => error ("The abstract object should be a variable\n" ^
-                             Syntax.string_of_term ctxt Prop ^ "\n\
-                            \But given " ^ Syntax.string_of_term ctxt X ))
-          handle Match => error ("Unrecogniziable Hint:\n" ^ Syntax.string_of_term ctxt Prop)
-      fun add_qunat ((H as Const(\<^const_name>\<open>Pure.imp\<close>,_) $ _) $ X)
-            = H $ add_qunat X
-        | add_qunat ((H as Const(\<^const_name>\<open>Trueprop\<close>, _)) $ X)
-            = H $ add_qunat X
-        | add_qunat (Prop as ((H as Const(\<^const_name>\<open>Action_Tag\<close>, _)) $ X $ A))
-            = if enter_tag then H $ add_qunat X $ A else mk Prop
-        | add_qunat Prop = mk Prop
-   in add_qunat
+        | lambda data (Abs(N,Ty,X)) = Abs(N,Ty, lambda data X)
+        | lambda (N,Ty,v) (\<^Const>\<open>Trueprop\<close> $ X) =
+            \<^Const>\<open>Trueprop\<close> $ (HOLogic.all_const Ty $ Abs(N,Ty, Term.abstract_over (v, X)))
+        | lambda _ X = X
+                 
+   in case get_x' hint
+   of SOME (X as Free (N,Ty)) => lambda (N,Ty,X) hint
+    | SOME (X as Var ((N,_),Ty)) => lambda (N,Ty,X) hint
+    | SOME (Bound _) => hint
+    | NONE => hint
   end
 
 

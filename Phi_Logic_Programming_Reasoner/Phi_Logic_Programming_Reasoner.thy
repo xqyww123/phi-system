@@ -847,7 +847,7 @@ paragraph \<open>Setup\<close>
 ML_file "library/reasoners.ML"
 
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.defer_obligation_tac true)\<close>
+  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.defer_obligation_tac (true,true,~1))\<close>
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
@@ -1067,7 +1067,7 @@ definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bo
 (* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
   where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close> *)
 
-lemma [cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
+lemma Simplify_cong[cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
 
 lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .
 lemma Simplify_I: \<open>A = B \<Longrightarrow> Simplify m A B\<close> unfolding Simplify_def .

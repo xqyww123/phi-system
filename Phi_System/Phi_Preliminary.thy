@@ -166,8 +166,12 @@ ML_file \<open>library/tools/where_tac.ML\<close>
 
 subsection \<open>Helper Isar Commands\<close>
 
+declare [[ML_debugger=false, ML_exception_debugger=false]]
+
 ML_file \<open>library/tools/optional_translation.ML\<close>
 ML_file \<open>library/tools/adhoc_overloading.ML\<close>
+
+declare [[ML_debugger, ML_exception_debugger]]
 
 
 subsection \<open>The Friendly Character\<close>

@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-                
+                 
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -77,17 +77,19 @@ lemma [\<phi>reason 1000]:
 
 declare [[\<phi>trace_reasoning = 3]]
 
-
+ 
  
 subsection \<open>Embedding Subjection into Type\<close>
-                                                 
+                                                                        
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
-  deriving (*Basic
-       and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
-       and*) \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
-       (*and \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
-             x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<and> P @action to Itself \<close>*)
+  deriving Basic
+       (*and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
+       and \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
+       and \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
+             x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<and> P @action to Itself \<close>
+       and Functional_Transformation_Functor*)
+       and Separation_Homo
 
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
@@ -149,6 +151,43 @@ end
 
 
 
+subsection \<open>Embedding Existential Quantification\<close>
+
+syntax
+  "_SetcomprPhiTy" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<phi>\<s>\<u>\<b>\<j>/ _./ _ " [2,0,2] 2)
+  "_SetcomprPhiTy'" :: "logic \<Rightarrow> idts \<Rightarrow> logic \<Rightarrow> logic"
+
+parse_ast_translation \<open>
+  let open Ast
+    fun idts_to_abs x (Appl [Constant "_idts", a, b]) = Appl [Constant "_abs", a, idts_to_abs x b]
+      | idts_to_abs x c = Appl [Constant "_abs", c, x]
+    fun parse_SetcomprPhiTy ctxt [Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, x, T],idts,P] =
+          Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
+                idts_to_abs x idts,
+                Appl [Constant "\<^const>Phi_BI.ExTyp_binder", idts,
+                      (case P of (Appl [Constant "_constrain", Variable "True", _]) => T
+                               | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, T, P])]]
+      | parse_SetcomprPhiTy ctxt [X,idts,P] =
+          Appl [Constant "\<^const>Phi_BI.ExTyp_binder", idts,
+                (case P of (Appl [Constant "_constrain", Variable "True", _]) => X
+                         | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
+  in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
+\<close>
+(*
+lemma Action_to_Itself[\<phi>reason 25]:
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v \<in> X) @action to Itself\<close>
+  unfolding Action_Tag_def Transformation_def by (simp add: \<phi>expns)*)
+
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. Object_Equiv (T x) (R x))
+\<Longrightarrow> Object_Equiv (ExTyp T) (\<lambda>f g. \<forall>x. R x (f x) (g x)) \<close>
+  unfolding Object_Equiv_def ExTyp_expn Transformation_def
+  by (clarsimp simp add: ExSet_expn; blast)
+
+
+
+
 (*
 lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
@@ -157,10 +196,12 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Stepwise Abstraction\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
-                                                                        
+declare [[\<phi>trace_reasoning = 3]]
+                                                                         
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
+
+ML \<open>Embed_into_Phi_Type.print \<^context> false\<close>
 
 thm \<phi>Composition
 
@@ -277,44 +318,6 @@ lemma \<phi>Composition_union_functor[\<phi>reason add]:
 section \<open>Logical Connectives\<close>
 
 
-
-subsection \<open>Embedding Existential Quantification\<close>
-
-syntax
-  "_SetcomprPhiTy" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<phi>\<s>\<u>\<b>\<j>/ _./ _ " [2,0,2] 2)
-  "_SetcomprPhiTy'" :: "logic \<Rightarrow> idts \<Rightarrow> logic \<Rightarrow> logic"
-
-parse_ast_translation \<open>
-  let open Ast
-    fun idts_to_abs x (Appl [Constant "_idts", a, b]) = Appl [Constant "_abs", a, idts_to_abs x b]
-      | idts_to_abs x c = Appl [Constant "_abs", c, x]
-    fun parse_SetcomprPhiTy ctxt [Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, x, T],idts,P] =
-          Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
-                idts_to_abs x idts,
-                Appl [Constant "\<^const>Phi_BI.ExTyp_binder", idts,
-                      (case P of (Appl [Constant "_constrain", Variable "True", _]) => T
-                               | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, T, P])]]
-      | parse_SetcomprPhiTy ctxt [X,idts,P] =
-          Appl [Constant "\<^const>Phi_BI.ExTyp_binder", idts,
-                (case P of (Appl [Constant "_constrain", Variable "True", _]) => X
-                         | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
-  in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
-\<close>
-(*
-lemma Action_to_Itself[\<phi>reason 25]:
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. v \<in> X) @action to Itself\<close>
-  unfolding Action_Tag_def Transformation_def by (simp add: \<phi>expns)*)
-
-lemma [\<phi>reason 1000]:
-  \<open> (\<And>a. Rewrite_into_\<phi>Type (S a) (x a \<Ztypecolon> T a))
-\<Longrightarrow> Rewrite_into_\<phi>Type (ExSet S) (x \<Ztypecolon> ExTyp T)\<close>
-  unfolding Rewrite_into_\<phi>Type_def by (simp add: ExTyp_expn, metis)
-
-lemma [\<phi>reason 1000]:
-  \<open> (\<And>x. Object_Equiv (T x) (R x))
-\<Longrightarrow> Object_Equiv (ExTyp T) (\<lambda>f g. \<forall>x. R x (f x) (g x)) \<close>
-  unfolding Object_Equiv_def ExTyp_expn Transformation_def
-  by (clarsimp simp add: ExSet_expn; blast)
 
 
 subsection \<open>Embedding Universal Quantification\<close>

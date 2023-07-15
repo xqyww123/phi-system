@@ -910,7 +910,7 @@ lemma [\<phi>reason_template default 50]:
 \<Longrightarrow> y \<Ztypecolon> Fb (U\<^sub>L \<^emph> U\<^sub>R) \<s>\<u>\<b>\<j> y. r y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> z. (\<exists>z'. z = un z' \<and> r z') @action \<A>\<T>split_step\<close> (*TODO: this syntactic priority*)
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def
   by (clarsimp simp add: Subjection_transformation_expn Ex_transformation_expn
-                  intro!: ExSet_imp_I Subjection_imp_I,
+                  intro!: ExSet_transformation_I Subjection_imp_I,
       rule implies_weaken[where P=True], blast, blast)
 
 lemma [\<phi>reason default 1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>\<T>split_step\<close>]:

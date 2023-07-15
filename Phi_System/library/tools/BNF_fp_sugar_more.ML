@@ -86,9 +86,7 @@ fun gen_property match kind gen (typ0 as Type(Tname,_)) generic =
       val thy = Context.theory_of generic
       val typ = Term.map_atyps (fn TVar ((N,i),S) => TVar ((N,~i),S) | T => T) typ0
       val mpf = map_filter (fn (ty',ths) =>
-                  let val i = Term.maxidx_of_typ ty'
-                      val (env, _) = match thy (ty', typ) (Vartab.empty, i)
-                      val inst = Phi_Help.tyenv_to_tvars_table ctxt env
+                  let val inst = match thy (ty', typ)
                    in SOME (inst, Thm.instantiate (inst, Vars.empty) ths)
                   end handle TYPE_MATCH => NONE)
    in case Symreltab.lookup (Properties.get generic) (Tname,kind)
@@ -144,8 +142,19 @@ fun gen_unit_simps Tname generic =
                           (Term.fastype_of LHS, th))
   end
 
-fun match' thy TU (tenv,i) = (Sign.typ_match thy TU tenv, i)
-fun identity_element typ generic = gen_property match' "one" gen_unit_simps typ generic
-fun identity_element_unify typ generic = gen_property Sign.typ_unify "one" gen_unit_simps typ generic
+fun typ_match thy (tya,tyb) =
+  Sign.typ_match thy (tya,tyb) Vartab.empty
+   |> Phi_Help.subst_tyenv
+   |> Phi_Help.certify_tyvars (Context.Theory thy)
+
+fun typ_unify thy (tya,tyb) =
+  let val i = Term.maxidx_of_typ tya
+   in fst (Sign.typ_unify thy (tya,tyb) (Vartab.empty, i))
+   |> Phi_Help.norm_tyenv
+   |> Phi_Help.certify_tyvars (Context.Theory thy)
+  end
+
+fun identity_element typ generic = gen_property typ_match "one" gen_unit_simps typ generic
+fun identity_element_unify typ generic = gen_property typ_unify "one" gen_unit_simps typ generic
 
 end
