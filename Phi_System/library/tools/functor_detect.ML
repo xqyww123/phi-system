@@ -411,7 +411,9 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
                       let val ((_,rules'1), ctxt'1) = Variable.import false rules ctxt
                           val ctxt's = Gen_Rule_SS.enhance ctxt'1
                        in Variable.export ctxt'1 ctxt
-                            (map (Simplifier.asm_lr_simplify ctxt's) rules'1)
+                            (map ( Simplification_Protect.protect ctxt's
+                                #> Simplifier.asm_lr_simplify ctxt's
+                                #> Simplification_Protect.unprotect ctxt's) rules'1)
                       end
                 val rule'1 = (rule OF props)
                       handle THM _ => let open Pretty in

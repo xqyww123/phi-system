@@ -96,10 +96,10 @@ declare [[\<phi>trace_reasoning = 0]]
 
 notation \<phi>Dependent_Sum (binder "\<Sigma>" 22)
         
-\<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _ " [26] 26)
+\<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
-       and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (rel_set eq) \<close>
+       and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        and Identity_Element
        and Trans_to_Raw_Abst
 
@@ -112,6 +112,11 @@ lemmas [\<phi>programming_simps] = Set_Abstraction.unfold
 
 declare \<phi>Dependent_Sum.unfold [gen_open_abstraction_simps]
 
+lemma Set_Abstraction_single[\<phi>programming_simps, simp]:
+  \<open>{x} \<Ztypecolon> \<S> T \<equiv> x \<Ztypecolon> T\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+  
 
 subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
@@ -125,15 +130,55 @@ lemma apply_\<Sigma>_Homo\<^sub>E:
   unfolding \<Sigma>_Homo\<^sub>E_def Premise_def
   by blast
 
+
 subsubsection \<open>\<S>-Homomorphism\<close>
 
-definition \<open>\<S>_Homo\<^sub>E Fa Fb D \<P> \<longleftrightarrow> (\<forall>T. \<forall>s \<in> D. s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<P> s \<Ztypecolon> Fb T)\<close>
-  \<comment> \<open>When the data structure is a set, \<open>\<P>\<close> is exactly the powerset\<close>
+text \<open>The homomorphism of \<open>\<S>\<close> type is entailed in the transformation functor directly.\<close>
+
+lemma \<S>_Homo\<^sub>E [\<phi>reason_template default 40]:
+  \<open> Transformation_Functor Fa Fb D R mapper
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
+\<Longrightarrow> s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb T \<s>\<u>\<b>\<j> y. mapper (\<lambda>S x. x \<in> S) s y @action to T\<close>
+  unfolding Transformation_Functor_def Transformation_def Premise_def Action_Tag_def
+  apply clarsimp
+  subgoal premises prems for v
+    by (insert prems(1)[THEN spec[where x=\<open>\<S> T\<close>], THEN spec[where x=\<open>T\<close>],
+                        THEN spec[where x=s], THEN spec[where x=\<open>\<lambda>S x. x \<in> S\<close>],
+                        simplified]
+               prems(2,3),
+        clarsimp) .
+
+lemma [\<phi>reason_template default 40]:
+  \<open> Transformation_Functor Fa Fb D R mapper
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
+\<Longrightarrow> s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb T \<s>\<u>\<b>\<j> y. mapper (\<lambda>S x. x \<in> S) s y @action to (T \<f>\<o>\<r> \<S> T)\<close>
+  unfolding Action_Tag_def
+  using \<S>_Homo\<^sub>E[unfolded Action_Tag_def] .
+
+lemma \<S>_Homo\<^sub>I [\<phi>reason_template default 40]:
+  \<open> Transformation_Functor Fa Fb D R mapper
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
+\<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> Fb (\<S> T) \<s>\<u>\<b>\<j> s'. mapper (\<lambda>a b. b = {a}) s s' @action to (\<S> T) \<close>
+  unfolding Action_Tag_def Transformation_Functor_def Premise_def
+  subgoal premises prems
+    by (insert prems(1)[THEN spec[where x=T], THEN spec[where x=\<open>\<S> T\<close>], THEN spec[where x=s],
+                        THEN spec[where x=\<open>\<lambda>a b. b = {a}\<close>], simplified]
+               prems(2),
+        clarsimp) .
+
+lemma [\<phi>reason_template default 40]:
+  \<open> Transformation_Functor Fa Fb D R mapper
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
+\<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> Fb (\<S> T) \<s>\<u>\<b>\<j> s'. mapper (\<lambda>a b. b = {a}) s s' @action to (\<S> T \<f>\<o>\<r> T) \<close>
+  unfolding Action_Tag_def
+  using \<S>_Homo\<^sub>I[unfolded Action_Tag_def] .
 
 
 
 subsection \<open>Embedding Subjection into Type\<close>
-                                                                                        
+
+declare [[\<phi>trace_reasoning = 1]]
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic

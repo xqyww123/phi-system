@@ -1402,6 +1402,30 @@ subsection \<open>Error Message\<close>
   in Seq.empty
   end\<close>
 
+subsection \<open>Protection against Simplification\<close>
+
+text \<open>Forms of antecedents are significant in \<phi>-LPR reasoning.
+  For convenience of reasoning, not all tasks are given a specific predicate constant, especially
+  when some tasks can be considered as special cases of or sub-tasks of other tasks.
+
+  Simplification is useful when generating reasoning rules automatically.
+  However, simplification also easily destroys the implicitly assumed form of the tasks
+  which are not assigned with a specific predicate constants.
+
+  An example of specific predicate constant form:
+  \<open>Predicate_Constant param1 param2 param3\<close>
+  An example of free form not using a specific predicate constant:
+  \<open>A \<longrightarrow> B @action reduction_job\<close>
+  where this task assumes a form of \<open>_ \<longrightarrow> _ @action reduction_job\<close> implicitly and the form
+  will be destroyed by simplification when \<open>A \<equiv> True\<close>.
+
+  In order to protect those free form of the tasks, this subsection provides a mechanism which
+  rewrites the tasks to a form using a specific predicate constant before any simplification,
+  and rewrites them back after the simplification, so that their forms are not destroyed during
+  the simplification.
+\<close>
+
+ML_file \<open>library/tools/simplification_protect.ML\<close>
 
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>

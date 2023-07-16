@@ -128,9 +128,6 @@ lemma Inhabited_I:
   \<open>x \<Turnstile> S \<Longrightarrow> Inhabited S\<close>
   unfolding Inhabited_def ..
 
-lemma Inhabited_cong[cong]:
-  \<open>X \<equiv> X \<Longrightarrow> Inhabited X \<equiv> Inhabited X\<close> .
-
 lemma Inhabited_fallback_True:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
   unfolding Action_Tag_def by blast
