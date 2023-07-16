@@ -119,7 +119,7 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
       fun simp (_, ctxt) =
         if is_some hint0 then I
         else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-              let val sctxt = ctxt addsimps @{thms special_Ex_def}
+              let val sctxt = Simps.enhance ctxt addsimps @{thms special_Ex_def}
                in HOLogic.Trueprop_conv (
                     if is_left
                     then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite sctxt))

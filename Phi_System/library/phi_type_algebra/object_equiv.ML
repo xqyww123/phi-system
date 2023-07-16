@@ -136,8 +136,8 @@ fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_EO_rewr_IH})),
                        fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_EO_rewr_C} then_conv
                             Conv.implies_concl_conv (
-                              HOLogic.Trueprop_conv (
-                              Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
+                              HOLogic.Trueprop_conv (fn ctm =>
+                              Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)) ctm
                             )))
       fun infer (phi, ctxt, rule) =
             if is_some hint0 orelse #is_recursive phi then NONE

@@ -70,7 +70,7 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
       val target = case element_ty
                      of \<^Type>\<open>prod a b\<close> => (a,b)
                       | _ => error "Internal bug #8522d8e9-57a1-4ad9-800e-1c1222fcabfc"
-      val ((dom,zip), ctxt) = guess_zip_guided flag target (unzip_typ ctxt x_ty) ctxt
+      val ((dom,zip), ctxt) = guess_zip_guided flag target (unzip_typ (Context.Proof ctxt) x_ty) ctxt
 
       fun subst_ty residue t =
             if t = element_ty then residue

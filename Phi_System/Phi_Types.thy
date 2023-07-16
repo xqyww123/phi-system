@@ -24,12 +24,12 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-                 
+                   
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
-       and Basic
+       and Implication
        and Is_Functional
        and Trans_to_Raw_Abst
 
@@ -76,15 +76,79 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
 
-\<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> (binder "\<Sigma>" 22)
-  where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
+declare [[\<phi>trace_reasoning = 0]]
     
+\<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [23] 22)
+  where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
+  deriving \<open>(\<And>A x. x \<Ztypecolon> T A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P A x) \<Longrightarrow> x \<Ztypecolon> \<phi>Dependent_Sum T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) (snd x) \<close>
+       and \<open>(\<And>A. Object_Equiv (T A) (eq A)) \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
+       and Identity_Element
 
-notation \<phi>Dependent_Sum ("\<Sigma> _" [23] 22)
+notation \<phi>Dependent_Sum (binder "\<Sigma>" 22)
+
+term list.set
+thm list.set
+
+ML \<open>the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>)
+  |> BNF_Def.map_ident_of_bnf \<close>
+
+ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
+
+ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
+|> #ctr_sugar
+\<close>
+
+thm list.map
+term list.map
+term list_all
+thm list_all2
+thm Set.ball_simps
+
+term Powp
+term \<open>(\<lambda>B. \<forall>x \<in> B. A x)\<close>
+term Ball
+
+lemma rel_set_distincts:
+  "rel_set A {} S \<longleftrightarrow> S = {}"
+  "rel_set A S {} \<longleftrightarrow> S = {}"
+  unfolding rel_set_def
+  by clarsimp+
+
+setup \<open>Context.theory_map (eBNF_Info.add_BNF (\<^type_name>\<open>Set.set\<close>, 
+let val a = TFree ("a", \<^sort>\<open>type\<close>)
+    val b = TFree ("b", \<^sort>\<open>type\<close>)
+ in {
+  T = \<^Type>\<open>Set.set a\<close>,
+  ctrs = [\<^Const>\<open>bot \<^Type>\<open>set a\<close>\<close>, \<^Const>\<open>insert a\<close>, \<^Const>\<open>sup \<^Type>\<open>set a\<close>\<close>],
+  deads = [], lives = [a], lives'= [b],
+  sets = [Abs("x", a, Bound 0)],
+  set_thms = [],
+  ctr_simps = [],
+  rel = \<^Const>\<open>rel_set a b\<close>,
+  rel_distincts = [],
+  rel_injects = @{thms' Lifting_Set.empty_transfer},
+  rel_eq = @{thm' rel_set_eq},
+  pred = Abs("P", a --> HOLogic.boolT, Abs ("S", \<^Type>\<open>Set.set a\<close>, \<^Const>\<open>Ball a\<close> $ Bound 0 $ Bound 1)),
+  pred_injects = @{thms' Set.ball_simps(5) Set.ball_Un Set.ball_simps(7)},
+  pred_simps = @{thms' Set.ball_simps},
+  map = \<^Const>\<open>Set.image a b\<close>,
+  map_thms = @{thms' Set.image_insert Set.image_Un Set.image_empty},
+  map_disc_iffs = @{thms' image_is_empty},
+  map_ident = @{thm' Set.image_ident}
+} end))\<close>
+
+
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _ " [22] 21)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
-  deriving Basic
+  deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
+       and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (rel_set eq) \<close>
+       and Identity_Element
+
+text \<open>Read it as 'the abstract object is certain element in the set'\<close>
+
+typ \<open>'a set\<close>
 
 lemma [embed_into_\<phi>type]:
   \<open> NO_MATCH (\<lambda>_. T) T
@@ -323,10 +387,6 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>m. rT m y \<and> rU x m) @action to Itself\<close>
   unfolding Transformation_def Action_Tag_def
   by clarsimp  blast
-
-lemma [\<phi>reason 1200]:
-  \<open>x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U) @action to RAW\<close>
-  \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket> .
 
 lemma [\<phi>reason 1200]:
   \<open> y \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U \<w>\<i>\<t>\<h> P
@@ -770,7 +830,7 @@ declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
   deriving Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and Separation_Homo
+       and Separation_Homo\<^sub>I
 
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -814,10 +874,11 @@ lemma [\<phi>reason 10000]:
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-  deriving Basic and Identity_Element
+  deriving Transformation_Functor
+    (*Basic and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
-       and Trans_to_Raw_Abst
+       and Trans_to_Raw_Abst*)
 
 
 

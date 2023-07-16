@@ -37,7 +37,7 @@ type guess_property =
 (* Guess from BNF *)
 
 val guess_operator :
-        (Proof.context * typ list * typ list * BNF_Def.bnf -> (term * Proof.context) Seq.seq)
+        (Proof.context * typ list * typ list * eBNF_Info.eBNF -> (term * Proof.context) Seq.seq)
             (*make the operator and configure any necessary reasoning like adding simplification rules *)
      -> (typ -> bool) (*check if the type is alive meaning if it is to guess the operator for it recursively*)
      -> (typ -> Proof.context -> term * Proof.context) (*if the type is not alive, make the operator for this type*)
@@ -60,10 +60,10 @@ val guess_func_mapper : (typ -> typ) (*f*) ->
 val guess_pred_mapper : Proof.context ->
       typ (*container*) -> typ (*the target element*) -> (term * Proof.context) Seq.seq
 
-val zip_typ : Proof.context -> typ * typ -> typ
+val zip_typ : Context.generic -> typ * typ -> typ
   (* zip(T(a1,int,U(a3),W(nat,a4)) , T(b1,int,U(b3),W(nat,b4))) = T(a1*b1, int, U(a3*b3), W(nat,a4*b4))
      The zip only zips type variables (either fixed or schematic).*)
-val unzip_typ : Proof.context -> typ -> typ * typ
+val unzip_typ : Context.generic -> typ -> typ * typ
   (*The inverse function of zip_typ*)
 val guess_zip_guided : bool (*true for zip, false for unzip*) ->
                        typ * typ (*the target element types*) ->
@@ -228,39 +228,10 @@ val _ = Theory.setup (Context.theory_map (
 
 (** Guess Abstract Operators from BNF **)
 
+type quasi_BNF = {}
+datatype eBNF = BNF of BNF_Def.bnf | qBNF of quasi_BNF
+
 (* Library *)
-
-fun classify_bnf_dead_live bnf tys =
-  let val btys = snd (Term.dest_Type (BNF_Def.T_of_bnf bnf))
-      val deads = BNF_Def.deads_of_bnf bnf
-      fun classify (t::tys) (bt::btys) =
-           (case classify tys btys
-              of (D,L) => if member (op =) deads bt then (t::D, L) else (D, t::L))
-        | classify [] [] = ([],[])
-        | classify _ _ = raise ListPair.UnequalLengths
-   in classify tys btys
-  end
-
-fun burrow_bnf_dead_live bnf deads_lives = 
-  let val btys = snd (Term.dest_Type (BNF_Def.T_of_bnf bnf))
-      val deads' = BNF_Def.deads_of_bnf bnf
-      fun burrow (deads,lives) (bt::btys) =
-            if member (op =) deads' bt then hd deads :: burrow (tl deads, lives) btys
-                                       else hd lives :: burrow (deads, tl lives) btys
-        | burrow ([],[]) [] = []
-        | burrow _ _ = error "Internal bug: burrow_bnf_dead_live"
-   in burrow deads_lives btys
-  end
-
-fun guess__get_bnf ctxt Tname =
-  case BNF_Def.bnf_of ctxt Tname
-    of NONE => (warning ("Type " ^ Tname ^ " is not a known BNF."); Seq.empty)
-     | SOME bnf => Seq.single bnf
-
-fun get_bnf ctxt Tname =
-  case BNF_Def.bnf_of ctxt Tname
-    of NONE => (raise Automation_Fail ("Type " ^ Tname ^ " is not a known BNF."))
-     | SOME bnf => bnf
 
 
 (* fun permute_seq (s::L) =
@@ -274,8 +245,8 @@ fun gen_guess_operator mk_term is_live mk_operator_for_dead atom_opr =
           of [] => (
             case x_ty
               of Type(Tname, Targs) =>
-                   guess__get_bnf ctxt Tname |> Seq.maps (fn bnf =>
-                   let val (D,L) = classify_bnf_dead_live bnf Targs
+                   let val bnf = eBNF_Info.get_bnf1 (Context.Proof ctxt) Tname
+                       val (D,L) = eBNF_Info.classify_bnf_dead_live bnf Targs
                     in mk_term (ctxt, D, L, bnf)
                     |> Seq.maps (fn (head,ctxt') =>
                         let fun mk_params ctxt (ty::L) =
@@ -290,7 +261,7 @@ fun gen_guess_operator mk_term is_live mk_operator_for_dead atom_opr =
                          |> Seq.map (fn (params', ctxt'3) =>
                               (fold (fn p => fn X => X $ p) params' head, ctxt'3))
                         end)
-                   end)
+                   end
                | _ => atom_opr x_ty ctxt)
            | L => Seq.of_list L
                |> Seq.map (rpair ctxt)
@@ -301,7 +272,8 @@ fun guess_operator mk_term is_live mk_operator_for_dead atom_opr =
   let fun guess ctxt known_oprs x_ty =
             Seq.make (fn () =>
               case Seq.pull (gen_guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt known_oprs x_ty)
-                of NONE => (warning ("Fail to guess the abstract operator for type " ^ Syntax.string_of_typ ctxt x_ty) ;
+                of NONE => (warning ("Fail to guess the abstract operator for type "
+                                    ^ Syntax.string_of_typ ctxt x_ty) ;
                             NONE)
                  | some => some )
    in guess
@@ -311,35 +283,6 @@ fun fp_sugar_of ctxt bnf =
   case BNF_Def.T_of_bnf bnf
     of Type(N, _) => BNF_FP_Def_Sugar.fp_sugar_of ctxt N
      | _ => NONE
-
-fun ctr_sugar_simps (ctr : Ctr_Sugar.ctr_sugar) =
-  #injects ctr @ #distincts ctr @ #case_thms ctr @ flat (#sel_thmss ctr)
-
-fun simps_of_ctr_fp (fp : BNF_FP_Def_Sugar.fp_sugar) =
-      ctr_sugar_simps (#ctr_sugar (#fp_ctr_sugar fp))
-
-fun simps_of_map_fp (fp : BNF_FP_Def_Sugar.fp_sugar) =
-      #map_thms (#fp_bnf_sugar fp)
-    @ #map_disc_iffs (#fp_bnf_sugar fp)
-
-fun simps_of_pred_fp (fp : BNF_FP_Def_Sugar.fp_sugar) =
-      #pred_injects (#fp_bnf_sugar fp)
-
-fun simps_of_rel_fp (fp : BNF_FP_Def_Sugar.fp_sugar) =
-      #rel_distincts (#fp_bnf_sugar fp)
-    @ #rel_injects (#fp_bnf_sugar fp)
-
-fun global_simps_of_rel (bnf : BNF_Def.bnf) =
-      [BNF_Def.rel_eq_of_bnf bnf]
-
-fun global_simps_of_map (bnf : BNF_Def.bnf) =
-      [BNF_Def.map_ident_of_bnf bnf]
-
-fun global_simps_of_pred (bnf : BNF_Def.bnf) =
-      [BNF_Def.pred_True_of_bnf bnf]
-
-fun simps_of_set (fp : BNF_FP_Def_Sugar.fp_sugar) =
-      #set_thms (#fp_bnf_sugar fp)
 
 fun add_global_simps thms ctxt = ctxt
   |> Simps.map' (fn ctxt => ctxt addsimps thms)
@@ -353,17 +296,14 @@ fun guess_set_opr ctxt ty element_ty =
   then Seq.single (Abs("",ty, \<^Const>\<open>insert ty\<close> $ Bound 0 $ \<^Const>\<open>bot \<^Type>\<open>set ty\<close>\<close>), ctxt)
   else case ty
          of Type(Tname, Targs) =>
-              guess__get_bnf ctxt Tname |> Seq.maps (fn bnf =>
-                let val (D,L) = classify_bnf_dead_live bnf Targs
-                    val N = length (BNF_Def.sets_of_bnf bnf)
+                let val bnf = eBNF_Info.get_bnf1 (Context.Proof ctxt) Tname
+                    val (D,L) = eBNF_Info.classify_bnf_dead_live bnf Targs
+                    val N = length (eBNF_Info.sets_of_bnf bnf)
                     val tys1 = List.tabulate (N, K D)
                     val tys2 = List.tabulate (N, K L)
-                    val sets = BNF_Def.mk_sets_of_bnf tys1 tys2 bnf
-                    val bnf_fp = BNF_FP_Def_Sugar.fp_sugar_of ctxt Tname
-                    val ctxt' = case bnf_fp of NONE => ctxt
-                                   | SOME fp => Simps.map' (fn ctxt =>
-                                        ctxt addsimps (simps_of_set fp @ simps_of_ctr_fp fp)
-                                      ) ctxt
+                    val sets = eBNF_Info.mk_sets_of_bnf tys1 tys2 bnf
+                    val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_set_safe bnf
+                                              @ eBNF_Info.simps_of_ctr_safe bnf)
                  in Seq.of_list sets
                  |> Seq.maps (fn s =>
                       case Term.fastype_of s
@@ -375,21 +315,16 @@ fun guess_set_opr ctxt ty element_ty =
                                           (Abs("", ty, \<^Const>\<open>Set.bind x element_ty\<close> $ (s $ Bound 0) $ s'), ctxt''))
                          | _ => error "Internal bug f07de235-2838-4483-b2f9-b0cce6d06676")
                 end
-              )
           | _ => Seq.empty
 
 (* Relator *)
 
 val guess_self_rel =
   let fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = ctxt
-                     |>(case fp_sugar_of ctxt bnf
-                          of NONE => I
-                           | SOME fp => Simps.map' (fn ctxt =>
-                                          ctxt addsimps ( simps_of_rel_fp fp
-                                                        @ simps_of_ctr_fp fp)))
-                     |> add_global_simps (global_simps_of_rel bnf)
-         in Seq.single (BNF_Def.mk_rel_of_bnf D L L bnf, ctxt')
+        let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_rel_safe bnf
+                                      @ eBNF_Info.simps_of_ctr_safe bnf)
+                     |> add_global_simps (eBNF_Info.global_simps_of_rel bnf)
+         in Seq.single (eBNF_Info.mk_rel_of_bnf D L L bnf, ctxt')
         end
       val is_live = K true
       fun mk_operator_for_dead _ _ = error "Internal bug"
@@ -402,14 +337,10 @@ val guess_self_rel =
 
 val guess_predicate =
   let fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = ctxt
-                     |>(case fp_sugar_of ctxt bnf
-                          of NONE => I
-                           | SOME fp => Simps.map' (fn ctxt =>
-                                          ctxt addsimps ( simps_of_pred_fp fp
-                                                        @ simps_of_ctr_fp fp)))
-                     |> add_global_simps (global_simps_of_pred bnf)
-         in Seq.single (BNF_Def.mk_pred_of_bnf D L bnf, ctxt')
+        let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_pred_safe bnf
+                                      @ eBNF_Info.simps_of_ctr_safe bnf)
+                     |> add_global_simps (eBNF_Info.global_simps_of_pred_safe bnf)
+         in Seq.single (eBNF_Info.mk_pred_of_bnf D L bnf, ctxt')
         end
       val is_live = K true
       fun mk_operator_for_dead ty ctxt = (Abs("", ty, \<^Const>\<open>True\<close>), ctxt)
@@ -428,13 +359,11 @@ fun guess_rel_mapper target_ty ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_rels = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = ctxt
-                     |>(case fp_sugar_of ctxt bnf
-                          of NONE => I
-                           | SOME fp => Simps.map' (fn ctxt =>
-                                ctxt addsimps ( simps_of_rel_fp fp @ simps_of_map_fp fp @ simps_of_ctr_fp fp)))
-                     |> add_global_simps (global_simps_of_rel bnf)
-         in Seq.single (BNF_Def.mk_rel_of_bnf D L (map target_ty L) bnf, ctxt')
+        let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_rel_safe bnf
+                                      @ eBNF_Info.simps_of_map_safe bnf
+                                      @ eBNF_Info.simps_of_ctr_safe bnf)
+                     |> add_global_simps (eBNF_Info.global_simps_of_rel bnf)
+         in Seq.single (eBNF_Info.mk_rel_of_bnf D L (map target_ty L) bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
       fun mk_operator_for_dead typ ctxt = (\<^Const>\<open>HOL.eq typ\<close>, ctxt)
@@ -453,13 +382,10 @@ fun guess_func_mapper target_ty ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_mappers = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = ctxt
-                     |>(case fp_sugar_of ctxt bnf
-                          of NONE => I
-                           | SOME fp => Simps.map' (fn ctxt =>
-                                ctxt addsimps ( simps_of_map_fp fp @ simps_of_ctr_fp fp)))
-                     |> add_global_simps (global_simps_of_map bnf)
-         in Seq.single (BNF_Def.mk_map_of_bnf D L (map target_ty L) bnf, ctxt')
+        let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_map_safe bnf
+                                      @ eBNF_Info.simps_of_ctr_safe bnf)
+                     |> add_global_simps (eBNF_Info.global_simps_of_map bnf)
+         in Seq.single (eBNF_Info.mk_map_of_bnf D L (map target_ty L) bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
       fun mk_operator_for_dead typ ctxt = (Abs("", typ, Bound 0), ctxt)
@@ -476,13 +402,10 @@ fun guess_pred_mapper ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_mappers = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = ctxt
-                     |>(case fp_sugar_of ctxt bnf
-                          of NONE => I
-                           | SOME fp => Simps.map' (fn ctxt =>
-                                ctxt addsimps ( simps_of_pred_fp fp @ simps_of_ctr_fp fp)))
-                     |> add_global_simps (global_simps_of_pred bnf)
-         in Seq.single (BNF_Def.mk_pred_of_bnf D L bnf, ctxt')
+        let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_pred_safe bnf
+                                      @ eBNF_Info.simps_of_ctr_safe bnf)
+                     |> add_global_simps (eBNF_Info.global_simps_of_pred bnf)
+         in Seq.single (eBNF_Info.mk_pred_of_bnf D L bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
       fun mk_operator_for_dead typ ctxt = (Abs("", typ, \<^Const>\<open>True\<close>), ctxt)
@@ -497,24 +420,24 @@ fun guess_pred_mapper ctxt ty element_ty =
 fun unzip_typ _ (\<^Type>\<open>prod \<open>a as TFree _\<close> \<open>b as TFree _\<close>\<close>) = (a,b)
   | unzip_typ _ (\<^Type>\<open>prod \<open>a as TVar _\<close> \<open>b as TVar _\<close>\<close>) = (a,b)
   | unzip_typ ctxt (Type(Tname, Targs)) =
-      let val bnf = get_bnf ctxt Tname
-          val (deads,lives) = classify_bnf_dead_live bnf Targs
+      let val bnf = eBNF_Info.get_bnf1 ctxt Tname
+          val (deads,lives) = eBNF_Info.classify_bnf_dead_live bnf Targs
           val lives' = map (unzip_typ ctxt) lives
                     |> split_list
-       in (Type (Tname,burrow_bnf_dead_live bnf (deads, fst lives')),
-           Type (Tname,burrow_bnf_dead_live bnf (deads, snd lives')))
+       in (Type (Tname,eBNF_Info.burrow_bnf_dead_live bnf (deads, fst lives')),
+           Type (Tname,eBNF_Info.burrow_bnf_dead_live bnf (deads, snd lives')))
       end
 
 fun zip_typ _ ((a as TFree _), (b as TFree _)) = \<^Type>\<open>prod a b\<close>
   | zip_typ _ ((a as TVar _), (b as TVar _)) = \<^Type>\<open>prod a b\<close>
   | zip_typ ctxt (Type(Tname, Targs), Type(Tname', Targs')) =
       let val _ = if Tname = Tname' then () else raise TYPE ("zip_typ", [], [])
-          val bnf = get_bnf ctxt Tname
-          val (deads,lives) = classify_bnf_dead_live bnf Targs
-          val (deads',lives') = classify_bnf_dead_live bnf Targs'
+          val bnf = eBNF_Info.get_bnf1 ctxt Tname
+          val (deads,lives) = eBNF_Info.classify_bnf_dead_live bnf Targs
+          val (deads',lives') = eBNF_Info.classify_bnf_dead_live bnf Targs'
           val _ = if deads = deads' then () else raise TYPE ("zip_typ", [], [])
           val lives_merge = map2 (fn t1 => fn t2 => zip_typ ctxt (t1,t2)) lives lives'
-          val Targs_merge = burrow_bnf_dead_live bnf (deads, lives_merge)
+          val Targs_merge = eBNF_Info.burrow_bnf_dead_live bnf (deads, lives_merge)
        in Type (Tname, Targs_merge)
       end
 
@@ -535,32 +458,28 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
       else case (T,T')
              of (Type(Tname, Targs), Type(Tname', Targs')) =>
                 let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
-                    val bnf = get_bnf ctxt Tname
-                    val (deads,lives) = classify_bnf_dead_live bnf Targs
-                    val (deads',lives') = classify_bnf_dead_live bnf Targs'
+                    val bnf = eBNF_Info.get_bnf1 (Context.Proof ctxt) Tname
+                    val (deads,lives) = eBNF_Info.classify_bnf_dead_live bnf Targs
+                    val (deads',lives') = eBNF_Info.classify_bnf_dead_live bnf Targs'
                     val _ = if deads = deads' then () else raise TYPE ("guess_zip", [], [])
                     val fp_more = case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) Tname
                                     of SOME x => x
                                      | NONE => raise Automation_Fail ("Fail to guess the zip operator for type " ^ Tname)
                     val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                                        else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
-                    val ctxt'' = ctxt
-                              |> (case fp_sugar_of ctxt bnf
-                                    of NONE => I
-                                     | SOME fp => Simps.map' (fn ctxt =>
-                                            ctxt addsimps (
-                                                (if flag then #zip_simps fp_more else #unzip_simps fp_more)
-                                                @ simps_of_rel_fp fp @ simps_of_map_fp fp
-                                                @ simps_of_ctr_fp fp)))
-                              |> add_global_simps (global_simps_of_rel bnf)
+                    val ctxt'' = ctxt addsimps ((if flag then #zip_simps fp_more else #unzip_simps fp_more)
+                                                @ eBNF_Info.simps_of_rel_safe bnf
+                                                @ eBNF_Info.simps_of_map_safe bnf
+                                                @ eBNF_Info.simps_of_ctr_safe bnf)
+                              |> add_global_simps (eBNF_Info.global_simps_of_rel_safe bnf)
                     val (args, ctxt') = ctxt''
                           |> fold_map (guess_zip_guided flag (target,target'))
                                       (lives ~~ lives')
                     val map_tys = map (fn (_,z) => case Term.fastype_of z
                                                      of \<^Type>\<open>fun a b\<close> => (a,b)) args
                                 |> split_list
-                    val mp = BNF_Def.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
-                    val rl = BNF_Def.mk_rel_of_bnf deads lives lives' bnf
+                    val mp = eBNF_Info.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
+                    val rl = eBNF_Info.mk_rel_of_bnf deads lives lives' bnf
                  in((Term.list_comb (rl, map fst args),
                      Abs("x", domain_type (Term.fastype_of zip),
                              if flag then Term.list_comb (mp, map snd args) $ (zip $ Bound 0)
@@ -577,24 +496,21 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
 
 fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs')) ctxt =
       let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
-          val bnf = get_bnf ctxt Tname
-          val (deads,lives) = classify_bnf_dead_live bnf Targs
-          val (deads',lives') = classify_bnf_dead_live bnf Targs'
+          val bnf = eBNF_Info.get_bnf1 (Context.Proof ctxt) Tname
+          val (deads,lives) = eBNF_Info.classify_bnf_dead_live bnf Targs
+          val (deads',lives') = eBNF_Info.classify_bnf_dead_live bnf Targs'
           val _ = if deads = deads' then () else raise TYPE ("guess_zip", [], [])
           val fp_more = case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) Tname
                           of SOME x => x
                            | NONE => raise Automation_Fail ("Fail to guess the zip operator for type " ^ Tname)
           val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                              else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
-          val simps = (case Ctr_Sugar.ctr_sugar_of ctxt Tname
-                                   of SOME cs => ctr_sugar_simps cs
-                                    | _ => [])
-          val (args, ctxt') = ctxt addsimps simps
+          val (args, ctxt') = ctxt addsimps eBNF_Info.simps_of_ctr_safe bnf
                   |> fold_map (guess_zip flag) (lives ~~ lives')
           val map_tys = map (fn z => case Term.fastype_of z
                                        of \<^Type>\<open>fun a b\<close> => (a,b)) args
                       |> split_list
-          val mp = BNF_Def.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
+          val mp = eBNF_Info.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
        in (Abs("x", domain_type (Term.fastype_of zip),
                     Term.list_comb (mp, args) $ (zip $ Bound 0)),
            ctxt')
@@ -788,11 +704,10 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,guess_property,rule,quants,ind_con
                 val (lambs, _, rule_concl) = Phi_Help.strip_meta_hhf (Phi_Help.leading_antecedent' rule')
                 val ind_prop = mk_ind_prop 0 (rev lambs) (HOLogic.dest_Trueprop rule_concl)
                 val ind = Phi_Type_Algebra.mk_ind_dest_ToA ctxt phi (K ind_prop)
-                        |> ind_conv ctxt phi
           
                 val ((inst,[rule't]), ctxt't) = Variable.import true [rule'] ctxt
                 val ind't = Thm.instantiate inst ind
-             in singleton (Variable.export ctxt't ctxt) (ind't RS rule't)
+             in singleton (Variable.export ctxt't ctxt) (ind_conv ctxt phi (ind't RS rule't))
             end
 
       val rule'3 = reasoning phi ctxt rule'2
@@ -849,17 +764,21 @@ end
 type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
 
 fun default_ind_conv (conv_IH, conv_CL) ctxt (phi:phi_type) =
-  Conv.fconv_rule (Phi_Conv.hhf_conv (
-      Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
-        case Thm.term_of ctm
-          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
-              => conv_IH ctxt phi ctm
-           | _ => Conv.all_conv ctm
-      ) (fn ctxt => fn ctm =>
-        case Thm.term_of ctm
-          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
-              => conv_CL ctxt phi ctm
-           | _ => Conv.all_conv ctm)
+  Conv.fconv_rule (Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
+    case Logic.strip_assums_concl (Thm.term_of ctm)
+      of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _)) => (
+            Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
+              case Thm.term_of ctm
+                of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
+                    => conv_IH ctxt phi ctm
+                 | _ => Conv.all_conv ctm
+            ) (fn ctxt => fn ctm =>
+              case Thm.term_of ctm
+                of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
+                    => conv_CL ctxt phi ctm
+                 | _ => Conv.all_conv ctm)
+            ctxt ctm)
+       | _ => Conv.all_conv ctm
     ) (K Conv.all_conv) ctxt)
 
 (* Abstract Constraint Guided Reasoning *)
@@ -1017,7 +936,8 @@ let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
       val ants = filter ((fn term => not (is_real_Premise term) andalso not (is_TA_IH_ToA term))
                          o Thm.concl_of) ants'1
                @ ToAs
-               |> map (Simplifier.rewrite_rule ctxt rewrs
+               |> map (Object_Logic.rulify ctxt
+                    #> Simplifier.rewrite_rule ctxt rewrs
                     #> Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt)
 
       val ctxt'' = ctxt

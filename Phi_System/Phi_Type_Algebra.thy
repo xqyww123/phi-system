@@ -390,7 +390,7 @@ ML \<open>#fp_res (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<
 
 declare [[ML_print_depth = 1000]]
 
-ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))
+ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
 |> #ctr_sugar
 \<close>
 
@@ -1101,6 +1101,7 @@ subsection \<open>Auto Generation of Properties\<close>
 
 subsubsection \<open>Extension of BNF-FP\<close>
 
+ML_file \<open>library/tools/extended_BNF_info.ML\<close>
 ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
 
 
@@ -1159,6 +1160,9 @@ lemma conv_intro_premise:
 lemma [fundef_cong]:
   \<open>T x = T' x' \<Longrightarrow> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')\<close>
   unfolding \<phi>Type_def by simp
+
+ML \<open>BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>Set.set\<close>\<close>
+
 
 ML_file \<open>library/automation/type_algebra.ML\<close>
 

@@ -111,6 +111,7 @@ fun made_of_ctrs ty chk_ctrs (Const(N, TY)) =
   | made_of_ctrs ty chk_ctrs (Abs(_,_,X)) = made_of_ctrs ty chk_ctrs X
   | made_of_ctrs _ _ _ = true
 
+(* DO NOT REMOVE
 fun chk_search_result1 ctxt pattern [] =
       error ("No existing theorems found for " ^ Syntax.string_of_term ctxt pattern)
   | chk_search_result1 _ _ [x] = [x]
@@ -119,7 +120,7 @@ fun chk_search_result1 ctxt pattern [] =
             block [str "More than one existing theorems found for ", Syntax.pretty_term ctxt pattern] ::
             map (fn th => item [Syntax.pretty_term ctxt (Thm.prop_of th)]) L
           )))
-      end
+      end*)
 
 fun gen_unit_simps Tname generic =
   let val sorts = Sign.arity_sorts (Context.theory_of generic) Tname \<^sort>\<open>one\<close>
@@ -127,9 +128,9 @@ fun gen_unit_simps Tname generic =
       val ty_args = map_index (fn (i,S) => TVar(("x",i),S)) sorts
       val ty = Type(Tname, ty_args)
       val pattern = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>HOL.eq ty\<close> $ \<^Const>\<open>one_class.one ty\<close> $ Var(("uu",0),ty))
-      val ctrs =(case Context.cases Ctr_Sugar.ctr_sugar_of_global Ctr_Sugar.ctr_sugar_of generic Tname
-                   of SOME c => fold (fn Const(N,_) => Symtab.insert_set N) (#ctrs c) Symtab.empty
-                    | NONE => Symtab.empty)
+      val bnf = eBNF_Info.get_bnf1 generic Tname
+      val ctrs = fold (fn Const(N,_) => Symtab.insert_set N
+                        | _ => I) (eBNF_Info.ctrs_of bnf) Symtab.empty
               |> Symtab.defined
    in Find_Theorems.find_theorems ctxt NONE NONE true [(true, Find_Theorems.Pattern pattern)]
    |> snd

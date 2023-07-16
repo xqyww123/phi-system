@@ -81,12 +81,12 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                        Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) $ _)
                     $ _ ))
                  => T)
-      val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr})),
-              fn ctxt => fn _ =>
-                  Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr} then_conv
+      val ind_conv = default_ind_conv (K (K (fn ctm => Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr} ctm)),
+              fn ctxt => fn _ => fn ctm =>
+                 (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr} then_conv
                   Conv.implies_concl_conv (HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                     Conv.arg1_conv (Conv.arg_conv (
-                      Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0))))))))
+                      Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))))))) ctm)
       fun Inh_reasoner ctxt sequent =
         case PLPR_Exhaustive.reason_exhaustively (SOME 2)
                   (ctxt, @{thm' \<phi>TA_Inh_step} RS sequent)
