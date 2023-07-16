@@ -79,7 +79,10 @@ fun instantiate_the_var var ctxt sequent0 =
            | Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
               Phi_Conv.hol_all_conv (normalize_Ex o snd) ctxt ctm
            | Const(\<^const_name>\<open>special_Ex\<close>, \<^Type>\<open>fun \<^Type>\<open>fun T _\<close> _\<close>) $ _ =>
-                if T = y_ty then Conv.all_conv ctm
+                if T = y_ty
+                then (Phi_Conv.quant_conv \<^const_name>\<open>special_Ex\<close> (fn (_, ctxt) => fn ctmxx =>
+                        Simplifier.rewrite (Simplifier.clear_simpset ctxt
+                          addsimps @{thms' HOL.imp_conjR[symmetric] HOL.simp_thms}) ctmxx) ctxt) ctm
                 else let
                   fun norm_Ex ctxt ctm =
                     case Thm.term_of ctm
@@ -87,12 +90,13 @@ fun instantiate_the_var var ctxt sequent0 =
                           (Phi_Conv.move_sp_Ex_inside_All ctxt then_conv
                            Phi_Conv.hol_all_conv (normalize_Ex o snd) ctxt) ctm
                        | _ => error "Deriving Trans_to_Raw_Abst fails: Cannot normalize the generated proof oblgiation"
-                   in (Simplifier.rewrite (Simplifier.clear_simpset ctxt
+                   in (Phi_Conv.quant_conv \<^const_name>\<open>special_Ex\<close> (fn (_, ctxt) =>
+                          Simplifier.rewrite (Simplifier.clear_simpset ctxt
                                 addsimps @{thms' HOL.all_conj_distrib[symmetric] all_simps(3-6)[symmetric]
-                                                 "_all_simps_plus_"}
-                                addsimprocs [\<^simproc>\<open>NO_MATCH\<close>])
-                            then_conv Drule.beta_eta_conversion
-                            then_conv norm_Ex ctxt) ctm
+                                                 "_all_simps_plus_" HOL.simp_thms}
+                                addsimprocs [\<^simproc>\<open>NO_MATCH\<close>])) ctxt
+                       then_conv Drule.beta_eta_conversion
+                       then_conv norm_Ex ctxt) ctm
                   end
            | _ => Conv.all_conv ctm
 
@@ -104,9 +108,9 @@ fun instantiate_the_var var ctxt sequent0 =
                         => X
                     | _ => error "BUG zfkezUm3Rm62IQTK0kglKQ"
 
-      fun mk_disj_inst (quants, prems) =
+      fun mk_disj_inst concls (quants, prems) =
         fold (fn (N,ty) => fn X => HOLogic.exists_const ty $ Abs(N,ty,X))
-          quants (Phi_Help.list_mk_conj prems)
+          quants (Phi_Help.list_mk_conj (prems @ concls))
 
       fun mk_conj_inst concls (quants, prems) =
         Phi_Help.list_mk_conj concls
@@ -117,22 +121,26 @@ fun instantiate_the_var var ctxt sequent0 =
 
       val has_the_var = Term.exists_subterm (fn Var v' => v' = var | _ => false)
 
-      fun inst_body (disj, conj) concls qp (Var v' $ _ $ _)
-            = if v' = var then (mk_disj_inst qp :: disj, mk_conj_inst' concls qp conj)
-                          else error "BUG 2+kAV8fFSSaBQ3U0iDok+A"
-        | inst_body (disj, conj) concls qp (\<^Const>\<open>conj\<close> $ (Var v' $ _ $ _) $ X)
-            = if v' = var then inst_body (mk_disj_inst qp :: disj, conj) concls qp X
-                          else error "BUG 2+kAV8fFSSaBQ3U0iDok+A"
-        | inst_body ret concls qp (\<^Const>\<open>conj\<close> $ P $ X)
-            = if has_the_var P
-              then inst_body (inst_body ret [] qp P) concls qp X
-              else inst_body ret (P::concls) qp X
-        | inst_body ret concls (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
-            = inst_body ret concls (quants, P::prems) X
-        | inst_body ret concls (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
-            = inst_body ret concls ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
-        | inst_body (disj, conj) concls qp P
-            = (disj, mk_conj_inst' (P::concls) qp conj)
+      fun pass_conjs qp concls_meet (\<^Const>\<open>HOL.conj\<close> $ A $ B)
+            = pass_conjs qp (pass_conjs qp concls_meet A) B
+        | pass_conjs _ (concls,meet) (Var v' $ _ $ _)
+            = if v' = var then (concls,true)
+              else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
+        | pass_conjs _ (concls,meet) P
+            = (fold_aterms (fn Var v' =>
+                if v' = var then raise Automation_Fail "fail to infer the transformation relation: fail to normalize the obligation"
+                else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
+                  | _ => I) P () ;
+               (P::concls, meet))
+
+      fun inst_body ret (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
+            = inst_body ret (quants, P::prems) X
+        | inst_body ret (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
+            = inst_body ret ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
+        | inst_body (disj, conj) qp P
+            = case pass_conjs qp ([],false) P
+                of (concls, true)  => (mk_disj_inst concls qp :: disj, conj)
+                 | (concls, false) => (disj, mk_conj_inst concls qp :: conj)
 
       fun inst_single ret (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
             = inst_single ret (quants, P::prems) X
@@ -140,7 +148,7 @@ fun instantiate_the_var var ctxt sequent0 =
             = inst_single ret ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
         | inst_single ret qp (\<^Const>\<open>special_Ex _\<close> $ Abs (_, ty, X))
             = if ty = y_ty
-              then inst_body ret [] qp (Term.subst_bounds ([y], X))
+              then inst_body ret qp (Term.subst_bounds ([y], X))
               else error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
         | inst_single (disj, conj) qp P
             = (disj, mk_conj_inst [P] qp :: conj)

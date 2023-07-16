@@ -439,11 +439,11 @@ lemma Subjection_imp_simp[simp]:
   \<open> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q) \<longleftrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<and> Q) \<close>
   unfolding Transformation_def by simp
 
-lemma Subjection_True [simp, \<phi>programming_safe_simps]:
+lemma Subjection_True [simp, \<phi>programming_simps]:
   \<open>(T \<s>\<u>\<b>\<j> True) = T\<close>
   unfolding BI_eq_iff by simp
 
-lemma Subjection_Flase[simp, \<phi>programming_safe_simps]:
+lemma Subjection_Flase[simp, \<phi>programming_simps]:
   \<open>(T \<s>\<u>\<b>\<j> False) = 0\<close>
   unfolding BI_eq_iff by simp
 
@@ -677,7 +677,7 @@ lemma ExSet_simps[simp]:
     "\<And>P. (\<exists>x. t = x \<and> P x) = P t"*)
   unfolding BI_eq_iff by simp_all blast
 
-declare ExSet_simps(1)[\<phi>programming_safe_simps]
+declare ExSet_simps(1)[\<phi>programming_simps]
 
 lemma ExSet_transformation:
   \<open>(\<And>x. S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' x \<w>\<i>\<t>\<h> P)

@@ -24,20 +24,20 @@ ML \<open>structure Phi_Expansions = Simpset (
 declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 
 ML \<open>
-structure Phi_Programming_Safe_Simp_SS = Simpset (
+structure Phi_Programming_Simp_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>\<phi>programming_safe_simps\<close>
+  val binding = \<^binding>\<open>\<phi>programming_simps\<close>
   val comment = "Simplification rules used in low automation level, which is safer than usual"
 )
 
-structure Phi_Programming_Simp_SS = Simpset (
+structure Phi_Programming_Unsafe_Simp_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = \<^binding>\<open>\<phi>programming_simps\<close>
+  val binding = \<^binding>\<open>\<phi>programming_unsafe_simps\<close>
   val comment = "Simplification rules used in the deductive programming"
 )
 \<close>
 
-lemmas [\<phi>programming_safe_simps] =
+lemmas [\<phi>programming_simps] =
   mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
   mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>] mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
   add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]

@@ -1128,6 +1128,28 @@ setup \<open>Context.theory_map(
       zip_simps = @{thms zip_eq_Cons_ex},
       unzip_simps = [] (*what I need to give?*)
   })
+#> eBNF_Info.add_BNF (\<^type_name>\<open>Set.set\<close>, 
+let val a = TFree ("a", \<^sort>\<open>type\<close>)
+    val b = TFree ("b", \<^sort>\<open>type\<close>)
+ in {
+  T = \<^Type>\<open>Set.set a\<close>,
+  ctrs = [\<^Const>\<open>bot \<^Type>\<open>set a\<close>\<close>, \<^Const>\<open>insert a\<close>, \<^Const>\<open>sup \<^Type>\<open>set a\<close>\<close>],
+  deads = [], lives = [a], lives'= [b],
+  sets = [Abs("x", a, Bound 0)],
+  set_thms = [],
+  ctr_simps = [],
+  rel = \<^Const>\<open>rel_set a b\<close>,
+  rel_distincts = [],
+  rel_injects = @{thms' Lifting_Set.empty_transfer},
+  rel_eq = @{thm' rel_set_eq},
+  pred = Abs("P", a --> HOLogic.boolT, Abs ("S", \<^Type>\<open>Set.set a\<close>, \<^Const>\<open>Ball a\<close> $ Bound 0 $ Bound 1)),
+  pred_injects = @{thms' Set.ball_simps(5) Set.ball_Un Set.ball_simps(7)},
+  pred_simps = @{thms' Set.ball_simps},
+  map = \<^Const>\<open>Set.image a b\<close>,
+  map_thms = @{thms' Set.image_insert Set.image_Un Set.image_empty},
+  map_disc_iffs = @{thms' image_is_empty},
+  map_ident = @{thm' Set.image_ident}
+} end)
 )\<close>
 
 (* ML \<open>\<^pattern>\<open>case_prod zip\<close>\<close>
@@ -1485,6 +1507,8 @@ ML_file \<open>library/phi_type_algebra/trans_to_raw_abst.ML\<close>
                                             | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
     = \<open> Phi_Type_Algebra_Derivers.trans_to_raw_abst \<close>
+
+thm HOL.simp_thms
 
 (*hide_fact \<phi>TA_TrRA_rule \<phi>TA_TrRA_rewr*)
 

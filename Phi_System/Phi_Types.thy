@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-                   
+                     
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -78,97 +78,58 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
 declare [[\<phi>trace_reasoning = 0]]
     
-\<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [23] 22)
+\<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
-  deriving \<open>(\<And>A x. x \<Ztypecolon> T A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P A x) \<Longrightarrow> x \<Ztypecolon> \<phi>Dependent_Sum T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) (snd x) \<close>
-       and \<open>(\<And>A. Object_Equiv (T A) (eq A)) \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
-       and Identity_Element
+
+  deriving \<open>(\<And>A x. x \<Ztypecolon> T A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P A x)
+        \<Longrightarrow> x \<Ztypecolon> \<phi>Dependent_Sum T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) (snd x) \<close>
+    and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
+        \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
+    and    \<open>Identity_Element\<^sub>I (u \<Ztypecolon> T c) P
+        \<Longrightarrow> Identity_Element\<^sub>I ((c, u) \<Ztypecolon> \<Sigma> T) P \<close>
+    and    \<open>Identity_Element\<^sub>E (u \<Ztypecolon> T c)
+        \<Longrightarrow> Identity_Element\<^sub>E ((c, u) \<Ztypecolon> \<Sigma> T) \<close>
+    and    \<open>Is_Functional (u \<Ztypecolon> T c)
+        \<Longrightarrow> Is_Functional ((c, u) \<Ztypecolon> \<Sigma> T)\<close>
+    and    \<open>(\<And>a. a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
+        \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
 
 notation \<phi>Dependent_Sum (binder "\<Sigma>" 22)
-
-term list.set
-thm list.set
-
-ML \<open>the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>)
-  |> BNF_Def.map_ident_of_bnf \<close>
-
-ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
-
-ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
-|> #ctr_sugar
-\<close>
-
-thm list.map
-term list.map
-term list_all
-thm list_all2
-thm Set.ball_simps
-
-term Powp
-term \<open>(\<lambda>B. \<forall>x \<in> B. A x)\<close>
-term Ball
-
-lemma rel_set_distincts:
-  "rel_set A {} S \<longleftrightarrow> S = {}"
-  "rel_set A S {} \<longleftrightarrow> S = {}"
-  unfolding rel_set_def
-  by clarsimp+
-
-setup \<open>Context.theory_map (eBNF_Info.add_BNF (\<^type_name>\<open>Set.set\<close>, 
-let val a = TFree ("a", \<^sort>\<open>type\<close>)
-    val b = TFree ("b", \<^sort>\<open>type\<close>)
- in {
-  T = \<^Type>\<open>Set.set a\<close>,
-  ctrs = [\<^Const>\<open>bot \<^Type>\<open>set a\<close>\<close>, \<^Const>\<open>insert a\<close>, \<^Const>\<open>sup \<^Type>\<open>set a\<close>\<close>],
-  deads = [], lives = [a], lives'= [b],
-  sets = [Abs("x", a, Bound 0)],
-  set_thms = [],
-  ctr_simps = [],
-  rel = \<^Const>\<open>rel_set a b\<close>,
-  rel_distincts = [],
-  rel_injects = @{thms' Lifting_Set.empty_transfer},
-  rel_eq = @{thm' rel_set_eq},
-  pred = Abs("P", a --> HOLogic.boolT, Abs ("S", \<^Type>\<open>Set.set a\<close>, \<^Const>\<open>Ball a\<close> $ Bound 0 $ Bound 1)),
-  pred_injects = @{thms' Set.ball_simps(5) Set.ball_Un Set.ball_simps(7)},
-  pred_simps = @{thms' Set.ball_simps},
-  map = \<^Const>\<open>Set.image a b\<close>,
-  map_thms = @{thms' Set.image_insert Set.image_Un Set.image_empty},
-  map_disc_iffs = @{thms' image_is_empty},
-  map_ident = @{thm' Set.image_ident}
-} end))\<close>
-
-
-declare [[\<phi>trace_reasoning = 0]]
-
-\<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _ " [22] 21)
+        
+\<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _ " [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (rel_set eq) \<close>
        and Identity_Element
+       and Trans_to_Raw_Abst
 
 text \<open>Read it as 'the abstract object is certain element in the set'\<close>
 
-typ \<open>'a set\<close>
+subsubsection \<open>Rules\<close>
 
-lemma [embed_into_\<phi>type]:
-  \<open> NO_MATCH (\<lambda>_. T) T
-\<Longrightarrow> f x \<Ztypecolon> T x \<s>\<u>\<b>\<j> x. P x \<equiv> { (x, f x) |x. P x } \<Ztypecolon> \<S> \<Sigma> T\<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp
+lemmas [\<phi>programming_simps] = Set_Abstraction.unfold
+                              \<phi>Dependent_Sum.unfold
 
-lemma [embed_into_\<phi>type]:
-  \<open> f x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. P x \<equiv> { f x |x. P x } \<Ztypecolon> \<S> T \<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp blast
+declare \<phi>Dependent_Sum.unfold [gen_open_abstraction_simps]
 
-thm embed_into_\<phi>type
 
-thm Set_Abstraction.open_abstraction
-term \<open>\<Sum>\<close>
-thm \<phi>Dependent_Sum.expansion
+subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
-thm \<phi>Dependent_Sum_def
-term \<open>\<S> (\<Sigma> x. T x)\<close>
+definition \<open>\<Sigma>_Homo\<^sub>E Fa Fb D \<sigma> \<longleftrightarrow> (\<forall>T. \<forall>x \<in> D. x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c))\<close>
+definition \<open>\<Sigma>_Homo\<^sub>I Fa Fb D \<sigma>' \<longleftrightarrow> (\<forall>T. \<forall>x \<in> D. x \<Ztypecolon> \<Sigma> c. Fa (T c) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma>' x \<Ztypecolon> Fb (\<Sigma> T))\<close>
+
+lemma apply_\<Sigma>_Homo\<^sub>E:
+  \<open> \<Sigma>_Homo\<^sub>E Fa Fb D \<sigma>
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D
+\<Longrightarrow> x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c)\<close>
+  unfolding \<Sigma>_Homo\<^sub>E_def Premise_def
+  by blast
+
+subsubsection \<open>\<S>-Homomorphism\<close>
+
+definition \<open>\<S>_Homo\<^sub>E Fa Fb D \<P> \<longleftrightarrow> (\<forall>T. \<forall>s \<in> D. s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<P> s \<Ztypecolon> Fb T)\<close>
+  \<comment> \<open>When the data structure is a set, \<open>\<P>\<close> is exactly the powerset\<close>
+
 
 
 subsection \<open>Embedding Subjection into Type\<close>
@@ -178,8 +139,7 @@ subsection \<open>Embedding Subjection into Type\<close>
   deriving Basic
        and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
-       and \<open>(\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
-             x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<and> P @action to Itself \<close>
+       and Trans_to_Raw_Abst
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
@@ -188,16 +148,51 @@ subsection \<open>Embedding Subjection into Type\<close>
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
-declare SubjectionTY.unfold[\<phi>programming_simps]
+subsubsection \<open>Rules\<close>
 
-lemma [gen_open_abstraction_simps]:
-  \<open>y \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> y. r y \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. r y \<and> P\<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp blast
+paragraph \<open>Simplification Rules\<close>
+
+lemmas [\<phi>programming_simps] = SubjectionTY.unfold
 
 lemma \<phi>\<s>\<u>\<b>\<j>_\<phi>\<s>\<u>\<b>\<j>[gen_open_abstraction_simps, simp]:
   \<open>(T \<phi>\<s>\<u>\<b>\<j> P \<phi>\<s>\<u>\<b>\<j> Q) = (T \<phi>\<s>\<u>\<b>\<j> P \<and> Q)\<close>
   by (rule \<phi>Type_eqI; clarsimp)
+
+lemma [gen_open_abstraction_simps, \<phi>programming_simps]:
+  \<open>\<S> (T \<phi>\<s>\<u>\<b>\<j> P) \<equiv> (\<S> T) \<phi>\<s>\<u>\<b>\<j> P\<close>
+  unfolding atomize_eq
+  by (rule \<phi>Type_eqI, simp, blast)
+
+lemma [gen_open_abstraction_simps, \<phi>programming_simps]:
+  \<open>\<Sigma> x. (T x \<phi>\<s>\<u>\<b>\<j> P) \<equiv> (\<Sigma> T) \<phi>\<s>\<u>\<b>\<j> P\<close>
+  unfolding atomize_eq
+  by (rule \<phi>Type_eqI, simp)
+
+lemma [gen_open_abstraction_simps, \<phi>programming_simps]:
+  \<open>y \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> y. r y \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. r y \<and> P\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
+
+
+paragraph \<open>Embedding into \<phi>-type\<close>
+
+lemma [embed_into_\<phi>type]:
+  \<open> NO_MATCH (\<lambda>_. T) T
+\<Longrightarrow> f x \<Ztypecolon> T x \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. P x } \<Ztypecolon> \<S> \<Sigma> T\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+
+lemma [embed_into_\<phi>type]:
+  \<open> f x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. P x } \<Ztypecolon> \<S> T \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
+
+lemma [embed_into_\<phi>type]:
+  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> x \<in> s \<s>\<u>\<b>\<j> x. \<top> \<equiv> s \<Ztypecolon> \<S> T \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+
+
 
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -255,26 +250,6 @@ in fn ctxt => fn cterm =>
 end
 \<close>
 *)
-
-declare [[\<phi>trace_reasoning = 0]]
- 
-subsection \<open>Embedding Existential Quantification\<close>
-
-term \<open>\<Sigma>\<^sub>\<phi>\<close>
-
-\<phi>type_def SigmaTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, ('c,'b)) \<phi>\<close> (binder "\<Sigma>\<^sub>\<phi>" 10)
-  where \<open>\<close>
-
-\<phi>type_def ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
-  where [embed_into_\<phi>type]: \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
-  deriving Basic
-       and \<open>(\<And>c x. x \<Ztypecolon> T c \<i>\<m>\<p>\<l>\<i>\<e>\<s> P c x) \<Longrightarrow> x \<Ztypecolon> ExTyp T \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>a. P a (x a)) \<close>
-       and Identity_Element
-       and \<open>(\<And>A x. x \<Ztypecolon> T A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
-               x \<Ztypecolon> ExTyp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>a b. y = b \<and> r (a x) b) @action to Itself \<close>
-
-thm ExTyp.open_abstraction 
-
 (*definitely \<open>(\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c))\<close> is some transformation functor, but it seems meaningless
   to give this property instead of giving the ad-hoc rules for transforming set, because the notion of set
   is so essential and basic.*)
@@ -331,10 +306,7 @@ lemma [gen_open_abstraction_simps]:
   unfolding atomize_eq BI_eq_iff
   by clarsimp blast
 
-lemma [gen_open_abstraction_simps]:
-  \<open>f \<Ztypecolon> (\<exists>\<phi>c. T \<phi>\<s>\<u>\<b>\<j> P c) \<s>\<u>\<b>\<j> f. r f \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. (\<exists>c f. r f \<and> y = f c \<and> P c)\<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp blast
+
 
 paragraph \<open>TO\<close>
 
