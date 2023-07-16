@@ -66,6 +66,47 @@ lemma [\<phi>reason 1000]:
 
 
 
+subsection \<open>Dependent Sum Type\<close>
+
+text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
+  independently with the element. It seems to be a limitation. For example, we want to transform
+  a list of unknown bit-length numbers \<open>l \<Ztypecolon> List T\<close> where \<open>x \<Ztypecolon> T \<equiv> (x \<Ztypecolon> \<nat>[b] \<s>\<u>\<b>\<j> b. x < 2^b)\<close>
+  into a set of all lists of such numbers \<open>{l | ? } \<Ztypecolon> List \<nat>[?]\<close> where the question marks denote
+  the terms cannot be expressed yet now.
+
+  Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
+
+\<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> (binder "\<Sigma>" 22)
+  where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
+    
+
+notation \<phi>Dependent_Sum ("\<Sigma> _" [23] 22)
+
+\<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _ " [22] 21)
+  where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
+  deriving Basic
+
+lemma [embed_into_\<phi>type]:
+  \<open> NO_MATCH (\<lambda>_. T) T
+\<Longrightarrow> f x \<Ztypecolon> T x \<s>\<u>\<b>\<j> x. P x \<equiv> { (x, f x) |x. P x } \<Ztypecolon> \<S> \<Sigma> T\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+
+lemma [embed_into_\<phi>type]:
+  \<open> f x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. P x \<equiv> { f x |x. P x } \<Ztypecolon> \<S> T \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
+
+thm embed_into_\<phi>type
+
+thm Set_Abstraction.open_abstraction
+term \<open>\<Sum>\<close>
+thm \<phi>Dependent_Sum.expansion
+
+thm \<phi>Dependent_Sum_def
+term \<open>\<S> (\<Sigma> x. T x)\<close>
+
+
 subsection \<open>Embedding Subjection into Type\<close>
                                                                                         
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
@@ -94,19 +135,34 @@ lemma \<phi>\<s>\<u>\<b>\<j>_\<phi>\<s>\<u>\<b>\<j>[gen_open_abstraction_simps, 
   \<open>(T \<phi>\<s>\<u>\<b>\<j> P \<phi>\<s>\<u>\<b>\<j> Q) = (T \<phi>\<s>\<u>\<b>\<j> P \<and> Q)\<close>
   by (rule \<phi>Type_eqI; clarsimp)
 
-(*
+
 subsubsection \<open>Algebraic Properties\<close>
 
-lemma \<phi>\<s>\<u>\<b>\<j>_simp:
-  \<open> Transformation_Functor Fa Fa D mapper
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> PPP
-\<Longrightarrow> (Fa (T \<phi>\<s>\<u>\<b>\<j> P)) \<equiv> (Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def
-  apply (rule \<phi>Type_eqI; clarsimp; rule)
-  subgoal premises prems for x p
-    thm prems(1)[THEN spec[where x=\<open>T \<phi>\<s>\<u>\<b>\<j> P\<close>], THEN spec[where x=T], THEN spec[where x=x]]
-thm prems
+text \<open>Here we construct two inner transformations from \<open>a \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P\<close> to \<open>a \<Ztypecolon> T\<close> and another reversely.
+  It is essentially an identity transformation from \<open>a\<close> to \<open>a\<close> itself.
+  The constraints checks 1. if the identity transformation is supported (a very weak requirement),
+        2. the container is always non-empty so that an independent assertion \<open>P\<close> bound at the element
+           type is valid globally (this is a necessary condition).  \<close>
+lemma move_\<phi>\<s>\<u>\<b>\<j>_over_typ_operator:
+  \<open> Transformation_Functor Fa Fa D R mapper
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a. a \<in> D x \<and> P \<longrightarrow> a \<in> R x) \<and> (\<forall>y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P)
+\<Longrightarrow> (x \<Ztypecolon> Fa (T \<phi>\<s>\<u>\<b>\<j> P)) \<equiv> (x \<Ztypecolon> Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def BI_eq_iff
+  apply (clarsimp; rule)
+  subgoal premises prems for p
+    by (insert prems(1)[THEN spec[where x=\<open>T \<phi>\<s>\<u>\<b>\<j> P\<close>], THEN spec[where x=T], THEN spec[where x=x],
+                           THEN spec[where x=\<open>\<lambda>a b. a = b \<and> P\<close>], simplified]
+               prems(2-4),
+        clarsimp,
+        blast)
+  subgoal premises prems for p
+    by (insert prems(1)[THEN spec[where x=\<open>T\<close>], THEN spec[where x=\<open>T \<phi>\<s>\<u>\<b>\<j> P\<close>], THEN spec[where x=x],
+                           THEN spec[where x=\<open>\<lambda>a b. a = b\<close>], simplified]
+               prems(2-4),
+        clarsimp,
+        blast) .
 
+(* TODO
 lemma \<phi>\<s>\<u>\<b>\<j>_simp:
   \<open> Transformation_Functor Fa Fa D mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ((\<forall>x y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P))
@@ -139,7 +195,12 @@ end
 declare [[\<phi>trace_reasoning = 0]]
  
 subsection \<open>Embedding Existential Quantification\<close>
-                   
+
+term \<open>\<Sigma>\<^sub>\<phi>\<close>
+
+\<phi>type_def SigmaTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, ('c,'b)) \<phi>\<close> (binder "\<Sigma>\<^sub>\<phi>" 10)
+  where \<open>\<close>
+
 \<phi>type_def ExTyp :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> (binder "\<exists>\<phi>" 10)
   where [embed_into_\<phi>type]: \<open>ExTyp T = (\<lambda>x. (\<exists>*c. x c \<Ztypecolon> T c))\<close>
   deriving Basic
@@ -148,6 +209,12 @@ subsection \<open>Embedding Existential Quantification\<close>
        and \<open>(\<And>A x. x \<Ztypecolon> T A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to Itself) \<Longrightarrow>
                x \<Ztypecolon> ExTyp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>a b. y = b \<and> r (a x) b) @action to Itself \<close>
 
+thm ExTyp.open_abstraction 
+
+(*definitely \<open>(\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c))\<close> is some transformation functor, but it seems meaningless
+  to give this property instead of giving the ad-hoc rules for transforming set, because the notion of set
+  is so essential and basic.*)
+(*
 lemma
   \<open>Transformation_Functor (\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c)) (\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c))
       (\<lambda>f. {f x |x. P x}) (\<lambda>r f g. \<forall>y. P y \<longrightarrow> (\<exists>x. P x \<and> r (f x) (g y)))\<close>
@@ -168,8 +235,7 @@ lemma
       by (metis Do_Extract_Implied_Facts \<phi>TA_Inh_extract_prem typing_inhabited)
     thm prems
   apply blast
-
-  term range
+*)
 
 subsubsection \<open>Syntax\<close>
 
@@ -205,6 +271,32 @@ lemma [gen_open_abstraction_simps]:
   \<open>f \<Ztypecolon> (\<exists>\<phi>c. T \<phi>\<s>\<u>\<b>\<j> P c) \<s>\<u>\<b>\<j> f. r f \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. (\<exists>c f. r f \<and> y = f c \<and> P c)\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp blast
+
+paragraph \<open>TO\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open>f \<Ztypecolon> ExTyp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f c \<Ztypecolon> T c \<s>\<u>\<b>\<j> c. \<top> @action to T\<close>
+  unfolding Action_Tag_def Transformation_def
+  by clarsimp
+  
+
+subsubsection \<open>Deriving (Fa (ExTyp T)) \<equiv> (\<exists>\<phi>c. Fb (T c)) \<close>
+
+lemma
+  \<open> (\<And>x. x \<Ztypecolon> Fa (ExTyp T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x c \<Ztypecolon> Fb (T c) \<s>\<u>\<b>\<j> c. \<top>)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Fa (ExTyp T) \<equiv> (\<exists>\<phi>c. Fb (T c))\<close>
+
+lemma
+  \<open> (Fa (ExTyp T)) \<equiv> (\<exists>\<phi>c. Fb (T c))\<close>
+  unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def
+  apply (rule \<phi>Type_eqI; clarsimp)
+  subgoal premises prems for x p
+    thm prems(1)[THEN spec[where x=\<open>ExTyp T\<close>]]
+    thm prems
+
+
 
 
 subsection \<open>Stepwise Abstraction\<close>

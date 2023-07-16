@@ -428,7 +428,7 @@ lemma [\<phi>reason 5000]:
 
 subsection \<open>To\<close>
 
-consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
+consts to :: \<open>'a \<Rightarrow> action\<close>
        \<A>subst :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> (infixl "\<f>\<o>\<r>" 10)
           \<comment> \<open>\<^term>\<open>to (A \<f>\<o>\<r> B)\<close> means, substitute A for B\<close>
        \<A>split :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> ("\<s>\<p>\<l>\<i>\<t>")

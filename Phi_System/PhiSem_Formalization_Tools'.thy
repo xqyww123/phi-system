@@ -113,7 +113,7 @@ abbreviation \<phi>Res_Sat'  :: \<open>resource \<Rightarrow> rassn \<Rightarrow
   where \<open>\<phi>Res_Sat' s P \<equiv> \<phi>Res_Sat s (\<phi>Res_Spec P)\<close>
 
 definition \<phi>Comp_Sat :: \<open>'ret comp set \<Rightarrow> ('ret \<phi>arg \<Rightarrow> rassn) \<Rightarrow> (ABNM \<Rightarrow> rassn) \<Rightarrow> bool\<close>
-  where \<open>\<phi>Comp_Sat c S E \<longleftrightarrow> c \<subseteq> \<S> S E\<close>
+  where \<open>\<phi>Comp_Sat c S E \<longleftrightarrow> c \<subseteq> LooseState S E\<close>
 
 abbreviation \<phi>Comp_Sat' :: \<open>'ret comp set \<Rightarrow> ('ret \<phi>arg \<Rightarrow> rassn) \<Rightarrow> (ABNM \<Rightarrow> rassn) \<Rightarrow> bool\<close>
                           ("_ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _ \<t>\<h>\<r>\<o>\<w>\<s> _" [11,11,11] 10)
@@ -1260,13 +1260,13 @@ lemma "__op_try__"[intro!]:
     apply (cases s; simp; cases x; clarsimp simp add: \<phi>expns ring_distribs)
     subgoal premises prems for a b u v
       using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
-      by (metis (no_types, lifting) INTERP_SPEC LooseStateSpec_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) set_mult_expn)
+      by (metis (no_types, lifting) INTERP_SPEC LooseState_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) set_mult_expn)
     subgoal premises prems for a b c d u v2 proof -
-      have \<open>Abnormal a b \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
+      have \<open>Abnormal a b \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
         using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
         using prems(10) prems(3) prems(7) prems(8) prems(9) by blast
       note this[simplified]
-      then have \<open>Success c d \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
+      then have \<open>Success c d \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
         using prems(2)[of a, THEN spec[where x=b], THEN spec[where x=R]]
         by (meson INTERP_SPEC prems(4) set_mult_expn)
       note this[simplified]
@@ -1274,18 +1274,18 @@ lemma "__op_try__"[intro!]:
         by (metis INTERP_SPEC prems(11) set_mult_expn)
     qed
     subgoal premises prems for a b c d u v proof -
-      have \<open>Abnormal a b \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
+      have \<open>Abnormal a b \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
         using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
         using prems(10) prems(3) prems(7) prems(8) prems(9) by blast
       note this[simplified]
-      then have \<open>Abnormal c d \<in> \<S> (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
+      then have \<open>Abnormal c d \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
         using prems(2)[THEN spec[where x=b], THEN spec[where x=R]]
         by (meson INTERP_SPEC prems(4) set_mult_expn)
       note this[simplified]
       then show ?thesis
         by (simp add: INTERP_SPEC set_mult_expn)
     qed
-     apply (smt (z3) INTERP_SPEC LooseStateSpec_expn(2) LooseStateSpec_expn(3) set_mult_expn)
+     apply (smt (z3) INTERP_SPEC LooseState_expn(2) LooseState_expn(3) set_mult_expn)
     by blast .
 
 definition "Union_the_Same_Or_Arbitrary_when_Var Z X Y \<longleftrightarrow> (\<forall>v. (Z::'v \<Rightarrow> 'a set) v = X v + Y v)"

@@ -281,7 +281,7 @@ private lemma from_fictional_refinement':
           INTERP_SPEC_subj INTERP_SPEC_ex
           \<phi>_expn[unfolded Satisfaction_def] Itself_expn[unfolded Satisfaction_def] set_mult_expn INTERP_SPEC
           Satisfaction_def Subjection_expn_set ExSet_expn_set Transition_of'_def
-          LooseStateSpec_def split_sum_all INTERP_RES_def interp_split R.\<r>_valid_split'
+          LooseState_def split_sum_all INTERP_RES_def interp_split R.\<r>_valid_split'
           R.inj.sep_insertion inj.sep_insertion prj.homo_mult eval_stat_forall split: eval_stat.split)
   subgoal premises prems for r u y v y' rr
     thm prems

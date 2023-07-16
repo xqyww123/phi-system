@@ -61,7 +61,7 @@ definition PendingConstruction :: " 'ret proc
                                   \<Rightarrow> (ABNM \<Rightarrow> assn)
                                   \<Rightarrow> bool "
     ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> _ \<o>\<n> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,1000,1000,11,11] 10)
-    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> \<S> (\<lambda>ret. INTERP_SPEC (R * S ret)) (\<lambda>ex. INTERP_SPEC (R * E ex))"
+    where "PendingConstruction f s R S E \<longleftrightarrow> f s \<subseteq> LooseState (\<lambda>ret. INTERP_SPEC (R * S ret)) (\<lambda>ex. INTERP_SPEC (R * E ex))"
 
 consts PendingConstruction_syntax :: \<open>'ret proc \<Rightarrow> ('ret \<phi>arg \<Rightarrow> assn) \<Rightarrow> (ABNM \<Rightarrow> assn) \<Rightarrow> bool\<close>
   ("\<p>\<e>\<n>\<d>\<i>\<n>\<g> \<p>\<r>\<o>\<c> _/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _/ \<t>\<h>\<r>\<o>\<w>\<s> _" [1000,11,11] 10)
@@ -205,14 +205,14 @@ lemma \<phi>apply_view_shift_pending:
 \<Longrightarrow> (\<And>x. T x \<s>\<h>\<i>\<f>\<t>\<s> T' x \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> PendingConstruction f blk H T' E"
   unfolding PendingConstruction_def View_Shift_def Satisfaction_def
-  by (clarsimp simp add: LooseStateSpec_expn' subset_iff split_comp_All)
+  by (clarsimp simp add: LooseState_expn' subset_iff split_comp_All)
 
 lemma \<phi>apply_view_shift_pending_E:
   " PendingConstruction f blk H T E
 \<Longrightarrow> (\<And>x. E x \<s>\<h>\<i>\<f>\<t>\<s> E' x \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> PendingConstruction f blk H T E'"
   unfolding PendingConstruction_def View_Shift_def Satisfaction_def
-  by (clarsimp simp add: LooseStateSpec_expn' subset_iff split_comp_All)
+  by (clarsimp simp add: LooseState_expn' subset_iff split_comp_All)
 
 lemmas \<phi>apply_implication_pending =
   \<phi>apply_view_shift_pending[OF _ view_shift_by_implication]

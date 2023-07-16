@@ -523,7 +523,7 @@ ML_file \<open>library/phi_type_algebra/helps.ML\<close>
 ML \<open>structure Embed_into_Phi_Type = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS_configure (
         let fun chk_rewr ctxt thm =
-              case Thm.prop_of thm
+              case Thm.concl_of thm
                 of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) => thm
                  | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) => thm
                  | Const(\<^const_name>\<open>Pure.eq\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) $ _ => Thm.symmetric thm
@@ -531,7 +531,7 @@ ML \<open>structure Embed_into_Phi_Type = Simpset (
                         thm RS' (ctxt, @{thm' HOL.sym})
                  | _ => raise THM ("Not a rewrite rule embedding BI assertions into \<phi>-types", 0, [thm])
             fun chk2 ctxt thm =
-              let val (X,Y) = case Thm.prop_of thm
+              let val (X,Y) = case Thm.concl_of thm
                                 of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ Y => (X,Y)
                                  | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y) => (X,Y)
                   val vars_X = Term.add_vars X []

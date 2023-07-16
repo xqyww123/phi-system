@@ -145,7 +145,7 @@ lemma "__DoWhile__rule_\<phi>app":
   " \<p>\<r>\<o>\<c> body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> (\<exists>*x'. X x' \<heavy_comma> \<v>\<a>\<l> P x' \<Ztypecolon> \<bool>) \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_do_while body \<lbrace> X x \<s>\<u>\<b>\<j> x. P x \<longmapsto> X x' \<s>\<u>\<b>\<j> x'. \<not> P x' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E "
   unfolding op_do_while_def \<phi>Procedure_def
-  apply (simp add: subset_iff LooseStateSpec_expn')
+  apply (simp add: subset_iff LooseState_expn')
   apply (rule allI impI conjI)+
   subgoal for comp R s
   apply (rotate_tac 2)
