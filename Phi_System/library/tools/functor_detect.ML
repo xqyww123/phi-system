@@ -377,7 +377,7 @@ fun property_dependent_setup (deps,no_rule_deps) automation (the_functor,propert
 
 structure Gen_Rule_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
+  val binding = SOME \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
   val comment = "Rules simplifying the generated \<phi>functor reasoning rules."
 )
 

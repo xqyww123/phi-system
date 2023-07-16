@@ -662,7 +662,7 @@ lemma open_abstraction_\<phi>app:
 ML \<open>
 structure Gen_Open_Abstraction_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>gen_open_abstraction_simps\<close>
+  val binding = SOME \<^binding>\<open>gen_open_abstraction_simps\<close>
   val comment = "Simplification rules used when generating open-abstraction rules"
 )
 \<close>
@@ -824,7 +824,7 @@ lemma [\<phi>reason 10]:
 ML \<open>
 structure PhiDef_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>\<phi>defs\<close>
+  val binding = SOME \<^binding>\<open>\<phi>defs\<close>
   val comment = "Rules to expand definitions of \<phi>-Type"
 )\<close>
 

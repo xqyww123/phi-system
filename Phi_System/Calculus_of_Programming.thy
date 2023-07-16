@@ -299,7 +299,7 @@ text \<open>Rules showing the obtained procedure is identical to the desired goa
 
 ML \<open>structure Proc_Monad_SS = Simpset(
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>procedure_simps\<close>
+  val binding = SOME \<^binding>\<open>procedure_simps\<close>
   val comment = "declare the rules for simplifying procedure monad."
 )\<close>
 

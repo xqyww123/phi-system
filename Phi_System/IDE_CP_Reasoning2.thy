@@ -1080,6 +1080,11 @@ text \<open>Task of Structural Extract \<^prop>\<open>(x,w) \<Ztypecolon> T \<^e
   given \<^term>\<open>x \<Ztypecolon> T\<close>, expecting \<^term>\<open>y \<Ztypecolon> U\<close>, the reasoner finds the further element \<^term>\<open>w \<Ztypecolon> W\<close>
   that needs to be extracted further and the remain \<^term>\<open>r \<Ztypecolon> R\<close> that remains from the extraction.\<close>
 
+paragraph \<open>Simplification Protect\<close>
+
+(*definition \<open>\<A>SE_Simp_Protect x T W y U R P\<close> *)
+
+
 
 subsection \<open>Termination\<close>
 

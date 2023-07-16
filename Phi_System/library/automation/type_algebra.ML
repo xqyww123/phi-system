@@ -184,7 +184,7 @@ type guess_property =
 
 structure Simps = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>\<phi>constraint_expansion\<close>
+  val binding = SOME \<^binding>\<open>\<phi>constraint_expansion\<close>
   val comment = "Rules to expand constraints and conditions in \<phi>-type algebra automation"
 )
 

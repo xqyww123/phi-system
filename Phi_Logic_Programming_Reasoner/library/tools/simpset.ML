@@ -48,7 +48,7 @@ end
 
 functor Simpset(Config : sig
   val initial_ss : Simpset_Configure.initial_ss_configure
-  val binding : binding
+  val binding : binding option
   val comment : string
 end) : SIMPSET = struct
 
@@ -73,7 +73,7 @@ fun map_with_result f generic =
    in (result, Data.put (Raw_Simplifier.simpset_of ctxt') generic) end
 
 structure Thms = Named_Thms (
-  val name = Config.binding
+  val name = the_default Binding.empty Config.binding
   val description = Config.comment
 )
 
@@ -89,10 +89,11 @@ fun del_simps thms = map_with_result (fn ctxt =>
 val add = Thm.declaration_attribute (fn th => add_simps [th])
 val del = Thm.declaration_attribute (fn th => del_simps [th])
 
-val _ = Theory.setup (
-   Attrib.setup Config.binding (Attrib.add_del add del) Config.comment
-#> Global_Theory.add_thms_dynamic (Config.binding, Thms.get o Context.proof_of)
-)
+val _ = (
+  case Config.binding of SOME B =>
+    Theory.setup ( Attrib.setup B (Attrib.add_del add del) Config.comment
+                #> Global_Theory.add_thms_dynamic (B, Thms.get o Context.proof_of))
+    | _ => ())
 
 fun print ctxt verbose =
   writeln (Pretty.string_of (Simplifier.pretty_simpset verbose (equip ctxt)))

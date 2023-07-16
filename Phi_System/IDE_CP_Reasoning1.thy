@@ -127,7 +127,7 @@ consts assertion_simps :: \<open>mode \<Rightarrow> mode\<close>
 ML \<open>
 structure Assertion_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>assertion_simps\<close>
+  val binding = SOME \<^binding>\<open>assertion_simps\<close>
   val comment = "Simplification rules normalizing an assertion. \
                        \It is applied before ToSA process."
 )
@@ -137,19 +137,19 @@ val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
 
 structure Assertion_SS_Source = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = \<^binding>\<open>assertion_simps_source\<close>
+  val binding = SOME \<^binding>\<open>assertion_simps_source\<close>
   val comment = "Simp rules normalizing particularly source part of an assertion."
 )
 
 structure Assertion_SS_Target = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = \<^binding>\<open>assertion_simps_target\<close>
+  val binding = SOME \<^binding>\<open>assertion_simps_target\<close>
   val comment = "Simp rules normalizing particularly target part of an assertion."
 )
 
 structure Assertion_SS_Abnormal = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = \<^binding>\<open>assertion_simps_abnormal\<close>
+  val binding = SOME \<^binding>\<open>assertion_simps_abnormal\<close>
   val comment = "Simp rules normalizing particularly the abnormal spec of a triple."
 )
 
@@ -548,7 +548,7 @@ ML \<open>structure Embed_into_Phi_Type = Simpset (
                 |> chk_rewr' ctxt
                 |> Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
         end)
-  val binding = \<^binding>\<open>embed_into_\<phi>type\<close>
+  val binding = SOME \<^binding>\<open>embed_into_\<phi>type\<close>
   val comment = "Declare a rewrite rule that rewrites BI assertions into \<phi>-type embedding"
 )\<close>
 

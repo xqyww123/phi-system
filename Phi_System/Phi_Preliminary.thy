@@ -17,7 +17,7 @@ subsection \<open>Named Theorems\<close>
 
 ML \<open>structure Phi_Expansions = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = \<^binding>\<open>\<phi>expns\<close>
+  val binding = SOME \<^binding>\<open>\<phi>expns\<close>
   val comment = "Semantics Expansions, used to expand assertions semantically."
 )\<close>
 
@@ -26,13 +26,13 @@ declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 ML \<open>
 structure Phi_Programming_Simp_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>\<phi>programming_simps\<close>
+  val binding = SOME \<^binding>\<open>\<phi>programming_simps\<close>
   val comment = "Simplification rules used in low automation level, which is safer than usual"
 )
 
 structure Phi_Programming_Unsafe_Simp_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
-  val binding = \<^binding>\<open>\<phi>programming_unsafe_simps\<close>
+  val binding = SOME \<^binding>\<open>\<phi>programming_unsafe_simps\<close>
   val comment = "Simplification rules used in the deductive programming"
 )
 \<close>

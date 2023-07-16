@@ -94,6 +94,8 @@ declare [[\<phi>trace_reasoning = 0]]
     and    \<open>(\<And>a. a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
 
+thm \<phi>Dependent_Sum.unfold
+
 notation \<phi>Dependent_Sum (binder "\<Sigma>" 22)
         
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
@@ -116,7 +118,23 @@ lemma Set_Abstraction_single[\<phi>programming_simps, simp]:
   \<open>{x} \<Ztypecolon> \<S> T \<equiv> x \<Ztypecolon> T\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
-  
+
+paragraph \<open>Transformation\<close>
+
+lemma [\<phi>reason for \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T _\<close> (1000)
+                   \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T' _\<close> (100) ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = c
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> snd x \<Ztypecolon> T c\<close>
+  unfolding Transformation_def Premise_def
+  by (cases x; clarsimp)
+
+lemma [\<phi>reason for \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T _\<close> (1000)
+                   \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T' _\<close> (100) ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = c
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> snd x \<Ztypecolon> T c @action \<A>SE\<close>
+  unfolding Transformation_def Premise_def
+  by (cases x; clarsimp)
+
 
 subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
@@ -129,6 +147,18 @@ lemma apply_\<Sigma>_Homo\<^sub>E:
 \<Longrightarrow> x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c)\<close>
   unfolding \<Sigma>_Homo\<^sub>E_def Premise_def
   by blast
+
+
+paragraph \<open>Deriver\<close>
+
+lemma
+  \<open> (\<And>T x. Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D \<longrightarrow>
+        (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c)))
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> \<Sigma>_Homo\<^sub>E Fa Fb D \<sigma>\<close>
+
 
 
 subsubsection \<open>\<S>-Homomorphism\<close>
@@ -178,7 +208,7 @@ lemma [\<phi>reason_template default 40]:
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-
+ 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
