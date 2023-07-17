@@ -930,7 +930,7 @@ lemma [\<phi>reason 1000 \<phi>Application_opt_L \<phi>Application_opt_R for
   unfolding prop_def \<phi>Application_def Optimum_Among_def .
 *)
 
-lemma [\<phi>reason 80 for \<open>
+lemma [\<phi>reason 71 for \<open>
   PROP \<phi>Application (PROP ?App &&& PROP ?Apps) ?State ?Result
 \<close>]:
   \<open> PROP \<phi>Application (PROP App) State (PROP Result)
@@ -1003,6 +1003,7 @@ lemma \<phi>apply_user_antecedent:
 ) \<close>
 
 
+(*TODO!!! why not like \<forall>?*)
 lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application (Pure.all ?App) ?State ?Result
 \<close>]:
@@ -1104,6 +1105,7 @@ The construction in a ready state should always be specified by a simple MTF.
 
 paragraph \<open>Transformation Methods\<close>
 
+(* TODO: can I remove this?
 lemma [\<phi>reason 3000 for \<open>
   PROP \<phi>Application (Trueprop (?x \<Ztypecolon> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?x' \<Ztypecolon> ?X'))) ?Result
@@ -1115,8 +1117,9 @@ lemma [\<phi>reason 3000 for \<open>
       (Trueprop (CurrentConstruction mode blk R (x' \<Ztypecolon> X')))
       (Trueprop ((CurrentConstruction mode blk R T') \<and> P'))\<close>
   by simp
+*)
 
-lemma [\<phi>reason 3100 for \<open>
+lemma [\<phi>reason 1200 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1126,7 +1129,7 @@ lemma [\<phi>reason 3100 for \<open>
   unfolding \<phi>Application_def
   using \<phi>apply_implication .
 
-lemma [\<phi>reason 1500 for \<open>
+lemma [\<phi>reason 1100 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S))) ?Result
 \<close>]:
@@ -1136,7 +1139,7 @@ lemma [\<phi>reason 1500 for \<open>
   unfolding \<phi>Application_def
   using \<phi>apply_implication implies_left_prod by blast
 
-lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
+lemma \<phi>apply_transformation_fully[\<phi>reason 1000 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T' \<w>\<i>\<t>\<h> ?P))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1151,6 +1154,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
 
 paragraph \<open>View Shift Methods\<close>
 
+(*TODO: can I remove this?
 lemma [\<phi>reason 3000 for \<open>
   PROP \<phi>Application (Trueprop (?x \<Ztypecolon> ?X \<s>\<h>\<i>\<f>\<t>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?x' \<Ztypecolon> ?X'))) ?Result
@@ -1162,8 +1166,9 @@ lemma [\<phi>reason 3000 for \<open>
       (Trueprop (CurrentConstruction mode blk R (x' \<Ztypecolon> X')))
       (Trueprop ((CurrentConstruction mode blk R T') \<and> P'))\<close>
   by simp
+*)
 
-lemma \<phi>apply_view_shift_fast[\<phi>reason 1800 for \<open>
+lemma \<phi>apply_view_shift_fast[\<phi>reason 1200 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<s>\<h>\<i>\<f>\<t>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1173,7 +1178,7 @@ lemma \<phi>apply_view_shift_fast[\<phi>reason 1800 for \<open>
   unfolding \<phi>Application_def
   using "\<phi>apply_view_shift" .
 
-lemma [\<phi>reason 1500 for \<open>
+lemma [\<phi>reason 1100 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<s>\<h>\<i>\<f>\<t>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S))) ?Result
 \<close>]:
@@ -1183,7 +1188,7 @@ lemma [\<phi>reason 1500 for \<open>
   unfolding \<phi>Application_def
   using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame by blast
 
-lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
+lemma \<phi>apply_view_shift_fully[\<phi>reason 1000 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<s>\<h>\<i>\<f>\<t>\<s> ?T' \<w>\<i>\<t>\<h> ?P))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1199,7 +1204,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason for \<open>
 
 paragraph \<open>Procedure Methods\<close>
 
-lemma apply_proc_fast[\<phi>reason 2000 for \<open>
+lemma apply_proc_fast[\<phi>reason 1200 for \<open>
   PROP \<phi>Application (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?S \<longmapsto> ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))
           (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S)) ?Result
 \<close>  \<open>
@@ -1214,7 +1219,7 @@ lemma apply_proc_fast[\<phi>reason 2000 for \<open>
   using \<phi>apply_proc .
 
 
-lemma \<phi>apply_proc_fully[\<phi>reason for
+lemma \<phi>apply_proc_fully[\<phi>reason 1000 for
     \<open>PROP \<phi>Application (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?S' \<longmapsto> ?T' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))
             (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S)) ?Result\<close>
 ]:
@@ -1353,7 +1358,7 @@ lemma [\<phi>reason 1200 for \<open>
   by (metis View_Shift_def view_shift_by_implication)
 
 
-subsubsection \<open>Applying on Implication Mode\<close>
+subsubsection \<open>Applying on Transformation Mode\<close>
 
 lemma apply_cast_on_imply_exact[\<phi>reason 2000 for \<open>
   PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
@@ -1376,7 +1381,7 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
   unfolding \<phi>Application_def ToA_Construction_def
   using implies_left_prod by (metis Transformation_def)
 
-lemma [\<phi>reason 100 for \<open>
+lemma [\<phi>reason 1000 for \<open>
   PROP \<phi>Application (Trueprop (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'

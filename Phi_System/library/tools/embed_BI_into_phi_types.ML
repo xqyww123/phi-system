@@ -8,14 +8,21 @@ end
 
 structure Embed_into_Phi_Type = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS_configure (
-        let fun chk_rewr ctxt thm =
-              case Thm.concl_of thm
-                of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) => thm
-                 | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) => thm
-                 | Const(\<^const_name>\<open>Pure.eq\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) $ _ => Thm.symmetric thm
-                 | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) $ _) =>
-                        thm RS' (ctxt, @{thm' HOL.sym})
-                 | _ => raise THM ("Not a rewrite rule embedding BI assertions into \<phi>-types", 0, [thm])
+        let fun err thm = raise THM ("Not a rewrite rule embedding BI assertions into \<phi>-types", 0, [thm])
+            fun chk_rewr ctxt thm =
+              let fun no_abst (Abs _) = false
+                    | no_abst _ = true
+                  fun chkeq _ (_, Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) = thm
+                    | chkeq sym (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _, _) = sym thm
+                    | chkeq _ (A,B) = case (Term.fastype_of A, no_abst A, no_abst B)
+                                        of (\<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>, true, true) => thm
+                                         | _ => err thm
+                  fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
+                    | chk (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ Y) = chkeq Thm.symmetric (X, Y)
+                    | chk (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y) = chkeq (fn th => th RS' (ctxt, @{thm' HOL.sym})) (X, Y)
+                    | chk _ = err thm
+               in chk (Thm.concl_of thm)
+              end
             fun chk2 ctxt thm =
               let val (X,Y) = case Thm.concl_of thm
                                 of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ Y => (X,Y)
@@ -31,6 +38,7 @@ structure Embed_into_Phi_Type = Simpset (
                   handle THM _ => chk_rewr ctxt (Phi_Type_Algebra.conv_def_to_equaltion ctxt thm))
                     |> chk2 ctxt
          in Simplifier.set_mksimps (fn ctxt => fn thm => thm
+                |> Phi_Help.beta_eta_contract
                 |> chk_rewr' ctxt
                 |> Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
         end)

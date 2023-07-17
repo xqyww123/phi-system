@@ -651,7 +651,10 @@ val _ =
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>print_\<phi>reasoners\<close>
-    "print \<phi>reasoner matching the given pattern"
+    "print \<phi>reasoner matching the given pattern\n\
+    \No question mark: prints what reasoners will be attempted on the given task exactly\n\
+    \One question mark: pritns all reasoners whose binding patterns match the given term\n\
+    \Two question mark: prints all reasoners whose binding patterns are matched by the given pattern"
     (Parse.term -- (Scan.optional ((Args.query |-- Args.query >> K 2) ||
                                    (Args.query >> K 1)) 0)
    >> (fn (raw_pattern, power) =>
