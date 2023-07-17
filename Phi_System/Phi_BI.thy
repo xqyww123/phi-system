@@ -185,6 +185,29 @@ abbreviation SimpleTransformation :: " 'a BI \<Rightarrow> 'a BI \<Rightarrow> b
 
 subsubsection \<open>Reasoning Setup - I\<close>
 
+text \<open>There are two kinds of transformation rule
+
+\<^item> cast-rule: \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> U \<w>\<i>\<t>\<h> P(x)\<close> binding on \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> U \<w>\<i>\<t>\<h> _\<close>.
+  It specifies given a term \<open>x \<Ztypecolon> T\<close>, how to transform it into type \<open>U\<close> and what is the
+  resulted abstract object with any potential auxiliary facts \<open>P(x)\<close>.
+
+\<^item> intro-rule: \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g(y) \<Ztypecolon> U' \<w>\<i>\<t>\<h> P \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<and> Q(y)\<close> binding on
+  \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>
+    
+\<^item> elim-rule
+
+Among the rules generated from \<open>\<phi>type_def\<close>, only the cast-rules are registered and activated.
+Case-rule is point to point (from a specific type to another specific) so it is safe.
+The intro-rule and the elim-rule reduce the abstraction level.
+They cause the reasoning reduces to a lower level of abstraction.
+Users can always activate the rules at their discretion.
+
+Intro-rule and elim-rule can always be applied manually. It doesn't burden the user even a little because
+the rules are used only when opening and closing an abstraction, in the case that should only happens
+when building an interface or an internal operation of a data structure, where users can
+write the intro-rule and the elim-rule at the beginning and the end of the program without thinking a bit.
+\<close>
+
 ML \<open>val phi_allow_source_object_to_be_not_variable =
           Config.declare_bool ("phi_allow_source_object_to_be_not_variable", \<^here>) (K false)\<close>
 
@@ -859,8 +882,8 @@ declare [[
 ]]
 
 lemma ToA_by_Equive_Class
-      [\<phi>reason !1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
-                  except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
+      [\<phi>reason default 10 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
+                          except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Object_Equiv U eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
@@ -868,8 +891,8 @@ lemma ToA_by_Equive_Class
   unfolding Object_Equiv_def Transformation_def Premise_def by clarsimp
 
 lemma ToA_by_Equive_Class'
-      [\<phi>reason !1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>
-                   except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+      [\<phi>reason default 10 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+                          except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Object_Equiv U eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'

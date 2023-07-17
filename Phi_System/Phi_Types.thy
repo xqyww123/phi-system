@@ -23,7 +23,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
                      
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
@@ -75,8 +75,6 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-
-declare [[\<phi>trace_reasoning = 0]]
     
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
@@ -95,6 +93,14 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
 
 thm \<phi>Dependent_Sum.unfold
+thm \<phi>Dependent_Sum.intro
+
+
+
+
+print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> ? ?
+
+
 
 notation \<phi>Dependent_Sum (binder "\<Sigma>" 22)
         
@@ -869,7 +875,7 @@ subsubsection \<open>By Key\<close>
 
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
 
-declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 0]]
+declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
                                                                                                                                                                                              
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
@@ -898,7 +904,7 @@ thm List3.obj_eq
 *)
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
  
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
       
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
