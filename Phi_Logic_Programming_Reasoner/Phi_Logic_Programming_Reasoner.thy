@@ -290,7 +290,7 @@ text \<open>Attributes @{attribute_def \<phi>reason} is provided for introducing
     @{syntax_def add_rule}: @{syntax priority}?
     ('for' @{syntax patterns})? ('except' @{syntax blacklist})?
     ;
-    @{syntax_def priority}: (@{syntax nat} | '!')
+    @{syntax_def priority}: ((() | '?' | '!' | '!!' | 'default') @{syntax nat})
     ;
     @{syntax_def patterns}: (() + @{syntax term})
     ;
@@ -310,9 +310,16 @@ text \<open>Attributes @{attribute_def \<phi>reason} is provided for introducing
   Patterns can be omitted. For introduction rule, the default pattern is the conclusion
   of the rule; for elimination rule, the default is the first premise.
 
-\<^descr> @{syntax priority} can be a natural number or, an exclamation mark denoting the priority of
-  1000,000, i.e., the minimal priority for a global cut.
-  If the priority is not given explicitly, by default it is 100.
+\<^descr> @{syntax priority} is a natural number together with an option mode description.
+  '!' means the rule is a local cut, '!!' is for global cut, '?' for the normal rule with backtrack.
+  'default' is for those automatically generated rule able to be override by user easily.
+  The default priority is 100 with backtrack.
+
+  Once a rule is declared as 'default', it is only applied when there is no other applicable rules
+  of higher priority, even when the application of the rules fails.
+  When you declare a rule as 'default', you may ask yourself, if the users provide another rule of
+  a higher priority, and the rule fails, is your rule still expected to be applied? If it is true,
+  your rule should not be declared as 'default' but just a normal rule with backtrack.
 \<close>
 
 text \<open>\<^emph>\<open>Remark\<close>: Rules of priority $\geq$ 1000 are named \<^emph>\<open>confident rules\<close> and others are

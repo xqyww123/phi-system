@@ -381,10 +381,13 @@ structure Gen_Rule_SS = Simpset (
   val comment = "Rules simplifying the generated \<phi>functor reasoning rules."
 )
 
+fun normalize th = th
+  |> Phi_Help.beta_eta_contract
+  |> Drule.zero_var_indexes
+
 fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 ctxt =
   let val thy = Context.theory_of ctxt
-      val rule = Phi_Help.beta_eta_contract rule0
-              |> Drule.zero_var_indexes
+      val rule = normalize rule0
       fun get_prop_kinds (TM::L) =
            (case try (Term.head_of o HOLogic.dest_Trueprop) TM
               of SOME (Const (k, _)) =>
@@ -437,8 +440,7 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
                                                     Thm.string_of_thm ctxt' rule'2); x))
                           |> Phi_Help.instantiate_higher_order_schematic_var ~1 ctxt'
                           |> singleton (simplify ctxt') 
-                          |> Phi_Help.beta_eta_contract
-                          |> Drule.zero_var_indexes
+                          |> normalize
                 val _ = Phi_Reasoner.info_print ctxt' 1 (fn () =>
                             "Instantiate reasoning rule for \<phi>-type operator ")
              in Phi_Reasoner.add_intro_rule pos mode priority pats guard [rule'] ctxt
@@ -491,6 +493,9 @@ val _ = Theory.setup (
 (*** \<phi>-Type Definition \& Infos ***)
 
 val introN = "intro"
+val intro_reasoningN = "intro_reasoning" (*rules for reasoning*)
+val elimN = "elim"
+val elim_reasoningN = "elim_reasoning"
 val unfoldN = "unfold"
 val expansionN = "expansion"
 val open_abstractionN = "open_abstraction"
@@ -1108,7 +1113,8 @@ fun add_type (def, pos, dervs) generic =
                                                \Use partial simplification and induction rules.";
                                        filter_relevant_eqs name (#psimps info))))
               |> map (conv_def_to_equaltion ctxt
-                   #> Phi_Help.beta_eta_contract)
+                   #> normalize)
+      val tagged_eqs = map (Conv.fconv_rule (add_premise_tag ctxt)) eqs
 
       val is_recursive = exists (fn eq =>
             case Thm.concl_of eq
@@ -1152,34 +1158,45 @@ fun add_type (def, pos, dervs) generic =
       val cases_VS = SOME (mk_cases_rule eqs mk_cases_shift cases_origin term ctxt)
                      handle Unavailable => NONE*)
 
-      fun gen_from_eqs rule f =
+
+      fun gen_from_eqs rule f eq =
             map (fn eq => (eq RS' (ctxt, rule))
                        |> f
-                       |> Drule.zero_var_indexes
-                       |> Phi_Help.beta_eta_contract) eqs
+                       |> normalize) eq
       exception Auto_Fail
-      fun gen_from_eqs' rule f = SOME (gen_from_eqs rule f)
-                                 handle Auto_Fail => NONE
-      val intro_ToA = gen_from_eqs @{thm' \<phi>intro_transformation}
-                              (Conv.fconv_rule (add_premise_tag ctxt))
-      val intro'R_ToA = gen_from_eqs @{thm' \<phi>intro'_transformation}
-                              (Conv.fconv_rule (add_premise_tag ctxt))
-                        handle THM _ => []
+      val intro_ToA = gen_from_eqs @{thm' \<phi>intro_transformation} I tagged_eqs
+      val intro'R_ToA = gen_from_eqs @{thm' \<phi>intro'_transformation} I tagged_eqs
+                        handle THM _ => [] (*in case of not a separation magma*)
+      val elim_ToA = gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
-                              (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                           (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                                   Conv.arg_conv (Simplifier.rewrite (
                                       Phi_Expansions.enhance (Simplifier.clear_simpset ctxt)))
-                                ) ctxt))
-      val open_abstraction = gen_from_eqs' @{thm' \<phi>open_abstraction}
-                                (Phi_Reasoner.reason1 (fn () => (
-                                      warning "Fail to reason the rule of openning abstraction";
-                                      raise Auto_Fail))
-                                  (SOME 1) ctxt)
-                          |> Option.map (map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                                HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
-                                    Phi_Syntax.transformation_conv Conv.all_conv
-                                        (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
-                                        Conv.all_conv))) ctxt)))
+                                ) ctxt)) tagged_eqs
+
+      val eqs_in_type = SOME (map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+            HOLogic.Trueprop_conv (Conv.arg_conv (fn ctm =>
+              Phi_Conv.embed_BI_assertion ctxt ctm
+              handle CTERM (s, ctms) => (
+                warning (Pretty.string_of (Pretty.chunks (
+                    Pretty.str s :: map (Syntax.pretty_term ctxt o Thm.term_of) ctms
+                    @ [Pretty.str "As a consequence, fail to generate the \<open>open_abstraction\<close> \<open>elim_SE\<close> lemmas"]
+                  )));
+                raise Auto_Fail)
+            ))) ctxt)) tagged_eqs)
+          handle Auto_Fail => NONE
+
+      val open_abstraction = eqs_in_type
+            |> Option.map ( gen_from_eqs @{thm' \<phi>open_abstraction} I
+                         #> map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                            HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
+                                Phi_Syntax.transformation_conv Conv.all_conv
+                                    (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
+                                    Conv.all_conv))) ctxt)) )
+
+      val elim'SE_ToA = Option.map (fn eqs => gen_from_eqs @{thm' \<phi>elim'SE_transformation} I eqs
+                                              handle THM _ => []
+                        ) eqs_in_type
 
       val proof_id =
         case term of Const _ => fst name_ty
@@ -1204,15 +1221,19 @@ fun add_type (def, pos, dervs) generic =
           Phi_Types.map (Symtab.update_new (fst (raw_term_name_typ (Morphism.term m term)),
                                             morphism_phi_type m (phi_trim_context phi_type)))))
    |> Phi_Help.generic_theory_mapping (fn m =>
-        Phi_Reasoner.add_intro_rules (map (fn rule =>
+        let val expns = Morphism.fact m expansions
+         in
+        (*Phi_Reasoner.add_intro_rules (map (fn rule =>
             ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 30, [], [], NONE)
         ) ( (case open_abstraction of SOME x => x | _ => [])
           @ intro'R_ToA @ intro_ToA))
-     #> Phi_Expansions.add_simps (Morphism.fact m expansions)
-     #> Simplifier.map_ss (fn ctxt => ctxt addsimps expansions))
+     #>*) Phi_Expansions.add_simps expns #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
+       end)
    |> note_properties phi_type (
         (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @
-        [(unfoldN, eqs), (introN, intro_ToA), (expansionN, expansions)])
+        [(unfoldN, eqs), (introN, intro_ToA), (intro_reasoningN, intro_ToA @ intro'R_ToA),
+         (elimN, elim_ToA), (elim_reasoningN, elim_ToA @ the_default [] elim'SE_ToA),
+         (expansionN, expansions)])
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)
    |> derive_properties dervs phi_type

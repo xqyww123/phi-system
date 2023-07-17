@@ -192,9 +192,12 @@ text \<open>There are two kinds of transformation rule
   resulted abstract object with any potential auxiliary facts \<open>P(x)\<close>.
 
 \<^item> intro-rule: \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g(y) \<Ztypecolon> U' \<w>\<i>\<t>\<h> P \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<and> Q(y)\<close> binding on
-  \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>
+  \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> _\<close>. It specifies that, in order to obtain \<open>y \<Ztypecolon> U\<close>, it is sufficient to
+  obtain \<open>g(y) \<Ztypecolon> U'\<close>.
     
-\<^item> elim-rule
+\<^item> elim-rule: \<open>g(x) \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> Q(x)\<close> binding on
+  \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>. It specifies how could we open the abstraction of \<open>x \<Ztypecolon> T\<close> to obtain
+  whatever we want.
 
 Among the rules generated from \<open>\<phi>type_def\<close>, only the cast-rules are registered and activated.
 Case-rule is point to point (from a specific type to another specific) so it is safe.

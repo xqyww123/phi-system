@@ -1,7 +1,7 @@
 chapter \<open>Pre-built \<phi>-Types\<close>
 
 theory Phi_Types
-  imports IDE_CP_Reasoning2
+  imports Phi_Type_Algebra
 begin
 
 section \<open>Basics\<close>
@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-                     
+                       
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -33,6 +33,10 @@ declare [[\<phi>trace_reasoning = 1]]
        and Is_Functional
        and Trans_to_Raw_Abst
 
+thm \<phi>Fun.intro
+thm \<phi>Fun.intro_reasoning
+thm \<phi>Fun.elim
+thm \<phi>Fun.elim_reasoning
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -75,7 +79,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-    
+     
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
 
@@ -94,13 +98,16 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
 thm \<phi>Dependent_Sum.unfold
 thm \<phi>Dependent_Sum.intro
+thm \<phi>Dependent_Sum.elim
+thm \<phi>Dependent_Sum.expansion
+thm \<phi>Dependent_Sum.unfold
 
 
 
 
 print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> ? ?
 
-
+declare [[\<phi>trace_reasoning = 0]]
 
 notation \<phi>Dependent_Sum (binder "\<Sigma>" 22)
         
@@ -115,17 +122,58 @@ text \<open>Read it as 'the abstract object is certain element in the set'\<clos
 
 subsubsection \<open>Rules\<close>
 
-lemmas [\<phi>programming_simps] = Set_Abstraction.unfold
-                              \<phi>Dependent_Sum.unfold
+lemmas [\<phi>programming_simps, assertion_simps] =
+                    Set_Abstraction.unfold \<phi>Dependent_Sum.unfold
 
-declare \<phi>Dependent_Sum.unfold [gen_open_abstraction_simps]
+declare \<phi>Dependent_Sum.unfold [embed_into_\<phi>type]
 
-lemma Set_Abstraction_single[\<phi>programming_simps, simp]:
+lemma Set_Abstraction_single[\<phi>programming_simps, assertion_simps, simp, embed_into_\<phi>type]:
   \<open>{x} \<Ztypecolon> \<S> T \<equiv> x \<Ztypecolon> T\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
 
+declare [[\<phi>trace_reasoning = 1]]
+
+declare \<phi>Dependent_Sum.intro_reasoning(1)
+        [where x=\<open>(a,b)\<close> for a b, simplified,
+         \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_, _) \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>
+                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>]
+
+        \<phi>Dependent_Sum.intro_reasoning(2)
+        [where x=\<open>(a,b)\<close> for a b, simplified,
+         \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_, _) \<Ztypecolon> \<Sigma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]
+
+        \<phi>Dependent_Sum.elim_reasoning[\<phi>reason 1000]
+
+declare Set_Abstraction.intro_reasoning  [\<phi>reason 60 (*TODO 60*)]
+        Set_Abstraction.elim_reasoning(1)[\<phi>reason 1000]
+
+lemma [\<phi>reason 2800]:
+  \<open> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> fst x \<Longrightarrow> (a, snd x) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE P)
+\<Longrightarrow> x \<Ztypecolon> (\<S> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE P \<close>
+  unfolding Action_Tag_def Premise_def Transformation_def
+  by (cases x; clarsimp; blast)
+
+
+
+
+
+
+
+
+
+declare \<phi>Dependent_Sum.intro_reasoning[where x=\<open>(a,b)\<close> for a b, simplified, \<phi>reason add]
+
+thm \<phi>Dependent_Sum.elim_reasoning 
+thm \<phi>Dependent_Sum.intro_reasoning[where x=\<open>(a,b)\<close> for a b, simplified] 
+
+thm embed_into_\<phi>type
+
+
 paragraph \<open>Transformation\<close>
+
+
 
 lemma [\<phi>reason for \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T _\<close> (1000)
                    \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T' _\<close> (100) ]:
@@ -134,10 +182,13 @@ lemma [\<phi>reason for \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\
   unfolding Transformation_def Premise_def
   by (cases x; clarsimp)
 
+lemma
+  \<open> x \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>  \<close>
+
 lemma [\<phi>reason for \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T _\<close> (1000)
                    \<open>_ \<Ztypecolon> \<Sigma> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T' _\<close> (100) ]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = c
-\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> snd x \<Ztypecolon> T c @action \<A>SE\<close>
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> snd x \<Ztypecolon> T c @action \<A>SE True\<close>
   unfolding Transformation_def Premise_def
   by (cases x; clarsimp)
 
@@ -235,25 +286,28 @@ paragraph \<open>Simplification Rules\<close>
 
 lemmas [\<phi>programming_simps] = SubjectionTY.unfold
 
-lemma \<phi>\<s>\<u>\<b>\<j>_\<phi>\<s>\<u>\<b>\<j>[gen_open_abstraction_simps, simp]:
+lemma \<phi>\<s>\<u>\<b>\<j>_\<phi>\<s>\<u>\<b>\<j>[embed_into_\<phi>type, simp]:
   \<open>(T \<phi>\<s>\<u>\<b>\<j> P \<phi>\<s>\<u>\<b>\<j> Q) = (T \<phi>\<s>\<u>\<b>\<j> P \<and> Q)\<close>
   by (rule \<phi>Type_eqI; clarsimp)
 
-lemma [gen_open_abstraction_simps, \<phi>programming_simps]:
+lemma \<phi>\<s>\<u>\<b>\<j>_over_\<S>[\<phi>programming_simps]:
   \<open>\<S> (T \<phi>\<s>\<u>\<b>\<j> P) \<equiv> (\<S> T) \<phi>\<s>\<u>\<b>\<j> P\<close>
   unfolding atomize_eq
   by (rule \<phi>Type_eqI, simp, blast)
 
-lemma [gen_open_abstraction_simps, \<phi>programming_simps]:
+lemma \<phi>\<s>\<u>\<b>\<j>_over_\<Sigma>[\<phi>programming_simps]:
   \<open>\<Sigma> x. (T x \<phi>\<s>\<u>\<b>\<j> P) \<equiv> (\<Sigma> T) \<phi>\<s>\<u>\<b>\<j> P\<close>
   unfolding atomize_eq
   by (rule \<phi>Type_eqI, simp)
 
-lemma [gen_open_abstraction_simps, \<phi>programming_simps]:
+thm embed_into_\<phi>type
+
+lemma [\<phi>programming_simps]:
   \<open>y \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> y. r y \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. r y \<and> P\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp blast
 
+thm embed_into_\<phi>type
 
 paragraph \<open>Embedding into \<phi>-type\<close>
 

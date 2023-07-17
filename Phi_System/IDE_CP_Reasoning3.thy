@@ -399,10 +399,10 @@ declare [[\<phi>reason_default_pattern
 
 (*
 lemma SE_clean_waste:
-  \<open> x \<Ztypecolon> T \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> W \<w>\<i>\<t>\<h> P @action \<A>SE
+  \<open> x \<Ztypecolon> T \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> W \<w>\<i>\<t>\<h> P @action \<A>SE True
 \<Longrightarrow> R = R' @action clean_automation_waste
 \<Longrightarrow> W = W' @action clean_automation_waste
-\<Longrightarrow> x \<Ztypecolon> T \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> W' \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> W' \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   unfolding Action_Tag_def
   by simp *)
 
@@ -426,12 +426,12 @@ lemma SE_clean_waste':
 
 (*
 lemma SE_clean_waste':
-  \<open> x \<Ztypecolon> T \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> W \<w>\<i>\<t>\<h> (Reverse_Transformation RP (yr \<Ztypecolon> Ur \<^emph> Wr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xr \<Ztypecolon> Tr \<^emph> Rr \<w>\<i>\<t>\<h> Pr) \<and> P) @action \<A>SE
+  \<open> x \<Ztypecolon> T \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> W \<w>\<i>\<t>\<h> (Reverse_Transformation RP (yr \<Ztypecolon> Ur \<^emph> Wr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xr \<Ztypecolon> Tr \<^emph> Rr \<w>\<i>\<t>\<h> Pr) \<and> P) @action \<A>SE True
 \<Longrightarrow> R = R' @action clean_automation_waste
 \<Longrightarrow> W = W' @action clean_automation_waste
 \<Longrightarrow> rR = rR' @action clean_automation_waste
 \<Longrightarrow> rW = rW' @action clean_automation_waste
-\<Longrightarrow> x \<Ztypecolon> T \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> W' \<w>\<i>\<t>\<h> (Reverse_Transformation RP (yr \<Ztypecolon> Ur \<^emph> Wr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xr \<Ztypecolon> Tr \<^emph> Rr \<w>\<i>\<t>\<h> Pr) \<and> P) @action \<A>SE\<close>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> W' \<w>\<i>\<t>\<h> (Reverse_Transformation RP (yr \<Ztypecolon> Ur \<^emph> Wr \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xr \<Ztypecolon> Tr \<^emph> Rr \<w>\<i>\<t>\<h> Pr) \<and> P) @action \<A>SE True\<close>
   unfolding Action_Tag_def
   by simp
 *)
@@ -454,7 +454,7 @@ subsubsection \<open>Installation -- Rules initializing the SE reasoning\<close>
 
 lemma ToSA_by_structural_extraction:
   " Object_Equiv T eq
-\<Longrightarrow> Try Any ((y,w) \<Ztypecolon> U \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xr \<Ztypecolon> T \<^emph> R \<w>\<i>\<t>\<h> P2 @action \<A>SE)
+\<Longrightarrow> Try Any ((y,w) \<Ztypecolon> U \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xr \<Ztypecolon> T \<^emph> R \<w>\<i>\<t>\<h> P2 @action \<A>SE True)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (fst xr) x
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 \<heavy_comma> \<blangle> w \<Ztypecolon> W \<brangle> \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2\<heavy_comma> snd xr \<Ztypecolon> R\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<w>\<i>\<t>\<h> P1 \<and> P2"
@@ -515,7 +515,7 @@ subsubsection \<open>Terminations for Specific Node\<close>
 
 lemma [\<phi>reason 1200]:
   \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, ()) \<Ztypecolon> \<black_circle> U \<^emph> \<circle> \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, ()) \<Ztypecolon> \<black_circle> U \<^emph> \<circle> \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   unfolding Action_Tag_def \<r>Guard_def
   by (cases x; simp add: \<phi>Prod_expn' \<phi>Some_cast)
 
@@ -524,7 +524,7 @@ lemma [\<phi>reason 1201]:
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, ()) \<Ztypecolon> \<black_circle> U \<^emph> \<circle> \<w>\<i>\<t>\<h> (
       Reverse_Transformation (fst y' \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P')
         (y' \<Ztypecolon> \<black_circle> U' \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x', ()) \<Ztypecolon> \<black_circle> T' \<^emph> \<circle> \<w>\<i>\<t>\<h> P')
-    \<and> P) @action \<A>SE\<close>
+    \<and> P) @action \<A>SE True\<close>
   unfolding Action_Tag_def \<r>Guard_def Generated_Rule_def
   by (cases x; cases y'; simp add: \<phi>Prod_expn' \<phi>Some_cast)
 
@@ -536,7 +536,7 @@ The bellowing reasoning is too weak! *)
 (*TODO!*)
 lemma [\<phi>reason 1200]:
   \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+\<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   unfolding Action_Tag_def \<r>Guard_def
   apply (cases C; cases x; simp add: \<phi>Prod_expn')
   \<medium_left_bracket> premises A
@@ -550,7 +550,7 @@ lemma [\<phi>reason 1211]:
 \<Longrightarrow> x \<Ztypecolon> Agreement T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, fst x) \<Ztypecolon> Agreement U \<^emph> (Agreement T ?\<^sub>\<phi> C) \<w>\<i>\<t>\<h> (
       Reverse_Transformation (fst y' \<Ztypecolon> U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> snd y' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P') (
         y' \<Ztypecolon> Agreement U' \<^emph> (Agreement T' ?\<^sub>\<phi> C) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd y', ()) \<Ztypecolon> Agreement T' \<^emph> \<circle> \<w>\<i>\<t>\<h> P')
-    \<and> P) @action \<A>SE \<close>
+    \<and> P) @action \<A>SE True \<close>
   unfolding Action_Tag_def \<r>Guard_def Generated_Rule_def
   apply (rule implies_weaken[where P=P], defer_tac)
   apply (cases C; cases x; simp add: \<phi>Prod_expn')
@@ -699,8 +699,8 @@ lemma SE_Near_Semimodule_adcb[(*THEN SE_clean_waste,*) \<phi>reason_template add
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> c ##\<^sub>+ b \<and> a ##\<^sub>+ d
 \<Longrightarrow> Dx' T (fst x, fst (snd x))
 \<Longrightarrow> Dx T (z a d (fst x, fst (snd x)))
-\<Longrightarrow> (fst (uz c b (z a d (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz c b (z a d (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+\<Longrightarrow> (fst (uz c b (z a d (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz c b (z a d (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
   \<medium_left_bracket> premises _ and _ and _ and _ and [useful,simp] and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
     apply_rule apply_Near_Semimodule_Functor_zip_rev[where t=a and s=d and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
@@ -727,12 +727,12 @@ lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
       Reverse_Transformation RP (
           (fst x', snd (snd x')) \<Ztypecolon> F3' b U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> F1' b T' \<^emph> W' \<w>\<i>\<t>\<h> P')
       \<and> P)
-      @action \<A>SE
+      @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz c b (z a d (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> F1 c T \<^emph> R \<w>\<i>\<t>\<h> (
       Reverse_Transformation (Dx'' T' (fst y', fst (snd x')) \<and> Dx'c T' (z' c b (fst y', fst (snd x'))) \<and> RP) (
           x' \<Ztypecolon> F3' b U' \<^emph> F1' c T' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd (uz' a d (z' c b (fst y', fst (snd x')))), fst (uz' a d (z' c b (fst y', fst (snd x')))), snd y') \<Ztypecolon> F1' a T' \<^emph> F1' d T' \<^emph> W' \<w>\<i>\<t>\<h> P')
       \<and> P)
-    @action \<A>SE \<close>
+    @action \<A>SE True \<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close> and W' :: \<open>('c'::sep_ab_semigroup,'d') \<phi>\<close>
   unfolding Action_Tag_def
   apply (rule implies_weaken, defer_tac)
@@ -766,8 +766,8 @@ lemma SE_Near_Semimodule_dabc[(*THEN SE_clean_waste,*) \<phi>reason_template add
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> b ##\<^sub>+ c \<and> d ##\<^sub>+ a
 \<Longrightarrow> Dx' T (fst x,fst (snd x))
 \<Longrightarrow> Dx T (z d a (fst x, fst (snd x)))
-\<Longrightarrow> (snd (uz b c (z d a (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, fst (uz b c (z d a (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> F1 c T \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+\<Longrightarrow> (snd (uz b c (z d a (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, fst (uz b c (z d a (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> F1 c T \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
   \<medium_left_bracket> premises _ and _ and [useful,simp] and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
     apply_rule apply_Near_Semimodule_Functor_zip[where t=d and s=a and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
@@ -785,8 +785,8 @@ lemma [(*THEN SE_clean_waste,*) \<phi>reason_template add]:
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> d + b \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> d \<in> Ds \<and> d + b ##\<^sub>+ c \<and> d ##\<^sub>+ b
 \<Longrightarrow> Dx T (fst x)
 \<Longrightarrow> Dx T (snd (uz (d + b) c (fst x)))
-\<Longrightarrow> (fst (uz d b (snd (uz (d + b) c (fst x)))), snd x) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz d b (snd (uz (d + b) c (fst x)))), fst (uz (d + b) c (fst x)), snd y) \<Ztypecolon> F3 b U \<^emph> F1 d T \<^emph> F1 c T \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+\<Longrightarrow> (fst (uz d b (snd (uz (d + b) c (fst x)))), snd x) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz d b (snd (uz (d + b) c (fst x)))), fst (uz (d + b) c (fst x)), snd y) \<Ztypecolon> F3 b U \<^emph> F1 d T \<^emph> F1 c T \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
   \<medium_left_bracket> premises _ and a and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
     apply_rule apply_Near_Semimodule_Functor_unzip[where t=\<open>d + b\<close> and s=c and F=F1, folded a]
@@ -808,8 +808,8 @@ lemma [(*THEN SE_clean_waste,*) \<phi>reason_template add]:
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> d + a \<in> Ds \<and> d ##\<^sub>+ a \<and> d + a ##\<^sub>+ c
 \<Longrightarrow> Dx T (fst x,fst (snd x))
 \<Longrightarrow> Dx' T (z d a (fst x, fst (snd x)), fst (snd (snd x)))
-\<Longrightarrow> (z' (d + a) c (z d a (fst x, fst (snd x)), fst (snd (snd x))), snd (snd (snd x))) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> F1 c T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+\<Longrightarrow> (z' (d + a) c (z d a (fst x, fst (snd x)), fst (snd (snd x))), snd (snd (snd x))) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> F1 c T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
   \<medium_left_bracket> premises _ and _ and [useful,simp] and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
     apply_rule apply_Near_Semimodule_Functor_zip[where t=d and s=a and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
@@ -871,22 +871,22 @@ lemma [THEN SE_clean_waste', \<phi>reason 1153]:
 
 
 lemma Structural_Extract_\<phi>Map_L_norm_right [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   unfolding Action_Tag_def \<phi>MapAt_L_At .
 
 lemma Structural_Extract_\<phi>Map_L_norm_left [\<phi>reason 1200]:
-  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
   unfolding Action_Tag_def \<phi>MapAt_L_At .
 
 lemma [\<phi>reason 1211]:
   \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U \<^emph> R \<w>\<i>\<t>\<h>
       (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T' \<^emph> W' \<w>\<i>\<t>\<h> P')
-      \<and> P) @action \<A>SE
+      \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow> U \<^emph> R \<w>\<i>\<t>\<h>
       (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T' \<^emph> W' \<w>\<i>\<t>\<h> P')
-      \<and> P) @action \<A>SE\<close>
+      \<and> P) @action \<A>SE True\<close>
   unfolding Generated_Rule_def Action_Tag_def
   by (rule implies_weaken, defer_tac,
       rule Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def], assumption, clarify,
@@ -895,10 +895,10 @@ lemma [\<phi>reason 1211]:
 lemma [\<phi>reason 1211]:
   \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<w>\<i>\<t>\<h>
       (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T' \<^emph> W' \<w>\<i>\<t>\<h> P')
-      \<and> P) @action \<A>SE
+      \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<^emph> R \<w>\<i>\<t>\<h>
       (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow> T' \<^emph> W' \<w>\<i>\<t>\<h> P')
-      \<and> P) @action \<A>SE\<close>
+      \<and> P) @action \<A>SE True\<close>
   unfolding Generated_Rule_def Action_Tag_def
   by (rule implies_weaken, defer_tac,
       rule Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def], assumption, clarify,
@@ -1148,87 +1148,87 @@ subsubsection \<open>Optimization\<close>
 text \<open>The below rules are not necessary but reduce fragments in the result of the reasoning.\<close>
 
 lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+  \<open> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+  \<open> x \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 2011]:
   \<open> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h>
-        (Reverse_Transformation RP (x' \<Ztypecolon> (n \<odiv> T' \<^emph> n \<odiv> U') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE
+        (Reverse_Transformation RP (x' \<Ztypecolon> (n \<odiv> T' \<^emph> n \<odiv> U') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> R \<w>\<i>\<t>\<h>
-       (Reverse_Transformation RP (x' \<Ztypecolon> (n \<odiv> (T' \<^emph> U')) \<^emph>  W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE\<close>
+       (Reverse_Transformation RP (x' \<Ztypecolon> (n \<odiv> (T' \<^emph> U')) \<^emph>  W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 lemma [\<phi>reason 2011]:
   \<open> x' \<Ztypecolon> (n \<odiv> T' \<^emph> n \<odiv> U') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h>
-        (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE
+        (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True
 \<Longrightarrow> x' \<Ztypecolon> (n \<odiv> (T' \<^emph> U')) \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h>
-        (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE\<close>
+        (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True\<close>
   for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
 
 lemma [\<phi>reason 2000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
 lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  \<open> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
   for T :: \<open>('a::{share_one,sep_magma},'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
 lemma [\<phi>reason 2011]:
   \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h>
-        (Reverse_Transformation RP (y' \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE
+        (Reverse_Transformation RP (y' \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> U) \<^emph> R \<w>\<i>\<t>\<h>
-        (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE\<close>
+        (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
   for T :: \<open>('k \<Rightarrow> 'a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('k \<Rightarrow> 'aa::share_module_sep,'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
 lemma [\<phi>reason 2011]:
   \<open> x' \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE
+      (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True
 \<Longrightarrow> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE \<close>
+      (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True \<close>
   for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
 
 lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+  \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt_L .
 
 lemma [\<phi>reason 2011]:
   \<open> x \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T') \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE
+      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T') \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T') \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE\<close>
+      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T') \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
 lemma [\<phi>reason 2011]:
   \<open> y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T') \<^emph> W' \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (x \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE
+      (Reverse_Transformation RP (x \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True
 \<Longrightarrow> y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T') \<^emph> W' \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE\<close>
+      (Reverse_Transformation RP (x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True\<close>
   for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
@@ -1236,30 +1236,30 @@ lemma [\<phi>reason 2011]:
 
 lemma [\<phi>reason 2000]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   unfolding Premise_def by simp
 
 lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  \<open> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
   unfolding Action_Tag_def
   by (cases x; simp add: \<phi>Prod_expn'; metis Transformation_def Inhabited_def \<phi>Share_\<phi>Share \<phi>Share_inhabited set_mult_inhabited)
 
 lemma [\<phi>reason 2011]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ((m * n) \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y' \<Ztypecolon> ((m * n) \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE
+      (Reverse_Transformation RP (y' \<Ztypecolon> ((m * n) \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> m \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y' \<Ztypecolon> ((n \<odiv> m \<odiv> U') \<^emph> R') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE\<close>
+      (Reverse_Transformation RP (y' \<Ztypecolon> ((n \<odiv> m \<odiv> U') \<^emph> R') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
   unfolding Premise_def by simp
 
 lemma [\<phi>reason 2011]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
 \<Longrightarrow> x' \<Ztypecolon> ((m * n) \<odiv> T') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<^emph> R' \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE
+      (Reverse_Transformation RP (y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> ((m * n) \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True
 \<Longrightarrow> x' \<Ztypecolon> (n \<odiv> m \<odiv> T') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<^emph> R' \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE\<close>
+      (Reverse_Transformation RP (y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> m \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True\<close>
   unfolding Premise_def by simp
 
 
@@ -1269,30 +1269,30 @@ text \<open>After all of these normalization, if we encounter the requirement to
   a total permission.\<close>
 
 lemma Structural_Extract_pad_share_left
-  [\<phi>reason 2000 except \<open>_ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>SE\<close>]:
-  \<open> x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+  [\<phi>reason 2000 except \<open>_ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>SE True\<close>]:
+  \<open> x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   by simp
 
 lemma Structural_Extract_pad_share_right
-  [\<phi>reason 2000 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<w>\<i>\<t>\<h> _ @action \<A>SE\<close>]:
-  \<open> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph> W \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+  [\<phi>reason 2000 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<w>\<i>\<t>\<h> _ @action \<A>SE True\<close>]:
+  \<open> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph> W \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   by simp
 
 
-lemma [\<phi>reason 2011 except \<open>_ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>SE\<close>]:
+lemma [\<phi>reason 2011 except \<open>_ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>SE True\<close>]:
   \<open> x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (1 \<odiv> T') \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE
+      (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (1 \<odiv> T') \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE\<close>
+      (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
   by simp
 
-lemma [\<phi>reason 2011 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<w>\<i>\<t>\<h> _ @action \<A>SE\<close>]:
+lemma [\<phi>reason 2011 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (_ \<odiv> _) \<^emph> _ \<w>\<i>\<t>\<h> _ @action \<A>SE True\<close>]:
   \<open> y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (1 \<odiv> T') \<^emph> W' \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE
+      (Reverse_Transformation RP (x \<Ztypecolon> (1 \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True
 \<Longrightarrow> y' \<Ztypecolon> (n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE\<close>
+      (Reverse_Transformation RP (x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True\<close>
   by simp
 
 

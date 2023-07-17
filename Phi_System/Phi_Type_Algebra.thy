@@ -1,5 +1,5 @@
 theory Phi_Type_Algebra
-  imports IDE_CP_Applications1
+  imports IDE_CP_Reasoning2
   keywords "\<phi>type_def" "\<phi>property_deriver" :: thy_defn
        and "deriving" :: quasi_command
 begin
@@ -343,13 +343,30 @@ lemma \<phi>intro_transformation:
 
 lemma \<phi>intro'_transformation:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * (x \<Ztypecolon> T) \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
   by simp
 
-lemma \<phi>open_abstraction:
+lemma \<phi>elim_transformation:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] (y' \<Ztypecolon> U') : U
+\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma \<phi>elim'SE_transformation:
+  \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
+\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE \<A>
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE \<A>\<close>
+  by (cases x; simp add: \<phi>Prod_expn')
+
+(* TODO!!!:
+lemma \<phi>elim'SE_transformation:
+  \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U))
+\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> U \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Auto_Transform_Hint Y' (x' \<Ztypecolon> T') \<and> P @action \<A>SE True\<close>*)
+
+lemma \<phi>open_abstraction:
+  \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to OPEN_ABSTRACTION \<close>
   unfolding Action_Tag_def Simplify_def
   by simp
@@ -445,7 +462,7 @@ fun fib :: \<open>int \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat\<clo
 
 ML \<open>Function_Common.retrieve_function_data \<^context> \<^term>\<open>fib\<close>\<close>
 
-
+thm fib.elims
 
 
 

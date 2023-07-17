@@ -158,8 +158,8 @@ lemma \<phi>_cast[\<phi>reason add]:
   unfolding Transformation_def by (clarsimp simp add: \<phi>expns)
 
 lemma \<phi>_Structural_Extract:
-  \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
+  \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
+\<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
   unfolding Action_Tag_def
   by (simp add: \<phi>Prod_expn'[symmetric] \<phi>_Prod \<phi>_cast)
 
@@ -169,9 +169,9 @@ declare \<phi>_Structural_Extract[(*THEN SE_clean_waste,*) \<phi>reason 1200]
 
 lemma [(*THEN SE_clean_waste',*) \<phi>reason 1211]:
   \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE
+      (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> \<phi> T \<^emph> \<phi> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<^emph> \<phi> R \<w>\<i>\<t>\<h>
-      (Reverse_Transformation RP (y' \<Ztypecolon> \<phi> U' \<^emph> \<phi> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<phi> T' \<^emph> \<phi> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE\<close>
+      (Reverse_Transformation RP (y' \<Ztypecolon> \<phi> U' \<^emph> \<phi> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<phi> T' \<^emph> \<phi> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
   unfolding Generated_Rule_def Action_Tag_def
   by (rule implies_weaken, defer_tac,
       rule \<phi>_Structural_Extract[unfolded Action_Tag_def], assumption,
