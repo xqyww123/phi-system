@@ -108,13 +108,10 @@ signature NU_REASONER = sig
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
 
-  type rule_pass = Position.T
-              -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
-              -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+  type pass_data = thm list (*rules*) * (mode * priority) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+  type rule_pass = Position.T -> pass_data -> pass_data
   val get_passes : Context.generic -> term list -> (string * term * rule_pass) list
-  val run_passes : Position.T
-                -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
-                -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+  val run_passes : Position.T -> pass_data -> pass_data
   val add_pass : string (*identifier*) * pattern * rule_pass -> Context.generic -> Context.generic
 
   val setup_cmd : (((string (*name term*) * Position.T) * (mode * priority (*default priority*)))
@@ -747,9 +744,8 @@ val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>re
 
 (** Reasoning Rule Pass **)
 
-type rule_pass = Position.T
-              -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
-              -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+type pass_data = thm list (*rules*) * (mode * priority) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+type rule_pass = Position.T -> pass_data -> pass_data
 
 fun rule_pass_eq ((n1,_,_),(n2,_,_)) = (n1 = n2)
 structure Rule_Pass = Generic_Data (
@@ -786,10 +782,10 @@ fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
       = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
   | process_error_rule _ _ = true
 
-fun intro_reasoner ctxt0 pos mode0 (priority:priority) pats0 guard0 rules0 =
+fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
   let
-    val (rules01, mode, (patterns, blacklist), guard, ctxt) =
-            run_passes pos (rules0, mode0, pats0, guard0, ctxt0)
+    val (rules01, (mode, priority), (patterns, blacklist), guard, ctxt) =
+            run_passes pos (rules0, (mode0, priority0), pats0, guard0, ctxt0)
     val rules = rules01
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
              |> map ( Phi_Help.beta_eta_contract
@@ -853,6 +849,7 @@ fun intro_reasoner ctxt0 pos mode0 (priority:priority) pats0 guard0 rules0 =
 fun add_intro_rule pos mode priority pats guard rules ctxt =
       intro_reasoner ctxt pos mode priority pats guard rules
         |-> add
+
 fun add_intro_rules [] ctxt = ctxt
   | add_intro_rules rules ctxt =
       if null rules then ctxt

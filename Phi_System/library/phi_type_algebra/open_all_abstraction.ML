@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val trans_to_raw_abst : hint list -> Phi_Type_Algebra.derive
+val open_all_abstraction : hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -249,7 +249,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
     | _ => raise Automation_Fail ""
   end
 
-val trans_to_raw_abst = accept_one "Trans_to_Raw_Abst" gen_trans_to_raw_abst
+val open_all_abstraction = accept_one "Trans_to_Raw_Abst" gen_trans_to_raw_abst
 
 end
 

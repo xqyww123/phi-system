@@ -24,14 +24,14 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-                       
+
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where [\<phi>defs]: \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Implication
        and Is_Functional
-       and Trans_to_Raw_Abst
+       and Open_All_Abstraction
 
 thm \<phi>Fun.intro
 thm \<phi>Fun.intro_reasoning
@@ -81,7 +81,7 @@ declare [[\<phi>trace_reasoning = 1]]
   deriving Basic
        and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
-       and Trans_to_Raw_Abst
+       and Open_All_Abstraction
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
@@ -179,7 +179,7 @@ declare SubjectionTY_def[embed_into_\<phi>type del]
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        and Identity_Element
-       and Trans_to_Raw_Abst 
+       and Open_All_Abstraction 
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
@@ -296,6 +296,7 @@ lemma apply_\<Sigma>_Homo\<^sub>E:
   unfolding \<Sigma>_Homo\<^sub>E_def Premise_def
   by blast
 
+print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close> ? ?
 
 (*
 paragraph \<open>Deriver\<close>
@@ -865,7 +866,7 @@ lemma [\<phi>reason 10000]:
     (*Basic and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
-       and Trans_to_Raw_Abst*)
+       and Open_All_Abstraction*)
 
 
 

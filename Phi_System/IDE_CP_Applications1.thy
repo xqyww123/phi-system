@@ -11,6 +11,13 @@ theory IDE_CP_Applications1
       and "<split>" = "\<s>\<p>\<l>\<i>\<t>"
 begin
 
+section \<open>Convention\<close>
+
+text \<open>Priority:
+
+\<^item> 59: Fallback of Make Abstraction
+\<close>
+
 section \<open>Build Elements of Actions\<close>
 
 subsubsection \<open>Actions only for implication only\<close>
@@ -652,33 +659,6 @@ lemma [\<phi>reason 1200]:
   by (cases x; simp; blast)
 
 
-subsubsection \<open>Open Abstraction\<close>
-
-consts RAW :: \<open>('a,'b) \<phi>\<close> \<comment> \<open>destruct whom TODO! WIP!\<close>
-
-lemma open_abstraction_\<phi>app:
-  \<open> Friendly_Help TEXT(\<open>Just tell me which \<phi>-type you want to open.\<close> \<newline>
-      \<open>Input a lambda abstraction e.g. \<open>\<lambda>x. List (Box x)\<close> as a pattern where the lambda variable is the \<phi>-type you want to destruct.\<close>
-      \<open>I will match\<close> T \<open>with the pattern.\<close> \<newline>
-      \<open>You can also use an underscore to denote the target \<phi>-type in this pattern so you don't need to write a lambda abstraction, e.g. \<open>List (Box _)\<close>\<close>)
-\<Longrightarrow> \<p>\<a>\<r>\<a>\<m> target
-\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to (target RAW)
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
-  unfolding Do_def Action_Tag_def .
-
-ML \<open>
-structure Gen_Open_Abstraction_SS = Simpset (
-  val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = SOME \<^binding>\<open>gen_open_abstraction_simps\<close>
-  val comment = "Simplification rules used when generating open-abstraction rules"
-)
-\<close>
-
-setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
-          ctxt addsimprocs [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]
-               addsimps @{thms' HOL.simp_thms}))\<close>
-
-
 subsubsection \<open>Simplification\<close>
 
 text \<open>Potentially weakening transformations designed for simplifying state sequents of the CoP.
@@ -774,6 +754,8 @@ subsection \<open>Case Analysis\<close>
 
 consts \<A>case :: action
 
+subsubsection \<open>Framework\<close>
+
 ML \<open>fun mk_pattern_for_cases_analysis ctxt term =
   let val idx = Term.maxidx_of_term term + 1
       fun chk_P (X as Const(\<^const_name>\<open>True\<close>, _)) = Var(("P",idx), HOLogic.boolT)
@@ -801,7 +783,8 @@ hide_fact "_cases_app_rule_"
 
 \<phi>processor case_analysis 5000 (\<open>_\<close>) \<open> IDECP_Induct_Analysis.case_analysis_processor \<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+
+subsubsection \<open>Case Rules\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<s>\<h>\<i>\<f>\<t>\<s> Y
@@ -838,7 +821,7 @@ lemma [\<phi>reason 1000]:
   using implies_trans by fastforce
 
 lemma [\<phi>reason default 0]:
-  \<open> FAIL TEXT(\<open>Don't know how to case split\<close> X)
+  \<open> FAIL TEXT(\<open>Don't know how to case-split\<close> X)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>case\<close>
   by blast
 
@@ -851,23 +834,82 @@ lemma [\<phi>reason default 0]:
   unfolding Argument_def Action_Tag_def using \<phi>CASE_VS . *)
 
 
+subsection \<open>Open \* Make Abstraction\<close>
+
+
+subsubsection \<open>Open Abstraction\<close>
+
+consts RAW :: \<open>('a,'b) \<phi>\<close> \<comment> \<open>destruct whom TODO! WIP!\<close>
+
+lemma open_abstraction_\<phi>app:
+  \<open> Friendly_Help TEXT(\<open>Just tell me which \<phi>-type you want to open.\<close> \<newline>
+      \<open>Input a lambda abstraction e.g. \<open>\<lambda>x. List (Box x)\<close> as a pattern where the lambda variable is the \<phi>-type you want to destruct.\<close>
+      \<open>I will match\<close> T \<open>with the pattern.\<close> \<newline>
+      \<open>You can also use an underscore to denote the target \<phi>-type in this pattern so you don't need to write a lambda abstraction, e.g. \<open>List (Box _)\<close>\<close>)
+\<Longrightarrow> \<p>\<a>\<r>\<a>\<m> target
+\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to (target RAW)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  unfolding Do_def Action_Tag_def .
+
+ML \<open>
+structure Gen_Open_Abstraction_SS = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = SOME \<^binding>\<open>gen_open_abstraction_simps\<close>
+  val comment = "Simplification rules used when generating open-abstraction rules"
+)
+\<close>
+
+setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
+          ctxt addsimprocs [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]
+               addsimps @{thms' HOL.simp_thms}))\<close>
+
+
+subsubsection \<open>Make Abstraction\<close>
+
+definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> where \<open>MAKE X \<equiv> X\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason !59]:
+  \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> Y) 
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P\<close>
+  by blast
+
+lemma [\<phi>reason !59]: \<comment> \<open>Exactly higher than the entry point of Structural Extract\<close>
+  \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> Y) 
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P\<close>
+  by blast
+
+setup \<open>let
+  fun pass_check _ data = if #2 (#2 data) <= 59
+                          then error "The priority of a MAKE rule must be greater than 59!"
+                          else data
+in Context.theory_map (
+      Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _\<close>, pass_check)
+   #> Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close> ^ "'R", \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>, pass_check))
+end\<close>
+
+
+
+
 subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type by Definition\<close>
 
 consts \<A>_construct\<phi> :: \<open>'a BI \<Rightarrow> action\<close>
-       \<A>_destruct\<phi>  :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
+       (*\<A>_destruct\<phi>  :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>*)
 
 declare [[ \<phi>reason_default_pattern
       \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_construct\<phi> ?S\<close> \<Rightarrow>
       \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_construct\<phi> ?S\<close>    (100)
-  and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_destruct\<phi> ?T\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_destruct\<phi> ?T\<close>    (100)
+  (*and \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_destruct\<phi> ?T\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_destruct\<phi> ?T\<close>    (100)*)
 ]]
 
+(*
 lemma destruct\<phi>_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> T'
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> D \<w>\<i>\<t>\<h> P @action \<A>_destruct\<phi> T'
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> D \<w>\<i>\<t>\<h> P\<close>
-  unfolding Action_Tag_def .
+  unfolding Action_Tag_def .*)
 
 consts \<A>_construct\<phi>_ToSA :: \<open>'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> action\<close>
 

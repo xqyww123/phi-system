@@ -297,10 +297,10 @@ Priority:
 \<^item> 35-49: Transformations, To-Transformations
 \<^item> 40: \<^const>\<open>Identity_Element\<^sub>I\<close>, \<^const>\<open>Identity_Element\<^sub>E\<close>
       \<^const>\<open>Object_Equiv\<close>
-\<^item> 60: Construction \<^term>\<open>to T\<close> where \<open>T\<close> is the type just defined
+\<^item> 80: Construction \<^term>\<open>to T\<close> where \<open>T\<close> is the type just defined
 \<^item> 80: Implication \<^prop>\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>,
       \<^prop>\<open>Is_Functional (x \<Ztypecolon> T)\<close>
-      Trans_to_Raw_Abst \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself\<close>
+      Open_All_Abstraction \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself\<close>
 \<^item> 1000: Parameter_Variant_of_the_Same_Functor, Type_Variant_of_the_Same_Functor
 \<^item> 1100: \<^const>\<open>Transformation_Functor\<close>
 \<close>
@@ -365,8 +365,17 @@ lemma \<phi>open_abstraction:
   unfolding Action_Tag_def Simplify_def
   by simp
 
-lemma \<phi>construct_abstraction:
-  \<open> () \<close>
+lemma \<phi>make_abstraction:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def MAKE_def by simp
+
+lemma \<phi>make_abstraction'R:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def MAKE_def by simp
 
 lemma \<phi>gen_expansion:
   \<open> (x \<Ztypecolon> T) = U
@@ -1653,16 +1662,14 @@ lemma "_all_simps_plus_":
   "NO_MATCH (All Z) P' \<Longrightarrow> (P' \<and> (\<forall>x. Q' x)) = (\<forall>x. P' \<and> Q' x)"
   by blast+
 
-ML_file \<open>library/phi_type_algebra/trans_to_raw_abst.ML\<close>
+ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
 
-\<phi>property_deriver Trans_to_Raw_Abst 100 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
-                                            | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
+\<phi>property_deriver Open_All_Abstraction 100 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
+                                               | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
-    = \<open> Phi_Type_Algebra_Derivers.trans_to_raw_abst \<close>
+    = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction \<close>
 
-thm HOL.simp_thms
 
-(*hide_fact \<phi>TA_TrRA_rule \<phi>TA_TrRA_rewr*)
 
 subsubsection \<open>Is_Functional\<close>
 

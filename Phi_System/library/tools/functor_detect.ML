@@ -1176,7 +1176,7 @@ fun add_type (def, pos, dervs) generic =
                                       Phi_Expansions.enhance (Simplifier.clear_simpset ctxt)))
                                 ) ctxt)) tagged_eqs
 
-      val eqs_in_type = SOME (map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+      val tagged_eqs_in_type = SOME (map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
             HOLogic.Trueprop_conv (Conv.arg_conv (fn ctm =>
               Phi_Conv.embed_BI_assertion ctxt ctm
               handle CTERM (s, ctms) => (
@@ -1188,17 +1188,19 @@ fun add_type (def, pos, dervs) generic =
             ))) ctxt)) tagged_eqs)
           handle Auto_Fail => NONE
 
-      val open_abstraction = eqs_in_type
+      val open_abstraction = tagged_eqs_in_type
             |> Option.map ( gen_from_eqs @{thm' \<phi>open_abstraction} I
                          #> map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                             HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                                 Phi_Syntax.transformation_conv Conv.all_conv
                                     (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
                                     Conv.all_conv))) ctxt)) )
+      val make_abstraction = gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
+                           @ gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
 
       val elim'SE_ToA = Option.map (fn eqs => gen_from_eqs @{thm' \<phi>elim'SE_transformation} I eqs
                                               handle THM _ => []
-                        ) eqs_in_type
+                        ) tagged_eqs_in_type
 
       val proof_id =
         case term of Const _ => fst name_ty
@@ -1224,10 +1226,13 @@ fun add_type (def, pos, dervs) generic =
                                             morphism_phi_type m (phi_trim_context phi_type)))))
    |> Phi_Help.generic_theory_mapping (fn m =>
         let val expns = Morphism.fact m expansions
-         in Phi_Reasoner.add_intro_rules (map (fn rule =>
-                ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 30, [], [], NONE)
-            ) ( (case open_abstraction of SOME x => x | _ => []) ))
-         #> Phi_Expansions.add_simps expns #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
+            fun add_rules mode priority rules =
+                  Phi_Reasoner.add_intro_rules (map (fn rule =>
+                      ([Morphism.thm m rule], pos, mode, priority, [], [], NONE)) rules)
+         in add_rules Phi_Reasoner.TO_BE_OVERRIDE 30 (case open_abstraction of SOME x => x | _ => [])
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE 80 make_abstraction
+         #> Phi_Expansions.add_simps expns
+         #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
    |> note_properties phi_type (
         (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @
