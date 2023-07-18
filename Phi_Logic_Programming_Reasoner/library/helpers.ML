@@ -1,6 +1,9 @@
 signature PHI_HELP = sig
 
+val leading_antecedent' : thm -> term
+
 val pos_parser : string -> Position.T parser
+val beta_eta_conversion : conv
 val beta_eta_contract : thm -> thm
 val beta_eta_contract_cterm : cterm -> cterm
 
@@ -14,6 +17,8 @@ end
 structure Phi_Help : PHI_HELP = struct
 
 exception REQUIRE_LAMBDA_NORMLAIZTION
+
+fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))
 
 fun pos_parser name =
   let val msg = name ^ " cannot capture the position of your rule \
@@ -36,6 +41,11 @@ fun beta_eta_contract th =
 
 fun beta_eta_contract_cterm x =
   Thm.dest_arg (Thm.cprop_of (Drule.beta_eta_conversion x));
+
+fun beta_eta_conversion ctm =
+  if Term.could_beta_eta_contract (Thm.term_of ctm)
+  then Drule.beta_eta_conversion ctm
+  else Conv.all_conv ctm
 
 fun lambda_normalization_ctac S s =
   let fun fallback exn =

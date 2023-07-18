@@ -1222,12 +1222,10 @@ fun add_type (def, pos, dervs) generic =
                                             morphism_phi_type m (phi_trim_context phi_type)))))
    |> Phi_Help.generic_theory_mapping (fn m =>
         let val expns = Morphism.fact m expansions
-         in
-        (*Phi_Reasoner.add_intro_rules (map (fn rule =>
-            ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 30, [], [], NONE)
-        ) ( (case open_abstraction of SOME x => x | _ => [])
-          @ intro'R_ToA @ intro_ToA))
-     #>*) Phi_Expansions.add_simps expns #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
+         in Phi_Reasoner.add_intro_rules (map (fn rule =>
+                ([Morphism.thm m rule], pos, Phi_Reasoner.TO_BE_OVERRIDE, 30, [], [], NONE)
+            ) ( (case open_abstraction of SOME x => x | _ => []) ))
+         #> Phi_Expansions.add_simps expns #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
    |> note_properties phi_type (
         (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @

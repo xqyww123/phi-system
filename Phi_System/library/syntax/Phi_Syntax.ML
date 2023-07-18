@@ -26,6 +26,7 @@ include PHI_SYNTAX
 
   val dest_satisfaction : term -> term * term
 
+  val is_BI_connective : term -> bool
   val fold_items_of_assertion : (term -> 'a -> 'a) -> term -> 'a -> 'a
   val exists_item_of_assertion : (term -> bool) -> term -> bool
   val forall_item_of_assertion : (term -> bool) -> term -> bool
@@ -101,14 +102,27 @@ val dest_ToA_Construction_c =
 val dest_satisfaction =
       dest_tags #> dest_binop \<^const_name>\<open>Satisfaction\<close>
 
+fun is_BI_connective (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>Subjection\<close>, _)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>ExSet\<close>, _)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>\<phi>Type\<close>, _)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>Additive_Conj\<close>, _)) = true
+  | is_BI_connective (Const(\<^const_name>\<open>FOCUS_TAG\<close>, _)) = true
+  | is_BI_connective (A $ _) = is_BI_connective A
+  | is_BI_connective _ = false
+
 (*including all \<phi>-type terms and atomic predicates*)
 fun fold_items_of_assertion f =
-  let fun fold (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>set _\<close>) $ A $ B) x = fold A (fold B x)
+  let fun fold (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) x = fold A (fold B x)
         | fold (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) x = fold X x
         | fold (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) x = fold X x
         | fold (Abs (_, _, X)) x = fold X x
         | fold (X as (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) x = f X x
-        | fold (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>set _\<close>) $ A $ B) x = fold A (fold B x)
+        | fold (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>set _\<close>\<close>\<close>) $ A $ B) x = fold A (fold B x)
         | fold (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) x = x
         | fold (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) x = x

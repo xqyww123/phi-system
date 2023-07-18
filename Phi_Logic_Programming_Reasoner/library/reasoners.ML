@@ -317,16 +317,17 @@ fun intro_all_leading_ex i thm =
 
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
-fun auto_obligation_solver ctxt th =
-  case major_prem_of th
-    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-          Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _)) =>
-            Seq.single (@{thm Premise_True} RS th)
-     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>True\<close>, _) =>
-          Seq.single (@{thm TrueI} RS th)
+fun auto_obligation_solver ctxt th = Seq.make (fn () =>
+  case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th)
+    of SOME (_, Const (\<^const_name>\<open>True\<close>, _)) =>
+            SOME (@{thm Premise_True} RS th, Seq.empty)
+     | SOME (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Var _) => SOME (@{thm Premise_refl} RS th, Seq.empty)
+     | SOME (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Var _ $ _) => SOME (@{thm Premise_refl} RS th, Seq.empty)
      | _ => head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
                 pre THEN HEADGOAL (Method.insert_tac ctxt aux)
                     THEN Clasimp.auto_tac ctxt) Agressive_Solver) th
+             |> Seq.pull
+)
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
 
@@ -348,33 +349,43 @@ fun auto_obligation_solver1 ctxt sequent =  (
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-fun safer_obligation_solver ctxt th0 =
-  let val th = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th0
-   in case try PLPR_Syntax.dest_premise_tag (major_prem_of th)
-        of SOME (_, \<^const>\<open>True\<close>) => Seq.single (@{thm Premise_True} RS th)
-         | SOME _ => apply ctxt (fn (ctxt,pre,aux,_) =>
-                        pre THEN HEADGOAL (fn s => fn x => Clasimp.clarsimp_tac (ctxt addsimps aux) s x)) Safe_Solver th
-         | NONE => Seq.single th
-  end
+fun safer_obligation_solver ctxt th = Seq.make (fn () =>
+  case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th)
+    of SOME (_, Const(\<^const_name>\<open>True\<close>, _)) => SOME (@{thm Premise_True} RS th, Seq.empty)
+     | SOME (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Var _) => SOME (@{thm Premise_refl} RS th, Seq.empty)
+     | SOME (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Var _ $ _) => SOME (@{thm Premise_refl} RS th, Seq.empty)
+     | SOME _ =>
+        let val th' = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
+         in apply ctxt (fn (ctxt,pre,aux,_) =>
+               pre THEN HEADGOAL (fn s => fn x => Clasimp.clarsimp_tac (ctxt addsimps aux) s x)) Safe_Solver th'
+         |> Seq.pull
+        end
+     | NONE => SOME (th, Seq.empty)
+)
 
 val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver
 
 fun safer_obligation_solver1 ctxt sequent =
-  case Thm.major_prem_of sequent
+  safer_obligation_solver' (fn _ =>
+    error (Pretty.string_of (Pretty.chunks [
+        Pretty.str "Fail to solve the proof obligation automatically:",
+        Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
+  ]))) (ctxt addsimps @{thms Premise_def}) sequent
+(*case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>Premise\<close> $ _ $ Goal) => (
-        Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
+        (*Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
             Pretty.str "Solving the following goal using \<open>clarsimp\<close> method...",
             Syntax.pretty_term ctxt Goal,
             Pretty.block (Pretty.here \<^here>)
-        ]);
+        ]); *)
         safer_obligation_solver' (fn _ =>
           error (Pretty.string_of (Pretty.chunks [
               Pretty.str "Fail to solve the proof obligation automatically:",
-              Syntax.pretty_term ctxt Goal
+              Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
         ]))) (ctxt addsimps @{thms Premise_def}) sequent
      )
      | _ => raise THM ("auto_obligation_solver1: The leading antecedent of the given sequent \
-              \is not a proof obligation.", 1, [sequent])
+              \is not a proof obligation.", 1, [sequent])*)
 
 
 

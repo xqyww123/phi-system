@@ -22,7 +22,6 @@ include PHI_HELP
   val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
                               * term list (*premises of the antecedent*)
                               * term (*conclusion containing loose bound*)
-  val leading_antecedent' : thm -> term
   val leading_antecedent : term -> (string * typ) list (*quantified variables*)
                                  * term list (*premises of the antecedent*)
                                  * term (*conclusion containing loose bound*)
@@ -151,8 +150,6 @@ fun front [] = raise Fail "front"
 fun repeat f x = repeat f (f x) handle TERM _ => x | CTERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
-
-fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))
 
 fun strip_meta_hhf term =
   let

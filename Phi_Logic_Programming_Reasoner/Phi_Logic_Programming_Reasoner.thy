@@ -767,8 +767,7 @@ structure Useful_Thms = Named_Thms (
   val name = \<^binding>\<open>useful\<close>
   val description = "theorems to be inserted in the automatic proving, \
         \having the same effect of using the @{command using} command."
-)
-\<close>
+)\<close>
 
 setup \<open>Useful_Thms.setup\<close>
 

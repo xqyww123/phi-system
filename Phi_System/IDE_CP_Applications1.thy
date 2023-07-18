@@ -268,21 +268,28 @@ lemma [\<phi>reason 1020]:
   using implies_right_prod .
 
 lemma [\<phi>reason 1010]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
 \<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> Q @action \<A>_every_item' A
-\<Longrightarrow> R * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_every_item' A\<close>
+\<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_every_item' A\<close>
   unfolding Action_Tag_def
   using implies_prod_bi_prod .
 
-lemma [\<phi>reason 1005]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
   unfolding Action_Tag_def .
 
+lemma [\<phi>reason 1020]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
+\<Longrightarrow> \<blangle> X \<brangle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
+  unfolding FOCUS_TAG_def .
+
+
+(*
 lemma [\<phi>reason 1000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>_every_item' A\<close>
   unfolding Action_Tag_def by simp
-
+*)
 
 subsubsection \<open>Actions of multi-arity\<close>
 
@@ -682,7 +689,8 @@ text \<open>Potentially weakening transformations designed for simplifying state
   Doing this simplification in the framework of To-Transformation benefits it by reusing the
   To-Transformation support in transformation functors, which brings the simplification into the elements.
 
-  The simplification is indolent for the sake of performance, and is applied only when the state sequent
+  The simplification is very heavy.
+  For the sake of performance, it is indolent and is applied only when the state sequent
   needs the simplification. There is a mechanism to detect such need. The default strategy is,
   we collect all the registered simplification rules, get the pattern of the source type of the
   transformations, and if the types of a state sequent match any of a pattern, the simplification
@@ -711,6 +719,28 @@ lemma \<A>simp_chk_go:
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>chk_need_simp \<close>
   unfolding Action_Tag_def .
 
+lemma \<A>simp_trans:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to MODE_SIMP
+\<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w y z @action to MODE_SIMP)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. (\<exists>y. r y \<and> w y z) @action to MODE_SIMP \<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp blast
+
+lemma \<A>simp_trans':
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' @action to MODE_SIMP
+\<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @action to MODE_SIMP
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @action to MODE_SIMP \<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp
+
+lemma \<A>simp_trans'P:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' \<and> P y @action to MODE_SIMP
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y' \<Longrightarrow> y' \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z @action to MODE_SIMP)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Z \<s>\<u>\<b>\<j> z. w z \<and> P y' @action to MODE_SIMP \<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp
+
+
 ML_file \<open>library/tools/CoP_simp.ML\<close>
 
 \<phi>reasoner_ML \<A>chk_need_simp 1000 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>chk_need_simp\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
@@ -724,6 +754,20 @@ ML_file \<open>library/tools/CoP_simp.ML\<close>
 lemma [\<phi>reason default 5]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action to MODE_SIMP\<close>
   unfolding Action_Tag_def by simp
+
+lemma [\<phi>reason default 4 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to MODE_SIMP\<close>]:
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action to MODE_SIMP\<close>
+  unfolding Action_Tag_def by simp
+
+\<phi>processor \<phi>transformation_based_simplifier 101 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S\<close>)
+  \<open>fn (ctxt,sequent) => Scan.succeed (fn _ =>
+    case Phi_Working_Mode.mode ctxt
+      of SOME mode => raise Bypass (SOME (ctxt, Phi_CoP_Simp.invoke_when_needed (ctxt,mode) sequent))
+       | NONE => raise Bypass NONE)\<close>
+
+setup \<open>Config.put_global Phi_CoP_Simp.enable_rule_pass true\<close>
+    (*Enable it until the internal rules are registered as it will modify the rules under the table.
+      It modifies any rule in form \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> into \<open>Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?? \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ??\<close>*)
 
 
 subsection \<open>Case Analysis\<close>

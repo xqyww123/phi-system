@@ -1,6 +1,7 @@
 signature PLPR_SYNTAX = sig
 
 val dest_premise_tag : term -> term * term
+val dest_premise_tag_opt : term -> (term * term) option
 val dest_premise_tag_c : cterm -> cterm * cterm
 val add_premise_tag_conv : cterm (*mode*) -> conv
 val premise_tag_conv : conv -> conv
@@ -29,6 +30,10 @@ val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
 val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try HOLogic.dest_Trueprop)
 val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
+
+fun dest_premise_tag_opt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_premise_tag_opt X
+  | dest_premise_tag_opt (Const(\<^const_name>\<open>Premise\<close>, _) $ tag $ X) = SOME (tag, X)
+  | dest_premise_tag_opt _ = NONE
 
 fun add_premise_tag_conv mode =
   let val rule = Thm.instantiate (TVars.empty, Vars.make [((("mode",0),\<^typ>\<open>mode\<close>),mode)])

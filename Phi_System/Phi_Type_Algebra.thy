@@ -790,6 +790,15 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   unfolding Action_Tag_def
   using transformation .
 
+lemma [\<phi>TA_internal_simplify_special_cases,
+       \<phi>reason default 42]:
+  \<open> Prem
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to MODE_SIMP)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to MODE_SIMP \<close>
+  unfolding Action_Tag_def Premise_def
+  using transformation[unfolded Premise_def] .
+
 end
   
 lemma [\<phi>reason_template default 53 requires Separation_Homo\<^sub>E]:

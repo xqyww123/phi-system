@@ -23,12 +23,13 @@ signature NU_REASONER = sig
        appliable higher rules.
  *)
 
+  datatype tactic = Tac_ML of context_state -> context_state Seq.seq | Tac_Rule of thm list
   type reasoner = {name: term,
-                 pos: Position.T,
-                 mode: mode,
-                 pattern: (term * int) list,
-                 blacklist: term list,
-                 tactic: (context_state -> context_state Seq.seq)}
+                   pos: Position.T,
+                   mode: mode,
+                   pattern: (term * int) list,
+                   blacklist: term list,
+                   tactic: tactic}
 
 
   val trace : int Config.T (*Prints the state of every reasoning step.*)
@@ -63,9 +64,14 @@ signature NU_REASONER = sig
   val has_reasoner : term -> (reasoner -> bool) -> Context.generic -> bool
   val reasoners : Proof.context -> reasoners
   val content : reasoners -> reasoner list
+  (*val call_reasoners : reasoners -> Proof.context -> *)
   val get_reasoners : theory -> reasoners
                    -> term (*pattern*) -> reasoner list
+  (*a faster version but a bit dirty*)
+  val get_reasoners' : theory -> reasoners
+                   -> term (*pattern*) -> (priority * pattern * serial (*reasoner id*) * reasoner) list
   val pretty : Proof.context -> reasoner -> Pretty.T
+  val apply_tactic : tactic -> context_state -> context_state Seq.seq
   (*val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list*)
 
   (* Interfaces for Reasoning *)
@@ -109,7 +115,7 @@ signature NU_REASONER = sig
   val run_passes : Position.T
                 -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
                 -> thm list (*rules*) * mode * ((pattern * priority option) list * pattern list) * guard option * Context.generic
-  val add_pass : string * term * rule_pass -> Context.generic -> Context.generic
+  val add_pass : string (*identifier*) * pattern * rule_pass -> Context.generic -> Context.generic
 
   val setup_cmd : (((string (*name term*) * Position.T) * (mode * priority (*default priority*)))
                    * ((bool (*true for matching, false for not matching*)
@@ -161,12 +167,13 @@ type action = cterm
 datatype mode = NORMAL (*can backtrack*) | LOCAL_CUT | GLOBAL_CUT | TO_BE_OVERRIDE
 (*TO_BE_OVERRIDE: The rule is applied only when no rules of higher priority are matched.*)
 
+datatype tactic = Tac_ML of context_state -> context_state Seq.seq | Tac_Rule of thm list
 type reasoner = {name: term,
                  pos: Position.T,
                  mode: mode,
                  pattern: (term * int) list,
                  blacklist: term list,
-                 tactic: (context_state -> context_state Seq.seq)}
+                 tactic: tactic}
 
 val trick = map_aterms (fn Var ((s,i),T) => Var ((s, if String.isPrefix "var_" s orelse s = "var"
                                                      then ~i - 1 else i),T)
@@ -352,6 +359,32 @@ fun add_lthy reasoner =
 
 (*** Implementing Functions ***)
 
+(* Auxiliary Helpers *)
+
+fun chop_seq_head' seq =
+  case Seq.chop 2 seq
+    of ([ret], _) => SOME ret
+       | ([], _) => NONE
+       | (ret::_, _) => (warning "Multi Resolution! For performance consideration, PLPR only takes\
+                                 \ the first solution and discards the remains.";
+                         SOME ret)
+
+fun chop_seq_head seq =
+  Seq.make (fn _ => Option.map (rpair Seq.empty) (chop_seq_head' seq))
+
+fun single_RS' rule ctxt thm =
+  Thm.biresolution (SOME ctxt) false [(false,rule)] 1 thm
+    |> chop_seq_head'
+
+fun single_RS rule ctxt thm =
+  Seq.make (fn _ => Option.map (rpair Seq.empty) (single_RS' rule ctxt thm))
+
+
+fun name_of_intro_reasoner rules =
+  (*Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ *) Logic.mk_conjunction_list (map Thm.prop_of rules)
+
+type guard = context_state -> bool
+
 (* Main Reasoning Function *)
 
 fun debug ctxt (c,_,_,({name,...} : reasoner)) =
@@ -396,6 +429,10 @@ fun distinct_rev eq lst =
           else dist (x :: rev_seen, xs);
   in dist ([], lst) end;
 
+fun apply_tactic (Tac_ML tac) s = tac s
+  | apply_tactic (Tac_Rule rules) (ctxt,sequent) =
+           Seq.of_list rules
+        |> Seq.map_filter (fn rule => Option.map (pair ctxt) (single_RS' rule ctxt sequent))
 
 fun get_reasoners' thy tactics term =
   Net.match_term tactics term
@@ -422,6 +459,7 @@ fun has_reasoner pattern filter ctxt =
   Net.match_term (Reasoners.get ctxt) pattern
     |> exists (fn (_,_,_,r) => filter r)
 
+(*
 fun gen_call_reasoners trace score tactics ctxt th =
   Thm.major_prem_of th
     |> Envir.beta_eta_contract
@@ -429,7 +467,7 @@ fun gen_call_reasoners trace score tactics ctxt th =
     |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
     |> map (fn (priority, _, _, r : reasoner) =>
           (priority + score, #pos r, #mode r, #tactic r (ctxt,th)
-                    (* Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))) *)))
+                    (* Seq.make (fn () => Seq.pull (#tactic r (ctxt,th))) *))) *)
     (*|> map_filter (fn (priority, _, _, r : reasoner) =>
         case #mode r
           of GLOBAL_CUT =>
@@ -457,7 +495,14 @@ fun gen_call_reasoners trace score tactics ctxt th =
 fun call_reasoners' trace score N ctxt tactics th =
   if Thm.nprems_of th <= N
   then raise Success (ctxt, th)
-  else gen_call_reasoners trace score tactics ctxt th
+  else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
+                     then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
+                     else th
+    in get_reasoners' (Proof_Context.theory_of ctxt) tactics (Thm.major_prem_of th')
+          |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
+          |> map (fn (priority, _, _, r : reasoner) =>
+                (priority + score, #pos r, #mode r, apply_tactic (#tactic r) (ctxt,th')))
+   end
 
 (*fun call_reasoners (ctxt,th) =
   gen_call_reasoners (Config.get ctxt trace) (Reasoners.get (Context.Proof ctxt)) ctxt th *)
@@ -587,7 +632,7 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (ctxt,thm) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
   in add_lthy {name=name', pos=Binding.pos_of name, mode=mode,
-               pattern=pos_pats, blacklist=neg_pats, tactic=method'''} lthy'
+               pattern=pos_pats, blacklist=neg_pats, tactic= Tac_ML method'''} lthy'
   end
 
 fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
@@ -610,9 +655,9 @@ fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
          ML_Lex.read (print_mode_ML mode) @ ML_Lex.read "), pattern=(" @
          ML_Lex.read (print_list (print_pair print_term print_int) pos_pats) @
          ML_Lex.read "), blacklist=(" @ ML_Lex.read (print_list print_term neg_pats) @
-         ML_Lex.read "), tactic=(let in " @
+         ML_Lex.read "), tactic= Phi_Reasoner.Tac_ML ((let in " @
          ML_Lex.read_source tactic_src @
-         ML_Lex.read (" end):(context_state -> context_state Seq.seq)})"))
+         ML_Lex.read (" end) : context_state -> context_state Seq.seq)})"))
     )
   end
 
@@ -683,31 +728,7 @@ val _ =
 
 (*** Reasoner for Reasoning Rule ***)
 
-(** Auxiliary Helpers **)
 
-fun chop_seq_head' seq =
-  case Seq.chop 2 seq
-    of ([ret], _) => SOME ret
-       | ([], _) => NONE
-       | (ret::_, _) => (warning "Multi Resolution! For performance consideration, PLPR only takes\
-                                 \ the first solution and discards the remains.";
-                         SOME ret)
-
-fun chop_seq_head seq =
-  Seq.make (fn _ => Option.map (rpair Seq.empty) (chop_seq_head' seq))
-
-fun single_RS' rule ctxt thm =
-  Thm.biresolution (SOME ctxt) false [(false,rule)] 1 thm
-    |> chop_seq_head'
-
-fun single_RS rule ctxt thm =
-  Seq.make (fn _ => Option.map (rpair Seq.empty) (single_RS' rule ctxt thm))
-
-
-fun name_of_intro_reasoner rules =
-  (*Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ *) Logic.mk_conjunction_list (map Thm.prop_of rules)
-
-type guard = context_state -> bool
 
 (** Default Pattern **)
 
@@ -771,7 +792,9 @@ fun intro_reasoner ctxt0 pos mode0 (priority:priority) pats0 guard0 rules0 =
             run_passes pos (rules0, mode0, pats0, guard0, ctxt0)
     val rules = rules01
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
-             |> map Thm.trim_context
+             |> map ( Phi_Help.beta_eta_contract
+                   #> Drule.zero_var_indexes
+                   #> Thm.trim_context )
     val _ = if null rules then error ("No rule is given!") else ()
     val pats = if null patterns
                then case rules
@@ -815,25 +838,27 @@ fun intro_reasoner ctxt0 pos mode0 (priority:priority) pats0 guard0 rules0 =
       case guard of NONE => tactic rules
                   | SOME G => let val tac = tactic rules
                                in (fn s => if G s then tac s else Seq.empty) end
-
-  in({name = name_of_intro_reasoner rules,
-      pos = pos,
-      mode = mode,
-      pattern = pats,
-      blacklist = blacklist,
-      tactic = guarded_tac rules_with_flag
-      },
-    ctxt)
+    val tac = if is_none guard andalso forall (not o snd) rules_with_flag
+              then Tac_Rule rules
+              else Tac_ML (guarded_tac rules_with_flag)
+  in ({name = name_of_intro_reasoner rules,
+       pos = pos,
+       mode = mode,
+       pattern = pats,
+       blacklist = blacklist,
+       tactic = tac},
+     ctxt)
   end
 
 fun add_intro_rule pos mode priority pats guard rules ctxt =
       intro_reasoner ctxt pos mode priority pats guard rules
         |-> add
-fun add_intro_rules rules ctxt =
-  if null rules then ctxt
-  else fold_map (fn (rule,pos,mode,priority,pattern,blacklist,guard) => fn ctxt =>
-                intro_reasoner ctxt pos mode priority (pattern,blacklist) guard rule) rules ctxt
-        |-> adds
+fun add_intro_rules [] ctxt = ctxt
+  | add_intro_rules rules ctxt =
+      if null rules then ctxt
+      else fold_map (fn (rule,pos,mode,priority,pattern,blacklist,guard) => fn ctxt =>
+                    intro_reasoner ctxt pos mode priority (pattern,blacklist) guard rule) rules ctxt
+            |-> adds
 
 (** Interfaces **)
 

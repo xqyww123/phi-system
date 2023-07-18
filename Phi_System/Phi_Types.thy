@@ -74,6 +74,8 @@ declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
 
 subsection \<open>Embedding Subjection into Type\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -112,7 +114,9 @@ text \<open>Here we construct two inner transformations from \<open>a \<Ztypecol
   The constraints checks 1. if the identity transformation is supported (a very weak requirement),
         2. the container is always non-empty so that an independent assertion \<open>P\<close> bound at the element
            type is valid globally (this is a necessary condition).  \<close>
-lemma move_\<phi>\<s>\<u>\<b>\<j>_over_typ_operator:
+
+
+lemma \<phi>\<s>\<u>\<b>\<j>_Homo:
   \<open> Transformation_Functor Fa Fa D R mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a. a \<in> D x \<and> P \<longrightarrow> a \<in> R x) \<and> (\<forall>y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P)
 \<Longrightarrow> (x \<Ztypecolon> Fa (T \<phi>\<s>\<u>\<b>\<j> P)) \<equiv> (x \<Ztypecolon> Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
@@ -131,35 +135,13 @@ lemma move_\<phi>\<s>\<u>\<b>\<j>_over_typ_operator:
         clarsimp,
         blast) .
 
-(* TODO
-lemma \<phi>\<s>\<u>\<b>\<j>_simp:
-  \<open> Transformation_Functor Fa Fa D mapper
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ((\<forall>x y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P))
-\<Longrightarrow> (Fa (T \<phi>\<s>\<u>\<b>\<j> P)) \<equiv> (Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def
-  by (rule \<phi>Type_eqI; clarsimp simp add: SubjectionTY_expn Subjection_expn ExSet_expn subset_iff,
-      smt (z3) SubjectionTY_expn Subjection_expn \<phi>Type_eqI
+text \<open>The above rule is interesting but essentially useless as it is replaced by the following rule.
+  The To-Transformation already enters into the elements by transformation functor.\<close>
 
-simproc_setup (in Transformation_Functor_L) \<phi>\<s>\<u>\<b>\<j>_simp (\<open>Fa (T \<phi>\<s>\<u>\<b>\<j> P)\<close>) = \<open>
-fn morph => 
-let val redex_residue = Morphism.cterm morph \<^schematic_cterm>\<open>(Fa (?T \<phi>\<s>\<u>\<b>\<j> ?k), Fa)\<close>
-    val redex = Thm.dest_arg1 redex_residue
-    val residue = Thm.dest_arg redex_residue
-in fn ctxt => fn cterm =>
-  let val s = Thm.first_order_match (redex, cterm)
-      val Fa = Thm.instantiate_cterm s residue
-<<<<<<< HEAD
-   in (Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
-         |> Phi_Reasoner.reason (SOME 1) ctxt
-=======
-   in (ctxt, Drule.infer_instantiate ctxt [(("Fa",0),Fa)] @{thm \<phi>\<s>\<u>\<b>\<j>_simp})
-         |> Phi_Reasoner.reason (SOME 2)
-         |> Option.map snd
->>>>>>> dce1a7d (WIP)
-  end
-end
-\<close>
-*)
+lemma [\<phi>reason 1000]:
+  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P @action to MODE_SIMP\<close>
+  unfolding Transformation_Functor_def Transformation_def Action_Tag_def
+  by simp
 
 
 subsection \<open>Dependent Sum Type\<close>
@@ -332,11 +314,11 @@ subsubsection \<open>\<S>-Homomorphism\<close>
 
 text \<open>The homomorphism of \<open>\<S>\<close> type is entailed in the transformation functor directly.\<close>
 
-lemma \<S>_Homo\<^sub>E [\<phi>reason_template default 40]:
+lemma \<S>_Homo\<^sub>E:
   \<open> Transformation_Functor Fa Fb D R mapper
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
-\<Longrightarrow> s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb T \<s>\<u>\<b>\<j> y. mapper (\<lambda>S x. x \<in> S) s y @action to T\<close>
-  unfolding Transformation_Functor_def Transformation_def Premise_def Action_Tag_def
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
+\<Longrightarrow> s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb T \<s>\<u>\<b>\<j> y. mapper (\<lambda>S x. x \<in> S) s y\<close>
+  unfolding Transformation_Functor_def Transformation_def Premise_def
   apply clarsimp
   subgoal premises prems for v
     by (insert prems(1)[THEN spec[where x=\<open>\<S> T\<close>], THEN spec[where x=\<open>T\<close>],
@@ -345,17 +327,10 @@ lemma \<S>_Homo\<^sub>E [\<phi>reason_template default 40]:
                prems(2,3),
         clarsimp) .
 
-lemma [\<phi>reason_template default 40]:
-  \<open> Transformation_Functor Fa Fb D R mapper
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
-\<Longrightarrow> s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb T \<s>\<u>\<b>\<j> y. mapper (\<lambda>S x. x \<in> S) s y @action to (T \<f>\<o>\<r> \<S> T)\<close>
-  unfolding Action_Tag_def
-  using \<S>_Homo\<^sub>E[unfolded Action_Tag_def] .
-
-lemma \<S>_Homo\<^sub>I [\<phi>reason_template default 40]:
+lemma \<S>_Homo\<^sub>I:
   \<open> Transformation_Functor Fa Fb D R mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
-\<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> Fb (\<S> T) \<s>\<u>\<b>\<j> s'. mapper (\<lambda>a b. b = {a}) s s' @action to (\<S> T) \<close>
+\<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> Fb (\<S> T) \<s>\<u>\<b>\<j> s'. mapper (\<lambda>a b. b = {a}) s s' \<close>
   unfolding Action_Tag_def Transformation_Functor_def Premise_def
   subgoal premises prems
     by (insert prems(1)[THEN spec[where x=T], THEN spec[where x=\<open>\<S> T\<close>], THEN spec[where x=s],
@@ -363,97 +338,12 @@ lemma \<S>_Homo\<^sub>I [\<phi>reason_template default 40]:
                prems(2),
         clarsimp) .
 
-lemma [\<phi>reason_template default 40]:
-  \<open> Transformation_Functor Fa Fb D R mapper
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
-\<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> Fb (\<S> T) \<s>\<u>\<b>\<j> s'. mapper (\<lambda>a b. b = {a}) s s' @action to (\<S> T \<f>\<o>\<r> T) \<close>
-  unfolding Action_Tag_def
-  using \<S>_Homo\<^sub>I[unfolded Action_Tag_def] .
-
-
-
-(*definitely \<open>(\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c))\<close> is some transformation functor, but it seems meaningless
-  to give this property instead of giving the ad-hoc rules for transforming set, because the notion of set
-  is so essential and basic.*)
-(*
-lemma
-  \<open>Transformation_Functor (\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c)) (\<lambda>T. ExTyp (\<lambda>c. T \<phi>\<s>\<u>\<b>\<j> P c))
-      (\<lambda>f. {f x |x. P x}) (\<lambda>r f g. \<forall>y. P y \<longrightarrow> (\<exists>x. P x \<and> r (f x) (g y)))\<close>
-    \<comment> \<open>Given a source set \<open>P\<close>, if we have a transformation \<open>r\<close> that maps every element in \<open>S\<close> to
-       some elements, then the minimal range of the transformation \<open>r\<close> over \<open>S\<close> is
-       \<open>{ r x | x \<in> P }\<close>. \<close>
-  unfolding Transformation_Functor_def Transformation_def
-  apply auto
-  
-  subgoal premises prems for T U x g v a proof -
-    thm prems
-    from prems(1) have \<open>\<exists>y. \<forall>a. v \<Turnstile> (x a \<Ztypecolon> T) \<longrightarrow> (v \<Turnstile> (y a \<Ztypecolon> U) \<and> g (x a) (y a))\<close>
-      by meson
-    then obtain y where y: \<open>\<forall>a. v \<Turnstile> (x a \<Ztypecolon> T) \<longrightarrow> (v \<Turnstile> (y a \<Ztypecolon> U) \<and> g (x a) (y a))\<close> by blast
-    then show ?thesis
-      by (meson prems(2))
-      
-      by (metis Do_Extract_Implied_Facts \<phi>TA_Inh_extract_prem typing_inhabited)
-    thm prems
-  apply blast
-*)
-
-subsubsection \<open>Syntax\<close>
-
-syntax
-  "_SetcomprPhiTy" :: "'a \<Rightarrow> idts \<Rightarrow> bool \<Rightarrow> 'a set"  ("_ \<phi>\<s>\<u>\<b>\<j>/ _./ _ " [2,0,2] 2)
-  "_SetcomprPhiTy'" :: "logic \<Rightarrow> idts \<Rightarrow> logic \<Rightarrow> logic"
-
-parse_ast_translation \<open>
-  let open Ast
-    fun idts_to_abs x (Appl [Constant "_idts", a, b]) = Appl [Constant "_abs", a, idts_to_abs x b]
-      | idts_to_abs x c = Appl [Constant "_abs", c, x]
-    fun parse_SetcomprPhiTy ctxt [Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>, x, T],idts,P] =
-          Appl [Constant \<^const_syntax>\<open>\<phi>Type\<close>,
-                idts_to_abs x idts,
-                Appl [Constant "\<^const>Phi_BI.ExTyp_binder", idts,
-                      (case P of (Appl [Constant "_constrain", Variable "True", _]) => T
-                               | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, T, P])]]
-      | parse_SetcomprPhiTy ctxt [X,idts,P] =
-          Appl [Constant "\<^const>Phi_BI.ExTyp_binder", idts,
-                (case P of (Appl [Constant "_constrain", Variable "True", _]) => X
-                         | _ => Appl [Constant \<^const_name>\<open>SubjectionTY\<close>, X, P])]
-  in [(\<^syntax_const>\<open>_SetcomprPhiTy\<close>, parse_SetcomprPhiTy)] end
-\<close>
-
-subsubsection \<open>Rules\<close>
-
-lemma [gen_open_abstraction_simps]:
-  \<open>f \<Ztypecolon> ExTyp (\<lambda>_. T) \<s>\<u>\<b>\<j> f. r f \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. (\<exists>c f. r f \<and> y = f c)\<close>
-  unfolding atomize_eq BI_eq_iff
-  by clarsimp blast
-
-
-
-paragraph \<open>TO\<close>
+text \<open>The above rules are interesting but essentially useless as it is replaced by the following rule.\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open>f \<Ztypecolon> ExTyp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f c \<Ztypecolon> T c \<s>\<u>\<b>\<j> c. \<top> @action to T\<close>
+  \<open>s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s @action to MODE_SIMP\<close>
   unfolding Action_Tag_def Transformation_def
-  by clarsimp
-  
-
-subsubsection \<open>Deriving (Fa (ExTyp T)) \<equiv> (\<exists>\<phi>c. Fb (T c)) \<close>
-
-lemma
-  \<open> (\<And>x. x \<Ztypecolon> Fa (ExTyp T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x c \<Ztypecolon> Fb (T c) \<s>\<u>\<b>\<j> c. \<top>)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Fa (ExTyp T) \<equiv> (\<exists>\<phi>c. Fb (T c))\<close>
-
-lemma
-  \<open> (Fa (ExTyp T)) \<equiv> (\<exists>\<phi>c. Fb (T c))\<close>
-  unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def
-  apply (rule \<phi>Type_eqI; clarsimp)
-  subgoal premises prems for x p
-    thm prems(1)[THEN spec[where x=\<open>ExTyp T\<close>]]
-    thm prems
-
+  by simp
 
 
 
@@ -464,13 +354,21 @@ declare [[\<phi>trace_reasoning = 1]]
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
 
+thm \<phi>Composition.open_abstraction
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
+\<Longrightarrow> (\<And>y. y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> B y)
+\<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<and> Ex B \<close>
+  unfolding Inhabited_def Action_Tag_def
+  by simp blast
+
 text \<open>It is too basic and our reasoner can barely do little about \<phi>-types embedded in a
   satisfaction statement because it as a pure proposition loses the type structure to guide our
   reasoner. As a consequence, almost every property of the \<phi>-type has to be proven manually.\<close>
 
-thm \<phi>Composition.open_abstraction
+thm \<phi>Composition.intro_reasoning[\<phi>reason 60]
 
-ML \<open>Gen_Open_Abstraction_SS.print \<^context> true\<close>
 
 term ExSet
 
@@ -499,12 +397,6 @@ lemma \<phi>Composition_expn[iff, \<phi>expns]:
   \<open>p \<Turnstile> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<Turnstile> (y \<Ztypecolon> T) \<and> y \<Turnstile> (x \<Ztypecolon> U))\<close>
   unfolding \<phi>Composition_def \<phi>Type_def by simp
 
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
-\<Longrightarrow> (\<And>y. y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> B y)
-\<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<and> Ex B \<close>
-  unfolding Inhabited_def Action_Tag_def
-  by blast
 
 lemma \<phi>Composition_transformation[\<phi>reason 1200 for \<open>(_ \<Ztypecolon> _ \<Zcomp> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ \<Ztypecolon> _ \<Zcomp> _) \<w>\<i>\<t>\<h> _\<close>]:
   \<open> x1 \<Ztypecolon> U1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x2 \<Ztypecolon> U2 \<w>\<i>\<t>\<h> P
