@@ -334,6 +334,7 @@ fun simplifier (ctxt, sequent) = Scan.succeed (fn _ =>
       then Phi_Programming_Simp_SS.equip ctxt
       else raise Bypass (SOME (ctxt, sequent))
     val sequent' = Simplifier.full_simplify sctxt sequent
+                |> Phi_Help.beta_eta_contract
   in raise Bypass (SOME (ctxt, sequent'))
   end)
 

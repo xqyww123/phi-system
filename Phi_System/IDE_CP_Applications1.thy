@@ -672,6 +672,59 @@ setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
                addsimps @{thms' HOL.simp_thms}))\<close>
 
 
+subsubsection \<open>Simplification\<close>
+
+text \<open>Potentially weakening transformations designed for simplifying state sequents of the CoP.
+
+  We reuse \<^const>\<open>MODE_SIMP\<close>.
+  Form: \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to MODE_SIMP\<close>
+
+  Doing this simplification in the framework of To-Transformation benefits it by reusing the
+  To-Transformation support in transformation functors, which brings the simplification into the elements.
+
+  The simplification is indolent for the sake of performance, and is applied only when the state sequent
+  needs the simplification. There is a mechanism to detect such need. The default strategy is,
+  we collect all the registered simplification rules, get the pattern of the source type of the
+  transformations, and if the types of a state sequent match any of a pattern, the simplification
+  is required and activated.
+
+  This default strategy is not perfect, so we provide hooks by which users can provide ML checkers.
+  The checker can bind on either the whole types or subterms of specific constant heads.
+  The checker only checks the type part.
+\<close>
+
+consts \<A>chk_need_simp :: action
+
+lemma \<A>simp_stage_1:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action \<A>_every_item \<A>chk_need_simp
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<close>
+  unfolding Action_Tag_def
+  by (simp add: implies_weaken)
+
+lemma \<A>simp_chk_no_need:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>chk_need_simp \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma \<A>simp_chk_go:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to MODE_SIMP
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>chk_need_simp \<close>
+  unfolding Action_Tag_def .
+
+ML_file \<open>library/tools/CoP_simp.ML\<close>
+
+\<phi>reasoner_ML \<A>chk_need_simp 1000 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>chk_need_simp\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val (X, _, _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
+   in if Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) X
+   then SOME ((ctxt, @{thm' \<A>simp_chk_go} RS' (ctxt, sequent)), Seq.empty)
+   else SOME ((ctxt, @{thm' \<A>simp_chk_no_need} RS' (ctxt, sequent)), Seq.empty)
+  end)
+\<close>
+
+lemma [\<phi>reason default 5]:
+  \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action to MODE_SIMP\<close>
+  unfolding Action_Tag_def by simp
+
 
 subsection \<open>Case Analysis\<close>
 
