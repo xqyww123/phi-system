@@ -63,7 +63,7 @@ type phi_type = {
      has_R: ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (?R.0 * x : T a b c \<longrightarrow> ?Y.0 and ?Q.0)  (*only available for sep-magma*)
      full:  ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (x : T a b c \<longrightarrow> ?Y.0 a b c x and ?Q.0 a b c x)
      dom_only: ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (x : T a b c \<longrightarrow> ?Y.0 and ?Q.0) *)
-  intro_ToA: thm list (*introduction transformations*),
+  intro_reasoning: thm list (*introduction transformations*),
   is_recursive: bool,
   is_impredicative: bool (*to be supported*)
 } (*rules and terms inside must be zero-indexed*)
@@ -510,7 +510,7 @@ type phi_type = {
   equations: thm list (*unfolding the term*),
   ind: thm,
   cases: thm option,
-  intro_ToA: thm list (*introduction transformations*),
+  intro_reasoning: thm list (*introduction transformations*),
   is_recursive: bool,
   is_impredicative: bool (*to be supported*)
 }
@@ -523,7 +523,7 @@ fun map_phi_type (mtm,mth) (phi : phi_type) =
     equations = mth (#equations phi),
     ind = singleton mth (#ind phi),
     cases = Option.map (singleton mth) (#cases phi),
-    intro_ToA = mth (#intro_ToA phi),
+    intro_reasoning = mth (#intro_reasoning phi),
     is_recursive = #is_recursive phi,
     is_impredicative = #is_impredicative phi
   } : phi_type
@@ -532,7 +532,7 @@ fun fold_phi_type (fold_tm, fold_thm) (phi : phi_type) x = x
   |> fold_tm (#term phi)
   |> fold fold_thm (#equations phi)
   |> fold_thm (#ind phi)
-  |> fold fold_thm (#intro_ToA phi)
+  |> fold fold_thm (#intro_reasoning phi)
 
 fun morphism_phi_type m = map_phi_type (Morphism.term m, Morphism.fact m)
 val phi_trim_context = map_phi_type (I, map (Thm.trim_context))
@@ -1165,9 +1165,11 @@ fun add_type (def, pos, dervs) generic =
                        |> normalize) eq
       exception Auto_Fail
       val intro_ToA = gen_from_eqs @{thm' \<phi>intro_transformation} I tagged_eqs
-      val intro'R_ToA = gen_from_eqs @{thm' \<phi>intro'_transformation} I tagged_eqs
-                        handle THM _ => [] (*in case of not a separation magma*)
+      val intro_reasoning   = gen_from_eqs @{thm' \<phi>intro_reasoning_transformation} I tagged_eqs
+      val intro'R_reasoning = gen_from_eqs @{thm' \<phi>intro'_reasoning_transformation} I tagged_eqs
+                       handle THM _ => [] (*in case of not a separation magma*)
       val elim_ToA = gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
+      val elim_reasoning = gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
                            (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                                   Conv.arg_conv (Simplifier.rewrite (
@@ -1210,7 +1212,7 @@ fun add_type (def, pos, dervs) generic =
             equations = map chk_zero_index_thm eqs,
             ind = chk_zero_index_thm ind,
             cases = cases,
-            intro_ToA = map chk_zero_index_thm intro_ToA,
+            intro_reasoning = map chk_zero_index_thm intro_reasoning,
             is_recursive = is_recursive,
             is_impredicative = false
           } : phi_type
@@ -1229,8 +1231,8 @@ fun add_type (def, pos, dervs) generic =
        end)
    |> note_properties phi_type (
         (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @
-        [(unfoldN, eqs), (introN, intro_ToA), (intro_reasoningN, intro_ToA @ intro'R_ToA),
-         (elimN, elim_ToA), (elim_reasoningN, elim_ToA @ the_default [] elim'SE_ToA),
+        [(unfoldN, eqs), (introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning),
+         (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ the_default [] elim'SE_ToA),
          (expansionN, expansions)])
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)

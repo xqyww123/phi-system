@@ -293,8 +293,16 @@ subsubsection \<open>Convention\<close>
 
 text \<open>
 Priority:
-\<^item> 30: inductively introduction ToA
-
+\<^item> 30: Destruction \<^term>\<open>to RAW\<close>
+\<^item> 35-49: Transformations, To-Transformations
+\<^item> 40: \<^const>\<open>Identity_Element\<^sub>I\<close>, \<^const>\<open>Identity_Element\<^sub>E\<close>
+      \<^const>\<open>Object_Equiv\<close>
+\<^item> 60: Construction \<^term>\<open>to T\<close> where \<open>T\<close> is the type just defined
+\<^item> 80: Implication \<^prop>\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>,
+      \<^prop>\<open>Is_Functional (x \<Ztypecolon> T)\<close>
+      Trans_to_Raw_Abst \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself\<close>
+\<^item> 1000: Parameter_Variant_of_the_Same_Functor, Type_Variant_of_the_Same_Functor
+\<^item> 1100: \<^const>\<open>Transformation_Functor\<close>
 \<close>
 
 subsubsection \<open>Implementation\<close>
@@ -313,17 +321,27 @@ lemma \<phi>inductive_destruction_rule_from_direct_definition':
 
 lemma \<phi>intro_transformation:
   \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<close>
+  by simp
+
+lemma \<phi>intro_reasoning_transformation:
+  \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> P \<close>
   by simp
 
-lemma \<phi>intro'_transformation:
+lemma \<phi>intro'_reasoning_transformation:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
   by simp
 
 lemma \<phi>elim_transformation:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<close>
+  by simp
+
+lemma \<phi>elim_reasoning_transformation:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
@@ -343,9 +361,12 @@ lemma \<phi>elim'SE_transformation:
 
 lemma \<phi>open_abstraction:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to OPEN_ABSTRACTION \<close>
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to RAW \<close>
   unfolding Action_Tag_def Simplify_def
   by simp
+
+lemma \<phi>construct_abstraction:
+  \<open> () \<close>
 
 lemma \<phi>gen_expansion:
   \<open> (x \<Ztypecolon> T) = U

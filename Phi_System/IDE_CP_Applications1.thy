@@ -654,7 +654,7 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Open Abstraction\<close>
 
-consts OPEN_ABSTRACTION :: \<open>('a,'b) \<phi>\<close> \<comment> \<open>destruct whom TODO! WIP!\<close>
+consts RAW :: \<open>('a,'b) \<phi>\<close> \<comment> \<open>destruct whom TODO! WIP!\<close>
 
 lemma open_abstraction_\<phi>app:
   \<open> Friendly_Help TEXT(\<open>Just tell me which \<phi>-type you want to open.\<close> \<newline>
@@ -662,7 +662,7 @@ lemma open_abstraction_\<phi>app:
       \<open>I will match\<close> T \<open>with the pattern.\<close> \<newline>
       \<open>You can also use an underscore to denote the target \<phi>-type in this pattern so you don't need to write a lambda abstraction, e.g. \<open>List (Box _)\<close>\<close>)
 \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> target
-\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to (target OPEN_ABSTRACTION)
+\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to (target RAW)
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
   unfolding Do_def Action_Tag_def .
 

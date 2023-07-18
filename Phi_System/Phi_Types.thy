@@ -354,6 +354,7 @@ declare [[\<phi>trace_reasoning = 1]]
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where [\<phi>defs]: \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
 
+thm \<phi>Composition.intro
 thm \<phi>Composition.open_abstraction
 
 lemma [\<phi>inhabitance_rule 1000]:

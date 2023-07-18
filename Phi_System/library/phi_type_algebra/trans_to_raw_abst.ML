@@ -243,7 +243,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 90
+                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
         |> Phi_Type_Algebra.note_properties phi0 [("Trans_to_Raw_Abst", [rule])]
     | _ => raise Automation_Fail ""
