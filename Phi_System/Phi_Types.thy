@@ -73,7 +73,7 @@ declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
 
 
 subsection \<open>Embedding Subjection into Type\<close>
- 
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -85,9 +85,7 @@ subsection \<open>Embedding Subjection into Type\<close>
        and Functional_Transformation_Functor
        and Separation_Homo
 
-
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
-
 
 
 subsubsection \<open>Rules\<close>
@@ -164,10 +162,6 @@ end
 *)
 
 
-
-
-
-
 subsection \<open>Dependent Sum Type\<close>
 
 text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
@@ -195,16 +189,47 @@ text \<open>Transformation functor requires inner elements to be transformed int
         \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
 
 notation \<phi>Dependent_Sum (binder "\<Sigma>" 22)
-        
+
+declare SubjectionTY_def[embed_into_\<phi>type del]
+
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        and Identity_Element
-       and Trans_to_Raw_Abst
+       and Trans_to_Raw_Abst 
 
-text \<open>Read it as 'the abstract object is certain element in the set'\<close>
+text \<open>Read it as 'the abstract object is certain element in the set'
 
+Together with the \<^const>\<open>SubjectionTY\<close>, \<^const>\<open>\<phi>Dependent_Sum\<close> and \<^const>\<open>Set_Abstraction\<close> embed
+  BI connective \<open>\<and>\<close> (\<^const>\<open>Subjection\<close>) and \<open>\<exists>\<close> (\<^const>\<open>ExSet\<close>) into \<phi>-types. The embedding of \<open>\<exists>\<close>
+  is in an algebraic way having good properties like the \<Sigma>-Homomorphism and \<S>-Homomorphism introduced bellow.
+
+The system reduces the three \<phi>-types actively just like how it reduces BI \<open>\<exists>\<close> and \<open>\<and>\<close>.
+Any pure facts in the conjunctions are extracted and stored, and existentially quantified variables are fixed.
+This reduction is reversible (meaning loosing no information).
+
+User should define their own \<phi>-types wrapping \<open>\<S>\<close> if they do not want this reduction.
+However, a specific fixed variable is generally easier to use than a certain element in a set.
+
+\<open>\<Sigma>\<close>-type usually cannot be reduced because there is no non-trivial homomorphism
+\<open>x \<Ztypecolon> F(\<Sigma> T) \<longleftrightarrow> f(x) \<Ztypecolon> \<Sigma>(F T)\<close> that moves a \<open>\<Sigma>\<close> out from a type operator \<open>F\<close>, unless
+all the first projection of the elements of \<open>x\<close> are equal. However,
+the reasoning about \<open>\<Sigma>\<close> has no problem because the \<open>x\<close> is given, so the parameters of the type i.e.,
+the first projections of the elements of \<open>x\<close> are known.
+We can apply \<open>\<Sigma>\<^sub>E\<close> and \<open>\<Sigma>\<^sub>I\<close> in the element transformation of \<open>x\<close> by \<open>F\<close>'s transformation functor property,
+and the generated proof obligations about \<open>x\<close> are able to specify the type parameter of \<open>T\<close>,
+e.g., if all the first projection of the elements of \<open>x\<close> are unchanged throughout the transformation, the
+  type parameter of \<open>T\<close> is unchanged).
+\<open>x \<Ztypecolon> \<Sigma> T \<longrightarrow> \<pi>\<^sub>2(x) \<Ztypecolon> T (\<pi>\<^sub>1 x)     (\<Sigma>\<^sub>E)\<close>
+\<open>x \<Ztypecolon> T(c) \<longrightarrow> (c,x) \<Ztypecolon> \<Sigma> T        (\<Sigma>\<^sub>I)\<close>
+
+\<open>\<S>\<close> type has homomorphism, and it is entailed in Transformation Functor.
+
+\<close>
+
+declare SubjectionTY_def[embed_into_\<phi>type add]
+        Set_Abstraction_def[embed_into_\<phi>type del]
 
 subsubsection \<open>Rules\<close>
 
@@ -278,8 +303,9 @@ lemma [\<phi>reason 2800]:
 
 subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
-definition \<open>\<Sigma>_Homo\<^sub>E Fa Fb D \<sigma> \<longleftrightarrow> (\<forall>T. \<forall>x \<in> D. x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c))\<close>
-definition \<open>\<Sigma>_Homo\<^sub>I Fa Fb D \<sigma>' \<longleftrightarrow> (\<forall>T. \<forall>x \<in> D. x \<Ztypecolon> \<Sigma> c. Fa (T c) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma>' x \<Ztypecolon> Fb (\<Sigma> T))\<close>
+definition \<open>\<Sigma>_Single_Point Fa Fb D \<sigma> \<longleftrightarrow> (\<forall>T. \<forall>x \<in> D. x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c))\<close>
+
+locale \<Sigma>_Homo
 
 lemma apply_\<Sigma>_Homo\<^sub>E:
   \<open> \<Sigma>_Homo\<^sub>E Fa Fb D \<sigma>
@@ -289,6 +315,7 @@ lemma apply_\<Sigma>_Homo\<^sub>E:
   by blast
 
 
+(*
 paragraph \<open>Deriver\<close>
 
 lemma
@@ -297,7 +324,7 @@ lemma
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> \<Sigma>_Homo\<^sub>E Fa Fb D \<sigma>\<close>
+\<Longrightarrow> \<Sigma>_Homo\<^sub>E Fa Fb D \<sigma>\<close> *)
 
 
 
