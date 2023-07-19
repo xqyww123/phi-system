@@ -7,6 +7,8 @@ theory IDE_CP_Applications1
   abbrevs "<vals>" = "\<v>\<a>\<l>s"
       and "<for>" = "\<f>\<o>\<r>"
       and "<split>" = "\<s>\<p>\<l>\<i>\<t>"
+      and "<this>" = "\<t>\<h>\<i>\<s>"
+      and "<any>" = "\<a>\<n>\<y>"
 begin
 
 text \<open> 
@@ -492,6 +494,11 @@ lemma [\<phi>reason 30]:
 
 section \<open>Basic Applications\<close>
 
+subsection \<open>General Syntax\<close>
+
+consts \<A>this :: 'a ("\<t>\<h>\<i>\<s>")
+       \<A>any  :: \<open>'a \<Rightarrow> 'a\<close> ("\<a>\<n>\<y>")
+
 subsection \<open>Is \& Assert\<close>
 
 lemma is_\<phi>app:
@@ -510,13 +517,10 @@ lemma assert_\<phi>app:
 
 subsection \<open>To\<close>
 
-consts to :: \<open>'a \<Rightarrow> action\<close>
-       \<A>subst :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> (infixl "\<f>\<o>\<r>" 10)
-          \<comment> \<open>\<^term>\<open>to (A \<f>\<o>\<r> B)\<close> means, substitute A for B\<close>
-       \<A>split :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> ("\<s>\<p>\<l>\<i>\<t>")
-       \<A>\<T>split_step :: \<open>action\<close>
+consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
+       \<A>elements :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> \<comment> \<open>enter to elements recursively\<close>
 
-abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close>
+(* abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close> *)
 
 ML \<open>fun mk_pattern_for_to_transformation ctxt term =
   let val idx = Term.maxidx_of_term term + 1
@@ -548,11 +552,33 @@ and \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. ?rel x \<t>\<r>\<a>\<n>\<s>\<f
 and \<open>?X @action \<A>\<T>split_step\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form: \<close> (?X @action \<A>\<T>split_step))\<close> (1)
 ]]
 
+definition \<A>action_parser :: \<open>'a \<Rightarrow> action \<Rightarrow> bool\<close>
+  where \<open>\<A>action_parser _ _ \<equiv> True\<close>
+
+declare [[\<phi>reason_default_pattern \<open>\<A>action_parser ?X _\<close> \<Rightarrow> \<open>\<A>action_parser ?X _\<close> (100) ]]
+
 lemma to_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> T
-\<Longrightarrow> \<^bold>d\<^bold>o X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to T
+\<Longrightarrow> \<A>action_parser T \<A>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
   unfolding Do_def Action_Tag_def .
+
+declare [[\<phi>trace_reasoning = 2]]
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>action_parser \<A> \<A> \<close>
+  unfolding \<A>action_parser_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>action_parser T (to T) \<close>
+  unfolding \<A>action_parser_def ..
+
+lemma [\<phi>reason default 0]:
+  \<open> FAIL TEXT(\<open>Do not know how to transform to\<close> A)
+\<Longrightarrow> \<A>action_parser A B \<close>
+  unfolding \<A>action_parser_def ..
+
 
 (*depreciated
 lemma destruct_\<phi>app:
@@ -564,9 +590,6 @@ subsubsection \<open>Simplification Protect\<close>
 
 definition [simplification_protect]:
   \<open>\<phi>To_Transformation_Simp_Protect X U r A \<equiv> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to A\<close>
-
-definition [simplification_protect]:
-  \<open>\<A>\<T>split_step_Simp_Protect T rx U ry \<equiv> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. rx x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. ry y @action \<A>\<T>split_step\<close>
 
 thm simplification_protect
 
@@ -595,20 +618,6 @@ Phi_Help.lambda_normalization_ctac (fn (ctxt,sequent) => Seq.make (fn () =>
          else SOME ((ctxt, @{thm' ToA_trivial} RS sequent), Seq.empty)
      | _ => raise TERM ("", [])
 ))\<close>
-
-\<phi>reasoner_ML \<A>subst_split 10000 (\<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<s>\<p>\<l>\<i>\<t> _)\<close>) = \<open>
-Phi_Help.lambda_normalization_ctac (fn (ctxt,sequent) => Seq.make (fn () =>
-  case Thm.major_prem_of sequent
-    of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _)
-            $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ _ $ _)
-            $ (Const(\<^const_name>\<open>to\<close>, _) $ (Const(\<^const_name>\<open>\<A>split\<close>, _) $ T)))
-      => if exists_subterm (fn tm => tm aconv T) X
-         then NONE
-         else SOME ((ctxt, @{thm' ToA_trivial} RS sequent), Seq.empty)
-     | _ => raise TERM ("", [])
-))\<close>
-
-hide_fact ToA_trivial
 
 
 lemma [\<phi>reason 0 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
@@ -695,11 +704,6 @@ lemma [\<phi>reason 1210 for \<open>_ \<Ztypecolon> _ \<^emph> _ \<t>\<r>\<a>\<n
     @action to (T' \<^emph> U' \<f>\<o>\<r> T \<^emph> U)\<close>
   unfolding Action_Tag_def Transformation_def
   by (cases x; simp; blast)
-
-lemma [\<phi>reason 1210 for \<open>_ \<Ztypecolon> _ \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<s>\<p>\<l>\<i>\<t> (_ \<^emph> _))\<close>]:
-  \<open> x \<Ztypecolon> (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (T \<^emph> U) \<s>\<u>\<b>\<j> x'. x' = x @action to (\<s>\<p>\<l>\<i>\<t> (T \<^emph> U)) \<close>
-  unfolding Action_Tag_def Transformation_def
-  by simp
 
 
 subsubsection \<open>To Itself\<close>
@@ -829,6 +833,13 @@ lemma as_\<phi>app:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U "
   unfolding Premise_def Action_Tag_def Object_Equiv_def Transformation_def
   by simp blast
+
+
+subsection \<open>Transformation that substitutes specific \<phi>-type\<close>
+
+consts \<A>subst :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> (infixl "\<f>\<o>\<r>" 10)
+
+text \<open>\<^term>\<open>to (A \<f>\<o>\<r> B)\<close> means to substitute A for B\<close>
 
 
 subsection \<open>Case Analysis\<close>
@@ -1055,6 +1066,68 @@ declare prod.case[\<phi>defs]
 *)
 
 
+subsection \<open>Split\<close>
+
+consts \<A>split :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close>
+       \<A>\<T>split_step :: \<open>action\<close>
+
+abbreviation \<A>split_synt ("\<s>\<p>\<l>\<i>\<t> _" [11] 10)
+  where \<open>(\<s>\<p>\<l>\<i>\<t> T) \<equiv> to (\<A>split T)\<close>
+
+text \<open>Syntax:
+
+\<^item> \<^term>\<open>\<s>\<p>\<l>\<i>\<t> List(\<t>\<h>\<i>\<s> \<^emph> other)\<close> splits for instance \<^term>\<open>List ((A \<^emph> B) \<^emph> other)\<close> into
+  \<^term>\<open>List (A \<^emph> other)\<close> and \<^term>\<open>List (B \<^emph> other)\<close>, leaving the \<^term>\<open>other\<close> unchanged.
+
+\<^item> \<^term>\<open>\<s>\<p>\<l>\<i>\<t> \<a>\<n>\<y> pattern\<close> splits any sub-\<phi>type matching the pattern
+
+\<^item> \<^term>\<open>\<s>\<p>\<l>\<i>\<t> any_term_not_containing_\<t>\<h>\<i>\<s>_or_\<a>\<n>\<y>\<close> does nothing.
+
+\<close>
+
+definition \<phi>Split_Result (infixr "<\<^emph>>" 70) where "\<phi>Split_Result \<equiv> \<phi>Prod"
+
+
+subsubsection \<open>Reasoning\<close>
+
+lemma pattern_match_do_the_split:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<s>\<p>\<l>\<i>\<t> \<t>\<h>\<i>\<s>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<s>\<p>\<l>\<i>\<t> \<a>\<n>\<y> pattern\<close>
+  unfolding Action_Tag_def .
+
+\<phi>reasoner_ML \<A>subst_split 10000 (\<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<s>\<p>\<l>\<i>\<t> _\<close>) = \<open>
+fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ (*Trueprop*) $ (_ (*Action_Tag*) $ (_ (*Transformation*) $ X $ _ $ _)
+                                             $ (_ (*to*) $ (_ (*\<A>split*) $ T)))
+        = Thm.major_prem_of sequent
+      (*fun chk_shortcut (\<^Const>\<open>\<A>any _\<close> $ )*)
+   in case T
+   of Const(\<^const_name>\<open>\<A>this\<close>, _) => NONE
+    | Const(\<^const_name>\<open>\<A>any\<close>, _) $ pat =>
+        if PLPR_Pattern.matches (Proof_Context.theory_of ctxt) (pat, X)
+        then SOME ((ctxt, @{thm' pattern_match_do_the_split} RS sequent), Seq.empty)
+        else SOME ((ctxt, @{thm' ToA_trivial} RS sequent), Seq.empty)
+    | _ => if exists_subterm (fn Const(\<^const_name>\<open>\<A>this\<close>, _) => true
+                               | Const(\<^const_name>\<open>\<A>any\<close>, _) => true
+                               | _ => false) X
+           then NONE
+           else SOME ((ctxt, @{thm' ToA_trivial} RS sequent), Seq.empty)
+  end
+)\<close>
+
+lemma [\<phi>reason 1210 for \<open>_ \<Ztypecolon> _ \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<s>\<p>\<l>\<i>\<t> \<t>\<h>\<i>\<s>\<close>]:
+  \<open> x \<Ztypecolon> (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (T <\<^emph>> U) \<s>\<u>\<b>\<j> x'. x' = x @action \<s>\<p>\<l>\<i>\<t> \<t>\<h>\<i>\<s> \<close>
+  unfolding Action_Tag_def Transformation_def \<phi>Split_Result_def
+  by simp
+
+
+subsubsection \<open>Simplification Protect\<close>
+
+definition [simplification_protect]:
+  \<open>\<A>\<T>split_step_Simp_Protect T rx U ry \<equiv> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. rx x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. ry y @action \<A>\<T>split_step\<close>
+
+
+
 subsection \<open>Duplicate \& Shrink\<close>
 
 consts action_dup    :: \<open>action\<close>
@@ -1090,5 +1163,7 @@ lemma [\<phi>reason 1]:
   unfolding Action_Tag_def
   by simp
 
+
+hide_fact ToA_trivial
 
 end

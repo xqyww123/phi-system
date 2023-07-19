@@ -2,6 +2,8 @@ signature eBNF_INFO = sig
 
 type quasi_BNF = {
   T : typ,
+  Tname : string,
+  casex: term option,
   ctrs : term list,
   deads: typ list,
   lives: typ list, (*source type variables of map*)
@@ -29,11 +31,16 @@ val add_BNF : string * quasi_BNF -> Context.generic -> Context.generic
 val get_bnf  : Context.generic -> string -> eBNF option
 val get_bnf1 : Context.generic -> string -> eBNF
 
+val tyargs_is_live_or_dead : eBNF -> bool list (*if tyargs_is_live_or_dead[i], the i-th type parameter is live*)
 val classify_bnf_dead_live : eBNF -> typ list -> typ list * typ list (*classify the type parameters into dead and live
                                                                        as that in Isabelle BNF lib*)
 val burrow_bnf_dead_live : eBNF -> typ list * typ list -> typ list (*the inverse function of classify_dead_live*)
 
+val Tname_of : eBNF -> string
+val T_of_bnf : eBNF -> typ
 val ctrs_of : eBNF -> term list
+val case_of : eBNF -> term option
+val case_of1 : eBNF -> term
 val sets_of_bnf : eBNF -> term list
 val mk_sets_of_bnf: typ list list -> typ list list -> eBNF -> term list
 val mk_rel_of_bnf : typ list -> typ list -> typ list -> eBNF -> term
@@ -74,6 +81,8 @@ open Phi_Type_Algebra
 
 type quasi_BNF = {
   T : typ,
+  Tname : string,
+  casex: term option,
   ctrs : term list,
   deads: typ list,
   lives: typ list, (*source type variables of map*)
@@ -111,9 +120,11 @@ val add_BNF = qBNFs.map o Symtab.update_new
 
 (* Library *)
 
-fun g_bnf (Tname, NONE, _, _) =
+fun err_bnf Tname =
       raise Automation_Fail ("BNF info for type " ^ Tname ^ " is not found.\n\
                              \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
+
+fun g_bnf (Tname, NONE, _, _) = err_bnf Tname
   | g_bnf (_, SOME bnf, _, _) = bnf
 
 fun g_fp (Tname, _, NONE, _) =
@@ -126,14 +137,26 @@ fun g_ctr (Tname, _, _, NONE) =
                              \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
   | g_ctr (_, _, _, SOME ctr) = ctr
 
-fun T_of_bnf (BNF bnf)  = BNF_Def.T_of_bnf (g_bnf bnf)
+fun Tname_of (BNF (Tname, _, _, _)) = Tname
+  | Tname_of (qBNF bnf) = #Tname bnf 
+
+fun T_of_bnf (BNF (_, SOME bnf, _, _)) = BNF_Def.T_of_bnf bnf
+  | T_of_bnf (BNF (_, _, SOME fp, _)) = #T fp
+  | T_of_bnf (BNF (_, _, _, SOME ctr)) = #T ctr
   | T_of_bnf (qBNF bnf) = #T bnf
+  | T_of_bnf (BNF (Tname, _, _, _)) = err_bnf Tname
 
 fun deads_of_bnf (BNF bnf) = BNF_Def.deads_of_bnf (g_bnf bnf)
   | deads_of_bnf (qBNF bnf) = #deads bnf
 
 fun lives_of_bnf (BNF bnf) = BNF_Def.lives_of_bnf (g_bnf bnf)
   | lives_of_bnf (qBNF bnf) = #lives bnf
+
+fun tyargs_is_live_or_dead bnf =
+  let val tys = snd (Term.dest_Type (T_of_bnf bnf))
+      val deads = deads_of_bnf bnf
+   in map (not o member (op =) deads) tys
+  end
 
 fun classify_bnf_dead_live bnf tys =
   let val btys = snd (Term.dest_Type (T_of_bnf bnf))
@@ -205,6 +228,11 @@ fun mk_map_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_map_of_bnf Ds Ts Us (g_bnf bnf
 fun ctrs_of (BNF bnf) = #ctrs (g_ctr bnf)
   | ctrs_of (qBNF bnf)= #ctrs bnf
 
+fun case_of (BNF bnf) = SOME (#casex (g_ctr bnf))
+  | case_of (qBNF bnf)= #casex bnf
+
+fun case_of1 bnf = case case_of bnf of SOME X => X | NONE =>
+      raise Automation_Fail ("No case-split operator given for type " ^ Tname_of bnf)
 
 (* Simplification rules *)
 

@@ -1,6 +1,10 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
+val subst_ty : (typ * typ) list -> typ -> typ
+val instantiate_phi_to_pair_x : Proof.context -> term * Phi_Type_Algebra.phi_type ->
+        typ TVars.table * ctyp TVars.table * Phi_Type_Algebra.phi_type
+
 val separation_homo_I : hint list -> Phi_Type_Algebra.derive
 val separation_homo_E : hint list -> Phi_Type_Algebra.derive
 
@@ -29,13 +33,10 @@ fun make_phi_for_pair ctxt0 (x_term0, FT_term0, (phi0:phi_type)) =
    in phi
   end)*)
 
-fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
-  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
-    |> Seq.maps (fn (T_term0, F_term0) =>
+fun instantiate_phi_to_pair_x ctxt (T_term0, phi0) =
   let val (_, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val ([], element_ty0, ele_model0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
 
-      (*make_phi_for_pair*)
       val idx = phi_maxidx_of phi0 ~1 + 1
       val ty_x'dest = Term.add_tvarsT element_ty0 []
       val thy = Proof_Context.theory_of ctxt
@@ -45,6 +46,25 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
                    ) (ty_x'dest ~~ SS) TVars.empty
       val instTy'= TVars.map (K (Thm.global_ctyp_of thy)) instTy
       val phi'1 = instantiate_phi (instTy', Vars.empty) phi0
+   in (instTy, instTy', phi'1)
+  end
+
+fun subst_ty redex_residue t =
+  case AList.lookup (op =) redex_residue t
+    of SOME residue => residue
+     | _ => (case t
+               of Type(Tname, targs) => Type(Tname, map (subst_ty redex_residue) targs)
+                | t' => t')
+
+fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
+  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
+    |> Seq.maps (fn (T_term0, F_term0) =>
+  let val (instTy, _, phi'1) = instantiate_phi_to_pair_x ctxt (T_term0, phi0)
+
+      val thy = Proof_Context.theory_of ctxt
+      val (_, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val ([], _, ele_model0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
+      
       val (model_ty'1, ele_model'1) = (
               Term_Subst.instantiateT instTy model_ty0,
               Term_Subst.instantiateT instTy ele_model0
@@ -69,17 +89,11 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
 
       val target = case element_ty
                      of \<^Type>\<open>prod a b\<close> => (a,b)
-                      | _ => error "Internal bug #8522d8e9-57a1-4ad9-800e-1c1222fcabfc"
+                      | _ => error "BUG 5fUVN91qSGOppdg3fOp49A"
       val ((dom,zip), ctxt) = guess_zip_guided flag target (unzip_typ (Context.Proof ctxt) x_ty) ctxt
 
-      fun subst_ty residue t =
-            if t = element_ty then residue
-            else case t
-                   of Type(Tname, targs) => Type(Tname, map (subst_ty residue) targs)
-                    | t' => t'
-
-      val Fa = Term.map_types (subst_ty (fst target)) F_term
-      val Fb = Term.map_types (subst_ty (snd target)) F_term
+      val Fa = Term.map_types (subst_ty [(element_ty, fst target)]) F_term
+      val Fb = Term.map_types (subst_ty [(element_ty, snd target)]) F_term
       val SH = (case (Term.fastype_of Fa, Term.fastype_of Fb)
                   of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                       \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>

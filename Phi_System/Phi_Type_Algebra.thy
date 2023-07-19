@@ -408,8 +408,8 @@ val s = BNF_Def.sets_of_bnf x
 val z = BNF_Def.mk_sets_of_bnf [[],[]] [[\<^typ>\<open>nat\<close>, \<^typ>\<open>int\<close>], [\<^typ>\<open>bool\<close>, \<^typ>\<open>int\<close>]] x
 val d = BNF_Def.set_transfer_of_bnf x\<close>
 
-ML \<open>#fp_res (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))
-|> #ctor_injects\<close>
+ML \<open>(the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))
+|> #BT\<close>
 
 declare [[ML_print_depth = 1000]]
 
@@ -1297,6 +1297,8 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
     val b = TFree ("b", \<^sort>\<open>type\<close>)
  in {
   T = \<^Type>\<open>Set.set a\<close>,
+  Tname = \<^type_name>\<open>Set.set\<close>,
+  casex = NONE,
   ctrs = [\<^Const>\<open>bot \<^Type>\<open>set a\<close>\<close>, \<^Const>\<open>insert a\<close>, \<^Const>\<open>sup \<^Type>\<open>set a\<close>\<close>],
   deads = [], lives = [a], lives'= [b],
   sets = [Abs("x", a, Bound 0)],
@@ -1579,7 +1581,7 @@ ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
 
 
-subsubsection \<open>Sep\<close>
+subsubsection \<open>Separation Homo\<close>
 
 lemma \<phi>TA_SHz_rule:
   \<open> (\<And>T U z. Ant \<longrightarrow>

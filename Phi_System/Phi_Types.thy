@@ -285,29 +285,38 @@ lemma [\<phi>reason 2800]:
 
 subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
-definition \<open>\<Sigma>_Single_Point Fa Fb D \<sigma> \<longleftrightarrow> (\<forall>T. \<forall>x \<in> D. x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c))\<close>
+definition \<open>Trivial_\<Sigma> Fa Fb D s m \<longleftrightarrow> (\<forall>T x. D x \<longrightarrow> (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))))\<close>
+  \<comment> \<open>There is only trivial homomorphism where all the first projection of the element are equal\<close>
 
 locale \<Sigma>_Homo
 
-lemma apply_\<Sigma>_Homo\<^sub>E:
-  \<open> \<Sigma>_Homo\<^sub>E Fa Fb D \<sigma>
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D
-\<Longrightarrow> x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c)\<close>
-  unfolding \<Sigma>_Homo\<^sub>E_def Premise_def
+lemma apply_Trivial_\<Sigma>:
+  \<open> Trivial_\<Sigma> Fa Fb D s m
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))\<close>
+  unfolding Trivial_\<Sigma>_def Premise_def
   by blast
 
-print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close> ? ?
+print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ + _ \<w>\<i>\<t>\<h> _\<close> ? ?
 
-(*
+
 paragraph \<open>Deriver\<close>
 
-lemma
-  \<open> (\<And>T x. Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> D \<longrightarrow>
-        (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<sigma> x \<Ztypecolon> \<Sigma> c. Fb (T c)))
+lemma \<phi>TA_SgH_rule:
+  \<open> (\<And>T x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<longrightarrow>
+        (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> \<Sigma>_Homo\<^sub>E Fa Fb D \<sigma>\<close> *)
+\<Longrightarrow> Trivial_\<Sigma> Fa Fb D s m\<close>
+  unfolding Trivial_\<Sigma>_def Premise_def
+  by blast
+
+
+ML_file \<open>library/phi_type_algebra/sigma_single_point.ML\<close>
+
+
+
 
 
 

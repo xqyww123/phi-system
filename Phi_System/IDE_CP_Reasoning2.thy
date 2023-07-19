@@ -201,9 +201,8 @@ text \<open>Priority Convention:
 \<^item> 3150: Assigning Zeros
 \<^item> 3000: Normalization
 \<^item> 2800: Disjunction in source part; Default normalization in source part
+        Fix existentially quantified variables in source part
 \<^item> 2600: Disjunction in target part; Default normalization in target part
-        Divergence happens here!
-        Existentially quantified variables are fixed here!
 \<^item> 2550: Top
 \<^item> 2100: Padding void holes after the last item. Rules capturing the whole items including
         the last item in the \<open>\<^emph>\<close>-sequence should have priority higher than this.
@@ -212,7 +211,9 @@ text \<open>Priority Convention:
 \<^item> 800:  Disjunction in target part
 \<^item> 50-54: Enters Structural Extraction. Elim-rules \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A'\<close> having a priority
          greater than 54, will be applied before Structural Extraction, and those less than 50,
-         will only be applied in the backtrack of the Structural Extraction.
+        will only be applied in the backtrack of the Structural Extraction.
+\<^item> 10: Instantiate existentially quantified variables in the target part
+      Divergence for additive disjunction in the target part
 \<close>
 
 
@@ -516,13 +517,9 @@ lemma [\<phi>reason 3230]:
   unfolding Transformation_def Premise_def by simp blast
 
 
-
 subsection \<open>Existential\<close>
 
-declare ToA_ex_intro
-declare ToA_ex_intro'
-
-\<phi>reasoner_ML ToA_ex_intro 2600 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ExSet _ \<brangle> \<w>\<i>\<t>\<h> _\<close>) = \<open>
+\<phi>reasoner_ML ToA_ex_intro !10 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ExSet _ \<brangle> \<w>\<i>\<t>\<h> _\<close>) = \<open>
 fn (ctxt,sequent) => Seq.make (fn () =>
   let val (_, X'', _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
       fun parse (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) = (false, ty, X)
@@ -728,7 +725,7 @@ lemma ToSA_disj_target_B:
 \<Longrightarrow>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A + B \<w>\<i>\<t>\<h> P\<close>
   by (simp add: Transformation_def)
 
-declare [[\<phi>reason 2600 ToSA_disj_target_A ToSA_disj_target_B for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<w>\<i>\<t>\<h> ?P\<close>]]
+declare [[\<phi>reason !10 ToSA_disj_target_A ToSA_disj_target_B for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<w>\<i>\<t>\<h> ?P\<close>]]
 
 hide_fact ToSA_disj_target_A ToSA_disj_target_B
 
@@ -744,7 +741,7 @@ lemma ToSA_disj_target_B':
   unfolding Action_Tag_def FOCUS_TAG_def Transformation_def
   by (simp add: distrib_left, blast)
 
-declare [[\<phi>reason 2600 ToSA_disj_target_A' ToSA_disj_target_B'
+declare [[\<phi>reason !10 ToSA_disj_target_A' ToSA_disj_target_B'
             for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ?A + ?B \<brangle> \<w>\<i>\<t>\<h> _\<close>]]
 
 hide_fact ToSA_disj_target_A' ToSA_disj_target_B'
