@@ -27,7 +27,7 @@ due to technical reasons.
 When a transformation from \<open>x \<Ztypecolon> T\<close> introduces existentially quantification, e.g., to \<open>{ y \<Ztypecolon> U |y. P y }\<close>,
 it opens the abstraction of \<open>x \<Ztypecolon> T\<close>.
 The \<open>x\<close> has no enough information to determine a unique value of \<open>y\<close> but only a set of candidates,
-which means the representation of \<open>y \<Ztypecolon> U\<close> is more specific and in a lower abstraction level.
+which means the representation of \<open>y \<Ztypecolon> U\<close> is more specific and therefore in a lower abstraction level.
 For example, \<open>x \<Ztypecolon> Q\<close> is a rational number and \<open>{ (a,b) \<Ztypecolon> \<int> \<times> \<int> |a b. a/b = x }\<close> is its representation.
 
 As the major reasoning process in the system, the ToA reasoning should maintain the abstraction level,
@@ -494,8 +494,13 @@ section \<open>Basic Applications\<close>
 
 subsection \<open>Is \& Assert\<close>
 
-lemma is_\<phi>app: "\<p>\<a>\<r>\<a>\<m> x' \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x' \<Longrightarrow> x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> N"
-  unfolding Premise_def using transformation_refl by force
+lemma is_\<phi>app:
+  \<open> \<p>\<a>\<r>\<a>\<m> y
+\<Longrightarrow> Object_Equiv T eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<close>
+  unfolding Premise_def Object_Equiv_def
+  by blast
 
 lemma assert_\<phi>app:
   \<open>\<p>\<a>\<r>\<a>\<m> Y \<Longrightarrow> \<^bold>d\<^bold>o X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action ToSA \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close>
@@ -816,34 +821,14 @@ setup \<open>Config.put_global Phi_CoP_Simp.enable_rule_pass true\<close>
 
 subsection \<open>As\<close>
 
-consts "as" :: \<open>'a BI \<Rightarrow> action\<close>
-
-declare [[\<phi>reason_default_pattern
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action as ?T\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action as ?T\<close> (100)
-]]
-
-abbreviation \<open>\<A>_transform_to_be S \<equiv> \<A>_leading_item (\<A>nap (as S)) \<close>
-
 lemma as_\<phi>app:
-  " \<p>\<a>\<r>\<a>\<m> S
-\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> P @action \<A>_transform_to_be S
-\<Longrightarrow> x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> P"
-  unfolding Do_def Action_Tag_def .
-
-lemma [\<phi>reason 10]:
-  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<w>\<i>\<t>\<h> P
-\<Longrightarrow> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<w>\<i>\<t>\<h> P @action as S\<close>
-  unfolding Action_Tag_def .
-
-lemma [\<phi>reason 1]:
-  \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> S)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action as S\<close>
-  unfolding Action_Tag_def by blast
-
-lemma [\<phi>reason 5000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action as X\<close>
-  unfolding Action_Tag_def using transformation_refl .
-
+  " \<p>\<a>\<r>\<a>\<m> (y \<Ztypecolon> U)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<s>\<u>\<b>\<j> y'. P y' @action to U
+\<Longrightarrow> Object_Equiv U eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>y'. P y' \<longrightarrow> eq y' y)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U "
+  unfolding Premise_def Action_Tag_def Object_Equiv_def Transformation_def
+  by simp blast
 
 
 subsection \<open>Case Analysis\<close>

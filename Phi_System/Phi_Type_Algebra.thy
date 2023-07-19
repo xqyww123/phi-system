@@ -784,6 +784,7 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   unfolding Action_Tag_def
   using transformation .
 
+(*
 lemma [\<phi>TA_internal_simplify_special_cases,
        \<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<s>\<u>\<b>\<j> y. _ @action as _\<close>]:
   \<open> Prem
@@ -792,6 +793,7 @@ lemma [\<phi>TA_internal_simplify_special_cases,
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action as Z \<close>
   unfolding Action_Tag_def
   using transformation .
+*)
 
 lemma [\<phi>TA_internal_simplify_special_cases,
        \<phi>reason default 40]:
@@ -919,6 +921,7 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   unfolding Action_Tag_def
   using functional_transformation[unfolded Argument_def] .
 
+(*
 lemma [\<phi>TA_internal_simplify_special_cases,
        \<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action as _\<close>]:
   \<open> Prem
@@ -927,7 +930,7 @@ lemma [\<phi>TA_internal_simplify_special_cases,
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper P x @action as Z \<close>
   unfolding Action_Tag_def
   using functional_transformation[unfolded Argument_def] .
-
+*)
 
 (*
 lemma [\<phi>TA_internal_simplify_special_cases,
