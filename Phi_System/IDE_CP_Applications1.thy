@@ -1,7 +1,5 @@
 chapter \<open>IDE-CP Functions \& Applications - Part I\<close>
 
-text \<open>In this part, we build simple applications based on IDE-CP directly, without too much
-  advanced reasoning processes.\<close>
 
 theory IDE_CP_Applications1
   imports IDE_CP_Core Phi_Algebras.Map_of_Tree
@@ -11,6 +9,102 @@ theory IDE_CP_Applications1
       and "<split>" = "\<s>\<p>\<l>\<i>\<t>"
 begin
 
+text \<open> 
+
+Note: Our reasoning is a calculus of sequents, but not the sequent calculus.
+      The \<^prop>\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> is a sequent \<open>X \<turnstile> Y\<close>.
+TODO: We should rename the word 'sequent' in MLs to 'state' as it is proof state instead of a sequent.
+
+TODO: move me somewhere
+
+There are essentially two transformation mechanism in the system, the major ToA reasoning and the
+To-Transformation.
+
+The major ToA reasoning handles transformation between BI assertions that does not introduce
+existential quantification, i.e., does not open an abstraction. The limitation is reasonable and also
+due to technical reasons.
+
+When a transformation from \<open>x \<Ztypecolon> T\<close> introduces existentially quantification, e.g., to \<open>{ y \<Ztypecolon> U |y. P y }\<close>,
+it opens the abstraction of \<open>x \<Ztypecolon> T\<close>.
+The \<open>x\<close> has no enough information to determine a unique value of \<open>y\<close> but only a set of candidates,
+which means the representation of \<open>y \<Ztypecolon> U\<close> is more specific and in a lower abstraction level.
+For example, \<open>x \<Ztypecolon> Q\<close> is a rational number and \<open>{ (a,b) \<Ztypecolon> \<int> \<times> \<int> |a b. a/b = x }\<close> is its representation.
+
+As the major reasoning process in the system, the ToA reasoning should maintain the abstraction level,
+and degenerate to a lower abstraction only when users ask so.
+Reducing to a lower abstraction, should only happen when building the interfaces or internal
+operations of the data structure.
+Manually writing two annotations to open and to close the abstraction at the beginning and the ending
+of the building of the interface, does not bring any thinking burden to users because the users of course
+know, he is going to enter the representation of the abstraction in order to make the internal operation.
+To-Transformation has capability to open an abstraction, as it supports the transformation introducing
+existential quantification.
+
+The technical difficulty to support introducing existential quantification is that, we instantiate
+the existential quantification in the right side of a transformation goal to schematic variables
+that can be instantiated to whatever later, so that we can enter the existential quantification
+in the right and let the inner structure guide the next reasoning (like a goal-directed proof search).
+The existential quantification at the left side is fixed before instantiating those in the right,
+so the schematic variable can capture, i.e., can instantiate to any expression containing the fixed
+existentially quantified variable of the left.
+However, later when an existential quantification is introduced at the left side after
+the instantiation of the right, the schematic variables cannot capture the new introduced existentially
+quantified variables.
+It is a deficiency of the current reasoning because it should not instantiate the right existential
+quantification that early, but if we remain them, the quantifier brings a lot of troubles in the pattern
+matching and the resolution of \<phi>-LPR. Just like the meta universal quantifier is specially processed
+by the resolution of Isabelle's kernel, the handling of the existential quantification should also
+be integrated in our resolution kernel, but it is hard and the performance would be a problem as
+we cannot enter the kernel as what Isabelle's resolution does.
+
+The expected resolution:
+\<open>A a \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y a\<close>    \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<exists>a. Y a \<Longrightarrow> B\<close>
+-------------------------------------------------------
+                    \<open>\<exists>a. A a \<Longrightarrow> B\<close>
+
+
+The To-Transformation is about a single \<phi>-type term \<open>x \<Ztypecolon> T\<close>. Given a \<phi>-type \<open>U\<close>, it transforms \<open>x \<Ztypecolon> T\<close>
+to a \<phi>-type term \<open>y \<Ztypecolon> U\<close> with whatever \<open>y\<close> it could be, or even a set \<open>{ y \<Ztypecolon> U | y. P y }\<close>.
+
+
+-------------------------------------------------------------------------------------
+
+ToA reasoning in the system by default does not change the abstraction level.
+To open an abstraction, you can use To-Transformation:
+
+    \<^verbatim>\<open>to \<open>List OPEN\<close>\<close>, in order to open \<open>List T\<close> into \<open>List Rep\<close>
+    you can also use \<^verbatim>\<open>open_abstraction \<open>List _\<close>\<close> which is a syntax sugar of \<open>to \<open>List OPEN\<close>\<close>
+
+To make an abstraction, just give the desired form and it invokes the synthesis process,
+
+    \<^verbatim>\<open> \<open>_ \<Ztypecolon> MAKE U\<close> \<close>
+
+Note you should not use To-Transformation to make an abstraction if the target \<open>U\<close> that you want to make
+requires to be assembled from more than one \<phi>-type terms. It is because To-Transformation is used
+to transform the first \<phi>-type term \<open>x \<Ztypecolon> T\<close> on your state sequent to whatever.
+It considers the first \<phi>-type term only.
+
+
+--------------------------------------------------------------------------------------
+
+\<phi>-system provides 5 syntax to annotate \<phi>-types, or in another words, to invoke transformation.
+
+\<^item> to \<open>the target \<phi>-type you want\<close>, it transforms the leading \<phi>-type term \<open>x \<Ztypecolon> T\<close> to \<open>{ y \<Ztypecolon> U |y. P y}\<close>
+                                   for the given \<open>U\<close> and a set of object \<open>y\<close> it can be.
+                                   It can also generate program code to achieve the target.
+                                   For example, if the leading term is \<open>x \<Ztypecolon> \<nat>\<close>, the \<open>to Float\<close> can
+                                   generate the program casting the integer.
+\<^item> is \<open>the expected object\<close>, it transforms the leading \<phi>-type term \<open>x \<Ztypecolon> T\<close> to \<open>y \<Ztypecolon> T\<close> for the given y.
+\<^item> as \<open>the expected object \<Ztypecolon> the target \<phi>-type\<close>, as \<open>y \<Ztypecolon> U\<close> is a syntax sugar of
+                                   \<^verbatim>\<open>to U\<close> followed by \<^verbatim>\<open>is y\<close>.
+\<^item> assert \<open>BI assertion\<close>, asserts the entire of the current state is what. It is pure transformation
+                         and never generates code.
+\<^item> \<open>x \<Ztypecolon> T\<close>, (directly giving a BI assertion without a leading keyword),
+           synthesis \<open>x \<Ztypecolon> T\<close> using whatever terms in the current state.
+           It may generate program code.
+\<close>
+
+
 section \<open>Convention\<close>
 
 text \<open>Priority:
@@ -18,7 +112,7 @@ text \<open>Priority:
 \<^item> 59: Fallback of Make Abstraction
 \<close>
 
-section \<open>Build Elements of Actions\<close>
+section \<open>Elements of Actions\<close>
 
 subsubsection \<open>Actions only for implication only\<close>
 
@@ -408,37 +502,6 @@ lemma assert_\<phi>app:
   unfolding Action_Tag_def Do_def
   using implies_weaken by blast
 
-subsection \<open>As\<close>
-
-consts "as" :: \<open>'a BI \<Rightarrow> action\<close>
-
-declare [[\<phi>reason_default_pattern
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action as ?T\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action as ?T\<close> (100)
-]]
-
-abbreviation \<open>\<A>_transform_to_be S \<equiv> \<A>_leading_item (\<A>nap (as S)) \<close>
-
-lemma as_\<phi>app:
-  " \<p>\<a>\<r>\<a>\<m> S
-\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> P @action \<A>_transform_to_be S
-\<Longrightarrow> x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> P"
-  unfolding Do_def Action_Tag_def .
-
-lemma [\<phi>reason 10]:
-  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<w>\<i>\<t>\<h> P
-\<Longrightarrow> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<w>\<i>\<t>\<h> P @action as S\<close>
-  unfolding Action_Tag_def .
-
-lemma [\<phi>reason 1]:
-  \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> S)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action as S\<close>
-  unfolding Action_Tag_def by blast
-
-lemma [\<phi>reason 5000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action as X\<close>
-  unfolding Action_Tag_def using transformation_refl .
-
-
 
 subsection \<open>To\<close>
 
@@ -750,6 +813,39 @@ setup \<open>Config.put_global Phi_CoP_Simp.enable_rule_pass true\<close>
       It modifies any rule in form \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> into \<open>Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?? \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ??\<close>*)
 
 
+
+subsection \<open>As\<close>
+
+consts "as" :: \<open>'a BI \<Rightarrow> action\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action as ?T\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action as ?T\<close> (100)
+]]
+
+abbreviation \<open>\<A>_transform_to_be S \<equiv> \<A>_leading_item (\<A>nap (as S)) \<close>
+
+lemma as_\<phi>app:
+  " \<p>\<a>\<r>\<a>\<m> S
+\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> P @action \<A>_transform_to_be S
+\<Longrightarrow> x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> P"
+  unfolding Do_def Action_Tag_def .
+
+lemma [\<phi>reason 10]:
+  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<w>\<i>\<t>\<h> P @action as S\<close>
+  unfolding Action_Tag_def .
+
+lemma [\<phi>reason 1]:
+  \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> S)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action as S\<close>
+  unfolding Action_Tag_def by blast
+
+lemma [\<phi>reason 5000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action as X\<close>
+  unfolding Action_Tag_def using transformation_refl .
+
+
+
 subsection \<open>Case Analysis\<close>
 
 consts \<A>case :: action
@@ -891,7 +987,7 @@ end\<close>
 
 
 
-
+(*
 subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type by Definition\<close>
 
 consts \<A>_construct\<phi> :: \<open>'a BI \<Rightarrow> action\<close>
@@ -971,7 +1067,7 @@ structure PhiDef_SS = Simpset (
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) PhiDef_SS.get')\<close>
 
 declare prod.case[\<phi>defs]
-
+*)
 
 
 subsection \<open>Duplicate \& Shrink\<close>
