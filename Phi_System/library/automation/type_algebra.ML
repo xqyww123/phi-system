@@ -148,7 +148,7 @@ val gen_abstract_constraint_guided_reasoning :
                   a function substituting schematic variables for those subterms.*)
 
 val PLPR_reasoner : int option -> PLPR_reasoner
-val ToA_reasoner : Phi_Type_Algebra.phi_type -> PLPR_reasoner (*reason using ToSA*)
+val ToA_reasoner : Phi_Type_Algebra.phi_type -> PLPR_reasoner (*reason using NToA*)
 
 val extract_pure_prem_by_RS : thm list (*RS rules*) -> extract_pure_prems
 
@@ -1001,7 +1001,7 @@ fun ToA_reasoner phi ctxt sequent =
   let val sequent'1 = (case Thm.major_prem_of sequent
                          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _)
                               => (chk_unfolded phi X; chk_unfolded phi Y;
-                                  @{thm' Action_Tag_D[where A = \<open>ToSA\<close>]} RS sequent)
+                                  @{thm' Action_Tag_D[where A = \<open>NToA\<close>]} RS sequent)
                           | _ => sequent)
    in PLPR_reasoner (SOME 1) ctxt sequent'1
   end

@@ -452,7 +452,7 @@ lemma Structural_Extract_reverse_transformation_I[intro?]:
 
 subsubsection \<open>Installation -- Rules initializing the SE reasoning\<close>
 
-lemma ToSA_by_structural_extraction:
+lemma NToA_by_structural_extraction:
   " Object_Equiv T eq
 \<Longrightarrow> Try Any ((y,w) \<Ztypecolon> U \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xr \<Ztypecolon> T \<^emph> R \<w>\<i>\<t>\<h> P2 @action \<A>SE True)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (fst xr) x
@@ -464,7 +464,7 @@ lemma ToSA_by_structural_extraction:
     SE
   \<medium_right_bracket> .
 
-lemma ToSA_by_structural_extraction__reverse_transformation:
+lemma NToA_by_structural_extraction__reverse_transformation:
   " Object_Equiv T eq
 \<Longrightarrow> Try Any (
       (y,w) \<Ztypecolon> U \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xr \<Ztypecolon> T \<^emph> R \<w>\<i>\<t>\<h> (
@@ -506,7 +506,7 @@ lemma [\<phi>reason 5]:
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (() \<Ztypecolon> \<phi>None) (y \<Ztypecolon> U) (() \<Ztypecolon> \<phi>None) (
         Reverse_Transformation Pr (Structural_Extract (y' \<Ztypecolon> U') (() \<Ztypecolon> \<phi>None) (x' \<Ztypecolon> T') (() \<Ztypecolon> \<phi>None) P2) \<and> P) \<close>
   unfolding Action_Tag_def
-  by (metis Generated_Rule_def Structural_Extract_fallback implies_weaken)
+  by (metis Generated_Rule_def Structural_Extract_fallback transformation_weaken)
 *)
 
 
@@ -552,13 +552,13 @@ lemma [\<phi>reason 1211]:
         y' \<Ztypecolon> Agreement U' \<^emph> (Agreement T' ?\<^sub>\<phi> C) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd y', ()) \<Ztypecolon> Agreement T' \<^emph> \<circle> \<w>\<i>\<t>\<h> P')
     \<and> P) @action \<A>SE True \<close>
   unfolding Action_Tag_def \<r>Guard_def Generated_Rule_def
-  apply (rule implies_weaken[where P=P], defer_tac)
+  apply (rule transformation_weaken[where P=P], defer_tac)
   apply (cases C; cases x; simp add: \<phi>Prod_expn')
   \<medium_left_bracket> premises A
     dup
     apply_rule Agreement_cast[OF A]
   \<medium_right_bracket>
-  apply (simp add: implies_weaken Agreement_cast)
+  apply (simp add: transformation_weaken Agreement_cast)
   apply (clarsimp; cases C; cases y'; simp add: \<phi>Prod_expn')
   \<medium_left_bracket> premises _ and _ and A and _
     apply_rule Agreement_cast[OF A]
@@ -735,7 +735,7 @@ lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
     @action \<A>SE True \<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close> and W' :: \<open>('c'::sep_ab_semigroup,'d') \<phi>\<close>
   unfolding Action_Tag_def
-  apply (rule implies_weaken, defer_tac)
+  apply (rule transformation_weaken, defer_tac)
   apply (rule SE_Near_Semimodule_adcb[of F1, unfolded Action_Tag_def])
   apply assumption
   apply assumption
@@ -888,7 +888,7 @@ lemma [\<phi>reason 1211]:
       (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T' \<^emph> W' \<w>\<i>\<t>\<h> P')
       \<and> P) @action \<A>SE True\<close>
   unfolding Generated_Rule_def Action_Tag_def
-  by (rule implies_weaken, defer_tac,
+  by (rule transformation_weaken, defer_tac,
       rule Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def], assumption, clarify,
       rule Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def], blast)
 
@@ -900,7 +900,7 @@ lemma [\<phi>reason 1211]:
       (Reverse_Transformation RP (y' \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> k \<^bold>\<rightarrow> T' \<^emph> W' \<w>\<i>\<t>\<h> P')
       \<and> P) @action \<A>SE True\<close>
   unfolding Generated_Rule_def Action_Tag_def
-  by (rule implies_weaken, defer_tac,
+  by (rule transformation_weaken, defer_tac,
       rule Structural_Extract_\<phi>Map_L_norm_left [unfolded Action_Tag_def], assumption, clarify,
       rule Structural_Extract_\<phi>Map_L_norm_right[unfolded Action_Tag_def], blast)
 

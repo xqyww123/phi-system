@@ -32,7 +32,7 @@ fun guess_property  (x_term, T_term, (phi:phi_type)) ctxt =
                             $ (\<^Const>\<open>\<phi>Type model_ty model_ty\<close> $ Bound 0 $ \<^Const>\<open>Itself model_ty\<close>)
                             $ (r_term $ Bound 1 $ Bound 0)))
                     $ \<^Const>\<open>True\<close>)
-                $ (\<^Const>\<open>to \<open>Term.fastype_of \<^Const>\<open>Itself model_ty\<close>\<close>\<close> $ \<^Const>\<open>Itself model_ty\<close>)))
+                $ (\<^Const>\<open>to model_ty model_ty\<close> $ \<^Const>\<open>Itself model_ty\<close>)))
          |> fold (fn T => fn X => HOLogic.all_const T $ Abs ("A", T, X)) rev_arg_tys
         end
       val r_types = map (fn ((_,x,m),_) => x --> m --> HOLogic.boolT) T_params
@@ -210,7 +210,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                                         $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ itself')
                                         $ _)))
                                   $ _)
-                              $ (\<^Const>\<open>to _\<close> $ itself))
+                              $ (\<^Const>\<open>to _ _\<close> $ itself))
                       = (T, (itself, itself'))
                 val (T', pair) = extract (Logic.strip_imp_concl hint)
              in (T',T) :: pair :: (map (snd o extract) (Logic.strip_imp_prems hint))

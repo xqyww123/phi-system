@@ -163,8 +163,8 @@ lemma [\<phi>reason 1010 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 
 
 lemma [\<phi>reason 1000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame' l Y E
-\<Longrightarrow> (\<And>v. Y v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' v @action ToSA)
-\<Longrightarrow> E \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' @action ToSA
+\<Longrightarrow> (\<And>v. Y v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' v @action NToA)
+\<Longrightarrow> E \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' @action NToA
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sift_brking_frame  l Y' E'\<close>
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
            Brking_Frame_def
@@ -243,7 +243,7 @@ lemma [\<phi>reason 1000]:
 
 hide_fact Brking_Frame_plus
 
-subsection \<open>ToSA through Brking_Frame\<close>
+subsection \<open>NToA through Brking_Frame\<close>
 
 
 lemma [\<phi>reason 2200]:

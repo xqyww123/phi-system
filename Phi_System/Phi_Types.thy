@@ -74,8 +74,8 @@ declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
 
 subsection \<open>Embedding Subjection into Type\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
+declare [[\<phi>trace_reasoning = 3]]
+          
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -85,7 +85,7 @@ declare [[\<phi>trace_reasoning = 1]]
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
-       and Separation_Homo
+       and Separation_Homo\<^sub>E
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -139,7 +139,7 @@ text \<open>The above rule is interesting but essentially useless as it is repla
   The To-Transformation already enters into the elements by transformation functor.\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P @action to MODE_SIMP\<close>
+  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P @action to \<A>simp\<close>
   unfolding Transformation_Functor_def Transformation_def Action_Tag_def
   by simp
 
@@ -351,7 +351,7 @@ lemma \<S>_Homo\<^sub>I:
 text \<open>The above rules are interesting but essentially useless as it is replaced by the following rule.\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open>s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s @action to MODE_SIMP\<close>
+  \<open>s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s @action to \<A>simp\<close>
   unfolding Action_Tag_def Transformation_def
   by simp
 
@@ -379,23 +379,25 @@ text \<open>It is too basic and our reasoner can barely do little about \<phi>-t
   reasoner. As a consequence, almost every property of the \<phi>-type has to be proven manually.\<close>
 
 thm \<phi>Composition.intro_reasoning[\<phi>reason 60]
-
+thm \<phi>Composition.elim_reasoning
 
 term ExSet
 
 
 lemma [\<phi>reason 1000]:
-  \<open> (\<And>x. x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rU x y @action to Itself)
-\<Longrightarrow> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rT x y @action to Itself)
-\<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>m. rT m y \<and> rU x m) @action to Itself\<close>
+  \<open> (\<And>x. x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y :: 'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rU x y @action to (Itself :: ('b,'b) \<phi>))
+\<Longrightarrow> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y :: 'c) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rT x y @action to (Itself :: ('c,'c) \<phi>))
+\<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>m. rT m y \<and> rU x m) @action to (Itself :: ('c,'c) \<phi>)\<close>
   unfolding Transformation_def Action_Tag_def
   by clarsimp  blast
 
+(*
 lemma [\<phi>reason 1200]:
-  \<open> y \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> y \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Zcomp> U \<w>\<i>\<t>\<h> P\<close>
+  \<open> y \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> y \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE (T \<Zcomp> U) \<w>\<i>\<t>\<h> P\<close>
   \<medium_left_bracket> premises Y[unfolded Transformation_def Itself_expn, simplified, useful]
     construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket> .
+*)
 
 lemma [\<phi>reason 1200]:
   \<open> Is_Functional (x \<Ztypecolon> U)
@@ -590,7 +592,7 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_structural act
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_structural act\<close>
   unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod implies_trans)
+  by (meson implies_left_prod implies_right_prod transformation_trans)
 
 
 
@@ -609,14 +611,14 @@ lemma prod_transform_as1:
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action as N
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action as (M * N)\<close>
   unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod implies_trans)
+  by (meson implies_left_prod implies_right_prod transformation_trans)
 
 lemma prod_transform_as2:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action to N
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action to M
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action to (M * N)\<close>
   unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod implies_trans)
+  by (meson implies_left_prod implies_right_prod transformation_trans)
 
 declare [[\<phi>reason 1200 prod_transform_as1 prod_transform_as2
       for \<open>?A * ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (?M * ?N)\<close>]]
@@ -628,7 +630,7 @@ lemma [\<phi>reason 1100]:
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action as T
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action as T\<close>
   unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod implies_trans)
+  by (meson implies_left_prod implies_right_prod transformation_trans)
 
 lemma Prod_transform_as1:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P @action as A

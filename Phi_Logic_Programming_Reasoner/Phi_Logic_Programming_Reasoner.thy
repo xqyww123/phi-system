@@ -602,7 +602,7 @@ lemma Matches_I: \<open>Matches pattern term\<close> unfolding Matches_def ..
 
 lemma NO_MATCH_I: "NO_MATCH A B" unfolding NO_MATCH_def ..
 
-\<phi>reasoner_ML NO_MATCH 0 ("NO_MATCH ?A ?B") = \<open>
+\<phi>reasoner_ML NO_MATCH !1 ("NO_MATCH ?A ?B") = \<open>
   fn (ctxt,th) =>
   let
     val (\<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>NO_MATCH\<close>, _) $ a $ b)) = Thm.major_prem_of th

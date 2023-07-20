@@ -129,7 +129,7 @@ structure Assertion_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = SOME \<^binding>\<open>assertion_simps\<close>
   val comment = "Simplification rules normalizing an assertion. \
-                       \It is applied before ToSA process."
+                       \It is applied before NToA process."
 )
 
 val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
@@ -408,7 +408,7 @@ text \<open>Antecedent \<^schematic_prop>\<open>\<phi>IntroFrameVar ?R ?S' S ?T'
   It has a meaning of `the remaining everything' like, the target (RHS) item tagged by this
   means the item matches the whole remaining part of the source (LHS) part.
   \<open>TAIL\<close> also means, the tagged item is at the end and has a sense of ending, so no further
-  padding is required (e.g. padding-of-void during ToSA reasoning).
+  padding is required (e.g. padding-of-void during NToA reasoning).
 \<close>
 
 lemma \<phi>IntroFrameVar_No:
@@ -638,7 +638,7 @@ lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolo
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x z
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<close>
   unfolding Identity_Element\<^sub>I_def Object_Equiv_def Premise_def
-  using implies_trans by fastforce
+  using transformation_trans by fastforce
 
 lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>E (?var_x \<Ztypecolon> _)\<close>]:
   \<open> Identity_Element\<^sub>E (z \<Ztypecolon> T)
@@ -646,7 +646,7 @@ lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>E (?var_x \<Ztypecolo
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq z x
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<close>
   unfolding Identity_Element\<^sub>E_def Object_Equiv_def Premise_def
-  using implies_trans by fastforce
+  using transformation_trans by fastforce
 
 lemma [\<phi>reason 1200]:
   \<open> Identity_Element\<^sub>I A P1
@@ -822,21 +822,18 @@ lemma [\<phi>reason 1200]:
 
 
 
-subsection \<open>Declaration of Transformation of State Abstraction (ToSA)\<close>
+subsection \<open>ToA Reasoning\<close>
 
-text \<open>
-  Supporting implication \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action ToSA\<close> only,
-  ToSA is a reasoning process of Transformation of Abstraction (ToA) for
-  assertions of (fictional) computation state.
-\<close>
+text \<open>NToA : Normalized ToA reasoning, the usual ToA reasoning having simplification and other
+             normalization at the beginning. \<close>
 
-consts ToSA' :: \<open>bool \<comment> \<open>whether to reason deeper transformation for each desired \<phi>-type
+consts NToA' :: \<open>bool \<comment> \<open>whether to reason deeper transformation for each desired \<phi>-type
                           by invoking more time-consuming reasoning process,
                           or just apply unification to match the desired.\<close>
               \<Rightarrow> mode\<close>
 
 text \<open>The boolean flag indicates whether to reason the transformation of \<phi>-types in depth.
-For \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<^sub>1 * \<cdots> * Y\<^sub>m @action ToSA' ?flag\<close>,
+For \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<^sub>1 * \<cdots> * Y\<^sub>m @action NToA' ?flag\<close>,
 
 \<^item> If the flag is turned on, for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close>, the reasoner
   infers in depth whether some source \<phi>-Type \<^term>\<open>X\<^sub>j\<close> can be transformed into \<^term>\<open>Y\<^sub>i\<close>,
@@ -850,10 +847,10 @@ The the flag is turned off, obviously the performance can be improved a lot thou
 the reasoning is weaker.
 \<close>
 
-abbreviation \<open>ToSA \<equiv> ToSA' True\<close>
+abbreviation \<open>NToA \<equiv> NToA' True\<close>
 
-lemma [\<phi>reason 3000 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action ToSA' ?mode\<close>]:
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action ToSA' mode\<close>
+lemma [\<phi>reason 3000 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action NToA' ?mode\<close>]:
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action NToA' mode\<close>
   unfolding Action_Tag_def using transformation_refl .
 
 subsection \<open>Declaration of Convergence of Branch\<close>
@@ -876,7 +873,7 @@ subsubsection \<open>Operations for a single Value\<close>
 
 (*
 lemma "_rule_extract_and_remove_the_first_value_"[no_atp]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> P @action ToSA' False
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> Y \<w>\<i>\<t>\<h> P @action NToA' False
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<close>
   for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)

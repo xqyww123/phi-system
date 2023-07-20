@@ -87,9 +87,9 @@ fun gen_TF hint0 (phi0 : phi_type) generic =
                         | X => NONE)) *)
       val unify_hint = hint_unify_by_type_operator (
               fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _) => F1)
-      val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr})),
+      val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr_IH})),
                         fn ctxt => fn phi =>
-                          Conv.rewr_conv @{thm \<phi>TA_TF_rewr} then_conv
+                          Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C} then_conv
                             Conv.implies_concl_conv (Conv.implies_concl_conv (
                                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                               Phi_Syntax.transformation_conv

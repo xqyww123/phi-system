@@ -17,7 +17,7 @@ signature PHI_APPLICATION = sig
 
 (*Depending on application rules, most of the resulted sequent (except resolution) has
 an additional obligation antecedent at the last of the antecedent list,
-storing proof obligations generated during ToSA, no matter whether the obligations are trivial.*)
+storing proof obligations generated during NToA, no matter whether the obligations are trivial.*)
   val try_apply : thm list (*applied rules*) -> Proof.context -> thm (*sequent*) -> thm option
   val apply : thm list (*rules to be applied*) -> Proof.context -> thm (*sequent*) -> thm
 

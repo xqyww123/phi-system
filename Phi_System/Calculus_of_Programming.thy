@@ -233,7 +233,7 @@ lemma \<phi>apply_implication_impl:
 
 lemma "_\<phi>cast_internal_rule_":
   " CurrentConstruction mode blk H T
-\<Longrightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> Any @action ToSA
+\<Longrightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> Any @action NToA
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> CurrentConstruction mode blk H T'"
@@ -243,7 +243,7 @@ lemma "_\<phi>cast_internal_rule_":
 
 lemma "_\<phi>cast_internal_rule_'":
   " \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> (\<And>v. T v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' v \<w>\<i>\<t>\<h> Any @action ToSA)
+\<Longrightarrow> (\<And>v. T v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' v \<w>\<i>\<t>\<h> Any @action NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T' \<t>\<h>\<r>\<o>\<w>\<s> E"
@@ -252,14 +252,14 @@ lemma "_\<phi>cast_internal_rule_'":
 
 lemma "_\<phi>cast_exception_":
   " \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> (\<And>v. E v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' v @action ToSA)
+\<Longrightarrow> (\<And>v. E v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' v @action NToA)
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E'"
   unfolding Action_Tag_def
   using \<phi>apply_implication_pending_E by blast
 
 lemma "_\<phi>cast_exception_rule_":
   " \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> (\<And>v. E v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' v @action ToSA)
+\<Longrightarrow> (\<And>v. E v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' v @action NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E'"
@@ -267,7 +267,7 @@ lemma "_\<phi>cast_exception_rule_":
 
 lemma "_\<phi>cast_implication_":
   \<open> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> Any @action ToSA
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> Any @action NToA
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T\<close>
@@ -275,7 +275,7 @@ lemma "_\<phi>cast_implication_":
 
 lemma "_\<phi>cast_proc_return_internal_rule_":
   " \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> (\<And>v. Y v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' v \<w>\<i>\<t>\<h> Any @action ToSA)
+\<Longrightarrow> (\<And>v. Y v \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' v \<w>\<i>\<t>\<h> Any @action NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E"
@@ -284,7 +284,7 @@ lemma "_\<phi>cast_proc_return_internal_rule_":
 
 lemma "_\<phi>cast_proc_exception_internal_rule_":
   " \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> (\<And>e. E e \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' e \<w>\<i>\<t>\<h> Any @action ToSA)
+\<Longrightarrow> (\<And>e. E e \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' e \<w>\<i>\<t>\<h> Any @action NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'"

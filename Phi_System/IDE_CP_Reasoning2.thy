@@ -186,16 +186,21 @@ lemma [\<phi>reason 1200]:
   unfolding Technical_def .
 
 
-section \<open>Transformation of State Abstraction (ToSA)\<close>
+section \<open>\<exists>-free ToA Reasoning with Normalization\<close>
 
-text \<open>This is a reasoning procedure for transformations of abstraction of the whole computation
-  state, which we name \<^emph>\<open>Transformation of State Abstraction (ToSA)\<close>.
-  Specifications must be given in MTF.
-  The procedure can recognize items specifying identical objects and
-    invoke the reasoning for transforming the object from the source abstraction to the target
-    abstraction.\<close>
+text \<open>The section and the next section present the main reasoning procedure for transformations of
+  abstraction in the system. The section gives the part passing every element in the right hand side
+  of a transformation goal, i.e., find the transformation of the target objects one by one, using
+  the remained source objects of (the transformation of) the previous object as the source of the
+  next transformation goal for the next object.
 
-text \<open>Priority Convention:
+  The next section gives the other part that passes the left hand side, i.e., for a certain target
+  object, search the source objects one by one to complete the transformation towards the target,
+  using the remained unsolved target proportion of the previous search as the goal of
+  the next search in the next source object.
+
+Priority Convention:
+
 \<^item> 4000: Termination
 \<^item> 3200: Very Safe Normalization
 \<^item> 3150: Assigning Zeros
@@ -222,23 +227,23 @@ consts ToA_flag_deep :: bool
 
 subsection \<open>Initialization\<close>
 
-lemma [\<phi>reason 2100 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action ToSA' ?mode\<close>]:
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action ToSA' mode\<close>
+lemma [\<phi>reason 2100 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action NToA' ?mode\<close>]:
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action NToA' mode\<close>
   unfolding Action_Tag_def using transformation_refl .
 
-lemma [\<phi>reason 2100 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<s>\<u>\<b>\<j> True \<w>\<i>\<t>\<h> ?P @action ToSA' ?mode\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action ToSA' mode
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j> True \<w>\<i>\<t>\<h> P @action ToSA' mode\<close>
+lemma [\<phi>reason 2100 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<s>\<u>\<b>\<j> True \<w>\<i>\<t>\<h> ?P @action NToA' ?mode\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action NToA' mode
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j> True \<w>\<i>\<t>\<h> P @action NToA' mode\<close>
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason 2020 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y @action ToSA' _\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action ToSA' deep
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action ToSA' deep\<close>
+lemma [\<phi>reason 2020 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y @action NToA' _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Any @action NToA' deep
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action NToA' deep\<close>
   unfolding Action_Tag_def
-  by (simp add: implies_weaken)
+  by (simp add: transformation_weaken)
 
 (*
-lemma "_ToSA_init_focus_":
+lemma "_NToA_init_focus_":
   \<open> Simplify (assertion_simps SOURCE) X' X
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> Y' \<brangle> \<w>\<i>\<t>\<h> P
@@ -247,7 +252,7 @@ lemma "_ToSA_init_focus_":
   unfolding Action_Tag_def Simplify_def
   by simp
 
-lemma "_ToSA_init_by_focus_":
+lemma "_NToA_init_by_focus_":
   \<open> Simplify (assertion_simps SOURCE) X' X
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> Y' \<brangle> \<w>\<i>\<t>\<h> P
@@ -259,8 +264,8 @@ lemma "_ToSA_init_by_focus_":
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def
   by (simp; metis Transformation_def implies_right_prod mult_1_class.mult_1_left) *)
 
-lemma "_ToSA_init_":
-  \<open> Simplify (assertion_simps SOURCE) X' X
+lemma "_NToA_init_":
+  \<open> Simplify (assertion_simps SOURCE) X' X \<comment> \<open>TODO: move this into the bellow ML\<close>
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
@@ -268,11 +273,11 @@ lemma "_ToSA_init_":
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def
   by simp
 
-\<phi>reasoner_ML ToSA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action ToSA' _\<close>) = \<open>
+\<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (ctxt0,sequent0) => Seq.make (fn () =>
   let val sequent = @{thm' Action_Tag_I} RS sequent0
       val _ (*Trueprop*) $ ( _ (*Action_Tag*) $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _)
-                                              $ (Const(\<^const_name>\<open>ToSA'\<close>, _) $ deep))
+                                              $ (Const(\<^const_name>\<open>NToA'\<close>, _) $ deep))
          = Thm.major_prem_of sequent0
 
       val ctxt = PLPR_Env.push \<^const_name>\<open>ToA_flag_deep\<close> deep ctxt0
@@ -336,11 +341,11 @@ fn (ctxt0,sequent0) => Seq.make (fn () =>
       val is_unital = Sign.of_sort (Proof_Context.theory_of ctxt) (fastype_of Y, \<^sort>\<open>sep_magma_1\<close>)
 
       val rule = if already_has_focus
-                 then @{thm "_ToSA_init_focus_"}
+                 then @{thm "_NToA_init_focus_"}
                  else if null void_tails andalso is_unital
-                 then @{thm "_ToSA_init_by_focus_"}
-                 else @{thm "_ToSA_init_"}*)
-   in SOME ((ctxt, @{thm "_ToSA_init_"} RS sequent2), Seq.empty)
+                 then @{thm "_NToA_init_by_focus_"}
+                 else @{thm "_NToA_init_"}*)
+   in SOME ((ctxt, @{thm "_NToA_init_"} RS sequent2), Seq.empty)
   end)
 \<close>
 
@@ -361,14 +366,14 @@ lemma ToA_ex_intro':
   for c :: 'b
   unfolding Transformation_def by (simp, metis)
 
-lemma ToSA_finish': "X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> X \<brangle>"
+lemma NToA_finish': "X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> X \<brangle>"
   for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding mult_1_left FOCUS_TAG_def Action_Tag_def
   using transformation_refl by this+
 
 ML \<open>
 (* X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P *)
-fun ToSA_to_wild_card ctxt thm =
+fun NToA_to_wild_card ctxt thm =
   let val (vs, _, goal) = Phi_Help.leading_antecedent (Thm.prop_of thm)
       val N = length vs
       val (X,Y0,_) = Phi_Syntax.dest_transformation goal
@@ -403,19 +408,19 @@ fun ToSA_to_wild_card ctxt thm =
             else Thm.instantiate (TVars.empty, Vars.make [(V, Thm.cterm_of ctxt Y'3)]) thm
       val tac = TRY (HEADGOAL (resolve0_tac @{thms Action_Tag_I}))
                 THEN REPEAT_DETERM_N N_bads (HEADGOAL (resolve0_tac @{thms ToA_ex_intro ToA_ex_intro'}))
-                THEN (HEADGOAL (resolve0_tac @{thms transformation_refl ToSA_finish'}))
+                THEN (HEADGOAL (resolve0_tac @{thms transformation_refl NToA_finish'}))
    in tac thm'
   end
 \<close>
 
-\<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P @action ToSA\<close> 2015 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @action ToSA\<close>) = \<open>
-  fn (ctxt,thm) => ToSA_to_wild_card ctxt thm |> Seq.map (pair ctxt)
+\<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P @action NToA\<close> 2015 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @action NToA\<close>) = \<open>
+  fn (ctxt,thm) => NToA_to_wild_card ctxt thm |> Seq.map (pair ctxt)
 \<close>
 
 
 subsection \<open>Termination\<close>
 
-declare ToSA_finish'[\<phi>reason 4000 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ?X  \<brangle> \<w>\<i>\<t>\<h> _\<close>,
+declare NToA_finish'[\<phi>reason 4000 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ?X  \<brangle> \<w>\<i>\<t>\<h> _\<close>,
                      \<phi>reason 900  for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ?X' \<brangle> \<w>\<i>\<t>\<h> _\<close>]
 
 lemma [\<phi>reason 4000]:
@@ -428,8 +433,8 @@ lemma [\<phi>reason 4000]:
   for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding FOCUS_TAG_def Action_Tag_def by simp
 
-\<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> P @action ToSA\<close> 4005 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>
-  fn (ctxt,thm) => ToSA_to_wild_card ctxt thm |> Seq.map (pair ctxt)
+\<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> P @action NToA\<close> 4005 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>
+  fn (ctxt,thm) => NToA_to_wild_card ctxt thm |> Seq.map (pair ctxt)
 \<close>
 
 
@@ -714,109 +719,109 @@ lemma [\<phi>reason 2810]:
 
 subsubsection \<open>Disjunction in Target\<close>
 
-lemma ToSA_disj_target_A:
+lemma NToA_disj_target_A:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A + B \<w>\<i>\<t>\<h> P\<close>
   unfolding plus_set_def
   by (metis implies_union(1) plus_set_def)
 
-lemma ToSA_disj_target_B:
+lemma NToA_disj_target_B:
   \<open>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
 \<Longrightarrow>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A + B \<w>\<i>\<t>\<h> P\<close>
   by (simp add: Transformation_def)
 
-declare [[\<phi>reason !10 ToSA_disj_target_A ToSA_disj_target_B for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<w>\<i>\<t>\<h> ?P\<close>]]
+declare [[\<phi>reason !10 NToA_disj_target_A NToA_disj_target_B for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<w>\<i>\<t>\<h> ?P\<close>]]
 
-hide_fact ToSA_disj_target_A ToSA_disj_target_B
+hide_fact NToA_disj_target_A NToA_disj_target_B
 
-lemma ToSA_disj_target_A':
+lemma NToA_disj_target_A':
   \<open>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> A \<brangle> \<w>\<i>\<t>\<h> P
 \<Longrightarrow>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> A + B \<brangle> \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def FOCUS_TAG_def Transformation_def
   by (simp add: distrib_left, blast)
 
-lemma ToSA_disj_target_B':
+lemma NToA_disj_target_B':
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> B \<brangle> \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> A + B \<brangle> \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def FOCUS_TAG_def Transformation_def
   by (simp add: distrib_left, blast)
 
-declare [[\<phi>reason !10 ToSA_disj_target_A' ToSA_disj_target_B'
+declare [[\<phi>reason !10 NToA_disj_target_A' NToA_disj_target_B'
             for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ?A + ?B \<brangle> \<w>\<i>\<t>\<h> _\<close>]]
 
-hide_fact ToSA_disj_target_A' ToSA_disj_target_B'
+hide_fact NToA_disj_target_A' NToA_disj_target_B'
 
 subsubsection \<open>Conditional Branch in Source\<close>
 
 text \<open>The condition should be regarded as an output, and the reasoning process assigns which
 the branch that it chooses to the output condition variable.\<close>
 
-lemma ToSA_cond_source_A:
+lemma NToA_cond_source_A:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> (if True then A else B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def
   by (simp add: Transformation_def distrib_left)
 
-lemma ToSA_cond_source_B:
+lemma NToA_cond_source_B:
   \<open> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> (if False then A else B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def
   by (simp add: Transformation_def distrib_left)
 
-declare [[\<phi>reason 2600 ToSA_cond_source_A ToSA_cond_source_B
+declare [[\<phi>reason 2600 NToA_cond_source_A NToA_cond_source_B
         for \<open>(if ?condition then ?A else ?B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P\<close>]]
 
-hide_fact ToSA_cond_source_A ToSA_cond_source_B
+hide_fact NToA_cond_source_A NToA_cond_source_B
 
-lemma ToSA_cond_source_A':
+lemma NToA_cond_source_A':
   \<open> R * A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R * (if True then A else B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def
   by (simp add: Transformation_def distrib_left)
 
-lemma ToSA_cond_source_B':
+lemma NToA_cond_source_B':
   \<open> R * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R * (if False then A else B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def
   by (simp add: Transformation_def distrib_left)
 
-declare [[\<phi>reason 2600 ToSA_cond_source_A' ToSA_cond_source_B'
+declare [[\<phi>reason 2600 NToA_cond_source_A' NToA_cond_source_B'
         for \<open>?R * (if ?condition then ?A else ?B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P\<close>]]
 
-hide_fact ToSA_cond_source_A' ToSA_cond_source_B'
+hide_fact NToA_cond_source_A' NToA_cond_source_B'
 
 
 subsubsection \<open>Conditional Branch in Target\<close>
 
-lemma ToSA_cond_target_A:
+lemma NToA_cond_target_A:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if True then A else B) \<w>\<i>\<t>\<h> P\<close>
   by simp
 
-lemma ToSA_cond_target_B:
+lemma NToA_cond_target_B:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if False then A else B) \<w>\<i>\<t>\<h> P\<close>
   by simp
 
-declare [[\<phi>reason 2600 ToSA_cond_target_A ToSA_cond_target_B
+declare [[\<phi>reason 2600 NToA_cond_target_A NToA_cond_target_B
             for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if ?condition then ?A else ?B) \<w>\<i>\<t>\<h> ?P\<close> ]]
 
-hide_fact ToSA_cond_target_A ToSA_cond_target_B
+hide_fact NToA_cond_target_A NToA_cond_target_B
 
-lemma ToSA_cond_target_A':
+lemma NToA_cond_target_A':
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> A \<brangle> \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> if True then A else B \<brangle> \<w>\<i>\<t>\<h> P\<close>
   by simp
 
-lemma ToSA_cond_target_B':
+lemma NToA_cond_target_B':
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> B \<brangle> \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> if False then A else B \<brangle> \<w>\<i>\<t>\<h> P\<close>
   by simp
 
-declare [[\<phi>reason 2600 ToSA_cond_target_B' ToSA_cond_target_A'
+declare [[\<phi>reason 2600 NToA_cond_target_B' NToA_cond_target_A'
             for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> if ?condition then ?A else ?B \<brangle> \<w>\<i>\<t>\<h> ?P\<close> ]]
 
-hide_fact ToSA_cond_target_A' ToSA_cond_target_B'
+hide_fact NToA_cond_target_A' NToA_cond_target_B'
 
 
 subsection \<open>Top\<close>
@@ -862,20 +867,20 @@ subsection \<open>Step-by-Step Searching Procedure\<close>
 
 (*
 lemma [\<phi>reason 2100
- except \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> (?X1 * ?X2) \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_ToSA ?mode ?G\<close>
-        \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> 1 \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_ToSA ?mode ?G\<close>
-        \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> TAIL ?X \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_ToSA ?mode ?G\<close>
+ except \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> (?X1 * ?X2) \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA ?mode ?G\<close>
+        \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> 1 \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA ?mode ?G\<close>
+        \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> TAIL ?X \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA ?mode ?G\<close>
 ]:
-  " H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> 1 * X \<brangle> \<w>\<i>\<t>\<h> P @action reason_ToSA mode G \<Longrightarrow>
-    H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> X \<brangle> \<w>\<i>\<t>\<h> P @action reason_ToSA mode G"
+  " H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> 1 * X \<brangle> \<w>\<i>\<t>\<h> P @action reason_NToA mode G \<Longrightarrow>
+    H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> X \<brangle> \<w>\<i>\<t>\<h> P @action reason_NToA mode G"
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding mult_1_left .
 
 
-lemma [\<phi>reason 1050 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_ToSA True ?G\<close>
-   except \<open>(?X'::?'a::sep_magma_1 set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y' \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_ToSA True ?G\<close>]:
+lemma [\<phi>reason 1050 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA True ?G\<close>
+   except \<open>(?X'::?'a::sep_magma_1 set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y' \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA True ?G\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action reason_ToSA True G\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action reason_NToA True G\<close>
   \<comment> \<open>If it doesn't have one, it cannot be reasoned by this procedure, so
       a fallback here handles it.\<close>
   unfolding FOCUS_TAG_def Action_Tag_def .*)
@@ -922,10 +927,10 @@ consts ToA_Annotation :: \<open>'a \<Rightarrow> 'a\<close>
   unfolding FOCUS_TAG_def Transformation_def split_paired_All Identity_Element\<^sub>I_def \<r>Recursion_Guard_def
   by (metis mult_1_class.mult_1_left set_mult_expn) *)
 
-(* lemma [\<phi>reason 1050 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_ToSA True ?G\<close>
-   except \<open>(?X'::?'a::sep_magma_1 set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y' \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_ToSA True ?G\<close>]:
+(* lemma [\<phi>reason 1050 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA True ?G\<close>
+   except \<open>(?X'::?'a::sep_magma_1 set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y' \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA True ?G\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action reason_ToSA True G\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action reason_NToA True G\<close>
   \<comment> \<open>If it isn't unital, it cannot be reasoned by this procedure, so
       a fallback here handles it.\<close>
   unfolding FOCUS_TAG_def Action_Tag_def . *)
@@ -986,7 +991,7 @@ lemma [\<phi>reason default 10 except \<open> (_ :: ?'a :: sep_semigroup set) \<
 
 
 (*
-lemma ToSA_skip [\<phi>reason 65 for \<open> _ * _ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ?X \<brangle> \<w>\<i>\<t>\<h> _\<close>
+lemma NToA_skip [\<phi>reason 65 for \<open> _ * _ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ?X \<brangle> \<w>\<i>\<t>\<h> _\<close>
                             ]:
 \<comment> \<open>or attempts the next cell, if still not succeeded\<close>
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * \<blangle> X \<brangle> \<w>\<i>\<t>\<h> P
@@ -1419,7 +1424,7 @@ lemma enter_SEb [\<phi>reason 51 for \<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>
 \<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P1 \<and> P2\<close>
   for A :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def \<phi>Prod_expn'
-  by (smt (z3) implies_right_prod implies_trans implies_weaken)
+  by (smt (z3) implies_right_prod transformation_trans transformation_weaken)
 
 declare enter_SEb [THEN ToA_by_Equive_Class, \<phi>reason 50 for \<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ \<close>]
 

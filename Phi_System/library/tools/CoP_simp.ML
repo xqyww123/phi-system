@@ -119,7 +119,7 @@ fun force_rule_pass rule ctxt =
 
 
 val _ = Theory.setup (Context.theory_map (
-  Phi_Reasoner.add_pass ("Phi_CoP_Simp", \<^pattern_prop>\<open>_ @action to MODE_SIMP\<close>,
+  Phi_Reasoner.add_pass ("Phi_CoP_Simp", \<^pattern_prop>\<open>_ @action to \<A>simp\<close>,
     fn pos => fn (rules, mode, pats, guard, ctxt) =>
         if Config.get_generic ctxt enable_rule_pass
         then let val (rules', ctxt') = fold_map force_rule_pass rules ctxt
@@ -138,9 +138,9 @@ fun simplifier (ctxt0,sequent) = Seq.make (fn () =>
       fun simp_task_mode (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = simp_task_mode X
         | simp_task_mode (Const(\<^const_name>\<open>Action_Tag\<close>, _)
               $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _)
-              $ (Const(\<^const_name>\<open>to\<close>, _) $ Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) ) = 1
+              $ (Const(\<^const_name>\<open>to\<close>, _) $ Const(\<^const_name>\<open>\<A>simp\<close>, _)) ) = 1
         | simp_task_mode (Const(\<^const_name>\<open>Premise\<close>, _) $ X $ _) = simp_task_mode X
-        | simp_task_mode (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = 2
+        | simp_task_mode (Const(\<^const_name>\<open>\<A>simp\<close>, _)) = 2
         | simp_task_mode (Const(\<^const_name>\<open>default\<close>, _)) = 3
         | simp_task_mode _ = 0
 

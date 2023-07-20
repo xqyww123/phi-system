@@ -427,6 +427,11 @@ fun distinct_rev eq lst =
   in dist ([], lst) end;
 
 fun apply_tactic (Tac_ML tac) s = tac s
+  | apply_tactic (Tac_Rule []) (ctxt,sequent) = Seq.empty
+  | apply_tactic (Tac_Rule [rule]) (ctxt,sequent) = Seq.make (fn () =>
+        case single_RS' rule ctxt sequent
+          of SOME ret => SOME ((ctxt, ret), Seq.empty)
+           | NONE => NONE)
   | apply_tactic (Tac_Rule rules) (ctxt,sequent) =
            Seq.of_list rules
         |> Seq.map_filter (fn rule => Option.map (pair ctxt) (single_RS' rule ctxt sequent))
@@ -528,6 +533,11 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
                                   Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                     else ()
             val _ = if score = 3015 then () else ()
+         (* fun filter_out_TBO L =
+              if exists (fn (_,_,m,_) => m = TO_BE_OVERRIDE) L
+              then filter_out (fn (_,_,m,_) => m = TO_BE_OVERRIDE) L
+              else L *)
+
             val Z = (call_reasoners' trace score N ctxt tactics th)
                   |> (fn Z =>
                         case mode
@@ -540,11 +550,13 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
                                             if pointer_eq (seq',Seq.empty) then L
                                             else [(score,pos,mode,seq')]::L)
                            | NORMAL => Z :: (
-                                  let val t = if pointer_eq (seq',Seq.empty) then L'
-                                              else (score,pos,mode,seq')::L'
+                                  let (*val L' = filter_out_TBO L'*)
+                                      val t = if pointer_eq (seq',Seq.empty) then L'
+                                              else (score,pos,mode,seq')::L' 
                                   in if null t then L else t::L end)
                            | TO_BE_OVERRIDE => Z :: (
-                                  let val t = if pointer_eq (seq',Seq.empty) then L'
+                                  let (*val L' = filter_out_TBO L'*)
+                                      val t = if pointer_eq (seq',Seq.empty) then L'
                                               else (score,pos,mode,seq')::L'
                                   in if null t then L else t::L end)
                      )
