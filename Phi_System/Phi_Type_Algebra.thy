@@ -289,6 +289,41 @@ lemma apply_Transformation_Functor:
 
 subsection \<open>Definition and Deriving Tools\<close>
 
+text \<open>The @{command \<phi>type_def} command always generate 4 sorts of rules.
+  For instance, for definition \<open>x \<Ztypecolon> T \<equiv> U\<close>,
+
+\<^item> \<^verbatim>\<open>T.intro\<close> of form \<^prop>\<open>U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close>. There are corresponding reasoning rules named \<^verbatim>\<open>T.intro_reasoning\<close>.
+      By default the reasoning rules are not activated. You may activate them by
+      \<^verbatim>\<open>declare T.intro_reasoning[\<phi>reason]\<close> in order to, for instance, reduce to \<open>U\<close> the reasoning of
+      \<^emph>\<open>every\<close> transformation goal targeting to \<open>T\<close>. Depending on the priority you configured,
+      if the priority is greater than 54 (the priority of the entry point of the Structural Extraction),,
+      this reduction happens before any in-depth reasoning that collects proportions in the source
+      objects to synthesis the target \<open>T\<close> (i.e. the Structural Extraction, SE);
+      if the priority is less than 50, it serves as a fallback when the SE fails.
+
+      In any case even if you do not activate the intro rule, the system always activates a rule
+      that allows you to use \<^term>\<open>MAKE T\<close> tag to invoke the intro rule and to make a \<phi>-type term
+      of \<open>T\<close> from \<open>U\<close>. To use it, just write \<phi>-Lang \<^verbatim>\<open>\<open>x \<Ztypecolon> MAKE T\<close>\<close> to invoke the synthesis process.
+
+\<^item> \<^verbatim>\<open>T.elim\<close> of form \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U\<close>. There are also corresponding reasoning rules named \<^verbatim>\<open>T.elim_reasoning\<close>.
+      They are also not activated by default. The priority of them can be more arbitrary because they are
+      in the SE process as the last stage of the \<exists>free-ToA reasoning. Note the \<exists>free-ToA reasoning
+      works not good if the elim rule introduces existential quantification, because the \<exists>free-ToA
+      by design does not consider opening abstraction.
+
+      No matter if the reasoning rules are activated, you can always open an abstraction using
+      To-Transformation, i.e., \<phi>-Lang \<^verbatim>\<open>to \<open>List OPEN\<close>\<close> for instance to open \<open>x" \<Ztypecolon> List T\<close> into
+      \<open>{ y" \<Ztypecolon> List U' | List.rel P x" y" }\<close> if \<open>U \<equiv> { y \<Ztypecolon> U' | P y }\<close> for some \<open>y\<close> and \<open>y"\<close> that
+      maybe in a set if \<open>x \<Ztypecolon> T\<close> is an abstraction of a set of \<open> { y \<Ztypecolon> U' | P y } \<close>.
+
+\<^item> \<^verbatim>\<open>T.unfold\<close>, \<^prop>\<open>(x \<Ztypecolon> T) = U\<close>
+
+\<^item> \<^verbatim>\<open>T.expansion\<close>, \<^prop>\<open>p \<Turnstile> (x \<Ztypecolon> T) \<longleftrightarrow> p \<Turnstile> U\<close>. This rule is added to the system global simplifier.
+
+If a definition like those recursive definitions is characterized by multiple equations.
+The above rules are generated for each equation correspondingly.
+\<close>
+
 subsubsection \<open>Convention\<close>
 
 text \<open>
@@ -384,11 +419,17 @@ lemma \<phi>gen_expansion:
   by simp
 
 
-
-
-
-
 ML_file \<open>library/tools/functor_detect.ML\<close>
+
+
+
+
+
+
+
+
+
+
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
 term \<open>HOL.eq\<close>
 
@@ -1513,7 +1554,7 @@ hide_fact Object_Equiv_rule \<phi>TA_EO_rewr_IH \<phi>TA_EO_rewr_C Object_Equiv_
 subsubsection \<open>Transformation Functor\<close>
 
 lemma \<phi>TA_TF_rule:
-  \<open>(\<And>T U g x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x) \<Longrightarrow>
+  \<open>(\<And>T U g x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x) \<Longrightarrow>
               Ant \<longrightarrow>
                (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<longrightarrow> (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)) \<longrightarrow> \<comment> \<open>split D\<close>
                (x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))

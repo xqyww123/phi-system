@@ -229,10 +229,10 @@ fun obligation_intro_Ex_conv conv_schematic ctxt thm =
         val mode = conv_schematic = 2
         val contract_Ex_rule = if mode then @{thm' contract_intro_sp_Ex}
                                        else @{thm' contract_intro_Ex}
-        val mv_Ex_All = if mode then Phi_Conv.move_sp_Ex_inside_All_exhausitive
-                                else Phi_Conv.move_Ex_inside_All_exhausitive
-        val mv_Ex_Disj = if mode then Phi_Conv.move_sp_Ex_downto_Disj_exhaustive
-                                 else Phi_Conv.move_Ex_downto_Disj_exhaustive
+        val mv_Ex_All = if mode then Phi_Conv.move_sp_Ex_inside_All_recursive
+                                else Phi_Conv.move_Ex_inside_All_recursive
+        val mv_Ex_Disj = if mode then Phi_Conv.move_sp_Ex_downto_Disj_recursive
+                                 else Phi_Conv.move_Ex_downto_Disj_recursive
         fun intro_Ex v thm =
               Conv.fconv_rule (
                   Conv.rewr_conv contract_Ex_rule then_conv

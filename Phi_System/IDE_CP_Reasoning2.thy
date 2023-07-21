@@ -1071,8 +1071,8 @@ ML \<open>fun mk_SE_pattern ctxt tm =
             else error ("In a rule of structural extraction, the abstract object of the source has to be a schematic variable\
                         \ but given\n" ^ Context.cases Syntax.string_of_term_global Syntax.string_of_term ctxt v)
         end
-      fun chk_P (\<^Const>\<open>HOL.conj\<close> $ (Const(\<^const_name>\<open>Auto_Transform_Hint\<close>, _) $ _ $ _) $ _) =
-            (idx := !idx + 1 ; \<^Const>\<open>HOL.conj\<close>
+      fun chk_P (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>Auto_Transform_Hint\<close>, _) $ _ $ _) $ _) =
+            (idx := !idx + 1 ; Const(\<^const_name>\<open>HOL.conj\<close>, _)
                 $ (Const(\<^const_name>\<open>Auto_Transform_Hint\<close>, TVar(("ta", !idx), []))
                     $ Var (("vx", !idx), TVar(("tx",!idx),[]))
                     $ Var (("vy", !idx), TVar(("ty",!idx),[])) )

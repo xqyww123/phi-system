@@ -259,3 +259,27 @@ fun tha RSN' (ctxt, i, thb) =
 (*Resolution: P \<Longrightarrow> Q, Q \<Longrightarrow> R gives P \<Longrightarrow> R*)
 fun tha RS' (ctxt, thb) = tha RSN' (ctxt, 1,thb);
 
+
+signature HOLOGIC = sig
+include HOLOGIC
+
+val imp_conv : conv -> conv -> conv
+val All_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
+val Ex_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
+
+end
+
+structure HOLogic : HOLOGIC = struct
+open HOLogic
+
+fun imp_conv cv1 cv2 ct =
+  (case Thm.term_of ct of
+    Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
+      Conv.combination_conv (Conv.arg_conv cv1) cv2 ct
+  | _ => raise CTERM ("imp_conv", [ct]));
+
+val All_conv = Phi_Conv.hol_all_conv
+val Ex_conv = Phi_Conv.quant_conv \<^const_name>\<open>Ex\<close>
+
+end
+

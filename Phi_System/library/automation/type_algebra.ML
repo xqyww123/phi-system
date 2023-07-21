@@ -799,7 +799,7 @@ fun instantiate_ToA (Ant,pure_info,ctxt) ToA =
     of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_IH_ToA\<close>)
         => let
           val ToA' = Ant RS (Thm.permute_prems 0 ~2 ToA)
-          val prem = Thm.cprop_of ToA' |> Thm.dest_arg1
+          val (prem, _) = Thm.dest_implies (Thm.cprop_of ToA')
           val vars = Drule.add_vars_cterm prem Cterms.empty
           val prem' = Cterms.fold ( curry Conjunction.mk_conjunction
                                   o Thm.cprop_of o Drule.mk_term

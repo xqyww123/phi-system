@@ -74,7 +74,7 @@ declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
 
 subsection \<open>Embedding Subjection into Type\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
           
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
@@ -356,33 +356,59 @@ lemma [\<phi>reason 1000]:
   by simp
 
 
+lemma
+  \<open>(\<forall>x xa xb xc.
+                 \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
+                    (\<forall>xd. \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruua.
+                             (\<forall>a. a \<in> {xc} \<longrightarrow> (\<forall>v. v \<Turnstile> (a \<Ztypecolon> x) \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> xa) \<and> xb a b))) \<longrightarrow>
+                             (\<forall>a b. a \<in> {xc} \<and> xb a b \<longrightarrow> b \<in> UNIV) \<longrightarrow> Ab = Ab \<longrightarrow> xd \<Turnstile> (xc \<Ztypecolon> x) \<longrightarrow> True \<longrightarrow> id (uu xd) \<Turnstile> (id uua \<Ztypecolon> xa) \<and> xb xc (id uua)) \<and>
+                    (\<forall>xd. (\<forall>a. a \<in> {xc} \<longrightarrow> (\<forall>v. v \<Turnstile> (a \<Ztypecolon> x) \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> xa) \<and> xb a b))) \<longrightarrow>
+                          (\<forall>a b. a \<in> {xc} \<and> xb a b \<longrightarrow> b \<in> UNIV) \<longrightarrow> Ab = Ab \<longrightarrow> xd \<Turnstile> (xc \<Ztypecolon> x) \<longrightarrow> xd = id (uu xd)) \<and>
+                    True)\<close>
+apply auto
+
+schematic_goal \<open>(\<forall>x. \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
+                 (\<forall>a. a \<in> {xa} \<longrightarrow> (\<forall>v. v \<Turnstile> (a \<Ztypecolon> T) \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> ga a b))) \<longrightarrow>
+                 (\<forall>a b. a \<in> {xa} \<and> ga a b \<longrightarrow> b \<in> UNIV) \<longrightarrow>
+                 Ab = Ab \<longrightarrow> x \<Turnstile> (xa \<Ztypecolon> T) \<longrightarrow> True \<longrightarrow> id (?c21 x) \<Turnstile> (id uu \<Ztypecolon> U) \<and> ga xa (id uu)) \<and>
+         (\<forall>x. (\<forall>a. a \<in> {xa} \<longrightarrow> (\<forall>v. v \<Turnstile> (a \<Ztypecolon> T) \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> ga a b))) \<longrightarrow>
+              (\<forall>a b. a \<in> {xa} \<and> ga a b \<longrightarrow> b \<in> UNIV) \<longrightarrow> Ab = Ab \<longrightarrow> x \<Turnstile> (xa \<Ztypecolon> T) \<longrightarrow> x = id (?c21 x))\<close>
+  apply (auto simp add: \<phi> \<phi>sledgehammer_simps)
+
 
 subsection \<open>Stepwise Abstraction\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
- 
+declare [[\<phi>trace_reasoning = 3]]
+      
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
+  deriving Transformation_Functor
 
-thm \<phi>Composition.intro
-thm \<phi>Composition.open_abstraction
+text \<open>
+  We do not use deriver here.
+  It is too basic and our reasoner can barely do little about \<phi>-types embedded in a
+  satisfaction statement because it as a pure proposition loses the type structure to guide our
+  reasoner. As a consequence, almost every property of the \<phi>-type has to be proven manually.
 
-lemma [\<phi>inhabitance_rule 1000]:
+  For this reason, user should use \<open>(T \<Zcomp> U)\<close> instead of a raw satisfaction statement \<open>x \<Turnstile> X\<close>.
+  The only meaningful interpretation of the satisfaction statement that we can imagine, is for
+  vertical composition of abstractions. Therefore, \<open>(T \<Zcomp> U)\<close> should be able to replace any usage
+  of satisfaction statement.
+\<close>
+
+lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
 \<Longrightarrow> (\<And>y. y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> B y)
 \<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<and> Ex B \<close>
   unfolding Inhabited_def Action_Tag_def
   by simp blast
 
-text \<open>It is too basic and our reasoner can barely do little about \<phi>-types embedded in a
-  satisfaction statement because it as a pure proposition loses the type structure to guide our
-  reasoner. As a consequence, almost every property of the \<phi>-type has to be proven manually.\<close>
-
-thm \<phi>Composition.intro_reasoning[\<phi>reason 60]
-thm \<phi>Composition.elim_reasoning
-
-term ExSet
-
+lemma [\<phi>reason 1000]:
+  \<open> Is_Functional (x \<Ztypecolon> U)
+\<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y \<Turnstile> (x \<Ztypecolon> U) \<Longrightarrow> Is_Functional (y \<Ztypecolon> T))
+\<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<Zcomp> U) \<close>
+  unfolding Is_Functional_def Premise_def
+  by clarsimp blast
 
 lemma [\<phi>reason 1000]:
   \<open> (\<And>x. x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y :: 'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rU x y @action to (Itself :: ('b,'b) \<phi>))
@@ -390,6 +416,20 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>m. rT m y \<and> rU x m) @action to (Itself :: ('c,'c) \<phi>)\<close>
   unfolding Transformation_def Action_Tag_def
   by clarsimp  blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> B) P
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) Q
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> B \<Zcomp> T) (P \<and> Q)\<close>
+  unfolding Identity_Element\<^sub>I_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>E (1 \<Ztypecolon> B)
+\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)
+\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> B \<Zcomp> T)\<close>
+  unfolding Identity_Element\<^sub>E_def Transformation_def
+  by simp blast
 
 (*
 lemma [\<phi>reason 1200]:
@@ -464,20 +504,6 @@ lemma (*The above rule is reversible*)
 interpretation Unit_Functor_L \<open>Unit_Homo B\<close> \<open>((\<Zcomp>) B)\<close>
   unfolding Unit_Functor_L_def Unit_Functor_def Transformation_def Unit_Homo_def
   by (auto simp add: \<phi>Composition_expn) *)
-
-lemma [\<phi>reason 1000]:
-  \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> B) P
-\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) Q
-\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> B \<Zcomp> T) (P \<and> Q)\<close>
-  unfolding Identity_Element\<^sub>I_def Transformation_def
-  by blast
-
-lemma [\<phi>reason 1000]:
-  \<open> Identity_Element\<^sub>E (1 \<Ztypecolon> B)
-\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)
-\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> B \<Zcomp> T)\<close>
-  unfolding Identity_Element\<^sub>E_def Transformation_def
-  by blast
 
 (*
 lemma \<phi>Composition_unit_functor[\<phi>reason add]:

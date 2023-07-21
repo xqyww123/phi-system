@@ -498,7 +498,7 @@ val elimN = "elim"
 val elim_reasoningN = "elim_reasoning"
 val unfoldN = "unfold"
 val expansionN = "expansion"
-val open_abstractionN = "open_abstraction"
+(* val open_abstractionN = "open_abstraction" *)
 
 datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
              | WFREC_DEF  of string * Function.info
@@ -1235,7 +1235,7 @@ fun add_type (def, pos, dervs) generic =
          #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
    |> note_properties phi_type (
-        (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @
+        (* (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @ *)
         [(unfoldN, eqs), (introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning),
          (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ the_default [] elim'SE_ToA),
          (expansionN, expansions)])
