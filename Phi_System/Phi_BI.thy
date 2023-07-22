@@ -333,13 +333,13 @@ declare transformation_refl [
               | chk (Const(\<^const_name>\<open>sup\<close>, _)) = false
               | chk (Const(\<^const_name>\<open>top\<close>, _)) = false
               | chk (Const(\<^const_name>\<open>bot\<close>, _)) = false
-              | chk (Abs _) = raise Phi_Help.REQUIRE_LAMBDA_NORMLAIZTION
+              | chk (Abs _) = raise REQUIRE_LAMBDA_NORMLAIZTION
               | chk (Const _) = true
               | chk _ = false
          in chk B
-         handle Phi_Help.REQUIRE_LAMBDA_NORMLAIZTION => (
+         handle REQUIRE_LAMBDA_NORMLAIZTION => (
             chk (Envir.beta_eta_contract B)
-            handle Phi_Help.REQUIRE_LAMBDA_NORMLAIZTION => false)
+            handle REQUIRE_LAMBDA_NORMLAIZTION => false)
         end \<close>]
 
 ML \<open>fun check_ToA_rule rule =

@@ -31,9 +31,9 @@ val zip_conjs : conv
 (*recursively for each nested implication*)
 val zip_conjs_recursively : conv
 
-(* (\<forall>x. P1 x) \<and> (\<forall>x. P2 x) \<dots> \<and> (\<forall>x. Pn x) \<longrightarrow> (\<forall>x. P1 x \<and> P2 x \<and> \<dots> Pn x)) *)
+(* (* (\<forall>x. P1 x) \<and> (\<forall>x. P2 x) \<dots> \<and> (\<forall>x. Pn x) \<longrightarrow> (\<forall>x. P1 x \<and> P2 x \<and> \<dots> Pn x)) *)
 val zip_Alls : conv
-val zip_Alls_recursively : Proof.context -> conv
+val zip_Alls_recursively : Proof.context -> conv *)
 
 (*
 val zip_All_conj_recursively : Proof.context -> conv
@@ -51,6 +51,10 @@ val move_Ex_downto_Disj_recursive : conv -> conv
 val move_sp_Ex_downto_Disj : conv
 val move_sp_Ex_downto_Disj_recursive : conv -> conv
 
+(*move inside to \<forall> and \<or>, with zipping over \<and>*)
+val move_Ex_inside : (Proof.context -> conv) -> Proof.context -> conv
+val move_sp_Ex_inside : (Proof.context -> conv) -> Proof.context -> conv
+
 (*
 (*move to inside any \<forall> and \<or>, with zip over \<and> and \<forall>, exhaustively*)
 val move_Ex_inside_exhaustively : Proof.context -> conv
@@ -63,18 +67,19 @@ open Phi_Conv
 
 fun zip_conjs ctm =
   case Thm.term_of ctm
-    of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
-        HOLogic.conj_conv zip_conjs zip_conjs ctm
-     | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
-        HOLogic.conj_conv Conv.all_conv zip_conjs ctm
-     | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
+    of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
         Conv.rewr_conv @{thm' imp_conjR[folded atomize_eq, symmetric]} ctm
+     | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) $ _ =>
+        (Conv.arg1_conv zip_conjs then_conv zip_conjs) ctm
+     | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
+        (Conv.arg_conv zip_conjs then_conv zip_conjs) ctm
      | _ => raise CTERM ("Phi_Conv.zip_conjs", [ctm])
 
 fun zip_conjs_recursively ctm =
   (zip_conjs then_conv HOLogic.imp_conv Conv.all_conv zip_conjs_recursively) ctm
   handle CTERM _ => Conv.all_conv ctm
 
+(*
 fun zip_Alls ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
@@ -178,7 +183,7 @@ fun zip_Alls__same_quantifier ctxt ctm =
   case choose_zip_All_quantifier (Thm.term_of ctm)
     of NONE => raise CTERM ("zip_Alls__same_quantifier", [ctm])
      | SOME (Name,Ty) => zip_Alls__same_quantifier' (Name, Thm.ctyp_of ctxt Ty)
-
+*)
 
 (*
 fun zip_All_conj_recursively ctxt ctm =
@@ -208,21 +213,116 @@ fun zip_All_conj_recursively ctxt ctm =
      | _ => Conv.all_conv ctm
 *)
 
+(*requires beta eta normalized*)
 fun gen_move_Ex_inside_All (Ex_name, rule) ctxt ctm =
-  case Thm.term_of ctm
-    of Const(Ex_name', _) $ (Abs(_, _, Const(\<^const_name>\<open>All\<close>, _) $ _)) =>
-        let val _ = if Ex_name = Ex_name' then ()
-                    else raise CTERM ("move_Ex_inside_All", [])
-            val (Ex, ctm1) = Thm.dest_comb ctm
-            val ( f, ctm2) = Thm.dest_abs_global ctm1
-            val (Al, ctm3) = Thm.dest_comb ctm2
-            val ( x, body) = Thm.dest_abs_global ctm3
-            val fx = Thm.apply f x
-            val Q = Thm.lambda x (Thm.lambda fx body)
-            val rule = Drule.infer_instantiate ctxt [(("Q",0),Q)] rule
-         in Conv.rewr_conv rule ctm
-        end
-     | _ => raise CTERM ("move_Ex_inside_All", [])
+  let fun err () = raise CTERM ("move_Ex_inside_All", [ctm])
+      val _ = case Thm.term_of ctm of Const(Ex_name', \<^Type>\<open>fun \<^Type>\<open>fun \<^Type>\<open>fun _ _\<close> _\<close> _\<close>) $ _ =>
+                     if Ex_name' = Ex_name then () else err ()
+                 | _ => err ()
+      val _ = case Thm.term_of ctm
+                of _ $ Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) => ()
+                 | _ => ()
+      val cTy = Thm.ctyp_of_cterm (fst (Thm.dest_comb ctm)) (*the type of the Ex binder, (f \<Rightarrow> _) \<Rightarrow> _*)
+             |> Thm.dest_ctyp0 |> Thm.dest_ctyp0 (*the type of the f*)
+             |> Thm.dest_ctyp0 (*the type of the universally quantified variable*)
+
+      val rule_of_hat = @{thm' HOL.simp_thms(35)[folded atomize_eq, symmetric]}
+                     |> Thm.instantiate (TVars.make [((("'b",0),\<^sort>\<open>type\<close>),cTy)], Vars.empty)
+      val wear_hat = Conv.rewr_conv rule_of_hat
+
+      datatype ret = RFound of int | RNot_Occur
+      exception Not_Occur
+      exception Found of int
+      exception Inconsistent
+
+      fun find_All (lev, _) (Bound i $ Bound j) =
+            if i = lev then RFound (lev - j) else RNot_Occur
+        | find_All (lev, bounds) (Free (Ni, _) $ Bound j) =
+            let val i = find_index (fn N => N = Ni) bounds
+             in if i = lev then RFound (lev - j) else RNot_Occur 
+            end
+        | find_All (lev, bounds) (Free (Ni, _) $ Free (Nj, _)) =
+            let val i = find_index (fn N => N = Ni) bounds
+                val j = find_index (fn N => N = Nj) bounds
+             in if i = lev then RFound (lev - j) else RNot_Occur 
+            end
+        | find_All lev (Const(\<^const_name>\<open>All\<close>, _) $ X) =
+            find_All lev (case X of Abs _ => X
+                                  | _ => Abs ("x", dummyT, Term.incr_boundvars 1 X $ Bound 0))
+        | find_All (lev, bounds) (Abs (_, _, X)) = find_All (lev + 1, "" :: bounds) X
+        | find_All lev (X $ Y) =
+           (case (find_All lev X, find_All lev Y)
+              of (RFound i, RFound j) => if i = j then RFound i else raise Inconsistent
+               | (RFound i, RNot_Occur) => RFound i
+               | (RNot_Occur, RFound i) => RFound i
+               | (RNot_Occur, RNot_Occur) => RNot_Occur)
+        | find_All _ _ = RNot_Occur
+
+      datatype ret3 = TFound of int | TNot_Occur | TConv of thm
+      fun try3 C ctm = TConv (C ctm) handle Not_Occur => TNot_Occur
+                                          | Found i => TFound i
+
+      fun move_All (lev,bounds) ctxt ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>All\<close>, _) $ _ =>
+               ((HOLogic.All_conv (fn (cv, ctxt) =>
+                    move_All (lev+1, Term.term_name (Thm.term_of cv) :: bounds) ctxt
+                 ) ctxt then_conv
+                 Conv.rewr_conv @{thm' all_comm[folded atomize_eq]}) ctm
+                handle Found i => if i = lev+1 then Conv.all_conv ctm else raise Found i )
+           | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ X $ Y =>
+                (case find_All (lev,bounds) X
+                   of RFound i => (
+                        case find_All (lev,bounds) Y
+                          of RFound j => if i = j then raise Found i else raise Inconsistent
+                           | RNot_Occur => raise Found i)
+                    | RNot_Occur =>
+                        (Conv.arg_conv (move_All (lev,bounds) ctxt) then_conv
+                         Conv.rewr_conv @{thm' HOL.all_simps(6)[folded atomize_eq, symmetric]}) ctm)
+           | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+                let fun conj_conv ctm =
+                     (case (try3 (move_All (lev,bounds) ctxt) (Thm.dest_arg1 ctm),
+                            try3 (move_All (lev,bounds) ctxt) (Thm.dest_arg ctm))
+                        of (TFound i, TFound j) => if i = j then raise Found i else raise Inconsistent
+                         | (TFound i, TNot_Occur) => raise Found i
+                         | (TNot_Occur, TFound i) => raise Found i
+                         | (TFound _, _) => raise Inconsistent
+                         | (_, TFound _) => raise Inconsistent
+                         | (TConv th1, TConv th2) => HOLogic.conj_conv (K th1) (K th2) ctm
+                         | (TConv th1, TNot_Occur) => HOLogic.conj_conv (K th1) wear_hat ctm
+                         | (TNot_Occur, TConv th2) => HOLogic.conj_conv wear_hat (K th2) ctm
+                         | (TNot_Occur, TNot_Occur) => raise Not_Occur)
+                 in (conj_conv then_conv
+                     Conv.rewr_conv @{thm' all_conj_distrib[folded atomize_eq, symmetric]}) ctm
+                end
+           | _ => (case find_All (lev,bounds) (Thm.term_of ctm)
+                     of RFound i => raise Found i
+                      | RNot_Occur => raise Not_Occur)
+
+      fun move_All_top (cv,ctxt) ctm =
+        move_All (0,[Term.term_name (Thm.term_of cv)]) ctxt ctm
+        handle Found _ => error "BUG RFVgduihRHq72ZiP2/9COg"
+             | Not_Occur => Conv.all_conv ctm
+
+      fun the_move ctm =
+        case Thm.term_of ctm
+          of Const(Ex_name', _) $ (Abs(_, _, Const(\<^const_name>\<open>All\<close>, _) $ _)) =>
+              let val _ = if Ex_name = Ex_name' then () else raise CTERM ("move_Ex_inside_All", [])
+                  val (Ex, ctm1) = Thm.dest_comb ctm
+                  val ( f, ctm2) = Thm.dest_abs_global ctm1
+                  val (Al, ctm3) = Thm.dest_comb ctm2
+                  val ( x, body) = Thm.dest_abs_global ctm3
+                  val fx = Thm.apply f x
+                  val Q = Thm.lambda x (Thm.lambda fx body)
+                  val rule = Drule.infer_instantiate ctxt [(("Q",0),Q)] rule
+               in Conv.rewr_conv rule ctm
+              end
+           | _ => error "BUG wXYN5fcXRhuYi/3CGR+zVQ" (*the previous move_All_top is not finished.*)
+
+   in (Phi_Conv.quant_conv Ex_name move_All_top ctxt then_conv
+       the_move) ctm
+   handle CTERM XX => raise CTERM XX
+  end
 
 val move_Ex_inside_All = gen_move_Ex_inside_All
       (\<^const_name>\<open>Ex\<close>, @{thm' choice_iff[folded atomize_eq, symmetric]})
@@ -249,7 +349,7 @@ let fun move_Ex_downto_Disj_recursive C ctm =
            of \<^Const>\<open>HOL.disj\<close> $ _ $ _ =>
                 Conv.combination_conv (Conv.arg_conv (move_Ex_downto_Disj_recursive C))
                                       (move_Ex_downto_Disj_recursive C) ctm
-            | _ => error "Internal bug"
+            | _ => error "BUG MOPPI5TrSk6+fBN7oHwPbQ"
        )) ctm
       handle CTERM _ => C ctm
  in move_Ex_downto_Disj_recursive
@@ -258,39 +358,44 @@ end
 val move_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_Ex_downto_Disj
 val move_sp_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_sp_Ex_downto_Disj
 
-(*
-fun gen_move_Ex_inside_exhaustively (ex_name, mv_disj, mv_all, rule_mv_imp) ctxt =
-  let fun conv ctxt ctm =
+fun gen_move_Ex_inside (ex_name, mv_all_recursive, mv_disj, rule_mv_imp) C =
+  let exception REVERSE_ETA
+      fun conv ctxt ctm =
         let val tm = case Thm.term_of ctm
-                       of Const(N, _) $ Abs (_, _, X) =>
-                            if N = ex_name then X
+                       of Const(N, _) $ X =>
+                            if N = ex_name
+                            then (case X of Abs (_, _, X) => X
+                                          | _ => raise REVERSE_ETA )
                             else raise CTERM ("Phi_Conv.move_Ex_inside_exhaustively", [ctm])
                         | _ =>   raise CTERM ("Phi_Conv.move_Ex_inside_exhaustively", [ctm])
          in case tm
-         of Const(\<^const_name>\<open>HOL.All\<close>, _) $ _  =>
-              (mv_all ctxt then_conv HOLogic.All_conv (conv o snd) ctxt) ctm
-          | Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _  => mv_disj (conv ctxt) ctm 
+         of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => mv_disj (conv ctxt) ctm 
+          | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+             ((Phi_Conv.quant_conv ex_name (K zip_conjs) ctxt then_conv
+               conv ctxt) ctm
+               handle CTERM _ => C ctxt ctm)
           | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
             ((Conv.rewr_conv rule_mv_imp then_conv
               Conv.arg_conv (conv ctxt)) ctm
-             handle CTERM _ => Conv.all_conv ctm )
-          | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-              Phi_Conv.quant_conv ex_name (zip_All_conj_recursively o snd) ctxt ctm
-          | _ => Conv.all_conv ctm
-        end
-   in Phi_Conv.quant_conv ex_name (fn (_, ctxt) =>
+             handle CTERM _ => C ctxt ctm )
+          | _ => C ctxt ctm
+        end handle REVERSE_ETA => (Conv.arg_conv Phi_Conv.inverse_eta_conv then_conv
+                                   conv ctxt) ctm
+        
+   in mv_all_recursive (fn ctxt =>
+      Phi_Conv.quant_conv ex_name (fn (_, ctxt) =>
         Raw_Simplifier.rewrite ctxt true @{thms' HOL.simp_thms[folded atomize_eq]}) ctxt
-      then_conv conv ctxt
+      then_conv conv ctxt)
   end
 
-val move_Ex_inside_exhaustively = gen_move_Ex_inside_exhaustively
-      (\<^const_name>\<open>Ex\<close>, move_Ex_downto_Disj_recursive, move_Ex_inside_All,
+val move_Ex_inside = gen_move_Ex_inside
+      (\<^const_name>\<open>Ex\<close>, move_Ex_inside_All_recursive, move_Ex_downto_Disj_recursive,
        @{thm' HOL.ex_simps(6)[folded atomize_eq]})
 
-val move_sp_Ex_inside_exhaustively = gen_move_Ex_inside_exhaustively
+val move_sp_Ex_inside = gen_move_Ex_inside
       (\<^const_name>\<open>special_Ex\<close>,
+       move_sp_Ex_inside_All_recursive,
        move_sp_Ex_downto_Disj_recursive,
-       move_sp_Ex_inside_All,
        @{thm' HOL.ex_simps(6)[folded special_Ex_def atomize_eq]})
-*)
+
 end

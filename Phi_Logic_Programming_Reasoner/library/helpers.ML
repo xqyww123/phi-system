@@ -1,3 +1,5 @@
+exception REQUIRE_LAMBDA_NORMLAIZTION
+
 signature PHI_HELP = sig
 
 val leading_antecedent' : thm -> term
@@ -7,7 +9,6 @@ val beta_eta_conversion : conv
 val beta_eta_contract : thm -> thm
 val beta_eta_contract_cterm : cterm -> cterm
 
-exception REQUIRE_LAMBDA_NORMLAIZTION
 val lambda_normalization_ctac : ('a * thm -> 'b) -> ('a * thm -> 'b)
 val lambda_normalization_conv : conv -> conv
 val lambda_normalization_rule : (thm -> thm) -> thm -> thm
@@ -15,8 +16,6 @@ val lambda_normalization_rule : (thm -> thm) -> thm -> thm
 end
 
 structure Phi_Help : PHI_HELP = struct
-
-exception REQUIRE_LAMBDA_NORMLAIZTION
 
 fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))
 

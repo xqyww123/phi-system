@@ -42,11 +42,11 @@ fun is_simp_needed ctxt =
          in (case h
          of Const (N, _) => apply_chk N tm
           | Abs (_, _, X) => if null args then chk X
-                             else raise Phi_Help.REQUIRE_LAMBDA_NORMLAIZTION
+                             else raise REQUIRE_LAMBDA_NORMLAIZTION
           | _ => false)
          orelse exists chk args
         end
-        handle Phi_Help.REQUIRE_LAMBDA_NORMLAIZTION =>
+        handle REQUIRE_LAMBDA_NORMLAIZTION =>
           chk (Envir.beta_eta_contract tm)
       fun chk' tm = apply_chk "" tm orelse chk tm
    in Phi_Syntax.exists_item_of_assertion chk'

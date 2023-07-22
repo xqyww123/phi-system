@@ -75,16 +75,16 @@ declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-               
+                           
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
-  deriving (*Basic
+  deriving Basic
        and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
        and Open_All_Abstraction
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
-       and*) Functional_Transformation_Functor
+       and Functional_Transformation_Functor
        and Separation_Homo\<^sub>E
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
@@ -355,31 +355,10 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def Transformation_def
   by simp
 
-
-lemma
-  \<open>(\<forall>x xa xb xc.
-                 \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
-                    (\<forall>xd. \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruua.
-                             (\<forall>a. a \<in> {xc} \<longrightarrow> (\<forall>v. v \<Turnstile> (a \<Ztypecolon> x) \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> xa) \<and> xb a b))) \<longrightarrow>
-                             (\<forall>a b. a \<in> {xc} \<and> xb a b \<longrightarrow> b \<in> UNIV) \<longrightarrow> Ab = Ab \<longrightarrow> xd \<Turnstile> (xc \<Ztypecolon> x) \<longrightarrow> True \<longrightarrow> id (uu xd) \<Turnstile> (id uua \<Ztypecolon> xa) \<and> xb xc (id uua)) \<and>
-                    (\<forall>xd. (\<forall>a. a \<in> {xc} \<longrightarrow> (\<forall>v. v \<Turnstile> (a \<Ztypecolon> x) \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> xa) \<and> xb a b))) \<longrightarrow>
-                          (\<forall>a b. a \<in> {xc} \<and> xb a b \<longrightarrow> b \<in> UNIV) \<longrightarrow> Ab = Ab \<longrightarrow> xd \<Turnstile> (xc \<Ztypecolon> x) \<longrightarrow> xd = id (uu xd)) \<and>
-                    True)\<close>
-apply auto
-
-schematic_goal \<open>(\<forall>x. \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
-                 (\<forall>a. a \<in> {xa} \<longrightarrow> (\<forall>v. v \<Turnstile> (a \<Ztypecolon> T) \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> ga a b))) \<longrightarrow>
-                 (\<forall>a b. a \<in> {xa} \<and> ga a b \<longrightarrow> b \<in> UNIV) \<longrightarrow>
-                 Ab = Ab \<longrightarrow> x \<Turnstile> (xa \<Ztypecolon> T) \<longrightarrow> True \<longrightarrow> id (?c21 x) \<Turnstile> (id uu \<Ztypecolon> U) \<and> ga xa (id uu)) \<and>
-         (\<forall>x. (\<forall>a. a \<in> {xa} \<longrightarrow> (\<forall>v. v \<Turnstile> (a \<Ztypecolon> T) \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> ga a b))) \<longrightarrow>
-              (\<forall>a b. a \<in> {xa} \<and> ga a b \<longrightarrow> b \<in> UNIV) \<longrightarrow> Ab = Ab \<longrightarrow> x \<Turnstile> (xa \<Ztypecolon> T) \<longrightarrow> x = id (?c21 x))\<close>
-  apply (auto simp add: \<phi> \<phi>sledgehammer_simps)
-
-
 subsection \<open>Stepwise Abstraction\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
-      
+        
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving Transformation_Functor
