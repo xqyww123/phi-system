@@ -835,7 +835,7 @@ lemma contract_intro_sp_Ex:
 
 ML_file "library/tools/patch_for_Ex.ML"
 
-thm imp_conjR[folded atomize_eq, symmetric]
+thm HOL.simp_thms
 
 simproc_setup move_sp_Ex_inside_All (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Rf. \<forall>x. Q x f\<close>) = \<open>
   fn _ => fn ctxt => fn ctm =>
