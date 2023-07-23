@@ -427,6 +427,32 @@ lemma implies_union:
 
 subsection \<open>Additive Conjunction\<close>
 
+text \<open>Non-pure Additive Conjunction (excludes those are used in pure propositions), is rarely used under our
+  refinement interpretation of BI assertions, because we can hardly imagine when and why an object
+  has to be specified by two abstractions that cannot transform to each other (if they can,
+  it is enough to use any one of them with a strong constraint to the abstraction, and transform it
+  to the other when need).
+  The existence of a non-trivial object that belongs to two \<phi>-type abstraction actually implies a meaningful
+  transformation between the two \<phi>-types.
+
+  To support additive conjunction, it also brings enormous branches in the reasoning so affects the
+  reasoning performance. Before applying the previous rules, we can add the bellow rules which are
+  also attempted in order and applied whenever possible.
+  \<open>X \<longrightarrow> A \<Longrightarrow> X \<longrightarrow> B \<Longrightarrow> X \<longrightarrow> A \<and> B\<close> generates two subgoals.
+  \<open>(A \<longrightarrow> Y) \<or> (B \<longrightarrow> Y) \<Longrightarrow> A \<and> B \<longrightarrow> Y\<close> branches the reasoning. Specially, when \<open>Y \<equiv> \<exists>x. P x\<close> is an
+  existential quantification, the priority of eliminating \<open>\<and>\<close> or instantiating \<open>\<exists>\<close> is significant.
+(*  If we instantiate first, the instantiation is forced to be identical in the two branches.
+  If we eliminate \<open>\<and>\<close> first, the \<open>P\<close> can be too strong *)
+  We attempt the both priorities by a search branch.
+  Again recall our hypothesis, we assume \<phi>-types between the conjunction are independent and
+  only consider \<open>(x \<Ztypecolon> T) \<and> (y \<Ztypecolon> U) \<longrightarrow> Y\<close> when either \<open>x \<Ztypecolon> T \<longrightarrow> Y\<close> or \<open>y \<Ztypecolon> U \<longrightarrow> Y\<close>.
+\<close>
+
+
+
+
+
+
 definition Additive_Conj :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI\<close> (infix "\<and>\<^sub>B\<^sub>I" 35)
   where \<open>Additive_Conj = (\<inter>)\<close>
 

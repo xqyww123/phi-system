@@ -361,6 +361,20 @@ lemma [\<phi>reason 1050]:
   by (simp add: ExSet_transformation)
 
 lemma [\<phi>reason 1050]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_every_item' \<A>
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_every_item' \<A>
+\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<and>\<^sub>B\<^sub>I Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_every_item' \<A>\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason 1050]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_every_item' \<A>
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_every_item' \<A>
+\<Longrightarrow> A + B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X + Y \<w>\<i>\<t>\<h> P \<or> Q @action \<A>_every_item' \<A>\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp
+
+lemma [\<phi>reason 1050]:
   \<open> TECHNICAL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>_every_item' A\<close>
   \<comment> \<open>Never bind technical items\<close>
   unfolding Action_Tag_def Technical_def by simp
@@ -612,9 +626,7 @@ ML_file \<open>library/tools/CoP_simp.ML\<close>
 \<phi>reasoner_ML \<A>chk_need_simp 1000 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>chk_need_simp\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let val (X, _, _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
    in if Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) X
-   then (
-     Phi_Reasoner.info_print ctxt 2 (fn () => "Invoking transformation-based simplification...");
-     SOME ((ctxt, @{thm' \<A>simp_chk_go} RS' (ctxt, sequent)), Seq.empty))
+   then SOME ((ctxt, @{thm' \<A>simp_chk_go} RS' (ctxt, sequent)), Seq.empty)
    else SOME ((ctxt, @{thm' \<A>simp_chk_no_need} RS' (ctxt, sequent)), Seq.empty)
   end)
 \<close>
@@ -924,6 +936,7 @@ lemma [\<phi>reason 1200]:
                     (\<exists>b a. x = b * a \<and> b ## a \<and> rb b \<and> ra a) @action to (Itself :: ('c,'c) \<phi>) \<close>
   unfolding Action_Tag_def Transformation_def
   by (cases x; simp; blast)
+
 
 
 subsubsection \<open>The \<open>to\<close> application\<close>

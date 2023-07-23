@@ -206,8 +206,9 @@ Priority Convention:
 \<^item> 3150: Assigning Zeros
 \<^item> 3000: Normalization
 \<^item> 2800: Disjunction in source part; Default normalization in source part
+        Conjunction in target part
         Fix existentially quantified variables in source part
-\<^item> 2600: Disjunction in target part; Default normalization in target part
+\<^item> 2600: Default normalization in target part (*what is this? =.=*)
 \<^item> 2550: Top
 \<^item> 2100: Padding void holes after the last item. Rules capturing the whole items including
         the last item in the \<open>\<^emph>\<close>-sequence should have priority higher than this.
@@ -217,7 +218,7 @@ Priority Convention:
 \<^item> 50-54: Enters Structural Extraction. Elim-rules \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A'\<close> having a priority
          greater than 54, will be applied before Structural Extraction, and those less than 50,
         will only be applied in the backtrack of the Structural Extraction.
-\<^item> 10: Instantiate existentially quantified variables in the target part
+\<^item> 12: Instantiate existentially quantified variables in the target part
       Divergence for additive disjunction in the target part
 \<close>
 
@@ -689,6 +690,29 @@ lemma [\<phi>reason 3100]:
 
 subsection \<open>Divergence\<close>
 
+subsubsection \<open>Conjunction\<close>
+
+lemma [\<phi>reason 2800]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<w>\<i>\<t>\<h> P1
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<and>\<^sub>B\<^sub>I B \<w>\<i>\<t>\<h> P1 \<and> P2 \<close>
+  unfolding Transformation_def
+  by simp
+
+lemma NToA_conj_src_A:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P \<close>
+  unfolding Transformation_def
+  by simp blast
+
+lemma NToA_conj_src_B:
+  \<open> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P \<close>
+  unfolding Transformation_def
+  by simp blast
+
+declare [[\<phi>reason !13 NToA_conj_src_A NToA_conj_src_B for \<open>_ \<and>\<^sub>B\<^sub>I _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> ]]
+
 subsubsection \<open>Disjunction in Source\<close>
 
 lemma [\<phi>reason 2800]:
@@ -730,7 +754,7 @@ lemma NToA_disj_target_B:
 \<Longrightarrow>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A + B \<w>\<i>\<t>\<h> P\<close>
   by (simp add: Transformation_def)
 
-declare [[\<phi>reason !10 NToA_disj_target_A NToA_disj_target_B for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<w>\<i>\<t>\<h> ?P\<close>]]
+declare [[\<phi>reason !12 NToA_disj_target_A NToA_disj_target_B for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<w>\<i>\<t>\<h> ?P\<close>]]
 
 hide_fact NToA_disj_target_A NToA_disj_target_B
 
@@ -746,7 +770,7 @@ lemma NToA_disj_target_B':
   unfolding Action_Tag_def FOCUS_TAG_def Transformation_def
   by (simp add: distrib_left, blast)
 
-declare [[\<phi>reason !10 NToA_disj_target_A' NToA_disj_target_B'
+declare [[\<phi>reason !12 NToA_disj_target_A' NToA_disj_target_B'
             for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ?A + ?B \<brangle> \<w>\<i>\<t>\<h> _\<close>]]
 
 hide_fact NToA_disj_target_A' NToA_disj_target_B'
@@ -983,7 +1007,7 @@ lemma [\<phi>reason 1200 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s
 
 subsection \<open>General Search\<close>
 
-lemma [\<phi>reason default 10 except \<open> (_ :: ?'a :: sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason default 12 except \<open> (_ :: ?'a :: sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   " H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R * H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> X \<brangle> \<w>\<i>\<t>\<h> P"
   unfolding FOCUS_TAG_def Transformation_def

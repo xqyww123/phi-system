@@ -93,9 +93,9 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
           of SOME th => th
            | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
 
-      fun varify_subgoal (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
+      fun varify_subgoal _ (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
             SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
-        | varify_subgoal X = error ""
+        | varify_subgoal _ X = error ""
 
       val extract_pure_prems =
         if def_contains_satisfaction phi0
@@ -103,8 +103,8 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
         else K (K [])
 
       fun Inh_reasoning _ ctxt =
-            gen_abstract_constraint_guided_reasoning
-                (if mode_infer then varify_subgoal else K NONE) extract_pure_prems
+            gen_abstract_constraint_guided_reasoning false
+                (if mode_infer then varify_subgoal else K (K NONE)) extract_pure_prems
                 Inh_reasoner ctxt
 
 

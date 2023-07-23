@@ -135,11 +135,13 @@ val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehamm
 (** Reasoning **)
 (*`reasoning` specifies how to solve the induction goals in detail.*)
 
-type varifier = term -> (term list * (term list -> term)) option
+type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type extract_pure_prems = Proof.context -> thm -> thm list
 
 type PLPR_reasoner = Proof.context -> thm -> thm
 val gen_abstract_constraint_guided_reasoning :
+        bool (*if it can split the goals when they contain HOL.disj in antecedents, no matter if the conclusion
+               contains schematic variables. is false by default*) ->
         varifier -> extract_pure_prems -> PLPR_reasoner -> reasoning
   (*It is a general framework using \<phi>-LPR and Isar subgoal tool.
     Because it uses Isar subgoal, it fixes all schematic variables. Users may expect the reasoning
@@ -855,14 +857,22 @@ fun extract_rewr ctxt th =
         else NONE
      | _ => NONE
 
-fun varify_subgoal mk ctxt sequent =
+fun varify_subgoal mk ctxt focus sequent =
   let val LHS = Thm.major_prem_of sequent
-   in case mk LHS of SOME (LHSS, gen_RHSS) =>
-      let val rvar_names = Name.invent (Variable.names_of ctxt) "schm" (length LHSS)
+   in case mk focus LHS of SOME (LHSS, gen_RHSS) =>
+      let val is_schm_LHSS = map (fn tm =>
+                Vars.exists (fn (_, ctm) => tm aconv Thm.term_of ctm)
+                            (snd (#schematics focus))) LHSS
+          val real_LHSS = map_filter (fn (b,c) => if b then SOME c else NONE) (is_schm_LHSS ~~ LHSS)
+          val rvar_names = Name.invent (Variable.names_of ctxt) "schm" (length real_LHSS)
           val ctxt' = Variable.add_fixes_direct rvar_names ctxt
-          val rvars = map2 (fn N => fn T => Free (N, Term.fastype_of T)) rvar_names LHSS
-          val eqs = map2 (fn l => fn r => \<^Const>\<open>Pure.eq \<open>Term.fastype_of r\<close>\<close> $ l $ r) LHSS rvars
-          val rule = \<^Const>\<open>Pure.imp\<close> $ gen_RHSS rvars $ LHS
+          val rvars = map2 (fn N => fn T => Free (N, Term.fastype_of T)) rvar_names real_LHSS
+          fun mk_fake_rvars (b::bs) l1 (o2::l2) = if b then hd l1 :: mk_fake_rvars bs (tl l1) l2
+                                                       else    o2 :: mk_fake_rvars bs l1 l2
+            | mk_fake_rvars [] _ _ = []
+          val fake_rvars = mk_fake_rvars is_schm_LHSS rvars LHSS
+          val eqs = map2 (fn l => fn r => \<^Const>\<open>Pure.eq \<open>Term.fastype_of r\<close>\<close> $ l $ r) real_LHSS rvars
+          val rule = \<^Const>\<open>Pure.imp\<close> $ gen_RHSS fake_rvars $ LHS
                   |> fold (fn eq => fn X => \<^Const>\<open>Pure.imp\<close> $ eq $ X) eqs
                   |> Thm.cterm_of ctxt
                   |> Goal.init
@@ -881,23 +891,34 @@ fun varify_subgoal_finale sequent =
   Phi_Help.repeat (fn th => @{thm' Pure.reflexive} RS th) sequent
 
 type reasoning = Proof.context -> thm -> thm
-type varifier = term -> (term list * (term list -> term)) option
+type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type PLPR_reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
 
-fun gen_abstract_constraint_guided_reasoning varify extract_prems reasoner =
-let fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
+fun gen_abstract_constraint_guided_reasoning always_diverge_disj varify extract_prems reasoner =
+let fun has_disj_ants th =
+          exists (fn Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) => true
+                   | _ => false)
+                 (#2 (Phi_Help.strip_meta_hhf (fst (Logic.dest_implies (Thm.prop_of th)))))
+    fun no_schematic_in_concl th = Thm.maxidx_of_cterm (Thm.cconcl_of th) = ~1
+
+  fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
   case Thm.major_prem_of sequent0
-    of _ $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
+    of _ (*Trueprop*) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
+     | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
+              abstract_constraint_guided_reasoning ctxt0 (@{thm' allI} RS sequent0)
      | _ =>
-  let val sequent = sequent0
-                 |> Phi_Help.repeat (fn th => @{thm' allI} RS th)
+  if has_disj_ants sequent0 andalso (always_diverge_disj orelse no_schematic_in_concl sequent0)
+  then Seq.hd (Thm.biresolution (SOME ctxt0) true [(true, @{thm' disjE})] 1 sequent0)
+    |> abstract_constraint_guided_reasoning ctxt0
+  else let
+      val sequent = sequent0
                  |> (fn th => @{thm' impI} RS th
                               handle THM _ => Method.insert_tac ctxt0 [Thm.transfer' ctxt0 @{thm' TrueI}] 1 th
                                            |> Seq.hd)
       val (focus, lsequent'0) = Subgoal.focus ctxt0 1 NONE sequent
       val ctxt = #context focus
-      val lsequent = varify_subgoal varify ctxt lsequent'0
+      val lsequent = varify_subgoal varify ctxt focus lsequent'0
 
       val len = length (#prems focus)
       val [Ant, pure_info] = List.drop (#prems focus, len - 2)

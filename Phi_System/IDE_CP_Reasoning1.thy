@@ -789,18 +789,17 @@ lemma (*the above rule is local complete*)
   by (clarsimp)
 
 lemma [\<phi>reason 1200]:
-  \<open> Identity_Element\<^sub>I A P
-\<Longrightarrow> Identity_Element\<^sub>I B Q
-\<Longrightarrow> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) (P \<and> Q) \<close>
+  \<open> Identity_Element\<^sub>I A P \<or> Identity_Element\<^sub>I B Q
+\<Longrightarrow> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) (P \<or> Q)\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
-  by clarsimp
+  by (clarsimp, blast)
 
 lemma (*the above rule is not local complete*)
-  \<open> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) True \<Longrightarrow> Identity_Element\<^sub>I A True \<and> Identity_Element\<^sub>I B True \<close>
+  \<open> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) True \<Longrightarrow> Identity_Element\<^sub>I A True \<or> Identity_Element\<^sub>I B True \<close>
   oops
   (* Auto Quickcheck found a counterexample:
-  A = {a\<^sub>1}
-  B = {} *)
+  A = {a\<^sub>3}
+  B = {a\<^sub>1} *)
 
 lemma [\<phi>reason 1200]:
   \<open>Identity_Element\<^sub>I (1 \<Ztypecolon> Itself) True\<close>

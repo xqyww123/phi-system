@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
- 
+    
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -43,16 +43,16 @@ subsubsection \<open>Algebraic Properties\<close>
 lemma [\<phi>reason add]:
   \<open> homo_sep_disj_total f
 \<Longrightarrow> homo_sep_mult f
-\<Longrightarrow> Separation_Homo_Obj (\<phi>Fun f) UNIV \<close>
-  unfolding Separation_Homo_Obj_def Transformation_def
+\<Longrightarrow> Object_Sep_Homo\<^sub>I (\<phi>Fun f) UNIV \<close>
+  unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
   by (clarsimp simp add: set_mult_expn homo_sep_disj_total.sep_disj_homo
                          homo_sep_mult.homo_mult)
 
 lemma [\<phi>reason add]:
   \<open> homo_sep_disj_total f
 \<Longrightarrow> homo_sep_mult f
-\<Longrightarrow> Separation_Homo_unzip (\<phi>Fun f)\<close>
-  unfolding Separation_Homo_unzip_def Transformation_def
+\<Longrightarrow> Object_Sep_Homo\<^sub>E (\<phi>Fun f)\<close>
+  unfolding Object_Sep_Homo\<^sub>E_def Transformation_def
   by (clarsimp simp add: set_mult_expn homo_sep_disj_total.sep_disj_homo
                          homo_sep_mult.homo_mult)
 
@@ -75,7 +75,7 @@ declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-                           
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -418,116 +418,82 @@ lemma [\<phi>reason 1200]:
     construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket> .
 *)
 
-declare [[\<phi>trace_reasoning = 2]]
-
-print_\<phi>reasoners \<open>_ \<Ztypecolon> _ \<Zcomp> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>simp' _\<close> ? ?
-print_\<phi>reasoners \<open>x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S @action \<A>simp' True\<close> ?
- 
-lemma [\<phi>reason 1200]:
-  \<open> Is_Functional (x \<Ztypecolon> U)
-\<Longrightarrow> y \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<w>\<i>\<t>\<h> P\<close>
-  \<medium_left_bracket> premises [unfolded Is_Functional_def, useful] and [unfolded satisfication_encoding, useful]
-    
-    
-    \<medium_right_bracket> .
-
-lemma \<phi>Composition_expn[iff, \<phi>expns]:
-  \<open>p \<Turnstile> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<Turnstile> (y \<Ztypecolon> T) \<and> y \<Turnstile> (x \<Ztypecolon> U))\<close>
-  unfolding \<phi>Composition_def \<phi>Type_def by simp
-
-
-lemma \<phi>Composition_transformation[\<phi>reason 1200 for \<open>(_ \<Ztypecolon> _ \<Zcomp> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ \<Ztypecolon> _ \<Zcomp> _) \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> x1 \<Ztypecolon> U1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x2 \<Ztypecolon> U2 \<w>\<i>\<t>\<h> P
-\<Longrightarrow> (x1 \<Ztypecolon> T \<Zcomp> U1) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x2 \<Ztypecolon> T \<Zcomp> U2) \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def by blast
 
 subsubsection \<open>Algebraic Properties\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
 
-interpretation \<phi>Composition: Functional_Transformation_Functor
-      \<open>(\<Zcomp>) B\<close> \<open>(\<Zcomp>) B'\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
-  by (standard,
-      ( unfold Transformation_Functor_def Premise_def,
-        clarsimp simp add: \<phi>Composition_expn Transformation_def ExSet_expn Subjection_expn ,
-        blast),
-      blast)
 
-lemma \<phi>Composition_separatio_functor_zip[\<phi>reason add]:
-  \<open> Separation_Homo_Obj B UNIV
+lemma \<phi>Composition_Separation_Homo\<^sub>I[\<phi>reason 1000]:
+  \<open> Object_Sep_Homo\<^sub>I B UNIV
 \<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) UNIV (\<lambda>x. x)\<close>
-  unfolding Separation_Homo\<^sub>I_def Transformation_def Separation_Homo_Obj_def
-  by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn, insert times_set_I, blast)
+  unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
+  by (clarsimp, insert times_set_I, blast)
 
 lemma (*The above rule is reversible. requiring the sep homo domain being the univ is already the weakest.*)
-  \<open> S \<noteq> {} \<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x) \<Longrightarrow> Separation_Homo_Obj B UNIV \<close>
-  unfolding Separation_Homo\<^sub>I_def Separation_Homo_Obj_def Transformation_def
-  apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
+  \<open> S \<noteq> {} \<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>I B UNIV \<close>
+  unfolding Separation_Homo\<^sub>I_def Object_Sep_Homo\<^sub>I_def Transformation_def
+  apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def)
   subgoal premises prems for x y u v
     by (insert prems(2)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
-               prems(1,3-5), auto) .
+               prems(1,3-5),
+        auto simp add: Satisfaction_def) .
 
 
-lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason add]:
-  \<open> Separation_Homo_unzip B
+lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
+  \<open> Object_Sep_Homo\<^sub>E B
 \<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
   for B :: \<open>('d::sep_magma,'e::sep_magma) \<phi>\<close>
-  unfolding Separation_Homo\<^sub>E_def Transformation_def Separation_Homo_unzip_def
-  by (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn; blast)
+  unfolding Separation_Homo\<^sub>E_def Transformation_def Object_Sep_Homo\<^sub>E_def
+  by (clarsimp simp add: set_mult_expn; blast)
 
 lemma (*The above rule is reversible*)
-  \<open> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Separation_Homo_unzip B \<close>
-  unfolding Separation_Homo\<^sub>E_def Separation_Homo_unzip_def Transformation_def
-  apply (clarsimp simp add: \<phi>Prod_expn \<phi>Composition_expn set_mult_expn)
-  apply (simp add: \<phi>Type_def)
+  \<open> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
+  unfolding Separation_Homo\<^sub>E_def Object_Sep_Homo\<^sub>E_def Transformation_def
+  apply (clarsimp simp add: set_mult_expn)
+  apply (simp add: \<phi>Type_def Satisfaction_def)
   subgoal premises prems for x y v
     by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
                prems(2-3), blast) .
 
-(*
-interpretation Unit_Functor_L \<open>Unit_Homo B\<close> \<open>((\<Zcomp>) B)\<close>
-  unfolding Unit_Functor_L_def Unit_Functor_def Transformation_def Unit_Homo_def
-  by (auto simp add: \<phi>Composition_expn) *)
 
-(*
-lemma \<phi>Composition_unit_functor[\<phi>reason add]:
-  \<open> Unit_Homo B
-\<Longrightarrow> Unit_Functor ((\<Zcomp>) B)\<close>
-  unfolding Unit_Functor_def Unit_Homo_def
-  by (auto simp add: \<phi>Composition_expn) *)
-
-(*
-lemma \<phi>Composition_union_functor[\<phi>reason add]:
-  \<open>Union_Functor ((\<Zcomp>) B) ((\<Zcomp>) B)\<close>
-  unfolding Union_Functor_def
-  by (clarify, rule \<phi>Type_eqI, simp add: \<phi>expns \<phi>Composition_expn; blast)
-*)
 
 section \<open>Logical Connectives\<close>
 
 
+(* subsection \<open>Embedding Universal Quantification\<close>
 
-
-subsection \<open>Embedding Universal Quantification\<close>
-
-definition \<phi>Type_univ_quant :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> ("\<forall>\<^sub>\<phi> _" [10] 10)
-  where \<open>\<phi>Type_univ_quant T = (\<lambda>x. {p. (\<forall>c. p \<in> (x c \<Ztypecolon> T c))})\<close>
+\<phi>type_def \<phi>Type_univ_quant :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> ("\<forall>\<^sub>\<phi> _" [10] 10)
+  where \<open>\<phi>Type_univ_quant T = (\<lambda>x. \<forall>\<^sup>Sc. x c \<Ztypecolon> T c)\<close>
 
 lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
   \<open>p \<in> (f \<Ztypecolon> (\<forall>\<^sub>\<phi> T)) \<longleftrightarrow> (\<forall>x. p \<in> (f x \<Ztypecolon> T x))\<close>
   unfolding \<phi>Type_univ_quant_def \<phi>Type_def by clarsimp
-
+*)
 
 subsection \<open>Embedding Additive Conjunction\<close>
 
-definition \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<inter>\<^sub>\<phi>" 70)
-  where \<open>(T \<inter>\<^sub>\<phi> U) = (\<lambda>(x,y). (x \<Ztypecolon> T) \<inter> (y \<Ztypecolon> U))\<close>
+declare [[\<phi>trace_reasoning = 3]] 
+     
+\<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
+  where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
+  deriving (*\<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q x) \<Longrightarrow> x \<Ztypecolon> T \<and>\<^sub>\<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) \<and> Q (snd x)\<close>
+       and \<open>Object_Equiv T eqa \<Longrightarrow> Object_Equiv U eqb \<Longrightarrow> Object_Equiv (T \<and>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
+       and \<open>Identity_Element\<^sub>I (1 \<Ztypecolon> T) P \<or> Identity_Element\<^sub>I (1 \<Ztypecolon> U) Q \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U) (P \<or> Q)\<close>
+       and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
+       and*) Transformation_Functor
 
-lemma \<phi>Inter_expn[\<phi>expns]:
-  \<open>((x,y) \<Ztypecolon> (T \<inter>\<^sub>\<phi> U)) = (x \<Ztypecolon> T) \<inter> (y \<Ztypecolon> U)\<close>
-  unfolding set_eq_iff \<phi>Type_def \<phi>Inter_def by simp
+term \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
+term \<open>\<inter>\<close>
+
+subsubsection \<open>Rules\<close>
+
+declare \<phi>Inter_def[embed_into_\<phi>type del]
+
+lemma \<phi>Inter_embedding[embed_into_\<phi>type]:
+  \<open>(x \<Ztypecolon> T) \<inter> (y \<Ztypecolon> U) \<equiv> (x, y) \<Ztypecolon> T \<inter>\<^sub>\<phi> U\<close>
+  unfolding atomize_eq BI_eq_iff
+  by simp
 
 lemma \<phi>Inter_inhabited[\<phi>inhabitance_rule 1000]:
   \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> A @action \<A>EIF

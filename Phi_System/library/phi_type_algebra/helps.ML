@@ -12,7 +12,7 @@ fun conv_def_to_equaltion ctxt def =
         conv_def_to_equaltion ctxt
           (Conv.fconv_rule (Phi_Conv.hhf_concl_conv Object_Logic.atomize ctxt) def)
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-         Const(\<^const_name>\<open>HOL.eq\<close>, Type(\<^type_name>\<open>fun\<close>, [Ty,_])) $ LHS $ RHS) =>
+         Const(\<^const_name>\<open>HOL.eq\<close>, \<^Type>\<open>fun Ty _\<close>) $ LHS $ RHS) =>
        (case Ty
           of \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>\<close> =>
               let val concl = Thm.dest_arg (Thm.cconcl_of def)
@@ -26,10 +26,20 @@ fun conv_def_to_equaltion ctxt def =
                                               Vars.make [((("T",0),Thm.typ_of_cterm T),T),
                                                          ((("U",0),Thm.typ_of_cterm U),U)])
                              (case RHS of Abs _ => @{thm \<phi>Type_conv_eq_1}
+                                        | Const(\<^const_name>\<open>case_prod\<close>, _) $ _ => @{thm \<phi>Type_conv_eq_1}
                                         | _ => @{thm \<phi>Type_conv_eq_2})
+                  fun prod_beta ctm =
+                    case Thm.term_of ctm
+                      of Const(\<^const_name>\<open>case_prod\<close>, _) $ _ $ _ =>
+                          (Conv.rewr_conv @{thm' case_prod_beta[folded atomize_eq]} then_conv prod_beta) ctm
+                       | Abs _ $ _ $ _ =>
+                          (Thm.beta_conversion true then_conv prod_beta) ctm
+                       | _ => Conv.all_conv ctm
+
                in Thm.bicompose NONE {flatten=false,match=true,incremented=true}
                                      (false, def, Thm.nprems_of def) 1 rule
                |> Seq.hd
+               |> Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.arg_conv prod_beta))
               end
            | \<^Type>\<open>set _\<close> => (
                 case LHS of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => def

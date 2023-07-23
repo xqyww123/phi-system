@@ -75,7 +75,8 @@ fun force_invoke (ctxt, mode) sequent =
 fun invoke_when_needed (ctxt, mode) sequent =
   let val assertion = #spec_of mode (Thm.prop_of sequent)
    in if is_simp_needed (Context.Proof ctxt) assertion
-   then force_invoke (ctxt, mode) sequent
+   then (Phi_Reasoner.info_print ctxt 2 (fn () => "Invoking transformation-based simplification...");
+         force_invoke (ctxt, mode) sequent)
    else sequent
   end
 
@@ -93,6 +94,7 @@ fun select_trans_rule (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = se
   | select_trans_rule _ = @{thm' \<A>simp_trans}
 
 val enable_rule_pass = Config.declare_bool ("Phi_CoP_Simp.enable_rule_pass", \<^here>) (K false)
+val extract_pattern_trigger = Config.declare_bool ("Phi_CoP_Simp.extract_pattern_trigger", \<^here>) (K true)
 
 fun force_rule_pass rule ctxt =
   let fun bad_rule msg = error ("Malform rule of Transformation-based Simplification:\n" ^
@@ -114,15 +116,20 @@ fun force_rule_pass rule ctxt =
         | get_pat X = if Phi_Syntax.is_BI_connective X
                       then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
                       else X
-      val pat = get_pat (Thm.concl_of rule)
-   in case try (add_simp_pattern pat) ctxt
-   of SOME ctxt' => (rule', ctxt')
-    | NONE => (
-        warning ("Fail to extract the pattern of the source type of the rule\n" ^
-                 Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ "\n\
-                 \The simplification will not be activated on the source type specified by the rule\n\
-                 \You may want to add the trigger manually by setup \<open>Phi_CoP_Simp.add_simp_pattern\<close> or \<open>Phi_CoP_Simp.add_simp_trigger\<close>") ;
-        (rule', ctxt))
+      val pat = if Config.get_generic ctxt extract_pattern_trigger
+                then SOME (get_pat (Thm.concl_of rule))
+                else NONE
+   in case pat
+   of SOME pat =>
+      (case try (add_simp_pattern pat) ctxt
+       of SOME ctxt' => (rule', ctxt')
+        | NONE => (
+            warning ("Fail to extract the pattern of the source type of the rule\n" ^
+                     Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ "\n\
+                     \The simplification will not be activated on the source type specified by the rule\n\
+                     \You may want to add the trigger manually by setup \<open>Phi_CoP_Simp.add_simp_pattern\<close> or \<open>Phi_CoP_Simp.add_simp_trigger\<close>") ;
+            (rule', ctxt)))
+    | NONE => (rule', ctxt)
   end
 
 
@@ -134,10 +141,15 @@ val _ = Theory.setup (Context.theory_map (
               in (rules', mode, pats, guard, ctxt')
              end
         else (rules, mode, pats, guard, ctxt))
-) #> Attrib.setup \<^binding>\<open>\<phi>trabsformation_based_simp\<close> (
+) #> Attrib.setup \<^binding>\<open>\<phi>transformation_based_simp\<close> (
   Phi_Reasoner.attr_syntax
     (Scan.lift (Scan.optional (Args.$$$ "no" |-- Args.$$$ "trigger" >> K false) true))
-    (fn (pos, mode, priority, add_trigger, ))
+    (fn (pos, mode, priority, add_trigger, patterns, guard) =>
+      Thm.declaration_attribute (fn rule => fn ctxt => ctxt
+        |> Config.put_generic extract_pattern_trigger add_trigger
+        |> Phi_Reasoner.add_intro_rule pos mode priority patterns guard [rule]
+        |> Config.restore_generic extract_pattern_trigger ctxt
+    ))
 ) ""
 )
 

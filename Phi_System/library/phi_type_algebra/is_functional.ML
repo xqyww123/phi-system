@@ -32,7 +32,7 @@ fun gen_is_functional hint0 (phi0 : phi_type) thy =
                     Conv.try_conv (Raw_Simplifier.rewrite ctxt true @{thms' \<phi>TA_IsFunc_rewr_ants}))))
                   (PLPR_Syntax.premise_tag_conv (
                     Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))))
-      val reasoning = gen_abstract_constraint_guided_reasoning (K NONE) (K (K [])) (PLPR_reasoner (SOME 1))
+      val reasoning = gen_abstract_constraint_guided_reasoning true (K (K NONE)) (K (K [])) (PLPR_reasoner (SOME 1))
 
       val rules = mk_rule_by_guess_or_hint ("Is_Functional", unify_hint, guess_property,
                                             @{thm' \<phi>TA_IsFunc_rule}, [], SOME ind_conv,

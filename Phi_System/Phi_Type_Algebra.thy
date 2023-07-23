@@ -96,10 +96,10 @@ locale Union_Functor = (*is this necessary?*)
 subsubsection \<open>Separation\<close>
 
 
-definition Separation_Homo_Obj :: \<open>('b::sep_magma, 'a::sep_magma) \<phi> \<Rightarrow> ('a \<times> 'a) set \<Rightarrow> bool\<close>
-  where \<open>Separation_Homo_Obj T D \<longleftrightarrow> (\<forall>x y. (y,x) \<in> D \<longrightarrow> ((x \<Ztypecolon> T) * (y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x * y \<Ztypecolon> T \<w>\<i>\<t>\<h> x ## y ))\<close>
+definition Object_Sep_Homo\<^sub>I :: \<open>('b::sep_magma, 'a::sep_magma) \<phi> \<Rightarrow> ('a \<times> 'a) set \<Rightarrow> bool\<close>
+  where \<open>Object_Sep_Homo\<^sub>I T D \<longleftrightarrow> (\<forall>x y. (y,x) \<in> D \<longrightarrow> ((x \<Ztypecolon> T) * (y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x * y \<Ztypecolon> T \<w>\<i>\<t>\<h> x ## y ))\<close>
 
-definition \<open>Separation_Homo_unzip T \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> ( (x * y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> T) * (y \<Ztypecolon> T) ))\<close>
+definition \<open>Object_Sep_Homo\<^sub>E T \<longleftrightarrow> (\<forall>x y. x ## y \<longrightarrow> ( (x * y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> T) * (y \<Ztypecolon> T) ))\<close>
 
 definition \<open>Separation_Homo\<^sub>I Ft Fu F3 D z \<longleftrightarrow>
               (\<forall>T U x y. (x,y) \<in> D \<longrightarrow> ((x,y) \<Ztypecolon> Ft(T) \<^emph> Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z (x,y) \<Ztypecolon> F3 (T \<^emph> U)))\<close>
@@ -171,7 +171,7 @@ declare [[
 
 declare [[
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Transformation_Functor _ _ _ _ _\<close>,
-  \<phi>reason_default_pattern \<open>Separation_Homo_Obj ?T _\<close> \<Rightarrow> \<open>Separation_Homo_Obj ?T _\<close> (100),
+  \<phi>reason_default_pattern \<open>Object_Sep_Homo\<^sub>I ?T _\<close> \<Rightarrow> \<open>Object_Sep_Homo\<^sub>I ?T _\<close> (100),
 
   \<phi>reason_default_pattern_ML \<open>Separation_Homo\<^sub>I ?Ft ?Fu _ _ _\<close> \<Rightarrow>
     \<open>fn generic => fn term =>
@@ -217,18 +217,17 @@ subsection \<open>Applications\<close>
 
 subsubsection \<open>Separation Homo / Functor\<close>
 
-
 lemma apply_sep_homo:
-  \<open> Separation_Homo_Obj T D
+  \<open> Object_Sep_Homo\<^sub>I T D
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y,x) \<in> D
 \<Longrightarrow> (x \<Ztypecolon> T) * (y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x * y \<Ztypecolon> T \<w>\<i>\<t>\<h> x ## y\<close>
-  unfolding Separation_Homo_Obj_def Premise_def by simp
+  unfolding Object_Sep_Homo\<^sub>I_def Premise_def by simp
 
 lemma apply_sep_homo_unzip:
-  \<open> Separation_Homo_unzip T
+  \<open> Object_Sep_Homo\<^sub>E T
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x ## y
 \<Longrightarrow> (x * y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> T) * (y \<Ztypecolon> T)\<close>
-  unfolding Separation_Homo_unzip_def Premise_def by blast
+  unfolding Object_Sep_Homo\<^sub>E_def Premise_def by blast
 
 lemma apply_Separation_Functor_zip:
   \<open> Separation_Homo\<^sub>I Ft Fu Fc D z
@@ -858,7 +857,7 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   using transformation .
    
 lemma [\<phi>TA_internal_simplify_special_cases,
-       \<phi>reason default 40]:
+       \<phi>transformation_based_simp default 40 no trigger]:
   \<open> Prem
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)
@@ -991,15 +990,15 @@ hide_fact Transformation_Functor_L_simp_cong
 
 subsubsection \<open>Separation Homomorphism\<close>
 
-lemma Separation_Homo_Obj_subdom[\<phi>reason default 1]:
-  \<open> Separation_Homo_Obj T Da
+lemma Object_Sep_Homo\<^sub>I_subdom[\<phi>reason default 1]:
+  \<open> Object_Sep_Homo\<^sub>I T Da
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Db \<subseteq> Da
-\<Longrightarrow> Separation_Homo_Obj T Db\<close>
-  unfolding Separation_Homo_Obj_def Premise_def subset_iff
+\<Longrightarrow> Object_Sep_Homo\<^sub>I T Db\<close>
+  unfolding Object_Sep_Homo\<^sub>I_def Premise_def subset_iff
   by blast
 
-(*Separation_Homo_Obj is necessary at least for composition \<phi>-type
-Separation_Homo_Obj B \<longleftrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)
+(*Object_Sep_Homo\<^sub>I is necessary at least for composition \<phi>-type
+Object_Sep_Homo\<^sub>I B \<longleftrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)
 *)
 
 (*There are two inner element \<open>a,b\<close>, we construct an inner transformation from \<open>(a \<Ztypecolon> T) * (b \<Ztypecolon> T)\<close>
@@ -1012,9 +1011,9 @@ lemma Separation_Homo_functor[\<phi>reason_template 50]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y z. m (\<lambda>(a, b) c. c = b * a \<and> b ## a \<and> (a, b) \<in> D (zz (x, y))) (zz (x, y)) z
                         \<longrightarrow> z = y * x \<and> y ## x) \<and>
            (\<forall>x y a b. (a, b) \<in> D (zz (x, y)) \<longrightarrow> b * a \<in> R (zz (x, y)))
-\<Longrightarrow> Separation_Homo_Obj T (Set.bind Ds (D o zz))
-\<Longrightarrow> Separation_Homo_Obj (F T) Ds\<close>
-  unfolding Separation_Homo_Obj_def Transformation_Functor_def Separation_Homo\<^sub>I_def Premise_def
+\<Longrightarrow> Object_Sep_Homo\<^sub>I T (Set.bind Ds (D o zz))
+\<Longrightarrow> Object_Sep_Homo\<^sub>I (F T) Ds\<close>
+  unfolding Object_Sep_Homo\<^sub>I_def Transformation_Functor_def Separation_Homo\<^sub>I_def Premise_def
   apply (clarsimp simp add: \<phi>Prod_expn'[symmetric] simp del: split_paired_All)
   subgoal premises prems for x y
   proof -
@@ -1043,7 +1042,7 @@ lemma Separation_Homo_eq_functor:
 \<Longrightarrow> Separation_Homo_eq T
 \<Longrightarrow> Separation_Homo_eq (F T)\<close>
   unfolding Separation_Homo_eq_def Transformation_Functor_def Sep_Homo_Ty_def
-            Separation_Homo_Obj_def
+            Object_Sep_Homo\<^sub>I_def
   apply (clarsimp simp add: \<phi>Prod_split[symmetric])
   subgoal premises prems for x y
   proof -
@@ -1055,9 +1054,9 @@ thm prems
   by (simp; metis \<phi>Prod_split) *)
 
 (*
-\<phi>reasoner_ML Separation_Homo_functor 50 (\<open>Separation_Homo_Obj _\<close>) = \<open>
+\<phi>reasoner_ML Separation_Homo_functor 50 (\<open>Object_Sep_Homo\<^sub>I _\<close>) = \<open>
 fn (ctxt, sequent) => Seq.make (fn () =>
-  let val _ (*Trueprop*) $ (Const(\<^const_name>\<open>Separation_Homo_Obj\<close>, _) $ T)
+  let val _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Sep_Homo\<^sub>I\<close>, _) $ T)
         = Thm.major_prem_of sequent
    in case Phi_Functor_Detect.detect 1 ctxt T
         of SOME [Ft,Tt] => let
@@ -1382,6 +1381,10 @@ lemma [fundef_cong]:
   \<open>T x = T' x' \<Longrightarrow> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')\<close>
   unfolding \<phi>Type_def by simp
 
+lemma \<phi>TA_ant_disj_split:
+  \<open>P \<longrightarrow> R \<Longrightarrow> Q \<longrightarrow> R \<Longrightarrow> P \<or> Q \<longrightarrow> R\<close>
+  by blast
+
 ML \<open>BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>Set.set\<close>\<close>
 
 
@@ -1444,16 +1447,6 @@ hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step \<phi>TA_Inh_ins
 subsubsection \<open>Identity Element Intro \& Elim\<close>
 
 lemma \<phi>TA_1L_rule:
-  \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) Any @action \<phi>TA_ind_target undefined)
-\<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any \<longrightarrow> P))
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
-\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
-  unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
-  using transformation_weaken by blast
-
-lemma \<phi>TA_1L_rule':
   \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -1461,6 +1454,15 @@ lemma \<phi>TA_1L_rule':
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
   unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
   using transformation_weaken by blast
+
+(*lemma \<phi>TA_1L_rule':
+  \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
+  unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
+  using transformation_weaken by blast*)
 
 lemma \<phi>TA_1R_rule:
   \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
@@ -1475,10 +1477,24 @@ lemma \<phi>TA_Ident_I_extract_prem:
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by blast
 
-lemma \<phi>TA_Ident_E_extract_prem:
+lemma \<phi>TA_Ident_E_extract_prem:                             
   \<open>Identity_Element\<^sub>E S \<Longrightarrow> (1 \<Turnstile> S)\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by blast
+
+lemma \<phi>TA_Ident_I_rule_step:
+  \<open> Identity_Element\<^sub>I X Q
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Q \<longrightarrow> P)
+\<Longrightarrow> Identity_Element\<^sub>I X P \<close>
+  unfolding Identity_Element\<^sub>I_def Premise_def
+  by (simp add: transformation_weaken)
+
+lemma \<phi>TA_Ident_I_rule_step_infer:
+  \<open> Identity_Element\<^sub>I X Q
+\<Longrightarrow> Identity_Element\<^sub>I X (Any \<or> Q) \<close>
+  unfolding Identity_Element\<^sub>I_def Transformation_def
+  by simp
+  
 
 ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 

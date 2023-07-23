@@ -126,7 +126,7 @@ fun OE_reasoning phi ctxt rule =
         if def_contains_satisfaction phi
         then extract_pure_prem_by_RS @{thms' \<phi>TA_OE_extract_prem}
         else K (K [])
-   in gen_abstract_constraint_guided_reasoning (K NONE) extract_prem (ToA_reasoner phi) ctxt' rule
+   in gen_abstract_constraint_guided_reasoning true (K (K NONE)) extract_prem (ToA_reasoner phi) ctxt' rule
   end
 
 fun gen_obj_equal' hint0 (phi0 : phi_type) thy =

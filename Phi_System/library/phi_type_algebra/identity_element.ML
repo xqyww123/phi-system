@@ -102,10 +102,11 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                        fn ctxt => fn _ =>
                             HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Action_Tag_def}) then_conv
                             Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)))
-      val varify_subgoal = if is_left
-            then (fn Trueprop $ (Identity_Element $ S $ P) =>
+      val varify_subgoal =
+            if is_left
+            then K (fn Trueprop $ (Identity_Element $ S $ P) =>
                         SOME ([P], fn [P'] => Trueprop $ (Identity_Element $ S $ P')))
-            else K NONE
+            else K (K NONE)
 
       val extract_prem =
         if def_contains_satisfaction phi0
@@ -114,22 +115,40 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                                       else @{thms' \<phi>TA_Ident_E_extract_prem})
         else K (K [])
 
-      fun reasoning _ = gen_abstract_constraint_guided_reasoning
-                            varify_subgoal extract_prem (PLPR_reasoner (SOME 1))
-      fun simp (_, ctxt) =
-        if is_some hint0 then I
-        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-              let val sctxt = Simps.enhance ctxt addsimps @{thms special_Ex_def}
-               in HOLogic.Trueprop_conv (
-                    if is_left
-                    then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite sctxt))
-                                               (Simplifier.rewrite sctxt)
-                    else Conv.arg_conv (Simplifier.rewrite sctxt))
-              end) ctxt)
-      val rule = if is_left
-                 then if is_some hint0 then @{thm' \<phi>TA_1L_rule}
-                      else @{thm' \<phi>TA_1L_rule'}
-                 else @{thm' \<phi>TA_1R_rule}
+      val reasoner = if is_left then (fn ctxt => fn th =>
+            case Thm.major_prem_of th
+              of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
+                  (case P of Var _ => PLPR_reasoner (SOME 1) ctxt (@{thm' \<phi>TA_Ident_I_rule_step_infer} RS th)
+                           | _     => PLPR_reasoner (SOME 2) ctxt (@{thm' \<phi>TA_Ident_I_rule_step} RS th))
+               | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
+            else PLPR_reasoner (SOME 1)
+      fun reasoning _ = gen_abstract_constraint_guided_reasoning true varify_subgoal extract_prem reasoner
+
+      fun set_the_infer_tail ctxt th =
+        if is_left then
+          case Thm.concl_of th
+            of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
+                (case P of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ Var v $ _ =>
+                              Thm.instantiate (TVars.empty, Vars.make [(v, \<^cterm>\<open>False\<close>)]) th
+                           |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                                      HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite ctxt))
+                               ) ctxt)
+                         | _ => th)
+             | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w"
+        else th
+
+      fun simp (_, ctxt) th = set_the_infer_tail ctxt th
+        |> (if is_some hint0 then I
+            else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                  let val sctxt = Simps.enhance ctxt addsimps @{thms special_Ex_def}
+                   in HOLogic.Trueprop_conv (
+                        if is_left
+                        then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite sctxt))
+                                                   (Simplifier.rewrite sctxt)
+                        else Conv.arg_conv (Simplifier.rewrite sctxt))
+                  end) ctxt))
+
+      val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = mk_rule_by_guess_or_hint (name, unify_hint_U, guess_property_id_ele is_left, rule, [],
                                             SOME ind_conv, reasoning, K NONE, simp)
                                            phi0 hint0 ctxt0

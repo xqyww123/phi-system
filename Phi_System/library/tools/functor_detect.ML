@@ -482,11 +482,9 @@ val _ = Theory.setup (
     Phi_Reasoner.attr_syntax
       (Scan.optional (
           Scan.lift (\<^keyword>\<open>requires\<close>) |-- (Parse.and_list' (Scan.repeat (Args.const {proper=true,strict=true})) >> flat)) [])
-      (fn (pos, mode, priority, additional_props, action, pats, guard) =>
-          let val _ = case action of NONE => ()
-                                   | _ => error "Bad syntax of \<phi>reason_functor"
-           in Thm.declaration_attribute (setup_rule_generation (pos,mode,priority,additional_props,pats,guard))
-          end)) ""
+      (fn (pos, mode, priority, additional_props, pats, guard) =>
+          Thm.declaration_attribute (setup_rule_generation (pos,mode,priority,additional_props,pats,guard))
+      )) ""
 )
 
 

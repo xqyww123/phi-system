@@ -134,7 +134,7 @@ signature NU_REASONER = sig
 
   val attr_syntax :
       'ext context_parser (*extension*) ->
-      (Position.T * mode * priority * 'ext * action option
+      (Position.T * mode * priority * 'ext
         * ((pattern * priority option) list * pattern list) * ML_guard option
        -> attribute)
      -> attribute context_parser
@@ -966,7 +966,7 @@ val _ = Theory.setup (
   Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
-               Method.modifier (gen_attr_add_intro' I (pos,NORMAL,100,[],NONE,([],[]),NONE)) \<^here>)
+               Method.modifier (gen_attr_add_intro' I (pos,NORMAL,100,([],NONE),([],[]),NONE)) \<^here>)
 ] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."
