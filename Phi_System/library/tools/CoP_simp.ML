@@ -95,16 +95,24 @@ fun select_trans_rule (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = se
 val enable_rule_pass = Config.declare_bool ("Phi_CoP_Simp.enable_rule_pass", \<^here>) (K false)
 
 fun force_rule_pass rule ctxt =
-  let val rule' = rule RS (Thm.transfer (Context.theory_of ctxt) (select_trans_rule (Thm.concl_of rule)))
+  let fun bad_rule msg = error ("Malform rule of Transformation-based Simplification:\n" ^
+                                Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ msg)
+
+      val is_meaningful = case Thm.concl_of rule
+                            of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ (_ (*\<A>simp*) $ X)) =>
+                                  (case X of Const(\<^const_name>\<open>True\<close>, _) => \<^cterm>\<open>False\<close>
+                                           | _ => \<^cterm>\<open>True\<close>)
+                             | _ => bad_rule ""
+      val trans_rule = select_trans_rule (Thm.concl_of rule)
+                    |> Thm.instantiate (TVars.empty, Vars.make [((("M",0),\<^typ>\<open>bool\<close>),is_meaningful)])
+      val rule' = rule RS (Thm.transfer (Context.theory_of ctxt) trans_rule)
 
       fun get_pat (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = get_pat X
         | get_pat (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = get_pat X
         | get_pat (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ _ $ _) = get_pat X
         | get_pat (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) = T
         | get_pat X = if Phi_Syntax.is_BI_connective X
-                      then error ("Malform rule of Transformation-based Simplification:\n" ^
-                                  Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ "\n\
-                                  \The source of the transformation should be a \<phi>-type or a BI predicate.")
+                      then bad_rule "\nThe source of the transformation should be a \<phi>-type or a BI predicate."
                       else X
       val pat = get_pat (Thm.concl_of rule)
    in case try (add_simp_pattern pat) ctxt
@@ -119,15 +127,19 @@ fun force_rule_pass rule ctxt =
 
 
 val _ = Theory.setup (Context.theory_map (
-  Phi_Reasoner.add_pass ("Phi_CoP_Simp", \<^pattern_prop>\<open>_ @action to \<A>simp\<close>,
+  Phi_Reasoner.add_pass ("Phi_CoP_Simp", \<^pattern_prop>\<open>_ @action \<A>simp' _\<close>,
     fn pos => fn (rules, mode, pats, guard, ctxt) =>
         if Config.get_generic ctxt enable_rule_pass
         then let val (rules', ctxt') = fold_map force_rule_pass rules ctxt
               in (rules', mode, pats, guard, ctxt')
              end
         else (rules, mode, pats, guard, ctxt))
-))
-
+) #> Attrib.setup \<^binding>\<open>\<phi>trabsformation_based_simp\<close> (
+  Phi_Reasoner.attr_syntax
+    (Scan.lift (Scan.optional (Args.$$$ "no" |-- Args.$$$ "trigger" >> K false) true))
+    (fn (pos, mode, priority, add_trigger, ))
+) ""
+)
 
 (*
 

@@ -10,7 +10,7 @@ subsection \<open>Definitions\<close>
 
 
 
-(*
+(* 
 subsubsection \<open>Unit\<close>
 
 definition \<open>Unit_Homo T \<longleftrightarrow> (1 \<Ztypecolon> T) = 1\<close>
@@ -856,13 +856,13 @@ lemma [\<phi>TA_internal_simplify_special_cases,
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z) \<close>
   unfolding Action_Tag_def
   using transformation .
- 
+   
 lemma [\<phi>TA_internal_simplify_special_cases,
        \<phi>reason default 40]:
   \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to \<A>simp)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action to \<A>simp \<close>
+\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)
+\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>simp \<close>
   unfolding Action_Tag_def Premise_def
   using transformation[unfolded Premise_def] .
 
@@ -890,7 +890,7 @@ lemma [\<phi>reason_template default 50 requires Separation_Homo\<^sub>E]:
 
 lemma [\<phi>reason_template default 45]:
   \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb un
-\<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. (\<exists>z. y = un z) @action to \<A>simp\<close>
+\<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. (\<exists>z. y = un z) @action \<A>simp\<close>
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def \<phi>Auto_Prod_def
   by (clarsimp simp add: Subjection_transformation_expn Ex_transformation_expn
                   intro!: ExSet_transformation_I Subjection_imp_I,
@@ -1107,7 +1107,7 @@ end
 subsubsection \<open>Reasonings in Structural Extraction\<close>
 
 paragraph \<open>Transformation Functor\<close>
-  
+   
 lemma "_Structural_Extract_general_rule_":
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z

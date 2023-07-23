@@ -835,9 +835,10 @@ lemma contract_intro_sp_Ex:
 
 ML_file "library/tools/patch_for_Ex.ML"
 
-simproc_setup move_sp_Ex_inside_All (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Rf. \<forall>x. Q x f\<close>) = \<open>
+
+simproc_setup move_sp_Ex_inside (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Rf. P f\<close>) = \<open>
   fn _ => fn ctxt => fn ctm =>
-    SOME (Phi_Conv.move_sp_Ex_inside_All ctxt ctm)
+    SOME (Conv.changed_conv (Phi_Conv.move_Ex_inside (K Conv.all_conv) ctxt) ctm)
     handle CTERM _ => NONE
 \<close>
 

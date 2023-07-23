@@ -69,6 +69,10 @@ fun zip_conjs ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
         Conv.rewr_conv @{thm' imp_conjR[folded atomize_eq, symmetric]} ctm
+     | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Const(\<^const_name>\<open>True\<close>, _)) =>
+        Conv.rewr_conv @{thm' HOL.simp_thms(21)[folded atomize_eq]} ctm
+     | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>True\<close>, _)) $ _ =>
+        Conv.rewr_conv @{thm' HOL.simp_thms(22)[folded atomize_eq]} ctm
      | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) $ _ =>
         (Conv.arg1_conv zip_conjs then_conv zip_conjs) ctm
      | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
@@ -279,6 +283,12 @@ fun gen_move_Ex_inside_All (Ex_name, rule) ctxt ctm =
                     | RNot_Occur =>
                         (Conv.arg_conv (move_All (lev,bounds) ctxt) then_conv
                          Conv.rewr_conv @{thm' HOL.all_simps(6)[folded atomize_eq, symmetric]}) ctm)
+           | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) $ _ =>
+                (Conv.rewr_conv @{thm' HOL.simp_thms(22)[folded atomize_eq]} then_conv
+                 move_All (lev,bounds) ctxt) ctm
+           | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ Const(\<^const_name>\<open>True\<close>, _) =>
+                (Conv.rewr_conv @{thm' HOL.simp_thms(21)[folded atomize_eq]} then_conv
+                 move_All (lev,bounds) ctxt) ctm
            | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
                 let fun conj_conv ctm =
                      (case (try3 (move_All (lev,bounds) ctxt) (Thm.dest_arg1 ctm),

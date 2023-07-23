@@ -139,7 +139,7 @@ text \<open>The above rule is interesting but essentially useless as it is repla
   The To-Transformation already enters into the elements by transformation functor.\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P @action to \<A>simp\<close>
+  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P @action \<A>simp\<close>
   unfolding Transformation_Functor_def Transformation_def Action_Tag_def
   by simp
 
@@ -351,17 +351,17 @@ lemma \<S>_Homo\<^sub>I:
 text \<open>The above rules are interesting but essentially useless as it is replaced by the following rule.\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open>s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s @action to \<A>simp\<close>
+  \<open>s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s @action \<A>simp\<close>
   unfolding Action_Tag_def Transformation_def
   by simp
 
 subsection \<open>Stepwise Abstraction\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-        
+declare [[\<phi>trace_reasoning = 2]]
+         
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
-  deriving Transformation_Functor
+  deriving Functional_Transformation_Functor
 
 text \<open>
   We do not use deriver here.
@@ -418,12 +418,19 @@ lemma [\<phi>reason 1200]:
     construct\<phi> \<open>x \<Ztypecolon> T \<Zcomp> U\<close> \<medium_right_bracket> .
 *)
 
+declare [[\<phi>trace_reasoning = 2]]
+
+print_\<phi>reasoners \<open>_ \<Ztypecolon> _ \<Zcomp> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>simp' _\<close> ? ?
+print_\<phi>reasoners \<open>x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S @action \<A>simp' True\<close> ?
+ 
 lemma [\<phi>reason 1200]:
   \<open> Is_Functional (x \<Ztypecolon> U)
 \<Longrightarrow> y \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<w>\<i>\<t>\<h> P\<close>
   \<medium_left_bracket> premises [unfolded Is_Functional_def, useful] and [unfolded satisfication_encoding, useful]
-    destruct \<medium_right_bracket> .
+    
+    
+    \<medium_right_bracket> .
 
 lemma \<phi>Composition_expn[iff, \<phi>expns]:
   \<open>p \<Turnstile> (x \<Ztypecolon> T \<Zcomp> U) \<longleftrightarrow> (\<exists>y. p \<Turnstile> (y \<Ztypecolon> T) \<and> y \<Turnstile> (x \<Ztypecolon> U))\<close>
