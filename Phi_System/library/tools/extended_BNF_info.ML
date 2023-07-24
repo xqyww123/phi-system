@@ -42,9 +42,13 @@ val ctrs_of : eBNF -> term list
 val case_of : eBNF -> term option
 val case_of1 : eBNF -> term
 val sets_of_bnf : eBNF -> term list
+val sets_of_bnf_safe : eBNF -> term list option
 val rel_of_bnf : eBNF -> term
+val rel_of_bnf_safe : eBNF -> term option
 val pred_of_bnf : eBNF -> term
+val pred_of_bnf_safe : eBNF -> term option
 val map_of_bnf : eBNF -> term
+val map_of_bnf_safe : eBNF -> term option
 val mk_sets_of_bnf: typ list list -> typ list list -> eBNF -> term list
 val mk_rel_of_bnf : typ list -> typ list -> typ list -> eBNF -> term
 val mk_pred_of_bnf : typ list -> typ list -> eBNF -> term
@@ -207,6 +211,9 @@ fun get_bnf1 ctxt Tname =
 
 fun sets_of_bnf (BNF bnf) = BNF_Def.sets_of_bnf (g_bnf bnf)
   | sets_of_bnf (qBNF bnf) = #sets bnf
+fun sets_of_bnf_safe (BNF (_,SOME b,_,_)) = SOME (BNF_Def.sets_of_bnf b)
+  | sets_of_bnf_safe (qBNF bnf) = SOME (#sets bnf)
+  | sets_of_bnf_safe _ = NONE
 
 fun mk_sets_of_bnf Dss Tss (BNF bnf) = BNF_Def.mk_sets_of_bnf Dss Tss (g_bnf bnf)
   | mk_sets_of_bnf Dss Tss (qBNF qbnf) =
@@ -215,6 +222,10 @@ fun mk_sets_of_bnf Dss Tss (BNF bnf) = BNF_Def.mk_sets_of_bnf Dss Tss (g_bnf bnf
 
 fun rel_of_bnf (BNF bnf) = BNF_Def.rel_of_bnf (g_bnf bnf)
   | rel_of_bnf (qBNF bnf) = #rel bnf
+fun rel_of_bnf_safe (BNF (_, SOME b, _, _)) = SOME (BNF_Def.rel_of_bnf b)
+  | rel_of_bnf_safe (qBNF bnf) = SOME (#rel bnf)
+  | rel_of_bnf_safe _ = NONE
+
 fun mk_rel_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_rel_of_bnf Ds Ts Us (g_bnf bnf)
   | mk_rel_of_bnf Ds Ts Us (qBNF bnf) =
       Term.subst_atomic_types
@@ -222,6 +233,10 @@ fun mk_rel_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_rel_of_bnf Ds Ts Us (g_bnf bnf
 
 fun pred_of_bnf (BNF bnf) = BNF_Def.pred_of_bnf (g_bnf bnf)
   | pred_of_bnf (qBNF bnf) = #pred bnf
+fun pred_of_bnf_safe (BNF (_,SOME b,_,_)) = SOME (BNF_Def.pred_of_bnf b)
+  | pred_of_bnf_safe (qBNF bnf) = SOME (#pred bnf)
+  | pred_of_bnf_safe _ = NONE
+
 fun mk_pred_of_bnf Ds Ts (BNF bnf) = BNF_Def.mk_pred_of_bnf Ds Ts (g_bnf bnf)
   | mk_pred_of_bnf Ds Ts (qBNF bnf) =
       Term.subst_atomic_types
@@ -229,6 +244,10 @@ fun mk_pred_of_bnf Ds Ts (BNF bnf) = BNF_Def.mk_pred_of_bnf Ds Ts (g_bnf bnf)
 
 fun map_of_bnf (BNF bnf) = BNF_Def.map_of_bnf (g_bnf bnf)
   | map_of_bnf (qBNF bnf) = #map bnf
+fun map_of_bnf_safe (BNF (_,SOME b,_,_)) = SOME (BNF_Def.map_of_bnf b)
+  | map_of_bnf_safe (qBNF bnf) = SOME (#map bnf)
+  | map_of_bnf_safe _ = NONE
+
 fun mk_map_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_map_of_bnf Ds Ts Us (g_bnf bnf)
   | mk_map_of_bnf Ds Ts Us (qBNF bnf) =
       Term.subst_atomic_types

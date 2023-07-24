@@ -133,8 +133,12 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
       (*val phi0pr = make_phi_for_pair generic phi0*)
       val unify_hint_SH = hint_unify_by_type_operator (
-            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ => F
+            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ => F
              | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ => F)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ D $ z) = [D,z]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ u) = [u]
+        | extract_oprs_from_hint _ = []
+
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn phi =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_IH}) then_conv
@@ -173,7 +177,7 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
              ) ctxt)
 
       val rules = mk_rule_by_guess_or_hint (if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E",
-                                            unify_hint_SH, guess_property_SH is_intro,
+                                            unify_hint_SH, extract_oprs_from_hint, guess_property_SH is_intro,
                                             (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule}), [0,~1,~1],
                                             SOME ind_conv, SH_reasoning is_intro, K NONE, simp)
                                            phi0 hint0 ctxt0

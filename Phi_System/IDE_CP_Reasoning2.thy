@@ -199,6 +199,11 @@ text \<open>The section and the next section present the main reasoning procedur
   using the remained unsolved target proportion of the previous search as the goal of
   the next search in the next source object.
 
+  In the reasoning processes, we only consider logic connectives that have an interpretation of refinement.
+  They include, \<open>\<or>, \<exists>, \<^emph>, \<and>\<close>. \<open>\<forall>\<close> is planned.
+  \<open>\<not>\<close> and \<open>\<rightarrow>\<close> are depreciated, because we cannot interpret from them what is the exact refinement
+  relation and the abstract object. \<open>@\<close> is only used in propositional constraints.
+
 Priority Convention:
 
 \<^item> 4000: Termination
@@ -697,7 +702,8 @@ text \<open>Non-pure Additive Conjunction (excludes those are used in pure propo
   rules which are also attempted subsequently in order and applied whenever possible.
   \<open>X \<longrightarrow> A \<Longrightarrow> X \<longrightarrow> B \<Longrightarrow> X \<longrightarrow> A \<and> B\<close> generates two subgoals.
   \<open>(A \<longrightarrow> Y) \<or> (B \<longrightarrow> Y) \<Longrightarrow> A \<and> B \<longrightarrow> Y\<close> branches the reasoning. Specially, when \<open>Y \<equiv> \<exists>x. P x\<close> is an
-  existential quantification, the priority of eliminating \<open>\<and>\<close> or instantiating \<open>\<exists>\<close> is significant.
+  existential quantification containing non-pure additive conjunction (e.g. \<open>P x \<equiv> C x \<and> D x\<close>),
+  the priority of eliminating \<open>\<and>\<close> or instantiating \<open>\<exists>\<close> is significant.
   We attempt the both priorities by a search branch.
 (*  If we instantiate first, the instantiation is forced to be identical in the two branches.
   If we eliminate \<open>\<and>\<close> first, the \<open>P\<close> can be too strong *)
@@ -727,8 +733,11 @@ lemma NToA_conj_src_B:
 
 \<phi>reasoner_ML NToA_conj_src !13  (\<open>_ \<and>\<^sub>B\<^sub>I _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   let val tail = (case Thm.major_prem_of sequent
-                    of _ (*Trueprop*) $ (_ (*Transformation*) $ _ $ (Const(\<^const_name>\<open>ExSet\<close>, _) $ _) $ _) =>
-                            Seq.make (fn () => ToA_ex_intro_reasoning (ctxt,sequent))
+                    of _ (*Trueprop*) $ (_ (*Transformation*) $ _ $ (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) $ _) =>
+                            if Term.exists_Const (fn (\<^const_name>\<open>Additive_Conj\<close>, _) => true
+                                                   | _ => false) X
+                            then Seq.make (fn () => ToA_ex_intro_reasoning (ctxt,sequent))
+                            else Seq.empty
                      | _ => Seq.empty)
    in SOME ((ctxt, @{thm' NToA_conj_src_A} RS sequent),
         Seq.make (fn () => SOME ((ctxt, @{thm' NToA_conj_src_B} RS sequent), tail)))

@@ -23,13 +23,14 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
     
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Implication
+       and Object_Equiv
        and Is_Functional
        and Open_All_Abstraction
 
@@ -153,7 +154,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-     
+ 
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
 
@@ -457,10 +458,6 @@ lemma (*The above rule is reversible*)
                prems(2-3), blast) .
 
 
-
-section \<open>Logical Connectives\<close>
-
-
 (* subsection \<open>Embedding Universal Quantification\<close>
 
 \<phi>type_def \<phi>Type_univ_quant :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> ("\<forall>\<^sub>\<phi> _" [10] 10)
@@ -471,240 +468,78 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
   unfolding \<phi>Type_univ_quant_def \<phi>Type_def by clarsimp
 *)
 
-
-
 subsection \<open>Embedding Additive Conjunction\<close>
 
-declare [[\<phi>trace_reasoning = 3]] 
-        
+declare [[\<phi>trace_reasoning = 3]]
+      
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
-  deriving \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q x) \<Longrightarrow> x \<Ztypecolon> T \<and>\<^sub>\<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) \<and> Q (snd x)\<close>
-       and \<open>Object_Equiv T eqa \<Longrightarrow> Object_Equiv U eqb \<Longrightarrow> Object_Equiv (T \<and>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
-       and \<open>Identity_Element\<^sub>I (1 \<Ztypecolon> T) P \<or> Identity_Element\<^sub>I (1 \<Ztypecolon> U) Q \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U) (P \<or> Q)\<close>
-       and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
+  deriving (*\<open>  (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
+          \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q x)
+          \<Longrightarrow> x \<Ztypecolon> T \<and>\<^sub>\<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) \<and> Q (snd x)\<close>
+       and \<open>  Object_Equiv T eqa
+          \<Longrightarrow> Object_Equiv U eqb
+          \<Longrightarrow> Object_Equiv (T \<and>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
+       and \<open>  Identity_Element\<^sub>I (1 \<Ztypecolon> T) P \<or> Identity_Element\<^sub>I (1 \<Ztypecolon> U) Q
+          \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U) (P \<or> Q)\<close>
+       and \<open>  Identity_Element\<^sub>E (1 \<Ztypecolon> T)
+          \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
+          \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
+       and*) Open_All_Abstraction
+     (*DO NOT REMOVE, I'm thinking if we really should support so much additive conjunction
        and Functional_Transformation_Functor
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>
+              Transformation_Functor ((\<and>\<^sub>\<phi>) A) ((\<and>\<^sub>\<phi>) A') Basic_BNFs.snds (\<lambda>_. UNIV) (rel_prod (=))\<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B' \<Longrightarrow>
+              Transformation_Functor (\<lambda>A. A \<and>\<^sub>\<phi> B) (\<lambda>A. A \<and>\<^sub>\<phi> B') Basic_BNFs.fsts (\<lambda>_. UNIV) (\<lambda>r. rel_prod r (=))\<close>
+       and \<open>Functional_Transformation_Functor ((\<and>\<^sub>\<phi>) A) ((\<and>\<^sub>\<phi>) A') Basic_BNFs.snds (\<lambda>_. UNIV)
+                                              (rel_prod (=)) (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A') (pred_prod (\<lambda>a. True)) (map_prod (\<lambda>a. a))\<close>
+       and \<open>Functional_Transformation_Functor (\<lambda>A. A \<and>\<^sub>\<phi> B) (\<lambda>A. A \<and>\<^sub>\<phi> B') Basic_BNFs.fsts
+                                              (\<lambda>_. UNIV) (\<lambda>r. rel_prod r (=)) (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B') (\<lambda>p. pred_prod p (\<lambda>a. True)) (\<lambda>f. map_prod f (\<lambda>a. a))\<close> *)
 
-term \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?A = ?Ab \<Longrightarrow>
-                         Transformation_Functor ((\<and>\<^sub>\<phi>) ?A) ((\<and>\<^sub>\<phi>) ?Ab) Basic_BNFs.snds (\<lambda>_. UNIV) (rel_prod (\<lambda>a b. True))\<close>
-
-term \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
-term \<open>\<inter>\<close>
 
 subsubsection \<open>Rules\<close>
 
 declare \<phi>Inter_def[embed_into_\<phi>type del]
 
 lemma \<phi>Inter_embedding[embed_into_\<phi>type]:
-  \<open>(x \<Ztypecolon> T) \<inter> (y \<Ztypecolon> U) \<equiv> (x, y) \<Ztypecolon> T \<inter>\<^sub>\<phi> U\<close>
+  \<open>(x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (y \<Ztypecolon> U) \<equiv> (x, y) \<Ztypecolon> T \<and>\<^sub>\<phi> U\<close>
   unfolding atomize_eq BI_eq_iff
   by simp
 
-lemma \<phi>Inter_inhabited[\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> A @action \<A>EIF
-\<Longrightarrow> Inhabited (y \<Ztypecolon> U) \<longrightarrow> B @action \<A>EIF
-\<Longrightarrow> Inhabited ((x,y) \<Ztypecolon> (T \<inter>\<^sub>\<phi> U)) \<longrightarrow> A \<and> B @action \<A>EIF \<close>
-  unfolding Inhabited_def Action_Tag_def
-  by (clarsimp simp add: \<phi>Inter_expn; blast)
-
-
-
 
 section \<open>Structural Connectives\<close>
-
-subsection \<open>None\<close>
-
-
-
-
-
-subsubsection \<open>Actions\<close>
-
-
-
-
-subsubsection \<open>Rules\<close>
-
-
-
-
-
-(*
-lemma [\<phi>reason 1500
-    for \<open>(() \<Ztypecolon> \<phi>None) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action (?Act::?'a::simplification action)\<close>
-    except \<open>(() \<Ztypecolon> \<phi>None) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> ?T \<w>\<i>\<t>\<h> ?P @action (?Act::?'a::simplification action)\<close>
-]:
-  \<open>(() \<Ztypecolon> \<phi>None) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 @action Act\<close>
-  for Act :: \<open>'a::simplification action\<close>
-  unfolding Action_Tag_def by (simp add: transformation_refl)
-*)
-
-subsection \<open>Prod\<close>
-
-(* lemma \<phi>Prod_inhabited_expn[\<phi>inhabited]:
-  \<open>Inhabited ((x1,x2) \<Ztypecolon> T1 \<^emph> T2) \<longleftrightarrow> Inhabited (x1 \<Ztypecolon> T1) \<and> Inhabited (x2 \<Ztypecolon> T2)\<close>
-  unfolding Inhabited_def apply (simp add: \<phi>expns) *)
-
-
-
-
-(*lemma (in \<phi>empty) SepNu_to_SepSet: "(OBJ (a,b) \<Ztypecolon> A \<^emph> B) = (OBJ a \<Ztypecolon> A) * (OBJ b \<Ztypecolon> B)"
-  by (simp add: \<phi>expns set_eq_iff times_list_def) *)
-
-subsubsection \<open>Reasoning Rules\<close>
-
-(* paragraph \<open>View Shift\<close>
-
-lemma [\<phi>reason for \<open>(?x,?y) \<Ztypecolon> ?N \<^emph> ?M \<s>\<h>\<i>\<f>\<t>\<s> (?x',?y') \<Ztypecolon> ?N' \<^emph> ?M' \<w>\<i>\<t>\<h> ?P\<close>]:
-  " x \<Ztypecolon> N \<s>\<h>\<i>\<f>\<t>\<s> x' \<Ztypecolon> N' \<w>\<i>\<t>\<h> P1
-\<Longrightarrow> y \<Ztypecolon> M \<s>\<h>\<i>\<f>\<t>\<s> y' \<Ztypecolon> M' \<w>\<i>\<t>\<h> P2
-\<Longrightarrow> (x,y) \<Ztypecolon> N \<^emph> M \<s>\<h>\<i>\<f>\<t>\<s> (x',y') \<Ztypecolon> N' \<^emph> M' \<w>\<i>\<t>\<h> P1 \<and> P2"
-  unfolding View_Shift_def \<phi>Prod_expn'
-  by (smt (verit, best) mult.commute mult.left_commute)  *)
-
-(*do not add it to \<phi>-LPR because we have stronger reasoning mechanisms*)
-
-
-
-
-
-subsubsection \<open>Action\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_structural act
-\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_structural act
-\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_structural act\<close>
-  unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod transformation_trans)
-
-
-
-
-
-
-
-
-lemma [\<phi>reason 1000]:
-  \<open> P @action as ((x \<Ztypecolon> T) * (y \<Ztypecolon> U))
-\<Longrightarrow> P @action as ((x,y) \<Ztypecolon> (T \<^emph> U)) \<close>
-  unfolding Action_Tag_def .
-
-lemma prod_transform_as1:
-  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action as M
-\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action as N
-\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action as (M * N)\<close>
-  unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod transformation_trans)
-
-lemma prod_transform_as2:
-  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action to N
-\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action to M
-\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action to (M * N)\<close>
-  unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod transformation_trans)
-
-declare [[\<phi>reason 1200 prod_transform_as1 prod_transform_as2
-      for \<open>?A * ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (?M * ?N)\<close>]]
-
-hide_fact prod_transform_as1 prod_transform_as2
-
-lemma [\<phi>reason 1100]:
-  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action as T
-\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action as T
-\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action as T\<close>
-  unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod transformation_trans)
-
-lemma Prod_transform_as1:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P @action as A
-\<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<w>\<i>\<t>\<h> Q @action as B
-\<Longrightarrow> (x,y) \<Ztypecolon> (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x',y') \<Ztypecolon> (T' \<^emph> U') \<w>\<i>\<t>\<h> P \<and> Q @action as (A * B)\<close>
-  unfolding Action_Tag_def
-  using \<phi>Prod_transformation .
-
-lemma Prod_transform_as2:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P @action as B
-\<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<w>\<i>\<t>\<h> Q @action as A
-\<Longrightarrow> (x,y) \<Ztypecolon> (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x',y') \<Ztypecolon> (T' \<^emph> U') \<w>\<i>\<t>\<h> P \<and> Q @action as (A * B)\<close>
-  unfolding Action_Tag_def
-  using \<phi>Prod_transformation .
-
-declare [[\<phi>reason 1200 Prod_transform_as1 Prod_transform_as2
-      for \<open>(?x,?y) \<Ztypecolon> (?T \<^emph> ?U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action as (?A * ?B)\<close>]]
-
-hide_fact Prod_transform_as1 Prod_transform_as2
-
-lemma [\<phi>reason 1100]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P @action as Target
-\<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<w>\<i>\<t>\<h> Q @action as Target
-\<Longrightarrow> (x,y) \<Ztypecolon> (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x',y') \<Ztypecolon> (T' \<^emph> U') \<w>\<i>\<t>\<h> P \<and> Q @action as Target\<close>
-  unfolding Action_Tag_def
-  using \<phi>Prod_transformation .
-
-
-paragraph \<open>Simplification\<close>
-
-(*lemma \<phi>Prod_simp_cong[folded atomize_eq]:
-  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
-\<Longrightarrow> (y \<Ztypecolon> U) = (y' \<Ztypecolon> U')
-\<Longrightarrow> ((x,y) \<Ztypecolon> T \<^emph> U) = ((x',y') \<Ztypecolon> T' \<^emph> U')\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-simproc_setup \<phi>Prod_simp_cong ("(x,y) \<Ztypecolon> (T \<^emph> U)") = \<open>
-  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>Prod_simp_cong} ctxt)
-\<close>*)
-
-lemma [simp]:
-  \<open>((x,y) \<Ztypecolon> ExTyp T \<^emph> U) = ((\<lambda>c. (x c, y)) \<Ztypecolon> (\<exists>\<phi> c. T c \<^emph> U))\<close>
-  by (clarsimp simp add: set_eq_iff \<phi>expns; blast)
-
-lemma [simp]:
-  \<open> NO_MATCH (ExTyp Any) T
-\<Longrightarrow> ((x,y) \<Ztypecolon> T \<^emph> ExTyp U) = ((\<lambda>c. (x, y c)) \<Ztypecolon> (\<exists>\<phi> c. T \<^emph> U c))\<close>
-  by (clarsimp simp add: set_eq_iff \<phi>expns; blast)
-
-
-(*lemma [simp]: "A \<inter> S \<perpendicular> A \<inter> -S"
-  unfolding disjoint_def by auto
-lemma heap_split_id: "P h1' h2' \<Longrightarrow> \<exists>h1 h2. h1' ++ h2' = h1 ++ h2 \<and> P h1 h2" by auto
-lemma heap_split_by_set: "P (h |` S) (h |` (- S)) \<Longrightarrow> \<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> P h1 h2"
-  by (rule exI[of _ "h |` S"], rule exI[of _ "h |` (- S)"])
-    (auto simp add: map_add_def option.case_eq_if restrict_map_def disjoint_def disjoint_iff domIff)
-lemma heap_split_by_addr_set: "P (h |` (MemAddress ` S)) (h |` (- (MemAddress ` S))) \<Longrightarrow> \<exists>h1 h2. h = h1 ++ h2 \<and> dom h1 \<perpendicular> dom h2 \<and> P h1 h2"
-  using heap_split_by_set .*)
-
 
 subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
-definition List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
-  where \<open>List_Item T = (\<lambda>x. { [v] |v. v \<in> (x \<Ztypecolon> T) })\<close>
+declare [[\<phi>trace_reasoning = 0]]
 
-lemma List_Item_expn[\<phi>expns]:
- \<open>p \<in> (x \<Ztypecolon> List_Item T) \<longleftrightarrow> (\<exists>v. p = [v] \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding List_Item_def \<phi>Type_def by simp
+\<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
+  where \<open>List_Item T \<equiv> \<phi>Fun (\<lambda>v. [v]) \<Zcomp> T\<close>
+  deriving Basic
+       and Is_Functional
+       and Open_All_Abstraction
 
-lemma List_Item_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> List_Item T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> Inhabited (x \<Ztypecolon> List_Item T) \<longrightarrow> C @action \<A>EIF \<close>
-  unfolding Inhabited_def Action_Tag_def
-  by (simp add: \<phi>expns)
+thm List_Item.expansion
+thm List_Item.intro_reasoning
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
-  \<open> v1 \<in> (x1 \<Ztypecolon> T1)
-\<Longrightarrow> v2 \<in> (x2 \<Ztypecolon> T2)
-\<Longrightarrow> [v1,v2] \<in> ((x1, x2) \<Ztypecolon> (List_Item T1 \<^emph> List_Item T2))\<close>
-  by (simp add: \<phi>expns times_list_def, rule exI[where x=\<open>[v2]\<close>], rule exI[where x=\<open>[v1]\<close>], simp)
+  \<open> v1 \<Turnstile> (x1 \<Ztypecolon> T1)
+\<Longrightarrow> v2 \<Turnstile> (x2 \<Ztypecolon> T2)
+\<Longrightarrow> [v1,v2] \<Turnstile> ((x1, x2) \<Ztypecolon> (List_Item T1 \<^emph> List_Item T2))\<close>
+  by (simp add: times_list_def,
+      rule exI[where x=\<open>[v2]\<close>],
+      rule exI[where x=\<open>[v1]\<close>],
+      simp)
 
 subsubsection \<open>Empty List\<close>
 
-definition Empty_List :: \<open>('v list, unit) \<phi>\<close>
-  where \<open>Empty_List = (\<lambda>x. { [] })\<close>
+\<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
+  where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
+
+thm Empty_List.elim_reasoning
 
 lemma [\<phi>expns]:
   \<open>p \<in> (x \<Ztypecolon> Empty_List) \<longleftrightarrow> p = []\<close>

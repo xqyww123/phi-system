@@ -239,7 +239,7 @@ fun obligation_intro_Ex_conv conv_schematic ctxt thm =
                   if mode
                   then Phi_Conv.leading_antecedent_conv (
                       PLPR_Syntax.premise_tag_conv (
-                        Phi_Conv.move_sp_Ex_inside (K Conv.all_conv) ctxt
+                        (fn ctm => Phi_Conv.move_sp_Ex_inside (K Conv.all_conv) ctxt ctm)
                         (*mv_Ex_All (fn _ => mv_Ex_Disj Conv.all_conv) ctxt*) )
                     )
                   else Conv.all_conv)
@@ -255,10 +255,10 @@ fun chk_option ctxt (a,b,~1) = (a,b,Config.get ctxt existential_obligation)
 fun collect_obligation_premises option ctxt thm = let open Conv
   val (collect_premises,conv_all,conv_schematic) = chk_option ctxt option
   val filter = is_premise_of_obligation (*(Context.Proof ctxt)*)
-  val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (K (
+  val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt => 
                 (if collect_premises then obligation_collect ctxt filter
                                      else Conv.all_conv) then_conv
-                rewr_conv @{thm Pure.prop_def[symmetric]})) ctxt
+                rewr_conv @{thm Pure.prop_def[symmetric]}) ctxt
               ) 1 thm
 
   (*val rule2 = if collect_premises

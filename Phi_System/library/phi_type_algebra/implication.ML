@@ -81,6 +81,9 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                        Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) $ _)
                     $ _ ))
                  => T)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ P) = [P]
+        | extract_oprs_from_hint _ = []
+
       val ind_conv = default_ind_conv (K (K (fn ctm => Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr} ctm)),
               fn ctxt => fn _ => fn ctm =>
                  (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr} then_conv
@@ -143,7 +146,7 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                       Conv.arg_conv (Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
                     ))) ctxt) rule
         end
-      val rules = mk_rule_by_guess_or_hint ("Implication", unify_hint_U, guess_property,
+      val rules = mk_rule_by_guess_or_hint ("Implication", unify_hint_U, extract_oprs_from_hint, guess_property,
                                             @{thm' \<phi>TA_Inh_rule}, [0], SOME ind_conv,
                                             Inh_reasoning, solver, simp)
                                            phi0 hint0 ctxt0

@@ -34,7 +34,7 @@ fun gen_is_functional hint0 (phi0 : phi_type) thy =
                     Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))))
       val reasoning = gen_abstract_constraint_guided_reasoning true (K (K NONE)) (K (K [])) (PLPR_reasoner (SOME 1))
 
-      val rules = mk_rule_by_guess_or_hint ("Is_Functional", unify_hint, guess_property,
+      val rules = mk_rule_by_guess_or_hint ("Is_Functional", unify_hint, K [], guess_property,
                                             @{thm' \<phi>TA_IsFunc_rule}, [], SOME ind_conv,
                                             K reasoning, K NONE, K I)
                                            phi0 hint0 ctxt0

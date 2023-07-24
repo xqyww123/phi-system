@@ -915,7 +915,7 @@ setup \<open>Phi_Type_Algebra.add_property_kind "Phi_Type_Algebra.Functional_Tra
 context Functional_Transformation_Functor
 begin
 
-lemma [\<phi>reason add]:
+lemma Functional_Transformation_Functor[\<phi>reason add]:
   \<open>Functional_Transformation_Functor Fa Fb D R mapper Prem pred_mapper func_mapper\<close>
   by (simp add: Functional_Transformation_Functor_axioms)
 
@@ -1390,6 +1390,8 @@ ML \<open>BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>Set.set\<
 
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
+ML \<open>eBNF_Info.pred_of_bnf (eBNF_Info.get_bnf1 (Context.Theory \<^theory>) \<^type_name>\<open>list\<close>)\<close>
+
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
 \<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn [] => fn phi => fn thy => (
@@ -1612,7 +1614,7 @@ subsubsection \<open>Functional Transformation Functor\<close>
 
 lemma \<phi>TA_FTF_rule:
   \<open> (Ant \<Longrightarrow> Prem \<Longrightarrow> Transformation_Functor F1 F2 D R mapper)
-\<Longrightarrow> (Ant \<Longrightarrow> Prem \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P. mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = fm f a' \<and> pm P a')))
+\<Longrightarrow> (Ant \<Longrightarrow> Prem \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P a' b'. mapper (\<lambda>a b. b = f a \<and> P a) a' b' \<longleftrightarrow> b' = fm f a' \<and> pm P a'))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant

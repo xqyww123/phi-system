@@ -457,6 +457,8 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def .
 
 
+(* Not really useful, I think?
+   DO NOT REMOVE, let me think more
 subsubsection \<open>Structural\<close>
 
 consts \<A>_structural :: \<open>action \<Rightarrow> action\<close>
@@ -506,15 +508,13 @@ lemma [\<phi>reason 30]:
   \<open> P @action A
 \<Longrightarrow> P @action \<A>_structural_2_1 A\<close>
   unfolding Action_Tag_def .
-
+*)
 
 section \<open>Basic Applications\<close>
 
 subsection \<open>General Syntax\<close>
 
 consts synt_orelse :: \<open>'a \<Rightarrow> 'b \<Rightarrow> 'a\<close> (infixr "\<o>\<r>\<e>\<l>\<s>\<e>" 30)
-       (*\<A>this :: 'a ("\<t>\<h>\<i>\<s>")
-         \<A>any  :: \<open>'a \<Rightarrow> 'a\<close> ("\<a>\<n>\<y>")*)
 
 subsection \<open>Is \& Assert\<close>
 

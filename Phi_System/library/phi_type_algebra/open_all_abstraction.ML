@@ -215,6 +215,11 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                 val (T', pair) = extract (Logic.strip_imp_concl hint)
              in (T',T) :: pair :: (map (snd o extract) (Logic.strip_imp_prems hint))
             end)
+      fun extract_oprs_from_hint (\<^Const>\<open>Transformation _\<close> $ _
+                                  $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _, (\<^Const>\<open>Subjection _\<close> $ _ $ r)))
+                                  $ _) = [r]
+        | extract_oprs_from_hint _ = []
+
       val ind_conv = default_ind_conv (
             fn ctxt => fn phi =>
                 Conv.rewr_conv @{thm' \<phi>TA_TrRA_rewr},
@@ -236,7 +241,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                 Conv.all_conv)
             ) ctxt)) ctxt)
          |> (fn rule => (rule RS' (ctxt, @{thm' spec})))
-      val rules = mk_rule_by_guess_or_hint ("Trans_to_Raw_Abst", unify_hint, guess_property,
+      val rules = mk_rule_by_guess_or_hint ("Trans_to_Raw_Abst", unify_hint, extract_oprs_from_hint, guess_property,
                                             @{thm' \<phi>TA_TrRA_rule}, [0],
                                             SOME ind_conv, reasoning, solver, simp)
                                            phi0 hint0 ctxt0

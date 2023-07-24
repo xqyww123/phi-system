@@ -311,8 +311,6 @@ fun gen_move_Ex_inside_All (Ex_name, rule) ctxt ctm =
 
       fun move_All_top (cv,ctxt) ctm =
         move_All (0,[Term.term_name (Thm.term_of cv)]) ctxt ctm
-        handle Found _ => error "BUG RFVgduihRHq72ZiP2/9COg"
-             | Not_Occur => Conv.all_conv ctm
 
       fun the_move ctm =
         case Thm.term_of ctm
@@ -331,7 +329,10 @@ fun gen_move_Ex_inside_All (Ex_name, rule) ctxt ctm =
 
    in (Phi_Conv.quant_conv Ex_name move_All_top ctxt then_conv
        the_move) ctm
-   handle CTERM XX => raise CTERM XX
+   handle Found _   => (warning "BUG RFVgduihRHq72ZiP2/9COg"; Conv.all_conv ctm)
+        | Not_Occur => raise CTERM ("move_Ex_inside_All: the quantified variable does not occur at all", [ctm])
+        | CTERM (msg, ctm) => (warning ("gen_move_Ex_inside_All fails\n" ^ msg);
+                               raise CTERM (msg, ctm))
   end
 
 val move_Ex_inside_All = gen_move_Ex_inside_All
@@ -368,44 +369,60 @@ end
 val move_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_Ex_downto_Disj
 val move_sp_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_sp_Ex_downto_Disj
 
-fun gen_move_Ex_inside (ex_name, mv_all_recursive, mv_disj, rule_mv_imp) C =
-  let exception REVERSE_ETA
-      fun conv ctxt ctm =
-        let val tm = case Thm.term_of ctm
-                       of Const(N, _) $ X =>
-                            if N = ex_name
-                            then (case X of Abs (_, _, X) => X
-                                          | _ => raise REVERSE_ETA )
-                            else raise CTERM ("Phi_Conv.move_Ex_inside_exhaustively", [ctm])
-                        | _ =>   raise CTERM ("Phi_Conv.move_Ex_inside_exhaustively", [ctm])
-         in case tm
-         of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => mv_disj (conv ctxt) ctm 
-          | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-             ((Phi_Conv.quant_conv ex_name (K zip_conjs) ctxt then_conv
-               conv ctxt) ctm
-               handle CTERM _ => C ctxt ctm)
-          | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
-            ((Conv.rewr_conv rule_mv_imp then_conv
-              Conv.arg_conv (conv ctxt)) ctm
-             handle CTERM _ => C ctxt ctm )
-          | _ => C ctxt ctm
-        end handle REVERSE_ETA => (Conv.arg_conv Phi_Conv.inverse_eta_conv then_conv
-                                   conv ctxt) ctm
+fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, rule_mv_imp, rule_elim_trivial) C =
+  let fun bound_occurs i (Bound j) = i = j
+        | bound_occurs i (Abs (_,_,X)) = bound_occurs (i+1) X
+        | bound_occurs i (A $ B) = bound_occurs i A orelse bound_occurs i B
+        | bound_occurs _ _ = false
+
+      fun open_ex C ctm =
+        case Thm.term_of ctm
+          of Const(N, _) $ X =>
+               if N = ex_name
+               then (case X of Abs (_, _, X) => if bound_occurs 0 X then C X ctm
+                                                else Conv.rewr_conv rule_elim_trivial ctm
+                             | _ => (Conv.arg_conv Phi_Conv.inverse_eta_conv then_conv
+                                     open_ex C) ctm )
+               else raise CTERM ("Phi_Conv.move_Ex_inside_exhaustively", [ctm])
+           | _ =>   raise CTERM ("Phi_Conv.move_Ex_inside_exhaustively", [ctm])
+
+      fun conv0 C ctxt = open_ex (fn tm => fn ctm =>
+        case tm
+          of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => mv_disj (conv0 C ctxt) ctm 
+           | _ => (mv_all ctxt then_conv hol_all_conv (conv0 C o snd) ctxt
+                   else_conv C ctxt) ctm
+        )
+
+      fun conv ctxt = open_ex (fn tm => fn ctm =>
+        case tm
+          of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => mv_disj (conv ctxt) ctm 
+           | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+              ((Phi_Conv.quant_conv ex_name (K zip_conjs) ctxt then_conv
+                conv ctxt) ctm
+                handle CTERM _ => C ctxt ctm)
+           | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
+             ((Conv.rewr_conv rule_mv_imp then_conv
+               Conv.arg_conv (conv ctxt)) ctm
+              handle CTERM _ => C ctxt ctm )
+           | _ => C ctxt ctm
+        )
         
-   in mv_all_recursive (fn ctxt =>
+   in conv0 (fn ctxt =>
       Phi_Conv.quant_conv ex_name (fn (_, ctxt) =>
         Raw_Simplifier.rewrite ctxt true @{thms' HOL.simp_thms[folded atomize_eq]}) ctxt
       then_conv conv ctxt)
   end
 
 val move_Ex_inside = gen_move_Ex_inside
-      (\<^const_name>\<open>Ex\<close>, move_Ex_inside_All_recursive, move_Ex_downto_Disj_recursive,
-       @{thm' HOL.ex_simps(6)[folded atomize_eq]})
+      (\<^const_name>\<open>Ex\<close>, move_Ex_inside_All, move_Ex_downto_Disj_recursive,
+       @{thm' HOL.ex_simps(6)[folded atomize_eq]},
+       @{thm' HOL.simp_thms(36)[folded atomize_eq]})
 
 val move_sp_Ex_inside = gen_move_Ex_inside
       (\<^const_name>\<open>special_Ex\<close>,
-       move_sp_Ex_inside_All_recursive,
+       move_sp_Ex_inside_All,
        move_sp_Ex_downto_Disj_recursive,
-       @{thm' HOL.ex_simps(6)[folded special_Ex_def atomize_eq]})
+       @{thm' HOL.ex_simps(6)[folded special_Ex_def atomize_eq]},
+       @{thm' HOL.simp_thms(36)[folded special_Ex_def atomize_eq]})
 
 end
