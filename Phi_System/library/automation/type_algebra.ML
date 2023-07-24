@@ -36,6 +36,10 @@ type guess_property =
 
 (* Guess from BNF *)
 
+val load_simpset : term -> Proof.context -> Proof.context
+        (*Given an operator like a relation mapper, predicate mapper, a set or any other thing,
+          load the simplification settings relating to the BNFs of the operator*)
+
 val guess_operator :
         (Proof.context * typ list * typ list * eBNF_Info.eBNF -> (term * Proof.context) Seq.seq)
             (*make the operator and configure any necessary reasoning like adding simplification rules *)
@@ -50,7 +54,7 @@ val guess_set_opr : Proof.context -> typ (*container type*) -> typ (*the target 
 val guess_self_rel : Proof.context -> (typ * term) list (*known operators*)
                                    -> typ (*container type*) -> (term * Proof.context) Seq.seq
 val guess_predicate : Proof.context -> (typ * term) list (*known predicates*) -> typ -> (term * Proof.context) Seq.seq
-val guess_rel_mapper : (typ -> typ) (*f*) -> Proof.context ->
+val guess_rel_mapper : (typ * typ -> term (*dead_opr*)) -> (typ -> typ) (*f*) -> Proof.context ->
                             typ (*container type*) -> typ (*the target element type*) ->
                             (term * Proof.context) Seq.seq
          (*return the relation mapper from the container type T to f(T), which maps the inner element
@@ -352,8 +356,15 @@ val guess_predicate =
 
 (* Mapper *)
 
-(*ty: container_ty*)
-fun guess_rel_mapper target_ty ctxt ty element_ty =
+fun load_rel_mapper_ss bnf ctxt =
+        ctxt addsimps ( eBNF_Info.simps_of_rel_safe bnf
+                      @ eBNF_Info.simps_of_map_safe bnf
+                      @ eBNF_Info.simps_of_ctr_safe bnf)
+     |> add_global_simps (eBNF_Info.global_simps_of_rel bnf)
+
+(*ty: container_ty
+  dead_opr: the relation for dead type parameters (including those are not the target element type)*)
+fun guess_rel_mapper dead_opr target_ty ctxt ty element_ty =
   let val [g'] = Name.invent (Variable.names_of ctxt) "g" 1
       val ([g], ctxt') = Variable.add_fixes [g'] ctxt
       val element_ty' = target_ty element_ty
@@ -361,17 +372,13 @@ fun guess_rel_mapper target_ty ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_rels = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_rel_safe bnf
-                                      @ eBNF_Info.simps_of_map_safe bnf
-                                      @ eBNF_Info.simps_of_ctr_safe bnf)
-                     |> add_global_simps (eBNF_Info.global_simps_of_rel bnf)
+        let val ctxt' = load_rel_mapper_ss bnf ctxt
          in Seq.single (eBNF_Info.mk_rel_of_bnf D L (map target_ty L) bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
       fun mk_operator_for_dead typ ctxt = (\<^Const>\<open>HOL.eq typ\<close>, ctxt)
-      fun atom_opr ty ctxt =
-            Seq.single (Abs("", ty, Abs ("", target_ty ty, \<^Const>\<open>True\<close>)), ctxt)
-   in guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt' known_rels ty
+      fun mk_dead_opr ty ctxt = Seq.single (dead_opr (ty, target_ty ty), ctxt)
+   in guess_operator mk_term is_live mk_operator_for_dead mk_dead_opr ctxt' known_rels ty
    |> Seq.map (fn (rel_term', ctxt) =>
         (Abs("", g_ty, Term.abstract_over (g_term, rel_term')), ctxt))
   end
@@ -521,6 +528,35 @@ fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs'
   | guess_zip _ ((a as TVar _), (b as TVar _)) ctxt = (Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0), ctxt)
   | guess_zip _ (a,b) _ = raise TYPE ("guess_zip", [a,b], [])
 
+
+(* load simpset *)
+
+exception Pass
+
+fun typless_eq (Const (N,_), Const(N',_)) = N = N'
+  | typless_eq (Free (N,_), Free(N',_)) = N = N'
+  | typless_eq (Bound i, Bound j) = i = j
+  | typless_eq (A $ B, A' $ B') = typless_eq (A,A') andalso typless_eq (B,B')
+  | typless_eq (Abs (_,_,X), Abs(_,_,X')) = typless_eq (X,X')
+  | typless_eq _ = false
+
+fun load_rel (opr_head, ty) ctxt =
+  let fun parse_typ \<^Type>\<open>fun \<open>Type(N, _)\<close> \<^Type>\<open>fun \<open>Type(N',_)\<close> \<^Type>\<open>bool\<close>\<close>\<close> =
+            if N <> N' then raise Pass
+            else let val bnf = eBNF_Info.get_bnf1 (Context.Proof ctxt) N
+              in if typless_eq (opr_head, eBNF_Info.rel_of_bnf bnf)
+                 then load_rel_mapper_ss bnf ctxt
+                 else raise Pass
+            end
+        | parse_typ \<^Type>\<open>fun _ T\<close> = parse_typ T
+        | parse_typ _ = raise Pass
+   in parse_typ ty
+  end
+
+fun load_one (opr_name, ty) ctxt =
+  let 
+   in ()
+  end
 
 
 (** Select Hint **)
@@ -757,7 +793,11 @@ fun hint_unify_by_type extract_type = hint_unify_general (fn hint => fn (_, T') 
       [(extract_type (extract_hhf hint), T')])
 
 fun hint_unify_by_type_operator extract_type_operator = hint_unify_general (fn hint => fn (_, T') =>
-      [(extract_type_operator (extract_hhf hint), T')])
+      let val i = Term.maxidx_of_term hint + 1
+          val hint_tyop = extract_type_operator (extract_hhf hint)
+          val v_ty = Term.domain_type (Term.fastype_of hint_tyop)
+       in [(hint_tyop $ Var(("v",i),v_ty), T')]
+      end)
 
 end
 

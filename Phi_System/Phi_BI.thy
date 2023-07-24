@@ -427,31 +427,6 @@ lemma implies_union:
 
 subsection \<open>Additive Conjunction\<close>
 
-text \<open>Non-pure Additive Conjunction (excludes those are used in pure propositions), is rarely used under our
-  refinement interpretation of BI assertions, because we can hardly imagine when and why an object
-  has to be specified by two abstractions that cannot transform to each other (if they can,
-  it is enough to use any one of them with a strong constraint to the abstraction, and transform it
-  to the other when need).
-  The existence of a non-trivial object that belongs to two \<phi>-type abstraction actually implies a meaningful
-  transformation between the two \<phi>-types.
-
-  To support additive conjunction, it also brings enormous branches in the reasoning so affects the
-  reasoning performance. Before applying the previous rules, we can add the bellow rules which are
-  also attempted in order and applied whenever possible.
-  \<open>X \<longrightarrow> A \<Longrightarrow> X \<longrightarrow> B \<Longrightarrow> X \<longrightarrow> A \<and> B\<close> generates two subgoals.
-  \<open>(A \<longrightarrow> Y) \<or> (B \<longrightarrow> Y) \<Longrightarrow> A \<and> B \<longrightarrow> Y\<close> branches the reasoning. Specially, when \<open>Y \<equiv> \<exists>x. P x\<close> is an
-  existential quantification, the priority of eliminating \<open>\<and>\<close> or instantiating \<open>\<exists>\<close> is significant.
-(*  If we instantiate first, the instantiation is forced to be identical in the two branches.
-  If we eliminate \<open>\<and>\<close> first, the \<open>P\<close> can be too strong *)
-  We attempt the both priorities by a search branch.
-  Again recall our hypothesis, we assume \<phi>-types between the conjunction are independent and
-  only consider \<open>(x \<Ztypecolon> T) \<and> (y \<Ztypecolon> U) \<longrightarrow> Y\<close> when either \<open>x \<Ztypecolon> T \<longrightarrow> Y\<close> or \<open>y \<Ztypecolon> U \<longrightarrow> Y\<close>.
-\<close>
-
-
-
-
-
 
 definition Additive_Conj :: \<open>'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI\<close> (infix "\<and>\<^sub>B\<^sub>I" 35)
   where \<open>Additive_Conj = (\<inter>)\<close>
@@ -477,6 +452,8 @@ subsubsection \<open>Subjection: Conjunction to a Pure Fact\<close>
 
 text \<open>This is the only widely used additive conjunction under the interpretation of the \<phi> data refinement\<close>
 
+paragraph \<open>Rules\<close>
+
 lemma Subjection_inhabited_E[elim!]:
   \<open>Inhabited (S \<s>\<u>\<b>\<j> P) \<Longrightarrow> (Inhabited S \<Longrightarrow> P \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def
@@ -488,15 +465,18 @@ lemma [\<phi>reason 1000]:
   unfolding Inhabited_def Action_Tag_def
   by simp
 
-lemma Subjection_cong[cong]:
-  \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> S \<equiv> S') \<Longrightarrow> (S \<s>\<u>\<b>\<j> P) \<equiv> (S' \<s>\<u>\<b>\<j> P')\<close>
-  unfolding atomize_eq BI_eq_iff by (simp, blast)
-
 lemma Subjection_imp_I:
   \<open> P
 \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Q
 \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q\<close>
   unfolding Transformation_def by simp
+
+
+paragraph \<open>Simplification\<close>
+
+lemma Subjection_cong[cong]:
+  \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> S \<equiv> S') \<Longrightarrow> (S \<s>\<u>\<b>\<j> P) \<equiv> (S' \<s>\<u>\<b>\<j> P')\<close>
+  unfolding atomize_eq BI_eq_iff by (simp, blast)
 
 lemma Subjection_imp_simp[simp]:
   \<open> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q) \<longleftrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<and> Q) \<close>
@@ -532,16 +512,28 @@ lemma Subjection_transformation_expn:
 (* lemma (in \<phi>empty) [simp]: "(VAL (S \<s>\<u>\<b>\<j> P)) = (VAL S \<s>\<u>\<b>\<j> P)" by (simp add: \<phi>expns set_eq_iff) blast
 lemma (in \<phi>empty) [simp]: "(OBJ (S \<s>\<u>\<b>\<j> P)) = (OBJ S \<s>\<u>\<b>\<j> P)" by (simp add: \<phi>expns set_eq_iff) *)
 
+subparagraph \<open>With Additive Conjunction\<close>
+
+lemma Subjection_addconj[simp]:
+  \<open>(A \<s>\<u>\<b>\<j> P) \<and>\<^sub>B\<^sub>I B \<equiv> (A \<and>\<^sub>B\<^sub>I B) \<s>\<u>\<b>\<j> P\<close>
+  \<open>B \<and>\<^sub>B\<^sub>I (A \<s>\<u>\<b>\<j> P) \<equiv> (B \<and>\<^sub>B\<^sub>I A) \<s>\<u>\<b>\<j> P\<close>
+  unfolding atomize_eq BI_eq_iff
+  by (clarsimp; blast)+
+
+subparagraph \<open>With Additive Disjunction\<close>
+
+lemma Subjection_plus_distrib:
+  \<open>(A + B \<s>\<u>\<b>\<j> P) = (A \<s>\<u>\<b>\<j> P) + (B \<s>\<u>\<b>\<j> P)\<close>
+  unfolding BI_eq_iff
+  by simp blast
+
+subparagraph \<open>With Multiplicative Conjunction\<close>
+
 lemma Subjection_times[simp]:
   \<open>(S \<s>\<u>\<b>\<j> P) * T = (S * T \<s>\<u>\<b>\<j> P)\<close>
   \<open>T * (S \<s>\<u>\<b>\<j> P) = (T * S \<s>\<u>\<b>\<j> P)\<close>
   unfolding BI_eq_iff
   by (simp, blast)+
-
-lemma Subjection_plus:
-  \<open>(A + B \<s>\<u>\<b>\<j> P) = (A \<s>\<u>\<b>\<j> P) + (B \<s>\<u>\<b>\<j> P)\<close>
-  unfolding BI_eq_iff
-  by simp blast
 
 (*subsection \<open>Disjunction\<close>*)
 
@@ -716,14 +708,10 @@ text \<open>Semantically, an existential quantification in BI actually represent
 lemma " Union { S x |x. P x } = (S x \<s>\<u>\<b>\<j> x. P x) "
   by (simp add: set_eq_iff ExSet_def Subjection_def) blast
 
-
-subsubsection \<open>Rules\<close>
+subsection \<open>Simplifications\<close>
 
 lemma ExSet_pair: "ExSet T = (\<exists>*a b. T (a,b))"
   unfolding BI_eq_iff by clarsimp
-
-lemma ExSet_times_left [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: BI_eq_iff, blast)
-lemma ExSet_times_right[simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: BI_eq_iff, blast)
 
 lemma ExSet_simps[simp]:
   \<open>ExSet 0 = 0\<close>
@@ -742,6 +730,35 @@ lemma ExSet_simps[simp]:
 
 declare ExSet_simps(1)[\<phi>programming_simps]
 
+lemma Ex_transformation_expn:
+  \<open>((\<exists>*x. A x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longleftrightarrow> (\<forall>x. A x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)\<close>
+  unfolding Transformation_def ExSet_expn
+  by blast
+
+paragraph \<open>With Multiplicative Conjunction\<close>
+
+lemma ExSet_times_left [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: BI_eq_iff, blast)
+lemma ExSet_times_right[simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: BI_eq_iff, blast)
+
+paragraph \<open>With Additive Conjunction\<close>
+
+lemma ExSet_simps_adconj:
+  \<open>A \<and>\<^sub>B\<^sub>I (\<exists>*c. B c) \<equiv> \<exists>*c. A \<and>\<^sub>B\<^sub>I B c\<close>
+  \<open>(\<exists>*c. B c) \<and>\<^sub>B\<^sub>I A \<equiv> \<exists>*c. B c \<and>\<^sub>B\<^sub>I A\<close>
+  unfolding atomize_eq BI_eq_iff
+  by simp+
+
+paragraph \<open>With Additive Disjunction\<close>
+
+lemma ExSet_simps_addisj:
+  \<open>A + (\<exists>*c. B c) \<equiv> \<exists>*c. A + B c\<close>
+  \<open>(\<exists>*c. B c) + A \<equiv> \<exists>*c. B c + A\<close>
+  unfolding atomize_eq BI_eq_iff
+  by simp+
+
+
+subsubsection \<open>Rules\<close>
+
 lemma ExSet_transformation:
   \<open>(\<And>x. S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' x \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> ExSet S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet S' \<w>\<i>\<t>\<h> P\<close>
@@ -758,11 +775,6 @@ lemma ExSet_additive_disj:
   unfolding BI_eq_iff by (simp_all add: plus_fun) blast+
 
 ML_file \<open>library/tools/simproc_ExSet_expand_quantifier.ML\<close>
-
-lemma Ex_transformation_expn:
-  \<open>((\<exists>*x. A x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longleftrightarrow> (\<forall>x. A x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)\<close>
-  unfolding Transformation_def ExSet_expn
-  by blast
 
 
 

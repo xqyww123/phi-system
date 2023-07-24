@@ -525,8 +525,7 @@ lemma [\<phi>reason 3230]:
 
 subsection \<open>Existential\<close>
 
-\<phi>reasoner_ML ToA_ex_intro !10 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ExSet _ \<brangle> \<w>\<i>\<t>\<h> _\<close>) = \<open>
-fn (ctxt,sequent) => Seq.make (fn () =>
+ML \<open>fun ToA_ex_intro_reasoning (ctxt,sequent) =
   let val (_, X'', _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
       fun parse (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) = (false, ty, X)
         | parse (Const(\<^const_name>\<open>times\<close>, _) $ _ $ (
@@ -547,17 +546,11 @@ fn (ctxt,sequent) => Seq.make (fn () =>
                   else if ex_var_is_in_obj_only ~1 X
                   then @{thm' ToA_ex_intro[where c=\<open>id c\<close> for c]}
                   else @{thm' ToA_ex_intro}
-   (* val (ctxt', rule) = 
-        if ex_var_is_in_obj_only ~1 X
-        then let val ([x_name], ctxt') = Variable.add_fixes (Name.invent (Variable.names_of ctxt) "\<x>" 1) ctxt
-                 val x_cterm = Thm.cterm_of ctxt (Free (x_name, ty))
-              in (ctxt',
-                  Thm.instantiate (TVars.make [((("'b",0),\<^sort>\<open>type\<close>), Thm.ctyp_of_cterm x_cterm)],
-                                  Vars.make  [((("c",0),Thm.typ_of_cterm x_cterm), x_cterm)]) rule0)
-             end
-        else (ctxt, rule0)*)
    in SOME ((ctxt, rule0 RS sequent), Seq.empty)
-  end)\<close>
+  end\<close>
+
+\<phi>reasoner_ML ToA_ex_intro !10 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * \<blangle> ExSet _ \<brangle> \<w>\<i>\<t>\<h> _\<close>)
+  = \<open>fn stat => Seq.make (fn () => ToA_ex_intro_reasoning stat)\<close>
 
 lemma [\<phi>reason 2800]:
   "(\<And>x.  T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
@@ -692,6 +685,27 @@ subsection \<open>Divergence\<close>
 
 subsubsection \<open>Conjunction\<close>
 
+text \<open>Non-pure Additive Conjunction (excludes those are used in pure propositions), is rarely used under our
+  refinement interpretation of BI assertions, because we can hardly imagine when and why an object
+  has to be specified by two abstractions that cannot transform to each other (if they can,
+  it is enough to use any one of them with a strong constraint over the abstraction, and transform it
+  to the other when needed). We believe those abstractions if exist are specific enough to be preferably
+  expressed by a specific \<phi>-type equipped with ad-hoc reasoning rules.
+
+  To support additive conjunction, it brings enormous branches in the reasoning so affects the
+  reasoning performance. Before applying the rules introduced previously, we can add the bellow
+  rules which are also attempted subsequently in order and applied whenever possible.
+  \<open>X \<longrightarrow> A \<Longrightarrow> X \<longrightarrow> B \<Longrightarrow> X \<longrightarrow> A \<and> B\<close> generates two subgoals.
+  \<open>(A \<longrightarrow> Y) \<or> (B \<longrightarrow> Y) \<Longrightarrow> A \<and> B \<longrightarrow> Y\<close> branches the reasoning. Specially, when \<open>Y \<equiv> \<exists>x. P x\<close> is an
+  existential quantification, the priority of eliminating \<open>\<and>\<close> or instantiating \<open>\<exists>\<close> is significant.
+  We attempt the both priorities by a search branch.
+(*  If we instantiate first, the instantiation is forced to be identical in the two branches.
+  If we eliminate \<open>\<and>\<close> first, the \<open>P\<close> can be too strong *)
+  This rule is irreversible and we recall our hypothesis that \<phi>-types between the conjunction are
+  considered disjoint, i.e., we only consider \<open>(x \<Ztypecolon> T) \<and> (y \<Ztypecolon> U) \<longrightarrow> Y\<close> when
+  either \<open>x \<Ztypecolon> T \<longrightarrow> Y\<close> or \<open>y \<Ztypecolon> U \<longrightarrow> Y\<close>.
+\<close>
+
 lemma [\<phi>reason 2800]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P2
@@ -711,7 +725,16 @@ lemma NToA_conj_src_B:
   unfolding Transformation_def
   by simp blast
 
-declare [[\<phi>reason !13 NToA_conj_src_A NToA_conj_src_B for \<open>_ \<and>\<^sub>B\<^sub>I _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> ]]
+\<phi>reasoner_ML NToA_conj_src !13  (\<open>_ \<and>\<^sub>B\<^sub>I _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val tail = (case Thm.major_prem_of sequent
+                    of _ (*Trueprop*) $ (_ (*Transformation*) $ _ $ (Const(\<^const_name>\<open>ExSet\<close>, _) $ _) $ _) =>
+                            Seq.make (fn () => ToA_ex_intro_reasoning (ctxt,sequent))
+                     | _ => Seq.empty)
+   in SOME ((ctxt, @{thm' NToA_conj_src_A} RS sequent),
+        Seq.make (fn () => SOME ((ctxt, @{thm' NToA_conj_src_B} RS sequent), tail)))
+  end
+  )\<close>
+
 
 subsubsection \<open>Disjunction in Source\<close>
 

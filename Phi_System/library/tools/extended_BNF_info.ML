@@ -42,6 +42,9 @@ val ctrs_of : eBNF -> term list
 val case_of : eBNF -> term option
 val case_of1 : eBNF -> term
 val sets_of_bnf : eBNF -> term list
+val rel_of_bnf : eBNF -> term
+val pred_of_bnf : eBNF -> term
+val map_of_bnf : eBNF -> term
 val mk_sets_of_bnf: typ list list -> typ list list -> eBNF -> term list
 val mk_rel_of_bnf : typ list -> typ list -> typ list -> eBNF -> term
 val mk_pred_of_bnf : typ list -> typ list -> eBNF -> term
@@ -210,16 +213,22 @@ fun mk_sets_of_bnf Dss Tss (BNF bnf) = BNF_Def.mk_sets_of_bnf Dss Tss (g_bnf bnf
       map2 (fn (Ds, Ts) => Term.subst_atomic_types
         ((#deads qbnf ~~ Ds) @ (#lives qbnf ~~ Ts))) (Dss ~~ Tss) (#sets qbnf)
 
+fun rel_of_bnf (BNF bnf) = BNF_Def.rel_of_bnf (g_bnf bnf)
+  | rel_of_bnf (qBNF bnf) = #rel bnf
 fun mk_rel_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_rel_of_bnf Ds Ts Us (g_bnf bnf)
   | mk_rel_of_bnf Ds Ts Us (qBNF bnf) =
       Term.subst_atomic_types
         ((#deads bnf ~~ Ds) @ (#lives bnf ~~ Ts) @ (#lives' bnf ~~ Us)) (#rel bnf)
 
+fun pred_of_bnf (BNF bnf) = BNF_Def.pred_of_bnf (g_bnf bnf)
+  | pred_of_bnf (qBNF bnf) = #pred bnf
 fun mk_pred_of_bnf Ds Ts (BNF bnf) = BNF_Def.mk_pred_of_bnf Ds Ts (g_bnf bnf)
   | mk_pred_of_bnf Ds Ts (qBNF bnf) =
       Term.subst_atomic_types
         ((#deads bnf ~~ Ds) @ (#lives bnf ~~ Ts)) (#pred bnf)
 
+fun map_of_bnf (BNF bnf) = BNF_Def.map_of_bnf (g_bnf bnf)
+  | map_of_bnf (qBNF bnf) = #map bnf
 fun mk_map_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_map_of_bnf Ds Ts Us (g_bnf bnf)
   | mk_map_of_bnf Ds Ts Us (qBNF bnf) =
       Term.subst_atomic_types

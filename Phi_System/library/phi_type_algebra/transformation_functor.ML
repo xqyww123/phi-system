@@ -56,7 +56,9 @@ fun guess_property_TF (x_term, FT_term, phi0) ctxt =
       val Rng = Abs("_", x_ty, \<^Const>\<open>top \<^Type>\<open>set \<open>target_ty element_ty\<close>\<close>\<close>)
    in guess_set_opr ctxt' x_ty element_ty
    |> Seq.maps (fn (D_term, ctxt'2) =>
-        guess_rel_mapper target_ty ctxt'2 x_ty element_ty
+        guess_rel_mapper (fn (ty1,ty2) => if ty1 = ty2 then \<^Const>\<open>HOL.eq ty1\<close>
+                                          else raise Automation_Fail "Fail to guess the relation mapper for dead type parameters"
+                         ) target_ty ctxt'2 x_ty element_ty
      |> Seq.map (fn (rel_mapper, ctxt'3) =>
           (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ Rng $ rel_mapper),
            x_term, FT_term, phi, ctxt'3)))

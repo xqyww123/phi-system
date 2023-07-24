@@ -471,17 +471,22 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
   unfolding \<phi>Type_univ_quant_def \<phi>Type_def by clarsimp
 *)
 
+
+
 subsection \<open>Embedding Additive Conjunction\<close>
 
 declare [[\<phi>trace_reasoning = 3]] 
-     
+        
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
-  deriving (*\<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q x) \<Longrightarrow> x \<Ztypecolon> T \<and>\<^sub>\<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) \<and> Q (snd x)\<close>
+  deriving \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q x) \<Longrightarrow> x \<Ztypecolon> T \<and>\<^sub>\<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) \<and> Q (snd x)\<close>
        and \<open>Object_Equiv T eqa \<Longrightarrow> Object_Equiv U eqb \<Longrightarrow> Object_Equiv (T \<and>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
        and \<open>Identity_Element\<^sub>I (1 \<Ztypecolon> T) P \<or> Identity_Element\<^sub>I (1 \<Ztypecolon> U) Q \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U) (P \<or> Q)\<close>
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
-       and*) Transformation_Functor
+       and Functional_Transformation_Functor
+
+term \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?A = ?Ab \<Longrightarrow>
+                         Transformation_Functor ((\<and>\<^sub>\<phi>) ?A) ((\<and>\<^sub>\<phi>) ?Ab) Basic_BNFs.snds (\<lambda>_. UNIV) (rel_prod (\<lambda>a b. True))\<close>
 
 term \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U) \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
 term \<open>\<inter>\<close>
