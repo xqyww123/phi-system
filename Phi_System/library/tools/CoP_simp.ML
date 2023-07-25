@@ -69,7 +69,7 @@ fun add_simp_trigger (N,chker) ctxt =
 
 fun force_invoke (ctxt, mode) sequent =
   let val sequent' = @{thm' \<A>simp_stage_1} RS (sequent RS' (ctxt, #transformation_rule mode))
-   in Phi_Reasoner.reason1 (fn () => "Simplification fails") (SOME 1) ctxt sequent'
+   in Phi_Reasoner.reason1 (fn () => "Simplification fails") (SOME 1) true ctxt sequent'
   end
 
 fun invoke_when_needed (ctxt, mode) sequent =

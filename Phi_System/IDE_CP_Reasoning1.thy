@@ -118,6 +118,59 @@ declare [[\<phi>reason_default_pattern
 ]]
 *)
 
+subsubsection \<open>Beta-reduction Hint for \<phi>-Type\<close>
+
+definition \<beta>_Hint_for_\<phi> (binder "\<lambda>\<^sub>\<beta> " 10)
+  where \<open>\<beta>_Hint_for_\<phi> f \<equiv> f\<close>
+
+text \<open>Occasionally, it can be convenient technically to use \<open>x \<Ztypecolon> (\<lambda>a. S a)\<close> that will be \<beta>-reduced
+      transparently to \<open>S\<close>. The tag \<^const>\<open>\<beta>_Hint_for_\<phi>\<close> allowing syntax \<open>x \<Ztypecolon> (\<lambda>\<^sub>\<beta> a. S a)\<close> hints
+      the reasoner to \<beta>-reduce the \<phi>-type term.\<close>
+
+lemma \<beta>_Hint_for_\<phi>[simp]:
+  \<open>x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<equiv> S x\<close>
+  unfolding \<beta>_Hint_for_\<phi>_def \<phi>Type_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>
+\<Longrightarrow> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> R * S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> R * S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>
+\<Longrightarrow> R * (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<w>\<i>\<t>\<h> P @action \<A>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action \<A>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  by simp
+
 
 section \<open>Normalization of Assertions\<close>
 
@@ -620,6 +673,41 @@ lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>I {_} _\<close> ]:
 lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>E {_}\<close>]:
   \<open>Identity_Element\<^sub>E {1}\<close>
   unfolding Identity_Element\<^sub>E_def one_set_def by simp
+
+subsubsection \<open>Special Forms\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>I (If C (x \<Ztypecolon> A) (x \<Ztypecolon> B)) P
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> If C A B) P\<close>
+  by (cases C; simp)
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>E (If C (x \<Ztypecolon> A) (x \<Ztypecolon> B))
+\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> If C A B)\<close>
+  by (cases C; simp)
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Identity_Element\<^sub>I A Pa)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Identity_Element\<^sub>I B Pb)
+\<Longrightarrow> Identity_Element\<^sub>I (If C A B) (If C Pa Pb) \<close>
+  by (cases C; simp)
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Identity_Element\<^sub>E A)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Identity_Element\<^sub>E B)
+\<Longrightarrow> Identity_Element\<^sub>E (If C A B) \<close>
+  by (cases C; simp)
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>I (S x) P
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>E (S x)
+\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y)) \<close>
+  by simp
+
 
 subsubsection \<open>Logic Connectives\<close>
 

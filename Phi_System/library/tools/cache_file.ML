@@ -145,9 +145,9 @@ fun update_cached_proof thy (id,s) =
 
 fun report_cache_is_outdated warn thy =
   if Phi_Envir.runtime_mode () = Phi_Envir.PRODUCTION
-  then error   ("Proof cache of " ^ Context.theory_name thy ^ " is outdated!")
+  then error   ("Proof cache for theory " ^ Context.theory_name thy ^ " is outdated!")
   else if warn
-       then warning ("Proof cache of " ^ Context.theory_name thy ^ " is outdated!")
+       then warning ("Proof cache for theory " ^ Context.theory_name thy ^ " is outdated!")
        else ()
 
 fun invalidate_proof_cache warn id thy =

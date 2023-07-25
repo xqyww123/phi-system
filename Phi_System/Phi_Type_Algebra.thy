@@ -680,7 +680,7 @@ lemma Type_Variant_of_the_Same_Functor_I [\<phi>reason 1]:
   unfolding Type_Variant_of_the_Same_Functor_def ..
 
 
-subsubsection \<open>Type Operator Base\<close>
+subsubsection \<open>Locale Base of Type Operator\<close>
 
 locale \<phi>Type_Functor =
   fixes F :: \<open>('c,'a) \<phi> \<Rightarrow> ('c1,'a1) \<phi>\<close>
@@ -742,6 +742,7 @@ lemma [\<phi>reason add!]:
 *)
 
 end
+
 
 
 subsubsection \<open>Transformation Functor\<close>
@@ -1703,7 +1704,7 @@ hide_fact \<phi>TA_SHz_rule \<phi>TA_SHu_rule \<phi>TA_SHz_rewr_IH \<phi>TA_SHz_
 
 
 
-subsubsection \<open>Transform to Raw Abstraction (the Itself \<phi>-type)\<close>
+subsubsection \<open>Exhaustively Open All Abstraction\<close>
 
 lemma \<phi>TA_TrRA_rule:
   \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target (to (Itself::('b,'b) \<phi>)))
@@ -1725,8 +1726,8 @@ lemma "_all_simps_plus_":
 
 ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
 
-\<phi>property_deriver Open_All_Abstraction 100 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
-                                               | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
+\<phi>property_deriver Open_Abstraction_Full 130 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
+                                                | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
     = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction \<close>
 

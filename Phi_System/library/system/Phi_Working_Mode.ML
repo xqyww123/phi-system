@@ -120,7 +120,7 @@ fun generic_cast rule place desired_nu ctxt sequent =
   let
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ => "reasoning cast..." ^ Position.here \<^here>)
     val sequent' =
-          case Phi_Reasoner.reason NONE ctxt (sequent RS rule)
+          case Phi_Reasoner.reason NONE true ctxt (sequent RS rule)
             of SOME ret => ret
              | NONE => raise Phi_Error.CastFail (place, desired_nu, sequent)
     val _ = case Thm.prop_of sequent'
@@ -509,7 +509,7 @@ fun infer_working_mode_of_sequent (ctxt,sequent) =
                 Thm.pretty_thm ctxt sequent
             ])
       val sequent' =
-          Phi_Reasoner.reason (SOME 1) ctxt (@{thm reason_programming} RS sequent)
+          Phi_Reasoner.reason (SOME 1) true ctxt (@{thm reason_programming} RS sequent)
               |> (fn SOME TH => TH
                    | NONE => error (Pretty.string_of (Pretty.chunks [
                         Pretty.str "Don't know how to make by programming:",

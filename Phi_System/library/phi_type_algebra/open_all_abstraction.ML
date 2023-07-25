@@ -10,7 +10,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun guess_property  (x_term, T_term, (phi:phi_type)) ctxt =
   let val _ = if #is_recursive phi
-              then error "Trans_to_Raw_Abst: I cannot guess the rule for a recursive \<phi>-type\n\
+              then error "Open_Abstraction_Full: I cannot guess the rule for a recursive \<phi>-type\n\
                          \Please manually annotate the expression."
               else ()
       val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
@@ -66,8 +66,8 @@ fun instantiate_the_var var ctxt sequent0 =
   let val (x_ty, y_ty) = case snd var
                            of \<^Type>\<open>fun x_ty \<^Type>\<open>fun y_ty \<^Type>\<open>bool\<close>\<close>\<close> => (x_ty, y_ty)
                             | _ => error "BUG qC2wYScnQXiFvdGaUF/mBA"
-      val [x,y] = Name.invent_names (Variable.names_of ctxt) "x" [x_ty, y_ty]
-               |> map Free
+      val [y] = Name.invent_names (Variable.names_of ctxt) "x" [y_ty]
+             |> map Free
 
       fun normalize_Ex ctxt ctm =
         case Thm.term_of ctm
@@ -89,7 +89,7 @@ fun instantiate_the_var var ctxt sequent0 =
                       of Const(\<^const_name>\<open>special_Ex\<close>, _) $ (Abs(_,_, Const(\<^const_name>\<open>HOL.All\<close>, _) $ _)) =>
                           (Phi_Conv.move_sp_Ex_inside_All ctxt then_conv
                            Phi_Conv.hol_all_conv (normalize_Ex o snd) ctxt) ctm
-                       | _ => error "Deriving Trans_to_Raw_Abst fails: Cannot normalize the generated proof oblgiation"
+                       | _ => error "Deriving Open_Abstraction_Full fails: Cannot normalize the generated proof oblgiation"
                    in (Phi_Conv.quant_conv \<^const_name>\<open>special_Ex\<close> (fn (_, ctxt) =>
                           Simplifier.rewrite (Simplifier.clear_simpset ctxt
                                 addsimps @{thms' HOL.all_conj_distrib[symmetric] all_simps(3-6)[symmetric]
@@ -108,9 +108,13 @@ fun instantiate_the_var var ctxt sequent0 =
                         => X
                     | _ => error "BUG zfkezUm3Rm62IQTK0kglKQ"
 
-      fun mk_disj_inst concls (quants, prems) =
-        fold (fn (N,ty) => fn X => HOLogic.exists_const ty $ Abs(N,ty,X))
-          quants (Phi_Help.list_mk_conj (prems @ concls))
+      fun mk_disj_inst vx concls (quants, prems) =
+        let val qlen = length quants
+         in fold_index (fn (i,(N,ty)) => fn X =>
+                  if vx = (N,ty) then Abs(N,ty,X) $ Bound (qlen-i)
+                                 else HOLogic.exists_const ty $ Abs(N,ty,X))
+              quants (Phi_Help.list_mk_conj (prems @ concls))
+        end
 
       fun mk_conj_inst concls (quants, prems) =
         Phi_Help.list_mk_conj concls
@@ -121,10 +125,16 @@ fun instantiate_the_var var ctxt sequent0 =
 
       val has_the_var = Term.exists_subterm (fn Var v' => v' = var | _ => false)
 
-      fun pass_conjs qp concls_meet (\<^Const>\<open>HOL.conj\<close> $ A $ B)
-            = pass_conjs qp (pass_conjs qp concls_meet A) B
-        | pass_conjs _ (concls,meet) (Var v' $ _ $ _)
-            = if v' = var then (concls,true)
+      fun opt_join NONE x = SOME x
+        | opt_join (SOME a) b = if a = b then SOME a else error "BUG"
+      fun pass_conjs qp concls_varx (\<^Const>\<open>HOL.conj\<close> $ A $ B)
+            = pass_conjs qp (pass_conjs qp concls_varx A) B
+        | pass_conjs (quants,_) (concls,varx) (Var v' $ vx $ _)
+            = if v' = var
+              then (concls,
+                    case vx of Free NT => opt_join varx NT
+                             | Bound i => opt_join varx (List.nth (quants, i))
+                             | _ => error "BUG" )
               else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
         | pass_conjs _ (concls,meet) P
             = (fold_aterms (fn Var v' =>
@@ -138,35 +148,35 @@ fun instantiate_the_var var ctxt sequent0 =
         | inst_body ret (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
             = inst_body ret ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
         | inst_body (disj, conj) qp P
-            = case pass_conjs qp ([],false) P
-                of (concls, true)  => (mk_disj_inst concls qp :: disj, conj)
-                 | (concls, false) => (disj, mk_conj_inst concls qp :: conj)
+            = case pass_conjs qp ([],NONE) P
+                of (concls, SOME vx)  => (mk_disj_inst vx concls qp :: disj, conj)
+                 | (concls, NONE) => (disj, mk_conj_inst concls qp :: conj)
 
-      fun inst_single ret (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
-            = inst_single ret (quants, P::prems) X
-        | inst_single ret (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
-            = inst_single ret ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
-        | inst_single ret qp (\<^Const>\<open>special_Ex _\<close> $ Abs (_, ty, X))
+      fun assemble_dc (disj,conj) = Phi_Help.list_mk_conj (Phi_Help.list_mk_disj disj :: conj)
+      fun final_assemble_dc dc = Abs("x", x_ty, Term.lambda y (assemble_dc dc))
+
+      fun inst (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
+            = inst (quants, P::prems) X
+        | inst (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
+            = inst ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
+        | inst qp (\<^Const>\<open>HOL.conj\<close> $ A $ B)
+            = let val (dA,cA) = inst qp A
+                  val (dB,cB) = inst qp B
+               in (dA@dB, cA@cB)
+              end
+       | inst qp (\<^Const>\<open>HOL.disj\<close> $ A $ B)
+            = let val a = assemble_dc (inst qp A)
+                  val b = assemble_dc (inst qp B)
+               in ([a,b], [])
+              end
+        | inst qp (\<^Const>\<open>special_Ex _\<close> $ Abs (_, ty, X))
             = if ty = y_ty
-              then inst_body ret qp (Term.subst_bounds ([y], X))
+              then inst_body ([],[]) qp (Term.subst_bounds ([y], X))
               else error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
-        | inst_single (disj, conj) qp P
-            = (disj, mk_conj_inst [P] qp :: conj)
+        | inst qp P
+            = ([], [mk_conj_inst [P] qp])
 
-      fun inst_toplevel ret (\<^Const>\<open>conj\<close> $ (\<^Const>\<open>HOL.All _\<close> $ Abs (_, ty, X)) $ Y)
-            = if ty = x_ty
-              then inst_toplevel (inst_single ret ([],[]) (Term.subst_bounds ([x], X))) Y
-              else error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
-        | inst_toplevel ret (\<^Const>\<open>HOL.All _\<close> $ Abs (_, ty, X))
-            = if ty = x_ty
-              then inst_single ret ([],[]) (Term.subst_bounds ([x], X))
-              else error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
-        | inst_toplevel ret \<^Const>\<open>True\<close> = ret
-        | inst_toplevel _ _ = error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
-
-      val (disj,conj) = inst_toplevel ([],[]) oblg
-      val inst = Term.lambda x (Term.lambda y (
-                    Phi_Help.list_mk_conj (Phi_Help.list_mk_disj disj :: conj)))
+      val inst = final_assemble_dc (inst ([],[]) oblg)
               |> Thm.cterm_of ctxt
    in Thm.instantiate (TVars.empty, Vars.make [(var, inst)]) sequent
   end
@@ -181,7 +191,7 @@ fun solver (phi, ctxt, sequent) =
            $ _))
          => (case X of Var v $ _ $ _ =>
                           SOME ( instantiate_the_var v ctxt sequent
-                            |> oblg_solver (#proof_id phi ^ "/Trans_to_Raw_Abst") ctxt)
+                            |> oblg_solver (#proof_id phi ^ "/Open_Abstraction_Full") ctxt)
                      | _ => NONE)
      | _ => error "Internal bug"
 
@@ -241,7 +251,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                 Conv.all_conv)
             ) ctxt)) ctxt)
          |> (fn rule => (rule RS' (ctxt, @{thm' spec})))
-      val rules = mk_rule_by_guess_or_hint ("Trans_to_Raw_Abst", unify_hint, extract_oprs_from_hint, guess_property,
+      val rules = mk_rule_by_guess_or_hint ("Open_Abstraction_Full", unify_hint, extract_oprs_from_hint, guess_property,
                                             @{thm' \<phi>TA_TrRA_rule}, [0],
                                             SOME ind_conv, reasoning, solver, simp)
                                            phi0 hint0 ctxt0
@@ -250,11 +260,11 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
         |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
-        |> Phi_Type_Algebra.note_properties phi0 [("Trans_to_Raw_Abst", [rule])]
+        |> Phi_Type_Algebra.note_properties phi0 [("Open_Abstraction_Full", [rule])]
     | _ => raise Automation_Fail ""
   end
 
-val open_all_abstraction = accept_one "Trans_to_Raw_Abst" gen_trans_to_raw_abst
+val open_all_abstraction = accept_one "Open_Abstraction_Full" gen_trans_to_raw_abst
 
 end
 

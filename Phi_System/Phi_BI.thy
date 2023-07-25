@@ -150,7 +150,7 @@ subsection \<open>\<phi>-Type\<close>
 
 type_synonym ('concrete,'abstract) \<phi> = " 'abstract \<Rightarrow> 'concrete BI "
 
-definition \<phi>Type :: "'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> 'a BI" (infix "\<Ztypecolon>" 20) where " (x \<Ztypecolon> T) = (T x)"
+definition \<phi>Type :: "'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> 'a BI" (infix "\<Ztypecolon>" 20) where " x \<Ztypecolon> T \<equiv> T x"
 
 text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
 
@@ -1028,6 +1028,13 @@ lemma
 \<Longrightarrow> Object_Equiv (\<lambda>x. {p. p \<Turnstile> S1 x \<longrightarrow> p \<Turnstile> S2 x}) (\<lambda>x y. R1 y x \<and> R2 x y) \<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
   by (clarsimp simp add: Satisfaction_def)
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Object_Equiv A Ea)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Object_Equiv B Eb)
+\<Longrightarrow> Object_Equiv (if C then A else B) (if C then Ea else Eb) \<close>
+  unfolding Premise_def
+  by (cases C; simp)
 
 (*
 lemma

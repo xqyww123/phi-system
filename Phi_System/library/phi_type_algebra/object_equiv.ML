@@ -98,7 +98,7 @@ fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
              in mk_Ants ctxt rev_arg_tys eq_names (ant::ants)
                         ((x_ty_A, Free(eq, typ))::param_eqs) T_term
             end
-            handle TYPE _ => (ants, param_eqs))
+            handle TYPE _ => mk_Ants ctxt rev_arg_tys eq_names ants param_eqs T_term)
         | mk_Ants _ [] [] ants param_eqs _ = (ants, param_eqs)
         | mk_Ants _ _ _ _ _ _ = raise ListPair.UnequalLengths
 

@@ -63,7 +63,7 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
                               (fn L => singleton (Proof_Context.export ctxt' ctxt) sequent :: L) ;
                     SOME []
                ))
-     val _ = Phi_Reasoner.reason NONE ctxt' sequent'
+     val _ = Phi_Reasoner.reason NONE true ctxt' sequent'
            |> (fn SOME _ => error "Internal bug b4c19005-f87c-4c03-9012-8fa0280a3154"
                 | NONE => ())
 

@@ -118,7 +118,7 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
                 "PLPR_Optimum_Solution: all choices are traversed, no solution found.");
               NONE)
            | SOME s =>
-               (case Phi_Reasoner.internal_reason NONE s
+               (case Phi_Reasoner.internal_reason NONE true s
                   of NONE => (Phi_Reasoner.info_print ctxt 2 (fn _ =>
                                 "PLPR_Optimum_Solution: the search branch fails, try another");
                               next_candidate ())
@@ -132,13 +132,13 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
 fun internal_start (ctxt,sequent) = gen_start ctxt [sequent]
 
 fun best_among (_, []) = NONE
-  | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE ctxt thm
+  | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE true ctxt thm
   | best_among (ctxt,candidates) =
     ( Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.chunks (
           Pretty.str "PLPR_Optimum_Solution: reasoning the optimal solution from candidates:" ::
           map (fn th => Pretty.item [Thm.pretty_thm ctxt th]) candidates
         ));
-      Phi_Reasoner.reason_sXXX ctxt (fn ctxt => ((), gen_start ctxt candidates))
+      Phi_Reasoner.reason_sXXX true ctxt (fn ctxt => ((), gen_start ctxt candidates))
         |> snd)
 
 end

@@ -405,7 +405,7 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
                       if exists (fn _ $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => true | _ => false)
                                 (Thm.prems_of rule)
                       then let val protect_num = fold (fn th => fn N => N + Thm.nprems_of th) props 0
-                            in case Phi_Reasoner.reason NONE ctxt' (Thm.permute_prems 0 protect_num rule)
+                            in case Phi_Reasoner.reason NONE true ctxt' (Thm.permute_prems 0 protect_num rule)
                                  of SOME ret => Thm.permute_prems 0 (~protect_num) ret
                                   | NONE => error "Rule Generation fails"
                            end
@@ -1164,8 +1164,8 @@ fun add_type (def, pos, dervs) generic =
       exception Auto_Fail
       val intro_ToA = gen_from_eqs @{thm' \<phi>intro_transformation} I tagged_eqs
       val intro_reasoning   = gen_from_eqs @{thm' \<phi>intro_reasoning_transformation} I tagged_eqs
-      val intro'R_reasoning = gen_from_eqs @{thm' \<phi>intro'_reasoning_transformation} I tagged_eqs
-                       handle THM _ => [] (*in case of not a separation magma*)
+      val intro'R_reasoning = (gen_from_eqs @{thm' \<phi>intro'_reasoning_transformation} I tagged_eqs
+                               handle THM _ => [] (*in case of not a separation magma*))
       val elim_ToA = gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
       val elim_reasoning = gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
@@ -1194,7 +1194,8 @@ fun add_type (def, pos, dervs) generic =
                                     (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
                                     Conv.all_conv))) ctxt)) )
       val make_abstraction = gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
-                           @ gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
+                           @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
+                              handle THM _ => [])
 
       val elim'SE_ToA = Option.map (fn eqs => gen_from_eqs @{thm' \<phi>elim'SE_transformation} I eqs
                                               handle THM _ => []

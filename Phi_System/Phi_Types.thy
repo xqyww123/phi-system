@@ -32,7 +32,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Implication
        and Object_Equiv
        and Is_Functional
-       and Open_All_Abstraction
+       and Open_Abstraction_Full
 
 thm \<phi>Fun.intro
 thm \<phi>Fun.intro_reasoning
@@ -82,7 +82,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Basic
        and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
-       and Open_All_Abstraction
+       and Open_Abstraction_Full
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
@@ -180,7 +180,7 @@ declare SubjectionTY_def[embed_into_\<phi>type del]
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        and Identity_Element
-       and Open_All_Abstraction 
+       and Open_Abstraction_Full 
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
@@ -470,11 +470,11 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 
 subsection \<open>Embedding Additive Conjunction\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-      
+declare [[\<phi>trace_reasoning = 0]]
+         
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
-  deriving (*\<open>  (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
+  deriving \<open>  (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
           \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q x)
           \<Longrightarrow> x \<Ztypecolon> T \<and>\<^sub>\<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) \<and> Q (snd x)\<close>
        and \<open>  Object_Equiv T eqa
@@ -485,7 +485,6 @@ declare [[\<phi>trace_reasoning = 3]]
        and \<open>  Identity_Element\<^sub>E (1 \<Ztypecolon> T)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
-       and*) Open_All_Abstraction
      (*DO NOT REMOVE, I'm thinking if we really should support so much additive conjunction
        and Functional_Transformation_Functor
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>
@@ -507,6 +506,14 @@ lemma \<phi>Inter_embedding[embed_into_\<phi>type]:
   unfolding atomize_eq BI_eq_iff
   by simp
 
+lemma [\<phi>reason 1000]:
+  \<open> fst x \<Ztypecolon> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ra y @action to Itself
+\<Longrightarrow> snd x \<Ztypecolon> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rb y @action to Itself
+\<Longrightarrow> x \<Ztypecolon> A \<and>\<^sub>\<phi> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ra y \<and> rb y @action to Itself \<close>
+  unfolding Action_Tag_def Transformation_def
+  by clarsimp
+  
+
 
 section \<open>Structural Connectives\<close>
 
@@ -514,16 +521,13 @@ subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> \<phi>Fun (\<lambda>v. [v]) \<Zcomp> T\<close>
   deriving Basic
        and Is_Functional
-       and Open_All_Abstraction
-
-thm List_Item.expansion
-thm List_Item.intro_reasoning
+       and Open_Abstraction_Full
+       and Functional_Transformation_Functor
+       and Separation_Homo
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
   \<open> v1 \<Turnstile> (x1 \<Ztypecolon> T1)
@@ -534,68 +538,60 @@ lemma \<comment> \<open>A example for how to represent list of multi-elements\<c
       rule exI[where x=\<open>[v1]\<close>],
       simp)
 
+
 subsubsection \<open>Empty List\<close>
 
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
-
-thm Empty_List.elim_reasoning
-
-lemma [\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> Empty_List) \<longleftrightarrow> p = []\<close>
-  unfolding Empty_List_def \<phi>Type_def by simp
-
-lemma Empty_List_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> Empty_List) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+  deriving Basic
+       and Is_Functional
+       and Open_Abstraction_Full
+       and Identity_Element
 
 
 subsection \<open>Optional\<close>
 
-definition \<phi>Optional :: \<open>('c,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('c::one,'x) \<phi>\<close> (infix "?\<^sub>\<phi>" 55)
-  where \<open>(T ?\<^sub>\<phi> C) = (\<lambda>x. if C then (x \<Ztypecolon> T) else 1)\<close>
+declare [[\<phi>trace_reasoning = 0]]
+   
+\<phi>type_def \<phi>Optional :: \<open>('c,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('c::one,'x) \<phi>\<close> (infix "?\<^sub>\<phi>" 55)
+  where \<open> T ?\<^sub>\<phi> C \<equiv> if C then T else (\<lambda>\<^sub>\<beta> x. 1) \<close>
+  deriving Object_Equiv
+       and Identity_Element
+       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T ?\<^sub>\<phi> C) \<close>
+       and Open_Abstraction_Full
 
-lemma \<phi>Optional_expn[\<phi>expns]:
-  \<open>(x \<Ztypecolon> T ?\<^sub>\<phi> C) = (if C then x \<Ztypecolon> T else 1)\<close>
-  unfolding \<phi>Type_def \<phi>Optional_def by simp
+thm \<phi>Optional.intro_reasoning
 
-lemma \<phi>Optional_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> T ?\<^sub>\<phi> C) \<Longrightarrow> ((C \<Longrightarrow> Inhabited (x \<Ztypecolon> T)) \<Longrightarrow> Z) \<Longrightarrow> Z\<close>
-  unfolding Inhabited_def by (cases C; clarsimp simp add: \<phi>Optional_expn)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> (C \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> A @action \<A>EIF)
-\<Longrightarrow> Inhabited (x \<Ztypecolon> T ?\<^sub>\<phi> C) \<longrightarrow> (C \<longrightarrow> A) @action \<A>EIF \<close>
-  unfolding Inhabited_def Action_Tag_def
-  by (cases C; clarsimp simp add: \<phi>Optional_expn)
+lemma [\<phi>reason 1000]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> x \<Ztypecolon> T ?\<^sub>\<phi> C \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<longrightarrow> P\<close>
+  unfolding Action_Tag_def Inhabited_def
+  by simp
 
 
-subsubsection \<open>Conversion\<close>
-
-lemma [simp]:
-  \<open>(x \<Ztypecolon> T ?\<^sub>\<phi> True) = (x \<Ztypecolon> T)\<close>
-  unfolding set_eq_iff by (simp add: \<phi>Optional_expn)
+subsubsection \<open>Simplification\<close>
 
 lemma [simp]:
-  \<open>(x \<Ztypecolon> T ?\<^sub>\<phi> False) = 1\<close>
-  unfolding set_eq_iff by (simp add: \<phi>Optional_expn)
+  \<open>x \<Ztypecolon> T ?\<^sub>\<phi> True \<equiv> x \<Ztypecolon> T\<close>
+  unfolding atomize_eq BI_eq_iff
+  by simp
 
-subsubsection \<open>Rules\<close>
-
-lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>I (?x \<Ztypecolon> ?T ?\<^sub>\<phi> ?C) _\<close>]:
-  \<open> Identity_Element\<^sub>I (x \<Ztypecolon> T ?\<^sub>\<phi> False) True\<close>
-  unfolding Identity_Element\<^sub>I_def by simp
+lemma [simp]:
+  \<open>x \<Ztypecolon> T ?\<^sub>\<phi> False \<equiv> 1\<close>
+  unfolding atomize_eq BI_eq_iff
+  by simp
 
 
 
 subsection \<open>Mapping\<close>
 
-definition \<phi>Mapping :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> ('av \<Rightarrow> 'bv, 'a \<Rightarrow> 'b) \<phi>\<close> (infixr "\<Rrightarrow>" 25)
-    \<comment> \<open>Forward Simulation\<close>
-  where \<open>(T \<Rrightarrow> U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> g v \<in> (f x \<Ztypecolon> U) })\<close>
+declare [[\<phi>trace_reasoning = 1]]
 
-lemma \<phi>Mapping_expn[\<phi>expns]:
-  \<open>g \<in> (f \<Ztypecolon> T \<Rrightarrow> U) \<longleftrightarrow> (\<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> g v \<in> (f x \<Ztypecolon> U))\<close>
-  unfolding \<phi>Mapping_def \<phi>Type_def by simp
+\<phi>type_def \<phi>Mapping :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> ('av \<Rightarrow> 'bv, 'a \<Rightarrow> 'b) \<phi>\<close> (infixr "\<Rrightarrow>" 25)
+    \<comment> \<open>Forward Simulation\<close>
+  where \<open>f \<Ztypecolon> T \<Rrightarrow> U \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>v x. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> g v \<Turnstile> (f x \<Ztypecolon> U))\<close>
+
+thm \<phi>Mapping.expansion
 
 lemma \<phi>Mapping_inhabited[elim!]:
   \<open>Inhabited (f \<Ztypecolon> T \<Rrightarrow> U) \<Longrightarrow> ((\<And>x. Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (f x \<Ztypecolon> U)) \<Longrightarrow> C) \<Longrightarrow> C\<close>
@@ -604,7 +600,7 @@ lemma \<phi>Mapping_inhabited[elim!]:
 lemma [\<phi>inhabitance_rule 1000]:
   \<open> ((\<exists>x. Inhabited (x \<Ztypecolon> T)) \<and> P = True) \<or> P = False
 \<Longrightarrow> (\<And>x. Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (f x \<Ztypecolon> U) \<longrightarrow> C x @action \<A>EIF)
-\<Longrightarrow> Inhabited (f \<Ztypecolon> T \<Rrightarrow> U) \<longrightarrow> (P \<longrightarrow> Ex C) @action \<A>EIF\<close>
+\<Longrightarrow> f \<Ztypecolon> T \<Rrightarrow> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<longrightarrow> Ex C \<close>
   unfolding Inhabited_def Action_Tag_def
   by (simp add: \<phi>Mapping_expn, blast)
 
@@ -669,7 +665,7 @@ thm List3.obj_eq
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
  
 declare [[\<phi>trace_reasoning = 1]]
-      
+       
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
   deriving Basic
@@ -690,7 +686,7 @@ lemma [\<phi>reason 10000]:
 
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
-  where [\<phi>defs, \<phi>expns]: \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
+  where \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
   deriving Transformation_Functor
     (*Basic and Identity_Element
        and Functional_Transformation_Functor

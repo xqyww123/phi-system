@@ -7,7 +7,7 @@ theory Phi_Logic_Programming_Reasoner
       "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
   and "<guard>" = "\<g>\<u>\<a>\<r>\<d>"
   and "<condition>" = "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>"
-  and "<@GOAL>" = "\<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L"
+  and "<@GOAL>" = "@GOAL"
   and "<threshold>" = "\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>"
   and "!!" = "!!"
   and "??" = "??"
@@ -881,6 +881,77 @@ ML_file_debug \<open>library/exhaustive.ML\<close>
 hide_fact merge_oblg_divergence
 
 
+subsection \<open>Environment Variables\<close>
+
+definition Push_Envir_Var :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
+  where \<open>Push_Envir_Var Name Val \<longleftrightarrow> True\<close>
+definition Pop_Envir_Var  :: \<open>'name \<Rightarrow> bool\<close> where \<open>Pop_Envir_Var Name \<longleftrightarrow> True\<close>
+definition Get_Envir_Var  :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
+  where \<open>Get_Envir_Var Name Return \<longleftrightarrow> True\<close>
+definition Get_Envir_Var' :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>Get_Envir_Var' Name Default Return \<longleftrightarrow> True\<close>
+
+subsubsection \<open>Implementation\<close>
+
+ML_file \<open>library/envir_var.ML\<close>
+
+lemma Push_Envir_Var_I: \<open>Push_Envir_Var N V\<close> unfolding Push_Envir_Var_def ..
+lemma Pop_Envir_Var_I:  \<open>Pop_Envir_Var N\<close>    unfolding Pop_Envir_Var_def  ..
+lemma Get_Envir_Var_I : \<open>Get_Envir_Var  N V\<close>   for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var_def  ..
+lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var'_def ..
+
+\<phi>reasoner_ML Push_Envir_Var 1000 (\<open>Push_Envir_Var _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ V) = Thm.major_prem_of sequent
+      val _ = if maxidx_of_term V <> ~1
+              then warning "PLPR Envir Var: The value to be assigned has schematic variables \
+                           \which will not be retained!"
+              else ()
+   in SOME ((PLPR_Env.push (PLPR_Env.name_of N) V ctxt,
+            @{thm Push_Envir_Var_I} RS sequent),
+      Seq.empty) end
+)\<close>
+
+\<phi>reasoner_ML Pop_Envir_Var 1000 (\<open>Pop_Envir_Var _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N) = Thm.major_prem_of sequent
+   in SOME ((PLPR_Env.pop (PLPR_Env.name_of N) ctxt, @{thm Pop_Envir_Var_I} RS sequent),
+      Seq.empty) end
+)\<close>
+
+\<phi>reasoner_ML Get_Envir_Var 1000 (\<open>Get_Envir_Var _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ _) = Thm.major_prem_of sequent
+      val idx = Thm.maxidx_of sequent + 1
+   in case PLPR_Env.get (PLPR_Env.name_of N) ctxt
+        of NONE => Phi_Reasoner.error
+                      ("No enviromental variable " ^ PLPR_Env.name_of N ^ " is set")
+         | SOME V' =>
+            let val V = Thm.incr_indexes_cterm idx (Thm.cterm_of ctxt V')
+             in SOME ((ctxt, ( @{thm Get_Envir_Var_I}
+                        |> Thm.incr_indexes idx
+                        |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
+                                             Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
+                         ) RS sequent),
+                    Seq.empty)
+            end
+  end
+)\<close>
+
+\<phi>reasoner_ML Get_Envir_Var' 1000 (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ D $ _) = Thm.major_prem_of sequent
+      val idx = Thm.maxidx_of sequent + 1
+      val V = Thm.cterm_of ctxt (case PLPR_Env.get (PLPR_Env.name_of N) ctxt
+                                   of SOME V => V | NONE => D)
+                |> Thm.incr_indexes_cterm idx
+   in SOME ((ctxt, ( @{thm Get_Envir_Var'_I}
+                  |> Thm.incr_indexes idx
+                  |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
+                                       Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
+                   ) RS sequent),
+      Seq.empty)
+  end
+)\<close>
+
+
+
 
 subsection \<open>Reasoning Frame\<close>
 
@@ -948,14 +1019,14 @@ It is not reasonable because the reasoning is redoing a solved problem on \<open
 To address this, a solution is to prune branches of \<open>A\<close> after \<open>A\<close> succeeds.
 
 In this section we introduce \<open>subgoal\<close> mechanism achieving the pruning.
-Each antecedent \<open>A\<close> is tagged with a goal context \<open>G\<close>, as \<open>\<open>A \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>\<close>.
+Each antecedent \<open>A\<close> is tagged with a goal context \<open>G\<close>, as \<open>\<open>A @GOAL G\<close>\<close>.
 A reasoning rule may check that the goal \<open>G\<close> has not been solved before doing any substantial
 computation, e.g.,
-\[ \<open>CHK_SUBGOAL G \<Longrightarrow> Computation \<Longrightarrow> (Ant \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)\<close> \]
+\[ \<open>CHK_SUBGOAL G \<Longrightarrow> Computation \<Longrightarrow> (Ant @GOAL G)\<close> \]
 Antecedent \<open>CHK_SUBGOAL G\<close> succeeds only when the goal \<open>G\<close> is not marked solved, \<^emph>\<open>or\<close>, the current
   search branch is the thread that marked \<open>G\<close> solved previously.
 When a rule succeeds, the rule may mark the goal \<open>G\<close> solved to prune other branches that check \<open>G\<close>.
-\[ \<open>Computation \<Longrightarrow> SOLVE_SUBGOAL G \<Longrightarrow> (Ant \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G)\<close> \]
+\[ \<open>Computation \<Longrightarrow> SOLVE_SUBGOAL G \<Longrightarrow> (Ant @GOAL G)\<close> \]
 If a goal \<open>G\<close> has been marked solved, any other antecedent \<open>SOLVE_SUBGOAL G\<close> marking \<open>G\<close> again, will
 fail, unless the current search branch is the thread that marked \<open>G\<close> solved previously.
 
@@ -965,8 +1036,8 @@ typedecl "subgoal"
 
 consts subgoal_context :: \<open>subgoal \<Rightarrow> action\<close>
 
-abbreviation GOAL_CTXT :: "bool \<Rightarrow> subgoal \<Rightarrow> bool"  ("_  \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L _" [26,1000] 26)
-  where "(P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G) \<equiv> (P @action subgoal_context G)"
+abbreviation GOAL_CTXT :: "bool \<Rightarrow> subgoal \<Rightarrow> bool"  ("_  @GOAL _" [26,1000] 26)
+  where "(P @GOAL G) \<equiv> (P @action subgoal_context G)"
 
 definition CHK_SUBGOAL :: "subgoal \<Rightarrow> bool" \<comment> \<open>Check whether the goal is solved\<close>
   where "CHK_SUBGOAL X \<longleftrightarrow> True"
@@ -998,9 +1069,9 @@ ML_file \<open>library/Subgoal_Env.ML\<close>
 \<phi>reasoner_ML CHK_SUBGOAL 2000 (\<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal\<close>
 \<phi>reasoner_ML SOLVE_SUBGOAL 9900 (\<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal\<close>
 
-lemma [\<phi>reason 800 for \<open>Try ?S ?P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L ?G\<close>]:
-  \<open> P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G
-\<Longrightarrow> Try True P \<^bold>@\<^bold>G\<^bold>O\<^bold>A\<^bold>L G\<close>
+lemma [\<phi>reason 800 for \<open>Try ?S ?P @GOAL ?G\<close>]:
+  \<open> P @GOAL G
+\<Longrightarrow> Try True P @GOAL G\<close>
   unfolding Try_def .
 
 
@@ -1059,6 +1130,40 @@ declare [[
     \<phi>reason 1000 HOL.disjI1 HOL.disjI2 for \<open>?A \<or> ?B\<close>
 ]]
 
+definition Orelse_shortcut (infixr "\<or>\<^sub>c\<^sub>u\<^sub>t" 30) where [iff]: \<open>(\<or>\<^sub>c\<^sub>u\<^sub>t) \<equiv> (\<or>)\<close>
+
+text \<open>\<^prop>\<open>A \<or>\<^sub>c\<^sub>u\<^sub>t B\<close>, if \<^prop>\<open>A\<close> succeeds, \<^prop>\<open>B\<close> will not be attempted in any future backtrack.\<close>
+
+
+lemma Orelse_shortcut_I1:
+  \<open> A
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> A \<or>\<^sub>c\<^sub>u\<^sub>t B \<close>
+  by simp
+
+lemma Orelse_shortcut_I2:
+  \<open> B
+\<Longrightarrow> A \<or>\<^sub>c\<^sub>u\<^sub>t B \<close>
+  by simp
+
+\<phi>reasoner_ML Orelse_shortcut 1000 (\<open>_ \<or>\<^sub>c\<^sub>u\<^sub>t _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val (G, goal, ctxt) = Subgoal_Env.allocate_subgoal \<^Const>\<open>TOP_GOAL\<close> ctxt
+      val [I1,I2] = map (Thm.instantiate (TVars.empty, Vars.make [((("G",0),\<^typ>\<open>subgoal\<close>),G)]))
+                        @{thms' Orelse_shortcut_I1 Orelse_shortcut_I2}
+      fun tac sequent0 = Seq.make (fn () =>
+        let val sequent = I2 RS sequent0
+         in case Thm.major_prem_of sequent
+              of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _) =>
+                  if Subgoal_Env.chk_goal goal
+                  then NONE
+                  else SOME ((ctxt, I1 RS sequent), tac sequent)
+               | _ => SOME ((ctxt, sequent), Seq.empty)
+        end)
+   in SOME ((ctxt, I1 RS sequent), tac sequent)
+  end
+)\<close>
+
+hide_fact Orelse_shortcut_I1 Orelse_shortcut_I2
 
 subsection \<open>Simplification \& Rewrite\<close>
 
@@ -1253,75 +1358,6 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Optimum_Among (Trueprop P) \<equiv> Trueprop (Optimum_Among_embed P)\<close>
   unfolding Optimum_Among_embed_def Optimum_Among_def .
 
-
-subsection \<open>Environment Variables\<close>
-
-definition Push_Envir_Var :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
-  where \<open>Push_Envir_Var Name Val \<longleftrightarrow> True\<close>
-definition Pop_Envir_Var  :: \<open>'name \<Rightarrow> bool\<close> where \<open>Pop_Envir_Var Name \<longleftrightarrow> True\<close>
-definition Get_Envir_Var  :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
-  where \<open>Get_Envir_Var Name Return \<longleftrightarrow> True\<close>
-definition Get_Envir_Var' :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> 'a \<Rightarrow> bool\<close>
-  where \<open>Get_Envir_Var' Name Default Return \<longleftrightarrow> True\<close>
-
-subsubsection \<open>Implementation\<close>
-
-ML_file \<open>library/envir_var.ML\<close>
-
-lemma Push_Envir_Var_I: \<open>Push_Envir_Var N V\<close> unfolding Push_Envir_Var_def ..
-lemma Pop_Envir_Var_I:  \<open>Pop_Envir_Var N\<close>    unfolding Pop_Envir_Var_def  ..
-lemma Get_Envir_Var_I : \<open>Get_Envir_Var  N V\<close>   for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var_def  ..
-lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var'_def ..
-
-\<phi>reasoner_ML Push_Envir_Var 1000 (\<open>Push_Envir_Var _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ $ (_ $ N $ V) = Thm.major_prem_of sequent
-      val _ = if maxidx_of_term V <> ~1
-              then warning "PLPR Envir Var: The value to be assigned has schematic variables \
-                           \which will not be retained!"
-              else ()
-   in SOME ((PLPR_Env.push (PLPR_Env.name_of N) V ctxt,
-            @{thm Push_Envir_Var_I} RS sequent),
-      Seq.empty) end
-)\<close>
-
-\<phi>reasoner_ML Pop_Envir_Var 1000 (\<open>Pop_Envir_Var _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ $ (_ $ N) = Thm.major_prem_of sequent
-   in SOME ((PLPR_Env.pop (PLPR_Env.name_of N) ctxt, @{thm Pop_Envir_Var_I} RS sequent),
-      Seq.empty) end
-)\<close>
-
-\<phi>reasoner_ML Get_Envir_Var 1000 (\<open>Get_Envir_Var _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ $ (_ $ N $ _) = Thm.major_prem_of sequent
-      val idx = Thm.maxidx_of sequent + 1
-   in case PLPR_Env.get (PLPR_Env.name_of N) ctxt
-        of NONE => Phi_Reasoner.error
-                      ("No enviromental variable " ^ PLPR_Env.name_of N ^ " is set")
-         | SOME V' =>
-            let val V = Thm.incr_indexes_cterm idx (Thm.cterm_of ctxt V')
-             in SOME ((ctxt, ( @{thm Get_Envir_Var_I}
-                        |> Thm.incr_indexes idx
-                        |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
-                                             Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
-                         ) RS sequent),
-                    Seq.empty)
-            end
-  end
-)\<close>
-
-\<phi>reasoner_ML Get_Envir_Var' 1000 (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ $ (_ $ N $ D $ _) = Thm.major_prem_of sequent
-      val idx = Thm.maxidx_of sequent + 1
-      val V = Thm.cterm_of ctxt (case PLPR_Env.get (PLPR_Env.name_of N) ctxt
-                                   of SOME V => V | NONE => D)
-                |> Thm.incr_indexes_cterm idx
-   in SOME ((ctxt, ( @{thm Get_Envir_Var'_I}
-                  |> Thm.incr_indexes idx
-                  |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
-                                       Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
-                   ) RS sequent),
-      Seq.empty)
-  end
-)\<close>
 
 
 subsection \<open>Recursion Guard\<close>
