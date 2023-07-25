@@ -833,6 +833,15 @@ lemma contract_intro_sp_Ex:
   unfolding special_Ex_def
   using contract_intro_Ex .
 
+lemma partition_conj_MM:
+  \<open>(A \<and> B) \<and> (C \<and> D) \<equiv> (A \<and> C) \<and> (B \<and> D)\<close>
+  unfolding atomize_eq
+  by blast
+
+lemma partition_conj_MN:
+  \<open>(A \<and> B) \<and> C \<equiv> (A \<and> C) \<and> B\<close>
+  unfolding atomize_eq by blast
+
 ML_file "library/tools/patch_for_Ex.ML"
 
 
@@ -1152,11 +1161,11 @@ lemma Orelse_shortcut_I2:
                         @{thms' Orelse_shortcut_I1 Orelse_shortcut_I2}
       fun tac sequent0 = Seq.make (fn () =>
         let val sequent = I2 RS sequent0
-         in case Thm.major_prem_of sequent
+         in if Subgoal_Env.chk_goal goal
+            then NONE
+            else case Thm.major_prem_of sequent
               of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _) =>
-                  if Subgoal_Env.chk_goal goal
-                  then NONE
-                  else SOME ((ctxt, I1 RS sequent), tac sequent)
+                      SOME ((ctxt, I1 RS sequent), tac sequent)
                | _ => SOME ((ctxt, sequent), Seq.empty)
         end)
    in SOME ((ctxt, I1 RS sequent), tac sequent)

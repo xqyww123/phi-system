@@ -1297,7 +1297,7 @@ declare homo_sep_disj_total_push_map [\<phi>reason 1100]
 subsection \<open>Property Derivers\<close>
 
 subsubsection \<open>Extension of BNF-FP\<close>
-
+                                 
 ML_file \<open>library/tools/extended_BNF_info.ML\<close>
 ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
 

@@ -42,6 +42,14 @@ thm \<phi>Fun.elim_reasoning
 subsubsection \<open>Algebraic Properties\<close>
 
 lemma [\<phi>reason add]:
+  \<open> homo_sep_disj_semi f
+\<Longrightarrow> homo_sep_mult f
+\<Longrightarrow> Object_Sep_Homo\<^sub>I (\<phi>Fun f) UNIV \<close>
+  unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
+  apply (clarsimp simp add: homo_sep_disj_semi_def homo_sep_mult_def)
+  
+
+lemma [\<phi>reason add]:
   \<open> homo_sep_disj_total f
 \<Longrightarrow> homo_sep_mult f
 \<Longrightarrow> Object_Sep_Homo\<^sub>I (\<phi>Fun f) UNIV \<close>
@@ -76,7 +84,7 @@ declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+   
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -356,9 +364,9 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def Transformation_def
   by simp
 
-subsection \<open>Stepwise Abstraction\<close>
+subsection \<open>Vertical Composition\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>trace_reasoning = 0]]
          
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
@@ -422,8 +430,6 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Algebraic Properties\<close>
 
-
-
 lemma \<phi>Composition_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>I B UNIV
 \<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) UNIV (\<lambda>x. x)\<close>
@@ -431,7 +437,9 @@ lemma \<phi>Composition_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   by (clarsimp, insert times_set_I, blast)
 
 lemma (*The above rule is reversible. requiring the sep homo domain being the univ is already the weakest.*)
-  \<open> S \<noteq> {} \<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>I B UNIV \<close>
+  \<open> S \<noteq> {}
+\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x)
+\<Longrightarrow> Object_Sep_Homo\<^sub>I B UNIV \<close>
   unfolding Separation_Homo\<^sub>I_def Object_Sep_Homo\<^sub>I_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def)
@@ -527,7 +535,6 @@ subsubsection \<open>List Item\<close>
        and Is_Functional
        and Open_Abstraction_Full
        and Functional_Transformation_Functor
-       and Separation_Homo
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
   \<open> v1 \<Turnstile> (x1 \<Ztypecolon> T1)
@@ -549,24 +556,44 @@ subsubsection \<open>Empty List\<close>
        and Identity_Element
 
 
-subsection \<open>Optional\<close>
+
+subsection \<open>Empty Type of Free Objects\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-   
-\<phi>type_def \<phi>Optional :: \<open>('c,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('c::one,'x) \<phi>\<close> (infix "?\<^sub>\<phi>" 55)
-  where \<open> T ?\<^sub>\<phi> C \<equiv> if C then T else (\<lambda>\<^sub>\<beta> x. 1) \<close>
-  deriving Object_Equiv
-       and Identity_Element
-       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T ?\<^sub>\<phi> C) \<close>
+
+\<phi>type_def \<phi>None_freeobj :: \<open>('v::one, 'x) \<phi>\<close> ("\<circle>\<^sub>\<x>")
+  where \<open> x \<Ztypecolon> \<circle>\<^sub>\<x> \<equiv> 1\<close>
+  deriving Basic
+       and \<open>Identity_Element\<^sub>I (x \<Ztypecolon> \<circle>\<^sub>\<x>) True \<close>
+       and \<open>Identity_Element\<^sub>E (x \<Ztypecolon> \<circle>\<^sub>\<x>) \<close>
        and Open_Abstraction_Full
 
-thm \<phi>Optional.intro_reasoning
+declare \<phi>None_freeobj.intro_reasoning[\<phi>reason 1000]
+        \<phi>None_freeobj.elim_reasoning[\<phi>reason 1000]
 
-lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
-\<Longrightarrow> x \<Ztypecolon> T ?\<^sub>\<phi> C \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<longrightarrow> P\<close>
-  unfolding Action_Tag_def Inhabited_def
+subsubsection \<open>Special Rules\<close>
+
+lemma [\<phi>reason !10]:
+  \<open>x \<Ztypecolon> \<circle>\<^sub>\<x> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<circle>\<^sub>\<x> \<s>\<u>\<b>\<j> y. True @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>\<close>
+  unfolding Action_Tag_def Transformation_def
   by simp
+
+
+
+subsection \<open>Optional\<close>
+
+\<phi>type_def \<phi>Optional :: \<open>('c,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('c::one,'x) \<phi>\<close> (infix "?\<^sub>\<phi>" 55)
+  where \<open> T ?\<^sub>\<phi> C \<equiv> if C then T else \<circle>\<^sub>\<x> \<close>
+  deriving Object_Equiv
+       and Identity_Element
+       and \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T ?\<^sub>\<phi> C) \<close>
+       and \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself)
+          \<Longrightarrow> x \<Ztypecolon> T ?\<^sub>\<phi> C \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (if C then r y else y = 1) @action to Itself\<close>
+       and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C = C'
+          \<Longrightarrow> Transformation_Functor (\<lambda>T. T ?\<^sub>\<phi> C) (\<lambda>T. T ?\<^sub>\<phi> C') (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>r. if C then r else (=)) \<close>
+       and \<open> Functional_Transformation_Functor (\<lambda>T. T ?\<^sub>\<phi> C) (\<lambda>T. T ?\<^sub>\<phi> C') (\<lambda>a. {a}) (\<lambda>_. UNIV)
+                                    (\<lambda>r. if C then r else (=)) (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C = C')
+                                    (\<lambda>P. if C then P else (\<lambda>_. True)) (\<lambda>f. if C then f else (\<lambda>x. x))\<close>
 
 
 subsubsection \<open>Simplification\<close>
@@ -577,7 +604,7 @@ lemma [simp]:
   by simp
 
 lemma [simp]:
-  \<open>x \<Ztypecolon> T ?\<^sub>\<phi> False \<equiv> 1\<close>
+  \<open>1 \<Ztypecolon> T ?\<^sub>\<phi> False \<equiv> 1\<close>
   unfolding atomize_eq BI_eq_iff
   by simp
 
@@ -636,14 +663,16 @@ subsubsection \<open>By Key\<close>
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-                                                                                                                                                                                             
+declare [[\<phi>trace_reasoning = 3]]
+
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Basic
+      deriving Transformation_Functor
+(*Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and Separation_Homo\<^sub>I
+       and Separation_Homo\<^sub>I*)
 
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>

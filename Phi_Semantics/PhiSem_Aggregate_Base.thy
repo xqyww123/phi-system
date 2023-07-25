@@ -62,7 +62,7 @@ lemma valid_index_tail[iff]:
   \<open>valid_index T (idx@[i]) \<longleftrightarrow> valid_index T idx \<and> valid_idx_step (index_type idx T) i\<close>
   by (induct idx arbitrary: T; simp)
 
-lemma [\<phi>reason 1]:
+lemma [\<phi>reason 0]:
   \<open> FAIL TEXT(\<open>Fail to show the validity of index\<close> idx \<open>on type\<close> T)
 \<Longrightarrow> valid_index T idx\<close>
   by blast

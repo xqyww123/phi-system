@@ -756,7 +756,7 @@ lemma [\<phi>reason 0 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<
   \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> T)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to T\<close>
   unfolding Action_Tag_def by blast
- 
+
 lemma [\<phi>reason default 1]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action NToA
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' \<and> P @action to U\<close>
@@ -764,6 +764,37 @@ lemma [\<phi>reason default 1]:
 
 lemma [\<phi>reason 5000]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @action to T\<close>
+  unfolding Action_Tag_def by simp
+
+
+subsubsection \<open>Special Forms\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ua \<s>\<u>\<b>\<j> y. ra y @action to T)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ub \<s>\<u>\<b>\<j> y. rb y @action to T)
+\<Longrightarrow> If C A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> If C Ua Ub \<s>\<u>\<b>\<j> y. (if C then ra y else rb y) @action to T\<close>
+  unfolding Action_Tag_def Premise_def
+  by (cases C; simp)
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> x \<Ztypecolon> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ua \<s>\<u>\<b>\<j> y. ra y @action to T)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> x \<Ztypecolon> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ub \<s>\<u>\<b>\<j> y. rb y @action to T)
+\<Longrightarrow> x \<Ztypecolon> If C A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> If C Ua Ub \<s>\<u>\<b>\<j> y. (if C then ra y else rb y) @action to T\<close>
+  unfolding Action_Tag_def Premise_def
+  by (cases C; simp)
+
+lemma [\<phi>reason 1000 for \<open>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
+  \<open> () \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to T
+\<Longrightarrow> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to T \<close>
+  by simp
+
+
+subsubsection \<open>No Change\<close>
+
+consts \<A>NO_CHANGE :: \<open>('a,'b) \<phi>\<close> ("\<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>")
+
+lemma [\<phi>reason 1000]:
+  \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e> \<close>
   unfolding Action_Tag_def by simp
 
 
@@ -777,6 +808,11 @@ lemma \<A>_strip_traverse:
 lemma \<A>_pattern_meet:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to A'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> pat \<Rightarrow> A) \<close>
+  unfolding Action_Tag_def .
+
+lemma \<A>_pattern_not_meet:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to \<A> \<close>
   unfolding Action_Tag_def .
 
 lemma \<A>_pattern_meet_this:
@@ -819,14 +855,22 @@ lemma \<A>_pattern_meet_that:
       fun meet_pattern' A i th =
         meet_pattern A (i,len) (if is_traverse then @{thm' \<A>_strip_traverse} RS th else th)
 
+      fun bad_pattern pat = error ("Bad Pattern: " ^ Syntax.string_of_term ctxt pat)
       fun cannot_shortcut (Abs (_, _, X)) = cannot_shortcut X
         | cannot_shortcut tm =
            (case Term.strip_comb tm of (Const (h, _), args) => (
-                  exists (fn (pat, _) =>
-                    case Term.head_of pat
-                      of Const(N, _) => if N = h then Pattern.matches thy (pat, tm) else false
-                       | _ => true) pats)
-                  orelse exists cannot_shortcut args
+                    exists (fn (pat, _) =>
+                      case Term.head_of pat
+                        of Const(N, _) => if N = h then Pattern.matches thy (pat, tm) else false
+                         | Free _ => false
+                         | _ => bad_pattern pat) pats)
+                    orelse exists cannot_shortcut args
+               | (Free (N, _), args) => (
+                    exists (fn (pat, _) =>
+                      case Term.head_of pat
+                        of Const(N, _) => false
+                         | Free(N', _) => if N = N' then Pattern.matches thy (pat, tm) else false
+                         | _ => bad_pattern pat) pats)
                | (_, args) => exists cannot_shortcut args)
 
    in case get_index (fn (pat,residue) =>
@@ -834,7 +878,9 @@ lemma \<A>_pattern_meet_that:
          in SOME (Envir.subst_term subst residue)
         end handle Pattern.MATCH => NONE) pats
    of NONE => if cannot_shortcut T then NONE
-              else SOME ((ctxt, @{thm' ToA_trivial} RS sequent), Seq.empty)
+              else (SOME ((ctxt, @{thm' ToA_trivial} RS sequent), Seq.empty)
+                 handle THM _ =>
+                    SOME ((ctxt, @{thm' \<A>_pattern_not_meet} RS sequent), Seq.empty))
     | SOME (i, A) => SOME ((ctxt, meet_pattern' (Thm.cterm_of ctxt A) i sequent), Seq.empty)
   end
 )\<close>
@@ -1290,6 +1336,6 @@ lemma [\<phi>reason 1]:
   by simp
 
 
-hide_fact ToA_trivial
+(*TODO: hide_fact ToA_trivial *)
 
 end

@@ -69,7 +69,7 @@ fun instantiate_the_var var ctxt sequent0 =
       val [y] = Name.invent_names (Variable.names_of ctxt) "x" [y_ty]
              |> map Free
 
-      fun normalize_Ex ctxt ctm =
+      (*fun normalize_Ex ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
               (Conv.arg1_conv (normalize_Ex ctxt) then_conv
@@ -99,10 +99,10 @@ fun instantiate_the_var var ctxt sequent0 =
                        then_conv norm_Ex ctxt) ctm
                   end
            | _ => Conv.all_conv ctm
-
-      val sequent = Conv.gconv_rule (HOLogic.Trueprop_conv (PLPR_Syntax.premise_tag_conv (
+*)
+      val sequent = sequent0 (*Conv.gconv_rule (HOLogic.Trueprop_conv (PLPR_Syntax.premise_tag_conv (
               normalize_Ex ctxt
-            ))) 1 sequent0
+            ))) 1 sequent0*)
       val oblg = case Thm.prop_of sequent
                    of \<^Const>\<open>Pure.imp\<close> $ (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_COLLECT\<close> $ X)) $ _
                         => X
@@ -172,12 +172,16 @@ fun instantiate_the_var var ctxt sequent0 =
         | inst qp (\<^Const>\<open>special_Ex _\<close> $ Abs (_, ty, X))
             = if ty = y_ty
               then inst_body ([],[]) qp (Term.subst_bounds ([y], X))
-              else error "BUG rmAIEDSmSJ6Y7ZuviDwskw"
+              else raise Automation_Fail ("patch_for_Ex.ML fails to normalize the \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R")
         | inst qp P
             = ([], [mk_conj_inst [P] qp])
 
       val inst = final_assemble_dc (inst ([],[]) oblg)
               |> Thm.cterm_of ctxt
+          handle Automation_Fail msg => raise Automation_Fail (
+                  "Fail to infer the transformation relation from the obtained proof obligation:\n" ^
+                  Syntax.string_of_term ctxt oblg ^
+                  (if msg = "" then "" else "\n" ^ msg))
    in Thm.instantiate (TVars.empty, Vars.make [(var, inst)]) sequent
   end
 
@@ -213,6 +217,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                   | extract (Const(\<^const_name>\<open>All\<close>, _) $ X) = extract X
                   | extract (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = extract X
                   | extract (Abs (_, _, X)) = extract X
+                  | extract (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extract X
                   | extract (\<^Const>\<open>Action_Tag\<close>
                               $ (\<^Const>\<open>Transformation _\<close>
                                   $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T)
@@ -251,10 +256,13 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                 Conv.all_conv)
             ) ctxt)) ctxt)
          |> (fn rule => (rule RS' (ctxt, @{thm' spec})))
+
+      val ctxt0' = if is_some hint0 then ctxt0
+                   else Config.put Phi_Reasoners.existential_obligation 2 ctxt0
       val rules = mk_rule_by_guess_or_hint ("Open_Abstraction_Full", unify_hint, extract_oprs_from_hint, guess_property,
                                             @{thm' \<phi>TA_TrRA_rule}, [0],
                                             SOME ind_conv, reasoning, solver, simp)
-                                           phi0 hint0 ctxt0
+                                           phi0 hint0 ctxt0'
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> Phi_Help.generic_theory_mapping (fn m =>

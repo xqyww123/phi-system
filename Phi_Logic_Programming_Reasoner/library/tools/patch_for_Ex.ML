@@ -329,7 +329,7 @@ fun gen_move_Ex_inside_All (Ex_name, rule) ctxt ctm =
 
    in (Phi_Conv.quant_conv Ex_name move_All_top ctxt then_conv
        the_move) ctm
-   handle Found _   => (warning "BUG RFVgduihRHq72ZiP2/9COg"; Conv.all_conv ctm)
+   handle Found _   => raise CTERM ("move_Ex_inside_All: fail to move the universal quantification to the top", [ctm])
         | Not_Occur => raise CTERM ("move_Ex_inside_All: the quantified variable does not occur at all", [ctm])
         | CTERM (msg, ctm) => (warning ("gen_move_Ex_inside_All fails\n" ^ msg);
                                raise CTERM (msg, ctm))
@@ -369,7 +369,7 @@ end
 val move_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_Ex_downto_Disj
 val move_sp_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_sp_Ex_downto_Disj
 
-fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, rule_mv_imp, rule_elim_trivial) C =
+fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, mv_irrelavent_conj, rule_mv_imp, rule_elim_trivial) C =
   let fun bound_occurs i (Bound j) = i = j
         | bound_occurs i (Abs (_,_,X)) = bound_occurs (i+1) X
         | bound_occurs i (A $ B) = bound_occurs i A orelse bound_occurs i B
@@ -393,19 +393,67 @@ fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, rule_mv_imp, rule_elim_trivial
                    else_conv C ctxt) ctm
         )
 
-      fun conv ctxt = open_ex (fn tm => fn ctm =>
+      datatype part = All | No | Mix of thm
+      (*given a conj-tree containing some leaves that are ex-quantified or not,
+        this process sorts the tree such that all the quantified leaves are in the right child of the root
+        and all the not-quantified are in the left child.
+        All means the current subtree's leaves are all quantified,
+        No means none of leaves are,
+        Mix means all quantified leaves are in the right child and all that not are in the left,
+            after the conversion given as the thm*)
+      fun partition_conj var ctm =
+        case Thm.term_of ctm
+          of Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+               (case (partition_conj var (Thm.dest_arg1 ctm), partition_conj var (Thm.dest_arg ctm))
+                  of (No, No) =>      No
+                   | (No, All) =>     Mix (Conv.all_conv ctm)
+                   | (No, Mix th) =>  Mix ((Conv.arg_conv (K th) then_conv
+                                            Conv.rewr_conv @{thm' HOL.conj_assoc[folded atomize_eq, symmetric]}) ctm)
+                   | (All, No) =>     Mix (Conv.rewr_conv @{thm' HOL.conj_commute[folded atomize_eq]} ctm)
+                   | (All, All) =>    All
+                   | (All, Mix th) => Mix ((Conv.arg_conv (K th) then_conv
+                                           Conv.rewr_conv @{thm' HOL.conj_left_commute[folded atomize_eq]}) ctm)
+                   | (Mix tha, No) => Mix ((Conv.arg1_conv (K tha) then_conv
+                                            Conv.rewr_conv @{thm' partition_conj_MN}) ctm)
+                   | (Mix tha, All) => Mix ((Conv.arg_conv (K tha) then_conv
+                                             Conv.rewr_conv @{thm' HOL.conj_assoc[folded atomize_eq]}) ctm)
+                   | (Mix tha, Mix thb) => Mix ((Conv.arg1_conv (K tha) then_conv
+                                                 Conv.arg_conv (K thb) then_conv
+                                                 Conv.rewr_conv @{thm' partition_conj_MM}) ctm))
+          | X => if exists_subterm (fn Free (N',_) => N' = var | _ => false) X
+                 then All
+                 else No
+
+      fun partition_zip_conj C ctxt ctm =
+        let val partition = Unsynchronized.ref true
+         in (Phi_Conv.quant_conv ex_name (fn (cvar,_) => fn ctm =>
+              let val Free (N, _) = Thm.term_of cvar
+               in case partition_conj N ctm
+                    of All => (partition := false; zip_conjs ctm)
+                     | No  => error "BUG: trivial ex should already be trimmed"
+                     | Mix th => (K th then_conv
+                                  Conv.arg_conv (Conv.try_conv zip_conjs_recursively)) ctm
+              end
+          ) ctxt then_conv
+         (fn ctm =>
+            if !partition
+            then (Conv.rewr_conv mv_irrelavent_conj then_conv
+                  Conv.arg_conv C) ctm
+            else  C ctm)) ctm
+        end
+
+      fun conv ctxt ctm = open_ex (fn tm => fn ctm =>
         case tm
           of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => mv_disj (conv ctxt) ctm 
            | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-              ((Phi_Conv.quant_conv ex_name (K zip_conjs) ctxt then_conv
-                conv ctxt) ctm
-                handle CTERM _ => C ctxt ctm)
+              (partition_zip_conj (conv ctxt) ctxt ctm
+               handle CTERM _ => C ctxt ctm)
            | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
              ((Conv.rewr_conv rule_mv_imp then_conv
                Conv.arg_conv (conv ctxt)) ctm
               handle CTERM _ => C ctxt ctm )
            | _ => C ctxt ctm
-        )
+        ) ctm
         
    in conv0 (fn ctxt =>
       Phi_Conv.quant_conv ex_name (fn (_, ctxt) =>
@@ -415,6 +463,7 @@ fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, rule_mv_imp, rule_elim_trivial
 
 val move_Ex_inside = gen_move_Ex_inside
       (\<^const_name>\<open>Ex\<close>, move_Ex_inside_All, move_Ex_downto_Disj_recursive,
+       @{thm' HOL.ex_simps(2)[folded atomize_eq]},
        @{thm' HOL.ex_simps(6)[folded atomize_eq]},
        @{thm' HOL.simp_thms(36)[folded atomize_eq]})
 
@@ -422,6 +471,7 @@ val move_sp_Ex_inside = gen_move_Ex_inside
       (\<^const_name>\<open>special_Ex\<close>,
        move_sp_Ex_inside_All,
        move_sp_Ex_downto_Disj_recursive,
+       @{thm' HOL.ex_simps(2)[folded special_Ex_def atomize_eq]},
        @{thm' HOL.ex_simps(6)[folded special_Ex_def atomize_eq]},
        @{thm' HOL.simp_thms(36)[folded special_Ex_def atomize_eq]})
 
