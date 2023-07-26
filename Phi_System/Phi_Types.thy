@@ -655,16 +655,15 @@ subsubsection \<open>By Key\<close>
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 3]]
-         
+declare [[\<phi>trace_reasoning = 4]]
+            
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-      deriving Transformation_Functor
-(*Basic
+  deriving (*Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and Separation_Homo\<^sub>I*)
+       and*) Separation_Homo\<^sub>I
 
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>

@@ -50,7 +50,7 @@ in fn thy => thy
 end\<close>
 
 ML_file \<open>library/tools/ml_thms.ML\<close>
-ML_file \<open>library/pattern.ML\<close>
+ML_file_debug \<open>library/pattern.ML\<close>
 ML_file_debug \<open>library/helpers.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>

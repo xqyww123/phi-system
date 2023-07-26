@@ -379,12 +379,24 @@ lemma [\<phi>reason 1050]:
   \<comment> \<open>Never bind technical items\<close>
   unfolding Action_Tag_def Technical_def by simp
 
+lemma [\<phi>reason 1050]:
+  \<open> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @action \<A>_every_item' A \<close>
+  unfolding Action_Tag_def
+  by simp
+
 lemma [\<phi>reason 1020]:
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
 \<Longrightarrow> R * (TECHNICAL X) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * (TECHNICAL X) \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
   \<comment> \<open>Never bind technical items\<close>
   unfolding Action_Tag_def
   using implies_right_prod .
+
+lemma [\<phi>reason 1020]:
+  \<open> R * X1 * X2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
+\<Longrightarrow> R * (X1 * X2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A \<close>
+  for R :: \<open>'a::sep_semigroup set\<close>
+  unfolding Action_Tag_def
+  by (simp add: mult.assoc)
 
 lemma [\<phi>reason 1010]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A

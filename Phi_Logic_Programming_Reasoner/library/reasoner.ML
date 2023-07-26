@@ -402,7 +402,7 @@ type guard = context_state -> bool
 (* Main Reasoning Function *)
 
 fun debug ctxt (c,_,_,({name,...} : reasoner)) =
-  tracing ("reasoning candicates (" ^ string_of_int c ^ "):\n"
+  tracing ("candicate reasoners (" ^ string_of_int c ^ "):\n"
               ^ Syntax.string_of_term (Proof_Context.set_mode Proof_Context.mode_abbrev ctxt) name)
 
 fun is_var (A $ _) = is_var A
@@ -532,6 +532,7 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
        gen_reason N trace limit iter true tactics L)
   | gen_reason N trace limit iter backtracking tactics (((score,pos,mode,seq)::L')::L) =
   let
+    val _ = if score = 19171 then () else ()
     val _ = if iter > limit
             then error "The reasoning reaches the limit of the number of reasoning steps.\n\
                        \Perhaps an infinite loop is encountered.\nOtherwise, \

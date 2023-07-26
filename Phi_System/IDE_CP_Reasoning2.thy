@@ -1321,6 +1321,8 @@ lemma [\<phi>reason default 2]:
   unfolding \<phi>None_itself_is_one Action_Tag_def Try_def
   by (cases x; simp add: mult.commute \<phi>Prod_expn')
 
+declare [[ML_print_depth = 1000]]
+ 
 lemma [\<phi>reason default 1]: \<comment> \<open>Structural_Extract_fail\<close>
   \<open> x \<Ztypecolon> X \<^emph> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, fst x) \<Ztypecolon> Y \<^emph> X @action \<A>SE True \<close>
   for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
