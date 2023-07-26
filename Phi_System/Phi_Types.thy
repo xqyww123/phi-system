@@ -42,14 +42,6 @@ thm \<phi>Fun.elim_reasoning
 subsubsection \<open>Algebraic Properties\<close>
 
 lemma [\<phi>reason add]:
-  \<open> homo_sep_disj_semi f
-\<Longrightarrow> homo_sep_mult f
-\<Longrightarrow> Object_Sep_Homo\<^sub>I (\<phi>Fun f) UNIV \<close>
-  unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
-  apply (clarsimp simp add: homo_sep_disj_semi_def homo_sep_mult_def)
-  
-
-lemma [\<phi>reason add]:
   \<open> homo_sep_disj_total f
 \<Longrightarrow> homo_sep_mult f
 \<Longrightarrow> Object_Sep_Homo\<^sub>I (\<phi>Fun f) UNIV \<close>
@@ -664,7 +656,7 @@ ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 3]]
-
+    
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>

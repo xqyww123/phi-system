@@ -144,6 +144,10 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 
 subsection \<open>General Syntax\<close>
 
+subsubsection \<open>Technical Tag\<close>
+
+text \<open>A general syntactic tag used for hiding internal things.\<close>
+
 definition Technical :: \<open>'a::{} \<Rightarrow> 'a\<close> ("TECHNICAL _" [17] 16) where \<open>Technical x \<equiv> x\<close>
 
 lemma Technical_I : \<open>P \<Longrightarrow> Technical P\<close> unfolding Technical_def .
@@ -176,6 +180,18 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 lemma [\<phi>inhabitance_rule 1000]:
   \<open> Inhabited X \<longrightarrow> C @action \<A>EIF
 \<Longrightarrow> Inhabited (TECHNICAL X) \<longrightarrow> C @action \<A>EIF \<close>
+  unfolding Technical_def .
+
+paragraph \<open>Reasoning Rules\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> Identity_Element\<^sub>I X P
+\<Longrightarrow> Identity_Element\<^sub>I (TECHNICAL X) P\<close>
+  unfolding Technical_def .
+
+lemma [\<phi>reason 1200]:
+  \<open> Identity_Element\<^sub>E X
+\<Longrightarrow> Identity_Element\<^sub>E (TECHNICAL X) \<close>
   unfolding Technical_def .
 
 

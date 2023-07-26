@@ -92,9 +92,9 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M) = [D,R,M]
         | extract_oprs_from_hint _ = []
 
-      val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr_IH})),
+      val ind_conv = default_ind_conv (K (K (fn ctm => Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C} ctm)),
                         fn ctxt => fn phi =>
-                          Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C} then_conv
+                          (fn ctm => Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C} ctm) then_conv
                             Conv.implies_concl_conv (Conv.implies_concl_conv (
                                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                               Phi_Syntax.transformation_conv

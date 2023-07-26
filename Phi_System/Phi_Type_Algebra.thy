@@ -1635,8 +1635,9 @@ ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
   requires Transformation_Functor
     = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor\<close>
 
+(* TODO:
 hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr_IH \<phi>TA_TF_rewr_C \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
-
+*)
 
 subsubsection \<open>Separation Homo\<close>
 

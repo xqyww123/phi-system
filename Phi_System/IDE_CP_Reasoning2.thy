@@ -144,46 +144,6 @@ lemma apply_extract_a_value:
 
 
 
-(*
-subsubsection \<open>General Reasoning by Algebraic Properties\<close>
-
-lemma Identity_Element\<^sub>I_general_rule:
-  \<open> Identity_Element\<^sub>I (x \<Ztypecolon> T) P
-\<Longrightarrow> Semi_Unit_Functor F
-\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> F T) P\<close>
-  unfolding Semi_Unit_Functor_def Identity_Element\<^sub>I_def Unit_Homo_def
-  by clarsimp
-
-\<phi>reasoner_ML "Identity_Element\<^sub>I_general_rule" 50 (\<open>Identity_Element\<^sub>I (_ \<Ztypecolon> _)\<close>) = \<open>
-fn (ctxt,sequent) => Seq.make (fn () =>
-  let val _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ ( _ (*\<phi>Type*) $ _ $ T)) = Thm.major_prem_of sequent
-   in case Phi_Type_Algebra.detect_type_operator 1 ctxt T
-        of SOME [Ft,Tt] => let
-            val rule = Drule.infer_instantiate ctxt
-                          [(("F",0), Thm.cterm_of ctxt Ft), (("T",0), Thm.cterm_of ctxt Tt)]
-                          @{thm "Identity_Element\<^sub>I_general_rule"}
-             in SOME ((ctxt, rule RS sequent), Seq.empty) end
-         | _ => NONE
-  end)
-\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> Unit_Homo T
-\<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T)\<close>
-  unfolding Unit_Homo_def Identity_Element\<^sub>I_def \<r>Guard_def Premise_def
-  by clarsimp
-
-lemma [\<phi>reason 1200]:
-  \<open> Unit_Homo T
-\<Longrightarrow> Identity_Element\<^sub>I (() \<Ztypecolon> T)\<close>
-  unfolding Unit_Homo_def Identity_Element\<^sub>I_def \<r>Guard_def Premise_def
-  by clarsimp
-*)
-
-lemma [\<phi>reason 1200]:
-  \<open> Identity_Element\<^sub>I X P
-\<Longrightarrow> Identity_Element\<^sub>I (TECHNICAL X) P\<close>
-  unfolding Technical_def .
 
 
 section \<open>\<exists>-free ToA Reasoning with Normalization\<close>
@@ -1143,6 +1103,15 @@ lemma [\<phi>reason 2000]:
   unfolding mult.assoc[symmetric] .
 
 
+subsection \<open>Entry Point of Next Procedures\<close>
+
+text \<open>The entry point of Structural Extraction is given in the section for SE.
+      It covers all the form of \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T\<close> and \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>\<close>
+
+lemma [\<phi>reason !50]:
+  \<open> Identity_Element\<^sub>I X P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P \<close>
+  unfolding Identity_Element\<^sub>I_def .
 
 (* subsection \<open>Structural Pairs\<close> (*depreciated*)
 

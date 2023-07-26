@@ -312,7 +312,7 @@ lemma assertion_eq_intro:
 
 subsubsection \<open>Reasoning Setup - II\<close>
 
-lemma [\<phi>reason 1]:
+lemma [\<phi>reason default 1]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close>
   unfolding Premise_def by blast
