@@ -239,7 +239,8 @@ fun obligation_intro_Ex_conv conv_schematic ctxt thm =
                   if mode
                   then Phi_Conv.leading_antecedent_conv (
                       PLPR_Syntax.premise_tag_conv (
-                        (fn ctm => Phi_Conv.move_sp_Ex_inside (K Conv.all_conv) ctxt ctm)
+                        (fn ctm => Phi_Conv.move_sp_Ex_inside (K Conv.all_conv) ctxt ctm
+                                |> @{print})
                         (*mv_Ex_All (fn _ => mv_Ex_Disj Conv.all_conv) ctxt*) )
                     )
                   else Conv.all_conv)

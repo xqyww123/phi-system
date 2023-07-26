@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-    
+                  
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -554,10 +554,10 @@ subsection \<open>Empty Type of Free Objects\<close>
 declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>None_freeobj :: \<open>('v::one, 'x) \<phi>\<close> ("\<circle>\<^sub>\<x>")
-  where \<open> x \<Ztypecolon> \<circle>\<^sub>\<x> \<equiv> 1\<close>
+  where \<open> x \<Ztypecolon> \<circle>\<^sub>\<x> \<equiv> 1 \<close>
   deriving Basic
-       and \<open>Identity_Element\<^sub>I (x \<Ztypecolon> \<circle>\<^sub>\<x>) True \<close>
-       and \<open>Identity_Element\<^sub>E (x \<Ztypecolon> \<circle>\<^sub>\<x>) \<close>
+       and \<open> Identity_Element\<^sub>I (x \<Ztypecolon> \<circle>\<^sub>\<x>) True \<close>
+       and \<open> Identity_Element\<^sub>E (x \<Ztypecolon> \<circle>\<^sub>\<x>) \<close>
        and Open_Abstraction_Full
 
 declare \<phi>None_freeobj.intro_reasoning[\<phi>reason 1000]
@@ -656,7 +656,7 @@ ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 3]]
-    
+         
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>

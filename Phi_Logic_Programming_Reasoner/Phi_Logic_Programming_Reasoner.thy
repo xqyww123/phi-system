@@ -842,6 +842,11 @@ lemma partition_conj_MN:
   \<open>(A \<and> B) \<and> C \<equiv> (A \<and> C) \<and> B\<close>
   unfolding atomize_eq by blast
 
+lemma sp_ex_ex_comm:
+  \<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R x. \<exists>y. P x y \<equiv> \<exists>y. \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R x. P x y\<close>
+  unfolding atomize_eq
+  by simp blast
+
 ML_file "library/tools/patch_for_Ex.ML"
 
 

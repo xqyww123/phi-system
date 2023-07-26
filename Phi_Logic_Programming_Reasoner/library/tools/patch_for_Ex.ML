@@ -83,6 +83,109 @@ fun zip_conjs_recursively ctm =
   (zip_conjs then_conv HOLogic.imp_conv Conv.all_conv zip_conjs_recursively) ctm
   handle CTERM _ => Conv.all_conv ctm
 
+val zip_conjs_recursively1 = zip_conjs then_conv zip_conjs_recursively
+
+fun bound_occurs i (Bound j) = i = j
+  | bound_occurs i (Abs (_,_,X)) = bound_occurs (i+1) X
+  | bound_occurs i (A $ B) = bound_occurs i A orelse bound_occurs i B
+  | bound_occurs _ _ = false
+
+(*mv_over_conj: (Qx. A \<and> B x) \<equiv> A \<and> (Qx. B)
+  rm_trivial: (Qx. A) \<equiv> A *)
+fun sink_quantifier_over_conjs (quant_name, mv_over_conj, rm_trivial, swap_rule) =
+  let datatype part = All | No | Mix of thm
+      (*given a conj-tree containing some leaves that are ex-quantified or not,
+        this process sorts the tree such that all the quantified leaves are in the right child of the root
+        and all the not-quantified are in the left child.
+        All means the current subtree's leaves are all quantified,
+        No means none of leaves are,
+        Mix means all quantified leaves are in the right child and all that not are in the left,
+            after the conversion given as the thm*)
+      fun partition_conj var ctm =
+        case Thm.term_of ctm
+          of Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+               (case (partition_conj var (Thm.dest_arg1 ctm), partition_conj var (Thm.dest_arg ctm))
+                  of (No, No) =>      No
+                   | (No, All) =>     Mix (Conv.all_conv ctm)
+                   | (No, Mix th) =>  Mix ((Conv.arg_conv (K th) then_conv
+                                            Conv.rewr_conv @{thm' HOL.conj_assoc[folded atomize_eq, symmetric]}) ctm)
+                   | (All, No) =>     Mix (Conv.rewr_conv @{thm' HOL.conj_commute[folded atomize_eq]} ctm)
+                   | (All, All) =>    All
+                   | (All, Mix th) => Mix ((Conv.arg_conv (K th) then_conv
+                                           Conv.rewr_conv @{thm' HOL.conj_left_commute[folded atomize_eq]}) ctm)
+                   | (Mix tha, No) => Mix ((Conv.arg1_conv (K tha) then_conv
+                                            Conv.rewr_conv @{thm' partition_conj_MN}) ctm)
+                   | (Mix tha, All) => Mix ((Conv.arg1_conv (K tha) then_conv
+                                             Conv.rewr_conv @{thm' HOL.conj_assoc[folded atomize_eq]}) ctm)
+                   | (Mix tha, Mix thb) => Mix ((Conv.arg1_conv (K tha) then_conv
+                                                 Conv.arg_conv (K thb) then_conv
+                                                 Conv.rewr_conv @{thm' partition_conj_MM}) ctm))
+          | X => if exists_subterm (fn Free (N',_) => N' = var | _ => false) X
+                 then All
+                 else No
+
+      fun quick_chk1 var (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
+           (case (quick_chk1 var A, quick_chk1 var B)
+              of (All, All) => All
+               | (No, No) => No
+               | _ => Mix Drule.dummy_thm)
+        | quick_chk1 var X = if bound_occurs var X
+                             then All
+                             else No
+
+      fun quick_chk lv (Y as (Const(N, _) $ X)) =
+            if N = quant_name then quick_chk lv X else quick_chk1 lv Y
+        | quick_chk lv (Abs (_, _, X)) = quick_chk (lv+1) X
+        | quick_chk lv X = quick_chk1 lv X
+
+      fun quick_chk0 ctm =
+        case Thm.term_of ctm
+          of Const(N, _) $ X =>
+              if N = quant_name then quick_chk ~1 X else raise CTERM ("sink_quantifier_over_conjs", [ctm])
+           | _ => raise CTERM ("sink_quantifier_over_conjs", [ctm])
+
+      fun open_quant C ctm =
+        case Thm.term_of ctm
+          of Const(N, _) $ X =>
+               if N = quant_name
+               then (case X of Abs (_, _, X) => C X ctm
+                             | _ => (Conv.arg_conv Phi_Conv.inverse_eta_conv then_conv
+                                     open_quant C) ctm )
+               else raise CTERM ("sink_quantifier_over_conjs", [ctm])
+           | _ =>   raise CTERM ("sink_quantifier_over_conjs", [ctm])
+
+   in fn ctxt => fn ctm => (
+   case quick_chk0 ctm
+     of All => raise CTERM ("sink_quantifier_over_conjs: unfeasible", [ctm])
+      | No  => Conv.rewr_conv rm_trivial ctm
+      | _ => let
+        fun conv ctxt ctm = open_quant (fn tm => fn ctm =>
+          case tm
+            of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+                 (Phi_Conv.quant_conv quant_name (fn (cvar, ctxt) => fn ctm =>
+                    let val Free (N, _) = Thm.term_of cvar
+                     in case partition_conj N ctm
+                          of Mix th => th
+                           | _ => error "BUG sWz5mwYCSD2Wd08rPgFKEQ"
+                    end
+                  ) ctxt
+                  then_conv Conv.rewr_conv mv_over_conj) ctm
+             | Const(N,_) $ _ =>
+                  if N = quant_name
+                  then (Conv.rewr_conv swap_rule then_conv
+                        Phi_Conv.quant_conv quant_name (conv o snd) ctxt) ctm
+                  else raise CTERM ("sink_quantifier_over_conjs: no conj", [ctm])
+             | _ => raise CTERM ("sink_quantifier_over_conjs: no conj", [ctm])
+          ) ctm
+        in conv ctxt ctm
+       end)
+  end
+
+val sink_All_over_conjs = sink_quantifier_over_conjs
+        (\<^const_name>\<open>HOL.All\<close>, @{thm' HOL.all_simps(2)[folded atomize_eq]},
+                              @{thm' HOL.simp_thms(35)[folded atomize_eq]},
+                              @{thm' HOL.all_comm[folded atomize_eq]})
+
 (*
 fun zip_Alls ctm =
   case Thm.term_of ctm
@@ -269,11 +372,19 @@ fun gen_move_Ex_inside_All (Ex_name, rule) ctxt ctm =
       fun move_All (lev,bounds) ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>All\<close>, _) $ _ =>
-               ((HOLogic.All_conv (fn (cv, ctxt) =>
-                    move_All (lev+1, Term.term_name (Thm.term_of cv) :: bounds) ctxt
-                 ) ctxt then_conv
-                 Conv.rewr_conv @{thm' all_comm[folded atomize_eq]}) ctm
-                handle Found i => if i = lev+1 then Conv.all_conv ctm else raise Found i )
+               (*((HOLogic.All_conv (fn (cv, ctxt) =>
+                            move_All (lev+1, Term.term_name (Thm.term_of cv) :: bounds) ctxt) ctxt
+                         then_conv Conv.rewr_conv @{thm' all_comm[folded atomize_eq]}) ctm
+                        handle Found i => if i = lev+1 then Conv.all_conv ctm else raise Found i)*)
+
+                (case try (sink_All_over_conjs ctxt) ctm
+                   of SOME th => (K th then_conv move_All (lev,bounds) ctxt) ctm
+                    | NONE => (
+                        (HOLogic.All_conv (fn (cv, ctxt) =>
+                            move_All (lev+1, Term.term_name (Thm.term_of cv) :: bounds) ctxt) ctxt
+                         then_conv Conv.rewr_conv @{thm' all_comm[folded atomize_eq]}) ctm
+                        handle Found i => if i = lev+1 then Conv.all_conv ctm else raise Found i))
+                
            | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ X $ Y =>
                 (case find_All (lev,bounds) X
                    of RFound i => (
@@ -369,103 +480,70 @@ end
 val move_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_Ex_downto_Disj
 val move_sp_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_sp_Ex_downto_Disj
 
-fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, mv_irrelavent_conj, rule_mv_imp, rule_elim_trivial) C =
-  let fun bound_occurs i (Bound j) = i = j
-        | bound_occurs i (Abs (_,_,X)) = bound_occurs (i+1) X
-        | bound_occurs i (A $ B) = bound_occurs i A orelse bound_occurs i B
-        | bound_occurs _ _ = false
 
-      fun open_ex C ctm =
+
+
+fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, mv_over_conj, rule_mv_imp, rm_trivial, swap_quant,
+                        swap_ex, swap_sp_ex) C ctxt =
+  let fun open_ex C ctm =
         case Thm.term_of ctm
           of Const(N, _) $ X =>
                if N = ex_name
-               then (case X of Abs (_, _, X) => if bound_occurs 0 X then C X ctm
-                                                else Conv.rewr_conv rule_elim_trivial ctm
+               then (case X of Abs (_, _, X) => C X ctm
                              | _ => (Conv.arg_conv Phi_Conv.inverse_eta_conv then_conv
                                      open_ex C) ctm )
                else raise CTERM ("Phi_Conv.move_Ex_inside_exhaustively", [ctm])
            | _ =>   raise CTERM ("Phi_Conv.move_Ex_inside_exhaustively", [ctm])
 
-      fun conv0 C ctxt = open_ex (fn tm => fn ctm =>
-        case tm
-          of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => mv_disj (conv0 C ctxt) ctm 
-           | _ => (mv_all ctxt then_conv hol_all_conv (conv0 C o snd) ctxt
-                   else_conv C ctxt) ctm
-        )
-
-      datatype part = All | No | Mix of thm
-      (*given a conj-tree containing some leaves that are ex-quantified or not,
-        this process sorts the tree such that all the quantified leaves are in the right child of the root
-        and all the not-quantified are in the left child.
-        All means the current subtree's leaves are all quantified,
-        No means none of leaves are,
-        Mix means all quantified leaves are in the right child and all that not are in the left,
-            after the conversion given as the thm*)
-      fun partition_conj var ctm =
-        case Thm.term_of ctm
-          of Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-               (case (partition_conj var (Thm.dest_arg1 ctm), partition_conj var (Thm.dest_arg ctm))
-                  of (No, No) =>      No
-                   | (No, All) =>     Mix (Conv.all_conv ctm)
-                   | (No, Mix th) =>  Mix ((Conv.arg_conv (K th) then_conv
-                                            Conv.rewr_conv @{thm' HOL.conj_assoc[folded atomize_eq, symmetric]}) ctm)
-                   | (All, No) =>     Mix (Conv.rewr_conv @{thm' HOL.conj_commute[folded atomize_eq]} ctm)
-                   | (All, All) =>    All
-                   | (All, Mix th) => Mix ((Conv.arg_conv (K th) then_conv
-                                           Conv.rewr_conv @{thm' HOL.conj_left_commute[folded atomize_eq]}) ctm)
-                   | (Mix tha, No) => Mix ((Conv.arg1_conv (K tha) then_conv
-                                            Conv.rewr_conv @{thm' partition_conj_MN}) ctm)
-                   | (Mix tha, All) => Mix ((Conv.arg_conv (K tha) then_conv
-                                             Conv.rewr_conv @{thm' HOL.conj_assoc[folded atomize_eq]}) ctm)
-                   | (Mix tha, Mix thb) => Mix ((Conv.arg1_conv (K tha) then_conv
-                                                 Conv.arg_conv (K thb) then_conv
-                                                 Conv.rewr_conv @{thm' partition_conj_MM}) ctm))
-          | X => if exists_subterm (fn Free (N',_) => N' = var | _ => false) X
-                 then All
-                 else No
-
-      fun partition_zip_conj C ctxt ctm =
-        let val partition = Unsynchronized.ref true
-         in (Phi_Conv.quant_conv ex_name (fn (cvar,_) => fn ctm =>
-              let val Free (N, _) = Thm.term_of cvar
-               in case partition_conj N ctm
-                    of All => (partition := false; zip_conjs ctm)
-                     | No  => error "BUG: trivial ex should already be trimmed"
-                     | Mix th => (K th then_conv
-                                  Conv.arg_conv (Conv.try_conv zip_conjs_recursively)) ctm
-              end
-          ) ctxt then_conv
-         (fn ctm =>
-            if !partition
-            then (Conv.rewr_conv mv_irrelavent_conj then_conv
-                  Conv.arg_conv C) ctm
-            else  C ctm)) ctm
-        end
+      fun trivial_case_chk C =
+        open_ex (fn tm => if bound_occurs 0 tm then C else Conv.rewr_conv rm_trivial)
 
       fun conv ctxt ctm = open_ex (fn tm => fn ctm =>
         case tm
-          of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => mv_disj (conv ctxt) ctm 
+          of Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
+              (Phi_Conv.quant_conv ex_name (sink_All_over_conjs o snd) ctxt
+               then_conv conv ctxt) ctm
+           | Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => mv_disj (conv ctxt) ctm 
            | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-              (partition_zip_conj (conv ctxt) ctxt ctm
-               handle CTERM _ => C ctxt ctm)
+              if bound_occurs 0 tm
+              then (case try (sink_quantifier_over_conjs (ex_name, mv_over_conj, rm_trivial, swap_quant) ctxt) ctm
+                      of SOME th => (K th then_conv
+                                     Conv.arg_conv (
+                                       Phi_Conv.quant_conv ex_name (K zip_conjs_recursively) ctxt then_conv
+                                       conv ctxt)) ctm
+                       | NONE => (Phi_Conv.quant_conv ex_name (K zip_conjs_recursively1) ctxt then_conv
+                                  conv ctxt) ctm)
+              else Conv.rewr_conv rm_trivial ctm
            | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
-             ((Conv.rewr_conv rule_mv_imp then_conv
+              (Conv.rewr_conv rule_mv_imp then_conv
                Conv.arg_conv (conv ctxt)) ctm
-              handle CTERM _ => C ctxt ctm )
+           | Const(\<^const_name>\<open>HOL.Ex\<close>, _) $ _ =>
+              (Conv.rewr_conv swap_ex then_conv
+               Phi_Conv.quant_conv \<^const_name>\<open>HOL.Ex\<close> (conv o snd) ctxt) ctm
+           | Const(\<^const_name>\<open>special_Ex\<close>, _) $ _ =>
+              (Conv.rewr_conv swap_sp_ex then_conv
+               Phi_Conv.quant_conv \<^const_name>\<open>special_Ex\<close> (conv o snd) ctxt) ctm
            | _ => C ctxt ctm
         ) ctm
+        handle CTERM _ =>
+          (mv_all ctxt then_conv hol_all_conv (conv o snd) ctxt
+           else_conv C ctxt) ctm
         
-   in conv0 (fn ctxt =>
-      Phi_Conv.quant_conv ex_name (fn (_, ctxt) =>
-        Raw_Simplifier.rewrite ctxt true @{thms' HOL.simp_thms[folded atomize_eq]}) ctxt
-      then_conv conv ctxt)
+   in trivial_case_chk (
+        Phi_Conv.quant_conv ex_name (fn (_, ctxt) =>
+          Raw_Simplifier.rewrite ctxt true @{thms' HOL.simp_thms[folded atomize_eq]}) ctxt
+        then_conv conv ctxt
+      )
   end
 
 val move_Ex_inside = gen_move_Ex_inside
       (\<^const_name>\<open>Ex\<close>, move_Ex_inside_All, move_Ex_downto_Disj_recursive,
        @{thm' HOL.ex_simps(2)[folded atomize_eq]},
        @{thm' HOL.ex_simps(6)[folded atomize_eq]},
-       @{thm' HOL.simp_thms(36)[folded atomize_eq]})
+       @{thm' HOL.simp_thms(36)[folded atomize_eq]},
+       @{thm' HOL.ex_comm[folded atomize_eq]},
+       @{thm' HOL.ex_comm[folded atomize_eq]},
+       @{thm' sp_ex_ex_comm[symmetric]})
 
 val move_sp_Ex_inside = gen_move_Ex_inside
       (\<^const_name>\<open>special_Ex\<close>,
@@ -473,6 +551,9 @@ val move_sp_Ex_inside = gen_move_Ex_inside
        move_sp_Ex_downto_Disj_recursive,
        @{thm' HOL.ex_simps(2)[folded special_Ex_def atomize_eq]},
        @{thm' HOL.ex_simps(6)[folded special_Ex_def atomize_eq]},
-       @{thm' HOL.simp_thms(36)[folded special_Ex_def atomize_eq]})
+       @{thm' HOL.simp_thms(36)[folded special_Ex_def atomize_eq]},
+       @{thm' HOL.ex_comm[folded special_Ex_def atomize_eq]},
+       @{thm' sp_ex_ex_comm},
+       @{thm' HOL.ex_comm[folded special_Ex_def atomize_eq]})
 
 end
