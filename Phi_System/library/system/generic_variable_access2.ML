@@ -184,7 +184,9 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
       (*Now we change the goal of the programming context to add the newly generated items if any *)
       val (_,arg_spec,ret_spec,E_spec) = Phi_Syntax.dest_procedure_c proc_cterm
       val ctxt =
-        if is_Var (Thm.term_of ret_spec) andalso is_Var (Thm.term_of E_spec)
+        if is_Var (Term.head_of (Thm.term_of ret_spec)) andalso
+                   is_Var (Term.head_of (Thm.term_of E_spec))
+                   (*change log: I added Term.head_of. if no bug, remove this comment*)
         then ctxt
         else let  
           val goal = Phi_Envir.get_thesis ctxt
@@ -231,7 +233,8 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
 
       (*insert a normalization of the abnormal spec before any exporting*)
       val (_, ctxt) =
-        if is_Var (Thm.term_of E_spec) 
+        if is_Var (Term.head_of (Thm.term_of E_spec))
+                  (*change log: I added Term.head_of. if no bug, remove this comment*)
         then ([], ctxt)
         else Assumption.add_assms (fn _ => fn _ =>
                 ((fn sequentx =>

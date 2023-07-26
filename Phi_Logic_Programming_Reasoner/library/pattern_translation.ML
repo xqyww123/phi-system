@@ -1,3 +1,13 @@
+signature PATTERN_REWRITE_GLOBAL = sig
+
+val mk_pattern : term -> term
+val does_match_term : theory -> term * term -> bool
+
+val rewrites : theory -> term * term list -> term -> term list option
+val rewrite  : theory -> term * term -> term -> term option
+
+end
+
 signature PATTERN_REWRITE = sig
 
 datatype rewrite = By_Pattern of term list | By_ML of (Context.generic -> term -> term list option)
@@ -8,13 +18,44 @@ type rewr = int * term * Position.T * rewrite
 val add : rewr list -> Context.generic -> Context.generic
 val remove : rewr -> Context.generic -> Context.generic
 val translate : Context.generic -> term -> term list
-val translate_by_unify : Context.generic -> term -> term list
 val setup_attribute : binding -> string -> theory -> theory
 
 val list_rewrites : Context.generic -> rewr list
 
 val print_rewrite  : Proof.context -> rewr -> Pretty.T
 val print_rewrites : Context.generic -> unit
+
+end
+
+structure Pattern_Translation : PATTERN_REWRITE_GLOBAL = struct
+
+fun mk_pattern raw =
+  map_aterms (fn Var ((s,i),T) =>
+                    if i < 0
+                    then raise TERM ("Pattern_Translation: the pattern contains negative schematic index", [raw])
+                    else Var ((s, if String.isPrefix "var_" s orelse s = "var" then ~i - 1 else i),T)
+               | X => X) raw
+
+val chk_trick = Vartab.forall (fn ((_,i),(_,tm)) => i >= 0 orelse is_Var (Term.head_of (Envir.beta_eta_contract tm)))
+
+fun match_term thy pat_obj env =
+  let val (tys,tms) = PLPR_Pattern.match thy pat_obj env
+   in if chk_trick tms then (tys,tms)
+      else raise Pattern.MATCH
+  end
+
+fun does_match_term thy pat_obj =
+      (match_term thy pat_obj (Vartab.empty, Vartab.empty) ; true)
+      handle Pattern.MATCH => false
+
+fun rewrites thy (pat,rets) term =
+  let val s = PLPR_Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)
+      in if chk_trick (snd s)
+         then SOME (map (Envir.subst_term s) rets)
+         else NONE
+   end handle Pattern.MATCH => NONE
+
+fun rewrite thy (pat,ret) term = Option.map hd (rewrites thy (pat,[ret]) term)
 
 end
 
@@ -55,7 +96,11 @@ structure Data = Generic_Data (
 
 fun add pat_pats ctxt =
       Data.map (fold (fn (n,p1,pos,p2) =>
-              Net.insert_term pat_pat_eq (p1,(n,p1,pos,p2))) pat_pats) ctxt
+            let val p1' = Pattern_Translation.mk_pattern p1
+             in Net.insert_term pat_pat_eq (p1',(n,p1',pos,p2))
+            end
+          ) pat_pats
+        ) ctxt
       handle Net.INSERT => Exn.error ("Some pattern clashes with existing entries.")
 
 fun remove (n,p1,pos,p2) =
@@ -77,33 +122,10 @@ fun print_rewrites ctxt =
       writeln (chunks (map (print_rewrite (Context.proof_of ctxt)) (list_rewrites ctxt)))
 end
 
-fun calculate ctxt term (n, pat0, _, By_Pattern pat_ret0) =
-     (let val ind = Term.maxidx_of_term term + 1
-          val pat = Logic.incr_indexes ([],[],ind) pat0
-          val pat_ret = map (Logic.incr_indexes ([],[],ind)) pat_ret0
-          val s = PLPR_Pattern.match (Context.theory_of ctxt) (pat, term) (Vartab.empty, Vartab.empty)
-       in (SOME (n, map (Envir.norm_term (Envir.Envir {maxidx = ~1, tyenv = #1 s, tenv = #2 s})) pat_ret))
-      end handle Pattern.MATCH => NONE)
+fun calculate ctxt term (n, pat0, _, By_Pattern ret0) =
+      Option.map (pair n) (Pattern_Translation.rewrites (Context.theory_of ctxt) (pat0, ret0) term)
   | calculate ctxt term (n, _, _, By_ML rewr) =
       Option.map (pair n) (rewr ctxt term)
-
-fun calculate_by_unify ctxt term (n, pat0, _, By_Pattern pat_ret0) =
-     (let val ind = Term.maxidx_of_term term + 1
-          val pat = Logic.incr_indexes ([],[],ind) pat0
-          val pat_ret = map (Logic.incr_indexes ([],[],ind)) pat_ret0
-       in Unify.unifiers (ctxt, Envir.empty (Term.maxidx_of_term pat), [(pat, term)])
-               |> Seq.chop 2
-               |> (fn ([],_) => NONE
-                    | ([(s,_)],_) => SOME (n, map (Envir.norm_term s) pat_ret)
-                    | _ => error (Pretty.string_of (Pretty.chunks [
-                            Pretty.str "Multiple unifiers between:",
-                            Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pat,
-                            Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term
-                        ])))
-      end handle Pattern.MATCH => NONE)
-  | calculate_by_unify ctxt term (n, _, _, By_ML rewr) =
-      Option.map (pair n) (rewr ctxt term)
-
 
 fun rewr_clash ctxt (_,ret) (_,ret2) =
   error (Pretty.string_of (Pretty.chunks (
@@ -132,7 +154,6 @@ fun gen_translate calc ctxt term =
          | NONE => [])
 
 val translate = gen_translate calculate
-val translate_by_unify = gen_translate calculate_by_unify
 
 (*fun parse_pats ctxt ((p1,p2),n) =
   let val ctxt_p = Proof_Context.set_mode Proof_Context.mode_pattern ctxt

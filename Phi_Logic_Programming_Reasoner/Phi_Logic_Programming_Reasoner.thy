@@ -50,11 +50,11 @@ in fn thy => thy
 end\<close>
 
 ML_file \<open>library/tools/ml_thms.ML\<close>
-ML_file_debug \<open>library/pattern.ML\<close>
-ML_file_debug \<open>library/helpers.ML\<close>
+ML_file \<open>library/pattern.ML\<close>
+ML_file \<open>library/helpers.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
-ML_file_debug \<open>library/pattern_translation.ML\<close>
+ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 
 definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
@@ -72,7 +72,7 @@ lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
   unfolding Action_Tag_def .
 
-ML_file_debug \<open>library/reasoner.ML\<close>
+ML_file \<open>library/reasoner.ML\<close>
 
 lemma \<r>Guard_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Guard P\<close> unfolding \<r>Guard_def .
 

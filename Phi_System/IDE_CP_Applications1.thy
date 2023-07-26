@@ -322,106 +322,95 @@ lemma [\<phi>reason 1010]:
 
 subsubsection \<open>Actions for every \<phi>-type item\<close>
 
-consts \<A>_every_item' :: \<open>action \<Rightarrow> action\<close>
-
-abbreviation \<open>\<A>_every_item A \<equiv> \<A>_simple_MTF (\<A>_every_item' A)\<close>
+consts \<A>_every_item :: \<open>action \<Rightarrow> action\<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_every_item' _\<close> \<Rightarrow>
-      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_every_item' _\<close>    (100)
-  and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<w>\<i>\<t>\<h> _ @action \<A>_every_item' _\<close> \<Rightarrow>
-      \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<w>\<i>\<t>\<h> _ @action \<A>_every_item' _\<close>    (100)
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_every_item _\<close> \<Rightarrow>
+      \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_every_item _\<close>    (100)
+  and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<w>\<i>\<t>\<h> _ @action \<A>_every_item _\<close> \<Rightarrow>
+      \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<w>\<i>\<t>\<h> _ @action \<A>_every_item _\<close>    (100)
 ]]
 
 
 paragraph \<open>Implication\<close>
 
 lemma [\<phi>reason 1050]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
-\<Longrightarrow> X \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
+  \<open> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 @action \<A>_every_item A \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason 1050]:
+  \<open> 0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 @action \<A>_every_item A \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason 1050]:
+  \<open> \<top> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<top> @action \<A>_every_item A \<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason 1050]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item A
+\<Longrightarrow> X \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P @action \<A>_every_item A\<close>
   unfolding Action_Tag_def
   using Subjection_transformation .
 
 lemma [\<phi>reason 1050]:
-  \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @action \<A>_every_item' A)
-\<Longrightarrow> ExSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_every_item \<A>
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_every_item \<A>
+\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<and>\<^sub>B\<^sub>I Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_every_item \<A>\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason 1050]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_every_item \<A>
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_every_item \<A>
+\<Longrightarrow> A + B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X + Y \<w>\<i>\<t>\<h> P \<or> Q @action \<A>_every_item \<A>\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp
+
+lemma [\<phi>reason 1050]:
+  \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @action \<A>_every_item A)
+\<Longrightarrow> ExSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet Y \<w>\<i>\<t>\<h> P @action \<A>_every_item A\<close>
   unfolding Action_Tag_def
   using ExSet_transformation .
 
 lemma [\<phi>reason 1050]:
-  \<open> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
-\<Longrightarrow> R * (X \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * (Y \<s>\<u>\<b>\<j> Q) \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
+  \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @action \<A>_every_item A)
+\<Longrightarrow> AllSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> AllSet Y \<w>\<i>\<t>\<h> P @action \<A>_every_item A\<close>
   unfolding Action_Tag_def Transformation_def
   by simp blast
 
 lemma [\<phi>reason 1050]:
-  \<open> (\<And>c. R * X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * Y c \<w>\<i>\<t>\<h> P @action \<A>_every_item' A)
-\<Longrightarrow> R * ExSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * ExSet Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
-  unfolding Action_Tag_def
-  by (simp add: ExSet_transformation)
+  \<open> TECHNICAL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL X @action \<A>_every_item \<A>\<close>
+  \<comment> \<open>Never bind technical items\<close>
+  unfolding Action_Tag_def Technical_def
+  by simp
 
 lemma [\<phi>reason 1050]:
-  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_every_item' \<A>
-\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_every_item' \<A>
-\<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<and>\<^sub>B\<^sub>I Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_every_item' \<A>\<close>
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_every_item \<A>
+\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_every_item \<A>
+\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_every_item \<A> \<close>
   unfolding Action_Tag_def Transformation_def
   by simp blast
 
 lemma [\<phi>reason 1050]:
-  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_every_item' \<A>
-\<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_every_item' \<A>
-\<Longrightarrow> A + B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X + Y \<w>\<i>\<t>\<h> P \<or> Q @action \<A>_every_item' \<A>\<close>
-  unfolding Action_Tag_def Transformation_def
-  by simp
-
-lemma [\<phi>reason 1050]:
-  \<open> TECHNICAL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>_every_item' A\<close>
-  \<comment> \<open>Never bind technical items\<close>
-  unfolding Action_Tag_def Technical_def by simp
-
-lemma [\<phi>reason 1050]:
-  \<open> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @action \<A>_every_item' A \<close>
-  unfolding Action_Tag_def
-  by simp
-
-lemma [\<phi>reason 1020]:
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
-\<Longrightarrow> R * (TECHNICAL X) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * (TECHNICAL X) \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
-  \<comment> \<open>Never bind technical items\<close>
-  unfolding Action_Tag_def
-  using implies_right_prod .
-
-lemma [\<phi>reason 1020]:
-  \<open> R * X1 * X2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
-\<Longrightarrow> R * (X1 * X2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A \<close>
-  for R :: \<open>'a::sep_semigroup set\<close>
-  unfolding Action_Tag_def
-  by (simp add: mult.assoc)
-
-lemma [\<phi>reason 1010]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
-\<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> Q @action \<A>_every_item' A
-\<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_every_item' A\<close>
-  unfolding Action_Tag_def
-  using implies_prod_bi_prod .
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item A
+\<Longrightarrow> \<blangle> X \<brangle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action \<A>_every_item A\<close>
+  unfolding FOCUS_TAG_def .
 
 lemma [\<phi>reason 1000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item A\<close>
   unfolding Action_Tag_def .
-
-lemma [\<phi>reason 1020]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_every_item' A
-\<Longrightarrow> \<blangle> X \<brangle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action \<A>_every_item' A\<close>
-  unfolding FOCUS_TAG_def .
-
 
 (*
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>_every_item' A\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>_every_item A\<close>
   unfolding Action_Tag_def by simp
 *)
 
+(* depreciated
 subsubsection \<open>Actions of multi-arity\<close>
 
 text \<open>for transformations containing remainder, of form \<open>?R\<heavy_comma> X \<longmapsto> ?R\<heavy_comma> Y\<close>
@@ -467,7 +456,7 @@ lemma [\<phi>reason 1000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_multi_arity' A\<close>
   unfolding Action_Tag_def .
-
+*)
 
 (* Not really useful, I think?
    DO NOT REMOVE, let me think more
@@ -588,7 +577,7 @@ declare [[ \<phi>reason_default_pattern
 consts \<A>chk_need_simp :: action
        \<A>_apply_simplication :: action
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_apply_simplication\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<w>\<i>\<t>\<h> Any @action \<A>_every_item \<A>chk_need_simp
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> Y : Ya
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication \<close>
@@ -704,7 +693,9 @@ ML \<open>fun mk_pattern_for_to_transformation ctxt term =
         | relax (Bound i) = Bound i
    in case term
         of Trueprop $ (Action_Tag $ (Trans $ X $ _ $ P) $ To_Tag) =>
-           SOME [Trueprop $ (Action_Tag $ (Trans $ X $ Var(("Y",idx), TVar(("model",idx),[])) $ chk_P P) $ relax To_Tag)]
+           SOME [Trueprop $ (Action_Tag
+              $ (relax Trans $ X $ Var(("Y",idx), TVar(("model",idx),[])) $ chk_P P)
+              $ relax To_Tag)]
   end\<close>
 
 declare [[
@@ -713,7 +704,7 @@ declare [[
     \<open>mk_pattern_for_to_transformation\<close> (100),
 
   \<phi>reason_default_pattern
-    \<open>?X @action to ?A\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad form: \<close> (?X @action to ?A) \<newline>
+    \<open>?X @action to ?A\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed To-Transformation: \<close> (?X @action to ?A) \<newline>
                                       \<open>Expect: \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?Y \<s>\<u>\<b>\<j> y. ?r y) @action to _\<close>\<close>)\<close> (1)
 (*depreciate
 and \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. ?rel x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. _ @action \<A>\<T>split_step\<close> \<Rightarrow>
@@ -1041,22 +1032,11 @@ consts \<A>case :: action
 
 subsubsection \<open>Framework\<close>
 
-ML \<open>fun mk_pattern_for_cases_analysis ctxt term =
-  let val idx = Term.maxidx_of_term term + 1
-      fun chk_P (X as Const(\<^const_name>\<open>True\<close>, _)) = Var(("P",idx), HOLogic.boolT)
-        | chk_P X = error ("The pure fact in a cases ToA must be \<open>True\<close>, but given\n" ^
-                           Context.cases Syntax.string_of_term_global Syntax.string_of_term ctxt X)
-   in case term
-        of Trueprop $ (Action_Tag $ (Trans $ X $ Y $ P) $ Acase) =>
-           SOME [Trueprop $ (Action_Tag $ (Trans $ X $ Var(("Y",idx), TVar(("model",idx),[])) $ chk_P P) $ Acase)]
-  end\<close>
-
 declare [[
-  \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>case\<close> \<Rightarrow>
-      \<open>mk_pattern_for_cases_analysis\<close> (100),
-  \<phi>reason_default_pattern_ML \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>case\<close> \<Rightarrow>
-      \<open>mk_pattern_for_cases_analysis\<close> (100),
-  \<phi>reason_default_pattern \<open> ?X @action \<A>case \<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad Form\<close> (?X @action \<A>case))\<close> (0)
+  \<phi>reason_default_pattern
+      \<open> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>case \<close> \<Rightarrow> \<open> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>case \<close>   (100)
+  and \<open> ?X \<s>\<h>\<i>\<f>\<t>\<s> _ @action \<A>case \<close> \<Rightarrow> \<open> ?X \<s>\<h>\<i>\<f>\<t>\<s> _ @action \<A>case \<close>   (100)
+  and \<open> ?X @action \<A>case \<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed \<A>case rule\<close> (?X @action \<A>case))\<close> (0)
 ]]
 
 lemma "_cases_app_rule_":
@@ -1284,6 +1264,10 @@ lemma [\<phi>reason 1210 for \<open>_ \<Ztypecolon> _ \<^emph> _ \<t>\<r>\<a>\<n
   unfolding Action_Tag_def Transformation_def \<phi>Auto_Prod_def
   by simp
 
+lemma [\<phi>reason !10]:
+  \<open> x \<Ztypecolon> T \<^emph>\<^sub>\<A> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<^emph> U \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
+  unfolding Action_Tag_def \<phi>Auto_Prod_def Transformation_def
+  by simp
 
 subsubsection \<open>Simplification\<close>
 

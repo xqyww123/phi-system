@@ -112,7 +112,7 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
 
 
 fun SHu_reasoner ctxt sequent =
-  case PLPR_Exhaustive.reason_exhaustively (SOME 2)
+  case PLPR_Exhaustive.reason_exhaustively (SOME 3)
             (ctxt, @{thm' \<phi>TA_SHu_rule_step} RS sequent)
     of SOME th => th
      | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"

@@ -68,7 +68,7 @@ fun guess_property_TF (x_term, FT_term, phi0) ctxt =
 local
 
 fun TF_reasoner ctxt sequent =
-  case PLPR_Exhaustive.reason_exhaustively (SOME 2)
+  case PLPR_Exhaustive.reason_exhaustively (SOME 3)
             (ctxt, @{thm' \<phi>TA_TF_rule_step} RS sequent)
     of SOME th => th
      | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
@@ -113,8 +113,9 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                         (Simplifier.rewrite sctxt))
                   end
                ) ctxt)
-      val rules = mk_rule_by_guess_or_hint ("Transformation_Functor/" ^ string_of_int prop_i,
-                                            unify_hint, extract_oprs_from_hint, guess_property_TF,
+      val name = if prop_i = 0 then "Transformation_Functor"
+                 else "Transformation_Functor/" ^ string_of_int prop_i
+      val rules = mk_rule_by_guess_or_hint (name, unify_hint, extract_oprs_from_hint, guess_property_TF,
                                             @{thm' \<phi>TA_TF_rule}, [0,~1,~1,~1],
                                             SOME ind_conv, TF_reasoning, K NONE, simp)
                                            phi0 hint0 ctxt0
@@ -207,8 +208,9 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
                         (Simplifier.rewrite sctxt))
                   end
              ) ctxt) thm
-      val rules = mk_rule_by_guess_or_hint ("Functional_Transformation_Functor/" ^ string_of_int prop_i,
-                                            unify_hint, extract_oprs_from_hint, guess_property_FTF, @{thm' \<phi>TA_FTF_rule}, [],
+      val name = if prop_i = 0 then "Functional_Transformation_Functor"
+                 else "Functional_Transformation_Functor/" ^ string_of_int prop_i
+      val rules = mk_rule_by_guess_or_hint (name, unify_hint, extract_oprs_from_hint, guess_property_FTF, @{thm' \<phi>TA_FTF_rule}, [],
                                             NONE, K reasoning, K NONE, simp)
                                             phi0 hint0 ctxt0
    in Seq.pull rules

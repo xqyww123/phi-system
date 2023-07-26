@@ -580,7 +580,7 @@ subsection \<open>Optional\<close>
        and Identity_Element
        and \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T ?\<^sub>\<phi> C) \<close>
        and \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself)
-          \<Longrightarrow> x \<Ztypecolon> T ?\<^sub>\<phi> C \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (if C then r y else y = 1) @action to Itself\<close>
+          \<Longrightarrow> x \<Ztypecolon> T ?\<^sub>\<phi> C \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. C \<longrightarrow> r y @action to Itself\<close>
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C = C'
           \<Longrightarrow> Transformation_Functor (\<lambda>T. T ?\<^sub>\<phi> C) (\<lambda>T. T ?\<^sub>\<phi> C') (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>r. if C then r else (=)) \<close>
        and \<open> Functional_Transformation_Functor (\<lambda>T. T ?\<^sub>\<phi> C) (\<lambda>T. T ?\<^sub>\<phi> C') (\<lambda>a. {a}) (\<lambda>_. UNIV)
@@ -655,15 +655,19 @@ subsubsection \<open>By Key\<close>
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 4]]
-            
+declare [[\<phi>trace_reasoning = 0]]
+                      
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving (*Basic
+  deriving Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and*) Separation_Homo\<^sub>I
+       and Separation_Homo
+ 
+term \<open>zip\<close>
+
+
 
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -672,6 +676,8 @@ declare [[\<phi>trace_reasoning = 4]]
   deriving Basic
        and Identity_Element
        and Transformation_Functor
+
+
 
 
 
@@ -701,30 +707,19 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 3]]
+ declare [[\<phi>trace_reasoning = 0]]
 
 
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-  deriving Transformation_Functor
-    (*Basic and Identity_Element
+  deriving Basic
+       and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
-       and Open_All_Abstraction*)
+       and Open_Abstraction_Full
+       and Is_Functional
 
-
-
-lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> k = k'
-\<Longrightarrow> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> 1(k := v) \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> k' \<^bold>\<rightarrow> T \<w>\<i>\<t>\<h> P\<close>
-  by (clarsimp simp add: \<phi>expns Transformation_def, blast)
-
-lemma [\<phi>reason 1200]:
-  \<open> Is_Functional (x \<Ztypecolon> T)
-\<Longrightarrow> Is_Functional (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
-  by (clarsimp simp add: \<phi>expns Is_Functional_def, blast)  
 
 
 
@@ -749,7 +744,7 @@ lemma \<phi>MapAt_\<phi>Prod:
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
   apply (metis fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1))
   by (metis fun_1upd_homo_right1)
-
+ 
 lemma \<phi>MapAt_\<phi>None:
   \<open>k \<^bold>\<rightarrow> \<circle> = \<circle>\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)

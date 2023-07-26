@@ -56,7 +56,7 @@ fun reasoning phi ctxt =
                         $ X $ _ $ _))
                  => chk_unfolded phi X
              | _ => ()) ;
-          case PLPR_Exhaustive.reason_exhaustively (SOME 2) (ctxt, @{thm' \<phi>TA_TF_rule_step} RS sequent)
+          case PLPR_Exhaustive.reason_exhaustively (SOME 3) (ctxt, @{thm' \<phi>TA_TF_rule_step} RS sequent)
             of SOME th => th
              | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
       )) ctxt

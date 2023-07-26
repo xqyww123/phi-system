@@ -1323,7 +1323,7 @@ fn (ctxt,sequent) =>
     val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Union_the_Same_Or_Arbitrary_when_Var\<close>, _)
           $ Z $ _ $ _) = Thm.major_prem_of sequent
   in (ctxt,
-        (if is_Var (Envir.beta_eta_contract Z)
+        (if is_Var (Term.head_of (Envir.beta_eta_contract Z))
          then @{thm Union_the_Same_Or_Arbitrary_when_Var__Arbitrary}
          else @{thm Union_the_Same_Or_Arbitrary_when_Var__the_Same})
         RS sequent) |> Seq.single

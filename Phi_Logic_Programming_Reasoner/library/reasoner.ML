@@ -184,14 +184,10 @@ type reasoner = {name: term,
                  blacklist: term list,
                  tactic: tactic}
 
-val trick = map_aterms (fn Var ((s,i),T) => Var ((s, if String.isPrefix "var_" s orelse s = "var"
-                                                     then ~i - 1 else i),T)
-                         | X => X)
-
 fun normalize_reasoner f ({name,pos,mode,pattern,blacklist,tactic}:reasoner) =
   ({name=name, pos=pos, mode=mode,
-    pattern = map (fn (x,y) => (trick (Envir.beta_eta_contract x), f y)) pattern,
-    blacklist = map (trick o Envir.beta_eta_contract) blacklist,
+    pattern = map (fn (x,y) => (Pattern_Translation.mk_pattern (Envir.beta_eta_contract x), f y)) pattern,
+    blacklist = map (Pattern_Translation.mk_pattern o Envir.beta_eta_contract) blacklist,
     tactic = tactic}:reasoner)
 
 fun transform_reasoner phi ({name,pos,mode,pattern,blacklist,tactic}:reasoner) =
@@ -405,21 +401,6 @@ fun debug ctxt (c,_,_,({name,...} : reasoner)) =
   tracing ("candicate reasoners (" ^ string_of_int c ^ "):\n"
               ^ Syntax.string_of_term (Proof_Context.set_mode Proof_Context.mode_abbrev ctxt) name)
 
-fun is_var (A $ _) = is_var A
-  | is_var (Var _) = true
-  | is_var _ = false
-
-fun match_term thy pat_obj =
-  let
-    val (_,tms) = PLPR_Pattern.match thy pat_obj (Vartab.empty, Vartab.empty)
-  in Vartab.fold (fn ((name,i),(_,tm)) => fn flag =>
-        if i < 0 (* String.isPrefix "var_" name *)
-        then flag andalso is_var (Envir.beta_eta_contract tm)
-        else flag
-     ) tms true
-  end
-  handle Pattern.MATCH => false
-
 fun concl_of_goal st i =
   let val (gi, rfrees) = Logic.goal_params st i
       val B = Logic.strip_assums_concl gi
@@ -456,9 +437,9 @@ fun apply_tactic (Tac_ML tac) s = tac s
 fun get_reasoners' thy tactics term =
   Net.match_term tactics term
     |> filter (fn (_,pat,_,reasoner) =>
-        match_term thy (pat,term)
+        Pattern_Translation.does_match_term thy (pat,term)
         andalso forall (fn pat =>
-          not (match_term thy (pat,term)))
+          not (Pattern_Translation.does_match_term thy (pat,term)))
         (#blacklist reasoner))
     |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
     |> distinct_rev (fn (a,b) => #3 a = #3 b)

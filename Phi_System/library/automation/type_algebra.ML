@@ -492,10 +492,12 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
                                      | NONE => raise Automation_Fail ("Fail to guess the zip operator for type " ^ Tname)
                     val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                                        else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
-                    val ctxt'' = ctxt addsimps ((if flag then #zip_simps fp_more else #unzip_simps fp_more)
+                    val ctxt'' = ctxt
+                              |> Simps.map' (fn ctxt =>
+                                    ctxt addsimps ((if flag then #zip_simps fp_more else #unzip_simps fp_more)
                                                 @ eBNF_Info.simps_of_rel_safe bnf
                                                 @ eBNF_Info.simps_of_map_safe bnf
-                                                @ eBNF_Info.simps_of_ctr_safe bnf)
+                                                @ eBNF_Info.simps_of_ctr_safe bnf))
                               |> add_global_simps (eBNF_Info.global_simps_of_rel_safe bnf)
                     val (args, ctxt') = ctxt''
                           |> fold_map (guess_zip_guided flag (target,target'))
@@ -566,6 +568,7 @@ fun load_rel (const_name, ty) ctxt =
    in parse_typ ty
   end
 
+(*CN: const name*)
 fun load_set (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<^Type>\<open>set _\<close>\<close>) ctxt =
       eBNF_Info.get_bnf (Context.Proof ctxt) N
         |> Option.mapPartial (mp eBNF_Info.sets_of_bnf_safe)
@@ -593,11 +596,30 @@ fun load_map (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<open>T as Type(N
         |> Option.mapPartial (mp eBNF_Info.map_of_bnf_safe)
         |> Option.mapPartial (fn (C, bnf) =>
               if const_eq CN C
-              then SOME (load_rel_mapper_ss bnf ctxt)
-              else NONE)
-      else NONE
+              then SOME (load_mapper_ss bnf ctxt)
+              else load_map (CN, T) ctxt)
+      else load_map (CN, T) ctxt
   | load_map (CN, \<^Type>\<open>fun \<^Type>\<open>fun _ _\<close> T\<close>) ctxt = load_map (CN, T) ctxt
   | load_map _ _ = NONE
+
+fun load_zip (CN, \<^Type>\<open>fun \<open>Type(N,ts1)\<close> \<open>T2 as \<^Type>\<open>fun \<open>Type(N',ts2)\<close> \<open>Type(N'', ts3)\<close>\<close>\<close>\<close>) ctxt =
+      let fun chk_ts (t1::ts1) (t2::ts2) (\<^Type>\<open>prod a b\<close>::ts3) =
+                a = t1 andalso b = t2 andalso chk_ts ts1 ts2 ts3
+            | chk_ts [] [] [] = true
+            | chk_ts _ _ _ = false
+       in if chk_ts ts1 ts2 ts3
+          then case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) N
+            of SOME fpm =>
+                if const_eq CN (#zip fpm)
+                then SOME (Simps.map' (fn ctxt =>
+                              ctxt addsimps (#zip_simps fpm @ #unzip_simps fpm)
+                           ) ctxt)
+                else load_zip (CN, T2) ctxt
+             | NONE => load_zip (CN, T2) ctxt
+          else load_zip (CN, T2) ctxt
+      end
+  | load_zip (CN, \<^Type>\<open>fun _ T2\<close>) ctxt = load_zip (CN, T2) ctxt
+  | load_zip _ _ = NONE
 
 fun load_const C ctxt =
   the_default ctxt (get_first (fn ld => ld C ctxt) [load_rel, load_set, load_predicate, load_map])

@@ -22,9 +22,6 @@ open Procedure_Syntax
 
 fun quantify_args_of_proc_term' record_name proc =
   let val (H as Const (\<^const_name>\<open>\<phi>Procedure\<close>, _)) $ f $ X $ Y $ E = proc
-      fun is_var (X $ Bound _) = is_var X
-        | is_var (Var _) = true
-        | is_var _ = false
       fun is_argT' (Type ("dummy", _)) = true
         | is_argT' T = is_argT T
       fun is_args Vs =
@@ -35,7 +32,7 @@ fun quantify_args_of_proc_term' record_name proc =
       fun is_Free_or_Const (Const _) = true
         | is_Free_or_Const (Free _) = true
         | is_Free_or_Const _ = false
-      val Vs = if is_var f then NONE
+      val Vs = if is_Var (Term.head_of f) then NONE
                else case f of F $ Vs => if is_Free_or_Const (head_of F)
                                         then if is_args Vs
                                         then SOME (dest_arg_tuple Vs)
@@ -45,7 +42,8 @@ fun quantify_args_of_proc_term' record_name proc =
       val (pack, X') = package_values "" true Vs X
       fun parameterize_var (Var (v,T))   = Var (v, fastype_of pack --> T) $ Bound 0
         | parameterize_var (X $ Bound i) = parameterize_var X $ Bound (i + 1)
-      val f' = if is_var f then parameterize_var f
+      val f' = if is_Var (Term.head_of f)
+               then parameterize_var f
                else case f of F $ Vs =>
                               if is_Free_or_Const (head_of F)
                               then if is_args Vs
