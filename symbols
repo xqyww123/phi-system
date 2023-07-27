@@ -2,6 +2,7 @@
 \<tribullet>        code: 0x002023  font: PhiSymbols  group: operator
 \<fish_eye>         code: 0x0025C9  font: PhiSymbols  group: punctuation
 \<black_circle>     code: 0x0025CF  font: PhiSymbols  group: punctuation
+\<half_blkcirc>     code: 0x0025D2  font: PhiSymbols  group: punctuation
 
 \<heavy_comma>      code: 0x00275F    font: PhiSymbols    group: punctuation  abbrev: ,,
 \<blangle>         code: 0x00276c   font: PhiSymbols  group: punctuation abbrev: <<b
@@ -10,5 +11,6 @@
 \<medium_right_bracket>  code: 0x002775  font: PhiSymbols   abbrev: }}
 \<dblcoloneqq>     code: 0x002A74   font: PhiSymbols   group: relation   abbrev: ::=
 
+\<odiv>            code: 0x002A38   font: PhiSymbols   group: operator   abbrev: (-:)
 \<lblbrace>        code: 0x003010   font: PhiSymbols   group: punctuation  abbrev: <[(>  abbrev: <{(>
 \<rblbrace>        code: 0x003011   font: PhiSymbols   group: punctuation  abbrev: <)]>  abbrev: <)}>

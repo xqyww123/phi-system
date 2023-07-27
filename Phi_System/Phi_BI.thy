@@ -854,6 +854,42 @@ lemma satisfication_encoding:
   unfolding Transformation_def by simp
 
 
+subsubsection \<open>Embedding of \<open>\<top>\<close>\<close>
+
+definition \<phi>Any :: \<open>('x, unit) \<phi>\<close> ("\<top>\<^sub>\<phi>")
+  where \<open>\<top>\<^sub>\<phi> = (\<lambda>_. UNIV)\<close>
+
+setup \<open>Sign.mandatory_path "\<phi>Any"\<close>
+
+lemma unfold:
+  \<open>(x \<Ztypecolon> \<top>\<^sub>\<phi>) = UNIV\<close>
+  unfolding \<phi>Any_def \<phi>Type_def ..
+
+lemma expansion:
+  \<open>p \<Turnstile> (x \<Ztypecolon> \<top>\<^sub>\<phi>) \<longleftrightarrow> True\<close>
+  unfolding \<phi>Any.unfold
+  by simp
+
+setup \<open>Sign.parent_path\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open>x \<Ztypecolon> \<top>\<^sub>\<phi> \<i>\<m>\<p>\<l>\<i>\<e>\<s> True\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> UNIV \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P\<close>
+  unfolding \<phi>Any.unfold
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> UNIV \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<top>\<^sub>\<phi> \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P\<close>
+  unfolding \<phi>Any.unfold
+  by simp
+
+
 subsubsection \<open>Embedding of Empty\<close>
 
 definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close> ("\<circle>")
@@ -878,7 +914,21 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Insertion into Unital Algebra\<close>
 
-definition \<phi>Option_Insertion :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
+definition \<phi>Option_Insertion :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x option) \<phi>\<close> ("\<half_blkcirc> _" [91] 90)
+  where \<open>\<half_blkcirc> T = (\<lambda>x. case x of Some x' \<Rightarrow> { Some v |v. v \<in> (x' \<Ztypecolon> T) } | None \<Rightarrow> { None })\<close>
+
+lemma \<phi>Option_Insertion_expn[simp, \<phi>expns]:
+  \<open> p \<Turnstile> (x' \<Ztypecolon> \<half_blkcirc> T) \<longleftrightarrow> (case x' of None \<Rightarrow> p = None
+                                 | Some x \<Rightarrow> \<exists>v. p = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)) \<close>
+  unfolding \<phi>Option_Insertion_def \<phi>Type_def Satisfaction_def
+  by (cases x'; clarsimp)+
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
+\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> pred_option P x\<close>
+  unfolding Action_Tag_def Inhabited_def
+  by (cases x; clarsimp)
+
 
 subsubsection \<open>Insertion into Unital Algebra\<close>
 
@@ -891,10 +941,22 @@ lemma \<phi>Some_expn[simp, \<phi>expns]:
   by simp
 
 lemma [\<phi>reason 1000]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
+  unfolding Action_Tag_def Inhabited_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P \<close>
   unfolding Transformation_def
   by simp blast
+
+lemma \<phi>Some_transformation_strip:
+  \<open> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P \<equiv> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
+  unfolding atomize_eq Transformation_def
+  by clarsimp blast
+
 
 subsubsection \<open>Embedding of Separation Conjunction\<close>
 
@@ -920,6 +982,10 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> x \<Ztypecolon> T1 \<^emph> T2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> C1 \<and> C2\<close>
   unfolding Inhabited_def Action_Tag_def
   by (cases x; simp, blast)
+
+lemma \<phi>Some_\<phi>Prod:
+  \<open> \<black_circle> T \<^emph> \<black_circle> U = \<black_circle> (T \<^emph> U) \<close>
+  by (rule \<phi>Type_eqI; clarsimp; force)
 
 lemma \<phi>Prod_\<phi>None:
   \<open>((x',y) \<Ztypecolon> \<circle> \<^emph> U) = ((y \<Ztypecolon> U) :: 'a::sep_magma_1 BI)\<close>
@@ -1078,5 +1144,9 @@ lemma
   unfolding Transformation_def
   apply (auto simp add: Subjection_expn) *)
 
+lemma [\<phi>reason 1000]:
+  \<open>Object_Equiv \<top>\<^sub>\<phi> (\<lambda>_ _. True)\<close>
+  unfolding Object_Equiv_def \<phi>Any.unfold
+  by simp
 
 end

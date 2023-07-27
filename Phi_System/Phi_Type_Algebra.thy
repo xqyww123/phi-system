@@ -1102,7 +1102,7 @@ begin
 end
 
 
-subsubsection \<open>Reasonings in Structural Extraction\<close>
+subsubsection \<open>Reasonings in Separation Extraction\<close>
 
 paragraph \<open>Transformation Functor\<close>
    
@@ -1125,14 +1125,88 @@ lemma "_Structural_Extract_general_rule_":
  
 declare "_Structural_Extract_general_rule_"[(*THEN SE_clean_waste,*) \<phi>reason_template 80]
 
-lemma "_Structural_Extract_general_rule_":
+(* This crazy rule is for the boundary cases when we reason the last element and when the algebra doesn't
+   have an identity element so that we cannot reduce it to the usual case by adding an identity element at the tail.
+
+The idea is to lift the non-unital algebra by adding an identity element. We use \<^const>\<open>\<black_circle>\<close> for it.
+But it is not the end. Because substantially its reasoning has no identity element, we have to use
+\<^term>\<open>\<half_blkcirc>[Cw] W\<close> with a boolean flag \<open>Cw\<close> to rudimentarily check if the remainder is needed or not.
+
+If u cannot use the identity element, the reasoning itself changes,
+like sometimes you have to apply Sep_Homo zipper while in another case you shouldn't use that.
+There is no trivial degeneration of Sep_Homo. There is no an identity element representing nothing.
+So if u are going to zip something, u really need to zip some two concrete things,
+instead of using the identity element to represent the degenerated situation where you actually zipped nothing.
+It forces us to really consider the cases of having remainders or not in the reasoning.
+
+The bellow rule is complicated, but is branch-less in reasoning. All branch expressions are in object level,
+free from explosion of expression, and can be simplified easily because the boolean flags are
+assigned by constants after the reasoning.
+
+*)
+lemma "_Structural_Extract_general_rule_b_":
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r Prem'r pred_mapper func_mapper'r
+\<Longrightarrow> Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w Prem'w pred_mapper'w func_mapper'w
+\<Longrightarrow> Functional_Transformation_Functor F1 F3  Dom'w Rng'b mapper'b Prem'b pred_mapper'w func_mapper'b
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
 \<Longrightarrow> Prem
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
-\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P x @action \<A>SE True)
-\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SE True \<close>
+\<Longrightarrow> Prem'r
+\<Longrightarrow> Prem'w
+\<Longrightarrow> Prem'b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e>
+        (Cw \<longrightarrow> x \<in> Dz) \<and>
+        (if Cw then if Cr then (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
+                          else (\<forall>a. a \<in> Dom (z x) \<longrightarrow> fst (f a) \<in> Rng'r (z x))
+               else if Cr then (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> f (a, undefined) \<in> Rng'w (fst x))
+                          else (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> fst (f (a, undefined)) \<in> Rng'b (fst x)))
+
+\<Longrightarrow> (\<And>x \<in> (if Cw then Dom (z x) else Dom'w (fst x) \<times> {undefined}).
+        x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P x @action \<A>SE False)
+
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F1 T \<^emph> \<half_blkcirc>[Cw] F4 W
+
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if Cw then if Cr then uz (func_mapper f (z x))
+                                else (func_mapper'r (fst o f) (z x), undefined)
+                     else if Cr then uz (func_mapper'w (\<lambda>x. f (x, undefined)) (fst x))
+                                else (func_mapper'b (\<lambda>x. fst (f (x, undefined))) (fst x), undefined))
+                \<Ztypecolon> \<black_circle> F3 U \<^emph> \<half_blkcirc>[Cr] F2 R
+
+    \<w>\<i>\<t>\<h> (if Cw then pred_mapper P (z x) else pred_mapper'w (\<lambda>x. P (x, undefined)) (fst x))
+    @action \<A>SE False \<close>
+  apply (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod)
+  apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def
+                       "_Structural_Extract_general_rule_"[unfolded Action_Tag_def])
+  \<medium_left_bracket> premises [] and FTF and [] and []
+         and _ and []
+         and [] and [] and [] and []
+         and _ and Tr
+    interpret Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r True pred_mapper func_mapper'r
+      using FTF . ;;
+    apply_rule apply_Separation_Functor_zip[where Fu=F4 and Ft=F1]
+    apply_rule functional_transformation[where U=\<open>U\<close> and f=\<open>fst o f\<close> and P=\<open>P\<close>]
+    \<medium_left_bracket> Tr \<medium_right_bracket> ;;
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises [] and [] and FTF and []
+         and [] and _
+         and [] and [] and [] and []
+         and _ and Tr
+    interpret Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w True pred_mapper'w func_mapper'w
+      using FTF . ;;
+    apply_rule functional_transformation[where U=\<open>U \<^emph> R\<close> and f=\<open>\<lambda>x. f (x, undefined)\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
+    \<medium_left_bracket> Tr \<medium_right_bracket> ;;
+    apply_Separation_Functor_unzip
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises [] and [] and [] and FTF
+         and [] and []
+         and [] and [] and [] and []
+         and _ and Tr
+    interpret Functional_Transformation_Functor F1 F3 Dom'w Rng'b mapper'b True pred_mapper'w func_mapper'b
+      using FTF . ;;
+    apply_rule functional_transformation[where U=\<open>U\<close> and f=\<open>\<lambda>x. fst (f (x, undefined))\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
+    \<medium_left_bracket> Tr \<medium_right_bracket> ;;
+  \<medium_right_bracket> .
 
 lemma "_Structural_Extract_general_rule_TH_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
@@ -1150,7 +1224,7 @@ lemma "_Structural_Extract_general_rule_TH_"[(*THEN SE_clean_waste',*) \<phi>rea
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using "_Structural_Extract_general_rule_"[where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
 
-
+(*
 lemma "_Structural_Extract_general_rule_b_":
   \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
@@ -1167,6 +1241,8 @@ lemma "_Structural_Extract_general_rule_b_":
   \<medium_right_bracket> .
 
 declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>reason_template 80]
+*)
+
 
 lemma "_Structural_Extract_general_rule'_b_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
   \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
@@ -1215,6 +1291,97 @@ lemma SE_general_Scala_Seminearing_left: (*need test, to be tested once we have 
   \<medium_right_bracket> .
 
 declare SE_general_Scala_Seminearing_left[(*THEN SE_clean_waste,*) \<phi>reason_template add 60]
+
+lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we have usable test case*)
+  \<open> Scala_Semimodule_Functor F3 U Ds
+\<Longrightarrow> Scala_Semimodule_Functor F4 W Ds
+\<Longrightarrow> Separation_Homo\<^sub>I (F1 a) (F4 a) F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>E (F3 a) (F2 a) F23 uz
+\<Longrightarrow> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Functional_Transformation_Functor F14 (F3 a) Dom Rng'r mapper'r Prem'r pred_mapper func_mapper'r
+\<Longrightarrow> Functional_Transformation_Functor (F1 a) F23 Dom'w Rng'w mapper'w Prem'w pred_mapper'w func_mapper'w
+\<Longrightarrow> Functional_Transformation_Functor (F1 a) (F3 a) Dom'w Rng'b mapper'b Prem'b pred_mapper'w func_mapper'b
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds
+\<Longrightarrow> Prem
+\<Longrightarrow> Prem'r
+\<Longrightarrow> Prem'w
+\<Longrightarrow> Prem'b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Cw \<longrightarrow> x \<in> Dz) \<and>
+           (if Cw then if Cr then (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
+                             else (\<forall>a. a \<in> Dom (z x) \<longrightarrow> fst (f a) \<in> Rng'r (z x))
+                  else if Cr then (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> f (a, undefined) \<in> Rng'w (fst x))
+                             else (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> fst (f (a, undefined)) \<in> Rng'b (fst x)))
+
+\<Longrightarrow> (\<And>x \<in> (if Cw then Dom (z x) else Dom'w (fst x) \<times> {undefined}).
+          x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] F4 c W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> \<black_circle> F3 c U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P x @action \<A>SE False)
+
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F1 a T \<^emph> \<half_blkcirc>[Cw] F4 b W
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if Cw then if Cr then uz (func_mapper f (z x))
+                                else (func_mapper'r (fst o f) (z x), undefined)
+                     else if Cr then uz (func_mapper'w (\<lambda>x. f (x, undefined)) (fst x))
+                                else (func_mapper'b (\<lambda>x. fst (f (x, undefined))) (fst x), undefined))
+                \<Ztypecolon> \<black_circle> F3 b U \<^emph> \<half_blkcirc>[Cr] F2 a R
+    \<w>\<i>\<t>\<h> (if Cw then pred_mapper P (z x) else pred_mapper'w (\<lambda>x. P (x, undefined)) (fst x))
+    @action \<A>SE False\<close>
+  apply (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod)
+  apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def
+                       "SE_general_Scala_Seminearing_left"[unfolded Action_Tag_def])
+  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+         and _ and []
+         and [] and FTF and [] and []
+         and _ and _
+         and [] and [] and [] and []
+         and _ and Tr
+    interpret Functional_Transformation_Functor F14 \<open>F3 a\<close> Dom Rng'r mapper'r True pred_mapper func_mapper'r
+      using FTF .
+    have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
+      by (metis LSF4 Scala_Semimodule_Functor_def \<open>a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds\<close> the_\<phi>(6))
+    have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
+      by (metis LSF3 Scala_Semimodule_Functor_def \<open>a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds\<close> the_\<phi>(6)) ;;
+    unfold F4D
+    apply_rule apply_Separation_Functor_zip[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
+    apply_rule functional_transformation[where U=\<open>F3 c U\<close> and f=\<open>fst o f\<close> and P=P]
+    \<medium_left_bracket> Tr \<medium_right_bracket> ;;
+    fold F3D
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+         and [] and _
+         and [] and [] and FTF and []
+         and _ and _
+         and [] and [] and [] and []
+         and _ and Tr
+    interpret Functional_Transformation_Functor \<open>F1 a\<close> F23 Dom'w Rng'w mapper'w True pred_mapper'w func_mapper'w
+      using FTF .
+    have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
+      by (metis LSF4 Scala_Semimodule_Functor_def the_\<phi>(2) the_\<phi>(4) the_\<phi>(5))
+    have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
+      by (metis LSF3 Scala_Semimodule_Functor_def the_\<phi>(2) the_\<phi>(4) the_\<phi>(5)) ;;
+    unfold F4D
+    apply_rule functional_transformation[where U=\<open>F3 c U \<^emph> R\<close> and f=\<open>\<lambda>x. f (x, undefined)\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
+    \<medium_left_bracket> Tr \<medium_right_bracket> ;;
+    apply_rule apply_Separation_Functor_unzip[where x=\<open>func_mapper'w (\<lambda>x. f (x, undefined)) (fst x)\<close> and Fc = F23]
+    fold F3D
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+         and _ and _
+         and [] and [] and [] and FTF
+         and _ and _
+         and [] and [] and [] and []
+         and _ and Tr
+    interpret Functional_Transformation_Functor \<open>F1 a\<close> \<open>F3 a\<close> Dom'w Rng'b mapper'b True pred_mapper'w func_mapper'b
+      using FTF .
+    have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
+      by (metis LSF4 Scala_Semimodule_Functor_def the_\<phi>(2) the_\<phi>(4) the_\<phi>(5))
+    have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
+      by (metis LSF3 Scala_Semimodule_Functor_def the_\<phi>(2) the_\<phi>(4) the_\<phi>(5)) ;;
+    unfold F4D
+    apply_rule functional_transformation[where U=\<open>F3 c U\<close> and f=\<open>\<lambda>x. fst (f (x, undefined))\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
+    \<medium_left_bracket> Tr \<medium_right_bracket> ;;
+    fold F3D
+  \<medium_right_bracket> .
+
+
 
 lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we have usable test case*)
   \<open> Scala_Semimodule_Functor F3 U Ds
