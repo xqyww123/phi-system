@@ -750,8 +750,7 @@ lemma (*The above rule is local complete*)
   by clarsimp
 
 lemma [\<phi>reason 3000]:
-  \<open> Identity_Element\<^sub>E A
-\<Longrightarrow> Identity_Element\<^sub>E B
+  \<open> Identity_Element\<^sub>E A \<or> Identity_Element\<^sub>E B
 \<Longrightarrow> Identity_Element\<^sub>E (A + B)\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by clarsimp

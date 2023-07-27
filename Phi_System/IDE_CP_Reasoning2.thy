@@ -1124,7 +1124,7 @@ definition StructuralTag ("<Structural> _" [10] 9) where "StructuralTag \<equiv>
 lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def . *)
 
 
-section \<open>Structural Extraction\<close>
+section \<open>Separation Extraction\<close>
 
 text \<open>The canonical form is where all permission annotation are on leaves.
   It minimizes fragments. (TODO: move this)\<close>
@@ -1420,6 +1420,24 @@ lemma [(*THEN SE_clean_waste',*) \<phi>reason 1201]:
   using Structural_Extract_\<phi>Prod_left .
 
 
+paragraph \<open>Boundary-P\<close>
+
+lemma Structural_Extract_p_\<phi>Prod_left:
+  \<open> Try S1 ((fst (fst x), fst w_ru) \<Ztypecolon> \<black_circle> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y_rt \<Ztypecolon> \<black_circle> Y \<^emph> Rt \<w>\<i>\<t>\<h> P1 @action \<A>SE True)
+\<Longrightarrow> Try S2 ((snd (fst x), snd x) \<Ztypecolon> \<black_circle> U \<^emph> W2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w_ru \<Ztypecolon> W \<^emph> Ru \<w>\<i>\<t>\<h> P2 @action \<A>SE True)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
+\<Longrightarrow> x \<Ztypecolon> (\<black_circle> T \<^emph> \<black_circle> U) \<^emph> W2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y_rt, snd y_rt, snd w_ru) \<Ztypecolon> \<black_circle> Y \<^emph> (Rt \<^emph> Ru) \<w>\<i>\<t>\<h> (P1 \<and> P2) @action \<A>SE True\<close>
+  for T :: \<open>('a::sep_semigroup,'b) \<phi>\<close>
+
+
+lemma Structural_Extract_p_\<phi>Prod_right:
+  \<open> Try S1 ((fst a, fst (snd a)) \<Ztypecolon> \<black_circle> A \<^emph> WY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> \<black_circle> Y \<^emph> B \<w>\<i>\<t>\<h> P1 @action \<A>SE True)
+\<Longrightarrow> Try S2 ((snd b, snd (snd a)) \<Ztypecolon> B \<^emph> WX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> c \<Ztypecolon> \<black_circle> X \<^emph> C \<w>\<i>\<t>\<h> P2 @action \<A>SE True)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
+\<Longrightarrow> a \<Ztypecolon> \<black_circle> A \<^emph> WY \<^emph> WX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((fst b, fst c), snd c) \<Ztypecolon> (\<black_circle> Y \<^emph> \<black_circle> X) \<^emph> C \<w>\<i>\<t>\<h> (P1 \<and> P2) @action \<A>SE True\<close>
+  for A :: \<open>('a::sep_semigroup,'b) \<phi>\<close>
+  using IDE_CP_Reasoning2.Structural_Extract_\<phi>Prod_right .
+
 paragraph \<open>Boundary\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
@@ -1501,33 +1519,68 @@ lemma enter_SE_TH:
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using enter_SE .
 
-ML \<open>fun SE_entry_point (rules : thm * thm * thm * thm) sequent =
-      let val (_, Y, P) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
-          fun obj_is_var (Const(\<^const_name>\<open>times\<close>, _) $ _ $ X) = obj_is_var X
-            | obj_is_var (Const(\<^const_name>\<open>FOCUS_TAG\<close>, _) $ X) = obj_is_var X
-            | obj_is_var (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) = is_Var (Term.head_of x)
-          val y_is_var = obj_is_var Y
-          val has_auto_hint =
-            case P of Const(\<^const_name>\<open>conj\<close>, _) $ (Const(\<^const_name>\<open>Auto_Transform_Hint\<close>, _) $ _ $ _) $ _ => true
-                    | _ => false
-          val rule =
-            if y_is_var
-            then if has_auto_hint then #1 rules else #2 rules
-            else if has_auto_hint then #3 rules else #4 rules
-       in rule RS sequent
-      end \<close>
+ML \<open>
+fun SE_entry_point (rules : thm * thm * thm * thm) sequent =
+  let val (_, Y, P) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
+      fun obj_is_var (Const(\<^const_name>\<open>times\<close>, _) $ _ $ X) = obj_is_var X
+        | obj_is_var (Const(\<^const_name>\<open>FOCUS_TAG\<close>, _) $ X) = obj_is_var X
+        | obj_is_var (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) = is_Var (Term.head_of x)
+      val y_is_var = obj_is_var Y
+      val has_auto_hint =
+        case P of Const(\<^const_name>\<open>conj\<close>, _) $ (Const(\<^const_name>\<open>Auto_Transform_Hint\<close>, _) $ _ $ _) $ _ => true
+                | _ => false
+      val rule =
+        if y_is_var
+        then if has_auto_hint then #1 rules else #2 rules
+        else if has_auto_hint then #3 rules else #4 rules
+   in rule RS sequent
+  end
+\<close>
 
 \<phi>reasoner_ML \<A>SE_Entry 50 (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (ctxt, sequent) =>
   Seq.make (fn () =>
-    SOME ((ctxt, SE_entry_point (@{thm' enter_SE_TH}, @{thm' enter_SE},
-                                 @{thm' enter_SE_TH[THEN ToA_by_Equive_Class']},
-                                 @{thm' enter_SE[THEN ToA_by_Equive_Class']}) sequent), Seq.empty))\<close>
+    if Sign.of_sort (Proof_Context.theory_of ctxt)
+                    (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_semigroup\<close>)
+    then SOME ((ctxt, SE_entry_point (@{thm' enter_SE_TH}, @{thm' enter_SE},
+                                      @{thm' enter_SE_TH[THEN ToA_by_Equive_Class']},
+                                      @{thm' enter_SE[THEN ToA_by_Equive_Class']}) sequent), Seq.empty)
+    else (warning "The reasoner can barely do nothing for those even are not sep_semigroup" ;
+          NONE))\<close>
+
+lemma enter_SEc:
+  \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P1 @action \<A>SE True
+\<Longrightarrow> Identity_Element\<^sub>I (snd y \<Ztypecolon> R) Q
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<w>\<i>\<t>\<h> P1 \<and> P2 \<and> Q\<close>
+  for A :: \<open>'a :: sep_magma_1 set\<close>
+  unfolding Action_Tag_def \<phi>Prod_expn' Identity_Element\<^sub>I_def
+  \<medium_left_bracket> premises T and R and A
+    apply_rule A[THEN implies_right_prod, where R=\<open>x \<Ztypecolon> T\<close>]
+    T
+    apply_rule R[THEN implies_right_prod, where R=\<open>fst y \<Ztypecolon> U\<close>]
+  \<medium_right_bracket> .
+
+lemma enter_SEd:
+  \<open> (x,w) \<Ztypecolon> \<black_circle> T \<^emph> \<black_circle> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> R \<w>\<i>\<t>\<h> P1 @action \<A>SE True
+\<Longrightarrow> Identity_Element\<^sub>I (snd y \<Ztypecolon> R) Q
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<w>\<i>\<t>\<h> P1 \<and> P2 \<and> Q \<close>
+  for A :: \<open>'a :: sep_magma set\<close>
+  unfolding Action_Tag_def \<phi>Prod_expn' Identity_Element\<^sub>I_def
+
+  unfolding Transformation_def
+  by clarsimp fastforce
+(*
+  \<medium_left_bracket> premises T and R and A
+    apply_rule A[THEN implies_right_prod, where R=\<open>x \<Ztypecolon> T\<close>]
+    thm A[THEN implies_right_prod, where R=\<open>x \<Ztypecolon> T\<close>]
+*)
+
 
 lemma enter_SEb:
   \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P1 @action \<A>SE False
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> P2
 \<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P1 \<and> P2\<close>
-  for A :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def \<phi>Prod_expn'
   by (smt (z3) implies_right_prod transformation_trans transformation_weaken)
 
@@ -1541,15 +1594,18 @@ lemma enter_SEb_TH:
   \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> Auto_Transform_Hint (y' \<Ztypecolon> U') (x' \<Ztypecolon> T' \<^emph> W') \<and> P1 @action \<A>SE False
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> Auto_Transform_Hint (w' \<Ztypecolon> W') A' \<and> P2
 \<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> Auto_Transform_Hint (y' \<Ztypecolon> U') (A' * (x'' \<Ztypecolon> T')) \<and> P1 \<and> P2\<close>
-  for A :: \<open>'a::sep_semigroup BI\<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using enter_SEb .
 
 \<phi>reasoner_ML \<A>SEb_Entry 50 (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (ctxt, sequent) =>
   Seq.make (fn () =>
-    SOME ((ctxt, SE_entry_point (@{thm' enter_SEb_TH}, @{thm' enter_SEb},
-                                 @{thm' enter_SEb_TH[THEN ToA_by_Equive_Class]},
-                                 @{thm' enter_SEb[THEN ToA_by_Equive_Class]}) sequent), Seq.empty))\<close>
+    if Sign.of_sort (Proof_Context.theory_of ctxt)
+                    (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
+    then SOME ((ctxt, SE_entry_point (@{thm' enter_SEb_TH}, @{thm' enter_SEb},
+                                      @{thm' enter_SEb_TH[THEN ToA_by_Equive_Class]},
+                                      @{thm' enter_SEb[THEN ToA_by_Equive_Class]}) sequent), Seq.empty)
+    else (warning "The reasoner can barely do nothing for those even are not sep_magma" ;
+          NONE))\<close>
 
 hide_fact enter_SE enter_SE_TH enter_SEb enter_SEb_TH
 

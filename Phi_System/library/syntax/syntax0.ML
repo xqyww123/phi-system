@@ -11,6 +11,7 @@ include PHI_SYNTAX
   val dest_view_shift   : term  -> term * term * term
   val dest_view_shift_c : cterm -> cterm * cterm * cterm
 
+  val dest_transformation_typ : term -> typ
   val dest_transformation   : term  -> term * term * term
   val dest_transformation_c : cterm -> cterm * cterm * cterm
   val transformation_conv : conv -> conv -> conv -> conv
@@ -73,6 +74,12 @@ val dest_transformation   =
 val dest_transformation_c =
          dest_tags_c
       #> dest_triop_c @{const_name "Transformation"}
+
+fun dest_transformation_typ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_transformation_typ X
+  | dest_transformation_typ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = dest_transformation_typ X
+  | dest_transformation_typ (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ X) = dest_transformation_typ X
+  | dest_transformation_typ (Const(\<^const_name>\<open>Transformation\<close>, \<^Type>\<open>fun \<^Type>\<open>set a\<close> _\<close>) $ _ $ _ $ _) = a
+  | dest_transformation_typ X = raise TERM ("dest_transformation_typ", [X])
 
 fun transformation_conv C_s C_t C_p ctm = (
   dest_transformation_c ctm;

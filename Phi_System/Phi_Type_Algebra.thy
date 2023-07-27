@@ -1125,7 +1125,16 @@ lemma "_Structural_Extract_general_rule_":
  
 declare "_Structural_Extract_general_rule_"[(*THEN SE_clean_waste,*) \<phi>reason_template 80]
 
-lemma "_Structural_Extract_general_rule'_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
+lemma "_Structural_Extract_general_rule_":
+  \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
+\<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P x @action \<A>SE True)
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SE True \<close>
+
+lemma "_Structural_Extract_general_rule_TH_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
@@ -1290,7 +1299,8 @@ subsubsection \<open>Push map\<close>
 declare homo_sep_disj_total_push_map [\<phi>reason 1100]
         homo_sep_mult_push_map [\<phi>reason 1100]
         homo_one_push_map [\<phi>reason 1100]
-
+thm homo_sep_disj_total_push_map
+ML \<open>@{thm' homo_sep_disj_total_push_map} |> Thm.prop_of\<close>
 
 subsection \<open>Property Derivers\<close>
 

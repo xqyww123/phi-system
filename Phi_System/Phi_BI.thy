@@ -860,22 +860,41 @@ definition \<phi>None :: \<open>('v::one, unit) \<phi>\<close> ("\<circle>")
   where \<open>\<phi>None = (\<lambda>x. { 1 }) \<close>
 
 lemma \<phi>None_expn[\<phi>expns, simp]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>None) \<longleftrightarrow> p = 1\<close>
-  unfolding \<phi>None_def \<phi>Type_def by simp
+  \<open>p \<Turnstile> (x \<Ztypecolon> \<phi>None) \<longleftrightarrow> p = 1\<close>
+  unfolding \<phi>None_def \<phi>Type_def Satisfaction_def
+  by simp
 
 lemma \<phi>None_inhabited[elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
 lemma \<phi>None_itself_is_one[simp]:
   \<open>(any \<Ztypecolon> \<phi>None) = 1\<close>
-  unfolding set_eq_iff by simp
+  unfolding BI_eq_iff by simp
 
 (*
 lemma [\<phi>reason 1200]:
   \<open>any \<Ztypecolon> \<phi>None \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<Ztypecolon> Itself\<close>
   unfolding Transformation_def by simp *)
 
+subsubsection \<open>Insertion into Unital Algebra\<close>
 
+definition \<phi>Option_Insertion :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
+
+subsubsection \<open>Insertion into Unital Algebra\<close>
+
+definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
+  where \<open>\<black_circle> T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
+
+lemma \<phi>Some_expn[simp, \<phi>expns]:
+  \<open>p \<Turnstile> (x \<Ztypecolon> \<black_circle> T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))\<close>
+  unfolding \<phi>Type_def \<phi>Some_def Satisfaction_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P \<close>
+  unfolding Transformation_def
+  by simp blast
 
 subsubsection \<open>Embedding of Separation Conjunction\<close>
 

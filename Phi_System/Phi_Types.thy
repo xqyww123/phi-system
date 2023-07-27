@@ -468,9 +468,24 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
   unfolding \<phi>Type_univ_quant_def \<phi>Type_def by clarsimp
 *)
 
-subsection \<open>Embedding Additive Conjunction\<close>
+subsection \<open>Embedding Additive Disjunction\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+\<phi>type_def \<phi>Union :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<or>\<^sub>\<phi>" 70)
+  where [embed_into_\<phi>type]: \<open>(T \<or>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U))\<close>
+  deriving \<open>  (\<And>x. x \<Ztypecolon> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pa x)
+          \<Longrightarrow> (\<And>x. x \<Ztypecolon> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pb x)
+          \<Longrightarrow> x \<Ztypecolon> (A \<or>\<^sub>\<phi> B) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pa (fst x) \<or> Pb (snd x) \<close>
+       and \<open>  Object_Equiv T eqa
+          \<Longrightarrow> Object_Equiv U eqb
+          \<Longrightarrow> Object_Equiv (T \<or>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
+       and \<open>  Identity_Element\<^sub>I (1 \<Ztypecolon> T) P
+          \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> U) Q
+          \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) (P \<or> Q)\<close>
+       and \<open>  Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<or> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
+          \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) \<close>
+
+
+subsection \<open>Embedding Additive Conjunction\<close>
          
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
@@ -865,9 +880,17 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
+declare [[\<phi>trace_reasoning = 3]]
+       
+\<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
+  where \<open>\<phi>MapAt_L k T = (\<phi>Fun (push_map k) \<Zcomp> T)\<close>
+  deriving Basic
+       and Identity_Element
+       and Functional_Transformation_Functor
+       and Separation_Homo
 
-definition \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
-  where \<open>\<phi>MapAt_L key T x = { push_map key v |v. v \<in> (x \<Ztypecolon> T) }\<close>
+thm \<phi>MapAt_L.unfold
+    \<phi>MapAt_L.expansion
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
@@ -1612,8 +1635,7 @@ lemma [\<phi>reason add]:
 
 subsubsection \<open>\<phi>-Some\<close>
 
-definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
-  where \<open>\<phi>Some T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
+
 
 abbreviation \<phi>Share_Some ("\<fish_eye> _" [91] 90)
   where \<open>\<phi>Share_Some T \<equiv> \<phi>insertion to_share UNIV (\<phi>Some T)\<close>
@@ -1623,9 +1645,7 @@ abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
 
 \<phi>adhoc_overloading \<phi>coercion \<phi>Some \<phi>Share_Some \<phi>Share_Some_L
 
-lemma \<phi>Some_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<phi>Some T) \<longleftrightarrow> (\<exists>v. p = Some v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Type_def \<phi>Some_def by simp
+
 
 lemma \<phi>Some_inhabited[elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Some T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>

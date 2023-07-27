@@ -70,7 +70,8 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
               Term_Subst.instantiateT instTy ele_model0
             )
       
-      val inst  = Phi_Help.lift_type_sort' thy [(model_ty'1, \<^sort>\<open>sep_magma\<close>), (ele_model'1, \<^sort>\<open>sep_magma\<close>)]
+      val target_sort = if Sign.of_sort thy (model_ty'1, \<^sort>\<open>one\<close>) then \<^sort>\<open>sep_magma_1\<close> else \<^sort>\<open>sep_magma\<close>
+      val inst  = Phi_Help.lift_type_sort' thy [(model_ty'1, target_sort), (ele_model'1, target_sort)]
                   handle TYPE _ => raise Automation_Fail ("Fail to guess the property because fail to \
                                     \constrain the type " ^ Syntax.string_of_typ ctxt model_ty'1 ^ " and "
                                     ^ Syntax.string_of_typ ctxt ele_model'1 ^ " by sort \<open>sep_magma\<close>")
