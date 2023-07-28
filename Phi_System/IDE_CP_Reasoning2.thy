@@ -1872,6 +1872,7 @@ lemma enter_SEba_TH:
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using enter_SEba .
 
+thm enter_SE[THEN ToA_by_Equive_Class', rotated 2]
 
 ML \<open>
 fun SE_entry_point rules thy sequent =

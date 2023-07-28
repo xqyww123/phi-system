@@ -1238,6 +1238,23 @@ lemma "_Structural_Extract_general_rule_TH_"[(*THEN SE_clean_waste',*) \<phi>rea
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using "_Structural_Extract_general_rule_"[where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
 
+
+lemma "_Structural_Extract_general_rule_a_"[\<phi>reason_template 80]:
+  \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
+\<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<w>\<i>\<t>\<h> P x @action \<A>SEa )
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f (z x) \<Ztypecolon> F3 U \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SEa \<close>
+  \<medium_left_bracket> premises FTF and _ and [\<phi>reason add] and _ and Tr
+    interpret Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
+      using FTF . ;;
+    apply_rule apply_Separation_Functor_zip[where Fu=F4 and Ft=F1]
+    apply_rule functional_transformation[where U=\<open>U\<close> and f=\<open>f\<close> and P=\<open>P\<close>]
+    \<medium_left_bracket> Tr \<medium_right_bracket> ;;
+  \<medium_right_bracket> .
+
+
 (*
 lemma "_Structural_Extract_general_rule_b_":
   \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper

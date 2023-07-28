@@ -738,7 +738,7 @@ lemma [\<phi>reason 10000]:
   deriving (*Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and*) Separation_Homo
+       and*) Separation_Homo\<^sub>E
        (*and Open_Abstraction_Full
        and Is_Functional*)
 

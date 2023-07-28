@@ -30,6 +30,7 @@ signature NU_REASONER = sig
                    pattern: (term * int) list,
                    blacklist: term list,
                    tactic: tactic}
+  val match_reasoner : theory -> term -> reasoner -> bool
 
 
   val trace : int Config.T (*Prints the state of every reasoning step.*)
@@ -60,6 +61,8 @@ signature NU_REASONER = sig
   val add_lthy : reasoner -> local_theory -> local_theory
   val del_reasoners: term (*pattern*)
                   -> (reasoner -> bool) (*filter, returning true to delete one*)
+                  -> Context.generic -> Context.generic
+  val del_reasoners_by_name: term (*pattern matching the name*)
                   -> Context.generic -> Context.generic
   val has_reasoner : term -> (reasoner -> bool) -> Context.generic -> bool
   val reasoners : Proof.context -> reasoners
@@ -200,6 +203,14 @@ fun print_mode_ML NORMAL = "Phi_Reasoner.NORMAL"
   | print_mode_ML LOCAL_CUT = "Phi_Reasoner.LOCAL_CUT"
   | print_mode_ML GLOBAL_CUT = "Phi_Reasoner.GLOBAL_CUT"
   | print_mode_ML TO_BE_OVERRIDE = "Phi_Reasoner.TO_BE_OVERRIDE"
+
+fun name_of_intro_reasoner rules = Logic.mk_conjunction_list (map Thm.prop_of rules)
+fun match_reasoner_name thy pattern name =
+  let val name_concls = Logic.dest_conjunction_list name
+                     |> map Logic.strip_assums_concl
+   in exists (fn X => Pattern_Translation.does_match_term thy (pattern, X)) name_concls
+  end
+fun match_reasoner thy pattern reasoner = match_reasoner_name thy pattern (#name reasoner)
 
 (* Attributes *)
 val auto_level = Attrib.setup_config_int \<^binding>\<open>\<phi>auto_level\<close> (K 2)
@@ -390,9 +401,6 @@ fun single_RS rule ctxt thm =
   Seq.make (fn _ => Option.map (rpair Seq.empty) (single_RS' rule ctxt thm))
 
 
-fun name_of_intro_reasoner rules =
-  (*Free ("\<phi>Intro_Rule", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ *) Logic.mk_conjunction_list (map Thm.prop_of rules)
-
 type guard = context_state -> bool
 
 (* Main Reasoning Function *)
@@ -454,6 +462,9 @@ fun del_reasoners pattern filter ctxt =
      in fold (fn (c,p,id,R) => Net.delete_term registry_eq (p, (c,p,id,R)))
              to_remove all_reasoners
     end) ctxt
+
+fun del_reasoners_by_name pattern ctxt =
+      del_reasoners pattern (match_reasoner (Context.theory_of ctxt) pattern) ctxt
 
 fun has_reasoner pattern filter ctxt =
   Net.match_term (Reasoners.get ctxt) pattern
@@ -716,17 +727,16 @@ val _ =
    >> (fn (raw_pattern, power) =>
       Toplevel.keep (fn top =>
         let val ctxt = Toplevel.context_of top
+            val thy = Proof_Context.theory_of ctxt
             val pattern = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt) raw_pattern
             val all_reasoners = Reasoners.get (Context.Proof ctxt)
             val reasoners = case power
-                              of 0 => get_reasoners' (Proof_Context.theory_of ctxt) all_reasoners pattern
+                              of 0 => get_reasoners' thy all_reasoners pattern
                                | 1 => Net.match_term all_reasoners pattern
                                         |> distinct (fn (a,b) => #3 a = #3 b)
                                         |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
                                | 2 => Net.entries all_reasoners
-                                        |> filter (fn (_,x,_,_) =>
-                                              Pattern.matches (Proof_Context.theory_of ctxt)
-                                                              (pattern,x))
+                                        |> filter (fn (_,_,_,r) => match_reasoner thy pattern r)
                                         |> distinct (fn (a,b) => #3 a = #3 b)
                                         |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
          in if null reasoners
@@ -851,7 +861,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
     val tac = if is_none guard andalso forall (not o snd) rules_with_flag
               then Tac_Rule rules
               else Tac_ML (guarded_tac rules_with_flag)
-  in ({name = name_of_intro_reasoner rules,
+  in ({name = @{print} (name_of_intro_reasoner rules),
        pos = pos,
        mode = mode,
        pattern = pats,
