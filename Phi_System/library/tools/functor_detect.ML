@@ -413,6 +413,7 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
                 fun simplify ctxt rules =
                       let val ((_,rules'1), ctxt'1) = Variable.import false rules ctxt
                           val ctxt's = Gen_Rule_SS.enhance ctxt'1
+                                    |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
                        in Variable.export ctxt'1 ctxt
                             (map ( Simplification_Protect.protect ctxt's
                                 #> Simplifier.asm_lr_simplify ctxt's

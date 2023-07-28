@@ -957,6 +957,10 @@ lemma \<phi>Some_transformation_strip:
   unfolding atomize_eq Transformation_def
   by clarsimp blast
 
+lemma \<phi>Some_eq_term_strip:
+  \<open> (x \<Ztypecolon> \<black_circle> T) = (y \<Ztypecolon> \<black_circle> U) \<equiv> (x \<Ztypecolon> T) = (y \<Ztypecolon> U) \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
 
 subsubsection \<open>Embedding of Separation Conjunction\<close>
 

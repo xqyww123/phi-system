@@ -277,11 +277,16 @@ declare Set_Abstraction.intro_reasoning  [\<phi>reason 60 (*TODO 60*)]
         Set_Abstraction.elim_reasoning(1)[\<phi>reason 1000]
 
 lemma [\<phi>reason 2800]:
-  \<open> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> fst x \<Longrightarrow> (a, snd x) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE P)
-\<Longrightarrow> x \<Ztypecolon> (\<S> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE P \<close>
+  \<open> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> fst x \<Longrightarrow> (a, snd x) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE )
+\<Longrightarrow> x \<Ztypecolon> (\<S> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
   unfolding Action_Tag_def Premise_def Transformation_def
   by (cases x; clarsimp; blast)
 
+lemma [\<phi>reason 2800]:
+  \<open> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> fst x \<Longrightarrow> (a, snd x) \<Ztypecolon> \<black_circle> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi )
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> (\<S> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
+  unfolding Action_Tag_def Premise_def Transformation_def
+  by (cases x; clarsimp; blast)
 
 
 subsubsection \<open>\<Sigma>-Homomorphism\<close>
@@ -358,7 +363,7 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Vertical Composition\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
          
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
@@ -440,7 +445,7 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
                prems(1,3-5),
         auto simp add: Satisfaction_def) .
 
-
+  
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
 \<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
@@ -566,6 +571,7 @@ subsubsection \<open>Empty List\<close>
 
 subsection \<open>Empty Type of Free Objects\<close>
 
+(*
 declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>None_freeobj :: \<open>('v::one, 'x) \<phi>\<close> ("\<circle>\<^sub>\<x>")
@@ -577,7 +583,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 declare \<phi>None_freeobj.intro_reasoning[\<phi>reason 1000]
         \<phi>None_freeobj.elim_reasoning[\<phi>reason 1000]
-
+*)
 subsubsection \<open>Special Rules\<close>
 
 lemma [\<phi>reason !10]:
@@ -589,6 +595,7 @@ lemma [\<phi>reason !10]:
 
 subsection \<open>Optional\<close>
 
+(*
 \<phi>type_def \<phi>Optional :: \<open>('c,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('c::one,'x) \<phi>\<close> (infix "?\<^sub>\<phi>" 55)
   where \<open> T ?\<^sub>\<phi> C \<equiv> if C then T else \<circle>\<^sub>\<x> \<close>
   deriving Object_Equiv
@@ -614,7 +621,7 @@ lemma [simp]:
   \<open>1 \<Ztypecolon> T ?\<^sub>\<phi> False \<equiv> 1\<close>
   unfolding atomize_eq BI_eq_iff
   by simp
-
+*)
 
 
 subsection \<open>Mapping\<close>
@@ -671,7 +678,7 @@ ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
 
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 0]]
-                      
+                        
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -722,18 +729,18 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 0]]
+ declare [[\<phi>trace_reasoning = 3]]
 
 
 
-\<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::sep_algebra, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
+\<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-  deriving Basic
+  deriving (*Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and Separation_Homo
-       and Open_Abstraction_Full
-       and Is_Functional
+       and*) Separation_Homo
+       (*and Open_Abstraction_Full
+       and Is_Functional*)
 
 
 

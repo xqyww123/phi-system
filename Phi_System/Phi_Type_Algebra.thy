@@ -384,9 +384,15 @@ lemma \<phi>elim_reasoning_transformation:
 
 lemma \<phi>elim'SE_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
-\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE \<A>
-\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE \<A>\<close>
+\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
   by (cases x; simp add: \<phi>Prod_expn')
+
+lemma \<phi>elim'SEi_transformation:
+  \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
+\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> \<black_circle> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
+  by (cases x; simp add: \<phi>Prod_expn' \<phi>Some_eq_term_strip[where T=T, symmetric])
 
 (* TODO!!!:
 lemma \<phi>elim'SE_transformation:
@@ -516,15 +522,23 @@ thm fib.elims
 
 
 
-
+paragraph \<open>Configuration\<close>
 
 (* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
           \<phi>inductive_destruction_rule_from_direct_definition'
           \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
 
-declare conj_imp_eq_imp_imp[simp_for_\<phi>TA_rule_generation]
-        Premise_I[simp_for_\<phi>TA_rule_generation]
+lemmas [simp_for_\<phi>TA_rule_generation] =
+  conj_imp_eq_imp_imp Premise_I
 
+lemma sing_times_sing[simp_for_\<phi>TA_rule_generation]:
+  \<open>{a} \<times> {b} = {(a,b)}\<close>
+  unfolding set_eq_iff
+  by simp
+
+lemma sing_if[simp_for_\<phi>TA_rule_generation]:
+  \<open>(if c then {a} else {b}) = {if c then a else b}\<close>
+  by simp
 
 setup \<open>
 let fun attach_var F =
@@ -1112,8 +1126,8 @@ lemma "_Structural_Extract_general_rule_":
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
 \<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
-\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P x @action \<A>SE True)
-\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SE True \<close>
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P x @action \<A>SE )
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SE \<close>
   \<medium_left_bracket> premises FTF and _ and _ and [\<phi>reason add] and _ and Tr
     interpret Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
       using FTF . ;;
@@ -1144,7 +1158,7 @@ free from explosion of expression, and can be simplified easily because the bool
 assigned by constants after the reasoning.
 
 *)
-lemma "_Structural_Extract_general_rule_b_":
+lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template 80]:
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r Prem'r pred_mapper func_mapper'r
 \<Longrightarrow> Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w Prem'w pred_mapper'w func_mapper'w
@@ -1163,7 +1177,7 @@ lemma "_Structural_Extract_general_rule_b_":
                           else (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> fst (f (a, undefined)) \<in> Rng'b (fst x)))
 
 \<Longrightarrow> (\<And>x \<in> (if Cw then Dom (z x) else Dom'w (fst x) \<times> {undefined}).
-        x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P x @action \<A>SE False)
+        x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P x @action \<A>SEi )
 
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> F1 T \<^emph> \<half_blkcirc>[Cw] F4 W
 
@@ -1174,7 +1188,7 @@ lemma "_Structural_Extract_general_rule_b_":
                 \<Ztypecolon> \<black_circle> F3 U \<^emph> \<half_blkcirc>[Cr] F2 R
 
     \<w>\<i>\<t>\<h> (if Cw then pred_mapper P (z x) else pred_mapper'w (\<lambda>x. P (x, undefined)) (fst x))
-    @action \<A>SE False \<close>
+    @action \<A>SEi \<close>
   apply (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod)
   apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def
                        "_Structural_Extract_general_rule_"[unfolded Action_Tag_def])
@@ -1218,9 +1232,9 @@ lemma "_Structural_Extract_general_rule_TH_"[(*THEN SE_clean_waste',*) \<phi>rea
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
-\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> (Auto_Transform_Hint U' (x' \<Ztypecolon> T' \<^emph> W') \<and> P x) @action \<A>SE True)
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> (Auto_Transform_Hint U' (x' \<Ztypecolon> T' \<^emph> W') \<and> P x) @action \<A>SE )
 \<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> (
-      Auto_Transform_Hint (F3' U') (x'' \<Ztypecolon> F1' T' \<^emph> F4' W') \<and> pred_mapper P (z x)) @action \<A>SE True \<close>
+      Auto_Transform_Hint (F3' U') (x'' \<Ztypecolon> F1' T' \<^emph> F4' W') \<and> pred_mapper P (z x)) @action \<A>SE \<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using "_Structural_Extract_general_rule_"[where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
 
@@ -1272,8 +1286,8 @@ lemma SE_general_Scala_Seminearing_left: (*need test, to be tested once we have 
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds
 \<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
-\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> F4 c W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F3 c U \<^emph> R \<w>\<i>\<t>\<h> P x @action \<A>SE True)
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 b U \<^emph> F2 a R \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SE True\<close>
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> F4 c W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F3 c U \<^emph> R \<w>\<i>\<t>\<h> P x @action \<A>SE )
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 b U \<^emph> F2 a R \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SE \<close>
   \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add] and _ and _ and FTF
              and _ and _ and [\<phi>reason add] and _ and Tr
     interpret Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
@@ -1314,7 +1328,7 @@ lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we hav
                              else (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> fst (f (a, undefined)) \<in> Rng'b (fst x)))
 
 \<Longrightarrow> (\<And>x \<in> (if Cw then Dom (z x) else Dom'w (fst x) \<times> {undefined}).
-          x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] F4 c W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> \<black_circle> F3 c U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P x @action \<A>SE False)
+          x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] F4 c W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> \<black_circle> F3 c U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P x @action \<A>SEi )
 
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> F1 a T \<^emph> \<half_blkcirc>[Cw] F4 b W
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if Cw then if Cr then uz (func_mapper f (z x))
@@ -1323,7 +1337,7 @@ lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we hav
                                 else (func_mapper'b (\<lambda>x. fst (f (x, undefined))) (fst x), undefined))
                 \<Ztypecolon> \<black_circle> F3 b U \<^emph> \<half_blkcirc>[Cr] F2 a R
     \<w>\<i>\<t>\<h> (if Cw then pred_mapper P (z x) else pred_mapper'w (\<lambda>x. P (x, undefined)) (fst x))
-    @action \<A>SE False\<close>
+    @action \<A>SEi \<close>
   apply (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod)
   apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def
                        "SE_general_Scala_Seminearing_left"[unfolded Action_Tag_def])
