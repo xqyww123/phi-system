@@ -81,7 +81,42 @@ fun print_dbg prompt th = Seq.make (fn () => (@{print} prompt; @{print} th; SOME
 
 val aux_thms = Useful_Thms.get
 
+
+(* Simple Simplification of Obligations Before Exporting *)
+(*to see if it can be reduced to some trivial form like \<open>A = ?x\<close>*)
+
+val conv_LRHS_heads = [\<^const_name>\<open>id\<close>, \<^const_name>\<open>fst\<close>, \<^const_name>\<open>snd\<close>]
+fun conv_LRHS ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>id\<close>, _) $ _ =>
+          Conv.rewr_conv @{thm' Fun.id_apply[folded atomize_eq]} ctm
+     | Const(\<^const_name>\<open>fst\<close>, _) $ (Const(\<^const_name>\<open>Pair\<close>, _) $ _ $ _) =>
+          Conv.rewr_conv @{thm' Product_Type.fst_conv[folded atomize_eq]} ctm
+     | Const(\<^const_name>\<open>snd\<close>, _) $ (Const(\<^const_name>\<open>Pair\<close>, _) $ _ $ _) =>
+          Conv.rewr_conv @{thm' Product_Type.snd_conv[folded atomize_eq]} ctm
+     | _ => raise CTERM ("conv_LRHS", [ctm])
+
+fun need_conv_LRHS tm =
+  case Term.head_of tm of Const(N, _) => member (op =) conv_LRHS_heads N
+                        | _ => false
+
+fun simple_simp ctxt sequent =
+  case PLPR_Syntax.dest_premise_tag (major_prem_of sequent)
+    of (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y) =>
+         if need_conv_LRHS X orelse need_conv_LRHS Y
+         then Conv.fconv_rule (Phi_Conv.leading_antecedent_conv (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                 Conv.arg_conv (Conv.arg_conv (
+                      HOLogic.eq_conv (Conv.repeat_conv conv_LRHS) (Conv.repeat_conv conv_LRHS)))
+                 ) ctxt
+              )) sequent
+         else sequent
+     | _ => sequent
+
+
+(*** Tactics ***)
+
 (** Tactic Configures **)
+(*depreciate?*)
 
 datatype solver_mode = Agressive_Solver (*the auto method*) | Safe_Solver (*by clarsimp*)
 
@@ -96,15 +131,23 @@ fun apply ctxt tactic  mode =
           (fn mode => fn (aux,tac,ctxt) =>
               ([], tactic (ctxt,tac,aux,mode), ctxt)) mode (aux_thms ctxt, all_tac, ctxt)))))
 
-(* tac THEN HEADGOAL (Method.insert_tac ctxt aux)
-                       THEN tactic ctxt *)
+(** Tactic Template **)
 
-(*
-fun apply' protect_head ctxt tactic =
-  let val prep = if protect_head
-                 then *)
+fun oblg_template f ctxt th00 = Seq.make (fn () =>
+  let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
+                   of SOME _ => th00
+                    | NONE => @{thm' Premise_D[where mode=default]} RS th00
+      val th = th01 (* simple_simp ctxt th01 *)
+   in case PLPR_Syntax.dest_premise_tag (major_prem_of th)
+        of (_, Const (\<^const_name>\<open>True\<close>, _)) =>
+                SOME (@{thm Premise_True} RS th, Seq.empty)
+         | (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B) =>
+              if is_Var (Term.head_of A) orelse is_Var (Term.head_of B)
+              then SOME (@{thm Premise_refl} RS th, Seq.empty)
+              else f ctxt th
+         | _ => f ctxt th
+  end)
 
-(** Tactics **)
 
 (*** Auxiliaries ***)
 
@@ -289,19 +332,17 @@ fun contract_obligations mode ctxt thm = thm
     |> collect_obligation_premises mode ctxt
     |> Conv.fconv_rule (Conv.rewr_conv @{thm contract_obligations})
 
-fun defer_antecedent contract ctxt thm =
-  let
-    val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
+fun defer_antecedent contract = oblg_template (fn ctxt => fn thm =>
+  let val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
           case tm of (_ $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _)) => true
                    | _ => false)
-  in
-    if idx = ~1
-    then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
-    else Thm.permute_prems 1 idx thm
+  in if idx = ~1
+     then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
+     else Thm.permute_prems 1 idx thm
       |> contract ctxt
       |> Thm.permute_prems 0 (~idx)
-      |> Seq.single
-  end
+      |> (fn X => SOME (X, Seq.empty))
+  end)
 
 val defer_obligation_tac = defer_antecedent o contract_obligations
 
@@ -319,17 +360,12 @@ fun intro_all_leading_ex i thm =
 
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
-fun auto_obligation_solver ctxt th = Seq.make (fn () =>
-  case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th)
-    of SOME (_, Const (\<^const_name>\<open>True\<close>, _)) =>
-            SOME (@{thm Premise_True} RS th, Seq.empty)
-     | SOME (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Var _) => SOME (@{thm Premise_refl} RS th, Seq.empty)
-     | SOME (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Var _ $ _) => SOME (@{thm Premise_refl} RS th, Seq.empty)
-     | _ => head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
-                pre THEN HEADGOAL (Method.insert_tac ctxt aux)
-                    THEN Clasimp.auto_tac ctxt) Agressive_Solver) th
-             |> Seq.pull
-)
+val auto_obligation_solver = oblg_template (fn ctxt => fn th =>
+      head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
+          pre THEN HEADGOAL (Method.insert_tac ctxt aux)
+              THEN Clasimp.auto_tac ctxt) Agressive_Solver)
+                (@{thm' Premise_I} RS th)
+       |> Seq.pull)
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
 
@@ -351,19 +387,13 @@ fun auto_obligation_solver1 ctxt sequent =  (
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-fun safer_obligation_solver ctxt th = Seq.make (fn () =>
-  case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th)
-    of SOME (_, Const(\<^const_name>\<open>True\<close>, _)) => SOME (@{thm Premise_True} RS th, Seq.empty)
-     | SOME (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ Var _) => SOME (@{thm Premise_refl} RS th, Seq.empty)
-     | SOME (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Var _ $ _) => SOME (@{thm Premise_refl} RS th, Seq.empty)
-     | SOME _ =>
-        let val th' = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
-         in apply ctxt (fn (ctxt,pre,aux,_) =>
-               pre THEN HEADGOAL (fn s => fn x => Clasimp.clarsimp_tac (ctxt addsimps aux) s x)) Safe_Solver th'
-         |> Seq.pull
-        end
-     | NONE => SOME (th, Seq.empty)
-)
+val safer_obligation_solver = oblg_template (fn ctxt => fn th =>
+      let val th'1 = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
+          val th' = @{thm' Premise_I} RS th'1
+       in apply ctxt (fn (ctxt,pre,aux,_) =>
+             pre THEN HEADGOAL (fn s => fn x => Clasimp.clarsimp_tac (ctxt addsimps aux) s x)) Safe_Solver th'
+       |> Seq.pull
+      end)
 
 val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver
 

@@ -111,8 +111,8 @@ fun instantiate_the_var var ctxt sequent0 =
       fun mk_disj_inst vx concls (quants, prems) =
         let val qlen = length quants
          in fold_index (fn (i,(N,ty)) => fn X =>
-                  if vx = (N,ty) then Abs(N,ty,X) $ Bound (qlen-i)
-                                 else HOLogic.exists_const ty $ Abs(N,ty,X))
+                  if vx = i then Abs(N,ty,X) $ Bound (qlen-i)
+                            else HOLogic.exists_const ty $ Abs(N,ty,X))
               quants (Phi_Help.list_mk_conj (prems @ concls))
         end
 
@@ -127,20 +127,16 @@ fun instantiate_the_var var ctxt sequent0 =
 
       fun opt_join NONE x = SOME x
         | opt_join (SOME a) b = if a = b then SOME a else error "BUG"
-      fun pass_conjs qp concls_varx (\<^Const>\<open>HOL.conj\<close> $ A $ B)
-            = pass_conjs qp (pass_conjs qp concls_varx A) B
-        | pass_conjs (quants,_) (concls,varx) (Var v' $ vx $ _)
+      fun pass_conjs concls_varx (\<^Const>\<open>HOL.conj\<close> $ A $ B)
+            = pass_conjs (pass_conjs concls_varx A) B
+        | pass_conjs (concls,varx) (Var v' $ vx $ _)
             = if v' = var
               then (concls,
-                    case vx of Free NT => opt_join varx NT
-                             | Bound i => opt_join varx (List.nth (quants, i))
+                    case vx of Bound i => opt_join varx i
                              | _ => error "BUG" )
               else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
-        | pass_conjs _ (concls,meet) P
-            = (fold_aterms (fn Var v' =>
-                if v' = var then raise Automation_Fail "fail to infer the transformation relation: fail to normalize the obligation"
-                else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
-                  | _ => I) P () ;
+        | pass_conjs (concls,meet) P
+            = (if has_the_var P then raise Automation_Fail "fail to infer the transformation relation: fail to normalize the obligation" else () ;
                (P::concls, meet))
 
       fun inst_body ret (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
@@ -148,7 +144,7 @@ fun instantiate_the_var var ctxt sequent0 =
         | inst_body ret (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
             = inst_body ret ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
         | inst_body (disj, conj) qp P
-            = case pass_conjs qp ([],NONE) P
+            = case pass_conjs ([],NONE) P
                 of (concls, SOME vx)  => (mk_disj_inst vx concls qp :: disj, conj)
                  | (concls, NONE) => (disj, mk_conj_inst concls qp :: conj)
 

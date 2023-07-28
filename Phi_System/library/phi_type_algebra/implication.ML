@@ -120,19 +120,29 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                       = inst_Pr ((N,ty)::vars, map (Term.incr_boundvars 1) prems) X
                  | inst_Pr (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
                       = inst_Pr (vars, P::prems) X
+                 | inst_Pr context (Const(\<^const_name>\<open>disj\<close>, _) $ A $ B)
+                      = let val (va,ia) = inst_Pr context A
+                            val (vb,ib) = inst_Pr context B
+                         in if va = vb then (va, \<^Const>\<open>HOL.disj\<close> $ ia $ ib)
+                            else raise Automation_Fail "Obligation is obtained, but I fail to infer \
+                                        \the expression of the implied pure fact from it."
+                        end
                  | inst_Pr (vars,prems) (Var (v as (("Pr",_), \<^Type>\<open>fun tyv _\<close>)) $ Bound j)
                       = Phi_Help.list_mk_conj prems
                           |> fold_index (fn (k, (N, ty)) => fn X =>
                                 if k = j then Abs (N, ty, X) $ Bound (length vars - 1 - k)
                                 else HOLogic.all_const ty $ Abs(N, ty, X)
                              ) vars
-                          |> (fn X => Abs ("x", tyv, X))
-                          |> (fn X => Thm.instantiate (TVars.empty, Vars.make [(v, Thm.cterm_of ctxt X)]))
+                          |> pair v
             in case Thm.prop_of sequent
                  of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _)
                       $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ X)) $ _
-                      => SOME (inst_Pr ([],[]) X sequent
+                      => let val (v, X) = inst_Pr ([],[]) X
+                             val X = case snd v of \<^Type>\<open>fun tyv _\<close> => Abs ("x", tyv, X)
+                                                 | _ => error "BUG GvwRuEdURwyJuFlxjBHOfQ"
+                          in SOME (Thm.instantiate (TVars.empty, Vars.make [(v, Thm.cterm_of ctxt X)]) sequent
                                 |> oblg_solver (#proof_id phi ^ "/Inh") ctxt)
+                         end
                   | _ => error "Internal bug"
            end)
 (*(fn (_,_,sequent) => SOME (@{thm' \<phi>TA_Inh_inst_P} RS sequent))*)

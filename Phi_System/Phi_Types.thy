@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-                  
+                      
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -33,11 +33,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Object_Equiv
        and Is_Functional
        and Open_Abstraction_Full
-
-thm \<phi>Fun.intro
-thm \<phi>Fun.intro_reasoning
-thm \<phi>Fun.elim
-thm \<phi>Fun.elim_reasoning
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -61,7 +56,7 @@ lemma [\<phi>reason add]:
 
 subsection \<open>\<phi>-Type Embedding of \<open>\<top>\<close>\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
   
 \<phi>type_def \<phi>Any :: \<open>('x, unit) \<phi>\<close>
   where [embed_into_\<phi>type]: \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
@@ -76,19 +71,19 @@ declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
 
 
 subsection \<open>Embedding Subjection into Type\<close>
-
+ 
 declare [[\<phi>trace_reasoning = 0]]
-   
+        
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
-  deriving Basic
+  deriving (*Basic
        and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
-       and Open_Abstraction_Full
-       and Identity_Element
+       and*) Open_Abstraction_Full
+       (*and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
-       and Separation_Homo\<^sub>E
+       and Separation_Homo\<^sub>E*)
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 

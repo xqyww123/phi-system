@@ -28,12 +28,15 @@ fun dest_binop_c const tm =
 
 val dest_Trueprop_c = dest_monop_c "HOL.Trueprop"
 
-val dest_premise_tag  = dest_binop   @{const_name "Premise"} o perhaps (try HOLogic.dest_Trueprop)
-val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
-
 fun dest_premise_tag_opt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_premise_tag_opt X
   | dest_premise_tag_opt (Const(\<^const_name>\<open>Premise\<close>, _) $ tag $ X) = SOME (tag, X)
   | dest_premise_tag_opt _ = NONE
+fun dest_premise_tag tm =
+  case dest_premise_tag_opt tm of SOME ret => ret
+     | NONE => raise TERM ("dest_premise_tag", [tm])
+val dest_premise_tag_c= dest_binop_c @{const_name "Premise"} o perhaps (try dest_Trueprop_c)
+
+
 
 fun add_premise_tag_conv mode =
   let val rule = Thm.instantiate (TVars.empty, Vars.make [((("mode",0),\<^typ>\<open>mode\<close>),mode)])
