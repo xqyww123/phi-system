@@ -137,7 +137,7 @@ fun oblg_template f ctxt th00 = Seq.make (fn () =>
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
-      val th = th01 (* simple_simp ctxt th01 *)
+      val th = simple_simp ctxt th01
    in case PLPR_Syntax.dest_premise_tag (major_prem_of th)
         of (_, Const (\<^const_name>\<open>True\<close>, _)) =>
                 SOME (@{thm Premise_True} RS th, Seq.empty)

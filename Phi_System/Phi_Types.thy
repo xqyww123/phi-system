@@ -54,36 +54,20 @@ lemma [\<phi>reason add]:
 
 
 
-subsection \<open>\<phi>-Type Embedding of \<open>\<top>\<close>\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
-  
-\<phi>type_def \<phi>Any :: \<open>('x, unit) \<phi>\<close>
-  where [embed_into_\<phi>type]: \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
-  deriving Basic
-
-lemma [\<phi>reason 1000]:
-  \<open>x \<Ztypecolon> \<phi>Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
-  \<medium_left_bracket> to Itself \<medium_right_bracket>.
-
-declare \<phi>Any.intro_reasoning [\<phi>reason 1000]
-
-
-
 subsection \<open>Embedding Subjection into Type\<close>
  
 declare [[\<phi>trace_reasoning = 0]]
-        
+          
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
-  deriving (*Basic
+  deriving Basic
        and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
-       and*) Open_Abstraction_Full
-       (*and Identity_Element
+       and Open_Abstraction_Full
+       and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
-       and Separation_Homo\<^sub>E*)
+       and Separation_Homo\<^sub>E
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -472,6 +456,8 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 
 subsection \<open>Embedding Additive Disjunction\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Union :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<or>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<or>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U))\<close>
   deriving \<open>  (\<And>x. x \<Ztypecolon> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pa x)
@@ -709,16 +695,12 @@ thm List3.obj_eq
 *)
 consts Nat :: \<open>(nat,nat) \<phi>\<close>
  
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
        
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
   deriving Basic
 
-thm List.Implication
-thm List.unfold
-
-print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> ? ?
   
 
 (*
@@ -726,18 +708,18 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 3]]
+ declare [[\<phi>trace_reasoning = 0]]
 
 
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
-  deriving (*Basic
+  deriving Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and*) Separation_Homo\<^sub>E
-       (*and Open_Abstraction_Full
-       and Is_Functional*)
+       and Separation_Homo
+       and Open_Abstraction_Full
+       and Is_Functional
 
 
 
@@ -884,7 +866,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
        
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<phi>Fun (push_map k) \<Zcomp> T)\<close>
@@ -892,6 +874,8 @@ declare [[\<phi>trace_reasoning = 3]]
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
+       and Open_Abstraction_Full
+       and Is_Functional
 
 thm \<phi>MapAt_L.unfold
     \<phi>MapAt_L.expansion
@@ -902,33 +886,19 @@ abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow
 abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>[\<^sub>]" 75)
   where \<open>\<phi>MapAt_Lnil key T \<equiv> \<phi>MapAt_L [key] (\<phi>MapAt [] T)\<close>
 
-lemma \<phi>MapAt_L_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) \<longleftrightarrow> (\<exists>v. p = push_map k v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Type_def \<phi>MapAt_L_def by simp
-
-lemma \<phi>MapAt_L_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> Inhabited (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) \<longrightarrow> C @action \<A>EIF \<close>
-  unfolding Inhabited_def
-  by (simp add: \<phi>expns)
-
 paragraph \<open>Conversion\<close>
 
 lemma \<phi>MapAt_L_\<phi>MapAt:
   \<open>k1 \<^bold>\<rightarrow>\<^sub>@ k2 \<^bold>\<rightarrow> T = (k1 @ k2) \<^bold>\<rightarrow> T\<close>
-  by (rule \<phi>Type_eqI; simp add: \<phi>expns \<phi>MapAt_def; force)
+  by (rule \<phi>Type_eqI; simp add: \<phi>MapAt_def; force)
 
 lemma \<phi>MapAt_L_\<phi>MapAt_L:
   \<open>k1 \<^bold>\<rightarrow>\<^sub>@ k2 \<^bold>\<rightarrow>\<^sub>@ T = (k1 @ k2) \<^bold>\<rightarrow>\<^sub>@ T\<close>
-  by (rule \<phi>Type_eqI; simp add: \<phi>expns; metis push_map_push_map)
+  by (rule \<phi>Type_eqI; simp; metis push_map_push_map)
 
 lemma \<phi>MapAt_L_\<phi>None:
   \<open>k \<^bold>\<rightarrow>\<^sub>@ \<circle> = \<circle>\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
+  by (rule \<phi>Type_eqI; clarsimp)
 
 (*
 lemma [\<phi>reason for \<open>?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub># \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action (?Act::?'a::simplification action)\<close>]:
@@ -948,16 +918,13 @@ simproc_setup \<phi>MapAt_L_simp_cong ("x \<Ztypecolon> k \<^bold>\<rightarrow>\
 
 lemma \<phi>MapAt_L_At:
   \<open>(ks \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) = (ks \<^bold>\<rightarrow> T)\<close>
-  by (rule \<phi>Type_eqI; simp add: \<phi>expns; metis append_self_conv push_map_unit)
+  by (rule \<phi>Type_eqI; simp; metis append_self_conv push_map_unit)
 
 
 paragraph \<open>Implication \& Action Rules\<close>
 
-lemma \<phi>MapAt_L_cast:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ U \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def
-  by (clarsimp simp add: \<phi>expns; blast)
+thm \<phi>MapAt_L.transformation
+
 
 (* TESTING
 lemma [\<phi>reason 1020]:
@@ -998,15 +965,6 @@ lemma [simp]:
 
 paragraph \<open>Algebraic Properties\<close>
  
-interpretation \<phi>MapAt_L: Functional_Transformation_Functor
-    \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k'\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k = k'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
-  by (standard, clarsimp simp add: Transformation_Functor_def Transformation_def ExSet_expn Premise_def
-      Subjection_expn \<phi>MapAt_L_expns; blast)
-
-interpretation \<phi>MapAt_L: Sep_Homo_Type_Functor_L
-    \<open>(\<^bold>\<rightarrow>\<^sub>@) k :: (_ \<Rightarrow> 'a::sep_magma_1,'b) \<phi> \<Rightarrow> _\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> True
-  by (standard, (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns),
-      smt (verit, ccfv_threshold) push_map_distrib_sep_mult push_map_sep_disj)
 
 lemma \<phi>MapAt_L_left_seminearring_functor[\<phi>reason 1100]:
   \<open>Scala_Semimodule_Functor (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>

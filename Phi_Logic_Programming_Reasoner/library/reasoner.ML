@@ -725,9 +725,9 @@ fun default_mode_of priority =
       else NO_CUT
 
 val mode_and_priority =
-      (cut_mode_parser -- backtrack_mode_parser -- Scan.optional Parse.int 100) >> 
-      (fn ((SOME m, bm), i) => ((m,bm),i)
-        | ((NONE, bm), i) => ((default_mode_of i, bm), i))
+      (backtrack_mode_parser -- cut_mode_parser -- Scan.optional Parse.int 100) >> 
+      (fn ((bm, SOME m), i) => ((m,bm),i)
+        | ((bm, NONE), i) => ((default_mode_of i, bm), i))
 
 val patterns = Parse.$$$ "(" |-- Parse.enum "|"
       (Scan.optional (\<^keyword>\<open>except\<close> >> K false) true -- Parse.term

@@ -636,11 +636,11 @@ declare [[\<phi>trace_reasoning = 2]]
 
 
 
-lemma [\<phi>reason !2]:
+lemma [\<phi>reason no explorative backtrack !2]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp' False\<close>
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason !1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp' False\<close>]:
+lemma [\<phi>reason no explorative backtrack !1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp' False\<close>]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>simp' False\<close>
   unfolding Action_Tag_def by simp
 
@@ -760,7 +760,7 @@ lemma ToA_trivial:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @action to any\<close>
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason 0 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
+lemma [\<phi>reason no explorative backtrack 0 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
   \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> T)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to T\<close>
   unfolding Action_Tag_def by blast
@@ -1005,6 +1005,10 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def Transformation_def Premise_def
   by simp
 
+lemma [\<phi>reason 1000]:
+  \<open>x \<Ztypecolon> \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
+  unfolding Action_Tag_def Transformation_def
+  by simp
 
 
 subsubsection \<open>The \<open>to\<close> application\<close>

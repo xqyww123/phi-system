@@ -62,47 +62,13 @@ fun reasoning phi ctxt =
       )) ctxt
   end
 
-fun instantiate_the_var var ctxt sequent0 =
+fun instantiate_the_var var ctxt sequent =
   let val (x_ty, y_ty) = case snd var
                            of \<^Type>\<open>fun x_ty \<^Type>\<open>fun y_ty \<^Type>\<open>bool\<close>\<close>\<close> => (x_ty, y_ty)
                             | _ => error "BUG qC2wYScnQXiFvdGaUF/mBA"
       val [y] = Name.invent_names (Variable.names_of ctxt) "x" [y_ty]
              |> map Free
 
-      (*fun normalize_Ex ctxt ctm =
-        case Thm.term_of ctm
-          of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-              (Conv.arg1_conv (normalize_Ex ctxt) then_conv
-               Conv.arg_conv (normalize_Ex ctxt)) ctm
-           | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
-              Conv.arg_conv (normalize_Ex ctxt) ctm
-           | Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
-              Phi_Conv.hol_all_conv (normalize_Ex o snd) ctxt ctm
-           | Const(\<^const_name>\<open>special_Ex\<close>, \<^Type>\<open>fun \<^Type>\<open>fun T _\<close> _\<close>) $ _ =>
-                if T = y_ty
-                then (Phi_Conv.quant_conv \<^const_name>\<open>special_Ex\<close> (fn (_, ctxt) => fn ctmxx =>
-                        Simplifier.rewrite (Simplifier.clear_simpset ctxt
-                          addsimps @{thms' HOL.imp_conjR[symmetric] HOL.simp_thms}) ctmxx) ctxt) ctm
-                else let
-                  fun norm_Ex ctxt ctm =
-                    case Thm.term_of ctm
-                      of Const(\<^const_name>\<open>special_Ex\<close>, _) $ (Abs(_,_, Const(\<^const_name>\<open>HOL.All\<close>, _) $ _)) =>
-                          (Phi_Conv.move_sp_Ex_inside_All ctxt then_conv
-                           Phi_Conv.hol_all_conv (normalize_Ex o snd) ctxt) ctm
-                       | _ => error "Deriving Open_Abstraction_Full fails: Cannot normalize the generated proof oblgiation"
-                   in (Phi_Conv.quant_conv \<^const_name>\<open>special_Ex\<close> (fn (_, ctxt) =>
-                          Simplifier.rewrite (Simplifier.clear_simpset ctxt
-                                addsimps @{thms' HOL.all_conj_distrib[symmetric] all_simps(3-6)[symmetric]
-                                                 "_all_simps_plus_" HOL.simp_thms}
-                                addsimprocs [\<^simproc>\<open>NO_MATCH\<close>])) ctxt
-                       then_conv Drule.beta_eta_conversion
-                       then_conv norm_Ex ctxt) ctm
-                  end
-           | _ => Conv.all_conv ctm
-*)
-      val sequent = sequent0 (*Conv.gconv_rule (HOLogic.Trueprop_conv (PLPR_Syntax.premise_tag_conv (
-              normalize_Ex ctxt
-            ))) 1 sequent0*)
       val oblg = case Thm.prop_of sequent
                    of \<^Const>\<open>Pure.imp\<close> $ (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_COLLECT\<close> $ X)) $ _
                         => X
@@ -129,9 +95,9 @@ fun instantiate_the_var var ctxt sequent0 =
         | opt_join (SOME a) b = if a = b then SOME a else error "BUG"
       fun pass_conjs concls_varx (\<^Const>\<open>HOL.conj\<close> $ A $ B)
             = pass_conjs (pass_conjs concls_varx A) B
-        | pass_conjs (concls,varx) (Var v' $ vx $ _)
+        | pass_conjs (concls,varx) (Var v' $ vx $ vy)
             = if v' = var
-              then (concls,
+              then ((\<^Const>\<open>HOL.eq y_ty\<close> $ y $ vy) :: concls,
                     case vx of Bound i => opt_join varx i
                              | _ => error "BUG" )
               else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
@@ -146,7 +112,7 @@ fun instantiate_the_var var ctxt sequent0 =
         | inst_body (disj, conj) qp P
             = case pass_conjs ([],NONE) P
                 of (concls, SOME vx)  => (mk_disj_inst vx concls qp :: disj, conj)
-                 | (concls, NONE) => (disj, mk_conj_inst concls qp :: conj)
+                 | (concls, NONE) => (disj, mk_conj_inst' concls qp conj)
 
       fun assemble_dc (disj,conj) = Phi_Help.list_mk_conj (Phi_Help.list_mk_disj disj :: conj)
       fun final_assemble_dc dc = Abs("x", x_ty, Term.lambda y (assemble_dc dc))
@@ -170,7 +136,9 @@ fun instantiate_the_var var ctxt sequent0 =
               then inst_body ([],[]) qp (Term.subst_bounds ([y], X))
               else raise Automation_Fail ("patch_for_Ex.ML fails to normalize the \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R")
         | inst qp P
-            = ([], [mk_conj_inst [P] qp])
+            = if has_the_var P
+              then inst_body ([],[]) qp P
+              else ([], [mk_conj_inst [P] qp])
 
       val inst = final_assemble_dc (inst ([],[]) oblg)
               |> Thm.cterm_of ctxt
@@ -232,9 +200,9 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (
-            fn ctxt => fn phi =>
+            fn _ => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_TrRA_rewr},
-            fn ctxt => fn phi =>
+            fn ctxt => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_TrRA_rewr} then_conv
                 Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
                   Phi_Syntax.transformation_conv

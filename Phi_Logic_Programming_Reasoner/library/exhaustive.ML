@@ -61,7 +61,7 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
               |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn (ctxt',sequent) => (
                     Synchronized.change (hd (Reached_Branches.get ctxt'))
                               (fn L => singleton (Proof_Context.export ctxt' ctxt) sequent :: L) ;
-                    SOME []
+                    raise Phi_Reasoner.Explorative_Backtrack
                ))
      val _ = Phi_Reasoner.reason NONE true ctxt' sequent'
            |> (fn SOME _ => error "Internal bug b4c19005-f87c-4c03-9012-8fa0280a3154"
