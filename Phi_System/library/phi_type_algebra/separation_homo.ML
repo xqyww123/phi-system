@@ -188,7 +188,7 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
              |> Phi_Type_Algebra.note_properties phi0
                     [(if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E", [rule'])]
              |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL 40 ([],[]) NONE
+                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 40 ([],[]) NONE
                                               [Morphism.thm m rule'])
   end
 

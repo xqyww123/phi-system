@@ -121,7 +121,7 @@ fun OE_reasoning phi ctxt rule =
   let val ctxt' = Context.proof_map (Phi_Reasoner.add_pass (
             "\<phi>TA.OE", \<^pattern_prop>\<open>Object_Equiv _ _\<close>,
             fn _ => fn (rules, (_, priority), pats, guard, ctxt) =>
-                       (rules, (Phi_Reasoner.LOCAL_CUT, priority), pats, guard, ctxt))) ctxt
+                       (rules, (Phi_Reasoner.NORMAL_LOCAL_CUT, priority), pats, guard, ctxt))) ctxt
       val extract_prem =
         if def_contains_satisfaction phi
         then extract_pure_prem_by_RS @{thms' \<phi>TA_OE_extract_prem}

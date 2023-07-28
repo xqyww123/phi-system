@@ -155,7 +155,7 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
          | SOME (rule', _) => thy
             |> Phi_Type_Algebra.note_properties phi0 [("Implication", [rule'])]
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL 80 ([],[]) NONE
+                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 80 ([],[]) NONE
                                               [Morphism.thm m rule'])
   end
 

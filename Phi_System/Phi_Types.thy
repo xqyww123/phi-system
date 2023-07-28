@@ -61,6 +61,8 @@ lemma [\<phi>reason add]:
 
 subsection \<open>\<phi>-Type Embedding of \<open>\<top>\<close>\<close>
 
+declare [[\<phi>trace_reasoning = 3]]
+  
 \<phi>type_def \<phi>Any :: \<open>('x, unit) \<phi>\<close>
   where [embed_into_\<phi>type]: \<open>\<phi>Any = (\<lambda>_. UNIV)\<close>
   deriving Basic

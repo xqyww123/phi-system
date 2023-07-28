@@ -1087,7 +1087,7 @@ let fun has_disj_ants th =
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_intro_rules (
-                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [], [], NONE)) ants)
+                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE, 200, [], [], NONE)) ants)
             (* #> Phi_Reasoner.add_intro_rules (map (fn (pat,rule) =>
                     ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs) *))
 

@@ -13,15 +13,26 @@ signature NU_REASONER = sig
   type reasoners
   type ML_guard = context_state -> bool
   type action = cterm
-  datatype mode = NORMAL (*can backtrack*) | LOCAL_CUT | GLOBAL_CUT | TO_BE_OVERRIDE
- (* TO_BE_OVERRIDE : A reasoner can be 'TO_BE_OVERRIDE' such that once there is appliable
-       reasoner of higher priority than it and returning non-empty, the
-       TO_BE_OVERRIDE reasoner will not be applied. This is help for
-       declaring default reasoner that is designed to be easily overrided by
-       user. It can be seen as the opposite of the local cut which overrides
-       all lower rules. The TO_BE_OVERRIDE reasoner will be overrided by any
-       appliable higher rules.
+
+  datatype cut_mode = NO_CUT | LOCAL_CUT | GLOBAL_CUT
+  datatype backtrack_mode = ALLOW_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
+  type mode = cut_mode * backtrack_mode
+  (* declare by NO_BACKTRACK to disable applying the reasoner during backtracking.
+        It causes the reasoner will not be applied once there is another reasoner of a higher priority,
+        no matter if that reasoner's application succeeds.
+        It is therefore useful to declare `default' rules which works when user does not give any
+        specific rule and to be overrided once any rule is given.
+
+     In exhaustive reasoning mode, in order to obtain all reachable solution of a reasoning goal,
+     the reasoning will not terminate even when a success is reached. Instead, a special `explorative'
+     backtrack is triggered to backtrack to other branches.
+     NO_EXPLORATIVE_BACKTRACK disables the rule to be applied in this explorative backtracking.
+     It can be for consideration of performance.
  *)
+  val NORMAL_MODE : mode
+  val NORMAL_LOCAL_CUT : mode
+  val TO_BE_OVERRIDE : mode
+
 
   datatype tactic = Tac_ML of context_state -> context_state Seq.seq | Tac_Rule of thm list
   type reasoner = {name: term,
@@ -50,6 +61,7 @@ signature NU_REASONER = sig
 
   exception Success of context_state
   exception Global_Cut of context_state
+  exception Explorative_Backtrack
 
   structure Global_Cut_Handlers : PLPR_HANDLERS
   structure Success_Handlers : PLPR_HANDLERS
@@ -112,7 +124,7 @@ signature NU_REASONER = sig
   val nested_level : Proof.context -> int (*Starting from 1*)
 
   type guard = context_state -> bool
-  val default_mode_of : priority -> mode
+  val default_mode_of : priority -> cut_mode
   val add_intro_rule : Position.T -> mode -> priority
                     -> (pattern * priority option) list * pattern list
                     -> guard option
@@ -176,8 +188,14 @@ type name = term
 type ML_guard = context_state -> bool
 type action = cterm
 
-datatype mode = NORMAL (*can backtrack*) | LOCAL_CUT | GLOBAL_CUT | TO_BE_OVERRIDE
-(*TO_BE_OVERRIDE: The rule is applied only when no rules of higher priority are matched.*)
+datatype cut_mode = NO_CUT | LOCAL_CUT | GLOBAL_CUT
+datatype backtrack_mode = ALLOW_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
+type mode = cut_mode * backtrack_mode
+
+val NORMAL_MODE = (NO_CUT, ALLOW_BACKTRACK)
+val NORMAL_LOCAL_CUT = (LOCAL_CUT, ALLOW_BACKTRACK)
+val TO_BE_OVERRIDE = (NO_CUT, NO_BACKTRACK)
+
 
 datatype tactic = Tac_ML of context_state -> context_state Seq.seq | Tac_Rule of thm list
 type reasoner = {name: term,
@@ -199,10 +217,15 @@ fun transform_reasoner phi ({name,pos,mode,pattern,blacklist,tactic}:reasoner) =
     blacklist = map (Morphism.term phi) blacklist,
     tactic = tactic}:reasoner)
 
-fun print_mode_ML NORMAL = "Phi_Reasoner.NORMAL"
-  | print_mode_ML LOCAL_CUT = "Phi_Reasoner.LOCAL_CUT"
-  | print_mode_ML GLOBAL_CUT = "Phi_Reasoner.GLOBAL_CUT"
-  | print_mode_ML TO_BE_OVERRIDE = "Phi_Reasoner.TO_BE_OVERRIDE"
+fun print_cut_mode_ML NO_CUT = "Phi_Reasoner.NO_CUT"
+  | print_cut_mode_ML LOCAL_CUT = "Phi_Reasoner.LOCAL_CUT"
+  | print_cut_mode_ML GLOBAL_CUT = "Phi_Reasoner.GLOBAL_CUT"
+
+fun print_backtrack_mode_ML ALLOW_BACKTRACK = "Phi_Reasoner.ALLOW_BACKTRACK"
+  | print_backtrack_mode_ML NO_BACKTRACK = "Phi_Reasoner.NO_BACKTRACK"
+  | print_backtrack_mode_ML NO_EXPLORATIVE_BACKTRACK = "Phi_Reasoner.NO_EXPLORATIVE_BACKTRACK"
+
+val print_mode_ML = ML_Syntax.print_pair print_cut_mode_ML print_backtrack_mode_ML
 
 fun name_of_intro_reasoner rules = Logic.mk_conjunction_list (map Thm.prop_of rules)
 fun match_reasoner_name thy pattern name =
@@ -264,7 +287,7 @@ val nested_level = Environ.get
 
 exception Success    of context_state
 exception Global_Cut of context_state
-(* exception Local_Cut  of (priority * Position.T * context_state Seq.seq) *)
+exception Explorative_Backtrack
 
 structure Global_Cut_Handlers = Local_Handlers(
   type domT = context_state
@@ -518,11 +541,19 @@ fun call_reasoners' trace score N ctxt tactics th =
 (*fun call_reasoners (ctxt,th) =
   gen_call_reasoners (Config.get ctxt trace) (Reasoners.get (Context.Proof ctxt)) ctxt th *)
 
+datatype backtracking = NO_BACKTRACKING | BACKTRACKING | EXPLORATIVE_BACKTRACKING
+
+fun disabled_due_to_backtrack ALLOW_BACKTRACK _ = false
+  | disabled_due_to_backtrack NO_BACKTRACK NO_BACKTRACKING = false
+  | disabled_due_to_backtrack NO_BACKTRACK _ = true
+  | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK EXPLORATIVE_BACKTRACKING = true
+  | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK _ = false
+
 fun gen_reason _ _ _ _ _ _ [] = NONE
   | gen_reason N trace limit iter _ tactics ([]::L) =
       (if 2 <= trace then tracing ("Backtracking...") else ();
-       gen_reason N trace limit iter true tactics L)
-  | gen_reason N trace limit iter backtracking tactics (((score,pos,mode,seq)::L')::L) =
+       gen_reason N trace limit iter BACKTRACKING tactics L)
+  | gen_reason N trace limit iter backtracking tactics (((score,pos,(mode as (cut_mode,backtrack_mode)),seq)::L')::L) =
   let
     val _ = if score = 19171 then () else ()
     val _ = if iter > limit
@@ -531,11 +562,10 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
                        \you can set \<phi>reasoning_step_limit to increase the limit of the steps\
                        \if it is too small."
             else ()
-  in
-  if mode = TO_BE_OVERRIDE andalso backtracking
+  in if disabled_due_to_backtrack backtrack_mode backtracking
   then gen_reason N trace limit iter backtracking tactics (L'::L)
   else
-   (case Seq.pull seq
+  ((case Seq.pull seq
       of SOME ((ctxt,th), seq') =>
           (let
             val _ = if 2 <= trace
@@ -550,44 +580,41 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
 
             val Z = (call_reasoners' trace score N ctxt tactics th)
                   |> (fn Z =>
-                        case mode
+                        case cut_mode
                           of GLOBAL_CUT => let val _ = if 2 <= trace
                                                        then tracing ("\<phi>reasoning cut:\n" ^ Thm.string_of_thm ctxt th)
                                                        else ()
-                                            in [[(score, pos, NORMAL, Seq.single (ctxt,th))]]
+                                            in [[(score, pos, NORMAL_MODE, Seq.single (ctxt,th))]]
                                            end
                            | LOCAL_CUT => Z :: (
                                             if pointer_eq (seq',Seq.empty) then L
                                             else [(score,pos,mode,seq')]::L)
-                           | NORMAL => Z :: (
+                           | NO_CUT => Z :: (
                                   let (*val L' = filter_out_TBO L'*)
                                       val t = if pointer_eq (seq',Seq.empty) then L'
                                               else (score,pos,mode,seq')::L' 
                                   in if null t then L else t::L end)
-                           | TO_BE_OVERRIDE => Z :: (
-                                  let (*val L' = filter_out_TBO L'*)
-                                      val t = if pointer_eq (seq',Seq.empty) then L'
-                                              else (score,pos,mode,seq')::L'
-                                  in if null t then L else t::L end)
                      )
           in
-            gen_reason N trace limit (iter+1) false tactics Z
+            gen_reason N trace limit (iter+1) NO_BACKTRACKING tactics Z
           end)
        | NONE => gen_reason N trace limit iter backtracking tactics (L'::L) )
     handle Success s => Success_Handlers.invoke (fst s) s
-                     |> map (fn (x,y) => (score,x,NORMAL,y))
-                     |> (fn Z => gen_reason N trace limit (iter+1) false tactics (Z :: L))
+                     |> map (fn (x,y) => (score,x,NORMAL_MODE,y))
+                     |> (fn Z => gen_reason N trace limit (iter+1) NO_BACKTRACKING tactics (Z :: L))
          | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
-                     |> map (fn (x,y) => (score,x,NORMAL,y))
-                     |> (fn Z => gen_reason N trace limit (iter+1) false tactics (Z :: L))
+                     |> map (fn (x,y) => (score,x,NORMAL_MODE,y))
+                     |> (fn Z => gen_reason N trace limit (iter+1) NO_BACKTRACKING tactics (Z :: L)) )
+    handle Explorative_Backtrack =>
+              gen_reason N trace limit iter EXPLORATIVE_BACKTRACKING tactics (L'::L)
   end
 
 (*Entry point*)
 fun gen_reason' ctxt N states =
   Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (fn () =>
      (gen_reason N (Config.get ctxt trace) (Config.get ctxt step_limit)
-                 0 false (Reasoners.get (Context.Proof ctxt))
-                 (map (map (fn seq => (0, Position.none, NORMAL, seq))) states)
+                 0 NO_BACKTRACKING (Reasoners.get (Context.Proof ctxt))
+                 (map (map (fn seq => (0, Position.none, NORMAL_MODE, seq))) states)
       handle Success ret => SOME ret)
   )
 
@@ -683,21 +710,24 @@ fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
     )
   end
 
-val mode = (\<^keyword>\<open>!\<close> |-- \<^keyword>\<open>!\<close> >> K (SOME GLOBAL_CUT)) ||
-           (\<^keyword>\<open>!\<close> >> K (SOME LOCAL_CUT)) ||
-           (\<^keyword>\<open>?\<close> >> K (SOME NORMAL)) ||
-           (Args.$$$ "default" >> K (SOME TO_BE_OVERRIDE)) ||
-           Scan.succeed NONE
+val cut_mode_parser = (\<^keyword>\<open>!\<close> |-- \<^keyword>\<open>!\<close> >> K (SOME GLOBAL_CUT))
+                   || (\<^keyword>\<open>!\<close> >> K (SOME LOCAL_CUT))
+                   || (\<^keyword>\<open>?\<close> >> K (SOME NO_CUT))
+                   || Scan.succeed NONE
+val backtrack_mode_parser = (Args.$$$ "default" >> K NO_BACKTRACK)
+                         || ((Args.$$$ "no" -- Args.$$$ "backtrack") >> K NO_BACKTRACK)
+                         || ((Args.$$$ "no" -- Args.$$$ "explorative" -- Args.$$$ "backtrack") >> K NO_BACKTRACK)
+                         || Scan.succeed ALLOW_BACKTRACK
 
 fun default_mode_of priority =
       if priority >= 1000000 then GLOBAL_CUT
       else if priority >= 1000 then LOCAL_CUT
-      else NORMAL
+      else NO_CUT
 
 val mode_and_priority =
-      (mode -- Scan.optional Parse.int 100) >> 
-      (fn (SOME m, i) => (m,i)
-        | (NONE, i) => (default_mode_of i, i))
+      (cut_mode_parser -- backtrack_mode_parser -- Scan.optional Parse.int 100) >> 
+      (fn ((SOME m, bm), i) => ((m,bm),i)
+        | ((NONE, bm), i) => ((default_mode_of i, bm), i))
 
 val patterns = Parse.$$$ "(" |-- Parse.enum "|"
       (Scan.optional (\<^keyword>\<open>except\<close> >> K false) true -- Parse.term
@@ -861,7 +891,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
     val tac = if is_none guard andalso forall (not o snd) rules_with_flag
               then Tac_Rule rules
               else Tac_ML (guarded_tac rules_with_flag)
-  in ({name = @{print} (name_of_intro_reasoner rules),
+  in ({name = name_of_intro_reasoner rules,
        pos = pos,
        mode = mode,
        pattern = pats,
@@ -978,7 +1008,7 @@ val _ = Theory.setup (
   Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
-               Method.modifier (gen_attr_add_intro' I (pos,NORMAL,100,([],NONE),([],[]),NONE)) \<^here>)
+               Method.modifier (gen_attr_add_intro' I (pos,NORMAL_MODE,100,([],NONE),([],[]),NONE)) \<^here>)
 ] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems true ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."
