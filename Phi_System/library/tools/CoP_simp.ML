@@ -4,7 +4,9 @@ signature PHI_COP_SIMP = sig
 
 val is_simp_needed : Context.generic -> term -> bool
 val add_simp_pattern : term -> Context.generic -> Context.generic
-val add_simp_trigger : Symtab.key * (term -> bool) -> Context.generic -> Context.generic
+val add_simp_trigger : term (*pattern*) * (term -> bool) -> Context.generic -> serial * Context.generic
+val del_simp_pattern : term -> Context.generic -> Context.generic
+val del_simp_trigger : term (*pattern*) * serial -> Context.generic -> Context.generic
 
 (* invoke the simplification if needed *)
 
@@ -21,26 +23,30 @@ structure Phi_CoP_Simp : PHI_COP_SIMP = struct
 
 (*** Check the need of simplification ***)
 
-datatype checker = Chk_Pattern of term | Chk_ML of term -> bool
+datatype checker = Chk_Pattern of term | Chk_ML of serial * (term -> bool)
+
+fun chker_eq thy (Chk_Pattern pa, Chk_Pattern pb) = Pattern.equiv thy (pa,pb)
+  | chker_eq _ (Chk_ML (s1,_), Chk_ML (s2,_)) = s1 = s2
+  | chker_eq _ _ = false
 
 structure Checkers = Generic_Data (
-  type T  = (serial * checker) list Symtab.table
-  val empty = Symtab.empty
-  val merge = Symtab.merge (eq_set ((op =) o apply2 fst))
+  type T  = checker Net.net
+  val empty = Net.empty
+  val merge = Net.merge pointer_eq
 )
 
 fun is_simp_needed ctxt =
   let val chkers = Checkers.get ctxt
       val thy = Context.theory_of ctxt
-      fun apply_chk N tm =
-        let val chks = the_default [] (Symtab.lookup chkers N)
-         in exists (fn (_, Chk_Pattern pat) => PLPR_Pattern.matches thy (pat,tm)
-                     | (_, Chk_ML f) => f tm) chks
-        end
+      fun apply_chk tm =
+        Net.match_term chkers tm
+          |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy (pat,tm)
+                      | Chk_ML (_, f)   => f tm)
       fun chk tm =
         let val (h,args) = Term.strip_comb tm
          in (case h
-         of Const (N, _) => apply_chk N tm
+         of Const _ => apply_chk tm
+          | Free _  => apply_chk tm
           | Abs (_, _, X) => if null args then chk X
                              else raise REQUIRE_LAMBDA_NORMLAIZTION
           | _ => false)
@@ -48,21 +54,33 @@ fun is_simp_needed ctxt =
         end
         handle REQUIRE_LAMBDA_NORMLAIZTION =>
           chk (Envir.beta_eta_contract tm)
-      fun chk' tm = apply_chk "" tm orelse chk tm
-   in Phi_Syntax.exists_item_of_assertion chk'
+   in Phi_Syntax.exists_item_of_assertion chk
   end
+
+fun chk_pattern pat =
+      case Term.head_of pat
+        of Const _ => ()
+         | Free _ => ()
+         | _ => raise TERM ("Phi_CoP_Simp.add_simp_pattern: The pattern must be leaded by a constant", [pat])
 
 (*the (type part of) \<phi>-types matching this pattern will invoke the simplification*)
 fun add_simp_pattern pat ctxt =
-  let val N = case Term.head_of pat
-                of Const (N,_) => N
-                 | Free (N, _) => N
-                 | _ => raise TERM ("Phi_CoP_Simp.add_simp_pattern: The pattern must be leaded by a constant", [pat])
-   in Checkers.map (Symtab.map_default (N,[]) (fn L => (serial(), Chk_Pattern pat) :: L)) ctxt
+  (chk_pattern pat ;
+   Checkers.map (Net.insert_term (chker_eq (Context.theory_of ctxt))
+                                 (pat, Chk_Pattern pat)) ctxt)
+
+fun add_simp_trigger (pat,chker) ctxt =
+  let val _ = chk_pattern pat
+      val id = serial()
+   in (id, Checkers.map (Net.insert_term (chker_eq (Context.theory_of ctxt))
+                                         (pat, Chk_ML (id,chker))) ctxt)
   end
 
-fun add_simp_trigger (N,chker) ctxt =
-  Checkers.map (Symtab.map_default (N,[]) (fn L => (serial(), Chk_ML chker) :: L)) ctxt
+fun del_simp_pattern pat ctxt =
+  Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_Pattern pat)) ctxt
+
+fun del_simp_trigger (pat,serial) ctxt =
+  Checkers.map (Net.delete_term (chker_eq (Context.theory_of ctxt)) (pat, Chk_ML (serial, K true))) ctxt
 
 
 (* invoke the simplification if needed *)
@@ -100,13 +118,14 @@ fun force_rule_pass rule ctxt =
   let fun bad_rule msg = error ("Malform rule of Transformation-based Simplification:\n" ^
                                 Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ msg)
 
-      val is_meaningful = case Thm.concl_of rule
-                            of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ (_ (*\<A>simp*) $ X)) =>
-                                  (case X of Const(\<^const_name>\<open>True\<close>, _) => \<^cterm>\<open>False\<close>
-                                           | _ => \<^cterm>\<open>True\<close>)
-                             | _ => bad_rule ""
+      val has_substantial_changes =
+            case Thm.concl_of rule
+              of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ (_ (*\<A>simp*) $ X)) =>
+                    (case X of Const(\<^const_name>\<open>True\<close>, _) => \<^cterm>\<open>False\<close>
+                             | _ => \<^cterm>\<open>True\<close>)
+               | _ => bad_rule ""
       val trans_rule = select_trans_rule (Thm.concl_of rule)
-                    |> Thm.instantiate (TVars.empty, Vars.make [((("M",0),\<^typ>\<open>bool\<close>),is_meaningful)])
+                    |> Thm.instantiate (TVars.empty, Vars.make [((("M",0),\<^typ>\<open>bool\<close>),has_substantial_changes)])
       val rule' = rule RS (Thm.transfer (Context.theory_of ctxt) trans_rule)
 
       fun get_pat (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = get_pat X

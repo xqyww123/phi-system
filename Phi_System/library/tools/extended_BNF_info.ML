@@ -4,6 +4,7 @@ type quasi_BNF = {
   T : typ,
   Tname : string,
   casex: term option,
+  case_distribs: thm list,
   ctrs : term list,
   deads: typ list,
   lives: typ list, (*source type variables of map*)
@@ -80,6 +81,9 @@ val global_simps_of_map_safe : eBNF -> thm list
 val global_simps_of_pred : eBNF -> thm list
 val global_simps_of_pred_safe : eBNF -> thm list
 
+val case_distribs_of : eBNF -> thm list
+val case_distribs_of_safe : eBNF -> thm list
+
 end
 
 structure eBNF_Info : eBNF_INFO = struct
@@ -90,6 +94,7 @@ type quasi_BNF = {
   T : typ,
   Tname : string,
   casex: term option,
+  case_distribs: thm list,
   ctrs : term list,
   deads: typ list,
   lives: typ list, (*source type variables of map*)
@@ -326,6 +331,13 @@ fun global_simps_of_pred (BNF bnf) = [BNF_Def.pred_True_of_bnf (g_bnf bnf)]
 fun global_simps_of_pred_safe (BNF (_,SOME bnf,_,_)) = [BNF_Def.pred_True_of_bnf bnf]
   | global_simps_of_pred_safe (BNF (_,NONE,_,_)) = []
   | global_simps_of_pred_safe (qBNF bnf)= [#map_ident bnf]
+
+fun case_distribs_of (BNF bnf) = #case_distribs (g_ctr bnf)
+  | case_distribs_of (qBNF bnf) = #case_distribs bnf
+
+fun case_distribs_of_safe (BNF (_,_,_,SOME c)) = #case_distribs c
+  | case_distribs_of_safe (BNF _) = []
+  | case_distribs_of_safe (qBNF bnf) = #case_distribs bnf
 
 
 (*

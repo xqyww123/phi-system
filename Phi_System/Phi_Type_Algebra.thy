@@ -439,7 +439,7 @@ ML_file \<open>library/tools/functor_detect.ML\<close>
 term \<open>HOL.eq\<close>
 
 datatype yyy = YLeaf nat | YNode nat yyy
-datatype ('a,'b) xxx = Leaf 'a | LeafB 'b | Node nat \<open>('a,'b) xxx\<close>
+datatype ('a,'b) xxx = Leaf 'a | LeafB 'b 'a | Node nat \<open>('a,'b) xxx\<close>
 
 term xxx.rel_xxx
 thm xxx.set
@@ -462,9 +462,10 @@ declare [[ML_print_depth = 1000]]
 
 ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
 |> #ctr_sugar
+
 \<close>
 
-ML \<open>BNF_Def.map_def_of_bnf (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))\<close>
+ML \<open>BNF_Def.pred_of_bnf (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>xxx\<close>))\<close>
 
 ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
@@ -874,8 +875,8 @@ lemma [\<phi>TA_internal_simplify_special_cases,
 lemma [\<phi>TA_internal_simplify_special_cases,
        \<phi>transformation_based_simp default 40 no trigger]:
   \<open> Prem
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>simp \<close>
   unfolding Action_Tag_def Premise_def
   using transformation[unfolded Premise_def] .
@@ -1538,6 +1539,7 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
   T = \<^Type>\<open>Set.set a\<close>,
   Tname = \<^type_name>\<open>Set.set\<close>,
   casex = NONE,
+  case_distribs = [],
   ctrs = [\<^Const>\<open>bot \<^Type>\<open>set a\<close>\<close>, \<^Const>\<open>insert a\<close>, \<^Const>\<open>sup \<^Type>\<open>set a\<close>\<close>],
   deads = [], lives = [a], lives'= [b],
   sets = [Abs("x", a, Bound 0)],
@@ -1598,6 +1600,17 @@ ML \<open>BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>Set.set\<
 ML_file \<open>library/automation/type_algebra.ML\<close>
 
 ML \<open>eBNF_Info.pred_of_bnf (eBNF_Info.get_bnf1 (Context.Theory \<^theory>) \<^type_name>\<open>list\<close>)\<close>
+
+
+subsubsection \<open>Common Rules\<close>
+
+lemma \<phi>TA_reason_rule__simp_NToA:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> Any' @action \<A>_apply_simplication
+\<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action NToA
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>simp\<close>
+  unfolding Action_Tag_def
+  by (simp add: Transformation_def)
+
 
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
@@ -1860,12 +1873,12 @@ lemma \<phi>TA_SHz_rule:
   by simp
 
 lemma \<phi>TA_SHu_rule:
-  \<open> (\<And>T U z. Ant \<longrightarrow> (z \<Ztypecolon> Fc (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> Ft T \<^emph> Fu U) @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<^emph> U \<Rightarrow> \<s>\<p>\<l>\<i>\<t>)))
+  \<open> (\<And>T U z. Ant \<longrightarrow> (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> Ft T \<^emph>\<^sub>\<A> Fu U) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc uz \<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def
+  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def \<phi>Auto_Prod_def
   by simp
 
 lemma \<phi>TA_SHz_rewr_IH:
@@ -1892,12 +1905,11 @@ lemma \<phi>TA_SHu_rewr_C:
   unfolding Action_Tag_def atomize_imp atomize_all
   by (rule; blast)
 
-lemmas \<phi>TA_SHu_rule_step = \<phi>TA_TF_rule_step
 
 ML_file \<open>library/phi_type_algebra/separation_homo.ML\<close>
 
 hide_fact \<phi>TA_SHz_rule \<phi>TA_SHu_rule \<phi>TA_SHz_rewr_IH \<phi>TA_SHz_rewr_C
-          \<phi>TA_SHu_rewr_IH \<phi>TA_SHu_rewr_C \<phi>TA_SHu_rule_step
+          \<phi>TA_SHu_rewr_IH \<phi>TA_SHu_rewr_C
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _\<close>) = \<open>
   Phi_Type_Algebra_Derivers.separation_homo_I
@@ -1997,13 +2009,13 @@ lemmas [\<phi>constraint_expansion] =
           HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
           prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv
           ExSet_simps
-          \<phi>Prod_expn' \<phi>Prod_expn''
+          \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Prod_expn'[folded \<phi>Auto_Prod_def] \<phi>Prod_expn''[folded \<phi>Auto_Prod_def]
           FSet.ball_simps(5-7) Set.ball_simps(5-7,9) Set.ball_Un
           Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
           list_all2_Cons1 list_all2_Nil zip_eq_Cons_ex zip_eq_Nil_eq_len list_all2_lengthD
-              map_ident
+          map_ident
 
-thm prod.map_ident
+thm map_ident
 thm zip_eq_Nil_eq_len zip_eq_Cons_ex
 
 

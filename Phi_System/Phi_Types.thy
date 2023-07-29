@@ -67,7 +67,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
-       and Separation_Homo\<^sub>E
+       and Separation_Homo
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -152,7 +152,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
     and    \<open>(\<And>a. a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
 
-notation \<phi>Dependent_Sum (binder "\<Sigma>" 22)
+notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
 
@@ -199,7 +199,7 @@ subsubsection \<open>Rules\<close>
 
 paragraph \<open>Simplifications\<close>
 
-lemmas [\<phi>programming_simps, assertion_simps] =
+lemmas [\<phi>programming_simps, assertion_simps, simp] =
                     Set_Abstraction.unfold \<phi>Dependent_Sum.unfold
 
 declare \<phi>Dependent_Sum.unfold [embed_into_\<phi>type]
@@ -228,7 +228,7 @@ lemma [embed_into_\<phi>type]:
 lemma [embed_into_\<phi>type]:
   \<open> f x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { f x |x. P x } \<Ztypecolon> \<S> T \<close>
   unfolding atomize_eq BI_eq_iff
-  by clarsimp blast
+  by clarsimp
 
 lemma [embed_into_\<phi>type]:
   \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> x \<in> s \<s>\<u>\<b>\<j> x. \<top> \<equiv> s \<Ztypecolon> \<S> T \<close>
@@ -272,36 +272,80 @@ lemma [\<phi>reason 2800]:
 
 subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
-definition \<open>Trivial_\<Sigma> Fa Fb D s m \<longleftrightarrow> (\<forall>T x. D x \<longrightarrow> (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))))\<close>
+definition \<open>Trivial_\<Sigma> Fa Fb D s m \<longleftrightarrow> (\<forall>T x. D (s x) x \<longrightarrow> (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))))\<close>
   \<comment> \<open>There is only trivial homomorphism where all the first projection of the element are equal\<close>
-
-locale \<Sigma>_Homo
 
 lemma apply_Trivial_\<Sigma>:
   \<open> Trivial_\<Sigma> Fa Fb D s m
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (s x) x
 \<Longrightarrow> x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))\<close>
   unfolding Trivial_\<Sigma>_def Premise_def
   by blast
 
-print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ + _ \<w>\<i>\<t>\<h> _\<close> ? ?
+text \<open>In this trivial homomorphism, the first project of all elements are equal.
+
+This homomorphism can give us a simplification rule that strips the inner \<open>\<Sigma>\<close>. However,
+the first project of all elements are equal, this is not a usual situation, so this simplification
+is invoked manually by \<open>to \<s>\<t>\<r>\<i>\<p>-\<Sigma>\<close>
+\<close>
+
+consts \<A>strip_\<Sigma> :: \<open>('a,'b) \<phi>\<close> ("\<s>\<t>\<r>\<i>\<p>-\<Sigma>")
+
+definition \<phi>Auto_\<Sigma> ("\<Sigma>\<^sub>\<A> _" [26] 26)
+  where [assertion_simps]: "\<phi>Auto_\<Sigma> \<equiv> \<phi>Dependent_Sum"
+
+notation \<phi>Auto_\<Sigma> (binder "\<Sigma>\<^sub>\<A> " 22)
+
+lemma [\<phi>reason 1000]:
+  \<open> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<Sigma>\<^sub>\<A> T \<s>\<u>\<b>\<j> x'. x' = x @action to \<s>\<t>\<r>\<i>\<p>-\<Sigma> \<close>
+  unfolding Action_Tag_def \<phi>Auto_\<Sigma>_def
+  by simp
+
+lemma [\<phi>reason !10]: \<comment> \<open>fallback if fails to strip \<Sigma> by simplification\<close>
+  \<open> x \<Ztypecolon> \<Sigma>\<^sub>\<A> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<Sigma> T \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
+  unfolding Action_Tag_def \<phi>Auto_\<Sigma>_def
+  by simp
 
 
 paragraph \<open>Deriver\<close>
 
 lemma \<phi>TA_SgH_rule:
-  \<open> (\<And>T x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<longrightarrow>
-        (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))))
+  \<open> (\<And>T y x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s x = y \<Longrightarrow> Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D y x \<longrightarrow>
+        (x \<Ztypecolon> Fa (\<Sigma>\<^sub>\<A> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, m x) \<Ztypecolon> \<Sigma>\<^sub>\<A> c. Fb (T c)) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Trivial_\<Sigma> Fa Fb D s m\<close>
-  unfolding Trivial_\<Sigma>_def Premise_def
-  by blast
+  unfolding Trivial_\<Sigma>_def Premise_def Action_Tag_def \<phi>Auto_\<Sigma>_def
+  by simp
 
+lemma \<phi>TA_SgH_rewr_IH:
+  \<open> Trueprop (Ant \<longrightarrow> DD \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U) @action \<phi>TA_ind_target \<A>)
+ \<equiv> (Ant \<Longrightarrow> DD \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<s>\<u>\<b>\<j> y'. y' = y @action \<A>) \<close>
+  unfolding Action_Tag_def atomize_imp
+  by simp
+
+lemma \<phi>TA_SgH_rewr_C:
+  \<open> Trueprop (Ant \<longrightarrow> DD \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_ind_target \<A>)
+ \<equiv> (Ant \<Longrightarrow> DD \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>) \<close>
+  unfolding Action_Tag_def atomize_imp .
+
+term \<open>case_option None\<close>
+term case_option
+
+thm \<phi>constraint_expansion
+
+term map_option
+
+ML \<open>\<^schematic_cterm>\<open>case_option None ?f :: ?'b option \<Rightarrow> ?'a option\<close>
+      |> Thm.incr_indexes_cterm 1
+|> Thm.term_of\<close>
 
 ML_file \<open>library/phi_type_algebra/sigma_single_point.ML\<close>
 
+\<phi>property_deriver Trivial_\<Sigma> 130 for ( \<open>Trivial_\<Sigma> _ _ _ _ _\<close> )
+  requires Warn_if_contains_Sat
+    = \<open> Phi_Type_Algebra_Derivers.sigma_trivial_homomorphism \<close>
 
 
 
@@ -524,12 +568,15 @@ subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> \<phi>Fun (\<lambda>v. [v]) \<Zcomp> T\<close>
   deriving Basic
        and Is_Functional
        and Open_Abstraction_Full
        and Functional_Transformation_Functor
+
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
   \<open> v1 \<Turnstile> (x1 \<Ztypecolon> T1)
@@ -658,20 +705,20 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
 
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
-
+  
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 0]]
-                        
+declare [[\<phi>trace_reasoning = 3]]
+                                           
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Basic
+  deriving (*Basic
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
+       and*) Trivial_\<Sigma>
  
 term \<open>zip\<close>
-
 
 
 

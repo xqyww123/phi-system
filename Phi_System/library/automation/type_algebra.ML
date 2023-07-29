@@ -36,10 +36,6 @@ type guess_property =
 
 (* Guess from BNF *)
 
-val load_simpset : term list -> Proof.context -> Proof.context
-        (*Given an operator like a relation mapper, predicate mapper, a set or any other thing,
-          load the simplification settings relating to the BNFs of the operator*)
-
 val guess_operator :
         (Proof.context * typ list * typ list * eBNF_Info.eBNF -> (term * Proof.context) Seq.seq)
             (*make the operator and configure any necessary reasoning like adding simplification rules *)
@@ -82,6 +78,24 @@ val make_forall_quantified_property : (typ (*x_ty*) * typ (*model_ty*) * term (*
 val make_forall_quantified_property_for_parameters_of_a_phi_type :
         (typ (*x_ty*) * typ (*model_ty*) * term (*x*) * term (*T*) -> term (*the property*))
      -> term -> term list
+
+(** Load Simpset **)
+
+(*The simplification that unfolds the recursive \<phi>-types and derives induction-hypothetic ToAs,
+  uses a specific simpset instead of the default global to prevent over-simplification.
+  The reasoning should only load the simplification rules of the used object operators (mapper or predicator etc).
+  Bellow they are loaders of the operators.
+*)
+
+val load_set_ss : eBNF_Info.eBNF -> Proof.context -> Proof.context
+val load_predicate_ss : eBNF_Info.eBNF -> Proof.context -> Proof.context
+val load_rel_mapper_ss : eBNF_Info.eBNF -> Proof.context -> Proof.context
+val load_mapper_ss : eBNF_Info.eBNF -> Proof.context -> Proof.context
+
+val load_simpset : term list -> Proof.context -> Proof.context
+  (*Given any object expressions, it parses the object operators used inside,
+    and load the related simplification settings*)
+
 
 (** The framework **)
 
@@ -1077,7 +1091,8 @@ let fun has_disj_ants th =
               of [] => if is_real_Premise (Thm.concl_of th) then [th] else []
                | some => some
             ) ants'1
-      val rewrs = map_filter (extract_rewr ctxt) ants'1
+      val rewrs = map_filter (extract_rewr ctxt) ants'1 |> @{print}
+      val _ = if null rewrs then () else ()
       val ants = filter ((fn term => not (is_real_Premise term) andalso not (is_TA_IH_ToA term))
                          o Thm.concl_of) ants'1
                @ ToAs
@@ -1092,9 +1107,9 @@ let fun has_disj_ants th =
                     ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs) *))
 
       val lsequent' = lsequent
+                    |> Simplifier.rewrite_goals_rule ctxt rewrs
                     |> ALLGOALS (Method.insert_tac ctxt'' prem_ants)
                     |> Seq.hd
-                    |> Simplifier.rewrite_goals_rule ctxt rewrs
                     |> reasoner ctxt''
 
       val lsequent'' = 

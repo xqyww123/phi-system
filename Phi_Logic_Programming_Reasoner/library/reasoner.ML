@@ -550,12 +550,14 @@ fun disabled_due_to_backtrack ALLOW_BACKTRACK _ = false
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK _ = false
 
 fun gen_reason _ _ _ _ _ _ [] = NONE
-  | gen_reason N trace limit iter _ tactics ([]::L) =
+  | gen_reason N trace limit iter backtracking tactics ([]::L) =
       (if 2 <= trace then tracing ("Backtracking...") else ();
-       gen_reason N trace limit iter BACKTRACKING tactics L)
+       gen_reason N trace limit iter
+          (if backtracking = EXPLORATIVE_BACKTRACKING then EXPLORATIVE_BACKTRACKING else BACKTRACKING)
+          tactics L)
   | gen_reason N trace limit iter backtracking tactics (((score,pos,(mode as (cut_mode,backtrack_mode)),seq)::L')::L) =
   let
-    val _ = if score = 19171 then () else ()
+    val _ = if backtrack_mode = NO_EXPLORATIVE_BACKTRACK then () else ()
     val _ = if iter > limit
             then error "The reasoning reaches the limit of the number of reasoning steps.\n\
                        \Perhaps an infinite loop is encountered.\nOtherwise, \
@@ -716,7 +718,7 @@ val cut_mode_parser = (\<^keyword>\<open>!\<close> |-- \<^keyword>\<open>!\<clos
                    || Scan.succeed NONE
 val backtrack_mode_parser = (Args.$$$ "default" >> K NO_BACKTRACK)
                          || ((Args.$$$ "no" -- Args.$$$ "backtrack") >> K NO_BACKTRACK)
-                         || ((Args.$$$ "no" -- Args.$$$ "explorative" -- Args.$$$ "backtrack") >> K NO_BACKTRACK)
+                         || ((Args.$$$ "no" -- Args.$$$ "explorative" -- Args.$$$ "backtrack") >> K NO_EXPLORATIVE_BACKTRACK)
                          || Scan.succeed ALLOW_BACKTRACK
 
 fun default_mode_of priority =

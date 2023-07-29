@@ -14,6 +14,7 @@ include PHI_HELP
 (**** Basic Operations ****)
   val last : 'a list -> 'a
   val front : 'a list -> 'a list
+  val split_last : 'a list -> 'a list * 'a
   val repeat : ('a -> 'a) -> 'a -> 'a
   val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
@@ -134,6 +135,8 @@ include PHI_HELP
   val abstract_over : term * term -> term
   val lambda_name : string * term -> term -> term
   val lambda : term -> term -> term
+  val subst_free_with_loose_bounds : (term * term) list -> term -> term
+          (*supports loose bounds in the residue*)
 
 end
 
@@ -146,6 +149,7 @@ fun last [] = raise Fail "last"
 fun front [] = raise Fail "front"
   | front [x] = []
   | front (h::ls) = h :: front ls
+fun split_last L = (front L, last L)
 
 fun repeat f x = repeat f (f x) handle TERM _ => x | CTERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
@@ -556,6 +560,15 @@ fun lambda_name (x, v) t =
 
 fun lambda v t = lambda_name ("", v) t;
 
+fun subst_free_with_loose_bounds [] = I
+  | subst_free_with_loose_bounds pairs =
+      let fun substf i u =
+            case AList.lookup (op aconv) pairs u of
+                SOME u' => Term.incr_boundvars i u'
+              | NONE => (case u of Abs(a,T,t) => Abs(a, T, substf (i+1) t)
+                                 | t$u' => substf i t $ substf i u'
+                                 | _ => u)
+       in substf 0 end
 
 end
 
