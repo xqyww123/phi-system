@@ -166,7 +166,7 @@ val _ = Theory.setup (Context.theory_map (
     (fn (pos, mode, priority, add_trigger, patterns, guard) =>
       Thm.declaration_attribute (fn rule => fn ctxt => ctxt
         |> Config.put_generic extract_pattern_trigger add_trigger
-        |> Phi_Reasoner.add_intro_rule pos mode priority patterns guard [rule]
+        |> Phi_Reasoner.add_rule pos mode priority patterns guard [rule]
         |> Config.restore_generic extract_pattern_trigger ctxt
     ))
 ) ""

@@ -310,7 +310,7 @@ lemma [\<phi>reason !10]: \<comment> \<open>fallback if fails to strip \<Sigma> 
 paragraph \<open>Deriver\<close>
 
 lemma \<phi>TA_SgH_rule:
-  \<open> (\<And>T y x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s x = y \<Longrightarrow> Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D y x \<longrightarrow>
+  \<open> (\<And>T y x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s x = y \<Longrightarrow> (Ant @action \<phi>TA_ANT) \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D y x \<longrightarrow>
         (x \<Ztypecolon> Fa (\<Sigma>\<^sub>\<A> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, m x) \<Ztypecolon> \<Sigma>\<^sub>\<A> c. Fb (T c)) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -329,6 +329,18 @@ lemma \<phi>TA_SgH_rewr_C:
   \<open> Trueprop (Ant \<longrightarrow> DD \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_ind_target \<A>)
  \<equiv> (Ant \<Longrightarrow> DD \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>) \<close>
   unfolding Action_Tag_def atomize_imp .
+
+lemma \<phi>TA_SgH_T_intro:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T c' \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> c = c'
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T c \<w>\<i>\<t>\<h> P \<close>
+  unfolding Premise_def by simp
+
+lemma \<phi>TA_SgH_T_intro':
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T c' \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> c = c'
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T c \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Premise_def by simp
 
 term \<open>case_option None\<close>
 term case_option
@@ -569,13 +581,14 @@ subsection \<open>List Item \& Empty List\<close>
 subsubsection \<open>List Item\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+ 
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> \<phi>Fun (\<lambda>v. [v]) \<Zcomp> T\<close>
   deriving Basic
        and Is_Functional
        and Open_Abstraction_Full
        and Functional_Transformation_Functor
+       and Trivial_\<Sigma>
 
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
@@ -716,18 +729,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
-       
- 
-term \<open>zip\<close>
-
-
-
-
-
-
-
-
-
+       and Trivial_\<Sigma>
 
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -736,7 +738,7 @@ term \<open>zip\<close>
   deriving Basic
        and Identity_Element
        and Transformation_Functor
-
+       and Trivial_\<Sigma>
 
 
 
@@ -775,6 +777,7 @@ lemma [\<phi>reason 10000]:
        and Separation_Homo
        and Open_Abstraction_Full
        and Is_Functional
+       and Trivial_\<Sigma>
 
 
 
@@ -931,6 +934,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Separation_Homo
        and Open_Abstraction_Full
        and Is_Functional
+       and Trivial_\<Sigma>
 
 thm \<phi>MapAt_L.unfold
     \<phi>MapAt_L.expansion

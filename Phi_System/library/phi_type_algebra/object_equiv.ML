@@ -204,7 +204,7 @@ fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
    |> (fn NONE => raise Automation_Fail ""
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
                                               ([],[]) NONE [Morphism.thm m rule'])
             |> Phi_Type_Algebra.note_properties phi0 [("obj_eq", [rule'])])
   end

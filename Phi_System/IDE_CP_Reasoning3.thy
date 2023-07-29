@@ -2465,7 +2465,7 @@ declare [[
         val cterm_A = Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term_A
         val rule = Drule.infer_instantiate (Context.proof_of ctxt) [(("any",0), cterm_A)]
                                            @{thm Is_Literal_internal_rule}
-     in Phi_Reasoner.add_intro_rule Position.none Phi_Reasoner.LOCAL_CUT 1000
+     in Phi_Reasoner.add_rule Position.none Phi_Reasoner.LOCAL_CUT 1000
             ([(Thm.concl_of rule, NONE)], []) NONE [rule] ctxt
     end
     handle MATCH => ctxt

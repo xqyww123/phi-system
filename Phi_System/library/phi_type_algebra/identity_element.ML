@@ -164,7 +164,7 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
             |> Phi_Type_Algebra.note_properties phi0
                   [((if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"), [rule'])]
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 40 ([],[]) NONE
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 40 ([],[]) NONE
                                               [Morphism.thm m rule'])
   end
 

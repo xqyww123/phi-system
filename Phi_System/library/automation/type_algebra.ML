@@ -159,7 +159,7 @@ val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehamm
 (*`reasoning` specifies how to solve the induction goals in detail.*)
 
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
-type reasoning_configure = Subgoal.focus * thm * Proof.context -> thm list -> thm list * thm list * thm list
+type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
 
 type PLPR_reasoner = Proof.context -> thm -> thm
 val gen_abstract_constraint_guided_reasoning :
@@ -1062,11 +1062,11 @@ type reasoning = Proof.context -> thm -> thm
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type PLPR_reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
-type reasoning_configure = Subgoal.focus * thm * Proof.context -> thm list -> thm list * thm list * thm list
+type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
 
 
 fun default_reasoning_configure extract_prems
-                                (focus:Subgoal.focus, lsequent, ctxt) local_prems =
+                                (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
   let val is_pure_fact = Phi_Syntax.is_action_of (
                           fn Const(\<^const_name>\<open>\<phi>TA_pure_facts\<close>, _) => true
                            | _ => false
@@ -1099,7 +1099,7 @@ fun default_reasoning_configure extract_prems
             ) local_prems
       val rewrs = map_filter (extract_rewr ctxt) local_prems
       val ants = filter_out (is_real_Premise o Thm.concl_of) local_prems
-   in (prem_ants, rewrs, ToAs @ ants)
+   in (prem_ants, rewrs, ToAs @ ants, ctxt)
   end
 
 fun gen_abstract_constraint_guided_reasoning always_diverge_disj configure varify reasoner =
@@ -1153,16 +1153,16 @@ let fun has_disj_ants th =
 
       val local_prems = maps pass_out_ant out_ants @ local_prems'1
 
-      val (prem_ants, rewrs, reasoner_ants') = configure (focus, lsequent, ctxt) local_prems
+      val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (focus, lsequent) (local_prems, ctxt)
       val reasoner_ants = reasoner_ants'
             |> map ( Object_Logic.rulify ctxt
                   #> Simplifier.rewrite_rule ctxt rewrs
                   #> Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt )
 
       val ctxt'' = ctxt
-            |> Context.proof_map (Phi_Reasoner.add_intro_rules (
+            |> Context.proof_map (Phi_Reasoner.add_rules (
                   map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE, 200, [], [], NONE)) reasoner_ants)
-            (* #> Phi_Reasoner.add_intro_rules (map (fn (pat,rule) =>
+            (* #> Phi_Reasoner.add_rules (map (fn (pat,rule) =>
                     ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs) *))
 
       val lsequent' = lsequent

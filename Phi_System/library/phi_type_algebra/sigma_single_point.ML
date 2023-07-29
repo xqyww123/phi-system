@@ -156,8 +156,27 @@ fun guess_property_SgTH (x_term0, FT_term0, phi0) ctxt =
    in ([], HOLogic.Trueprop $ SSP, x_term, FT_term, phi, ctxt)
   end)
 
+fun reasoning_configure (subgoal, lsequent) (local_prems, ctxt) =
+  let val SOME T_tm = AList.lookup (op =) (#params subgoal) "T"
+      val inst = try (Drule.infer_instantiate ctxt [(("T",0), T_tm)])
+      val T_rules = map_filter inst @{thms' \<phi>TA_SgH_T_intro \<phi>TA_SgH_T_intro'}
+      fun mk_black ((T as Free _) $ Var (_, Ty)) = T $ Var (("var",0), Ty)
+        | mk_black (X $ Y) = (mk_black X $ mk_black Y)
+        | mk_black (Abs (N,Ty,X)) = Abs (N,Ty, mk_black X)
+        | mk_black X = X
+      fun mk_black' th = mk_black (Thm.concl_of th)
+      val ctxt = Context.proof_map (
+            Phi_Reasoner.add_rules (map (fn rule =>
+                ([rule], \<^here>, (Phi_Reasoner.LOCAL_CUT, Phi_Reasoner.ADMIT_BACKTRACK), 300, [], [mk_black' rule], NONE)) T_rules)
+          ) ctxt
+   in default_reasoning_configure (K (K [])) (subgoal, lsequent) (local_prems, ctxt)
+  end
+
 fun SgTH_reasoning phi ctxt =
-  gen_abstract_constraint_guided_reasoning true (K (K NONE)) (K (K [])) (fn ctxt => fn sequent => (
+  gen_abstract_constraint_guided_reasoning true
+      reasoning_configure
+      (K (K NONE))
+      (fn ctxt => fn sequent => (
          (case Thm.major_prem_of sequent
             of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _)
                  => (chk_unfolded phi X; chk_unfolded phi Y)
@@ -183,11 +202,10 @@ fun gen_SgTH hint0 (phi0 : phi_type) thy =
                 Conv.implies_concl_conv (Conv.implies_conv
                   (PLPR_Syntax.premise_tag_conv (
                     Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))))
-                  (Phi_Conv.action_tag_conv (fn ctm =>
+                  (Phi_Conv.action_tag_conv (
                     Simplifier.asm_rewrite (Simps.equip ctxt
                         addsimps (@{thms' \<phi>Dependent_Sum.unfold \<phi>Dependent_Sum.unfold[folded \<phi>Auto_\<Sigma>_def]}
-                                  @ #equations phi0)) ctm
-                    |> @{print}
+                                  @ #equations phi0))
                   )))
         )
       fun simp (_, ctxt) =
@@ -209,7 +227,7 @@ fun gen_SgTH hint0 (phi0 : phi_type) thy =
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_intro_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
         |> Phi_Type_Algebra.note_properties phi0 [("Trivial_\<Sigma>", [rule])]
     | _ => raise Automation_Fail ""

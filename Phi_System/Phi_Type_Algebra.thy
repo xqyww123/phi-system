@@ -741,7 +741,7 @@ declaration \<open>fn m => fn ctxt =>
                   chunks (str "Generated reasoning rules: " ::
                           map (fn rule => item [Syntax.pretty_term ctxt' (Thm.prop_of rule)]) rules)
                 end) *)
-   in Phi_Reasoner.add_intro_rules (
+   in Phi_Reasoner.add_rules (
         map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT, 1000, [], [], NONE)) rules
         ) ctxt
   end

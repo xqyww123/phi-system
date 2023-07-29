@@ -444,7 +444,7 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
                           |> normalize
                 val _ = Phi_Reasoner.info_print ctxt' 1 (fn () =>
                             "Instantiate reasoning rule for \<phi>-type operator ")
-             in Phi_Reasoner.add_intro_rule pos mode priority pats guard [rule'] ctxt
+             in Phi_Reasoner.add_rule pos mode priority pats guard [rule'] ctxt
             end
             handle Inst_Fail => ctxt
       val automation = property_dependent_setup (prop_kinds, additional_props) impl
@@ -1227,7 +1227,7 @@ fun add_type (def, pos, dervs) generic =
    |> Phi_Help.generic_theory_mapping (fn m =>
         let val expns = Morphism.fact m expansions
             fun add_rules mode priority rules =
-                  Phi_Reasoner.add_intro_rules (map (fn rule =>
+                  Phi_Reasoner.add_rules (map (fn rule =>
                       ([Morphism.thm m rule], pos, mode, priority, [], [], NONE)) rules)
          in add_rules Phi_Reasoner.TO_BE_OVERRIDE 30 (case open_abstraction of SOME x => x | _ => [])
          #> add_rules Phi_Reasoner.TO_BE_OVERRIDE 80 make_abstraction

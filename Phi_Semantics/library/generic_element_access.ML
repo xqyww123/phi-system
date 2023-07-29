@@ -77,7 +77,7 @@ fun mk_element_index_input_internal args0 ctxt =
         Phi_Reasoner.del_reasoners \<^pattern_prop>\<open>(_ :: VAL) \<in> _ @action parse_element_index_input\<close>
           (fn r => exists (fn pat => Pattern.matches thy (pat, #name r)) pats))
    |> Context.proof_map (
-        Phi_Reasoner.add_intro_rules reasoning_rules)
+        Phi_Reasoner.add_rules reasoning_rules)
    |> pair idx_input
   end
 

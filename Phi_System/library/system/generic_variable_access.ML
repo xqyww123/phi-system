@@ -347,7 +347,7 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
 (** Predefined Processes **)
 
 fun register_value_spec_thms pos rules =
-  Phi_Reasoner.add_intro_rules (map (fn rule =>
+  Phi_Reasoner.add_rules (map (fn rule =>
     let
       val i = maxidx_of_term (Thm.prop_of rule) + 1
       val pattern =

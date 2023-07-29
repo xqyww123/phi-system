@@ -15,7 +15,7 @@ signature NU_REASONER = sig
   type action = cterm
 
   datatype cut_mode = NO_CUT | LOCAL_CUT | GLOBAL_CUT
-  datatype backtrack_mode = ALLOW_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
+  datatype backtrack_mode = ADMIT_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
   type mode = cut_mode * backtrack_mode
   (* declare by NO_BACKTRACK to disable applying the reasoner during backtracking.
         It causes the reasoner will not be applied once there is another reasoner of a higher priority,
@@ -125,12 +125,12 @@ signature NU_REASONER = sig
 
   type guard = context_state -> bool
   val default_mode_of : priority -> cut_mode
-  val add_intro_rule : Position.T -> mode -> priority
+  val add_rule : Position.T -> mode -> priority
                     -> (pattern * priority option) list * pattern list
                     -> guard option
                     -> thm list
                     -> Context.generic -> Context.generic
-  val add_intro_rules: (thm list * Position.T * mode * priority
+  val add_rules: (thm list * Position.T * mode * priority
                        * (pattern * priority option) list * pattern list
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
@@ -189,11 +189,11 @@ type ML_guard = context_state -> bool
 type action = cterm
 
 datatype cut_mode = NO_CUT | LOCAL_CUT | GLOBAL_CUT
-datatype backtrack_mode = ALLOW_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
+datatype backtrack_mode = ADMIT_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
 type mode = cut_mode * backtrack_mode
 
-val NORMAL_MODE = (NO_CUT, ALLOW_BACKTRACK)
-val NORMAL_LOCAL_CUT = (LOCAL_CUT, ALLOW_BACKTRACK)
+val NORMAL_MODE = (NO_CUT, ADMIT_BACKTRACK)
+val NORMAL_LOCAL_CUT = (LOCAL_CUT, ADMIT_BACKTRACK)
 val TO_BE_OVERRIDE = (NO_CUT, NO_BACKTRACK)
 
 
@@ -221,7 +221,7 @@ fun print_cut_mode_ML NO_CUT = "Phi_Reasoner.NO_CUT"
   | print_cut_mode_ML LOCAL_CUT = "Phi_Reasoner.LOCAL_CUT"
   | print_cut_mode_ML GLOBAL_CUT = "Phi_Reasoner.GLOBAL_CUT"
 
-fun print_backtrack_mode_ML ALLOW_BACKTRACK = "Phi_Reasoner.ALLOW_BACKTRACK"
+fun print_backtrack_mode_ML ADMIT_BACKTRACK = "Phi_Reasoner.ADMIT_BACKTRACK"
   | print_backtrack_mode_ML NO_BACKTRACK = "Phi_Reasoner.NO_BACKTRACK"
   | print_backtrack_mode_ML NO_EXPLORATIVE_BACKTRACK = "Phi_Reasoner.NO_EXPLORATIVE_BACKTRACK"
 
@@ -543,7 +543,7 @@ fun call_reasoners' trace score N ctxt tactics th =
 
 datatype backtracking = NO_BACKTRACKING | BACKTRACKING | EXPLORATIVE_BACKTRACKING
 
-fun disabled_due_to_backtrack ALLOW_BACKTRACK _ = false
+fun disabled_due_to_backtrack ADMIT_BACKTRACK _ = false
   | disabled_due_to_backtrack NO_BACKTRACK NO_BACKTRACKING = false
   | disabled_due_to_backtrack NO_BACKTRACK _ = true
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK EXPLORATIVE_BACKTRACKING = true
@@ -719,7 +719,7 @@ val cut_mode_parser = (\<^keyword>\<open>!\<close> |-- \<^keyword>\<open>!\<clos
 val backtrack_mode_parser = (Args.$$$ "default" >> K NO_BACKTRACK)
                          || ((Args.$$$ "no" -- Args.$$$ "backtrack") >> K NO_BACKTRACK)
                          || ((Args.$$$ "no" -- Args.$$$ "explorative" -- Args.$$$ "backtrack") >> K NO_EXPLORATIVE_BACKTRACK)
-                         || Scan.succeed ALLOW_BACKTRACK
+                         || Scan.succeed ADMIT_BACKTRACK
 
 fun default_mode_of priority =
       if priority >= 1000000 then GLOBAL_CUT
@@ -902,12 +902,12 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
      ctxt)
   end
 
-fun add_intro_rule pos mode priority pats guard rules ctxt =
+fun add_rule pos mode priority pats guard rules ctxt =
       intro_reasoner ctxt pos mode priority pats guard rules
         |-> add
 
-fun add_intro_rules [] ctxt = ctxt
-  | add_intro_rules rules ctxt =
+fun add_rules [] ctxt = ctxt
+  | add_rules rules ctxt =
       if null rules then ctxt
       else fold_map (fn (rule,pos,mode,priority,pattern,blacklist,guard) => fn ctxt =>
                     intro_reasoner ctxt pos mode priority (pattern,blacklist) guard rule) rules ctxt
@@ -985,7 +985,7 @@ fun gen_attr_add_intro' pass (pos, mode, priority, (additional_rules, action), (
                    |> map Phi_Help.beta_eta_contract
                    |> Drule.zero_var_indexes_list
           val (rules', ctxt') = pass (rules, ctxt)
-       in add_intro_rule pos mode priority (pattern,blacklist) guard rules' ctxt' end)
+       in add_rule pos mode priority (pattern,blacklist) guard rules' ctxt' end)
 
 local
 fun read_term_mode mode' ctxt tm = Syntax.read_term (Proof_Context.set_mode mode' ctxt) tm
