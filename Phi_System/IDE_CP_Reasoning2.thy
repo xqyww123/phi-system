@@ -1210,23 +1210,24 @@ lemma \<phi>Some_\<phi>None_freeobj:
   unfolding atomize_eq BI_eq_iff
   by clarsimp+
 
-definition \<phi>Conditional_Opt_Ins :: \<open>bool \<Rightarrow> ('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<half_blkcirc>[_] _" [20,91] 90)
+definition \<phi>Cond_Unital_Ins :: \<open>bool \<Rightarrow> ('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<half_blkcirc>[_] _" [20,91] 90)
+  \<comment> \<open>Conditional Unital Insertion\<close>
   where \<open>\<half_blkcirc>[C] T = (if C then \<black_circle> T else \<circle>\<^sub>\<x>)\<close>
 
-lemma \<phi>Conditional_Opt_Ins_unfold:
+lemma \<phi>Cond_Unital_Ins_unfold:
   \<open> \<half_blkcirc>[C] T = (if C then \<black_circle> T else \<circle>\<^sub>\<x>) \<close>
-  unfolding \<phi>Type_def \<phi>Conditional_Opt_Ins_def
+  unfolding \<phi>Type_def \<phi>Cond_Unital_Ins_def
   by clarsimp
 
-lemma \<phi>Conditional_Opt_Ins_unfold_simp[simp]:
+lemma \<phi>Cond_Unital_Ins_unfold_simp[simp]:
   \<open> \<half_blkcirc>[True] T \<equiv> \<black_circle> T \<close>
   \<open> \<half_blkcirc>[False] T \<equiv> \<circle>\<^sub>\<x> \<close>
-  unfolding \<phi>Conditional_Opt_Ins_unfold
+  unfolding \<phi>Cond_Unital_Ins_unfold
   by simp+
 
-lemma \<phi>Conditional_Opt_Ins_expn[simp, \<phi>expns]:
+lemma \<phi>Cond_Unital_Ins_expn[simp, \<phi>expns]:
   \<open> p \<Turnstile> (x \<Ztypecolon> \<half_blkcirc>[C] T) \<longleftrightarrow> (if C then (\<exists>v. p = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)) else p = None) \<close>
-  unfolding \<phi>Conditional_Opt_Ins_unfold
+  unfolding \<phi>Cond_Unital_Ins_unfold
   by clarsimp
 
 lemma [\<phi>reason 1000]:
@@ -1564,7 +1565,7 @@ subsection \<open>Normalization\<close>
 lemma [\<phi>reason 3000 for \<open>_ \<Ztypecolon> (\<half_blkcirc>[True] _ \<^emph> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>SEi\<close>]:
   \<open> x \<Ztypecolon> (\<black_circle> T \<^emph> W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi
 \<Longrightarrow> x \<Ztypecolon> (\<half_blkcirc>[True] T \<^emph> W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
-  unfolding Action_Tag_def \<phi>Conditional_Opt_Ins_unfold_simp .
+  unfolding Action_Tag_def \<phi>Cond_Unital_Ins_unfold_simp .
 
 
 lemma [\<phi>reason 3000 for \<open>_ \<Ztypecolon> (\<half_blkcirc>[False] _ \<^emph> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (\<black_circle> _ \<^emph> _) @action \<A>SEi \<close>]:

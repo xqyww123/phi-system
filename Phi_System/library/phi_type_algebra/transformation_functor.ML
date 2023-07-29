@@ -78,7 +78,9 @@ fun TF_reasoning phi ctxt =
         if def_contains_satisfaction phi
         then extract_pure_prem_by_RS @{thms' \<phi>TA_TF_extract_prem}
         else K (K [])
-   in gen_abstract_constraint_guided_reasoning true (K (K NONE)) extract_prem TF_reasoner ctxt
+   in gen_abstract_constraint_guided_reasoning true
+          (default_reasoning_configure extract_prem)
+          (K (K NONE)) TF_reasoner ctxt
   end
 
 fun gen_TF prop_i hint0 (phi0 : phi_type) generic =

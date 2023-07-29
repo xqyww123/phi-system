@@ -159,21 +159,40 @@ val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehamm
 (*`reasoning` specifies how to solve the induction goals in detail.*)
 
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
-type extract_pure_prems = Proof.context -> thm -> thm list
+type reasoning_configure = Subgoal.focus * thm * Proof.context -> thm list -> thm list * thm list * thm list
 
 type PLPR_reasoner = Proof.context -> thm -> thm
 val gen_abstract_constraint_guided_reasoning :
-        bool (*if it can split the goals when they contain HOL.disj in antecedents, no matter if the conclusion
-               contains schematic variables. is false by default*) ->
-        varifier -> extract_pure_prems -> PLPR_reasoner -> reasoning
-  (*It is a general framework using \<phi>-LPR and Isar subgoal tool.
-    Because it uses Isar subgoal, it fixes all schematic variables. Users may expect the reasoning
-    to infer some schematic variables. If so, `varifier` is used.
-    Given a term, `varifier` returns the subterms that should be schematic variables, and
-                  a function substituting schematic variables for those subterms.*)
+        bool (*to split the goals when they contain HOL.disj in antecedents, no matter if the conclusion
+               contains schematic variables. it is false by default*) ->
+        reasoning_configure -> varifier -> PLPR_reasoner -> reasoning
+(*It is a general framework using \<phi>-LPR and Isar subgoal tool.
+  Because it uses Isar subgoal, it fixes all schematic variables. Users may expect the reasoning
+  to infer some schematic variables. If so, `varifier` is used.
+  Given a term, `varifier` returns the subterms that should be schematic variables, and
+                a function substituting schematic variables for those subterms.
+
+  `reasoning_configure` parse the role of local premises.
+  It receives the subgoal context, local premises, local sequent, and should classify the local premises
+  into three sorts, pure conditions, rewrites and reasoners respectively.
+*)
 
 val PLPR_reasoner : int option -> PLPR_reasoner
 val ToA_reasoner : Phi_Type_Algebra.phi_type -> PLPR_reasoner (*reason using NToA*)
+
+(* Default Reasoning Configure *)
+
+type extract_pure_prems = Proof.context -> thm -> thm list
+
+val default_reasoning_configure : extract_pure_prems -> reasoning_configure
+(*classify local premises by syntactic tags. allows to extract additional local condition
+  by `extract_pure_prems`.
+
+  It also recognizes premises tagged by \<phi>TA_pure_facts and \<phi>TA_conditioned_ToA_template.
+  \<phi>TA_conditioned_ToA_template rules are conditioned by pure propositions.
+  collects pure facts tagged \<phi>TA_pure_facts, to derive the condition of the \<phi>TA_conditioned_ToA_template rules,
+  and therefore to instantiate possible ToA rules from \<phi>TA_conditioned_ToA_template rules.
+*)
 
 val extract_pure_prem_by_RS : thm list (*RS rules*) -> extract_pure_prems
 
@@ -923,7 +942,7 @@ fun default_ind_conv (conv_IH, conv_CL) ctxt (phi:phi_type) =
 
 (* Abstract Constraint Guided Reasoning *)
 
-fun is_TA_IH_ToA (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_IH_ToA\<close>)) = true
+fun is_TA_IH_ToA (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_conditioned_ToA_template\<close>)) = true
   | is_TA_IH_ToA _ = false
 
 fun timed_chop timeout n xq =
@@ -934,16 +953,26 @@ fun timed_chop timeout n xq =
     | SOME (x, xq') => apfst (Basics.cons x) (timed_chop timeout (n - 1) xq'))
     handle Timeout.TIMEOUT _ => ([], Seq.empty)
 
-fun instantiate_ToA (Ant,pure_info,ctxt) ToA =
+fun instantiate_ToA (pure_info,ctxt) ToA =
   case Thm.concl_of ToA
-    of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_IH_ToA\<close>)
+    of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ \<^Const>\<open>\<phi>TA_conditioned_ToA_template\<close>)
         => let
-          val ToA' = Ant RS (Thm.permute_prems 0 ~2 ToA)
-          val (prem, _) = Thm.dest_implies (Thm.cprop_of ToA')
-          val vars = Drule.add_vars_cterm prem Cterms.empty
+          val (i,target_prem) =
+                case get_index (fn ctm =>
+                        if Phi_Syntax.is_action_of (fn Const (\<^const_name>\<open>\<phi>TA_pure_facts\<close>, _) => true
+                                                     | _ => false)
+                           (Thm.term_of ctm)
+                        then SOME ctm
+                        else NONE)
+                      (Thm.cprems_of ToA)
+                  of SOME xx => xx
+                   | NONE => error "Bad Configuration: an induction hypothesis is declared with \<phi>TA_conditioned_ToA_template\
+                                   \ but has no antecedent tagged with \<phi>TA_pure_facts"
+          (* Gosh, I forget why I trace those instantiations...
+          val vars = Drule.add_vars_cterm target_prem Cterms.empty
           val prem' = Cterms.fold ( curry Conjunction.mk_conjunction
                                   o Thm.cprop_of o Drule.mk_term
-                                  o fst) vars prem
+                                  o fst) vars target_prem*)
           fun elim_conj ret thm =
                 case Thm.prop_of thm
                   of Const(\<^const_name>\<open>Pure.conjunction\<close>, _) $ _ $ _ =>
@@ -956,10 +985,11 @@ fun instantiate_ToA (Ant,pure_info,ctxt) ToA =
                   |> distinct (fn ((thsa,_),(thsb,_)) =>
                                   eq_list (Thm.equiv_thm (Proof_Context.theory_of ctxt)) (thsa, thsb))
                   |> map snd
-          val insts = Goal.init prem'
-                  |>(REPEAT_DETERM_N (Cterms.size vars) (
+          val insts = Goal.init target_prem
+                  |>((*REPEAT_DETERM_N (Cterms.size vars) (
                         resolve_tac ctxt [Conjunction.conjunctionI] 1 THEN
                         resolve_tac ctxt [Drule.termI] 1)
+                     THEN*) resolve_tac ctxt @{thms' Action_Tag_I} 1
                      THEN Method.insert_tac ctxt [pure_info] 1)
                   |> Seq.hd
                   (*|> @{print}
@@ -969,7 +999,7 @@ fun instantiate_ToA (Ant,pure_info,ctxt) ToA =
                   |> timed_chop (Time.fromMilliseconds 50) 21 |> fst
                   |> map Goal.conclude
                   |> simplify_distinct ctxt
-                  |> maps (fn th => let val th' = th RS ToA'
+                  |> maps (fn th => let val th' = th RSN (i+1,ToA)
                                         val th2 = th' RS' (ctxt, @{thm' Action_Tag_D})
                                         (*fun rewr_pat (\<^Const>\<open>Trueprop\<close> $ (\<^Const_>\<open>Transformation ty\<close> $ X $ Y $ _)) =
                                               (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Transformation ty\<close> $ X $ Y
@@ -1032,51 +1062,27 @@ type reasoning = Proof.context -> thm -> thm
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type PLPR_reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
+type reasoning_configure = Subgoal.focus * thm * Proof.context -> thm list -> thm list * thm list * thm list
 
-fun gen_abstract_constraint_guided_reasoning always_diverge_disj varify extract_prems reasoner =
-let fun has_disj_ants th =
-          exists (fn Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) => true
-                   | _ => false)
-                 (#2 (Phi_Help.strip_meta_hhf (fst (Logic.dest_implies (Thm.prop_of th)))))
-    fun no_schematic_in_concl th = Thm.maxidx_of_cterm (Thm.cconcl_of th) = ~1
 
-  fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
-  case Thm.major_prem_of sequent0
-    of _ (*Trueprop*) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
-     | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
-              abstract_constraint_guided_reasoning ctxt0 (@{thm' allI} RS sequent0)
-     | _ =>
-  if has_disj_ants sequent0 andalso (always_diverge_disj orelse no_schematic_in_concl sequent0)
-  then Seq.hd (Thm.biresolution (SOME ctxt0) true [(true, @{thm' disjE})] 1 sequent0)
-    |> abstract_constraint_guided_reasoning ctxt0
-  else let
-      val sequent = sequent0
-                 |> (fn th => @{thm' impI} RS th
-                              handle THM _ => Method.insert_tac ctxt0 [Thm.transfer' ctxt0 @{thm' TrueI}] 1 th
-                                           |> Seq.hd)
-      val (focus, lsequent'0) = Subgoal.focus ctxt0 1 NONE sequent
-      val ctxt = #context focus
-      val lsequent = varify_subgoal varify ctxt focus lsequent'0
+fun default_reasoning_configure extract_prems
+                                (focus:Subgoal.focus, lsequent, ctxt) local_prems =
+  let val is_pure_fact = Phi_Syntax.is_action_of (
+                          fn Const(\<^const_name>\<open>\<phi>TA_pure_facts\<close>, _) => true
+                           | _ => false
+                        ) o Thm.concl_of
+      val is_ToA_template = Phi_Syntax.is_action_of (
+                          fn Const(\<^const_name>\<open>\<phi>TA_conditioned_ToA_template\<close>, _) => true
+                           | _ => false
+                        ) o Thm.concl_of
+      val pure_facts = filter is_pure_fact local_prems
+                    |> map (fn th => th RS' (ctxt, @{thm' Action_Tag_D}))
+      val ToAs = filter is_ToA_template local_prems
+              |> maps (instantiate_ToA (Phi_Help.conj_intros ctxt pure_facts, ctxt))
+      val pure_fact' = map (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=MODE_SIMP]})) pure_facts
 
-      val len = length (#prems focus)
-      val [Ant, pure_info] = List.drop (#prems focus, len - 2)
+      val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
-      val ToAs = maps (instantiate_ToA (Ant,pure_info,ctxt)) (List.take (#prems focus, len - 2))
-
-      fun pass_conj_ants ant = ant
-            |> Phi_Help.conj_elims ctxt
-            |> map ( Thm.forall_elim_vars (Thm.maxidx_of lsequent)
-                   o Phi_Help.repeat (fn th => th RS' (ctxt, @{thm' spec})))
-      val ant'0 = List.nth (#prems focus, len - 2)
-      fun pass_ind_ants ant =
-        case Thm.prop_of ant
-          of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ _ =>
-              if A aconv (Thm.prop_of ant'0)
-              then ant'0 RS ant
-              else ant
-           | _ => ant
-      val ants'1 = pass_conj_ants ant'0
-                 @ map pass_ind_ants (List.take (#prems focus, len - 2))
       fun is_real_Premise (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_real_Premise X
         | is_real_Premise (Const(\<^const_name>\<open>All\<close>, _) $ X) = is_real_Premise X
         | is_real_Premise (Abs (_,_,X)) = is_real_Premise X
@@ -1090,19 +1096,72 @@ let fun has_disj_ants th =
             case extract_prems ctxt th
               of [] => if is_real_Premise (Thm.concl_of th) then [th] else []
                | some => some
-            ) ants'1
-      val rewrs = map_filter (extract_rewr ctxt) ants'1 |> @{print}
-      val _ = if null rewrs then () else ()
-      val ants = filter ((fn term => not (is_real_Premise term) andalso not (is_TA_IH_ToA term))
-                         o Thm.concl_of) ants'1
-               @ ToAs
-               |> map (Object_Logic.rulify ctxt
-                    #> Simplifier.rewrite_rule ctxt rewrs
-                    #> Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt)
+            ) local_prems
+      val rewrs = map_filter (extract_rewr ctxt) local_prems
+      val ants = filter_out (is_real_Premise o Thm.concl_of) local_prems
+   in (prem_ants, rewrs, ToAs @ ants)
+  end
+
+fun gen_abstract_constraint_guided_reasoning always_diverge_disj configure varify reasoner =
+let fun has_disj_ants th =
+      let fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
+            | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = chk X
+            | chk (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) = true
+            | chk _ = false
+       in exists chk (#2 (Phi_Help.strip_meta_hhf (fst (Logic.dest_implies (Thm.prop_of th)))))
+      end
+    fun no_schematic_in_concl th = Thm.maxidx_of_cterm (Thm.cconcl_of th) = ~1
+
+  fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
+  case Thm.major_prem_of sequent0
+    of _ (*Trueprop*) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
+     | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
+              abstract_constraint_guided_reasoning ctxt0 (@{thm' allI} RS sequent0)
+     | _ =>
+  if has_disj_ants sequent0 andalso (always_diverge_disj orelse no_schematic_in_concl sequent0)
+  then Seq.hd (Thm.biresolution (SOME ctxt0) true [(true, @{thm' disjE}), (true, @{thm' tagged_disjE})] 1 sequent0)
+    |> abstract_constraint_guided_reasoning ctxt0
+  else let
+      val sequent = sequent0
+                 (*|> (fn th => @{thm' impI} RS th
+                              handle THM _ => Method.insert_tac ctxt0 [Thm.transfer' ctxt0 @{thm' TrueI}] 1 th
+                                           |> Seq.hd)*)
+      val (focus, lsequent'0) = Subgoal.focus ctxt0 1 NONE sequent
+      val ctxt = #context focus
+      val lsequent = varify_subgoal varify ctxt focus lsequent'0
+
+      val len = length (#prems focus)
+
+      val is_out_ant = Phi_Syntax.is_action_of (
+                          fn Const(\<^const_name>\<open>\<phi>TA_ANT\<close>, _) => true
+                           | _ => false
+                        ) o Thm.concl_of
+      val out_ants = filter is_out_ant (#prems focus)
+      val local_prems' = filter_out is_out_ant (#prems focus)
+
+      fun elim_out_ants th =
+        case get_index (fn P => find_first (fn A => P aconv (Thm.prop_of A)) out_ants) (Thm.prems_of th)
+          of SOME (i, A) => Seq.hd (Thm.biresolution NONE true [(false, A)] (i+1) th)
+                              |> elim_out_ants
+           | NONE => th
+      val local_prems'1 = map elim_out_ants local_prems'
+
+      fun pass_out_ant ant = (ant RS' (ctxt, @{thm' Action_Tag_D}))
+            |> Phi_Help.conj_elims ctxt
+            |> map ( Thm.forall_elim_vars (Thm.maxidx_of lsequent)
+                   o Phi_Help.repeat (fn th => th RS' (ctxt, @{thm' spec})))
+
+      val local_prems = maps pass_out_ant out_ants @ local_prems'1
+
+      val (prem_ants, rewrs, reasoner_ants') = configure (focus, lsequent, ctxt) local_prems
+      val reasoner_ants = reasoner_ants'
+            |> map ( Object_Logic.rulify ctxt
+                  #> Simplifier.rewrite_rule ctxt rewrs
+                  #> Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt )
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_intro_rules (
-                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE, 200, [], [], NONE)) ants)
+                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE, 200, [], [], NONE)) reasoner_ants)
             (* #> Phi_Reasoner.add_intro_rules (map (fn (pat,rule) =>
                     ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs) *))
 
@@ -1112,21 +1171,18 @@ let fun has_disj_ants th =
                     |> Seq.hd
                     |> reasoner ctxt''
 
-      val lsequent'' = 
-            if Thm.prop_of pure_info = \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close>
-            then lsequent'
-            else Conv.gconv_rule (PLPR_Syntax.premise_tag_conv (
-                    Conv.rewr_conv (pure_info RS' (ctxt'', @{thm' conv_intro_premise})))) 1
-                    lsequent'
+      (*val lsequent'' = fold PLPR_Syntax.provide_premise_condition prem_ants lsequent'*)
 
-   in Subgoal.retrofit ctxt'' ctxt0 (#params focus) (#asms focus) 1 lsequent'' sequent
+   in Subgoal.retrofit ctxt'' ctxt0 (#params focus) (#asms focus) 1 lsequent' sequent
    |> Seq.hd
    |> Phi_Reasoners.defer_obligation_tac (false, true, ~1) ctxt
    |> Seq.hd
    |> varify_subgoal_finale
    |> abstract_constraint_guided_reasoning ctxt
   end
-in fn ctxt => abstract_constraint_guided_reasoning (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
+in fn ctxt =>
+       Simplifier.norm_hhf ctxt
+    #> abstract_constraint_guided_reasoning (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
 end
 
 fun chk_unfolded (phi : phi_type) term =

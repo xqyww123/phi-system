@@ -1,6 +1,7 @@
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
+  val is_action_of : (term -> bool) -> (term -> bool)
   val dest_tags   :  term ->  term
   val dest_tags_c : cterm -> cterm
 
@@ -38,6 +39,9 @@ open Thm Term HOLogic Phi_Help Phi_Syntax
 val dest_action_tag   = dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
 val dest_action_tag_c = dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
 
+fun is_action_of P (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ A) = P A
+  | is_action_of P (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_action_of P X
+  | is_action_of _ _ = false
 
 fun dest_tags X = X
   |> perhaps (try dest_Trueprop)

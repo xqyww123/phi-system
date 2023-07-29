@@ -127,6 +127,7 @@ include PHI_HELP
 
   val list_mk_conj : term list -> term
   val list_mk_disj : term list -> term
+  val conj_intros: Proof.context -> thm list -> thm
   val conj_elims : Proof.context -> thm -> thm list
 
 
@@ -136,7 +137,7 @@ include PHI_HELP
   val lambda_name : string * term -> term -> term
   val lambda : term -> term -> term
   val subst_free_with_loose_bounds : (term * term) list -> term -> term
-          (*supports loose bounds in the residue*)
+          (*supports loose bounds either in the redex or the residue*)
 
 end
 
@@ -539,6 +540,9 @@ fun conj_elims ctxt th =
     of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => []
      | _ => HOLogic.conj_elims ctxt th
 
+fun conj_intros _ [] = @{thm' TrueI}
+  | conj_intros ctxt L = foldr1 (uncurry (HOLogic.conj_intr ctxt)) L
+
 (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
   This version improves it, but it still requires that loose bounds do not occur in `v`*)
 fun abstract_over (v, body) =
@@ -562,12 +566,19 @@ fun lambda v t = lambda_name ("", v) t;
 
 fun subst_free_with_loose_bounds [] = I
   | subst_free_with_loose_bounds pairs =
-      let fun substf i u =
-            case AList.lookup (op aconv) pairs u of
-                SOME u' => Term.incr_boundvars i u'
-              | NONE => (case u of Abs(a,T,t) => Abs(a, T, substf (i+1) t)
-                                 | t$u' => substf i t $ substf i u'
-                                 | _ => u)
+      let fun aconv_bound_diff d (t1 $ u1, t2 $ u2) =
+                aconv_bound_diff d (t1,t2) andalso aconv_bound_diff d (u1,u2)
+            | aconv_bound_diff d (Abs (_, T1, t1), Abs (_, T2, t2)) =
+                aconv_bound_diff d (t1,t2) andalso T1 = T2
+            | aconv_bound_diff d (Bound i, Bound j) = i + d = j
+            | aconv_bound_diff _ (a1,a2) = a1 = a2
+
+          fun substf i u =
+            case AList.lookup (aconv_bound_diff i) pairs u
+              of SOME u' => Term.incr_boundvars i u'
+               | NONE => (case u of Abs(a,T,t) => Abs(a, T, substf (i+1) t)
+                                  | t$u' => substf i t $ substf i u'
+                                  | _ => u)
        in substf 0 end
 
 end

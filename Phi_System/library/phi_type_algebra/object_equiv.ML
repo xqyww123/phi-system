@@ -1,18 +1,25 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val object_equiv       : hint list -> Phi_Type_Algebra.derive
+val conv_hol_imp_to_meta_if_has : conv -> conv
+val object_equiv : hint list -> Phi_Type_Algebra.derive
 
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
+fun conv_hol_imp_to_meta_if_has Cant ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
+          (Conv.rewr_conv @{thm' atomize_imp[symmetric]} then_conv
+           Conv.arg1_conv (HOLogic.Trueprop_conv Cant)) ctm
+     | _ => Conv.all_conv ctm
 
 (*** Object Equivalence ***)
 
 local
-
+(*
 fun set_last_schematic_var ctxt rule0 =
   let val rule = Phi_Help.beta_eta_contract rule0
       val (t1,t2,tm) =
@@ -38,7 +45,37 @@ fun set_eq_when_it_is_constant_true ctxt rule0 =
                  | _ => error "Internal bug a74fc08c-d9c1-4b19-99b2-4f18a07b31aa"
    in Thm.instantiate (TVars.empty, Vars.make [(v, Thm.cterm_of ctxt P)]) rule
   end
+*)
 
+fun infer_equiv ctxt sequent =
+  let val var = case Thm.concl_of sequent
+                  of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var v) => v
+                   | _ => error "BUG gZvGQ6CHTG+D2d27jtExHQ"
+      val (tya, tyb) = case snd var of \<^Type>\<open>fun a \<^Type>\<open>fun b _\<close>\<close> => (a,b)
+      val (_,oblg) = PLPR_Syntax.dest_premise_tag (Thm.major_prem_of sequent)
+      
+      fun infer lev (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (Var v' $ x $ y) $ Y) =
+            if v' = var
+            then Phi_Help.subst_free_with_loose_bounds [(x, Bound (lev+1)), (y, Bound lev)] Y
+            else \<^Const>\<open>True\<close>
+        | infer lev (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ X $ Y) =
+            \<^Const>\<open>HOL.conj\<close> $ infer lev X $ infer lev Y
+        | infer lev (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ X $ Y) =
+            \<^Const>\<open>HOL.disj\<close> $ infer lev X $ infer lev Y
+        | infer lev ((H as Const(\<^const_name>\<open>HOL.All\<close>, _)) $ Abs (N, Ty, X)) =
+            H $ Abs (N, Ty, infer (lev+1) X)
+        | infer lev ((H as Const(\<^const_name>\<open>HOL.Ex\<close>, _)) $ Abs (N, Ty, X)) =
+            H $ Abs (N, Ty, infer (lev+1) X)
+        | infer lev ((H as Const(\<^const_name>\<open>special_Ex\<close>, _)) $ Abs (N, Ty, X)) =
+            H $ Abs (N, Ty, infer (lev+1) X)
+        | infer _ _ = \<^Const>\<open>True\<close>
+
+      val eq = Abs ("x", tya, Abs ("y", tyb, infer 0 oblg))
+            |> Thm.cterm_of ctxt
+   in Thm.instantiate (TVars.empty, Vars.make [(var, eq)]) sequent
+  end
+
+(*
 (*must be beta-eta normalized*)
 fun infer_eq ctxt rule =
   let fun is_free_bound lev (Abs(_,_,X)) = is_free_bound (lev+1) X
@@ -68,7 +105,8 @@ fun infer_eq ctxt rule =
                            then @{thm' Object_Equiv_rule_move_all2} RS rule
                            else @{thm' Object_Equiv_rule_move_all} RS rule)
          | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ Const(\<^const_name>\<open>True\<close>, _)) =>
-            (@{thm Object_Equiv_rule_move_set_eq_end} RS (@{thm' simp_thms(21)[THEN iffD2]} RS rule))
+            (@{thm Object_Equiv_rule_move_set_eq_end} RS (@{thm' simp_thms(21)[THEN iffD2]} RS
+                    (@{thm' simp_thms(21)[THEN iffD2]} RS rule)))
               |> set_last_schematic_var ctxt
          | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ _) =>
             infer_eq ctxt (@{thm' Object_Equiv_rule_move_set_eq} RS rule)
@@ -80,7 +118,7 @@ fun infer_eq ctxt rule =
         raise Automation_Fail ("Fail to infer the object equivelance from the obtained obligation\n" ^
                  Thm.string_of_thm ctxt rule)
   end
-
+*)
 
 fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
   let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi)) 
@@ -126,7 +164,9 @@ fun OE_reasoning phi ctxt rule =
         if def_contains_satisfaction phi
         then extract_pure_prem_by_RS @{thms' \<phi>TA_OE_extract_prem}
         else K (K [])
-   in gen_abstract_constraint_guided_reasoning true (K (K NONE)) extract_prem (ToA_reasoner phi) ctxt' rule
+   in gen_abstract_constraint_guided_reasoning true
+          (default_reasoning_configure extract_prem)
+          (K (K NONE)) (ToA_reasoner phi) ctxt' rule
   end
 
 fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
@@ -138,16 +178,18 @@ fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
 
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_EO_rewr_IH})),
                        fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_EO_rewr_C} then_conv
-                            Conv.implies_concl_conv (
-                              HOLogic.Trueprop_conv (fn ctm =>
-                              Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)) ctm
-                            )))
+                            Conv.implies_concl_conv (HOLogic.Trueprop_conv (fn ctm =>
+                              Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)) ctm)
+                              then_conv Phi_Conv.hol_alls_to_meta_alls (fn _ =>
+                                  conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
+                                ) ctxt))
       fun infer (phi, ctxt, rule) =
             if is_some hint0 orelse #is_recursive phi then NONE
-            else (@{thm' Premise_I} RS rule)
+            else rule
                    |> Phi_Help.beta_eta_contract
                    |> Simplifier.rewrite_rule ctxt @{thms special_Ex_def}
-                   |> infer_eq ctxt
+                   |> infer_equiv ctxt
+                   |> oblg_solver "Object_Equiv" ctxt
                    |> SOME
       fun simp (_, ctxt) =
         if is_some hint0 then I

@@ -126,7 +126,8 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                            | _     => PLPR_reasoner (SOME 2) ctxt (@{thm' \<phi>TA_Ident_I_rule_step} RS th))
                | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
             else PLPR_reasoner (SOME 1)
-      fun reasoning _ = gen_abstract_constraint_guided_reasoning true varify_subgoal extract_prem reasoner
+      fun reasoning _ = gen_abstract_constraint_guided_reasoning true
+                            (default_reasoning_configure extract_prem) varify_subgoal reasoner
 
       fun set_the_infer_tail ctxt th =
         if is_left then

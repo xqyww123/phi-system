@@ -119,7 +119,10 @@ fun SHu_reasoner ctxt sequent =
      | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
 
 fun SH_reasoning is_intro phi ctxt =
-  gen_abstract_constraint_guided_reasoning true (K (K NONE)) (K (K [])) (fn ctxt => fn sequent => (
+  gen_abstract_constraint_guided_reasoning true
+      (default_reasoning_configure (K (K [])))
+      (K (K NONE))
+      (fn ctxt => fn sequent => (
          (case Thm.major_prem_of sequent
             of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _)
                         $ (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) $ _ $ _)
@@ -150,10 +153,11 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
                )) ctxt,
             fn ctxt => fn phi =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_C}) then_conv
-                Conv.implies_concl_conv (
-                  HOLogic.Trueprop_conv (
-                  Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
-                ))
+                Conv.implies_concl_conv (HOLogic.Trueprop_conv (
+                  Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))) then_conv
+                Phi_Conv.hol_alls_to_meta_alls (fn _ => fn ctm =>
+                  conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]}) ctm
+                ) ctxt)
             )
       val ind_conv_u = default_ind_conv (
             fn ctxt => fn _ =>

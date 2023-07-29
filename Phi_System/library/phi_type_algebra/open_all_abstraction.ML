@@ -49,7 +49,10 @@ fun reasoning phi ctxt =
         if def_contains_satisfaction phi
         then (fn _ => fn th => [])
         else K (K [])*)
-   in gen_abstract_constraint_guided_reasoning false (K (K NONE)) (K (K [])) (fn ctxt => fn sequent => (
+   in gen_abstract_constraint_guided_reasoning false
+         (default_reasoning_configure (K (K [])))
+         (K (K NONE))
+         (fn ctxt => fn sequent => (
          (case Thm.major_prem_of sequent
             of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ (
                     Const(\<^const_name>\<open>Transformation\<close>, _)

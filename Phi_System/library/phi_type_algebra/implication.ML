@@ -107,7 +107,8 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
 
       fun Inh_reasoning _ ctxt =
             gen_abstract_constraint_guided_reasoning false
-                (if mode_infer then varify_subgoal else K (K NONE)) extract_pure_prems
+                (default_reasoning_configure extract_pure_prems)
+                (if mode_infer then varify_subgoal else K (K NONE))
                 Inh_reasoner ctxt
 
 
@@ -145,7 +146,6 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                          end
                   | _ => error "Internal bug"
            end)
-(*(fn (_,_,sequent) => SOME (@{thm' \<phi>TA_Inh_inst_P} RS sequent))*)
         else K NONE
       fun simp (_, ctxt) rule0 =
         let val rule = rule0 RS' (ctxt, @{thm' spec})

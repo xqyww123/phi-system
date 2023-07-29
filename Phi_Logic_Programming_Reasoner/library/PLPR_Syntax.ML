@@ -6,6 +6,8 @@ val dest_premise_tag_c : cterm -> cterm * cterm
 val add_premise_tag_conv : cterm (*mode*) -> conv
 val premise_tag_conv : conv -> conv
 
+val provide_premise_condition : thm -> thm -> thm
+
 end
 
 structure PLPR_Syntax : PLPR_SYNTAX = struct
@@ -49,5 +51,13 @@ fun premise_tag_conv C ctm =
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (premise_tag_conv C) ctm
      | Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _ => Conv.arg_conv C ctm
      | _ => raise CTERM ("premise_tag_conv",[ctm])
+
+fun provide_premise_condition C th =
+  case Thm.prop_of C
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) =>
+        C RS (@{thm' provide_premise_condition_p} RS th)
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+        C RS (@{thm' provide_premise_condition} RS th)
+     | _ => raise THM ("provide_premise_condition", 0, [C])
 
 end

@@ -771,6 +771,17 @@ structure Useful_Thms = Named_Thms (
 
 setup \<open>Useful_Thms.setup\<close>
 
+lemma provide_premise_condition:
+  \<open>P \<Longrightarrow> Premise mode (P \<longrightarrow> Q) \<Longrightarrow> Premise mode Q\<close>
+  unfolding Premise_def
+  by blast
+
+lemma provide_premise_condition_p:
+  \<open>Premise mode' P \<Longrightarrow> Premise mode (P \<longrightarrow> Q) \<Longrightarrow> Premise mode Q\<close>
+  unfolding Premise_def
+  by blast
+
+
 ML_file \<open>library/PLPR_Syntax.ML\<close>
 
 paragraph \<open>Contract Premises for Reporting Obligation\<close>
