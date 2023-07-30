@@ -82,9 +82,7 @@ fun guess_ssp ctxt (sigma_ty, sigma) (T as \<^Type>\<open>prod ta tb\<close>) =
                        end               
                val mapper = eBNF_Info.mk_map_of_bnf deads lives (rev rev_lives') bnf
                          |> fold (fn M => fn X => X $ M) rev_maps
-               val ctxt = ctxt
-                       |> load_mapper_ss bnf
-                       |> load_predicate_ss bnf
+               val ctxt = load_ss (false,true,true,true) bnf ctxt
                
                fun inst_case_distrib th =
                  let val idx = Thm.maxidx_of th + 1

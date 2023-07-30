@@ -471,7 +471,7 @@ ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_n
 
 ML \<open>local val bnf = (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))
 in 
-val xx = BNF_Def.pred_mono_of_bnf bnf
+val xx = BNF_Def.rel_map_of_bnf bnf
 end\<close>
 
 thm list.rel_eq
@@ -565,6 +565,10 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
       (fn (_ $ F $ _ $ _ $ _) => attach_var F)
 #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Near_Semimodule_Functor_unzip\<close>
       (fn (_ $ F $ _ $ _ $ _) => attach_var F)
+#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Identity_Element\<^sub>I\<close>
+      (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _) => T)
+#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
+      (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) => T)
 end
 \<close>
 
@@ -758,6 +762,42 @@ lemma [\<phi>reason add!]:
 
 end
 
+
+subsubsection \<open>Identity Element\<close>
+
+lemma [\<phi>reason_template default 40]:
+  \<open> Identity_Element\<^sub>I (yy \<Ztypecolon> R) P
+\<Longrightarrow> Object_Equiv R eq
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq (snd y) yy
+\<Longrightarrow> y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, ()) \<Ztypecolon> U \<^emph> \<circle> \<w>\<i>\<t>\<h> P @action \<A>SE_trim True \<close>
+  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>I_def]
+    apply_rule R1[THEN implies_right_prod]
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason_template default 41]:
+  \<open> Identity_Element\<^sub>I (yy \<Ztypecolon> R) P
+\<Longrightarrow> Object_Equiv R eq
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq (snd y) yy
+\<Longrightarrow> y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, ()) \<Ztypecolon> U \<^emph> \<circle> \<w>\<i>\<t>\<h>
+        Auto_Transform_Hint (y'' \<Ztypecolon> U' \<^emph> \<circle>) (x'' \<Ztypecolon> U' \<^emph> R') \<and> P @action \<A>SE_trim True \<close>
+  unfolding Auto_Transform_Hint_def
+  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>I_def]
+    apply_rule R1[THEN implies_right_prod]
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason_template default 40]:
+  \<open> Identity_Element\<^sub>E (u \<Ztypecolon> W)
+\<Longrightarrow> x' \<Ztypecolon> T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst x', u) \<Ztypecolon> T \<^emph> W @action \<A>SE_trim False \<close>
+  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>E_def]
+    apply_rule R1[THEN implies_right_prod]
+  \<medium_right_bracket> .
+
+lemma [\<phi>reason_template default 40]:
+  \<open> Identity_Element\<^sub>E (u \<Ztypecolon> W)
+\<Longrightarrow> x' \<Ztypecolon> T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst x', u) \<Ztypecolon> T \<^emph> W \<w>\<i>\<t>\<h> Auto_Transform_Hint (y\<^sub>H \<Ztypecolon> T\<^sub>H \<^emph> W\<^sub>H) (x\<^sub>H \<Ztypecolon> T\<^sub>H \<^emph> \<circle>) \<and> True @action \<A>SE_trim False \<close>
+  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>E_def]
+    apply_rule R1[THEN implies_right_prod]
+  \<medium_right_bracket> .
 
 
 subsubsection \<open>Transformation Functor\<close>
@@ -1239,7 +1279,7 @@ lemma "_Structural_Extract_general_rule_TH_"[(*THEN SE_clean_waste',*) \<phi>rea
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using "_Structural_Extract_general_rule_"[where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
 
-
+  
 lemma "_Structural_Extract_general_rule_a_"[\<phi>reason_template 80]:
   \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
@@ -1508,6 +1548,7 @@ subsubsection \<open>Extension of BNF-FP\<close>
 ML_file \<open>library/tools/extended_BNF_info.ML\<close>
 ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
 
+paragraph \<open>Configurations\<close>
 
 lemma zip_eq_Cons_ex:
   \<open>zip a b = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. a = ah # al \<and> b = bh # bl \<and> (ah,bh) = h \<and> zip al bl = l)\<close>
@@ -1558,9 +1599,6 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
   map_ident = @{thm' Set.image_ident}
 } end)
 )\<close>
-
-(* ML \<open>\<^pattern>\<open>case_prod zip\<close>\<close>
-ML \<open>\<^pattern>\<open>(\<lambda>l. (map fst l, map snd l))\<close>\<close> *)
 
 
 subsubsection \<open>Deriver Framework\<close>
@@ -2008,16 +2046,18 @@ ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\
           Object_Equiv_rule_move_all2
 
           \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH (*\<phi>TA_TF_rule_step*) *)
-
-lemmas [\<phi>constraint_expansion] =
-          HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
+setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt => ctxt addsimps
+  @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
           prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv
           ExSet_simps
           \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Prod_expn'[folded \<phi>Auto_Prod_def] \<phi>Prod_expn''[folded \<phi>Auto_Prod_def]
-          FSet.ball_simps(5-7) Set.ball_simps(5-7,9) Set.ball_Un
-          Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
+          FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
           list_all2_Cons1 list_all2_Nil zip_eq_Cons_ex zip_eq_Nil_eq_len list_all2_lengthD
-          map_ident
+          map_ident}))\<close>
+
+lemmas [\<phi>constraint_expansion] =
+          Set.ball_Un
+          Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
 
 thm map_ident
 thm zip_eq_Nil_eq_len zip_eq_Cons_ex

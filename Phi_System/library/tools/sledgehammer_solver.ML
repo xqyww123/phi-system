@@ -298,7 +298,7 @@ fun sledgehammer (ctxt,sequent0) =
       fun search_prf prompt =
         let
           val (prf0,stat0) = eval_prf_str_stat 5 (SOME (fn () => ("",stat))) prompt stat
-          val N = Thm.nprems_of (#goal (Proof.raw_goal stat0))
+          val N = Thm.nprems_of (@{print} (#goal (Proof.raw_goal stat0)))
           val Ns = string_of_int N
 
           val _ = if N > 20 then (tracing ("The prompt generates too many subgoals (" ^

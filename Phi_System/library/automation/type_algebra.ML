@@ -87,10 +87,8 @@ val make_forall_quantified_property_for_parameters_of_a_phi_type :
   Bellow they are loaders of the operators.
 *)
 
-val load_set_ss : eBNF_Info.eBNF -> Proof.context -> Proof.context
-val load_predicate_ss : eBNF_Info.eBNF -> Proof.context -> Proof.context
-val load_rel_mapper_ss : eBNF_Info.eBNF -> Proof.context -> Proof.context
-val load_mapper_ss : eBNF_Info.eBNF -> Proof.context -> Proof.context
+val load_ss : bool (*set*) * bool (*pred*) * bool (*rel*) * bool (*map*)
+           -> eBNF_Info.eBNF -> Proof.context -> Proof.context
 
 val load_simpset : term list -> Proof.context -> Proof.context
   (*Given any object expressions, it parses the object operators used inside,
@@ -332,14 +330,22 @@ fun fp_sugar_of ctxt bnf =
      | _ => NONE
 
 fun add_global_simps thms ctxt = ctxt
-  |> Simps.map' (fn ctxt => ctxt addsimps thms)
+  |> Simps.add_simps' thms
   |> (fn ctxt => ctxt addsimps thms)
 
-(* Set *)
 
-fun load_set_ss bnf ctxt = ctxt
-  |> Simps.map' (fn ctxt => ctxt addsimps ( eBNF_Info.simps_of_set_safe bnf
-                                          @ eBNF_Info.simps_of_ctr_safe bnf))
+fun load_ss (set,pred,rel,map) bnf ctxt = ctxt
+  |> Simps.add_simps' ( eBNF_Info.simps_of_ctr_safe bnf
+                      @ (if set then eBNF_Info.simps_of_set_safe bnf else [])
+                      @ (if pred then eBNF_Info.simps_of_pred_safe bnf else [])
+                      @ (if rel then eBNF_Info.simps_of_rel_safe bnf else [])
+                      @ (if map then eBNF_Info.simps_of_map_safe bnf else []))
+  |> add_global_simps ( (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
+                      @ (if rel then eBNF_Info.global_simps_of_rel_safe bnf else [])
+                      @ (if map then eBNF_Info.global_simps_of_map_safe bnf else []))
+
+
+(* Set *)
 
 (*ty: container type*)
 fun guess_set_opr ctxt ty element_ty =
@@ -386,14 +392,9 @@ val guess_self_rel =
 
 (* Predicator *)
 
-fun load_predicate_ss bnf ctxt = ctxt
-   |> Simps.map' (fn ctxt => ctxt addsimps ( eBNF_Info.simps_of_pred_safe bnf
-                                           @ eBNF_Info.simps_of_ctr_safe bnf))
-   |> add_global_simps (eBNF_Info.global_simps_of_pred_safe bnf)
-
 val guess_predicate =
   let fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = load_predicate_ss bnf ctxt
+        let val ctxt' = load_ss (false,true,false,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_pred_of_bnf D L bnf, ctxt')
         end
       val is_live = K true
@@ -403,12 +404,6 @@ val guess_predicate =
   end
 
 (* Mapper *)
-
-fun load_rel_mapper_ss bnf ctxt = ctxt
-     |> Simps.map' (fn ctxt => ctxt addsimps ( eBNF_Info.simps_of_rel_safe bnf
-                                             @ eBNF_Info.simps_of_map_safe bnf
-                                             @ eBNF_Info.simps_of_ctr_safe bnf))
-     |> add_global_simps (eBNF_Info.global_simps_of_rel_safe bnf)
 
 (*ty: container_ty
   dead_opr: the relation for dead type parameters (including those are not the target element type)*)
@@ -420,7 +415,7 @@ fun guess_rel_mapper dead_opr target_ty ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_rels = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = load_rel_mapper_ss bnf ctxt
+        let val ctxt' = load_ss (false,false,true,true) bnf ctxt
          in Seq.single (eBNF_Info.mk_rel_of_bnf D L (map target_ty L) bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
@@ -431,11 +426,6 @@ fun guess_rel_mapper dead_opr target_ty ctxt ty element_ty =
         (Abs("", g_ty, Term.abstract_over (g_term, rel_term')), ctxt))
   end
 
-fun load_mapper_ss bnf ctxt = ctxt
-  |> Simps.map' (fn ctxt => ctxt addsimps ( eBNF_Info.simps_of_map_safe bnf
-                                          @ eBNF_Info.simps_of_ctr_safe bnf)
-                         |> add_global_simps (eBNF_Info.global_simps_of_map_safe bnf))
-
 fun guess_func_mapper target_ty ctxt ty element_ty =
   let val [g'] = Name.invent (Variable.names_of ctxt) "g" 1
       val ([g], ctxt') = Variable.add_fixes [g'] ctxt
@@ -444,7 +434,7 @@ fun guess_func_mapper target_ty ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_mappers = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = load_mapper_ss bnf ctxt
+        let val ctxt' = load_ss (false,false,false,true) bnf ctxt
          in Seq.single (eBNF_Info.mk_map_of_bnf D L (map target_ty L) bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
@@ -462,7 +452,7 @@ fun guess_pred_mapper ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_mappers = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = load_predicate_ss bnf ctxt
+        let val ctxt' = load_ss (false,true,false,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_pred_of_bnf D L bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
@@ -526,11 +516,10 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
                     val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                                        else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
                     val ctxt'' = ctxt
-                              |> Simps.map' (fn ctxt =>
-                                    ctxt addsimps ((if flag then #zip_simps fp_more else #unzip_simps fp_more)
-                                                @ eBNF_Info.simps_of_rel_safe bnf
-                                                @ eBNF_Info.simps_of_map_safe bnf
-                                                @ eBNF_Info.simps_of_ctr_safe bnf))
+                              |> Simps.add_simps' ((if flag then #zip_simps fp_more else #unzip_simps fp_more)
+                                                  @ eBNF_Info.simps_of_rel_safe bnf
+                                                  @ eBNF_Info.simps_of_map_safe bnf
+                                                  @ eBNF_Info.simps_of_ctr_safe bnf)
                               |> add_global_simps (eBNF_Info.global_simps_of_rel_safe bnf)
                     val (args, ctxt') = ctxt''
                           |> fold_map (guess_zip_guided flag (target,target'))
@@ -594,7 +583,7 @@ fun load_rel (const_name, ty) ctxt =
               |> Option.mapPartial (mp eBNF_Info.rel_of_bnf_safe)
               |> Option.mapPartial (fn (C, bnf) =>
                    if const_eq const_name C
-                   then SOME (load_rel_mapper_ss bnf ctxt)
+                   then SOME (load_ss (false,false,true,true) bnf ctxt)
                    else NONE)
         | parse_typ \<^Type>\<open>fun \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>bool\<close>\<close>\<close> T\<close> = parse_typ T
         | parse_typ _ = NONE
@@ -607,7 +596,7 @@ fun load_set (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<^Type>\<open>set
         |> Option.mapPartial (mp eBNF_Info.sets_of_bnf_safe)
         |> Option.mapPartial (fn (C, bnf) =>
             if exists (const_eq CN) C
-            then SOME (load_set_ss bnf ctxt)
+            then SOME (load_ss (true,false,false,false) bnf ctxt)
             else NONE)
   | load_set _ _ = NONE
 
@@ -616,7 +605,7 @@ fun load_predicate (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<^Type>\<op
         |> Option.mapPartial (mp eBNF_Info.pred_of_bnf_safe)
         |> Option.mapPartial (fn (C, bnf) =>
             if const_eq CN C
-            then SOME (load_predicate_ss bnf ctxt)
+            then SOME (load_ss (false,true,false,false) bnf ctxt)
             else NONE)
   | load_predicate (CN, \<^Type>\<open>fun \<^Type>\<open>fun _ \<^Type>\<open>bool\<close>\<close> T\<close>) ctxt = load_predicate (CN, T) ctxt
   | load_predicate _ _ = NONE
@@ -629,7 +618,7 @@ fun load_map (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<open>T as Type(N
         |> Option.mapPartial (mp eBNF_Info.map_of_bnf_safe)
         |> Option.mapPartial (fn (C, bnf) =>
               if const_eq CN C
-              then SOME (load_mapper_ss bnf ctxt)
+              then SOME (load_ss (false,false,false,true) bnf ctxt)
               else load_map (CN, T) ctxt)
       else load_map (CN, T) ctxt
   | load_map (CN, \<^Type>\<open>fun \<^Type>\<open>fun _ _\<close> T\<close>) ctxt = load_map (CN, T) ctxt
@@ -644,9 +633,7 @@ fun load_zip (CN, \<^Type>\<open>fun \<open>Type(N,ts1)\<close> \<open>T2 as \<^
           then case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) N
             of SOME fpm =>
                 if const_eq CN (#zip fpm)
-                then SOME (Simps.map' (fn ctxt =>
-                              ctxt addsimps (#zip_simps fpm @ #unzip_simps fpm)
-                           ) ctxt)
+                then SOME (Simps.add_simps' (#zip_simps fpm @ #unzip_simps fpm) ctxt)
                 else load_zip (CN, T2) ctxt
              | NONE => load_zip (CN, T2) ctxt
           else load_zip (CN, T2) ctxt
@@ -763,11 +750,11 @@ end
 
 type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
 
-fun oblg_solver proof_id ctxt sequent =
+fun oblg_solver proof_id ctxt sequent = (
   (*case Thm.major_prem_of sequent
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
-        Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt, sequent)
+        Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Simps.simp_rules ctxt, sequent)
           |> (fn th => case Thm.major_prem_of th
                          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
                               @{thm' Premise_True} RS th
@@ -775,6 +762,7 @@ fun oblg_solver proof_id ctxt sequent =
                               @{thm' TrueI} RS th
                           | _ => th)
      (*| _ => sequent*)
+  )
 
 (* The Framework *)
 

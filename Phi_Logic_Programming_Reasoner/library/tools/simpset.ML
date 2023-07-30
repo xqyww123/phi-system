@@ -23,6 +23,7 @@ val print : Proof.context -> bool -> unit
 val simp_rules: Proof.context -> thm list
 
 val add_simps: thm list -> Context.generic -> Context.generic
+val add_simps': thm list -> Proof.context -> Proof.context
 val del_simps: thm list -> Context.generic -> Context.generic
 
 end
@@ -82,6 +83,7 @@ val simp_rules = Thms.get
 fun add_simps thms = map_with_result (fn ctxt =>
             (maps (Simplifier.mksimps ctxt) thms, ctxt addsimps thms))
               #-> fold Thms.add_thm
+val add_simps' = Context.proof_map o add_simps
 fun del_simps thms = map_with_result (fn ctxt =>
             (maps (Simplifier.mksimps ctxt) thms, ctxt delsimps thms))
               #-> fold Thms.del_thm

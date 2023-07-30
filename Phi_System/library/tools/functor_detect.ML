@@ -33,7 +33,7 @@ val add_property_kind : property_name -> (term -> term) -> theory -> theory
 
 val lookup_property_exact : Context.generic -> term (*pattern of the type operator*) -> property_name -> (term * Position.T * thm) list
 val lookup_property_match : Context.generic -> term (*same as the above*) -> property_name -> (term * Position.T * thm) list
-val lookup_property_unify : Context.generic -> term (*same as the above*) -> property_name -> (term * Position.T * thm) list
+(*val lookup_property_unify : Context.generic -> term (*same as the above*) -> property_name -> (term * Position.T * thm) list*)
 val add_property : term * Position.T * thm -> Context.generic -> Context.generic
 (*val list_functors : Context.generic -> term list*)
 
@@ -43,9 +43,9 @@ structure Gen_Rule_SS : SIMPSET (*simpset for generating reasoning rules*)
 
 type automation_on_property =
         term (*type operator*) * thm (*property*) -> Context.generic -> Context.generic
-val add_automation_on_property : priority -> automation_on_property -> Context.generic -> Context.generic
+val add_automation_on_property : priority * property_name list (*bindings*) -> automation_on_property -> Context.generic -> Context.generic
 val invoke_automations_on_property : term * thm -> Context.generic -> Context.generic
-val property_dependent_setup : string list * string list -> (thm list -> automation_on_property) -> automation_on_property
+val property_dependent_setup : property_name list * property_name list -> (thm list -> automation_on_property) -> automation_on_property
 
 (* \<phi>-Type Definition \& Infos *)
 
@@ -201,7 +201,7 @@ fun detect_type_operator1 arity ctxt term =
 (** Property Kind **)
 
 structure Property_Kinds = Theory_Data (
-  type T = (term -> term (*extract the functor from the property spec*)) Symtab.table
+  type T = (term -> term (*extract the type operator from the property spec*)) Symtab.table
   val empty = Symtab.empty
   val merge = Symtab.merge (K true)
 )
@@ -232,36 +232,54 @@ structure Properties = Generic_Data (
   val merge = Net.merge property_eq
 )
 
+fun prop_table_order k ((p1,_),(p2,_)) = if p1 = p2 then raise Symtab.DUP k else int_ord (p1,p2)
+
 structure Automation_on_Property = Generic_Data (
-  type T = automation_on_property PriorityTab.table
-  val empty = PriorityTab.empty
-  val merge = PriorityTab.merge (K false)
+  type T = (priority * automation_on_property) Ord_List.T Symtab.table
+  val empty = Symtab.empty
+  val merge = Symtab.join (fn k => uncurry (Ord_List.union (prop_table_order k)))
 )
 
-fun net_encode_property_key (the_functor, property_name) =
-  Const("P", dummyT) $ the_functor $ Const(property_name, dummyT)
+fun close_phitype_operator phityp =
+  let val i = maxidx_of_term phityp + 1
+   in case Term.binder_types (Term.fastype_of phityp)
+   of [] => phityp
+    | L => fold_index (fn (j,Ty) => fn Tm => Tm $ Var(("x",i+j), Ty)) L phityp
+  end
+
+fun net_encode_property_key (phityp, property_name) =
+  Const("P", dummyT) $ close_phitype_operator phityp $ Const(property_name, dummyT)
 
 (*fun net_encode_phityp phityp = Const("F", dummyT) $ phityp*)
 
 fun get_property_name thm =
   fst (Term.dest_Const (Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of thm))))
 
-fun lookup_property_exact ctxt phityp property_name =
+fun lookup_property_exact ctxt phityp0 property_name =
   let val thy = Context.theory_of ctxt
+      val phityp = close_phitype_operator phityp0
    in Net.match_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
       |> filter (fn (tm, _, _) => Pattern.equiv thy (tm, phityp))
   end
 
-fun lookup_property_match ctxt phityp property_name =
-  Net.match_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
-    |> filter (fn (tm, _, _) => Pattern.matches (Context.theory_of ctxt) (tm, phityp))
+fun lookup_property_match ctxt phityp0 property_name =
+  let val phityp = close_phitype_operator phityp0
+   in Net.match_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
+   |> filter (fn (tm, _, _) => Pattern.matches (Context.theory_of ctxt) (tm, phityp))
+  end
 
-fun lookup_property_unify ctxt phityp property_name =
-  Net.unify_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
-    |> filter (fn (tm, _, _) => can (Pattern.unify ctxt (tm, phityp)) Envir.init)
+(*fun lookup_property_unify ctxt phityp0 property_name =
+  let val phityp = close_phitype_operator phityp0
+   in Net.unify_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
+   |> filter (fn (tm, _, _) => can (Pattern.unify ctxt (tm, phityp)) Envir.init)
+  end*)
 
 fun invoke_automations_on_property phityp ctxt =
-  PriorityTab.fold (fn (_,s) => s phityp) (Automation_on_Property.get ctxt) ctxt
+  let val prop_kind = get_property_name (snd phityp)
+   in case Symtab.lookup (Automation_on_Property.get ctxt) prop_kind
+   of NONE => ctxt
+    | SOME L => fold (fn (_,s) => s phityp) L ctxt
+  end
 
 (*fun list_functors ctxt =
   Net.unify_term (Properties.get ctxt) (net_encode_phityp (Var(("uu",0),TVar(("'uu",0),[]))))
@@ -277,8 +295,9 @@ fun add_property (phityp0,pos,property) ctxt =
   let val thy = Context.theory_of ctxt
       val phityp' = phityp0
                   |> Envir.beta_eta_contract
-                  |> Term_Subst.zero_var_indexes 
-                  |> Logic.incr_indexes ([],[],~1)
+                  |> close_phitype_operator
+                  |> Term.map_aterms ( (fn Var ((N,i),T) => Var ((N,~i-1),T) | T => T)
+                                    #> map_types (map_type_tvar (fn ((N,i),S) => TVar ((N,~i-1),S))))
       val property_name = get_property_name property
       val key = net_encode_property_key (phityp', property_name)
       (*val key_phityp = net_encode_phityp phityp'*)
@@ -304,7 +323,7 @@ fun add_property (phityp0,pos,property) ctxt =
          in Net.insert_term property_eq (k''', (k,pos,v)) net
         end
    in ctxt
-    |> Properties.map (insert_term (key, (phityp',pos,property)))
+    |> Properties.map (insert_term (key, (phityp', pos, property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
     |> invoke_automations_on_property (phityp0,property)
  (* handle Net.INSERT => let open Pretty
@@ -351,10 +370,14 @@ fun add_property_kind k extract thy =
                        (rules, mode, pats, guard, add_prop pos rules ctxt)))
   end
 
-fun add_automation_on_property priority automation ctxt =
-  Automation_on_Property.map (PriorityTab.update_new (
-      (priority, Context.theory_long_name (Context.theory_of ctxt)), automation)) ctxt
+fun add_automation_on_property (priority, prop_kinds) automation =
+  fold (fn prop_kind =>
+      Automation_on_Property.map (@{print} o Symtab.map_default (prop_kind,[])
+          (Ord_List.insert (prop_table_order prop_kind) (priority, automation)))
+    ) (distinct (op =) prop_kinds)
 
+(*no_rule_deps are still dependences required to activate the automation,
+  but their rules are not required to be and will not be passed to the automation*)
 fun property_dependent_setup (deps,no_rule_deps) automation (the_functor,property) ctxt =
   let exception Dep
       val prop_name = get_property_name property
@@ -364,7 +387,7 @@ fun property_dependent_setup (deps,no_rule_deps) automation (the_functor,propert
                       case lookup_property_match ctxt the_functor dep
                         of [(_,_,x)] => x
                          | [] => raise Dep
-                         | ((_,_,x)::_) => (warning ("multiple match for " ^ Syntax.string_of_term (Context.proof_of ctxt) the_functor); x)
+                         | ((_,_,x)::_) => (warning ("multiple property instances match " ^ Syntax.string_of_term (Context.proof_of ctxt) the_functor); x)
                     ) deps
                val rules = get_rules deps
                val _ = get_rules no_rule_deps
@@ -468,7 +491,7 @@ fun setup_rule_generation (pos,mode,priority,additional_props,pats,guard) rule0 
               in fold cross_product (tl existing_rules) init
              end
    in ctxt
-   |> add_automation_on_property (serial ()) automation
+   |> add_automation_on_property (serial (), prop_kinds) automation
    |> fold (fn (f,rules) => impl (rev rules) (f,Drule.dummy_thm)) existing_ins
   end
 

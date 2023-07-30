@@ -3,9 +3,9 @@ chapter \<open>Pre-built \<phi>-Types\<close>
 theory Phi_Types
   imports Phi_Type_Algebra
 begin
-
+ 
 section \<open>Basics\<close>
-
+ 
 subsection \<open>Preliminary Sugars\<close>
 
 consts \<phi>coercion :: \<open>('c1,'a) \<phi> \<Rightarrow> ('c2,'a) \<phi>\<close> ("\<coercion> _" [61] 60)
@@ -56,7 +56,7 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding Subjection into Type\<close>
  
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
            
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
@@ -67,7 +67,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
-       and Separation_Homo\<^sub>I
+       and Separation_Homo
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -400,8 +400,8 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Vertical Composition\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-         
+declare [[\<phi>trace_reasoning = 1]]
+                
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving Functional_Transformation_Functor
@@ -688,40 +688,18 @@ lemma [\<phi>inhabitance_rule 1000]:
   unfolding Inhabited_def Action_Tag_def
   by (simp add: \<phi>Mapping_expn, blast)
 
-(*
-lemma
-  \<open>(\<exists>c ca w cb cc wa.
-             \<forall>T U g x Ta xa l.
-                True \<longrightarrow>
-                True \<longrightarrow>
-                (\<forall>xb xaa.
-                    True \<longrightarrow>
-                    list_all2 g l xb \<longrightarrow>
-                    g xa xaa \<longrightarrow> (True \<and> True) \<and> True \<longrightarrow> g xa (id (c T U g x Ta xa l xb xaa)) \<and> list_all2 g l (id (ca T U g x Ta xa l xb xaa))) \<and>
-                (\<forall>xb xaa. True \<longrightarrow> list_all2 g l xb \<longrightarrow> g xa xaa \<longrightarrow> True \<and> True \<longrightarrow> xaa = id (c T U g x Ta xa l xb xaa)) \<and>
-                (\<forall>xb xaa. True \<longrightarrow> list_all2 g l xb \<longrightarrow> g xa xaa \<longrightarrow> fst (xb, w T U g x Ta xa l xb xaa) = id (ca T U g x Ta xa l xb xaa)) \<and>
-                (True \<longrightarrow> xa \<in> set (xa # l)) \<and> (\<forall>a. True \<longrightarrow> a \<in> set l \<longrightarrow> a \<in> set (xa # l)) \<and> True \<or>
-                (\<forall>xb xaa.
-                    True \<longrightarrow>
-                    list_all2 g l xb \<longrightarrow>
-                    g xa xaa \<longrightarrow> (True \<and> True) \<and> True \<longrightarrow> g xa (id (cb T U g x Ta xa l xb xaa)) \<and> list_all2 g l (id (cc T U g x Ta xa l xb xaa))) \<and>
-                (\<forall>xb xaa. True \<longrightarrow> list_all2 g l xb \<longrightarrow> g xa xaa \<longrightarrow> True \<and> True \<longrightarrow> xaa = id (cb T U g x Ta xa l xb xaa)) \<and>
-                (\<forall>xb xaa. True \<longrightarrow> list_all2 g l xb \<longrightarrow> g xa xaa \<longrightarrow> list_all2 (=) (fst (xb, wa T U g x Ta xa l xb xaa)) (id (cc T U g x Ta xa l xb xaa))) \<and>
-                (True \<longrightarrow> xa \<in> set (xa # l)) \<and> (\<forall>a. True \<longrightarrow> a \<in> set l \<longrightarrow> a \<in> set (xa # l)) \<and> True) \<and>
-         (\<forall>T U g x Ta. True \<longrightarrow> True \<longrightarrow> True) \<and> True \<close>
-  apply (((rule conjI)+ ; ((rule exI)+)?), auto) *)
 
 
 
 subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
-
+   
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 0]]
-                                                 
+                                                     
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -731,7 +709,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Separation_Homo
        and Trivial_\<Sigma>
 
-
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
@@ -739,11 +716,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Identity_Element
        and Transformation_Functor
        and Trivial_\<Sigma>
-
-
-
-
-thm List3.obj_eq
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -765,7 +737,7 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 0]]
+ declare [[\<phi>trace_reasoning = 1]]
 
 
 
@@ -924,7 +896,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
        
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<phi>Fun (push_map k) \<Zcomp> T)\<close>
@@ -945,7 +917,7 @@ abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow
 abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>[\<^sub>]" 75)
   where \<open>\<phi>MapAt_Lnil key T \<equiv> \<phi>MapAt_L [key] (\<phi>MapAt [] T)\<close>
 
-paragraph \<open>Conversion\<close>
+paragraph \<open>Simplification\<close>
 
 lemma \<phi>MapAt_L_\<phi>MapAt:
   \<open>k1 \<^bold>\<rightarrow>\<^sub>@ k2 \<^bold>\<rightarrow> T = (k1 @ k2) \<^bold>\<rightarrow> T\<close>
@@ -998,8 +970,8 @@ lemma [\<phi>reason 1017]:
 &&& \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k @ kd = k'
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def \<r>Guard_def conjunction_imp
-  apply (clarsimp simp add: \<phi>expns)
+  unfolding Transformation_def \<r>Guard_def conjunction_imp Premise_def
+  apply clarsimp
   using push_map_push_map by blast
 
 lemma [\<phi>reason 1013]:
@@ -1008,8 +980,8 @@ lemma [\<phi>reason 1013]:
 &&& \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k @ kd = k'
 \<Longrightarrow> x \<Ztypecolon> kd \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> k' \<^bold>\<rightarrow>\<^sub>@ U \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def \<r>Guard_def conjunction_imp
-  by (clarsimp simp add: \<phi>expns)
+  unfolding Transformation_def \<r>Guard_def conjunction_imp Premise_def
+  by (clarsimp)
 
 (* TESTING
 lemma [\<phi>reason 1200]:
