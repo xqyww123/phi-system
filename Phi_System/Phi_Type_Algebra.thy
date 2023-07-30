@@ -424,6 +424,7 @@ lemma \<phi>gen_expansion:
   by simp
 
 
+ML_file \<open>library/phi_type_algebra/properties.ML\<close>
 ML_file \<open>library/tools/functor_detect.ML\<close>
 
 
@@ -569,6 +570,7 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
       (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _) => T)
 #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
       (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) => T)
+#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)
 end
 \<close>
 
@@ -761,43 +763,6 @@ lemma [\<phi>reason add!]:
 *)
 
 end
-
-
-subsubsection \<open>Identity Element\<close>
-
-lemma [\<phi>reason_template default 40]:
-  \<open> Identity_Element\<^sub>I (yy \<Ztypecolon> R) P
-\<Longrightarrow> Object_Equiv R eq
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq (snd y) yy
-\<Longrightarrow> y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, ()) \<Ztypecolon> U \<^emph> \<circle> \<w>\<i>\<t>\<h> P @action \<A>SE_trim True \<close>
-  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>I_def]
-    apply_rule R1[THEN implies_right_prod]
-  \<medium_right_bracket> .
-
-lemma [\<phi>reason_template default 41]:
-  \<open> Identity_Element\<^sub>I (yy \<Ztypecolon> R) P
-\<Longrightarrow> Object_Equiv R eq
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq (snd y) yy
-\<Longrightarrow> y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, ()) \<Ztypecolon> U \<^emph> \<circle> \<w>\<i>\<t>\<h>
-        Auto_Transform_Hint (y'' \<Ztypecolon> U' \<^emph> \<circle>) (x'' \<Ztypecolon> U' \<^emph> R') \<and> P @action \<A>SE_trim True \<close>
-  unfolding Auto_Transform_Hint_def
-  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>I_def]
-    apply_rule R1[THEN implies_right_prod]
-  \<medium_right_bracket> .
-
-lemma [\<phi>reason_template default 40]:
-  \<open> Identity_Element\<^sub>E (u \<Ztypecolon> W)
-\<Longrightarrow> x' \<Ztypecolon> T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst x', u) \<Ztypecolon> T \<^emph> W @action \<A>SE_trim False \<close>
-  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>E_def]
-    apply_rule R1[THEN implies_right_prod]
-  \<medium_right_bracket> .
-
-lemma [\<phi>reason_template default 40]:
-  \<open> Identity_Element\<^sub>E (u \<Ztypecolon> W)
-\<Longrightarrow> x' \<Ztypecolon> T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst x', u) \<Ztypecolon> T \<^emph> W \<w>\<i>\<t>\<h> Auto_Transform_Hint (y\<^sub>H \<Ztypecolon> T\<^sub>H \<^emph> W\<^sub>H) (x\<^sub>H \<Ztypecolon> T\<^sub>H \<^emph> \<circle>) \<and> True @action \<A>SE_trim False \<close>
-  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>E_def]
-    apply_rule R1[THEN implies_right_prod]
-  \<medium_right_bracket> .
 
 
 subsubsection \<open>Transformation Functor\<close>
@@ -1177,8 +1142,8 @@ lemma "_Structural_Extract_general_rule_":
     \<medium_left_bracket> Tr \<medium_right_bracket>
     apply_Separation_Functor_unzip
   \<medium_right_bracket> . 
- 
-declare "_Structural_Extract_general_rule_"[(*THEN SE_clean_waste,*) \<phi>reason_template 80]
+
+declare "_Structural_Extract_general_rule_"[THEN \<A>SE_clean_waste, \<phi>reason_template 80]
 
 (* This crazy rule is for the boundary cases when we reason the last element and when the algebra doesn't
    have an identity element so that we cannot reduce it to the usual case by adding an identity element at the tail.
@@ -1263,7 +1228,7 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template 80]:
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
   \<medium_right_bracket> .
 
-lemma "_Structural_Extract_general_rule_TH_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
+lemma [THEN \<A>SE_clean_waste_TH, \<phi>reason_template 82]:
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
@@ -1273,14 +1238,14 @@ lemma "_Structural_Extract_general_rule_TH_"[(*THEN SE_clean_waste',*) \<phi>rea
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
-\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> (Auto_Transform_Hint U' (x' \<Ztypecolon> T' \<^emph> W') \<and> P x) @action \<A>SE )
-\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> (
-      Auto_Transform_Hint (F3' U') (x'' \<Ztypecolon> F1' T' \<^emph> F4' W') \<and> pred_mapper P (z x)) @action \<A>SE \<close>
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> (Auto_Transform_Hint (y\<^sub>H \<Ztypecolon> U\<^sub>H \<^emph> R\<^sub>H) (x\<^sub>H \<Ztypecolon> T\<^sub>H \<^emph> W\<^sub>H) \<and> P x) @action \<A>SE )
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> 
+      Auto_Transform_Hint (y'\<^sub>H \<Ztypecolon> F3' U\<^sub>H \<^emph> F2' R\<^sub>H) (x'\<^sub>H \<Ztypecolon> F1' T\<^sub>H \<^emph> F4' W\<^sub>H) \<and> pred_mapper P (z x) @action \<A>SE \<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using "_Structural_Extract_general_rule_"[where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
 
   
-lemma "_Structural_Extract_general_rule_a_"[\<phi>reason_template 80]:
+lemma "_Structural_Extract_general_rule_a_":
   \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Prem
@@ -1295,6 +1260,7 @@ lemma "_Structural_Extract_general_rule_a_"[\<phi>reason_template 80]:
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
   \<medium_right_bracket> .
 
+declare "_Structural_Extract_general_rule_a_"[THEN \<A>SEa_clean_waste, \<phi>reason_template 80]
 
 (*
 lemma "_Structural_Extract_general_rule_b_":
@@ -1362,7 +1328,7 @@ lemma SE_general_Scala_Seminearing_left: (*need test, to be tested once we have 
     fold F3D
   \<medium_right_bracket> .
 
-declare SE_general_Scala_Seminearing_left[(*THEN SE_clean_waste,*) \<phi>reason_template add 60]
+declare SE_general_Scala_Seminearing_left[THEN \<A>SE_clean_waste, \<phi>reason_template add 60]
 
 lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we have usable test case*)
   \<open> Scala_Semimodule_Functor F3 U Ds
@@ -2019,6 +1985,68 @@ ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 
 \<phi>property_deriver Is_Functional 100 for (\<open>Is_Functional (_ \<Ztypecolon> _)\<close>)
     = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
+
+
+
+subsubsection \<open>Trim Empty Generated during Separation Extraction\<close>
+
+text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules that eliminates into \<open>\<circle>\<close>
+  any \<open>F \<circle>\<close> generated during Separation Extraction process.
+
+  This elimination is derived from \<open>Identity_Element\<close>. If the elimination rule is condition-less
+  (demand no conditional premise nor reasoner subgoals), the rule is activated automatically.
+  But if there are conditions, the system needs user's discretion to decide if to activate it.
+  If so, activate deriver \<open>SE_Trim_Empty\<close>.
+\<close>
+
+lemma derive_\<A>SE_trim_I:
+  \<open> Identity_Element\<^sub>I (yy \<Ztypecolon> R) P
+\<Longrightarrow> Object_Equiv R eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd y) yy
+\<Longrightarrow> \<A>SE_trim\<^sub>I y R (fst y, ()) \<circle> P \<close>
+  unfolding \<A>SE_trim\<^sub>I_def
+  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>I_def]
+    apply_rule R1[THEN implies_right_prod]
+  \<medium_right_bracket> .
+
+lemma derive_\<A>SE_trim_I_TH:
+  \<open> Identity_Element\<^sub>I (yy \<Ztypecolon> R) P
+\<Longrightarrow> Object_Equiv R eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd y) yy
+\<Longrightarrow> \<A>SE_trim\<^sub>I_TH y R (fst y, ()) \<circle> P \<circle> R' \<close>
+  unfolding \<A>SE_trim\<^sub>I_TH_def
+  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>I_def]
+    apply_rule R1[THEN implies_right_prod]
+  \<medium_right_bracket> .
+
+lemma derive_\<A>SE_trim_E:
+  \<open> Identity_Element\<^sub>E (u \<Ztypecolon> W)
+\<Longrightarrow> \<A>SE_trim\<^sub>E (fst x', u) W x' \<circle> \<close>
+  unfolding \<A>SE_trim\<^sub>E_def
+  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>E_def]
+    apply_rule R1[THEN implies_right_prod]
+  \<medium_right_bracket> .
+
+lemma derive_\<A>SE_trim_E_TH:
+  \<open> Identity_Element\<^sub>E (u \<Ztypecolon> W)
+\<Longrightarrow> \<A>SE_trim\<^sub>E_TH (fst x', u) W x' \<circle> \<circle> W\<^sub>H \<close>
+  unfolding \<A>SE_trim\<^sub>E_TH_def
+  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>E_def]
+    apply_rule R1[THEN implies_right_prod]
+  \<medium_right_bracket> .
+
+
+ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
+
+\<phi>property_deriver SE_Trime_Empty 110
+    = \<open> K Phi_Type_Algebra_Derivers.SE_Trime_Empty \<close>
+
+
+lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.SE_Trime_Empty__generation_pass\<close>] =
+          derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
+
+
+
 
 
 

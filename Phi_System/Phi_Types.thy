@@ -23,7 +23,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
                     
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
@@ -57,7 +57,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
  
 declare [[\<phi>trace_reasoning = 1]]
-           
+                     
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -68,6 +68,7 @@ declare [[\<phi>trace_reasoning = 1]]
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
        and Separation_Homo
+       and SE_Trime_Empty
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -128,6 +129,8 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Dependent Sum Type\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+
 text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
   independently with the element. It seems to be a limitation. For example, we want to transform
   a list of unknown bit-length numbers \<open>l \<Ztypecolon> List T\<close> where \<open>x \<Ztypecolon> T \<equiv> (x \<Ztypecolon> \<nat>[b] \<s>\<u>\<b>\<j> b. x < 2^b)\<close>
@@ -135,7 +138,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
- 
+    
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
 
@@ -439,6 +442,8 @@ lemma [\<phi>reason 1000]:
   unfolding Transformation_def Action_Tag_def
   by clarsimp  blast
 
+declare [[\<phi>trace_reasoning = 1]]
+   
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> B) P
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) Q
@@ -452,6 +457,13 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> B \<Zcomp> T)\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by simp blast
+ 
+lemma [\<phi>reason 1000]:
+  \<open> Object_Equiv T eq
+\<Longrightarrow> Object_Equiv (B \<Zcomp> T) eq \<close>
+  unfolding Object_Equiv_def Transformation_def
+  by clarsimp blast
+
 
 (*
 lemma [\<phi>reason 1200]:
@@ -512,8 +524,8 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 
 subsection \<open>Embedding Additive Disjunction\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-   
+declare [[\<phi>trace_reasoning = 1]]
+    
 \<phi>type_def \<phi>Union :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<or>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<or>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U))\<close>
   deriving \<open>  (\<And>x. x \<Ztypecolon> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pa x)
@@ -580,7 +592,7 @@ subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
  
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> \<phi>Fun (\<lambda>v. [v]) \<Zcomp> T\<close>
@@ -602,7 +614,7 @@ lemma \<comment> \<open>A example for how to represent list of multi-elements\<c
 
 
 subsubsection \<open>Empty List\<close>
-
+  
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
   deriving Basic
@@ -698,7 +710,7 @@ subsubsection \<open>By Key\<close>
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
                                                      
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
@@ -708,6 +720,17 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        and Separation_Homo
        and Trivial_\<Sigma>
+
+
+
+
+
+
+
+
+
+
+
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
@@ -897,7 +920,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   by \<phi>reason *)
 
 declare [[\<phi>trace_reasoning = 1]]
-       
+             
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<phi>Fun (push_map k) \<Zcomp> T)\<close>
   deriving Basic

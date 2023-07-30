@@ -76,15 +76,14 @@ signature NU_REASONER = sig
                   -> Context.generic -> Context.generic
   val del_reasoners_by_name: term (*pattern matching the name*)
                   -> Context.generic -> Context.generic
-  val has_reasoner : term -> (reasoner -> bool) -> Context.generic -> bool
+  val has_reasoner : pattern -> (reasoner -> bool) -> Context.generic -> bool
   val reasoners : Proof.context -> reasoners
   val content : reasoners -> reasoner list
   (*val call_reasoners : reasoners -> Proof.context -> *)
-  val get_reasoners : theory -> reasoners
-                   -> term (*pattern*) -> reasoner list
+  val get_reasoners : theory -> reasoners -> pattern -> reasoner list
   (*a faster version but a bit dirty*)
   val get_reasoners' : theory -> reasoners
-                   -> term (*pattern*) -> (priority * pattern * serial (*reasoner id*) * reasoner) list
+                    -> pattern -> (priority * pattern * serial (*reasoner id*) * reasoner) list
   val pretty : Proof.context -> reasoner -> Pretty.T
   val apply_tactic : tactic -> context_state -> context_state Seq.seq
   (*val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list*)
@@ -490,7 +489,7 @@ fun del_reasoners_by_name pattern ctxt =
       del_reasoners pattern (match_reasoner (Context.theory_of ctxt) pattern) ctxt
 
 fun has_reasoner pattern filter ctxt =
-  Net.match_term (Reasoners.get ctxt) pattern
+  Net.unify_term (Reasoners.get ctxt) pattern
     |> exists (fn (_,_,_,r) => filter r)
 
 (*

@@ -762,6 +762,37 @@ lemma Premise_refl[\<phi>reason 2000 for \<open>Premise ?mode (?x = ?x)\<close>
   "Premise mode (x = x)"
   unfolding Premise_def ..
 
+lemma [\<phi>reason 2010]:
+  \<open> Premise mode (L = R)
+\<Longrightarrow> Premise mode (L = id R)\<close>
+  by simp
+
+lemma [\<phi>reason 2010]:
+  \<open> Premise mode (L = R)
+\<Longrightarrow> Premise mode (id L = R)\<close>
+  by simp
+
+lemma [\<phi>reason 2020]:
+  \<open> Premise mode (La = Ra)
+\<Longrightarrow> Premise mode (Lb = Rb)
+\<Longrightarrow> Premise mode ((La, Lb) = (Ra, Rb))\<close>
+  unfolding Premise_def
+  by simp
+
+lemma [\<phi>reason 2010]:
+  \<open> Premise mode (La = fst R)
+\<Longrightarrow> Premise mode (Lb = snd R)
+\<Longrightarrow> Premise mode ((La, Lb) = R)\<close>
+  unfolding Premise_def
+  by (cases R; simp)
+
+lemma [\<phi>reason 2010]:
+  \<open> Premise mode (fst L = Ra)
+\<Longrightarrow> Premise mode (snd L = Rb)
+\<Longrightarrow> Premise mode (L = (Ra, Rb))\<close>
+  unfolding Premise_def
+  by (cases L; simp)
+
 ML \<open>
 structure Useful_Thms = Named_Thms (
   val name = \<^binding>\<open>useful\<close>
@@ -878,8 +909,17 @@ paragraph \<open>Setup\<close>
 
 ML_file "library/reasoners.ML"
 
+ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
+          Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)\<close>
+
 \<phi>reasoner_ML Normal_Premise 10 (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.defer_obligation_tac (true,true,~1))\<close>
+  = \<open>Phi_Reasoners.wrap (fn ctxt =>
+        case Config.get ctxt Phi_Reasoner_solve_obligation_and_no_defer
+          of 0 => Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt
+           | 1 => Phi_Reasoners.safer_obligation_solver ctxt
+           | 2 => Phi_Reasoners.auto_obligation_solver ctxt
+           | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
+    )\<close>
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>

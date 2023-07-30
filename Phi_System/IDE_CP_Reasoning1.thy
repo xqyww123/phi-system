@@ -667,6 +667,14 @@ lemma [\<phi>reason 3000]:
   \<open>Identity_Element\<^sub>I 1 True\<close>
   unfolding Identity_Element\<^sub>I_def by simp
 
+lemma Identity_Element\<^sub>E_empty[\<phi>reason 3000]:
+  \<open>Identity_Element\<^sub>E (any \<Ztypecolon> \<circle>)\<close>
+  unfolding Identity_Element\<^sub>E_def by simp
+
+lemma Identity_Element\<^sub>I_empty[\<phi>reason 3000]:
+  \<open>Identity_Element\<^sub>I (any \<Ztypecolon> \<circle>) True\<close>
+  unfolding Identity_Element\<^sub>I_def by simp
+
 lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>I {_} _\<close> ]:
   \<open>Identity_Element\<^sub>I {1} True\<close>
   unfolding Identity_Element\<^sub>I_def one_set_def by simp

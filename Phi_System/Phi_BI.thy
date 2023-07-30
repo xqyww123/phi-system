@@ -1051,7 +1051,7 @@ lemma ToA_by_Equive_Class'
   unfolding Object_Equiv_def Transformation_def Premise_def FOCUS_TAG_def
   by (clarsimp, meson Transformation_def implies_left_prod)
 
-lemma [\<phi>reason default 1]:
+lemma Object_Equiv_fallback[\<phi>reason default 1]:
   \<open>Object_Equiv T (=)\<close>
   unfolding Object_Equiv_def by simp
 

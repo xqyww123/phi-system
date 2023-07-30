@@ -33,6 +33,7 @@ signature PHI_REASONERS = sig
                               -> Proof.context -> thm -> thm
   val safer_obligation_solver1: Proof.context -> thm -> thm
 
+
   (*defer the leading antecedent to the nearest obligation and call the contract*)
   val defer_antecedent : (Proof.context -> thm -> thm) (*contract*)
                                  -> Proof.context -> thm -> thm Seq.seq
