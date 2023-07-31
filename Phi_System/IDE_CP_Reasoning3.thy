@@ -693,7 +693,7 @@ and [\<phi>reason add]*)
 lemma SE_Near_Semimodule_adcb[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
   \<open> Near_Semimodule_Functor_unzip F1 Ds Dx uz
 \<Longrightarrow> Near_Semimodule_Functor_zip_rev F1 Ds Dx' z
-\<Longrightarrow> Parameter_Variant_of_the_Same_Functor F1 F3
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F1 F3
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> a + d = c + b @action non_trivial_partial_add_split
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> c ##\<^sub>+ b \<and> a ##\<^sub>+ d
@@ -716,8 +716,8 @@ lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
 \<Longrightarrow> Near_Semimodule_Functor_zip_rev F1 Ds Dx' z
 \<Longrightarrow> Near_Semimodule_Functor_zip F1' Ds Dx'' z'
 \<Longrightarrow> Near_Semimodule_Functor_unzip F1' Ds Dx'c uz'
-\<Longrightarrow> Parameter_Variant_of_the_Same_Functor F1 F3
-\<Longrightarrow> Parameter_Variant_of_the_Same_Functor F1' F3'
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F1 F3
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F1' F3'
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> a + d = c + b @action non_trivial_partial_add_split
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> c ##\<^sub>+ b \<and> a ##\<^sub>+ d
@@ -748,7 +748,7 @@ lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
   apply assumption
   (*apply simp
   apply simp*)
-  apply (clarsimp simp add: Generated_Rule_def \<r>Success_def Parameter_Variant_of_the_Same_Functor_def)
+  apply (clarsimp simp add: Generated_Rule_def \<r>Success_def Parameter_Variant_of_the_Same_Type_def)
   \<medium_left_bracket> premises _ and _ and _ and _ and [symmetric,simp] and _ and _ and _ and _ and _
          and [\<phi>reason add] and [\<phi>reason add] and _ and Tr
     Tr

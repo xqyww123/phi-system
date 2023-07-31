@@ -20,12 +20,10 @@ structure Generic_Element_Access : GENERIC_ELEMENT_ACCESS = struct
 val get_element_of_abstract_object_goal =
       Thm.trivial \<^schematic_cprop>\<open>Get_Abstract_Element ?x ?T ?path ?y\<close>
 
-val _ = get_element_of_abstract_object_goal
-
 fun get_element_of_abstract_object ctxt (x,T,path) =
-  let val goal = Drule.infer_instantiate ctxt
-                    [(("x",0),x), (("T",0),T), (("path",0),path)]
-                    get_element_of_abstract_object_goal
+  let val idx = Int.max (Thm.maxidx_of_cterm x, Int.max (Thm.maxidx_of_cterm T, Thm.maxidx_of_cterm path)) + 1
+      val goal = Thm.incr_indexes idx get_element_of_abstract_object_goal
+              |> Drule.infer_instantiate ctxt [(("x",idx),x), (("T",idx),T), (("path",idx),path)]
       val ret = Phi_Reasoner.reason1 (fn _ => error "Get_Abstract_Element reasoning fails.")
                                      (SOME 1) true ctxt goal
    in case Thm.prop_of ret

@@ -1,6 +1,6 @@
 theory Phi_Type_Algebra
   imports IDE_CP_Reasoning2
-  keywords "\<phi>type_def" "\<phi>property_deriver" :: thy_defn
+  keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" :: thy_defn
        and "deriving" :: quasi_command
 begin
 
@@ -336,7 +336,7 @@ Priority:
 \<^item> 80: Implication \<^prop>\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>,
       \<^prop>\<open>Is_Functional (x \<Ztypecolon> T)\<close>
       Open_All_Abstraction \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself\<close>
-\<^item> 1000: Parameter_Variant_of_the_Same_Functor, Type_Variant_of_the_Same_Functor
+\<^item> 1000: Type_Variant_of_the_Same_Type_Operator
 \<^item> 1100: \<^const>\<open>Transformation_Functor\<close>
 \<close>
 
@@ -676,31 +676,39 @@ subsection \<open>Reasonings and Their Applications\<close>
 
 subsubsection \<open>Vary Type Operator among Instantiations\<close>
 
-definition Type_Variant_of_the_Same_Functor :: \<open> 'a \<Rightarrow> 'b \<Rightarrow> bool \<close>
-  where \<open> Type_Variant_of_the_Same_Functor Fa Fb \<longleftrightarrow> True \<close>
-  \<comment> \<open>Fa and Fb are the same functor but of different type instantiation\<close>
+definition Type_Variant_of_the_Same_Type_Operator :: \<open> ('a \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('a2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
+  where \<open> Type_Variant_of_the_Same_Type_Operator Fa Fb \<longleftrightarrow> True \<close>
+  \<comment> \<open>Fa and Fb are the same functor having identical parameters but of different type instantiations.
+      We use this to simulate the \<Lambda> operator in system-F\<close>
 
-definition Parameter_Variant_of_the_Same_Functor :: \<open> 'a \<Rightarrow> 'b \<Rightarrow> bool \<close>
-  where \<open> Parameter_Variant_of_the_Same_Functor Fa Fb \<longleftrightarrow> True \<close>
+(*definition Parameter_Variant_of_the_Same_Type :: \<open> ('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> bool \<close>
+  where \<open> Parameter_Variant_of_the_Same_Type Fa Fb \<longleftrightarrow> True \<close> *)
 
 declare [[
   \<phi>reason_default_pattern
-      \<open>Type_Variant_of_the_Same_Functor ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Functor ?Fa _\<close> (100)
-  and \<open>Parameter_Variant_of_the_Same_Functor ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Functor ?Fa _\<close> (100),
+      \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close> (100)
+  (*and \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> (100) *),
   
-  \<phi>premise_attribute? [\<phi>reason add] for \<open>Type_Variant_of_the_Same_Functor _ _\<close>,
-  \<phi>premise_attribute? [\<phi>reason add] for \<open>Parameter_Variant_of_the_Same_Functor _ _\<close>
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Type_Variant_of_the_Same_Type_Operator _ _\<close>
+  (* \<phi>premise_attribute? [\<phi>reason add] for \<open>Parameter_Variant_of_the_Same_Type _ _\<close> *)
 ]]
 
-lemma Parameter_Variant_of_the_Same_Functor_I [\<phi>reason 1]:
-  \<open>Parameter_Variant_of_the_Same_Functor Fa Fb\<close>
-  unfolding Parameter_Variant_of_the_Same_Functor_def ..
+(*
+lemma Parameter_Variant_of_the_Same_Type_I [\<phi>reason 1]:
+  \<open>Parameter_Variant_of_the_Same_Type Fa Fb\<close>
+  unfolding Parameter_Variant_of_the_Same_Type_def .. *)
 
-lemma Type_Variant_of_the_Same_Functor_I [\<phi>reason 1]:
-  \<open>Type_Variant_of_the_Same_Functor Fa Fb\<close>
-  unfolding Type_Variant_of_the_Same_Functor_def ..
+lemma Type_Variant_of_the_Same_Type_Operator_I [\<phi>reason 1]:
+  \<open>Type_Variant_of_the_Same_Type_Operator Fa Fb\<close>
+  unfolding Type_Variant_of_the_Same_Type_Operator_def ..
+
+ML_file \<open>library/phi_type_algebra/variant_phi_type_instantiations.ML\<close>
+
+setup \<open>Phi_Type_Algebra.add_property_kind
+          \<^const_name>\<open>Type_Variant_of_the_Same_Type_Operator\<close> (fn (_ $ F $ _) => F)\<close>
 
 
+(*
 subsubsection \<open>Locale Base of Type Operator\<close>
 
 locale \<phi>Type_Functor =
@@ -729,12 +737,12 @@ declaration \<open>fn m => fn ctxt =>
                                                     ((("'b",0),\<^sort>\<open>type\<close>), Thm.ctyp_of_cterm tm')],
                                          Vars.make [((("Fa",0), Thm.typ_of_cterm tm ), tm ),
                                                     ((("Fb",0), Thm.typ_of_cterm tm'), tm')])
-                                       @{thm Parameter_Variant_of_the_Same_Functor_I}
+                                       @{thm Parameter_Variant_of_the_Same_Type_I}
             val rule'= Thm.instantiate (TVars.make [((("'a",0),\<^sort>\<open>type\<close>), Thm.ctyp_of_cterm tm ),
                                                     ((("'b",0),\<^sort>\<open>type\<close>), Thm.ctyp_of_cterm tm'T)],
                                          Vars.make [((("Fa",0), Thm.typ_of_cterm tm ), tm ),
                                                     ((("Fb",0), Thm.typ_of_cterm tm'T), tm'T)])
-                                       @{thm Type_Variant_of_the_Same_Functor_I}
+                                       @{thm Type_Variant_of_the_Same_Type_Operator_I}
          in [rule,rule']
         end
       fun collect_rules ret ctm =
@@ -752,18 +760,17 @@ declaration \<open>fn m => fn ctxt =>
         ) ctxt
   end
 \<close>
-
 (*
 lemma [\<phi>reason add!]:
-  \<open>Type_Variant_of_the_Same_Functor F F\<close>
-  unfolding Type_Variant_of_the_Same_Functor_def ..*)
+  \<open>Type_Variant_of_the_Same_Type_Operator F F\<close>
+  unfolding Type_Variant_of_the_Same_Type_Operator_def ..*)
 
 (*priority of the 2-arity functor: 32
   priority of the n-arity functor: 3n
 *)
 
 end
-
+*)
 
 subsubsection \<open>Transformation Functor\<close>
 
@@ -799,9 +806,9 @@ attribute_setup \<phi>TA_internal_simplify_special_cases = \<open>Scan.succeed (
 )\<close>
 
  
-locale Transformation_Functor_L = \<phi>Type_Functor Fa
-  for Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
-+ fixes Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
+locale Transformation_Functor_L =
+  fixes Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
+    and Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
     and D  :: \<open>'c \<Rightarrow> 'a set\<close>
     and R  :: \<open>'c \<Rightarrow> 'e set\<close>
     and mapper :: \<open>('a \<Rightarrow> 'e \<Rightarrow> bool) \<Rightarrow> 'c \<Rightarrow> 'f \<Rightarrow> bool\<close>
@@ -1227,14 +1234,14 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template 80]:
     apply_rule functional_transformation[where U=\<open>U\<close> and f=\<open>\<lambda>x. fst (f (x, undefined))\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
   \<medium_right_bracket> .
-
+ 
 lemma [THEN \<A>SE_clean_waste_TH, \<phi>reason_template 82]:
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
-\<Longrightarrow> Type_Variant_of_the_Same_Functor F3 F3'
-\<Longrightarrow> Type_Variant_of_the_Same_Functor F1 F1'
-\<Longrightarrow> Type_Variant_of_the_Same_Functor F4 F4'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F3 F3'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F1 F1'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F4 F4'
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
@@ -1285,9 +1292,9 @@ declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>rea
 lemma "_Structural_Extract_general_rule'_b_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
   \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
-\<Longrightarrow> Type_Variant_of_the_Same_Functor F3 F3'
-\<Longrightarrow> Type_Variant_of_the_Same_Functor F1 F1'
-\<Longrightarrow> Type_Variant_of_the_Same_Functor F4 F4'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F3 F3'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F1 F1'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F4 F4'
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
@@ -2000,38 +2007,42 @@ text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules 
 \<close>
 
 lemma derive_\<A>SE_trim_I:
-  \<open> Identity_Element\<^sub>I (yy \<Ztypecolon> R) P
-\<Longrightarrow> Object_Equiv R eq
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> Identity_Element\<^sub>I (yy \<Ztypecolon> F \<circle>) P
+\<Longrightarrow> Object_Equiv (F \<circle>) eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd y) yy
-\<Longrightarrow> \<A>SE_trim\<^sub>I y R (fst y, ()) \<circle> P \<close>
+\<Longrightarrow> \<A>SE_trim\<^sub>I y (F \<circle>) (fst y, ()) \<circle> P \<close>
   unfolding \<A>SE_trim\<^sub>I_def
-  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>I_def]
+  \<medium_left_bracket> premises _ and R1[unfolded Identity_Element\<^sub>I_def]
     apply_rule R1[THEN implies_right_prod]
   \<medium_right_bracket> .
 
 lemma derive_\<A>SE_trim_I_TH:
-  \<open> Identity_Element\<^sub>I (yy \<Ztypecolon> R) P
-\<Longrightarrow> Object_Equiv R eq
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> Identity_Element\<^sub>I (yy \<Ztypecolon> F \<circle>) P
+\<Longrightarrow> Object_Equiv (F \<circle>) eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd y) yy
-\<Longrightarrow> \<A>SE_trim\<^sub>I_TH y R (fst y, ()) \<circle> P \<circle> R' \<close>
+\<Longrightarrow> \<A>SE_trim\<^sub>I_TH y (F \<circle>) (fst y, ()) \<circle> P \<circle> (F' \<circle>) \<close>
   unfolding \<A>SE_trim\<^sub>I_TH_def
-  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>I_def]
+  \<medium_left_bracket> premises _ and  R1[unfolded Identity_Element\<^sub>I_def]
     apply_rule R1[THEN implies_right_prod]
   \<medium_right_bracket> .
 
 lemma derive_\<A>SE_trim_E:
-  \<open> Identity_Element\<^sub>E (u \<Ztypecolon> W)
-\<Longrightarrow> \<A>SE_trim\<^sub>E (fst x', u) W x' \<circle> \<close>
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> Identity_Element\<^sub>E (u \<Ztypecolon> F \<circle>)
+\<Longrightarrow> \<A>SE_trim\<^sub>E (fst x', u) (F \<circle>) x' \<circle> \<close>
   unfolding \<A>SE_trim\<^sub>E_def
-  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>E_def]
+  \<medium_left_bracket> premises _ and R1[unfolded Identity_Element\<^sub>E_def]
     apply_rule R1[THEN implies_right_prod]
   \<medium_right_bracket> .
 
 lemma derive_\<A>SE_trim_E_TH:
-  \<open> Identity_Element\<^sub>E (u \<Ztypecolon> W)
-\<Longrightarrow> \<A>SE_trim\<^sub>E_TH (fst x', u) W x' \<circle> \<circle> W\<^sub>H \<close>
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> Identity_Element\<^sub>E (u \<Ztypecolon> F \<circle>)
+\<Longrightarrow> \<A>SE_trim\<^sub>E_TH (fst x', u) (F \<circle>) x' \<circle> \<circle> (F' \<circle>) \<close>
   unfolding \<A>SE_trim\<^sub>E_TH_def
-  \<medium_left_bracket> premises R1[unfolded Identity_Element\<^sub>E_def]
+  \<medium_left_bracket> premises _ and R1[unfolded Identity_Element\<^sub>E_def]
     apply_rule R1[THEN implies_right_prod]
   \<medium_right_bracket> .
 
@@ -2041,9 +2052,9 @@ ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
 \<phi>property_deriver SE_Trime_Empty 110
     = \<open> K Phi_Type_Algebra_Derivers.SE_Trime_Empty \<close>
 
-
 lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.SE_Trime_Empty__generation_pass\<close>] =
-          derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
+          derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH
+          derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
 
 
 

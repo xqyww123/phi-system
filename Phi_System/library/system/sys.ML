@@ -125,8 +125,9 @@ fun export_codeblock ctxt (param_s, param_ret) rule assm sequent0 =
       val sequent = if has_bound_ret E
                     then let val E' = Term.absfree param_ret' E
                                    |> Thm.cterm_of ctxt
-                             val ex_rule = @{thm \<phi>ex_quantify_E}
-                                        |> Drule.infer_instantiate ctxt [(("E",0),E')]
+                             val E_idx = Thm.maxidx_of_cterm E' + 1
+                             val ex_rule = Thm.incr_indexes E_idx @{thm \<phi>ex_quantify_E}
+                                        |> Drule.infer_instantiate ctxt [(("E",E_idx),E')]
                           in sequent0 RS ex_rule end
                     else sequent0
    in

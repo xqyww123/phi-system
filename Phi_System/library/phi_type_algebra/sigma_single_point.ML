@@ -156,7 +156,9 @@ fun guess_property_SgTH (x_term0, FT_term0, phi0) ctxt =
 
 fun reasoning_configure (subgoal, lsequent) (local_prems, ctxt) =
   let val SOME T_tm = AList.lookup (op =) (#params subgoal) "T"
-      val inst = try (Drule.infer_instantiate ctxt [(("T",0), T_tm)])
+      val T_idx = Thm.maxidx_of_cterm T_tm + 1
+      val inst = Thm.incr_indexes T_idx
+              #> try (Drule.infer_instantiate ctxt [(("T",T_idx), T_tm)])
       val T_rules = map_filter inst @{thms' \<phi>TA_SgH_T_intro \<phi>TA_SgH_T_intro'}
       fun mk_black ((T as Free _) $ Var (_, Ty)) = T $ Var (("var",0), Ty)
         | mk_black (X $ Y) = (mk_black X $ mk_black Y)

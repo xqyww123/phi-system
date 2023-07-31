@@ -407,12 +407,13 @@ lemma [\<phi>reason 1200 for \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
     val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _))
       = Phi_Help.leading_antecedent (Thm.prop_of sequent)
     val Y' = Abs("", fastype_of x, abstract_over (x, Y))
-    val idx = Thm.maxidx_of sequent
+    val idx = Thm.maxidx_of sequent + 1
     val vars = map Var (List.tabulate (length Vs, (fn i => ("v", i+idx))) ~~ map snd Vs)
     fun subst X = Term.subst_bounds (vars, X)
+    val idx = idx + length Vs
     val rule = Drule.infer_instantiate ctxt
-                  (map (apsnd (Thm.cterm_of ctxt)) [(("x",0), subst x), (("Y'",0),subst Y')])
-                  @{thm lambda_abstraction}
+                  (map (apsnd (Thm.cterm_of ctxt)) [(("x",idx), subst x), (("Y'",idx),subst Y')])
+                  (Thm.incr_indexes idx @{thm lambda_abstraction})
   in
     Seq.single (ctxt, rule RS sequent)
   end

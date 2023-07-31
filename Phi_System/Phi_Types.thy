@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-                    
+                      
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -57,7 +57,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
  
 declare [[\<phi>trace_reasoning = 1]]
-                     
+                          
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -158,7 +158,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
-
+ 
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
@@ -442,7 +442,7 @@ lemma [\<phi>reason 1000]:
   unfolding Transformation_def Action_Tag_def
   by clarsimp  blast
 
-declare [[\<phi>trace_reasoning = 1]]
+
    
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> B) P
@@ -450,7 +450,7 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> B \<Zcomp> T) (P \<and> Q)\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by simp blast
-
+     
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>E (1 \<Ztypecolon> B)
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)
@@ -463,6 +463,9 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Object_Equiv (B \<Zcomp> T) eq \<close>
   unfolding Object_Equiv_def Transformation_def
   by clarsimp blast
+
+ 
+let_\<phi>type \<phi>Composition deriving SE_Trime_Empty
 
 
 (*
@@ -920,7 +923,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   by \<phi>reason *)
 
 declare [[\<phi>trace_reasoning = 1]]
-             
+                  
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<phi>Fun (push_map k) \<Zcomp> T)\<close>
   deriving Basic
@@ -1035,8 +1038,8 @@ interpretation \<phi>MapAt_L: Union_Functor \<open>(\<^bold>\<rightarrow>\<^sub>
   by (standard; rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 
 lemma [\<phi>reason 1000]:
-  \<open>Type_Variant_of_the_Same_Functor ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k)\<close>
-  unfolding Type_Variant_of_the_Same_Functor_def ..
+  \<open>Type_Variant_of_the_Same_Type_Operator ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k)\<close>
+  unfolding Type_Variant_of_the_Same_Type_Operator_def ..
 *)
 
 

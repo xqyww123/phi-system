@@ -31,7 +31,7 @@ type automation_on_property =
         term (*type operator*) * thm (*property*) -> Context.generic -> Context.generic
 val add_automation_on_property : priority * property_name list (*bindings*) -> automation_on_property -> Context.generic -> Context.generic
 val invoke_automations_on_property : term * thm -> Context.generic -> Context.generic
-val property_dependent_setup : property_name list * property_name list -> (thm list -> automation_on_property) -> automation_on_property
+val property_dependent_setup : property_name list -> (thm list -> automation_on_property) -> automation_on_property
 
 (* Internal Interfaces *)
 
@@ -151,24 +151,27 @@ fun add_property (phityp0,pos,property) ctxt =
       val property_name = get_property_name property
       val key = net_encode_property_key (phityp', property_name)
       (*val key_phityp = net_encode_phityp phityp'*)
+      exception SKIP
       fun insert_term (k''', (k,pos,v)) net =
         let val clashes = Net.unify_term net k'''
                        |> filter (fn (k', _, _) => Pattern.matches thy (k',k) orelse Pattern.matches thy (k,k'))
             val _ = if null clashes then ()
                     else let open Pretty
                         val ctxt' = Context.proof_of ctxt
-                     in error (string_of (chunks (
+                     in warning (string_of (chunks (
                            block [str "The property ", str property_name, str " of \<phi>-type ",
                                   Syntax.pretty_term ctxt' phityp0,
                                   str " either covers or is covered by other existing rules."] ::
                            str "We prohibit redundancy of \<phi>-type properties because it causes \
-                               \a great amount of redundancy in the generated reasoning rules. \
+                               \a great amount of redundancy in the generated reasoning rules.\n\
+                               \No automation will be invoked on this.\n\
                                \Instead, you should provide the most general rule and, if you want, \
                                \specialized (branched) reasoning on its antecedents." ::
                            map (fn (_,pos,rule) => block (
                                here pos @ [Syntax.pretty_term ctxt' (Thm.prop_of rule)]
                              )) clashes
-                         )))
+                         ))) ;
+                        raise SKIP
                     end
          in Net.insert_term property_eq (k''', (k,pos,v)) net
         end
@@ -176,6 +179,7 @@ fun add_property (phityp0,pos,property) ctxt =
     |> Properties.map (insert_term (key, (phityp', pos, property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
     |> invoke_automations_on_property (phityp0,property)
+   handle SKIP => ctxt
  (* handle Net.INSERT => let open Pretty
       val term = Context.cases Syntax.pretty_term_global Syntax.pretty_term
        in error (string_of (chunks [
@@ -222,26 +226,26 @@ fun add_property_kind k extract thy =
 
 fun add_automation_on_property (priority, prop_kinds) automation =
   fold (fn prop_kind =>
-      Automation_on_Property.map (@{print} o Symtab.map_default (prop_kind,[])
+      Automation_on_Property.map (Symtab.map_default (prop_kind,[])
           (Ord_List.insert (prop_table_order prop_kind) (priority, automation)))
     ) (distinct (op =) prop_kinds)
 
-(*no_rule_deps are still dependences required to activate the automation,
-  but their rules are not required to be and will not be passed to the automation*)
-fun property_dependent_setup (deps,no_rule_deps) automation (the_functor,property) ctxt =
+fun property_dependent_setup deps automation (the_functor,property) ctxt =
   let exception Dep
       val prop_name = get_property_name property
    in(if Thm.is_dummy property orelse member (op =) deps prop_name
-                               orelse member (op =) no_rule_deps prop_name
-      then let fun get_rules deps = map (fn dep =>
-                      case lookup_property_unify ctxt the_functor dep
-                        of [(_,_,x)] => x
-                         | [] => raise Dep
-                         | ((_,_,x)::_) => (warning ("multiple property instances match " ^ Syntax.string_of_term (Context.proof_of ctxt) the_functor); x)
-                    ) deps
-               val rules = get_rules deps
-               val _ = get_rules no_rule_deps
-            in automation rules (the_functor,property) ctxt
+      then let fun cross_map _ [] = []
+                 | cross_map f [h] = map single (f h)
+                 | cross_map f (h::L) = let val L' = cross_map f L
+                                         in maps (fn L'' => map (fn x => x :: L'') (f h)) L'
+                                        end
+               val get_rules = cross_map (fn dep =>
+                      case map #3 (lookup_property_unify ctxt the_functor dep)
+                        of [] => raise Dep
+                         | L => L
+                    )
+               val ruless = get_rules deps
+            in fold (fn rules => automation rules (the_functor,property)) ruless ctxt
            end
       else ctxt)
       handle Dep => ctxt
@@ -263,7 +267,7 @@ val rule_template_pass__sender : rule_generation_pass option Unsynchronized.ref
       = Unsynchronized.ref NONE
 val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__sender_locker" ()
 
-fun setup_rule_generation (pos,mode,priority,(additional_props,pass),pats,guard) rule0 ctxt =
+fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) rule0 ctxt =
   let val thy = Context.theory_of ctxt
       val rule = normalize rule0
       fun get_prop_kinds (TM::L) =
@@ -274,8 +278,17 @@ fun setup_rule_generation (pos,mode,priority,(additional_props,pass),pats,guard)
                     else []
                | _ => [])
         | get_prop_kinds [] = []
-      val prop_kinds = get_prop_kinds (Thm.prems_of rule)
-      val _ = List.app (assert_property_kind thy) additional_props
+      val prop_kinds = case raw_dependences
+                         of SOME deps => (List.app (assert_property_kind thy) deps;
+                                          deps)
+                          | NONE => get_prop_kinds (Thm.prems_of rule)
+      val _ = Phi_Reasoner.info_pretty_generic ctxt 1 (fn () => let open Pretty
+                  val consts = Context.cases Sign.consts_of Proof_Context.consts_of ctxt
+               in chunks (str "Installing \<phi>reasoning rule template depended on " ::
+                    map (item o single o Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt o
+                         Const o Consts.the_const consts) prop_kinds)
+              end)
+
       exception Inst_Fail
       fun impl props _ ctxt =
             let val ctxt' = Context.proof_of ctxt
@@ -297,7 +310,7 @@ fun setup_rule_generation (pos,mode,priority,(additional_props,pass),pats,guard)
                                 #> Simplifier.asm_lr_simplify ctxt's
                                 #> Simplification_Protect.unprotect ctxt's) rules'1)
                       end
-                val rule'1 = (rule OF props)
+                val rule'1 = Phi_Help.beta_eta_contract (rule OF props)
                       handle THM _ => let open Pretty in
                           Phi_Reasoner.info_pretty ctxt' 2 (fn () =>
                             chunks (block (str "Mismatch in instantiating a reasoning rule " :: here pos) ::
@@ -332,7 +345,7 @@ fun setup_rule_generation (pos,mode,priority,(additional_props,pass),pats,guard)
                       map (fn rule => ([rule], pos, mode, priority, fst pats, snd pats, NONE) ) rules') ctxt)
             end
             handle Inst_Fail => ctxt
-      val automation = property_dependent_setup (prop_kinds, additional_props) impl
+      val automation = property_dependent_setup prop_kinds impl
 
       val properties = Properties.get ctxt
       val existing_rules = map (fn pk =>
@@ -366,10 +379,10 @@ val _ = Theory.setup (
 
 #>Attrib.setup \<^binding>\<open>\<phi>reason_template\<close> (
     Phi_Reasoner.attr_syntax
-      (Scan.optional (
-          Scan.lift (\<^keyword>\<open>requires\<close>) |-- (Parse.and_list' (Scan.repeat (Args.const {proper=true,strict=true})) >> flat)) [] --
+      (Scan.option (
+          Scan.lift (\<^keyword>\<open>requires\<close>) |-- (Parse.and_list' (Scan.repeat (Args.const {proper=true,strict=true})) >> flat)) --
        Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source)))
-      (fn (pos, mode, priority, (additional_props, pass_src), pats, guard) =>
+      (fn (pos, mode, priority, (dependences, pass_src), pats, guard) =>
         Thm.declaration_attribute (fn thm => fn ctxt =>
           let val pass = Option.map (fn src =>
                     let val _ = Synchronized.change rule_template_pass__sender_locker (fn () => (
@@ -384,9 +397,16 @@ val _ = Theory.setup (
                      in pass
                     end
                   ) pass_src
-           in setup_rule_generation (pos,mode,priority,(additional_props,pass),pats,guard) thm ctxt
+           in setup_rule_generation (pos,mode,priority,(dependences,pass),pats,guard) thm ctxt
           end)
-      )) ""
+      ))
+  "declare a \<phi>reasoning rule template which will be instantiated automatically when the depended \
+  \properties are given for a \<phi>-type (operator).\n\
+  \The properties must be in the leading antecedents and must be about an identical \<phi>-type \
+  \(of potential different type instantiations so therefore be represented by different fixed free variables).\n\
+  \It is able to parse the depended properties from the leading antecedents greedily for all possible, \
+  \and may caputre more dependencies than the expected. If so, you can specify the exact dependency \
+  \explicilty by [[\<phi>reason_template requires \<open>dependencies\<close>]]"
 )
 
 

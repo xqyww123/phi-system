@@ -24,6 +24,7 @@ datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*))
 
 type phi_type = {
   term: term (*of most general type and schematic variables*),
+  cterm: thm (*TERM <the_cterm>*),
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
@@ -53,6 +54,8 @@ val note_properties : phi_type -> (bstring * thm list) list -> generic_theory ->
 type hints = term list
 
 val get_type_info : Context.generic -> string (*const name*) -> phi_type option
+
+structure Type_Def_Hook : HOOKS (*invoked when the phi-type is defined but before any deriver is applied*)
 
 (* Property Deriver from \<phi>-Type Definition*)
 
@@ -151,6 +154,7 @@ datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*))
 
 type phi_type = {
   term: term (*of most general type*),
+  cterm: thm,
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
@@ -164,6 +168,7 @@ type phi_type = {
 fun map_phi_type (mtm,mth) (phi : phi_type) =
   {
     term = mtm (#term phi),
+    cterm = singleton mth (#cterm phi),
     pos = #pos phi,
     proof_id = #proof_id phi,
     equations = mth (#equations phi),
@@ -614,114 +619,10 @@ fun normalize th = th
 
 (** Main **)
 
-(* I am a fool
-exception Unavailable
-
-fun mk_cases_ToA cases_num (x_ty, model_ty, x_term, T_term) ctxt0 =
-  let val ([Y_name], ctxt) = Variable.variant_fixes ["Y"] ctxt0
-   in (ctxt,
-       \<^Const>\<open>Transformation model_ty\<close>
-        $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x_term $ T_term)
-        $ Free (Y_name, \<^Type>\<open>set model_ty\<close>)
-        $ \<^Const>\<open>True\<close>)
-  end
-
-fun mk_cases_shift cases_num (x_ty, model_ty, x_term, T_term) ctxt0 =
-  let val ([Y_name], ctxt) = Variable.variant_fixes ["Y"] ctxt0
-      val _ = if model_ty = \<^Type>\<open>fun \<^Type>\<open>FIC_N\<close> \<^Type>\<open>FIC\<close>\<close> then () else raise Unavailable
-   in (ctxt,
-       \<^Const>\<open>View_Shift\<close>
-        $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x_term $ T_term)
-        $ Free (Y_name, \<^Type>\<open>set model_ty\<close>)
-        $ \<^Const>\<open>True\<close>)
-  end
-
-local
-
-fun can_reduce bvars (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Free (N,_)) =
-      member (op =) bvars N andalso not (exists_subterm (fn Free(N',_) => N' = N | _ => false) X)
-  | can_reduce _ _ = false
-
-fun rearrange_prems bvars ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-         Const(\<^const_name>\<open>conj\<close>, _) $ XX $ _)
-       ) $ _ =>
-        if can_reduce bvars XX
-        then (Conv.rewr_conv @{thm' BNF_Fixpoint_Base.conj_imp_eq_imp_imp} then_conv
-              Conv.arg_conv (rearrange_prems bvars)) ctm
-        else (Conv.rewr_conv @{thm' BNF_Fixpoint_Base.conj_imp_eq_imp_imp} then_conv
-              Conv.rewr_conv @{thm' Pure.swap_prems_eq} then_conv
-              Conv.arg_conv (rearrange_prems bvars)) ctm
-     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ XX) $ _ =>
-        if can_reduce bvars XX
-        then Conv.arg_conv (Conv.rewr_conv @{thm' Pure.prop_def[symmetric]}) ctm
-        else Conv.rewr_conv @{thm' Pure.prop_def[symmetric]} ctm
-
-fun elim_all_conv ctxt ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Pure.all\<close>, _) $ _) => Conv.all_conv ctm
-     | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Pure.prop\<close>, _) $ _) =>
-        Phi_Conv.meta_all_conv (K (Conv.rewr_conv @{thm' Pure.prop_def})) ctxt ctm
-     | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _,
-          Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-              Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ X)) $ _ )
-        => if X = Bound 0
-           then Conv.rewr_conv @{thm' HOL.subst_all(2)} ctm
-           else (Conv.rewr_conv @{thm' Pure.norm_hhf_eq[symmetric]} then_conv
-                 Conv.arg_conv (elim_all_conv ctxt)) ctm
-     | _ => Conv.all_conv ctm
-
-in
-(*\<And>x y z. \<dots> \<Longrightarrow> A = y \<Longrightarrow> \<dots>  \<equiv> \<And>x y z. \<dots>[A/y] \<Longrightarrow> \<dots>[A/y] *)
-fun defined_meta_all_conv bvars ctxt ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
-        (Phi_Conv.meta_all_conv (fn (bvar,ctm) =>
-            case Thm.term_of bvar of Free (N, _) => defined_meta_all_conv (N::bvars) ctm
-         ) ctxt then_conv
-         elim_all_conv ctxt) ctm
-     | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => rearrange_prems bvars ctm
-     | _ => Conv.all_conv ctm
-end
-
-
-fun mk_cases_rule eqs mk rule0 phi_term0 ctxt00 =
-  let val ((inst'',[rule]),ctxt0) = Variable.importT [rule0] ctxt00
-      val phi_term = Term_Subst.instantiate (Phi_Help.ty_table_no_c inst'', Vars.empty) phi_term0
-      val (_, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of phi_term)
-      val ((x_term, T_term), ctxt't1) = fix_phi_term_params phi_term ctxt0
-      val cases_num = Thm.nprems_of rule
-      val (ctxt, P_term') = mk cases_num (x_ty, model_ty, x_term, T_term) ctxt't1
-      val P_term = (\<^Const>\<open>Action_Tag\<close> $ P_term' $ (\<^Const>\<open>\<A>case \<open>Term.fastype_of T_term\<close>\<close> $ T_term))
-                |> Thm.cterm_of ctxt
-
-      val args = snd (strip_comb T_term) @ [x_term]
-
-      val var_P = case Thm.concl_of rule
-                    of \<^Const>\<open>Trueprop\<close> $ Var v => v
-                     | _ => raise THM ("Not a case-split rule", 0, [rule])
-      val var_x = case remove (op =) var_P (Term.add_vars (Thm.prop_of rule) [])
-                    of [v] => SOME v
-                     | [] => NONE
-                     | _ => raise THM ("Not a case-split rule", 0, [rule])
-
-      val the_x = Thm.cterm_of ctxt (HOLogic.mk_tuple args)
-      val inst = case var_x of SOME v => [(var_P, P_term), (v, the_x)]
-                             | NONE => [(var_P, P_term)]
-   in Thm.instantiate (TVars.empty, Vars.make inst) rule
-   |> Conv.fconv_rule (Phi_Conv.hhf_conv
-        (fn ctxt => Simplifier.asm_lr_rewrite (
-                        Simplifier.clear_simpset ctxt addsimps (@{thms' prod.inject HOL.simp_thms} @ eqs))
-                    then_conv Phi_Conv.hhf_concl_conv (fn ctxt =>
-                        HOLogic.Trueprop_conv (
-                          Conv.rewr_conv @{thm' Action_Tag_def} then_conv
-                          Conv.rewr_conv @{thm' Argument_def[symmetric]})) ctxt
-                    then_conv defined_meta_all_conv [] ctxt)
-        (K Conv.all_conv) ctxt)
-  end
-
-val P_to_P = Thm.trivial \<^schematic_cprop>\<open>?P :: bool\<close>*)
+structure Type_Def_Hook = Hooks(
+  type arg = phi_type
+  type state = generic_theory
+)
 
 fun add_type (def, pos, dervs) generic =
   let val ctxt = Context.proof_of generic
@@ -858,8 +759,10 @@ fun add_type (def, pos, dervs) generic =
            | Free _ =>
               Context.cases Sign.full_name Local_Theory.full_name generic (Binding.name (fst name_ty))
 
+      val the_term = chk_zero_index_term term
       val phi_type = {
-            term = chk_zero_index_term term,
+            term = the_term,
+            cterm = Drule.mk_term (Thm.cterm_of ctxt the_term),
             pos = pos,
             proof_id = proof_id,
             equations = map chk_zero_index_thm eqs,
@@ -892,6 +795,7 @@ fun add_type (def, pos, dervs) generic =
          (expansionN, expansions)])
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)
+   |> Type_Def_Hook.invoke generic phi_type
    |> derive_properties dervs phi_type
    |> Context_Position.restore_visible_generic generic
    |> pair phi_type
@@ -988,6 +892,16 @@ fun add_fun_cmd a b c hints int generic =
 
 end
 
+fun let_phityp_deriving_cmd ((raw_const_name,pos), deriving_ast) thy =
+  let val Const (const_name, _) =
+            Proof_Context.read_const {proper=false, strict=false} (Context.proof_of thy) raw_const_name
+      val phi = case get_type_info thy const_name
+                  of SOME phi => phi
+                   | NONE => error ("No \<phi>-type named "^ const_name ^ " found")
+      val derivings = check_deriving_ast thy deriving_ast
+   in derive_properties derivings phi thy
+  end
+
 
 val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- deriving_parser
       >> (fn ((config, (fixes, specs)), algebras) => add_fun_cmd fixes specs config algebras))
@@ -1017,6 +931,11 @@ in
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "define \<phi>-types"
           ((def_direct || def_by_fun) >> (fn f =>
               Toplevel.theory' (fn int => Context.theory_map (f int)) Toplevel.no_presentation))
+
+val _ = Outer_Syntax.command \<^command_keyword>\<open>let_\<phi>type\<close> "derive properties of existing \<phi>-types"
+          ((Parse.position Parse.const -- deriving_parser) >> (fn const_deriving =>
+              Toplevel.theory (Context.theory_map (let_phityp_deriving_cmd const_deriving))))
+
 end
 
 end
