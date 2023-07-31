@@ -102,7 +102,7 @@ fun SE_Trime_Empty (phi : phi_type) thy =
                                   (Morphism.fact m rules)))
   end
 
-fun SE_Trime_Empty__generation_pass (_, gen, ctxt) th =
+fun SE_Trime_Empty__generation_pass (_, gen, _, ctxt) th =
   let val rctxt = Config.put Phi_Reasoner_solve_obligation_and_no_defer 1 ctxt
       fun reason th =
         let val concl = Thm.cconcl_of th

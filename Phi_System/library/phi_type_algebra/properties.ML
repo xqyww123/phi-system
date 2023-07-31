@@ -7,6 +7,8 @@ signature PHI_TYPE_ALGEBRA = sig
 
 include PHI_TYPE_ALGEBRA
 
+exception Automation_Fail of string
+
 (* Algebraic Properties *)
 
 type property_name = string
@@ -28,14 +30,15 @@ structure Gen_Rule_SS : SIMPSET (*simpset for generating reasoning rules*)
 (* The Framework for Automation based on Algebraic Property *)
 
 type automation_on_property =
-        term (*type operator*) * thm (*property*) -> Context.generic -> Context.generic
-val add_automation_on_property : priority * property_name list (*bindings*) -> automation_on_property -> Context.generic -> Context.generic
-val invoke_automations_on_property : term * thm -> Context.generic -> Context.generic
-val property_dependent_setup : property_name list -> (thm list -> automation_on_property) -> automation_on_property
+        term (*\<phi>-type (operator)*) * Position.T * thm (*properties*) list -> Context.generic -> Context.generic
+val add_automation_on_property : priority * property_name list (*dependended properties*)
+                              -> automation_on_property
+                              -> Context.generic -> Context.generic
+val invoke_automations_on_property : term * Position.T * thm -> Context.generic -> Context.generic
 
 (* Internal Interfaces *)
 
-type rule_generation_pass = property_name list * (thm -> thm list) * Proof.context -> thm -> thm list
+type rule_generation_pass = property_name list * (thm -> thm list) * Position.T * Proof.context -> thm -> thm list
 val rule_template_pass__sender : rule_generation_pass option Unsynchronized.ref
 
 end
@@ -43,6 +46,8 @@ end
 structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
 
 open Phi_Type_Algebra
+
+exception Automation_Fail of string
 
 type property_name = string
 
@@ -72,7 +77,11 @@ fun extract_type_operator_from_property1 thy k =
 
 (** Property DB **)
 
-type automation_on_property = term (*\<phi>-type or type operator*) * thm (*property*) -> Context.generic -> Context.generic
+type automation_on_property_i = term (*\<phi>-type (operator)*) * Position.T * thm (*the property that invokes the automation*)
+                             -> Context.generic -> Context.generic
+
+type automation_on_property = term (*\<phi>-type (operator)*) * Position.T * thm (*property*) list
+                           -> Context.generic -> Context.generic
 
 fun property_eq ((t1,_,th1),(t2,_,th2)) = (t1 aconv t2) andalso Thm.eq_thm_prop (th1,th2)
 
@@ -85,7 +94,7 @@ structure Properties = Generic_Data (
 fun prop_table_order k ((p1,_),(p2,_)) = if p1 = p2 then raise Symtab.DUP k else int_ord (p1,p2)
 
 structure Automation_on_Property = Generic_Data (
-  type T = (priority * automation_on_property) Ord_List.T Symtab.table
+  type T = (priority * automation_on_property_i) Ord_List.T Symtab.table
   val empty = Symtab.empty
   val merge = Symtab.join (fn k => uncurry (Ord_List.union (prop_table_order k)))
 )
@@ -125,7 +134,7 @@ fun lookup_property_unify ctxt phityp0 property_name =
   end
 
 fun invoke_automations_on_property phityp ctxt =
-  let val prop_kind = get_property_name (snd phityp)
+  let val prop_kind = get_property_name (#3 phityp)
    in case Symtab.lookup (Automation_on_Property.get ctxt) prop_kind
    of NONE => ctxt
     | SOME L => fold (fn (_,s) => s phityp) L ctxt
@@ -178,7 +187,7 @@ fun add_property (phityp0,pos,property) ctxt =
    in ctxt
     |> Properties.map (insert_term (key, (phityp', pos, property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
-    |> invoke_automations_on_property (phityp0,property)
+    |> invoke_automations_on_property (phityp0, pos, property)
    handle SKIP => ctxt
  (* handle Net.INSERT => let open Pretty
       val term = Context.cases Syntax.pretty_term_global Syntax.pretty_term
@@ -224,13 +233,7 @@ fun add_property_kind k extract thy =
                        (rules, mode, pats, guard, add_prop pos rules ctxt)))
   end
 
-fun add_automation_on_property (priority, prop_kinds) automation =
-  fold (fn prop_kind =>
-      Automation_on_Property.map (Symtab.map_default (prop_kind,[])
-          (Ord_List.insert (prop_table_order prop_kind) (priority, automation)))
-    ) (distinct (op =) prop_kinds)
-
-fun property_dependent_setup deps automation (the_functor,property) ctxt =
+fun toplevel_property_auto deps automation (the_functor,pos,property) ctxt =
   let exception Dep
       val prop_name = get_property_name property
    in(if Thm.is_dummy property orelse member (op =) deps prop_name
@@ -240,16 +243,30 @@ fun property_dependent_setup deps automation (the_functor,property) ctxt =
                                          in maps (fn L'' => map (fn x => x :: L'') (f h)) L'
                                         end
                val get_rules = cross_map (fn dep =>
-                      case map #3 (lookup_property_unify ctxt the_functor dep)
+                      case if dep = prop_name
+                           then [property]
+                           else map #3 (lookup_property_unify ctxt the_functor dep)
                         of [] => raise Dep
                          | L => L
                     )
                val ruless = get_rules deps
-            in fold (fn rules => automation rules (the_functor,property)) ruless ctxt
+            in fold (fn rules => fn ctxt =>
+                          automation (the_functor,pos,rules) ctxt
+                          handle Automation_Fail msg => (
+                              if msg = "" then () else warning ("Automation Fail:\n" ^ msg) ;
+                              ctxt
+                            )
+                    ) ruless ctxt
            end
       else ctxt)
       handle Dep => ctxt
   end
+
+fun add_automation_on_property (priority, prop_kinds) automation =
+  fold (fn prop_kind =>
+      Automation_on_Property.map (Symtab.map_default (prop_kind,[])
+          (Ord_List.insert (prop_table_order prop_kind) (priority, toplevel_property_auto prop_kinds automation)))
+    ) (distinct (op =) prop_kinds)
 
 
 structure Gen_Rule_SS = Simpset (
@@ -262,7 +279,7 @@ fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
 
-type rule_generation_pass = property_name list * (thm -> thm list) * Proof.context -> thm -> thm list
+type rule_generation_pass = property_name list * (thm -> thm list) * Position.T * Proof.context -> thm -> thm list
 val rule_template_pass__sender : rule_generation_pass option Unsynchronized.ref
       = Unsynchronized.ref NONE
 val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__sender_locker" ()
@@ -290,7 +307,7 @@ fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) 
               end)
 
       exception Inst_Fail
-      fun impl props _ ctxt =
+      fun impl (_, pos, props) ctxt =
             let val ctxt' = Context.proof_of ctxt
                 fun do_reason rule =
                       if exists (fn _ $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => true | _ => false)
@@ -336,7 +353,7 @@ fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) 
                                 |> normalize
                    in [rule']
                   end
-                val rules' = case pass of SOME ps => ps (prop_kinds, default_generation, ctxt') rule'1
+                val rules' = case pass of SOME ps => ps (prop_kinds, default_generation, pos, ctxt') rule'1
                                         | NONE => default_generation rule'1
              in if null rules' then ctxt
              else (Phi_Reasoner.info_print ctxt' 1 (fn () =>
@@ -345,7 +362,6 @@ fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) 
                       map (fn rule => ([rule], pos, mode, priority, fst pats, snd pats, NONE) ) rules') ctxt)
             end
             handle Inst_Fail => ctxt
-      val automation = property_dependent_setup prop_kinds impl
 
       val properties = Properties.get ctxt
       val existing_rules = map (fn pk =>
@@ -366,8 +382,8 @@ fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) 
               in fold cross_product (tl existing_rules) init
              end
    in ctxt
-   |> add_automation_on_property (serial (), prop_kinds) automation
-   |> fold (fn (f,rules) => impl (rev rules) (f,Drule.dummy_thm)) existing_ins
+   |> add_automation_on_property (serial (), prop_kinds) impl
+   |> fold (fn (f,rules) => impl (f, pos, rev rules)) existing_ins
   end
 
 (** Interfaces for Automation over Property **)

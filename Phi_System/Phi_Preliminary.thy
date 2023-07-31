@@ -307,14 +307,54 @@ translations
   ("aprop") "CONST meta_case_prod (\<lambda>x (y,z,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_case_prod (\<lambda>x. CONST meta_case_prod (\<lambda>y (z,zs). P))"
   ("aprop") "CONST meta_case_prod (\<lambda>x (y,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_case_prod (\<lambda>x. CONST meta_case_prod (\<lambda>y zs. P))"
 
-lemma meta_Ball_simp[simp]:
+lemma meta_Ball_sing[simp]:
   \<open> (\<And>x \<in> {y}. PROP P x) \<equiv> PROP P y \<close>
   unfolding meta_Ball_def Premise_def by simp
 
 lemma Ball_for_reason:
   \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> A \<Longrightarrow> P x)\<close>
   unfolding atomize_imp atomize_all Ball_def Premise_def .
-  
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP P y
+\<Longrightarrow> (\<And>x \<in> {y}. PROP P x)\<close>
+  unfolding meta_Ball_def Premise_def by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> P y
+\<Longrightarrow> (\<forall>x \<in> {y}. P x)\<close>
+  by simp
+
+lemma meta_Ball_pair[\<phi>reason 1010]:
+  \<open> (\<And>y \<in> {y}. PROP P x y)
+\<Longrightarrow> (\<And>(x,y) \<in> {(x,y)}. PROP P x y)\<close>
+  unfolding meta_Ball_def meta_case_prod_def Premise_def by simp
+
+lemma [\<phi>reason 1010]:
+  \<open> (\<forall>y \<in> {y}. P x y)
+\<Longrightarrow> (\<forall>(x,y) \<in> {(x,y)}. P x y) \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> (Q \<Longrightarrow> (\<And>x \<in> S. PROP P x))
+\<Longrightarrow> (\<And>x \<in> S \<s>\<u>\<b>\<j> Q. PROP P x)\<close>
+  unfolding meta_Ball_def Premise_def Subjection_expn_set
+  by (clarsimp simp add: atomize_conj[symmetric] conjunction_imp norm_hhf_eq)
+
+lemma [\<phi>reason 1000]:
+  \<open> (Q \<Longrightarrow> \<forall>x \<in> S. P x)
+\<Longrightarrow> (\<forall>x \<in> S \<s>\<u>\<b>\<j> Q. P x)\<close>
+  unfolding Ball_def Subjection_expn_set
+  by simp
+
+lemma sing_times_sing:
+  \<open>{a} \<times> {b} = {(a,b)}\<close>
+  unfolding set_eq_iff
+  by simp
+
+lemma sing_if:
+  \<open>(if c then {a} else {b}) = {if c then a else b}\<close>
+  by simp
 
 ML_file \<open>library/tools/case_prod_conv.ML\<close>
 
@@ -341,37 +381,6 @@ ML_file \<open>library/tools/case_prod_conv.ML\<close>
 hide_fact Ball_for_reason
 
 
-lemma [\<phi>reason 1000]:
-  \<open> PROP P y
-\<Longrightarrow> (\<And>x \<in> {y}. PROP P x)\<close>
-  unfolding meta_Ball_def Premise_def by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> P y
-\<Longrightarrow> (\<forall>x \<in> {y}. P x)\<close>
-  by simp
-
-lemma [\<phi>reason 1010]:
-  \<open> (\<And>y \<in> {y}. PROP P x y)
-\<Longrightarrow> (\<And>(x,y) \<in> {(x,y)}. PROP P x y)\<close>
-  unfolding meta_Ball_def meta_case_prod_def Premise_def by simp
-
-lemma [\<phi>reason 1010]:
-  \<open> (\<forall>y \<in> {y}. P x y)
-\<Longrightarrow> (\<forall>(x,y) \<in> {(x,y)}. P x y) \<close>
-  by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> (Q \<Longrightarrow> (\<And>x \<in> S. PROP P x))
-\<Longrightarrow> (\<And>x \<in> S \<s>\<u>\<b>\<j> Q. PROP P x)\<close>
-  unfolding meta_Ball_def Premise_def Subjection_expn_set
-  by (clarsimp simp add: atomize_conj[symmetric] conjunction_imp norm_hhf_eq)
-
-lemma [\<phi>reason 1000]:
-  \<open> (Q \<Longrightarrow> \<forall>x \<in> S. P x)
-\<Longrightarrow> (\<forall>x \<in> S \<s>\<u>\<b>\<j> Q. P x)\<close>
-  unfolding Ball_def Subjection_expn_set
-  by simp
 
 
 subsection \<open>Very Early Mechanism\<close>

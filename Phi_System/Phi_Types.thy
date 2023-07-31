@@ -57,7 +57,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
  
 declare [[\<phi>trace_reasoning = 1]]
-                          
+                           
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -545,7 +545,9 @@ declare [[\<phi>trace_reasoning = 1]]
 
 
 subsection \<open>Embedding Additive Conjunction\<close>
-         
+
+declare [[\<phi>trace_reasoning = 1]]
+ 
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
   deriving \<open>  (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
@@ -559,8 +561,8 @@ subsection \<open>Embedding Additive Conjunction\<close>
        and \<open>  Identity_Element\<^sub>E (1 \<Ztypecolon> T)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
-     (*DO NOT REMOVE, I'm thinking if we really should support so much additive conjunction
        and Functional_Transformation_Functor
+     (*DO NOT REMOVE, I'm thinking if we really should support so much additive conjunction
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>
               Transformation_Functor ((\<and>\<^sub>\<phi>) A) ((\<and>\<^sub>\<phi>) A') Basic_BNFs.snds (\<lambda>_. UNIV) (rel_prod (=))\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B' \<Longrightarrow>
@@ -723,14 +725,6 @@ declare [[\<phi>trace_reasoning = 1]]
        and Functional_Transformation_Functor
        and Separation_Homo
        and Trivial_\<Sigma>
-
-
-
-
-
-
-
-
 
 
 
@@ -923,7 +917,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   by \<phi>reason *)
 
 declare [[\<phi>trace_reasoning = 1]]
-                  
+                   
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<phi>Fun (push_map k) \<Zcomp> T)\<close>
   deriving Basic

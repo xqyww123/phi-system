@@ -98,8 +98,6 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 (* Tools *)
 
-exception Automation_Fail of string
-
 val is_Type_Opr : typ -> bool
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
@@ -322,8 +320,6 @@ fun fix_phi_term_params phi_term ctxt =
   end
 
 (*** Deriving Properties ***)
-
-exception Automation_Fail of string
 
 type priority = int
 type deriver_name = string

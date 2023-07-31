@@ -531,16 +531,7 @@ paragraph \<open>Configuration\<close>
           \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
 
 lemmas [simp_for_\<phi>TA_rule_generation] =
-  conj_imp_eq_imp_imp Premise_I
-
-lemma sing_times_sing[simp_for_\<phi>TA_rule_generation]:
-  \<open>{a} \<times> {b} = {(a,b)}\<close>
-  unfolding set_eq_iff
-  by simp
-
-lemma sing_if[simp_for_\<phi>TA_rule_generation]:
-  \<open>(if c then {a} else {b}) = {if c then a else b}\<close>
-  by simp
+  conj_imp_eq_imp_imp Premise_I sing_times_sing sing_if
 
 setup \<open>
 let fun attach_var F =
@@ -797,7 +788,7 @@ attribute_setup \<phi>TA_internal_simplify_special_cases = \<open>Scan.succeed (
             else (SOME x, SOME (f x th))
    in rule_attribute (fn generic => fn rule =>
         let val ctxt = Context.proof_of generic
-            val sctxt = Simplifier.clear_simpset ctxt addsimps @{thms meta_Ball_simp}
+            val sctxt = Simplifier.clear_simpset ctxt addsimps @{thms meta_Ball_sing}
             val rule' = Simplifier.full_simplify sctxt rule
                       |> Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt
          in rule'
@@ -1872,6 +1863,28 @@ ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr_IH \<phi>TA_TF_rewr_C \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
 *)
 
+subsubsection \<open>Congruence in Function Definition\<close>
+
+lemma function_congruence_template:
+  \<open> Transformation_Functor F F D R M
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<subseteq> R x \<and> M (=) = (=)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> x = y
+\<Longrightarrow> (\<And>a \<in> D x. T a = U a)
+\<Longrightarrow> F T x = F U y\<close>
+  unfolding Transformation_Functor_def Premise_def Transformation_def \<phi>Type_def BI_eq_iff
+            subset_iff meta_Ball_def Ball_def
+  apply clarify
+  subgoal premises prems for u
+    by (insert prems(1)[THEN spec[where x=T], THEN spec[where x=U], THEN spec[where x=y], THEN spec[where x=\<open>(=)\<close>]]
+               prems(1)[THEN spec[where x=U], THEN spec[where x=T], THEN spec[where x=y], THEN spec[where x=\<open>(=)\<close>]]
+               prems(3-6) ;
+        auto) .
+  
+ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
+
+thm exI[fundef_cong]
+
 subsubsection \<open>Separation Homo\<close>
 
 lemma \<phi>TA_SHz_rule:
@@ -2095,9 +2108,11 @@ setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt =>
           map_ident}))\<close>
 
 lemmas [\<phi>constraint_expansion] =
-          Set.ball_Un
-          Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
+  Set.ball_Un
+  Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
+  Basic_BNFs.prod_set_defs
 
+thm Basic_BNFs.prod_set_defs
 thm map_ident
 thm zip_eq_Nil_eq_len zip_eq_Cons_ex
 
