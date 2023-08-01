@@ -199,9 +199,7 @@ val extract_pure_prem_by_RS : thm list (*RS rules*) -> extract_pure_prems
 exception Automation_Fail of string
 structure Simps : SIMPSET (*The standard simpset for deriving*)
 
-val accept : string (*name for printing*) ->
-      (int -> hint option -> Phi_Type_Algebra.derive) ->
-       hint list -> Phi_Type_Algebra.derive
+val accept : (int -> hint option -> Phi_Type_Algebra.derive) -> hint list -> Phi_Type_Algebra.derive
 val accept_one : string (*name for printing*) ->
       (hint option -> Phi_Type_Algebra.derive) ->
        hint list -> Phi_Type_Algebra.derive
@@ -376,6 +374,7 @@ fun guess_set_opr ctxt ty element_ty =
 
 (* Relator *)
 
+(*the relation between terms in the same type*)
 val guess_self_rel =
   let fun mk_term (ctxt, D, L, bnf) =
         let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_rel_safe bnf
@@ -651,43 +650,17 @@ fun load_simpset tms ctxt = fold load_const (fold add_consts' tms []) ctxt
 
 (** Select Hint **)
 
-local open Pretty
+fun accept gen [] phityp thy = gen 0 NONE phityp thy
+  | accept gen Hs phityp thy = fold_index (fn (i, H) => gen i (SOME H) phityp) Hs thy
 
-fun err_derive prop_name msg has_hint =
-      error ("Fail to derive the property " ^ prop_name ^
-        (if msg = "" then "" else "\n" ^ msg) ^
-        (if has_hint then ""
-         else "\nThe guessed property may be wrong, and you may provide the \
-              \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."))
-
-fun err_prove hint thy msg has_hint =
-      error ("Fail to derive the given property:\n" ^
-      Context.cases Syntax.string_of_term_global Syntax.string_of_term thy hint ^ "\n" ^
-        (if msg = "" then "" else "\n" ^ msg) ^
-        (if has_hint then ""
-         else "\nThe guessed property may be wrong, and you may provide the \
-              \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."))
-
-in
-
-fun accept prop_name gen [] phityp thy = (gen 0 NONE phityp thy
-         handle Automation_Fail msg => err_derive prop_name msg false)
-  | accept _ gen Hs phityp thy = fold_index (fn (i, H) =>
-            gen i (SOME H) phityp
-            handle Automation_Fail msg => err_prove H thy msg true
-         ) Hs thy
-
-fun accept_one prop_name gen [] phityp thy = (gen NONE phityp thy
-         handle Automation_Fail msg => err_derive prop_name msg false)
-  | accept_one _ gen [H] phityp thy = (gen (SOME H) phityp thy
-         handle Automation_Fail msg => err_prove H thy msg true)
+fun accept_one _ gen [] phityp thy = gen NONE phityp thy
+  | accept_one _ gen [H] phityp thy = gen (SOME H) phityp thy
   | accept_one prop_name _ hints _ thy =
-         error (string_of (chunks (
-           block [str prop_name, str " only derives one reasoning rule, but multiple hints are given"] ::
-           map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints)))
-        
-
-end
+      let open Pretty
+       in error (string_of (chunks (
+            block [str prop_name, str " only derives one reasoning rule, but multiple hints are given"] ::
+            map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints)))
+      end
 
 (*depreciated:*)
 local

@@ -101,10 +101,10 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 val is_Type_Opr : typ -> bool
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
-val separate_type_operator_and_its_parameter : term -> (term (*T*) * term (*F*)) list
-val separate_type_operator_and_its_non_parameterized_parameter : term -> (term (*T*) * term (*F*)) list
-val separate_type_operator_and_its_parameter_safe : term -> (term (*T*) * term (*F*)) list
-val separate_type_operator_and_its_non_parameterized_parameter_safe : term -> (term (*T*) * term (*F*)) list
+val separate_type_operator_and_its_parameter : term (*F(T)*) -> (term (*T*) * term (*F*)) list
+val separate_type_operator_and_its_non_parameterized_parameter : term (*F(T)*) -> (term (*T*) * term (*F*)) list
+val separate_type_operator_and_its_parameter_safe : term (*F(T)*) -> (term (*T*) * term (*F*)) list
+val separate_type_operator_and_its_non_parameterized_parameter_safe : term (*F(T)*) -> (term (*T*) * term (*F*)) list
 
 val def_contains_satisfaction : phi_type -> bool
 
@@ -414,8 +414,21 @@ fun complete_deriver_dependences ctxt dervs =
   Derivings.fold (fn (_,(_,derv)) =>
       add_deriver_dependences ctxt (#dependences derv)) dervs dervs
 
+fun err_derive prop_name msg hints =
+  let open Pretty
+   in error ("Fail to derive the property " ^ prop_name ^
+        (if msg = "" then "" else "\n" ^ msg) ^
+        (if null hints
+         then "\nThe guessed property may be wrong, and you may provide the \
+              \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."
+         else ""))
+  end
+
 fun derive_properties dervs phityp =
-  Derivings.fold (fn (_,(hints,derv)) => #derive derv hints phityp) dervs
+  Derivings.fold (fn ((_,name),(hints,derv)) =>
+      #derive derv hints phityp
+      handle Automation_Fail msg => err_derive name msg hints
+  ) dervs
 
 (*fun get_derivers_from_constant_name ctxt =
   *)

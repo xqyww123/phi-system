@@ -442,6 +442,7 @@ fun gen_move_Ex_inside_All (Ex_name, rule) ctxt ctm =
        the_move) ctm
    handle Found _   => raise CTERM ("move_Ex_inside_All: fail to move the universal quantification to the top", [ctm])
         | Not_Occur => raise CTERM ("move_Ex_inside_All: the quantified variable does not occur at all", [ctm])
+        | Inconsistent => raise CTERM ("move_Ex_inside_All: the quantified variable is applied to different terms", [ctm])
         | CTERM (msg, ctm) => (warning ("gen_move_Ex_inside_All fails\n" ^ msg);
                                raise CTERM (msg, ctm))
   end

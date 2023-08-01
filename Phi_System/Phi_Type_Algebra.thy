@@ -561,7 +561,12 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
       (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _) => T)
 #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
       (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) => T)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)
+(*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
+  \<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
+  it can have special overridings for singular points like that many type operators \<open>F\<close> have a
+  wider reachability relation at \<open>F \<circle>\<close>. The overloadings multiply the resulted instantiations
+  and they requires priority precedence which is not in the capability of the template
+  instantiation automation.\<close>
 end
 \<close>
 
@@ -1303,6 +1308,7 @@ lemma "_Structural_Extract_general_rule_a_":
   \<medium_right_bracket> .
 
 declare "_Structural_Extract_general_rule_a_"[THEN \<A>SEa_clean_waste, \<phi>reason_template default 80]
+thm "_Structural_Extract_general_rule_a_"[THEN \<A>SEa_clean_waste]
 
 lemma "_Structural_Extract_general_rule_a_TH_"[\<phi>reason_template default 81]:
   \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
@@ -1830,7 +1836,7 @@ hide_fact Object_Equiv_rule \<phi>TA_EO_rewr_IH \<phi>TA_EO_rewr_C Object_Equiv_
           Object_Equiv_rule_move_set_eq_end *)
 
 \<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.object_equiv
+     Phi_Type_Algebra_Derivers.object_equiv
 \<close>
 
 \<phi>property_deriver Basic 109 requires Object_Equiv and Implication
@@ -2106,10 +2112,10 @@ lemma derive_\<A>SE_trim_E_TH:
 
 ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
 
-\<phi>property_deriver SE_Trime_Empty 110
-    = \<open> K Phi_Type_Algebra_Derivers.SE_Trime_Empty \<close>
+\<phi>property_deriver SE_Trim_Empty 110
+    = \<open> K Phi_Type_Algebra_Derivers.SE_Trim_Empty \<close>
 
-lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.SE_Trime_Empty__generation_pass\<close>] =
+lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.SE_Trim_Empty__generation_pass\<close>] =
           derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH
           derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
 

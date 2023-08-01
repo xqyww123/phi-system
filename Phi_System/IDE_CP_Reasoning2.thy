@@ -1558,9 +1558,9 @@ thm \<A>SE_trim\<^sub>I_TH_def
 
 declare [[ \<phi>reason_default_pattern
       \<open> \<A>SE_trim\<^sub>E _ ?W _ _ \<close> \<Rightarrow> \<open> \<A>SE_trim\<^sub>E _ ?W _ _ \<close>   (100)
-  and \<open> \<A>SE_trim\<^sub>I _ ?R _ _ _ \<close> \<Rightarrow> \<open> \<A>SE_trim\<^sub>I _ ?R _ _ _ \<close>   (100)
+  and \<open> \<A>SE_trim\<^sub>I ?y ?R _ _ _ \<close> \<Rightarrow> \<open> \<A>SE_trim\<^sub>I ?y ?R _ _ _ \<close>   (100)
   and \<open> \<A>SE_trim\<^sub>E_TH _ ?W _ _ _ _ \<close> \<Rightarrow> \<open> \<A>SE_trim\<^sub>E_TH _ ?W _ _ _ _ \<close>   (110)
-  and \<open> \<A>SE_trim\<^sub>I_TH _ ?R _ _ _ _ _ \<close> \<Rightarrow> \<open> \<A>SE_trim\<^sub>I_TH _ ?R _ _ _ _ _ \<close>   (110)
+  and \<open> \<A>SE_trim\<^sub>I_TH ?y ?R _ _ _ _ _ \<close> \<Rightarrow> \<open> \<A>SE_trim\<^sub>I_TH ?y ?R _ _ _ _ _ \<close>   (110)
 ]]
 
 lemma \<A>SE_clean_waste:
@@ -1601,9 +1601,19 @@ lemma [\<phi>reason default 1]:
   unfolding \<A>SE_trim\<^sub>I_def
   by simp
 
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>I (x,y) \<circle> (x, ()) \<circle> True \<close>
+  unfolding \<A>SE_trim\<^sub>I_def
+  by simp
+
 lemma [\<phi>reason default 1]:
   \<open> \<A>SE_trim\<^sub>I_TH y R y R True R\<^sub>H R\<^sub>H \<close>
   unfolding \<A>SE_trim\<^sub>I_TH_def Auto_Transform_Hint_def HOL.simp_thms(22)
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>I_TH (x,y) \<circle> (x, ()) \<circle> True R\<^sub>H R\<^sub>H \<close>
+  unfolding \<A>SE_trim\<^sub>I_TH_def
   by simp
 
 lemma [\<phi>reason default 1]:
@@ -1611,8 +1621,18 @@ lemma [\<phi>reason default 1]:
   unfolding \<A>SE_trim\<^sub>E_def
   by simp
 
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>E (x,()) \<circle> (x,()) \<circle> \<close>
+  unfolding \<A>SE_trim\<^sub>E_def
+  by simp
+
 lemma [\<phi>reason default 1]:
   \<open> \<A>SE_trim\<^sub>E_TH x W x W W\<^sub>H W\<^sub>H \<close>
+  unfolding \<A>SE_trim\<^sub>E_TH_def Auto_Transform_Hint_def HOL.simp_thms(22)
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>E_TH (x,()) \<circle> (x,()) \<circle> W\<^sub>H W\<^sub>H \<close>
   unfolding \<A>SE_trim\<^sub>E_TH_def Auto_Transform_Hint_def HOL.simp_thms(22)
   by simp
 

@@ -161,7 +161,7 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
 
 in
 
-val transformation_functor = accept "Transformation_Functor" gen_TF
+val transformation_functor = accept gen_TF
 
 end
 
@@ -247,6 +247,6 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
           end)
   end
 
-val functional_transformation_functor = accept "Functional_Transformation_Functor" gen_FTF
+val functional_transformation_functor = accept gen_FTF
 
 end

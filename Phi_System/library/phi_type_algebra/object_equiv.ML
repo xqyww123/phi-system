@@ -19,33 +19,11 @@ fun conv_hol_imp_to_meta_if_has Cant ctm =
 (*** Object Equivalence ***)
 
 local
-(*
-fun set_last_schematic_var ctxt rule0 =
-  let val rule = Phi_Help.beta_eta_contract rule0
-      val (t1,t2,tm) =
-        case Thm.concl_of rule
-          of _ (*Trueprop*) $ (_ (*Object_Equiv*) $ _ $ Abs (_, t1, Abs (_, t2, tm)))
-              => (t1,t2,tm)
-           | _ => error "Internal bug cb9504e4-7db1-45f8-b1f6-ec37a5b75105"
-      fun get_the_last_var (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ X) = get_the_last_var X
-        | get_the_last_var (Var v $ Bound 0 $ Bound 1) = (v, Abs("",t2,Abs("",t1,\<^term>\<open>True\<close>)))
-        | get_the_last_var (Var v $ Bound 1 $ Bound 0) = (v, Abs("",t1,Abs("",t2,\<^term>\<open>True\<close>)))
-        | get_the_last_var _ = error "Internal bug 6160c2ee-6448-4654-b017-237c879c33a3"
-      val last_var = get_the_last_var tm |> apsnd (Thm.cterm_of ctxt)
-   in Thm.instantiate (TVars.empty, Vars.make [last_var]) rule
-  end
 
-fun set_eq_when_it_is_constant_true ctxt rule0 =
-  let val rule = Phi_Help.beta_eta_contract rule0
-      val v = case Thm.concl_of rule
-                of _ (*Trueprop*) $ (_ (*\<phi>Equal_Obj*) $ Var v $ _) => v
-                 | _ => error "Internal bug 5d769e14-74ca-4afb-8d43-672e0afc5470"
-      val P = case snd v
-                of \<^Type>\<open>fun a \<open>\<^Type>\<open>fun b _\<close>\<close>\<close> => Abs("",a,Abs("",b,\<^term>\<open>True\<close>))
-                 | _ => error "Internal bug a74fc08c-d9c1-4b19-99b2-4f18a07b31aa"
-   in Thm.instantiate (TVars.empty, Vars.make [(v, Thm.cterm_of ctxt P)]) rule
-  end
-*)
+fun need_infer sequent =
+  case Thm.concl_of sequent
+    of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var _) => true
+     | _ => false
 
 fun infer_equiv ctxt sequent =
   let val var = case Thm.concl_of sequent
@@ -75,68 +53,30 @@ fun infer_equiv ctxt sequent =
    in Thm.instantiate (TVars.empty, Vars.make [(var, eq)]) sequent
   end
 
-(*
-(*must be beta-eta normalized*)
-fun infer_eq ctxt rule =
-  let fun is_free_bound lev (Abs(_,_,X)) = is_free_bound (lev+1) X
-        | is_free_bound lev (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ X $ _) = is_free_bound lev X
-        | is_free_bound lev (A $ B) = is_free_bound lev A andalso is_free_bound lev B
-        | is_free_bound lev (Bound i) = (i = lev)
-        | is_free_bound _ _ = true
-      fun is_free_bound' (Abs(_,_,X)) = is_free_bound 0 X
-        | is_free_bound' _ = true
-   in (case Thm.major_prem_of rule
-        of _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ (
-                  Const(\<^const_name>\<open>Ex\<close>, _) $ (Abs(_,_, Const(\<^const_name>\<open>All\<close>, _) $ _)) ) $ _) =>
-            Conv.fconv_rule (Phi_Conv.leading_antecedent_conv (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                HOLogic.Trueprop_conv (
-                  HOLogic.conj_conv (Phi_Conv.move_Ex_inside_All ctxt) Conv.all_conv
-              )) ctxt)) rule
-            |> infer_eq ctxt
-         | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ (
-                  Const(\<^const_name>\<open>Ex\<close>, _) $ (Abs(_,_, Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ )) ) $ _) =>
-            Conv.fconv_rule (Phi_Conv.leading_antecedent_conv (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                HOLogic.Trueprop_conv (
-                  HOLogic.conj_conv (Conv.rewr_conv @{thm' HOL.ex_simps(6)[folded atomize_eq]}) Conv.all_conv
-              )) ctxt)) rule
-            |> infer_eq ctxt
-         | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ (Const(\<^const_name>\<open>All\<close>, _) $ X ) $ _) =>
-            infer_eq ctxt (if is_free_bound' X
-                           then @{thm' Object_Equiv_rule_move_all2} RS rule
-                           else @{thm' Object_Equiv_rule_move_all} RS rule)
-         | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ Const(\<^const_name>\<open>True\<close>, _)) =>
-            (@{thm Object_Equiv_rule_move_set_eq_end} RS (@{thm' simp_thms(21)[THEN iffD2]} RS
-                    (@{thm' simp_thms(21)[THEN iffD2]} RS rule)))
-              |> set_last_schematic_var ctxt
-         | _ (*Trueprop*) $ (Const(\<^const_name>\<open>conj\<close>, _) $ _ $ _) =>
-            infer_eq ctxt (@{thm' Object_Equiv_rule_move_set_eq} RS rule)
-         | _ (*Trueprop*) $ Const(\<^const_name>\<open>True\<close>, _) =>
-            (@{thm' TrueI} RS rule)
-              |> set_eq_when_it_is_constant_true ctxt
-         | _ => error "internal bug 7147bf3f-9e7d-4ffc-a40b-aa621a4fca21")
-      handle THM _ =>
-        raise Automation_Fail ("Fail to infer the object equivelance from the obtained obligation\n" ^
-                 Thm.string_of_thm ctxt rule)
-  end
-*)
+(*if the \<phi>-type is recursive, guess the reachability relation from the relation operator of the BNF,
+  or else, leave it as a schematic variable because we can infer it from the proof obligation later.
 
+  If the \<phi>-type has any parameters whose logic type looks like a \<phi>-type, the reachability relations
+  of the parameters are also assumed as antecedents of the guessing property, and also used in
+  above guessing the reachability relations of the target \<phi>-type.*)
 fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
   let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi)) 
       fun mk_Ants ctxt (Ty::rev_arg_tys) (eq::eq_names) ants param_eqs (T_term $ A) =
-           (let val (rev_arg_tys_A, x_ty_A, model_ty_A) = dest_parameterized_phi_ty Ty
-                val arity_A = length rev_arg_tys_A
-                val typ = x_ty_A --> x_ty_A --> \<^typ>\<open>bool\<close>
-                val ant = (Term.incr_bv (arity_A, 0, A))
-                        |> fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A          
-                        |> (fn X => \<^Const>\<open>Object_Equiv x_ty_A model_ty_A\<close> $ X $ Free(eq, typ))
-                        |> fold (fn T => fn X =>
-                            Const(\<^const_name>\<open>All\<close>, (T --> HOLogic.boolT) --> HOLogic.boolT)
-                              $ Abs("",T,X)
-                           ) rev_arg_tys_A
-             in mk_Ants ctxt rev_arg_tys eq_names (ant::ants)
-                        ((x_ty_A, Free(eq, typ))::param_eqs) T_term
-            end
-            handle TYPE _ => mk_Ants ctxt rev_arg_tys eq_names ants param_eqs T_term)
+           (case try dest_parameterized_phi_ty Ty
+              of SOME (rev_arg_tys_A, x_ty_A, model_ty_A) =>
+                  let val arity_A = length rev_arg_tys_A
+                      val typ = x_ty_A --> x_ty_A --> \<^typ>\<open>bool\<close>
+                      val ant = (Term.incr_bv (arity_A, 0, A))
+                              |> fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A          
+                              |> (fn X => \<^Const>\<open>Object_Equiv x_ty_A model_ty_A\<close> $ X $ Free(eq, typ))
+                              |> fold (fn T => fn X =>
+                                  Const(\<^const_name>\<open>All\<close>, (T --> HOLogic.boolT) --> HOLogic.boolT)
+                                    $ Abs("",T,X)
+                                 ) rev_arg_tys_A
+                   in mk_Ants ctxt rev_arg_tys eq_names (ant::ants)
+                              ((x_ty_A, Free(eq, typ))::param_eqs) T_term
+                  end
+               | NONE => mk_Ants ctxt rev_arg_tys eq_names ants param_eqs T_term)
         | mk_Ants _ [] [] ants param_eqs _ = (ants, param_eqs)
         | mk_Ants _ _ _ _ _ _ = raise ListPair.UnequalLengths
 
@@ -146,13 +86,42 @@ fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
       val (ants,param_eqs) = mk_Ants ctxt rev_arg_tys rev_eq_names [] [] T_term
 
       val eq_terms =
-             if #is_recursive phi
-             then guess_self_rel ctxt param_eqs x_ty
-             else Seq.single (Var(("eq", 1), x_ty --> x_ty --> HOLogic.boolT), ctxt)
+            if #is_recursive phi
+            then guess_self_rel ctxt param_eqs x_ty
+            else Seq.single (Var(("eq", 1), x_ty --> x_ty --> HOLogic.boolT), ctxt)
    in eq_terms
    |> Seq.map (fn (eq_term, ctxt') =>
         (ants, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close> $ T_term $ eq_term),
          x_Term, T_term, phi, ctxt'))
+  end
+
+
+
+(*The reachability relation of many type operators at singular point \<open>F \<circle>\<close> can become \<open>\<lambda>_. True\<close>*)
+fun guess_obj_eq_singular_None (x_term0, FT_term0, phi0:phi_type) ctxt =
+  let val thy = Proof_Context.theory_of ctxt
+   in separate_type_operator_and_its_parameter_safe FT_term0
+   |> Seq.of_list
+   |> Seq.map_filter (fn (T_term0, F_term0) =>
+  let val (rev_args_T0,x_ty_T0,model_ty_T0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
+      val inst = Sign.typ_match thy (x_ty_T0, \<^Type>\<open>unit\<close>) Vartab.empty
+              |> Phi_Help.lift_type_sort thy (model_ty_T0, \<^sort>\<open>one\<close>)
+              |> Phi_Help.subst_tyenv
+            handle TYPE _ => raise Automation_Fail "Fail to lift to lift the type"
+                 | Type.TYPE_MATCH => raise Automation_Fail "Fail to lift to lift the type"
+      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
+      val phi = instantiate_phi (inst', Vars.empty) phi0
+      val subst = Term_Subst.instantiate (inst, Vars.empty)
+      val substT= Term_Subst.instantiateT inst
+      val (x_term, F_term, model_ty_T, rev_args_T) =
+              (subst x_term0, subst F_term0, substT model_ty_T0, map substT rev_args_T0)
+      val (_, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      val FT_term = F_term $ (fold (fn T => fn X => Abs ("x", T, X)) rev_args_T \<^Const>\<open>\<phi>None model_ty_T\<close>)
+      val property = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close>
+                                            $ FT_term
+                                            $ Abs ("x", x_ty, Abs ("y", x_ty, \<^Const>\<open>True\<close>)))
+   in SOME ([], property, x_term, FT_term, phi, ctxt)
+  end handle Automation_Fail _ => NONE)
   end
 
 fun OE_reasoning phi ctxt rule =
@@ -169,10 +138,12 @@ fun OE_reasoning phi ctxt rule =
           (K (K NONE)) (ToA_reasoner phi) ctxt' rule
   end
 
-fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val unify_hint = hint_unify_by_type (
-            fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
+fun gen_obj_equal' mode_singular hint0 (phi0 : phi_type) thy =
+  let val name = if mode_singular then "Object_Equiv\<^sub>O" else "Object_Equiv"
+      val guess = if mode_singular then guess_obj_eq_singular_None else guess_property_obj_eq
+
+      val ctxt0 = Context.proof_of thy
+      val unify_hint = hint_unify_by_type (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
@@ -184,19 +155,20 @@ fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
                                   conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
                                 ) ctxt))
       fun infer (phi, ctxt, rule) =
-            if is_some hint0 orelse #is_recursive phi then NONE
-            else rule
+            if need_infer rule
+            then rule
                    |> Phi_Help.beta_eta_contract
                    |> Simplifier.rewrite_rule ctxt @{thms special_Ex_def}
                    |> infer_equiv ctxt
-                   |> oblg_solver "Object_Equiv" ctxt
+                   |> oblg_solver name ctxt
                    |> SOME
+            else NONE
       fun simp (_, ctxt) =
         if is_some hint0 then I
         else Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
                (K (Conv.arg_conv (Conv.arg_conv (
                   Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))))) ctxt)
-      val rules = mk_rule_by_guess_or_hint ("Object_Equiv", unify_hint, extract_oprs_from_hint, guess_property_obj_eq,
+      val rules = mk_rule_by_guess_or_hint (name, unify_hint, extract_oprs_from_hint, guess,
                                             @{thm' Object_Equiv_rule}, [0],
                                             SOME ind_conv, OE_reasoning, infer, simp)
                                            phi0 hint0 ctxt0
@@ -204,14 +176,16 @@ fun gen_obj_equal' hint0 (phi0 : phi_type) thy =
    |> (fn NONE => raise Automation_Fail ""
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE (if mode_singular then 80 else 40)
                                               ([],[]) NONE [Morphism.thm m rule'])
-            |> Phi_Type_Algebra.note_properties phi0 [("obj_eq", [rule'])])
+            |> Phi_Type_Algebra.note_properties phi0 [(name, [rule'])])
   end
 
 in
 
-val object_equiv = accept_one "Object_Equiv" gen_obj_equal'
+fun object_equiv [] phi = gen_obj_equal' false NONE phi
+                       #> gen_obj_equal' true NONE phi
+  | object_equiv Hs phi = fold (fn H => gen_obj_equal' false (SOME H) phi) Hs
 
 end
 

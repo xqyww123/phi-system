@@ -229,19 +229,14 @@ fun uncertify_vars (ty, tm) = (uncertify_tyvars ty, uncertify_tmvars tm)
 
 
 fun lift_type_sort thy (ty,sort) env00 =
-  let val idx = Term.maxidx_of_typ ty
+  let val idx = Term.maxidx_of_typ ty + 1
    in if Sign.of_sort thy (ty, sort)
       then env00
-      else let val (env0,_) =
-                     Sign.typ_unify thy
-                           (ty, TVar(("_", idx), sort))
-                           (env00, idx)
-               val env = Vartab.map (fn N => (fn (S, TVar(_,S')) => (S, TVar(N,S'))
-                                               | X => if N = ("_", 1) then X
-                                                      else error "Internal bug 8bb59e49-9b57-48bc-b310-9da3b8f5ff7f"))
-                         (Vartab.delete_safe ("_", idx) env0)
-                in env
-               end
+      else let val var_a = TVar(("a", idx), sort)
+               val (env'1, _) = Sign.typ_unify thy (ty, var_a) (env00, idx)
+               val target = Envir.norm_type env'1 var_a
+            in Sign.typ_match thy (ty, target) env00
+           end
            handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
   end
 

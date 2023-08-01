@@ -25,19 +25,27 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
            \<^Const>\<open>one_class.one typ'\<close>, ctxt)
       end
   | guess_id_ele typ ctxt =
-  let val (inst, unit_simp, ctxt') =
-            case BNF_FP_Sugar_More.identity_element_unify typ (Context.Proof ctxt)
-              of ([], _) => raise Automation_Fail (
-                                "Fail to guess the property, because no identity element and \
-                                \its simplification rule found for type \
-                                \" ^ Syntax.string_of_typ ctxt typ)
-               | ((inst, unit_simp) :: _, ctxt') => (inst, unit_simp, ctxt')
-      val unit = case Thm.concl_of unit_simp
-                   of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => LHS
-   in (inst, unit,
-       Context.the_proof (Simps.map (fn ctxt => ctxt addsimps [unit_simp]) ctxt'))
-  end
+      let val (inst, unit_simp, ctxt') =
+                case BNF_FP_Sugar_More.identity_element_unify typ (Context.Proof ctxt)
+                  of ([], _) => raise Automation_Fail (
+                                    "Fail to guess the property, because no identity element and \
+                                    \its simplification rule found for type \
+                                    \" ^ Syntax.string_of_typ ctxt typ)
+                   | ((inst, unit_simp) :: _, ctxt') => (inst, unit_simp, ctxt')
+          val unit = case Thm.concl_of unit_simp
+                       of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => LHS
+       in (inst, unit,
+           Context.the_proof (Simps.map (fn ctxt => ctxt addsimps [unit_simp]) ctxt'))
+      end
 
+(*strategy: lift the logic type of the abstract objects onto \<^sort>\<open>one\<close>. If fails, guess fails.
+  We only support the \<phi>-type to a unital abstract algebra. We guess the identity abstract object
+  if \<open>1\<close> (the identity of the algebra), because if it is not the identity, what else better it could be?
+
+  If the \<phi>-type is parameterized, for any parameter $A$ whose logic type looks like a \<phi>-type, if
+  the abstract domain of $A$ is also unital, the property of identity element of $A$ is declared
+  as an antecedent of the guessed property.
+*)
 fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
   let val (_,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val inst  = (Phi_Help.lift_type_sort' (Proof_Context.theory_of ctxt)
@@ -62,24 +70,25 @@ fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
                       else ([""], ctxt)
       val thy = Proof_Context.theory_of ctxt
       fun mk_Ants (Ty::rev_arg_tys) ants (T_term $ A) ctxt =
-       (let val (rev_arg_tys_A, x_ty_A, model_ty_A) = dest_parameterized_phi_ty Ty
-         in if Sign.of_sort thy (x_ty_A, \<^sort>\<open>one\<close>)
-            then let
-                  val arity_A = length rev_arg_tys_A
-                  val ([P], ctxt') = mk_P ctxt
-                  val A' = fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A
-                              (Term.incr_bv (arity_A, 0, A))
-                  val ant = (\<^Const>\<open>\<phi>Type x_ty_A model_ty_A\<close> $ \<^Const>\<open>one_class.one x_ty_A\<close> $ A')
-                          |> (fn X => (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty_A\<close> $ X $ Free(P, HOLogic.boolT)
-                                                  else \<^Const>\<open>Identity_Element\<^sub>E model_ty_A\<close> $ X))
-                          |> fold (fn T => fn X =>
-                                  Const(\<^const_name>\<open>All\<close>, (T --> HOLogic.boolT) --> HOLogic.boolT)
-                                    $ Abs("",T,X)
-                                 ) rev_arg_tys_A
-               in mk_Ants rev_arg_tys (ant::ants) T_term ctxt'
-              end
-            else mk_Ants rev_arg_tys ants T_term ctxt
-        end handle TYPE _ => mk_Ants rev_arg_tys ants T_term ctxt)
+       (case try dest_parameterized_phi_ty Ty
+          of SOME (rev_arg_tys_A, x_ty_A, model_ty_A) =>
+              if Sign.of_sort thy (x_ty_A, \<^sort>\<open>one\<close>)
+              then let
+                    val arity_A = length rev_arg_tys_A
+                    val ([P], ctxt') = mk_P ctxt
+                    val A' = fold_index (fn (i,_) => fn X => X $ Bound (arity_A-1-i)) rev_arg_tys_A
+                                (Term.incr_bv (arity_A, 0, A))
+                    val ant = (\<^Const>\<open>\<phi>Type x_ty_A model_ty_A\<close> $ \<^Const>\<open>one_class.one x_ty_A\<close> $ A')
+                            |> (fn X => (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty_A\<close> $ X $ Free(P, HOLogic.boolT)
+                                                    else \<^Const>\<open>Identity_Element\<^sub>E model_ty_A\<close> $ X))
+                            |> fold (fn T => fn X =>
+                                    Const(\<^const_name>\<open>All\<close>, (T --> HOLogic.boolT) --> HOLogic.boolT)
+                                      $ Abs("",T,X)
+                                   ) rev_arg_tys_A
+                 in mk_Ants rev_arg_tys (ant::ants) T_term ctxt'
+                end
+              else mk_Ants rev_arg_tys ants T_term ctxt
+           | NONE => mk_Ants rev_arg_tys ants T_term ctxt)
         | mk_Ants [] ants _ ctxt = (ants, ctxt)
         | mk_Ants _ _ _ _ = raise ListPair.UnequalLengths
       val (ants, ctxt) = mk_Ants rev_arg_tys [] T_term ctxt

@@ -56,8 +56,8 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding Subjection into Type\<close>
  
-declare [[\<phi>trace_reasoning = 1]]
-                           
+declare [[\<phi>trace_reasoning = 0]]
+                              
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -68,7 +68,6 @@ declare [[\<phi>trace_reasoning = 1]]
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
        and Separation_Homo
-       and SE_Trime_Empty
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -158,13 +157,14 @@ text \<open>Transformation functor requires inner elements to be transformed int
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
- 
+             
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
+       and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        and Identity_Element
-       and Open_Abstraction_Full 
+       and Open_Abstraction_Full
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
@@ -465,7 +465,7 @@ lemma [\<phi>reason 1000]:
   by clarsimp blast
 
  
-let_\<phi>type \<phi>Composition deriving SE_Trime_Empty
+let_\<phi>type \<phi>Composition deriving SE_Trim_Empty
 
 
 (*
@@ -716,7 +716,7 @@ ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 1]]
-                                                     
+                                                        
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -726,16 +726,27 @@ declare [[\<phi>trace_reasoning = 1]]
        and Separation_Homo
        and Trivial_\<Sigma>
 
+declare map_eq_Cons_conv[\<phi>constraint_expansion] (*TODO!!!!*)
 
 
 
+
+
+
+
+
+declare [[\<phi>trace_reasoning = 3]]
+   
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
-  deriving Basic
+  deriving Functional_Transformation_Functor
+       and (*aBasic
        and Identity_Element
        and Transformation_Functor
        and Trivial_\<Sigma>
+       and*) Separation_Homo
+
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>

@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val SE_Trime_Empty__generation_pass : Phi_Type_Algebra.rule_generation_pass
-val SE_Trime_Empty : Phi_Type_Algebra.derive
+val SE_Trim_Empty__generation_pass : Phi_Type_Algebra.rule_generation_pass
+val SE_Trim_Empty : Phi_Type_Algebra.derive
 
 end
 
@@ -28,7 +28,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 fun simp ctxt th =
   Conv.fconv_rule (Phi_Conv.hhf_concl_conv Simplifier.rewrite ctxt) th
 
-fun SE_Trime_Empty (phi : phi_type) thy =
+fun SE_Trim_Empty (phi : phi_type) thy =
   let fun fetch_properties name = Phi_Type_Algebra.lookup_property_unify thy (#term phi) name
                                |> map #3
       fun fetch_property name =
@@ -102,7 +102,7 @@ fun SE_Trime_Empty (phi : phi_type) thy =
                                   (Morphism.fact m rules)))
   end
 
-fun SE_Trime_Empty__generation_pass (_, gen, _, ctxt) th =
+fun SE_Trim_Empty__generation_pass (_, gen, _, ctxt) th =
   let val rctxt = Config.put Phi_Reasoner_solve_obligation_and_no_defer 1 ctxt
       fun reason th =
         let val concl = Thm.cconcl_of th
