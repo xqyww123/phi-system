@@ -24,7 +24,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-                      
+                                         
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -57,7 +57,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
  
 declare [[\<phi>trace_reasoning = 0]]
-                              
+                                           
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -162,7 +162,7 @@ declare SubjectionTY_def[embed_into_\<phi>type del]
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
-       and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
+       (*and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>*)
        and Identity_Element
        and Open_Abstraction_Full
 
@@ -715,8 +715,8 @@ subsubsection \<open>By Key\<close>
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 1]]
-                                                        
+declare [[\<phi>trace_reasoning = 3]]
+                                                              
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -741,11 +741,11 @@ declare [[\<phi>trace_reasoning = 3]]
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
   deriving Functional_Transformation_Functor
-       and (*aBasic
+       and Basic
        and Identity_Element
        and Transformation_Functor
        and Trivial_\<Sigma>
-       and*) Separation_Homo
+       (*and Separation_Homo*)
 
 
 (* BOSS:

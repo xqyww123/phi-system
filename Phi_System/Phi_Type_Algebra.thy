@@ -1933,7 +1933,6 @@ lemma function_congruence_template:
   
 ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 
-thm exI[fundef_cong]
 
 subsubsection \<open>Separation Homo\<close>
 

@@ -2,33 +2,41 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 
 (*** A common framework to build derivers fast ***)
 
+type induct_inst_params = term option list
+(*parameters of the phi-type in the *reversed* order with the abstract object prepended to the begining,
+  i.e., induct_inst_params[0] is the abstract object, induct_inst_params[i] is the $(n-i)$th parameter
+  is there are $n$ parameters in total.
+  all must be free variables.
+  they are used to instantiate the induction rule.
+  If certain parameter is not a fixed free variable in the goal (e.g.,
+  represented by a universally quantified variable), preserve its place
+  and set it to None.
+  The first element must be the abstract object or None.*)
+
 (** Component: unify_hint **)
 
 type hint = term
-type unify_hint = (Proof.context -> hint (*property*) -> term (*fixed term x*) * term (*fixed term T*) -> ctyp TVars.table * cterm Vars.table)
-  (*Given the `hint` and the `x \<Ztypecolon> T` that will be used in the reasoning, unify them two *)
+type parse_hint = Proof.context -> hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
 
 (* Common choices of the unification *)
 
-val hint_unify_general : (hint -> term (*x*) * term (*T*) -> (term * term) list (*pairs to be unified*)) -> unify_hint
-val hint_unify_by_type : (term -> term) (*f*) -> unify_hint
-      (*use `f` to extract the \<phi>-type part of the (conclusion part of the) property, then
-        do the usual unification with the `T`*)
-val hint_unify_by_type_operator : (term -> term) (*f*) -> unify_hint
-      (*The `T` is a combination of a \<phi>-type operator `F` and its parameter `T'`, i.e. `T \<equiv> F T'`.
-        The `F` is the part really matters, so use `f` to extract the \<phi>-type operator part
-        of the (conclusion part of the) property, then do the usual unification about the `F`*)
+val parse_parameters_of_phi_type : term -> term option list
+val parse_hint_has_object_and_type : (term -> term * term) (*extract_object_and_phityp*) -> parse_hint
+val parse_hint_has_type_only : (term -> term) (*extract_phityp*) -> parse_hint
+val parse_hint_has_type_operator_only : (term -> term) (*extract_phityp_opr*) -> parse_hint
 
 (** Component: guess_property **)
 
 type guess_property =
-        term (*x*) * term (*T*) * Phi_Type_Algebra.phi_type ->
+        Phi_Type_Algebra.phi_type ->
         Proof.context ->
-        (term list (*antecedents*) * term (*conclusion*) * term (*x'*) * term (*T'*)
-          * Phi_Type_Algebra.phi_type (*instantiated*) * Proof.context ) Seq.seq
+        ( term list (*antecedents*)
+        * term (*conclusion*)
+        * induct_inst_params
+        * Phi_Type_Algebra.phi_type * Proof.context ) Seq.seq
 
 (*If user gives no hint, we need to guess the property to be reasoned.
-  Given `x \<Ztypecolon> T`, `guess_property` may guess the abstract operator from the logic type of the abstract
+  The `guess_property` may guess the abstract operator from the logic type of the abstract
   object (e.g. by Bounded Natural Functor) or by any other means. It can also instantiate any logic
   types in `x \<Ztypecolon> T` and the `phi_type`, maybe into a smaller sort (e.g. from \<open>?'a::type\<close> to \<open>?'a::one\<close>).
   It can return terms containing schematic variables, and there is no requirement on the index.
@@ -101,9 +109,10 @@ type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
 type reasoning = Proof.context -> thm -> thm
 type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
 
-val mk_rule_by_guess_or_hint :
+(*Main Entry Point*)
+val deriver_framework :
       string (*name of the proof cache, e.g. "/object_equive"*)
-    * unify_hint
+    * parse_hint
     * (term -> term list) (*extract_oprs_from_hint*)
     * guess_property
     * thm (*rule*) * int list (*quant_interps*)
@@ -218,10 +227,11 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra
 
+type induct_inst_params = term option list
 type guess_property =
-        term (*x*) * term (*T*) * Phi_Type_Algebra.phi_type ->
+        Phi_Type_Algebra.phi_type ->
         Proof.context ->
-        (term list * term * term * term * Phi_Type_Algebra.phi_type * Proof.context ) Seq.seq
+        (term list * term * term option list * Phi_Type_Algebra.phi_type * Proof.context ) Seq.seq
 
 (* fun reason_fail msg = (warning msg; raise Automation_Fail) *)
 
@@ -745,40 +755,54 @@ fun oblg_solver proof_id ctxt sequent = (
   quants[i] = i means interpret the variable as the i-th parameter of the \<phi>-type
   quants[i] = ~1 means interpret it as a fixed variable
   Note the quants is reversed against the quantified variables*)
-fun mk_rule_by_guess_or_hint (name,unify_hint,extract_oprs_from_hint,guess_property,rule,quants,ind_conv_opt,reasoning,solver,simp)
-                             (phi0 : phi_type) hint ctxt0 =
+fun deriver_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rule,quants,ind_conv_opt,reasoning,solver,simp)
+                      (phi0 : phi_type) hint ctxt0 =
   let (*val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0*)
-      val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0
+      (*val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0*)
    in (case hint of SOME H0 =>
-              let val idx = Phi_Type_Algebra.phi_maxidx_of phi0 ~1 + 1
-                  val H = Logic.incr_indexes ([],[],idx) H0
-                  val inst01 = unify_hint ctxt01 H (x_term0, T_term0)
-                  val phi01 = Phi_Type_Algebra.instantiate_phi inst01 phi0
-                  val (inst, phi, ctxt) = fix_phi_type true phi01 ctxt01
-                  val subst = Term_Subst.instantiate (Phi_Help.uncertify_vars inst01)
-                           #> Term_Subst.instantiate (Phi_Help.uncertify_vars inst)
-                  val (x_term0', T_term0', H0') = (subst x_term0, subst T_term0, subst H)
-                  val ([x_term, T_term, H''], ctxt) =
-                          Variable.import_terms true [x_term0', T_term0', H0'] ctxt
+              let (*val idx = Phi_Type_Algebra.phi_maxidx_of phi0 ~1 + 1
+                  val H = Logic.incr_indexes ([],[],idx) H0*)
+                  val thy = Proof_Context.theory_of ctxt0
+                  val (typ_of_phi0, parameters0, H01) = parse_hint ctxt0 H0
+
+                  val (inst0, ctxt) = Variable.import_inst true [H01] ctxt0
+                  val inst0c = Phi_Help.certify_vars (Context.Proof ctxt) inst0
+                  val typ_of_phi = Term_Subst.instantiateT (fst inst0) typ_of_phi0
+                  val parameters = map (Option.map (Term_Subst.instantiate inst0)) parameters0
+                  val H = Term_Subst.instantiate inst0 H01
+
+                  val inst = (Sign.typ_match thy (Term.fastype_of (#term phi0), typ_of_phi) Vartab.empty
+                              handle Type.TYPE_MATCH => raise Automation_Fail (let open Pretty in
+                                          string_of (chunks [str "Invalid Hint",
+                                                             Syntax.pretty_term ctxt H])
+                                        end))
+                          |> Phi_Help.subst_tyenv
+                          |> Phi_Help.certify_tyvars (Context.Proof ctxt)
+
+                  val phi = Phi_Type_Algebra.instantiate_phi (inst, Vars.empty) phi0
+                  
 
                   fun extract_oprs_from_hint' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_oprs_from_hint' X
                     | extract_oprs_from_hint' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = extract_oprs_from_hint' X
                     | extract_oprs_from_hint' X = extract_oprs_from_hint X
-                  val oprs = extract_oprs_from_hint' (Logic.strip_imp_concl H'')
+                  val oprs = extract_oprs_from_hint' (Logic.strip_imp_concl H)
                   val ctxt = load_simpset oprs ctxt
 
-               in Seq.single (Logic.strip_imp_prems H'', Logic.strip_imp_concl H'',
-                              x_term, T_term, phi, ctxt)
+               in Seq.single (Logic.strip_imp_prems H, Logic.strip_imp_concl H, parameters, phi, ctxt)
               end
-           | _ => guess_property (x_term0, T_term0, phi0) ctxt01)
-   |> Seq.map (fn (ants01, property01, x_term01, T_term01, phi01, ctxt01) => 
-  let val (ants, property, x_term, T_term, phi, ctxt) =
+           | _ => guess_property phi0 ctxt0)
+   |> Seq.map (fn (ants01, property01, phi_typ_parameters01, phi01, ctxt01) => 
+  let val (ants, property, phi_typ_parameters, phi, ctxt) =
         if is_phi_type_fixed phi01
-        then (ants01, property01, x_term01, T_term01, phi01, ctxt01)
+        then (ants01, property01, phi_typ_parameters01, phi01, ctxt01)
         else let val (inst, phi, ctxt) = fix_phi_type true phi01 ctxt01
                  val subst = Term_Subst.instantiate (Phi_Help.uncertify_vars inst)
-              in (map subst ants01, subst property01, subst x_term01, subst T_term01, phi, ctxt)
+              in (map subst ants01, subst property01, map (Option.map subst) phi_typ_parameters01, phi, ctxt)
              end
+      val phityp_arity = length (Term.binder_types (Term.fastype_of (#term phi)))
+      val _ = if phityp_arity = length phi_typ_parameters then ()
+              else error "Bad Argument: phi_typ_parameters"
+
       fun chk_ant (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = X
         | chk_ant X = case Term.fastype_of X
                         of \<^Type>\<open>bool\<close> => X
@@ -797,10 +821,11 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,extract_oprs_from_hint,guess_prope
             case ind_conv_opt
               of NONE => rule'
                | SOME ind_conv =>
-            let fun mk_free_table i ret (X $ Free (N,_)) =
-                      mk_free_table (i+1) (Symtab.update_new ((N,i)) ret) X
-                  | mk_free_table _ ret _ = ret
-                val free_tabel = mk_free_table 0 Symtab.empty (T_term $ x_term)
+            let val free_tabel = Symtab.build (fold_index (fn (i, SOME (Free (N,_))) => Symtab.update_new (N,i)
+                                                            | (_, SOME (Bound _)) => I
+                                                            | (_, NONE) => I
+                                                            | _ => I)
+                                                          phi_typ_parameters)
                 fun mk_ind_prop lev lambs (X $ Y) = mk_ind_prop lev lambs X $ mk_ind_prop lev lambs Y
                   | mk_ind_prop lev lambs (Bound i) =
                       if i < lev then Bound i else
@@ -836,6 +861,7 @@ fun mk_rule_by_guess_or_hint (name,unify_hint,extract_oprs_from_hint,guess_prope
                           (Phi_Conv.hol_alls_to_meta_alls (K Conv.all_conv) ctxt)
                           Conv.all_conv)
                 |> singleton (Proof_Context.export ctxt ctxt0)
+
    in Phi_Reasoner.info_pretty ctxt 0 (fn () => let open Pretty in
         block [str name, str " : ", Thm.pretty_thm ctxt rule'4]
       end) ;
@@ -850,32 +876,41 @@ fun extract_hhf (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extr
   | extract_hhf (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_hhf X
   | extract_hhf (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = extract_hhf X
   | extract_hhf X = Envir.beta_eta_contract X
+
+fun malformed ctxt hint =
+  raise Automation_Fail (let open Pretty in
+      string_of (chunks [str "Malformed Hint",
+                         Syntax.pretty_term ctxt hint])
+    end)
+
 in
 
 type hint = term
-type unify_hint = (Proof.context -> hint -> term * term -> ctyp TVars.table * cterm Vars.table)
+type parse_hint = Proof.context -> hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
 
-fun hint_unify_general extract_pairs ctxt hint (x', T') =
-  Unify.smash_unifiers (Context.Proof ctxt)
-                       (extract_pairs hint (x', T'))
-                       Envir.init
-    |> Seq.chop 2
-    |> (fn ([], _) => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
-         | ([Envir.Envir x], _) => Phi_Help.norm_env (#tyenv x, #tenv x)
-                                |> Phi_Help.certify_vars (Context.Proof ctxt)
-         | _ => error ("Multi-unification in hint: " ^ Syntax.string_of_term ctxt hint))
-  handle TERM _ => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
-       | Match  => error ("Bad hint: " ^ Syntax.string_of_term ctxt hint)
-    
-fun hint_unify_by_type extract_type = hint_unify_general (fn hint => fn (_, T') =>
-      [(extract_type (extract_hhf hint), T')])
+fun parse_parameters_of_phi_type phity =
+  map SOME (rev (snd (Term.strip_comb (Envir.beta_eta_contract phity))))
 
-fun hint_unify_by_type_operator extract_type_operator = hint_unify_general (fn hint => fn (_, T') =>
-      let val i = Term.maxidx_of_term hint + 1
-          val hint_tyop = extract_type_operator (extract_hhf hint)
-          val v_ty = Term.domain_type (Term.fastype_of hint_tyop)
-       in [(hint_tyop $ Var(("v",i),v_ty), T')]
-      end)
+fun parse_hint_has_object_and_type extract_object_and_phityp ctxt hint =
+  let val (obj, phity) = extract_object_and_phityp (extract_hhf hint)
+                         handle Match => malformed ctxt hint
+      val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
+   in (Term.fastype_of phiconst, map SOME (obj :: rev params), hint)
+  end
+
+fun parse_hint_has_type_only extract_phityp ctxt hint =
+  let val phity = extract_phityp (extract_hhf hint)
+                  handle Match => malformed ctxt hint
+      val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
+   in (Term.fastype_of phiconst, NONE :: map SOME (rev params), hint)
+  end
+
+fun parse_hint_has_type_operator_only extract_phityp_opr ctxt hint =
+  let val phity = extract_phityp_opr (extract_hhf hint)
+                  handle Match => malformed ctxt hint
+      val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
+   in (Term.fastype_of phiconst, NONE :: NONE :: map SOME (rev params), hint)
+  end
 
 end
 
@@ -1039,7 +1074,7 @@ fun default_reasoning_configure extract_prems
       val pure_facts = filter is_pure_fact local_prems
                     |> map (fn th => th RS' (ctxt, @{thm' Action_Tag_D}))
       val ToAs = filter is_ToA_template local_prems
-              |> maps (instantiate_ToA (Phi_Help.conj_intros ctxt pure_facts, ctxt))
+              |> maps (instantiate_ToA (Thm.transfer' ctxt (Phi_Help.conj_intros ctxt pure_facts), ctxt))
       val pure_fact' = map (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=MODE_SIMP]})) pure_facts
 
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems

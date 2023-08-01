@@ -126,13 +126,14 @@ fun guess_ssp_top ctxt sigma_ty T =
   end
 
 
-fun guess_property_SgTH (x_term0, FT_term0, phi0) ctxt =
-  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
-    |> Seq.map (fn (T_term0, F_term0) =>
+fun guess_property_SgTH phi0 ctxt =
+  let val ((_, FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
+   in Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
+   |> Seq.map (fn (T_term0, F_term0) =>
   let val (instTy, _, phi) = instantiate_phi_to_pair_x ctxt (T_term0, phi0)
 
       val inst = Term_Subst.instantiate (instTy, Vars.empty)
-      val (x_term, FT_term, F_term, T_term) = (inst x_term0, inst FT_term0, inst F_term0, inst T_term0)
+      val (FT_term, F_term, T_term) = (inst FT_term0, inst F_term0, inst T_term0)
 
       val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([], element_ty, _) = dest_parameterized_phi_ty (Term.fastype_of T_term)
@@ -151,8 +152,9 @@ fun guess_property_SgTH (x_term0, FT_term0, phi0) ctxt =
                     end
                    | _ => error "Internal bug")
 
-   in ([], HOLogic.Trueprop $ SSP, x_term, FT_term, phi, ctxt)
+   in ([], HOLogic.Trueprop $ SSP, NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end)
+  end
 
 fun reasoning_configure (subgoal, lsequent) (local_prems, ctxt) =
   let val SOME T_tm = AList.lookup (op =) (#params subgoal) "T"
@@ -189,7 +191,7 @@ fun SgTH_reasoning phi ctxt =
 
 fun gen_SgTH hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val unify_hint_Sg = hint_unify_by_type_operator (
+      val parse_hint = parse_hint_has_type_operator_only (
             fn Const(\<^const_name>\<open>Trivial_\<Sigma>\<close>, _) $ F $ _ $ _ $ _ $ _ => F)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Trivial_\<Sigma>\<close>, _) $ _ $ _ $ D $ s $ z) = [D,s,z]
         | extract_oprs_from_hint _ = []
@@ -220,10 +222,10 @@ fun gen_SgTH hint0 (phi0 : phi_type) thy =
                  end
              ) ctxt)
 
-      val rules = mk_rule_by_guess_or_hint ("Trivial_\<Sigma>", unify_hint_Sg, extract_oprs_from_hint,
-                                            guess_property_SgTH, @{thm' \<phi>TA_SgH_rule}, [0,~1,~1],
-                                            SOME ind_conv, SgTH_reasoning, K NONE, simp)
-                                            phi0 hint0 ctxt0
+      val rules = deriver_framework ("Trivial_\<Sigma>", parse_hint, extract_oprs_from_hint,
+                                     guess_property_SgTH, @{thm' \<phi>TA_SgH_rule}, [0,~1,~1],
+                                     SOME ind_conv, SgTH_reasoning, K NONE, simp)
+                                    phi0 hint0 ctxt0
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> Phi_Help.generic_theory_mapping (fn m =>

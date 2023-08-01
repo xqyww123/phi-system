@@ -34,8 +34,7 @@ fun make_phi_for_pair ctxt0 (x_term0, FT_term0, (phi0:phi_type)) =
   end)*)
 
 fun instantiate_phi_to_pair_x ctxt (T_term0, phi0) =
-  let val (_, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
-      val ([], element_ty0, ele_model0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
+  let val ([], element_ty0, _) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
 
       val idx = phi_maxidx_of phi0 ~1 + 1
       val ty_x'dest = Term.add_tvarsT element_ty0 []
@@ -56,9 +55,10 @@ fun subst_ty redex_residue t =
                of Type(Tname, targs) => Type(Tname, map (subst_ty redex_residue) targs)
                 | t' => t')
 
-fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
-  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
-    |> Seq.maps (fn (T_term0, F_term0) =>
+fun guess_property_SH flag (phi0:phi_type) ctxt =
+  let val ((_,FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
+   in Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
+  |> Seq.maps (fn (T_term0, F_term0) =>
   let val (instTy, _, phi'1) = instantiate_phi_to_pair_x ctxt (T_term0, phi0)
 
       val thy = Proof_Context.theory_of ctxt
@@ -81,7 +81,7 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
       val subst = Term_Subst.instantiate (instTy, Vars.empty)
                #> Term_Subst.instantiate (inst, Vars.empty)
 
-      val (x_term, FT_term, F_term, T_term) = (subst x_term0, subst FT_term0, subst F_term0, subst T_term0)
+      val (FT_term, F_term, T_term) = (subst FT_term0, subst F_term0, subst T_term0)
       val x_ty = x_ty0
               |> Term_Subst.instantiateT instTy
               |> Term_Subst.instantiateT inst
@@ -107,9 +107,9 @@ fun guess_property_SH flag (x_term0, FT_term0, (phi0:phi_type)) ctxt =
                        $ Fa $ Fb $ F_term $ zip)
                    | _ => error "Internal bug")
 
-   in Seq.single ([], HOLogic.Trueprop $ SH, x_term, FT_term, phi, ctxt)
+   in Seq.single ([], HOLogic.Trueprop $ SH, NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end)
-
+  end
 
 
 fun SHu_reasoner ctxt sequent =
@@ -136,7 +136,7 @@ fun SH_reasoning is_intro phi ctxt =
 fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
       (*val phi0pr = make_phi_for_pair generic phi0*)
-      val unify_hint_SH = hint_unify_by_type_operator (
+      val parse_hint = parse_hint_has_type_operator_only (
             fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ => F
              | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ => F)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ D $ z) = [D,z]
@@ -144,14 +144,14 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
         | extract_oprs_from_hint _ = []
 
       val ind_conv_z = default_ind_conv (
-            fn ctxt => fn phi =>
+            fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_IH}) then_conv
                 Phi_Conv.meta_alls_conv (fn ctxt =>
                 Conv.implies_concl_conv (Conv.implies_conv (
                   Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
                 ) Conv.all_conv
                )) ctxt,
-            fn ctxt => fn phi =>
+            fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_C}) then_conv
                 Conv.implies_concl_conv (HOLogic.Trueprop_conv (
                   Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))) then_conv
@@ -181,13 +181,13 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
                  end
              ) ctxt)
 
-      val rules = mk_rule_by_guess_or_hint (if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E",
-                                            unify_hint_SH, extract_oprs_from_hint, guess_property_SH is_intro,
-                                            (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule}), [0,~1,~1],
-                                            SOME ind_conv, SH_reasoning is_intro, K NONE, simp)
-                                           phi0 hint0 ctxt0
+      val rules = deriver_framework (if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E",
+                                     parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
+                                     (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule}), [0,~1,~1],
+                                     SOME ind_conv, SH_reasoning is_intro, K NONE, simp)
+                                    phi0 hint0 ctxt0
    in case Seq.pull rules
-        of NONE => raise Automation_Fail ""
+        of NONE => raise Automation_Fail "Fail to derive any property"
          | SOME (rule', _) => generic
              |> Phi_Type_Algebra.note_properties phi0
                     [(if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E", [rule'])]

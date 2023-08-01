@@ -23,7 +23,7 @@ datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*))
              | WFREC_DEF  of string (*const name*) * Function.info
 
 type phi_type = {
-  term: term (*of most general type and schematic variables*),
+  term: term (*of most general type and schematic variables. always be a constant*),
   cterm: thm (*TERM <the_cterm>*),
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
@@ -769,6 +769,8 @@ fun add_type (def, pos, dervs) generic =
               Context.cases Sign.full_name Local_Theory.full_name generic (Binding.name (fst name_ty))
 
       val the_term = chk_zero_index_term term
+      val _ = case the_term of Const _ => ()
+                 | _ => raise TERM ("Must be a constant", [the_term])
       val phi_type = {
             term = the_term,
             cterm = Drule.mk_term (Thm.cterm_of ctxt the_term),

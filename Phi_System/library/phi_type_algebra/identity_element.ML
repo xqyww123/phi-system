@@ -46,7 +46,7 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
   the abstract domain of $A$ is also unital, the property of identity element of $A$ is declared
   as an antecedent of the guessed property.
 *)
-fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
+fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
   let val (_,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val inst  = (Phi_Help.lift_type_sort' (Proof_Context.theory_of ctxt)
                                             [(x_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>one\<close>)]
@@ -56,13 +56,13 @@ fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi01 = instantiate_phi (inst',Vars.empty) phi0
       val subst = Term_Subst.instantiate (inst, Vars.empty)
-      val (x_term01, T_term01) = (subst x_term0, subst T_term0)
 
       val (_, x_ty01, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi01))
       val (inst01, unit, ctxt) = guess_id_ele x_ty01 ctxt
       val subst01 = Term_Subst.instantiate (Phi_Help.uncertify_tyvars inst01, Vars.empty)
       val phi = instantiate_phi (inst01, Vars.empty) phi01
-      val (x_term, T_term) = (subst01 x_term01, subst01 T_term01)
+
+      val ((x_term, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
 
       val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun mk_P ctxt = if is_left
@@ -96,17 +96,17 @@ fun guess_property_id_ele is_left (x_term0, T_term0, (phi0:phi_type)) ctxt =
    in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (
         (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty\<close> $ xT $ Var(("P", 0), HOLogic.boolT)
                     else \<^Const>\<open>Identity_Element\<^sub>E model_ty\<close> $ xT)),
-        x_term, T_term, phi,
-        ctxt)
+        (case x_term of Free _ => SOME x_term | _ => NONE) :: parse_parameters_of_phi_type T_term,
+        phi, ctxt)
   end
 
 fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
       val name = if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"
 
-      val unify_hint_U = hint_unify_by_type (
-            fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) $ _ => T
-             | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ _ $ T) => T
+      val parse_hint = parse_hint_has_object_and_type (
+            fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ x $ T) $ _ => (x, T)
+             | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ x $ T) => (x, T)
              | _ => raise TERM ("",[]))
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []
@@ -163,12 +163,12 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                   end) ctxt))
 
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
-      val rules = mk_rule_by_guess_or_hint (name, unify_hint_U, extract_oprs_from_hint,
-                                            guess_property_id_ele is_left, rule, [],
-                                            SOME ind_conv, reasoning, K NONE, simp)
-                                           phi0 hint0 ctxt0
+      val rules = deriver_framework (name, parse_hint, extract_oprs_from_hint,
+                                     guess_property_id_ele is_left, rule, [],
+                                     SOME ind_conv, reasoning, K NONE, simp)
+                                    phi0 hint0 ctxt0
    in case Seq.pull rules
-        of NONE => raise Automation_Fail ""
+        of NONE => raise Automation_Fail "Fail to derive any property"
          | SOME (rule', _) => generic
             |> Phi_Type_Algebra.note_properties phi0
                   [((if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"), [rule'])]

@@ -10,8 +10,9 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 (*** Inhabitance ***)
 
-fun guess_property_inhab_tyop (x_term, T_term, (phi:phi_type)) ctxt =
-  let val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+fun guess_property_inhab_tyop (phi:phi_type) ctxt =
+  let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+      val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun collect_params ret [] _  = ret
         | collect_params ret (arg_ty :: rev_arg_tys) (F' $ T') =
             case try dest_parameterized_phi_ty arg_ty
@@ -41,18 +42,19 @@ fun guess_property_inhab_tyop (x_term, T_term, (phi:phi_type)) ctxt =
                         $ (\<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T_term))
                         $ (pred $ Bound 0))
                     $ \<^Const>\<open>\<A>EIF\<close>)),
-         x_term, T_term, phi, ctxt))
+         NONE :: parse_parameters_of_phi_type T_term, phi, ctxt))
   end
 
-fun guess_property_inhab_atom (x_term, T_term, (phi:phi_type)) ctxt =
-  let val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+fun guess_property_inhab_atom (phi:phi_type) ctxt =
+  let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+      val (_,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val idx = phi_maxidx_of phi ~1 + 1
       val Prop = HOLogic.Trueprop $ (HOLogic.all_const x_ty $ Abs ("x", x_ty, \<^Const>\<open>Action_Tag\<close>
                     $ (\<^Const>\<open>HOL.implies\<close>
                         $ (\<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T_term))
                         $ (Var(("Pr",idx), x_ty --> HOLogic.boolT) $ Bound 0))
                     $ \<^Const>\<open>\<A>EIF\<close>))
-   in Seq.single ([], Prop, x_term, T_term, phi, ctxt)
+   in Seq.single ([], Prop, NONE :: parse_parameters_of_phi_type T_term, phi, ctxt)
   end
 
 fun gen_inhab hint00 (phi0 : phi_type) thy =
@@ -74,13 +76,13 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                            else guess_property_inhab_atom
       val mode_infer = not (is_some hint0 orelse is_Type_Opr (Term.fastype_of (#term phi0)))
 
-      val unify_hint_U = hint_unify_by_type (
+      val parse_hint = parse_hint_has_object_and_type (
             fn Const(\<^const_name>\<open>HOL.All\<close>, _) $ (Abs (_,_,
                   Const(\<^const_name>\<open>Action_Tag\<close>, _) $ 
                     (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (
-                       Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) $ _)
+                       Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T)) $ _)
                     $ _ ))
-                 => T)
+                 => (x,T))
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []
 
@@ -156,12 +158,12 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                       Conv.arg_conv (Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
                     ))) ctxt) rule
         end
-      val rules = mk_rule_by_guess_or_hint ("Implication", unify_hint_U, extract_oprs_from_hint, guess_property,
+      val rules = deriver_framework ("Implication", parse_hint, extract_oprs_from_hint, guess_property,
                                             @{thm' \<phi>TA_Inh_rule}, [0], SOME ind_conv,
                                             Inh_reasoning, solver, simp)
                                            phi0 hint0 ctxt0
    in case Seq.pull rules
-        of NONE => raise Automation_Fail ""
+        of NONE => raise Automation_Fail "Fail to derive any property."
          | SOME (rule', _) => thy
             |> Phi_Type_Algebra.note_properties phi0 [("Implication", [rule'])]
             |> Phi_Help.generic_theory_mapping (fn m =>

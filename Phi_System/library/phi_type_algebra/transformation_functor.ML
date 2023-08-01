@@ -12,7 +12,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 (*** Transformation Functor ***)
 
-fun mk_TF's_two_instantiations ctxt0 (_, FT_term0, phi0) =
+fun mk_TF's_two_instantiations ctxt0 (FT_term0, phi0) =
   let val (inst0, phi, ctxt) = fix_phi_type true phi0 ctxt0
       val FT_term = Term_Subst.instantiate (Phi_Help.uncertify_vars inst0) FT_term0
    in Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term)
@@ -41,9 +41,10 @@ fun mk_TF's_two_instantiations ctxt0 (_, FT_term0, phi0) =
   end)
   end
 
-fun guess_property_TF (x_term, FT_term, phi0) ctxt =
-  mk_TF's_two_instantiations ctxt (x_term, FT_term, phi0)
-    |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt') =>
+fun guess_property_TF phi0 ctxt =
+  let val ((_,FT_term), ctxt) = fix_phi_term_params (#term phi0) ctxt
+   in mk_TF's_two_instantiations ctxt (FT_term, phi0)
+   |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt') =>
   let val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
 
@@ -61,8 +62,9 @@ fun guess_property_TF (x_term, FT_term, phi0) ctxt =
                          ) target_ty ctxt'2 x_ty element_ty
      |> Seq.map (fn (rel_mapper, ctxt'3) =>
           (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ Rng $ rel_mapper),
-           x_term, FT_term, phi, ctxt'3)))
+           NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt'3)))
   end)
+  end
 
 
 local
@@ -89,7 +91,7 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                     Phi_Reasoners.Is_Premise_of_Obligation.add 123
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
                         | X => NONE)) *)
-      val unify_hint = hint_unify_by_type_operator (
+      val parse_hint = parse_hint_has_type_operator_only (
               fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _) => F1)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M) = [D,R,M]
         | extract_oprs_from_hint _ = []
@@ -117,12 +119,12 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                ) ctxt)
       val name = if prop_i = 0 then "Transformation_Functor"
                  else "Transformation_Functor/" ^ string_of_int prop_i
-      val rules = mk_rule_by_guess_or_hint (name, unify_hint, extract_oprs_from_hint, guess_property_TF,
-                                            @{thm' \<phi>TA_TF_rule}, [0,~1,~1,~1],
-                                            SOME ind_conv, TF_reasoning, K NONE, simp)
-                                           phi0 hint0 ctxt0
+      val rules = deriver_framework (name, parse_hint, extract_oprs_from_hint, guess_property_TF,
+                                      @{thm' \<phi>TA_TF_rule}, [0,~1,~1,~1],
+                                      SOME ind_conv, TF_reasoning, K NONE, simp)
+                                     phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail ""
+   |> (fn NONE => raise Automation_Fail "Fail to derive any property"
         | SOME (rule', _) =>
           let fun set_prem_to_True rule =
                 case Thm.prop_of rule
@@ -167,9 +169,10 @@ end
 
 (** Functional Transformation Functor **)
 
-fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
-  mk_TF's_two_instantiations ctxt0 (x_term, FT_term, phi0)
-    |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt) => let
+fun guess_property_FTF phi0 ctxt0 =
+  let val ((_, FT_term), ctxt0) = fix_phi_term_params (#term phi0) ctxt0
+   in mk_TF's_two_instantiations ctxt0 (FT_term, phi0)
+   |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt) => let
       val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
       
@@ -188,13 +191,15 @@ fun guess_property_FTF (x_term, FT_term, phi0) ctxt0 =
    |> Seq.maps (fn (fm, ctxt'2) =>
         guess_pred_mapper ctxt'2 x_ty element_ty
      |> Seq.map (fn (pm, ctxt'3) =>
-          ([], \<^Const>\<open>Trueprop\<close> $ (FTF_head $ pm $ fm), x_term, FT_term, phi,
-               load_simpset [fm,pm] ctxt'3)))
+          ([], \<^Const>\<open>Trueprop\<close> $ (FTF_head $ pm $ fm),
+           NONE :: parse_parameters_of_phi_type FT_term, phi,
+           load_simpset [fm,pm] ctxt'3)))
   end)
+  end
 
 fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val unify_hint = hint_unify_by_type_operator (
+      val parse_hint = parse_hint_has_type_operator_only (
             fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M $ _ $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []
@@ -212,11 +217,11 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
              ) ctxt) thm
       val name = if prop_i = 0 then "Functional_Transformation_Functor"
                  else "Functional_Transformation_Functor/" ^ string_of_int prop_i
-      val rules = mk_rule_by_guess_or_hint (name, unify_hint, extract_oprs_from_hint, guess_property_FTF, @{thm' \<phi>TA_FTF_rule}, [],
-                                            NONE, K reasoning, K NONE, simp)
-                                            phi0 hint0 ctxt0
+      val rules = deriver_framework (name, parse_hint, extract_oprs_from_hint, guess_property_FTF, @{thm' \<phi>TA_FTF_rule}, [],
+                                     NONE, K reasoning, K NONE, simp)
+                                    phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail ""
+   |> (fn NONE => raise Automation_Fail "Fail to derive any property"
         | SOME (rule'0, _) =>
           let fun set_prem_to_True rule =
                 case Thm.prop_of rule

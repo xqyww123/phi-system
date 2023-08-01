@@ -8,8 +8,9 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun guess_property  (x_term, T_term, (phi:phi_type)) ctxt =
-  let val _ = if #is_recursive phi
+fun guess_property (phi:phi_type) ctxt =
+  let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+      val _ = if #is_recursive phi
               then error "Open_Abstraction_Full: I cannot guess the rule for a recursive \<phi>-type\n\
                          \Please manually annotate the expression."
               else ()
@@ -41,7 +42,8 @@ fun guess_property  (x_term, T_term, (phi:phi_type)) ctxt =
       val ants = map2 (mk_prop o Free) r_fixes T_params 
       val idx = phi_maxidx_of phi ~1 + 1
       val prop = mk_prop (Var(("r",idx), x_ty --> model_ty --> HOLogic.boolT)) (([], x_ty, model_ty), T_term)
-   in Seq.single (ants, HOLogic.Trueprop $ prop, x_term, T_term, phi, ctxt')
+   in Seq.single (ants, HOLogic.Trueprop $ prop,
+                  NONE :: parse_parameters_of_phi_type T_term, phi, ctxt')
   end
 
 fun reasoning phi ctxt =
@@ -179,7 +181,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
             end
             )) hint00
 
-      val unify_hint = hint_unify_general (fn hint => fn (_,T) =>
+      fun parse_hint ctxt hint =
             let fun extract (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract X
                   | extract (Const(\<^const_name>\<open>All\<close>, _) $ X) = extract X
                   | extract (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = extract X
@@ -195,8 +197,15 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                               $ (\<^Const>\<open>to _ _\<close> $ itself))
                       = (T, (itself, itself'))
                 val (T', pair) = extract (Logic.strip_imp_concl hint)
-             in (T',T) :: pair :: (map (snd o extract) (Logic.strip_imp_prems hint))
-            end)
+                val pairs = pair :: (map (snd o extract) (Logic.strip_imp_prems hint))
+                val idx = Term.maxidx_of_term hint
+                val env = case Seq.pull (Unify.smash_unifiers (Context.Proof ctxt) pairs (Envir.empty idx))
+                            of SOME (env, _) => env
+                             | NONE => raise Match
+                val hint' = Envir.norm_term env hint
+                val T = Envir.norm_term env T'
+             in (Term.fastype_of (Term.head_of T), NONE :: parse_parameters_of_phi_type T, hint')
+            end
       fun extract_oprs_from_hint (\<^Const>\<open>Transformation _\<close> $ _
                                   $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _, (\<^Const>\<open>Subjection _\<close> $ _ $ r)))
                                   $ _) = [r]
@@ -226,17 +235,17 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
 
       val ctxt0' = if is_some hint0 then ctxt0
                    else Config.put Phi_Reasoners.existential_obligation 2 ctxt0
-      val rules = mk_rule_by_guess_or_hint ("Open_Abstraction_Full", unify_hint, extract_oprs_from_hint, guess_property,
-                                            @{thm' \<phi>TA_TrRA_rule}, [0],
-                                            SOME ind_conv, reasoning, solver, simp)
-                                           phi0 hint0 ctxt0'
+      val rules = deriver_framework ("Open_Abstraction_Full", parse_hint, extract_oprs_from_hint, guess_property,
+                                     @{thm' \<phi>TA_TrRA_rule}, [0],
+                                     SOME ind_conv, reasoning, solver, simp)
+                                    phi0 hint0 ctxt0'
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
         |> Phi_Type_Algebra.note_properties phi0 [("Open_Abstraction_Full", [rule])]
-    | _ => raise Automation_Fail ""
+    | _ => raise Automation_Fail "Fail to derive any property"
   end
 
 val open_all_abstraction = accept_one "Open_Abstraction_Full" gen_trans_to_raw_abst

@@ -59,8 +59,9 @@ fun infer_equiv ctxt sequent =
   If the \<phi>-type has any parameters whose logic type looks like a \<phi>-type, the reachability relations
   of the parameters are also assumed as antecedents of the guessing property, and also used in
   above guessing the reachability relations of the target \<phi>-type.*)
-fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
-  let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi)) 
+fun guess_property_obj_eq (phi:phi_type) ctxt =
+  let val ((_,T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+      val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi)) 
       fun mk_Ants ctxt (Ty::rev_arg_tys) (eq::eq_names) ants param_eqs (T_term $ A) =
            (case try dest_parameterized_phi_ty Ty
               of SOME (rev_arg_tys_A, x_ty_A, model_ty_A) =>
@@ -81,8 +82,8 @@ fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
         | mk_Ants _ _ _ _ _ _ = raise ListPair.UnequalLengths
 
       val arity = length rev_arg_tys
-      val rev_eq_names' = Name.invent (Variable.names_of ctxt0) "eq" arity
-      val (rev_eq_names, ctxt) = Variable.add_fixes rev_eq_names' ctxt0
+      val rev_eq_names' = Name.invent (Variable.names_of ctxt) "eq" arity
+      val (rev_eq_names, ctxt) = Variable.add_fixes rev_eq_names' ctxt
       val (ants,param_eqs) = mk_Ants ctxt rev_arg_tys rev_eq_names [] [] T_term
 
       val eq_terms =
@@ -92,14 +93,15 @@ fun guess_property_obj_eq (x_Term, T_term, (phi:phi_type)) ctxt0 =
    in eq_terms
    |> Seq.map (fn (eq_term, ctxt') =>
         (ants, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close> $ T_term $ eq_term),
-         x_Term, T_term, phi, ctxt'))
+         NONE :: parse_parameters_of_phi_type T_term, phi, ctxt'))
   end
 
 
 
 (*The reachability relation of many type operators at singular point \<open>F \<circle>\<close> can become \<open>\<lambda>_. True\<close>*)
-fun guess_obj_eq_singular_None (x_term0, FT_term0, phi0:phi_type) ctxt =
+fun guess_obj_eq_singular_None (phi0:phi_type) ctxt =
   let val thy = Proof_Context.theory_of ctxt
+      val ((_, FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
    in separate_type_operator_and_its_parameter_safe FT_term0
    |> Seq.of_list
    |> Seq.map_filter (fn (T_term0, F_term0) =>
@@ -113,14 +115,13 @@ fun guess_obj_eq_singular_None (x_term0, FT_term0, phi0:phi_type) ctxt =
       val phi = instantiate_phi (inst', Vars.empty) phi0
       val subst = Term_Subst.instantiate (inst, Vars.empty)
       val substT= Term_Subst.instantiateT inst
-      val (x_term, F_term, model_ty_T, rev_args_T) =
-              (subst x_term0, subst F_term0, substT model_ty_T0, map substT rev_args_T0)
+      val (F_term, model_ty_T, rev_args_T) = (subst F_term0, substT model_ty_T0, map substT rev_args_T0)
       val (_, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val FT_term = F_term $ (fold (fn T => fn X => Abs ("x", T, X)) rev_args_T \<^Const>\<open>\<phi>None model_ty_T\<close>)
       val property = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close>
                                             $ FT_term
                                             $ Abs ("x", x_ty, Abs ("y", x_ty, \<^Const>\<open>True\<close>)))
-   in SOME ([], property, x_term, FT_term, phi, ctxt)
+   in SOME ([], property, NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end handle Automation_Fail _ => NONE)
   end
 
@@ -143,7 +144,7 @@ fun gen_obj_equal' mode_singular hint0 (phi0 : phi_type) thy =
       val guess = if mode_singular then guess_obj_eq_singular_None else guess_property_obj_eq
 
       val ctxt0 = Context.proof_of thy
-      val unify_hint = hint_unify_by_type (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
+      val parse_hint = parse_hint_has_type_only (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
@@ -154,7 +155,7 @@ fun gen_obj_equal' mode_singular hint0 (phi0 : phi_type) thy =
                               then_conv Phi_Conv.hol_alls_to_meta_alls (fn _ =>
                                   conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
                                 ) ctxt))
-      fun infer (phi, ctxt, rule) =
+      fun infer (_, ctxt, rule) =
             if need_infer rule
             then rule
                    |> Phi_Help.beta_eta_contract
@@ -168,12 +169,12 @@ fun gen_obj_equal' mode_singular hint0 (phi0 : phi_type) thy =
         else Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
                (K (Conv.arg_conv (Conv.arg_conv (
                   Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))))) ctxt)
-      val rules = mk_rule_by_guess_or_hint (name, unify_hint, extract_oprs_from_hint, guess,
-                                            @{thm' Object_Equiv_rule}, [0],
-                                            SOME ind_conv, OE_reasoning, infer, simp)
-                                           phi0 hint0 ctxt0
+      val rules = deriver_framework (name, parse_hint, extract_oprs_from_hint, guess,
+                                      @{thm' Object_Equiv_rule}, [0],
+                                      SOME ind_conv, OE_reasoning, infer, simp)
+                                     phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail ""
+   |> (fn NONE => raise Automation_Fail "Fail to derive any property"
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE (if mode_singular then 80 else 40)
@@ -184,7 +185,8 @@ fun gen_obj_equal' mode_singular hint0 (phi0 : phi_type) thy =
 in
 
 fun object_equiv [] phi = gen_obj_equal' false NONE phi
-                       #> gen_obj_equal' true NONE phi
+                       (*#> (fn ctxt => gen_obj_equal' true NONE phi ctxt
+                                      handle Automation_Fail _ => ctxt)*)
   | object_equiv Hs phi = fold (fn H => gen_obj_equal' false (SOME H) phi) Hs
 
 end
