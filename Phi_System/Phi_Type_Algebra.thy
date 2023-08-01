@@ -1141,7 +1141,25 @@ lemma "_Structural_Extract_general_rule_":
     apply_Separation_Functor_unzip
   \<medium_right_bracket> . 
 
-declare "_Structural_Extract_general_rule_"[THEN \<A>SE_clean_waste, \<phi>reason_template 80]
+declare "_Structural_Extract_general_rule_"[THEN \<A>SE_clean_waste, \<phi>reason_template default 80]
+
+lemma [THEN \<A>SE_clean_waste_TH, \<phi>reason_template default 81]:
+  \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
+\<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F1 F1'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F2 F2'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F3 F3'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F4 F4'
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> (Auto_Transform_Hint (y\<^sub>H \<Ztypecolon> U\<^sub>H \<^emph> R\<^sub>H) (x\<^sub>H \<Ztypecolon> T\<^sub>H \<^emph> W\<^sub>H) \<and> P x) @action \<A>SE )
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> 
+      Auto_Transform_Hint (y'\<^sub>H \<Ztypecolon> F3' U\<^sub>H \<^emph> F2' R\<^sub>H) (x'\<^sub>H \<Ztypecolon> F1' T\<^sub>H \<^emph> F4' W\<^sub>H) \<and> pred_mapper P (z x) @action \<A>SE \<close>
+  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
+  using "_Structural_Extract_general_rule_"[where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
+
 
 (* This crazy rule is for the boundary cases when we reason the last element and when the algebra doesn't
    have an identity element so that we cannot reduce it to the usual case by adding an identity element at the tail.
@@ -1162,7 +1180,7 @@ free from explosion of expression, and can be simplified easily because the bool
 assigned by constants after the reasoning.
 
 *)
-lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template 80]:
+lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r Prem'r pred_mapper func_mapper'r
 \<Longrightarrow> Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w Prem'w pred_mapper'w func_mapper'w
@@ -1226,21 +1244,47 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template 80]:
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
   \<medium_right_bracket> .
  
-lemma [THEN \<A>SE_clean_waste_TH, \<phi>reason_template 82]:
+lemma "_Structural_Extract_general_rule_i_TH_"[\<phi>reason_template default 81]:
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r Prem'r pred_mapper func_mapper'r
+\<Longrightarrow> Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w Prem'w pred_mapper'w func_mapper'w
+\<Longrightarrow> Functional_Transformation_Functor F1 F3  Dom'w Rng'b mapper'b Prem'b pred_mapper'w func_mapper'b
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 uz
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F3 F3'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F1 F1'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F2 F2'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F3 F3'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F4 F4'
-\<Longrightarrow> \<r>Success
 \<Longrightarrow> Prem
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
-\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> (Auto_Transform_Hint (y\<^sub>H \<Ztypecolon> U\<^sub>H \<^emph> R\<^sub>H) (x\<^sub>H \<Ztypecolon> T\<^sub>H \<^emph> W\<^sub>H) \<and> P x) @action \<A>SE )
-\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 U \<^emph> F2 R \<w>\<i>\<t>\<h> 
-      Auto_Transform_Hint (y'\<^sub>H \<Ztypecolon> F3' U\<^sub>H \<^emph> F2' R\<^sub>H) (x'\<^sub>H \<Ztypecolon> F1' T\<^sub>H \<^emph> F4' W\<^sub>H) \<and> pred_mapper P (z x) @action \<A>SE \<close>
+\<Longrightarrow> Prem'r
+\<Longrightarrow> Prem'w
+\<Longrightarrow> Prem'b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e>
+        (Cw \<longrightarrow> x \<in> Dz) \<and>
+        (if Cw then if Cr then (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
+                          else (\<forall>a. a \<in> Dom (z x) \<longrightarrow> fst (f a) \<in> Rng'r (z x))
+               else if Cr then (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> f (a, undefined) \<in> Rng'w (fst x))
+                          else (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> fst (f (a, undefined)) \<in> Rng'b (fst x)))
+
+\<Longrightarrow> (\<And>x \<in> (if Cw then Dom (z x) else Dom'w (fst x) \<times> {undefined}).
+        x \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h>
+            Auto_Transform_Hint (y1\<^sub>H \<Ztypecolon> \<black_circle> U\<^sub>H \<^emph> \<half_blkcirc>[Cr] R\<^sub>H) (x1\<^sub>H \<Ztypecolon> \<black_circle> T\<^sub>H \<^emph> \<half_blkcirc>[Cw] W\<^sub>H) \<and> P x @action \<A>SEi )
+
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F1 T \<^emph> \<half_blkcirc>[Cw] F4 W
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if Cw then if Cr then uz (func_mapper f (z x))
+                                else (func_mapper'r (fst o f) (z x), undefined)
+                     else if Cr then uz (func_mapper'w (\<lambda>x. f (x, undefined)) (fst x))
+                                else (func_mapper'b (\<lambda>x. fst (f (x, undefined))) (fst x), undefined))
+                \<Ztypecolon> \<black_circle> F3 U \<^emph> \<half_blkcirc>[Cr] F2 R
+
+    \<w>\<i>\<t>\<h> Auto_Transform_Hint (y2\<^sub>H \<Ztypecolon> \<black_circle> F3' U\<^sub>H \<^emph> \<half_blkcirc>[Cr] F2' R\<^sub>H) (x2\<^sub>H \<Ztypecolon> \<black_circle> F1' T\<^sub>H \<^emph> \<half_blkcirc>[Cw] F4' W\<^sub>H)
+      \<and> (if Cw then pred_mapper P (z x) else pred_mapper'w (\<lambda>x. P (x, undefined)) (fst x))
+    @action \<A>SEi \<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
-  using "_Structural_Extract_general_rule_"[where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
+  using "_Structural_Extract_general_rule_i_"[where pred_mapper=pred_mapper
+          and pred_mapper'w=pred_mapper'w and P=P and uz=uz and func_mapper=func_mapper
+          and func_mapper'r=func_mapper'r and func_mapper'w=func_mapper'w
+          and func_mapper'b=func_mapper'b] .
 
   
 lemma "_Structural_Extract_general_rule_a_":
@@ -1258,7 +1302,23 @@ lemma "_Structural_Extract_general_rule_a_":
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
   \<medium_right_bracket> .
 
-declare "_Structural_Extract_general_rule_a_"[THEN \<A>SEa_clean_waste, \<phi>reason_template 80]
+declare "_Structural_Extract_general_rule_a_"[THEN \<A>SEa_clean_waste, \<phi>reason_template default 80]
+
+lemma "_Structural_Extract_general_rule_a_TH_"[\<phi>reason_template default 81]:
+  \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F1 F1'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F3 F3'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F4 F4'
+\<Longrightarrow> Prem
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<w>\<i>\<t>\<h>
+      Auto_Transform_Hint (y1\<^sub>H \<Ztypecolon> U\<^sub>H) (x2\<^sub>H \<Ztypecolon> T\<^sub>H \<^emph> W\<^sub>H) \<and> P x @action \<A>SEa )
+\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f (z x) \<Ztypecolon> F3 U \<w>\<i>\<t>\<h>
+      Auto_Transform_Hint (y2\<^sub>H \<Ztypecolon> F3' U\<^sub>H) (x2\<^sub>H \<Ztypecolon> F1' T\<^sub>H \<^emph> F4' W\<^sub>H) \<and> pred_mapper P (z x) @action \<A>SEa \<close>
+  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
+  using "_Structural_Extract_general_rule_a_"[where func_mapper=func_mapper and P=P
+            and pred_mapper=pred_mapper] .
 
 (*
 lemma "_Structural_Extract_general_rule_b_":
@@ -1278,22 +1338,6 @@ lemma "_Structural_Extract_general_rule_b_":
 
 declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>reason_template 80]
 *)
-
-
-lemma "_Structural_Extract_general_rule'_b_"[(*THEN SE_clean_waste',*) \<phi>reason_template 82]:
-  \<open> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
-\<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 Dz z
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F3 F3'
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F1 F1'
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F4 F4'
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> Prem
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
-\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<w>\<i>\<t>\<h> Auto_Transform_Hint (y'1 \<Ztypecolon> U') (x'1 \<Ztypecolon> T' \<^emph> W') \<and> P x @action \<A>SE False)
-\<Longrightarrow> x \<Ztypecolon> F1 T \<^emph> F4 W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f (z x) \<Ztypecolon> F3 U \<w>\<i>\<t>\<h>
-          Auto_Transform_Hint (y'2 \<Ztypecolon> F3' U') (x'2 \<Ztypecolon> F1' T' \<^emph> F4' W') \<and> pred_mapper P (z x) @action \<A>SE False \<close>
-  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
-  using "_Structural_Extract_general_rule_b_"[where f=f and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
 
 
 paragraph \<open>Seminearing\<close>
