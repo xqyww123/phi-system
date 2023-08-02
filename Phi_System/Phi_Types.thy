@@ -57,7 +57,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
  
 declare [[\<phi>trace_reasoning = 0]]
-                                           
+                                             
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -128,7 +128,7 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Dependent Sum Type\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
   independently with the element. It seems to be a limitation. For example, we want to transform
@@ -597,7 +597,7 @@ subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> \<phi>Fun (\<lambda>v. [v]) \<Zcomp> T\<close>
@@ -716,15 +716,15 @@ ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 3]]
-                                                              
+                                                               
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
   deriving Basic
-       and Identity_Element
+       (*and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
-       and Trivial_\<Sigma>
+       and Trivial_\<Sigma>*)
 
 declare map_eq_Cons_conv[\<phi>constraint_expansion] (*TODO!!!!*)
 
@@ -768,7 +768,7 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 1]]
+ declare [[\<phi>trace_reasoning = 0]]
 
 
 

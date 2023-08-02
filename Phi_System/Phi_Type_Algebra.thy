@@ -1787,7 +1787,7 @@ hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
 \<phi>property_deriver Identity_Element 103 requires Identity_Element\<^sub>I and Identity_Element\<^sub>E
 
 
-subsubsection \<open>Object_Equiv\<close>
+subsubsection \<open>Usual Object Equivalence\<close>
 
 lemma Object_Equiv_rule:
   \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
@@ -1829,6 +1829,26 @@ lemma \<phi>TA_OE_extract_prem:
   unfolding Object_Equiv_def Transformation_def
   by blast
 
+paragraph \<open>Object Equivalence at Singular Point\<close>
+
+lemma \<phi>TA_OE\<^sub>O_rule:
+  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+            (x \<Ztypecolon> F \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> base \<Ztypecolon> F \<circle>) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+            (base \<Ztypecolon> F \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F \<circle>) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Object_Equiv (F \<circle>) (\<lambda>_ _. True)\<close>
+  unfolding Object_Equiv_def Action_Tag_def Transformation_def Premise_def
+  by blast
+
+lemma \<phi>TA_OE\<^sub>O_rewr:
+  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target undefined) \<equiv> (Ant \<Longrightarrow> P)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
+
+
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 (*
 hide_fact Object_Equiv_rule \<phi>TA_EO_rewr_IH \<phi>TA_EO_rewr_C Object_Equiv_rule_move_all
@@ -1840,6 +1860,7 @@ hide_fact Object_Equiv_rule \<phi>TA_EO_rewr_IH \<phi>TA_EO_rewr_C Object_Equiv_
 \<close>
 
 \<phi>property_deriver Basic 109 requires Object_Equiv and Implication
+
 
 
 subsubsection \<open>Transformation Functor\<close>

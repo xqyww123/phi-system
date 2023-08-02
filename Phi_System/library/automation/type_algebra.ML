@@ -20,6 +20,7 @@ type parse_hint = Proof.context -> hint -> typ (*of the phi-typ const*) * induct
 
 (* Common choices of the unification *)
 
+val malformed_hint : Context.generic -> term -> 'a
 val parse_parameters_of_phi_type : term -> term option list
 val parse_hint_has_object_and_type : (term -> term * term) (*extract_object_and_phityp*) -> parse_hint
 val parse_hint_has_type_only : (term -> term) (*extract_phityp*) -> parse_hint
@@ -169,7 +170,7 @@ type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) optio
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
 
 type PLPR_reasoner = Proof.context -> thm -> thm
-val gen_abstract_constraint_guided_reasoning :
+val default_reasoning :
         bool (*to split the goals when they contain HOL.disj in antecedents, no matter if the conclusion
                contains schematic variables. it is false by default*) ->
         reasoning_configure -> varifier -> PLPR_reasoner -> reasoning
@@ -851,7 +852,12 @@ fun deriver_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rul
              in singleton (Variable.export ctxt't ctxt) (ind_conv ctxt phi (ind't RS rule't))
             end
 
-      val rule'3 = reasoning phi ctxt rule'2
+      fun reasoning_loop rule =
+        case Thm.major_prem_of rule
+          of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) => rule
+           | _ => reasoning_loop (reasoning phi ctxt rule)
+      val rule'3 = reasoning_loop rule'2
+
       val rule'4 =(case solver (phi, ctxt, rule'3)
                      of SOME ret => ret
                       | NONE => oblg_solver (#proof_id phi ^ "/" ^ name) ctxt rule'3)
@@ -869,19 +875,19 @@ fun deriver_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rul
   end)
   end
 
-(* Default Hint Unifier *)
+(* Default Hint Parser *)
+
+fun malformed_hint ctxt hint =
+  raise Automation_Fail (let open Pretty in
+      string_of (chunks [str "Malformed Hint",
+                         Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt hint])
+    end)
 
 local
 fun extract_hhf (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extract_hhf X
   | extract_hhf (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_hhf X
   | extract_hhf (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = extract_hhf X
   | extract_hhf X = Envir.beta_eta_contract X
-
-fun malformed ctxt hint =
-  raise Automation_Fail (let open Pretty in
-      string_of (chunks [str "Malformed Hint",
-                         Syntax.pretty_term ctxt hint])
-    end)
 
 in
 
@@ -893,21 +899,21 @@ fun parse_parameters_of_phi_type phity =
 
 fun parse_hint_has_object_and_type extract_object_and_phityp ctxt hint =
   let val (obj, phity) = extract_object_and_phityp (extract_hhf hint)
-                         handle Match => malformed ctxt hint
+                         handle Match => malformed_hint (Context.Proof ctxt) hint
       val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
    in (Term.fastype_of phiconst, map SOME (obj :: rev params), hint)
   end
 
 fun parse_hint_has_type_only extract_phityp ctxt hint =
   let val phity = extract_phityp (extract_hhf hint)
-                  handle Match => malformed ctxt hint
+                  handle Match => malformed_hint (Context.Proof ctxt) hint
       val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
    in (Term.fastype_of phiconst, NONE :: map SOME (rev params), hint)
   end
 
 fun parse_hint_has_type_operator_only extract_phityp_opr ctxt hint =
   let val phity = extract_phityp_opr (extract_hhf hint)
-                  handle Match => malformed ctxt hint
+                  handle Match => malformed_hint (Context.Proof ctxt) hint
       val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
    in (Term.fastype_of phiconst, NONE :: NONE :: map SOME (rev params), hint)
   end
@@ -1098,7 +1104,7 @@ fun default_reasoning_configure extract_prems
    in (prem_ants, rewrs, ToAs @ ants, ctxt)
   end
 
-fun gen_abstract_constraint_guided_reasoning always_diverge_disj configure varify reasoner =
+fun default_reasoning always_diverge_disj configure varify reasoner =
 let fun has_disj_ants th =
       let fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
             | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = chk X

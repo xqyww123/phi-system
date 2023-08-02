@@ -175,7 +175,7 @@ fun reasoning_configure (subgoal, lsequent) (local_prems, ctxt) =
   end
 
 fun SgTH_reasoning phi ctxt =
-  gen_abstract_constraint_guided_reasoning true
+  default_reasoning true
       reasoning_configure
       (K (K NONE))
       (fn ctxt => fn sequent => (

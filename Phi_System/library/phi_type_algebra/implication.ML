@@ -108,7 +108,7 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
         else K (K [])
 
       fun Inh_reasoning _ ctxt =
-            gen_abstract_constraint_guided_reasoning false
+            default_reasoning false
                 (default_reasoning_configure extract_pure_prems)
                 (if mode_infer then varify_subgoal else K (K NONE))
                 Inh_reasoner ctxt

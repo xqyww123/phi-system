@@ -119,7 +119,7 @@ fun SHu_reasoner ctxt sequent =
      | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
 
 fun SH_reasoning is_intro phi ctxt =
-  gen_abstract_constraint_guided_reasoning true
+  default_reasoning true
       (default_reasoning_configure (K (K [])))
       (K (K NONE))
       (fn ctxt => fn sequent => (
