@@ -4,10 +4,34 @@ include PHI_CONV
 val embed_BI_assertion : Proof.context -> conv
 val embed_BI_assertion_safe : Proof.context -> conv
 
+(*{f a b c | a b c. P a b c} : \<S> T \<equiv> f a b c : T subj a b c. P a b c*)
+val type_form_to_ex_quantified : Proof.context -> conv
+(*{f a b c | a b c. P a b c} : \<S> T \<equiv> y : T subj a b c. y = f a b c \<and> P a b c*)
+val type_form_to_ex_quantified_single_var : Proof.context -> conv
+        (*note this form is the required target form of To-Transformation*)
+
+(* Auxiliary *)
+
+val Embed_into_Phi_Type__enable_chk : bool Config.T
+(*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
+val move_Ex_for_set_notation : simproc
+
+structure Embed_into_Phi_Type : SIMPSET
+
+(* Internal *)
+
+val set_rules__type_form_to_ex_quantified : thm list -> unit
+val set_rules__type_form_to_ex_quantified_single_var : thm list -> unit
+
 end
 
+structure Phi_Conv : PHI_CONV = struct
+open Phi_Conv
+
+val Embed_into_Phi_Type__enable_chk = Config.declare_bool ("Embed_into_Phi_Type__enable_chk", \<^here>) (K false)
+
 structure Embed_into_Phi_Type = Simpset (
-  val initial_ss = Simpset_Configure.Empty_SS_configure (
+  val initial_ss = Simpset_Configure.Minimal_SS_configure (
         let fun err thm = raise THM ("Not a rewrite rule embedding BI assertions into \<phi>-types", 0, [thm])
             fun chk_rewr ctxt thm =
               let fun no_abst (Abs _) = false
@@ -34,20 +58,48 @@ structure Embed_into_Phi_Type = Simpset (
                           Vars.make (map (fn (v,t) =>
                             ((v,t), Thm.cterm_of ctxt (Const(\<^const_name>\<open>undefined\<close>, t)))) bads)) thm
               end
-            fun chk_rewr' ctxt thm = (chk_rewr ctxt thm
-                  handle THM _ => chk_rewr ctxt (Phi_Type_Algebra.conv_def_to_equaltion ctxt thm))
+            fun chk_rewr' ctxt thm =
+                  (chk_rewr ctxt thm
+                   handle THM _ => chk_rewr ctxt (Phi_Type_Algebra.conv_def_to_equaltion ctxt thm))
                     |> chk2 ctxt
          in Simplifier.set_mksimps (fn ctxt => fn thm => thm
                 |> Phi_Help.beta_eta_contract
-                |> chk_rewr' ctxt
+                |> Config.get ctxt Embed_into_Phi_Type__enable_chk ? chk_rewr' ctxt
                 |> Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
         end)
   val binding = SOME \<^binding>\<open>embed_into_\<phi>type\<close>
   val comment = "Declare a rewrite rule that rewrites BI assertions into \<phi>-type embedding"
 )
 
-structure Phi_Conv : PHI_CONV = struct
-open Phi_Conv
+(*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
+val move_Ex_for_set_notation =
+  Simplifier.make_simproc \<^context> "Embed_into_Phi_Type.move_Ex" {
+  lhss = [\<^term>\<open>\<exists>y. x = f y \<and> (\<exists>b. P y b)\<close>],
+  proc = fn m => fn ctxt => fn ctm =>
+    case Thm.term_of ctm
+      of _ $ Abs (y, _, _ $ _ $ (_ $ Abs (b, _, _))) =>
+        let val ret = Conv.rewr_conv @{lemma \<open>\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b\<close>
+                                          by (unfold atomize_eq, blast)} ctm
+            val prop = case Thm.prop_of ret
+                         of Eq $ LHS $ (Exb $ Abs (_, Tb, Exy $ Abs (_, Ty, Body))) =>
+                            Eq $ LHS $ (Exb $ Abs (b, Tb, Exy $ Abs (y, Ty, Body)))
+                          | _ => raise CTERM ("",[])
+         in SOME (Thm.renamed_prop prop ret)
+        end
+        handle CTERM _ => NONE
+       | _ => NONE
+}
+
+val _ = Theory.setup (Context.theory_map (
+  Embed_into_Phi_Type.map (fn ctxt =>
+    ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>HOL.defined_All\<close>, \<^simproc>\<open>defined_all\<close>,
+                      \<^simproc>\<open>defined_Collect\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>Set.defined_Bex\<close>,
+                      \<^simproc>\<open>unit_eq\<close>, \<^simproc>\<open>case_prod_beta\<close>, \<^simproc>\<open>case_prod_eta\<close>,
+                      \<^simproc>\<open>Collect_mem\<close>, move_Ex_for_set_notation]
+         addsimps @{thms' HOL.simp_thms})
+) #> Config.put_global Embed_into_Phi_Type__enable_chk true
+)
+
 
 fun chk_embed_BI_assertion ctm =
   case Thm.term_of ctm
@@ -60,4 +112,37 @@ fun embed_BI_assertion_safe ctxt =
 fun embed_BI_assertion ctxt = embed_BI_assertion_safe ctxt then_conv chk_embed_BI_assertion
 
 
+(*type_form_to_ex_quantified*)
+
+val rules_of_type_form_to_ex_quantified : thm list option Unsynchronized.ref = Unsynchronized.ref NONE
+val rules_of_type_form_to_ex_quantified_single_var : thm list option Unsynchronized.ref = Unsynchronized.ref NONE
+
+fun set_rules__type_form_to_ex_quantified rules =
+  rules_of_type_form_to_ex_quantified := SOME rules
+
+fun set_rules__type_form_to_ex_quantified_single_var rules =
+  rules_of_type_form_to_ex_quantified_single_var := SOME rules
+
+fun type_form_to_ex_quantified ctxt ctm =
+  case !rules_of_type_form_to_ex_quantified
+    of SOME rules => Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps rules) ctm
+     | NONE => Conv.all_conv ctm
+
+fun single_var_fallback ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>ExSet\<close>, _) $ (
+          Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound 0 $ _) $ _) =>
+        Conv.all_conv ctm
+     | Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ =>
+        Conv.rewr_conv @{lemma \<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x\<close> by (clarsimp simp add: atomize_eq BI_eq_iff)} ctm
+     | _ => raise CTERM ("Fail to convert into existential quantified single variable form", [ctm])
+
+fun type_form_to_ex_quantified_single_var ctxt ctm =
+  case !rules_of_type_form_to_ex_quantified_single_var
+    of SOME rules => (Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps rules)
+                      then_conv single_var_fallback) ctm
+     | NONE => Conv.all_conv ctm
+
 end
+
+structure Embed_into_Phi_Type = Phi_Conv.Embed_into_Phi_Type

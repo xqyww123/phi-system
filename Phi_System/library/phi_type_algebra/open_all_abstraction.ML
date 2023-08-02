@@ -54,17 +54,8 @@ fun reasoning phi ctxt =
    in default_reasoning false
          (default_reasoning_configure (K (K [])))
          (K (K NONE))
-         (fn ctxt => fn sequent => (
-         (case Thm.major_prem_of sequent
-            of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ (
-                    Const(\<^const_name>\<open>Transformation\<close>, _)
-                        $ X $ _ $ _))
-                 => chk_unfolded phi X
-             | _ => ()) ;
-          case PLPR_Exhaustive.reason_exhaustively (SOME 3) (ctxt, @{thm' \<phi>TA_TF_rule_step} RS sequent)
-            of SOME th => th
-             | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
-      )) ctxt
+         (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded phi)))
+         ctxt
   end
 
 fun instantiate_the_var var ctxt sequent =
@@ -235,9 +226,10 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
 
       val ctxt0' = if is_some hint0 then ctxt0
                    else Config.put Phi_Reasoners.existential_obligation 2 ctxt0
-      val rules = deriver_framework ("Open_Abstraction_Full", parse_hint, extract_oprs_from_hint, guess_property,
-                                     @{thm' \<phi>TA_TrRA_rule}, [0],
-                                     SOME ind_conv, reasoning, solver, simp)
+      val rules = deriving_framework ("Open_Abstraction_Full", parse_hint, extract_oprs_from_hint,
+                                      guess_property, @{thm' \<phi>TA_TrRA_rule},
+                                      [(SOME ([0], ind_conv), reasoning)],
+                                      solver, simp)
                                     phi0 hint0 ctxt0'
    in case Seq.pull rules
    of SOME (rule, _) => thy

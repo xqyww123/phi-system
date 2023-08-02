@@ -158,10 +158,11 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                       Conv.arg_conv (Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
                     ))) ctxt) rule
         end
-      val rules = deriver_framework ("Implication", parse_hint, extract_oprs_from_hint, guess_property,
-                                            @{thm' \<phi>TA_Inh_rule}, [0], SOME ind_conv,
-                                            Inh_reasoning, solver, simp)
-                                           phi0 hint0 ctxt0
+      val rules = deriving_framework ("Implication", parse_hint, extract_oprs_from_hint,
+                                       guess_property, @{thm' \<phi>TA_Inh_rule},
+                                       [(SOME ([0], ind_conv), Inh_reasoning)],
+                                       solver, simp)
+                                      phi0 hint0 ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail "Fail to derive any property."
          | SOME (rule', _) => thy

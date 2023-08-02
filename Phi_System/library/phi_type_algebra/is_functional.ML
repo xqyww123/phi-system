@@ -36,11 +36,10 @@ fun gen_is_functional hint0 (phi0 : phi_type) thy =
       val reasoning = default_reasoning true
                           (default_reasoning_configure (K (K [])))
                           (K (K NONE))
-                          (PLPR_reasoner (SOME 1))
+                          (exhaustive_PLPR_reasoner (SOME 1))
 
-      val rules = deriver_framework ("Is_Functional", parse_hint, K [], guess_property,
-                                     @{thm' \<phi>TA_IsFunc_rule}, [], SOME ind_conv,
-                                     K reasoning, K NONE, K I)
+      val rules = deriving_framework ("Is_Functional", parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},
+                                      [(SOME ([], ind_conv), K reasoning)], K NONE, K I)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
    of SOME (rule, _) => thy

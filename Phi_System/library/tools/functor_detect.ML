@@ -23,7 +23,7 @@ datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*))
              | WFREC_DEF  of string (*const name*) * Function.info
 
 type phi_type = {
-  term: term (*of most general type and schematic variables. always be a constant*),
+  term: term (*of most general type and schematic variables. always be a constant or a fixed free*),
   cterm: thm (*TERM <the_cterm>*),
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
@@ -424,11 +424,14 @@ fun err_derive prop_name msg hints =
          else ""))
   end
 
-fun derive_properties dervs phityp =
-  Derivings.fold (fn ((_,name),(hints,derv)) =>
-      #derive derv hints phityp
+fun derive_properties dervs phityp thy = thy
+  |> Context.mapping (Context_Position.set_visible_global false)
+                     (Context_Position.set_visible false)
+  |> Derivings.fold (fn ((_,name),(hints,derv)) => fn ctxt =>
+      #derive derv hints phityp ctxt
       handle Automation_Fail msg => err_derive name msg hints
-  ) dervs
+     ) dervs
+  |> Context_Position.restore_visible_generic thy
 
 (*fun get_derivers_from_constant_name ctxt =
   *)

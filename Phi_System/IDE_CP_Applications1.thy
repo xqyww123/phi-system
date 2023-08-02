@@ -1119,12 +1119,12 @@ lemma [\<phi>reason default 0]:
   unfolding Argument_def Action_Tag_def using \<phi>CASE_VS . *)
 
 
-subsection \<open>Open \* Make Abstraction\<close>
+subsection \<open>Open \& Make Abstraction\<close>
 
 
 subsubsection \<open>Open Abstraction\<close>
 
-consts RAW :: \<open>('a,'b) \<phi>\<close> \<comment> \<open>destruct whom TODO! WIP!\<close>
+consts RAW :: \<open>('a,'b) \<phi>\<close>
 
 lemma open_abstraction_\<phi>app:
   \<open> Friendly_Help TEXT(\<open>Just tell me which \<phi>-type you want to open.\<close> \<newline>
@@ -1148,6 +1148,11 @@ setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
           ctxt addsimprocs [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]
                addsimps @{thms' HOL.simp_thms}))\<close>
 
+lemma \<comment>\<open>fallback\<close>
+  [\<phi>reason default 2 for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to RAW\<close>]:
+  \<open> FAIL TEXT(\<open>Fail to destruct \<phi>-type\<close> T)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to RAW \<close>
+  by blast
 
 subsubsection \<open>Make Abstraction\<close>
 
@@ -1165,6 +1170,18 @@ lemma [\<phi>reason !59]: \<comment> \<open>Exactly higher than the entry point 
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P\<close>
   by blast
 
+lemma \<comment>\<open>fallback\<close>
+  [\<phi>reason default 2 for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _ \<close>]:
+  \<open> FAIL TEXT(\<open>Fail to construct \<phi>-type\<close> U)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P \<close>
+  by blast
+
+lemma \<comment>\<open>fallback\<close>
+  [\<phi>reason default 3 for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ \<close>]:
+  \<open> FAIL TEXT(\<open>Fail to construct \<phi>-type\<close> U)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+  by blast
+
 setup \<open>let
   fun pass_check _ data = if #2 (#2 data) <= 59
                           then error "The priority of a MAKE rule must be greater than 59!"
@@ -1173,7 +1190,6 @@ in Context.theory_map (
       Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _\<close>, pass_check)
    #> Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close> ^ "'R", \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>, pass_check))
 end\<close>
-
 
 
 (*

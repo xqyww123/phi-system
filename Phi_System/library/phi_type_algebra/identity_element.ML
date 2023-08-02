@@ -128,13 +128,17 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                                       else @{thms' \<phi>TA_Ident_E_extract_prem})
         else K (K [])
 
-      val reasoner = if is_left then (fn ctxt => fn th =>
-            case Thm.major_prem_of th
-              of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
-                  (case P of Var _ => PLPR_reasoner (SOME 1) ctxt (@{thm' \<phi>TA_Ident_I_rule_step_infer} RS th)
-                           | _     => PLPR_reasoner (SOME 2) ctxt (@{thm' \<phi>TA_Ident_I_rule_step} RS th))
-               | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
-            else PLPR_reasoner (SOME 1)
+      val reasoner =
+            if is_left
+            then (fn ctxt => fn th =>
+              case Thm.major_prem_of th
+                of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
+                    let val rule = (case P of Var _ => @{thm' \<phi>TA_Ident_I_rule_step_infer}
+                                            | _     => @{thm' \<phi>TA_Ident_I_rule_step})
+                     in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded phi0)) ctxt th
+                    end
+                 | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
+            else exhaustive_PLPR_reasoner (SOME 1)
       fun reasoning _ = default_reasoning true
                             (default_reasoning_configure extract_prem) varify_subgoal reasoner
 
@@ -163,9 +167,10 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                   end) ctxt))
 
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
-      val rules = deriver_framework (name, parse_hint, extract_oprs_from_hint,
-                                     guess_property_id_ele is_left, rule, [],
-                                     SOME ind_conv, reasoning, K NONE, simp)
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
+                                     guess_property_id_ele is_left, rule,
+                                     [(SOME ([], ind_conv), reasoning)],
+                                     K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail "Fail to derive any property"

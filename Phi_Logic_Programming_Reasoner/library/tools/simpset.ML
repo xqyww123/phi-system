@@ -3,6 +3,7 @@ signature SIMPSET_CONFIGURE = sig
 datatype initial_ss_configure = Empty_SS (*containing nothing*)
                               | Empty_SS_configure of (Proof.context -> Proof.context)
                               | Minimal_SS (*containing necessary elements to enable minimal usage*)
+                              | Minimal_SS_configure of (Proof.context -> Proof.context)
                               | Give_SS of simpset
 
 val initial_ss_of : initial_ss_configure -> simpset
@@ -32,6 +33,7 @@ structure Simpset_Configure : SIMPSET_CONFIGURE = struct
 datatype initial_ss_configure = Empty_SS (*containing nothing*)
                               | Empty_SS_configure of (Proof.context -> Proof.context)
                               | Minimal_SS (*containing necessary elements to enable minimal usage*)
+                              | Minimal_SS_configure of (Proof.context -> Proof.context)
                               | Give_SS of simpset
 fun initial_ss_of Empty_SS =
       let val ctxt = Context.the_local_context ()
@@ -39,11 +41,12 @@ fun initial_ss_of Empty_SS =
                                        Simplifier.empty_ss
       end
   | initial_ss_of (Empty_SS_configure cfg) =
-      let val ctxt = Context.the_local_context ()
-       in Simplifier.simpset_map ctxt cfg Simplifier.empty_ss
-      end
+      Simplifier.simpset_map (Context.the_local_context ()) cfg Simplifier.empty_ss
   | initial_ss_of Minimal_SS =
       Raw_Simplifier.simpset_of (Raw_Simplifier.clear_simpset (Context.the_local_context ()))
+  | initial_ss_of (Minimal_SS_configure cfg) =
+      Simplifier.simpset_map (Context.the_local_context ()) cfg
+          (Raw_Simplifier.simpset_of (Raw_Simplifier.clear_simpset (Context.the_local_context ())))
   | initial_ss_of (Give_SS ss) = ss
 end
 

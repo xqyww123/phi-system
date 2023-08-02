@@ -108,41 +108,55 @@ val load_simpset : term list -> Proof.context -> Proof.context
 
 type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
 type reasoning = Proof.context -> thm -> thm
+type subgoal_configure = (int list (*quant_interps*) * ind_conv) option (*If not given, no induction will be applied*)
+                       * (Phi_Type_Algebra.phi_type -> reasoning)
 type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
 
 (*Main Entry Point*)
-val deriver_framework :
+val deriving_framework :
       string (*name of the proof cache, e.g. "/object_equive"*)
     * parse_hint
     * (term -> term list) (*extract_oprs_from_hint*)
     * guess_property
-    * thm (*rule*) * int list (*quant_interps*)
-    * ind_conv option (*If not given, no induction will be applied*)
-    * (Phi_Type_Algebra.phi_type -> reasoning)
+    * thm (*rule*)
+    * subgoal_configure list
     * solver
     * (Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm) (*final simplification*)
    -> Phi_Type_Algebra.phi_type -> term option -> Proof.context -> thm Seq.seq
 
-(*Besides the parameters already explained above, `rule` is a PLPR sequent giving a scheme about
-  how to derive the target property in detail. It is in the bellow form,
-  ` <the leading antecedent is the one to which induction applies> \<Longrightarrow>
-    <some optional antecedents, but no induction will be applied on them> \<Longrightarrow>
-    \<r>Success (*terminates the deriving successfully*) \<Longrightarrow>
+(* Besides the parameters explained above,
+  extract_oprs_from_hint allows user to indicate what are the mapper, predicator or other operators in
+  the given hint, so that we can load reasoning configures like simplification sets binding on the
+  operators (e.g., the simplification rules of the related BNF)
+
+  `rule` is a PLPR reasoning rule describing how to derive the target property in detail, in the bellow form,
+  ` ( <the leading antecedent is the one to which induction applies> \<Longrightarrow>
+      <some optional antecedents, but no induction will be applied on them> \<Longrightarrow>
+      \<r>Success (*terminates the deriving successfully*)
+    ) (*repeats as a deriving can invole multiple subgoals*) \<Longrightarrow>
     \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True (*stores the generated proof obligations*) \<Longrightarrow>
     <derived property>`
-  The leading antecedent can be universally quantified (by \<And>), the parameter `quant_interps` decides
-    how to interpret the quantified variables. For the *reserved* ith variable,
+
+  A deriving may contain multiple subgoals, and for each subgoal, a configure describes it.
+  The configure consists of an optional induction description and a reasoning description.
+  It provides supports for applying induction at most once for each goal, but more induction
+  can be applied manually.
+
+  Induction description:
+
+  The leading antecedent can be universally quantified by \<And>, the parameter `quant_interps` decides
+    how to interpret the quantified variables in a *reversed* order.
+  For the last $i$th variable (actually $i$ is the variable's de brujin index),
     quant_interps[i] = 0 means to interpret the variable as the abstract object and therefore the
         induction can destruct it according to the induction rule in the phi_type
-    quant_interps[i] = i means to interpret the variable as the i-th parameter of the \<phi>-type
-    quant_interps[i] = ~1 means to interpret it as a fixed variable*)
+    quant_interps[i] = j means to interpret the variable as the j-th parameter of the \<phi>-type
+    quant_interps[i] = ~1 means to interpret it as a fixed variable
 
-(*extract_oprs_from_hint allows user to indicate what are the mapper, predicator or other operators in
-  the given hint, so that we can load reasoning configures like simplification sets binding on the
-  operators (e.g., the simplification rules of the related BNF)*)
-
-(*`ind_conv` : any conversion on the induction rule. If not given, no induction will be applied.
-   A default option is the bellow*)
+  `ind_conv` : applies conversion and simplification on the induction rule.
+  If not given, no induction will be applied.
+  The default_ind_conv parses the induction hypotheses and conclusions, and supports to apply different
+    conversion on them.
+*)
 
 val default_ind_conv : (Proof.context -> Phi_Type_Algebra.phi_type -> conv) (*converting induction hypotheses*) *
                        (Proof.context -> Phi_Type_Algebra.phi_type -> conv) (*converting subgoals of the induction*)
@@ -152,28 +166,17 @@ val default_ind_conv : (Proof.context -> Phi_Type_Algebra.phi_type -> conv) (*co
   or else `default_ind_conv` cannot find which one is the induction hypothesis,
   see @{thm \<phi>TA_SHz_rule} as an example.*)
 
-(*The `solver` optionally solves the proof obligation. It can return NONE to fallback to the
-    default Auto_Sledgehammer solver.
-
-  If the abstract operators are given by the hint, the proof obligations should contain no
-    undetermined schematic variable so Auto_Sledgehammer is good to deal with them.
-  However if a deriver wants to infer the abstract operators when no hint is given, it can provide
-    a solver to instantiates the schematic variables.
-*)
-
-val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehammer solver*)
-
 (** Reasoning **)
-(*`reasoning` specifies how to solve the induction goals in detail.*)
+(*`reasoning` specifies how to solve the reasoning goals in detail.*)
 
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
 
-type PLPR_reasoner = Proof.context -> thm -> thm
+type reasoner = Proof.context -> thm -> thm
 val default_reasoning :
         bool (*to split the goals when they contain HOL.disj in antecedents, no matter if the conclusion
                contains schematic variables. it is false by default*) ->
-        reasoning_configure -> varifier -> PLPR_reasoner -> reasoning
+        reasoning_configure -> varifier -> reasoner -> reasoning
 (*It is a general framework using \<phi>-LPR and Isar subgoal tool.
   Because it uses Isar subgoal, it fixes all schematic variables. Users may expect the reasoning
   to infer some schematic variables. If so, `varifier` is used.
@@ -185,8 +188,10 @@ val default_reasoning :
   into three sorts, pure conditions, rewrites and reasoners respectively.
 *)
 
-val PLPR_reasoner : int option -> PLPR_reasoner
-val ToA_reasoner : Phi_Type_Algebra.phi_type -> PLPR_reasoner (*reason using NToA*)
+val exhaustive_PLPR_reasoner : int option -> reasoner
+val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> Proof.context -> thm -> thm
+  (*The chk may check if the ith argument of the target reasoning goal is in a good form and
+    raises warning if not*)
 
 (* Default Reasoning Configure *)
 
@@ -203,6 +208,20 @@ val default_reasoning_configure : extract_pure_prems -> reasoning_configure
 *)
 
 val extract_pure_prem_by_RS : thm list (*RS rules*) -> extract_pure_prems
+
+(** Solver **)
+
+(*The `solver` optionally solves the proof obligation. It can return NONE to fallback to the
+  default Auto_Sledgehammer solver.
+
+  When the object operators are given by the hint, the proof obligations should contain no
+    undetermined schematic variable and Auto_Sledgehammer is good in this case.
+  When no hint is given, a deriver can provide a solver that infers the object operators
+    and perhaps call the fallback sledgehammer solver after it.
+*)
+
+val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehammer solver*)
+
 
 (** Other Misc Tools **)
 
@@ -756,7 +775,7 @@ fun oblg_solver proof_id ctxt sequent = (
   quants[i] = i means interpret the variable as the i-th parameter of the \<phi>-type
   quants[i] = ~1 means interpret it as a fixed variable
   Note the quants is reversed against the quantified variables*)
-fun deriver_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rule,quants,ind_conv_opt,reasoning,solver,simp)
+fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rule,subgoal_reasonings,solver,simp)
                       (phi0 : phi_type) hint ctxt0 =
   let (*val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0*)
       (*val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0*)
@@ -811,17 +830,21 @@ fun deriver_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rul
                                        Syntax.string_of_term ctxt X)
       val ant = map (chk_ant o Object_Logic.atomize_term ctxt) ants
              |> Phi_Help.list_mk_conj
-      val inst_rule = Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
-                                    (Vartab.empty, Vartab.empty)
+      val inst_rule = (Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
+                                     (Vartab.empty, Vartab.empty)
+                       handle Pattern.MATCH =>
+                          raise Automation_Fail (let open Pretty in string_of (
+                              chunks [str "The given property does not match the reasoning rule",
+                                      item [str "property: ", Syntax.pretty_term ctxt property],
+                                      item [str "rule: ", Syntax.pretty_term ctxt (Thm.concl_of rule)]]
+                           )end))
                    |> apsnd (Vartab.update_new (("Ant",0), (\<^typ>\<open>bool\<close>, ant)))
                    |> Phi_Help.subst_env
                    |> Phi_Help.certify_vars (Context.Proof ctxt)
       val rule' = Thm.instantiate inst_rule rule
       
-      val rule'2 =
-            case ind_conv_opt
-              of NONE => rule'
-               | SOME ind_conv =>
+      fun apply_induction NONE rule' = rule'
+        | apply_induction (SOME (quants, ind_conv)) rule' =
             let val free_tabel = Symtab.build (fold_index (fn (i, SOME (Free (N,_))) => Symtab.update_new (N,i)
                                                             | (_, SOME (Bound _)) => I
                                                             | (_, NONE) => I
@@ -849,14 +872,15 @@ fun deriver_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rul
           
                 val ((inst,[rule't]), ctxt't) = Variable.import true [rule'] ctxt
                 val ind't = Thm.instantiate inst ind
-             in singleton (Variable.export ctxt't ctxt) (ind_conv ctxt phi (ind't RS rule't))
+             in (ind't RS Goal.protect 1 rule't)
+             |> ind_conv ctxt phi
+             |> Goal.conclude
+             |> singleton (Variable.export ctxt't ctxt) 
             end
 
-      fun reasoning_loop rule =
-        case Thm.major_prem_of rule
-          of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) => rule
-           | _ => reasoning_loop (reasoning phi ctxt rule)
-      val rule'3 = reasoning_loop rule'2
+      val rule'3 = fold (fn (ind_config,reasoning) => fn rule' =>
+              reasoning phi ctxt (apply_induction ind_config rule')
+            ) subgoal_reasonings rule'
 
       val rule'4 =(case solver (phi, ctxt, rule'3)
                      of SOME ret => ret
@@ -1061,11 +1085,12 @@ fun varify_subgoal_finale sequent =
   Phi_Help.repeat (fn th => @{thm' Pure.reflexive} RS th) sequent
 
 type reasoning = Proof.context -> thm -> thm
+type subgoal_configure = (int list (*quant_interps*) * ind_conv) option (*If not given, no induction will be applied*)
+                       * (Phi_Type_Algebra.phi_type -> reasoning)
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
-type PLPR_reasoner = Proof.context -> thm -> thm
+type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
-
 
 fun default_reasoning_configure extract_prems
                                 (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
@@ -1121,7 +1146,11 @@ let fun has_disj_ants th =
               abstract_constraint_guided_reasoning ctxt0 (@{thm' allI} RS sequent0)
      | _ =>
   if has_disj_ants sequent0 andalso (always_diverge_disj orelse no_schematic_in_concl sequent0)
-  then Seq.hd (Thm.biresolution (SOME ctxt0) true [(true, @{thm' disjE}), (true, @{thm' tagged_disjE})] 1 sequent0)
+  then Seq.hd (Thm.biresolution (SOME ctxt0) true
+            [(true, @{thm' disjE}),
+             (true, @{lemma \<open> P \<or> Q @action A \<Longrightarrow> (P @action A \<Longrightarrow> C) \<Longrightarrow> (Q @action A \<Longrightarrow> C) \<Longrightarrow> C \<close>
+                        by (unfold Action_Tag_def, blast)})]
+            1 sequent0)
     |> abstract_constraint_guided_reasoning ctxt0
   else let
       val sequent = sequent0
@@ -1153,7 +1182,15 @@ let fun has_disj_ants th =
             |> map ( Thm.forall_elim_vars (Thm.maxidx_of lsequent)
                    o Phi_Help.repeat (fn th => th RS' (ctxt, @{thm' spec})))
 
-      val local_prems = maps pass_out_ant out_ants @ local_prems'1
+      fun pass_prem th =
+        case Thm.concl_of th
+          of Const(\<^const_name>\<open>Pure.conjunction\<close>, _) $ _ $ _ =>
+              maps pass_prem [th RS' (ctxt, @{thm' Pure.conjunctionD1}),
+                              th RS' (ctxt, @{thm' Pure.conjunctionD2})]
+           | _ => [th]
+
+      val local_prems = (maps pass_out_ant out_ants @ local_prems'1)
+                     |> maps pass_prem
 
       val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (focus, lsequent) (local_prems, ctxt)
       val reasoner_ants = reasoner_ants'
@@ -1197,6 +1234,7 @@ fun chk_unfolded (phi : phi_type) term =
         | chk (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = chk X
         | chk (Abs(_,_,X)) = chk X
         | chk (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) = is_atom x andalso chk T
+        | chk (Const(\<^const_name>\<open>\<phi>Auto_Prod\<close>, _) $ A $ B) = chk A andalso chk B
         | chk (Const(N',_)) = N = N'
         | chk (Free(N',_)) = N = N'
         | chk (X $ _) = chk X
@@ -1209,19 +1247,22 @@ fun chk_unfolded (phi : phi_type) term =
 
 fun conv_chk_unfolded (phi : phi_type) ctm = (chk_unfolded phi (Thm.term_of ctm); Conv.all_conv ctm)
 
-fun PLPR_reasoner num ctxt sequent =
+fun exhaustive_PLPR_reasoner num ctxt sequent =
   case PLPR_Exhaustive.reason_exhaustively num (ctxt, sequent)
     of SOME th => th
      | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
-   
 
-fun ToA_reasoner phi ctxt sequent =
-  let val sequent'1 = (case Thm.major_prem_of sequent
-                         of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _)
-                              => (chk_unfolded phi X; chk_unfolded phi Y;
-                                  @{thm' Action_Tag_D[where A = \<open>NToA\<close>]} RS sequent)
-                          | _ => sequent)
-   in PLPR_reasoner (SOME 1) ctxt sequent'1
+fun exhaustive_PLPR_reasoner_by_rule rule chk_unfolds ctxt sequent =
+  let fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
+        | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = chk X
+        | chk X = let val (_, args) = Term.strip_comb X
+                      fun app_index i [] = ()
+                        | app_index i (h::L) = (chk_unfolds i h ; app_index (i+1) L)
+                   in app_index 0 args
+                  end
+   in chk (Thm.major_prem_of sequent) ;
+      exhaustive_PLPR_reasoner (SOME (Thm.nprems_of rule)) ctxt
+                               (rule RS sequent)
   end
 
 fun extract_pure_prem_by_RS rules ctxt thm =

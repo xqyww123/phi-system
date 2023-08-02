@@ -69,12 +69,6 @@ fun guess_property_TF phi0 ctxt =
 
 local
 
-fun TF_reasoner ctxt sequent =
-  case PLPR_Exhaustive.reason_exhaustively (SOME 3)
-            (ctxt, @{thm' \<phi>TA_TF_rule_step} RS sequent)
-    of SOME th => th
-     | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
-
 fun TF_reasoning phi ctxt =
   let val extract_prem =
         if def_contains_satisfaction phi
@@ -82,7 +76,9 @@ fun TF_reasoning phi ctxt =
         else K (K [])
    in default_reasoning true
           (default_reasoning_configure extract_prem)
-          (K (K NONE)) TF_reasoner ctxt
+          (K (K NONE))
+          (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded phi)))
+          ctxt
   end
 
 fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
@@ -119,9 +115,10 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                ) ctxt)
       val name = if prop_i = 0 then "Transformation_Functor"
                  else "Transformation_Functor/" ^ string_of_int prop_i
-      val rules = deriver_framework (name, parse_hint, extract_oprs_from_hint, guess_property_TF,
-                                      @{thm' \<phi>TA_TF_rule}, [0,~1,~1,~1],
-                                      SOME ind_conv, TF_reasoning, K NONE, simp)
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
+                                      guess_property_TF, @{thm' \<phi>TA_TF_rule},
+                                      [(SOME ([0,~1,~1,~1], ind_conv), TF_reasoning)],
+                                      K NONE, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail "Fail to derive any property"
@@ -204,7 +201,7 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M $ _ $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []
 
-      val reasoning = PLPR_reasoner NONE
+      val reasoning = exhaustive_PLPR_reasoner NONE
       fun simp (_, ctxt) thm =
         if is_some hint0 then thm
         else Conv.fconv_rule (
@@ -217,8 +214,8 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
              ) ctxt) thm
       val name = if prop_i = 0 then "Functional_Transformation_Functor"
                  else "Functional_Transformation_Functor/" ^ string_of_int prop_i
-      val rules = deriver_framework (name, parse_hint, extract_oprs_from_hint, guess_property_FTF, @{thm' \<phi>TA_FTF_rule}, [],
-                                     NONE, K reasoning, K NONE, simp)
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_FTF, @{thm' \<phi>TA_FTF_rule},
+                                      [(NONE, K reasoning)], K NONE, simp)
                                     phi0 hint0 ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail "Fail to derive any property"

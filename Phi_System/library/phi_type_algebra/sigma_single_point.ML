@@ -179,8 +179,8 @@ fun SgTH_reasoning phi ctxt =
       reasoning_configure
       (K (K NONE))
       (fn ctxt => fn sequent => (
-         (case Thm.major_prem_of sequent
-            of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _)
+         (case try Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
+            of SOME (X, Y, _)
                  => (chk_unfolded phi X; chk_unfolded phi Y)
              | _ => ()) ;
           case PLPR_Exhaustive.reason_exhaustively (SOME 2)
@@ -222,9 +222,10 @@ fun gen_SgTH hint0 (phi0 : phi_type) thy =
                  end
              ) ctxt)
 
-      val rules = deriver_framework ("Trivial_\<Sigma>", parse_hint, extract_oprs_from_hint,
-                                     guess_property_SgTH, @{thm' \<phi>TA_SgH_rule}, [0,~1,~1],
-                                     SOME ind_conv, SgTH_reasoning, K NONE, simp)
+      val rules = deriving_framework ("Trivial_\<Sigma>", parse_hint, extract_oprs_from_hint,
+                                     guess_property_SgTH, @{thm' \<phi>TA_SgH_rule},
+                                     [(SOME ([0,~1,~1], ind_conv), SgTH_reasoning)],
+                                     K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
    of SOME (rule, _) => thy

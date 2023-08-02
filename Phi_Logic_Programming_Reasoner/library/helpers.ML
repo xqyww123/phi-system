@@ -99,6 +99,8 @@ val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val hol_alls_to_meta_alls: (Proof.context -> conv) -> Proof.context -> conv
 
+val hol_imp_conv : conv -> conv -> conv
+
 val leading_antecedent_conv : conv -> conv
 val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
 val hhf_conv : (Proof.context -> conv) (*premise conv*)
@@ -190,6 +192,13 @@ fun hol_alls_to_meta_alls C ctxt ctm =
           meta_all_conv (hol_alls_to_meta_alls C o snd) ctxt) ctm
      | _ => C ctxt ctm
 
+fun hol_imp_conv cv1 cv2 ct =
+  (case Thm.term_of ct
+     of Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
+          Conv.combination_conv (Conv.arg_conv cv1) cv2 ct
+      | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (hol_imp_conv cv1 cv2) ct
+      | _ => raise CTERM ("imp_conv", [ct]));
+
 
 
 fun leading_antecedent_conv C = implies_conv C all_conv
@@ -271,12 +280,7 @@ end
 structure HOLogic : HOLOGIC = struct
 open HOLogic
 
-fun imp_conv cv1 cv2 ct =
-  (case Thm.term_of ct of
-    Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
-      Conv.combination_conv (Conv.arg_conv cv1) cv2 ct
-  | _ => raise CTERM ("imp_conv", [ct]));
-
+val imp_conv = Phi_Conv.hol_imp_conv
 val All_conv = Phi_Conv.hol_all_conv
 val Ex_conv = Phi_Conv.quant_conv \<^const_name>\<open>Ex\<close>
 

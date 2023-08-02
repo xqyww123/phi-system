@@ -3,7 +3,10 @@ chapter \<open>Pre-built \<phi>-Types\<close>
 theory Phi_Types
   imports Phi_Type_Algebra
 begin
- 
+
+ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified [] ;
+    Phi_Conv.set_rules__type_form_to_ex_quantified_single_var [] \<close>
+
 section \<open>Basics\<close>
  
 subsection \<open>Preliminary Sugars\<close>
@@ -56,8 +59,8 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding Subjection into Type\<close>
  
-declare [[\<phi>trace_reasoning = 0]]
-                                             
+declare  [[\<phi>trace_reasoning = 0]]
+                                               
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -68,6 +71,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
        and Separation_Homo
+
+thm SubjectionTY.elim_reasoning
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -137,7 +142,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-    
+      
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
 
@@ -157,14 +162,15 @@ text \<open>Transformation functor requires inner elements to be transformed int
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
-             
+          
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
-       (*and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>*)
+       and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
        and Identity_Element
        and Open_Abstraction_Full
+
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
@@ -223,7 +229,7 @@ lemma \<phi>\<s>\<u>\<b>\<j>_over_\<Sigma>[\<phi>programming_simps]:
   by (rule \<phi>Type_eqI, simp)
 
 lemma [embed_into_\<phi>type]:
-  \<open> NO_MATCH (\<lambda>_. T) T
+  \<open> NO_MATCH (\<lambda>_. T') T
 \<Longrightarrow> f x \<Ztypecolon> T x \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. P x } \<Ztypecolon> \<S> \<Sigma> T\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
@@ -238,10 +244,44 @@ lemma [embed_into_\<phi>type]:
   unfolding atomize_eq BI_eq_iff
   by clarsimp
 
+lemma [embed_into_\<phi>type]:
+  \<open> NO_MATCH (\<lambda>_. T') T
+\<Longrightarrow> {x. P c x} \<Ztypecolon> \<S> (T c) \<s>\<u>\<b>\<j> c. \<top> \<equiv> {x. \<exists>c y. x = (c, y) \<and> P c y} \<Ztypecolon> \<S> \<Sigma> T\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
 
+lemma [embed_into_\<phi>type]:
+  \<open> {x. P c x} \<Ztypecolon> \<S> T \<s>\<u>\<b>\<j> c. \<top> \<equiv> {x. \<exists>c. P c x} \<Ztypecolon> \<S> T\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
+
+paragraph \<open>Conversion Setup\<close>
+
+lemma pure_type_to_ex_quantified_form_1:
+  \<open> {x. \<exists>a. P x a} \<Ztypecolon> \<S> T \<equiv> {x. P x a} \<Ztypecolon> \<S> T \<s>\<u>\<b>\<j> a. \<top> \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp blast
+
+lemma pure_type_to_ex_quantified_form_2:
+  \<open> {x. x = y \<and> P} \<Ztypecolon> \<S> T \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> P \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+
+lemma pure_type_to_ex_quantified_form_3:
+  \<open> Collect P \<Ztypecolon> \<S> T \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. P y \<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+
+ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified
+      @{thms' pure_type_to_ex_quantified_form_1 pure_type_to_ex_quantified_form_2} ;
+    Phi_Conv.set_rules__type_form_to_ex_quantified_single_var
+      @{thms' pure_type_to_ex_quantified_form_1 pure_type_to_ex_quantified_form_3} \<close>
+
+hide_fact pure_type_to_ex_quantified_form_1
+          pure_type_to_ex_quantified_form_2
+          pure_type_to_ex_quantified_form_3
 
 paragraph \<open>ToA Reasoning\<close>
-
 
 declare [[\<phi>trace_reasoning = 1]]
 
@@ -401,6 +441,8 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def Transformation_def
   by simp
 
+
+
 subsection \<open>Vertical Composition\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
@@ -527,7 +569,7 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 
 subsection \<open>Embedding Additive Disjunction\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
     
 \<phi>type_def \<phi>Union :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<or>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<or>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U))\<close>
@@ -542,6 +584,17 @@ declare [[\<phi>trace_reasoning = 1]]
           \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) (P \<or> Q)\<close>
        and \<open>  Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<or> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) \<close>
+
+subsubsection \<open>Configurations\<close>
+
+declare \<phi>Union_def[embed_into_\<phi>type del]
+
+lemma [embed_into_\<phi>type]:
+  \<open>(x \<Ztypecolon> T) + (y \<Ztypecolon> U) \<equiv> (x,y) \<Ztypecolon> T \<or>\<^sub>\<phi> U\<close>
+  unfolding atomize_eq BI_eq_iff
+  by clarsimp
+
+let_\<phi>type \<phi>Union deriving \<open>Object_Equiv (\<circle> \<or>\<^sub>\<phi> \<circle>) (\<lambda>_ _. True)\<close>
 
 
 subsection \<open>Embedding Additive Conjunction\<close>
@@ -715,16 +768,16 @@ subsubsection \<open>By Key\<close>
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 3]]
-                                                               
+declare [[\<phi>trace_reasoning = 0]]
+                                                                   
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
   deriving Basic
-       (*and Identity_Element
+       and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
-       and Trivial_\<Sigma>*)
+       and Trivial_\<Sigma>
 
 declare map_eq_Cons_conv[\<phi>constraint_expansion] (*TODO!!!!*)
 
@@ -735,7 +788,7 @@ declare map_eq_Cons_conv[\<phi>constraint_expansion] (*TODO!!!!*)
 
 
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
    
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>

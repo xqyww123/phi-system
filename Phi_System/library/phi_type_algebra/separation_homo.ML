@@ -111,27 +111,18 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
   end)
   end
 
-
-fun SHu_reasoner ctxt sequent =
-  case PLPR_Exhaustive.reason_exhaustively (SOME 2)
-            (ctxt, @{thm' \<phi>TA_reason_rule__simp_NToA} RS sequent)
-    of SOME th => th
-     | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
-
 fun SH_reasoning is_intro phi ctxt =
   default_reasoning true
       (default_reasoning_configure (K (K [])))
       (K (K NONE))
-      (fn ctxt => fn sequent => (
-         (case Thm.major_prem_of sequent
-            of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _)
-                        $ (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) $ _ $ _)
-                 => (chk_unfolded phi X1; chk_unfolded phi X2)
-             | _ => ()) ;
-          if is_intro
-          then ToA_reasoner phi ctxt sequent
-          else SHu_reasoner ctxt sequent
-      )) ctxt
+      (fn ctxt => fn sequent =>
+         let fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) = (chk_unfolded phi X1; chk_unfolded phi X2)
+               | chk 0 X = chk_unfolded phi X
+               | chk _ _ = ()
+          in if is_intro
+          then exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} chk ctxt sequent
+          else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
+         end) ctxt
 
 fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
@@ -181,10 +172,11 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
                  end
              ) ctxt)
 
-      val rules = deriver_framework (if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E",
+      val rules = deriving_framework (if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E",
                                      parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
-                                     (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule}), [0,~1,~1],
-                                     SOME ind_conv, SH_reasoning is_intro, K NONE, simp)
+                                     (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule}),
+                                     [(SOME ([0,~1,~1], ind_conv), SH_reasoning is_intro)],
+                                     K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail "Fail to derive any property"
