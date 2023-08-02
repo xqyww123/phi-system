@@ -135,7 +135,7 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                 of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
                     let val rule = (case P of Var _ => @{thm' \<phi>TA_Ident_I_rule_step_infer}
                                             | _     => @{thm' \<phi>TA_Ident_I_rule_step})
-                     in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded phi0)) ctxt th
+                     in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded' ctxt phi0)) ctxt th
                     end
                  | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
             else exhaustive_PLPR_reasoner (SOME 1)

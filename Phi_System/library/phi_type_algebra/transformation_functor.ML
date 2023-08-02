@@ -77,7 +77,7 @@ fun TF_reasoning phi ctxt =
    in default_reasoning true
           (default_reasoning_configure extract_prem)
           (K (K NONE))
-          (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded phi)))
+          (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded' ctxt phi)))
           ctxt
   end
 
@@ -99,9 +99,9 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                               Phi_Syntax.transformation_conv
                               (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)) then_conv
-                               conv_chk_unfolded phi)
+                               conv_chk_unfolded phi ctxt)
                               (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)) then_conv
-                               conv_chk_unfolded phi)
+                               conv_chk_unfolded phi ctxt)
                               Conv.all_conv)))))
       fun simp (_, ctxt) =
         if is_some hint0 then I

@@ -1564,28 +1564,44 @@ ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
 
 paragraph \<open>Configurations\<close>
 
-lemma zip_eq_Cons_ex:
-  \<open>zip a b = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. a = ah # al \<and> b = bh # bl \<and> (ah,bh) = h \<and> zip al bl = l)\<close>
+definition \<open>zip' = case_prod zip\<close>
+definition \<open>unzip' l = (map fst l, map snd l)\<close>
+
+lemma zip'_eq_Cons_ex:
+  \<open>zip' x = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. fst x = ah # al \<and> snd x = bh # bl \<and> (ah,bh) = h \<and> zip' (al,bl) = l)\<close>
+  unfolding zip'_def
+  by (cases x; simp; induct_tac b; case_tac a; simp)
+
+lemma zip'_eq_Nil_eq_len:
+  \<open>length (fst l) = length (snd l) \<Longrightarrow> (zip' l = []) \<longleftrightarrow> l = ([], [])\<close>
+  unfolding zip'_def
+  apply (cases l; simp)
+  subgoal for a b
+    by (induct b; cases a; simp) .
+
+lemma zip'_eq_Nil_with_rel:
+  \<open>list_all2 P a b \<and> zip' (a,b) = [] \<longleftrightarrow> a = [] \<and> b = []\<close>
+  unfolding zip'_def
   by (induct b; cases a; simp)
 
-lemma zip_eq_Nil_eq_len:
-  \<open>length a = length b \<Longrightarrow> (zip a b = []) \<longleftrightarrow> a = [] \<and> b = []\<close>
-  by (induct b; cases a; simp)
+lemma unzip'_inj[simp]:
+  \<open>unzip' [] = ([], [])\<close>
+  \<open>fst (unzip' (x # L)) = (fst x # fst (unzip' L))\<close>
+  \<open>snd (unzip' (x # L)) = (snd x # snd (unzip' L))\<close>
+  unfolding unzip'_def
+  by simp_all
 
-lemma zip_eq_Nil_with_rel:
-  \<open>list_all2 P a b \<and> zip a b = [] \<longleftrightarrow> a = [] \<and> b = []\<close>
-  by (induct b; cases a; simp)
-
+thm zip'_eq_Cons_ex zip'_eq_Nil_eq_len
 
 setup \<open>Context.theory_map(
   BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>list\<close>, {
       deads = [],
       lives = [\<^typ>\<open>'a\<close>],
       lives'= [\<^typ>\<open>'b\<close>],
-      zip = \<^term>\<open>case_prod zip\<close>,
-      unzip = \<^term>\<open>(\<lambda>l. (map fst l, map snd l))\<close>,
-      zip_simps = @{thms zip_eq_Cons_ex},
-      unzip_simps = [] (*what I need to give?*)
+      zip = \<^term>\<open>zip'\<close>,
+      unzip = \<^Const>\<open>unzip' \<^typ>\<open>'a\<close> \<^typ>\<open>'b\<close>\<close>,
+      zip_simps = @{thms' zip'_eq_Cons_ex zip'_eq_Cons_ex zip'_eq_Nil_eq_len},
+      unzip_simps = @{thms' unzip'_inj} (*what I need to give?*)
   })
 #> eBNF_Info.add_BNF (\<^type_name>\<open>Set.set\<close>, 
 let val a = TFree ("a", \<^sort>\<open>type\<close>)
@@ -2175,11 +2191,11 @@ ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\
           \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH (*\<phi>TA_reason_rule__simp_NToA*) *)
 setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt => ctxt addsimps
   @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
-          prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv
+          prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
           ExSet_simps
           \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Prod_expn'[folded \<phi>Auto_Prod_def] \<phi>Prod_expn''[folded \<phi>Auto_Prod_def]
           FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
-          list_all2_Cons1 list_all2_Nil zip_eq_Cons_ex zip_eq_Nil_eq_len list_all2_lengthD
+          list_all2_Cons1 list_all2_Nil list_all2_lengthD
           map_ident}))\<close>
 
 lemmas [\<phi>constraint_expansion] =
@@ -2189,7 +2205,6 @@ lemmas [\<phi>constraint_expansion] =
 
 thm Basic_BNFs.prod_set_defs
 thm map_ident
-thm zip_eq_Nil_eq_len zip_eq_Cons_ex
 
 
 

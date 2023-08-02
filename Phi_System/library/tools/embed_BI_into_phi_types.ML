@@ -96,7 +96,7 @@ val _ = Theory.setup (Context.theory_map (
                       \<^simproc>\<open>defined_Collect\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>Set.defined_Bex\<close>,
                       \<^simproc>\<open>unit_eq\<close>, \<^simproc>\<open>case_prod_beta\<close>, \<^simproc>\<open>case_prod_eta\<close>,
                       \<^simproc>\<open>Collect_mem\<close>, move_Ex_for_set_notation]
-         addsimps @{thms' HOL.simp_thms})
+         addsimps @{thms' HOL.simp_thms conj_assoc})
 ) #> Config.put_global Embed_into_Phi_Type__enable_chk true
 )
 
@@ -129,13 +129,15 @@ fun type_form_to_ex_quantified ctxt ctm =
      | NONE => Conv.all_conv ctm
 
 fun single_var_fallback ctm =
-  case Thm.term_of ctm
-    of Const(\<^const_name>\<open>ExSet\<close>, _) $ (
-          Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound 0 $ _) $ _) =>
-        Conv.all_conv ctm
-     | Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ =>
+  let fun chk (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, X)) = chk X
+        | chk (Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound _ $ _) $ _) = true
+        | chk _ = false
+   in case Thm.term_of ctm
+   of Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ =>
         Conv.rewr_conv @{lemma \<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x\<close> by (clarsimp simp add: atomize_eq BI_eq_iff)} ctm
-     | _ => raise CTERM ("Fail to convert into existential quantified single variable form", [ctm])
+    | X => if chk X then Conv.all_conv ctm
+           else raise CTERM ("Fail to convert into existential quantified single variable form", [ctm])
+  end
 
 fun type_form_to_ex_quantified_single_var ctxt ctm =
   case !rules_of_type_form_to_ex_quantified_single_var

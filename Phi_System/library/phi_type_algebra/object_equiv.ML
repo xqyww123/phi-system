@@ -137,7 +137,7 @@ fun OE_reasoning phi ctxt rule =
    in default_reasoning true
           (default_reasoning_configure extract_prem)
           (K (K NONE))
-          (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} (K (chk_unfolded phi)))
+          (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} (K (chk_unfolded' ctxt' phi)))
           ctxt' rule
   end
 
@@ -191,15 +191,17 @@ fun gen_obj_equal'_singular (i,hint0) (phi0 : phi_type) thy =
                (K (Conv.arg_conv (Conv.arg_conv (
                   Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))))) ctxt)
 
-      fun OEO_reasoning1 phi = default_reasoning false
+      fun OEO_reasoning1 phi ctxt = default_reasoning false
             (default_reasoning_configure (K (K [])))
             (K (K NONE))
-            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_NToA} (K (chk_unfolded phi)))
+            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_NToA} (K (chk_unfolded' ctxt phi)))
+            ctxt
 
-      fun OEO_reasoning2 phi = default_reasoning false
+      fun OEO_reasoning2 phi ctxt = default_reasoning false
             (default_reasoning_configure (K (K [])))
             (K (K NONE))
-            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__NToA} (K (chk_unfolded phi)))
+            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__NToA} (K (chk_unfolded' ctxt phi)))
+            ctxt
 
       val rules = deriving_framework (NAME, parse_hint, extract_oprs_from_hint,
                                       guess_obj_eq_singular_None, rule,

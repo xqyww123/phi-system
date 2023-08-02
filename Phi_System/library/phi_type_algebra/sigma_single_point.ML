@@ -181,7 +181,7 @@ fun SgTH_reasoning phi ctxt =
       (fn ctxt => fn sequent => (
          (case try Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
             of SOME (X, Y, _)
-                 => (chk_unfolded phi X; chk_unfolded phi Y)
+                 => (chk_unfolded' ctxt phi X; chk_unfolded' ctxt phi Y)
              | _ => ()) ;
           case PLPR_Exhaustive.reason_exhaustively (SOME 2)
                   (ctxt, @{thm' \<phi>TA_reason_rule__simp_NToA} RS sequent)

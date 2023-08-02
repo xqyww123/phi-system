@@ -116,8 +116,8 @@ fun SH_reasoning is_intro phi ctxt =
       (default_reasoning_configure (K (K [])))
       (K (K NONE))
       (fn ctxt => fn sequent =>
-         let fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) = (chk_unfolded phi X1; chk_unfolded phi X2)
-               | chk 0 X = chk_unfolded phi X
+         let fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) = (chk_unfolded' ctxt phi X1; chk_unfolded' ctxt phi X2)
+               | chk 0 X = chk_unfolded' ctxt phi X
                | chk _ _ = ()
           in if is_intro
           then exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} chk ctxt sequent

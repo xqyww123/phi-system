@@ -162,7 +162,8 @@ text \<open>Transformation functor requires inner elements to be transformed int
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
-          
+declare [[simp_trace_depth_limit = 10]]
+             
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
@@ -281,6 +282,7 @@ hide_fact pure_type_to_ex_quantified_form_1
           pure_type_to_ex_quantified_form_2
           pure_type_to_ex_quantified_form_3
 
+
 paragraph \<open>ToA Reasoning\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
@@ -384,17 +386,6 @@ lemma \<phi>TA_SgH_T_intro':
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> c = c'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T c \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
   unfolding Premise_def by simp
-
-term \<open>case_option None\<close>
-term case_option
-
-thm \<phi>constraint_expansion
-
-term map_option
-
-ML \<open>\<^schematic_cterm>\<open>case_option None ?f :: ?'b option \<Rightarrow> ?'a option\<close>
-      |> Thm.incr_indexes_cterm 1
-|> Thm.term_of\<close>
 
 ML_file \<open>library/phi_type_algebra/sigma_single_point.ML\<close>
 
@@ -768,7 +759,7 @@ subsubsection \<open>By Key\<close>
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
                                                                    
 \<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
@@ -778,27 +769,78 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        and Separation_Homo
        and Trivial_\<Sigma>
+       and SE_Trim_Empty
 
 declare map_eq_Cons_conv[\<phi>constraint_expansion] (*TODO!!!!*)
 
 
 
+lemma
+  \<open>(\<forall>x xa xb xc.
+              list_all2 (\<lambda>x y. True) x xb \<and> list_all2 (list_all2 (\<lambda>x y. True)) xa xc \<longrightarrow>
+              (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ry.
+                  (\<forall>a. a \<in> set xb \<longrightarrow> (y a, a) \<in> UNIV) \<and>
+                  (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
+                      fst (unzip' (map (\<lambda>x. ((fst x, snd (snd x)), ())) (zip' (x, map (\<lambda>x. (y x, x)) xb)))) =
+                      zip' (x, xb) \<and>
+                      length x = length (map (\<lambda>x. (y x, x)) xb))))\<close>
+  apply auto
+
+
+lemma
+  \<open>(\<And>xb xc xd xe.
+     length xb = length xd \<Longrightarrow>
+     list_all2 (\<lambda>x y. length x = length y) xc xe \<Longrightarrow>
+     map (fst \<circ> (\<lambda>x. ((fst x, snd (snd x)), ()))) (zip xb (map (Pair ()) xd)) = zip xb xd) \<Longrightarrow>
+ ((\<forall>x xa xb xc xd xaa xba xca xda xe.
+      ((list_all2 (\<lambda>x y. True) xba xda \<and> list_all2 (list_all2 (\<lambda>x y. True)) xca xe) \<and>
+       zip xba xda = xd \<and> map2 zip xca xe = xaa \<longrightarrow>
+       (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu. list_all2 (list_all2 (=)) (fst (xca, uu)) xca)) \<and>
+      ((list_all2 (\<lambda>x y. True) xba xda \<and> list_all2 (list_all2 (\<lambda>x y. True)) xca xe) \<and>
+       zip xba xda = xd \<and> map2 zip xca xe = xaa \<longrightarrow>
+       (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
+           list_all2 (list_all2 (=)) (fst (snd (xba, fst (xe, uu)), fst (xba, fst (xe, uu)))) xe \<and>
+           (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruua.
+               list_all2 (=)
+                (fst (fst (map (fst \<circ>
+                                (\<lambda>x. ((fst (fst x, fst (snd x)), fst (snd (snd (fst x, fst (snd x)), snd (snd x)), ())),
+                                       ())))
+                            (case (snd (snd (xba, fst (xe, uu)), fst (xba, fst (xe, uu))), map (\<lambda>x. (uua x, x)) xda) of
+                             (x, xa) \<Rightarrow> zip x xa),
+                           map (snd \<circ>
+                                (\<lambda>x. ((fst (fst x, fst (snd x)), fst (snd (snd (fst x, fst (snd x)), snd (snd x)), ())),
+                                       ())))
+                            (case (snd (snd (xba, fst (xe, uu)), fst (xba, fst (xe, uu))), map (\<lambda>x. (uua x, x)) xda) of
+                             (x, xa) \<Rightarrow> zip x xa)),
+                      ()))
+                xd \<and>
+               (\<forall>a. a \<in> set xda \<longrightarrow> (uua a, a) \<in> UNIV) \<and>
+               (case (snd (snd (xba, fst (xe, uu)), fst (xba, fst (xe, uu))), map (\<lambda>x. (uua x, x)) xda) of
+                (x, y) \<Rightarrow> length x = length y))))) \<and>
+  True)\<close>
+  apply auto
+  apply (simp add: list.rel_eq)
+   apply (simp add: list.rel_eq)
+  apply (auto simp add: comp_def)
+
+  term map2
 
 
 
 
 
-declare [[\<phi>trace_reasoning = 0]]
+
+declare [[\<phi>trace_reasoning = 3]]
    
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
-  deriving Functional_Transformation_Functor
+  deriving (*Functional_Transformation_Functor
        and Basic
        and Identity_Element
        and Transformation_Functor
        and Trivial_\<Sigma>
-       (*and Separation_Homo*)
+       and*) Separation_Homo\<^sub>I
 
 
 (* BOSS:

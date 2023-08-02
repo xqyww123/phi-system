@@ -234,8 +234,9 @@ val accept_one : string (*name for printing*) ->
        hint list -> Phi_Type_Algebra.derive
     (*wraps and checks if the user gives at most one hint*)
 
-val chk_unfolded : Phi_Type_Algebra.phi_type -> term -> unit
-val conv_chk_unfolded : Phi_Type_Algebra.phi_type -> conv
+val chk_unfolded : Context.generic -> Phi_Type_Algebra.phi_type -> term -> unit
+val chk_unfolded': Proof.context -> Phi_Type_Algebra.phi_type -> term -> unit
+val conv_chk_unfolded : Phi_Type_Algebra.phi_type -> Proof.context -> conv
       (*roughly check if a phi-type expression is expanded, and warn if not*)
 
 val quantifies_abstract_object : (term -> term option) (*get the abstract object*) -> (term -> term)
@@ -753,19 +754,22 @@ end
 
 type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
 
-fun oblg_solver proof_id ctxt sequent = (
+fun oblg_solver proof_id ctxt sequent =
   (*case Thm.major_prem_of sequent
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
-        Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Simps.simp_rules ctxt, sequent)
+   let val sequent'1 = Simplifier.asm_lr_simp_tac (Simps.equip ctxt) 1 sequent
+                    |> Seq.hd
+                    |> @{print}
+    in Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Simps.simp_rules ctxt, sequent'1)
           |> (fn th => case Thm.major_prem_of th
                          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
                               @{thm' Premise_True} RS th
                           | \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> =>
                               @{thm' TrueI} RS th
                           | _ => th)
+  end
      (*| _ => sequent*)
-  )
 
 (* The Framework *)
 
@@ -1224,7 +1228,7 @@ in fn ctxt =>
     #> abstract_constraint_guided_reasoning (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
 end
 
-fun chk_unfolded (phi : phi_type) term =
+fun chk_unfolded ctxt (phi : phi_type) term =
   let val (N,_) = raw_term_name_typ (#term phi)
       fun is_atom (Bound _) = true
         | is_atom (Free _) = true
@@ -1240,12 +1244,18 @@ fun chk_unfolded (phi : phi_type) term =
         | chk (X $ _) = chk X
         | chk _ = false
    in if chk term
-      then warning "The phi-type is not unfolded by simplification and inductive destruction. \
-                   \The reasoning may fail."
+      then warning (let open Pretty in string_of (
+              chunks [str "The phi-type is not unfolded by simplification and inductive destruction. \
+                          \The reasoning may fail.",
+                      Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term]
+            ) end)
       else ()
   end
 
-fun conv_chk_unfolded (phi : phi_type) ctm = (chk_unfolded phi (Thm.term_of ctm); Conv.all_conv ctm)
+fun chk_unfolded' ctxt = chk_unfolded (Context.Proof ctxt)
+
+fun conv_chk_unfolded (phi : phi_type) ctxt ctm =
+      (chk_unfolded' ctxt phi (Thm.term_of ctm); Conv.all_conv ctm)
 
 fun exhaustive_PLPR_reasoner num ctxt sequent =
   case PLPR_Exhaustive.reason_exhaustively num (ctxt, sequent)

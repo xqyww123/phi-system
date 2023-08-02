@@ -41,10 +41,9 @@ fun SE_Trim_Empty (phi : phi_type) thy =
       val TVs = fetch_properties \<^const_name>\<open>Type_Variant_of_the_Same_Type_Operator\<close>
       val IE_I = fetch_property \<^const_name>\<open>Identity_Element\<^sub>I\<close>
       val IE_E = fetch_property \<^const_name>\<open>Identity_Element\<^sub>E\<close>
-      val OE = fetch_property \<^const_name>\<open>Object_Equiv\<close>
       val intros = @{thms' derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH}
                 |> map (Thm.transfer'' thy)
-                |> maps (fn rule => map_filter (fn TV => SOME (rule OF [TV, IE_I, OE])
+                |> maps (fn rule => map_filter (fn TV => SOME (rule OF [TV, IE_I])
                                                          handle THM _ => NONE) TVs)
       val elims  = @{thms' derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH}
                 |> map (Thm.transfer'' thy)
@@ -58,9 +57,10 @@ fun SE_Trim_Empty (phi : phi_type) thy =
                   | work (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = work X
                   | work (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = work X
                   | work (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ eq) =
-                      (case Term.fastype_of eq of \<^Type>\<open>fun \<^Type>\<open>unit\<close> _\<close> =>
-                              (i, @{thm' Object_Equiv_fallback} RSN (i+1, th))
-                          | _ => (i+1, th))
+                      th |> Thm.permute_prems 0 i
+                         |> (fn th => case Phi_Reasoner.reason (SOME 1) true ctxt' th
+                                        of SOME ret => (i, Thm.permute_prems 0 (~i) ret)
+                                         | NONE => (i+1, Thm.permute_prems 0 (~i) th))
                   | work (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _)
                             $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ Const(\<^const_name>\<open>\<phi>None\<close>, _))
                             $ _) =
