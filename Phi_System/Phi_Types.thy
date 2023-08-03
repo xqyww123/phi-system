@@ -755,21 +755,23 @@ lemma [\<phi>inhabitance_rule 1000]:
 subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
-   
+
+thm list_all2_lengthD
+
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 1]]
-                                                                        
+declare [[\<phi>trace_reasoning = 3]]
+                                                                            
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Basic
+  deriving (*Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and Separation_Homo
-       and Trivial_\<Sigma>
-       and SE_Trim_Empty
+       and*) Separation_Homo\<^sub>I
+       (*and Trivial_\<Sigma>
+       and SE_Trim_Empty*)
 
 declare map_eq_Cons_conv[\<phi>constraint_expansion] (*TODO!!!!*)
 

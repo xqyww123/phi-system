@@ -92,11 +92,6 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                   Conv.implies_concl_conv (HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                     Conv.arg1_conv (Conv.arg_conv (
                       Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))))))) ctm)
-      fun Inh_reasoner ctxt sequent =
-        case PLPR_Exhaustive.reason_exhaustively (SOME 2)
-                  (ctxt, @{thm' \<phi>TA_Inh_step} RS sequent)
-          of SOME th => th
-           | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
 
       fun varify_subgoal _ (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
             SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
@@ -107,11 +102,12 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
         then extract_pure_prem_by_RS @{thms' \<phi>TA_Inh_extract_prem}
         else K (K [])
 
-      fun Inh_reasoning _ ctxt =
+      fun Inh_reasoning phi ctxt =
             default_reasoning false
                 (default_reasoning_configure extract_pure_prems)
                 (if mode_infer then varify_subgoal else K (K NONE))
-                Inh_reasoner ctxt
+                (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_Inh_step} (K (chk_unfolded' ctxt phi)))
+                ctxt
 
 
       val solver =
@@ -127,8 +123,9 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                       = let val (va,ia) = inst_Pr context A
                             val (vb,ib) = inst_Pr context B
                          in if va = vb then (va, \<^Const>\<open>HOL.disj\<close> $ ia $ ib)
-                            else raise Automation_Fail "Obligation is obtained, but I fail to infer \
-                                        \the expression of the implied pure fact from it."
+                            else raise Automation_Fail (fn () =>
+                                  [Pretty.para "Obligation is obtained, but I fail to infer \
+                                               \the expression of the implied pure fact from it."])
                         end
                  | inst_Pr (vars,prems) (Var (v as (("Pr",_), \<^Type>\<open>fun tyv _\<close>)) $ Bound j)
                       = Phi_Help.list_mk_conj prems
@@ -164,7 +161,7 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                                        solver, simp)
                                       phi0 hint0 ctxt0
    in case Seq.pull rules
-        of NONE => raise Automation_Fail "Fail to derive any property."
+        of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
             |> Phi_Type_Algebra.note_properties phi0 [("Implication", [rule'])]
             |> Phi_Help.generic_theory_mapping (fn m =>

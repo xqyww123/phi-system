@@ -39,7 +39,7 @@ fun guess_projector bnf i insts =
    |> apsnd (Term.subst_atomic_types ((ret_ty, HOLogic.boolT) :: subst))*)
   end
 
-fun fail () = raise Automation_Fail "Fail to guess the \<Sigma> trivial homomorphism."
+fun fail () = raise Automation_Fail (fn () => [Pretty.str "Fail to guess the \<Sigma> trivial homomorphism."])
 
 fun guess_ssp ctxt (sigma_ty, sigma) (T as \<^Type>\<open>prod ta tb\<close>) =
       if ta = sigma_ty
@@ -82,7 +82,7 @@ fun guess_ssp ctxt (sigma_ty, sigma) (T as \<^Type>\<open>prod ta tb\<close>) =
                        end               
                val mapper = eBNF_Info.mk_map_of_bnf deads lives (rev rev_lives') bnf
                          |> fold (fn M => fn X => X $ M) rev_maps
-               val ctxt = load_ss (false,true,true,true) bnf ctxt
+               val ctxt = load_ss (false,true,true,true,false) bnf ctxt
                
                fun inst_case_distrib th =
                  let val idx = Thm.maxidx_of th + 1
@@ -178,16 +178,9 @@ fun SgTH_reasoning phi ctxt =
   default_reasoning true
       reasoning_configure
       (K (K NONE))
-      (fn ctxt => fn sequent => (
-         (case try Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
-            of SOME (X, Y, _)
-                 => (chk_unfolded' ctxt phi X; chk_unfolded' ctxt phi Y)
-             | _ => ()) ;
-          case PLPR_Exhaustive.reason_exhaustively (SOME 2)
-                  (ctxt, @{thm' \<phi>TA_reason_rule__simp_NToA} RS sequent)
-            of SOME th => th
-             | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
-      )) ctxt
+      (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA}
+         (K (chk_unfolded' ctxt phi)))
+      ctxt
 
 fun gen_SgTH hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
@@ -233,7 +226,7 @@ fun gen_SgTH hint0 (phi0 : phi_type) thy =
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
         |> Phi_Type_Algebra.note_properties phi0 [("Trivial_\<Sigma>", [rule])]
-    | _ => raise Automation_Fail ""
+    | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
 val sigma_trivial_homomorphism = accept_one "Trivial_\<Sigma>" gen_SgTH

@@ -1718,6 +1718,10 @@ lemma \<phi>TA_Ident_I_rule_step_infer:
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by simp
   
+ML \<open>writeln (let open Pretty in string_of (
+  block (text "aaa aaa sss sssss sdasdas aa a asd asd qwe  asd asd" @ [brk 1] @ text "bbb")
+)end)\<close>
+
 
 ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
@@ -2108,8 +2112,10 @@ setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt =>
           ExSet_simps
           \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Prod_expn'[folded \<phi>Auto_Prod_def] \<phi>Prod_expn''[folded \<phi>Auto_Prod_def]
           FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
-          list_all2_Cons1 list_all2_Nil list_all2_lengthD
+          list_all2_Cons1 list_all2_Nil
           map_ident}))\<close>
+
+thm list_all2_lengthD
 
 lemmas [\<phi>constraint_expansion] =
   Set.ball_Un
@@ -2180,8 +2186,7 @@ setup \<open> Context.theory_map(
       zip = \<^term>\<open>zip'\<close>,
       unzip = \<^Const>\<open>unzip' \<^typ>\<open>'a\<close> \<^typ>\<open>'b\<close>\<close>,
       zip_simps = @{thms' zip'_inj zip'_eq_Cons_ex zip'_eq_Cons_ex zip'_eq_Nil_eq_len
-                          length_map},
-      unzip_simps = @{thms' unzip'_inj unzip'_prj map_prod_case_analysis} (*what I need to give?*)
+                          length_map unzip'_inj unzip'_prj map_prod_case_analysis}
   }))
 \<close>
 
@@ -2260,7 +2265,13 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
   map_thms = @{thms' Set.image_insert Set.image_Un Set.image_empty},
   map_disc_iffs = @{thms' image_is_empty},
   map_ident = @{thm' Set.image_ident},
-  map_comp_of = @{thm' Set.image_image}
+  map_comp_of = @{thm' Set.image_image},
+  fp_more = NONE (*{
+    deads = [],
+    lives = [a],
+    lives'= [b],
+    
+  }*)
 } end)
 )\<close>
 

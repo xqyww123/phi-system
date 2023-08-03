@@ -57,9 +57,13 @@ fun guess_property_TF phi0 ctxt =
       val Rng = Abs("_", x_ty, \<^Const>\<open>top \<^Type>\<open>set \<open>target_ty element_ty\<close>\<close>\<close>)
    in guess_set_opr ctxt' x_ty element_ty
    |> Seq.maps (fn (D_term, ctxt'2) =>
-        guess_rel_mapper (fn (ty1,ty2) => if ty1 = ty2 then \<^Const>\<open>HOL.eq ty1\<close>
-                                          else raise Automation_Fail "Fail to guess the relation mapper for dead type parameters"
-                         ) target_ty ctxt'2 x_ty element_ty
+        guess_rel_mapper (fn (ty1,ty2) =>
+            if ty1 = ty2 then \<^Const>\<open>HOL.eq ty1\<close>
+            else raise Automation_Fail (fn () => let open Pretty in
+                    [paragraph (text "Fail to guess the relation mapper for" @
+                                [brk 1, Syntax.pretty_typ ctxt'2 x_ty])]
+                 end)
+        ) target_ty ctxt'2 x_ty element_ty
      |> Seq.map (fn (rel_mapper, ctxt'3) =>
           (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ Rng $ rel_mapper),
            NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt'3)))
@@ -121,7 +125,7 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                                       K NONE, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail "Fail to derive any property"
+   |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) =>
           let fun set_prem_to_True rule =
                 case Thm.prop_of rule
@@ -218,7 +222,7 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
                                       [(NONE, K reasoning)], K NONE, simp)
                                     phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail "Fail to derive any property"
+   |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule'0, _) =>
           let fun set_prem_to_True rule =
                 case Thm.prop_of rule

@@ -72,9 +72,12 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
       
       val target_sort = if Sign.of_sort thy (model_ty'1, \<^sort>\<open>one\<close>) then \<^sort>\<open>sep_magma_1\<close> else \<^sort>\<open>sep_magma\<close>
       val inst  = Phi_Help.lift_type_sort' thy [(model_ty'1, target_sort), (ele_model'1, target_sort)]
-                  handle TYPE _ => raise Automation_Fail ("Fail to guess the property because fail to \
-                                    \constrain the type " ^ Syntax.string_of_typ ctxt model_ty'1 ^ " and "
-                                    ^ Syntax.string_of_typ ctxt ele_model'1 ^ " by sort \<open>sep_magma\<close>")
+                  handle TYPE _ => raise Automation_Fail (fn () => let open Pretty in
+                      [paragraph (text "Fail to constrain" @
+                                  [brk 1, Syntax.pretty_typ ctxt model_ty'1, brk 1, str "and", brk 1,
+                                   Syntax.pretty_typ ctxt ele_model'1] @
+                                  text "by sort \<open>sep_magma\<close>")]
+                      end)
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
 
       val phi = instantiate_phi (inst',Vars.empty) phi'1
@@ -139,13 +142,13 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_IH}) then_conv
                 Phi_Conv.meta_alls_conv (fn ctxt =>
                 Conv.implies_concl_conv (Conv.implies_conv (
-                  Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
+                  (fn ctm => Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)) ctm)
                 ) Conv.all_conv
                )) ctxt,
             fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_C}) then_conv
                 Conv.implies_concl_conv (HOLogic.Trueprop_conv (
-                  Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))) then_conv
+                  (fn ctm => Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)) ctm) ) then_conv
                 Phi_Conv.hol_alls_to_meta_alls (fn _ => fn ctm =>
                   conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]}) ctm
                 ) ctxt)
@@ -179,7 +182,7 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
-        of NONE => raise Automation_Fail "Fail to derive any property"
+        of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
              |> Phi_Type_Algebra.note_properties phi0
                     [(if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E", [rule'])]

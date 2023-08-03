@@ -6,8 +6,7 @@ type fp_more = {
   lives': typ list,
   zip: term,
   unzip: term,
-  zip_simps: thm list,
-  unzip_simps: thm list
+  zip_simps: thm list
 }
 
 val add_fp_more : string * fp_more -> Context.generic -> Context.generic
@@ -27,8 +26,7 @@ type fp_more = {
   lives': typ list,
   zip: term,
   unzip: term,
-  zip_simps: thm list,
-  unzip_simps: thm list
+  zip_simps: thm list
 }
 
 fun map_fp_more (fty, ftm, fth) (fp : fp_more) = {
@@ -37,8 +35,7 @@ fun map_fp_more (fty, ftm, fth) (fp : fp_more) = {
   lives' = fty (#lives' fp),
   zip = ftm (#zip fp),
   unzip = ftm (#unzip fp),
-  zip_simps = fth (#zip_simps fp),
-  unzip_simps = fth (#unzip_simps fp)
+  zip_simps = fth (#zip_simps fp)
 } : fp_more
 
 val trim_fp_more = map_fp_more (I, I, map Thm.trim_context)

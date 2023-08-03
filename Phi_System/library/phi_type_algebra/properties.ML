@@ -7,7 +7,7 @@ signature PHI_TYPE_ALGEBRA = sig
 
 include PHI_TYPE_ALGEBRA
 
-exception Automation_Fail of string list
+exception Automation_Fail of unit -> Pretty.T list
 
 (* Algebraic Properties *)
 
@@ -47,7 +47,7 @@ structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
 
 open Phi_Type_Algebra
 
-exception Automation_Fail of string list
+exception Automation_Fail of unit -> Pretty.T list
 
 type property_name = string
 
@@ -252,10 +252,13 @@ fun toplevel_property_auto deps automation (the_functor,pos,property) ctxt =
                val ruless = get_rules deps
             in fold (fn rules => fn ctxt =>
                           automation (the_functor,pos,rules) ctxt
-                          handle Automation_Fail msg => (
-                              if null msg then () else warning (String.concat ("Automation Fail:\n" :: msg)) ;
+                          handle Automation_Fail msg =>
+                            let open Pretty
+                                val msg' = msg ()
+                             in if null msg' then ()
+                                else warning (string_of (chunks (str "Automation Fail:" :: msg'))) ;
                               ctxt
-                            )
+                            end
                     ) ruless ctxt
            end
       else ctxt)

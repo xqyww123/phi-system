@@ -52,6 +52,7 @@ val pred_of_bnf : eBNF -> term
 val pred_of_bnf_safe : eBNF -> term option
 val map_of_bnf : eBNF -> term
 val map_of_bnf_safe : eBNF -> term option
+val fp_more_of : eBNF -> BNF_FP_Sugar_More.fp_more option
 val mk_sets_of_bnf: typ list list -> typ list list -> eBNF -> term list
 val mk_rel_of_bnf : typ list -> typ list -> typ list -> eBNF -> term
 val mk_pred_of_bnf : typ list -> typ list -> eBNF -> term
@@ -85,6 +86,9 @@ val global_simps_of_pred_safe : eBNF -> thm list
 
 val case_distribs_of : eBNF -> thm list
 val case_distribs_of_safe : eBNF -> thm list
+
+val simps_of_zip : eBNF -> thm list
+val simps_of_zip_safe : eBNF -> thm list
 
 (* Rules searched from DB *)
 
@@ -152,24 +156,31 @@ val add_BNF = qBNFs.map o Symtab.update_new
 local open Pretty in
 
 fun err_bnf Tname =
-      raise Automation_Fail [block [str "BNF info for type ", str Tname, str " is not found"],
-                             str "May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>"]
+      raise Automation_Fail (fn () => [
+              block [str "BNF info for type ", str Tname, str " is not found"],
+              str "May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>"])
 
 fun g_bnf (Tname, NONE, _, _, _) = err_bnf Tname
   | g_bnf (_, SOME bnf, _, _, _) = bnf
 
 fun g_fp (Tname, _, NONE, _, _) =
-      raise Automation_Fail ("BNF_FP for type " ^ Tname ^ " is not found.\n\
-                             \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
+      raise Automation_Fail (fn () => [
+              block [str "BNF_FP for type ", str Tname, str " is not found."],
+              str "May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>"])
   | g_fp (_, _, SOME fp, _, _) = fp
 
 fun g_ctr (Tname, _, _, NONE, _) =
-      raise Automation_Fail ("Constructor Info for type " ^ Tname ^ " is not found.\n\
-                             \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
+      raise Automation_Fail (fn () => [
+              block [str "Constructor Info for type ", str Tname, str " is not found."],
+              str "May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>"])
   | g_ctr (_, _, _, SOME ctr, _) = ctr
 
-fun g_more_fp (BNF (Tname, _,_,_,NONE)) =
-      raise Automation_Fail ("extended BNF info is not found on type " ^ Tname)
+
+fun err_more_fp Tname =
+      raise Automation_Fail (fn () => [block [str "extended BNF info is not found on type ", str Tname]])
+
+fun fp_more_of (BNF (_, _,_,_,fpm)) = fpm
+  | fp_more_of (qBNF bnf) = #fp_more bnf
 
 end
 
@@ -239,8 +250,10 @@ fun get_bnf ctxt Tname =
 fun get_bnf1 ctxt Tname =
   case get_bnf ctxt Tname
     of SOME ret => ret
-     | NONE => raise Automation_Fail ("Type " ^ Tname ^ " is not a known BNF.\n\
-                                      \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
+     | NONE => raise Automation_Fail (fn () => let open Pretty in
+                  [block [str "Type ", str Tname, str " has no registered BNF info."],
+                   str "May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>"]
+                  end)
 
 fun get_bnf_of_typ1 ctxt (Type (Tname, _)) = get_bnf1 ctxt Tname
   | get_bnf_of_typ1 ctxt T = raise TYPE ("Not a constant", [T], [])
@@ -290,7 +303,8 @@ fun case_of (BNF bnf) = SOME (#casex (g_ctr bnf))
   | case_of (qBNF bnf)= #casex bnf
 
 fun case_of1 bnf = case case_of bnf of SOME X => X | NONE =>
-      raise Automation_Fail ("No case-split operator given for type " ^ Tname_of bnf)
+      raise Automation_Fail (fn () =>
+              [Pretty.str "No case-split operator given for type ", Pretty.str (Tname_of bnf)])
 
 
 (*** Search From DB ***)
@@ -469,6 +483,11 @@ fun case_distribs_of (BNF bnf) = #case_distribs (g_ctr bnf)
   | case_distribs_of (qBNF bnf) = #case_distribs bnf
 fun case_distribs_of_safe bnf = case_distribs_of bnf handle Automation_Fail _ => []
 
-(*fun simps_of_zip (BNF bnf) *)
+fun simps_of_zip_safe bnf =
+      case fp_more_of bnf of SOME more => #zip_simps more
+         | NONE => []
+fun simps_of_zip bnf =
+      case fp_more_of bnf of SOME more => #zip_simps more
+         | NONE => err_more_fp (Tname_of bnf)
 
 end

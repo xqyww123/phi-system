@@ -105,11 +105,17 @@ fun guess_obj_eq_singular_None (phi0:phi_type) ctxt =
    |> Seq.of_list
    |> Seq.map_filter (fn (T_term0, F_term0) =>
   let val (rev_args_T0,x_ty_T0,model_ty_T0) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
-      val inst = Sign.typ_match thy (x_ty_T0, \<^Type>\<open>unit\<close>) Vartab.empty
-              |> Phi_Help.lift_type_sort thy (model_ty_T0, \<^sort>\<open>one\<close>)
+      val inst = (Sign.typ_match thy (x_ty_T0, \<^Type>\<open>unit\<close>) Vartab.empty
+                    handle Type.TYPE_MATCH => raise Automation_Fail (fn () => let open Pretty in
+                        [str "Fail to instantiate the abstract type to \<^typ>\<open>unit\<close>"]
+                      end))
+              |> (fn env => Phi_Help.lift_type_sort thy (model_ty_T0, \<^sort>\<open>one\<close>) env
+                    handle TYPE _ => raise Automation_Fail (fn () => let open Pretty in
+                      [paragraph (text "Fail to lift" @
+                                  [brk 1, Syntax.pretty_typ ctxt model_ty_T0, brk 1] @
+                                  text "to sort\<open>one\<close>")]
+                    end))
               |> Phi_Help.subst_tyenv
-            handle TYPE _ => raise Automation_Fail "Fail to lift to lift the type"
-                 | Type.TYPE_MATCH => raise Automation_Fail "Fail to lift to lift the type"
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi = instantiate_phi (inst', Vars.empty) phi0
       val subst = Term_Subst.instantiate (inst, Vars.empty)
@@ -154,7 +160,8 @@ fun gen_obj_equal'_singular (i,hint0) (phi0 : phi_type) thy =
                                              if exists_subterm (fn Bound _ => true | _ => false) X then NONE else SOME X
                                           | _ => NONE)
                                   |> (fn SOME X => X
-                                       | NONE => raise Automation_Fail "The induction rule has no base step?!")
+                                       | NONE => raise Automation_Fail (fn () =>
+                                                    [Pretty.str "The induction rule has no base step?!"]))
                                   |> Thm.cterm_of ctxt0
                                   |> Thm.incr_indexes_cterm (Thm.maxidx_of rule0 + 1)
                        in Drule.infer_instantiate ctxt0 [(("base",0),base)] rule0
@@ -210,7 +217,7 @@ fun gen_obj_equal'_singular (i,hint0) (phi0 : phi_type) thy =
                                       K NONE, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail "Fail to derive any property"
+   |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80 ([],[]) NONE [Morphism.thm m rule'])
@@ -252,7 +259,7 @@ fun gen_obj_equal' (i,hint0) (phi0 : phi_type) thy =
                                       [(SOME ([0], ind_conv), OE_reasoning)], infer, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules
-   |> (fn NONE => raise Automation_Fail "Fail to derive any property"
+   |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE [Morphism.thm m rule'])

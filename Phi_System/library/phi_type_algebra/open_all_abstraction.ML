@@ -98,7 +98,11 @@ fun instantiate_the_var var ctxt sequent =
                              | _ => error "BUG" )
               else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
         | pass_conjs (concls,meet) P
-            = (if has_the_var P then raise Automation_Fail "fail to infer the transformation relation: fail to normalize the obligation" else () ;
+            = (if has_the_var P
+               then raise Automation_Fail (fn () => let open Pretty in
+                      [para "fail to infer the transformation relation: fail to normalize the obligation"]
+                    end)
+               else () ;
                (P::concls, meet))
 
       fun inst_body ret (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
@@ -130,7 +134,7 @@ fun instantiate_the_var var ctxt sequent =
         | inst qp (\<^Const>\<open>special_Ex _\<close> $ Abs (_, ty, X))
             = if ty = y_ty
               then inst_body ([],[]) qp (Term.subst_bounds ([y], X))
-              else raise Automation_Fail ("patch_for_Ex.ML fails to normalize the \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R")
+              else raise Automation_Fail (fn () => [Pretty.str "patch_for_Ex.ML fails to normalize the \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R"])
         | inst qp P
             = if has_the_var P
               then inst_body ([],[]) qp P
@@ -138,10 +142,11 @@ fun instantiate_the_var var ctxt sequent =
 
       val inst = final_assemble_dc (inst ([],[]) oblg)
               |> Thm.cterm_of ctxt
-          handle Automation_Fail msg => raise Automation_Fail (
-                  "Fail to infer the transformation relation from the obtained proof obligation:\n" ^
-                  Syntax.string_of_term ctxt oblg ^
-                  (if msg = "" then "" else "\n" ^ msg))
+          handle Automation_Fail msg => raise Automation_Fail (fn () => let open Pretty in
+                   [block [para "Fail to infer the transformation relation from the obtained proof obligation:",
+                           Syntax.pretty_term ctxt oblg]] @
+                    msg ()
+                  end)
    in Thm.instantiate (TVars.empty, Vars.make [(var, inst)]) sequent
   end
 
@@ -237,7 +242,7 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
         |> Phi_Type_Algebra.note_properties phi0 [("Open_Abstraction_Full", [rule])]
-    | _ => raise Automation_Fail "Fail to derive any property"
+    | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
 val open_all_abstraction = accept_one "Open_Abstraction_Full" gen_trans_to_raw_abst

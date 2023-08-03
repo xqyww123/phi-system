@@ -33,7 +33,7 @@ fun SE_Trim_Empty (phi : phi_type) thy =
                                |> map #3
       fun fetch_property name =
             case fetch_properties name
-              of [] => raise Automation_Fail ("Property " ^ name ^ " is not given")
+              of [] => raise Automation_Fail (fn () => [Pretty.str ("Property " ^ name ^ " is not given")])
                | x :: _ => x
       (*fun has_reasoned rule =
         *)

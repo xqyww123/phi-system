@@ -47,7 +47,7 @@ fun gen_is_functional hint0 (phi0 : phi_type) thy =
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
         |> Phi_Type_Algebra.note_properties phi0 [("Is_Functional", [rule])]
-    | _ => raise Automation_Fail "Fail to derive any property"
+    | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
 val is_functional = accept_one "Is_Functional" gen_is_functional

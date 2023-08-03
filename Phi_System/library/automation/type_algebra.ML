@@ -96,7 +96,7 @@ val make_forall_quantified_property_for_parameters_of_a_phi_type :
   Bellow they are loaders of the operators.
 *)
 
-val load_ss : bool (*set*) * bool (*pred*) * bool (*rel*) * bool (*map*)
+val load_ss : bool (*set*) * bool (*pred*) * bool (*rel*) * bool (*map*) * bool (*zip*)
            -> eBNF_Info.eBNF -> Proof.context -> Proof.context
 
 val load_simpset : term list -> Proof.context -> Proof.context
@@ -189,7 +189,7 @@ val default_reasoning :
 *)
 
 val exhaustive_PLPR_reasoner : int option -> reasoner
-val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> Proof.context -> thm -> thm
+val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> reasoner
   (*The chk may check if the ith argument of the target reasoning goal is in a good form and
     raises warning if not*)
 
@@ -225,7 +225,7 @@ val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehamm
 
 (** Other Misc Tools **)
 
-exception Automation_Fail of string
+exception Automation_Fail of (unit -> Pretty.T list)
 structure Simps : SIMPSET (*The standard simpset for deriving*)
 
 val accept : (int -> hint option -> Phi_Type_Algebra.derive) -> hint list -> Phi_Type_Algebra.derive
@@ -365,7 +365,7 @@ fun add_global_simps thms ctxt = ctxt
 
 fun proof_map_result f ctxt = f (Context.Proof ctxt) |> apsnd (Context.proof_of)
 
-fun load_ss (set,pred,rel,map) bnf ctxt = 
+fun load_ss (set,pred,rel,map,zip) bnf ctxt = 
   let fun more_rule flag gen (rules, ctxt) =
             if flag then (case gen ctxt of (rule, ctxt) => (rule :: rules, ctxt)) else (rules, ctxt)
       fun more_rules flag gen (rules, ctxt) =
@@ -378,6 +378,7 @@ fun load_ss (set,pred,rel,map) bnf ctxt =
                        @ (if pred then eBNF_Info.simps_of_pred_safe bnf else [])
                        @ (if rel then eBNF_Info.simps_of_rel_safe bnf else [])
                        @ (if map then eBNF_Info.simps_of_map_safe bnf else [])
+                       @ (if zip then eBNF_Info.simps_of_zip_safe bnf else [])
                        @ additional)
    |> add_global_simps ( (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
                        @ (if rel then eBNF_Info.global_simps_of_rel_safe bnf else [])
@@ -435,7 +436,7 @@ val guess_self_rel =
 
 val guess_predicate =
   let fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = load_ss (false,true,false,false) bnf ctxt
+        let val ctxt' = load_ss (false,true,false,false,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_pred_of_bnf D L bnf, ctxt')
         end
       val is_live = K true
@@ -456,7 +457,7 @@ fun guess_rel_mapper dead_opr target_ty ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_rels = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = load_ss (false,false,true,true) bnf ctxt
+        let val ctxt' = load_ss (false,false,true,true,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_rel_of_bnf D L (map target_ty L) bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
@@ -475,7 +476,7 @@ fun guess_func_mapper target_ty ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_mappers = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = load_ss (false,false,false,true) bnf ctxt
+        let val ctxt' = load_ss (false,false,false,true,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_map_of_bnf D L (map target_ty L) bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
@@ -493,7 +494,7 @@ fun guess_pred_mapper ctxt ty element_ty =
       val g_term = Free(g, g_ty)
       val known_mappers = [(element_ty, g_term)]
       fun mk_term (ctxt, D, L, bnf) =
-        let val ctxt' = load_ss (false,true,false,false) bnf ctxt
+        let val ctxt' = load_ss (false,true,false,false,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_pred_of_bnf D L bnf, ctxt')
         end
       val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
@@ -553,15 +554,12 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
                     val _ = if deads = deads' then () else raise TYPE ("guess_zip", [], [])
                     val fp_more = case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) Tname
                                     of SOME x => x
-                                     | NONE => raise Automation_Fail ("Fail to guess the zip operator for type " ^ Tname)
+                                     | NONE => raise Automation_Fail (fn () =>
+                                                  [Pretty.block [Pretty.str "Fail to guess the zip operator for type ",
+                                                                 Pretty.str Tname]])
                     val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                                        else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
-                    val ctxt'' = ctxt
-                              |> Simps.add_simps' (#zip_simps fp_more @ #unzip_simps fp_more
-                                                  @ eBNF_Info.simps_of_rel_safe bnf
-                                                  @ eBNF_Info.simps_of_map_safe bnf
-                                                  @ eBNF_Info.simps_of_ctr_safe bnf)
-                              |> add_global_simps (eBNF_Info.global_simps_of_rel_safe bnf)
+                    val ctxt'' = load_ss (false,false,true,true,true) bnf ctxt
                     val (args, ctxt') = ctxt''
                           |> fold_map (guess_zip_guided flag (target,target'))
                                       (lives ~~ lives')
@@ -625,7 +623,7 @@ fun load_rel (const_name, ty) ctxt =
               |> Option.mapPartial (mp eBNF_Info.rel_of_bnf_safe)
               |> Option.mapPartial (fn (C, bnf) =>
                    if const_eq const_name C
-                   then SOME (load_ss (false,false,true,true) bnf ctxt)
+                   then SOME (load_ss (false,false,true,true,false) bnf ctxt)
                    else NONE)
         | parse_typ \<^Type>\<open>fun \<^Type>\<open>fun _ \<^Type>\<open>fun _ \<^Type>\<open>bool\<close>\<close>\<close> T\<close> = parse_typ T
         | parse_typ _ = NONE
@@ -638,7 +636,7 @@ fun load_set (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<^Type>\<open>set
         |> Option.mapPartial (mp eBNF_Info.sets_of_bnf_safe)
         |> Option.mapPartial (fn (C, bnf) =>
             if exists (const_eq CN) C
-            then SOME (load_ss (true,false,false,false) bnf ctxt)
+            then SOME (load_ss (true,false,false,false,false) bnf ctxt)
             else NONE)
   | load_set _ _ = NONE
 
@@ -647,7 +645,7 @@ fun load_predicate (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<^Type>\<op
         |> Option.mapPartial (mp eBNF_Info.pred_of_bnf_safe)
         |> Option.mapPartial (fn (C, bnf) =>
             if const_eq CN C
-            then SOME (load_ss (false,true,false,false) bnf ctxt)
+            then SOME (load_ss (false,true,false,false,false) bnf ctxt)
             else NONE)
   | load_predicate (CN, \<^Type>\<open>fun \<^Type>\<open>fun _ \<^Type>\<open>bool\<close>\<close> T\<close>) ctxt = load_predicate (CN, T) ctxt
   | load_predicate _ _ = NONE
@@ -660,7 +658,7 @@ fun load_map (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<open>T as Type(N
         |> Option.mapPartial (mp eBNF_Info.map_of_bnf_safe)
         |> Option.mapPartial (fn (C, bnf) =>
               if const_eq CN C
-              then SOME (load_ss (false,false,false,true) bnf ctxt)
+              then SOME (load_ss (false,false,false,true,false) bnf ctxt)
               else load_map (CN, T) ctxt)
       else load_map (CN, T) ctxt
   | load_map (CN, \<^Type>\<open>fun \<^Type>\<open>fun _ _\<close> T\<close>) ctxt = load_map (CN, T) ctxt
@@ -672,12 +670,12 @@ fun load_zip (CN, \<^Type>\<open>fun \<open>Type(N,ts1)\<close> \<open>T2 as \<^
             | chk_ts [] [] [] = true
             | chk_ts _ _ _ = false
        in if chk_ts ts1 ts2 ts3
-          then case BNF_FP_Sugar_More.get_fp_more (Context.Proof ctxt) N
-            of SOME fpm =>
-                if const_eq CN (#zip fpm)
-                then SOME (Simps.add_simps' (#zip_simps fpm @ #unzip_simps fpm) ctxt)
-                else load_zip (CN, T2) ctxt
-             | NONE => load_zip (CN, T2) ctxt
+          then eBNF_Info.get_bnf (Context.Proof ctxt) N
+            |> Option.mapPartial (mp eBNF_Info.fp_more_of)
+            |> Option.mapPartial (fn (fp_more, bnf) =>
+                  if const_eq CN (#zip fp_more)
+                  then SOME (load_ss (false,false,true,true,true) bnf ctxt)
+                  else load_zip (CN, T2) ctxt)
           else load_zip (CN, T2) ctxt
       end
   | load_zip (CN, \<^Type>\<open>fun _ T2\<close>) ctxt = load_zip (CN, T2) ctxt
@@ -808,9 +806,9 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                   val H = Term_Subst.instantiate inst0 H01
 
                   val inst = (Sign.typ_match thy (Term.fastype_of (#term phi0), typ_of_phi) Vartab.empty
-                              handle Type.TYPE_MATCH => raise Automation_Fail (let open Pretty in
-                                          string_of (chunks [str "Invalid Hint",
-                                                             Syntax.pretty_term ctxt H])
+                              handle Type.TYPE_MATCH => raise Automation_Fail (fn () =>
+                                        let open Pretty in
+                                          [str "Invalid Hint", Syntax.pretty_term ctxt H]
                                         end))
                           |> Phi_Help.subst_tyenv
                           |> Phi_Help.certify_tyvars (Context.Proof ctxt)
@@ -849,11 +847,11 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
       val inst_rule = (Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
                                      (Vartab.empty, Vartab.empty)
                        handle Pattern.MATCH =>
-                          raise Automation_Fail (let open Pretty in string_of (
-                              chunks [str "The given property does not match the reasoning rule",
-                                      item [str "property: ", Syntax.pretty_term ctxt property],
-                                      item [str "rule: ", Syntax.pretty_term ctxt (Thm.concl_of rule)]]
-                           )end))
+                          raise Automation_Fail (let open Pretty in fn () =>
+                                  [str "The given property does not match the reasoning rule",
+                                   item [str "property: ", Syntax.pretty_term ctxt property],
+                                   item [str "rule: ", Syntax.pretty_term ctxt (Thm.concl_of rule)]]
+                            end))
                    |> apsnd (Vartab.update_new (("Ant",0), (\<^typ>\<open>bool\<close>, ant)))
                    |> Phi_Help.subst_env
                    |> Phi_Help.certify_vars (Context.Proof ctxt)
@@ -918,9 +916,9 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 (* Default Hint Parser *)
 
 fun malformed_hint ctxt hint =
-  raise Automation_Fail (let open Pretty in
-      string_of (chunks [str "Malformed Hint",
-                         Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt hint])
+  raise Automation_Fail (let open Pretty in fn () =>
+          [str "Malformed Hint",
+           Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt hint]
     end)
 
 local
@@ -1050,7 +1048,19 @@ fun instantiate_ToA (pure_info,ctxt) ToA =
                                         val ToA2 = th2 RS' (ctxt, @{thm' mk_ToA_rule'})
                                      in [ToA1, ToA2]
                                     end)
-          val _ = if length insts > 20
+          val _ = if null insts 
+                  then report_potential_failure_reason (let open Pretty in [
+                          fn () => chunks [para "I fail to derive any instantiation of the induction-hypothetic reasoning rule",
+                                           indent 2 (Thm.pretty_thm ctxt ToA),
+                                           para "because I fail to derive its premise",
+                                           indent 2 (Syntax.pretty_term ctxt (Thm.term_of target_prem)),
+                                           para "from the contextual condition",
+                                           indent 2 (Thm.pretty_thm ctxt pure_info),
+                                           para "Perhaps, the propositions are not sufficiently simplified. You may\
+                                                \ need to add necessary rules by declaring [\<phi>constraint_expansion], or \
+                                                \even configure the BNF settings by ML \<open>BNF_FP_Sugar_More.add_fp_more\<close> "]
+                       ] end)
+                  else if length insts > 20
                   then warning "I find more than 20 instantiations which is very abnormal.\
                                \ I only take the first 20 instantiations."
                   else ()
@@ -1177,8 +1187,6 @@ let fun has_disj_ants th =
       val ctxt = #context focus
       val lsequent = varify_subgoal varify ctxt focus lsequent'0
 
-      val len = length (#prems focus)
-
       val is_out_ant = Phi_Syntax.is_action_of (
                           fn Const(\<^const_name>\<open>\<phi>TA_ANT\<close>, _) => true
                            | _ => false
@@ -1256,11 +1264,11 @@ fun chk_unfolded ctxt (phi : phi_type) term =
         | chk (X $ _) = chk X
         | chk _ = false
    in if chk term
-      then warning (let open Pretty in string_of (
+      then report_potential_failure_reason (let open Pretty in [fn () => 
               chunks [str "The phi-type is not unfolded by simplification and inductive destruction. \
                           \The reasoning may fail.",
                       Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term]
-            ) end)
+            ] end)
       else ()
   end
 
@@ -1272,7 +1280,7 @@ fun conv_chk_unfolded (phi : phi_type) ctxt ctm =
 fun exhaustive_PLPR_reasoner num ctxt sequent =
   case PLPR_Exhaustive.reason_exhaustively num (ctxt, sequent)
     of SOME th => th
-     | NONE => raise Automation_Fail "\<phi>-LPR reasoning fails"
+     | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR reasoning fails"])
 
 fun exhaustive_PLPR_reasoner_by_rule rule chk_unfolds ctxt sequent =
   let fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X

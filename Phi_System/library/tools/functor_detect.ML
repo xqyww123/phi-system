@@ -88,6 +88,7 @@ val add_derivers_from_hint : Context.generic -> term -> derivings -> derivings
 val add_deriver_dependences : Context.generic -> deriver_name list -> derivings -> derivings
 val complete_deriver_dependences : Context.generic -> derivings -> derivings
 
+val report_potential_failure_reason : (unit -> Pretty.T) list -> unit
 (*no need to call it explicitly. It is invoked by `add_type` *)
 val derive_properties : derivings -> phi_type -> generic_theory -> generic_theory
 val add_type : def * Position.T * derivings -> generic_theory -> phi_type * generic_theory
@@ -414,22 +415,41 @@ fun complete_deriver_dependences ctxt dervs =
   Derivings.fold (fn (_,(_,derv)) =>
       add_deriver_dependences ctxt (#dependences derv)) dervs dervs
 
-fun err_derive prop_name msg hints =
-      error (String.concat (
-        "Fail to derive the property " :: prop_name :: (if null msg then [] else "\n" :: msg) @
+(* Deriving *)
+
+val reason_of_deriving_fails : (unit -> Pretty.T) list Thread_Data.var = Thread_Data.var ()
+
+fun err_derive prop_name msg hints = let open Pretty in
+      error (string_of (chunks (
+        block [str "Fail to derive the property ", str prop_name] ::
+        msg @
         (if null hints
-         then ["\nThe guessed property may be wrong, and you may provide the \
-               \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."]
-         else [])))
+         then [para "The guessed property may be wrong, and you may provide the \
+                    \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."]
+         else []) @
+        (case Thread_Data.get reason_of_deriving_fails
+           of SOME (reasons as _ :: _) =>
+                para "There are some potential reasons for the failure" ::
+                map (fn g => item [g ()]) reasons
+            | _ => [])
+      )))
+      end
+
+fun report_potential_failure_reason G =
+  case Thread_Data.get reason_of_deriving_fails
+    of SOME L => Thread_Data.put reason_of_deriving_fails (SOME (G @ L))
+     | NONE => ()
 
 fun derive_properties dervs phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
-  |> Derivings.fold (fn ((_,name),(hints,derv)) => fn ctxt =>
+  |> Derivings.fold (fn ((_,name),(hints,derv)) => fn ctxt => (
+      Thread_Data.put reason_of_deriving_fails (SOME []) ;
       #derive derv hints phityp ctxt
-      handle Automation_Fail msg => err_derive name msg hints
+      handle Automation_Fail msg => err_derive name (msg ()) hints)
      ) dervs
   |> Context_Position.restore_visible_generic thy
+
 
 (*fun get_derivers_from_constant_name ctxt =
   *)
@@ -556,7 +576,7 @@ fun is_Type_Opr ty =
 
 fun assert_Type_Opr ty =
   if is_Type_Opr ty then ()
-  else raise Automation_Fail ["Not a \<phi>-type operator!"]
+  else raise Automation_Fail (fn () => [Pretty.str "Not a \<phi>-type operator!"])
 
 fun is_first_parameter_a_type ty =
   case dest_parameterized_phi_ty ty
@@ -569,7 +589,7 @@ fun is_first_parameter_a_type ty =
 
 fun assert_first_parameter_is_type ty =
   if is_first_parameter_a_type ty then ()
-  else raise Automation_Fail ["Not a \<phi>-type operator!"]
+  else raise Automation_Fail (fn () => [Pretty.str "Not a \<phi>-type operator!"])
 
 fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
   let fun split prevs (F $ T) =
@@ -596,8 +616,10 @@ val separate_type_operator_and_its_non_parameterized_parameter_safe =
 
 fun warn_separate_type_operator f FT_term =
   case f FT_term
-    of [] => raise Automation_Fail ["Fail to parse ", Term.term_name (Term.head_of FT_term),
-                                    " as a type operator."]
+    of [] => raise Automation_Fail (fn () =>
+                      [Pretty.str "Fail to parse ",
+                       Pretty.str (Term.term_name (Term.head_of FT_term)),
+                       Pretty.str " as a type operator."])
      | ret => ret
 
 val separate_type_operator_and_its_parameter =

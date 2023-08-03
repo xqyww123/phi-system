@@ -14,12 +14,18 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 fun guess_id_ele (typ as TFree (_, S)) ctxt =
       if Sign.subsort (Proof_Context.theory_of ctxt) (S, \<^sort>\<open>one\<close>)
       then (TVars.empty, \<^Const>\<open>one_class.one typ\<close>, ctxt)
-      else raise Automation_Fail ("Fail to guess the identity element for type " ^
-                                  Syntax.string_of_typ ctxt typ ^ " which is a fixed variable not of sort \<open>one\<close>")
+      else raise Automation_Fail (let open Pretty in fn () =>
+                  [paragraph (text "Fail to guess the identity element for type " @
+                             [brk 1, Syntax.pretty_typ ctxt typ, brk 1] @
+                              text "which is a fixed variable not of sort \<open>one\<close>")]
+                 end)
   | guess_id_ele (typ as TVar _) ctxt =
       let val inst  = (Phi_Help.lift_type_sort' (Proof_Context.theory_of ctxt) [(typ, \<^sort>\<open>one\<close>)]
-                       handle TYPE _ => raise Automation_Fail ("Fail to guess the identity element for type " ^
-                                  Syntax.string_of_typ ctxt typ ^ " because fail to constrain it by sort \<open>one\<close>"))
+                       handle TYPE _ => raise Automation_Fail (let open Pretty in fn () =>
+                                [paragraph (text "Fail to guess the identity element for type" @
+                                            [brk 1, Syntax.pretty_typ ctxt typ, brk 1] @
+                                            text "because fail to constrain it by sort \<open>one\<close>")]
+                                end))
           val typ' = Term_Subst.instantiateT inst typ
        in (Phi_Help.certify_tyvars (Context.Proof ctxt) inst,
            \<^Const>\<open>one_class.one typ'\<close>, ctxt)
@@ -27,10 +33,11 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
   | guess_id_ele (typ as Type _) ctxt =
       let val (inst, unit_simp, ctxt') =
                 case eBNF_Info.identity_element_unify typ (Context.Proof ctxt)
-                  of ([], _) => raise Automation_Fail (
-                                    "Fail to guess the property, because no identity element and \
-                                    \its simplification rule found for type \
-                                    \" ^ Syntax.string_of_typ ctxt typ)
+                  of ([], _) => raise Automation_Fail (fn () => let open Pretty in
+                                  [paragraph (text "Fail to guess the property, because no identity element and \
+                                                   \its simplification rule found for type" @
+                                              [brk 1, Syntax.pretty_typ ctxt typ])]
+                                  end)
                    | ((inst, unit_simp) :: _, ctxt') => (inst, unit_simp, ctxt')
           val unit = case Thm.concl_of unit_simp
                        of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => LHS
@@ -50,9 +57,13 @@ fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
   let val (_,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val inst  = (Phi_Help.lift_type_sort' (Proof_Context.theory_of ctxt)
                                             [(x_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>one\<close>)]
-                  handle TYPE _ => raise Automation_Fail ("Fail to lift the type " ^
-                      Syntax.string_of_typ ctxt x_ty0 ^ " and " ^ Syntax.string_of_typ ctxt model_ty0
-                      ^ " into sort \<open>one\<close>."))
+                  handle TYPE _ => raise Automation_Fail (fn () => let open Pretty in
+                          [paragraph (text "Fail to lift the type " @
+                                      [brk 1, Syntax.pretty_typ ctxt x_ty0, brk 1] @
+                                      text "and" @
+                                      [brk 1, Syntax.pretty_typ ctxt model_ty0, brk 1] @
+                                      text " into sort \<open>one\<close>.")]
+                          end))
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi01 = instantiate_phi (inst',Vars.empty) phi0
       val subst = Term_Subst.instantiate (inst, Vars.empty)
@@ -173,7 +184,7 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
-        of NONE => raise Automation_Fail "Fail to derive any property"
+        of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
             |> Phi_Type_Algebra.note_properties phi0
                   [((if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"), [rule'])]
