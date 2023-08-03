@@ -22,7 +22,9 @@ type quasi_BNF = {
   map: term,
   map_thms: thm list,
   map_disc_iffs: thm list,
-  map_ident: thm
+  map_ident: thm,
+  map_comp_of: thm,
+  fp_more : BNF_FP_Sugar_More.fp_more option
 }
 
 type eBNF
@@ -84,6 +86,18 @@ val global_simps_of_pred_safe : eBNF -> thm list
 val case_distribs_of : eBNF -> thm list
 val case_distribs_of_safe : eBNF -> thm list
 
+(* Rules searched from DB *)
+
+val export_cache : Context.generic -> Context.generic -> Context.generic
+
+val identity_element : eBNF -> Context.generic -> thm list * Context.generic
+val identity_element_match : typ -> Context.generic -> thm list * Context.generic
+val identity_element_unify : typ -> Context.generic -> (ctyp TVars.table * thm) list * Context.generic
+
+val relator_on_const_true : eBNF -> Context.generic -> thm list * Context.generic
+val relator_on_const_true_match : typ -> Context.generic -> thm list * Context.generic
+val relator_on_const_true_unify : typ -> Context.generic -> (ctyp TVars.table * thm) list * Context.generic
+
 end
 
 structure eBNF_Info : eBNF_INFO = struct
@@ -112,12 +126,15 @@ type quasi_BNF = {
   map: term,
   map_thms: thm list,
   map_disc_iffs: thm list,
-  map_ident: thm
+  map_ident: thm,
+  map_comp_of: thm,
+  fp_more : BNF_FP_Sugar_More.fp_more option
 }
 
 datatype eBNF =  BNF of string * BNF_Def.bnf option
                                * BNF_FP_Def_Sugar.fp_sugar option
                                * Ctr_Sugar.ctr_sugar option
+                               * BNF_FP_Sugar_More.fp_more option
               | qBNF of quasi_BNF
 
 (* Data *)
@@ -130,33 +147,44 @@ structure qBNFs = Generic_Data (
 
 val add_BNF = qBNFs.map o Symtab.update_new
 
-(* Library *)
+(*** Auxiliaries ***)
+
+local open Pretty in
 
 fun err_bnf Tname =
-      raise Automation_Fail ("BNF info for type " ^ Tname ^ " is not found.\n\
-                             \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
+      raise Automation_Fail [block [str "BNF info for type ", str Tname, str " is not found"],
+                             str "May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>"]
 
-fun g_bnf (Tname, NONE, _, _) = err_bnf Tname
-  | g_bnf (_, SOME bnf, _, _) = bnf
+fun g_bnf (Tname, NONE, _, _, _) = err_bnf Tname
+  | g_bnf (_, SOME bnf, _, _, _) = bnf
 
-fun g_fp (Tname, _, NONE, _) =
+fun g_fp (Tname, _, NONE, _, _) =
       raise Automation_Fail ("BNF_FP for type " ^ Tname ^ " is not found.\n\
                              \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
-  | g_fp (_, _, SOME fp, _) = fp
+  | g_fp (_, _, SOME fp, _, _) = fp
 
-fun g_ctr (Tname, _, _, NONE) =
+fun g_ctr (Tname, _, _, NONE, _) =
       raise Automation_Fail ("Constructor Info for type " ^ Tname ^ " is not found.\n\
                              \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
-  | g_ctr (_, _, _, SOME ctr) = ctr
+  | g_ctr (_, _, _, SOME ctr, _) = ctr
 
-fun Tname_of (BNF (Tname, _, _, _)) = Tname
+fun g_more_fp (BNF (Tname, _,_,_,NONE)) =
+      raise Automation_Fail ("extended BNF info is not found on type " ^ Tname)
+
+end
+
+(*** Basics ***)
+
+(** Basic Info \& Interface **)
+
+fun Tname_of (BNF (Tname, _, _, _, _)) = Tname
   | Tname_of (qBNF bnf) = #Tname bnf 
 
-fun T_of_bnf (BNF (_, SOME bnf, _, _)) = BNF_Def.T_of_bnf bnf
-  | T_of_bnf (BNF (_, _, SOME fp, _)) = #T fp
-  | T_of_bnf (BNF (_, _, _, SOME ctr)) = #T ctr
+fun T_of_bnf (BNF (_, SOME bnf, _, _, _)) = BNF_Def.T_of_bnf bnf
+  | T_of_bnf (BNF (_, _, SOME fp, _, _)) = #T fp
+  | T_of_bnf (BNF (_, _, _, SOME ctr, _)) = #T ctr
   | T_of_bnf (qBNF bnf) = #T bnf
-  | T_of_bnf (BNF (Tname, _, _, _)) = err_bnf Tname
+  | T_of_bnf (BNF (Tname, _, _, _, _)) = err_bnf Tname
 
 fun deads_of_bnf (BNF bnf) = BNF_Def.deads_of_bnf (g_bnf bnf)
   | deads_of_bnf (qBNF bnf) = #deads bnf
@@ -198,13 +226,14 @@ fun get_bnf ctxt Tname =
      | _ => (
   case (Context.cases BNF_Def.bnf_of_global BNF_Def.bnf_of ctxt Tname,
         Context.cases BNF_FP_Def_Sugar.fp_sugar_of_global BNF_FP_Def_Sugar.fp_sugar_of ctxt Tname,
-        Context.cases Ctr_Sugar.ctr_sugar_of_global Ctr_Sugar.ctr_sugar_of ctxt Tname)
-    of (NONE, NONE, NONE) => NONE
-     | (a,b,c) => let
+        Context.cases Ctr_Sugar.ctr_sugar_of_global Ctr_Sugar.ctr_sugar_of ctxt Tname,
+        BNF_FP_Sugar_More.get_fp_more ctxt Tname)
+    of (NONE, NONE, NONE, NONE) => NONE
+     | (a,b,c,d) => let
             val c' = case (b,c) of (_, SOME c') => SOME c'
                                  | (SOME b', _) => SOME (#ctr_sugar (#fp_ctr_sugar b'))
                                  | _ => NONE
-         in SOME (BNF (Tname,a,b,c'))
+         in SOME (BNF (Tname,a,b,c',d))
         end)
 
 fun get_bnf1 ctxt Tname =
@@ -213,12 +242,14 @@ fun get_bnf1 ctxt Tname =
      | NONE => raise Automation_Fail ("Type " ^ Tname ^ " is not a known BNF.\n\
                                       \May register the required infos using \<open>setup \<open>eBNF_Info.add_BNF data\<close>\<close>")
 
+fun get_bnf_of_typ1 ctxt (Type (Tname, _)) = get_bnf1 ctxt Tname
+  | get_bnf_of_typ1 ctxt T = raise TYPE ("Not a constant", [T], [])
+
+(** BNF Operators **)
 
 fun sets_of_bnf (BNF bnf) = BNF_Def.sets_of_bnf (g_bnf bnf)
   | sets_of_bnf (qBNF bnf) = #sets bnf
-fun sets_of_bnf_safe (BNF (_,SOME b,_,_)) = SOME (BNF_Def.sets_of_bnf b)
-  | sets_of_bnf_safe (qBNF bnf) = SOME (#sets bnf)
-  | sets_of_bnf_safe _ = NONE
+fun sets_of_bnf_safe bnf = SOME (sets_of_bnf bnf) handle Automation_Fail _ => NONE
 
 fun mk_sets_of_bnf Dss Tss (BNF bnf) = BNF_Def.mk_sets_of_bnf Dss Tss (g_bnf bnf)
   | mk_sets_of_bnf Dss Tss (qBNF qbnf) =
@@ -227,9 +258,7 @@ fun mk_sets_of_bnf Dss Tss (BNF bnf) = BNF_Def.mk_sets_of_bnf Dss Tss (g_bnf bnf
 
 fun rel_of_bnf (BNF bnf) = BNF_Def.rel_of_bnf (g_bnf bnf)
   | rel_of_bnf (qBNF bnf) = #rel bnf
-fun rel_of_bnf_safe (BNF (_, SOME b, _, _)) = SOME (BNF_Def.rel_of_bnf b)
-  | rel_of_bnf_safe (qBNF bnf) = SOME (#rel bnf)
-  | rel_of_bnf_safe _ = NONE
+fun rel_of_bnf_safe bnf = SOME (rel_of_bnf bnf) handle Automation_Fail _ => NONE
 
 fun mk_rel_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_rel_of_bnf Ds Ts Us (g_bnf bnf)
   | mk_rel_of_bnf Ds Ts Us (qBNF bnf) =
@@ -238,9 +267,7 @@ fun mk_rel_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_rel_of_bnf Ds Ts Us (g_bnf bnf
 
 fun pred_of_bnf (BNF bnf) = BNF_Def.pred_of_bnf (g_bnf bnf)
   | pred_of_bnf (qBNF bnf) = #pred bnf
-fun pred_of_bnf_safe (BNF (_,SOME b,_,_)) = SOME (BNF_Def.pred_of_bnf b)
-  | pred_of_bnf_safe (qBNF bnf) = SOME (#pred bnf)
-  | pred_of_bnf_safe _ = NONE
+fun pred_of_bnf_safe bnf = SOME (pred_of_bnf bnf) handle Automation_Fail _ => NONE
 
 fun mk_pred_of_bnf Ds Ts (BNF bnf) = BNF_Def.mk_pred_of_bnf Ds Ts (g_bnf bnf)
   | mk_pred_of_bnf Ds Ts (qBNF bnf) =
@@ -249,9 +276,7 @@ fun mk_pred_of_bnf Ds Ts (BNF bnf) = BNF_Def.mk_pred_of_bnf Ds Ts (g_bnf bnf)
 
 fun map_of_bnf (BNF bnf) = BNF_Def.map_of_bnf (g_bnf bnf)
   | map_of_bnf (qBNF bnf) = #map bnf
-fun map_of_bnf_safe (BNF (_,SOME b,_,_)) = SOME (BNF_Def.map_of_bnf b)
-  | map_of_bnf_safe (qBNF bnf) = SOME (#map bnf)
-  | map_of_bnf_safe _ = NONE
+fun map_of_bnf_safe bnf = SOME (map_of_bnf bnf) handle Automation_Fail _ => NONE
 
 fun mk_map_of_bnf Ds Ts Us (BNF bnf) = BNF_Def.mk_map_of_bnf Ds Ts Us (g_bnf bnf)
   | mk_map_of_bnf Ds Ts Us (qBNF bnf) =
@@ -267,129 +292,183 @@ fun case_of (BNF bnf) = SOME (#casex (g_ctr bnf))
 fun case_of1 bnf = case case_of bnf of SOME X => X | NONE =>
       raise Automation_Fail ("No case-split operator given for type " ^ Tname_of bnf)
 
-(* Simplification rules *)
+
+(*** Search From DB ***)
+
+(*BNF package and relatives do not always provide what all we need. We can search by pattern match
+  from the data base of all lemmas in Isabelle. *)
+
+structure Caches = Generic_Data (
+  type T = (typ * thm) list Symreltab.table
+  val empty = Symreltab.empty
+  val merge = Symreltab.merge (K true)
+)
+
+fun export_cache from to = Caches.put (Caches.get from) to
+
+fun gen_property inst kind get_bnf gen arg generic =
+  let val thy = Context.theory_of generic
+      val bnf = get_bnf generic arg
+      val Tname = Tname_of bnf
+      val mpf = map_filter (inst thy arg)
+   in case Symreltab.lookup (Caches.get generic) (Tname,kind)
+        of SOME ths =>
+            (mpf (map (apsnd (Thm.transfer'' generic)) ths), generic)
+         | NONE =>
+            let val res = gen bnf generic
+             in (mpf res, Caches.map (Symreltab.update_new ((Tname,kind), res)) generic)
+            end
+  end
+  | gen_property _ _ _ _ _ generic = ([], generic)
+
+fun no_inst _ _ (_, th) = SOME th
+
+fun typ_inst_by_match thy tyb (tya, th) =
+  Sign.typ_match thy (tya,tyb) Vartab.empty
+   |> Phi_Help.subst_tyenv
+   |> Phi_Help.certify_tyvars (Context.Theory thy)
+   |> (fn inst => SOME (Thm.instantiate (inst, Vars.empty) th))
+  handle Type.TYPE_MATCH => NONE
+
+fun typ_inst_by_unify thy tyb (tya0,th0) =
+  let val idx = Term.maxidx_of_typ tyb + 1
+      val tya = Logic.incr_tvar idx tya0
+      val th = Thm.incr_indexes idx th0
+   in fst (Sign.typ_unify thy (tya,tyb) (Vartab.empty, Term.maxidx_of_typ tya + 1))
+   |> Phi_Help.norm_tyenv
+   |> Phi_Help.certify_tyvars (Context.Theory thy)
+   |> (fn inst => SOME (inst, Thm.instantiate (inst, Vars.empty) th))
+   handle Type.TUNIFY => NONE
+  end
+
+(* DO NOT REMOVE
+fun chk_search_result1 ctxt pattern [] =
+      error ("No existing theorems found for " ^ Syntax.string_of_term ctxt pattern)
+  | chk_search_result1 _ _ [x] = [x]
+  | chk_search_result1 ctxt pattern L = let open Pretty in
+        error (string_of (chunks (
+            block [str "More than one existing theorems found for ", Syntax.pretty_term ctxt pattern] ::
+            map (fn th => item [Syntax.pretty_term ctxt (Thm.prop_of th)]) L
+          )))
+      end*)
+
+
+fun mk_typ_of_sort thy (Tname,sort) =
+  let val sorts = Sign.arity_sorts thy Tname sort
+      val ty_args = map_index (fn (i,S) => TVar(("x",i),S)) sorts
+   in Type(Tname, ty_args)
+  end
+
+
+(** Unit \<open>1 \<equiv> ?\<close> **)
+
+fun made_of_ctrs ty chk_ctrs (Const(N, TY)) =
+     (case body_type TY
+        of Type (TN, _) => if TN = ty then chk_ctrs N else true
+         | _ => true)
+  | made_of_ctrs ty chk_ctrs (X $ Y) = made_of_ctrs ty chk_ctrs X andalso made_of_ctrs ty chk_ctrs Y
+  | made_of_ctrs ty chk_ctrs (Abs(_,_,X)) = made_of_ctrs ty chk_ctrs X
+  | made_of_ctrs _ _ _ = true
+
+fun gen_unit_simps bnf ctxt0 =
+  let val Tname = Tname_of bnf
+      val ctxt = Context.proof_of ctxt0
+      val ty = mk_typ_of_sort (Context.theory_of ctxt0) (Tname, \<^sort>\<open>one\<close>)
+      val pattern = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>HOL.eq ty\<close> $ \<^Const>\<open>one_class.one ty\<close> $ Var(("uu",0),ty))
+      val ctrs = fold (fn Const(N,_) => Symtab.insert_set N
+                        | _ => I) (ctrs_of bnf) Symtab.empty
+              |> Symtab.defined
+   in Find_Theorems.find_theorems ctxt NONE NONE true [(true, Find_Theorems.Pattern pattern)]
+   |> snd
+   |> map_filter (fn (_, th) => case Thm.prop_of th
+                                  of _ (*Trueprop*) $ (_ (*eq*) $ _ $ RHS) =>
+                                      if made_of_ctrs Tname ctrs RHS
+                                      then SOME th
+                                      else NONE
+                                   | _ => NONE)
+   (*|> chk_search_result1 ctxt pattern*)
+   |> map (fn th => case Thm.concl_of th
+                      of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => (Term.fastype_of LHS, th))
+  end
+
+val identity_element = gen_property no_inst "one" (K I) gen_unit_simps
+val identity_element_match = gen_property typ_inst_by_match "one" get_bnf_of_typ1 gen_unit_simps
+val identity_element_unify = gen_property typ_inst_by_unify "one" get_bnf_of_typ1 gen_unit_simps
+
+(** Relator on Constant True **)
+
+fun gen_relator_const_true bnf ctxt =
+  let val rel = rel_of_bnf bnf
+      fun drop_last2 L = List.take (L, length L - 2)
+      val rel = rel
+             |> fold (fn \<^Type>\<open>fun T \<^Type>\<open>fun U \<^Type>\<open>bool\<close>\<close>\<close> => fn X => X $ Abs ("_", T, Abs ("_", U, \<^Const>\<open>True\<close>)))
+                     (drop_last2 (Term.binder_types (Term.fastype_of rel)))
+      val rel_ty = Term.fastype_of rel
+      val pattern = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>HOL.eq rel_ty\<close> $ rel $ Var (("exp", 0), rel_ty))
+      val pattern'= \<^Const>\<open>Pure.eq rel_ty\<close> $ rel $ Var (("exp", 0), rel_ty)
+   in ( snd (Find_Theorems.find_theorems (Context.proof_of ctxt) NONE NONE true
+                                        [(true, Find_Theorems.Pattern pattern )])
+      @ snd (Find_Theorems.find_theorems (Context.proof_of ctxt) NONE NONE true
+                                        [(true, Find_Theorems.Pattern pattern')]))
+   |> map (fn (_, th) => case Thm.concl_of th
+                           of _ $ (Const(\<^const_name>\<open>HOL.eq\<close>, \<^Type>\<open>fun T _\<close>) $ _ $ _) => (T, th)
+                            | Const(\<^const_name>\<open>Pure.eq\<close>, \<^Type>\<open>fun T _\<close>) $ _ $ _ => (T, th))
+  end
+
+
+val relator_on_const_true = gen_property no_inst "relator_on_const_True" (K I) gen_relator_const_true
+val relator_on_const_true_match =
+      gen_property typ_inst_by_match "relator_on_const_True" get_bnf_of_typ1 gen_relator_const_true
+val relator_on_const_true_unify =
+      gen_property typ_inst_by_unify "relator_on_const_True" get_bnf_of_typ1 gen_unit_simps
+
+(*** Simplification rules ***)
 
 fun ctr_sugar_simps (ctr : Ctr_Sugar.ctr_sugar) =
   #injects ctr @ #distincts ctr @ #case_thms ctr @ flat (#sel_thmss ctr)
 
 fun simps_of_ctr (BNF bnf) = ctr_sugar_simps (g_ctr bnf)
   | simps_of_ctr (qBNF bnf) = #ctr_simps bnf
-
-fun simps_of_ctr_safe (BNF (_,_,_,SOME c)) = ctr_sugar_simps c
-  | simps_of_ctr_safe (BNF (_,_,_,NONE)) = []
-  | simps_of_ctr_safe (qBNF bnf) = #ctr_simps bnf
+fun simps_of_ctr_safe bnf = simps_of_ctr bnf handle Automation_Fail _ => []
 
 fun simps_of_set (BNF bnf) = #set_thms (#fp_bnf_sugar (g_fp bnf))
   | simps_of_set (qBNF bnf) = #set_thms bnf
-
-fun simps_of_set_safe (BNF (_,_,SOME fp,_)) = #set_thms (#fp_bnf_sugar fp)
-  | simps_of_set_safe (BNF (_,_,NONE,_)) = []
-  | simps_of_set_safe (qBNF bnf) = #set_thms bnf
+fun simps_of_set_safe bnf = simps_of_set bnf handle Automation_Fail _ => []
 
 fun simps_of_rel (BNF bnf) = #rel_distincts (#fp_bnf_sugar (g_fp bnf))
                            @ #rel_injects (#fp_bnf_sugar (g_fp bnf))
   | simps_of_rel (qBNF bnf) = #rel_distincts bnf @ #rel_injects bnf
-
-fun simps_of_rel_safe (BNF (_,_,SOME fp,_)) = #rel_distincts (#fp_bnf_sugar fp)
-                                            @ #rel_injects (#fp_bnf_sugar fp)
-  | simps_of_rel_safe (BNF (_,_,NONE,_)) = []
-  | simps_of_rel_safe (qBNF bnf) = #rel_distincts bnf @ #rel_injects bnf
+fun simps_of_rel_safe bnf = simps_of_rel bnf handle Automation_Fail _ => []
 
 fun global_simps_of_rel (BNF bnf) = [BNF_Def.rel_eq_of_bnf (g_bnf bnf)]
   | global_simps_of_rel (qBNF bnf)= [#rel_eq bnf]
-
-fun global_simps_of_rel_safe (BNF (_,SOME bnf,_,_)) = [BNF_Def.rel_eq_of_bnf bnf]
-  | global_simps_of_rel_safe (BNF (_,NONE,_,_)) = []
-  | global_simps_of_rel_safe (qBNF bnf)= [#rel_eq bnf]
+fun global_simps_of_rel_safe bnf = global_simps_of_rel bnf handle Automation_Fail _ => []
 
 fun simps_of_pred (BNF bnf) = #pred_injects (#fp_bnf_sugar (g_fp bnf))
   | simps_of_pred (qBNF bnf) = #pred_injects bnf @ #pred_simps bnf
-
-fun simps_of_pred_safe (BNF (_,_,SOME fp,_)) = #pred_injects (#fp_bnf_sugar fp)
-  | simps_of_pred_safe (BNF (_,_,NONE,_)) = []
-  | simps_of_pred_safe (qBNF bnf) = #pred_injects bnf
+fun simps_of_pred_safe bnf = simps_of_pred bnf handle Automation_Fail _ => []
 
 fun simps_of_map (BNF bnf) = #map_thms (#fp_bnf_sugar (g_fp bnf))
                            @ #map_disc_iffs (#fp_bnf_sugar (g_fp bnf))
+                           @ [BNF_Def.map_comp_of_bnf (g_bnf bnf)]
   | simps_of_map (qBNF bnf) = #map_thms bnf @ #map_disc_iffs bnf
+                            @ [#map_comp_of bnf]
 
-fun simps_of_map_safe (BNF (_,_,SOME fp,_)) = #map_thms (#fp_bnf_sugar fp)
-                                            @ #map_disc_iffs (#fp_bnf_sugar fp)
-  | simps_of_map_safe (BNF (_,_,NONE,_)) = []
-  | simps_of_map_safe (qBNF bnf) = #map_thms bnf @ #map_disc_iffs bnf
+fun simps_of_map_safe x = simps_of_map x
+                          handle Automation_Fail _ => []
 
 fun global_simps_of_map (BNF bnf) = [BNF_Def.map_ident_of_bnf (g_bnf bnf)]
   | global_simps_of_map (qBNF bnf)= [#map_ident bnf]
-
-fun global_simps_of_map_safe (BNF (_,SOME bnf,_,_)) = [BNF_Def.map_ident_of_bnf bnf]
-  | global_simps_of_map_safe (BNF (_,NONE,_,_)) = []
-  | global_simps_of_map_safe (qBNF bnf)= [#map_ident bnf]
+fun global_simps_of_map_safe bnf = global_simps_of_map bnf handle Automation_Fail _ => []
 
 fun global_simps_of_pred (BNF bnf) = [BNF_Def.pred_True_of_bnf (g_bnf bnf)]
   | global_simps_of_pred (qBNF bnf)= [#map_ident bnf]
-
-fun global_simps_of_pred_safe (BNF (_,SOME bnf,_,_)) = [BNF_Def.pred_True_of_bnf bnf]
-  | global_simps_of_pred_safe (BNF (_,NONE,_,_)) = []
-  | global_simps_of_pred_safe (qBNF bnf)= [#map_ident bnf]
+fun global_simps_of_pred_safe bnf = global_simps_of_pred bnf handle Automation_Fail _ => []
 
 fun case_distribs_of (BNF bnf) = #case_distribs (g_ctr bnf)
   | case_distribs_of (qBNF bnf) = #case_distribs bnf
+fun case_distribs_of_safe bnf = case_distribs_of bnf handle Automation_Fail _ => []
 
-fun case_distribs_of_safe (BNF (_,_,_,SOME c)) = #case_distribs c
-  | case_distribs_of_safe (BNF _) = []
-  | case_distribs_of_safe (qBNF bnf) = #case_distribs bnf
-
-
-(*
-fun mk_sets_of_bnf Dss Tss (BNF bnf) = BNF_Def.mk_sets_of_bnf Dss Tss
-  | *)
-
-(*val mk_sets_of_bnf: typ list list -> typ list list -> eBNF -> term list*)
-
-(* fun permute_seq (s::L) =
-      Seq.maps (fn s' => permute_seq L |> Seq.map (fn L' => s'::L')) s
-  | permute_seq [] = Seq.single [] *)
-(*
-fun gen_guess_operator mk_term is_live mk_operator_for_dead atom_opr =
-  let fun guess_operator' ctxt known_oprs x_ty =
-        case map_filter (fn (ty', term) => if ty' = x_ty then SOME term else NONE)
-                        known_oprs
-          of [] => (
-            case x_ty
-              of Type(Tname, Targs) =>
-                   let val bnf = get_bnf1 ctxt Tname
-                       val (D,L) = classify_bnf_dead_live bnf Targs
-                    in mk_term (ctxt, D, L, bnf)
-                    |> Seq.maps (fn (head,ctxt') =>
-                        let fun mk_params ctxt (ty::L) =
-                                  (if not (AList.defined (op =) known_oprs ty) orelse is_live ty
-                                   then guess_operator' ctxt known_oprs ty
-                                   else Seq.single (mk_operator_for_dead ty ctxt))
-                                    |> Seq.maps (fn (opr, ctxt') =>
-                                          mk_params ctxt' L
-                                            |> Seq.map (fn (oprs, ctxt'') => (opr::oprs, ctxt'')))
-                              | mk_params ctxt [] = Seq.single ([], ctxt)
-                         in mk_params ctxt' L
-                         |> Seq.map (fn (params', ctxt'3) =>
-                              (fold (fn p => fn X => X $ p) params' head, ctxt'3))
-                        end)
-                   end
-               | _ => atom_opr x_ty ctxt)
-           | L => Seq.of_list L
-               |> Seq.map (rpair ctxt)
-   in guess_operator'
-  end
-
-fun guess_operator mk_term is_live mk_operator_for_dead atom_opr =
-  let fun guess ctxt known_oprs x_ty =
-            Seq.make (fn () =>
-              case Seq.pull (gen_guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt known_oprs x_ty)
-                of NONE => (warning ("Fail to guess the abstract operator for type "
-                                    ^ Context.cases Syntax.string_of_typ_global Syntax.string_of_typ ctxt x_ty) ;
-                            NONE)
-                 | some => some )
-   in guess
-  end
-*)
+(*fun simps_of_zip (BNF bnf) *)
 
 end

@@ -163,7 +163,7 @@ notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
 declare [[simp_trace_depth_limit = 10]]
-             
+              
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
@@ -760,8 +760,8 @@ ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 1]]
-                                                                   
-\<phi>type_def List :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
+                                                                        
+\<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
   deriving Basic
@@ -777,13 +777,13 @@ declare map_eq_Cons_conv[\<phi>constraint_expansion] (*TODO!!!!*)
 
 lemma
   \<open>(\<forall>x xa xb xc.
-              list_all2 (\<lambda>x y. True) x xb \<and> list_all2 (list_all2 (\<lambda>x y. True)) xa xc \<longrightarrow>
-              (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ry.
-                  (\<forall>a. a \<in> set xb \<longrightarrow> (y a, a) \<in> UNIV) \<and>
-                  (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
-                      fst (unzip' (map (\<lambda>x. ((fst x, snd (snd x)), ())) (zip' (x, map (\<lambda>x. (y x, x)) xb)))) =
-                      zip' (x, xb) \<and>
-                      length x = length (map (\<lambda>x. (y x, x)) xb))))\<close>
+             list_all2 (\<lambda>x y. True) x xb \<and> list_all2 (list_all2 (\<lambda>x y. True)) xa xc \<longrightarrow>
+             (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ry.
+                 (\<forall>a. a \<in> set xb \<longrightarrow> (y a, a) \<in> UNIV) \<and>
+                 (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
+                     fst (unzip' (map (\<lambda>x. ((fst x, snd (snd x)), ())) (zip' (x, map (\<lambda>x. (y x, x)) xb)))) =
+                     zip' (x, xb) \<and>
+                     length x = length (map (\<lambda>x. (y x, x)) xb)))) \<close>
   apply auto
 
 
@@ -828,10 +828,10 @@ lemma
 
 
 
-
+ 
 
 declare [[\<phi>trace_reasoning = 3]]
-   
+     
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>

@@ -384,13 +384,13 @@ lemma \<phi>elim_reasoning_transformation:
 
 lemma \<phi>elim'SE_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
-\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> (case x of (a,b) \<Rightarrow> (y a, b)) \<Ztypecolon> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
   by (cases x; simp add: \<phi>Prod_expn')
 
 lemma \<phi>elim'SEi_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
-\<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> \<black_circle> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi
+\<Longrightarrow> (case x of (a,b) \<Rightarrow> (y a, b)) \<Ztypecolon> \<black_circle> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
   by (cases x; simp add: \<phi>Prod_expn' \<phi>Some_eq_term_strip[where T=T, symmetric])
 
@@ -1558,77 +1558,9 @@ ML \<open>@{thm' homo_sep_disj_total_push_map} |> Thm.prop_of\<close>
 subsection \<open>Property Derivers\<close>
 
 subsubsection \<open>Extension of BNF-FP\<close>
-                                 
-ML_file \<open>library/tools/extended_BNF_info.ML\<close>
+
 ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
-
-paragraph \<open>Configurations\<close>
-
-definition \<open>zip' = case_prod zip\<close>
-definition \<open>unzip' l = (map fst l, map snd l)\<close>
-
-lemma zip'_eq_Cons_ex:
-  \<open>zip' x = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. fst x = ah # al \<and> snd x = bh # bl \<and> (ah,bh) = h \<and> zip' (al,bl) = l)\<close>
-  unfolding zip'_def
-  by (cases x; simp; induct_tac b; case_tac a; simp)
-
-lemma zip'_eq_Nil_eq_len:
-  \<open>length (fst l) = length (snd l) \<Longrightarrow> (zip' l = []) \<longleftrightarrow> l = ([], [])\<close>
-  unfolding zip'_def
-  apply (cases l; simp)
-  subgoal for a b
-    by (induct b; cases a; simp) .
-
-lemma zip'_eq_Nil_with_rel:
-  \<open>list_all2 P a b \<and> zip' (a,b) = [] \<longleftrightarrow> a = [] \<and> b = []\<close>
-  unfolding zip'_def
-  by (induct b; cases a; simp)
-
-lemma unzip'_inj[simp]:
-  \<open>unzip' [] = ([], [])\<close>
-  \<open>fst (unzip' (x # L)) = (fst x # fst (unzip' L))\<close>
-  \<open>snd (unzip' (x # L)) = (snd x # snd (unzip' L))\<close>
-  unfolding unzip'_def
-  by simp_all
-
-thm zip'_eq_Cons_ex zip'_eq_Nil_eq_len
-
-setup \<open>Context.theory_map(
-  BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>list\<close>, {
-      deads = [],
-      lives = [\<^typ>\<open>'a\<close>],
-      lives'= [\<^typ>\<open>'b\<close>],
-      zip = \<^term>\<open>zip'\<close>,
-      unzip = \<^Const>\<open>unzip' \<^typ>\<open>'a\<close> \<^typ>\<open>'b\<close>\<close>,
-      zip_simps = @{thms' zip'_eq_Cons_ex zip'_eq_Cons_ex zip'_eq_Nil_eq_len},
-      unzip_simps = @{thms' unzip'_inj} (*what I need to give?*)
-  })
-#> eBNF_Info.add_BNF (\<^type_name>\<open>Set.set\<close>, 
-let val a = TFree ("a", \<^sort>\<open>type\<close>)
-    val b = TFree ("b", \<^sort>\<open>type\<close>)
- in {
-  T = \<^Type>\<open>Set.set a\<close>,
-  Tname = \<^type_name>\<open>Set.set\<close>,
-  casex = NONE,
-  case_distribs = [],
-  ctrs = [\<^Const>\<open>bot \<^Type>\<open>set a\<close>\<close>, \<^Const>\<open>insert a\<close>, \<^Const>\<open>sup \<^Type>\<open>set a\<close>\<close>],
-  deads = [], lives = [a], lives'= [b],
-  sets = [Abs("x", a, Bound 0)],
-  set_thms = [],
-  ctr_simps = [],
-  rel = \<^Const>\<open>rel_set a b\<close>,
-  rel_distincts = [],
-  rel_injects = @{thms' Lifting_Set.empty_transfer},
-  rel_eq = @{thm' rel_set_eq},
-  pred = Abs("P", a --> HOLogic.boolT, Abs ("S", \<^Type>\<open>Set.set a\<close>, \<^Const>\<open>Ball a\<close> $ Bound 0 $ Bound 1)),
-  pred_injects = @{thms' Set.ball_simps(5) Set.ball_Un Set.ball_simps(7)},
-  pred_simps = @{thms' Set.ball_simps},
-  map = \<^Const>\<open>Set.image a b\<close>,
-  map_thms = @{thms' Set.image_insert Set.image_Un Set.image_empty},
-  map_disc_iffs = @{thms' image_is_empty},
-  map_ident = @{thm' Set.image_ident}
-} end)
-)\<close>
+ML_file \<open>library/tools/extended_BNF_info.ML\<close>
 
 
 subsubsection \<open>Deriver Framework\<close>
@@ -2166,7 +2098,94 @@ lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.
 
 
 
-subsubsection \<open>System\<close>
+subsection \<open>Configure Simplification Set for Deriving\<close>
+
+subsubsection \<open>General\<close>
+
+setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt => ctxt addsimps
+  @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
+          prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
+          ExSet_simps
+          \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Prod_expn'[folded \<phi>Auto_Prod_def] \<phi>Prod_expn''[folded \<phi>Auto_Prod_def]
+          FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
+          list_all2_Cons1 list_all2_Nil list_all2_lengthD
+          map_ident}))\<close>
+
+lemmas [\<phi>constraint_expansion] =
+  Set.ball_Un
+  Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
+  Basic_BNFs.prod_set_defs
+
+
+subsubsection \<open>List\<close>
+
+definition \<open>zip' = case_prod zip\<close>
+definition \<open>unzip' l = (map fst l, map snd l)\<close>
+
+lemma zip'_inj[simp]:
+  \<open>length (fst l) = length (snd l) \<Longrightarrow> map fst (zip' l) = fst l\<close>
+  \<open>length (fst l) = length (snd l) \<Longrightarrow> map snd (zip' l) = snd l\<close>
+  unfolding zip'_def
+  by (cases l; simp)+
+  
+  
+
+lemma zip'_eq_Cons_ex:
+  \<open>zip' x = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. fst x = ah # al \<and> snd x = bh # bl \<and> (ah,bh) = h \<and> zip' (al,bl) = l)\<close>
+  unfolding zip'_def
+  by (cases x; simp; induct_tac b; case_tac a; simp)
+
+lemma zip'_eq_Nil_eq_len:
+  \<open>length (fst l) = length (snd l) \<Longrightarrow> (zip' l = []) \<longleftrightarrow> l = ([], [])\<close>
+  unfolding zip'_def
+  apply (cases l; simp)
+  subgoal for a b
+    by (induct b; cases a; simp) .
+
+lemma zip'_eq_Nil_with_rel:
+  \<open>list_all2 P a b \<and> zip' (a,b) = [] \<longleftrightarrow> a = [] \<and> b = []\<close>
+  unfolding zip'_def
+  by (induct b; cases a; simp)
+
+lemma unzip'_inj[simp]:
+  \<open>unzip' [] = ([], [])\<close>
+  unfolding unzip'_def
+  by simp_all
+
+lemma unzip'_prj[simp]:
+  \<open>fst (unzip' L) = map fst L\<close>
+  \<open>snd (unzip' L) = map snd L\<close>
+  unfolding unzip'_def
+  by simp_all
+
+lemma map_prod_case_analysis:
+  \<open>map (\<lambda>x. (f x, g x)) la = lb \<equiv> map f la = map fst lb \<and> map g la = map snd lb \<close>
+  by (induct la arbitrary: lb; clarsimp; fastforce)
+
+lemma list_all2__const_True[simp]:
+  \<open>list_all2 (\<lambda>x y. True) = (\<lambda>x y. length x = length y)\<close>
+  apply (clarsimp simp add: fun_eq_iff)
+  subgoal for x y
+  by (induct x arbitrary: y; simp; case_tac y; simp) .
+
+
+  thm map_eq_Cons_conv
+thm zip'_eq_Cons_ex zip'_eq_Nil_eq_len
+
+setup \<open> Context.theory_map(
+  BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>list\<close>, {
+      deads = [],
+      lives = [\<^typ>\<open>'a\<close>],
+      lives'= [\<^typ>\<open>'b\<close>],
+      zip = \<^term>\<open>zip'\<close>,
+      unzip = \<^Const>\<open>unzip' \<^typ>\<open>'a\<close> \<^typ>\<open>'b\<close>\<close>,
+      zip_simps = @{thms' zip'_inj zip'_eq_Cons_ex zip'_eq_Cons_ex zip'_eq_Nil_eq_len
+                          length_map},
+      unzip_simps = @{thms' unzip'_inj unzip'_prj map_prod_case_analysis} (*what I need to give?*)
+  }))
+\<close>
+
+
 
 lemma list_all2_reduct_rel[simp]:
   \<open>list_all2 (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = map f a' \<and> list_all P a')\<close>
@@ -2189,20 +2208,6 @@ ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\
           Object_Equiv_rule_move_all2
 
           \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH (*\<phi>TA_reason_rule__simp_NToA*) *)
-setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt => ctxt addsimps
-  @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
-          prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
-          ExSet_simps
-          \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Prod_expn'[folded \<phi>Auto_Prod_def] \<phi>Prod_expn''[folded \<phi>Auto_Prod_def]
-          FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
-          list_all2_Cons1 list_all2_Nil list_all2_lengthD
-          map_ident}))\<close>
-
-lemmas [\<phi>constraint_expansion] =
-  Set.ball_Un
-  Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
-  Basic_BNFs.prod_set_defs
-
 thm Basic_BNFs.prod_set_defs
 thm map_ident
 
@@ -2215,11 +2220,6 @@ lemma Set_bind_insert[simp, \<phi>constraint_expansion]:
 
 ML \<open>Conjunction.conjunctionI\<close>
 
-lemma list_all2__const_True[simp]:
-  \<open>list_all2 (\<lambda>x y. True) = (\<lambda>x y. length x = length y)\<close>
-  apply (clarsimp simp add: fun_eq_iff)
-  subgoal for x y
-  by (induct x arbitrary: y; simp; case_tac y; simp) .
 
 
 thm Set.ball_Un
@@ -2231,6 +2231,38 @@ ML \<open>\<^simproc>\<open>defined_Ex\<close>\<close>
 ML \<open>Quantifier1.rearrange_Ex\<close>
 thm ExSet_simps
 thm ex_simps
+
+
+subsubsection \<open>Set\<close>
+
+
+setup \<open> Context.theory_map (eBNF_Info.add_BNF (\<^type_name>\<open>Set.set\<close>, 
+let val a = TFree ("a", \<^sort>\<open>type\<close>)
+    val b = TFree ("b", \<^sort>\<open>type\<close>)
+ in {
+  T = \<^Type>\<open>Set.set a\<close>,
+  Tname = \<^type_name>\<open>Set.set\<close>,
+  casex = NONE,
+  case_distribs = [],
+  ctrs = [\<^Const>\<open>bot \<^Type>\<open>set a\<close>\<close>, \<^Const>\<open>insert a\<close>, \<^Const>\<open>sup \<^Type>\<open>set a\<close>\<close>],
+  deads = [], lives = [a], lives'= [b],
+  sets = [Abs("x", a, Bound 0)],
+  set_thms = [],
+  ctr_simps = [],
+  rel = \<^Const>\<open>rel_set a b\<close>,
+  rel_distincts = [],
+  rel_injects = @{thms' Lifting_Set.empty_transfer},
+  rel_eq = @{thm' rel_set_eq},
+  pred = Abs("P", a --> HOLogic.boolT, Abs ("S", \<^Type>\<open>Set.set a\<close>, \<^Const>\<open>Ball a\<close> $ Bound 0 $ Bound 1)),
+  pred_injects = @{thms' Set.ball_simps(5) Set.ball_Un Set.ball_simps(7)},
+  pred_simps = @{thms' Set.ball_simps},
+  map = \<^Const>\<open>Set.image a b\<close>,
+  map_thms = @{thms' Set.image_insert Set.image_Un Set.image_empty},
+  map_disc_iffs = @{thms' image_is_empty},
+  map_ident = @{thm' Set.image_ident},
+  map_comp_of = @{thm' Set.image_image}
+} end)
+)\<close>
 
 
 

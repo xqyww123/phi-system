@@ -16,11 +16,6 @@ val get_fp_more : Context.generic -> string -> fp_more option
 val mk_zip : typ list -> typ list -> typ list -> fp_more -> term
 val mk_unzip : typ list -> typ list -> typ list -> fp_more -> term
 
-val export : Context.generic -> Context.generic -> Context.generic
-
-val identity_element : typ -> Context.generic -> thm list * Context.generic
-val identity_element_unify : typ -> Context.generic -> (ctyp TVars.table * thm) list * Context.generic
-
 end
 
 structure BNF_FP_Sugar_More : BNF_FP_SUGAR_MORE = struct
@@ -71,94 +66,6 @@ fun mk_unzip Ds Ts Us fp_more =
         ((#deads fp_more ~~ Ds) @ (#lives fp_more ~~ Ts) @ (#lives' fp_more ~~ Us)) (#unzip fp_more)
 
 
-(*** Cache ***)
 
-structure Properties = Generic_Data (
-  type T = (typ * thm) list Symreltab.table
-  val empty = Symreltab.empty
-  val merge = Symreltab.merge (K true)
-)
-
-fun export from to = Properties.put (Properties.get from) to
-
-fun gen_property inst kind gen (typ as Type(Tname,_)) generic =
-  let val thy = Context.theory_of generic
-      val mpf = map_filter (inst thy typ)
-   in case Symreltab.lookup (Properties.get generic) (Tname,kind)
-        of SOME ths =>
-            (mpf (map (apsnd (Thm.transfer'' generic)) ths), generic)
-         | NONE =>
-            let val res = gen Tname generic
-             in (mpf res, Properties.map (Symreltab.update_new (
-                              (Tname,kind), res)) generic)
-            end
-  end
-  | gen_property _ _ _ typ _ =
-      raise TYPE ("Not a Type constant", [typ], [])
-
-
-
-fun made_of_ctrs ty chk_ctrs (Const(N, TY)) =
-     (case body_type TY
-        of Type (TN, _) => if TN = ty then chk_ctrs N else true
-         | _ => true)
-  | made_of_ctrs ty chk_ctrs (X $ Y) = made_of_ctrs ty chk_ctrs X andalso made_of_ctrs ty chk_ctrs Y
-  | made_of_ctrs ty chk_ctrs (Abs(_,_,X)) = made_of_ctrs ty chk_ctrs X
-  | made_of_ctrs _ _ _ = true
-
-(* DO NOT REMOVE
-fun chk_search_result1 ctxt pattern [] =
-      error ("No existing theorems found for " ^ Syntax.string_of_term ctxt pattern)
-  | chk_search_result1 _ _ [x] = [x]
-  | chk_search_result1 ctxt pattern L = let open Pretty in
-        error (string_of (chunks (
-            block [str "More than one existing theorems found for ", Syntax.pretty_term ctxt pattern] ::
-            map (fn th => item [Syntax.pretty_term ctxt (Thm.prop_of th)]) L
-          )))
-      end*)
-
-fun gen_unit_simps Tname generic =
-  let val sorts = Sign.arity_sorts (Context.theory_of generic) Tname \<^sort>\<open>one\<close>
-      val ctxt = Context.proof_of generic
-      val ty_args = map_index (fn (i,S) => TVar(("x",i),S)) sorts
-      val ty = Type(Tname, ty_args)
-      val pattern = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>HOL.eq ty\<close> $ \<^Const>\<open>one_class.one ty\<close> $ Var(("uu",0),ty))
-      val bnf = eBNF_Info.get_bnf1 generic Tname
-      val ctrs = fold (fn Const(N,_) => Symtab.insert_set N
-                        | _ => I) (eBNF_Info.ctrs_of bnf) Symtab.empty
-              |> Symtab.defined
-   in Find_Theorems.find_theorems ctxt NONE NONE true [(true, Find_Theorems.Pattern pattern)]
-   |> snd
-   |> map_filter (fn (_, th) => case Thm.prop_of th
-                                  of _ (*Trueprop*) $ (_ (*eq*) $ _ $ RHS) =>
-                                      if made_of_ctrs Tname ctrs RHS
-                                      then SOME th
-                                      else NONE
-                                   | _ => NONE)
-   (*|> chk_search_result1 ctxt pattern*)
-   |> map (fn th => case Thm.concl_of th
-                      of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => (Term.fastype_of LHS, th))
-  end
-
-fun typ_inst_by_match thy tyb (tya, th) =
-  Sign.typ_match thy (tya,tyb) Vartab.empty
-   |> Phi_Help.subst_tyenv
-   |> Phi_Help.certify_tyvars (Context.Theory thy)
-   |> (fn inst => SOME (Thm.instantiate (inst, Vars.empty) th))
-  handle Type.TYPE_MATCH => NONE
-
-fun typ_unify thy tyb (tya0,th0) =
-  let val idx = Term.maxidx_of_typ tyb + 1
-      val tya = Logic.incr_tvar idx tya0
-      val th = Thm.incr_indexes idx th0
-   in fst (Sign.typ_unify thy (tya,tyb) (Vartab.empty, Term.maxidx_of_typ tya + 1))
-   |> Phi_Help.norm_tyenv
-   |> Phi_Help.certify_tyvars (Context.Theory thy)
-   |> (fn inst => SOME (inst, Thm.instantiate (inst, Vars.empty) th))
-   handle Type.TUNIFY => NONE
-  end
-
-fun identity_element typ generic = gen_property typ_inst_by_match "one" gen_unit_simps typ generic
-fun identity_element_unify typ generic = gen_property typ_unify "one" gen_unit_simps typ generic
 
 end

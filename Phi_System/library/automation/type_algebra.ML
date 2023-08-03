@@ -295,7 +295,8 @@ val _ = Theory.setup (Context.theory_map (
 #>*)
   Simps.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
-                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>])
+                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
+                       \<^simproc>\<open>Funcomp_Lambda\<close>])
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
       |> Simplifier.add_cong @{thm HOL.conj_cong})
 ))
@@ -362,16 +363,26 @@ fun add_global_simps thms ctxt = ctxt
   |> Simps.add_simps' thms
   |> (fn ctxt => ctxt addsimps thms)
 
+fun proof_map_result f ctxt = f (Context.Proof ctxt) |> apsnd (Context.proof_of)
 
-fun load_ss (set,pred,rel,map) bnf ctxt = ctxt
-  |> Simps.add_simps' ( eBNF_Info.simps_of_ctr_safe bnf
-                      @ (if set then eBNF_Info.simps_of_set_safe bnf else [])
-                      @ (if pred then eBNF_Info.simps_of_pred_safe bnf else [])
-                      @ (if rel then eBNF_Info.simps_of_rel_safe bnf else [])
-                      @ (if map then eBNF_Info.simps_of_map_safe bnf else []))
-  |> add_global_simps ( (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
-                      @ (if rel then eBNF_Info.global_simps_of_rel_safe bnf else [])
-                      @ (if map then eBNF_Info.global_simps_of_map_safe bnf else []))
+fun load_ss (set,pred,rel,map) bnf ctxt = 
+  let fun more_rule flag gen (rules, ctxt) =
+            if flag then (case gen ctxt of (rule, ctxt) => (rule :: rules, ctxt)) else (rules, ctxt)
+      fun more_rules flag gen (rules, ctxt) =
+            if flag then (case gen ctxt of (rule, ctxt) => (rule @ rules, ctxt)) else (rules, ctxt)
+      val (additional, ctxt) = ([], ctxt)
+            |> more_rules rel (proof_map_result (eBNF_Info.relator_on_const_true bnf))
+   in ctxt
+   |> Simps.add_simps' ( eBNF_Info.simps_of_ctr_safe bnf
+                       @ (if set then eBNF_Info.simps_of_set_safe bnf else [])
+                       @ (if pred then eBNF_Info.simps_of_pred_safe bnf else [])
+                       @ (if rel then eBNF_Info.simps_of_rel_safe bnf else [])
+                       @ (if map then eBNF_Info.simps_of_map_safe bnf else [])
+                       @ additional)
+   |> add_global_simps ( (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
+                       @ (if rel then eBNF_Info.global_simps_of_rel_safe bnf else [])
+                       @ (if map then eBNF_Info.global_simps_of_map_safe bnf else []))
+  end
 
 
 (* Set *)
@@ -546,7 +557,7 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
                     val zip = (if flag then BNF_FP_Sugar_More.mk_zip
                                        else BNF_FP_Sugar_More.mk_unzip) deads lives lives' fp_more
                     val ctxt'' = ctxt
-                              |> Simps.add_simps' ((if flag then #zip_simps fp_more else #unzip_simps fp_more)
+                              |> Simps.add_simps' (#zip_simps fp_more @ #unzip_simps fp_more
                                                   @ eBNF_Info.simps_of_rel_safe bnf
                                                   @ eBNF_Info.simps_of_map_safe bnf
                                                   @ eBNF_Info.simps_of_ctr_safe bnf)
@@ -573,6 +584,7 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
         else error "Internal bug #a1dd0817-f55a-468e-ba79-95183f145380"
   end
 
+(* DO NOT REMOVE, still good and maybe useful, but not maintained
 fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs')) ctxt =
       let val _ = if Tname = Tname' then () else raise TYPE ("guess_zip", [], [])
           val bnf = eBNF_Info.get_bnf1 (Context.Proof ctxt) Tname
@@ -597,7 +609,7 @@ fun guess_zip flag (*(target,target')*) (Type(Tname, Targs), Type(Tname', Targs'
   | guess_zip _ ((a as TFree _), (b as TFree _)) ctxt = (Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0), ctxt)
   | guess_zip _ ((a as TVar _), (b as TVar _)) ctxt = (Abs("x", \<^Type>\<open>prod a b\<close>, Bound 0), ctxt)
   | guess_zip _ (a,b) _ = raise TYPE ("guess_zip", [a,b], [])
-
+*)
 
 (* load simpset *)
 

@@ -7,7 +7,7 @@ signature PHI_TYPE_ALGEBRA = sig
 
 include PHI_TYPE_ALGEBRA
 
-exception Automation_Fail of string
+exception Automation_Fail of string list
 
 (* Algebraic Properties *)
 
@@ -47,7 +47,7 @@ structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
 
 open Phi_Type_Algebra
 
-exception Automation_Fail of string
+exception Automation_Fail of string list
 
 type property_name = string
 
@@ -253,7 +253,7 @@ fun toplevel_property_auto deps automation (the_functor,pos,property) ctxt =
             in fold (fn rules => fn ctxt =>
                           automation (the_functor,pos,rules) ctxt
                           handle Automation_Fail msg => (
-                              if msg = "" then () else warning ("Automation Fail:\n" ^ msg) ;
+                              if null msg then () else warning (String.concat ("Automation Fail:\n" :: msg)) ;
                               ctxt
                             )
                     ) ruless ctxt

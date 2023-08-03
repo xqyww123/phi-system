@@ -415,14 +415,12 @@ fun complete_deriver_dependences ctxt dervs =
       add_deriver_dependences ctxt (#dependences derv)) dervs dervs
 
 fun err_derive prop_name msg hints =
-  let open Pretty
-   in error ("Fail to derive the property " ^ prop_name ^
-        (if msg = "" then "" else "\n" ^ msg) ^
+      error (String.concat (
+        "Fail to derive the property " :: prop_name :: (if null msg then [] else "\n" :: msg) @
         (if null hints
-         then "\nThe guessed property may be wrong, and you may provide the \
-              \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."
-         else ""))
-  end
+         then ["\nThe guessed property may be wrong, and you may provide the \
+               \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."]
+         else [])))
 
 fun derive_properties dervs phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
@@ -558,7 +556,7 @@ fun is_Type_Opr ty =
 
 fun assert_Type_Opr ty =
   if is_Type_Opr ty then ()
-  else raise Automation_Fail "Not a \<phi>-type operator!"
+  else raise Automation_Fail ["Not a \<phi>-type operator!"]
 
 fun is_first_parameter_a_type ty =
   case dest_parameterized_phi_ty ty
@@ -571,7 +569,7 @@ fun is_first_parameter_a_type ty =
 
 fun assert_first_parameter_is_type ty =
   if is_first_parameter_a_type ty then ()
-  else raise Automation_Fail "Not a \<phi>-type operator!"
+  else raise Automation_Fail ["Not a \<phi>-type operator!"]
 
 fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
   let fun split prevs (F $ T) =
@@ -598,8 +596,8 @@ val separate_type_operator_and_its_non_parameterized_parameter_safe =
 
 fun warn_separate_type_operator f FT_term =
   case f FT_term
-    of [] => raise Automation_Fail ("Fail to parse " ^ Term.term_name (Term.head_of FT_term) ^
-                                    " as a type operator.")
+    of [] => raise Automation_Fail ["Fail to parse ", Term.term_name (Term.head_of FT_term),
+                                    " as a type operator."]
      | ret => ret
 
 val separate_type_operator_and_its_parameter =

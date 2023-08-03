@@ -24,9 +24,9 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
        in (Phi_Help.certify_tyvars (Context.Proof ctxt) inst,
            \<^Const>\<open>one_class.one typ'\<close>, ctxt)
       end
-  | guess_id_ele typ ctxt =
+  | guess_id_ele (typ as Type _) ctxt =
       let val (inst, unit_simp, ctxt') =
-                case BNF_FP_Sugar_More.identity_element_unify typ (Context.Proof ctxt)
+                case eBNF_Info.identity_element_unify typ (Context.Proof ctxt)
                   of ([], _) => raise Automation_Fail (
                                     "Fail to guess the property, because no identity element and \
                                     \its simplification rule found for type \
