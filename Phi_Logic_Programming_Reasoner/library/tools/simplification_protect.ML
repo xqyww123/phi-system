@@ -19,12 +19,14 @@ structure Protectors = Simpset (
                                      oo Simpdata.mksimps Simpdata.mksimps_pairs)))
   val binding = NONE
   val comment = "Rewrite rules applied before simplification in order to protect any specific assertion forms"
+  val attribute = NONE
 )
 
 structure Un_Protectors = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = NONE
   val comment = "Rewrite rules applied after simplification to recovery the protected form"
+  val attribute = NONE
 )
 
 fun protect ctxt = Simplifier.full_simplify (Protectors.equip ctxt)

@@ -275,7 +275,8 @@ fun add_automation_on_property (priority, prop_kinds) automation =
 structure Gen_Rule_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
-  val comment = "Rules simplifying the generated \<phi>functor reasoning rules."
+  val comment = "Rules simplifying the reasoning rules instantiated from templates."
+  val attribute = NONE
 )
 
 fun normalize th = th

@@ -164,7 +164,7 @@ val default_ind_conv : (Proof.context -> Phi_Type_Algebra.phi_type -> conv) (*co
 
 (*To use `default_ind_conv`, you must tag the leading antecedent of the `rule` by `\<phi>TA_ind_target`,
   or else `default_ind_conv` cannot find which one is the induction hypothesis,
-  see @{thm \<phi>TA_SHz_rule} as an example.*)
+  see @{thm \<phi>TA_SH\<^sub>I_rule} as an example.*)
 
 (** Reasoning **)
 (*`reasoning` specifies how to solve the reasoning goals in detail.*)
@@ -254,19 +254,87 @@ type guess_property =
         Proof.context ->
         (term list * term * term option list * Phi_Type_Algebra.phi_type * Proof.context ) Seq.seq
 
-(* fun reason_fail msg = (warning msg; raise Automation_Fail) *)
+(** Simplification Rules unfolding the constrains and conditions **)
+
+structure Type_specific_Simps = Generic_Data (
+  type T = thm Net.net
+  val empty = Net.empty
+  val merge = Net.merge pointer_eq
+)
+
+exception Parse_Fail of string list
+
+fun parse_which_type_for_the_rule rule =
+  let val exclude = [\<^type_name>\<open>bool\<close>, \<^type_name>\<open>nat\<close>, \<^type_name>\<open>int\<close>, \<^type_name>\<open>prop\<close>, \<^type_name>\<open>fun\<close>, \<^type_name>\<open>set\<close>]
+      fun fold_type_const f =
+        let fun fld (Type (Tname, Targs)) x = fold fld Targs (f Tname x)
+              | fld _ x = x
+         in fld
+        end
+      fun add_tyconst tm = fold_types (fold_type_const (fn Tname =>
+              if member (op =) exclude Tname then I else insert (op =) Tname)) tm []
+      val tyconsts = add_tyconst (Thm.concl_of rule)
+   in case tyconsts
+   of [tycon] => tycon
+    | L => raise Parse_Fail L
+  end
+
+fun add_type_specific_simp (Tname, rules) ctxt =
+  Type_specific_Simps.map (fold (fn rule =>
+      Net.insert_term (Thm.equiv_thm (Context.theory_of ctxt))
+                      (Const(Tname, Term.dummyT) $ Thm.prop_of rule,
+                       rule)
+      ) rules) ctxt
+
+fun del_type_specific_simp (Tname, rules) ctxt =
+  Type_specific_Simps.map (fold (fn rule =>
+      Net.delete_term_safe (Thm.equiv_thm (Context.theory_of ctxt))
+                           (Const(Tname, Term.dummyT) $ Thm.prop_of rule,
+                            rule)
+      ) rules) ctxt
+
+fun get_type_specific_simp ctxt Tname =
+  Net.unify_term (Type_specific_Simps.get ctxt) (Const(Tname, Term.dummyT) $ Var (("",0),TVar(("",0),[])))
 
 structure Simps = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = SOME \<^binding>\<open>\<phi>constraint_expansion\<close>
-  val comment = "Rules to expand constraints and conditions in \<phi>-type algebra automation"
+  val comment = "Rules unfolding constraints and conditions in property deriving of \<phi>-type algebra.\n\
+                \Basically, simplification rules for object operators including mappers, relators, \
+                \predicators of the abstract algebra of \<phi>-types"
+  val attribute = SOME (fn add => fn del =>
+    let fun gen (opr1, opr2) =
+          (fn SOME "" => opr1
+            | NONE => Thm.declaration_attribute (fn th => let open Pretty in
+                          opr2 (@{print} (parse_which_type_for_the_rule th), [th])
+                        handle Parse_Fail [] => error (string_of (
+                                  para "You are declaring a simp rule applying locally only on\
+                                       \ certain specific type. The type is not given and I \
+                                       \failed to parse it from the given rule. Please \
+                                       \indicate it explicitly by [\<phi>constraint_expansion for <the type>].\
+                                       \ Otherwise, maybe you want the rule to be applied everywhere \
+                                       \globally. If so, declare [\<phi>constraint_expansion global]."))
+                             | Parse_Fail L => error (string_of (chunks (
+                                  para "You are declaring a simp rule applying locally only on\
+                                       \ certain specific type. The type is not given and I \
+                                       \tried to parse it from the given rule but I cannot \
+                                       \determine which type you prefer from the bellow candidates." ::
+                                  map (fn N => item [str N]) L @
+                                 [para "Please indicate it explicitly by [\<phi>constraint_expansion for <the type>].\
+                                       \ Otherwise, maybe you want the rule to be applied everywhere \
+                                       \globally. If so, declare [\<phi>constraint_expansion global]."]
+                                  )))
+                        end)
+            | SOME Tname => Thm.declaration_attribute (fn th => opr2 (Tname, [th])))
+        val add' = gen (add, add_type_specific_simp)
+        val del' = gen (del, del_type_specific_simp)
+     in Scan.lift (Args.add >> K add' || Args.del >> K del' || Scan.succeed add')
+          -- (  Scan.lift (Args.$$$ "global") >> K (SOME "")
+             || Scan.lift \<^keyword>\<open>for\<close> |-- Args.type_name {proper=true, strict=true} >> SOME
+             || Scan.succeed NONE)
+     >> (fn (attr, target) => attr target)
+    end)
 )
-
-(*structure Normalize_ToA = Simpset (
-  val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>\<phi>type_algebra_normalize_ToA_ss\<close>
-  val comment = "Internal simplification set to normalize ToA in \<phi>-type algebra automation"
-)*)
 
 (*
 local
@@ -287,18 +355,14 @@ in val eq_simproc = Simplifier.make_simproc \<^context> "Phi_Type_Algebra.eq" {
 end *)
 
 val _ = Theory.setup (Context.theory_map (
-   (*Normalize_ToA.map (fn ctxt =>
-    (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
-                       \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>])
-      |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
-      |> Simplifier.add_cong @{thm HOL.conj_cong})
-#>*)
+
   Simps.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
                        \<^simproc>\<open>Funcomp_Lambda\<close>])
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
       |> Simplifier.add_cong @{thm HOL.conj_cong})
+          (*Because of this cong, the order of the conjunction is significant!*)
 ))
 
 (** Guess Abstract Operators from BNF **)
@@ -379,6 +443,7 @@ fun load_ss (set,pred,rel,map,zip) bnf ctxt =
                        @ (if rel then eBNF_Info.simps_of_rel_safe bnf else [])
                        @ (if map then eBNF_Info.simps_of_map_safe bnf else [])
                        @ (if zip then eBNF_Info.simps_of_zip_safe bnf else [])
+                       @ get_type_specific_simp (Context.Proof ctxt) (eBNF_Info.Tname_of bnf)
                        @ additional)
    |> add_global_simps ( (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
                        @ (if rel then eBNF_Info.global_simps_of_rel_safe bnf else [])
@@ -568,10 +633,11 @@ fun guess_zip_guided flag (target,target') (T,T') ctxt =
                                 |> split_list
                     val mp = eBNF_Info.mk_map_of_bnf deads (fst map_tys) (snd map_tys) bnf
                     val rl = eBNF_Info.mk_rel_of_bnf deads lives lives' bnf
+                    val mp' = Term.list_comb (mp, map snd args)
                  in((Term.list_comb (rl, map fst args),
-                     Abs("x", domain_type (Term.fastype_of zip),
-                             if flag then Term.list_comb (mp, map snd args) $ (zip $ Bound 0)
-                                     else zip $ (Term.list_comb (mp, map snd args) $ Bound 0))),
+                     Abs("x", domain_type (Term.fastype_of (if flag then zip else mp')),
+                              if flag then mp' $ (zip $ Bound 0)
+                                      else zip $ (mp' $ Bound 0))),
                     ctxt')
                 end
               | _ => error "Internal bug #928dccd3-7497-4f2c-867c-4b7407fcfdef"
@@ -768,9 +834,11 @@ fun oblg_solver proof_id ctxt sequent =
   (*case Thm.major_prem_of sequent
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
-   let val sequent'1 = Simplifier.asm_lr_simp_tac (Simps.equip ctxt) 1 sequent
+   let val ctxt'' = Simps.equip ctxt
+                 |> Simplifier.del_cong @{thm HOL.conj_cong}
+       val sequent'1 = Simplifier.asm_lr_simp_tac ctxt'' 1 sequent
                     |> Seq.hd
-                    |> @{print}
+                    (*|> @{print}*)
     in Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Simps.simp_rules ctxt, sequent'1)
           |> (fn th => case Thm.major_prem_of th
                          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
@@ -1265,8 +1333,7 @@ fun chk_unfolded ctxt (phi : phi_type) term =
         | chk _ = false
    in if chk term
       then report_potential_failure_reason (let open Pretty in [fn () => 
-              chunks [str "The phi-type is not unfolded by simplification and inductive destruction. \
-                          \The reasoning may fail.",
+              chunks [str "The phi-type is not unfolded by simplification and inductive destruction.",
                       Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term]
             ] end)
       else ()

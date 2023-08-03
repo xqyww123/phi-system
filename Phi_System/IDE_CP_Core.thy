@@ -672,6 +672,7 @@ structure Post_Synthesis_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = SOME \<^binding>\<open>post_synthesis_simp\<close>
   val comment = "Rules simplifying after the synthesis operation."
+  val attribute = NONE
 )
 \<close>
 

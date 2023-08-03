@@ -1914,7 +1914,7 @@ ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 
 subsubsection \<open>Separation Homo\<close>
 
-lemma \<phi>TA_SHz_rule:
+lemma \<phi>TA_SH\<^sub>I_rule:
   \<open> (\<And>T U z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
               (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
                   \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U))) @action \<phi>TA_ind_target undefined)
@@ -1925,7 +1925,7 @@ lemma \<phi>TA_SHz_rule:
   unfolding Separation_Homo\<^sub>I_def \<phi>Prod_expn' Action_Tag_def
   by simp
 
-lemma \<phi>TA_SHu_rule:
+lemma \<phi>TA_SH\<^sub>E_rule:
   \<open> (\<And>T U z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
              (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> Ft T \<^emph>\<^sub>\<A> Fu U) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
@@ -1935,25 +1935,32 @@ lemma \<phi>TA_SHu_rule:
   unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def \<phi>Auto_Prod_def
   by simp
 
-lemma \<phi>TA_SHz_rewr_IH:
+lemma \<phi>TA_SH\<^sub>I_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> Q x y) @action \<phi>TA_ind_target undefined)
 \<equiv> (\<And>x y. Ant \<Longrightarrow> P x y @action \<phi>TA_pure_facts \<Longrightarrow> Q x y @action \<phi>TA_conditioned_ToA_template)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all
   by (rule; blast)
 
-lemma \<phi>TA_SHz_rewr_C:
+text \<open>This conditioned template is necessary because, see,
+  \<^prop>\<open>(\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U)))\<close>
+  \<^term>\<open>z\<close> does not decide \<open>x\<close> and \<open>y\<close> during the reasoning phase and until the phase of proof obligation solving.
+  When there are multiple choices of such induction hypotheses, for sure, we can attempt every choice
+  exhaustively, but it multiplies the search branches and can harm the performance dramatically.
+\<close>
+
+lemma \<phi>TA_SH\<^sub>I_rewr_C:
   \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
 \<equiv> (Ant \<Longrightarrow> P)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all
   by (rule; blast)
 
-lemma \<phi>TA_SHu_rewr_IH:
+lemma \<phi>TA_SH\<^sub>E_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> U) @action \<phi>TA_ind_target A)
 \<equiv> (Ant \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all
   by simp
 
-lemma \<phi>TA_SHu_rewr_C:
+lemma \<phi>TA_SH\<^sub>E_rewr_C:
   \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
 \<equiv> (Ant \<Longrightarrow> P @action A)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all
@@ -1961,8 +1968,8 @@ lemma \<phi>TA_SHu_rewr_C:
 
 ML_file \<open>library/phi_type_algebra/separation_homo.ML\<close>
 
-hide_fact \<phi>TA_SHz_rule \<phi>TA_SHu_rule \<phi>TA_SHz_rewr_IH \<phi>TA_SHz_rewr_C
-          \<phi>TA_SHu_rewr_IH \<phi>TA_SHu_rewr_C
+hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_rewr_IH \<phi>TA_SH\<^sub>I_rewr_C
+          \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _\<close>) = \<open>
   Phi_Type_Algebra_Derivers.separation_homo_I
@@ -2115,11 +2122,11 @@ setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt =>
           list_all2_Cons1 list_all2_Nil
           map_ident}))\<close>
 
-thm list_all2_lengthD
+
+lemmas [\<phi>constraint_expansion global] =
+  Nat.add_Suc_right Groups.monoid_add_class.add.right_neutral Nat.nat.inject
 
 lemmas [\<phi>constraint_expansion] =
-  Set.ball_Un
-  Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image Set.nonempty_bind_const Finite_Set.finite_bind
   Basic_BNFs.prod_set_defs
 
 
@@ -2133,8 +2140,13 @@ lemma zip'_inj[simp]:
   \<open>length (fst l) = length (snd l) \<Longrightarrow> map snd (zip' l) = snd l\<close>
   unfolding zip'_def
   by (cases l; simp)+
-  
-  
+
+(*
+lemma zip'_inj'[simp]:
+  \<open>length (fst l) = length (snd l) \<Longrightarrow> map (\<lambda>x. f (fst x)) (zip' l) = map f (fst l)\<close>
+  \<open>length (fst l) = length (snd l) \<Longrightarrow> map (\<lambda>x. f (snd x)) (zip' l) = snd l\<close>
+  unfolding zip'_def
+  by (cases l; simp) *)
 
 lemma zip'_eq_Cons_ex:
   \<open>zip' x = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. fst x = ah # al \<and> snd x = bh # bl \<and> (ah,bh) = h \<and> zip' (al,bl) = l)\<close>
@@ -2152,6 +2164,17 @@ lemma zip'_eq_Nil_with_rel:
   \<open>list_all2 P a b \<and> zip' (a,b) = [] \<longleftrightarrow> a = [] \<and> b = []\<close>
   unfolding zip'_def
   by (induct b; cases a; simp)
+
+lemma length_zip':
+  \<open>length a = length b \<Longrightarrow> length (zip' (a,b)) = length b\<close>
+  unfolding zip'_def
+  by simp
+
+lemma zip'_map:
+  \<open>zip' (map f xs, ys) = map (\<lambda>(x,y). (f x, y)) (zip' (xs, ys))\<close>
+  \<open>zip' (xs, map g ys) = map (\<lambda>(x,y). (x, g y)) (zip' (xs, ys))\<close>
+  unfolding zip'_def
+  by (simp add: zip_map1 zip_map2)+
 
 lemma unzip'_inj[simp]:
   \<open>unzip' [] = ([], [])\<close>
@@ -2174,10 +2197,6 @@ lemma list_all2__const_True[simp]:
   subgoal for x y
   by (induct x arbitrary: y; simp; case_tac y; simp) .
 
-
-  thm map_eq_Cons_conv
-thm zip'_eq_Cons_ex zip'_eq_Nil_eq_len
-
 setup \<open> Context.theory_map(
   BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>list\<close>, {
       deads = [],
@@ -2186,56 +2205,20 @@ setup \<open> Context.theory_map(
       zip = \<^term>\<open>zip'\<close>,
       unzip = \<^Const>\<open>unzip' \<^typ>\<open>'a\<close> \<^typ>\<open>'b\<close>\<close>,
       zip_simps = @{thms' zip'_inj zip'_eq_Cons_ex zip'_eq_Cons_ex zip'_eq_Nil_eq_len
-                          length_map unzip'_inj unzip'_prj map_prod_case_analysis}
+                          length_map length_zip' zip'_map
+                          unzip'_inj unzip'_prj map_prod_case_analysis}
   }))
 \<close>
 
-
-
-lemma list_all2_reduct_rel[simp]:
+lemma list_all2_reduct_rel[simp]: (*TODO!*)
   \<open>list_all2 (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = map f a' \<and> list_all P a')\<close>
   apply (clarsimp simp add: fun_eq_iff)
   subgoal for x y by (induct x arbitrary: y; simp; case_tac y; simp; blast) .
 
-(*
-lemma
-  \<open>list_all (\<lambda>x. Q \<and> P x) x = (Q \<and> list_all P x)\<close>
-  apply (induct x; simp) *)
+lemmas [\<phi>constraint_expansion] =
+  list.size map_eq_Cons_conv list_all2_lengthD[THEN HOL.Eq_TrueI]
 
 
-
-
-term case_prod
-
-ML \<open>Sign.arity_sorts \<^theory> \<^type_name>\<open>prod\<close> \<^sort>\<open>times\<close>\<close>
-
-(* hide_fact Object_Equiv_rule_move_all Object_Equiv_rule_move_set_eq Object_Equiv_rule_move_set_eq_end
-          Object_Equiv_rule_move_all2
-
-          \<phi>TA_TF_rule \<phi>TA_TF_rewr \<phi>TA_TF_pattern_IH (*\<phi>TA_reason_rule__simp_NToA*) *)
-thm Basic_BNFs.prod_set_defs
-thm map_ident
-
-
-
-lemma Set_bind_insert[simp, \<phi>constraint_expansion]:
-  \<open>Set.bind (insert x S) f = f x \<union> Set.bind S f\<close>
-  unfolding Set.bind_def
-  by auto
-
-ML \<open>Conjunction.conjunctionI\<close>
-
-
-
-thm Set.ball_Un
-thm set_simps
-thm list.set
-
-
-ML \<open>\<^simproc>\<open>defined_Ex\<close>\<close>
-ML \<open>Quantifier1.rearrange_Ex\<close>
-thm ExSet_simps
-thm ex_simps
 
 
 subsubsection \<open>Set\<close>
@@ -2275,6 +2258,14 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
 } end)
 )\<close>
 
+lemmas [\<phi>constraint_expansion for set] =
+  Set.ball_Un Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image
+  Set.nonempty_bind_const Finite_Set.finite_bind
+
+lemma Set_bind_insert[simp, \<phi>constraint_expansion for set]:
+  \<open>Set.bind (insert x S) f = f x \<union> Set.bind S f\<close>
+  unfolding Set.bind_def
+  by auto
 
 
 (*

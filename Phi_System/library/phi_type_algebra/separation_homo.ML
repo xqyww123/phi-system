@@ -139,14 +139,14 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
 
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_IH}) then_conv
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>I_rewr_IH}) then_conv
                 Phi_Conv.meta_alls_conv (fn ctxt =>
                 Conv.implies_concl_conv (Conv.implies_conv (
                   (fn ctm => Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)) ctm)
                 ) Conv.all_conv
                )) ctxt,
             fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHz_rewr_C}) then_conv
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>I_rewr_C}) then_conv
                 Conv.implies_concl_conv (HOLogic.Trueprop_conv (
                   (fn ctm => Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)) ctm) ) then_conv
                 Phi_Conv.hol_alls_to_meta_alls (fn _ => fn ctm =>
@@ -155,9 +155,9 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
             )
       val ind_conv_u = default_ind_conv (
             fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr_IH}),
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_IH}),
             fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SHu_rewr_C}) then_conv
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_C}) then_conv
                 Conv.implies_concl_conv (
                   HOLogic.Trueprop_conv (
                   Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))
@@ -177,7 +177,7 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
 
       val rules = deriving_framework (if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E",
                                      parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
-                                     (if is_intro then @{thm' \<phi>TA_SHz_rule} else @{thm' \<phi>TA_SHu_rule}),
+                                     (if is_intro then @{thm' \<phi>TA_SH\<^sub>I_rule} else @{thm' \<phi>TA_SH\<^sub>E_rule}),
                                      [(SOME ([0,~1,~1], ind_conv), SH_reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0

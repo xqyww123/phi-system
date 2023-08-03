@@ -1141,6 +1141,7 @@ structure Gen_Open_Abstraction_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = SOME \<^binding>\<open>gen_open_abstraction_simps\<close>
   val comment = "Simplification rules used when generating open-abstraction rules"
+  val attribute = NONE
 )
 \<close>
 

@@ -591,7 +591,7 @@ let_\<phi>type \<phi>Union deriving \<open>Object_Equiv (\<circle> \<or>\<^sub>\
 subsection \<open>Embedding Additive Conjunction\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
- 
+     
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
   deriving \<open>  (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
@@ -761,88 +761,29 @@ thm list_all2_lengthD
 ML \<open>Phi_Cache_DB.invalidate_cache \<^theory>\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 3]]
-                                                                            
+declare [[\<phi>trace_reasoning = 0]]
+                                                                             
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving (*Basic
+  deriving Basic
        and Identity_Element
        and Functional_Transformation_Functor
-       and*) Separation_Homo\<^sub>I
-       (*and Trivial_\<Sigma>
-       and SE_Trim_Empty*)
+       and Separation_Homo
+       and Trivial_\<Sigma>
+       and SE_Trim_Empty
 
-declare map_eq_Cons_conv[\<phi>constraint_expansion] (*TODO!!!!*)
-
-
-
-lemma
-  \<open>(\<forall>x xa xb xc.
-             list_all2 (\<lambda>x y. True) x xb \<and> list_all2 (list_all2 (\<lambda>x y. True)) xa xc \<longrightarrow>
-             (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ry.
-                 (\<forall>a. a \<in> set xb \<longrightarrow> (y a, a) \<in> UNIV) \<and>
-                 (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
-                     fst (unzip' (map (\<lambda>x. ((fst x, snd (snd x)), ())) (zip' (x, map (\<lambda>x. (y x, x)) xb)))) =
-                     zip' (x, xb) \<and>
-                     length x = length (map (\<lambda>x. (y x, x)) xb)))) \<close>
-  apply auto
-
-
-lemma
-  \<open>(\<And>xb xc xd xe.
-     length xb = length xd \<Longrightarrow>
-     list_all2 (\<lambda>x y. length x = length y) xc xe \<Longrightarrow>
-     map (fst \<circ> (\<lambda>x. ((fst x, snd (snd x)), ()))) (zip xb (map (Pair ()) xd)) = zip xb xd) \<Longrightarrow>
- ((\<forall>x xa xb xc xd xaa xba xca xda xe.
-      ((list_all2 (\<lambda>x y. True) xba xda \<and> list_all2 (list_all2 (\<lambda>x y. True)) xca xe) \<and>
-       zip xba xda = xd \<and> map2 zip xca xe = xaa \<longrightarrow>
-       (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu. list_all2 (list_all2 (=)) (fst (xca, uu)) xca)) \<and>
-      ((list_all2 (\<lambda>x y. True) xba xda \<and> list_all2 (list_all2 (\<lambda>x y. True)) xca xe) \<and>
-       zip xba xda = xd \<and> map2 zip xca xe = xaa \<longrightarrow>
-       (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruu.
-           list_all2 (list_all2 (=)) (fst (snd (xba, fst (xe, uu)), fst (xba, fst (xe, uu)))) xe \<and>
-           (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ruua.
-               list_all2 (=)
-                (fst (fst (map (fst \<circ>
-                                (\<lambda>x. ((fst (fst x, fst (snd x)), fst (snd (snd (fst x, fst (snd x)), snd (snd x)), ())),
-                                       ())))
-                            (case (snd (snd (xba, fst (xe, uu)), fst (xba, fst (xe, uu))), map (\<lambda>x. (uua x, x)) xda) of
-                             (x, xa) \<Rightarrow> zip x xa),
-                           map (snd \<circ>
-                                (\<lambda>x. ((fst (fst x, fst (snd x)), fst (snd (snd (fst x, fst (snd x)), snd (snd x)), ())),
-                                       ())))
-                            (case (snd (snd (xba, fst (xe, uu)), fst (xba, fst (xe, uu))), map (\<lambda>x. (uua x, x)) xda) of
-                             (x, xa) \<Rightarrow> zip x xa)),
-                      ()))
-                xd \<and>
-               (\<forall>a. a \<in> set xda \<longrightarrow> (uua a, a) \<in> UNIV) \<and>
-               (case (snd (snd (xba, fst (xe, uu)), fst (xba, fst (xe, uu))), map (\<lambda>x. (uua x, x)) xda) of
-                (x, y) \<Rightarrow> length x = length y))))) \<and>
-  True)\<close>
-  apply auto
-  apply (simp add: list.rel_eq)
-   apply (simp add: list.rel_eq)
-  apply (auto simp add: comp_def)
-
-  term map2
-
-
-
-
- 
-
-declare [[\<phi>trace_reasoning = 3]]
-     
+        
+       
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
-  deriving (*Functional_Transformation_Functor
-       and Basic
+  deriving Basic
        and Identity_Element
-       and Transformation_Functor
+       and Functional_Transformation_Functor
+       and Separation_Homo
+       and SE_Trim_Empty
        and Trivial_\<Sigma>
-       and*) Separation_Homo\<^sub>I
 
 
 (* BOSS:

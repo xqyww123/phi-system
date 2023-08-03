@@ -10,6 +10,7 @@ structure Inhabitance_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>inhabitance_simp\<close>
   val comment = "Rules simplifying local facts implied from \<phi>-type specifications"
+  val attribute = NONE
 )
 
 

@@ -314,6 +314,7 @@ structure Eval_Sem_Idx_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = \<^binding>\<open>eval_aggregate_path\<close>
   val comment = "Rules evaluating indexing of semantic type and value"
+  val attribute = NONE
 )\<close>
 
 \<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] ?X' : ?X\<close>

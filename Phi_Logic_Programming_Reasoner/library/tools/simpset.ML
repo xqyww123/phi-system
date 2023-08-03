@@ -54,6 +54,7 @@ functor Simpset(Config : sig
   val initial_ss : Simpset_Configure.initial_ss_configure
   val binding : binding option
   val comment : string
+  val attribute : (attribute -> attribute -> attribute context_parser) option
 end) : SIMPSET = struct
 
 structure Data = Generic_Data (
@@ -96,7 +97,7 @@ val del = Thm.declaration_attribute (fn th => del_simps [th])
 
 val _ = (
   case Config.binding of SOME B =>
-    Theory.setup ( Attrib.setup B (Attrib.add_del add del) Config.comment
+    Theory.setup ( Attrib.setup B (the_default Attrib.add_del Config.attribute add del) Config.comment
                 #> Global_Theory.add_thms_dynamic (B, Thms.get o Context.proof_of))
     | _ => ())
 
