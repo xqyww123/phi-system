@@ -1642,6 +1642,15 @@ lemma \<phi>TA_Inh_rule:
   unfolding Action_Tag_def
   by simp
 
+lemma \<phi>TA_SuC_rule:
+  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) @action \<phi>TA_ind_target \<A>ESC)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> \<forall>x. P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T\<close>
+  unfolding Action_Tag_def
+  by simp
+
 lemma \<phi>TA_Inh_rewr:
   \<open>Trueprop (Ant \<longrightarrow> XX @action \<phi>TA_ind_target A)
  \<equiv> (Ant \<Longrightarrow> XX @action A)\<close>

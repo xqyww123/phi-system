@@ -9,6 +9,7 @@ theory Phi_Preliminary
   keywords "optional_translations" :: thy_decl
        and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl
   abbrevs "<implies>" = "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
+      and "<suffices>" = "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>"
 begin
 
 declare [ [ML_debugger, ML_exception_debugger]]
@@ -231,7 +232,8 @@ subsubsection \<open>Inhabitance Reasoning - Part I\<close>
 definition Generate_Implication_Reasoning :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
   where \<open>Generate_Implication_Reasoning IN OUT_L OUT_R \<longleftrightarrow> (IN \<longrightarrow> OUT_L \<longrightarrow> OUT_R)\<close>
 
-consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts\<close>
+consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts entailed from the given proposition\<close>
+       \<A>ESC :: action \<comment> \<open>Extract Sufficient Condition to entail the given proposition\<close>
 
 declare [[
   \<phi>reason_default_pattern \<open>Generate_Implication_Reasoning ?I _ _\<close>

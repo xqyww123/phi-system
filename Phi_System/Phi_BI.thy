@@ -117,6 +117,11 @@ definition Inhabited :: " 'a BI \<Rightarrow> bool " where  "Inhabited S = (\<ex
 
 abbreviation Inhabitance_Implication :: \<open>'a BI \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>" 10)
   where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> Inhabited S \<longrightarrow> P @action \<A>EIF\<close>
+  \<comment> \<open>P is weaker than S. We want to get a simpler P and as strong as possible. \<close>
+
+abbreviation Sufficient_Inhabitance :: \<open>bool \<Rightarrow> 'a BI \<Rightarrow> bool\<close> (infix "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>" 10)
+  where \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S \<equiv> P \<longrightarrow> Inhabited S @action \<A>ESC\<close>
+  \<comment> \<open>P is stronger than S. We want to get a simpler P and as weak as possible. \<close>
 
 declare [[
   \<phi>reason_default_pattern \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
@@ -132,11 +137,22 @@ lemma Inhabited_fallback_True:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
   unfolding Action_Tag_def by blast
 
+lemma Suf_Inhabited_fallback_True:
+  \<open> False \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X \<close>
+  unfolding Action_Tag_def by blast
+
 \<phi>reasoner_ML Inhabited_fallback default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) =
 \<open>fn (ctxt,sequent) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
   else SOME ((ctxt, @{thm Inhabited_fallback_True} RS sequent), Seq.empty)
+)\<close>
+
+\<phi>reasoner_ML Suf_Inhabited_fallback default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> _\<close>) =
+\<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
+  then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Suf_Inhabited_fallback_True} RS sequent), Seq.empty)
 )\<close>
 
 lemma Membership_E_Inhabitance:
@@ -165,12 +181,24 @@ ML_file \<open>library/tools/simp_congruence.ML\<close>
 
 declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
-    fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ (_ (*imp*) $ (
+    fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*imp*) $ (
                             _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _)) =>
       if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
       then NONE
-      else error("Bad form: In \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> the x must be a schematic variable. But it gives\n" ^
-                 Context.cases Syntax.string_of_term_global Syntax.string_of_term ctxt tm)\<close> (1000)
+      else error (let open Pretty in string_of (chunks [
+            para "Malformed Implication Rule: in \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> the x must be a schematic variable. But given",
+            Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
+          ]) end)\<close> (1000),
+
+  \<phi>reason_default_pattern_ML \<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> _ \<Ztypecolon> _\<close> \<Rightarrow> \<open>
+    fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*imp*) $ _ $ (
+                            _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _))) $ _)) =>
+      if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
+      then NONE
+      else error (let open Pretty in string_of (chunks [
+            para "Malformed Sufficiency Rule: in \<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T\<close> the x must be a schematic variable. But given",
+            Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
+          ]) end)\<close> (1000)
 ]]
 
 subsection \<open>Transformation of Abstraction\<close>
@@ -415,6 +443,15 @@ lemma [\<phi>inhabitance_rule 1000]:
   unfolding Action_Tag_def Inhabited_def
   by simp blast
 
+lemma [\<phi>reason 1000]:
+  \<open> A \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X
+\<Longrightarrow> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> Y
+\<Longrightarrow> A \<or> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X + Y\<close>
+  unfolding Action_Tag_def Inhabited_def
+  by simp blast
+
+text \<open>The above two rules are reversible.\<close>
+
 lemma set_plus_inhabited[elim!]:
   \<open>Inhabited (S + T) \<Longrightarrow> (Inhabited S \<Longrightarrow> C) \<Longrightarrow> (Inhabited T \<Longrightarrow> C) \<Longrightarrow> C\<close>
   unfolding Inhabited_def
@@ -445,12 +482,23 @@ lemma additive_conj_inhabited_E[elim!]:
   unfolding Inhabited_def
   by simp blast
 
-lemma additive_conj_implication[\<phi>reason 1000]:
+lemma [\<phi>reason 1000]:
   \<open> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
 \<Longrightarrow> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
 \<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q\<close>
   unfolding Action_Tag_def
   by blast
+
+lemma
+  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
+\<Longrightarrow> Q \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> B
+\<Longrightarrow> P \<and> Q \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A \<and>\<^sub>B\<^sub>I B\<close>
+  unfolding Action_Tag_def Inhabited_def
+  oops
+
+text \<open>There is no sufficiency reasoning for additive conjunction, because the sufficient condition
+  of \<open>A \<and>\<^sub>B\<^sub>I B\<close> cannot be reasoned separately (by considering \<open>A\<close> and \<open>B\<close> separately).\<close>
+
 
 
 subsubsection \<open>Subjection: Conjunction to a Pure Fact\<close>
@@ -469,6 +517,12 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> S \<s>\<u>\<b>\<j> P \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> C \<close>
   unfolding Inhabited_def Action_Tag_def
   by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S
+\<Longrightarrow> P \<and> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S \<s>\<u>\<b>\<j> P \<close>
+  unfolding Inhabited_def Action_Tag_def
+  by simp 
 
 lemma Subjection_imp_I:
   \<open> P
@@ -571,12 +625,23 @@ lemma set_mult_inhabited[elim!]:
   unfolding Inhabited_def
   by (simp, blast)
 
-lemma [\<phi>inhabitance_rule 1000]:
+lemma [\<phi>reason 1000]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
 \<Longrightarrow> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> B
 \<Longrightarrow> X * Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<and> B\<close>
   unfolding Action_Tag_def
   using set_mult_inhabited by blast
+
+lemma
+  \<open> A \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X
+\<Longrightarrow> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> Y
+\<Longrightarrow> A \<and> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X * Y\<close>
+  oops
+
+text \<open>There is no sufficiency reasoning for multiplicative conjunction, because if we reason A and B
+  separately, we loose the constraint about A and B are separatable, A ## B..\<close>
+
+
 
 lemma implies_left_prod:
   "U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> R * U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * U \<w>\<i>\<t>\<h> P "
@@ -605,6 +670,12 @@ lemma ExSet_inhabited_E[elim!]:
 lemma [\<phi>reason 1000]:
   \<open> (\<And>x. S x \<i>\<m>\<p>\<l>\<i>\<e>\<s> C x)
 \<Longrightarrow> ExSet S \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ex C \<close>
+  unfolding Inhabited_def Action_Tag_def
+  by (simp; blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. C x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S x)
+\<Longrightarrow> Ex C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> ExSet S \<close>
   unfolding Inhabited_def Action_Tag_def
   by (simp; blast)
 
@@ -839,9 +910,13 @@ lemma Itself_inhabited[\<phi>reason 1000, simp, intro!]:
   unfolding Inhabited_def
   by blast
 
-lemma [\<phi>inhabitance_rule 1000]:
+lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> Itself \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
   using Inhabited_fallback_True .
+
+lemma [\<phi>reason 1000]:
+  \<open> False \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> Itself \<close>
+  using Suf_Inhabited_fallback_True .
 
 lemma Itself_E[\<phi>reason 20]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<close>
@@ -865,7 +940,7 @@ lemma unfold:
   \<open>(x \<Ztypecolon> \<top>\<^sub>\<phi>) = UNIV\<close>
   unfolding \<phi>Any_def \<phi>Type_def ..
 
-lemma expansion:
+lemma expansion[simp]:
   \<open>p \<Turnstile> (x \<Ztypecolon> \<top>\<^sub>\<phi>) \<longleftrightarrow> True\<close>
   unfolding \<phi>Any.unfold
   by simp
@@ -875,6 +950,11 @@ setup \<open>Sign.parent_path\<close>
 lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> \<top>\<^sub>\<phi> \<i>\<m>\<p>\<l>\<i>\<e>\<s> True\<close>
   unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open>True \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> \<top>\<^sub>\<phi>\<close>
+  unfolding Action_Tag_def Inhabited_def
   by simp
 
 lemma [\<phi>reason 1000]:
@@ -929,6 +1009,12 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def Inhabited_def
   by (cases x; clarsimp)
 
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T)
+\<Longrightarrow> pred_option P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> \<half_blkcirc> T\<close>
+  unfolding Action_Tag_def Inhabited_def
+  by (cases x; clarsimp)
+
 
 subsubsection \<open>Insertion into Unital Algebra\<close>
 
@@ -943,6 +1029,12 @@ lemma \<phi>Some_expn[simp, \<phi>expns]:
 lemma [\<phi>reason 1000]:
   \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
+  unfolding Action_Tag_def Inhabited_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T
+\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> \<black_circle> T \<close>
   unfolding Action_Tag_def Inhabited_def
   by clarsimp
 

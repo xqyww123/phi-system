@@ -732,18 +732,19 @@ declare [[\<phi>trace_reasoning = 1]]
     \<comment> \<open>Forward Simulation\<close>
   where \<open>f \<Ztypecolon> T \<Rrightarrow> U \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>v x. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> g v \<Turnstile> (f x \<Ztypecolon> U))\<close>
 
+text \<open>Again it is a form requiring satisfaction operator, so our deriver is very limited on this.\<close>
+
 thm \<phi>Mapping.expansion
 
-lemma \<phi>Mapping_inhabited[elim!]:
-  \<open>Inhabited (f \<Ztypecolon> T \<Rrightarrow> U) \<Longrightarrow> ((\<And>x. Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (f x \<Ztypecolon> U)) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>Mapping_expn, blast)
-
 lemma [\<phi>inhabitance_rule 1000]:
-  \<open> ((\<exists>x. Inhabited (x \<Ztypecolon> T)) \<and> P = True) \<or> P = False
-\<Longrightarrow> (\<And>x. Inhabited (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (f x \<Ztypecolon> U) \<longrightarrow> C x @action \<A>EIF)
-\<Longrightarrow> f \<Ztypecolon> T \<Rrightarrow> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<longrightarrow> Ex C \<close>
+  \<open> (\<And>x. St x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T)
+\<Longrightarrow> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> Ct x)
+\<Longrightarrow> (\<And>x. Ct x \<Longrightarrow> f x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Cu x )
+\<Longrightarrow> f \<Ztypecolon> T \<Rrightarrow> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>x. St x \<longrightarrow> Ct x \<and> Cu x) \<close>
   unfolding Inhabited_def Action_Tag_def
-  by (simp add: \<phi>Mapping_expn, blast)
+  apply clarsimp
+  apply blast
+  
 
 
 
