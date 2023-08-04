@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val SE_Trim_Empty__generation_pass : Phi_Type_Algebra.rule_generation_pass
-val SE_Trim_Empty : Phi_Type_Algebra.derive
+val SE_Trim_Empty__generation_pass : Phi_Type_Template_Properties.rule_generation_pass
+val SE_Trim_Empty : quiet -> Phi_Type_Algebra.derive
 
 end
 
@@ -28,8 +28,8 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 fun simp ctxt th =
   Conv.fconv_rule (Phi_Conv.hhf_concl_conv Simplifier.rewrite ctxt) th
 
-fun SE_Trim_Empty (phi : phi_type) thy =
-  let fun fetch_properties name = Phi_Type_Algebra.lookup_property_unify thy (#term phi) name
+fun gen_SE_Trim_Empty _ (phi : phi_type) thy =
+  let fun fetch_properties name = Phi_Type_Template_Properties.lookup_property_unify thy (#term phi) name
                                |> map #3
       fun fetch_property name =
             case fetch_properties name
@@ -86,12 +86,16 @@ fun SE_Trim_Empty (phi : phi_type) thy =
             fun get_target (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = get_target X
               | get_target (Const _ $ _ $ T) = T
               | get_target (X $ _) = get_target X
-            val reasoned = Phi_Reasoner.has_reasoner concl (fn r =>
+            val has_reasoned = Phi_Reasoner.has_reasoner concl (fn r =>
                   case #tactic r of Phi_Reasoner.Tac_Rule ths =>
                           exists (fn th => Pattern.matches thy' (get_target concl, get_target (Thm.concl_of th))) ths
                      | _ => false) thy
-         in if reasoned then NONE
-            else SOME (snd (red th) |> simp ctxt')
+         in if has_reasoned
+            then NONE
+            else SOME (snd (red th)
+                   |> simp ctxt'
+                   |> Thm.solve_constraints
+                   |> Phi_Help.unique_flexflex (SOME ctxt'))
         end
 
       val rules = map_filter (reason o Phi_Help.beta_eta_contract) (intros @ elims)
@@ -100,7 +104,10 @@ fun SE_Trim_Empty (phi : phi_type) thy =
         Phi_Reasoner.add_rules (map (fn rule => 
             ([rule], #pos phi, Phi_Reasoner.TO_BE_OVERRIDE, 40, [], [], NONE))
                                   (Morphism.fact m rules)))
+   |> pair rules
   end
+
+val SE_Trim_Empty = deriver_framework_no_hints (ONLY_ONCE, "SE_Trim_Empty") gen_SE_Trim_Empty
 
 fun SE_Trim_Empty__generation_pass (_, gen, _, ctxt) th =
   let val rctxt = Config.put Phi_Reasoner_solve_obligation_and_no_defer 1 ctxt

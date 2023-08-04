@@ -2,7 +2,8 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val conv_hol_imp_to_meta_if_has : conv -> conv
-val object_equiv : hint list -> Phi_Type_Algebra.derive
+val object_equiv : quiet -> hint list -> Phi_Type_Algebra.derive
+val object_equiv_singular : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -147,10 +148,8 @@ fun OE_reasoning phi ctxt rule =
           ctxt' rule
   end
 
-fun gen_obj_equal'_singular (i,hint0) (phi0 : phi_type) thy =
+fun gen_obj_equal_singular (_,name) _ (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val NAME = "Object_Equiv\<^sub>" ^ (if i = 0 then "O" else string_of_int i)
-
       val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
       val rule = if #is_recursive phi0
                  then let val base = Thm.prems_of (#ind phi0)
@@ -192,12 +191,6 @@ fun gen_obj_equal'_singular (i,hint0) (phi0 : phi_type) thy =
                             Phi_Conv.may_action_tag_conv (Phi_Conv.hol_imp_conv Conv.all_conv (simp_conv step1 ctxt phi)) then_conv
                             Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr})
 
-      fun simp (_, ctxt) =
-        if is_some hint0 then I
-        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
-               (K (Conv.arg_conv (Conv.arg_conv (
-                  Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))))) ctxt)
-
       fun OEO_reasoning1 phi ctxt = default_reasoning false
             (default_reasoning_configure (K (K [])))
             (K (K NONE))
@@ -210,25 +203,24 @@ fun gen_obj_equal'_singular (i,hint0) (phi0 : phi_type) thy =
             (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__NToA} (K (chk_unfolded' ctxt phi)))
             ctxt
 
-      val rules = deriving_framework (NAME, parse_hint, extract_oprs_from_hint,
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_obj_eq_singular_None, rule,
                                       [(SOME ([0], ind_conv true ), OEO_reasoning1),
                                        (SOME ([0], ind_conv false), OEO_reasoning2)],
-                                      K NONE, simp)
-                                     phi0 hint0 ctxt0
+                                      K NONE, K I)
+                                     phi0 NONE ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80 ([],[]) NONE [Morphism.thm m rule'])
-            |> Phi_Type_Algebra.note_properties phi0 [(NAME, [rule'])])
+            |> note_properties phi0 [(name, [rule'])]
+            |> pair [rule'])
   end
 
 
-fun gen_obj_equal' (i,hint0) (phi0 : phi_type) thy =
+fun gen_obj_equal' (_,name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val NAME = "Object_Equiv" ^ (if i = 0 then "" else "\<^sub>" ^ string_of_int i)
-
       val parse_hint = parse_hint_has_type_only (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
@@ -246,7 +238,7 @@ fun gen_obj_equal' (i,hint0) (phi0 : phi_type) thy =
                    |> Phi_Help.beta_eta_contract
                    |> Simplifier.rewrite_rule ctxt @{thms special_Ex_def}
                    |> infer_equiv ctxt
-                   |> oblg_solver NAME ctxt
+                   |> oblg_solver name ctxt
                    |> SOME
             else NONE
       fun simp (_, ctxt) =
@@ -254,7 +246,7 @@ fun gen_obj_equal' (i,hint0) (phi0 : phi_type) thy =
         else Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
                (K (Conv.arg_conv (Conv.arg_conv (
                   Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))))) ctxt)
-      val rules = deriving_framework (NAME, parse_hint, extract_oprs_from_hint,
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
                                       [(SOME ([0], ind_conv), OE_reasoning)], infer, simp)
                                      phi0 hint0 ctxt0
@@ -263,7 +255,8 @@ fun gen_obj_equal' (i,hint0) (phi0 : phi_type) thy =
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE [Morphism.thm m rule'])
-            |> Phi_Type_Algebra.note_properties phi0 [(NAME, [rule'])])
+            |> note_properties phi0 [(name, [rule'])]
+            |> pair [rule'])
   end
 
 fun chk_is_singular ctxt tm =
@@ -274,18 +267,16 @@ fun chk_is_singular ctxt tm =
             | _ => false)
      | _ => malformed_hint ctxt tm
 
+fun gen_obj_equal'' name NONE phi thy = gen_obj_equal' name NONE phi thy
+  | gen_obj_equal'' name (SOME H) phi thy =
+      if chk_is_singular thy H
+      then gen_obj_equal_singular name NONE phi thy
+      else gen_obj_equal' name (SOME H) phi thy
+
 in
 
-fun object_equiv [] phi ctxt = ctxt
-        |> gen_obj_equal' (0, NONE) phi 
-        |> (fn ctxt => gen_obj_equal'_singular (0,NONE) phi ctxt
-                       handle Automation_Fail _ => ctxt)
-  | object_equiv Hs phi ctxt = ctxt
-        |> fold_index (fn (i,H) =>
-                 if chk_is_singular ctxt H
-                 then gen_obj_equal'_singular (i, SOME H) phi
-                 else gen_obj_equal' (i, SOME H) phi) (rev Hs)
-
+val object_equiv_singular = deriver_framework (ACCEPT_NO_HINT, ONLY_ONCE, "Object_Equiv\<^sub>O") gen_obj_equal_singular
+val object_equiv = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Object_Equiv") gen_obj_equal''
 
 end
 

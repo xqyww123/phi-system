@@ -3,11 +3,7 @@
 \<^item> Deriving rules from property-conditioned templates
 *)
 
-signature PHI_TYPE_ALGEBRA = sig
-
-include PHI_TYPE_ALGEBRA
-
-exception Automation_Fail of unit -> Pretty.T list
+signature PHI_TYPE_TEMPLATE_PROPERTIES = sig
 
 (* Algebraic Properties *)
 
@@ -25,14 +21,14 @@ val lookup_property_unify : Context.generic -> term (*same as the above*) -> pro
 val add_property : term * Position.T * thm -> Context.generic -> Context.generic
 (*val list_functors : Context.generic -> term list*)
 
-structure Gen_Rule_SS : SIMPSET (*simpset for generating reasoning rules*)
+structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
 
 (* The Framework for Automation based on Algebraic Property *)
 
-type automation_on_property =
+type template_automation =
         term (*\<phi>-type (operator)*) * Position.T * thm (*properties*) list -> Context.generic -> Context.generic
-val add_automation_on_property : priority * property_name list (*dependended properties*)
-                              -> automation_on_property
+val add_template_automation : priority * property_name list (*dependended properties*)
+                              -> template_automation
                               -> Context.generic -> Context.generic
 val invoke_automations_on_property : term * Position.T * thm -> Context.generic -> Context.generic
 
@@ -43,11 +39,9 @@ val rule_template_pass__sender : rule_generation_pass option Unsynchronized.ref
 
 end
 
-structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
+structure Phi_Type_Template_Properties : PHI_TYPE_TEMPLATE_PROPERTIES = struct
 
-open Phi_Type_Algebra
-
-exception Automation_Fail of unit -> Pretty.T list
+exception Automation_Fail = Phi_Type_Algebra.Automation_Fail
 
 type property_name = string
 
@@ -77,10 +71,10 @@ fun extract_type_operator_from_property1 thy k =
 
 (** Property DB **)
 
-type automation_on_property_i = term (*\<phi>-type (operator)*) * Position.T * thm (*the property that invokes the automation*)
+type template_automation_i = term (*\<phi>-type (operator)*) * Position.T * thm (*the property that invokes the automation*)
                              -> Context.generic -> Context.generic
 
-type automation_on_property = term (*\<phi>-type (operator)*) * Position.T * thm (*property*) list
+type template_automation = term (*\<phi>-type (operator)*) * Position.T * thm (*property*) list
                            -> Context.generic -> Context.generic
 
 fun property_eq ((t1,_,th1),(t2,_,th2)) = (t1 aconv t2) andalso Thm.eq_thm_prop (th1,th2)
@@ -94,7 +88,7 @@ structure Properties = Generic_Data (
 fun prop_table_order k ((p1,_),(p2,_)) = if p1 = p2 then raise Symtab.DUP k else int_ord (p1,p2)
 
 structure Automation_on_Property = Generic_Data (
-  type T = (priority * automation_on_property_i) Ord_List.T Symtab.table
+  type T = (priority * template_automation_i) Ord_List.T Symtab.table
   val empty = Symtab.empty
   val merge = Symtab.join (fn k => uncurry (Ord_List.union (prop_table_order k)))
 )
@@ -265,14 +259,14 @@ fun toplevel_property_auto deps automation (the_functor,pos,property) ctxt =
       handle Dep => ctxt
   end
 
-fun add_automation_on_property (priority, prop_kinds) automation =
+fun add_template_automation (priority, prop_kinds) automation =
   fold (fn prop_kind =>
       Automation_on_Property.map (Symtab.map_default (prop_kind,[])
           (Ord_List.insert (prop_table_order prop_kind) (priority, toplevel_property_auto prop_kinds automation)))
     ) (distinct (op =) prop_kinds)
 
 
-structure Gen_Rule_SS = Simpset (
+structure Template_Inst_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
   val comment = "Rules simplifying the reasoning rules instantiated from templates."
@@ -324,7 +318,7 @@ fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) 
                       else rule
                 fun simplify ctxt rules =
                       let val ((_,rules'1), ctxt'1) = Variable.import false rules ctxt
-                          val ctxt's = Gen_Rule_SS.enhance ctxt'1
+                          val ctxt's = Template_Inst_SS.enhance ctxt'1
                                     |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
                        in Variable.export ctxt'1 ctxt
                             (map ( Simplification_Protect.protect ctxt's
@@ -345,13 +339,7 @@ fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) 
                                 |> do_reason
                                 |> singleton (simplify ctxt') 
                       val rule' = rule'2
-                                |> Thm.flexflex_rule (SOME ctxt')
-                                |> Seq.chop 2
-                                |> (fn ([], _) => error ("During rule generation: fail to solve flex-flex pairs\n"^
-                                                          Thm.string_of_thm ctxt' rule'2)
-                                     | ([x], _) => x
-                                     | ((x::_), _) => (warning ("Multiple solution of flex-flex pair! Take the first one.\n"^
-                                                          Thm.string_of_thm ctxt' rule'2); x))
+                                |> Phi_Help.unique_flexflex (SOME ctxt')
                                 |> Phi_Help.instantiate_higher_order_schematic_var ~1 ctxt'
                                 |> singleton (simplify ctxt') 
                                 |> normalize
@@ -386,7 +374,7 @@ fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) 
               in fold cross_product (tl existing_rules) init
              end
    in ctxt
-   |> add_automation_on_property (serial (), prop_kinds) impl
+   |> add_template_automation (serial (), prop_kinds) impl
    |> fold (fn (f,rules) => impl (f, pos, rev rules)) existing_ins
   end
 
@@ -407,9 +395,9 @@ val _ = Theory.setup (
           let val pass = Option.map (fn src =>
                     let val _ = Synchronized.change rule_template_pass__sender_locker (fn () => (
                                   ML_Context.expression (Input.pos_of src)
-                                    (ML_Lex.read "Phi_Type_Algebra.rule_template_pass__sender := SOME ((" @
+                                    (ML_Lex.read "Phi_Type_Template_Properties.rule_template_pass__sender := SOME ((" @
                                      ML_Lex.read_source src @
-                                     ML_Lex.read ") : Phi_Type_Algebra.rule_generation_pass)")
+                                     ML_Lex.read ") : Phi_Type_Template_Properties.rule_generation_pass)")
                                     ctxt;
                                   ()))
                         val pass = the (!rule_template_pass__sender)

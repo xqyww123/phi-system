@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val open_all_abstraction : hint list -> Phi_Type_Algebra.derive
+val open_all_abstraction : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -11,8 +11,9 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 fun guess_property (phi:phi_type) ctxt =
   let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val _ = if #is_recursive phi
-              then error "Open_Abstraction_Full: I cannot guess the rule for a recursive \<phi>-type\n\
-                         \Please manually annotate the expression."
+              then raise Automation_Fail (fn () => [
+                      Pretty.para "Fail to guess the rule for a recursive \<phi>-type\
+                                  \May manually annotate the expression."])
               else ()
       val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun collect_params ret [] _  = ret
@@ -150,22 +151,8 @@ fun instantiate_the_var var ctxt sequent =
    in Thm.instantiate (TVars.empty, Vars.make [(var, inst)]) sequent
   end
 
-fun solver (phi, ctxt, sequent) =
-  case Thm.concl_of sequent
-    of _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ Abs (_, _, \<^Const>\<open>Action_Tag\<close> $
-           (\<^Const>\<open>Transformation _\<close> $ _
-               $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _,
-                   \<^Const>\<open>Subjection _\<close> $ _ $ X ))
-               $ _)
-           $ _))
-         => (case X of Var v $ _ $ _ =>
-                          SOME ( instantiate_the_var v ctxt sequent
-                            |> oblg_solver (#proof_id phi ^ "/Open_Abstraction_Full") ctxt)
-                     | _ => NONE)
-     | _ => error "Internal bug"
 
-
-fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
+fun gen_trans_to_raw_abst (_,name) hint00 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val hint0 = Option.map (quantifies_abstract_object (
             let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
@@ -229,9 +216,24 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
             ) ctxt)) ctxt)
          |> (fn rule => (rule RS' (ctxt, @{thm' spec})))
 
+      fun solver (phi, ctxt, sequent) =
+            case Thm.concl_of sequent
+              of _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ Abs (_, _, \<^Const>\<open>Action_Tag\<close> $
+                     (\<^Const>\<open>Transformation _\<close> $ _
+                         $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _,
+                             \<^Const>\<open>Subjection _\<close> $ _ $ X ))
+                         $ _)
+                     $ _))
+                   => (case X of Var v $ _ $ _ =>
+                                    SOME ( instantiate_the_var v ctxt sequent
+                                      |> oblg_solver (#proof_id phi ^ "/" ^ name) ctxt)
+                               | _ => NONE)
+               | _ => error "BUG"
+
+
       val ctxt0' = if is_some hint0 then ctxt0
                    else Config.put Phi_Reasoners.existential_obligation 2 ctxt0
-      val rules = deriving_framework ("Open_Abstraction_Full", parse_hint, extract_oprs_from_hint,
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_TrRA_rule},
                                       [(SOME ([0], ind_conv), reasoning)],
                                       solver, simp)
@@ -241,11 +243,12 @@ fun gen_trans_to_raw_abst hint00 (phi0 : phi_type) thy =
         |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
-        |> Phi_Type_Algebra.note_properties phi0 [("Open_Abstraction_Full", [rule])]
+        |> note_properties phi0 [(name, [rule])]
+        |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val open_all_abstraction = accept_one "Open_Abstraction_Full" gen_trans_to_raw_abst
+val open_all_abstraction = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Open_Abstraction_Full") gen_trans_to_raw_abst
 
 end
 

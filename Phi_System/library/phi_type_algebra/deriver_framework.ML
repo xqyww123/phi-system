@@ -104,7 +104,7 @@ val load_simpset : term list -> Proof.context -> Proof.context
     and load the related simplification settings*)
 
 
-(** The framework **)
+(** A framework for deriving properties **)
 
 type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
 type reasoning = Proof.context -> thm -> thm
@@ -114,7 +114,7 @@ type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
 
 (*Main Entry Point*)
 val deriving_framework :
-      string (*name of the proof cache, e.g. "/object_equive"*)
+      string (*property name used in proof cache and Isabelle binding*)
     * parse_hint
     * (term -> term list) (*extract_oprs_from_hint*)
     * guess_property
@@ -223,16 +223,54 @@ val extract_pure_prem_by_RS : thm list (*RS rules*) -> extract_pure_prems
 val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehammer solver*)
 
 
+(** A framework of deriver **)
+
+datatype hint_mode = ACCEPT_NO_HINT | ACCEPT_ONE_HINT | ACCEPT_ANY_HINTS | REQUIRE_ONE_HINT | REQUIRE_HINTS
+datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
+
+type quiet = bool
+val deriver_framework : hint_mode * multiple_call * string (*name*)
+                     -> (int (*the times that the deriver has been invoked*) * string (*name suffixed by the time*)
+                          -> hint option
+                          -> Phi_Type_Algebra.phi_type
+                          -> generic_theory
+                          -> thm list (*derived rule*) * generic_theory)
+                     -> quiet
+                     -> hint list
+                     -> Phi_Type_Algebra.derive
+(*This simple framework handles the issue of invoking a deriver by multiple times,
+  and also checks if the proper number of hints are given.
+  Then it calls the given diver for each hint one by one, or call it by NONE is no hint is given.
+
+  When the deriver is invoked more than once, the name is suffixed by an index to differentiate the
+  binding of the resulted rule among the callings.
+
+  The derived rule will be stored into \<phi>-Type library but I will not bind it into the Isabelle environment.
+
+  If `quiet` is turned on, no error will be printed and it returns silently with doing nothing,
+  even when the deriver raises Automation_Fail.
+*)
+
+val deriver_framework_no_hints : multiple_call * string (*name*)
+                     -> (string (*name*)
+                          -> Phi_Type_Algebra.phi_type
+                          -> generic_theory
+                          -> thm list (*derived rule*) * generic_theory)
+                     -> quiet
+                     -> Phi_Type_Algebra.derive
+
 (** Other Misc Tools **)
 
 exception Automation_Fail of (unit -> Pretty.T list)
 structure Simps : SIMPSET (*The standard simpset for deriving*)
 
-val accept : (int -> hint option -> Phi_Type_Algebra.derive) -> hint list -> Phi_Type_Algebra.derive
+(*
+val accept : (hint option -> Phi_Type_Algebra.derive) -> hint list -> Phi_Type_Algebra.derive
 val accept_one : string (*name for printing*) ->
       (hint option -> Phi_Type_Algebra.derive) ->
        hint list -> Phi_Type_Algebra.derive
     (*wraps and checks if the user gives at most one hint*)
+*)
 
 val chk_unfolded : Context.generic -> Phi_Type_Algebra.phi_type -> term -> unit
 val chk_unfolded': Proof.context -> Phi_Type_Algebra.phi_type -> term -> unit
@@ -417,11 +455,6 @@ fun guess_operator mk_term is_live mk_operator_for_dead atom_opr =
                  | some => some )
    in guess
   end
-
-fun fp_sugar_of ctxt bnf =
-  case BNF_Def.T_of_bnf bnf
-    of Type(N, _) => BNF_FP_Def_Sugar.fp_sugar_of ctxt N
-     | _ => NONE
 
 fun add_global_simps thms ctxt = ctxt
   |> Simps.add_simps' thms
@@ -730,12 +763,29 @@ fun load_map (CN, \<^Type>\<open>fun \<open>Type(N,_)\<close> \<open>T as Type(N
   | load_map (CN, \<^Type>\<open>fun \<^Type>\<open>fun _ _\<close> T\<close>) ctxt = load_map (CN, T) ctxt
   | load_map _ _ = NONE
 
-fun load_zip (CN, \<^Type>\<open>fun \<open>Type(N,ts1)\<close> \<open>T2 as \<^Type>\<open>fun \<open>Type(N',ts2)\<close> \<open>Type(N'', ts3)\<close>\<close>\<close>\<close>) ctxt =
+fun load_unzip (CN, \<^Type>\<open>fun \<open>T2 as Type(N'', ts3)\<close> \<^Type>\<open>prod \<open>Type(N,ts1)\<close> \<open>Type(N',ts2)\<close>\<close>\<close>) ctxt =
       let fun chk_ts (t1::ts1) (t2::ts2) (\<^Type>\<open>prod a b\<close>::ts3) =
                 a = t1 andalso b = t2 andalso chk_ts ts1 ts2 ts3
             | chk_ts [] [] [] = true
             | chk_ts _ _ _ = false
-       in if chk_ts ts1 ts2 ts3
+       in if N = N'' andalso N = N' andalso chk_ts ts1 ts2 ts3
+          then eBNF_Info.get_bnf (Context.Proof ctxt) N
+            |> Option.mapPartial (mp eBNF_Info.fp_more_of)
+            |> Option.mapPartial (fn (fp_more, bnf) =>
+                  if const_eq CN (#unzip fp_more)
+                  then SOME (load_ss (false,false,true,true,true) bnf ctxt)
+                  else load_unzip (CN, T2) ctxt)
+          else load_unzip (CN, T2) ctxt
+      end
+  | load_unzip (CN, \<^Type>\<open>fun _ T2\<close>) ctxt = load_unzip (CN, T2) ctxt
+  | load_unzip _ _ = NONE
+
+fun load_zip (CN, \<^Type>\<open>fun \<^Type>\<open>prod \<open>Type(N,ts1)\<close> \<open>Type(N',ts2)\<close>\<close> \<open>T2 as Type(N'', ts3)\<close>\<close>) ctxt =
+      let fun chk_ts (t1::ts1) (t2::ts2) (\<^Type>\<open>prod a b\<close>::ts3) =
+                a = t1 andalso b = t2 andalso chk_ts ts1 ts2 ts3
+            | chk_ts [] [] [] = true
+            | chk_ts _ _ _ = false
+       in if N = N'' andalso N = N' andalso chk_ts ts1 ts2 ts3
           then eBNF_Info.get_bnf (Context.Proof ctxt) N
             |> Option.mapPartial (mp eBNF_Info.fp_more_of)
             |> Option.mapPartial (fn (fp_more, bnf) =>
@@ -748,17 +798,75 @@ fun load_zip (CN, \<^Type>\<open>fun \<open>Type(N,ts1)\<close> \<open>T2 as \<^
   | load_zip _ _ = NONE
 
 fun load_const C ctxt =
-  the_default ctxt (get_first (fn ld => ld C ctxt) [load_rel, load_set, load_predicate, load_map])
+  the_default ctxt (get_first (fn ld => ld C ctxt)
+      [load_rel, load_set, load_predicate, load_map, load_unzip, load_zip])
 
 val add_consts' = fold_aterms (fn Const c => insert (op = o apply2 fst) c | _ => I);
 fun load_simpset tms ctxt = fold load_const (fold add_consts' tms []) ctxt
 
 
 
-(** Select Hint **)
+(** Deriver Framework **)
 
-fun accept gen [] phityp thy = gen 0 NONE phityp thy
-  | accept gen Hs phityp thy = fold_index (fn (i, H) => gen i (SOME H) phityp) Hs thy
+datatype hint_mode = ACCEPT_NO_HINT | ACCEPT_ONE_HINT | ACCEPT_ANY_HINTS | REQUIRE_ONE_HINT | REQUIRE_HINTS
+datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
+
+type quiet = bool
+
+fun deriver_framework (hint_mode, multiple_call, name) deriver
+                      quiet hints phi thy =
+  let val ind = length (lookup_derived_properties thy phi name)
+      val _ = let open Pretty in
+          case (multiple_call, ind, hints)
+            of (_, 0, _) => ()
+             | (ONLY_ONCE, _, _) => raise Automation_Fail (fn () => [
+                  paragraph (str "deriver " :: brk 1 :: str name :: brk 1 :: text "can only be invoked once")
+                ])
+             | (ONLY_ONCE_IF_NO_HINT, _, []) => raise Automation_Fail (fn () => [
+                  paragraph (str name :: brk 1 :: text "has already derived the hint-less case.\
+                             \ Please provide the desired form of the rule if you want to derive more.")
+                ])
+             | _ => ()
+          end
+      val _ = let open Pretty in
+          case (hint_mode, hints)
+            of (ACCEPT_NO_HINT, _ :: _) => raise Automation_Fail (fn () =>
+                  paragraph (str name :: brk 1 :: text "accepts no hint, but given") ::
+                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints
+                )
+             | (ACCEPT_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
+                  paragraph (str name :: brk 1 :: text "accepts at most one hint, but more hints are given") ::
+                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints
+                )
+             | (REQUIRE_ONE_HINT, []) => raise Automation_Fail (fn () => [
+                  paragraph (str name :: brk 1 :: text "requires exact one hint, but no hint is given")
+                ])
+             | (REQUIRE_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
+                  paragraph (str name :: brk 1 :: text "requires exact one hint, but more hints are given") ::
+                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints
+                )
+             | (REQUIRE_HINTS, []) => raise Automation_Fail (fn () => [
+                  paragraph (str name :: brk 1 :: text "requires some hint(s), but no hint is given")
+                ])
+             | _ => ()
+          end
+      fun invoke (i,H) thy =
+        let val iname = suffix_name_by_index (i+ind) name
+         in deriver (i+ind, iname) H phi thy
+         |-> register_derived_properties phi (name, i+ind)
+        end
+   in (case hints
+   of [] => invoke (ind, NONE) thy
+    |  L => fold_index invoke (map SOME L) thy)
+  end
+  handle (ex as Automation_Fail _) => if quiet then thy else Exn.reraise ex
+
+fun deriver_framework_no_hints (mcall, name) deriver quiet =
+  deriver_framework (ACCEPT_NO_HINT, mcall, name) (fn (_,name) => fn _ => deriver name) quiet []
+
+(*
+fun accept gen [] phityp thy = gen NONE phityp thy
+  | accept gen Hs phityp thy = fold (fn H => gen (SOME H) phityp) Hs thy
 
 fun accept_one _ gen [] phityp thy = gen NONE phityp thy
   | accept_one _ gen [H] phityp thy = gen (SOME H) phityp thy
@@ -767,7 +875,7 @@ fun accept_one _ gen [] phityp thy = gen NONE phityp thy
        in error (string_of (chunks (
             block [str prop_name, str " only derives one reasoning rule, but multiple hints are given"] ::
             map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints)))
-      end
+      end*)
 
 (*depreciated:*)
 local
@@ -868,7 +976,6 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                   val (typ_of_phi0, parameters0, H01) = parse_hint ctxt0 H0
 
                   val (inst0, ctxt) = Variable.import_inst true [H01] ctxt0
-                  val inst0c = Phi_Help.certify_vars (Context.Proof ctxt) inst0
                   val typ_of_phi = Term_Subst.instantiateT (fst inst0) typ_of_phi0
                   val parameters = map (Option.map (Term_Subst.instantiate inst0)) parameters0
                   val H = Term_Subst.instantiate inst0 H01
@@ -974,10 +1081,9 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                           Conv.all_conv)
                 |> singleton (Proof_Context.export ctxt ctxt0)
 
-   in Phi_Reasoner.info_pretty ctxt 0 (fn () => let open Pretty in
-        block [str name, str " : ", Thm.pretty_thm ctxt rule'4]
-      end) ;
-      rule'4
+   in rule'4
+   |> Thm.solve_constraints
+   |> Phi_Help.unique_flexflex (SOME ctxt0)
   end)
   end
 
@@ -1353,7 +1459,7 @@ fun exhaustive_PLPR_reasoner_by_rule rule chk_unfolds ctxt sequent =
   let fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
         | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = chk X
         | chk X = let val (_, args) = Term.strip_comb X
-                      fun app_index i [] = ()
+                      fun app_index _ [] = ()
                         | app_index i (h::L) = (chk_unfolds i h ; app_index (i+1) L)
                    in app_index 0 args
                   end
@@ -1386,7 +1492,7 @@ fun make_forall_quantified_property_for_parameters_of_a_phi_type mk (F $ T) =
      (case try (make_forall_quantified_property mk) T
         of SOME ret => ret :: make_forall_quantified_property_for_parameters_of_a_phi_type mk F
          | NONE => make_forall_quantified_property_for_parameters_of_a_phi_type mk F)
-  | make_forall_quantified_property_for_parameters_of_a_phi_type mk _ = []
+  | make_forall_quantified_property_for_parameters_of_a_phi_type _ _ = []
 
 fun quantifies_abstract_object get_x hint =
   let fun get_x' (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_x' X

@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val identity_element_I : hint list -> Phi_Type_Algebra.derive
-val identity_element_E : hint list -> Phi_Type_Algebra.derive
+val identity_element_I : quiet -> hint list -> Phi_Type_Algebra.derive
+val identity_element_E : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -111,10 +111,8 @@ fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
         phi, ctxt)
   end
 
-fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
+fun gen_id_ele is_left (_,name) hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
-      val name = if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"
-
       val parse_hint = parse_hint_has_object_and_type (
             fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ x $ T) $ _ => (x, T)
              | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ x $ T) => (x, T)
@@ -186,15 +184,15 @@ fun gen_id_ele is_left hint0 (phi0 : phi_type) generic =
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
-            |> Phi_Type_Algebra.note_properties phi0
-                  [((if is_left then "Identity_Element\<^sub>I" else "Identity_Element\<^sub>E"), [rule'])]
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 40 ([],[]) NONE
                                               [Morphism.thm m rule'])
+            |> note_properties phi0 [(name, [rule'])]
+            |> pair [rule']
   end
 
-val identity_element_I = accept_one "Identity_Element\<^sub>I" (gen_id_ele true)
-val identity_element_E = accept_one "Identity_Element\<^sub>E" (gen_id_ele false)
+val identity_element_I = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Identity_Element\<^sub>I") (gen_id_ele true)
+val identity_element_E = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Identity_Element\<^sub>E") (gen_id_ele false)
 
 
 end

@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val sigma_trivial_homomorphism : Phi_Type_Algebra.hints -> Phi_Type_Algebra.derive
+val sigma_trivial_homomorphism : quiet -> Phi_Type_Algebra.hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -150,7 +150,7 @@ fun guess_property_SgTH phi0 ctxt =
                     let val Fb = Term.map_types (subst_ty [(element_ty, b), (d, f)]) F_term
                      in \<^Const>\<open>Trivial_\<Sigma> a b c d e f\<close> $ F_term $ Fb $ P $ sel $ mapper
                     end
-                   | _ => error "Internal bug")
+                   | _ => error "BUG")
 
    in ([], HOLogic.Trueprop $ SSP, NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end)
@@ -182,7 +182,7 @@ fun SgTH_reasoning phi ctxt =
          (K (chk_unfolded' ctxt phi)))
       ctxt
 
-fun gen_SgTH hint0 (phi0 : phi_type) thy =
+fun gen_SgTH (_,name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val parse_hint = parse_hint_has_type_operator_only (
             fn Const(\<^const_name>\<open>Trivial_\<Sigma>\<close>, _) $ F $ _ $ _ $ _ $ _ => F)
@@ -215,7 +215,7 @@ fun gen_SgTH hint0 (phi0 : phi_type) thy =
                  end
              ) ctxt)
 
-      val rules = deriving_framework ("Trivial_\<Sigma>", parse_hint, extract_oprs_from_hint,
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property_SgTH, @{thm' \<phi>TA_SgH_rule},
                                      [(SOME ([0,~1,~1], ind_conv), SgTH_reasoning)],
                                      K NONE, simp)
@@ -225,10 +225,11 @@ fun gen_SgTH hint0 (phi0 : phi_type) thy =
         |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
-        |> Phi_Type_Algebra.note_properties phi0 [("Trivial_\<Sigma>", [rule])]
+        |> note_properties phi0 [(name, [rule])]
+        |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val sigma_trivial_homomorphism = accept_one "Trivial_\<Sigma>" gen_SgTH
+val sigma_trivial_homomorphism = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Trivial_\<Sigma>") gen_SgTH
 
 end

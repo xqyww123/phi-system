@@ -5,8 +5,8 @@ val subst_ty : (typ * typ) list -> typ -> typ
 val instantiate_phi_to_pair_x : Proof.context -> term * Phi_Type_Algebra.phi_type ->
         typ TVars.table * ctyp TVars.table * Phi_Type_Algebra.phi_type
 
-val separation_homo_I : hint list -> Phi_Type_Algebra.derive
-val separation_homo_E : hint list -> Phi_Type_Algebra.derive
+val separation_homo_I : quiet -> hint list -> Phi_Type_Algebra.derive
+val separation_homo_E : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -127,7 +127,7 @@ fun SH_reasoning is_intro phi ctxt =
           else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
          end) ctxt
 
-fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
+fun gen_SH is_intro (_,name) hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
       (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint_has_type_operator_only (
@@ -175,8 +175,7 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
                  end
              ) ctxt)
 
-      val rules = deriving_framework (if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E",
-                                     parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
                                      (if is_intro then @{thm' \<phi>TA_SH\<^sub>I_rule} else @{thm' \<phi>TA_SH\<^sub>E_rule}),
                                      [(SOME ([0,~1,~1], ind_conv), SH_reasoning is_intro)],
                                      K NONE, simp)
@@ -184,15 +183,15 @@ fun gen_SH is_intro hint0 (phi0 : phi_type) generic =
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
-             |> Phi_Type_Algebra.note_properties phi0
-                    [(if is_intro then "Separation_Homo\<^sub>I" else "Separation_Homo\<^sub>E", [rule'])]
+             |> note_properties phi0 [(name, [rule'])]
              |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 40 ([],[]) NONE
                                               [Morphism.thm m rule'])
+             |> pair [rule']
   end
 
-val separation_homo_I = accept_one "Separation_Homo\<^sub>I" (gen_SH true)
-val separation_homo_E = accept_one "Separation_Homo\<^sub>E" (gen_SH false)
+val separation_homo_I = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Separation_Homo\<^sub>I") (gen_SH true)
+val separation_homo_E = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Separation_Homo\<^sub>E") (gen_SH false)
 
 
 end

@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val is_functional : hint list -> Phi_Type_Algebra.derive
+val is_functional : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -18,7 +18,7 @@ fun guess_property (phi:phi_type) ctxt =
   end
 
 
-fun gen_is_functional hint0 (phi0 : phi_type) thy =
+fun gen_is_functional (_,name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val parse_hint = parse_hint_has_object_and_type (
             fn \<^Const>\<open>Is_Functional _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ x $ T) => (x, T) )
@@ -38,18 +38,19 @@ fun gen_is_functional hint0 (phi0 : phi_type) thy =
                           (K (K NONE))
                           (exhaustive_PLPR_reasoner (SOME 1))
 
-      val rules = deriving_framework ("Is_Functional", parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},
+      val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},
                                       [(SOME ([], ind_conv), K reasoning)], K NONE, K I)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
    of SOME (rule, _) => thy
+        |> note_properties phi0 [(name, [rule])]
         |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
-        |> Phi_Type_Algebra.note_properties phi0 [("Is_Functional", [rule])]
+        |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val is_functional = accept_one "Is_Functional" gen_is_functional
+val is_functional = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Is_Functional") gen_is_functional
 
 end

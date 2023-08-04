@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val inhabitance : hint list -> Phi_Type_Algebra.derive
+val inhabitance : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -57,7 +57,8 @@ fun guess_property_inhab_atom (phi:phi_type) ctxt =
    in Seq.single ([], Prop, NONE :: parse_parameters_of_phi_type T_term, phi, ctxt)
   end
 
-fun gen_inhab hint00 (phi0 : phi_type) thy =
+val NAME = "Implication"
+fun gen_inhab (der_id, name) hint00 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val hint0 = Option.map (quantifies_abstract_object (
             let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
@@ -155,21 +156,22 @@ fun gen_inhab hint00 (phi0 : phi_type) thy =
                       Conv.arg_conv (Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
                     ))) ctxt) rule
         end
-      val rules = deriving_framework ("Implication", parse_hint, extract_oprs_from_hint,
-                                       guess_property, @{thm' \<phi>TA_Inh_rule},
-                                       [(SOME ([0], ind_conv), Inh_reasoning)],
-                                       solver, simp)
-                                      phi0 hint0 ctxt0
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
+                                      guess_property, @{thm' \<phi>TA_Inh_rule},
+                                      [(SOME ([0], ind_conv), Inh_reasoning)],
+                                      solver, simp)
+                                     phi0 hint0 ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
-            |> Phi_Type_Algebra.note_properties phi0 [("Implication", [rule'])]
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 80 ([],[]) NONE
                                               [Morphism.thm m rule'])
+            |> note_properties phi0 [(name, [rule'])]
+            |> pair [rule']
   end
 
-val inhabitance = accept_one "Implication" gen_inhab
+val inhabitance = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, NAME) gen_inhab
 
 
 end

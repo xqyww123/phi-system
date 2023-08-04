@@ -13,6 +13,8 @@ val lambda_normalization_ctac : ('a * thm -> 'b) -> ('a * thm -> 'b)
 val lambda_normalization_conv : conv -> conv
 val lambda_normalization_rule : (thm -> thm) -> thm -> thm
 
+val unique_flexflex : Proof.context option -> thm -> thm
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -81,6 +83,12 @@ fun lambda_normalization_rule R thm =
            | e as THM _   => fallback e
            | e as TERM _  => fallback e
   end
+
+fun unique_flexflex ctxt thm =
+  case Seq.chop 2 (Thm.flexflex_rule ctxt thm)
+    of ([], _) => raise THM ("unique_flexflex: fail to solve flex-flex pairs", 0, [thm])
+     | ([th'], _) => th'
+     | (L, _) => raise THM ("unique_flexflex: multi unification of flex-flex pairs", 0, L)
 
 end
 

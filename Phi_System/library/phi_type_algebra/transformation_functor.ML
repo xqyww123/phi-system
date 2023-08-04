@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val transformation_functor            : hint list -> Phi_Type_Algebra.derive
-val functional_transformation_functor : hint list -> Phi_Type_Algebra.derive
+val transformation_functor            : quiet -> hint list -> Phi_Type_Algebra.derive
+val functional_transformation_functor : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -52,7 +52,7 @@ fun guess_property_TF phi0 ctxt =
                        of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                            \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
                           \<^Const>\<open>Transformation_Functor a b c d e f\<close> $ F_term $ F'_term
-                        | _ => error "Internal bug")
+                        | _ => error "BUG")
       val target_ty = Term_Subst.instantiateT_frees inst_ty
       val Rng = Abs("_", x_ty, \<^Const>\<open>top \<^Type>\<open>set \<open>target_ty element_ty\<close>\<close>\<close>)
    in guess_set_opr ctxt' x_ty element_ty
@@ -64,9 +64,9 @@ fun guess_property_TF phi0 ctxt =
                                 [brk 1, Syntax.pretty_typ ctxt'2 x_ty])]
                  end)
         ) target_ty ctxt'2 x_ty element_ty
-     |> Seq.map (fn (rel_mapper, ctxt'3) =>
-          (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ Rng $ rel_mapper),
-           NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt'3)))
+   |> Seq.map (fn (rel_mapper, ctxt'3) =>
+        (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ Rng $ rel_mapper),
+         NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt'3)))
   end)
   end
 
@@ -85,7 +85,7 @@ fun TF_reasoning phi ctxt =
           ctxt
   end
 
-fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
+fun gen_TF (der_id, name) hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
             (*|> def_contains_satisfaction phi0 ? Context.proof_map (
                     Phi_Reasoners.Is_Premise_of_Obligation.add 123
@@ -117,8 +117,6 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                         (Simplifier.rewrite sctxt))
                   end
                ) ctxt)
-      val name = if prop_i = 0 then "Transformation_Functor"
-                 else "Transformation_Functor/" ^ string_of_int prop_i
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_TF, @{thm' \<phi>TA_TF_rule},
                                       [(SOME ([0,~1,~1,~1], ind_conv), TF_reasoning)],
@@ -136,13 +134,12 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                               |> (fn th => case Thm.nprems_of th
                                              of 0 => set_prem_to_True th
                                               | 1 => Seq.hd (Thm.assumption (SOME ctxt0) 1 th)
-                                              | _ => error "Internal bug")
+                                              | _ => error "BUG")
 
                 
               fun setup_locale cmd lthy =
                 let val ((_,[locale_rule']), _) = Variable.import true [locale_rule] lthy
-                    val interp_name = Term.term_name (#term phi0) ^
-                                      (if prop_i = 0 then "" else string_of_int prop_i)
+                    val interp_name = suffix_name_by_index der_id (Term.term_name (#term phi0))
                  in case Thm.concl_of locale_rule'
                       of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor_L\<close>, _)
                             $ Fa $ Fb $ D $ R $ m $ Pr) =>
@@ -154,17 +151,15 @@ fun gen_TF prop_i hint0 (phi0 : phi_type) generic =
                       |> Proof.global_done_proof
                 end
            in generic
-         (*|> Phi_Type_Algebra.note_properties phi0 [("Transformation_Functor", [rule'])] *)
            |> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
                               (setup_locale Interpretation.sublocale)
-         (*|> Context.mapping (Named_Target.theory_map (setup_functional_TF Interpretation.global_interpretation))
-                              (setup_functional_TF Interpretation.sublocale)*)
+           |> pair [rule']
           end)
   end
 
 in
 
-val transformation_functor = accept gen_TF
+val transformation_functor = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Transformation_Functor") gen_TF
 
 end
 
@@ -186,7 +181,7 @@ fun guess_property_FTF phi0 ctxt0 =
                               $ Var(("R",0), c --> \<^Type>\<open>set e\<close>)
                               $ Var(("mapper",0), (a --> e --> \<^Type>\<open>bool\<close>) --> c --> f --> \<^Type>\<open>bool\<close>)
                               $ ant
-                         | _ => error "Internal bug")
+                         | _ => error "BUG")
       val target_ty = Term_Subst.instantiateT_frees inst_ty
    in guess_func_mapper target_ty ctxt x_ty element_ty
    |> Seq.maps (fn (fm, ctxt'2) =>
@@ -198,7 +193,7 @@ fun guess_property_FTF phi0 ctxt0 =
   end)
   end
 
-fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
+fun gen_FTF (der_id,name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val parse_hint = parse_hint_has_type_operator_only (
             fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
@@ -216,9 +211,8 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
                         (Simplifier.rewrite sctxt))
                   end
              ) ctxt) thm
-      val name = if prop_i = 0 then "Functional_Transformation_Functor"
-                 else "Functional_Transformation_Functor/" ^ string_of_int prop_i
-      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_FTF, @{thm' \<phi>TA_FTF_rule},
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
+                                      guess_property_FTF, @{thm' \<phi>TA_FTF_rule},
                                       [(NONE, K reasoning)], K NONE, simp)
                                     phi0 hint0 ctxt0
    in Seq.pull rules
@@ -233,8 +227,7 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
               
               fun setup_functional_TF cmd lthy =
                 let val ((_,[locale_rule']), _) = Variable.import true [rule'] lthy
-                    val interp_name = Term.term_name (#term phi0) ^
-                                      (if prop_i = 0 then "" else string_of_int prop_i)
+                    val interp_name = suffix_name_by_index der_id (Term.term_name (#term phi0))
                  in case Thm.concl_of locale_rule'
                       of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _)
                             $ Fa $ Fb $ D $ R $ m $ Pr $ pm $ fm) =>
@@ -250,9 +243,11 @@ fun gen_FTF prop_i hint0 (phi0 : phi_type) thy =
            in thy
            |> Context.mapping (Named_Target.theory_map (setup_functional_TF Interpretation.global_interpretation))
                               (setup_functional_TF Interpretation.sublocale)
+           |> pair [rule']
           end)
   end
 
-val functional_transformation_functor = accept gen_FTF
+val functional_transformation_functor = deriver_framework
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Functional_Transformation_Functor") gen_FTF
 
 end

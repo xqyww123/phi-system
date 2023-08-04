@@ -142,7 +142,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-      
+       
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
 
@@ -150,6 +150,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
         \<Longrightarrow> x \<Ztypecolon> \<phi>Dependent_Sum T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) (snd x) \<close>
     and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
+    and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
     and    \<open>Identity_Element\<^sub>I (u \<Ztypecolon> T c) P
         \<Longrightarrow> Identity_Element\<^sub>I ((c, u) \<Ztypecolon> \<Sigma> T) P \<close>
     and    \<open>Identity_Element\<^sub>E (u \<Ztypecolon> T c)
@@ -163,7 +164,7 @@ notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
 declare [[simp_trace_depth_limit = 10]]
-              
+
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
@@ -171,7 +172,6 @@ declare [[simp_trace_depth_limit = 10]]
        and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
        and Identity_Element
        and Open_Abstraction_Full
-
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
@@ -285,8 +285,6 @@ hide_fact pure_type_to_ex_quantified_form_1
 
 paragraph \<open>ToA Reasoning\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
 declare \<phi>Dependent_Sum.intro_reasoning(1)
         [where x=\<open>(a,b)\<close> for a b, simplified,
          \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_, _) \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>
@@ -391,8 +389,9 @@ ML_file \<open>library/phi_type_algebra/sigma_single_point.ML\<close>
 
 \<phi>property_deriver Trivial_\<Sigma> 130 for ( \<open>Trivial_\<Sigma> _ _ _ _ _\<close> )
   requires Warn_if_contains_Sat
-    = \<open> Phi_Type_Algebra_Derivers.sigma_trivial_homomorphism \<close>
+    = \<open> Phi_Type_Algebra_Derivers.sigma_trivial_homomorphism false \<close>
 
+hide_fact \<phi>TA_SgH_T_intro' \<phi>TA_SgH_T_intro \<phi>TA_SgH_rewr_C \<phi>TA_SgH_rewr_IH \<phi>TA_SgH_rule
 
 
 
@@ -435,8 +434,6 @@ lemma [\<phi>reason 1000]:
 
 
 subsection \<open>Vertical Composition\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
                 
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
@@ -497,7 +494,6 @@ lemma [\<phi>reason 1000]:
   unfolding Object_Equiv_def Transformation_def
   by clarsimp blast
 
- 
 let_\<phi>type \<phi>Composition deriving SE_Trim_Empty
 
 
@@ -590,7 +586,7 @@ let_\<phi>type \<phi>Union deriving \<open>Object_Equiv (\<circle> \<or>\<^sub>\
 
 subsection \<open>Embedding Additive Conjunction\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
      
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
@@ -774,7 +770,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and SE_Trim_Empty
 
         
-       
+        
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
@@ -965,7 +961,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
                    
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<phi>Fun (push_map k) \<Zcomp> T)\<close>

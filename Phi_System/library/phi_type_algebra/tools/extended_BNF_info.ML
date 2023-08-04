@@ -34,6 +34,8 @@ val add_BNF : string * quasi_BNF -> Context.generic -> Context.generic
 val get_bnf  : Context.generic -> string -> eBNF option
 val get_bnf1 : Context.generic -> string -> eBNF
 
+val deads_of_bnf : eBNF -> typ list
+val lives_of_bnf : eBNF -> typ list
 val tyargs_is_live_or_dead : eBNF -> bool list (*if tyargs_is_live_or_dead[i], the i-th type parameter is live*)
 val classify_bnf_dead_live : eBNF -> typ list -> typ list * typ list (*classify the type parameters into dead and live
                                                                        as that in Isabelle BNF lib*)
@@ -256,7 +258,7 @@ fun get_bnf1 ctxt Tname =
                   end)
 
 fun get_bnf_of_typ1 ctxt (Type (Tname, _)) = get_bnf1 ctxt Tname
-  | get_bnf_of_typ1 ctxt T = raise TYPE ("Not a constant", [T], [])
+  | get_bnf_of_typ1 _ T = raise TYPE ("Not a constant", [T], [])
 
 (** BNF Operators **)
 
@@ -333,7 +335,6 @@ fun gen_property inst kind get_bnf gen arg generic =
              in (mpf res, Caches.map (Symreltab.update_new ((Tname,kind), res)) generic)
             end
   end
-  | gen_property _ _ _ _ _ generic = ([], generic)
 
 fun no_inst _ _ (_, th) = SOME th
 
@@ -402,7 +403,8 @@ fun gen_unit_simps bnf ctxt0 =
                                    | _ => NONE)
    (*|> chk_search_result1 ctxt pattern*)
    |> map (fn th => case Thm.concl_of th
-                      of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => (Term.fastype_of LHS, th))
+                      of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => (Term.fastype_of LHS, th)
+                       | _ => error "BUG")
   end
 
 val identity_element = gen_property no_inst "one" (K I) gen_unit_simps
@@ -426,7 +428,8 @@ fun gen_relator_const_true bnf ctxt =
                                         [(true, Find_Theorems.Pattern pattern')]))
    |> map (fn (_, th) => case Thm.concl_of th
                            of _ $ (Const(\<^const_name>\<open>HOL.eq\<close>, \<^Type>\<open>fun T _\<close>) $ _ $ _) => (T, th)
-                            | Const(\<^const_name>\<open>Pure.eq\<close>, \<^Type>\<open>fun T _\<close>) $ _ $ _ => (T, th))
+                            | Const(\<^const_name>\<open>Pure.eq\<close>, \<^Type>\<open>fun T _\<close>) $ _ $ _ => (T, th)
+                            | _ => error "BUG")
   end
 
 

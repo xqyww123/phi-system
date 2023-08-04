@@ -17,9 +17,9 @@ signature PHI_TYPE_ALGEBRA = sig
 include PHI_TYPE_ALGEBRA
 
 
-(* \<phi>-Type Definition \& Infos *)
+(** \<phi>-Type Definition \& Infos **)
 
-datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
+datatype def = DIRECT_DEF of (term (*lhs of the def*) * (string (*def_name*) * thm (*def*)))
              | WFREC_DEF  of string (*const name*) * Function.info
 
 type phi_type = {
@@ -49,23 +49,20 @@ val phi_trim_context : phi_type -> phi_type
 val phi_transfer : theory -> phi_type -> phi_type
 val phi_maxidx_of : phi_type -> int -> int
 
-val note_properties : phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
-
-type hints = term list
+type hint = term
 
 val get_type_info : Context.generic -> string (*const name*) -> phi_type option
 
 structure Type_Def_Hook : HOOKS (*invoked when the phi-type is defined but before any deriver is applied*)
 
-(* Property Deriver from \<phi>-Type Definition*)
-
+(** Property Deriver from \<phi>-Type Definition **)
 type priority = int
 type deriver_name = string
 type derive = phi_type -> generic_theory -> generic_theory
 type deriver = {
   priority: priority,
   dependences: deriver_name list,
-  derive: hints -> derive
+  derive: hint list -> derive
 }
 
 val get_deriver : Context.generic -> deriver_name -> deriver
@@ -76,28 +73,45 @@ val define_deriver_global : binding -> deriver -> theory -> string * theory
 
 type pattern = term
 val bind_derivers_on_patterns : (pattern * deriver_name) list -> Context.generic -> Context.generic
-val match_deriver : Context.generic -> term -> (deriver_name * deriver) option
+val match_deriver : Context.generic -> hint -> (deriver_name * deriver) option
 exception Unknown_Hint of term
-val match_deriver1 : Context.generic -> term -> deriver_name * deriver
+val match_deriver1 : Context.generic -> hint -> deriver_name * deriver
 
 structure Derivings : TABLE
-type derivings = (hints * deriver) Derivings.table
-val add_deriver : hints * (deriver_name * deriver) -> derivings -> derivings
-val add_derivers_from_hint : Context.generic -> term -> derivings -> derivings
+type derivings = (hint list * deriver) Derivings.table
+val add_deriver : hint list * (deriver_name * deriver) -> derivings -> derivings
+val add_derivers_from_hint : Context.generic -> hint -> derivings -> derivings
 
 val add_deriver_dependences : Context.generic -> deriver_name list -> derivings -> derivings
 val complete_deriver_dependences : Context.generic -> derivings -> derivings
 
 val report_potential_failure_reason : (unit -> Pretty.T) list -> unit
-(*no need to call it explicitly. It is invoked by `add_type` *)
+(*no need to call it manually. It is invoked by `add_type` *)
 val derive_properties : derivings -> phi_type -> generic_theory -> generic_theory
-val add_type : def * Position.T * derivings -> generic_theory -> phi_type * generic_theory
+
+(* Derived Properties *)
+
+val lookup_derived_properties : Context.generic -> phi_type -> string (*name*) -> thm list list
+      (*the name is not necessarily the name of the deriver as a deriver can derive multiple
+        properties. It is the name that is sent by the deriver when it calls `register_derived_properties`.*)
+val register_derived_properties : phi_type -> string * int -> thm list -> generic_theory -> generic_theory
+      (*It will also bind in Isabelle the properties to names <phi_type_name.property_names\<^sub>i>
+        for the i-th property each.*)
+val note_properties : phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
+val suffix_name_by_index : int -> string -> string
+
+(* Syntax *)
 
 type deriving_ast
 val deriving_parser : deriving_ast list parser
 val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
-(* Tools *)
+
+(** Define \<phi>-Type and invoke derivings **)
+
+val add_type : def * Position.T * derivings -> generic_theory -> phi_type * generic_theory
+
+(** Tools **)
 
 val is_Type_Opr : typ -> bool
 val assert_Type_Opr : typ -> unit
@@ -127,7 +141,7 @@ val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*x*) * typ 
 
 (* Internal Technical stuffs *)
 
-val ML_sender : (hints -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
+val ML_sender : (hint list -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
 
 end
 
@@ -189,7 +203,7 @@ val phi_trim_context = map_phi_type (I, map (Thm.trim_context))
 fun phi_transfer thy = map_phi_type (I, map (Thm.transfer thy))
 val phi_maxidx_of = fold_phi_type (Term.maxidx_term, Thm.maxidx_thm)
 
-type hints = term list
+type hint = term
 
 structure Phi_Types = Generic_Data (
   type T = phi_type Symtab.table
@@ -244,7 +258,7 @@ val add_premise_tag = Phi_Conv.recursive_premises_conv (fn ctxt => fn ctm =>
 
 fun raw_term_name_typ (Const N_T) = N_T
   | raw_term_name_typ (Free N_T) = N_T
-  | raw_term_name_typ _ = error "Internal bug"
+  | raw_term_name_typ X = raise TERM ("Not a Const nor Free", [X])
 
 fun mk_ind_dest_ToA_internal ctxt (phi : phi_type) prop0 = (*not tested*)
   let val typ = Term.fastype_of (#term phi)
@@ -328,7 +342,7 @@ type derive = phi_type -> generic_theory -> generic_theory
 type deriver = {
   priority: priority,
   dependences: deriver_name list,
-  derive: hints -> derive
+  derive: hint list -> derive
 }
 
 structure Derivers = Generic_Data (
@@ -338,7 +352,7 @@ structure Derivers = Generic_Data (
 )
 
 structure Derivings = Table (type key = priority * deriver_name; val ord = prod_ord int_ord string_ord)
-type derivings = (hints * deriver) Derivings.table
+type derivings = (hint list * deriver) Derivings.table
 
 type pattern = term
 structure Deriver_Bindings = Generic_Data (
@@ -450,9 +464,43 @@ fun derive_properties dervs phityp thy = thy
      ) dervs
   |> Context_Position.restore_visible_generic thy
 
+(* Derived Properties *)
 
-(*fun get_derivers_from_constant_name ctxt =
-  *)
+structure Derived_Properties = Generic_Data (
+  type T = thm list list Symreltab.table
+  val empty = Symreltab.empty
+  val merge = Symreltab.join (K (merge pointer_eq))
+)
+
+fun lookup_derived_properties ctxt phi name =
+  case Symreltab.lookup (Derived_Properties.get ctxt) (fst (raw_term_name_typ (#term phi)), name)
+    of SOME ret => ret
+     | NONE => []
+
+fun note_properties (phi : phi_type) notes =
+  let val short_name = Term.term_name (#term phi)
+      fun mk_binding name = Binding.make (name, (#pos phi))
+                         |> Binding.qualify true short_name
+   in Context.mapping (fold (fn (N,Th) => snd o Global_Theory.note_thms "" ((mk_binding N, []), [(Th,[])])) notes)
+                      (fold (fn (N,Th) => snd o Local_Theory.note ((mk_binding N, []), Th)) notes)
+  end
+
+fun suffix_name_by_index ind name =
+      if ind = 0 then name else suffix ("\<^sub>" ^ string_of_int ind) name
+
+fun register_derived_properties phi (name, ind) ths thy =
+  let val ind' = length (lookup_derived_properties thy phi name)
+      val _ = if ind' = ind then () else error "Bad Index"
+      val _ = Phi_Reasoner.info_pretty_generic thy 0 (fn () =>
+              let open Pretty
+               in block [str (suffix_name_by_index ind name), brk 1,
+                         chunks (map (fn th => item [Context.cases Thm.pretty_thm_global Thm.pretty_thm thy th]) ths)]
+              end)
+   in Phi_Help.generic_theory_mapping (fn m =>
+        let val key = fst (raw_term_name_typ (Morphism.term m (#term phi)))
+         in Derived_Properties.map (Symreltab.map_default ((key, name), []) (fn L => ths :: L))
+        end) thy
+  end
 
 (* Syntax *)
 
@@ -507,16 +555,17 @@ fun check_property_hint ctxt phi_typ_const hint =
 fun check_deriving_ast ctxt derv_ast =
   let val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of ctxt)
    in Derivings.empty
-   |> fold (fn Derv_By_Name name => add_deriver ([], check_deriver ctxt name)
-             | Derv_By_Term term =>
-                let val term' = Syntax.parse_prop ctxt_parse term
-                             |> Syntax.check_prop ctxt_parse
-                             |> Envir.beta_eta_contract
-                    val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
-                    val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
-                 in add_derivers_from_hint ctxt term'1
-                end
-           ) derv_ast
+   |> fold_rev (
+        fn Derv_By_Name name => add_deriver ([], check_deriver ctxt name)
+         | Derv_By_Term term =>
+            let val term' = Syntax.parse_prop ctxt_parse term
+                         |> Syntax.check_prop ctxt_parse
+                         |> Envir.beta_eta_contract
+                val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
+                val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
+             in add_derivers_from_hint ctxt term'1
+            end
+       ) derv_ast
    |> complete_deriver_dependences ctxt
    handle Unknown_Hint term =>
       error (Pretty.string_of (Pretty.chunks [
@@ -528,7 +577,7 @@ fun check_deriving_ast ctxt derv_ast =
 (* Interface for Deriver *)
 
 val ML_sender_locker = Synchronized.var "\<phi>TA.ML_sender_locker" ()
-val ML_sender : (hints -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
+val ML_sender : (hint list -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
   = Unsynchronized.ref NONE
 
 val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |-- Parse.and_list (Scan.repeat deriving_name) >> flat) []
@@ -542,7 +591,7 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
             case ML' of SOME ML =>
                 let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := SOME ((" @
                                ML_Lex.read_source ML @
-                               ML_Lex.read "): Phi_Type_Algebra.hints -> Phi_Type_Algebra.derive)"
+                               ML_Lex.read "): Phi_Type_Algebra.hint list -> Phi_Type_Algebra.derive)"
                  in Synchronized.change_result ML_sender_locker (fn () => let
                       val _ = ML_Context.expression (Input.pos_of ML) expr (Context.Theory thy)
                       val ret = the (!ML_sender)
@@ -636,14 +685,6 @@ fun chk_zero_index_term term =
   if Term.maxidx_of_term term <= 0
   then term
   else error "Internal bug: not zero-indexed!"
-
-fun note_properties (phi : phi_type) notes =
-  let val short_name = Term.term_name (#term phi)
-      fun mk_binding name = Binding.make (name, (#pos phi))
-                         |> Binding.qualify true short_name
-   in Context.mapping (fold (fn (N,Th) => snd o Global_Theory.note_thms "" ((mk_binding N, []), [(Th,[])])) notes)
-                      (fold (fn (N,Th) => snd o Local_Theory.note ((mk_binding N, []), Th)) notes)
-  end
 
 fun normalize th = th
   |> Phi_Help.beta_eta_contract

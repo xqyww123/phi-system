@@ -425,7 +425,7 @@ lemma \<phi>gen_expansion:
 
 
 ML_file \<open>library/phi_type_algebra/properties.ML\<close>
-ML_file \<open>library/tools/functor_detect.ML\<close>
+ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
 
 
@@ -539,27 +539,28 @@ let fun attach_var F =
        in case fastype_of F of \<^Type>\<open>fun T _\<close> => F $ Var(("uu",i),T)
                              | _ => error "Impossible #8da16473-84ef-4bd8-9a96-331bcff88011"
       end
+    open Phi_Type_Template_Properties
 in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\<close>
   "set the pattern rewrite to parse the functor part and the argument part from a term\
   \ matching the patter"
-#>*) Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Transformation_Functor\<close>
+#>*)add_property_kind \<^const_name>\<open>Transformation_Functor\<close>
       (fn (_ $ F $ _ $ _ $ _ $ _) => F)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>I\<close>
+#> add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>I\<close>
       (fn (_ $ F $ _ $ _ $ _ $ _ ) => F)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>E\<close>
+#> add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>E\<close>
       (fn (_ $ F $ _ $ _ $ _ ) => F)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Scala_Semimodule_Functor\<close>
+#> add_property_kind \<^const_name>\<open>Scala_Semimodule_Functor\<close>
       (fn (_ $ F $ _ $ _ ) => attach_var F)
 (* #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Unit_Functor\<close> (fn (_ $ F) => F) *)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Near_Semimodule_Functor_zip\<close>
+#> add_property_kind \<^const_name>\<open>Near_Semimodule_Functor_zip\<close>
       (fn (_ $ F $ _ $ _ $ _) => attach_var F)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Near_Semimodule_Functor_zip_rev\<close>
+#> add_property_kind \<^const_name>\<open>Near_Semimodule_Functor_zip_rev\<close>
       (fn (_ $ F $ _ $ _ $ _) => attach_var F)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Near_Semimodule_Functor_unzip\<close>
+#> add_property_kind \<^const_name>\<open>Near_Semimodule_Functor_unzip\<close>
       (fn (_ $ F $ _ $ _ $ _) => attach_var F)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Identity_Element\<^sub>I\<close>
+#> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>I\<close>
       (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _) => T)
-#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
+#> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
       (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) => T)
 (*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
   \<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
@@ -700,7 +701,7 @@ lemma Type_Variant_of_the_Same_Type_Operator_I [\<phi>reason 1]:
 
 ML_file \<open>library/phi_type_algebra/variant_phi_type_instantiations.ML\<close>
 
-setup \<open>Phi_Type_Algebra.add_property_kind
+setup \<open>Phi_Type_Template_Properties.add_property_kind
           \<^const_name>\<open>Type_Variant_of_the_Same_Type_Operator\<close> (fn (_ $ F $ _) => F)\<close>
 
 
@@ -931,7 +932,7 @@ locale Functional_Transformation_Functor =
   assumes functional_mapper:
       \<open>Prem \<Longrightarrow> mapper (\<lambda>a b. b = f a \<and> P a) = (\<lambda>a' b'. b' = func_mapper f a' \<and> pred_mapper P a')\<close>
 
-setup \<open>Phi_Type_Algebra.add_property_kind "Phi_Type_Algebra.Functional_Transformation_Functor"
+setup \<open>Phi_Type_Template_Properties.add_property_kind \<^const_name>\<open>Functional_Transformation_Functor\<close>
             (fn (_ $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F)\<close>
 
 context Functional_Transformation_Functor
@@ -1552,15 +1553,14 @@ subsubsection \<open>Push map\<close>
 declare homo_sep_disj_total_push_map [\<phi>reason 1100]
         homo_sep_mult_push_map [\<phi>reason 1100]
         homo_one_push_map [\<phi>reason 1100]
-thm homo_sep_disj_total_push_map
-ML \<open>@{thm' homo_sep_disj_total_push_map} |> Thm.prop_of\<close>
+
 
 subsection \<open>Property Derivers\<close>
 
 subsubsection \<open>Extension of BNF-FP\<close>
 
-ML_file \<open>library/tools/BNF_fp_sugar_more.ML\<close>
-ML_file \<open>library/tools/extended_BNF_info.ML\<close>
+ML_file \<open>library/phi_type_algebra/tools/BNF_fp_sugar_more.ML\<close>
+ML_file \<open>library/phi_type_algebra/tools/extended_BNF_info.ML\<close>
 
 
 subsubsection \<open>Deriver Framework\<close>
@@ -1615,7 +1615,7 @@ lemma \<phi>TA_reason_rule__\<A>_simp_NToA:
   unfolding Action_Tag_def
   by (simp add: Transformation_def)
 
-ML_file \<open>library/automation/type_algebra.ML\<close>
+ML_file \<open>library/phi_type_algebra/deriver_framework.ML\<close>
 
 
 
@@ -1663,7 +1663,7 @@ ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step
 
 \<phi>property_deriver Implication 90 for (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.inhabitance
+  Phi_Type_Algebra_Derivers.inhabitance false
 \<close>
 
 
@@ -1717,11 +1717,6 @@ lemma \<phi>TA_Ident_I_rule_step_infer:
 \<Longrightarrow> Identity_Element\<^sub>I X (Any \<or> Q) \<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by simp
-  
-ML \<open>writeln (let open Pretty in string_of (
-  block (text "aaa aaa sss sssss sdasdas aa a asd asd qwe  asd asd" @ [brk 1] @ text "bbb")
-)end)\<close>
-
 
 ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
@@ -1729,11 +1724,11 @@ hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
 
 \<phi>property_deriver Identity_Element\<^sub>I 101 for (\<open>Identity_Element\<^sub>I _ _\<close>)
     requires Warn_if_contains_Sat
-  = \<open>Phi_Type_Algebra_Derivers.identity_element_I\<close>
+  = \<open>Phi_Type_Algebra_Derivers.identity_element_I false\<close>
 
 \<phi>property_deriver Identity_Element\<^sub>E 102 for (\<open>Identity_Element\<^sub>E _\<close>)
     requires Warn_if_contains_Sat
-  = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
+  = \<open>Phi_Type_Algebra_Derivers.identity_element_E false\<close>
 
 \<phi>property_deriver Identity_Element 103 requires Identity_Element\<^sub>I and Identity_Element\<^sub>E
 
@@ -1780,6 +1775,7 @@ lemma \<phi>TA_OE_extract_prem:
   unfolding Object_Equiv_def Transformation_def
   by blast
 
+
 paragraph \<open>Object Equivalence at Singular Point\<close>
 
 consts \<A>base_case :: \<open>(unit,unit) \<phi>\<close>
@@ -1820,8 +1816,13 @@ hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_
           Object_Equiv_rule_move_all2 Object_Equiv_rule_move_set_eq
           Object_Equiv_rule_move_set_eq_end *)
 
-\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) = \<open>
-     Phi_Type_Algebra_Derivers.object_equiv
+\<phi>property_deriver Object_Equiv\<^sub>O 105 = \<open>
+     Phi_Type_Algebra_Derivers.object_equiv_singular false
+\<close>
+
+\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) = \<open>fn Hs => fn phi =>
+     Phi_Type_Algebra_Derivers.object_equiv false Hs phi
+  #> null Hs ? Phi_Type_Algebra_Derivers.object_equiv_singular true [] phi
 \<close>
 
 \<phi>property_deriver Basic 109 requires Object_Equiv and Implication
@@ -1862,6 +1863,8 @@ lemma \<phi>TA_TF_extract_prem:
   unfolding Transformation_def Action_Tag_def
   by blast
 
+
+
 subsubsection \<open>Functional Transformation Functor\<close>
 
 lemma \<phi>TA_FTF_rule:
@@ -1879,17 +1882,18 @@ lemma \<phi>TA_FTF_rule:
 ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 
 \<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.transformation_functor
+  Phi_Type_Algebra_Derivers.transformation_functor false
 \<close>
 
 \<phi>property_deriver Functional_Transformation_Functor 111
   for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>)
   requires Transformation_Functor
-    = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor\<close>
+    = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor false\<close>
 
 (* TODO:
 hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr_IH \<phi>TA_TF_rewr_C \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
 *)
+
 
 subsubsection \<open>Congruence in Function Definition\<close>
 
@@ -1910,6 +1914,7 @@ lemma function_congruence_template:
         auto) .
   
 ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
+
 
 
 subsubsection \<open>Separation Homo\<close>
@@ -1972,11 +1977,11 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
           \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.separation_homo_I
+  Phi_Type_Algebra_Derivers.separation_homo_I false
 \<close>
 
 \<phi>property_deriver Separation_Homo\<^sub>E 121 for (\<open>Separation_Homo\<^sub>E _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.separation_homo_E
+  Phi_Type_Algebra_Derivers.separation_homo_E false
 \<close>
 
 \<phi>property_deriver Separation_Homo 122
@@ -2010,7 +2015,7 @@ ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
 \<phi>property_deriver Open_Abstraction_Full 130 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
                                                 | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
-    = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction \<close>
+    = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction false \<close>
 
 
 
@@ -2038,7 +2043,7 @@ lemma \<phi>TA_IsFunc_rewr_ants:
 ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 
 \<phi>property_deriver Is_Functional 100 for (\<open>Is_Functional (_ \<Ztypecolon> _)\<close>)
-    = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
+    = \<open> Phi_Type_Algebra_Derivers.is_functional false \<close>
 
 
 
@@ -2097,7 +2102,7 @@ lemma derive_\<A>SE_trim_E_TH:
 ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
 
 \<phi>property_deriver SE_Trim_Empty 110
-    = \<open> K Phi_Type_Algebra_Derivers.SE_Trim_Empty \<close>
+    = \<open> K (Phi_Type_Algebra_Derivers.SE_Trim_Empty false) \<close>
 
 lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.SE_Trim_Empty__generation_pass\<close>] =
           derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH
@@ -2111,7 +2116,7 @@ lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.
 
 subsection \<open>Configure Simplification Set for Deriving\<close>
 
-subsubsection \<open>General\<close>
+subsubsection \<open>Common\<close>
 
 setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt => ctxt addsimps
   @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
@@ -2140,13 +2145,6 @@ lemma zip'_inj[simp]:
   \<open>length (fst l) = length (snd l) \<Longrightarrow> map snd (zip' l) = snd l\<close>
   unfolding zip'_def
   by (cases l; simp)+
-
-(*
-lemma zip'_inj'[simp]:
-  \<open>length (fst l) = length (snd l) \<Longrightarrow> map (\<lambda>x. f (fst x)) (zip' l) = map f (fst l)\<close>
-  \<open>length (fst l) = length (snd l) \<Longrightarrow> map (\<lambda>x. f (snd x)) (zip' l) = snd l\<close>
-  unfolding zip'_def
-  by (cases l; simp) *)
 
 lemma zip'_eq_Cons_ex:
   \<open>zip' x = (h#l) \<longleftrightarrow> (\<exists>ah al bh bl. fst x = ah # al \<and> snd x = bh # bl \<and> (ah,bh) = h \<and> zip' (al,bl) = l)\<close>
@@ -2249,7 +2247,7 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
   map_disc_iffs = @{thms' image_is_empty},
   map_ident = @{thm' Set.image_ident},
   map_comp_of = @{thm' Set.image_image},
-  fp_more = NONE (*{
+  fp_more = NONE (*{ TODO!
     deads = [],
     lives = [a],
     lives'= [b],
@@ -2266,18 +2264,6 @@ lemma Set_bind_insert[simp, \<phi>constraint_expansion for set]:
   \<open>Set.bind (insert x S) f = f x \<union> Set.bind S f\<close>
   unfolding Set.bind_def
   by auto
-
-
-(*
-lemma
-  \<open> (\<And>T U z. Ant \<longrightarrow> (\<forall>x y. z = w(x,y) \<longrightarrow> (z \<Ztypecolon> Fc (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)))
-\<Longrightarrow> Ant
-\<Longrightarrow> Separation_Homo\<^sub>E Fa Fb Fc w \<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'
-  by simp
-
-lemma
-  \<open> Scala_Semimodule_Functor F  \<close> *)
 
 
 end
