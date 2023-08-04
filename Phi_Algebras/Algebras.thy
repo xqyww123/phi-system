@@ -499,6 +499,11 @@ end
 
 subsection \<open>Homomorphisms\<close>
 
+locale homo_sep_disj_semi =
+  fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
+  assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> (* TODO: improve this to be a \<longleftrightarrow> ! *)
+
+
 locale homo_sep_disj_total =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
   assumes sep_disj_homo[iff]: \<open>\<psi> a ## \<psi> b \<longleftrightarrow> a ## b\<close>
@@ -509,10 +514,6 @@ lemma homo_sep_disj_total_comp:
 \<Longrightarrow> homo_sep_disj_total (f o g)\<close>
   unfolding homo_sep_disj_total_def
   by simp
-
-locale homo_sep_disj_semi =
-  fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
-  assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> (* TODO: improve this to be a \<longleftrightarrow> ! *)
 
 locale homo_sep_mult =
   fixes \<psi> :: " 'a::sep_magma \<Rightarrow> 'b::sep_magma "
@@ -544,6 +545,38 @@ locale sep_insertion = homo_sep \<psi>
   and D :: \<open>'a set\<close>
 + assumes sep_insertion: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
 begin
+
+text \<open>The separation insertion only requires right-half homomorphism of the separation disjunction
+  (\<open>x ## y \<longrightarrow> \<psi> x ## \<psi> y\<close>, it is an implication instead of an equation).
+  It allows the source algebra to be inserted into a larger target algebra where the target algebra
+  can define more behavior between the projected elements of the source algebra.
+  As an instance showing the value of the flexibility, we consider
+  the insertion from a discrete unital algebra (where the separation between any two elements are
+  undefined unless one of the element is the identity) into permission algebra
+  \<open>\<psi> 1 = 1    \<psi> x = Perm(1,x)    where fraction p in Perm(p,x) is the permission, and 1 means the total permission\<close>
+  it requires this flexibility if we allow super-permission in our formalization.
+  Note the permission algebra supports scalar operation, \<open>c \<cdot> Perm(p,x) = Perm(c\<cdot>p, x)\<close>, a permission
+  can be temporarily larger than 1 inside the inner operation of a scalar expression, only if after
+  the scalar operation, the permission is less or equal than 1.
+  It means \<open>Perm(1,x) * Perm(1,x) = Prem(2,x)\<close> is defined, and if the insertion requires bi-direction
+  homomorphism of the separation disjunction, from it we have \<open>x * x\<close> is defined, which is contrast
+  with the discrete source algebra.
+  The bi-direction homomorphism is allowed only if we prohibit super-permission, but it destroys the
+  semiring propert of the permission algebra.
+  The super-permission frees us from checking the overflow of the permission addition and makes
+  the expressiveness more flexible. By contrast, the left-half homomorphism allows the transformation
+  \<open>\<psi> x * \<psi> y \<longrightarrow> \<psi> (x * y)\<close> and this transformation is also important and necessary.
+  Without the left-half homomorphism, we must check the separatablity between \<open>x\<close> and \<open>y\<close>.
+  There is no alternative way to the flexibility including super-permission, but the separatablity
+  can be checked automatically and in most cases, the separatablity between
+  two \<phi>-types \<open>x : T\<close> and \<open>y : U\<close> can be inferred from the types \<open>T\<close> and \<open>U\<close>. A type usually
+  records which part of the resource does this \<phi>-type assertion specifies (otherwise, it is impossible
+  to reason the transformation that extracts a certain part of the resource which is used locally by
+  a subroutine, note the reasoning is type-guided).
+  From this domain of specification, we can check the separatablity by checking the domains are disjoint.
+
+  The reasoning procedure is given by \<open>\<phi>Sep_Disj\<close> later.
+  \<close>
 
 lemma sep_insertion'[no_atp]:
   \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
