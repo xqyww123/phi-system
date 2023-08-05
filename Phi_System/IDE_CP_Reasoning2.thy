@@ -265,8 +265,10 @@ fn (ctxt0,sequent0) => Seq.make (fn () =>
 
       val zeros = scan0 [] Y
       val sequent1 = (case zeros of [] => sequent
-                         | (_::zeros') => Thm.instantiate (TVars.empty, Vars.make zeros') sequent
-                                       |> Simplifier.simplify (Phi_Programming_Simp_SS.equip ctxt))
+                         | (_::zeros') =>
+                                Thm.instantiate (TVars.empty, Vars.make zeros') sequent
+                             |> Simplifier.simplify (Phi_Programming_Simp_SS.enhance (
+                                                       Phi_Programming_Base_Simp_SS.equip ctxt)))
 
       fun scan1 ret (Const (\<^const_name>\<open>times\<close>, _) $ _ $ (Const (\<^const_name>\<open>FOCUS_TAG\<close>, _) $ _))
             = (true,[])

@@ -135,15 +135,15 @@ fun type_form_to_ex_quantified ctxt ctm =
      | NONE => Conv.all_conv ctm
 
 fun single_var_fallback ctm =
-  let fun chk (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, X)) = chk X
-        | chk (Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound _ $ _) $ _) = true
-        | chk _ = false
-   in case Thm.term_of ctm
-   of Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ =>
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ =>
         Conv.rewr_conv @{lemma \<open>x \<Ztypecolon> T \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x\<close> by (clarsimp simp add: atomize_eq BI_eq_iff)} ctm
-    | X => if chk X then Conv.all_conv ctm
-           else raise CTERM ("Fail to convert into existential quantified single variable form", [ctm])
-  end
+     | Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) $ _ =>
+        Conv.rewr_conv @{lemma \<open>x \<Ztypecolon> T \<s>\<u>\<b>\<j> P \<equiv> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P\<close> by (clarsimp simp add: atomize_eq BI_eq_iff)} ctm
+     | Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
+         Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound _ $ _) $ _) =>
+            Conv.all_conv ctm
+     | _ => raise CTERM ("Fail to convert into existential quantified single variable form", [ctm])
 
 fun type_form_to_ex_quantified_single_var ctxt ctm =
   case !rules_of_type_form_to_ex_quantified_single_var

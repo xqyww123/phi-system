@@ -27,25 +27,31 @@ declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
 
 ML \<open>
 structure Phi_Programming_Simp_SS = Simpset (
-  val initial_ss = Simpset_Configure.Minimal_SS
+  val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>\<phi>programming_simps\<close>
-  val comment = "Simplification rules used in low automation level, which is safer than usual"
+  val comment = "Simplification rules used in the deductive programming.\n\
+                \Any rule declared here is also declared in the system global simp set automatically."
   val attribute = NONE
 )
+\<comment> \<open>A trick: if a \<phi>programming_simp rule is also declared in the system simpset, just declare it
+    by \<phi>programming_base_simps, and it can improve the performance.\<close>
 
-structure Phi_Programming_Unsafe_Simp_SS = Simpset (
-  val initial_ss = Simpset_Configure.Empty_SS
-  val binding = SOME \<^binding>\<open>\<phi>programming_unsafe_simps\<close>
-  val comment = "Simplification rules used in the deductive programming"
+structure Phi_Programming_Base_Simp_SS = Simpset (
+  val initial_ss = Simpset_Configure.Minimal_SS
+  val binding = SOME \<^binding>\<open>\<phi>programming_base_simps\<close>
+  val comment = "Simplification rules used only in low level automation"
   val attribute = NONE
 )
 \<close>
 
-lemmas [\<phi>programming_simps] =
+lemmas [\<phi>programming_base_simps] =
   mult_zero_right[where 'a=\<open>'a::sep_magma set\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma set\<close>]
   mult_1_right[where 'a=\<open>'a::sep_magma_1 set\<close>] mult_1_left[where 'a=\<open>'a::sep_magma_1 set\<close>]
   add_0_right[where 'a=\<open>'a::sep_magma set\<close>] add_0_left[where 'a=\<open>'a::sep_magma set\<close>]
   zero_fun HOL.simp_thms
+
+setup \<open>Context.theory_map (Phi_Programming_Base_Simp_SS.map (fn ctxt =>
+  ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>defined_Ex\<close>]))\<close>
 
 subsection \<open>Error Mechanism\<close>
 

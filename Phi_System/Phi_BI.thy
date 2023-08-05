@@ -541,20 +541,20 @@ lemma Subjection_imp_simp[simp]:
   \<open> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q) \<longleftrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<and> Q) \<close>
   unfolding Transformation_def by simp
 
-lemma Subjection_True [simp, \<phi>programming_simps]:
+lemma Subjection_True [simp, \<phi>programming_base_simps]:
   \<open>(T \<s>\<u>\<b>\<j> True) = T\<close>
   unfolding BI_eq_iff by simp
 
-lemma Subjection_Flase[simp, \<phi>programming_simps]:
+lemma Subjection_Flase[simp, \<phi>programming_base_simps]:
   \<open>(T \<s>\<u>\<b>\<j> False) = 0\<close>
   unfolding BI_eq_iff by simp
 
-lemma Subjection_Subjection:
+lemma Subjection_Subjection[simp, \<phi>programming_base_simps]:
   \<open>(S \<s>\<u>\<b>\<j> P \<s>\<u>\<b>\<j> Q) = (S \<s>\<u>\<b>\<j> P \<and> Q)\<close>
   unfolding BI_eq_iff
   by simp
 
-lemma Subjection_Zero[simp]:
+lemma Subjection_Zero[simp, \<phi>programming_base_simps]:
   \<open>(0 \<s>\<u>\<b>\<j> P) = 0\<close>
   unfolding BI_eq_iff
   by simp
@@ -636,6 +636,8 @@ lemma
   \<open> A \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X
 \<Longrightarrow> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> Y
 \<Longrightarrow> A \<and> B \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X * Y\<close>
+  unfolding Action_Tag_def Inhabited_def
+  apply clarsimp
   oops
 
 text \<open>There is no sufficiency reasoning for multiplicative conjunction, because if we reason A and B
@@ -784,27 +786,23 @@ text \<open>Semantically, an existential quantification in BI actually represent
 lemma " Union { S x |x. P x } = (S x \<s>\<u>\<b>\<j> x. P x) "
   by (simp add: set_eq_iff ExSet_def Subjection_def) blast
 
-subsection \<open>Simplifications\<close>
+subsubsection \<open>Simplifications\<close>
 
 lemma ExSet_pair: "ExSet T = (\<exists>*a b. T (a,b))"
   unfolding BI_eq_iff by clarsimp
 
-lemma ExSet_simps[simp]:
+lemma ExSet_simps[simp,\<phi>programming_base_simps]:
   \<open>ExSet 0 = 0\<close>
   \<open>ExSet (\<lambda>_. T) = T\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x) = (F y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
-  \<open>(X b \<s>\<u>\<b>\<j> P b \<s>\<u>\<b>\<j> b. Q b) = (X b \<s>\<u>\<b>\<j> b. P b \<and> Q b)\<close>
-  \<open>(X2 a b \<s>\<u>\<b>\<j> a. P2 a b \<s>\<u>\<b>\<j> b. Q b) = (X2 a b \<s>\<u>\<b>\<j> a b. P2 a b \<and> Q b)\<close>
-  \<open>ExSet 0 = 0\<close>
+  \<open>(ExSet X \<s>\<u>\<b>\<j> PP) = (ExSet (\<lambda>c. X c \<s>\<u>\<b>\<j> PP))\<close>
 (*  \<open>(\<exists>* x. x = t \<and> P x) = P t\<close>
 "\<And>P. (\<exists>x. x = t \<and> P x) = P t"
     "\<And>P. (\<exists>x. t = x \<and> P x) = P t"*)
-  unfolding BI_eq_iff by simp_all blast
-
-declare ExSet_simps(1)[\<phi>programming_simps]
+  unfolding BI_eq_iff by simp_all
 
 lemma Ex_transformation_expn:
   \<open>((\<exists>*x. A x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longleftrightarrow> (\<forall>x. A x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)\<close>

@@ -329,9 +329,9 @@ fun simplifier (ctxt, sequent) = Scan.succeed (fn _ =>
     val lev = Config.get ctxt Phi_Reasoner.auto_level
     val sctxt =
       if lev >= 2
-      then Phi_Programming_Unsafe_Simp_SS.enhance ctxt
+      then Phi_Programming_Simp_SS.enhance ctxt
       else if lev >= 1
-      then Phi_Programming_Simp_SS.equip ctxt
+      then Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
       else raise Bypass (SOME (ctxt, sequent))
     val sequent' = Simplifier.full_simplify sctxt sequent
                 |> Phi_Help.beta_eta_contract
