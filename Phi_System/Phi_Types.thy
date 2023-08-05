@@ -1391,15 +1391,15 @@ qed
 lemma \<phi>insertion_Prod_imply:
   \<open>x \<Ztypecolon> \<phi>insertion f D (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<phi>insertion f D T) \<^emph> (\<phi>insertion f D U)\<close>
   unfolding Transformation_def
-  apply (cases x; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def)
-  by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion.axioms(1) sep_insertion_1.axioms sep_insertion_monoid.axioms perm_ins_homo.axioms(1))
+  apply (cases x; clarsimp simp add: \<phi>expns)
+  by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion.axioms(1) sep_insertion_1.axioms sep_insertion_monoid.axioms perm_ins_homo.axioms(1)
 
 lemma \<phi>insertion_Prod:
   \<open> \<phi>Sep_Disj U T
 \<Longrightarrow> \<phi>insertion f D (T \<^emph> U) = (\<phi>insertion f D T) \<^emph> (\<phi>insertion f D U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def)
-  by (metis homo_sep_def homo_sep_mult.homo_mult sep_insertion_1.axioms(1) sep_insertion_def sep_insertion_monoid.axioms)
+  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def
+  by (metis homo_sep_def homo_sep_mult.homo_mult sep_insertion_1.axioms(1) sep_insertion_def sep_insertion_monoid.axioms
 
 thm perm_ins_homo.axioms(1)
 

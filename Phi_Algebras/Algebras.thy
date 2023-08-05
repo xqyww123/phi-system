@@ -546,14 +546,14 @@ locale sep_insertion = homo_sep \<psi>
 + assumes sep_insertion: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
 begin
 
-text \<open>The separation insertion only requires right-half homomorphism of the separation disjunction
+text \<open>The separation insertion only requires the right-half homomorphism of the separation disjunction
   (\<open>x ## y \<longrightarrow> \<psi> x ## \<psi> y\<close>, it is an implication instead of an equation).
   It allows the source algebra to be inserted into a larger target algebra where the target algebra
-  can define more behavior between the projected elements of the source algebra.
+  can define more behaviors between the projected elements of the source algebra.
   As an instance showing the value of the flexibility, we consider
-  the insertion from a discrete unital algebra (where the separation between any two elements are
-  undefined unless one of the element is the identity) into permission algebra
-  \<open>\<psi> 1 = 1    \<psi> x = Perm(1,x)    where fraction p in Perm(p,x) is the permission, and 1 means the total permission\<close>
+  the insertion into a permission algebra from a discrete unital algebra (where the separation
+  between any two elements are undefined unless one of the element is the identity)
+  \<open>\<psi> 1 = 1    \<psi> x = Perm(1,x)    where fraction p in Perm(p,x) is the permission, and 1 is the total permission\<close>
   it requires this flexibility if we allow super-permission in our formalization.
   Note the permission algebra supports scalar operation, \<open>c \<cdot> Perm(p,x) = Perm(c\<cdot>p, x)\<close>, a permission
   can be temporarily larger than 1 inside the inner operation of a scalar expression, only if after
