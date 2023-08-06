@@ -1255,14 +1255,13 @@ subsection \<open>Share \& Option\<close>
 
 subsubsection \<open>Definition of Properties\<close>
 
-definition \<phi>Sep_Disj' :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
-  where \<open>\<phi>Sep_Disj' X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> (\<exists>u' v'. u' * v' = u * v \<and> u' ## v'))\<close>
-
 definition \<phi>Sep_Disj :: \<open>('a::sep_magma,'b1) \<phi> \<Rightarrow> ('a,'b2) \<phi> \<Rightarrow> bool\<close>
   where \<open>\<phi>Sep_Disj T U \<longleftrightarrow> (\<forall>x y u v. u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (y \<Ztypecolon> U) \<longrightarrow> (\<exists>u' v'. u' \<Turnstile> (x \<Ztypecolon> T) \<and> v' \<Turnstile> (y \<Ztypecolon> U) \<and> u' ## v'))\<close>
 
 definition \<phi>Sep_Disj_Inj :: \<open>'a::share_semimodule_sep set \<Rightarrow> bool\<close>
   where \<open>\<phi>Sep_Disj_Inj S \<longleftrightarrow> (\<forall>u v. u \<in> S \<and> v \<in> S \<and> u ## v \<longrightarrow> u = v) \<and> (\<forall>u. u \<in> S \<longrightarrow> u ## u)\<close>
+
+subsubsection \<open>The \<phi>-Type of Separation Homomorphism\<close>
 
 
 subsubsection \<open>Insertion Functor\<close>

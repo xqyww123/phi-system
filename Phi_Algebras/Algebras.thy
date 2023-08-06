@@ -534,22 +534,14 @@ locale homo_join_sub =
 
 locale homo_sep = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
+  \<comment> \<open>Non-closed (weak) homomorphism. This is the standard homomorphism in partial algebras. []\<close>
 
-lemma homo_sep_comp:
-  \<open>homo_sep f \<Longrightarrow> homo_sep g \<Longrightarrow> homo_sep (f o g)\<close>
-  unfolding homo_sep_mult_def homo_sep_disj_semi_def homo_sep_def
-  by simp
-
-locale sep_insertion = homo_sep \<psi>
-  for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
-  and D :: \<open>'a set\<close>
-+ assumes sep_insertion: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
-begin
-
-text \<open>The separation insertion only requires the right-half homomorphism of the separation disjunction
+text \<open>
+  Note a non-closed homomorphism only requires the right-half entailment of the separation disjunction
   (\<open>x ## y \<longrightarrow> \<psi> x ## \<psi> y\<close>, it is an implication instead of an equation).
-  It allows the source algebra to be inserted into a larger target algebra where the target algebra
-  can define more behaviors between the projected elements of the source algebra.
+
+  It provides more flexibility where the target algebra \<open>\<BB>\<close>
+  can define more behaviors between the projected elements of the source algebra \<open>\<A>\<close>.
   As an instance showing the value of the flexibility, we consider
   the insertion into a permission algebra from a discrete unital algebra (where the separation
   between any two elements are undefined unless one of the element is the identity)
@@ -562,11 +554,15 @@ text \<open>The separation insertion only requires the right-half homomorphism o
   homomorphism of the separation disjunction, from it we have \<open>x * x\<close> is defined, which is contrast
   with the discrete source algebra.
   The bi-direction homomorphism is allowed only if we prohibit super-permission, but it destroys the
-  semiring propert of the permission algebra.
+  semimodule property of the permission algebra.
   The super-permission frees us from checking the overflow of the permission addition and makes
-  the expressiveness more flexible. By contrast, the left-half homomorphism allows the transformation
-  \<open>\<psi> x * \<psi> y \<longrightarrow> \<psi> (x * y)\<close> and this transformation is also important and necessary.
-  Without the left-half homomorphism, we must check the separatablity between \<open>x\<close> and \<open>y\<close>.
+  the expressiveness more flexible.
+
+  By contrast, if the homomorphism is not assumed to be closed, i.e., from \<open>\<psi> x ## \<psi> y\<close> we cannot have \<open>x ## y\<close>,
+  we can only have one side transformation \<open>\<psi> (x * y) \<longrightarrow> \<psi> x * \<psi> y\<close> but not the other side
+  \<open>\<psi> x * \<psi> y \<longrightarrow> \<psi> (x * y)\<close> because we don't know if \<open>x ## y\<close>.
+  This side of transformation is still important and necessary.
+
   There is no alternative way to the flexibility including super-permission, but the separatablity
   can be checked automatically and in most cases, the separatablity between
   two \<phi>-types \<open>x : T\<close> and \<open>y : U\<close> can be inferred from the types \<open>T\<close> and \<open>U\<close>. A type usually
@@ -577,6 +573,26 @@ text \<open>The separation insertion only requires the right-half homomorphism o
 
   The reasoning procedure is given by \<open>\<phi>Sep_Disj\<close> later.
   \<close>
+
+
+lemma homo_sep_comp:
+  \<open>homo_sep f \<Longrightarrow> homo_sep g \<Longrightarrow> homo_sep (f o g)\<close>
+  unfolding homo_sep_mult_def homo_sep_disj_semi_def homo_sep_def
+  by simp
+
+locale sep_insertion = homo_sep \<psi>
+  for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
+  and D :: \<open>'a set\<close> \<comment> \<open>carrier set of the source algebra,
+                        Previously we implicitly extend the carrier set to be the universe of the type.
+                        It can be done because for any element \<open>d\<close> not belonging to the carrier set,
+                        only if \<open>d\<close> has no defined operation with any other element including itself,
+                        the introduction of \<open>d\<close> doesn't affect anything, any properties including the homormophisms.
+                        However here, if \<open>a = \<psi> d\<close> belongs to the target algebra,
+                        \<open>d\<close> matters due to the bellow property,
+                        so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
++ assumes sep_insertion: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+begin
+
 
 lemma sep_insertion'[no_atp]:
   \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
