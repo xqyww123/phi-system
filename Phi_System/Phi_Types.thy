@@ -170,7 +170,7 @@ text \<open>Read it as 'the abstract object is certain element in the set'
 
 Together with the \<^const>\<open>SubjectionTY\<close>, \<^const>\<open>\<phi>Dependent_Sum\<close> and \<^const>\<open>Set_Abstraction\<close> embed
   BI connective \<open>\<and>\<close> (\<^const>\<open>Subjection\<close>) and \<open>\<exists>\<close> (\<^const>\<open>ExSet\<close>) into \<phi>-types. The embedding of \<open>\<exists>\<close>
-  is in an algebraic way having good properties like the \<Sigma>-Homomorphism and \<S>-Homomorphism introduced bellow.
+  is in an algebraic way having good properties like the \<Sigma>-Homomorphism and \<S>-Homomorphism introduced below.
 
 The system reduces the three \<phi>-types actively just like how it reduces BI \<open>\<exists>\<close> and \<open>\<and>\<close>.
 Any pure facts in the conjunctions are extracted and stored, and existentially quantified variables are fixed.

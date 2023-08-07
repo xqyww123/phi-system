@@ -1181,7 +1181,7 @@ So if u are going to zip something, u really need to zip some two concrete thing
 instead of using the identity element to represent the degenerated situation where you actually zipped nothing.
 It forces us to really consider the cases of having remainders or not in the reasoning.
 
-The bellow rule is complicated, but is branch-less in reasoning. All branch expressions are in object level,
+The rule below is complicated, but is branch-less in reasoning. All branch expressions are in object level,
 free from explosion of expression, and can be simplified easily because the boolean flags are
 assigned by constants after the reasoning.
 

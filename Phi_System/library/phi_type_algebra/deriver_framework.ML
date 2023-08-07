@@ -129,7 +129,7 @@ val deriving_framework :
   the given hint, so that we can load reasoning configures like simplification sets binding on the
   operators (e.g., the simplification rules of the related BNF)
 
-  `rule` is a PLPR reasoning rule describing how to derive the target property in detail, in the bellow form,
+  `rule` is a PLPR reasoning rule describing how to derive the target property in detail, in the following form,
   ` ( <the leading antecedent is the one to which induction applies> \<Longrightarrow>
       <some optional antecedents, but no induction will be applied on them> \<Longrightarrow>
       \<r>Success (*terminates the deriving successfully*)
@@ -356,7 +356,7 @@ structure Simps = Simpset (
                                   para "You are declaring a simp rule applying locally only on\
                                        \ certain specific type. The type is not given and I \
                                        \tried to parse it from the given rule but I cannot \
-                                       \determine which type you prefer from the bellow candidates." ::
+                                       \determine which type you prefer from the candidates below." ::
                                   map (fn N => item [str N]) L @
                                  [para "Please indicate it explicitly by [\<phi>constraint_expansion for <the type>].\
                                        \ Otherwise, maybe you want the rule to be applied everywhere \

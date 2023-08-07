@@ -600,7 +600,7 @@ locale sep_insertion = homo_sep \<psi>
                         only if \<open>d\<close> has no defined operation with any other element including itself,
                         the introduction of \<open>d\<close> doesn't affect anything, any properties including the homormophisms.
                         However here, if \<open>a = \<psi> d\<close> belongs to the target algebra,
-                        \<open>d\<close> matters due to the bellow property,
+                        \<open>d\<close> matters due to the property below,
                         so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
 + assumes sep_insertion: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
 begin

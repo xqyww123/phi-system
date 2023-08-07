@@ -159,7 +159,7 @@ text \<open>The section and the next section present the main reasoning procedur
   using the remained unsolved target proportion of the previous search as the goal of
   the next search in the next source object.
 
-  In the reasoning processes, we only consider logic connectives that have an interpretation of refinement.
+  In the reasoning processes, we only consider logical connectives that have an interpretation of refinement.
   They include, \<open>\<or>, \<exists>, \<^emph>, \<and>\<close>. \<open>\<forall>\<close> is planned.
   \<open>\<not>\<close> and \<open>\<rightarrow>\<close> are depreciated, because we cannot interpret from them what is the exact refinement
   relation and the abstract object. \<open>@\<close> is only used in propositional constraints.
@@ -230,7 +230,7 @@ lemma "_NToA_init_by_focus_":
   by (simp; metis Transformation_def implies_right_prod mult_1_class.mult_1_left) *)
 
 lemma "_NToA_init_":
-  \<open> Simplify (assertion_simps SOURCE) X' X \<comment> \<open>TODO: move this into the bellow ML\<close>
+  \<open> Simplify (assertion_simps SOURCE) X' X \<comment> \<open>TODO: move this into the ML below\<close>
 \<Longrightarrow> Simplify (assertion_simps TARGET) Y' Y
 \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
@@ -659,7 +659,7 @@ text \<open>Non-pure Additive Conjunction (excludes those are used in pure propo
   expressed by a specific \<phi>-type equipped with ad-hoc reasoning rules.
 
   To support additive conjunction, it brings enormous branches in the reasoning so affects the
-  reasoning performance. Before applying the rules introduced previously, we can add the bellow
+  reasoning performance. Before applying the rules introduced previously, we can add the following
   rules which are also attempted subsequently in order and applied whenever possible.
   \<open>X \<longrightarrow> A \<Longrightarrow> X \<longrightarrow> B \<Longrightarrow> X \<longrightarrow> A \<and> B\<close> generates two subgoals.
   \<open>(A \<longrightarrow> Y) \<or> (B \<longrightarrow> Y) \<Longrightarrow> A \<and> B \<longrightarrow> Y\<close> branches the reasoning. Specially, when \<open>Y \<equiv> \<exists>x. P x\<close> is an

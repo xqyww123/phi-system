@@ -168,7 +168,12 @@ type_synonym ('concrete,'abstract) \<phi> = " 'abstract \<Rightarrow> 'concrete 
 
 definition \<phi>Type :: "'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> 'a BI" (infix "\<Ztypecolon>" 20) where " x \<Ztypecolon> T \<equiv> T x"
 
-text \<open>The implementation represents BI assertions by sets simply, in shallow embedding manner.\<close>
+text \<open>Convention of name:
+
+In \<open>x \<Ztypecolon> T\<close>, we refer to \<open>x\<close> as the \<^emph>\<open>object\<close> or the \<^emph>\<open>\<phi>-type term\<close> and \<open>T\<close> as the \<^emph>\<open>\<phi>-type\<close>.
+For convenience, when the context is unambiguous, we also call the entire \<open>x \<Ztypecolon> T\<close> as '\<phi>-type',
+but as \<^emph>\<open>\<phi>-type assertion\<close> to be precise.
+\<close>
 
 lemma typing_inhabited: "p \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (x \<Ztypecolon> T)"
   unfolding Inhabited_def \<phi>Type_def by blast

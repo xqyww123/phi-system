@@ -79,7 +79,8 @@ abbreviation Reverse_Transformation :: \<open>bool \<Rightarrow> bool \<Rightarr
   where \<open>Reverse_Transformation \<equiv> Generated_Rule (MODE_AUTO REVERSE_TRANSFORMATION)\<close>
 *)
 
-text \<open>
+text \<open>TODO: update this
+
 Note, the argument here means any \<phi>-Type in the pre-condition, not necessary argument value.
 
   If in a procedure or an implication rule or a view shift rule,
@@ -258,7 +259,7 @@ lemmas [assertion_simps_source] =
 
 
 
-section \<open>Reasoning Process\<close>
+section \<open>Small Reasoning Process\<close>
 
 subsection \<open>Auxiliaries\<close>
 
@@ -647,7 +648,7 @@ lemma [\<phi>reason 1200]:
   by clarsimp
 
 
-subsection \<open>Identity Element I\&E\<close>
+section \<open>Identity Element I\&E\<close>
 
 definition Identity_Element\<^sub>I :: \<open>'a::one BI \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>I S P \<longleftrightarrow> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)\<close>
 definition Identity_Element\<^sub>E :: \<open>'a::one BI \<Rightarrow> bool\<close> where \<open>Identity_Element\<^sub>E S \<longleftrightarrow> (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S)\<close>
@@ -924,12 +925,62 @@ lemma [\<phi>reason 1200]:
 
 
 
-subsection \<open>Determine Separation Disjunction from Specification\<close>
+section \<open>Determine Separation Disjunction from Specification\<close>
 
 definition Separation_Disj :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
   where \<open>Separation_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>
 
+text \<open>
+  \<open>Separation_Disj A B\<close> asserts if any two elements in \<open>A\<close> and \<open>B\<close> respectively are compatible
+  in sense of having defined group operation (of separation algebra) between them.
+  The motivation to infer such compatibility is based on two reasons.
 
+\<^enum> The implication reasoning \<open>Inhabited A \<longrightarrow> P\<close> infers a weaker but simpler approximation
+  of the pure fact implied inside \<open>A\<close>.
+  However, only the weakening part is not enough for mapping \<phi>-types like
+  \<open>f \<Ztypecolon> T \<Rrightarrow> U := {g. (\<forall>u x. u \<Turnstile> x \<Ztypecolon> T \<longrightarrow> g(y) \<Turnstile> f(x) \<Ztypecolon> U)}\<close> (forward simulation)
+  whose domain \<phi>-type \<open>T\<close> is contravariant.
+  To extract its implication, the dual of the implication reasoning, sufficiency reasoning,
+  called as such by us, is required. It infers a stronger approximation \<open>Q\<close> such that
+  \<open>Q \<longrightarrow> Inhabited A\<close> for a given assertion \<open>A\<close>.
+  By it we have the implication of \<open>f \<Ztypecolon> T \<Rrightarrow> U\<close>,
+  \<open> (\<And>x. Q x \<longrightarrow> Inhabited (x \<Ztypecolon> T))
+\<Longrightarrow> (\<And>x. Inhabited (x \<Ztypecolon> T) \<rightarrow> P x)
+\<Longrightarrow> (\<And>y. Inhabited (y \<Ztypecolon> U) \<rightarrow> P' y)
+\<Longrightarrow> Inhabited (f \<Ztypecolon> T \<Rrightarrow> U) \<longrightarrow> (\<forall>x. Q x \<longrightarrow> P x \<and> P' (f x))\<close>.
+  
+  The rules of sufficiency reasoning for logical connectives are given where???. Note there are
+  no direct rules for conjunctive operators (\<open>\<and>\<close> and \<open>*\<close>).
+  For \<open>\<and>\<close>, it is because the inhabitance of each side
+  does not imply the inhabitance of the both sides, because the residents may not equal.
+  For \<open>*\<close>, it is due to, though we have two residents \<open>u \<Turnstile> A\<close> and \<open>v \<Turnstile> B\<close> for each assertions,
+  we do not know if \<open>u\<close> and \<open>v\<close> are compatible, so we cannot deduce \<open>u * v \<Turnstile> A * B\<close>.
+
+  \<open>\<and>\<close> is rarely used under our interpretation of data refinement.
+  However, multiplicative conjunction is still essential,
+  especially for example, when the key of the map is a tuple and the tuple fields are connected by \<open>*\<close>.
+  \<open>Separation_Disj A B\<close> is a remedy and a stronger condition for this as it gives the compatibility of \<open>u,v\<close> as above.
+  \<open> Inhabited A \<longrightarrow> P
+\<Longrightarrow> Inhabited B \<longrightarrow> Q
+\<Longrightarrow> Separation_Disj A B
+\<Longrightarrow> Inhabited (A * B) \<longrightarrow> P \<and> Q\<close>
+  The exact condition for the rule is, \<open>Inhabited A \<and> Inhabited B \<longrightarrow> Inhabited (A * B)\<close>.
+  \<open>Separation_Disj A B\<close> is stronger than it due to two reasons, 1. we still need to consider the
+  second motivation as mentioned above and discussed below. 2. our automation algorithm is limited
+  in deriving the exact property and can only be an approximation as Separation_Disj. The limitation
+  is due to what???
+
+\<^enum> The standard homomorphism from a partial algebra \<open>\<A>\<close> to another \<open>\<B>\<close> only assumes the group operation
+  defined between two certain elements in \<open>\<A>\<close>, is also defined in \<open>\<B>\<close>, but not reversely, i.e.,
+  \<open>u ## v \<longrightarrow> \<psi>(u) ## \<psi>(v)   but not reversely necessarily\<close>
+  It hinders the transformation \<open>x \<Ztypecolon> F(T) \<^emph> F(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> F(T \<^emph> U)\<close>.
+  Certainly, we can ask a stronger assumption i.e. closed homomorphism to circumvent, but not all homomorphisms
+  are closed. <The example of super permission>
+
+  \<open>Separation_Disj A B\<close> allows the \<phi>-type transformation for non-closed separation homomorphism.
+\<close>
+
+section \<open>Declaration of Reasonig Process\<close>
 
 subsection \<open>ToA Reasoning\<close>
 
