@@ -136,9 +136,9 @@ lemma (in homo_sep_mult) [\<phi>reason 1100]:
   \<open>homo_sep_mult \<psi>\<close>
   by (simp add: homo_sep_mult_axioms)
 
-lemma (in homo_sep_disj_total) [\<phi>reason 1100]:
-  \<open>homo_sep_disj_total \<psi>\<close>
-  by (simp add: homo_sep_disj_total_axioms)
+lemma (in homo_sep_disj_closed) [\<phi>reason 1100]:
+  \<open>homo_sep_disj_closed \<psi>\<close>
+  by (simp add: homo_sep_disj_closed_axioms)
 
 
 declare [[
@@ -1502,27 +1502,46 @@ declare SE_general_Scala_Seminearing_left_b[(*THEN SE_clean_waste,*) \<phi>reaso
 
 subsection \<open>Properties for Specific Elements\<close>
 
-subsubsection \<open>Fun upd\<close>
+subsubsection \<open>Reasoning Hierarchy\<close>
 
-declare homo_sep_disj_total_comp[\<phi>reason 50]
-        homo_sep_comp[\<phi>reason 50]
-        homo_sep_mult_comp[\<phi>reason 50]
+lemmas [\<phi>reason 20] =
+        closed_homo_sep.intro
+        homo_sep.intro
 
-lemma [\<phi>reason 50]:
-  \<open> homo_sep_disj_total \<psi>
-\<Longrightarrow> homo_sep_disj_semi \<psi>\<close>
-  unfolding homo_sep_disj_semi_def homo_sep_disj_total_def
+lemma [\<phi>reason 10]:
+  \<open> homo_sep_disj_closed \<psi>
+\<Longrightarrow> homo_sep_disj \<psi>\<close>
+  unfolding homo_sep_disj_def homo_sep_disj_closed_def
   by blast
 
-lemma homo_sep_disj_total_fun_upd [\<phi>reason 1100]:
-  \<open>homo_sep_disj_total (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
-  unfolding homo_sep_disj_total_def
+lemmas [\<phi>reason 30] =
+        homo_sep_disj_closed_comp
+        homo_sep_disj_comp
+        homo_sep_comp
+        homo_sep_mult_comp
+
+subsubsection \<open>Identity\<close>
+
+lemmas [\<phi>reason 1000] =
+    homo_sep_disj_closed_id
+    homo_sep_disj_id
+    homo_sep_mult_id
+    homo_one_id
+    homo_sep_id
+    closed_homo_sep
+
+
+subsubsection \<open>Fun upd\<close>
+
+lemma homo_sep_disj_closed_fun_upd [\<phi>reason 1100]:
+  \<open>homo_sep_disj_closed (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
+  unfolding homo_sep_disj_closed_def
   by (simp add: sep_disj_fun_def)
 
-lemma homo_sep_disj_total_fun_upd' [\<phi>reason 1050]:
-  \<open> homo_sep_disj_total f
-\<Longrightarrow> homo_sep_disj_total (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
-  unfolding homo_sep_disj_total_def
+lemma homo_sep_disj_closed_fun_upd' [\<phi>reason 1000]:
+  \<open> homo_sep_disj_closed f
+\<Longrightarrow> homo_sep_disj_closed (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
+  unfolding homo_sep_disj_closed_def
   by (simp add: sep_disj_fun_def)
 
 lemma homo_sep_mult_fun_upd[\<phi>reason 1100]:
@@ -1530,7 +1549,7 @@ lemma homo_sep_mult_fun_upd[\<phi>reason 1100]:
   unfolding homo_sep_mult_def
   by (simp add: fun_eq_iff times_fun_def)
 
-lemma homo_sep_mult_fun_upd'[\<phi>reason 1050]:
+lemma homo_sep_mult_fun_upd'[\<phi>reason 100]:
   \<open> homo_sep_mult f
 \<Longrightarrow> homo_sep_mult (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
   unfolding homo_sep_mult_def
@@ -1541,16 +1560,37 @@ lemma homo_one_fun_upd[\<phi>reason 1100]:
   unfolding homo_one_def
   by (simp add: fun_eq_iff times_fun_def)
 
-lemma homo_one_fun_upd'[\<phi>reason 1050]:
+lemma homo_one_fun_upd'[\<phi>reason 1000]:
   \<open> homo_one f
 \<Longrightarrow> homo_one (\<lambda>x. fun_upd 1 k (f x))\<close>
   unfolding homo_one_def
   by (simp add: fun_eq_iff times_fun_def)
 
+lemma homo_sep_fun_upd[\<phi>reason 1100]:
+  \<open> homo_sep (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k) \<close>
+  by (rule homo_sep.intro; simp add: homo_sep_mult_fun_upd homo_sep_disj_def)
+
+lemma homo_sep_fun_upd'[\<phi>reason 1000]:
+  \<open> homo_sep f
+\<Longrightarrow> homo_sep (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x)) \<close>
+  unfolding homo_sep_def
+  by (simp add: homo_sep_mult_fun_upd' homo_sep_disj_def)
+
+lemma closed_homo_sep_fun_upd[\<phi>reason 1100]:
+  \<open> closed_homo_sep (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k) \<close>
+  by (rule closed_homo_sep.intro; simp add: homo_sep_fun_upd homo_sep_disj_closed_fun_upd)
+
+lemma closed_homo_sep_fun_upd'[\<phi>reason 1000]:
+  \<open> closed_homo_sep f
+\<Longrightarrow> closed_homo_sep (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x)) \<close>
+  unfolding closed_homo_sep_def
+  by (simp add: homo_sep_disj_closed_fun_upd' homo_sep_fun_upd')
+
+
 
 subsubsection \<open>Push map\<close>
 
-declare homo_sep_disj_total_push_map [\<phi>reason 1100]
+declare homo_sep_disj_closed_push_map [\<phi>reason 1100]
         homo_sep_mult_push_map [\<phi>reason 1100]
         homo_one_push_map [\<phi>reason 1100]
 

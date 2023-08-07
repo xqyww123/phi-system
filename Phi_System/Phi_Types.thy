@@ -26,33 +26,32 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
                                          
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
-       and Implication
-       and Object_Equiv
+       and Basic
        and Is_Functional
        and Open_Abstraction_Full
 
 subsubsection \<open>Algebraic Properties\<close>
 
 lemma [\<phi>reason add]:
-  \<open> homo_sep_disj_total f
+  \<open> homo_sep_disj_closed f
 \<Longrightarrow> homo_sep_mult f
 \<Longrightarrow> Object_Sep_Homo\<^sub>I (\<phi>Fun f) UNIV \<close>
   unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
-  by (clarsimp simp add: set_mult_expn homo_sep_disj_total.sep_disj_homo
+  by (clarsimp simp add: set_mult_expn homo_sep_disj_closed.sep_disj_homo
                          homo_sep_mult.homo_mult)
 
 lemma [\<phi>reason add]:
-  \<open> homo_sep_disj_total f
+  \<open> homo_sep_disj f
 \<Longrightarrow> homo_sep_mult f
 \<Longrightarrow> Object_Sep_Homo\<^sub>E (\<phi>Fun f)\<close>
   unfolding Object_Sep_Homo\<^sub>E_def Transformation_def
-  by (clarsimp simp add: set_mult_expn homo_sep_disj_total.sep_disj_homo
+  by (clarsimp simp add: set_mult_expn homo_sep_disj_def
                          homo_sep_mult.homo_mult)
 
 
@@ -136,10 +135,10 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-       
+           
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
-
+ 
   deriving \<open>(\<And>A x. x \<Ztypecolon> T A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P A x)
         \<Longrightarrow> x \<Ztypecolon> \<phi>Dependent_Sum T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) (snd x) \<close>
     and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
@@ -269,7 +268,7 @@ lemma [embed_into_\<phi>type]:
 lemma [embed_into_\<phi>type]:
   \<open> {x. P c x} \<Ztypecolon> \<S> T \<s>\<u>\<b>\<j> c. \<top> \<equiv> {x. \<exists>c. P c x} \<Ztypecolon> \<S> T\<close>
   unfolding atomize_eq BI_eq_iff
-  by clarsimp blast
+  by clarsimp
 
 paragraph \<open>Conversion Setup\<close>
 
@@ -510,6 +509,12 @@ lemma [\<phi>reason 1200]:
 
 
 subsubsection \<open>Algebraic Properties\<close>
+
+lemma \<phi>Composition_Separation_Homo\<^sub>I:
+  \<open> Object_Sep_Homo\<^sub>I B D
+\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) DD (\<lambda>x. x)\<close>
+  unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
+  apply clarsimp
 
 lemma \<phi>Composition_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>I B UNIV
@@ -804,7 +809,7 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 0]]
+ declare [[\<phi>trace_reasoning = 3]]
 
 
 
@@ -1249,6 +1254,51 @@ lemma [\<phi>inhabitance_rule 1000]:
 *)
 
 
+
+subsection \<open>Morphism of Separation Homomorphism\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def \<phi>sep_homo_morph :: \<open>('a::sep_magma \<Rightarrow> 'c::sep_magma) \<Rightarrow> ('c,'a) \<phi>\<close>
+  where \<open>\<phi>sep_homo_morph \<psi> = (\<phi>Fun \<psi> \<phi>\<s>\<u>\<b>\<j> homo_sep \<psi>)\<close>
+  deriving Basic
+       and \<open>Object_Equiv (\<phi>sep_homo_morph \<psi>) (\<lambda>x y. \<psi> x = \<psi> y)\<close>
+       and Is_Functional
+       and Open_Abstraction_Full
+
+lemma [\<phi>reason add]:
+  \<open> Object_Sep_Homo\<^sub>I (\<phi>sep_homo_morph \<psi>) {(y,x). \<psi> x ## \<psi> y \<longrightarrow> x ## y} \<close>
+  unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
+  by (clarsimp simp add: homo_sep_def homo_sep_mult_def homo_sep_disj_def)
+
+lemma
+  \<open> (x \<Ztypecolon> \<phi>sep_homo_morph \<psi>) * (y \<Ztypecolon> \<phi>sep_homo_morph \<psi>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x * y \<Ztypecolon> \<phi>sep_homo_morph \<psi> \<w>\<i>\<t>\<h> x ## y
+\<Longrightarrow> x ## y\<close>
+  unfolding Transformation_def
+  apply (clarsimp simp add: homo_sep_def)
+
+lemma [\<phi>reason add]:
+  \<open> Object_Sep_Homo\<^sub>E (\<phi>sep_homo_morph \<psi>) \<close>
+  unfolding Object_Sep_Homo\<^sub>E_def Transformation_def
+  by (clarsimp simp add: homo_sep_def homo_sep_mult_def homo_sep_disj_def)
+
+term \<open>Object_Equiv (\<phi>sep_homo_morph \<psi>) (\<lambda>x y. \<psi> x = \<psi> y)\<close>
+
+\<phi>type_def \<phi>sep_homo :: \<open>('a::sep_magma \<Rightarrow> 'b::sep_magma) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
+  where \<open>\<phi>sep_homo \<psi> T = (\<lambda>x. x \<Ztypecolon> \<phi>Fun \<psi> \<Zcomp> T \<s>\<u>\<b>\<j> homo_sep \<psi>)\<close>
+  deriving (*Basic
+       and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<phi>sep_homo \<psi> T) eq \<close>
+       and \<open>Object_Equiv (\<phi>sep_homo T \<circle>) (\<lambda>_ _. True)\<close>
+       and Functional_Transformation_Functor
+       and*) Separation_Homo\<^sub>E
+
+thm \<phi>sep_homo.unfold
+
+term \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<phi>sep_homo \<psi> T) eq \<close>
+term \<open>Object_Equiv (\<phi>sep_homo T \<circle>) (\<lambda>_ _. True)\<close>
+
+
+
 section \<open>Permission \& Share\<close>
 
 subsection \<open>Share \& Option\<close>
@@ -1262,6 +1312,9 @@ definition \<phi>Sep_Disj_Inj :: \<open>'a::share_semimodule_sep set \<Rightarro
   where \<open>\<phi>Sep_Disj_Inj S \<longleftrightarrow> (\<forall>u v. u \<in> S \<and> v \<in> S \<and> u ## v \<longrightarrow> u = v) \<and> (\<forall>u. u \<in> S \<longrightarrow> u ## u)\<close>
 
 subsubsection \<open>The \<phi>-Type of Separation Homomorphism\<close>
+
+
+
 
 
 subsubsection \<open>Insertion Functor\<close>
@@ -1322,7 +1375,7 @@ lemma \<phi>insertion_Prod:
   \<open> \<phi>Sep_Disj U T
 \<Longrightarrow> \<phi>insertion f D (T \<^emph> U) = (\<phi>insertion f D T) \<^emph> (\<phi>insertion f D U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def)
+  apply (metis homo_sep_def homo_sep_disj_def homo_sep_mult_def sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def)
   
   
 
@@ -1374,7 +1427,7 @@ lemma \<phi>insertion_Prod_imply:
   \<open>x \<Ztypecolon> \<phi>insertion f D (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<phi>insertion f D T) \<^emph> (\<phi>insertion f D U)\<close>
   unfolding Transformation_def
   apply (cases x; clarsimp simp add: \<phi>expns)
-  by (metis homo_sep_def homo_sep_disj_semi_def homo_sep_mult_def sep_insertion.axioms(1) sep_insertion_1.axioms sep_insertion_monoid.axioms perm_ins_homo.axioms(1)
+  by (metis homo_sep_def homo_sep_disj_def homo_sep_mult_def sep_insertion.axioms(1) sep_insertion_1.axioms sep_insertion_monoid.axioms perm_ins_homo.axioms(1)
 
 
 thm perm_ins_homo.axioms(1)

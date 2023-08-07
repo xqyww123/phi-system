@@ -115,9 +115,9 @@ lemma push_map_dom1_eq[simp]:
 
 subsubsection \<open>Algebraic Properties\<close>
 
-lemma homo_sep_disj_total_push_map:
-  \<open>homo_sep_disj_total (push_map k :: ('k list \<Rightarrow> 'a::sep_magma_1) \<Rightarrow> ('k list \<Rightarrow> 'a::sep_magma_1) )\<close>
-  unfolding homo_sep_disj_total_def push_map_def
+lemma homo_sep_disj_closed_push_map:
+  \<open>homo_sep_disj_closed (push_map k :: ('k list \<Rightarrow> 'a::sep_magma_1) \<Rightarrow> ('k list \<Rightarrow> 'a::sep_magma_1) )\<close>
+  unfolding homo_sep_disj_closed_def push_map_def
   by (auto simp add: sep_disj_fun_def, metis append_eq_conv_conj)
 
 lemma homo_sep_mult_push_map:

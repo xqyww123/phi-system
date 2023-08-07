@@ -148,7 +148,7 @@ fun OE_reasoning phi ctxt rule =
           ctxt' rule
   end
 
-fun gen_obj_equal_singular (_,name) _ (phi0 : phi_type) thy =
+fun gen_obj_equal_singular (_,name) hint (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
       val rule = if #is_recursive phi0
@@ -167,8 +167,7 @@ fun gen_obj_equal_singular (_,name) _ (phi0 : phi_type) thy =
                       end
                  else rule0
 
-      val parse_hint = parse_hint_has_type_operator_only (
-              fn \<^Const>\<open>Object_Equiv _ _\<close> $ (F $ Const(\<^const_name>\<open>\<phi>None\<close>, _)) $ _ => F)
+      val parse_hint = parse_hint_has_type_only (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T $ _ => T)
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
@@ -208,7 +207,7 @@ fun gen_obj_equal_singular (_,name) _ (phi0 : phi_type) thy =
                                       [(SOME ([0], ind_conv true ), OEO_reasoning1),
                                        (SOME ([0], ind_conv false), OEO_reasoning2)],
                                       K NONE, K I)
-                                     phi0 NONE ctxt0
+                                     phi0 hint ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
@@ -270,7 +269,7 @@ fun chk_is_singular ctxt tm =
 fun gen_obj_equal'' name NONE phi thy = gen_obj_equal' name NONE phi thy
   | gen_obj_equal'' name (SOME H) phi thy =
       if chk_is_singular thy H
-      then gen_obj_equal_singular name NONE phi thy
+      then gen_obj_equal_singular name (SOME H) phi thy
       else gen_obj_equal' name (SOME H) phi thy
 
 in

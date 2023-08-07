@@ -499,20 +499,29 @@ end
 
 subsection \<open>Homomorphisms\<close>
 
-locale homo_sep_disj_semi =
+locale homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
   assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> (* TODO: improve this to be a \<longleftrightarrow> ! *)
 
-
-locale homo_sep_disj_total =
+locale homo_sep_disj_closed =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
   assumes sep_disj_homo[iff]: \<open>\<psi> a ## \<psi> b \<longleftrightarrow> a ## b\<close>
+begin
+sublocale homo_sep_disj by standard simp
+end
 
-lemma homo_sep_disj_total_comp:
-  \<open> homo_sep_disj_total f
-\<Longrightarrow> homo_sep_disj_total g
-\<Longrightarrow> homo_sep_disj_total (f o g)\<close>
-  unfolding homo_sep_disj_total_def
+lemma homo_sep_disj_comp:
+  \<open> homo_sep_disj f
+\<Longrightarrow> homo_sep_disj g
+\<Longrightarrow> homo_sep_disj (f o g) \<close>
+  unfolding homo_sep_disj_def
+  by simp
+
+lemma homo_sep_disj_closed_comp:
+  \<open> homo_sep_disj_closed f
+\<Longrightarrow> homo_sep_disj_closed g
+\<Longrightarrow> homo_sep_disj_closed (f o g)\<close>
+  unfolding homo_sep_disj_closed_def
   by simp
 
 locale homo_sep_mult =
@@ -520,11 +529,11 @@ locale homo_sep_mult =
   assumes homo_mult: "x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y"
 
 lemma homo_sep_mult_comp:
-  \<open> homo_sep_disj_semi f
+  \<open> homo_sep_disj f
 \<Longrightarrow> homo_sep_mult f
 \<Longrightarrow> homo_sep_mult g
 \<Longrightarrow> homo_sep_mult (g o f)\<close>
-  unfolding homo_sep_mult_def homo_sep_disj_semi_def
+  unfolding homo_sep_mult_def homo_sep_disj_def
   by clarsimp
 
 locale homo_join_sub =
@@ -532,7 +541,7 @@ locale homo_join_sub =
     and D :: \<open>'a set\<close>
   assumes homo_join_sub: \<open>x \<in> D \<and> y \<in> D \<Longrightarrow> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
 
-locale homo_sep = homo_sep_mult \<psi> + homo_sep_disj_semi \<psi>
+locale homo_sep = homo_sep_mult \<psi> + homo_sep_disj \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
   \<comment> \<open>Non-closed (weak) homomorphism. This is the standard homomorphism in partial algebras. []\<close>
 
@@ -577,8 +586,11 @@ text \<open>
 
 lemma homo_sep_comp:
   \<open>homo_sep f \<Longrightarrow> homo_sep g \<Longrightarrow> homo_sep (f o g)\<close>
-  unfolding homo_sep_mult_def homo_sep_disj_semi_def homo_sep_def
+  unfolding homo_sep_mult_def homo_sep_disj_def homo_sep_def
   by simp
+
+locale closed_homo_sep = homo_sep + homo_sep_disj_closed
+
 
 locale sep_insertion = homo_sep \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
@@ -621,7 +633,7 @@ lemma sep_insertion_comp:
 \<Longrightarrow> sep_insertion f Df \<Longrightarrow> sep_insertion g Dg \<Longrightarrow> sep_insertion (f o g) Dg\<close>
   unfolding sep_insertion_def sep_insertion_axioms_def
   by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
-      smt (verit, ccfv_threshold) homo_sep.axioms(2) homo_sep_disj_semi.sep_disj_homo_semi)
+      smt (verit, ccfv_threshold) homo_sep.axioms(2) homo_sep_disj.sep_disj_homo_semi)
 
 lemma sep_insertion_1_comp:
   \<open> g ` Dg \<subseteq> Df
@@ -986,8 +998,41 @@ end
 
 section \<open>Instances of Algebras\<close>
 
-(*TODO: some structures like partial map contain plenty of various helper lemmas that
+(*TODO: some structures like partial map contain many helper lemmas that
 are not settled down properly.*)
+
+subsection \<open>Identity\<close>
+
+lemma homo_sep_disj_closed_id:
+  \<open>homo_sep_disj_closed (\<lambda>x. x)\<close>
+  unfolding homo_sep_disj_closed_def
+  by simp
+
+lemma homo_sep_disj_id:
+  \<open>homo_sep_disj (\<lambda>x. x)\<close>
+  unfolding homo_sep_disj_def
+  by simp
+
+lemma homo_sep_mult_id:
+  \<open>homo_sep_mult (\<lambda>x. x)\<close>
+  unfolding homo_sep_mult_def
+  by simp
+
+lemma homo_one_id:
+  \<open>homo_one (\<lambda>x. x)\<close>
+  unfolding homo_one_def
+  by simp
+
+lemma homo_sep_id:
+  \<open>homo_sep (\<lambda>x. x)\<close>
+  unfolding homo_sep_def
+  by (simp add: homo_sep_mult_id homo_sep_disj_id)
+
+lemma closed_homo_sep:
+  \<open>closed_homo_sep (\<lambda>x. x)\<close>
+  unfolding closed_homo_sep_def
+  by (simp add: homo_sep_id homo_sep_disj_closed_id)
+
 
 subsection \<open>Option\<close>
 

@@ -65,7 +65,7 @@ it does not require the physical resource to be separable because any structure 
 locale sep_inj_proj =
   inj: homo_sep inject + inj: homo_one inject +
   prj: homo_sep project + prj: homo_one project +
-  inj: homo_sep_disj_total inject
+  inj: homo_sep_disj_closed inject
   for inject :: \<open>'T::sep_algebra \<Rightarrow> 'REP::sep_algebra\<close>
   and project:: \<open>'REP::sep_algebra \<Rightarrow> 'T::sep_algebra\<close>
     \<comment> \<open>the project' cannot be arbitrarily any inverse function of the inject',
@@ -104,8 +104,8 @@ lemma sep_inj_proj_comp:
 \<Longrightarrow> sep_inj_proj f2 g2
 \<Longrightarrow> sep_inj_proj (f2 o f1) (g1 o g2)\<close>
   unfolding sep_inj_proj_def sep_inj_proj_axioms_def
-  apply (clarsimp simp add: homo_sep_comp homo_sep_disj_total_comp homo_one_def)
-  using homo_sep_disj_total.sep_disj_homo by blast
+  apply (clarsimp simp add: homo_sep_comp homo_sep_disj_closed_comp homo_one_def)
+  using homo_sep_disj_closed.sep_disj_homo by blast
 
 
 locale sep_space_entry =

@@ -245,12 +245,13 @@ lemmas [assertion_simps] =
   add_0_right[where 'a=\<open>'a::sep_magma BI\<close>] add_0_left[where 'a=\<open>'a::sep_magma BI\<close>]
   zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
   plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
-  Subjection_Zero Subjection_times Subjection_addconj
+  Subjection_Subjection Subjection_Zero Subjection_times Subjection_addconj
   ExSet_simps(1,3,4,5,6)
   distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
   \<phi>V_simps
   \<phi>Prod_expn'' \<phi>Prod_expn'
+  HOL.simp_thms
 
 lemmas [assertion_simps_source] =
           ExSet_times_left ExSet_times_right ExSet_simps_adconj ExSet_simps_addisj
@@ -920,6 +921,13 @@ lemma [\<phi>reason 1200]:
 lemma [\<phi>reason 1200]:
   \<open>Identity_Element\<^sub>E (any \<Ztypecolon> \<phi>None)\<close>
   unfolding Identity_Element\<^sub>E_def by simp
+
+
+
+subsection \<open>Determine Separation Disjunction from Specification\<close>
+
+definition Separation_Disj :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+  where \<open>Separation_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>
 
 
 
