@@ -185,7 +185,7 @@ lemma \<F>_functional_condition_Map_of_Val_ins_dom:
   by (clarsimp; case_tac r; case_tac x; simp)
 
 (*
-interpretation Map_of_Val_ins_UNIV: cancl_sep_insertion_monoid \<open>Map_of_Val_ins\<close> UNIV
+interpretation Map_of_Val_ins_UNIV: cancl_sep_orthogonal_monoid \<open>Map_of_Val_ins\<close> UNIV
   apply (standard; clarsimp simp add: Map_of_Val_ins_def split_nosep_meta_all
                                       Map_of_Val_ins_dom_def
                             split: option.split)
@@ -195,7 +195,7 @@ interpretation Map_of_Val_ins_UNIV: cancl_sep_insertion_monoid \<open>Map_of_Val
   using Mapof_not_1 apply fastforce *)
   
 
-interpretation Map_of_Val_ins: cancl_sep_insertion_monoid \<open>Map_of_Val_ins\<close> \<open>Map_of_Val_ins_dom TY\<close>
+interpretation Map_of_Val_ins: cancl_sep_orthogonal_monoid \<open>Map_of_Val_ins\<close> \<open>Map_of_Val_ins_dom TY\<close>
   apply (standard; clarsimp simp add: Map_of_Val_ins_def split_nosep_meta_all
                                       Map_of_Val_ins_dom_def
                             split: option.split)

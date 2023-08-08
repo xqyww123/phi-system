@@ -145,9 +145,9 @@ lemma
   \<open>(1(memaddr.blk addr := to_share \<circ> memaddr.index addr \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)) \<Ztypecolon> FIC.aggregate_mem.\<phi> Itself)
     = (v \<Ztypecolon> \<m>\<e>\<m>[addr] ([] \<^bold>\<rightarrow> to_share.\<phi> (\<black_circle> Nosep Itself)))\<close>
   unfolding set_eq_iff
-  apply (clarsimp simp add: \<phi>expns to_share.perm_ins_homo_axioms)
+  apply (clarsimp simp add: \<phi>expns to_share.share_orthogonal_homo_axioms)
 
-thm to_share.perm_ins_homo_axioms
+thm to_share.share_orthogonal_homo_axioms
 
 
 

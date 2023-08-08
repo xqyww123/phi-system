@@ -198,13 +198,13 @@ lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> \<circle>) = 
 
 
 lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi>insertion ?\<psi> _ \<circle>) = ?Z @action clean_automation_waste\<close>]:
-  \<open> sep_insertion_monoid \<psi> D
+  \<open> sep_orthogonal_monoid \<psi> D
 \<Longrightarrow> (x \<Ztypecolon> \<phi>insertion \<psi> D \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>insertion_\<phi>None
   by simp
 
-declare perm_ins_homo_pointwise[\<phi>reason 1200]
-        perm_ins_homo_to_share[\<phi>reason 1200]
+declare share_orthogonal_homo_pointwise[\<phi>reason 1200]
+        share_orthogonal_homo_to_share[\<phi>reason 1200]
 
 lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> ?T \<^emph> \<circle>) = ?Z @action clean_automation_waste\<close>]:
   \<open>((x,y) \<Ztypecolon> T \<^emph> \<circle>) = ((x \<Ztypecolon> T) :: 'a::sep_magma_1 set) @action clean_automation_waste\<close>
@@ -918,7 +918,7 @@ lemma Structural_Extract_\<phi>insertion:
                        P\<close>
   unfolding Structural_Extract_def Transformation_def \<phi>Sep_Disj_def
   apply (clarsimp simp add: \<phi>expns)
-  by (metis (no_types, lifting) homo_sep _def homo_sep_disj_def homo_sep_mult.homo_mult sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def perm_ins_homo.axioms(1))
+  by (metis (no_types, lifting) homo_sep _def homo_sep_disj_def homo_sep_mult.homo_mult sep_orthogonal_1_def sep_orthogonal_def sep_orthogonal_monoid_def share_orthogonal_homo.axioms(1))
 
 declare Structural_Extract_\<phi>insertion[THEN SE_clean_waste, \<phi>reason 1200]
 

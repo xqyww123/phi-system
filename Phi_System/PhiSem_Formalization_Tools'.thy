@@ -483,7 +483,7 @@ subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
    R: resource Res
-+  share: perm_ins_homo \<psi>
++  share: share_orthogonal_homo \<psi>
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
       \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
 for Res :: "'T::sep_algebra resource_entry"
@@ -544,7 +544,7 @@ lemma expand:
 
 (*lemma expand_conj:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP (r * mk (perm_ins_homo x))) \<and> r ## mk (perm_ins_homo x)
+\<Longrightarrow> (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP (r * mk (share_orthogonal_homo x))) \<and> r ## mk (share_orthogonal_homo x)
 \<longleftrightarrow> (\<s>\<t>\<a>\<t>\<e> s \<i>\<s> \<I> INTERP r * { R.mk x })\<close>
   unfolding \<phi>Res_Sat_def
   subgoal premises prems
@@ -823,10 +823,10 @@ lemma "__dispose_rule__":
             simplified, simplified one_set_def[symmetric], simplified] .
 
 (*depreciate*)
-abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
-  where \<open>perm_ins_homo \<equiv> (o) to_share\<close>
+abbreviation share_orthogonal_homo :: \<open>('key \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'val share option)\<close>
+  where \<open>share_orthogonal_homo \<equiv> (o) to_share\<close>
 (*depreciate*)
-abbreviation \<open>share_fiction \<equiv> basic_fiction ;\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
+abbreviation \<open>share_fiction \<equiv> basic_fiction ;\<^sub>\<I> \<F>_functional share_orthogonal_homo\<close>
 
 (* lemma share_fiction_expn_full:
   \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<Znrres> v))))
@@ -905,12 +905,12 @@ for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entr
 and Fic :: "('key \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> ..
+sublocale permission_fiction Res \<open>R.share_orthogonal_homo\<close> ..
 
 lemma expand:
   \<open> r \<in> FIC.SPACE
-\<Longrightarrow> r ## mk (R.perm_ins_homo x)
-\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (R.perm_ins_homo x))) =
+\<Longrightarrow> r ## mk (R.share_orthogonal_homo x)
+\<Longrightarrow> \<phi>Res_Spec (\<I> INTERP (r * mk (R.share_orthogonal_homo x))) =
     \<phi>Res_Spec (\<I> INTERP r * {R.mk x} )\<close>
   subgoal premises prems
     using expand_subj[where r=r and x=x, simplified prems(2) Subjection_True, OF prems(1)] . .
@@ -1055,9 +1055,9 @@ lemma "__dispose_rule__":
       using prems(10) prems(6) t1 by force
   qed .
 
-abbreviation perm_ins_homo :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
-  where \<open>perm_ins_homo \<equiv> (o) ((o) to_share)\<close>
-abbreviation \<open>share_fiction \<equiv> basic_fiction ;\<^sub>\<I> \<F>_functional perm_ins_homo\<close>
+abbreviation share_orthogonal_homo :: \<open>('key \<Rightarrow> 'key2 \<Rightarrow> 'val option) \<Rightarrow> ('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option)\<close>
+  where \<open>share_orthogonal_homo \<equiv> (o) ((o) to_share)\<close>
+abbreviation \<open>share_fiction \<equiv> basic_fiction ;\<^sub>\<I> \<F>_functional share_orthogonal_homo\<close>
 
 (*depreciated!*)
 (*lemma share_fiction_expn_full':
@@ -1174,10 +1174,10 @@ locale share_fiction_for_partial_mapping_resource2 =
     and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) fiction_entry"
 begin
 
-sublocale permission_fiction Res \<open>R.perm_ins_homo\<close> ..
+sublocale permission_fiction Res \<open>R.share_orthogonal_homo\<close> ..
 
 lemma [simp]:
-  \<open>R.perm_ins_homo (1(k := f)) = 1(k := to_share o f)\<close>
+  \<open>R.share_orthogonal_homo (1(k := f)) = 1(k := to_share o f)\<close>
   unfolding fun_eq_iff by simp
 
 lemmas partial_implies = partial_implies_raw

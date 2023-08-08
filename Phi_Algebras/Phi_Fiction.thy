@@ -27,8 +27,9 @@ text \<open>
   The interpretation can be any map to set that preserves \<open>1\<close>, the unit of the separation algebra.\<close>
 
 
-type_synonym ('a,'b) interp = \<open>'a \<Rightarrow> 'b set\<close>
-type_synonym ('a,'b) unital_homo_interp = \<open>('a, 'b set) unital_homo\<close>
+type_synonym 'a spec = \<open>'a set\<close>
+type_synonym ('a,'b) interp = \<open>'a \<Rightarrow> 'b spec\<close>
+type_synonym ('a,'b) unital_homo_interp = \<open>('a, 'b spec) unital_homo\<close>
 
 (*
 definition \<I>\<^sub>r\<^sub>e\<^sub>l :: \<open>('a::one,'b::one) interp \<Rightarrow> ('a \<times> 'b) set\<close> 
@@ -140,7 +141,8 @@ lemma refinement_ExSet:
   by (clarsimp simp add: ExSet_expn_set subset_iff Image_def Bex_def Id_on_iff, blast)
 
 
-definition \<open>refinement_projection I D = \<Union> (I ` (UNIV * D))\<close>
+definition refinement_projection :: \<open>('abstract::sep_magma \<Rightarrow> 'concrete set) \<Rightarrow> 'abstract spec \<Rightarrow> 'concrete spec\<close>
+  where \<open>refinement_projection I D = \<Union> (I ` (UNIV * D))\<close>
 
 lemma refinement_projection_mono:
   \<open> D \<subseteq> D'
@@ -435,11 +437,12 @@ lemma map_option_inj_at_1[simp]:
   unfolding one_option_def kernel_is_1_def
   by (simp add: split_option_all)
 
-lemma (in sep_insertion_monoid) \<F>_functional_projection:
+lemma (in sep_orthogonal_monoid) \<F>_functional_projection:
   \<open> S \<subseteq> D
 \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) (\<psi> ` S) \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
-  by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>] sep_insertion; blast)
+  apply (simp)
+  by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>] sep_orthogonal; blast)
 
 (*TODO: move this or remove this*)
 lemma kernel_is_1_pointwise[simp,intro!]:
@@ -492,12 +495,12 @@ lemma \<F>_functional_condition_UNIV[simp]:
   \<open>\<F>_functional_condition UNIV\<close>
   unfolding \<F>_functional_condition_def by simp
 
-definition frame_preserving_relation
+definition frame_preserving_relation \<comment> \<open>TODO: REALLY UGLY!\<close>
   where \<open>frame_preserving_relation R
     \<longleftrightarrow> (\<forall>a b c d r w. (a,b) \<in> R \<and> (c,d) \<in> R \<and> r * a = w * c \<and> r ## a \<and> r ## b \<and> w ## c
             \<longrightarrow> r * b = w * d \<and> w ## d)\<close>
 
-context cancl_sep_insertion_monoid begin
+context cancl_sep_orthogonal_monoid begin
 
 lemma \<F>_functional_refinement_complex:
   \<open> (\<forall>a b. (a,b) \<in> R \<longrightarrow> a \<in> D \<and> b \<in> D)
@@ -505,7 +508,7 @@ lemma \<F>_functional_refinement_complex:
 \<Longrightarrow> Sep_Closed D
 \<Longrightarrow> Id_on UNIV * R \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` R \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` (Domain R) \<close>
   unfolding Fictional_Forward_Simulation_def
-  apply (auto simp add: set_mult_expn Subjection_expn_set sep_insertion Sep_Closed_def image_iff Bex_def)
+  apply (auto simp add: set_mult_expn Subjection_expn_set sep_orthogonal Sep_Closed_def image_iff Bex_def)
   by (smt (z3) frame_preserving_relation_def homo_mult sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
 
 lemma \<F>_functional_refinement:
@@ -513,7 +516,7 @@ lemma \<F>_functional_refinement:
 \<Longrightarrow> \<F>_functional_condition D
 \<Longrightarrow> Id_on UNIV * {(a, b)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` {(a,b)} \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` {a} \<close>
   unfolding Fictional_Forward_Simulation_def \<F>_functional_condition_def
-  apply (auto simp add: set_mult_expn Subjection_expn_set sep_insertion)
+  apply (auto simp add: set_mult_expn Subjection_expn_set sep_orthogonal)
   apply (metis (no_types, lifting) homo_mult sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
   by (metis sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_mult_assoc')
 
@@ -522,13 +525,13 @@ end
 subsubsection \<open>Cancellative Permission Insertion Homomorphism\<close>
 
 
-context cancl_perm_ins_homo begin
+context cancl_share_orthogonal_homo begin
 
 lemma refinement_projection_half_perm:
   \<open>S \<subseteq> D \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) ((share n o \<psi>) ` S) \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
-  by (auto simp add: set_mult_expn sep_insertion share_sep_wand',
-      insert perm_ins_homo.share_sep_wand' perm_ins_homo_axioms, blast)
+  by (auto simp add: set_mult_expn sep_orthogonal share_orthogonal',
+      insert share_orthogonal_homo.share_orthogonal' share_orthogonal_homo_axioms, blast)
 
 
 end

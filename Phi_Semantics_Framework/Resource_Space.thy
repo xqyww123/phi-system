@@ -75,7 +75,7 @@ locale sep_inj_proj =
               a * b = inject c \<longleftrightarrow> (\<exists>a' b'. a = inject a' \<and> b = inject b' \<and> a' * b' = c)\<close>
 begin
 
-sublocale inj: sep_insertion_monoid inject UNIV
+sublocale inj: sep_orthogonal_monoid inject UNIV
   by (standard; simp; metis mult_in_dom prj.sep_disj_homo_semi proj_inj)
 
 lemma inject_inj[iff]:

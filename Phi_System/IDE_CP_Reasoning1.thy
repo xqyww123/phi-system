@@ -927,13 +927,34 @@ lemma [\<phi>reason 1200]:
 
 section \<open>Determine Separation Disjunction from Specification\<close>
 
-definition Separation_Disj :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
-  where \<open>Separation_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>
+definition Separation_Disj :: \<open>('a::sep_magma \<Rightarrow> 'b::sep_magma) \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
+  where \<open>Separation_Disj \<psi> X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
+
+lemma
+  \<open> MEMOIZE homo_sep \<psi>
+\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>1
+\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>2
+\<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close>
+  for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
+  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
+  by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_right)
+
+lemma
+  \<open> MEMOIZE homo_sep \<psi>
+\<Longrightarrow> Separation_Disj \<psi> A\<^sub>1 B
+\<Longrightarrow> Separation_Disj \<psi> A\<^sub>2 B
+\<Longrightarrow> Separation_Disj \<psi> (A\<^sub>1 * A\<^sub>2) B\<close>
+  for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
+  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
+  by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_left)
+
+(*definition Separation_Disj :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+  where \<open>Separation_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>*)
 
 text \<open>
-  \<open>Separation_Disj A B\<close> asserts if any two elements in \<open>A\<close> and \<open>B\<close> respectively are compatible
-  in sense of having defined group operation (of separation algebra) between them.
-  The motivation to infer such compatibility is based on two reasons.
+\<open>Separation_Disj A B\<close> asserts if any two elements in \<open>A\<close> and \<open>B\<close> respectively are compatible
+in sense of having defined group operation (of separation algebra) between them.
+The motivation to infer such compatibility is based on two reasons.
 
 \<^enum> The implication reasoning \<open>Inhabited A \<longrightarrow> P\<close> infers a weaker but simpler approximation
   of the pure fact implied inside \<open>A\<close>.
@@ -978,6 +999,22 @@ text \<open>
   are closed. <The example of super permission>
 
   \<open>Separation_Disj A B\<close> allows the \<phi>-type transformation for non-closed separation homomorphism.
+
+  To enable \<open>x \<Ztypecolon> (\<psi> \<Zcomp> T) \<^emph> (\<psi> \<Zcomp> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> \<psi> \<Zcomp> (T \<^emph> U)\<close>, the weakest condition is
+  \<open>SD\<^sub>\<psi>'(A,B) \<longleftrightarrow> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<and> \<psi> u ## \<psi> v \<longrightarrow> \<exists>u' v'. u' \<Turnstile> A \<and> v' \<Turnstile> B \<and> \<psi>(u) * \<psi>(v) = \<psi>(u') * \<psi>(v') \<and> u' ## v')\<close>
+  However, \<open>SD\<^sub>\<psi>'(A,B)\<close> is difficult to automate. We fail to find a reasoning rule splitting \<open>SD\<^sub>\<psi>'(A,B\<^sub>1 \<^emph> B\<^sub>2)\<close>
+  the respective cases for \<open>B\<^sub>1\<close> and \<open>B\<^sub>2\<close>. Instead our \<open>Separation_Disj\<close> has simple rules, e.g.,
+  \<open> Separation_Disj \<psi> A B\<^sub>1
+\<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close>
+
+  Instead, we consider an over approximated form,
+  \<open>SD\<^sub>\<psi>(A,B) \<longleftrightarrow> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
+
+
+  If the \<open>\<psi>\<close> cannot be parameterized, and therefore universally quantified,
+  the weakest condition is then our \<open>Separation_Disj A B\<close>.
+
+Separation_Disj is an over approximation. 
 \<close>
 
 section \<open>Declaration of Reasonig Process\<close>

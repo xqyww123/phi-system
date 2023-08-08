@@ -1463,6 +1463,26 @@ ML_file \<open>library/recursion_guard.ML\<close>
 hide_fact Do_\<r>Recursion_Guard
 
 
+subsection \<open>Efficient Memoization\<close>
+
+text \<open>by adding the conclusion as a local reasoning rule, for conclusions containing no schematic
+  variables only.\<close>
+
+definition Memoize :: \<open>bool \<Rightarrow> bool\<close> ("MEMOIZE _" [9] 8) where [iff]: \<open>Memoize X \<equiv> X\<close>
+
+lemma Memoize_I: \<open>X \<Longrightarrow> Memoize X\<close> unfolding Memoize_def .
+lemma Memoize_D: \<open>Memoize X \<Longrightarrow> X\<close> unfolding Memoize_def .
+
+subsubsection \<open>Implementation\<close>
+
+ML_file \<open>library/memoization.ML\<close>
+
+\<phi>reasoner_ML Memoize 1000 (\<open>Memoize _\<close>) = \<open>fn (ctxt, sequent) => Seq.make (fn () =>
+  case Phi_Reasoners.tagged_memoize (ctxt, sequent)
+    of SOME s' => SOME (s', Seq.empty)
+     | NONE => SOME ((ctxt, @{thm' Memoize_I} RS' (ctxt, sequent)), Seq.empty))\<close>
+
+
 subsection \<open>Error Message\<close>
 
 \<phi>reasoner_ML TRACING 1200 (\<open>TRACING ?x\<close>) = \<open>fn (ctxt,sequent) =>

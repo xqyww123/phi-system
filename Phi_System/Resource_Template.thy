@@ -7,9 +7,9 @@ chapter \<open>Resource Bases and Templates\<close>
 
 section \<open>Preliminary\<close>
 
-interpretation to_share: cancl_perm_ins_homo \<open>to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option\<close> UNIV ..
+interpretation to_share: cancl_share_orthogonal_homo \<open>to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option\<close> UNIV ..
 interpretation pointwise_to_share:
-  cancl_perm_ins_homo \<open>(o) (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close> \<open>pointwise_set UNIV\<close>
+  cancl_share_orthogonal_homo \<open>(o) (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close> \<open>pointwise_set UNIV\<close>
   by (standard; standard)
 
 section \<open>Bases\<close>
@@ -282,7 +282,7 @@ private lemma from_fictional_refinement':
           \<phi>_expn[unfolded Satisfaction_def] Itself_expn[unfolded Satisfaction_def] set_mult_expn INTERP_SPEC
           Satisfaction_def Subjection_expn_set ExSet_expn_set Transition_of'_def
           LooseState_def split_sum_all INTERP_RES_def interp_split R.\<r>_valid_split'
-          R.inj.sep_insertion inj.sep_insertion prj.homo_mult eval_stat_forall split: eval_stat.split)
+          R.inj.sep_orthogonal inj.sep_orthogonal prj.homo_mult eval_stat_forall split: eval_stat.split)
   subgoal premises prems for r u y v y' rr
     thm prems
     thm prems(4)[THEN spec[where x=v], THEN spec[where x=x], THEN spec[where x=\<open>get r\<close>], THEN spec[where x=\<open>{u}\<close>], THEN spec[where x=\<open>y'\<close>]]
@@ -379,7 +379,7 @@ subsubsection \<open>Permission Fiction\<close>
 
 locale permission_fiction =
    R: resource Res
-+  share: perm_ins_homo \<psi>
++  share: share_orthogonal_homo \<psi>
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
       \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
 for Res :: "'T::sep_algebra resource_entry"
@@ -698,7 +698,7 @@ lemma getter_refinement:
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: set_mult_expn Id_on_iff
                               Subjection_expn_set prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
-                              inj.sep_insertion[simplified] in_invariant)
+                              inj.sep_orthogonal[simplified] in_invariant)
   by (smt (verit, ccfv_threshold) domI fun_upd_same image_iff mult_1_class.mult_1_left one_option_def option.sel sep_disj_fun_nonsepable(2) times_fun)
  
 
@@ -721,7 +721,7 @@ lemma setter_refinement:
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at k (F o the)\<close>]])
   unfolding Fictional_Forward_Simulation_def
   apply (clarsimp simp add: set_mult_expn Subjection_expn_set ExSet_expn_set
-            prj.homo_mult \<r>_valid_split' inj.sep_insertion[simplified])
+            prj.homo_mult \<r>_valid_split' inj.sep_orthogonal[simplified])
   subgoal premises prems for r R x' u v
   proof -
     have x1: \<open>r ## 1(k \<mapsto> v)\<close> using prems(4) by blast

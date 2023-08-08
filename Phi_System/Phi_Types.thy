@@ -1259,17 +1259,24 @@ subsection \<open>Morphism of Separation Homomorphism\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
-\<phi>type_def \<phi>sep_homo_morph :: \<open>('a::sep_magma \<Rightarrow> 'c::sep_magma) \<Rightarrow> ('c,'a) \<phi>\<close>
-  where \<open>\<phi>sep_homo_morph \<psi> = (\<phi>Fun \<psi> \<phi>\<s>\<u>\<b>\<j> homo_sep \<psi>)\<close>
+\<phi>type_def \<phi>sep_homo :: \<open>('a::sep_magma \<Rightarrow> 'c::sep_magma) \<Rightarrow> ('c,'a) \<phi>\<close>
+  where \<open>\<phi>sep_homo \<psi> = (\<phi>Fun \<psi> \<phi>\<s>\<u>\<b>\<j> homo_sep \<psi>)\<close>
   deriving Basic
-       and \<open>Object_Equiv (\<phi>sep_homo_morph \<psi>) (\<lambda>x y. \<psi> x = \<psi> y)\<close>
+       and \<open>Object_Equiv (\<phi>sep_homo \<psi>) (\<lambda>x y. \<psi> x = \<psi> y)\<close>
        and Is_Functional
        and Open_Abstraction_Full
 
 lemma [\<phi>reason add]:
-  \<open> Object_Sep_Homo\<^sub>I (\<phi>sep_homo_morph \<psi>) {(y,x). \<psi> x ## \<psi> y \<longrightarrow> x ## y} \<close>
+  \<open> Object_Sep_Homo\<^sub>I (\<phi>sep_homo \<psi>) {(y,x). \<psi> x ## \<psi> y \<longrightarrow> x ## y} \<close>
   unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
   by (clarsimp simp add: homo_sep_def homo_sep_mult_def homo_sep_disj_def)
+
+lemma \<phi>sep_homo_Prod:
+  \<open> (\<phi>sep_homo \<psi> \<Zcomp> (T \<^emph> U)) = (\<phi>sep_homo \<psi> \<Zcomp> T) \<^emph> (\<phi>sep_homo \<psi> \<Zcomp> U)\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add:; rule; clarsimp)
+  using homo_sep.axioms(1) homo_sep.axioms(2) homo_sep_disj_def homo_sep_mult_def apply blast
+  
+  
 
 lemma
   \<open> (x \<Ztypecolon> \<phi>sep_homo_morph \<psi>) * (y \<Ztypecolon> \<phi>sep_homo_morph \<psi>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x * y \<Ztypecolon> \<phi>sep_homo_morph \<psi> \<w>\<i>\<t>\<h> x ## y
@@ -1319,13 +1326,13 @@ subsubsection \<open>The \<phi>-Type of Separation Homomorphism\<close>
 
 subsubsection \<open>Insertion Functor\<close>
 
-declare perm_ins_homo_pointwise[\<phi>reason 1200]
-        perm_ins_homo_to_share[\<phi>reason 1200]
+declare share_orthogonal_homo_pointwise[\<phi>reason 1200]
+        share_orthogonal_homo_to_share[\<phi>reason 1200]
 
 declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi>insertion :: \<open>('a::sep_monoid \<Rightarrow> 'b::sep_monoid) \<Rightarrow> 'a set \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('b,'x) \<phi>\<close>
-  where \<open>\<phi>insertion \<psi> D T = (\<lambda>x. x \<Ztypecolon> \<phi>Fun \<psi> \<Zcomp> T \<s>\<u>\<b>\<j> sep_insertion_monoid \<psi> D)\<close>
+  where \<open>\<phi>insertion \<psi> D T = (\<lambda>x. x \<Ztypecolon> \<phi>Fun \<psi> \<Zcomp> T \<s>\<u>\<b>\<j> sep_orthogonal_monoid \<psi> D)\<close>
   deriving Basic
        and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<phi>insertion \<psi> D T) eq\<close>
        and Object_Equiv\<^sub>O
@@ -1334,11 +1341,11 @@ declare [[\<phi>trace_reasoning = 0]]
 
 term \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<phi>insertion \<psi> D T) eq\<close>
 
-abbreviation (in sep_insertion_monoid) \<open>\<phi> \<equiv> \<phi>insertion \<psi> D\<close>
+abbreviation (in sep_orthogonal_monoid) \<open>\<phi> \<equiv> \<phi>insertion \<psi> D\<close>
 
-lemma (in sep_insertion_monoid) [\<phi>expns]:
+lemma (in sep_orthogonal_monoid) [\<phi>expns]:
   \<open>p \<Turnstile> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = \<psi> v \<and> v \<Turnstile> (x \<Ztypecolon> T))\<close>
-  by (simp add: sep_insertion_monoid_axioms)
+  by (simp add: sep_orthogonal_monoid_axioms)
 
 paragraph \<open>Implication\<close>
 (*
@@ -1375,19 +1382,19 @@ lemma \<phi>insertion_Prod:
   \<open> \<phi>Sep_Disj U T
 \<Longrightarrow> \<phi>insertion f D (T \<^emph> U) = (\<phi>insertion f D T) \<^emph> (\<phi>insertion f D U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>Sep_Disj_def; rule; clarsimp)
-  apply (metis homo_sep_def homo_sep_disj_def homo_sep_mult_def sep_insertion_1_def sep_insertion_def sep_insertion_monoid_def)
+  apply (metis homo_sep_def homo_sep_disj_def homo_sep_mult_def sep_orthogonal_1_def sep_orthogonal_def sep_orthogonal_monoid_def)
   
   
 
 
 
 lemma \<phi>insertion_\<phi>None:
-  assumes prem: \<open>sep_insertion_monoid \<psi> D\<close>
+  assumes prem: \<open>sep_orthogonal_monoid \<psi> D\<close>
   shows \<open>\<phi>insertion \<psi> D \<circle> = \<circle>\<close>
 proof -
-  interpret sep_insertion_monoid \<psi> using prem .
+  interpret sep_orthogonal_monoid \<psi> using prem .
   show \<open>\<phi> \<circle> = \<circle>\<close>
-    by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns sep_insertion_monoid_axioms)
+    by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns sep_orthogonal_monoid_axioms)
 qed
 
 (* lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> \<phi>insertion ?\<psi> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action (?Act::?'a::simplification action)\<close>]:
@@ -1395,15 +1402,15 @@ qed
   for Act :: \<open>'a::simplification action\<close>
   unfolding Transformation_def Action_Tag_def
   apply (clarsimp simp add: \<phi>expns)
-  using inj_at_1_def perm_ins_homo'.axioms(5) by blast *)
+  using inj_at_1_def share_orthogonal_homo'.axioms(5) by blast *)
 
 lemma \<phi>insertion_MapAt:
   \<open>\<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow> T) = (k \<^bold>\<rightarrow> \<phi>insertion f D T)\<close>
 proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns \<phi>MapAt_def
-            sep_insertion_monoid_pointwise_eq; rule; clarsimp)
+            sep_orthogonal_monoid_pointwise_eq; rule; clarsimp)
   fix x :: 'a and va :: 'd
-  assume \<open>sep_insertion_monoid f D\<close>
-  then interpret sep_insertion_monoid f .
+  assume \<open>sep_orthogonal_monoid f D\<close>
+  then interpret sep_orthogonal_monoid f .
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> 1(k := va) = 1(k := v) \<and> (\<exists>va. v = f va \<and> va \<in> (x \<Ztypecolon> T))\<close> by fastforce
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. 1(k := f va) = f \<circ> v \<and> (\<exists>va. v = 1(k := va) \<and> va \<in> (x \<Ztypecolon> T))\<close>
     by (metis \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> 1(k := va) = 1(k := v) \<and> (\<exists>va. v = f va \<and> va \<in> (x \<Ztypecolon> T))\<close> comp_def fun_upd_same)
@@ -1412,10 +1419,10 @@ qed
 lemma \<phi>insertion_MapAt_L:
   \<open>\<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow>\<^sub>@ T) = (k \<^bold>\<rightarrow>\<^sub>@ \<phi>insertion ((o) f) (pointwise_set D) T)\<close>
 proof (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns
-            sep_insertion_monoid_pointwise_eq; rule; clarsimp)
+            sep_orthogonal_monoid_pointwise_eq; rule; clarsimp)
   fix x :: 'a and va :: \<open>'b list \<Rightarrow> 'd\<close>
-  assume \<open>sep_insertion_monoid f D\<close>
-  then interpret sep_insertion_monoid f .
+  assume \<open>sep_orthogonal_monoid f D\<close>
+  then interpret sep_orthogonal_monoid f .
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. f \<circ> k \<tribullet>\<^sub>m va = k \<tribullet>\<^sub>m v \<and> (\<exists>va. v = f \<circ> va \<and> va \<in> (x \<Ztypecolon> T))\<close>
     using homo_one_axioms push_map_homo by blast
   show \<open>va \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<exists>v. k \<tribullet>\<^sub>m (f \<circ> va) = f \<circ> v \<and> (\<exists>va. v = k \<tribullet>\<^sub>m va \<and> va \<in> (x \<Ztypecolon> T))\<close>
@@ -1427,10 +1434,10 @@ lemma \<phi>insertion_Prod_imply:
   \<open>x \<Ztypecolon> \<phi>insertion f D (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<phi>insertion f D T) \<^emph> (\<phi>insertion f D U)\<close>
   unfolding Transformation_def
   apply (cases x; clarsimp simp add: \<phi>expns)
-  by (metis homo_sep_def homo_sep_disj_def homo_sep_mult_def sep_insertion.axioms(1) sep_insertion_1.axioms sep_insertion_monoid.axioms perm_ins_homo.axioms(1)
+  by (metis homo_sep_def homo_sep_disj_def homo_sep_mult_def sep_orthogonal.axioms(1) sep_orthogonal_1.axioms sep_orthogonal_monoid.axioms share_orthogonal_homo.axioms(1)
 
 
-thm perm_ins_homo.axioms(1)
+thm share_orthogonal_homo.axioms(1)
 
 subsubsection \<open>Permission Annotation\<close>
 
@@ -1867,7 +1874,7 @@ lemma [\<phi>reason 1200]:
   \<open> \<phi>Sep_Disj X A
 \<Longrightarrow> \<phi>Sep_Disj X B
 \<Longrightarrow> \<phi>Sep_Disj X (A \<^emph> B) \<close>
-  for X :: \<open>('a::sep_disj_intuitive, 'b) \<phi>\<close>
+  for X :: \<open>('a::sep_disj_distrib, 'b) \<phi>\<close>
   unfolding \<phi>Sep_Disj_def
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
 
@@ -1875,7 +1882,7 @@ lemma [\<phi>reason 1300]:
   \<open> \<phi>Sep_Disj X Z
 \<Longrightarrow> \<phi>Sep_Disj Y Z
 \<Longrightarrow> \<phi>Sep_Disj (X \<^emph> Y) Z \<close>
-  for X :: \<open>('a::sep_disj_intuitive, 'b) \<phi>\<close>
+  for X :: \<open>('a::sep_disj_distrib, 'b) \<phi>\<close>
   unfolding \<phi>Sep_Disj_def
   by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
 

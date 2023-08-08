@@ -409,11 +409,11 @@ lemma map_option_inj_at_1[simp]:
   unfolding one_option_def kernel_is_1_def
   by (simp add: split_option_all)
 
-lemma (in sep_insertion_monoid) \<F>_functional_projection [simp]:
+lemma (in sep_orthogonal_monoid) \<F>_functional_projection [simp]:
   \<open> S \<subseteq> D
 \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) (\<psi> ` S) \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
-  by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>] sep_insertion; blast)
+  by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>] sep_orthogonal; blast)
 
 lemma kernel_is_1_pointwise[simp,intro!]:
   \<open>kernel_is_1 \<psi> D \<Longrightarrow> kernel_is_1 ((\<circ>) \<psi>) (pointwise_set D)\<close>
@@ -460,7 +460,7 @@ lemma refinement_projection:
   apply (clarsimp simp add: set_mult_expn Subjection_expn)
 subgoal for r R u v w *)
 
-context cancl_sep_insertion_monoid begin
+context cancl_sep_orthogonal_monoid begin
 
 lemma \<F>_functional_refinement:
   \<open> a \<in> D \<and> b \<in> D
@@ -468,7 +468,7 @@ lemma \<F>_functional_refinement:
 \<Longrightarrow> kernel_is_1 \<psi> D
 \<Longrightarrow> Id_on UNIV * {(a, b)} \<r>\<e>\<f>\<i>\<n>\<e>\<s> pairself \<psi> ` {(a,b)} \<w>.\<r>.\<t> \<F>_functional \<psi> D \<i>\<n> \<psi> ` {a} \<close>
   unfolding Fictional_Forward_Simulation_def
-  apply (auto simp add: set_mult_expn Subjection_expn sep_insertion)
+  apply (auto simp add: set_mult_expn Subjection_expn sep_orthogonal)
   apply (metis (no_types, lifting) homo_mult sep_cancel sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc)
   by (metis sep_cancel sep_disj_homo_semi sep_disj_multD1 sep_disj_multD2 sep_disj_multI1 sep_mult_assoc')
 
@@ -477,13 +477,13 @@ end
 subsubsection \<open>Cancellative Permission Insertion Homomorphism\<close>
 
 
-context cancl_perm_ins_homo begin
+context cancl_share_orthogonal_homo begin
 
 lemma refinement_projection_half_perm:
   \<open>S \<subseteq> D \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> refinement_projection (\<F>_functional \<psi> D) ((share n o \<psi>) ` S) \<subseteq> UNIV * S\<close>
   unfolding refinement_projection_def
-  by (auto simp add: set_mult_expn sep_insertion share_sep_wand',
-      insert perm_ins_homo.share_sep_wand' perm_ins_homo_axioms, blast)
+  by (auto simp add: set_mult_expn sep_orthogonal share_orthogonal',
+      insert share_orthogonal_homo.share_orthogonal' share_orthogonal_homo_axioms, blast)
 
 
 end
