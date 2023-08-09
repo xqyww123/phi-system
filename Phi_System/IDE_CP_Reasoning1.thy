@@ -931,30 +931,40 @@ definition Separation_Disj :: \<open>('a::sep_magma \<Rightarrow> 'b::sep_magma)
   where \<open>Separation_Disj \<psi> X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
 
 lemma
-  \<open> MEMOIZE homo_sep \<psi>
-\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>1
-\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>2
-\<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close>
-  for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
-  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
-  by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_right)
-
-lemma
-  \<open> MEMOIZE homo_sep \<psi>
-\<Longrightarrow> Separation_Disj \<psi> A\<^sub>1 B
-\<Longrightarrow> Separation_Disj \<psi> A\<^sub>2 B
-\<Longrightarrow> Separation_Disj \<psi> (A\<^sub>1 * A\<^sub>2) B\<close>
-  for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
-  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
-  by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_left)
-
-(*definition Separation_Disj :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
-  where \<open>Separation_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>*)
+  \<open> Inhabited A \<and> Inhabited (B\<^sub>1 * B\<^sub>2)
+\<Longrightarrow> Inhabited B\<^sub>1 \<longrightarrow> Inhabited (A * B\<^sub>1)
+\<Longrightarrow> Inhabited B\<^sub>2 \<longrightarrow> Inhabited (A * B\<^sub>2)
+\<Longrightarrow> Inhabited (A * (B\<^sub>1 * B\<^sub>2))\<close>
+  unfolding Inhabited_def
+  apply clarsimp
+  subgoal for p u v
+    apply (rule exI[where x=p]; simp)
 
 text \<open>
-\<open>Separation_Disj A B\<close> asserts if any two elements in \<open>A\<close> and \<open>B\<close> respectively are compatible
+\<open>Separation_Disj\<^sub>\<psi> A B\<close> and particular a simpler form
+\<open>Separation_Disj A B \<triangleq> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<longrightarrow> u ## v)\<close>
+assert if any two objects \<open>u,v\<close> satisfying \<open>A,B\<close> respectively are compatible
 in sense of having defined group operation (of separation algebra) between them.
 The motivation to infer such compatibility is based on two reasons.
+
+\<^enum> The standard homomorphism from a partial algebra \<open>\<A>\<close> to another \<open>\<B>\<close> only assumes the group operation
+  defined between two certain elements in \<open>\<A>\<close>, is also defined in \<open>\<B>\<close>, but not reversely, i.e.,
+  \<open>u ## v \<longrightarrow> \<psi>(u) ## \<psi>(v)   but not reversely necessarily\<close>
+  It hinders the transformation \<open>x \<Ztypecolon> F(T) \<^emph> F(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> F(T \<^emph> U)\<close>.
+  Certainly, we can ask a stronger assumption i.e. closed homomorphism to circumvent, but not all homomorphisms
+  are closed. <The example of super permission>
+
+  \<open>Separation_Disj\<^sub>\<psi> A B\<close> allows the \<phi>-type transformation for non-closed separation homomorphism.
+
+  To enable \<open>x \<Ztypecolon> (\<psi> \<Zcomp> T) \<^emph> (\<psi> \<Zcomp> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> \<psi> \<Zcomp> (T \<^emph> U)\<close>, the weakest condition is
+  \<open>SD\<^sub>\<psi>'(A,B) \<longleftrightarrow> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<and> \<psi> u ## \<psi> v \<longrightarrow> \<exists>u' v'. u' \<Turnstile> A \<and> v' \<Turnstile> B \<and> \<psi>(u) * \<psi>(v) = \<psi>(u') * \<psi>(v') \<and> u' ## v')\<close>
+  However, \<open>SD\<^sub>\<psi>'(A,B)\<close> is difficult to automate and \<open>\<psi>(u) * \<psi>(v) = \<psi>(u') * \<psi>(v')\<close> is hard to deal.
+  We fail to find a reasoning rule splitting \<open>SD\<^sub>\<psi>'(A, B\<^sub>1 \<^emph> B\<^sub>2)\<close> to the respective cases for \<open>B\<^sub>1\<close> and \<open>B\<^sub>2\<close>.
+  Due to this, we apply an approximation assuming the \<open>u',v'\<close> are equal to the \<open>u,v\<close>, and then
+  we get the form of \<open>Separation_Disj\<^sub>\<psi>\<close> and it has simpler reasoning rules such as
+  \<open> Separation_Disj \<psi> A B\<^sub>1
+\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>2
+\<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close> for separation homomorphism \<open>\<psi>\<close>.
 
 \<^enum> The implication reasoning \<open>Inhabited A \<longrightarrow> P\<close> infers a weaker but simpler approximation
   of the pure fact implied inside \<open>A\<close>.
@@ -985,27 +995,30 @@ The motivation to infer such compatibility is based on two reasons.
 \<Longrightarrow> Inhabited B \<longrightarrow> Q
 \<Longrightarrow> Separation_Disj A B
 \<Longrightarrow> Inhabited (A * B) \<longrightarrow> P \<and> Q\<close>
-  The exact condition for the rule is, \<open>Inhabited A \<and> Inhabited B \<longrightarrow> Inhabited (A * B)\<close>.
-  \<open>Separation_Disj A B\<close> is stronger than it due to two reasons, 1. we still need to consider the
+  The exact condition for the rule is, \<open>SD'(A,B) \<triangleq> Inhabited A \<and> Inhabited B \<longrightarrow> Inhabited (A * B)\<close>
+  or equivalently \<open>\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<longrightarrow> \<exists>u' v'. u' \<Turnstile> A \<and> v' \<Turnstile> B \<and> u' ## v'\<close>.
+  However, again, we fail to find a reasoning rule on the exact condition that splits \<open>SD'(A, B\<^sub>1 * B\<^sub>2)\<close>.
+  The main difficulty is the existential witness of \<open>SD'(A, B\<^sub>1)\<close> and of \<open>SD'(A, B\<^sub>2)\<close> have no connection
+  between each other, preventing us utilizing them to deduce \<open>SD'(A, B\<^sub>1 * B\<^sub>2)\<close>.
+
+  To automate it, again as an approximation we assume the \<open>u',v'\<close> are equal to \<open>u,v\<close>, and we obtain
+  \<open>Separation_Disj A B\<close> which is a special case of \<open>Separation_Disj\<^sub>\<psi> A B\<close> when \<open>\<psi>\<close> is the homomorphism
+  to the total algebra \<open>{\<epsilon>}\<close> of single-element.
+
+  Admittedly, \<open>Separation_Disj A B\<close> is very strong. Many \<phi>-types do not meet it unless at least
+  the \<phi>-type has a fixed domain of resources with a given object \<open>x\<close>. It excludes for instance
+  linked list because the addresses of the non-head nodes are indeterminate.
+  However, 
+
+  WRONG \& BAD!!!!
+
+, 1. we still need to consider the
   second motivation as mentioned above and discussed below. 2. our automation algorithm is limited
   in deriving the exact property and can only be an approximation as Separation_Disj. The limitation
   is due to what???
 
-\<^enum> The standard homomorphism from a partial algebra \<open>\<A>\<close> to another \<open>\<B>\<close> only assumes the group operation
-  defined between two certain elements in \<open>\<A>\<close>, is also defined in \<open>\<B>\<close>, but not reversely, i.e.,
-  \<open>u ## v \<longrightarrow> \<psi>(u) ## \<psi>(v)   but not reversely necessarily\<close>
-  It hinders the transformation \<open>x \<Ztypecolon> F(T) \<^emph> F(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> F(T \<^emph> U)\<close>.
-  Certainly, we can ask a stronger assumption i.e. closed homomorphism to circumvent, but not all homomorphisms
-  are closed. <The example of super permission>
 
-  \<open>Separation_Disj A B\<close> allows the \<phi>-type transformation for non-closed separation homomorphism.
-
-  To enable \<open>x \<Ztypecolon> (\<psi> \<Zcomp> T) \<^emph> (\<psi> \<Zcomp> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> \<psi> \<Zcomp> (T \<^emph> U)\<close>, the weakest condition is
-  \<open>SD\<^sub>\<psi>'(A,B) \<longleftrightarrow> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<and> \<psi> u ## \<psi> v \<longrightarrow> \<exists>u' v'. u' \<Turnstile> A \<and> v' \<Turnstile> B \<and> \<psi>(u) * \<psi>(v) = \<psi>(u') * \<psi>(v') \<and> u' ## v')\<close>
-  However, \<open>SD\<^sub>\<psi>'(A,B)\<close> is difficult to automate. We fail to find a reasoning rule splitting \<open>SD\<^sub>\<psi>'(A,B\<^sub>1 \<^emph> B\<^sub>2)\<close>
-  the respective cases for \<open>B\<^sub>1\<close> and \<open>B\<^sub>2\<close>. Instead our \<open>Separation_Disj\<close> has simple rules, e.g.,
-  \<open> Separation_Disj \<psi> A B\<^sub>1
-\<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close>
+  
 
   Instead, we consider an over approximated form,
   \<open>SD\<^sub>\<psi>(A,B) \<longleftrightarrow> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
@@ -1016,6 +1029,62 @@ The motivation to infer such compatibility is based on two reasons.
 
 Separation_Disj is an over approximation. 
 \<close>
+
+type_synonym ('a,'d) domainoid = \<open>('d \<Rightarrow> 'd \<Rightarrow> bool) \<times> ('a \<Rightarrow> 'd)\<close>
+definition domainoid :: \<open>('a::sep_magma,'d) domainoid \<Rightarrow> bool\<close>
+  where \<open>domainoid rel_dm \<longleftrightarrow> (\<forall>a b. a ## b \<longleftrightarrow> fst rel_dm (snd rel_dm a) (snd rel_dm b))\<close>
+
+(* A --domainoid--> D(A)
+   | \<psi>               | D(\<psi>)
+   v                 v
+   B --domainoid--> D(B) *)
+definition homo_domainoid :: \<open> ('a::sep_magma,'da) domainoid
+                            \<Rightarrow> ('b::sep_magma,'ba) domainoid
+                            \<Rightarrow> ('a \<Rightarrow> 'b)
+                            \<Rightarrow> ('da \<Rightarrow> 'ba)
+                            \<Rightarrow> bool\<close>
+  where \<open>homo_domainoid D\<^sub>A D\<^sub>B \<psi> \<psi>\<^sub>D \<longleftrightarrow>
+            domainoid D\<^sub>A \<and> domainoid D\<^sub>B \<and> homo_sep \<psi> \<and>
+            (\<forall>a. snd D\<^sub>B (\<psi> a) = \<psi>\<^sub>D (snd D\<^sub>A a))\<close>
+
+definition Domainoid :: \<open>('c::sep_magma,'d) domainoid \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'd set) \<Rightarrow> bool\<close>
+  where \<open>Domainoid dm T dm' \<longleftrightarrow> domainoid dm \<and> (\<forall>x u. u \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> snd dm u \<in> dm' x )\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> Domainoid dm\<^sub>A T dm\<^sub>T
+\<Longrightarrow> Domainoid dm\<^sub>A U dm\<^sub>U
+\<Longrightarrow> homo_domainoid dm\<^sub>A dm\<^sub>B \<psi> \<psi>\<^sub>D \<or>\<^sub>c\<^sub>u\<^sub>t dm\<^sub>B = (\<lambda>_ _. True, undefined)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>d\<^sub>x d\<^sub>y. d\<^sub>x \<in> dm\<^sub>T x \<and> d\<^sub>y \<in> dm\<^sub>U y \<and> fst dm\<^sub>B (\<psi>\<^sub>D d\<^sub>x) (\<psi>\<^sub>D d\<^sub>y) \<longrightarrow> fst dm\<^sub>A d\<^sub>x d\<^sub>y)
+\<Longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<close>
+  for \<psi> :: \<open>'c::sep_magma \<Rightarrow> 'cc::sep_magma\<close>
+  unfolding Separation_Disj_def Domainoid_def domainoid_def Premise_def homo_domainoid_def
+            Orelse_shortcut_def
+  by (elim disjE; clarsimp)
+
+
+
+lemma [\<phi>reason 1000]:
+  \<open> MEMOIZE homo_sep \<psi>
+\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>1
+\<Longrightarrow> Separation_Disj \<psi> A B\<^sub>2
+\<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close>
+  for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
+  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
+  by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_right)
+
+lemma [\<phi>reason 1000]:
+  \<open> MEMOIZE homo_sep \<psi>
+\<Longrightarrow> Separation_Disj \<psi> A\<^sub>1 B
+\<Longrightarrow> Separation_Disj \<psi> A\<^sub>2 B
+\<Longrightarrow> Separation_Disj \<psi> (A\<^sub>1 * A\<^sub>2) B\<close>
+  for \<psi> :: \<open>'a::sep_disj_distrib \<Rightarrow> 'b::sep_disj_distrib\<close>
+  unfolding Separation_Disj_def homo_sep_def homo_sep_mult_def
+  by (clarsimp, metis homo_sep_disj_def sep_disj_distrib_left)
+
+(*definition Separation_Disj :: \<open>'a::sep_magma set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+  where \<open>Separation_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>*)
+
+
 
 section \<open>Declaration of Reasonig Process\<close>
 
