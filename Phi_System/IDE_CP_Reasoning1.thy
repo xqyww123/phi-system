@@ -927,35 +927,28 @@ lemma [\<phi>reason 1200]:
 
 section \<open>Determine Separation Disjunction from Specification\<close>
 
+text \<open>The section covers two mechanisms about reasoning the separation disjunction between two given assertions,
+i.e., if (respectively to each mechanism) any of or certain of two objects \<open>u \<Turnstile> A\<close> and \<open>v \<Turnstile> B\<close>
+satisfying the given assertions \<open>A\<close> and \<open>B\<close>, have defined group operation (of the separation algebra)
+between them, denoted by \<open>u ## v\<close> following the paper by Calcagno.
+The motivation to infer such compatibility is based on two reasons.
+
+\<^enum> The first mechanism focuses on the property below.
+\<close>
+
 definition Separation_Disj :: \<open>('a::sep_magma \<Rightarrow> 'b::sep_magma) \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
   where \<open>Separation_Disj \<psi> X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
 
-lemma
-  \<open> Inhabited A \<and> Inhabited (B\<^sub>1 * B\<^sub>2)
-\<Longrightarrow> Inhabited B\<^sub>1 \<longrightarrow> Inhabited (A * B\<^sub>1)
-\<Longrightarrow> Inhabited B\<^sub>2 \<longrightarrow> Inhabited (A * B\<^sub>2)
-\<Longrightarrow> Inhabited (A * (B\<^sub>1 * B\<^sub>2))\<close>
-  unfolding Inhabited_def
-  apply clarsimp
-  subgoal for p u v
-    apply (rule exI[where x=p]; simp)
-  oops
-
 text \<open>
-\<open>Separation_Disj\<^sub>\<psi> A B\<close> and particular a simpler form
-\<open>Separation_Disj A B \<triangleq> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<longrightarrow> u ## v)\<close>
-assert if any two objects \<open>u,v\<close> satisfying \<open>A,B\<close> respectively are compatible
-in sense of having defined group operation (of separation algebra) between them.
-The motivation to infer such compatibility is based on two reasons.
+  The standard homomorphism from a partial algebra \<open>\<A>\<close> to another \<open>\<B>\<close> only assumes the group operation
+  defined (between two certain elements) in \<open>\<A>\<close>, is also defined in \<open>\<B>\<close>, but not reversely, i.e.,
+  \<open>u ## v \<longrightarrow> \<psi>(u) ## \<psi>(v)   but not generally   \<psi>(u) ## \<psi>(v) \<longrightarrow> u ## v \<close>
+  It blocks the \<open>x \<Ztypecolon> (\<psi> \<Zcomp> T) \<^emph> (\<psi> \<Zcomp> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> (\<psi> \<Zcomp> T \<^emph> U)\<close>, one side of the \<phi>-type separation homomorphism.
 
-\<^enum> The standard homomorphism from a partial algebra \<open>\<A>\<close> to another \<open>\<B>\<close> only assumes the group operation
-  defined between two certain elements in \<open>\<A>\<close>, is also defined in \<open>\<B>\<close>, but not reversely, i.e.,
-  \<open>u ## v \<longrightarrow> \<psi>(u) ## \<psi>(v)   but not reversely necessarily\<close>
-  It hinders the transformation \<open>x \<Ztypecolon> F(T) \<^emph> F(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> F(T \<^emph> U)\<close>.
-  Certainly, we can ask a stronger assumption i.e. closed homomorphism to circumvent, but not all homomorphisms
-  are closed. <The example of super permission>
+  Certainly, to circumvent it, we can ask a stronger assumption i.e. closed homomorphism,
+  but not all homomorphisms are closed. An example is super permission...
 
-  \<open>Separation_Disj\<^sub>\<psi> A B\<close> allows the \<phi>-type transformation for non-closed separation homomorphism.
+  As a remedy, \<open>Separation_Disj\<^sub>\<psi> A B\<close> allows the \<phi>-type transformation for non-closed separation homomorphism.
 
   To enable \<open>x \<Ztypecolon> (\<psi> \<Zcomp> T) \<^emph> (\<psi> \<Zcomp> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> zip(x) \<Ztypecolon> \<psi> \<Zcomp> (T \<^emph> U)\<close>, the weakest condition is
   \<open>SD\<^sub>\<psi>'(A,B) \<longleftrightarrow> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<and> \<psi> u ## \<psi> v \<longrightarrow> \<exists>u' v'. u' \<Turnstile> A \<and> v' \<Turnstile> B \<and> \<psi>(u) * \<psi>(v) = \<psi>(u') * \<psi>(v') \<and> u' ## v')\<close>
@@ -967,77 +960,48 @@ The motivation to infer such compatibility is based on two reasons.
 \<Longrightarrow> Separation_Disj \<psi> A B\<^sub>2
 \<Longrightarrow> Separation_Disj \<psi> A (B\<^sub>1 * B\<^sub>2)\<close> for separation homomorphism \<open>\<psi>\<close>.
 
-\<^enum> The implication reasoning \<open>Inhabited A \<longrightarrow> P\<close> infers a weaker but simpler approximation
+\<^enum> Another mechanism focus on satisfaction of multiplicative conjunction, of the following form,
+  \<open>Inhabited A \<Longrightarrow> Inhabited B \<Longrightarrow> with_what_condition \<longrightarrow> Inhabited (A * B)\<close>
+
+  The implication reasoning \<open>Inhabited A \<longrightarrow> P\<close> infers a weaker but simpler approximation
   of the pure fact implied inside \<open>A\<close>.
-  However, only the weakening part is not enough for mapping \<phi>-types like
+  However, only the weakening part is not enough for \<phi>-types of mappings such as
   \<open>f \<Ztypecolon> T \<Rrightarrow> U := {g. (\<forall>u x. u \<Turnstile> x \<Ztypecolon> T \<longrightarrow> g(y) \<Turnstile> f(x) \<Ztypecolon> U)}\<close> (forward simulation)
   whose domain \<phi>-type \<open>T\<close> is contravariant.
-  To extract its implication, the dual of the implication reasoning, sufficiency reasoning,
-  called as such by us, is required. It infers a stronger approximation \<open>Q\<close> such that
-  \<open>Q \<longrightarrow> Inhabited A\<close> for a given assertion \<open>A\<close>.
-  By it we have the implication of \<open>f \<Ztypecolon> T \<Rrightarrow> U\<close>,
+  To extract its implication, the dual of the implication reasoning is required, namely satisfaction reasoning.
+  It infers a stronger approximation \<open>Q\<close> such that \<open>Q \<longrightarrow> Inhabited A\<close> for a given assertion \<open>A\<close>.
+  By it, we can complete the implication rule of \<open>f \<Ztypecolon> T \<Rrightarrow> U\<close>,
   \<open> (\<And>x. Q x \<longrightarrow> Inhabited (x \<Ztypecolon> T))
 \<Longrightarrow> (\<And>x. Inhabited (x \<Ztypecolon> T) \<rightarrow> P x)
 \<Longrightarrow> (\<And>y. Inhabited (y \<Ztypecolon> U) \<rightarrow> P' y)
 \<Longrightarrow> Inhabited (f \<Ztypecolon> T \<Rrightarrow> U) \<longrightarrow> (\<forall>x. Q x \<longrightarrow> P x \<and> P' (f x))\<close>.
   
-  The rules of sufficiency reasoning for logical connectives are given where???. Note there are
-  no direct rules for conjunctive operators (\<open>\<and>\<close> and \<open>*\<close>).
-  For \<open>\<and>\<close>, it is because the inhabitance of each side
+  The rules of satisfaction reasoning for logical connectives are given where???, except those
+  for conjunctive operators (\<open>\<and>\<close> and \<open>*\<close>).
+  For \<open>\<and>\<close>, it is due to that the inhabitance of each side of the conjunction
   does not imply the inhabitance of the both sides, because the residents may not equal.
   For \<open>*\<close>, it is due to, though we have two residents \<open>u \<Turnstile> A\<close> and \<open>v \<Turnstile> B\<close> for each assertions,
-  we do not know if \<open>u\<close> and \<open>v\<close> are compatible, so we cannot deduce \<open>u * v \<Turnstile> A * B\<close>.
+  we do not know if \<open>u ## v\<close>, so we cannot deduce \<open>u * v \<Turnstile> A * B\<close>.
 
-  \<open>\<and>\<close> is rarely used under our interpretation of data refinement.
-  However, multiplicative conjunction is still essential,
+  Even though \<open>\<and>\<close> is less-intuitive and rarely used under our interpretation of data refinement,
+  multiplicative conjunction is essential,
   especially for example, when the key of the map is a tuple and the tuple fields are connected by \<open>*\<close>.
-  \<open>Separation_Disj A B\<close> is a remedy and a stronger condition for this as it gives the compatibility of \<open>u,v\<close> as above.
-  \<open> Inhabited A \<longrightarrow> P
-\<Longrightarrow> Inhabited B \<longrightarrow> Q
-\<Longrightarrow> Separation_Disj A B
-\<Longrightarrow> Inhabited (A * B) \<longrightarrow> P \<and> Q\<close>
-  The exact condition for the rule is, \<open>SD'(A,B) \<triangleq> Inhabited A \<and> Inhabited B \<longrightarrow> Inhabited (A * B)\<close>
-  or equivalently \<open>\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<longrightarrow> \<exists>u' v'. u' \<Turnstile> A \<and> v' \<Turnstile> B \<and> u' ## v'\<close>.
-  However, again, we fail to find a reasoning rule on the exact condition that splits \<open>SD'(A, B\<^sub>1 * B\<^sub>2)\<close>.
-  The main difficulty is the existential witness of \<open>SD'(A, B\<^sub>1)\<close> and of \<open>SD'(A, B\<^sub>2)\<close> have no connection
-  between each other, preventing us utilizing them to deduce \<open>SD'(A, B\<^sub>1 * B\<^sub>2)\<close>.
 
-  To automate it, again as an approximation we assume the \<open>u',v'\<close> are equal to \<open>u,v\<close>, and we obtain
-  \<open>Separation_Disj A B\<close> which is a special case of \<open>Separation_Disj\<^sub>\<psi> A B\<close> when \<open>\<psi>\<close> is the homomorphism
-  to the total algebra \<open>{\<epsilon>}\<close> of single-element.
-
-  Admittedly, \<open>Separation_Disj A B\<close> is very strong. Many \<phi>-types do not meet it unless at least
-  the \<phi>-type has a fixed domain of resources with a given object \<open>x\<close>. It excludes for instance
-  linked list because the addresses of the non-head nodes are indeterminate.
-  However, 
-
-  WRONG \& BAD!!!!
-
-, 1. we still need to consider the
-  second motivation as mentioned above and discussed below. 2. our automation algorithm is limited
-  in deriving the exact property and can only be an approximation as Separation_Disj. The limitation
-  is due to what???
-
-
-  
-
-  Instead, we consider an over approximated form,
-  \<open>SD\<^sub>\<psi>(A,B) \<longleftrightarrow> (\<forall>u v. u \<Turnstile> A \<and> v \<Turnstile> B \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
-
-
-  If the \<open>\<psi>\<close> cannot be parameterized, and therefore universally quantified,
-  the weakest condition is then our \<open>Separation_Disj A B\<close>.
-
-Separation_Disj is an over approximation. 
+The satisfaction reasoning of multiplicative conjunctions, together with the above \<open>Separation_Disj\<^sub>\<psi>\<close>,
+relies on the notion of \<^emph>\<open>domainoid\<close>, which is invented in order to reason the separation disjunction
+on an abstract domain, particularly by means of \<open>Domainoid_Homo\<close> presented later.
 \<close>
 
 type_synonym ('a,'d) domainoid = \<open> 'a \<Rightarrow> 'd \<close>
   \<comment> \<open>A forgetful functor that extracts domains and trims data\<close>
 
-text \<open>A domainoid \<open>\<psi>\<close> is a forgetful functor that extracts the domain parts and forgets the data parts of a SA,
-  such that \<open>\<psi>(x) ## \<psi>(y) \<longleftrightarrow> x ## y\<close> (i.e., \<psi> is a closed homomorphism) is sufficient to determine
-  the separation disjunction \<open>x ## y\<close>, but of a simpler expression.
-  Usually, \<open>\<psi>(x)\<close> is the domain of the resource \<open>x\<close>, such as addresses of memory objects,
+definition domainoid :: \<open>('a::sep_magma,'d::sep_magma) domainoid \<Rightarrow> bool\<close>
+  where \<open>domainoid \<delta> \<longleftrightarrow> closed_homo_sep \<delta>\<close>
+
+text \<open>A domainoid \<open>\<delta>\<close> is a closed homomorphism and also a forgetful functor that extracts the domain
+  parts and forgets the data parts of a SA, such that \<open>\<delta>(x) ## \<delta>(y) \<longleftrightarrow> x ## y\<close> is sufficient to
+  determine the separation disjunction \<open>x ## y\<close>, but of a simpler expression.
+  Usually, \<open>\<delta>(x)\<close> is the domain of the resource \<open>x\<close>, such as addresses of memory objects,
   but it can be others like \<open>address \<rightarrow> permission\<close> the permission map of a sharing memory
   \<open>address \<rightarrow> permission \<times> value\<close>. Considering this, we call it domain-oid.
 
@@ -1046,12 +1010,12 @@ text \<open>A domainoid \<open>\<psi>\<close> is a forgetful functor that extrac
   concrete representations of the resources, as usually we only abstract the data and leave the
   resource identifiers untouched.
 
-  With abbreviation \<open>domainoid d \<triangleq> closed_homo_sep d\<close> we emphasize \<open>d\<close> is a domainoid.
+  With abbreviation \<open>domainoid d \<triangleq> closed_homo_sep \<delta>\<close> we emphasize \<open>\<delta>\<close> is a domainoid.
 
-  Modality \<open>\<DD>[d] S \<triangleq> (d u \<Ztypecolon> Itself \<s>\<u>\<b>\<j> u. u \<Turnstile> S \<and> domainoid d)\<close> maps an assertion \<open>S\<close> to the domainoids
+  Modality \<open>\<DD>[d] S \<triangleq> (\<delta> u \<Ztypecolon> Itself \<s>\<u>\<b>\<j> u. u \<Turnstile> S \<and> domainoid \<delta>)\<close> maps an assertion \<open>S\<close> to the domainoids
   of its resources, if we still use separation logic to specify the domainoids (on the algebra of the domainoids).
   The modality is homomorphic over all logical connectives except additive conjunctions (including universal quantification).
-  Though domainoid is designed to solve satisfaction of multiplicative conjunction, it can still do nothing
+  Though domainoid is designed to solve satisfaction of multiplicative conjunction, it still can do nothing
   to additive conjunctions.
 
   For mapping the domainoid functor onto the abstract domain of a \<phi>-type \<open>x \<Ztypecolon> T\<close>,
@@ -1064,11 +1028,6 @@ text \<open>A domainoid \<open>\<psi>\<close> is a forgetful functor that extrac
   The lower homomorphism is used for deducing the satisfaction of multiplicative conjunction.
   The upper homomorphism is for enabling transformation of non-closed separation homomorphism.
 \<close>
-
-
-
-definition domainoid :: \<open>('a::sep_magma,'d::sep_magma) domainoid \<Rightarrow> bool\<close>
-  where \<open>domainoid dm \<longleftrightarrow> closed_homo_sep dm\<close>
 
 definition domainoid_BI_functor :: \<open>('a,'d) domainoid \<Rightarrow> 'a::sep_magma BI \<Rightarrow> 'd::sep_magma set\<close> ("\<DD>[_]" [10] 1000)
   where \<open>(\<DD>[d] S) = {d u |u. u \<Turnstile> S \<and> domainoid d}\<close>
