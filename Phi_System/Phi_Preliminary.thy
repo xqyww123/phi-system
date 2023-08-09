@@ -244,9 +244,9 @@ consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts entailed from t
 declare [[
   \<phi>reason_default_pattern \<open>Generate_Implication_Reasoning ?I _ _\<close>
                         \<Rightarrow> \<open>Generate_Implication_Reasoning ?I _ _\<close> (100)
-  and \<open>?X \<longrightarrow> _ @action \<A>EIF\<close>
-   \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
-  and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (10)
+  and \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
+  and \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> \<Rightarrow> \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> (100)
+  and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
 ]]
 
 lemma Do_Generate_Implication_Reasoning:
@@ -278,8 +278,18 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast
 
+lemma [\<phi>reason 1000]:
+  \<open> A \<longrightarrow> A' @action \<A>ESC
+\<Longrightarrow> B \<longrightarrow> B' @action \<A>ESC
+\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>ESC \<close>
+  unfolding Action_Tag_def by blast
+
 lemma Extact_implied_facts_Iden[\<phi>reason default 1]:
   \<open> A \<longrightarrow> A @action \<A>EIF \<close>
+  unfolding Action_Tag_def by blast
+
+lemma Extact_sufficient_conditions_Iden[\<phi>reason default 1]:
+  \<open> A \<longrightarrow> A @action \<A>ESC \<close>
   unfolding Action_Tag_def by blast
 
 (*

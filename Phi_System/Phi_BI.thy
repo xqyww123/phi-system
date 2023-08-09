@@ -924,8 +924,8 @@ lemma [elim!]:
   by clarsimp blast
 
 lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (S x) \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> Inhabited (AllSet S) \<longrightarrow> C @action \<A>EIF \<close>
+  \<open> S x \<i>\<m>\<p>\<l>\<i>\<e>\<s> C
+\<Longrightarrow> AllSet S \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<close>
   unfolding Action_Tag_def
   by clarsimp blast
 

@@ -925,7 +925,7 @@ lemma [\<phi>reason 1200]:
 
 
 
-section \<open>Determine Separation Disjunction from Specification\<close>
+section \<open>Determine Separation Disjunction on Specification Level\<close>
 
 text \<open>The section covers two mechanisms about reasoning the separation disjunction between two given assertions,
 i.e., if (respectively to each mechanism) any of or certain of two objects \<open>u \<Turnstile> A\<close> and \<open>v \<Turnstile> B\<close>
@@ -1001,7 +1001,7 @@ definition domainoid :: \<open>('a::sep_magma,'d::sep_magma) domainoid \<Rightar
 text \<open>A domainoid \<open>\<delta>\<close> is a closed homomorphism and also a forgetful functor that extracts the domain
   parts and forgets the data parts of a SA, such that \<open>\<delta>(x) ## \<delta>(y) \<longleftrightarrow> x ## y\<close> is sufficient to
   determine the separation disjunction \<open>x ## y\<close>, but of a simpler expression.
-  Usually, \<open>\<delta>(x)\<close> is the domain of the resource \<open>x\<close>, such as addresses of memory objects,
+  Usually, \<open>\<delta>(x)\<close> is the domain of the resource \<open>x\<close>, such as the address of a memory object,
   but it can be others like \<open>address \<rightarrow> permission\<close> the permission map of a sharing memory
   \<open>address \<rightarrow> permission \<times> value\<close>. Considering this, we call it domain-oid.
 
@@ -1122,6 +1122,18 @@ lemma [\<phi>reason 1000]:
   unfolding \<DD>_Subjection
   by (clarsimp simp add: Subjection_ord)
 
+lemma [\<phi>reason 1000]:
+  \<open> Pa \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
+\<Longrightarrow> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> B
+\<Longrightarrow> domainoid d
+\<Longrightarrow> A' \<le> \<DD>[d] A \<comment>\<open>expand \<open>\<DD>[d] A, \<DD>[d] B\<close> to a simpler but still strong enough approximation\<close>
+\<Longrightarrow> B' \<le> \<DD>[d] B
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Pa \<and> Pb \<longrightarrow> (\<exists>a b. a \<in> A' \<and> b \<in> B' \<and> a ## b))
+\<Longrightarrow> Pa \<and> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A * B\<close>
+  unfolding Inhabited_def subset_iff Premise_def Action_Tag_def
+  by (clarsimp simp add: domainoid_def closed_homo_sep_def homo_sep_disj_closed_def; blast)
+
+
 
 (* A --domainoid--> D(A)
    | \<psi>               | D(\<psi>)
@@ -1167,35 +1179,11 @@ lemma
 
 
 
-definition Sep_Compatible :: \<open>'a::sep_magma BI \<Rightarrow> 'a::sep_magma BI \<Rightarrow> bool\<close>
-  where \<open>Sep_Compatible A B \<longleftrightarrow> (Inhabited A \<and> Inhabited B \<longrightarrow> Inhabited (A * B))\<close>
-
-lemma
-  \<open> Pa \<longrightarrow> Inhabited A
-\<Longrightarrow> Pb \<longrightarrow> Inhabited B
-\<Longrightarrow> domainoid d
-\<Longrightarrow> A' \<le> \<DD>[d] A \<comment>\<open>expand \<open>\<DD>[d] A, \<DD>[d] B\<close> to a simpler but still strong enough approximation\<close>
-\<Longrightarrow> B' \<le> \<DD>[d] B
-\<Longrightarrow> (Pa \<and> Pb \<longrightarrow> (\<exists>a b. a \<in> A' \<and> b \<in> B' \<and> a ## b))
-\<Longrightarrow> Pa \<and> Pb \<longrightarrow> Inhabited (A * B)\<close>
-  unfolding Inhabited_def subset_iff
-  by (clarsimp simp add: domainoid_def closed_homo_sep_def homo_sep_disj_closed_def; blast)
 
 lemma \<comment> \<open>The above rule is reversible for any domainoid \<open>d\<close>\<close>
   \<open> domainoid d \<Longrightarrow> Inhabited (A * B) \<longleftrightarrow> (\<exists>a b. a \<in> \<DD>[d] A \<and> b \<in> \<DD>[d] B \<and> a ## b)\<close>
   unfolding Inhabited_def
   by (clarsimp simp add: domainoid_def closed_homo_sep_def homo_sep_disj_closed_def; blast)
-
-lemma
-  \<open> Sep_Compatible A (B * C)
-\<Longrightarrow> Sep_Compatible B C
-\<Longrightarrow> Sep_Compatible (A * B) C\<close>
-  for A :: \<open>'a::sep_semigroup BI\<close>
-  unfolding Sep_Compatible_def Inhabited_def
-  apply clarsimp
-  by (metis sep_disj_multD1 sep_disj_multI1)
-  
-
 
 
 

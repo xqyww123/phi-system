@@ -177,9 +177,14 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>Technical (Trueprop P) \<equiv> Trueprop (Technical_embed P)\<close>
   unfolding Technical_def Technical_embed_def .
 
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited X \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> Inhabited (TECHNICAL X) \<longrightarrow> C @action \<A>EIF \<close>
+lemma [\<phi>reason 1000]:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> C
+\<Longrightarrow> TECHNICAL X \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<close>
+  unfolding Technical_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X
+\<Longrightarrow> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> TECHNICAL X \<close>
   unfolding Technical_def .
 
 paragraph \<open>Reasoning Rules\<close>
