@@ -111,6 +111,20 @@ lemma Top_expn[iff, \<phi>expns]:
   unfolding Satisfaction_def by simp
 
 
+subsection \<open>BI order\<close>
+
+lemma BI_sub_iff:
+  \<open> S \<le> S' \<longleftrightarrow> (\<forall>u. u \<Turnstile> S \<longrightarrow> u \<Turnstile> S') \<close>
+  unfolding Satisfaction_def subset_iff ..
+
+declare [[\<phi>reason_default_pattern
+    \<open> ?S \<le> ?S' \<close> \<Rightarrow> \<open> ?S \<le> ?S' \<close> \<open> ?var_S \<le> ?S' \<close> \<open> ?S \<le> ?var_S' \<close> (100) ]]
+
+declare order.refl[\<phi>reason for \<open>?X \<le> ?X\<close> (10000)
+                               \<open>?var \<le> _\<close> (1)
+                               \<open>_ \<le> ?var\<close> (1) ]
+
+
 subsection \<open>Inhabitance\<close>
 
 definition Inhabited :: " 'a BI \<Rightarrow> bool " where  "Inhabited S = (\<exists>p. p \<Turnstile> S)"
@@ -427,10 +441,19 @@ lemma zero_implies_any[\<phi>reason 2000, simp]:
   \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X\<close>
   unfolding Transformation_def zero_set_def Satisfaction_def by simp
 
+lemma BI_bot_ord [\<phi>reason for \<open>0 \<le> _\<close> (1000)]:
+  \<open>0 \<le> Any\<close>
+  for Any :: \<open>'a BI\<close>
+  by (simp add: zero_set_def)
+
+declare bot_least [\<phi>reason for \<open>bot \<le> _\<close> (1000)]
+
 
 subsection \<open>Top\<close>
 
 notation top ("\<top>")
+
+declare top_greatest [\<phi>reason for \<open>_ \<le> \<top>\<close> (1000)]
 
 
 subsection \<open>Additive Disjunction\<close>
@@ -470,7 +493,8 @@ lemma implies_union:
   unfolding Transformation_def
   by simp_all
 
-
+declare add_mono[\<phi>reason 1000]
+  
 
 subsection \<open>Additive Conjunction\<close>
 
@@ -534,6 +558,12 @@ lemma Subjection_imp_I:
 \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Q
 \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q\<close>
   unfolding Transformation_def by simp
+
+lemma Subjection_ord[\<phi>reason 1000]:
+  \<open> S \<le> S'
+\<Longrightarrow> (S \<s>\<u>\<b>\<j> P) \<le> (S' \<s>\<u>\<b>\<j> P) \<close>
+  unfolding BI_sub_iff
+  by clarsimp
 
 
 paragraph \<open>Simplification\<close>
@@ -685,6 +715,12 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Ex C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> ExSet S \<close>
   unfolding Inhabited_def Action_Tag_def
   by (simp; blast)
+
+lemma ExSet_ord[\<phi>reason 1000]:
+  \<open> (\<And>c. S c \<le> S' c)
+\<Longrightarrow> ExSet S \<le> ExSet S' \<close>
+  unfolding BI_sub_iff
+  by simp blast
 
 subsubsection \<open>Syntax\<close>
 
@@ -859,26 +895,26 @@ ML_file \<open>library/tools/simproc_ExSet_expand_quantifier.ML\<close>
 
 subsection \<open>Universal Quantification\<close>
 
-definition AllSet :: \<open>('a \<Rightarrow> 'b BI) \<Rightarrow> 'b BI\<close> (binder "\<forall>\<^sup>S" 10)
+definition AllSet :: \<open>('a \<Rightarrow> 'b BI) \<Rightarrow> 'b BI\<close> (binder "\<forall>\<^sub>B\<^sub>I" 10)
   where \<open>AllSet X = {y. \<forall>x. y \<in> X x}\<close>
 
 lemma AllSet_expn[simp, \<phi>expns]:
-  \<open>p \<Turnstile> (\<forall>\<^sup>Sx. B x) \<longleftrightarrow> (\<forall>x. p \<Turnstile> B x)\<close>
+  \<open>p \<Turnstile> (\<forall>\<^sub>B\<^sub>Ix. B x) \<longleftrightarrow> (\<forall>x. p \<Turnstile> B x)\<close>
   unfolding AllSet_def Satisfaction_def by simp
 
 lemma AllSet_subset:
-  \<open>A \<subseteq> (\<forall>\<^sup>S x. B x) \<longleftrightarrow> (\<forall>x. A \<subseteq> B x)\<close>
+  \<open>A \<subseteq> (\<forall>\<^sub>B\<^sub>I x. B x) \<longleftrightarrow> (\<forall>x. A \<subseteq> B x)\<close>
   unfolding AllSet_def subset_iff by (rule; clarsimp; blast)
 
 lemma AllSet_refl:
   \<open>(\<And>x. refl (B x))
-\<Longrightarrow> refl (\<forall>\<^sup>S x. B x)\<close>
+\<Longrightarrow> refl (\<forall>\<^sub>B\<^sub>I x. B x)\<close>
   unfolding AllSet_def
   by (simp add: refl_on_def)
 
 lemma AllSet_trans:
   \<open>(\<And>x. trans (B x))
-\<Longrightarrow> trans (\<forall>\<^sup>S x. B x)\<close>
+\<Longrightarrow> trans (\<forall>\<^sub>B\<^sub>I x. B x)\<close>
   unfolding AllSet_def
   by (smt (verit) mem_Collect_eq transD transI)
 

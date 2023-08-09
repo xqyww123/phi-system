@@ -555,7 +555,7 @@ lemma (*The above rule is reversible*)
 (* subsection \<open>Embedding Universal Quantification\<close>
 
 \<phi>type_def \<phi>Type_univ_quant :: \<open>('c \<Rightarrow> ('a, 'b) \<phi>) \<Rightarrow> ('a, 'c \<Rightarrow> 'b)\<phi>\<close> ("\<forall>\<^sub>\<phi> _" [10] 10)
-  where \<open>\<phi>Type_univ_quant T = (\<lambda>x. \<forall>\<^sup>Sc. x c \<Ztypecolon> T c)\<close>
+  where \<open>\<phi>Type_univ_quant T = (\<lambda>x. \<forall>\<^sub>B\<^sub>Ic. x c \<Ztypecolon> T c)\<close>
 
 lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
   \<open>p \<in> (f \<Ztypecolon> (\<forall>\<^sub>\<phi> T)) \<longleftrightarrow> (\<forall>x. p \<in> (f x \<Ztypecolon> T x))\<close>
