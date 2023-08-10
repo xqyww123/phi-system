@@ -132,12 +132,12 @@ fun gen_id_ele is_left (_,name) hint0 (phi0 : phi_type) generic =
 
       val prem_extractions =
         if def_contains_satisfaction phi0
-        then [("", Phi_Reasoners.Extract_Rule (
-                      if is_left
-                      then @{lemma' \<open>Identity_Element\<^sub>I S P \<equiv> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P) \<and> Identity_Element\<^sub>I S P\<close>
-                               by (simp add: Identity_Element\<^sub>I_def Transformation_def)}
-                      else @{lemma' \<open>Identity_Element\<^sub>E S \<equiv> (1 \<Turnstile> S) \<and> Identity_Element\<^sub>E S\<close>
-                               by (simp add: Identity_Element\<^sub>E_def Transformation_def)}))]
+        then [Phi_Reasoners.Extract_Rule (
+                if is_left
+                then @{lemma' \<open>Identity_Element\<^sub>I S P \<equiv> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P) \<and> Identity_Element\<^sub>I S P\<close>
+                         by (simp add: Identity_Element\<^sub>I_def Transformation_def)}
+                else @{lemma' \<open>Identity_Element\<^sub>E S \<equiv> (1 \<Turnstile> S) \<and> Identity_Element\<^sub>E S\<close>
+                         by (simp add: Identity_Element\<^sub>E_def Transformation_def)})]
         else []
 
       val reasoner =

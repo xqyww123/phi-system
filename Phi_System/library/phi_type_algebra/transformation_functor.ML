@@ -76,10 +76,10 @@ local
 fun TF_reasoning phi ctxt =
   let val prem_extractions =
         if def_contains_satisfaction phi
-        then [("", Phi_Reasoners.Extract_Rule
-                      @{lemma' \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. r b @action to what_ever
-                              \<equiv> (\<forall>v. v \<Turnstile> X \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> r b)) \<and> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. r b @action to what_ever)\<close>
-                          by (simp add: Transformation_def Action_Tag_def)})]
+        then [Phi_Reasoners.Extract_Rule
+                @{lemma' \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. r b @action to what_ever
+                        \<equiv> (\<forall>v. v \<Turnstile> X \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> r b)) \<and> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. r b @action to what_ever)\<close>
+                    by (simp add: Transformation_def Action_Tag_def)}]
         else []
    in default_reasoning true
           (default_reasoning_configure prem_extractions)

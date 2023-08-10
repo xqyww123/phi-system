@@ -140,9 +140,9 @@ fun OE_reasoning phi ctxt rule =
 
       val prem_extractions =
         if def_contains_satisfaction phi
-        then [("", Phi_Reasoners.Extract_Rule
-                      @{lemma' \<open>Object_Equiv T eq \<Longrightarrow> (\<forall>x y v. eq x y \<longrightarrow> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<Turnstile> (y \<Ztypecolon> T))\<close>
-                          by (simp add: Object_Equiv_def Transformation_def)})]
+        then [Phi_Reasoners.Extract_Rule
+                @{lemma' \<open>Object_Equiv T eq \<Longrightarrow> (\<forall>x y v. eq x y \<longrightarrow> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<Turnstile> (y \<Ztypecolon> T))\<close>
+                    by (simp add: Object_Equiv_def Transformation_def)}]
         else []
 
    in default_reasoning true

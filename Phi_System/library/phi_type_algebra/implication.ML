@@ -100,7 +100,7 @@ fun gen_inhab (der_id, name) hint00 (phi0 : phi_type) thy =
 
       val prem_extractions =
         if def_contains_satisfaction phi0
-        then [("", Phi_Reasoners.Extract_Rule @{thm' \<phi>TA_Inh_extract_prem})]
+        then [Phi_Reasoners.Extract_Rule @{thm' \<phi>TA_Inh_extract_prem}]
         else []
 
       fun Inh_reasoning phi ctxt =

@@ -195,7 +195,7 @@ val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> r
 
 (* Default Reasoning Configure *)
 
-val default_reasoning_configure : (string * Phi_Reasoners.extraction) list -> reasoning_configure
+val default_reasoning_configure : Phi_Reasoners.extraction list -> reasoning_configure
 (*classify local premises by syntactic tags. allows to extract additional local condition
   by Phi_Reasoners.extraction.
 

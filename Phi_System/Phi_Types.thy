@@ -434,7 +434,7 @@ lemma [\<phi>reason 1000]:
 
 
 subsection \<open>Vertical Composition\<close>
-                 
+                    
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving Functional_Transformation_Functor
@@ -633,14 +633,15 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Vertical Composition of Func\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
-  deriving (*Basic
-       and*) \<open>homo_one f \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
+  deriving Basic
+       and \<open> homo_one f \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
+       and \<open> homo_one f \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
 
-term \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f 1 = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
+term \<open>homo_one f \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
 
 term homo_one
 
