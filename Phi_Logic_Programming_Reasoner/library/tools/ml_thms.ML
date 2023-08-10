@@ -1,3 +1,8 @@
+(*
+The file provides an alternative of the antiquotation @{thm}, @{thms} and @{lemmas}
+  in which, the stored lemmas are context-free, so that the total memory usage may be saved.
+*)
+
 signature PHI_ML_THMS =
 sig
   (*val the_attributes: Proof.context -> int -> Token.src list*)
@@ -57,9 +62,39 @@ fun thm_binding kind is_single thms ctxt =
       else ("", ml_body);
   in (decl, ctxt'') end;
 
+val embedded_lemma =
+  Args.mode "open" -- Parse.and_list1 (Scan.repeat1 Parse.embedded_inner_syntax)
+    -- Parse.for_fixes -- Method.parse_by
+    >> (fn (((is_open, raw_stmt), fixes), (methods, reports)) => fn ctxt =>
+        let
+          val _ = Context_Position.reports ctxt reports;
+
+          val fixes_ctxt = #2 (Proof_Context.add_fixes_cmd fixes ctxt);
+          val stmt = burrow (map (rpair []) o Syntax.read_props fixes_ctxt) raw_stmt;
+          val stmt_ctxt = (fold o fold) (Proof_Context.augment o #1) stmt fixes_ctxt;
+
+          val prep_result = Goal.norm_result ctxt #> not is_open ? Thm.close_derivation \<^here>;
+          fun after_qed res goal_ctxt =
+            Proof_Context.put_thms false (Auto_Bind.thisN,
+              SOME (map prep_result (Proof_Context.export goal_ctxt ctxt (flat res)))) goal_ctxt;
+
+          val thms_ctxt = stmt_ctxt
+            |> Proof.theorem NONE after_qed stmt
+            |> Proof.global_terminal_proof methods;
+          val thms =
+            Proof_Context.get_fact thms_ctxt
+              (Facts.named (Proof_Context.full_name thms_ctxt (Binding.name Auto_Bind.thisN)))
+            |> map Thm.trim_context
+        in (thms, (map #1 (flat stmt), stmt_ctxt)) end);
+
+
 val _ = Theory.setup
   (ML_Antiquotation.declaration \<^binding>\<open>thm'\<close> (Attrib.thm >> single) (K (thm_binding "thm" true)) #>
-   ML_Antiquotation.declaration \<^binding>\<open>thms'\<close> Attrib.thms (K (thm_binding "thms" false)));
+   ML_Antiquotation.declaration \<^binding>\<open>thms'\<close> Attrib.thms (K (thm_binding "thms" false)) #>
+   ML_Antiquotation.declaration \<^binding>\<open>lemma'\<close> (Scan.lift embedded_lemma)
+    (fn _ => fn make_lemma => fn ctxt =>
+      let val thms = #1 (make_lemma ctxt)
+      in thm_binding "lemma" (length thms = 1) thms ctxt end));
 
 (*
 (* embedded lemma *)

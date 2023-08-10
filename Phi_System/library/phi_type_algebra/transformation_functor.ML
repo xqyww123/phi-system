@@ -74,12 +74,15 @@ fun guess_property_TF phi0 ctxt =
 local
 
 fun TF_reasoning phi ctxt =
-  let val extract_prem =
+  let val prem_extractions =
         if def_contains_satisfaction phi
-        then extract_pure_prem_by_RS @{thms' \<phi>TA_TF_extract_prem}
-        else K (K [])
+        then [("", Phi_Reasoners.Extract_Rule
+                      @{lemma' \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. r b @action to what_ever
+                              \<equiv> (\<forall>v. v \<Turnstile> X \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> r b)) \<and> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. r b @action to what_ever)\<close>
+                          by (simp add: Transformation_def Action_Tag_def)})]
+        else []
    in default_reasoning true
-          (default_reasoning_configure extract_prem)
+          (default_reasoning_configure prem_extractions)
           (K (K NONE))
           (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded' ctxt phi)))
           ctxt

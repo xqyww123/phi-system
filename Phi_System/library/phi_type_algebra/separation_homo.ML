@@ -119,7 +119,7 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
 
 fun SH_reasoning is_intro phi ctxt =
   default_reasoning true
-      (default_reasoning_configure (K (K [])))
+      (default_reasoning_configure [])
       (K (K NONE))
       (fn ctxt => fn sequent =>
          let fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) = (chk_unfolded' ctxt phi X1; chk_unfolded' ctxt phi X2)

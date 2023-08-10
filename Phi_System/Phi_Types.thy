@@ -3,7 +3,7 @@ chapter \<open>Pre-built \<phi>-Types\<close>
 theory Phi_Types
   imports Phi_Type_Algebra
 begin
-
+ 
 ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified [] ;
     Phi_Conv.set_rules__type_form_to_ex_quantified_single_var [] \<close>
 
@@ -57,9 +57,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
- 
-declare  [[\<phi>trace_reasoning = 0]]
-                                                      
+                                                       
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -436,7 +434,7 @@ lemma [\<phi>reason 1000]:
 
 
 subsection \<open>Vertical Composition\<close>
-                
+                 
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving Functional_Transformation_Functor
@@ -556,6 +554,7 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
   unfolding \<phi>Type_univ_quant_def \<phi>Type_def by clarsimp
 *)
 
+
 subsection \<open>Embedding Additive Disjunction\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -630,8 +629,20 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> x \<Ztypecolon> A \<and>\<^sub>\<phi> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ra y \<and> rb y @action to Itself \<close>
   unfolding Action_Tag_def Transformation_def
   by clarsimp
-  
 
+
+subsection \<open>Vertical Composition of Func\<close>
+
+declare [[\<phi>trace_reasoning = 3]]
+
+\<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
+  where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
+  deriving (*Basic
+       and*) \<open>homo_one f \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
+
+term \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f 1 = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
+
+term homo_one
 
 section \<open>Structural Connectives\<close>
 
@@ -803,7 +814,7 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 3]]
+ declare [[\<phi>trace_reasoning = 0]]
 
 
 

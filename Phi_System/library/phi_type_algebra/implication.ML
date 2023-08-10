@@ -98,14 +98,14 @@ fun gen_inhab (der_id, name) hint00 (phi0 : phi_type) thy =
             SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
         | varify_subgoal _ X = error ""
 
-      val extract_pure_prems =
+      val prem_extractions =
         if def_contains_satisfaction phi0
-        then extract_pure_prem_by_RS @{thms' \<phi>TA_Inh_extract_prem}
-        else K (K [])
+        then [("", Phi_Reasoners.Extract_Rule @{thm' \<phi>TA_Inh_extract_prem})]
+        else []
 
       fun Inh_reasoning phi ctxt =
             default_reasoning false
-                (default_reasoning_configure extract_pure_prems)
+                (default_reasoning_configure prem_extractions)
                 (if mode_infer then varify_subgoal else K (K NONE))
                 (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_Inh_step} (K (chk_unfolded' ctxt phi)))
                 ctxt

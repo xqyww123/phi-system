@@ -34,7 +34,7 @@ fun gen_is_functional (_,name) hint0 (phi0 : phi_type) thy =
                   (PLPR_Syntax.premise_tag_conv (
                     Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))))
       val reasoning = default_reasoning true
-                          (default_reasoning_configure (K (K [])))
+                          (default_reasoning_configure [])
                           (K (K NONE))
                           (exhaustive_PLPR_reasoner (SOME 1))
 

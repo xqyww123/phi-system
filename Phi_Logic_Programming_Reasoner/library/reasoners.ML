@@ -42,10 +42,20 @@ signature PHI_REASONERS = sig
   structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
       context before applying either the automatic solving*)
 
+  (* Premise Extraction from arbitrary antecedent *)
+  datatype extraction = Extract_Rule of thm | Extract_Fun of conv
+  val add_premise_extractions : (string * extraction) list -> Context.generic -> Context.generic
+  val add_premise_extraction_rules : thm list -> Context.generic -> Context.generic
+  val del_premise_extraction : string -> Context.generic -> Context.generic
+  val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
+  val extract_prems_rewr : Context.generic (*the context used to fetch the extractions*)
+                        -> Proof.context -> cterm -> thm option option
+  val is_syntactic_premise : term -> bool
+
   (*structure Is_Premise_of_Obligation : HANDLERS
       (*Tell me what antecedents are considered premise of a proof obligation to be reported,
         and what are not so that to be ignored.*)*)
-  val is_premise_of_obligation : (*Context.generic ->*) term -> bool
+  (*val is_premise_of_obligation : (*Context.generic ->*) term -> bool*)
 
   (*structure Local_Premises_of_Obligation : NAMED_THMS
       (*You can add any facts to be reported as premises of a proof obligation*)*)
@@ -184,25 +194,167 @@ fun context_tactic_to_state_transition tac fail ctxt sequent =
 
 (*** Defer ***)
 
+(*Given any antecedent, if we can extract abstract pure facts that can help to solve the target
+  proof obligation?*)
+(*Convention: the rule of premise extraction has form \<open>A \<equiv> Premise \<and> A\<close>*)
+datatype extraction = Extract_Rule of thm | Extract_Fun of conv
+
+fun extraction_eq (Extract_Rule tha, Extract_Rule thb) = Thm.eq_thm_prop (tha, thb)
+  | extraction_eq (Extract_Fun fa, Extract_Fun fb) = pointer_eq (fa, fb)
+  | extraction_eq _ = false
+
+val extraction_entry_eq = eq_pair (op aconv) extraction_eq
+
+type pattern = term
+structure Premise_Extraction = Generic_Data (
+  type T = (pattern * extraction) Net.net
+  val empty = Net.empty
+  val merge = Net.merge extraction_entry_eq
+)
+
+fun chk_extraction_rule ctxt rule =
+      let open Pretty
+          fun err msg = error (string_of (chunks [
+                            paragraph (text "Bad rule of premise extraction:" @ [brk 1] @ text msg),
+                            Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt rule
+                         ]))
+       in case Thm.prop_of rule
+       of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+              Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
+                  (X, Extract_Rule (rule RS @{thm' eq_reflection}))
+        | Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
+                  (X, Extract_Rule rule)
+        | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+               err "cannot have premises"
+        | _ => err "malformed rule, must of form \<open>A \<equiv> Prem \<and> A'\<close> where Prem is the extracted premise"
+      end
+
+fun chk_extraction ctxt (pattern, Extract_Rule rule) = (pattern, snd (chk_extraction_rule ctxt rule))
+  | chk_extraction _ X = X
+
+fun dup_fst (x,y) = (x,(x,y))
+
+fun add_premise_extractions [] ctxt = ctxt
+  | add_premise_extractions pattern_extrs ctxt =
+      Premise_Extraction.map (fold (
+        Net.insert_term extraction_entry_eq o dup_fst o chk_extraction ctxt
+      ) pattern_extrs) ctxt
+
+fun add_premise_extraction_rules [] ctxt = ctxt
+  | add_premise_extraction_rules rules ctxt =
+      Premise_Extraction.map (fold (
+          Net.insert_term extraction_entry_eq o dup_fst o chk_extraction_rule ctxt
+      ) rules) ctxt
+      handle Symtab.DUP name => error ("There are already premise extraction rules binding on " ^ name)
+
+val del_premise_extraction = Premise_Extraction.map o Symtab.delete
+
+val premise_extraction =
+      Attrib.add_del (Thm.declaration_attribute (add_premise_extraction_rules o single))
+                     (Thm.declaration_attribute (fn rule => fn ctxt =>
+                          del_premise_extraction (fst (chk_extraction_get_name ctxt rule)) ctxt))
+
+val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>premise_extraction\<close> premise_extraction
+                      "Declare rewrite rules to extract premises augmenting the proof obligation")
+
+fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = is_syntactic_premise M
+  | is_syntactic_premise (Const(\<^const_name>\<open>default\<close>, _)) = true
+  | is_syntactic_premise (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+  | is_syntactic_premise (Abs (_,_,X)) = is_syntactic_premise X
+  | is_syntactic_premise (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_syntactic_premise X
+  | is_syntactic_premise (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_syntactic_premise X
+  | is_syntactic_premise (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = is_syntactic_premise X
+  | is_syntactic_premise (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = is_syntactic_premise X
+  | is_syntactic_premise (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = is_syntactic_premise X
+  | is_syntactic_premise _ = false
+
+fun extract_prems_rewr ctxt =
+  let val tab = Premise_Extraction.get ctxt
+      fun quick_check (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check X
+        | quick_check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = quick_check X
+        | quick_check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = quick_check X
+        | quick_check (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) = quick_check A orelse quick_check B
+        | quick_check tm =
+            case Term.head_of tm
+              of Const(N, _) => Symtab.defined tab N
+               | Free (N, _) => Symtab.defined tab N
+               | _ => false
+
+      fun extract ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B =>
+               (case (extract (Thm.dest_arg1 ctm), extract (Thm.dest_arg ctm))
+                  of (SOME ruleA, SOME ruleB) =>
+                      let val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> (Pa \<and> Pb) \<and> (A' \<and> B')\<close>
+                                          by (simp add: atomize_eq, blast)}
+                                   |> Thm.transfer'' ctxt
+                       in SOME (ruleA RS (ruleB RS merge))
+                      end
+                   | (SOME ruleA, NONE) =>
+                      let val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> A \<and> B \<equiv> Pa \<and> (A' \<and> B)\<close>
+                                          by (simp add: atomize_eq)}
+                       in SOME (ruleA RS merge)
+                      end
+                   | (NONE, SOME ruleB) =>
+                      let val merge = @{lemma' \<open>B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> Pb \<and> (A \<and> B')\<close>
+                                          by (simp add: atomize_eq, blast)}
+                       in SOME (ruleB RS merge)
+                      end
+                   | (NONE, NONE) => NONE)
+           | tm =>
+               (case Term.head_of tm
+                  of Const(N, _) => (case Symtab.lookup tab N
+                                       of SOME (Extract_Rule rule) => SOME rule
+                                        | SOME (Extract_Fun f) => SOME (f ctm)
+                                        | NONE => NONE)
+                   | Free(N, _)  => (case Symtab.lookup tab N
+                                       of SOME (Extract_Rule rule) => SOME rule
+                                        | SOME (Extract_Fun f) => SOME (f ctm)
+                                        | NONE => NONE)
+                   | _ => NONE)
+
+      exception Not_Meet
+      fun extract' ctxt ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>HOL.Trueprop\<close>, _) $ _ =>
+              (case extract (Thm.dest_arg ctm)
+                 of SOME rule => Conv.arg_conv (K rule) ctm
+                  | NONE => raise Not_Meet)
+           | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X =>
+              (Conv.rewr_conv @{thm' atomize_imp} then_conv
+               Conv.arg_conv (Conv.arg_conv (extract' ctxt)) then_conv
+               Conv.rewr_conv @{thm' imp_conjR[folded atomize_eq]}) ctm
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X) =>
+              (Conv.rewr_conv @{thm' atomize_all} then_conv
+               Conv.arg_conv (Phi_Conv.hol_all_conv (extract' o snd) ctxt) then_conv
+               Conv.rewr_conv @{thm' all_conj_distrib[folded atomize_eq]}) ctm
+   in fn ctxt => fn ctm =>
+   if is_syntactic_premise (Thm.term_of ctm)
+   then SOME NONE
+   else if quick_check (Thm.term_of ctm)
+   then SOME (SOME (extract' ctxt ctm))
+        handle Not_Meet => NONE
+   else NONE
+  end
+
+fun extract_prems ctxt strip =
+  let val ctxt' = Context.proof_of ctxt
+      val conv = extract_prems_rewr ctxt
+   in fn thm =>
+   case conv ctxt' (Thm.cprop_of thm)
+     of SOME NONE => SOME (if strip then thm RS' (ctxt', @{thm' Premise_D}) else thm)
+      | SOME (SOME rule) => SOME (
+          (Thm.equal_elim rule thm RS' (ctxt', conjunct1))
+            |> not strip ? (fn th => th RS' (ctxt', @{thm' Premise_I[where mode=MODE_SIMP]})))
+      | NONE => NONE
+  end
+
+
 (*structure Is_Premise_of_Obligation = Handlers ( type arg = term; type ret = bool )
 structure Local_Premises_of_Obligation = Named_Thms (
   val name = \<^binding>\<open>__local_premise_of_obligation__\<close>
   val description = "Facts inside will be added as premises into proof obligations"
 )*)
-
-val is_premise_of_obligation =
-  let fun default (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = default M
-        | default (Const(\<^const_name>\<open>default\<close>, _)) = true
-        | default (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
-        | default (Abs (_,_,X)) = default X
-        | default (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = default X
-        | default (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = default X
-        | default (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = default X
-        | default (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = default X
-        | default (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = default X
-        | default _ = false
-   in default
-  end
 
 (*
 fun is_premise_of_obligation ctxt =
@@ -223,6 +375,41 @@ fun is_premise_of_obligation ctxt =
   end
 *)
 
+val contract_premise_imp =
+    @{lemma \<open>(P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
+            by (rule, (simp add: Premise_def)+)}
+val contract_premise_imp' =
+    @{lemma \<open>(P \<and> A \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (A &&& PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
+            by (rule, (simp add: Premise_def conjunction_imp)+)}
+
+fun obligation_collect ctxt filter =
+  let fun conv ctm =
+        Phi_Help.lambda_normalization_conv (fn ctm =>
+          case Thm.term_of ctm
+            of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+                  Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
+             | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ Pr $ _
+                 => case filter ctxt (Thm.dest_arg1 ctm)
+                      of SOME NONE => (*A normal premises using the normal rule*)
+                           (Conv.implies_conv
+                              (Phi_Conv.atomize_conv ctxt then_conv
+                               Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
+                                                                        Premise_def[where mode=MODE_SIMP]})
+                              conv then_conv
+                            Conv.rewr_conv contract_premise_imp) ctm
+                       | SOME (SOME rule) => (*Not a direct premise but still has something can be extracted
+                                               so we apply the given rule to extract*)
+                           (Conv.implies_conv (Conv.rewr_conv rule) conv then_conv
+                            Conv.rewr_conv contract_premise_imp') ctm
+                       | NONE => (*Just waste*)
+                           (Conv.arg_conv conv then_conv
+                            Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm
+             | _ => raise CTERM ("unexpected proof obligation form", [ctm])
+        ) ctm
+   in conv
+  end
+
+(* REMOVE THIS WHEN NO BUG
 fun obligation_collect ctxt filter ctm =
   Phi_Help.lambda_normalization_conv (fn ctm =>
     case Thm.term_of ctm
@@ -240,6 +427,7 @@ fun obligation_collect ctxt filter ctm =
                     Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm
        | _ => raise CTERM ("unexpected proof obligation form", [ctm])
   ) ctm
+*)
 
 fun obligation_conv_all ctxt ctm =
   Phi_Help.lambda_normalization_conv (fn ctm =>
@@ -298,7 +486,7 @@ fun chk_option ctxt (a,b,~1) = (a,b,Config.get ctxt existential_obligation)
 
 fun collect_obligation_premises option ctxt thm = let open Conv
   val (collect_premises,conv_all,conv_schematic) = chk_option ctxt option
-  val filter = is_premise_of_obligation (*(Context.Proof ctxt)*)
+  val filter = extract_prems_rewr (Context.Proof ctxt)
   val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt => 
                 (if collect_premises then obligation_collect ctxt filter
                                      else Conv.all_conv) then_conv

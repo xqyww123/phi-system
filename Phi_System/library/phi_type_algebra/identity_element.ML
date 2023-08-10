@@ -130,12 +130,15 @@ fun gen_id_ele is_left (_,name) hint0 (phi0 : phi_type) generic =
                         SOME ([P], fn [P'] => Trueprop $ (Identity_Element $ S $ P')))
             else K (K NONE)
 
-      val extract_prem =
+      val prem_extractions =
         if def_contains_satisfaction phi0
-        then extract_pure_prem_by_RS (if is_left
-                                      then @{thms' \<phi>TA_Ident_I_extract_prem}
-                                      else @{thms' \<phi>TA_Ident_E_extract_prem})
-        else K (K [])
+        then [("", Phi_Reasoners.Extract_Rule (
+                      if is_left
+                      then @{lemma' \<open>Identity_Element\<^sub>I S P \<equiv> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P) \<and> Identity_Element\<^sub>I S P\<close>
+                               by (simp add: Identity_Element\<^sub>I_def Transformation_def)}
+                      else @{lemma' \<open>Identity_Element\<^sub>E S \<equiv> (1 \<Turnstile> S) \<and> Identity_Element\<^sub>E S\<close>
+                               by (simp add: Identity_Element\<^sub>E_def Transformation_def)}))]
+        else []
 
       val reasoner =
             if is_left
@@ -149,7 +152,7 @@ fun gen_id_ele is_left (_,name) hint0 (phi0 : phi_type) generic =
                  | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
             else exhaustive_PLPR_reasoner (SOME 1)
       fun reasoning _ = default_reasoning true
-                            (default_reasoning_configure extract_prem) varify_subgoal reasoner
+                            (default_reasoning_configure prem_extractions) varify_subgoal reasoner
 
       fun set_the_infer_tail ctxt th =
         if is_left then

@@ -118,6 +118,11 @@ subsection \<open>Configurations\<close>
 
 declare (in homo_one) homo_one_axioms[\<phi>reason 1100]
 
+lemma [\<phi>premise_extraction]:
+  \<open>homo_one \<psi> \<equiv> \<psi> 1 = 1 \<and> True\<close>
+  unfolding homo_one_def
+  by simp
+
 lemma (in homo_sep_mult) [\<phi>reason 1100]:
   \<open>homo_sep_mult \<psi>\<close>
   by (simp add: homo_sep_mult_axioms)
@@ -1708,8 +1713,9 @@ lemma \<phi>TA_Inh_step:
   by blast
 
 lemma \<phi>TA_Inh_extract_prem:
-  \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> (\<exists>v. v \<Turnstile> (x \<Ztypecolon> T)) \<longrightarrow> P\<close>
-  unfolding Action_Tag_def Inhabited_def .
+  \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> ((\<exists>v. v \<Turnstile> (x \<Ztypecolon> T)) \<longrightarrow> P) \<and> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P)\<close>
+  unfolding Action_Tag_def Inhabited_def atomize_eq
+  by blast
 
 ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
@@ -1748,16 +1754,6 @@ lemma \<phi>TA_1R_rule:
 \<Longrightarrow> Ant
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)\<close>
   unfolding Action_Tag_def .
-
-lemma \<phi>TA_Ident_I_extract_prem:
-  \<open>Identity_Element\<^sub>I S P \<Longrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P)\<close>
-  unfolding Identity_Element\<^sub>I_def Transformation_def
-  by blast
-
-lemma \<phi>TA_Ident_E_extract_prem:                             
-  \<open>Identity_Element\<^sub>E S \<Longrightarrow> (1 \<Turnstile> S)\<close>
-  unfolding Identity_Element\<^sub>E_def Transformation_def
-  by blast
 
 lemma \<phi>TA_Ident_I_rule_step:
   \<open> Identity_Element\<^sub>I X Q
@@ -1822,11 +1818,6 @@ lemma Object_Equiv_rule_move_set_eq:
 
 lemma Object_Equiv_rule_move_set_eq_end:
   \<open>(P \<and> R \<longrightarrow> P)\<close>
-  by blast
-
-lemma \<phi>TA_OE_extract_prem:
-  \<open>Object_Equiv T eq \<Longrightarrow> (\<forall>x y v. eq x y \<longrightarrow> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<Turnstile> (y \<Ztypecolon> T))\<close>
-  unfolding Object_Equiv_def Transformation_def
   by blast
 
 
@@ -1910,13 +1901,6 @@ lemma \<phi>TA_TF_rewr_C:
 lemma \<phi>TA_TF_pattern_IH:
   \<open> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
 \<Longrightarrow> PROP Pure.term (\<And>a \<in> S. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Any a \<w>\<i>\<t>\<h> Any' a @action A)\<close> .
-
-lemma \<phi>TA_TF_extract_prem:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. r b @action to what_ever
-\<Longrightarrow> (\<forall>v. v \<Turnstile> X \<longrightarrow> (\<exists>b. v \<Turnstile> (b \<Ztypecolon> U) \<and> r b))\<close>
-  unfolding Transformation_def Action_Tag_def
-  by blast
-
 
 
 subsubsection \<open>Functional Transformation Functor\<close>

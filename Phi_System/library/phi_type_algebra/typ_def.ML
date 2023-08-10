@@ -53,8 +53,6 @@ type hint = term
 
 val get_type_info : Context.generic -> string (*const name*) -> phi_type option
 
-structure Type_Def_Hook : HOOKS (*invoked when the phi-type is defined but before any deriver is applied*)
-
 (** Property Deriver from \<phi>-Type Definition **)
 type priority = int
 type deriver_name = string
@@ -109,6 +107,7 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 (** Define \<phi>-Type and invoke derivings **)
 
+structure Defining_Phi_Type : HOOKS (*invoked before any deriving*)
 val add_type : def * Position.T * derivings -> generic_theory -> phi_type * generic_theory
 
 (** Tools **)
@@ -692,7 +691,7 @@ fun normalize th = th
 
 (** Main **)
 
-structure Type_Def_Hook = Hooks(
+structure Defining_Phi_Type = Hooks(
   type arg = phi_type
   type state = generic_theory
 )
@@ -870,7 +869,7 @@ fun add_type (def, pos, dervs) generic =
          (expansionN, expansions)])
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)
-   |> Type_Def_Hook.invoke generic phi_type
+   |> Defining_Phi_Type.invoke generic phi_type
    |> derive_properties dervs phi_type
    |> Context_Position.restore_visible_generic generic
    |> pair phi_type

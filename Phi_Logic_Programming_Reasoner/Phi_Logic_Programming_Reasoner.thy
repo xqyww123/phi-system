@@ -817,10 +817,6 @@ ML_file \<open>library/PLPR_Syntax.ML\<close>
 
 paragraph \<open>Contract Premises for Reporting Obligation\<close>
 
-lemma contract_premise_imp:
-  \<open>(P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
-  unfolding Premise_def by (rule, rule, simp+)
-
 lemma contract_add_additional_prems:
   \<open> Q
 \<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> Q \<Longrightarrow> PROP P)
@@ -925,7 +921,7 @@ ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
 
 (* TODO: reenable!
-hide_fact contract_premise_imp contract_drop_waste contract_obligations contract_premise_all
+hide_fact contract_drop_waste contract_obligations contract_premise_all
           contract_add_additional_prems
 *)
 

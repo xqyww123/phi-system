@@ -137,12 +137,16 @@ fun OE_reasoning phi ctxt rule =
             "\<phi>TA.OE", \<^pattern_prop>\<open>Object_Equiv _ _\<close>,
             fn _ => fn (rules, (_, priority), pats, guard, ctxt) =>
                        (rules, (Phi_Reasoner.NORMAL_LOCAL_CUT, priority), pats, guard, ctxt))) ctxt
-      val extract_prem =
+
+      val prem_extractions =
         if def_contains_satisfaction phi
-        then extract_pure_prem_by_RS @{thms' \<phi>TA_OE_extract_prem}
-        else K (K [])
+        then [("", Phi_Reasoners.Extract_Rule
+                      @{lemma' \<open>Object_Equiv T eq \<Longrightarrow> (\<forall>x y v. eq x y \<longrightarrow> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> v \<Turnstile> (y \<Ztypecolon> T))\<close>
+                          by (simp add: Object_Equiv_def Transformation_def)})]
+        else []
+
    in default_reasoning true
-          (default_reasoning_configure extract_prem)
+          (default_reasoning_configure prem_extractions)
           (K (K NONE))
           (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} (K (chk_unfolded' ctxt' phi)))
           ctxt' rule
@@ -191,13 +195,13 @@ fun gen_obj_equal_singular (_,name) hint (phi0 : phi_type) thy =
                             Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr})
 
       fun OEO_reasoning1 phi ctxt = default_reasoning false
-            (default_reasoning_configure (K (K [])))
+            (default_reasoning_configure [])
             (K (K NONE))
             (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_NToA} (K (chk_unfolded' ctxt phi)))
             ctxt
 
       fun OEO_reasoning2 phi ctxt = default_reasoning false
-            (default_reasoning_configure (K (K [])))
+            (default_reasoning_configure [])
             (K (K NONE))
             (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__NToA} (K (chk_unfolded' ctxt phi)))
             ctxt

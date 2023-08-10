@@ -171,7 +171,7 @@ fun reasoning_configure (subgoal, lsequent) (local_prems, ctxt) =
             Phi_Reasoner.add_rules (map (fn rule =>
                 ([rule], \<^here>, (Phi_Reasoner.LOCAL_CUT, Phi_Reasoner.ADMIT_BACKTRACK), 300, [], [mk_black' rule], NONE)) T_rules)
           ) ctxt
-   in default_reasoning_configure (K (K [])) (subgoal, lsequent) (local_prems, ctxt)
+   in default_reasoning_configure [] (subgoal, lsequent) (local_prems, ctxt)
   end
 
 fun SgTH_reasoning phi ctxt =

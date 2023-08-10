@@ -195,19 +195,15 @@ val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> r
 
 (* Default Reasoning Configure *)
 
-type extract_pure_prems = Proof.context -> thm -> thm list
-
-val default_reasoning_configure : extract_pure_prems -> reasoning_configure
+val default_reasoning_configure : (string * Phi_Reasoners.extraction) list -> reasoning_configure
 (*classify local premises by syntactic tags. allows to extract additional local condition
-  by `extract_pure_prems`.
+  by Phi_Reasoners.extraction.
 
   It also recognizes premises tagged by \<phi>TA_pure_facts and \<phi>TA_conditioned_ToA_template.
   \<phi>TA_conditioned_ToA_template rules are conditioned by pure propositions.
   collects pure facts tagged \<phi>TA_pure_facts, to derive the condition of the \<phi>TA_conditioned_ToA_template rules,
   and therefore to instantiate possible ToA rules from \<phi>TA_conditioned_ToA_template rules.
 *)
-
-val extract_pure_prem_by_RS : thm list (*RS rules*) -> extract_pure_prems
 
 (** Solver **)
 
@@ -1293,7 +1289,7 @@ type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
 
-fun default_reasoning_configure extract_prems
+fun default_reasoning_configure extractions
                                 (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
   let val is_pure_fact = Phi_Syntax.is_action_of (
                           fn Const(\<^const_name>\<open>\<phi>TA_pure_facts\<close>, _) => true
@@ -1311,22 +1307,16 @@ fun default_reasoning_configure extract_prems
 
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
-      fun is_real_Premise (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_real_Premise X
-        | is_real_Premise (Const(\<^const_name>\<open>All\<close>, _) $ X) = is_real_Premise X
-        | is_real_Premise (Abs (_,_,X)) = is_real_Premise X
-        | is_real_Premise (Const(\<^const_name>\<open>implies\<close>, _) $ _ $ X) = is_real_Premise X
-        | is_real_Premise (Const(\<^const_name>\<open>Premise\<close>, _) $ X $ _) = is_real_Premise X
-        | is_real_Premise (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
-        | is_real_Premise (Const(\<^const_name>\<open>default\<close>, _)) = true
-        | is_real_Premise (Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)) = true
-        | is_real_Premise _ = false
-      val prem_ants = maps (fn th =>
+      val extract_prem = Phi_Reasoners.extract_prems (
+              Phi_Reasoners.add_premise_extractions extractions (Context.Proof ctxt)) false
+      val prem_ants = map_filter extract_prem local_prems
+(*maps (fn th =>
             case extract_prems ctxt th
               of [] => if is_real_Premise (Thm.concl_of th) then [th] else []
                | some => some
-            ) local_prems
+            ) local_prems*)
       val rewrs = map_filter (extract_rewr ctxt) local_prems
-      val ants = filter_out (is_real_Premise o Thm.concl_of) local_prems
+      val ants = filter_out (Phi_Reasoners.is_syntactic_premise o Thm.concl_of) local_prems
    in (prem_ants, rewrs, ToAs @ ants, ctxt)
   end
 
@@ -1468,16 +1458,6 @@ fun exhaustive_PLPR_reasoner_by_rule rule chk_unfolds ctxt sequent =
       exhaustive_PLPR_reasoner (SOME (Thm.nprems_of rule)) ctxt
                                (rule RS sequent)
   end
-
-fun extract_pure_prem_by_RS rules ctxt thm =
-  map_filter (fn rule =>
-    try (fn x => thm RS' x) (ctxt, rule)
-      |> Option.map (fn thm => thm
-          |> Simplifier.rewrite_rule ctxt @{thms' Premise_def[where mode=default] Premise_def[where mode=MODE_SIMP]}
-          |> Thm.forall_intr_vars
-          |> Phi_Conv.atomize ctxt
-          |> (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=default]})))
-  ) rules
 
 (** Other Tools **)
 
