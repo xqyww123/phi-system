@@ -3,7 +3,7 @@ chapter \<open>Pre-built \<phi>-Types\<close>
 theory Phi_Types
   imports Phi_Type_Algebra
 begin
- 
+
 ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified [] ;
     Phi_Conv.set_rules__type_form_to_ex_quantified_single_var [] \<close>
 
@@ -39,20 +39,18 @@ declare [[\<phi>trace_reasoning = 0]]
 subsubsection \<open>Algebraic Properties\<close>
 
 lemma [\<phi>reason add]:
-  \<open> homo_sep_disj_closed f
-\<Longrightarrow> homo_sep_mult f
+  \<open> closed_homo_sep f
 \<Longrightarrow> Object_Sep_Homo\<^sub>I (\<phi>Fun f) UNIV \<close>
   unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
   by (clarsimp simp add: set_mult_expn homo_sep_disj_closed.sep_disj_homo
-                         homo_sep_mult.homo_mult)
+                         homo_sep_mult.homo_mult closed_homo_sep_def homo_sep_def)
 
 lemma [\<phi>reason add]:
-  \<open> homo_sep_disj f
-\<Longrightarrow> homo_sep_mult f
+  \<open> homo_sep f
 \<Longrightarrow> Object_Sep_Homo\<^sub>E (\<phi>Fun f)\<close>
   unfolding Object_Sep_Homo\<^sub>E_def Transformation_def
   by (clarsimp simp add: set_mult_expn homo_sep_disj_def
-                         homo_sep_mult.homo_mult)
+                         homo_sep_mult.homo_mult homo_sep_def)
 
 
 
@@ -633,17 +631,54 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Vertical Composition of Func\<close>
 
+text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
+
 declare [[\<phi>trace_reasoning = 0]]
 
-\<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
+\<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   deriving Basic
        and \<open> homo_one f \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
        and \<open> homo_one f \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
+       and Is_Functional
+       and Functional_Transformation_Functor
+       and Trivial_\<Sigma>
+       and Open_Abstraction_Full
+       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<lambda>x. x)\<close>
 
-term \<open>homo_one f \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
+text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
 
-term homo_one
+lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
+  \<open> homo_sep \<psi>
+\<Longrightarrow> homo_sep_disj_closed \<psi> \<and> Prem = (\<lambda>T U xy. True)
+    \<or>\<^sub>c\<^sub>u\<^sub>t Prem = (\<lambda>T U xy. Separation_Disj \<psi> (snd xy \<Ztypecolon> U) (fst xy \<Ztypecolon> T))
+\<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) Prem UNIV (\<lambda>x. x) \<close>
+  unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
+            Separation_Disj_def closed_homo_sep_def homo_sep_def homo_sep_disj_closed_def
+            homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def
+  by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
+
+subsubsection \<open>Configuration\<close>
+
+setup \<open>Context.theory_map (Phi_Type_Algebra.Defining_Phi_Type.add 12 (fn phi => fn thy =>
+  let exception Found of term * term
+      fun find (X as Const(\<^const_name>\<open>\<phi>Composition\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Fun\<close>, _) $ f) $ T)
+            = raise Found (X, Const(\<^const_name>\<open>\<phi>Fun'\<close>, dummyT) $ f $ T)
+        | find (A $ B) = (find A; find B)
+        | find (Abs (_, _, X)) = find X
+        | find _ = ()
+
+      open Pretty
+      val _ = List.app (find o Thm.prop_of) (#equations phi)
+              handle Found (X,Y) => Phi_Reasoner.warn_pretty thy 0 (fn () =>
+                  paragraph (text "We have noticed you are using" @ [brk 1,
+                      Context.cases Syntax.pretty_term_global Syntax.pretty_term thy X, brk 1] @
+                      text "instead of a more specific \<phi>-type" @ [brk 1,
+                      Context.cases Syntax.pretty_term_global Syntax.pretty_term thy Y, str ".", brk 1] @
+                      text "We highly recommend the later form which replaces the former totally and\
+                           \ have more general automation on separation homomorphism." ))
+   in thy
+  end))\<close>
 
 section \<open>Structural Connectives\<close>
 
@@ -654,7 +689,7 @@ subsubsection \<open>List Item\<close>
 declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
-  where \<open>List_Item T \<equiv> \<phi>Fun (\<lambda>v. [v]) \<Zcomp> T\<close>
+  where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
        and Is_Functional
        and Open_Abstraction_Full
@@ -820,7 +855,7 @@ lemma [\<phi>reason 10000]:
 
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
-  where \<open>\<phi>MapAt k T = (\<phi>Fun (fun_upd 1 k) \<Zcomp> T)\<close>
+  where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
        and Identity_Element
        and Functional_Transformation_Functor
@@ -977,7 +1012,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
 declare [[\<phi>trace_reasoning = 0]]
                    
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
-  where \<open>\<phi>MapAt_L k T = (\<phi>Fun (push_map k) \<Zcomp> T)\<close>
+  where \<open>\<phi>MapAt_L k T = (push_map k \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
        and Identity_Element
        and Functional_Transformation_Functor

@@ -51,7 +51,7 @@ signature NU_REASONER = sig
   val info_print : Proof.context -> int (*level*) -> (unit -> string) -> unit
   val info_pretty: Proof.context -> int (*level*) -> (unit -> Pretty.T) -> unit
   val info_pretty_generic : Context.generic -> int (*level*) -> (unit -> Pretty.T) -> unit
-  val warn_pretty: Proof.context -> int (*level*) -> (unit -> Pretty.T) -> unit
+  val warn_pretty: Context.generic -> int (*level*) -> (unit -> Pretty.T) -> unit
   val error : string -> 'a
   val bad_config : string -> 'a
 
@@ -257,7 +257,7 @@ fun info_pretty_generic ctxt level G =
   else ()
 
 fun warn_pretty ctxt level G =
-  if level <= Config.get ctxt trace
+  if level <= Config.get_generic ctxt trace
   then warning (Pretty.string_of (G ()))
   else ()
 
