@@ -1168,7 +1168,6 @@ lemma [\<phi>reason 1000]:
   by (clarsimp simp add: domainoid_def Premise_def homo_domainoid_def
                          closed_homo_sep_def homo_sep_disj_closed_def; metis)
 
-  
 
 lemma
   \<open> Domainoid_Homo\<^sub>L d T dm\<^sub>T
@@ -1188,9 +1187,6 @@ lemma \<comment> \<open>The above rule is reversible for any domainoid \<open>d\
 
 
 
-
-lemma
-  \<open>A \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> B\<close>
 
 
 lemma [\<phi>reason 1000]:

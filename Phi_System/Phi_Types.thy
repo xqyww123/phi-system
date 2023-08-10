@@ -510,21 +510,15 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Algebraic Properties\<close>
 
-lemma \<phi>Composition_Separation_Homo\<^sub>I:
-  \<open> Object_Sep_Homo\<^sub>I B D
-\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) DD (\<lambda>x. x)\<close>
-  unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
-  apply clarsimp
-
 lemma \<phi>Composition_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>I B UNIV
-\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) UNIV (\<lambda>x. x)\<close>
+\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
   by (clarsimp, insert times_set_I, blast)
 
 lemma (*The above rule is reversible. requiring the sep homo domain being the univ is already the weakest.*)
   \<open> S \<noteq> {}
-\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) S (\<lambda>x. x)
+\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>_ _ _. True) S (\<lambda>x. x)
 \<Longrightarrow> Object_Sep_Homo\<^sub>I B UNIV \<close>
   unfolding Separation_Homo\<^sub>I_def Object_Sep_Homo\<^sub>I_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
@@ -1271,11 +1265,22 @@ lemma [\<phi>reason add]:
   unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
   by (clarsimp simp add: homo_sep_def homo_sep_mult_def homo_sep_disj_def)
 
+lemma \<phi>Composition_Separation_Homo\<^sub>I'[\<phi>reason 1200]:
+  \<open> Separation_Homo\<^sub>I ((\<Zcomp>) (\<phi>sep_homo \<psi>)) ((\<Zcomp>) (\<phi>sep_homo \<psi>)) ((\<Zcomp>) (\<phi>sep_homo \<psi>))
+                     (\<lambda>T U xy. Separation_Disj \<psi> (snd xy \<Ztypecolon> U) (fst xy \<Ztypecolon> T))
+                     UNIV (\<lambda>x. x)\<close>
+  unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
+            Separation_Disj_def
+  by (clarsimp; metis homo_sep_def homo_sep_mult_def)
+  
+
+
 lemma \<phi>sep_homo_Prod:
   \<open> (\<phi>sep_homo \<psi> \<Zcomp> (T \<^emph> U)) = (\<phi>sep_homo \<psi> \<Zcomp> T) \<^emph> (\<phi>sep_homo \<psi> \<Zcomp> U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add:; rule; clarsimp)
   using homo_sep.axioms(1) homo_sep.axioms(2) homo_sep_disj_def homo_sep_mult_def apply blast
-  
+
+
   
 
 lemma

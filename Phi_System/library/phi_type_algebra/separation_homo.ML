@@ -104,6 +104,9 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
                     (if flag
                      then \<^Const>\<open>Separation_Homo\<^sub>I a b c d e f x_ty\<close>
                        $ Fa $ Fb $ F_term
+                       $ (Abs ("_", \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close>,
+                          Abs ("_", \<^Type>\<open>fun e \<^Type>\<open>set b\<close>\<close>,
+                          Abs ("_", \<^Type>\<open>prod c f\<close>, \<^Const>\<open>True\<close>))))
                        $ (\<^Const>\<open>Collect \<^Type>\<open>prod c f\<close>\<close> $ (\<^Const>\<open>case_prod c f \<^Type>\<open>bool\<close>\<close> $ dom))
                        $ zip
                      else \<^Const>\<open>Separation_Homo\<^sub>E a b c d e f x_ty\<close>
@@ -131,9 +134,9 @@ fun gen_SH is_intro (_,name) hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
       (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint_has_type_operator_only (
-            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ => F
+            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F
              | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ => F)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ D $ z) = [D,z]
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
         | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ u) = [u]
         | extract_oprs_from_hint _ = []
 
