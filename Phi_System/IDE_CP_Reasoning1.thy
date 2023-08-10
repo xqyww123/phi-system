@@ -998,12 +998,12 @@ type_synonym ('a,'d) domainoid = \<open> 'a \<Rightarrow> 'd \<close>
 definition domainoid :: \<open>('a::sep_magma,'d::sep_magma) domainoid \<Rightarrow> bool\<close>
   where \<open>domainoid \<delta> \<longleftrightarrow> closed_homo_sep \<delta>\<close>
 
-text \<open>A domainoid \<open>\<delta>\<close> is a closed homomorphism and also a forgetful functor that extracts the domain
+text \<open>A domainoid extraction \<open>\<delta>\<close> is a closed homomorphism and also a forgetful functor that extracts the domain
   parts and forgets the data parts of a SA, such that \<open>\<delta>(x) ## \<delta>(y) \<longleftrightarrow> x ## y\<close> is sufficient to
   determine the separation disjunction \<open>x ## y\<close>, but of a simpler expression.
   Usually, \<open>\<delta>(x)\<close> is the domain of the resource \<open>x\<close>, such as the address of a memory object,
   but it can be others like \<open>address \<rightarrow> permission\<close> the permission map of a sharing memory
-  \<open>address \<rightarrow> permission \<times> value\<close>. Considering this, we call it domain-oid.
+  \<open>address \<rightarrow> permission \<times> value\<close>. Considering this, we call it domain-oid extraction or simply domainoid.
 
   By extracting the domainoids of two \<phi>-type assertions or other assertions, we can determine the
   separation disjunction between the two assertions without involving and reducing to

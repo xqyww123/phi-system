@@ -277,7 +277,8 @@ val chk_unfolded': Proof.context -> Phi_Type_Algebra.phi_type -> term -> unit
 val conv_chk_unfolded : Phi_Type_Algebra.phi_type -> Proof.context -> conv
       (*roughly check if a phi-type expression is expanded, and warn if not*)
 
-val quantifies_abstract_object : (term -> term option) (*get the abstract object*) -> (term -> term)
+val chk_abstract_object_quantified : (term -> term option) (*get the abstract object*)
+                                  -> Proof.context -> term -> term
 
 end
 
@@ -1494,26 +1495,28 @@ fun make_forall_quantified_property_for_parameters_of_a_phi_type mk (F $ T) =
          | NONE => make_forall_quantified_property_for_parameters_of_a_phi_type mk F)
   | make_forall_quantified_property_for_parameters_of_a_phi_type _ _ = []
 
-fun quantifies_abstract_object get_x hint =
+fun chk_abstract_object_quantified get_x ctxt hint =
   let fun get_x' (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_x' X
         | get_x' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = get_x' X
         | get_x' (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = get_x' X
+        | get_x' (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = get_x' X
         | get_x' (Abs(_, _, X)) = get_x' X
         | get_x' X = get_x X
 
-      fun lambda data (\<^Const>\<open>Pure.imp\<close> $ A $ B) =
-            \<^Const>\<open>Pure.imp\<close> $ lambda data A $ lambda data B
-        | lambda data (\<^Const>\<open>Pure.all ty\<close> $ X) = \<^Const>\<open>Pure.all ty\<close> $ lambda data X
-        | lambda data (Abs(N,Ty,X)) = Abs(N,Ty, lambda data X)
-        | lambda (N,Ty,v) (XX as (\<^Const>\<open>Trueprop\<close> $ X)) =
-            if Term.exists_subterm (fn x => x = v) X
-            then \<^Const>\<open>Trueprop\<close> $ (HOLogic.all_const Ty $ Abs(N,Ty, Phi_Help.abstract_over (v, X)))
-            else XX
-        | lambda _ X = X
+      fun err (N,Ty,v) hint = let open Pretty in
+          raise Automation_Fail (fn () =>
+          case Logic.strip_assums_concl hint
+            of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
+                    [para "The abstract object must be universally quantified, e.g.,",
+                     Syntax.pretty_term ctxt (\<^Const>\<open>Trueprop\<close> $
+                        (HOLogic.all_const Ty $ Abs(N,Ty, Phi_Help.abstract_over (v, X))))]
+             | _ => [para "The abstract object must be universally quantified"]
+          )
+        end
                  
    in case get_x' hint
-   of SOME (X as Free (N,Ty)) => lambda (N,Ty,X) hint
-    | SOME (X as Var ((N,_),Ty)) => lambda (N,Ty,X) hint
+   of SOME (X as Free (N,Ty)) => err (N,Ty,X) hint
+    | SOME (X as Var ((N,_),Ty)) => err (N,Ty,X) hint
     | SOME (Bound _) => hint
     | NONE => hint
   end

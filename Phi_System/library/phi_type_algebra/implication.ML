@@ -60,7 +60,7 @@ fun guess_property_inhab_atom (phi:phi_type) ctxt =
 val NAME = "Implication"
 fun gen_inhab (der_id, name) hint00 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val hint0 = Option.map (quantifies_abstract_object (
+      val hint0 = Option.map (chk_abstract_object_quantified (
             let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
                   | target (Const(\<^const_name>\<open>HOL.implies\<close>, _)
                               $ (Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ X $ T))
@@ -70,7 +70,7 @@ fun gen_inhab (der_id, name) hint00 (phi0 : phi_type) thy =
                         else SOME X
              in target
             end
-            )) hint00
+            ) ctxt0) hint00
 
       val guess_property = if is_Type_Opr (Term.fastype_of (#term phi0))
                            then guess_property_inhab_tyop

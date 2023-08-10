@@ -72,7 +72,7 @@ lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
   unfolding Action_Tag_def .
 
-ML_file \<open>library/reasoner.ML\<close>
+ML_file_debug \<open>library/reasoner.ML\<close>
 
 lemma \<r>Guard_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Guard P\<close> unfolding \<r>Guard_def .
 

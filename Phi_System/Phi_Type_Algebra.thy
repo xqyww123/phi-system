@@ -1715,7 +1715,8 @@ ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
 hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step
 
-\<phi>property_deriver Implication 90 for (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) = \<open>
+\<phi>property_deriver Implication 90 for ( \<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>
+                                      | \<open>\<forall>x. _ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) = \<open>
   Phi_Type_Algebra_Derivers.inhabitance false
 \<close>
 
@@ -2066,6 +2067,7 @@ lemma "_all_simps_plus_":
 ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
 
 \<phi>property_deriver Open_Abstraction_Full 130 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
+                                                | \<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>
                                                 | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
     = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction false \<close>

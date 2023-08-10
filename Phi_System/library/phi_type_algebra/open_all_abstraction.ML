@@ -152,9 +152,21 @@ fun instantiate_the_var var ctxt sequent =
   end
 
 
+fun chk_quantifier_place (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ B)
+      = \<^Const>\<open>Pure.imp\<close> $ chk_quantifier_place A $ chk_quantifier_place B
+  | chk_quantifier_place ((H as Const(\<^const_name>\<open>Pure.all\<close>, _)) $ Abs (N,Ty,X))
+      = H $ Abs (N,Ty, chk_quantifier_place X)
+  | chk_quantifier_place (\<^Const>\<open>Trueprop\<close> $
+                           ((H as Const(\<^const_name>\<open>Action_Tag\<close>, _))
+                              $ ((H2 as Const(\<^const_name>\<open>HOL.All\<close>, _)) $ Abs (N,Ty,X))
+                              $ A))
+      = \<^Const>\<open>Trueprop\<close> $ (H2 $ Abs (N, Ty, H $ X $ A))
+  | chk_quantifier_place X = X
+
 fun gen_trans_to_raw_abst (_,name) hint00 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val hint0 = Option.map (quantifies_abstract_object (
+      val hint0 = Option.map (chk_quantifier_place
+            #> chk_abstract_object_quantified (
             let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
                   | target (\<^Const>\<open>Transformation _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ X $ T) $ _ $ _) =
                         if Term.exists_subterm (fn x => x = X) T
@@ -162,7 +174,7 @@ fun gen_trans_to_raw_abst (_,name) hint00 (phi0 : phi_type) thy =
                         else SOME X
              in target
             end
-            )) hint00
+            ) ctxt0) hint00
 
       fun parse_hint ctxt hint =
             let fun extract (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract X

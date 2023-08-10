@@ -59,12 +59,11 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
  
 declare  [[\<phi>trace_reasoning = 0]]
-                                               
+                                                      
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
        and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
-       and \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<Longrightarrow> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> Q \<close>
        and Open_Abstraction_Full
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
@@ -135,12 +134,12 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-           
+               
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
- 
+  
   deriving \<open>(\<And>A x. x \<Ztypecolon> T A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P A x)
-        \<Longrightarrow> x \<Ztypecolon> \<phi>Dependent_Sum T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) (snd x) \<close>
+        \<Longrightarrow> \<forall>x. x \<Ztypecolon> \<phi>Dependent_Sum T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) (snd x) \<close>
     and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
     and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
@@ -150,8 +149,9 @@ text \<open>Transformation functor requires inner elements to be transformed int
         \<Longrightarrow> Identity_Element\<^sub>E ((c, u) \<Ztypecolon> \<Sigma> T) \<close>
     and    \<open>Is_Functional (u \<Ztypecolon> T c)
         \<Longrightarrow> Is_Functional ((c, u) \<Ztypecolon> \<Sigma> T)\<close>
-    and    \<open>(\<And>a. a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
-        \<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
+    and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
+        \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
+
 
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
@@ -160,7 +160,7 @@ declare [[simp_trace_depth_limit = 10]]
 
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
-  deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
+  deriving \<open> (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> \<forall>s. s \<Ztypecolon> \<S> T  \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
        and Identity_Element
@@ -564,7 +564,7 @@ declare [[\<phi>trace_reasoning = 0]]
   where [embed_into_\<phi>type]: \<open>(T \<or>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U))\<close>
   deriving \<open>  (\<And>x. x \<Ztypecolon> A \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pa x)
           \<Longrightarrow> (\<And>x. x \<Ztypecolon> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pb x)
-          \<Longrightarrow> x \<Ztypecolon> (A \<or>\<^sub>\<phi> B) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pa (fst x) \<or> Pb (snd x) \<close>
+          \<Longrightarrow> \<forall>x. x \<Ztypecolon> (A \<or>\<^sub>\<phi> B) \<i>\<m>\<p>\<l>\<i>\<e>\<s> Pa (fst x) \<or> Pb (snd x) \<close>
        and \<open>  Object_Equiv T eqa
           \<Longrightarrow> Object_Equiv U eqb
           \<Longrightarrow> Object_Equiv (T \<or>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
@@ -594,7 +594,7 @@ declare [[\<phi>trace_reasoning = 0]]
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
   deriving \<open>  (\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
           \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q x)
-          \<Longrightarrow> x \<Ztypecolon> T \<and>\<^sub>\<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) \<and> Q (snd x)\<close>
+          \<Longrightarrow> \<forall>x. x \<Ztypecolon> T \<and>\<^sub>\<phi> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P (fst x) \<and> Q (snd x)\<close>
        and \<open>  Object_Equiv T eqa
           \<Longrightarrow> Object_Equiv U eqb
           \<Longrightarrow> Object_Equiv (T \<and>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
@@ -1251,14 +1251,13 @@ lemma [\<phi>inhabitance_rule 1000]:
 
 subsection \<open>Morphism of Separation Homomorphism\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
 
-\<phi>type_def \<phi>sep_homo :: \<open>('a::sep_magma \<Rightarrow> 'c::sep_magma) \<Rightarrow> ('c,'a) \<phi>\<close>
-  where \<open>\<phi>sep_homo \<psi> = (\<phi>Fun \<psi> \<phi>\<s>\<u>\<b>\<j> homo_sep \<psi>)\<close>
-  deriving Basic
-       and \<open>Object_Equiv (\<phi>sep_homo \<psi>) (\<lambda>x y. \<psi> x = \<psi> y)\<close>
-       and Is_Functional
-       and Open_Abstraction_Full
+\<phi>type_def \<phi>sep_homo :: \<open>('a::sep_magma \<Rightarrow> 'c::sep_magma) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
+  where \<open>\<phi>sep_homo \<psi> T = (\<phi>Fun \<psi> \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> homo_sep \<psi>)\<close>
+  deriving Implication
+       (*and Is_Functional
+       and Open_Abstraction_Full*)
 
 lemma [\<phi>reason add]:
   \<open> Object_Sep_Homo\<^sub>I (\<phi>sep_homo \<psi>) {(y,x). \<psi> x ## \<psi> y \<longrightarrow> x ## y} \<close>
