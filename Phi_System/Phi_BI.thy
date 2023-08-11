@@ -68,11 +68,6 @@ begin
 
 type_synonym 'a BI = \<open>'a set\<close>
 
-subsection \<open>Bottom\<close>
-
-abbreviation Bottom ("\<bottom>") where \<open>Bottom \<equiv> (0::'a::sep_magma BI)\<close>
-abbreviation Bottom_abs ("\<bottom>\<^sub>\<lambda>") where \<open>Bottom_abs \<equiv> (0 :: 'b \<Rightarrow> 'a::sep_magma BI)\<close>
-
 subsection \<open>Satisfaction\<close>
 
 definition Satisfaction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> (infix "\<Turnstile>" 50) where \<open>(\<Turnstile>) = (\<in>)\<close>
@@ -95,7 +90,7 @@ lemma ExSet_expn[iff, \<phi>expns]:
   unfolding Satisfaction_def using ExSet_expn_set .
 
 lemma Bottom_expn[iff, \<phi>expns]:
-  \<open>\<not> (p \<Turnstile> \<bottom>)\<close>
+  \<open>\<not> (p \<Turnstile> {})\<close>
   unfolding Satisfaction_def by simp
 
 lemma Zero_expn[iff, \<phi>expns]:
@@ -442,8 +437,13 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Bottom\<close>
 
-text \<open>We write the bottom as \<open>0::'a BI\<close> instead of the usual \<open>\<bottom>\<close> though they are equal,
-  in order to leverage the existing automation on semiring (\<open>0, 1, *, +\<close>).\<close>
+text \<open>Despite of semantically \<open>0 = \<bottom>\<close> where syntactically \<open>\<bottom> \<equiv> {}\<close>, but there is not syntactically
+  \<open>0 \<equiv> {}\<close>. We prefer to use \<open>0\<close> instead of the more usual \<open>\<bottom>\<close> for the sake of forming
+  a semiring together with \<open>1 \<equiv> emp\<close>, \<open>*\<close>, \<open>+ \<equiv> \<or>\<^sub>B\<^sub>I\<close>, to leverage the existing automation of semiring.\<close>
+
+abbreviation Bottom ("\<bottom>\<^sub>B\<^sub>I") where \<open>Bottom \<equiv> (0::'a::sep_magma BI)\<close>
+abbreviation Bottom_abs ("\<bottom>\<^sub>\<lambda>") where \<open>Bottom_abs \<equiv> (0 :: 'b \<Rightarrow> 'a::sep_magma BI)\<close>
+
 
 lemma zero_implies_any[\<phi>reason 2000, simp]:
   \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X\<close>
@@ -705,7 +705,7 @@ lemma implies_prod_bi_prod:
 
 subsection \<open>Multiplicative Finite Quantification\<close>
 
-definition Mul_Quant :: \<open>('a \<Rightarrow> 'b::sep_algebra BI) \<Rightarrow> 'a set \<Rightarrow> 'b BI\<close>
+definition Mul_Quant :: \<open>('a \<Rightarrow> 'b::sep_algebra BI) \<Rightarrow> 'a set \<Rightarrow> 'b BI\<close> ("\<big_ast>")
   where \<open>Mul_Quant A S \<equiv> (prod A S \<s>\<u>\<b>\<j> finite S)\<close>
 
 syntax
@@ -724,6 +724,23 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> (\<big_ast>i\<in>S. A i) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>i\<in>S. P i)\<close>
   unfolding Mul_Quant_def Action_Tag_def Inhabited_def meta_Ball_def Premise_def
   by (clarsimp; metis Satisfaction_def ex_in_conv prod_zero zero_set_iff)
+
+lemma Mul_Quant_ord:
+  \<open> (\<And>i\<in>S. A i \<le> A' i)
+\<Longrightarrow> (\<big_ast>i\<in>S. A i) \<le> (\<big_ast>i\<in>S. A' i) \<close>
+  unfolding atomize_Ball
+proof -
+  { assume \<open>finite S\<close>
+    have \<open>(\<forall>i\<in>S. A i \<le> A' i) \<longrightarrow> (\<Prod>i\<in>S. A i) \<le> (\<Prod>i\<in>S. A' i)\<close>
+      by (induct rule: finite_induct[OF \<open>finite S\<close>];
+          clarsimp simp add: BI_sub_iff;
+          blast)
+  }
+  moreover assume \<open>\<forall>i\<in>S. A i \<le> A' i\<close>
+  ultimately show ?thesis
+  unfolding Mul_Quant_def
+  by (metis (full_types) BI_bot_ord Subjection_Flase Subjection_True)
+qed
 
 
 

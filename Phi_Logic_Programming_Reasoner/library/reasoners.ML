@@ -48,10 +48,17 @@ signature PHI_REASONERS = sig
   val add_premise_extractions : extraction list -> Context.generic -> Context.generic
   val add_premise_extraction_rules : thm list -> Context.generic -> Context.generic
   val del_premise_extractions : extraction list -> Context.generic -> Context.generic
-  val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
+  val extract_prem  : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
+  val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm list
   val extract_prems_rewr : Context.generic (*the context used to fetch the extractions*)
                         -> Proof.context -> cterm -> thm option option
   val is_syntactic_premise : term -> bool
+
+  (* Simplifications that uses the extracted premises *)
+  val asm_simplify : Proof.context -> thm -> thm
+  val asm_lr_simplify : Proof.context -> thm -> thm
+  val asm_simp_tac : Proof.context -> int -> tactic
+  val asm_lr_simp_tac : Proof.context -> int -> tactic
 
   (*structure Is_Premise_of_Obligation : HANDLERS
       (*Tell me what antecedents are considered premise of a proof obligation to be reported,
@@ -193,7 +200,9 @@ fun context_tactic_to_state_transition tac fail ctxt sequent =
     of SOME (th', _) => SOME (ctxt, th')
      | NONE => NONE *)
 
-(*** Defer ***)
+(*** Obligation Extraction ***)
+
+(** Premise Extraction **)
 
 (*Given any antecedent, if we can extract abstract pure facts that can help to solve the target
   proof obligation?*)
@@ -365,7 +374,7 @@ fun extract_prems_rewr ctxt =
    else NONE
   end
 
-fun extract_prems ctxt strip =
+fun extract_prem ctxt strip =
   let val ctxt' = Context.proof_of ctxt
       val conv = extract_prems_rewr ctxt
    in fn thm =>
@@ -376,6 +385,9 @@ fun extract_prems ctxt strip =
             |> not strip ? (fn th => th RS' (ctxt', @{thm' Premise_I[where mode=MODE_SIMP]})))
       | NONE => NONE
   end
+
+fun extract_prems ctxt strip thm =
+  the_default [] (Option.map Phi_Help.conj_elims (extract_prem ctxt strip thm))
 
 
 (*structure Is_Premise_of_Obligation = Handlers ( type arg = term; type ret = bool )
@@ -402,6 +414,24 @@ fun is_premise_of_obligation ctxt =
      | NONE => default tm
   end
 *)
+
+(** Applications of the Premise Extraction **)
+
+
+fun gen_simplify simp ctxt =
+  let val extract = extract_prems (Context.Proof ctxt) true
+      val sctxt = Simplifier.set_mksimps (fn ctxt =>
+                      maps (Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
+                    o extract) ctxt
+   in simp sctxt
+  end
+
+val asm_simplify = gen_simplify Simplifier.asm_simplify
+val asm_lr_simplify = gen_simplify Simplifier.asm_lr_simplify
+val asm_simp_tac = gen_simplify Simplifier.asm_simp_tac
+val asm_lr_simp_tac = gen_simplify Simplifier.asm_lr_simp_tac
+
+(** Obligation Extraction **)
 
 val contract_premise_imp =
     @{lemma \<open>(P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>

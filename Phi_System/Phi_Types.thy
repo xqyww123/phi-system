@@ -432,7 +432,7 @@ lemma [\<phi>reason 1000]:
 
 
 subsection \<open>Vertical Composition\<close>
-                    
+
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving Functional_Transformation_Functor
@@ -551,6 +551,68 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
   \<open>p \<in> (f \<Ztypecolon> (\<forall>\<^sub>\<phi> T)) \<longleftrightarrow> (\<forall>x. p \<in> (f x \<Ztypecolon> T x))\<close>
   unfolding \<phi>Type_univ_quant_def \<phi>Type_def by clarsimp
 *)
+
+
+subsection \<open>Embedding Additive Disjunction\<close>
+
+subsubsection \<open>Preliminary Settings\<close>
+
+term case_sum
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason 1020]:
+  \<open> A a \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> case_sum A B (Inl a) \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>
+  by simp
+
+lemma [\<phi>reason 1020]:
+  \<open> B b \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> case_sum A B (Inr b) \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> A a \<i>\<m>\<p>\<l>\<i>\<e>\<s> P a)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> B b \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q b)
+\<Longrightarrow> case_sum A B x \<i>\<m>\<p>\<l>\<i>\<e>\<s> case_sum P Q x \<close>
+  by (cases x; simp)
+
+
+
+notepad
+begin
+
+  assume th: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<Longrightarrow> P A\<close>
+  ML_val \<open>
+let val ctxt = Simplifier.set_mksimps (fn ctxt =>
+       map Thm.symmetric o Simpdata.mksimps Simpdata.mksimps_pairs ctxt
+        o @{print}
+        o Raw_Simplifier.rewrite_rule \<^context> @{thms' Premise_def}) \<^context>
+ in Simplifier.asm_lr_simplify ctxt @{thm' th}
+end
+\<close>
+
+end
+
+lemma
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<Longrightarrow> P A\<close>
+  apply (simp add: Premise_def)
+
+
+
+
+subsubsection \<open>Addition of Algebraic Data Type\<close>
+
+declare [[\<phi>trace_reasoning = 3]]
+
+\<phi>type_def \<phi>ADT_Add :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
+  where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
+  deriving Object_Equiv
+
+thm old.sum.simps
+
+term \<open>(fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U)\<close>
+
 
 
 subsection \<open>Embedding Additive Disjunction\<close>

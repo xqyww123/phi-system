@@ -125,12 +125,6 @@ include PHI_HELP
 
   val generic_theory_mapping : (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
 
-  val list_mk_conj : term list -> term
-  val list_mk_disj : term list -> term
-  val conj_intros: Proof.context -> thm list -> thm
-  val conj_elims : Proof.context -> thm -> thm list
-
-
   (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
   The stuffs here improve it, but they still require that loose bounds do not occur in the redex*)
   val abstract_over : term * term -> term
@@ -523,20 +517,6 @@ fun instantiate_higher_order_schematic_var num ctxt thm =
 fun generic_theory_mapping f =
   Context.mapping (Context.theory_map (f Morphism.identity))
                   (Local_Theory.declaration {syntax=false,pervasive=false} f)
-
-fun list_mk_conj [] = \<^const>\<open>True\<close>
-  | list_mk_conj L = foldr1 HOLogic.mk_conj L
-
-fun list_mk_disj [] = \<^const>\<open>True\<close>
-  | list_mk_disj L = foldr1 HOLogic.mk_disj L
-
-fun conj_elims ctxt th =
-  case Thm.prop_of th
-    of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => []
-     | _ => HOLogic.conj_elims ctxt th
-
-fun conj_intros _ [] = @{thm' TrueI}
-  | conj_intros ctxt L = foldr1 (uncurry (HOLogic.conj_intr ctxt)) L
 
 (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
   This version improves it, but it still requires that loose bounds do not occur in `v`*)

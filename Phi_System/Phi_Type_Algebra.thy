@@ -2256,6 +2256,12 @@ lemmas [\<phi>constraint_expansion] =
   list.size map_eq_Cons_conv list_all2_lengthD[THEN HOL.Eq_TrueI]
 
 
+subsubsection \<open>Sum\<close>
+
+lemma pred_sum_eq_case_sum[\<phi>constraint_expansion]:
+  \<open>pred_sum P Q x \<longleftrightarrow> case_sum P Q x\<close>
+  by (cases x; simp)
+
 
 
 subsubsection \<open>Set\<close>

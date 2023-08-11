@@ -15,6 +15,12 @@ val lambda_normalization_rule : (thm -> thm) -> thm -> thm
 
 val unique_flexflex : Proof.context option -> thm -> thm
 
+val list_mk_conj : term list -> term
+val list_mk_disj : term list -> term
+val conj_intros: Proof.context -> thm list -> thm
+val conj_elim  : thm -> thm * thm
+val conj_elims : thm -> thm list
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -89,6 +95,39 @@ fun unique_flexflex ctxt thm =
     of ([], _) => raise THM ("unique_flexflex: fail to solve flex-flex pairs", 0, [thm])
      | ([th'], _) => th'
      | (L, _) => raise THM ("unique_flexflex: multi unification of flex-flex pairs", 0, L)
+
+fun list_mk_conj [] = \<^const>\<open>True\<close>
+  | list_mk_conj L = foldr1 HOLogic.mk_conj L
+
+fun list_mk_disj [] = \<^const>\<open>True\<close>
+  | list_mk_disj L = foldr1 HOLogic.mk_disj L
+
+fun conj_elim thPQ =
+  let
+    val _ = case Thm.prop_of thPQ
+              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) => ()
+               | _ => raise THM ("conj_elim", 0, [thPQ])
+    val (P, Q) = Thm.dest_binop (Thm.dest_arg (Thm.cprop_of thPQ))
+      handle CTERM (msg, _) => raise THM (msg, 0, [thPQ]);
+    val thP =
+      Thm.implies_elim \<^instantiate>\<open>P and Q in lemma (open) \<open>P \<and> Q \<Longrightarrow> P\<close> by (rule conjunct1)\<close> thPQ;
+    val thQ =
+      Thm.implies_elim \<^instantiate>\<open>P and Q in lemma (open) \<open>P \<and> Q \<Longrightarrow> Q\<close> by (rule conjunct2)\<close> thPQ;
+  in (thP, thQ) end;
+
+fun conj_elims th =
+  case Thm.prop_of th
+    of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => []
+     | _ => let fun elim th =
+                  let val (th1, th2) = conj_elim th
+                   in elim th1 @ elim th2
+                  end handle THM _ => [th]
+             in elim th
+            end
+
+fun conj_intros _ [] = @{thm' TrueI}
+  | conj_intros ctxt L = foldr1 (uncurry (HOLogic.conj_intr ctxt)) L
+
 
 end
 
