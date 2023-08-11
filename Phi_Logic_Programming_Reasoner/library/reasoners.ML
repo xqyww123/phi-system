@@ -298,7 +298,7 @@ fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _
   | is_syntactic_premise (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = is_syntactic_premise X
   | is_syntactic_premise _ = false
 
-fun extract_prems_rewr ctxt =
+fun gen_extract_prems_rewr ctxt =
   let val net = Premise_Extraction.get ctxt
       val thy = Context.theory_of ctxt
 
@@ -369,29 +369,52 @@ fun extract_prems_rewr ctxt =
                Conv.rewr_conv @{lemma' \<open>(\<And>c. P c \<and> W c) \<equiv> Trueprop (All P \<and> All W)\<close>
                                   by (unfold atomize_all, rule, blast, blast)}) ctm
            | _ => raise Not_Meet
-   in fn ctxt => fn ctm =>
+   in (quick_check,
+   fn ctxt => fn ctm =>
    if is_syntactic_premise (Thm.term_of ctm)
    then SOME NONE
    else if quick_check (Thm.term_of ctm)
    then SOME (SOME (extract' ctxt ctm))
         handle Not_Meet => NONE
-   else NONE
+   else NONE)
   end
+
+fun extract_prems_rewr ctxt = snd (gen_extract_prems_rewr ctxt)
 
 fun extract_prem ctxt strip =
   let val ctxt' = Context.proof_of ctxt
-      val conv = extract_prems_rewr ctxt
+      val (qchk, conv) = gen_extract_prems_rewr ctxt
    in fn thm =>
-   case conv ctxt' (Thm.cprop_of thm)
-     of SOME NONE => SOME (if strip then thm RS' (ctxt', @{thm' Premise_D}) else thm)
-      | SOME (SOME rule) => SOME (
-          (Thm.equal_elim rule thm RS' (ctxt', conjunct1))
-            |> not strip ? (fn th => th RS' (ctxt', @{thm' Premise_I[where mode=MODE_SIMP]})))
-      | NONE => NONE
+   if is_syntactic_premise (Thm.prop_of thm)
+   then SOME (if strip
+              then (Raw_Simplifier.norm_hhf ctxt' thm) RS' (ctxt', @{thm' Premise_D})
+              else thm)
+   else if qchk (Thm.prop_of thm)
+        then let val thm = Raw_Simplifier.norm_hhf ctxt' thm
+              in (case conv ctxt' (Thm.cprop_of thm)
+                    of SOME NONE => SOME (if strip
+                                          then thm RS' (ctxt', @{thm' Premise_D})
+                                          else thm)
+                     | SOME (SOME rule) => SOME (
+                         (Thm.equal_elim rule thm RS' (ctxt', conjunct1))
+                           |> not strip ? (fn th => th RS' (ctxt', @{thm' Premise_I[where mode=MODE_SIMP]})))
+                     | NONE => NONE)
+             end
+   else NONE
   end
 
 fun extract_prems ctxt strip thm =
-  the_default [] (Option.map Phi_Help.conj_elims (extract_prem ctxt strip thm))
+  let fun simp th =
+        case Thm.concl_of th
+          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
+                simp (Conv.fconv_rule (Conv.rewr_conv @{thm' atomize_all[symmetric]}) th)
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
+                simp (Thm.forall_elim_var (Thm.maxidx_of th) th)
+           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
+                maps simp (Phi_Help.conj_elims th)
+           | _ => [th]
+   in the_default [] (Option.map simp (extract_prem ctxt strip thm))
+  end
 
 
 (*structure Is_Premise_of_Obligation = Handlers ( type arg = term; type ret = bool )

@@ -583,11 +583,14 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Addition of Algebraic Data Type\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
+declare [[\<phi>trace_reasoning = 0]]
+      
 \<phi>type_def \<phi>ADT_Add :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
-  deriving Object_Equiv
+  deriving Implication
+       and \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
+
+term \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
 
 thm old.sum.simps
 
@@ -690,6 +693,8 @@ declare [[\<phi>trace_reasoning = 0]]
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+ 
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi>
 \<Longrightarrow> homo_sep_disj_closed \<psi> \<and> Prem = (\<lambda>T U xy. True)
@@ -730,7 +735,7 @@ lemma
 \<Longrightarrow> prod A S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>x \<in> S. P x)\<close>
   unfolding Action_Tag_def meta_Ball_def Inhabited_def Premise_def
   apply clarsimp
-  by (metis BI_sub_iff Bottom_expn prod_zero subset_antisym)
+  by (metis Satisfaction_def Zero_expn ex_in_conv prod_zero)
   
   thm comm_monoid_mult_class.prod.remove
 
@@ -763,6 +768,8 @@ lemma \<comment> \<open>A example for how to represent list of multi-elements\<c
 
 
 subsubsection \<open>Empty List\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
   
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
@@ -905,19 +912,20 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 0]]
+ declare [[\<phi>trace_reasoning = 3]]
 
 
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
-  deriving Basic
+  deriving Separation_Homo\<^sub>I
+       (*and Basic
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
        and Open_Abstraction_Full
        and Is_Functional
-       and Trivial_\<Sigma>
+       and Trivial_\<Sigma>*)
 
 
 

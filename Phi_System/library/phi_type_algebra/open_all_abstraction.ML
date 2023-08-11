@@ -94,9 +94,8 @@ fun instantiate_the_var var ctxt sequent =
             = pass_conjs (pass_conjs concls_varx A) B
         | pass_conjs (concls,varx) (Var v' $ vx $ vy)
             = if v' = var
-              then ((\<^Const>\<open>HOL.eq y_ty\<close> $ y $ vy) :: concls,
-                    case vx of Bound i => opt_join varx i
-                             | _ => error "BUG" )
+              then case vx of Bound i => ((\<^Const>\<open>HOL.eq y_ty\<close> $ y $ vy) :: concls, opt_join varx i)
+                            | _ => ((\<^Const>\<open>HOL.eq y_ty\<close> $ y $ vy) :: concls, varx)
               else error "Phi_Type_Algebra_Derivers.instantiate_the_var: unexpected schematic variables"
         | pass_conjs (concls,meet) P
             = (if has_the_var P
