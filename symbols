@@ -4,7 +4,8 @@
 \<black_circle>     code: 0x0025CF  font: PhiSymbols  group: punctuation
 \<half_blkcirc>     code: 0x0025D2  font: PhiSymbols  group: punctuation
 
-\<heavy_comma>      code: 0x00275F    font: PhiSymbols    group: punctuation  abbrev: ,,
+\<heavy_comma>     code: 0x00275F   font: PhiSymbols  group: punctuation abbrev: ,,
+\<big_ast>         code: 0x002731   font: PhiSymbols  group: operator    abbrev: <**>
 \<blangle>         code: 0x00276c   font: PhiSymbols  group: punctuation abbrev: <<b
 \<brangle>         code: 0x00276d   font: PhiSymbols  group: punctuation abbrev: >>b
 \<medium_left_bracket>   code: 0x002774  font: PhiSymbols   abbrev: {{

@@ -680,6 +680,19 @@ setup \<open>Context.theory_map (Phi_Type_Algebra.Defining_Phi_Type.add 12 (fn p
    in thy
   end))\<close>
 
+subsection \<open>Multiplicative Finite Product\<close>
+
+lemma
+  \<open> (\<And>x \<in> S. A x \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
+\<Longrightarrow> finite S
+\<Longrightarrow> prod A S \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>x \<in> S. P x)\<close>
+  unfolding Action_Tag_def meta_Ball_def Inhabited_def Premise_def
+  apply clarsimp
+  by (metis BI_sub_iff Bottom_expn prod_zero subset_antisym)
+  
+  thm comm_monoid_mult_class.prod.remove
+
+
 section \<open>Structural Connectives\<close>
 
 subsection \<open>List Item \& Empty List\<close>

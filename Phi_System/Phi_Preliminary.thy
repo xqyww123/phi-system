@@ -326,8 +326,6 @@ lemma meta_case_prod_simp[iff]:
   \<open>meta_case_prod f (x,y) \<equiv> f x y\<close>
   unfolding meta_case_prod_def by simp
 
-thm prod.case[folded atomize_eq]
-
 syntax
   "_meta_Ball" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> prop \<Rightarrow> prop" ("(3\<And>(_/\<in>_)./ _)" [0, 0, 0] 0)
 
@@ -345,6 +343,10 @@ lemma meta_Ball_sing[simp]:
 lemma Ball_for_reason:
   \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> A \<Longrightarrow> P x)\<close>
   unfolding atomize_imp atomize_all Ball_def Premise_def .
+
+lemma atomize_Ball:
+  \<open> (\<And>x\<in>S. P x) \<equiv> Trueprop (\<forall>x\<in>S. P x) \<close>
+  unfolding meta_Ball_def Premise_def Ball_def atomize_imp atomize_all .
 
 lemma [\<phi>reason 1000]:
   \<open> PROP P y

@@ -216,6 +216,21 @@ lemma [\<phi>reason 1200]:
   unfolding Is_Functional_def set_eq_iff
   by (simp add: set_mult_expn, blast)
 
+lemma [\<phi>reason 1200]:
+  \<open> (\<And>i\<in>S. Is_Functional (A i))
+\<Longrightarrow> Is_Functional (\<big_ast>i\<in>S. A i) \<close>
+  unfolding Is_Functional_def Mul_Quant_def atomize_Ball Ball_def
+proof clarsimp
+  fix x y
+  assume prems: \<open>\<forall>x. x \<in> S \<longrightarrow> (\<forall>xa y. xa \<Turnstile> A x \<and> y \<Turnstile> A x \<longrightarrow> xa = y)\<close> (is ?A)
+                \<open>x \<Turnstile> prod A S\<close> (is ?B)
+                \<open>y \<Turnstile> prod A S\<close> (is ?C)
+     and \<open>finite S\<close>
+  have \<open>?A \<and> ?B \<and> ?C \<longrightarrow> x = y\<close>
+    by (induct arbitrary: x y rule: finite_induct[OF \<open>finite S\<close>]; clarsimp; blast)
+  then show \<open>x = y\<close>
+    using prems by blast
+qed
 
 
 subsection \<open>Injective\<close>

@@ -923,6 +923,34 @@ lemma [\<phi>reason 1200]:
   \<open>Identity_Element\<^sub>E (any \<Ztypecolon> \<phi>None)\<close>
   unfolding Identity_Element\<^sub>E_def by simp
 
+lemma [\<phi>reason 1200]:
+  \<open> (\<And>i. Identity_Element\<^sub>I (A i) (P i))
+\<Longrightarrow> Identity_Element\<^sub>I (\<big_ast>i\<in>S. A i) (\<forall>i\<in>S. P i)\<close>
+  unfolding Identity_Element\<^sub>I_def Mul_Quant_def Transformation_def
+proof clarsimp
+  fix v
+  assume prems: \<open>(\<And>i. \<forall>v. v \<Turnstile> A i \<longrightarrow> v = 1 \<and> P i)\<close>
+                \<open>v \<Turnstile> prod A S\<close>
+     and \<open>finite S\<close>
+  show \<open>v = 1 \<and> (\<forall>x\<in>S. P x)\<close>
+    by (insert prems; induct rule: finite_induct[OF \<open>finite S\<close>]; clarsimp; fastforce)
+qed
+
+lemma [\<phi>reason 1200]:
+  \<open> (\<And>i. Identity_Element\<^sub>E (A i))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> finite S
+\<Longrightarrow> Identity_Element\<^sub>E (\<big_ast>i\<in>S. A i) \<close>
+  unfolding Identity_Element\<^sub>E_def Mul_Quant_def Transformation_def Premise_def
+proof clarsimp
+  fix v
+  assume prems: \<open>(\<And>i. 1 \<Turnstile> A i)\<close>
+     and \<open>finite S\<close>
+  show \<open>1 \<Turnstile> prod A S\<close>
+    by (insert prems;
+        induct rule: finite_induct[OF \<open>finite S\<close>];
+        clarsimp;
+        (insert mult_1_class.mult_1_left sep_magma_1_right, blast))
+qed
 
 
 section \<open>Determine Separation Disjunction on Specification Level\<close>

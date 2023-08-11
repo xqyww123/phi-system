@@ -169,12 +169,20 @@ lemma Suf_Inhabited_fallback_True:
   else SOME ((ctxt, @{thm Suf_Inhabited_fallback_True} RS sequent), Seq.empty)
 )\<close>
 
+lemma [\<phi>reason 1000]:
+  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> Inhabited A\<close>
+  unfolding Action_Tag_def Premise_def
+  by blast
+
+(*
 lemma Membership_E_Inhabitance:
   \<open> x \<Turnstile> S
 \<Longrightarrow> Inhabited S \<longrightarrow> C
 \<Longrightarrow> C\<close>
   unfolding Inhabited_def by blast
-
+*)
 
 subsection \<open>\<phi>-Type\<close>
 
@@ -694,6 +702,28 @@ lemma implies_prod_bi_prod:
 \<Longrightarrow> L' * R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> L * R \<w>\<i>\<t>\<h> P \<and> Q "
   unfolding Transformation_def split_paired_All sep_conj_expn by blast
 
+
+subsection \<open>Multiplicative Finite Quantification\<close>
+
+definition Mul_Quant :: \<open>('a \<Rightarrow> 'b::sep_algebra BI) \<Rightarrow> 'a set \<Rightarrow> 'b BI\<close>
+  where \<open>Mul_Quant A S \<equiv> (prod A S \<s>\<u>\<b>\<j> finite S)\<close>
+
+syntax
+  "_Mul_Quant" :: "pttrn => 'a set => 'b => 'b::comm_monoid_mult"  ("(2\<big_ast>(_/\<in>_)./ _)" [0, 51, 10] 10)
+translations \<comment> \<open>Beware of argument permutation!\<close>
+  "\<big_ast>i\<in>A. b" == "CONST Mul_Quant (\<lambda>i. b) A"
+
+syntax
+  "_qMul_Quant" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  ("(2\<big_ast>_ | (_)./ _)" [0, 0, 10] 10)
+translations
+  "\<big_ast>x|P. t" => "CONST Mul_Quant (\<lambda>x. t) {x. P}"
+
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>i\<in>S. A i \<i>\<m>\<p>\<l>\<i>\<e>\<s> P i)
+\<Longrightarrow> (\<big_ast>i\<in>S. A i) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>i\<in>S. P i)\<close>
+  unfolding Mul_Quant_def Action_Tag_def Inhabited_def meta_Ball_def Premise_def
+  by (clarsimp; metis Satisfaction_def ex_in_conv prod_zero zero_set_iff)
 
 
 
@@ -1283,5 +1313,23 @@ lemma [\<phi>reason 1000]:
   \<open>Object_Equiv \<top>\<^sub>\<phi> (\<lambda>_ _. True)\<close>
   unfolding Object_Equiv_def \<phi>Any.unfold
   by simp
+
+lemma Object_Equiv_Mul_Quant[\<phi>reason 1000]:
+  \<open> (\<And>i\<in>S. Object_Equiv (\<lambda>x. A x i) (eq i))
+\<Longrightarrow> Object_Equiv (\<lambda>x. \<big_ast>i\<in>S. A x i) (\<lambda>x y. \<forall>i. eq i x y)\<close>
+  unfolding Object_Equiv_def Transformation_def \<phi>Type_def
+            meta_Ball_def Premise_def Mul_Quant_def
+  proof (clarsimp, unfold Satisfaction_def)
+    fix x y v
+    assume prems: \<open>(\<And>x. x \<in> S \<Longrightarrow> \<forall>xa y. eq x xa y \<longrightarrow> (\<forall>v. v \<in> A xa x \<longrightarrow> v \<in> A y x))\<close>
+                  \<open>\<forall>i. eq i x y\<close>
+                  \<open>v \<in> prod (A x) S\<close>
+       and \<open>finite S\<close>
+    show \<open>v \<in> prod (A y) S\<close>
+      by (insert prems;
+          induct arbitrary: x y v rule: finite_induct[OF \<open>finite S\<close>];
+          clarsimp simp add: set_mult_expn;
+          metis)
+  qed
 
 end
