@@ -196,9 +196,9 @@ fun gen_SgTH (_,name) hint0 (phi0 : phi_type) thy =
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SgH_rewr_C}) then_conv
                 Conv.implies_concl_conv (Conv.implies_conv
                   (PLPR_Syntax.premise_tag_conv (
-                    Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0))))
+                    Phi_Reasoners.asm_rewrite true (Simps.equip ctxt addsimps (#equations phi0))))
                   (Phi_Conv.action_tag_conv (
-                    Simplifier.asm_rewrite (Simps.equip ctxt
+                    Phi_Reasoners.asm_rewrite true (Simps.equip ctxt
                         addsimps (@{thms' \<phi>Dependent_Sum.unfold \<phi>Dependent_Sum.unfold[folded \<phi>Auto_\<Sigma>_def]}
                                   @ #equations phi0))
                   )))

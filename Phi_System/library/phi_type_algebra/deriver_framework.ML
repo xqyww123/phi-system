@@ -941,7 +941,7 @@ fun oblg_solver proof_id ctxt sequent =
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
    let val ctxt'' = Simps.equip ctxt
                  |> Simplifier.del_cong @{thm HOL.conj_cong}
-       val sequent'1 = Simplifier.asm_lr_simp_tac ctxt'' 1 sequent
+       val sequent'1 = Phi_Reasoners.asm_lr_simp_tac true ctxt'' 1 sequent
                     |> Seq.hd
                     (*|> @{print}*)
     in Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Simps.simp_rules ctxt, sequent'1)
@@ -1307,7 +1307,7 @@ fun default_reasoning_configure extractions
 
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
-      val extract_prem = Phi_Reasoners.extract_prems (
+      val extract_prem = Phi_Reasoners.extract_prem (
               Phi_Reasoners.add_premise_extractions extractions (Context.Proof ctxt)) false
       val prem_ants = map_filter extract_prem local_prems
 (*maps (fn th =>
@@ -1367,7 +1367,7 @@ let fun has_disj_ants th =
       val local_prems'1 = map elim_out_ants local_prems'
 
       fun pass_out_ant ant = (ant RS' (ctxt, @{thm' Action_Tag_D}))
-            |> Phi_Help.conj_elims ctxt
+            |> Phi_Help.conj_elims
             |> map ( Thm.forall_elim_vars (Thm.maxidx_of lsequent)
                    o Phi_Help.repeat (fn th => th RS' (ctxt, @{thm' spec})))
 

@@ -794,10 +794,6 @@ lemma [(*THEN SE_clean_waste,*) \<phi>reason_template add]:
     Tr
   \<medium_right_bracket> .
 
-(*schematic_goal
-  \<open>A ?x \<Longrightarrow> A ?x \<Longrightarrow> B\<close>
-  ML_val \<open>#goal @{Isar.goal} |> Simplifier.asm_lr_simplify \<^context>\<close> *)
-
 (* [--d--][--a--][--c--]
    [---------b---------]
    Give a, expect b, need d, c. *)

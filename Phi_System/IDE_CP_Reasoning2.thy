@@ -176,10 +176,10 @@ Priority Convention:
 \<^item> 2600: Usual reasonings
 \<^item> 2100: Padding void holes after the last item. Rules capturing the whole items including
         the last item in the \<open>\<^emph>\<close>-sequence should have priority higher than this.
-\<^item> 2000: Step-by-step searching
+\<^item> 2000: Step-by-step searching (only the target side, as the source side is by SE)
 \<^item> 1000 - 1999: Confident rules or shortcuts for specific \<phi>-types
 \<^item> 800:  Disjunction in target part
-\<^item> 50-54: Enters Structural Extraction. Elim-rules \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A'\<close> having a priority
+\<^item> 50-51: Enters Structural Extraction. Elim-rules \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A'\<close> having a priority
          greater than 54, will be applied before Structural Extraction, and those less than 50,
         will only be applied in the backtrack of the Structural Extraction.
 \<^item> 12: Instantiate existentially quantified variables in the target part
@@ -805,6 +805,7 @@ declare [[\<phi>reason !12 NToA_cond_source_A NToA_cond_source_B
 
 hide_fact NToA_cond_source_A NToA_cond_source_B
 
+(*TODO*)
 lemma [\<phi>reason 2600 except \<open>(if ?var then _ else _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<or>\<^sub>c\<^sub>u\<^sub>t (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P))
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False) \<or>\<^sub>c\<^sub>u\<^sub>t (B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P))
@@ -1163,6 +1164,119 @@ lemma [\<phi>reason 2000]:
 
 definition StructuralTag ("<Structural> _" [10] 9) where "StructuralTag \<equiv> Trueprop"
 lemma StructuralTag_I: "P \<Longrightarrow> <Structural> P" unfolding StructuralTag_def . *)
+
+subsection \<open>Miscellaneous\<close>
+
+subsubsection \<open>Case-split of Sum\<close>
+
+lemma [\<phi>reason 2000]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A a \<w>\<i>\<t>\<h> P a)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B b \<w>\<i>\<t>\<h> Q b)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum A B x \<w>\<i>\<t>\<h> case_sum P Q x \<close>
+  by (cases x; simp)
+
+lemma [\<phi>reason 2010]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A a \<r>\<e>\<m>\<a>\<i>\<n>\<s> Ra a \<w>\<i>\<t>\<h> P a)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B b \<r>\<e>\<m>\<a>\<i>\<n>\<s> Rb b \<w>\<i>\<t>\<h> Q b)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps TARGET] R: case_sum Ra Rb x
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum A B x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> case_sum P Q x \<close>
+  by (cases x; simp add: Simplify_def)
+
+lemma 
+  \<open> Y = case_sum Ya Yb x
+\<Longrightarrow> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<w>\<i>\<t>\<h> P a)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<w>\<i>\<t>\<h> Q b)
+\<Longrightarrow> case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> case_sum P Q x \<close>
+  by (cases x; simp add: Simplify_def)
+
+term case_sum
+ML \<open>Thm.generalize_cterm (Names.empty, Names.make_set ["a"]) 3 \<^cterm>\<open>a = b\<close>\<close>
+
+thm sum.case_distrib
+
+lemma
+  \<open>(case_sum fa fb x) (case_sum va vb x) \<equiv> (case_sum (\<lambda>x. fa x (va x)) (\<lambda>x. fb x (vb x)) x)\<close>
+  unfolding atomize_eq
+  by (cases x; simp)
+
+ML \<open>
+(* case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> case_sum P Q x
+OR case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> case_sum P Q x *)
+fun reasoner_ToA_of_case_sum rule (ctxt,sequent) = Seq.make (fn () =>
+  let val (qvars, _, concl, ctxt'N) =
+              Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent))) ctxt
+      val qvar_names = Names.build (fold (Names.add_set o Term.term_name o Thm.term_of) qvars)
+      val idx = Thm.maxidx_of sequent
+      val (_,Y0',_) = Phi_Syntax.dest_transformation (Thm.term_of concl)
+      val (has_remainder, Y0) =
+        case Y0' of Const(\<^const_name>\<open>times\<close>, _) $ Y $ (Const(\<^const_name>\<open>FOCUS_TAG\<close>, _) $ _) =>
+                         (true , Y)
+                  | _ => (false, Y0')
+      val (X,Yr,_) = Phi_Syntax.dest_transformation_c (Thm.generalize_cterm (Names.empty, qvar_names) (idx+1) concl)
+      val Y = if has_remainder then Thm.dest_arg1 Yr else Yr
+      val x = Thm.dest_arg X
+      val \<^Type>\<open>sum ta tb\<close> = Thm.typ_of_cterm x
+      val ([Na,Nb], ctxt'N) = Variable.variant_fixes ["xa","xb"] ctxt'N
+      val xa = Thm.cterm_of ctxt'N (Free (Na, ta))
+      val xb = Thm.cterm_of ctxt'N (Free (Nb, tb))
+
+      val vars = Term.add_vars Y0 []
+      val Ya_s = map (fn ((N,i),ty) => Thm.apply (Thm.var ((N,i+2), Thm.ctyp_of ctxt (ta --> ty))) xa) vars
+      val Yb_s = map (fn ((N,i),ty) => Thm.apply (Thm.var ((N,i+3), Thm.ctyp_of ctxt (tb --> ty))) xb) vars 
+      val Y_s  = map2 (fn a => fn b =>
+                   let val ty = Thm.typ_of_cterm a
+                    in Thm.apply (Thm.apply (Thm.apply (
+                            Thm.cterm_of ctxt \<^Const>\<open>case_sum ta ty tb\<close>) a) b) x
+                   end) Ya_s Yb_s
+      val Ya' = Thm.instantiate_cterm (TVars.empty, Vars.make (vars ~~ Ya_s)) Y
+      val Yb' = Thm.instantiate_cterm (TVars.empty, Vars.make (vars ~~ Yb_s)) Y
+      val Y'  = Thm.instantiate_cterm (TVars.empty, Vars.make (vars ~~ Y_s )) Y
+      val rule' = Drule.infer_instantiate ctxt [(("Y",0),Y'), (("Ya",0),Ya'), (("Yb",0),Yb')] rule
+               |> Conv.gconv_rule () 1
+      val sequent' = (rule RS' (ctxt, sequent))
+                  |> Drule.infer_instantiate ctxt [((""))]
+   in NONE
+  end)
+\<close>
+
+\<phi>reasoner_ML \<open>ML (case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)\<close> 2000 (\<open>case_sum _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>)
+  = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+  let val (qvars, _, concl, ctxt') =
+              Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent))) ctxt
+      val qvar_names = Names.build (fold (Names.add_set o Term.term_name o Thm.term_of) qvars)
+      val idx = Thm.maxidx_of sequent
+      val (_,Y0,_) = Phi_Syntax.dest_transformation (Thm.term_of concl)
+      val (_,Y ,_) = Phi_Syntax.dest_transformation_c (Thm.generalize_cterm (Names.empty, qvar_names) (idx+1) concl)
+      val vars = Term.add_vars Y0 []
+      val cvars = map (apsnd (Thm.ctyp_of ctxt)) vars
+      val Ya = map (fn ((N,i),cty) => Thm.var ((N,i+2),cty)) cvars
+      val Yb = map (fn ((N,i),cty) => Thm.var ((N,i+3),cty)) cvars
+   in NONE
+  end)
+\<close>
+
+lemma [\<phi>reason 2005]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> W * A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<w>\<i>\<t>\<h> P a)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> W * B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<w>\<i>\<t>\<h> Q b)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps TARGET] Y: case_sum Ya Yb x
+\<Longrightarrow> W * case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> case_sum P Q x \<close>
+  by (cases x; simp add: Simplify_def)
+
+lemma [\<phi>reason 2010]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<r>\<e>\<m>\<a>\<i>\<n>\<s> Ra a \<w>\<i>\<t>\<h> P a)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<r>\<e>\<m>\<a>\<i>\<n>\<s> Rb b \<w>\<i>\<t>\<h> Q b)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps TARGET] Y: case_sum Ya Yb x
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps TARGET] R: case_sum Ra Rb x
+\<Longrightarrow> case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> case_sum P Q x \<close>
+  by (cases x; simp add: Simplify_def)
+
+lemma [\<phi>reason 2015]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> W * A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<r>\<e>\<m>\<a>\<i>\<n>\<s> Ra a \<w>\<i>\<t>\<h> P a)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> W * B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb b \<r>\<e>\<m>\<a>\<i>\<n>\<s> Rb b \<w>\<i>\<t>\<h> Q b)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps TARGET] Y: case_sum Ya Yb x
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps TARGET] R: case_sum Ra Rb x
+\<Longrightarrow> W * case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> case_sum P Q x \<close>
+  by (cases x; simp add: Simplify_def)
 
 
 section \<open>Separation Extraction\<close>

@@ -54,11 +54,15 @@ signature PHI_REASONERS = sig
                         -> Proof.context -> cterm -> thm option option
   val is_syntactic_premise : term -> bool
 
-  (* Simplifications that uses the extracted premises *)
-  val asm_simplify : Proof.context -> thm -> thm
-  val asm_lr_simplify : Proof.context -> thm -> thm
-  val asm_simp_tac : Proof.context -> int -> tactic
-  val asm_lr_simp_tac : Proof.context -> int -> tactic
+  (* Simplifications that uses the extracted premises.
+     The boolean: use_origin. if not use_origin, drops the original premises
+     and only remains the extracted premises.*)
+  val asm_simplify : bool -> Proof.context -> thm -> thm
+  val asm_lr_simplify : bool -> Proof.context -> thm -> thm
+  val asm_simp_tac : bool -> Proof.context -> int -> tactic
+  val asm_lr_simp_tac : bool -> Proof.context -> int -> tactic
+  val asm_rewrite : bool -> Proof.context -> conv
+  val asm_lr_rewrite : bool -> Proof.context -> conv
 
   (*structure Is_Premise_of_Obligation : HANDLERS
       (*Tell me what antecedents are considered premise of a proof obligation to be reported,
@@ -418,11 +422,14 @@ fun is_premise_of_obligation ctxt =
 (** Applications of the Premise Extraction **)
 
 
-fun gen_simplify simp ctxt =
+(* if not use_origin, drops the original premises and only remains the extracted premises. *)
+fun gen_simplify simp use_origin ctxt =
   let val extract = extract_prems (Context.Proof ctxt) true
+      val extract' = if use_origin then (fn th => th :: extract th)
+                     else extract
       val sctxt = Simplifier.set_mksimps (fn ctxt =>
                       maps (Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
-                    o extract) ctxt
+                    o extract') ctxt
    in simp sctxt
   end
 
@@ -430,6 +437,8 @@ val asm_simplify = gen_simplify Simplifier.asm_simplify
 val asm_lr_simplify = gen_simplify Simplifier.asm_lr_simplify
 val asm_simp_tac = gen_simplify Simplifier.asm_simp_tac
 val asm_lr_simp_tac = gen_simplify Simplifier.asm_lr_simp_tac
+val asm_rewrite = gen_simplify Simplifier.asm_rewrite
+val asm_lr_rewrite = gen_simplify Simplifier.asm_lr_rewrite
 
 (** Obligation Extraction **)
 

@@ -322,7 +322,7 @@ fun setup_rule_generation (pos,mode,priority,(raw_dependences,pass),pats,guard) 
                                     |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
                        in Variable.export ctxt'1 ctxt
                             (map ( Simplification_Protect.protect ctxt's
-                                #> Simplifier.asm_lr_simplify ctxt's
+                                #> Phi_Reasoners.asm_lr_simplify true ctxt's
                                 #> Simplification_Protect.unprotect ctxt's) rules'1)
                       end
                 val rule'1 = Phi_Help.beta_eta_contract (rule OF props)

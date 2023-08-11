@@ -10,10 +10,6 @@ val type_form_to_ex_quantified : Proof.context -> conv
 val type_form_to_ex_quantified_single_var : Proof.context -> conv
         (*note this form is the required target form of To-Transformation*)
 
-(* Auxiliary *)
-
-(*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
-val move_Ex_for_set_notation : simproc
 
 structure Embed_into_Phi_Type : SIMPSET
 
@@ -77,25 +73,6 @@ structure Embed_into_Phi_Type = Simpset (
          in Attrib.add_del add' del'
         end)
 )
-
-(*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
-val move_Ex_for_set_notation =
-  Simplifier.make_simproc \<^context> "Embed_into_Phi_Type.move_Ex" {
-  lhss = [\<^term>\<open>\<exists>y. x = f y \<and> (\<exists>b. P y b)\<close>],
-  proc = fn m => fn ctxt => fn ctm =>
-    case Thm.term_of ctm
-      of _ $ Abs (y, _, _ $ _ $ (_ $ Abs (b, _, _))) =>
-        let val ret = Conv.rewr_conv @{lemma \<open>\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b\<close>
-                                          by (unfold atomize_eq, blast)} ctm
-            val prop = case Thm.prop_of ret
-                         of Eq $ LHS $ (Exb $ Abs (_, Tb, Exy $ Abs (_, Ty, Body))) =>
-                            Eq $ LHS $ (Exb $ Abs (b, Tb, Exy $ Abs (y, Ty, Body)))
-                          | _ => raise CTERM ("",[])
-         in SOME (Thm.renamed_prop prop ret)
-        end
-        handle CTERM _ => NONE
-       | _ => NONE
-}
 
 val _ = Theory.setup (Context.theory_map (
   Embed_into_Phi_Type.map (fn ctxt =>

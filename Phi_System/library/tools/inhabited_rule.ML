@@ -61,7 +61,7 @@ fun extract_implied_facts ctxt statement =
    |> Phi_Reasoner.reason1 (K "fail to extract implied fact. It is an internal error and some reasonig rules are miss-configured.")
                            (SOME 1) true ctxt
    |> Simplifier.simplify (Inhabitance_SS.enhance ctxt)
-   |> Phi_Help.conj_elims ctxt
+   |> Phi_Help.conj_elims
   end
 
 fun is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (

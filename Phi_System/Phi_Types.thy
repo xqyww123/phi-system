@@ -579,26 +579,6 @@ lemma [\<phi>reason 1000]:
 
 
 
-notepad
-begin
-
-  assume th: \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<Longrightarrow> P A\<close>
-  ML_val \<open>
-let val ctxt = Simplifier.set_mksimps (fn ctxt =>
-       map Thm.symmetric o Simpdata.mksimps Simpdata.mksimps_pairs ctxt
-        o @{print}
-        o Raw_Simplifier.rewrite_rule \<^context> @{thms' Premise_def}) \<^context>
- in Simplifier.asm_lr_simplify ctxt @{thm' th}
-end
-\<close>
-
-end
-
-lemma
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A \<Longrightarrow> P A\<close>
-  apply (simp add: Premise_def)
-
-
 
 
 subsubsection \<open>Addition of Algebraic Data Type\<close>

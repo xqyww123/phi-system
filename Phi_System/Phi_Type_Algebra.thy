@@ -479,7 +479,7 @@ val ths = #fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_n
 |> flat
 val ((_,ths2),_) = Variable.import true ths \<^context>
 val xxx = ths2
-|> map (Simplifier.asm_simplify (Simplifier.clear_simpset \<^context> addsimps @{thms HOL.simp_thms ex_simps[symmetric]}))
+|> map (Phi_Reasoners.asm_simplify true (Simplifier.clear_simpset \<^context> addsimps @{thms HOL.simp_thms ex_simps[symmetric]}))
 |> filter (fn th => (case Thm.concl_of th of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => false | _ => true))
 |> distinct (Thm.equiv_thm \<^theory>)
 \<close>

@@ -188,7 +188,14 @@ structure Assertion_SS = Simpset (
 )
 
 val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
-      ctxt addsimprocs [Simplifier.the_simproc \<^context> "HOL.NO_MATCH"])))
+      (ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>HOL.defined_All\<close>,
+                         \<^simproc>\<open>defined_all\<close>, \<^simproc>\<open>defined_Collect\<close>, \<^simproc>\<open>Set.defined_All\<close>,
+                         \<^simproc>\<open>Set.defined_Bex\<close>, \<^simproc>\<open>unit_eq\<close>, \<^simproc>\<open>case_prod_beta\<close>,
+                         \<^simproc>\<open>case_prod_eta\<close>, \<^simproc>\<open>Collect_mem\<close>,
+                         Phi_Conv.move_Ex_for_set_notation]
+            addsimps @{thms' Sum_Type.sum.case HOL.simp_thms})
+          |> Simplifier.add_cong @{thm' Subjection_cong}
+    )))
 
 structure Assertion_SS_Source = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
@@ -252,7 +259,6 @@ lemmas [assertion_simps] =
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
   \<phi>V_simps
   \<phi>Prod_expn'' \<phi>Prod_expn'
-  HOL.simp_thms
 
 lemmas [assertion_simps_source] =
           ExSet_times_left ExSet_times_right ExSet_simps_adconj ExSet_simps_addisj

@@ -123,7 +123,7 @@ fun gen_id_ele is_left (_,name) hint0 (phi0 : phi_type) generic =
       val ind_conv = default_ind_conv (K (K Conv.all_conv),
                        fn ctxt => fn _ =>
                             HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Action_Tag_def}) then_conv
-                            Simplifier.asm_rewrite (Simps.equip ctxt addsimps (#equations phi0)))
+                            Phi_Reasoners.asm_rewrite true (Simps.equip ctxt addsimps (#equations phi0)))
       val varify_subgoal =
             if is_left
             then K (fn Trueprop $ (Identity_Element $ S $ P) =>

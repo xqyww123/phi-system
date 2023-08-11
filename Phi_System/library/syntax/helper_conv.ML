@@ -14,6 +14,9 @@ Converting \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<dots> \<Longrighta
 val aggregate_imps_hol : conv -> conv
 val expand_aggregated_imps_hol : conv (*for Ai*) -> conv (*for C*) -> conv
 
+(*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
+val move_Ex_for_set_notation : simproc
+
 end
 
 structure Phi_Conv : PHI_CONV = struct
@@ -73,6 +76,23 @@ fun expand_aggregated_imps_hol Cp Cc ctm =
             (implies_conv Cp Cc) ctm
      | _ => Cc ctm
 
-
+(*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
+val move_Ex_for_set_notation =
+  Simplifier.make_simproc \<^context> "Embed_into_Phi_Type.move_Ex" {
+  lhss = [\<^term>\<open>\<exists>y. x = f y \<and> (\<exists>b. P y b)\<close>],
+  proc = fn m => fn ctxt => fn ctm =>
+    case Thm.term_of ctm
+      of _ $ Abs (y, _, _ $ _ $ (_ $ Abs (b, _, _))) =>
+        let val ret = Conv.rewr_conv @{lemma \<open>\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b\<close>
+                                          by (unfold atomize_eq, blast)} ctm
+            val prop = case Thm.prop_of ret
+                         of Eq $ LHS $ (Exb $ Abs (_, Tb, Exy $ Abs (_, Ty, Body))) =>
+                            Eq $ LHS $ (Exb $ Abs (b, Tb, Exy $ Abs (y, Ty, Body)))
+                          | _ => raise CTERM ("",[])
+         in SOME (Thm.renamed_prop prop ret)
+        end
+        handle CTERM _ => NONE
+       | _ => NONE
+}
 
 end
