@@ -743,7 +743,7 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
 \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) Prem UNIV (\<lambda>x. x) \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
             Separation_Disj_def closed_homo_sep_def homo_sep_def closed_homo_sep_disj_def
-            homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def
+            homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
 
 subsubsection \<open>Configuration\<close>
@@ -921,7 +921,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and SE_Trim_Empty
 
         
-        
+
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
@@ -1240,18 +1240,16 @@ lemma [\<phi>reason 1000]:
 subsubsection \<open>Permission Annotation\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-   
+     
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Basic
        and \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> \<forall>x. x \<Ztypecolon> n \<odiv> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x \<and> 0 < n\<close>
        and Is_Functional
        and Functional_Transformation_Functor
-       and Open_Abstraction_Full
+       (*and Open_Abstraction_Full *)
        and Trivial_\<Sigma>
-       and \<open>Separation_Homo\<^sub>I ((\<odiv>) n :: ('c::share_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
-       and \<open>Separation_Homo\<^sub>E ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>x. x)\<close>
-       (*and Separation_Homo\<^sub>I*)
+       and Separation_Homo
 
 term \<open>Separation_Homo\<^sub>I ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
 term \<open>Separation_Homo\<^sub>E ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>x. x)\<close>

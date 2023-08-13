@@ -2,11 +2,11 @@ signature SUBGOAL_ENV = sig
 
   type subgoal
 
-  val allocate_subgoal : term -> Proof.context -> cterm * subgoal * Proof.context
+  val allocate_subgoal : term option -> Proof.context -> cterm * subgoal * Proof.context
   val chk_goal : subgoal -> bool
 
   val subgoal : context_state -> context_state Seq.seq
-  val chk_subgoal : context_state -> context_state Seq.seq
+  val chk_subgoal : context_state -> context_state Seq.seq (*if the subgoal is solved already*)
   val solve_subgoal : context_state -> context_state Seq.seq
   val is_sub : Proof.context -> term (*a*) * term (*b*) -> bool (*a \<le> b*)
 
@@ -33,13 +33,14 @@ structure Subgoal = Proof_Data (
   val init = K (init_tab, 0, Inttab.empty)
 )
 
-fun name_of_goal \<^const>\<open>TOP_GOAL\<close> = ""
+fun name_of_goal (Const(\<^const_name>\<open>TOP_GOAL\<close>, _)) = ""
   | name_of_goal term = Term.term_name term
 
-fun fetch_goal ctxt goal =
-  case Symtab.lookup (Subgoal.get ctxt |> #1) (name_of_goal goal)
-    of SOME X => X
-     | NONE => raise TERM ("The goal does not exist!", [goal])
+fun fetch_goal _ (Const(\<^const_name>\<open>TOP_GOAL\<close>, _)) = Topgoal
+  | fetch_goal ctxt goal =
+      case Symtab.lookup (Subgoal.get ctxt |> #1) (name_of_goal goal)
+        of SOME X => X
+         | NONE => raise TERM ("The goal does not exist!", [goal])
 
 fun is_subgoal (Topgoal, _) = true
   | is_subgoal (_, Topgoal) = false
@@ -49,7 +50,7 @@ fun is_sub ctxt = is_subgoal o apply2 (fetch_goal ctxt)
 
 fun allocate_subgoal father' ctxt =
   let val cnt = Subgoal.get ctxt |> #2
-      val father = fetch_goal ctxt father'
+      val father = the_default Topgoal (Option.map (fetch_goal ctxt) father')
       val ([name], ctxt't) = Variable.add_fixes [("\<r>GOAL"^string_of_int cnt)] ctxt
       fun chk_no_goal (Free(N,_)) = name <> N
         | chk_no_goal (X $ Y) = chk_no_goal X andalso chk_no_goal Y
@@ -65,7 +66,7 @@ fun allocate_subgoal father' ctxt =
   
       val _ = if chk_goal father
               then error ("Attempt to open a sub-goal under a solved father goal "
-                           ^Syntax.string_of_term ctxt father'^".")
+                           ^Syntax.string_of_term ctxt (the_default \<^Const>\<open>TOP_GOAL\<close> father') ^".")
               else ()
       val newg = Subgoal (cnt, father, Synchronized.var "Subgoal_Env" false)
       val ctxt'' = Subgoal.map (fn (g,n,s) =>
@@ -78,7 +79,7 @@ fun subgoal (ctxt,sequent) =
   let
     val (\<^const>\<open>Trueprop\<close> $ (\<^const>\<open>SUBGOAL\<close> $ father' $ _))
           = Thm.major_prem_of sequent
-    val (newg_term, _, ctxt'') = allocate_subgoal father' ctxt
+    val (newg_term, _, ctxt'') = allocate_subgoal (SOME father') ctxt
     val idx = Thm.maxidx_of_cterm newg_term + 1
     val subgoal_I =
             Thm.instantiate' [] [NONE, SOME newg_term] (Thm.incr_indexes idx @{thm SUBGOAL_I})

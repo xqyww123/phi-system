@@ -1103,7 +1103,7 @@ lemma [\<phi>reason 1200]:
   \<open>any \<Ztypecolon> \<phi>None \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<Ztypecolon> Itself\<close>
   unfolding Transformation_def by simp *)
 
-subsubsection \<open>Insertion into Unital Algebra\<close>
+(*subsubsection \<open>Insertion into Unital Algebra\<close>
 
 definition \<phi>Option_Insertion :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x option) \<phi>\<close> ("\<half_blkcirc> _" [91] 90)
   where \<open>\<half_blkcirc> T = (\<lambda>x. case x of Some x' \<Rightarrow> { Some v |v. v \<in> (x' \<Ztypecolon> T) } | None \<Rightarrow> { None })\<close>
@@ -1125,7 +1125,7 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> pred_option P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> \<half_blkcirc> T\<close>
   unfolding Action_Tag_def Inhabited_def
   by (cases x; clarsimp)
-
+*)
 
 subsubsection \<open>Insertion into Unital Algebra\<close>
 
@@ -1266,6 +1266,22 @@ lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\
   unfolding Object_Equiv_def Transformation_def Premise_def by clarsimp*)
 
 lemma [\<phi>reason 1000]:
+  \<open> Object_Equiv \<top>\<^sub>\<phi> (\<lambda>_ _. True) \<close>
+  unfolding Object_Equiv_def Transformation_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> Object_Equiv \<circle> (\<lambda>_ _. True) \<close>
+  unfolding Object_Equiv_def Transformation_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> Object_Equiv T eq
+\<Longrightarrow> Object_Equiv (\<black_circle> T) eq \<close>
+  unfolding Object_Equiv_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason 1000]:
   \<open> (\<And>a. Object_Equiv (\<lambda>x. S x a) (R a))
 \<Longrightarrow> Object_Equiv (\<lambda>x. ExSet (S x)) (\<lambda>x y. \<forall>a. R a x y) \<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
@@ -1308,6 +1324,13 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Object_Equiv S2 R2
 \<Longrightarrow> Object_Equiv (\<lambda>x. S1 x * S2 x) (\<lambda> x y. R1 x y \<and> R2 x y) \<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
+  by (clarsimp simp add: set_mult_expn; blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> Object_Equiv T\<^sub>a Eq\<^sub>a
+\<Longrightarrow> Object_Equiv T\<^sub>b Eq\<^sub>b
+\<Longrightarrow> Object_Equiv (T\<^sub>a \<^emph> T\<^sub>b) (\<lambda>(x\<^sub>a, x\<^sub>b) (y\<^sub>a, y\<^sub>b). Eq\<^sub>a x\<^sub>a y\<^sub>a \<and> Eq\<^sub>b x\<^sub>b y\<^sub>b) \<close>
+  unfolding Object_Equiv_def Transformation_def
   by (clarsimp simp add: set_mult_expn; blast)
 
 (*

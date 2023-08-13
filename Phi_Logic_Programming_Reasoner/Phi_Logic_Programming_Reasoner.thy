@@ -510,35 +510,9 @@ For example,
  \[ \<open>1 + 2 = ?result \<Longrightarrow> Print ?result \<Longrightarrow> Done\<close> \]
   the reasoning of antecedent \<open>1 + 2 = ?result\<close> instantiates \<open>?result\<close> to \<open>3\<close>, and results in
 \[ \<open>Print 3 \<Longrightarrow> Done\<close> \]
- If view the antecedent as a program (sub-routine),
+ If we regard the antecedent as a program (sub-routine),
  the schematic variables of the antecedent have a meaning of \<^emph>\<open>output\<close>,
  and we name them \<^emph>\<open>output variables\<close>.
-
-The following \<open>Try\<close> antecedent is a such example.\<close>
-
-subsubsection \<open>Try\<close>
-
-definition Try :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Try success_or_fail P = P\<close>
-
-text \<open>
-The typical usage is \<open>\<open>Try ?success_or_fail P\<close>\<close>, where
-\<open>P\<close> should be an antecedent having some fallback reasoner (not given here),
-and \<open>?success_or_fail\<close> is an output variable representing whether the \<open>P\<close> is successfully
-deduced \<^emph>\<open>without\<close> using fallback.
-
-A high priority (800) rule reasons \<open>\<open>Try True P\<close>\<close> normally and set the output variable
-\<open>success_or_fail\<close> to be true.\<close>
-
-lemma [\<phi>reason 800 for \<open>Try ?S ?P\<close>]:
-  \<open> P
-\<Longrightarrow> Try True P\<close>
-  unfolding Try_def .
-
-text \<open>
-Users using \<open>\<open>Try True P\<close>\<close> should provide the fallback rule for their own \<open>P\<close>.
-It depends on the application scenario and there is not a general rule for fallback of course.
-The fallback rule may has the following form,
-\[ \<open> Fallback_of_P \<Longrightarrow> Try False P \<close> \]
 \<close>
 
 
@@ -1134,11 +1108,6 @@ ML_file \<open>library/Subgoal_Env.ML\<close>
 \<phi>reasoner_ML CHK_SUBGOAL 2000 (\<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal o snd\<close>
 \<phi>reasoner_ML SOLVE_SUBGOAL 9900 (\<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal o snd\<close>
 
-lemma [\<phi>reason 800 for \<open>Try ?S ?P @GOAL ?G\<close>]:
-  \<open> P @GOAL G
-\<Longrightarrow> Try True P @GOAL G\<close>
-  unfolding Try_def .
-
 
 subsection \<open>Branch\<close>
 
@@ -1215,7 +1184,7 @@ lemma Orelse_shortcut_I2:
   by simp
 
 \<phi>reasoner_ML Orelse_shortcut 1000 (\<open>_ \<or>\<^sub>c\<^sub>u\<^sub>t _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val (G, goal, ctxt) = Subgoal_Env.allocate_subgoal \<^Const>\<open>TOP_GOAL\<close> ctxt
+  let val (G, goal, ctxt) = Subgoal_Env.allocate_subgoal NONE ctxt
       val [I1,I2] = map (Thm.instantiate (TVars.empty, Vars.make [((("G",0),\<^typ>\<open>subgoal\<close>),G)]))
                         @{thms' Orelse_shortcut_I1 Orelse_shortcut_I2}
       fun tac sequent0 = Seq.make (fn () =>
@@ -1231,7 +1200,53 @@ lemma Orelse_shortcut_I2:
   end
 )\<close>
 
+
 hide_fact Orelse_shortcut_I1 Orelse_shortcut_I2
+
+subsubsection \<open>Try\<close>
+
+definition Try :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Try success_or_fail P = P\<close>
+definition Attempt_Fallback :: \<open>bool \<Rightarrow> bool\<close> where \<open>Attempt_Fallback X = X\<close>
+
+text \<open>
+The typical usage is \<open>\<open>Try ?success_or_fail P\<close>\<close>, where
+\<open>P\<close> should be an antecedent having some fallback reasoner (not given here),
+and \<open>?success_or_fail\<close> is an output variable representing whether the \<open>P\<close> is successfully
+deduced \<^emph>\<open>without\<close> using fallback.
+
+A high priority (800) rule reasons \<open>\<open>Try True P\<close>\<close> normally and set the output variable
+\<open>success_or_fail\<close> to be true.
+
+To use \<open>Try True P\<close>, the corresponding fallback rule \<open>Attempt_Fallback P\<close> has to be given.
+\<close>
+
+lemma Try_true_branch[\<phi>reason 1000]:
+  \<open> P
+\<Longrightarrow> SOLVE_SUBGOAL G
+\<Longrightarrow> Try True P\<close>
+  unfolding Try_def .
+
+lemma Try_false_branch[\<phi>reason 1000]:
+  \<open> Attempt_Fallback P
+\<Longrightarrow> Try False P \<close>
+  unfolding Attempt_Fallback_def Try_def
+  by simp
+
+\<phi>reasoner_ML Try 2000 (\<open>Try ?var_F _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+let val _ (*Trueprop*) $ (_(*Try*) $ _ $ _) = Thm.major_prem_of sequent
+    val (G', sg, ctxt') = Subgoal_Env.allocate_subgoal NONE ctxt
+    val fallback = Seq.make (fn () =>
+          if Subgoal_Env.chk_goal sg
+          then NONE
+          else SOME ((ctxt', @{thm' Try_false_branch} RS sequent), Seq.empty))
+    val true_rule = Thm.instantiate (TVars.empty, Vars.make [((("G",0),\<^typ>\<open>subgoal\<close>),G')]) @{thm' Try_true_branch}
+ in SOME ((ctxt', true_rule RS sequent), fallback)
+end)
+\<close>
+
+
+
+
 
 subsection \<open>Simplification \& Rewrite\<close>
 
