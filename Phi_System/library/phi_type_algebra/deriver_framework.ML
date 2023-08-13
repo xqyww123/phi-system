@@ -1322,28 +1322,35 @@ fun default_reasoning_configure extractions
 
 fun default_reasoning always_diverge_disj configure varify reasoner =
 let fun has_disj_ants th =
-      let fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
-            | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = chk X
-            | chk (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) = true
-            | chk _ = false
-       in exists chk (#2 (Phi_Help.strip_meta_hhf (fst (Logic.dest_implies (Thm.prop_of th)))))
+      let val no_schematic_in_concl = Thm.maxidx_of_cterm (Thm.cconcl_of th) = ~1
+          fun give rule =
+                if always_diverge_disj orelse no_schematic_in_concl
+                then SOME rule else NONE
+          fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
+            | chk (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) = give @{thm' disjE}
+            | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) $ _)
+                = give @{lemma \<open> P \<or> Q @action A \<Longrightarrow> (P @action A \<Longrightarrow> C) \<Longrightarrow> (Q @action A \<Longrightarrow> C) \<Longrightarrow> C \<close>
+                            by (unfold Action_Tag_def Orelse_shortcut_def, blast)}
+            | chk (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _)
+                = give @{thm' disjE[folded Orelse_shortcut_def]}
+            | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _) $ _)
+                = give @{lemma \<open> P \<or>\<^sub>c\<^sub>u\<^sub>t Q @action A \<Longrightarrow> (P @action A \<Longrightarrow> C) \<Longrightarrow> (Q @action A \<Longrightarrow> C) \<Longrightarrow> C \<close>
+                            by (unfold Action_Tag_def Orelse_shortcut_def, blast)}
+            | chk _ = NONE
+       in get_first chk (#2 (Phi_Help.strip_meta_hhf (fst (Logic.dest_implies (Thm.prop_of th)))))
       end
-    fun no_schematic_in_concl th = Thm.maxidx_of_cterm (Thm.cconcl_of th) = ~1
 
-  fun abstract_constraint_guided_reasoning ctxt0 sequent0 =
+  fun reasoning ctxt0 sequent0 =
   case Thm.major_prem_of sequent0
     of _ (*Trueprop*) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
      | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
-              abstract_constraint_guided_reasoning ctxt0 (@{thm' allI} RS sequent0)
+              reasoning ctxt0 (@{thm' allI} RS sequent0)
      | _ =>
-  if has_disj_ants sequent0 andalso (always_diverge_disj orelse no_schematic_in_concl sequent0)
-  then Seq.hd (Thm.biresolution (SOME ctxt0) true
-            [(true, @{thm' disjE}),
-             (true, @{lemma \<open> P \<or> Q @action A \<Longrightarrow> (P @action A \<Longrightarrow> C) \<Longrightarrow> (Q @action A \<Longrightarrow> C) \<Longrightarrow> C \<close>
-                        by (unfold Action_Tag_def, blast)})]
-            1 sequent0)
-    |> abstract_constraint_guided_reasoning ctxt0
-  else let
+  case has_disj_ants sequent0
+    of SOME erule =>
+       Seq.hd (Thm.biresolution (SOME ctxt0) true [(true, erule)] 1 sequent0)
+        |> reasoning ctxt0
+    | _ => let
       val sequent = sequent0
                  (*|> (fn th => @{thm' impI} RS th
                               handle THM _ => Method.insert_tac ctxt0 [Thm.transfer' ctxt0 @{thm' TrueI}] 1 th
@@ -1406,11 +1413,19 @@ let fun has_disj_ants th =
    |> Phi_Reasoners.defer_obligation_tac (false, true, ~1) ctxt
    |> Seq.hd
    |> varify_subgoal_finale
-   |> abstract_constraint_guided_reasoning ctxt
+   |> reasoning ctxt
   end
-in fn ctxt =>
-       Simplifier.norm_hhf ctxt
-    #> abstract_constraint_guided_reasoning (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
+in fn ctxt => fn th => th
+    |> Simplifier.norm_hhf ctxt
+    |> Conv.gconv_rule (Simplifier.full_rewrite (
+          clear_simpset ctxt addsimps
+            (@{thms' HOL.simp_thms(31)[folded atomize_eq]
+                   HOL.simp_thms(31)[folded atomize_eq Orelse_shortcut_def]}
+           @ @{lemma \<open>P \<or> FAIL text \<equiv> P\<close> \<open>P \<or>\<^sub>c\<^sub>u\<^sub>t FAIL text \<equiv> P\<close>
+                     \<open>P \<or> TRACE_FAIL text \<equiv> P\<close> \<open>P \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL text \<equiv> P\<close>
+                  by (unfold FAIL_def Orelse_shortcut_def TRACE_FAIL_def, simp_all)})
+       )) 1
+    |> reasoning (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
 end
 
 fun chk_unfolded ctxt (phi : phi_type) term =

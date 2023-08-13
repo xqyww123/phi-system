@@ -190,9 +190,9 @@ lemma [\<phi>reason 1200]:
   \<open>(x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ \<circle>) = (() \<Ztypecolon> \<circle>) @action clean_automation_waste\<close>
   unfolding Action_Tag_def \<phi>MapAt_L_\<phi>None by simp
 
-lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<Znrres> \<circle>) = ?Z @action clean_automation_waste\<close>]:
+lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> ?n \<odiv> \<circle>) = ?Z @action clean_automation_waste\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> \<circle>) = (() \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>)) @action clean_automation_waste\<close>
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> \<circle>) = (() \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>)) @action clean_automation_waste\<close>
   unfolding Action_Tag_def Premise_def \<phi>Share_\<phi>None by simp
 *)
 
@@ -214,15 +214,15 @@ lemma [\<phi>reason 1200 for \<open>((?x,?y) \<Ztypecolon> \<circle> \<^emph> ?U
   \<open>((x,y) \<Ztypecolon> \<circle> \<^emph> U) = ((y \<Ztypecolon> U) :: 'b::sep_magma_1 set) @action clean_automation_waste\<close>
   unfolding \<phi>Prod_\<phi>None Action_Tag_def ..
 
-lemma [\<phi>reason 1200 for \<open>((?x,?r) \<Ztypecolon> ?T \<^emph> (?n \<Znrres> \<circle>)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
+lemma [\<phi>reason 1200 for \<open>((?x,?r) \<Ztypecolon> ?T \<^emph> (?n \<odiv> \<circle>)) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
-\<Longrightarrow> ((x,r) \<Ztypecolon> T \<^emph> (n \<Znrres> \<circle>)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
+\<Longrightarrow> ((x,r) \<Ztypecolon> T \<^emph> (n \<odiv> \<circle>)) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
   unfolding set_eq_iff Premise_def Action_Tag_def
   by (simp add: \<phi>expns)
 
-lemma [\<phi>reason 1200 for \<open>((?r,?x) \<Ztypecolon> (?n \<Znrres> \<circle>) \<^emph> ?T) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
+lemma [\<phi>reason 1200 for \<open>((?r,?x) \<Ztypecolon> (?n \<odiv> \<circle>) \<^emph> ?T) = (?Z :: ?'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
-\<Longrightarrow> ((r,x) \<Ztypecolon> (n \<Znrres> \<circle>) \<^emph> T) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
+\<Longrightarrow> ((r,x) \<Ztypecolon> (n \<odiv> \<circle>) \<^emph> T) = ((x \<Ztypecolon> T):: 'a::{share_one,sep_magma_1} set) @action clean_automation_waste\<close>
   unfolding set_eq_iff Premise_def Action_Tag_def
   by (simp add: \<phi>expns)
 
@@ -306,9 +306,9 @@ definition Structure_Info :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarr
   \<comment> \<open>Extract structure information inside an assertion, typically validity of permissions
       (i.e. large than zero), which is used in the automation procedure.\<close>
 
-lemma [\<phi>reason 1200 for \<open>Structure_Info (?n \<Znrres> ?T) ?P\<close>]:
+lemma [\<phi>reason 1200 for \<open>Structure_Info (?n \<odiv> ?T) ?P\<close>]:
   \<open> Structure_Info T P
-\<Longrightarrow> Structure_Info (n \<Znrres> T) (0 < n \<and> P)\<close>
+\<Longrightarrow> Structure_Info (n \<odiv> T) (0 < n \<and> P)\<close>
   unfolding Structure_Info_def Inhabited_def
   by (simp add: \<phi>expns)
 
@@ -984,9 +984,9 @@ TODO: re-enable this! *)
 lemma Structural_Extract_share_half:
     \<comment> \<open>if only requires a half of the permission, give it a half of that currently we have.\<close>
   \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> half(m / 2) \<Znrres> U) (w \<Ztypecolon> W) P\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<odiv> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<odiv> U) (w \<Ztypecolon> W) P
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<odiv> T) ((x,r) \<Ztypecolon> m / 2 \<odiv> T \<^emph> R) (y \<Ztypecolon> half(m / 2) \<odiv> U) (w \<Ztypecolon> W) P\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
   unfolding Structural_Extract_def half_def Action_Tag_def
   \<medium_left_bracket> premises [\<phi>reason] and X
     apply_rule share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_prod]
@@ -995,16 +995,16 @@ lemma Structural_Extract_share_half:
   \<medium_right_bracket> .
 
 declare Structural_Extract_share_half[THEN SE_clean_waste,
-    \<phi>reason 1300 for \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) _ (?y \<Ztypecolon> half ?mmm \<Znrres> ?U) _ _\<close>]
+    \<phi>reason 1300 for \<open>Structural_Extract (?x \<Ztypecolon> ?n \<odiv> ?T) _ (?y \<Ztypecolon> half ?mmm \<odiv> ?U) _ _\<close>]
 
 lemma Structural_Extract_share_half_rev:
   \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> Structural_Extract (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) P
-\<Longrightarrow> Structural_Extract (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) P\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+\<Longrightarrow> Structural_Extract (y \<Ztypecolon> m / 2 \<odiv> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m / 2 \<odiv> T) (r \<Ztypecolon> R) P
+\<Longrightarrow> Structural_Extract (y \<Ztypecolon> m / 2 \<odiv> U) (w \<Ztypecolon> W) (x \<Ztypecolon> m \<odiv> T) ((x,r) \<Ztypecolon> m / 2 \<odiv> T \<^emph> R) P\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
   unfolding Structural_Extract_def Action_Tag_def \<phi>Prod_expn'
   \<medium_left_bracket> premises [\<phi>reason] and X
-  have t1: \<open>(r \<Ztypecolon> R) * (x \<Ztypecolon> m / 2 \<Znrres> T) * (y \<Ztypecolon> m / 2 \<Znrres> U) = (r \<Ztypecolon> R) * (y \<Ztypecolon> m / 2 \<Znrres> U) * (x \<Ztypecolon> m / 2 \<Znrres> T)\<close>
+  have t1: \<open>(r \<Ztypecolon> R) * (x \<Ztypecolon> m / 2 \<odiv> T) * (y \<Ztypecolon> m / 2 \<odiv> U) = (r \<Ztypecolon> R) * (y \<Ztypecolon> m / 2 \<odiv> U) * (x \<Ztypecolon> m / 2 \<odiv> T)\<close>
     by (metis (mono_tags, lifting) mult.assoc mult.commute)
   ;; unfold t1
      apply_rule X[THEN implies_right_prod]
@@ -1015,18 +1015,18 @@ lemma Structural_Extract_share_half_rev:
 
 lemma
   [THEN SE_clean_waste',
-   \<phi>reason 1311 for \<open>Structural_Extract (?x \<Ztypecolon> ?n \<Znrres> ?T) ?R (?y \<Ztypecolon> half ?mmm \<Znrres> ?U) ?R2
+   \<phi>reason 1311 for \<open>Structural_Extract (?x \<Ztypecolon> ?n \<odiv> ?T) ?R (?y \<Ztypecolon> half ?mmm \<odiv> ?U) ?R2
       (Reverse_Transformation _ _ \<and> _)\<close>]:
   \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<Znrres> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<Znrres> U) (w \<Ztypecolon> W)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m / 2 \<odiv> T) (r \<Ztypecolon> R) (y \<Ztypecolon> m / 2 \<odiv> U) (w \<Ztypecolon> W)
     (Reverse_Transformation RP
-        (Structural_Extract (y' \<Ztypecolon> m / 2 \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m / 2 \<Znrres> T') (r' \<Ztypecolon> R') P')
+        (Structural_Extract (y' \<Ztypecolon> m / 2 \<odiv> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m / 2 \<odiv> T') (r' \<Ztypecolon> R') P')
     \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((x,r) \<Ztypecolon> m / 2 \<Znrres> T \<^emph> R) (y \<Ztypecolon> half (m / 2) \<Znrres> U) (w \<Ztypecolon> W)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<odiv> T) ((x,r) \<Ztypecolon> m / 2 \<odiv> T \<^emph> R) (y \<Ztypecolon> half (m / 2) \<odiv> U) (w \<Ztypecolon> W)
     (Reverse_Transformation (RP \<and>\<^sub>\<r> \<phi>Sep_Disj_Inj (x' \<Ztypecolon> T'))
-        (Structural_Extract (y' \<Ztypecolon> half (m / 2) \<Znrres> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m \<Znrres> T') ((x',r') \<Ztypecolon> m / 2 \<Znrres> T' \<^emph> R') P')
+        (Structural_Extract (y' \<Ztypecolon> half (m / 2) \<odiv> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> m \<odiv> T') ((x',r') \<Ztypecolon> m / 2 \<odiv> T' \<^emph> R') P')
     \<and> P)\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close> and T' :: \<open>('aa::share_nun_semimodule,'bb) \<phi>\<close>
   unfolding Generated_Rule_def Compact_Antecedent_def half_def
   by (blast intro: Structural_Extract_share_half    [unfolded Action_Tag_def half_def]
                    Structural_Extract_share_half_rev[unfolded Action_Tag_def]
@@ -1038,8 +1038,8 @@ lemma Structural_Extract_share_eq:
   \<comment> \<open>If requires exactly what we have now, typically this happens after the previous rule or n = 1.\<close>
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m = n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W) P \<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<odiv> T) (r \<Ztypecolon> m \<odiv> R) (y \<Ztypecolon> n \<odiv> U) (w \<Ztypecolon> m \<odiv> W) P \<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn'[symmetric] Premise_def \<r>Guard_def conjunction_imp
   apply (simp add: \<phi>Share_\<phi>Prod[symmetric])
   using \<phi>Share_transformation .
@@ -1050,10 +1050,10 @@ lemma [THEN SE_clean_waste', \<phi>reason 1211]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m = n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> m \<Znrres> W)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<odiv> T) (r \<Ztypecolon> m \<odiv> R) (y \<Ztypecolon> n \<odiv> U) (w \<Ztypecolon> m \<odiv> W)
       (Reverse_Transformation RP
-          (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> m \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
+          (Structural_Extract (y' \<Ztypecolon> n \<odiv> U') (w' \<Ztypecolon> m \<odiv> W') (x' \<Ztypecolon> m \<odiv> T') (r' \<Ztypecolon> m \<odiv> R') P') \<and> P)\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close> and T' :: \<open>('aa::share_nun_semimodule,'bb) \<phi>\<close>
   unfolding Generated_Rule_def Action_Tag_def \<r>Guard_def conjunction_imp
   by (blast intro: Structural_Extract_share_eq[unfolded Action_Tag_def \<r>Guard_def conjunction_imp]
                    Structural_Extract_imply_P)
@@ -1066,15 +1066,15 @@ lemma Structural_Extract_share_ge:
 &&& \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W) P\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<odiv> T) ((r,x) \<Ztypecolon> (n \<odiv> R \<^emph> (m-n) \<odiv> T)) (y \<Ztypecolon> n \<odiv> U) (w \<Ztypecolon> n \<odiv> W) P\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' Action_Tag_def conjunction_imp \<r>Guard_def
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and [\<phi>reason] and _ and X
     apply_rule share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
     apply_rule X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
                  THEN implies_right_prod]
-  have t1: \<open>(r \<Ztypecolon> n \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U) * (x \<Ztypecolon> m - n \<Znrres> T) = (x \<Ztypecolon> m - n \<Znrres> T) * (r \<Ztypecolon> n \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U)\<close>
+  have t1: \<open>(r \<Ztypecolon> n \<odiv> R) * (y \<Ztypecolon> n \<odiv> U) * (x \<Ztypecolon> m - n \<odiv> T) = (x \<Ztypecolon> m - n \<odiv> T) * (r \<Ztypecolon> n \<odiv> R) * (y \<Ztypecolon> n \<odiv> U)\<close>
     using mult.assoc mult.commute by blast
   ;; unfold t1
   \<medium_right_bracket> .
@@ -1087,17 +1087,17 @@ lemma Structural_Extract_share_le:
 &&& \<phi>Sep_Disj_Inj (y \<Ztypecolon> U)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < m
 \<Longrightarrow> Structural_Extract (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W) P
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U) P\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<odiv> T) (r \<Ztypecolon> m \<odiv> R) (y \<Ztypecolon> n \<odiv> U) ((w,y) \<Ztypecolon> m \<odiv> W \<^emph> (n-m) \<odiv> U) P\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
   unfolding Structural_Extract_def \<phi>Prod_expn' conjunction_imp \<r>Guard_def
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and _ and X
     apply_rule X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
                  THEN implies_left_prod, folded mult.assoc]
 
-  have \<open>(y \<Ztypecolon> n - m \<Znrres> U) * (y \<Ztypecolon> m \<Znrres> U) = (y \<Ztypecolon> n \<Znrres> U)\<close>
+  have \<open>(y \<Ztypecolon> n - m \<odiv> U) * (y \<Ztypecolon> m \<odiv> U) = (y \<Ztypecolon> n \<odiv> U)\<close>
     using \<phi>Share_share[where n=\<open>n-m\<close> and m=m, simplified] \<phi>
     by (smt (verit) SDI)
-  then have t1: \<open>(y \<Ztypecolon> n - m \<Znrres> U) * (r \<Ztypecolon> m \<Znrres> R) * (y \<Ztypecolon> m \<Znrres> U) = (r \<Ztypecolon> m \<Znrres> R) * (y \<Ztypecolon> n \<Znrres> U)\<close>
+  then have t1: \<open>(y \<Ztypecolon> n - m \<odiv> U) * (r \<Ztypecolon> m \<odiv> R) * (y \<Ztypecolon> m \<odiv> U) = (r \<Ztypecolon> m \<odiv> R) * (y \<Ztypecolon> n \<odiv> U)\<close>
     by (metis ab_semigroup_mult_class.mult_ac(1) mult.commute)
   ;; unfold t1
   \<medium_right_bracket> .
@@ -1113,10 +1113,10 @@ lemma [THEN SE_clean_waste', \<phi>reason 1183]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) ((r,x) \<Ztypecolon> (n \<Znrres> R \<^emph> (m-n) \<Znrres> T)) (y \<Ztypecolon> n \<Znrres> U) (w \<Ztypecolon> n \<Znrres> W)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<odiv> T) ((r,x) \<Ztypecolon> (n \<odiv> R \<^emph> (m-n) \<odiv> T)) (y \<Ztypecolon> n \<odiv> U) (w \<Ztypecolon> n \<odiv> W)
       (Reverse_Transformation (RP \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> m-n = mn) \<and>\<^sub>\<r> \<phi>Sep_Disj_Inj (x' \<Ztypecolon> T'))
-        (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') (w' \<Ztypecolon> n \<Znrres> W') (x' \<Ztypecolon> m \<Znrres> T') ((r',x') \<Ztypecolon> (n \<Znrres> R' \<^emph> mn \<Znrres> T')) P') \<and> P)\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
+        (Structural_Extract (y' \<Ztypecolon> n \<odiv> U') (w' \<Ztypecolon> n \<odiv> W') (x' \<Ztypecolon> m \<odiv> T') ((r',x') \<Ztypecolon> (n \<odiv> R' \<^emph> mn \<odiv> T')) P') \<and> P)\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close> and T' :: \<open>('aa::share_nun_semimodule,'bb) \<phi>\<close>
   unfolding Generated_Rule_def Compact_Antecedent_def Premise_def
             conjunction_imp \<r>Guard_def
   by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def \<r>Guard_def conjunction_imp]
@@ -1129,10 +1129,10 @@ lemma [THEN SE_clean_waste', \<phi>reason 1173]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < m
 \<Longrightarrow> Structural_Extract  (x \<Ztypecolon> T) (r \<Ztypecolon> R) (y \<Ztypecolon> U) (w \<Ztypecolon> W)
       (Reverse_Transformation RP (Structural_Extract (y' \<Ztypecolon> U') (w' \<Ztypecolon> W') (x' \<Ztypecolon> T') (r' \<Ztypecolon> R') P') \<and> P)
-\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<Znrres> T) (r \<Ztypecolon> m \<Znrres> R) (y \<Ztypecolon> n \<Znrres> U) ((w,y) \<Ztypecolon> m \<Znrres> W \<^emph> (n-m) \<Znrres> U)
+\<Longrightarrow> Structural_Extract (x \<Ztypecolon> m \<odiv> T) (r \<Ztypecolon> m \<odiv> R) (y \<Ztypecolon> n \<odiv> U) ((w,y) \<Ztypecolon> m \<odiv> W \<^emph> (n-m) \<odiv> U)
       (Reverse_Transformation (RP \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> nm = n - m) \<and>\<^sub>\<r> \<phi>Sep_Disj_Inj (y' \<Ztypecolon> U'))
-        (Structural_Extract (y' \<Ztypecolon> n \<Znrres> U') ((w',y') \<Ztypecolon> m \<Znrres> W' \<^emph> nm \<Znrres> U') (x' \<Ztypecolon> m \<Znrres> T') (r' \<Ztypecolon> m \<Znrres> R') P') \<and> P)\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep,'bb) \<phi>\<close>
+        (Structural_Extract (y' \<Ztypecolon> n \<odiv> U') ((w',y') \<Ztypecolon> m \<odiv> W' \<^emph> nm \<odiv> U') (x' \<Ztypecolon> m \<odiv> T') (r' \<Ztypecolon> m \<odiv> R') P') \<and> P)\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close> and T' :: \<open>('aa::share_nun_semimodule,'bb) \<phi>\<close>
   unfolding Generated_Rule_def Compact_Antecedent_def Premise_def conjunction_imp \<r>Guard_def
   by (blast intro: Structural_Extract_share_ge[unfolded Action_Tag_def conjunction_imp \<r>Guard_def]
                    Structural_Extract_share_le[unfolded Action_Tag_def conjunction_imp \<r>Guard_def]
@@ -1146,13 +1146,13 @@ text \<open>The below rules are not necessary but reduce fragments in the result
 lemma [\<phi>reason 2000]:
   \<open> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
-  for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
+  for T :: \<open>('a::share_nun_semimodule, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 2000]:
   \<open> x \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True\<close>
-  for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
+  for T :: \<open>('a::share_nun_semimodule, 'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 
 lemma [\<phi>reason 2011]:
@@ -1160,7 +1160,7 @@ lemma [\<phi>reason 2011]:
         (Reverse_Transformation RP (x' \<Ztypecolon> (n \<odiv> T' \<^emph> n \<odiv> U') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> X \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> R \<w>\<i>\<t>\<h>
        (Reverse_Transformation RP (x' \<Ztypecolon> (n \<odiv> (T' \<^emph> U')) \<^emph>  W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
-  for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
+  for T :: \<open>('a::share_nun_semimodule, 'b) \<phi>\<close> and T' :: \<open>('aa::share_nun_semimodule, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
@@ -1169,7 +1169,7 @@ lemma [\<phi>reason 2011]:
         (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> T \<^emph> n \<odiv> U) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True
 \<Longrightarrow> x' \<Ztypecolon> (n \<odiv> (T' \<^emph> U')) \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h>
         (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> (T \<^emph> U)) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True\<close>
-  for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule_sep, 'bb) \<phi>\<close>
+  for T :: \<open>('a::share_nun_semimodule, 'b) \<phi>\<close> and T' :: \<open>('aa::share_nun_semimodule, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>Prod
   by blast
 
@@ -1177,7 +1177,7 @@ lemma [\<phi>reason 2011]:
 lemma [\<phi>reason 2000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
-  for T :: \<open>('a::share_module_sep,'b) \<phi>\<close>
+  for T :: \<open>('a::share_semimodule,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>MapAt .
 
 lemma [\<phi>reason 2000]:
@@ -1191,7 +1191,7 @@ lemma [\<phi>reason 2011]:
         (Reverse_Transformation RP (y' \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> U) \<^emph> R \<w>\<i>\<t>\<h>
         (Reverse_Transformation RP (y' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> U') \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
-  for T :: \<open>('k \<Rightarrow> 'a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('k \<Rightarrow> 'aa::share_module_sep,'bb) \<phi>\<close>
+  for T :: \<open>('k \<Rightarrow> 'a::share_semimodule,'b) \<phi>\<close> and T' :: \<open>('k \<Rightarrow> 'aa::share_semimodule,'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
@@ -1200,7 +1200,7 @@ lemma [\<phi>reason 2011]:
       (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (k \<^bold>\<rightarrow> n \<odiv> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True
 \<Longrightarrow> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T') \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y' \<^emph> R' \<w>\<i>\<t>\<h>
       (Reverse_Transformation RP (y \<Ztypecolon> Y \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow> T) \<^emph> W \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True \<close>
-  for T :: \<open>('a::share_module_sep,'b) \<phi>\<close> and T' :: \<open>('aa::share_module_sep,'bb) \<phi>\<close>
+  for T :: \<open>('a::share_semimodule,'b) \<phi>\<close> and T' :: \<open>('aa::share_semimodule,'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt
   by blast
 
@@ -1216,7 +1216,7 @@ lemma [\<phi>reason 2011]:
       (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T') \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
       (Reverse_Transformation RP (y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T') \<^emph> W' \<w>\<i>\<t>\<h> P') \<and> P) @action \<A>SE True\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_semimodule, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 
@@ -1225,7 +1225,7 @@ lemma [\<phi>reason 2011]:
       (Reverse_Transformation RP (x \<Ztypecolon> (k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True
 \<Longrightarrow> y' \<Ztypecolon> U' \<^emph> R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T') \<^emph> W' \<w>\<i>\<t>\<h>
       (Reverse_Transformation RP (x \<Ztypecolon> (n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P) \<and> P') @action \<A>SE True\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_module_sep, 'bb) \<phi>\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::{share_one,sep_magma}, 'b) \<phi>\<close> and T' :: \<open>('k list \<Rightarrow> 'aa::share_semimodule, 'bb) \<phi>\<close>
   unfolding Generated_Rule_def atomize_imp atomize_conj Action_Tag_def Premise_def \<phi>Share_\<phi>MapAt_L
   by blast
 

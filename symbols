@@ -12,6 +12,7 @@
 \<medium_right_bracket>  code: 0x002775  font: PhiSymbols   abbrev: }}
 \<dblcoloneqq>     code: 0x002A74   font: PhiSymbols   group: relation   abbrev: ::=
 
+\<odivr>           code: 0x0029BC   font: PhiSymbols   group: operator   abbrev: (/:)
 \<odiv>            code: 0x002A38   font: PhiSymbols   group: operator   abbrev: (-:)
 \<lblbrace>        code: 0x003010   font: PhiSymbols   group: punctuation  abbrev: <[(>  abbrev: <{(>
 \<rblbrace>        code: 0x003011   font: PhiSymbols   group: punctuation  abbrev: <)]>  abbrev: <)}>

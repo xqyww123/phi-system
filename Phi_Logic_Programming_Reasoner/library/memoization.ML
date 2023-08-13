@@ -26,7 +26,7 @@ fun gen_memoize_safe f (ctxt, sequent) =
                       |> Thm.forall_intr_vars
                       |> f
               val num = Thm.nprems_of save
-              fun tac (ctxt,sequent) = Seq.make (fn () =>
+              fun tac (_, (ctxt,sequent)) = Seq.make (fn () =>
                   let val sequent' = (save RS' (ctxt, sequent))
                                   |> REPEAT_DETERM_N num (Thm.assumption (SOME ctxt) 1)
                    in Seq.pull sequent'

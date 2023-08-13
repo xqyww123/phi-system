@@ -205,7 +205,7 @@ lemma Friendly_Help_E[elim!]: \<open>Friendly_Help ANY \<Longrightarrow> C \<Lon
 
 (*TODO: move this to \<phi>processor so that the help is displayed only when the IDECP ends at that*)
 
-\<phi>reasoner_ML Friendly_Help 1000 (\<open>Friendly_Help _\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML Friendly_Help 1000 (\<open>Friendly_Help _\<close>) = \<open>fn (_, (ctxt,sequent)) =>
  (if Config.get ctxt Phi_The_Friendly_Character.enable
   then let
         val _ $ (_ $ text) = Thm.major_prem_of sequent
@@ -392,7 +392,7 @@ lemma sing_if:
 ML_file \<open>library/tools/case_prod_conv.ML\<close>
 
 \<phi>reasoner_ML meta_case_prod_in_meta_Ball !1 (\<open>PROP meta_Ball _ _\<close>) = \<open>
-  fn (ctxt,sequent) => Seq.make (fn () =>
+  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 Conv.rewr_conv @{thm meta_Ball_def} then_conv
                 Phi_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
@@ -402,7 +402,7 @@ ML_file \<open>library/tools/case_prod_conv.ML\<close>
 \<close>
 
 \<phi>reasoner_ML case_prod_in_Ball !1 (\<open>Ball _ _\<close>) = \<open>
-  fn (ctxt,sequent) => Seq.make (fn () =>
+  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 Conv.rewr_conv @{thm Ball_for_reason} then_conv
                 Phi_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt

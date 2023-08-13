@@ -590,7 +590,7 @@ definition Matches :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> wher
 lemma Matches_I: \<open>Matches pattern term\<close> unfolding Matches_def ..
 
 \<phi>reasoner_ML Matches 2000 (\<open>Matches ?pattern ?term\<close>) =
-  \<open>fn (ctxt, sequent) =>
+  \<open>fn (_, (ctxt, sequent)) =>
     let
       val (\<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Matches\<close>,_) $ pattern $ term))
             = Thm.major_prem_of sequent
@@ -603,7 +603,7 @@ lemma Matches_I: \<open>Matches pattern term\<close> unfolding Matches_def ..
 lemma NO_MATCH_I: "NO_MATCH A B" unfolding NO_MATCH_def ..
 
 \<phi>reasoner_ML NO_MATCH !1 ("NO_MATCH ?A ?B") = \<open>
-  fn (ctxt,th) =>
+  fn (_,(ctxt,th)) =>
   let
     val (\<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>NO_MATCH\<close>, _) $ a $ b)) = Thm.major_prem_of th
   in
@@ -622,12 +622,12 @@ definition May_By_Assumption :: \<open>prop \<Rightarrow> prop\<close> where \<o
 lemma By_Assumption_I: \<open>PROP P \<Longrightarrow> PROP By_Assumption P\<close> unfolding By_Assumption_def .
 lemma May_By_Assumption_I: \<open>PROP P \<Longrightarrow> PROP May_By_Assumption P\<close> unfolding May_By_Assumption_def .
 
-\<phi>reasoner_ML By_Assumption 1000 (\<open>PROP By_Assumption _\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML By_Assumption 1000 (\<open>PROP By_Assumption _\<close>) = \<open>fn (_,(ctxt,sequent)) =>
     HEADGOAL (Tactic.assume_tac ctxt) (@{thm By_Assumption_I} RS sequent)
       |> Seq.map (pair ctxt)
 \<close>
 
-\<phi>reasoner_ML May_By_Assumption 1000 (\<open>PROP May_By_Assumption _\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML May_By_Assumption 1000 (\<open>PROP May_By_Assumption _\<close>) = \<open>fn (_,(ctxt,sequent)) =>
   let val sequent' = @{thm May_By_Assumption_I} RS sequent
    in (HEADGOAL (Tactic.assume_tac ctxt) ORELSE Seq.single) sequent'
         |> Seq.map (pair ctxt)
@@ -654,7 +654,7 @@ lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
 
 declare [[ML_debugger]]
 
-\<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (_,(ctxt,sequent)) =>
   raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
 
 
@@ -919,10 +919,10 @@ ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
            | 1 => Phi_Reasoners.safer_obligation_solver ctxt
            | 2 => Phi_Reasoners.auto_obligation_solver ctxt
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
-    )\<close>
+    ) o snd\<close>
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
-  = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver\<close>
+  = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver o snd\<close>
 
 (* TODO: reenable!
 hide_fact contract_drop_waste contract_obligations contract_premise_all
@@ -965,7 +965,7 @@ lemma Pop_Envir_Var_I:  \<open>Pop_Envir_Var N\<close>    unfolding Pop_Envir_Va
 lemma Get_Envir_Var_I : \<open>Get_Envir_Var  N V\<close>   for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var_def  ..
 lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var'_def ..
 
-\<phi>reasoner_ML Push_Envir_Var 1000 (\<open>Push_Envir_Var _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML Push_Envir_Var 1000 (\<open>Push_Envir_Var _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N $ V) = Thm.major_prem_of sequent
       val _ = if maxidx_of_term V <> ~1
               then warning "PLPR Envir Var: The value to be assigned has schematic variables \
@@ -976,13 +976,13 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
       Seq.empty) end
 )\<close>
 
-\<phi>reasoner_ML Pop_Envir_Var 1000 (\<open>Pop_Envir_Var _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML Pop_Envir_Var 1000 (\<open>Pop_Envir_Var _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N) = Thm.major_prem_of sequent
    in SOME ((PLPR_Env.pop (PLPR_Env.name_of N) ctxt, @{thm Pop_Envir_Var_I} RS sequent),
       Seq.empty) end
 )\<close>
 
-\<phi>reasoner_ML Get_Envir_Var 1000 (\<open>Get_Envir_Var _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML Get_Envir_Var 1000 (\<open>Get_Envir_Var _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N $ _) = Thm.major_prem_of sequent
       val idx = Thm.maxidx_of sequent + 1
    in case PLPR_Env.get (PLPR_Env.name_of N) ctxt
@@ -1000,7 +1000,7 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
   end
 )\<close>
 
-\<phi>reasoner_ML Get_Envir_Var' 1000 (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML Get_Envir_Var' 1000 (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N $ D $ _) = Thm.major_prem_of sequent
       val idx = Thm.maxidx_of sequent + 1
       val V = Thm.cterm_of ctxt (case PLPR_Env.get (PLPR_Env.name_of N) ctxt
@@ -1068,9 +1068,9 @@ lemma \<r>END_I: \<open>\<r>END\<close> unfolding \<r>END_def ..
 
 ML_file \<open>library/nested.ML\<close>
 
-\<phi>reasoner_ML \<r>BEGIN 1000 (\<open>\<r>BEGIN\<close>) = \<open>PLPR_Nested_Reasoning.enter_scope\<close>
-\<phi>reasoner_ML \<r>END 1000 (\<open>\<r>END\<close>) = \<open>PLPR_Nested_Reasoning.exit_scope\<close>
-\<phi>reasoner_ML \<r>Call 1000 (\<open>\<r>CALL _\<close>) = \<open>PLPR_Nested_Reasoning.call\<close>
+\<phi>reasoner_ML \<r>BEGIN 1000 (\<open>\<r>BEGIN\<close>) = \<open>PLPR_Nested_Reasoning.enter_scope o snd\<close>
+\<phi>reasoner_ML \<r>END 1000 (\<open>\<r>END\<close>) = \<open>PLPR_Nested_Reasoning.exit_scope o snd\<close>
+\<phi>reasoner_ML \<r>Call 1000 (\<open>\<r>CALL _\<close>) = \<open>PLPR_Nested_Reasoning.call o snd\<close>
 
 
 subsection \<open>Pruning\<close>
@@ -1130,9 +1130,9 @@ lemma SOLVE_SUBGOAL_I[iff]: "SOLVE_SUBGOAL X" unfolding SOLVE_SUBGOAL_def ..
 
 ML_file \<open>library/Subgoal_Env.ML\<close>
 
-\<phi>reasoner_ML SUBGOAL 2000 (\<open>SUBGOAL ?ROOT ?NEWGOAL\<close>) = \<open>Subgoal_Env.subgoal\<close>
-\<phi>reasoner_ML CHK_SUBGOAL 2000 (\<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal\<close>
-\<phi>reasoner_ML SOLVE_SUBGOAL 9900 (\<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal\<close>
+\<phi>reasoner_ML SUBGOAL 2000 (\<open>SUBGOAL ?ROOT ?NEWGOAL\<close>) = \<open>Subgoal_Env.subgoal o snd\<close>
+\<phi>reasoner_ML CHK_SUBGOAL 2000 (\<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal o snd\<close>
+\<phi>reasoner_ML SOLVE_SUBGOAL 9900 (\<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal o snd\<close>
 
 lemma [\<phi>reason 800 for \<open>Try ?S ?P @GOAL ?G\<close>]:
   \<open> P @GOAL G
@@ -1195,23 +1195,26 @@ declare [[
     \<phi>reason 1000 HOL.disjI1 HOL.disjI2 for \<open>?A \<or> ?B\<close>
 ]]
 
-definition Orelse_shortcut (infixr "\<or>\<^sub>c\<^sub>u\<^sub>t" 30) where [iff]: \<open>(\<or>\<^sub>c\<^sub>u\<^sub>t) \<equiv> (\<or>)\<close>
+subsubsection \<open>Cutting Branch\<close>
+
+definition Orelse_shortcut (infixr "\<or>\<^sub>c\<^sub>u\<^sub>t" 30) where \<open>(\<or>\<^sub>c\<^sub>u\<^sub>t) \<equiv> (\<or>)\<close>
 
 text \<open>\<^prop>\<open>A \<or>\<^sub>c\<^sub>u\<^sub>t B\<close>, if \<^prop>\<open>A\<close> succeeds, \<^prop>\<open>B\<close> will not be attempted in any future backtrack.\<close>
-
 
 lemma Orelse_shortcut_I1:
   \<open> A
 \<Longrightarrow> SOLVE_SUBGOAL G
 \<Longrightarrow> A \<or>\<^sub>c\<^sub>u\<^sub>t B \<close>
+  unfolding Orelse_shortcut_def
   by simp
 
 lemma Orelse_shortcut_I2:
   \<open> B
 \<Longrightarrow> A \<or>\<^sub>c\<^sub>u\<^sub>t B \<close>
+  unfolding Orelse_shortcut_def
   by simp
 
-\<phi>reasoner_ML Orelse_shortcut 1000 (\<open>_ \<or>\<^sub>c\<^sub>u\<^sub>t _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML Orelse_shortcut 1000 (\<open>_ \<or>\<^sub>c\<^sub>u\<^sub>t _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (G, goal, ctxt) = Subgoal_Env.allocate_subgoal \<^Const>\<open>TOP_GOAL\<close> ctxt
       val [I1,I2] = map (Thm.instantiate (TVars.empty, Vars.make [((("G",0),\<^typ>\<open>subgoal\<close>),G)]))
                         @{thms' Orelse_shortcut_I1 Orelse_shortcut_I2}
@@ -1267,7 +1270,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I)\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I) o snd\<close>
 
 
 (* subsection \<open>Exhaustive Divergence\<close>
@@ -1377,7 +1380,7 @@ lemma Do_Optimum_Solution:
                                     
 ML_file_debug \<open>library/optimum_solution.ML\<close>
 
-\<phi>reasoner_ML Incremental_Cost 1000 (\<open>Incremental_Cost _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML Incremental_Cost 1000 (\<open>Incremental_Cost _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N) = Thm.major_prem_of sequent
       val (_, n) = HOLogic.dest_number N
       val sequent' = @{thm Incremental_Cost_I} RS sequent
@@ -1385,7 +1388,7 @@ ML_file_debug \<open>library/optimum_solution.ML\<close>
    end
 )\<close>
 
-\<phi>reasoner_ML Threshold_Cost 1000 (\<open>Threshold_Cost _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML Threshold_Cost 1000 (\<open>Threshold_Cost _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N) = Thm.major_prem_of sequent
       val (_, n) = HOLogic.dest_number N
       val sequent' = @{thm Threshold_Cost_I} RS sequent
@@ -1394,18 +1397,15 @@ ML_file_debug \<open>library/optimum_solution.ML\<close>
 )\<close>
 
 \<phi>reasoner_ML Optimum_Solution 1000 (\<open>PROP Optimum_Solution _\<close>) = \<open>
-   apsnd (fn th => @{thm Do_Optimum_Solution} RS th)
-#> PLPR_Optimum_Solution.internal_start
+  PLPR_Optimum_Solution.internal_start o apsnd (fn th => @{thm Do_Optimum_Solution} RS th) o snd
 \<close>
 
 \<phi>reasoner_ML Begin_Optimum_Solution 1000 (\<open>Begin_Optimum_Solution\<close>) = \<open>
-   apsnd (fn th => @{thm Begin_Optimum_Solution_I} RS th)
-#> PLPR_Optimum_Solution.internal_start
+  PLPR_Optimum_Solution.internal_start o apsnd (fn th => @{thm Begin_Optimum_Solution_I} RS th) o snd
 \<close>
 
 \<phi>reasoner_ML End_Optimum_Solution 1000 (\<open>End_Optimum_Solution\<close>) = \<open>
-   apsnd (fn th => @{thm End_Optimum_Solution_I} RS th)
-#> PLPR_Optimum_Solution.internal_finish
+  PLPR_Optimum_Solution.internal_finish o apsnd (fn th => @{thm End_Optimum_Solution_I} RS th) o snd
 \<close>
 
 (*\<phi>reasoner_ML \<r>Choice 1000 (\<open>PROP \<r>Choice _\<close>) = \<open>fn (ctxt,sequent) =>
@@ -1458,7 +1458,7 @@ lemma [\<phi>reason 1000]:
 
 ML_file \<open>library/recursion_guard.ML\<close>
 
-\<phi>reasoner_ML \<r>Recursion_Guard 1000 (\<open>\<r>RECURSION_GUARD(?X) (PROP ?P)\<close>) = \<open>PLPR_Recursion_Guard.reason\<close>
+\<phi>reasoner_ML \<r>Recursion_Guard 1000 (\<open>\<r>RECURSION_GUARD(?X) (PROP ?P)\<close>) = \<open>PLPR_Recursion_Guard.reason o snd\<close>
 
 hide_fact Do_\<r>Recursion_Guard
 
@@ -1477,7 +1477,7 @@ subsubsection \<open>Implementation\<close>
 
 ML_file \<open>library/memoization.ML\<close>
 
-\<phi>reasoner_ML Memoize 1000 (\<open>Memoize _\<close>) = \<open>fn (ctxt, sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML Memoize 1000 (\<open>Memoize _\<close>) = \<open>fn (_, (ctxt, sequent)) => Seq.make (fn () =>
   case Phi_Reasoners.tagged_memoize (ctxt, sequent)
     of SOME s' => SOME (s', Seq.empty)
      | NONE => SOME ((ctxt, @{thm' Memoize_I} RS' (ctxt, sequent)), Seq.empty))\<close>
@@ -1485,18 +1485,17 @@ ML_file \<open>library/memoization.ML\<close>
 
 subsection \<open>Error Message\<close>
 
-\<phi>reasoner_ML TRACING 1200 (\<open>TRACING ?x\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML TRACING 1200 (\<open>TRACING ?x\<close>) = \<open>fn (_, (ctxt,sequent)) =>
   if Context_Position.is_really_visible ctxt
   then let
          val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>TRACING\<close> $ text)
                = Thm.major_prem_of sequent
-         val str = Text_Encoding.decode_text_str ctxt text
-         val _ = tracing str
+         val _ = Phi_Reasoner.info_print ctxt 1 (fn () => Text_Encoding.decode_text_str ctxt text)
        in Seq.single (ctxt, @{thm TRACING_I} RS sequent)
        end
   else Seq.empty\<close>
 
-\<phi>reasoner_ML WARNING 1200 (\<open>WARNING ?x\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML WARNING 1200 (\<open>WARNING ?x\<close>) = \<open>fn (_, (ctxt,sequent)) =>
   if Context_Position.is_really_visible ctxt
   then let
          val \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>WARNING\<close> $ text)
@@ -1507,20 +1506,30 @@ subsection \<open>Error Message\<close>
        end
   else Seq.empty\<close>
 
-\<phi>reasoner_ML FAIL 1200 (\<open>FAIL ?x\<close> | \<open>PROP FAIL' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
-  if not (Config.get ctxt PLPR_Exhaustive.PLPR_exhaustive_mode) andalso
-     Context_Position.is_really_visible ctxt
-  then let
-         val text = case Thm.major_prem_of sequent
-                      of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ X) => X
-                       | \<^const>\<open>FAIL'\<close> $ X => X
-         val str = Text_Encoding.decode_text_str ctxt text
-         val _ = warning str
-       in Seq.empty
+\<phi>reasoner_ML FAIL 1200 (\<open>FAIL ?x\<close> | \<open>PROP FAIL' ?x'\<close>) = \<open>fn (bmode, (ctxt,sequent)) =>
+  if bmode <> Phi_Reasoner.EXPLORATIVE_BACKTRACKING
+  then let val text = case Thm.major_prem_of sequent
+                        of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>FAIL\<close> $ X) => X
+                         | \<^const>\<open>FAIL'\<close> $ X => X
+           val str = Text_Encoding.decode_text_str ctxt text
+           val _ = warning str
+        in Seq.empty
        end
   else Seq.empty\<close>
 
-\<phi>reasoner_ML ERROR 1200 (\<open>ERROR ?x\<close> | \<open>PROP ERROR' ?x'\<close>) = \<open>fn (ctxt,sequent) =>
+\<phi>reasoner_ML TRACE_FAIL 1200 (\<open>TRACE_FAIL ?x\<close> | \<open>PROP TRACE_FAIL' ?x'\<close>) = \<open>fn (bmode, (ctxt,sequent)) =>
+  if bmode <> Phi_Reasoner.EXPLORATIVE_BACKTRACKING
+  then let val text = case Thm.major_prem_of sequent
+                        of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>TRACE_FAIL\<close> $ X) => X
+                         | \<^const>\<open>TRACE_FAIL\<close> $ X => X
+           val str = Text_Encoding.decode_text_str ctxt text
+           val _ = Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () =>
+                        Text_Encoding.decode_text_pretty ctxt text)
+        in Seq.empty
+       end
+  else Seq.empty\<close>
+
+\<phi>reasoner_ML ERROR 1200 (\<open>ERROR ?x\<close> | \<open>PROP ERROR' ?x'\<close>) = \<open>fn (_, (ctxt,sequent)) =>
   let
     val text = case Thm.major_prem_of sequent
                  of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>ERROR\<close> $ X) => X

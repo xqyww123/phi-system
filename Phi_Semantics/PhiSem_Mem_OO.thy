@@ -128,7 +128,7 @@ fiction_space \<phi>OO_fic =
   OO_share :: RES.Objs.share_fiction (share_fiction_for_partial_mapping_resource2 RES.Objs) ..
 
 lemma "__case_prod_ref_field__":
-  \<open>(\<lambda>(x, y). (1(ref := 1(field \<mapsto> n \<Znrres> v))) x y) = 1((ref,field) \<mapsto> n \<Znrres> v)\<close>
+  \<open>(\<lambda>(x, y). (1(ref := 1(field \<mapsto> n \<odiv> v))) x y) = 1((ref,field) \<mapsto> n \<odiv> v)\<close>
   unfolding fun_eq_iff by simp
 
 
@@ -260,16 +260,16 @@ paragraph \<open>Load Field\<close>
 lemma op_obj_load_field_raw_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_obj_load_field field TY raw \<lbrace>
-      nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> \<v>\<a>\<l>[raw] (Ref cls)
-  \<longmapsto> nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> Itself \<heavy_comma> \<v>\<a>\<l> v \<Ztypecolon> Itself
+      nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> ref \<Ztypecolon> \<v>\<a>\<l>[raw] (Ref cls)
+  \<longmapsto> nosep v \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> Itself \<heavy_comma> \<v>\<a>\<l> v \<Ztypecolon> Itself
 \<rbrace>\<close>
   unfolding op_obj_load_field_def Premise_def
   by (rule \<phi>M_getV_ref, rule, rule \<phi>SEQ, rule \<phi>M_assert, simp, rule, simp add: Itself_expn)
    
 proc (nodef) op_obj_load_field:
   requires A: \<open>\<phi>SemType (x \<Ztypecolon> T) TY\<close>
-  input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
-  output \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<Znrres> \<coercion> T \<heavy_comma> \<v>\<a>\<l> x \<Ztypecolon> T\<close>
+  input  \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> T \<heavy_comma> ref \<Ztypecolon> Val raw (Ref cls)\<close>
+  output \<open>x \<Ztypecolon> obj: ref \<^bold>\<rightarrow> field \<^bold>\<rightarrow> n \<odiv> \<coercion> T \<heavy_comma> \<v>\<a>\<l> x \<Ztypecolon> T\<close>
 \<medium_left_bracket> \<open>obj: _\<close> to Itself \<exists>v
   have [simp]: \<open>v \<in> Well_Type TY\<close> using A[unfolded \<phi>SemType_def subset_iff] \<phi> by blast
   ;; $ref op_obj_load_field_raw[where TY=TY]

@@ -52,10 +52,10 @@ end
 
 proc balance_of:
   argument \<open>msg \<Ztypecolon> Msg\<heavy_comma>
-      balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address)] \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
+      balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address)] \<^bold>\<rightarrow> n \<odiv> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       \<v>\<a>\<l> account \<Ztypecolon> Address\<close>
   return   \<open>msg \<Ztypecolon> Msg\<heavy_comma>
-      balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address)] \<^bold>\<rightarrow> n \<Znrres> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
+      balance \<Ztypecolon> ledge: msg.contract msg \<^bold>\<rightarrow> [\<bbbS>\<f>\<i>\<e>\<l>\<d> ''balance'', \<bbbS>\<m>\<a>\<p> (account \<Ztypecolon> Address)] \<^bold>\<rightarrow> n \<odiv> \<fish_eye>\<lbrakk>\<tau>Int 256\<rbrakk> Currency \<heavy_comma>
       \<v>\<a>\<l> balance \<Ztypecolon> \<nat>[256]\<close>
   \<medium_left_bracket> \<rightarrow> v_account;;
     op_get_msg_addr[where G=msg.contract]

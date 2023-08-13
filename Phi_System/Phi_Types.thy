@@ -42,7 +42,7 @@ lemma [\<phi>reason add]:
   \<open> closed_homo_sep f
 \<Longrightarrow> Object_Sep_Homo\<^sub>I (\<phi>Fun f) UNIV \<close>
   unfolding Object_Sep_Homo\<^sub>I_def Transformation_def
-  by (clarsimp simp add: set_mult_expn homo_sep_disj_closed.sep_disj_homo
+  by (clarsimp simp add: set_mult_expn closed_homo_sep_disj.sep_disj_homo
                          homo_sep_mult.homo_mult closed_homo_sep_def homo_sep_def)
 
 lemma [\<phi>reason add]:
@@ -59,14 +59,13 @@ subsection \<open>Embedding Subjection into Type\<close>
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
+       and \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> \<forall>x. x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x \<and> Q \<close>
        and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Open_Abstraction_Full
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
        and Separation_Homo
-
-thm SubjectionTY.elim_reasoning
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -720,7 +719,7 @@ subsection \<open>Vertical Composition of Func\<close>
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+   
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   deriving Basic
@@ -730,19 +729,20 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
        and Open_Abstraction_Full
-       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<lambda>x. x)\<close>
+       and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<lambda>x. x)\<close>
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
  
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
-  \<open> homo_sep \<psi>
-\<Longrightarrow> homo_sep_disj_closed \<psi> \<and> Prem = (\<lambda>T U xy. True)
+  \<open> homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
+\<Longrightarrow> closed_homo_sep_disj \<psi> \<and> Prem = (\<lambda>T U xy. True)
     \<or>\<^sub>c\<^sub>u\<^sub>t Prem = (\<lambda>T U xy. Separation_Disj \<psi> (snd xy \<Ztypecolon> U) (fst xy \<Ztypecolon> T))
+    \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
 \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) Prem UNIV (\<lambda>x. x) \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
-            Separation_Disj_def closed_homo_sep_def homo_sep_def homo_sep_disj_closed_def
+            Separation_Disj_def closed_homo_sep_def homo_sep_def closed_homo_sep_disj_def
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def
   by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
 
@@ -959,14 +959,13 @@ lemma [\<phi>reason 10000]:
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
-  deriving Separation_Homo\<^sub>I
-       (*and Basic
+  deriving Basic
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
        and Open_Abstraction_Full
        and Is_Functional
-       and Trivial_\<Sigma>*)
+       and Trivial_\<Sigma>
 
 
 
@@ -1234,6 +1233,321 @@ lemma [\<phi>reason 1000]:
 *)
 
 
+
+
+
+
+subsubsection \<open>Permission Annotation\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
+   
+\<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
+  where \<open>\<phi>Share n T = (share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
+  deriving Basic
+       and \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> \<forall>x. x \<Ztypecolon> n \<odiv> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x \<and> 0 < n\<close>
+       and Is_Functional
+       and Functional_Transformation_Functor
+       and Open_Abstraction_Full
+       and Trivial_\<Sigma>
+       and \<open>Separation_Homo\<^sub>I ((\<odiv>) n :: ('c::share_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
+       and \<open>Separation_Homo\<^sub>E ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>x. x)\<close>
+       (*and Separation_Homo\<^sub>I*)
+
+term \<open>Separation_Homo\<^sub>I ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
+term \<open>Separation_Homo\<^sub>E ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>x. x)\<close>
+term \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> \<forall>x. x \<Ztypecolon> n \<odiv> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x \<and> 0 < n\<close>
+
+
+thm \<phi>Share.expansion
+
+lemma \<phi>Share_inhabited[elim!]:
+  \<open>Inhabited (x \<Ztypecolon> n \<odiv> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
+  unfolding Inhabited_def by (simp add: \<phi>Share_expn)
+
+lemma [\<phi>inhabitance_rule 1000]:
+  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF
+\<Longrightarrow> Inhabited (x \<Ztypecolon> n \<odiv> T) \<longrightarrow> 0 < n \<and> C @action \<A>EIF\<close>
+  unfolding Inhabited_def Action_Tag_def
+  by (simp add: \<phi>Share_expn)
+
+
+subparagraph \<open>Auxiliary Tag\<close>
+
+(*TODO: depreciate this, or automate this*)
+
+definition half :: \<open>rat \<Rightarrow> rat\<close> where [iff]: \<open>half x = x\<close>
+
+text \<open>Many read-only applicable rules require only non-zero permissions.
+  It is reflected as arbitrary schematic variable in the rule, like
+    \<^schematic_prop>\<open> x \<Ztypecolon> ?n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z\<close>.
+  As arbitrary schematic variable, the reasoner may by mistake instantiate it to be the total
+  permission. It is not the optimal, and it is better to only assign a half of the permission
+    and to leave the remain half to be used potentially later.
+  For example, if a rule requires twice the same resource,
+    \<^schematic_prop>\<open> (x \<Ztypecolon> ?n \<odiv> T) * (x \<Ztypecolon> ?m \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z\<close>.
+  The best solution is to assign ?n by a half of the current permission and then assign ?m
+    the half of the remaining half.
+
+  Unfortunately, the reasoner can hardly be configured to apply this conservative policy, because
+  schematic variables have a semantics of accepting any instantiation and there are many short-cut
+  reasoning rule trying to solve greedily a local problem by unification.
+
+  An approach is, if a rule may request a same object by twice, add the tag \<^term>\<open>half\<close> on its
+    permission to tell explicitly the reasoner to only assign it a half of the permission.
+    \<^schematic_prop>\<open> (x \<Ztypecolon> half ?n \<odiv> T) * (x \<Ztypecolon> half ?m \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z\<close>.
+\<close>
+
+paragraph \<open>Structural Conversions\<close>
+
+lemma \<phi>Share_1[simp]:
+  \<open> 1 \<odiv> T = T \<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
+
+lemma \<phi>Share_\<phi>Share[simp]:
+  \<open> 0 < n \<and> 0 < m
+\<Longrightarrow> n \<odiv> m \<odiv> T = (m * n) \<odiv> T \<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
+  by (metis mult.commute share_share_not0)
+  
+
+lemma \<phi>Share_share:
+  \<open> 0 < n \<and> 0 < m
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) * (x \<Ztypecolon> m \<odiv> T) = (x \<Ztypecolon> (n + m) \<odiv> T)\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
+  unfolding \<phi>Sep_Disj_Inj_def
+  apply (clarsimp simp add: \<phi>expns set_eq_iff; rule; clarsimp)
+  using share_sep_left_distrib_0 apply blast
+  subgoal for v
+  apply (rule exI[where x=\<open>share n v\<close>], rule exI[where x=\<open>share m v\<close>], simp)
+    by (metis share_sep_left_distrib_0) .
+
+lemma \<phi>Share_\<phi>MapAt:
+  \<open>n \<odiv> k \<^bold>\<rightarrow> T = k \<^bold>\<rightarrow> n \<odiv> T\<close>
+  for T :: \<open>('a::share_one,'b) \<phi>\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
+  apply blast
+  by (metis share_fun_updt share_right_one)
+
+lemma \<phi>Share_\<phi>MapAt_L:
+  \<open>n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T = k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::share_one,'b) \<phi>\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule)
+  apply (clarsimp simp add: share_push_map) apply blast
+  apply (clarsimp simp add: share_push_map[symmetric]) by blast
+
+lemma \<phi>Share_\<phi>Prod:
+  \<open>n \<odiv> (T \<^emph> U) = (n \<odiv> T) \<^emph> (n \<odiv> U)\<close>
+  for T :: \<open>('a::share_nun_semimodule, 'b) \<phi>\<close>
+  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
+  apply (metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
+  using share_sep_right_distrib_0 by blast
+
+lemma \<phi>Share_\<phi>None:
+  \<open>0 < n \<Longrightarrow> n \<odiv> \<circle> = (\<circle> :: ('a::share_one,unit) \<phi>)\<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
+
+(*
+lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> ?n \<odiv> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action (?Act::?'b::simplification action)\<close>]:
+  \<open>x \<Ztypecolon> n \<odiv> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>) @action Act\<close>
+  for Act :: \<open>'b::simplification action\<close>
+  unfolding Transformation_def Action_Tag_def
+  by (simp add: \<phi>expns) *)
+
+
+paragraph \<open>Implication \& Action Rules\<close>
+
+lemma \<phi>Share_transformation:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> n \<odiv> U \<w>\<i>\<t>\<h> P\<close>
+  unfolding Transformation_def by (clarsimp simp add: \<phi>expns; blast)
+
+lemma [\<phi>reason 1010]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n = n'
+\<Longrightarrow> x \<Ztypecolon> n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> n' \<odiv> U \<w>\<i>\<t>\<h> P\<close>
+  using \<phi>Share_transformation by (simp add: Premise_def)
+
+lemma [\<phi>reason 1000]:
+  \<open> x \<Ztypecolon> (m * n) \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
+\<Longrightarrow> x \<Ztypecolon> n \<odiv> m \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  unfolding Premise_def by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (m * n) \<odiv> T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> n \<odiv> m \<odiv> T \<w>\<i>\<t>\<h> P\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
+  unfolding Premise_def by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow> n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  for T :: \<open>('a::share_one,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt .
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> k \<^bold>\<rightarrow> n \<odiv> T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<w>\<i>\<t>\<h> P\<close>
+  for T :: \<open>('a::share_one,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt .
+
+lemma [\<phi>reason 1000]:
+  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::share_one, 'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt_L .
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T \<w>\<i>\<t>\<h> P\<close>
+  for T :: \<open>('k list \<Rightarrow> 'a::share_one, 'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>MapAt_L .
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> T) \<^emph> (n \<odiv> U) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> n \<odiv> (T \<^emph> U) \<w>\<i>\<t>\<h> P\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>Prod .
+
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> (n \<odiv> T) \<^emph> (n \<odiv> U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> (T \<^emph> U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
+  unfolding \<phi>Share_\<phi>Prod .
+
+
+paragraph \<open>Action Rules\<close>
+
+lemma [\<phi>reason 1200]:
+  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action \<A>_structural Act
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<odiv> U) \<w>\<i>\<t>\<h> P @action \<A>_structural Act\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+(* TESTING
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action to Z
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<odiv> U) \<w>\<i>\<t>\<h> P @action to Z\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+lemma [\<phi>reason 1100]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n' = n
+\<Longrightarrow> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action to Z
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<odiv> U) \<w>\<i>\<t>\<h> P @action to (n' \<odiv> Z)\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+lemma [\<phi>reason 1000]:
+  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action as Z
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<odiv> U) \<w>\<i>\<t>\<h> P @action as Z\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation .
+
+lemma [\<phi>reason 1100]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n' = n
+\<Longrightarrow> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Z)
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<odiv> U) \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> n' \<odiv> Z)\<close>
+  unfolding Action_Tag_def using \<phi>Share_transformation . *)
+
+
+paragraph \<open>Simplifications\<close>
+
+lemma [simp]:
+  \<open>(n \<odiv> ExTyp T) = (\<exists>\<phi> c. n \<odiv> T c)\<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
+
+lemma [simp]:
+  \<open>(n \<odiv> (T \<phi>\<s>\<u>\<b>\<j> P)) = (n \<odiv> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
+
+(*
+lemma \<phi>Share_simp_cong[folded atomize_eq]:
+  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) = (x' \<Ztypecolon> n \<odiv> T')\<close>
+  unfolding set_eq_iff by (simp add: \<phi>expns)
+
+simproc_setup \<phi>Share_simp_cong ("x \<Ztypecolon> n \<odiv> T") = \<open>
+  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>Share_simp_cong} ctxt)
+\<close>*)
+
+
+subparagraph \<open>Permission\<close>
+
+lemma share_split_\<phi>app:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
+\<Longrightarrow> (x \<Ztypecolon> (n+m) \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> n \<odiv> T) * (x \<Ztypecolon> m \<odiv> T)\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
+  by (simp add: \<phi>Share_share Premise_def)
+
+lemma share_merge_\<phi>app:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
+\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
+\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) * (x \<Ztypecolon> m \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> (n+m) \<odiv> T)\<close>
+  for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
+  by (simp add: \<phi>Share_share Premise_def)
+
+paragraph \<open>Algebraic Properties\<close>
+
+lemma \<phi>Share_left_seminearring_functor[\<phi>reason add]:
+  \<open>Scala_Semimodule_Functor (\<odiv>) T {0<..1}\<close>
+  unfolding Scala_Semimodule_Functor_def
+  by clarsimp
+
+(*
+lemma \<phi>Share_void_functor[\<phi>reason add]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
+\<Longrightarrow> Unit_Functor ((\<odiv>) n :: ('a::share_one, 'b) \<phi> \<Rightarrow> ('a, 'b) \<phi>)\<close>
+  unfolding Unit_Functor_def Transformation_def Premise_def
+  by (clarsimp simp add: \<phi>Share_expn, insert share_right_one, blast)*)
+ 
+interpretation \<phi>Share: Functional_Transformation_Functor
+    \<open>(\<odiv>) n\<close> \<open>(\<odiv>) n'\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> n = n'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
+  by (standard, clarsimp simp add: Transformation_Functor_def Transformation_def ExSet_expn Premise_def
+      Subjection_expn \<phi>Share_expn; blast)
+
+interpretation \<phi>Share: Sep_Homo_Type_Functor_L
+    \<open>(\<odiv>) n :: ('a::share_nun_semimodule, 'b) \<phi> \<Rightarrow> _\<close> \<open>(\<odiv>) n\<close> \<open>(\<odiv>) n\<close> True
+  by ((standard; rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp),
+      (insert share_sep_right_distrib_0, blast)[1],
+      metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
+
+lemma [\<phi>reason add]:
+  \<open> Near_Semimodule_Functor_zip ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+        {n. 0 < n}
+        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Object_Equiv T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
+        (\<lambda>_ _. fst) \<close>
+  unfolding Near_Semimodule_Functor_zip_def \<phi>Sep_Disj_Inj_def
+  by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn Premise_def;
+      metis share_sep_left_distrib_0)
+
+lemma [\<phi>reason add]:
+  \<open> Near_Semimodule_Functor_zip_rev ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+        {n. 0 < n}
+        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Object_Equiv T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
+        (\<lambda>_ _. fst) \<close>
+  unfolding Near_Semimodule_Functor_zip_rev_def \<phi>Sep_Disj_Inj_def
+  by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn Premise_def;
+      metis add.commute share_sep_left_distrib_0)
+
+lemma [\<phi>reason add]:
+  \<open> Near_Semimodule_Functor_unzip ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+        {n. 0 < n}
+        (\<lambda>T x. \<phi>Sep_Disj_Inj (x \<Ztypecolon> T))
+        (\<lambda>_ _ x. (x,x)) \<close>
+  unfolding Near_Semimodule_Functor_unzip_def \<phi>Sep_Disj_Inj_def
+  by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn;
+      metis share_sep_disj_left share_sep_disj_right share_sep_left_distrib_0)
+
+
+
+
+
+
+
+
+
+
+
 (* subsection \<open>Down Lifting\<close> (*depreciated*)
 
 definition DownLift :: "('a, 'b) \<phi> \<Rightarrow> ('c \<Rightarrow> 'b) \<Rightarrow> ('a,'c) \<phi>" (infixl "<down-lift>" 80)
@@ -1470,7 +1784,7 @@ subsubsection \<open>Definition of Properties\<close>
 definition \<phi>Sep_Disj :: \<open>('a::sep_magma,'b1) \<phi> \<Rightarrow> ('a,'b2) \<phi> \<Rightarrow> bool\<close>
   where \<open>\<phi>Sep_Disj T U \<longleftrightarrow> (\<forall>x y u v. u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (y \<Ztypecolon> U) \<longrightarrow> (\<exists>u' v'. u' \<Turnstile> (x \<Ztypecolon> T) \<and> v' \<Turnstile> (y \<Ztypecolon> U) \<and> u' ## v'))\<close>
 
-definition \<phi>Sep_Disj_Inj :: \<open>'a::share_semimodule_sep set \<Rightarrow> bool\<close>
+definition \<phi>Sep_Disj_Inj :: \<open>'a::share_nun_semimodule set \<Rightarrow> bool\<close>
   where \<open>\<phi>Sep_Disj_Inj S \<longleftrightarrow> (\<forall>u v. u \<in> S \<and> v \<in> S \<and> u ## v \<longrightarrow> u = v) \<and> (\<forall>u. u \<in> S \<longrightarrow> u ## u)\<close>
 
 subsubsection \<open>The \<phi>-Type of Separation Homomorphism\<close>
@@ -1593,293 +1907,6 @@ lemma \<phi>insertion_Prod_imply:
 
 
 thm share_orthogonal_homo.axioms(1)
-
-subsubsection \<open>Permission Annotation\<close>
-
-definition \<phi>Share :: \<open>rat \<Rightarrow> ('v::share,'x) \<phi> \<Rightarrow> ('v, 'x) \<phi>\<close> (infixr "\<odiv>" 75)
-  where \<open>\<phi>Share n T = (\<lambda>x. { share n v |v. v \<in> (x \<Ztypecolon> T) \<and> 0 < n }) \<close>
-
-lemma \<phi>Share_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> n \<odiv> T) \<longleftrightarrow> (\<exists>v. p = share n v \<and> v \<in> (x \<Ztypecolon> T) \<and> 0 < n )\<close>
-  unfolding \<phi>Share_def \<phi>Type_def by simp
-
-lemma \<phi>Share_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> n \<odiv> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> 0 < n \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>Share_expn)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> Inhabited (x \<Ztypecolon> n \<odiv> T) \<longrightarrow> 0 < n \<and> C @action \<A>EIF\<close>
-  unfolding Inhabited_def Action_Tag_def
-  by (simp add: \<phi>Share_expn)
-
-
-subparagraph \<open>Auxiliary Tag\<close>
-
-(*TODO: depreciate this, or automate this*)
-
-definition half :: \<open>rat \<Rightarrow> rat\<close> where [iff]: \<open>half x = x\<close>
-
-text \<open>Many read-only applicable rules require only non-zero permissions.
-  It is reflected as arbitrary schematic variable in the rule, like
-    \<^schematic_prop>\<open> x \<Ztypecolon> ?n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z\<close>.
-  As arbitrary schematic variable, the reasoner may by mistake instantiate it to be the total
-  permission. It is not the optimal, and it is better to only assign a half of the permission
-    and to leave the remain half to be used potentially later.
-  For example, if a rule requires twice the same resource,
-    \<^schematic_prop>\<open> (x \<Ztypecolon> ?n \<odiv> T) * (x \<Ztypecolon> ?m \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z\<close>.
-  The best solution is to assign ?n by a half of the current permission and then assign ?m
-    the half of the remaining half.
-
-  Unfortunately, the reasoner can hardly be configured to apply this conservative policy, because
-  schematic variables have a semantics of accepting any instantiation and there are many short-cut
-  reasoning rule trying to solve greedily a local problem by unification.
-
-  An approach is, if a rule may request a same object by twice, add the tag \<^term>\<open>half\<close> on its
-    permission to tell explicitly the reasoner to only assign it a half of the permission.
-    \<^schematic_prop>\<open> (x \<Ztypecolon> half ?n \<odiv> T) * (x \<Ztypecolon> half ?m \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Z\<close>.
-\<close>
-
-paragraph \<open>Structural Conversions\<close>
-
-lemma \<phi>Share_1[simp]:
-  \<open> 1 \<odiv> T = T \<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-
-lemma \<phi>Share_\<phi>Share[simp]:
-  \<open> 0 < n \<and> 0 < m
-\<Longrightarrow> n \<odiv> m \<odiv> T = (m * n) \<odiv> T \<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-  by (metis mult.commute share_share_not0)
-  
-
-lemma \<phi>Share_share:
-  \<open> 0 < n \<and> 0 < m
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) * (x \<Ztypecolon> m \<odiv> T) = (x \<Ztypecolon> (n + m) \<odiv> T)\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  apply (clarsimp simp add: \<phi>expns set_eq_iff; rule; clarsimp)
-  using share_sep_left_distrib_0 apply blast
-  subgoal for v
-  apply (rule exI[where x=\<open>share n v\<close>], rule exI[where x=\<open>share m v\<close>], simp)
-    by (metis share_sep_left_distrib_0) .
-
-lemma \<phi>Share_\<phi>MapAt:
-  \<open>n \<odiv> k \<^bold>\<rightarrow> T = k \<^bold>\<rightarrow> n \<odiv> T\<close>
-  for T :: \<open>('a::share_one,'b) \<phi>\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
-  apply blast
-  by (metis share_fun_updt share_right_one)
-
-lemma \<phi>Share_\<phi>MapAt_L:
-  \<open>n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T = k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::share_one,'b) \<phi>\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule)
-  apply (clarsimp simp add: share_push_map) apply blast
-  apply (clarsimp simp add: share_push_map[symmetric]) by blast
-
-lemma \<phi>Share_\<phi>Prod:
-  \<open>n \<odiv> (T \<^emph> U) = (n \<odiv> T) \<^emph> (n \<odiv> U)\<close>
-  for T :: \<open>('a::share_semimodule_sep, 'b) \<phi>\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
-  apply (metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
-  using share_sep_right_distrib_0 by blast
-
-lemma \<phi>Share_\<phi>None:
-  \<open>0 < n \<Longrightarrow> n \<odiv> \<circle> = (\<circle> :: ('a::share_one,unit) \<phi>)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns)
-
-(*
-lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> ?n \<Znrres> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action (?Act::?'b::simplification action)\<close>]:
-  \<open>x \<Ztypecolon> n \<Znrres> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>) @action Act\<close>
-  for Act :: \<open>'b::simplification action\<close>
-  unfolding Transformation_def Action_Tag_def
-  by (simp add: \<phi>expns) *)
-
-
-paragraph \<open>Implication \& Action Rules\<close>
-
-lemma \<phi>Share_transformation:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> n \<odiv> U \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def by (clarsimp simp add: \<phi>expns; blast)
-
-lemma [\<phi>reason 1010]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n = n'
-\<Longrightarrow> x \<Ztypecolon> n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> n' \<odiv> U \<w>\<i>\<t>\<h> P\<close>
-  using \<phi>Share_transformation by (simp add: Premise_def)
-
-lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> (m * n) \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> x \<Ztypecolon> n \<odiv> m \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
-  unfolding Premise_def by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (m * n) \<odiv> T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> n \<odiv> m \<odiv> T \<w>\<i>\<t>\<h> P\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding Premise_def by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow> n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
-  for T :: \<open>('a::share_one,'b) \<phi>\<close>
-  unfolding \<phi>Share_\<phi>MapAt .
-
-lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> k \<^bold>\<rightarrow> n \<odiv> T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow> T \<w>\<i>\<t>\<h> P\<close>
-  for T :: \<open>('a::share_one,'b) \<phi>\<close>
-  unfolding \<phi>Share_\<phi>MapAt .
-
-lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::share_one, 'b) \<phi>\<close>
-  unfolding \<phi>Share_\<phi>MapAt_L .
-
-lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T \<w>\<i>\<t>\<h> P\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::share_one, 'b) \<phi>\<close>
-  unfolding \<phi>Share_\<phi>MapAt_L .
-
-lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (n \<odiv> T) \<^emph> (n \<odiv> U) \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> n \<odiv> (T \<^emph> U) \<w>\<i>\<t>\<h> P\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding \<phi>Share_\<phi>Prod .
-
-lemma [\<phi>reason 1000]:
-  \<open> (x \<Ztypecolon> (n \<odiv> T) \<^emph> (n \<odiv> U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> (x \<Ztypecolon> n \<odiv> (T \<^emph> U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  unfolding \<phi>Share_\<phi>Prod .
-
-
-paragraph \<open>Action Rules\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action \<A>_structural Act
-\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<odiv> U) \<w>\<i>\<t>\<h> P @action \<A>_structural Act\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-(* TESTING
-lemma [\<phi>reason 1000]:
-  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action to Z
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<Znrres> U) \<w>\<i>\<t>\<h> P @action to Z\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-lemma [\<phi>reason 1100]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n' = n
-\<Longrightarrow> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action to Z
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<Znrres> U) \<w>\<i>\<t>\<h> P @action to (n' \<Znrres> Z)\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-lemma [\<phi>reason 1000]:
-  \<open> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action as Z
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<Znrres> U) \<w>\<i>\<t>\<h> P @action as Z\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation .
-
-lemma [\<phi>reason 1100]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n' = n
-\<Longrightarrow> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> U) \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> n \<Znrres> U) \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> n' \<Znrres> Z)\<close>
-  unfolding Action_Tag_def using \<phi>Share_transformation . *)
-
-
-paragraph \<open>Simplifications\<close>
-
-lemma [simp]:
-  \<open>(n \<odiv> ExTyp T) = (\<exists>\<phi> c. n \<odiv> T c)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-lemma [simp]:
-  \<open>(n \<odiv> (T \<phi>\<s>\<u>\<b>\<j> P)) = (n \<odiv> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-(*
-lemma \<phi>Share_simp_cong[folded atomize_eq]:
-  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
-\<Longrightarrow> (x \<Ztypecolon> n \<Znrres> T) = (x' \<Ztypecolon> n \<Znrres> T')\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-simproc_setup \<phi>Share_simp_cong ("x \<Ztypecolon> n \<Znrres> T") = \<open>
-  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>Share_simp_cong} ctxt)
-\<close>*)
-
-
-subparagraph \<open>Permission\<close>
-
-lemma share_split_\<phi>app:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> (x \<Ztypecolon> (n+m) \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> n \<odiv> T) * (x \<Ztypecolon> m \<odiv> T)\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  by (simp add: \<phi>Share_share Premise_def)
-
-lemma share_merge_\<phi>app:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<and> 0 < m
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> (x \<Ztypecolon> n \<odiv> T) * (x \<Ztypecolon> m \<odiv> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> (n+m) \<odiv> T)\<close>
-  for T :: \<open>('a::share_semimodule_sep,'b) \<phi>\<close>
-  by (simp add: \<phi>Share_share Premise_def)
-
-paragraph \<open>Algebraic Properties\<close>
-
-lemma \<phi>Share_left_seminearring_functor[\<phi>reason add]:
-  \<open>Scala_Semimodule_Functor (\<odiv>) T {0<..1}\<close>
-  unfolding Scala_Semimodule_Functor_def
-  by clarsimp
-
-(*
-lemma \<phi>Share_void_functor[\<phi>reason add]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
-\<Longrightarrow> Unit_Functor ((\<Znrres>) n :: ('a::share_one, 'b) \<phi> \<Rightarrow> ('a, 'b) \<phi>)\<close>
-  unfolding Unit_Functor_def Transformation_def Premise_def
-  by (clarsimp simp add: \<phi>Share_expn, insert share_right_one, blast)*)
- 
-interpretation \<phi>Share: Functional_Transformation_Functor
-    \<open>(\<odiv>) n\<close> \<open>(\<odiv>) n'\<close> \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> n = n'\<close> \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
-  by (standard, clarsimp simp add: Transformation_Functor_def Transformation_def ExSet_expn Premise_def
-      Subjection_expn \<phi>Share_expn; blast)
-
-interpretation \<phi>Share: Sep_Homo_Type_Functor_L
-    \<open>(\<odiv>) n :: ('a::share_semimodule_sep, 'b) \<phi> \<Rightarrow> _\<close> \<open>(\<odiv>) n\<close> \<open>(\<odiv>) n\<close> True
-  by ((standard; rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp),
-      (insert share_sep_right_distrib_0, blast)[1],
-      metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
-
-lemma [\<phi>reason add]:
-  \<open> Near_Semimodule_Functor_zip ((\<odiv>) :: _ \<Rightarrow> ('a::share_semimodule_sep,'b) \<phi> \<Rightarrow> _)
-        {n. 0 < n}
-        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Object_Equiv T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
-        (\<lambda>_ _. fst) \<close>
-  unfolding Near_Semimodule_Functor_zip_def \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn Premise_def;
-      metis share_sep_left_distrib_0)
-
-lemma [\<phi>reason add]:
-  \<open> Near_Semimodule_Functor_zip_rev ((\<odiv>) :: _ \<Rightarrow> ('a::share_semimodule_sep,'b) \<phi> \<Rightarrow> _)
-        {n. 0 < n}
-        (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Object_Equiv T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
-        (\<lambda>_ _. fst) \<close>
-  unfolding Near_Semimodule_Functor_zip_rev_def \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn Premise_def;
-      metis add.commute share_sep_left_distrib_0)
-
-lemma [\<phi>reason add]:
-  \<open> Near_Semimodule_Functor_unzip ((\<odiv>) :: _ \<Rightarrow> ('a::share_semimodule_sep,'b) \<phi> \<Rightarrow> _)
-        {n. 0 < n}
-        (\<lambda>T x. \<phi>Sep_Disj_Inj (x \<Ztypecolon> T))
-        (\<lambda>_ _ x. (x,x)) \<close>
-  unfolding Near_Semimodule_Functor_unzip_def \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn;
-      metis share_sep_disj_left share_sep_disj_right share_sep_left_distrib_0)
 
 
 
@@ -2116,7 +2143,7 @@ lemma [\<phi>reason 1200]:
   by (clarsimp simp add: \<phi>expns; rule; clarsimp)
 
 lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>None :: 'a::share_module_sep set) \<close>
+  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>None :: 'a::share_semimodule set) \<close>
   unfolding \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: \<phi>expns)
 

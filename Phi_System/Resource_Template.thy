@@ -383,7 +383,7 @@ locale permission_fiction =
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
       \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi>)\<close>
 for Res :: "'T::sep_algebra resource_entry"
-and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
+and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_semimodule,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
 begin
 

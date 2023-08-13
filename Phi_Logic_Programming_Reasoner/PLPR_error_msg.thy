@@ -123,16 +123,17 @@ subsection \<open>Reasoners for Printing Message\<close>
 
 subsubsection \<open>Tracing\<close>
 
-definition TRACING :: \<open>text \<Rightarrow> bool\<close>
-  where [iff]: \<open>TRACING x \<longleftrightarrow> True\<close>
+definition TRACING :: \<open>text \<Rightarrow> bool\<close> where \<open>TRACING x \<longleftrightarrow> True\<close>
+
+text \<open>The message is printed only when \<^verbatim>\<open>\<phi>trac_reasoning \<ge> 1\<close>.
+      \<^verbatim>\<open>declare [[\<phi>trac_reasoning = 1]]\<close>\<close>
 
 lemma TRACING_I: \<open>TRACING x\<close>
   unfolding TRACING_def ..
 
 subsubsection \<open>Warning\<close>
 
-definition WARNING :: \<open>text \<Rightarrow> bool\<close>
-  where [iff]: \<open>WARNING x \<longleftrightarrow> True\<close>
+definition WARNING :: \<open>text \<Rightarrow> bool\<close> where \<open>WARNING x \<longleftrightarrow> True\<close>
 
 lemma WARNING_I: \<open>WARNING x\<close>
   unfolding WARNING_def ..
@@ -142,22 +143,26 @@ subsubsection \<open>Fail\<close>
 text \<open>Fail ends the current search branch but does not terminate
  the whole reasoning.\<close>
 
-definition FAIL :: \<open>text \<Rightarrow> bool\<close>
-  where [iff]: \<open>FAIL x \<longleftrightarrow> False\<close>
+definition FAIL :: \<open>text \<Rightarrow> bool\<close> where \<open>FAIL x \<longleftrightarrow> False\<close>
 
-definition FAIL' :: \<open>text \<Rightarrow> prop\<close>
-  where [iff]: \<open>FAIL' x \<equiv> (\<And>P. PROP P)\<close>
+definition FAIL' :: \<open>text \<Rightarrow> prop\<close> where \<open>FAIL' x \<equiv> (\<And>P. PROP P)\<close>
+
+subsubsection \<open>Traced Fail\<close>
+
+text \<open>A debug tracing printed only when \<^verbatim>\<open>\<phi>trac_reasoning \<ge> 1\<close>.\<close>
+
+definition TRACE_FAIL :: \<open>text \<Rightarrow> bool\<close> where \<open>TRACE_FAIL x \<longleftrightarrow> False\<close>
+
+definition TRACE_FAIL' :: \<open>text \<Rightarrow> prop\<close> where \<open>TRACE_FAIL' x \<equiv> (\<And>P. PROP P)\<close>
 
 
 subsubsection \<open>Error\<close>
 
 text \<open>Fail terminates the whole reasoning.\<close>
 
-definition ERROR :: \<open>text \<Rightarrow> bool\<close>
-  where [iff]: \<open>ERROR x \<longleftrightarrow> False\<close>
+definition ERROR :: \<open>text \<Rightarrow> bool\<close> where \<open>ERROR x \<longleftrightarrow> False\<close>
 
-definition ERROR' :: \<open>text \<Rightarrow> prop\<close>
-  where [iff]: \<open>ERROR' x \<equiv> (\<And>P. PROP P)\<close>
+definition ERROR' :: \<open>text \<Rightarrow> prop\<close> where \<open>ERROR' x \<equiv> (\<And>P. PROP P)\<close>
 
 
 end

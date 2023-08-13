@@ -510,7 +510,7 @@ locale permission_fiction =
 +  fiction_kind FIC.DOMAIN INTERPRET Fic
       \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> (\<F>_functional \<psi> UNIV)\<close>
 for Res :: "'T::sep_algebra resource_entry"
-and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_module_sep,sep_algebra}\<close>
+and \<psi> :: \<open>'T \<Rightarrow> 'U::{share_sep_disj,share_semimodule,sep_algebra}\<close>
 and Fic :: "'U fiction_entry"
 + assumes \<psi>_kernel_is_1[simp]: \<open>kernel_is_1 \<psi> UNIV\<close>
 begin
@@ -844,7 +844,7 @@ abbreviation share_orthogonal_homo :: \<open>('key \<Rightarrow> 'val option) \<
 abbreviation \<open>share_fiction \<equiv> basic_fiction \<Zcomp>\<^sub>\<I> \<F>_functional share_orthogonal_homo UNIV\<close>
 
 (* lemma share_fiction_expn_full:
-  \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<Znrres> v))))
+  \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> 1 \<odiv> v))))
  = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k \<mapsto> v)))})\<close>
   unfolding set_eq_iff
   apply (clarify, rule;
@@ -865,7 +865,7 @@ abbreviation \<open>share_fiction \<equiv> basic_fiction \<Zcomp>\<^sub>\<I> \<F
 
 
 lemma share_fiction_partially_implies:
-  \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> n \<Znrres> v))))
+  \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> n \<odiv> v))))
 \<Longrightarrow> \<exists>objs. get res = Fine objs \<and> objs k = Some v\<close>
   apply (clarsimp simp add: share_fiction_def basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
             mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' inject_wand_homo
@@ -879,7 +879,7 @@ lemma share_fiction_partially_implies:
   qed .
 
 lemma
-  assumes A: \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> n \<Znrres> v))))\<close>
+  assumes A: \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k \<mapsto> n \<odiv> v))))\<close>
   shows share_fiction_partially_implies'[simp]: \<open>!!( get res) k = Some v\<close>
 proof -
   from A[THEN share_fiction_partially_implies]
@@ -1118,13 +1118,13 @@ abbreviation \<open>share_fiction \<equiv> basic_fiction \<Zcomp>\<^sub>\<I> \<F
     qed .
 
 lemma share_fiction_expn_full:
-  \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> 1 \<Znrres> v)))))
+  \<open>\<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> 1 \<odiv> v)))))
  = \<phi>Res_Spec (R * \<I> share_fiction R2 * { mk (Fine (1(k := 1(k2 \<mapsto> v))))})\<close>
   using share_fiction_expn_full'[where f=\<open>1(k2 \<mapsto> v)\<close>, simplified] .
 
 (*depreciated!*)
 lemma share_fiction_partially_implies:
-  \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v)))))
+  \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> n \<odiv> v)))))
 \<Longrightarrow> \<exists>objs. get res = Fine objs \<and> objs k k2 = Some v\<close>
   apply (clarsimp simp add: share_fiction_def basic_fine_fiction_\<I> \<phi>expns fiction_to_share_\<I>
             mult_strip_fine_011 \<phi>Res_Spec_def \<r>_valid_split' inject_wand_homo
@@ -1144,7 +1144,7 @@ lemma share_fiction_partially_implies:
   qed .
 
 lemma
-  assumes A: \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> n \<Znrres> v)))))\<close>
+  assumes A: \<open> res \<in> \<phi>Res_Spec (R * \<I> share_fiction (R2 * Fine (1(k := 1(k2 \<mapsto> n \<odiv> v)))))\<close>
   shows share_fiction_partially_implies'[simp]: \<open>!!( get res) k k2 = Some v\<close>
 proof -
   from A[THEN share_fiction_partially_implies]

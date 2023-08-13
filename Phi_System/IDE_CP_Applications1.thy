@@ -267,13 +267,13 @@ lemma [\<phi>reason 1050]:
   \<open> ERROR TEXT(\<open>There is no item!\<close>)
 \<Longrightarrow> TECHNICAL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Any \<w>\<i>\<t>\<h> P @action \<A>_leading_item' A\<close>
   \<comment> \<open>Never bind technical items\<close>
-  unfolding Action_Tag_def by blast
+  unfolding Action_Tag_def ERROR_def by blast
 
 lemma [\<phi>reason 1050]:
   \<open> ERROR TEXT(\<open>There is no item!\<close>)
 \<Longrightarrow> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Any \<w>\<i>\<t>\<h> P @action \<A>_leading_item' A\<close>
   \<comment> \<open>Never bind technical items\<close>
-  unfolding Action_Tag_def by blast
+  unfolding Action_Tag_def ERROR_def by blast
 
 
 lemma [\<phi>reason 1020]:
@@ -644,7 +644,8 @@ lemma \<A>simp_trans'P:
 
 ML_file \<open>library/tools/CoP_simp.ML\<close>
                
-\<phi>reasoner_ML \<A>chk_need_simp 1000 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>chk_need_simp _\<close>) = \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<phi>reasoner_ML \<A>chk_need_simp 1000 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>chk_need_simp _\<close>) = \<open>
+fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (X, Y, _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
    in if Phi_CoP_Simp.is_simp_needed (Context.Proof ctxt) X
    then SOME ((ctxt, @{thm' \<A>simp_chk_go} RS' (ctxt, sequent)), Seq.empty)
@@ -788,7 +789,7 @@ lemma ToA_trivial:
 lemma [\<phi>reason no explorative backtrack 0 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
   \<open> FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> T)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to T\<close>
-  unfolding Action_Tag_def by blast
+  unfolding Action_Tag_def FAIL_def by blast
 
 lemma [\<phi>reason default 1]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action NToA
@@ -865,7 +866,7 @@ lemma \<A>_pattern_meet_that:
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close> ) =
-\<open>fn (ctxt, sequent) => Seq.make (fn () =>
+\<open>fn (_, (ctxt, sequent)) => Seq.make (fn () =>
   let fun parse_patterns (Const(\<^const_name>\<open>synt_orelse\<close>, _) $ X $ Y)
             = parse_patterns X @ parse_patterns Y
         | parse_patterns (Const(\<^const_name>\<open>\<A>pattern\<close>, _) $ Pat $ Y) = [(Pat, Y)]
@@ -1123,6 +1124,7 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason default 0]:
   \<open> FAIL TEXT(\<open>Don't know how to case-split\<close> X)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>case\<close>
+  unfolding FAIL_def
   by blast
 
 
@@ -1168,6 +1170,7 @@ lemma \<comment>\<open>fallback\<close>
   [\<phi>reason default 2 for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to RAW\<close>]:
   \<open> FAIL TEXT(\<open>Fail to destruct \<phi>-type\<close> T)
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to RAW \<close>
+  unfolding FAIL_def
   by blast
 
 subsubsection \<open>Make Abstraction\<close>
@@ -1179,23 +1182,27 @@ declare [[\<phi>trace_reasoning = 1]]
 lemma [\<phi>reason !59]:
   \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> Y) 
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P\<close>
+  unfolding FAIL_def
   by blast
 
 lemma [\<phi>reason !59]: \<comment> \<open>Exactly higher than the entry point of Structural Extract\<close>
   \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> Y) 
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P\<close>
+  unfolding FAIL_def
   by blast
 
 lemma \<comment>\<open>fallback\<close>
   [\<phi>reason default 2 for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _ \<close>]:
   \<open> FAIL TEXT(\<open>Fail to construct \<phi>-type\<close> U)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P \<close>
+  unfolding FAIL_def
   by blast
 
 lemma \<comment>\<open>fallback\<close>
   [\<phi>reason default 3 for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ \<close>]:
   \<open> FAIL TEXT(\<open>Fail to construct \<phi>-type\<close> U)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+  unfolding FAIL_def
   by blast
 
 setup \<open>let
@@ -1381,8 +1388,8 @@ declare [[\<phi>reason_default_pattern
 lemma [\<phi>reason 1]:
   \<open> FAIL TEXT(\<open>cannot find a source object\<close> x \<open>enabling transformation\<close> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<w>\<i>\<t>\<h> P))
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action find_source_object\<close>
-  unfolding Action_Tag_def
-  by simp
+  unfolding Action_Tag_def FAIL_def
+  by blast
 
 
 (*TODO: hide_fact ToA_trivial *)

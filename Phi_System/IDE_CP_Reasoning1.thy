@@ -224,28 +224,28 @@ structure Assertion_SS_Abnormal = Simpset (
 \<phi>reasoner_ML assertion_simp_source 1300
   (\<open>Simplify (assertion_simps SOURCE) ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
-      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Source.get' ctxt)))\<close>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Source.get' ctxt))) o snd\<close>
 
 \<phi>reasoner_ML assertion_simp_target 1300
   (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
-      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt)))\<close>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt))) o snd\<close>
 
 \<phi>reasoner_ML assertion_simp_abnormal 1300
   (\<open>Simplify (assertion_simps ABNORMAL) ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
-      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Abnormal.get' ctxt)))\<close>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Abnormal.get' ctxt))) o snd\<close>
 
 \<phi>reasoner_ML assertion_simp 1200
   (\<open>Premise (assertion_simps _) _\<close> | \<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close>
      )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Assertion_SS.get')\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Assertion_SS.get') o snd\<close>
 
 \<phi>reasoner_ML semantic_simps 1200
   (\<open>Premise semantic_mode _\<close> | \<open>Simplify semantic_mode ?X' ?X\<close>
      )
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
-        Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse}))\<close>
+        Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse})) o snd\<close>
 
 lemmas [assertion_simps] =
   mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>]
@@ -283,7 +283,7 @@ abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>ex
   Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
                             ctxt addsimps (Useful_Thms.get ctxt))),
   Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
-        Phi_Expansions.enhance (ctxt addsimps (Useful_Thms.get ctxt)))))
+        Phi_Expansions.enhance (ctxt addsimps (Useful_Thms.get ctxt))))) o snd
 \<close>
 
 
@@ -382,7 +382,7 @@ lemma rename_abstraction:
   unfolding rename_abstraction_def ..
 
 \<phi>reasoner_ML rename_abstraction 1100 (\<open>rename_abstraction TYPE(?'name) ?Y ?Y'\<close>) =
-\<open>fn (ctxt, sequent) =>
+\<open>fn (_, (ctxt, sequent)) =>
   case Thm.major_prem_of sequent
     of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>rename_abstraction\<close>, _)
                 $ (Const (\<^const_name>\<open>Pure.type\<close>, Type(\<^type_name>\<open>itself\<close>, [name'])))
@@ -417,7 +417,7 @@ lemma [\<phi>reason 1200 for \<open>lambda_abstraction (?x,?y) ?fx ?f\<close>]:
 \<Longrightarrow> lambda_abstraction (x,y) fx (case_prod f2)\<close>
   unfolding lambda_abstraction_def by simp
 
-\<phi>reasoner_ML lambda_abstraction 1100 ("lambda_abstraction ?x ?Y ?Y'") = \<open>fn (ctxt, sequent) =>
+\<phi>reasoner_ML lambda_abstraction 1100 ("lambda_abstraction ?x ?Y ?Y'") = \<open>fn (_, (ctxt, sequent)) =>
   let
     val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>lambda_abstraction\<close>, _) $ x $ Y $ _))
       = Phi_Help.leading_antecedent (Thm.prop_of sequent)
@@ -455,7 +455,7 @@ consts frame_var_rewrs :: mode
 
 \<phi>reasoner_ML Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_only (K Seq.empty) (fn ctxt =>
-          Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>))\<close>
+          Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>)) o snd\<close>
 
 definition \<phi>IntroFrameVar :: "'a::sep_magma BI option \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool"
   where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> (case R of Some R' \<Rightarrow> S' = (R' * S) \<and> T' = R' * T
@@ -498,7 +498,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   unfolding \<phi>IntroFrameVar'_def FOCUS_TAG_def by blast
 
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
-\<open>fn (ctxt, sequent) =>
+\<open>fn (_, (ctxt, sequent)) =>
   let
     val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, \<^Type>\<open>fun \<^Type>\<open>option \<^Type>\<open>set Ty\<close>\<close> _\<close>) $ _ $ _ $ S $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
@@ -516,7 +516,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   end\<close>
 
 \<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
-\<open>fn (ctxt, sequent) =>
+\<open>fn (_, (ctxt, sequent)) =>
   let
     val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
         Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
@@ -561,7 +561,7 @@ ML_file \<open>library/tools/embed_BI_into_phi_types.ML\<close>
 consts mode_embed_into_\<phi>type :: mode
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] _ : _\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt => Embed_into_Phi_Type.equip ctxt))\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt => Embed_into_Phi_Type.equip ctxt)) o snd\<close>
  
 lemmas [embed_into_\<phi>type] =
     \<phi>None_itself_is_one[where any=\<open>()\<close>] \<phi>Prod_expn' \<phi>Any_def
@@ -599,7 +599,7 @@ lemma [\<phi>reason 1020 except \<open>\<phi>_Have_Types (\<lambda>vs. ?A vs\<he
 lemma [\<phi>reason 1000]:
   \<open> FAIL TEXT(\<open>Fail to infer the semantic type of\<close> R)
 \<Longrightarrow> \<phi>_Have_Types R TYs\<close>
-  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def by clarsimp
+  unfolding \<phi>_Have_Types_def Well_Typed_Vals_def FAIL_def by clarsimp
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>_Have_Types (\<lambda>ret. (exp ret) (v ret)) TYs
@@ -1107,7 +1107,7 @@ lemma \<DD>_0:
 lemma \<DD>_Multiplicative_Conj:
   \<open>\<DD>[d] (A * B) = \<DD>[d] A * \<DD>[d] B\<close>
   unfolding BI_eq_iff
-  by (clarsimp simp add: domainoid_def closed_homo_sep_def homo_sep_disj_closed_def homo_sep_def
+  by (clarsimp simp add: domainoid_def closed_homo_sep_def closed_homo_sep_disj_def homo_sep_def
                          homo_sep_mult_def; rule; clarsimp; metis)
 
 lemma \<DD>_Mul_Quant:
@@ -1244,12 +1244,12 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Pa \<and> Pb \<longrightarrow> (\<exists>a b. a \<in> A' \<and> b \<in> B' \<and> a ## b))
 \<Longrightarrow> Pa \<and> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A * B\<close>
   unfolding Inhabited_def subset_iff Premise_def Action_Tag_def
-  by (clarsimp simp add: domainoid_def closed_homo_sep_def homo_sep_disj_closed_def; blast)
+  by (clarsimp simp add: domainoid_def closed_homo_sep_def closed_homo_sep_disj_def; blast)
 
 lemma \<comment> \<open>The above rule is reversible for any domainoid \<open>d\<close>\<close>
   \<open> domainoid d \<Longrightarrow> Inhabited (A * B) \<longleftrightarrow> (\<exists>a b. a \<in> \<DD>[d] A \<and> b \<in> \<DD>[d] B \<and> a ## b)\<close>
   unfolding Inhabited_def
-  by (clarsimp simp add: domainoid_def closed_homo_sep_def homo_sep_disj_closed_def; blast)
+  by (clarsimp simp add: domainoid_def closed_homo_sep_def closed_homo_sep_disj_def; blast)
 
 
 subsection \<open>Domainoid gives Separation_Disj\<close>
@@ -1263,7 +1263,7 @@ lemma [\<phi>reason 1000]:
   for \<psi> :: \<open>'c::sep_magma \<Rightarrow> 'cc::sep_magma\<close>
   unfolding Separation_Disj_def Domainoid_Homo\<^sub>U_def
   by (clarsimp simp add: domainoid_def Premise_def homo_domainoid_def
-                         closed_homo_sep_def homo_sep_disj_closed_def; metis)
+                         closed_homo_sep_def closed_homo_sep_disj_def; metis)
 
 
 lemma [\<phi>reason 1000]:

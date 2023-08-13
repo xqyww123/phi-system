@@ -151,14 +151,14 @@ lemma Suf_Inhabited_fallback_True:
   unfolding Action_Tag_def by blast
 
 \<phi>reasoner_ML Inhabited_fallback default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) =
-\<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
   else SOME ((ctxt, @{thm Inhabited_fallback_True} RS sequent), Seq.empty)
 )\<close>
 
 \<phi>reasoner_ML Suf_Inhabited_fallback default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> _\<close>) =
-\<open>fn (ctxt,sequent) => Seq.make (fn () =>
+\<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
   else SOME ((ctxt, @{thm Suf_Inhabited_fallback_True} RS sequent), Seq.empty)

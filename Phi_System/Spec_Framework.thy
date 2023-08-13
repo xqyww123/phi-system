@@ -104,6 +104,7 @@ lemma [\<phi>reason 100]:
 lemma [\<phi>reason 1]:
   \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
 \<Longrightarrow> \<phi>SemType X Any\<close>
+  unfolding FAIL_def
   by blast
 
 lemma [\<phi>reason 1000]:
@@ -192,6 +193,7 @@ lemma Is_Functional_imp:
 lemma [\<phi>reason 1]:
   \<open> FAIL TEXT(\<open>Fail to prove\<close> S \<open>is functional\<close>)
 \<Longrightarrow> Is_Functional S\<close>
+  unfolding FAIL_def
   by blast
 
 lemma [\<phi>reason 1200]:

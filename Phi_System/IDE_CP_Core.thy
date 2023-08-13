@@ -235,15 +235,15 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   unfolding Do_def Do_embed_def .
 
 \<phi>reasoner_ML ParamTag 1000 (\<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent)
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_param_antecedent) o snd
 \<close>
 
 \<phi>reasoner_ML Argument 1000 (\<open>\<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?P\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent) o snd
 \<close>
 
 \<phi>reasoner_ML Do 1200 (\<open>\<^bold>d\<^bold>o (PROP ?P)\<close>) = \<open>
-  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent)
+  Phi_Reasoners.wrap (K Phi_Sys_Reasoner.defer_antecedent) o snd
 \<close>
 
 
@@ -411,7 +411,7 @@ qed
 
 \<phi>reasoner_ML \<open>\<phi>Programming_Method (Trueprop (All P))\<close> 1000
   (\<open>PROP \<phi>Programming_Method (Trueprop (All ?P)) _ _ _ _\<close>)
-  = \<open>fn (ctxt,sequent) =>
+  = \<open>fn (_, (ctxt,sequent)) =>
   let val _ $ (_ $ (_ $ P)) $ _ $ _ $ _ $ _ = Thm.major_prem_of sequent
       fun rename N' (Abs ("x",T,X)) = Abs (N',T,X)
         | rename N' (X $ Y) = rename N' X $ rename N' Y
@@ -425,7 +425,7 @@ qed
 
 \<phi>reasoner_ML \<open>\<phi>Programming_Method (Pure.all P)\<close> 1000
   (\<open>PROP \<phi>Programming_Method (Pure.all ?P) _ _ _ _\<close>)
-  = \<open>fn (ctxt,sequent) =>
+  = \<open>fn (_, (ctxt,sequent)) =>
   let val _ $ (_ $ P) $ _ $ _ $ _ $ _ = Thm.major_prem_of sequent
       fun rename N' (Abs ("x",T,X)) = Abs (N',T,X)
         | rename N' (X $ Y) = rename N' X $ rename N' Y
@@ -684,7 +684,7 @@ structure Post_Synthesis_SS = Simpset (
 consts post_synthesis_simp :: mode
 
 \<phi>reasoner_ML post_synthesis_simp 1200 (\<open>Simplify post_synthesis_simp ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Post_Synthesis_SS.get')\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Post_Synthesis_SS.get') o snd\<close>
 
 subsubsection \<open>Synthesis Operations\<close>
 
@@ -997,7 +997,7 @@ lemma \<phi>apply_user_antecedent:
 \<phi>reasoner_ML \<phi>apply_admit_antecedent 1100
   ( \<open>PROP \<phi>Application (PROP ?Prem \<Longrightarrow> PROP ?App) ?State ?Result\<close>
   | \<open>PROP \<phi>Application (Trueprop (?Prem' \<longrightarrow> ?App')) ?State ?Result\<close> )
-= \<open>fn (ctxt,sequent) => Seq.make (fn () =>
+= \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ app $ _ $ _ = Thm.major_prem_of sequent
       val (user_rule, eager_rule) =
                case app of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
@@ -1325,7 +1325,7 @@ fun dec_bound_level d [] = []
   | dec_bound_level d (h::l) = inc_bound (d+1) h :: (dec_bound_level (d+1) l)
 
 in
-  fn (ctxt,sequent) =>
+  fn (_, (ctxt,sequent)) =>
     let
       val (Vs, _, \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Simple_HO_Unification\<close>, _) $ f $ f'))
         = Phi_Help.leading_antecedent (Thm.prop_of sequent)
@@ -1599,7 +1599,7 @@ subsubsection \<open>ML\<close>
 ML_file \<open>library/system/generic_element_access.ML\<close>
 
 \<phi>reasoner_ML chk_element_index_all_solved 1000 (\<open>chk_element_index_all_solved _\<close>) = \<open>
-fn (ctxt,sequent) => Seq.make (fn () =>
+fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (_,_,ant,_) =
         Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent))) ctxt
       val idx = Thm.dest_arg (Thm.dest_arg ant)
@@ -1616,7 +1616,7 @@ fn (ctxt,sequent) => Seq.make (fn () =>
 \<close>
 
 \<phi>reasoner_ML report_unprocessed_element_index 1000 (\<open>report_unprocessed_element_index _\<close>) = \<open>
-fn (ctxt,sequent) => Seq.make (fn () =>
+fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val (_,_,ant,_) =
         Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent))) ctxt
       val idx = Thm.dest_arg (Thm.dest_arg ant)

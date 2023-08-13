@@ -34,7 +34,8 @@ signature NU_REASONER = sig
   val TO_BE_OVERRIDE : mode
 
 
-  datatype tactic = Tac_ML of context_state -> context_state Seq.seq | Tac_Rule of thm list
+  datatype backtracking = NO_BACKTRACKING | BACKTRACKING | EXPLORATIVE_BACKTRACKING
+  datatype tactic = Tac_ML of backtracking * context_state -> context_state Seq.seq | Tac_Rule of thm list
   type reasoner = {name: term,
                    pos: Position.T,
                    mode: mode,
@@ -85,7 +86,7 @@ signature NU_REASONER = sig
   val get_reasoners' : theory -> reasoners
                     -> pattern -> (priority * pattern * serial (*reasoner id*) * reasoner) list
   val pretty : Proof.context -> reasoner -> Pretty.T
-  val apply_tactic : tactic -> context_state -> context_state Seq.seq
+  val apply_tactic : backtracking -> tactic -> context_state -> context_state Seq.seq
   (*val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list*)
 
   (* Interfaces for Reasoning *)
@@ -196,7 +197,8 @@ val NORMAL_LOCAL_CUT = (LOCAL_CUT, ADMIT_BACKTRACK)
 val TO_BE_OVERRIDE = (NO_CUT, NO_BACKTRACK)
 
 
-datatype tactic = Tac_ML of context_state -> context_state Seq.seq | Tac_Rule of thm list
+datatype backtracking = NO_BACKTRACKING | BACKTRACKING | EXPLORATIVE_BACKTRACKING
+datatype tactic = Tac_ML of backtracking * context_state -> context_state Seq.seq | Tac_Rule of thm list
 type reasoner = {name: term,
                  pos: Position.T,
                  mode: mode,
@@ -454,13 +456,13 @@ fun distinct_rev eq lst =
           else dist (x :: rev_seen, xs);
   in dist ([], lst) end;
 
-fun apply_tactic (Tac_ML tac) s = tac s
-  | apply_tactic (Tac_Rule []) (ctxt,sequent) = Seq.empty
-  | apply_tactic (Tac_Rule [rule]) (ctxt,sequent) = Seq.make (fn () =>
+fun apply_tactic bmode (Tac_ML tac) s = tac (bmode, s)
+  | apply_tactic _ (Tac_Rule []) (ctxt,sequent) = Seq.empty
+  | apply_tactic _ (Tac_Rule [rule]) (ctxt,sequent) = Seq.make (fn () =>
         case single_RS' rule ctxt sequent
           of SOME ret => SOME ((ctxt, ret), Seq.empty)
            | NONE => NONE)
-  | apply_tactic (Tac_Rule rules) (ctxt,sequent) =
+  | apply_tactic _ (Tac_Rule rules) (ctxt,sequent) =
            Seq.of_list rules
         |> Seq.map_filter (fn rule => Option.map (pair ctxt) (single_RS' rule ctxt sequent))
 
@@ -525,22 +527,8 @@ fun gen_call_reasoners trace score tactics ctxt th =
        | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
                       |> map (fn (x,y) => (score,x,false,y))*)
 
-fun call_reasoners' trace score N ctxt tactics th =
-  if Thm.nprems_of th <= N
-  then raise Success (ctxt, th)
-  else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
-                     then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
-                     else th
-    in get_reasoners' (Proof_Context.theory_of ctxt) tactics (Thm.major_prem_of th')
-          |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
-          |> map (fn (priority, _, _, r : reasoner) =>
-                (priority + score, #pos r, #mode r, apply_tactic (#tactic r) (ctxt,th')))
-   end
-
 (*fun call_reasoners (ctxt,th) =
   gen_call_reasoners (Config.get ctxt trace) (Reasoners.get (Context.Proof ctxt)) ctxt th *)
-
-datatype backtracking = NO_BACKTRACKING | BACKTRACKING | EXPLORATIVE_BACKTRACKING
 
 fun disabled_due_to_backtrack ADMIT_BACKTRACK _ = false
   | disabled_due_to_backtrack NO_BACKTRACK NO_BACKTRACKING = false
@@ -579,23 +567,31 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
               then filter_out (fn (_,_,m,_) => m = TO_BE_OVERRIDE) L
               else L *)
 
-            val Z = (call_reasoners' trace score N ctxt tactics th)
-                  |> (fn Z =>
-                        case cut_mode
-                          of GLOBAL_CUT => let val _ = if 2 <= trace
-                                                       then tracing ("\<phi>reasoning cut:\n" ^ Thm.string_of_thm ctxt th)
-                                                       else ()
-                                            in [[(score, pos, NORMAL_MODE, Seq.single (ctxt,th))]]
-                                           end
-                           | LOCAL_CUT => Z :: (
-                                            if pointer_eq (seq',Seq.empty) then L
-                                            else [(score,pos,mode,seq')]::L)
-                           | NO_CUT => Z :: (
-                                  let (*val L' = filter_out_TBO L'*)
-                                      val t = if pointer_eq (seq',Seq.empty) then L'
-                                              else (score,pos,mode,seq')::L' 
-                                  in if null t then L else t::L end)
-                     )
+            val Z = if Thm.nprems_of th <= N
+                    then raise Success (ctxt, th)
+                    else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
+                                       then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
+                                       else th
+                      in get_reasoners' (Proof_Context.theory_of ctxt) tactics (Thm.major_prem_of th')
+                            |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
+                            |> map (fn (priority, _, _, r : reasoner) =>
+                                  (priority + score, #pos r, #mode r, apply_tactic backtracking (#tactic r) (ctxt,th')))
+                     end
+
+            val Z = case cut_mode
+                      of GLOBAL_CUT => let val _ = if 2 <= trace
+                                                   then tracing ("\<phi>reasoning cut:\n" ^ Thm.string_of_thm ctxt th)
+                                                   else ()
+                                        in [[(score, pos, NORMAL_MODE, Seq.single (ctxt,th))]]
+                                       end
+                       | LOCAL_CUT => Z :: (
+                                        if pointer_eq (seq',Seq.empty) then L
+                                        else [(score,pos,mode,seq')]::L)
+                       | NO_CUT => Z :: (
+                              let (*val L' = filter_out_TBO L'*)
+                                  val t = if pointer_eq (seq',Seq.empty) then L'
+                                          else (score,pos,mode,seq')::L' 
+                              in if null t then L else t::L end)
           in
             gen_reason N trace limit (iter+1) NO_BACKTRACKING tactics Z
           end)
@@ -680,7 +676,7 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
 
     val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
-    val method'''= (fn (ctxt,thm) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
+    val method'''= (fn (_, (ctxt,thm)) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
   in add_lthy {name=name', pos=Binding.pos_of name, mode=mode,
                pattern=pos_pats, blacklist=neg_pats, tactic= Tac_ML method'''} lthy'
   end
@@ -707,7 +703,7 @@ fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
          ML_Lex.read "), blacklist=(" @ ML_Lex.read (print_list print_term neg_pats) @
          ML_Lex.read "), tactic= Phi_Reasoner.Tac_ML ((let in " @
          ML_Lex.read_source tactic_src @
-         ML_Lex.read (" end) : context_state -> context_state Seq.seq)})"))
+         ML_Lex.read (" end) : Phi_Reasoner.backtracking * context_state -> context_state Seq.seq)})"))
     )
   end
 
@@ -875,20 +871,20 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
       end) rules
 
     fun tactic [] _ = Seq.empty
-      | tactic ((rule, has_semantic_guard)::R) (ctxt,sequent) = Seq.make (fn _ =>
+      | tactic ((rule, has_semantic_guard)::R) (bm, (ctxt,sequent)) = Seq.make (fn _ =>
           case single_RS' rule ctxt sequent
-            of NONE => Seq.pull (tactic R (ctxt,sequent))
+            of NONE => Seq.pull (tactic R (bm, (ctxt,sequent)))
              | SOME sequent' =>
                 if has_semantic_guard
                 then (case internal_reason (SOME 1) false (ctxt, sequent')
-                        of SOME s' => SOME (s', tactic R (ctxt,sequent))
-                         | NONE => Seq.pull (tactic R (ctxt,sequent)))
-                else SOME ((ctxt, sequent'), tactic R (ctxt,sequent))
+                        of SOME s' => SOME (s', tactic R (bm, (ctxt,sequent)))
+                         | NONE => Seq.pull (tactic R (bm, (ctxt,sequent))))
+                else SOME ((ctxt, sequent'), tactic R (bm, (ctxt,sequent)))
         )
     fun guarded_tac rules =
       case guard of NONE => tactic rules
                   | SOME G => let val tac = tactic rules
-                               in (fn s => if G s then tac s else Seq.empty) end
+                               in (fn (bm,s) => if G s then tac (bm,s) else Seq.empty) end
     val tac = if is_none guard andalso forall (not o snd) rules_with_flag
               then Tac_Rule rules
               else Tac_ML (guarded_tac rules_with_flag)

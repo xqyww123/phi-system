@@ -127,9 +127,9 @@ lemma (in homo_sep_mult) [\<phi>reason 1100]:
   \<open>homo_sep_mult \<psi>\<close>
   by (simp add: homo_sep_mult_axioms)
 
-lemma (in homo_sep_disj_closed) [\<phi>reason 1100]:
-  \<open>homo_sep_disj_closed \<psi>\<close>
-  by (simp add: homo_sep_disj_closed_axioms)
+lemma (in closed_homo_sep_disj) [\<phi>reason 1100]:
+  \<open>closed_homo_sep_disj \<psi>\<close>
+  by (simp add: closed_homo_sep_disj_axioms)
 
 
 declare [[
@@ -1247,7 +1247,7 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
     apply_rule functional_transformation[where U=\<open>U\<close> and f=\<open>\<lambda>x. fst (f (x, undefined))\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
   \<medium_right_bracket> .
- 
+
 lemma "_Structural_Extract_general_rule_i_TH_"[\<phi>reason_template default 81]:
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Prem
@@ -1513,13 +1513,13 @@ lemmas [\<phi>reason 20] =
         homo_sep.intro
 
 lemma [\<phi>reason 10]:
-  \<open> homo_sep_disj_closed \<psi>
+  \<open> closed_homo_sep_disj \<psi>
 \<Longrightarrow> homo_sep_disj \<psi>\<close>
-  unfolding homo_sep_disj_def homo_sep_disj_closed_def
+  unfolding homo_sep_disj_def closed_homo_sep_disj_def
   by blast
 
 lemmas [\<phi>reason 30] =
-        homo_sep_disj_closed_comp
+        closed_homo_sep_disj_comp
         homo_sep_disj_comp
         homo_sep_comp
         homo_sep_mult_comp
@@ -1527,7 +1527,7 @@ lemmas [\<phi>reason 30] =
 subsubsection \<open>Identity\<close>
 
 lemmas [\<phi>reason 1000] =
-    homo_sep_disj_closed_id
+    closed_homo_sep_disj_id
     homo_sep_disj_id
     homo_sep_mult_id
     homo_one_id
@@ -1535,17 +1535,17 @@ lemmas [\<phi>reason 1000] =
     closed_homo_sep
 
 
-subsubsection \<open>Fun upd\<close>
+subsubsection \<open>Functional Pointwise\<close>
 
-lemma homo_sep_disj_closed_fun_upd [\<phi>reason 1100]:
-  \<open>homo_sep_disj_closed (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
-  unfolding homo_sep_disj_closed_def
+lemma closed_homo_sep_disj_fun_upd [\<phi>reason 1100]:
+  \<open>closed_homo_sep_disj (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
+  unfolding closed_homo_sep_disj_def
   by (simp add: sep_disj_fun_def)
 
-lemma homo_sep_disj_closed_fun_upd' [\<phi>reason 1000]:
-  \<open> homo_sep_disj_closed f
-\<Longrightarrow> homo_sep_disj_closed (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
-  unfolding homo_sep_disj_closed_def
+lemma closed_homo_sep_disj_fun_upd' [\<phi>reason 1000]:
+  \<open> closed_homo_sep_disj f
+\<Longrightarrow> closed_homo_sep_disj (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
+  unfolding closed_homo_sep_disj_def
   by (simp add: sep_disj_fun_def)
 
 lemma homo_sep_mult_fun_upd[\<phi>reason 1100]:
@@ -1582,21 +1582,52 @@ lemma homo_sep_fun_upd'[\<phi>reason 1000]:
 
 lemma closed_homo_sep_fun_upd[\<phi>reason 1100]:
   \<open> closed_homo_sep (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k) \<close>
-  by (rule closed_homo_sep.intro; simp add: homo_sep_fun_upd homo_sep_disj_closed_fun_upd)
+  by (rule closed_homo_sep.intro; simp add: homo_sep_fun_upd closed_homo_sep_disj_fun_upd)
 
 lemma closed_homo_sep_fun_upd'[\<phi>reason 1000]:
   \<open> closed_homo_sep f
 \<Longrightarrow> closed_homo_sep (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x)) \<close>
   unfolding closed_homo_sep_def
-  by (simp add: homo_sep_disj_closed_fun_upd' homo_sep_fun_upd')
-
+  by (simp add: closed_homo_sep_disj_fun_upd' homo_sep_fun_upd')
 
 
 subsubsection \<open>Push map\<close>
 
-declare homo_sep_disj_closed_push_map [\<phi>reason 1100]
+declare closed_homo_sep_disj_push_map [\<phi>reason 1100]
         homo_sep_mult_push_map [\<phi>reason 1100]
         homo_one_push_map [\<phi>reason 1100]
+
+subsubsection \<open>Share Division\<close>
+
+lemma homo_one_share[\<phi>reason 1000]:
+  \<open>homo_one ((\<odivr>) n :: 'a::share_one \<Rightarrow> 'a)\<close>
+  unfolding homo_one_def
+  by simp
+
+lemma homo_sep_mult_share[\<phi>reason 1000]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
+  unfolding homo_sep_mult_def Premise_def
+  by (simp add: share_sep_right_distrib_0)
+
+lemma homo_sep_disj_share[\<phi>reason 1000]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
+  unfolding homo_sep_disj_def Premise_def
+  by simp
+
+lemma closed_homo_sep_disj_share[\<phi>reason 1000]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
+  unfolding closed_homo_sep_disj_def Premise_def
+  by simp
+
+lemma homo_sep_share[\<phi>reason 1000]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
+  unfolding homo_sep_def Premise_def
+  by (simp add: homo_sep_mult_share homo_sep_disj_share)
+
+lemma closed_homo_sep_share[\<phi>reason 1000]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
+  unfolding closed_homo_sep_def Premise_def
+  by (simp add: homo_sep_share closed_homo_sep_disj_share)
 
 
 subsection \<open>Property Derivers\<close>
