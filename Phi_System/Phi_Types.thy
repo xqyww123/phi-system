@@ -579,12 +579,53 @@ lemma [\<phi>reason 1000]:
 
 
 
+subsubsection \<open>\<phi>-Type Embedding of Multiplicative Finite Quantification\<close>
+
+definition \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
+  where \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T i)\<close>
+
+syntax
+  "_\<phi>Mul_Quant" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_/\<in>_]/ _)" [0, 51, 1000] 1000)
+  "_\<phi>Mul_Quant_print" :: "pttrn \<Rightarrow> pttrn \<Rightarrow> 'x \<Rightarrow> 'a set \<Rightarrow> 'T \<Rightarrow> logic"
+translations
+  "x \<Ztypecolon> \<big_ast>[i\<in>I] T" => "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I (\<lambda>i. T))"
+  "x \<Ztypecolon> \<big_ast>[i\<in>I] T" <= "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I (\<lambda>j. T))"
+
+print_translation \<open>[
+  (\<^syntax_const>\<open>_\<phi>Mul_Quant_print\<close>, (fn ctxt =>fn L => hd (@{print} L)))
+]\<close>
 
 
+subsubsection \<open>Separation Extraction\<close>
+
+term insert
+
+lemma
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I \<Longrightarrow> (fst x i, fst wr) \<Ztypecolon> T i \<^emph> Wi \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y \<^emph> Ri)
+\<Longrightarrow> (fst x, snd x) \<Ztypecolon> \<big_ast>\<^sup>\<phi> (Set.remove i I) T \<^emph> Ws \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> wr \<Ztypecolon> Wi \<^emph> Rs
+\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd wr) \<Ztypecolon> Y \<^emph> (Ri \<^emph> Rs) \<w>\<i>\<t>\<h> P\<close>
+  sorry
+  (*\<medium_left_bracket> premises I and S
+    *)
+
+lemma
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> J = I
+\<Longrightarrow> (\<And>i\<in>J. (fst x i, snd x i) \<Ztypecolon> T i \<^emph> W i \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y i \<Ztypecolon> Y i \<^emph> R i)
+\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<^emph> \<big_ast>\<^sup>\<phi> J W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst o y, fst x, snd o y) \<Ztypecolon> \<big_ast>\<^sup>\<phi> J Y \<^emph> (\<big_ast>\<^sup>\<phi> (I-J) T \<^emph> \<big_ast>\<^sup>\<phi> J R) \<w>\<i>\<t>\<h> P\<close>
+  sorry
+
+lemma
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> J \<subseteq> I
+\<Longrightarrow> (\<And>i\<in>J. (fst x i, snd x i) \<Ztypecolon> T i \<^emph> W i \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y i \<Ztypecolon> Y i \<^emph> R i)
+\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<^emph> \<big_ast>\<^sup>\<phi> J W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst o y, fst x, snd o y) \<Ztypecolon> \<big_ast>\<^sup>\<phi> J Y \<^emph> (\<big_ast>\<^sup>\<phi> (I-J) T \<^emph> \<big_ast>\<^sup>\<phi> J R) \<w>\<i>\<t>\<h> P\<close>
+  sorry
+
+
+(* TODO!
 subsubsection \<open>Addition of Algebraic Data Type\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-      
+declare [[\<phi>trace_reasoning = 3]]
+           
 \<phi>type_def \<phi>ADT_Add :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
   deriving Implication
@@ -595,7 +636,7 @@ term \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>
 thm old.sum.simps
 
 term \<open>(fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U)\<close>
-
+*)
 
 
 subsection \<open>Embedding Additive Disjunction\<close>

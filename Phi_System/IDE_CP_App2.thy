@@ -269,7 +269,8 @@ lemma [\<phi>reason 1000]:
   \<open> PROP \<phi>Programming_Method
           (\<And>x y vx vy. \<p>\<r>\<e>\<m>\<i>\<s>\<e> ceq x y
               \<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<l>[vx] T \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<v>\<a>\<l>[vx] U \<heavy_comma> y' \<Ztypecolon> \<v>\<a>\<l>[vy] U
-                  \<s>\<u>\<b>\<j> U x' y'. Embedded_Reasoning (\<phi>Equal U ceq' eq') \<and> ceq' x' y' \<and> eq x y = eq' x' y')
+                  \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> \<phi>Equal U ceq' eq'
+                  \<s>\<u>\<b>\<j> U x' y'. ceq' x' y' \<and> eq x y = eq' x' y')
           M D R F
 \<Longrightarrow> Friendly_Help
     TEXT(\<open>Hi! Transform the specification to some representation of \<phi>-types whose\<close> \<phi>Equal

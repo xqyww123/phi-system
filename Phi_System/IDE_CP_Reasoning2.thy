@@ -447,26 +447,28 @@ lemma [\<phi>reason 3200]:
 subsection \<open>Subjection\<close>
 
 lemma [\<phi>reason 3200]:
-  " T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow>
-   (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
-    T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P "
-  unfolding Transformation_def Pass_Embedded_Reasoning_def by simp
+  " T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> Q)
+\<Longrightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P "
+  unfolding Transformation_def Premise_def
+  by simp
 
 lemma [\<phi>reason 3210]:
   " T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow>
     T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<s>\<u>\<b>\<j> True \<w>\<i>\<t>\<h> P "
-  unfolding Transformation_def Pass_Embedded_Reasoning_def by simp
+  unfolding Transformation_def by simp
 
 lemma [\<phi>reason 3200]:
-  " T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<brangle> \<w>\<i>\<t>\<h> P \<Longrightarrow>
-   (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Pass_Embedded_Reasoning Q) \<Longrightarrow>
-    T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<s>\<u>\<b>\<j> Q \<brangle> \<w>\<i>\<t>\<h> P "
-  unfolding Transformation_def Pass_Embedded_Reasoning_def by simp
+  " T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<brangle> \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> Q)
+\<Longrightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<s>\<u>\<b>\<j> Q \<brangle> \<w>\<i>\<t>\<h> P "
+  unfolding Transformation_def Premise_def
+  by simp
 
 lemma [\<phi>reason 3210]:
   " T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<brangle> \<w>\<i>\<t>\<h> P \<Longrightarrow>
     T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> U \<s>\<u>\<b>\<j> True \<brangle> \<w>\<i>\<t>\<h> P "
-  unfolding Transformation_def Pass_Embedded_Reasoning_def by simp
+  unfolding Transformation_def by simp
 
 lemma [\<phi>reason 3220]: (*THINK: add Q in P, is good or not?*)
   "(\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q \<Longrightarrow> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P )
@@ -1228,63 +1230,8 @@ lemma sum_case_distrib_fx:
 ML \<open>
 (* case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> case_sum P Q x
 OR case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> case_sum P Q x *)
-(*For a ToA like \<open>if C then A else B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> that will be split to two subgoals and in which
-  the schematic variables in the target \<open>Y\<close> may be instantiated to different values,
-  reasoner_ToA_conditioned_subgoals merges the instantiations between the two subgoals.
-  For example, if the two branches returns \<open>Y[x/a]\<close> and \<open>Y[x/b]\<close> respectively for different two
-  instantiations \<open>a\<close> and \<open>b\<close>, reasoner_ToA_conditioned_subgoals returns \<open>Y[x/(if C then a else b)]\<close>
-  for each schematic variable.
-  *)
-fun reasoner_ToA_conditioned_subgoals ((rule, ruleR), (quick_rule, quick_ruleR),
-                                       head_const, arity, rewrs, mk_insts)
-                                      (ctxt,sequent) =
-  Seq.make (fn () =>
-  let fun has_var tm = maxidx_of_term tm >= 0
-      val (no_var, has_remainder) =
-        case #2 (Phi_Syntax.dest_transformation (Thm.major_prem_of sequent))
-          of Const(\<^const_name>\<open>times\<close>, _) $ Y $ (Const(\<^const_name>\<open>FOCUS_TAG\<close>, _) $ _)
-               => (has_var Y, true)
-           | Y => (has_var Y, false)
-      val rule' = if no_var
-                  then if has_remainder then quick_ruleR else quick_rule
-                  else if has_remainder then ruleR else rule
-      val sequent' = rule' RS' (ctxt, sequent)
-   in if no_var
-   then SOME ((ctxt, sequent'), Seq.empty)
-   else let
-      (*val Y0 = case Thm.major_prem_of sequent'
-                 of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ Y $ _ => Y
-                  | _ => error "BUG: reasoner_ToA_conditioned_subgoals: bad rule"*)
 
-      val (_, _, equation0, ctxt'N) =
-              Phi_Help.strip_meta_hhf_c (fst (Thm.dest_implies (Thm.cprop_of sequent'))) ctxt
-      (*val qvar_names = Names.build (fold (Names.add_set o Term.term_name o Thm.term_of) qvars)
-      val idx = Thm.maxidx_of sequent' *)
 
-      val (Y,RHS) = (*Thm.generalize_cterm (Names.empty, qvar_names) (idx+1)*) equation0
-                 |> Phi_Help.dest_binop_c \<^const_name>\<open>Pure.eq\<close>
-      val vars = Term.add_vars (Thm.term_of Y) []
-      val inst = mk_insts ctxt'N (vars,Y,RHS)
-      val move_to_top = Conv.bottom_conv (fn _ => fn ctm =>
-            case Term.strip_comb (Thm.term_of ctm)
-              of (Const (N, _), args) =>
-                    if N = head_const andalso length args = arity
-                    then (Phi_Help.beta_eta_conversion then_conv
-                         (fn ctm =>
-                            case get_first (fn rule => try (Conv.rewr_conv rule) ctm) rewrs
-                              of SOME ret => ret
-                              | NONE => Conv.all_conv ctm)) ctm
-                    else Conv.all_conv ctm
-               | _ => Conv.all_conv ctm) ctxt'N
-      val sequent'' = Thm.instantiate (TVars.empty, inst) sequent'
-               |> Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn _ =>
-                      Conv.arg_conv move_to_top then_conv
-                      Conv.arg1_conv move_to_top) ctxt) 1
-               |> (fn th => @{thm' Pure.reflexive} RS th
-                            handle THM _ => error "BUG: fail to solve the equation")
-   in SOME ((ctxt, sequent''), Seq.empty)
-  end
-  end)
 
 fun reasoner_ToA_conditioned_subgoals_sum ctxt'N (vars,Y,RHS) =
   let val (Ya, Yb, x) = Phi_Help.dest_triop_c \<^const_name>\<open>case_sum\<close> RHS
@@ -1315,11 +1262,11 @@ fun reasoner_ToA_conditioned_subgoals_sum ctxt'N (vars,Y,RHS) =
 \<close>
 
 \<phi>reasoner_ML \<open>ML (case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)\<close> 2000 (\<open>case_sum _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>)
-  = \<open>reasoner_ToA_conditioned_subgoals ((@{thm' ToA_case_sum_src}, @{thm' ToA_case_sum_src_R}),
-                                        (@{thm' ToA_case_sum_src_Q}, @{thm' ToA_case_sum_src_R_Q}),
-                                        \<^const_name>\<open>case_sum\<close>, 3,
-                                        @{thms' case_sum_degenerate sum_case_distrib_fx sum.case_distrib},
-                                        reasoner_ToA_conditioned_subgoals_sum)\<close>
+  = \<open>Phi_Reasoners.reasoner_ToA_conditioned_subgoals
+         ((@{thm' ToA_case_sum_src}, @{thm' ToA_case_sum_src_R}),
+          (@{thm' ToA_case_sum_src_Q}, @{thm' ToA_case_sum_src_R_Q}),
+          (\<^const_name>\<open>case_sum\<close>, 3, @{thms' case_sum_degenerate sum_case_distrib_fx sum.case_distrib}),
+          reasoner_ToA_conditioned_subgoals_sum)\<close>
 
 lemma [\<phi>reason 2005]:
   \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> W * A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya a \<w>\<i>\<t>\<h> P a)
@@ -2192,13 +2139,13 @@ lemma Is_Functional_imp'':
   by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Embedded_Reasoning (Is_Functional S'))) M D R F
+  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> Is_Functional S')) M D R F
 \<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show\<close> S \<open>is functional\<close>
       \<open>Now you entered the programming mode and you need to transform the specification to\<close>
       \<open>someone which is functional, so that we can verify your claim.\<close>)
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Is_Functional S)) M D R F\<close>
   unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
-            Embedded_Reasoning_def
+            Subjec_Reasoning_def
   by (rule Is_Functional_imp''[where S'=S']; simp)
 
 

@@ -5,6 +5,7 @@ text \<open>The part includes small process that can be built without infrastruc
 
 theory IDE_CP_Reasoning1
   imports Spec_Framework Phi_BI
+  abbrevs "<subj-reasoning>" = "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>"
 begin
 
 section \<open>Annotations Guiding the Reasoning\<close>
@@ -269,6 +270,8 @@ section \<open>Small Reasoning Process\<close>
 
 subsection \<open>Auxiliaries\<close>
 
+ML_file \<open>library/tools/helper_reasoners.ML\<close>
+
 subsubsection \<open>Semantic Expansion of \<phi>-Types\<close>
 
 consts MODE_\<phi>EXPN :: mode \<comment> \<open>relating to named_theorems \<open>\<phi>expn\<close>\<close>
@@ -530,50 +533,17 @@ lemma \<phi>IntroFrameVar'_Yes:
 hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes \<phi>IntroFrameVar'_Yes
 
 
-subsubsection \<open>Embedded Reasoning\<close>
+subsubsection \<open>Reasoning Embedded in BI Assertion\<close>
 
-definition Embedded_Reasoning :: \<open>bool \<Rightarrow> bool\<close> where \<open>Embedded_Reasoning X \<longleftrightarrow> X\<close>
-
-text \<open>Annotate a boolean assertion in a proof obligation is actually an embedded reasoning
-antecedent.\<close>
-
-definition Pass_Embedded_Reasoning :: \<open>bool \<Rightarrow> bool\<close>
-  where \<open>Pass_Embedded_Reasoning X \<longleftrightarrow> X\<close>
-
-definition Pass_Embedded_Reasoning' :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
-  where \<open>Pass_Embedded_Reasoning' IN OUT \<longleftrightarrow> (OUT \<longleftrightarrow> IN)\<close>
-
-declare [[\<phi>reason_default_pattern
-      \<open>Pass_Embedded_Reasoning' ?X _\<close> \<Rightarrow> \<open>Pass_Embedded_Reasoning' ?X _\<close> (100)
-]]
+definition Subjec_Reasoning :: \<open> 'p set \<Rightarrow> bool \<Rightarrow> 'p set \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
+  where \<open>Subjec_Reasoning \<equiv> Subjection\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> Pass_Embedded_Reasoning' X Y
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Y
-\<Longrightarrow> Pass_Embedded_Reasoning X\<close>
-  unfolding Pass_Embedded_Reasoning_def Pass_Embedded_Reasoning'_def Premise_def
-  by blast
-
-lemma [\<phi>reason 1110]:
-  \<open> R
-\<Longrightarrow> Pass_Embedded_Reasoning' X Y
-\<Longrightarrow> Pass_Embedded_Reasoning' (Embedded_Reasoning R \<and> X) Y\<close>
-  unfolding Pass_Embedded_Reasoning'_def Embedded_Reasoning_def by blast
-
-lemma [\<phi>reason 1100]:
-  \<open> Pass_Embedded_Reasoning' X Y
-\<Longrightarrow> Pass_Embedded_Reasoning' (P \<and> X) (P \<and> Y)\<close>
-  unfolding Pass_Embedded_Reasoning'_def by blast
-
-lemma [\<phi>reason 1010]:
-  \<open> R
-\<Longrightarrow> Pass_Embedded_Reasoning' (Embedded_Reasoning R) True \<close>
-  unfolding Pass_Embedded_Reasoning'_def Embedded_Reasoning_def by blast
-
-lemma [\<phi>reason 1000]:
-  \<open> Pass_Embedded_Reasoning' P P \<close>
-  unfolding Pass_Embedded_Reasoning'_def by blast
-
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> A \<w>\<i>\<t>\<h> P\<close>
+  unfolding Subjec_Reasoning_def Transformation_def
+  by simp
 
 subsection \<open>Embed BI Assertion into \<phi>-Type\<close>
 

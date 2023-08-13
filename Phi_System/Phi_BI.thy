@@ -718,6 +718,7 @@ syntax
 translations
   "\<big_ast>x|P. t" => "CONST Mul_Quant (\<lambda>x. t) {x. P}"
 
+subsubsection \<open>Rules\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> (\<And>i\<in>S. A i \<i>\<m>\<p>\<l>\<i>\<e>\<s> P i)
@@ -742,7 +743,31 @@ proof -
   by (metis (full_types) BI_bot_ord Subjection_Flase Subjection_True)
 qed
 
+lemma finite_prod_subjection:
+  \<open>finite I \<Longrightarrow> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<Prod>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
+  unfolding BI_eq_iff
+proof (clarify; rule; clarsimp)
+  fix u
+  assume \<open>finite I\<close>
+  have \<open>u \<Turnstile> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i) \<longrightarrow> u \<Turnstile> prod A I \<and> (\<forall>x\<in>I. P x)\<close>
+    by (induct arbitrary: u rule: finite_induct[OF \<open>finite I\<close>]; simp; blast)
+  moreover assume \<open>u \<Turnstile> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i)\<close>
+  ultimately show \<open>u \<Turnstile> prod A I \<and> (\<forall>x\<in>I. P x)\<close>
+    by blast
+qed 
 
+lemma sep_quant_subjection:
+  \<open>(\<big_ast>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<big_ast>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
+  unfolding BI_eq_iff
+  by (clarify; rule; clarsimp simp add: Mul_Quant_def finite_prod_subjection)
+
+lemma sep_quant_contract:
+  \<open>(\<big_ast>i\<in>I. \<big_ast>j\<in>J. A i j) = ((\<big_ast>ij \<in> I \<times> J. case_prod A ij) \<s>\<u>\<b>\<j> finite I)\<close>
+  unfolding BI_eq_iff Mul_Quant_def
+  by (clarsimp; rule;
+      clarsimp simp add: finite_prod_subjection ex_in_conv finite_cartesian_product_iff;
+      cases \<open>I = {}\<close>; cases \<open>J = {}\<close>; simp add: prod.cartesian_product)
+  thm prod.cartesian_product
 
 subsection \<open>Existential Quantification\<close>
 
