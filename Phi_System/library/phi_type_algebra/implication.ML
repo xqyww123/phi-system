@@ -20,28 +20,20 @@ fun guess_property_inhab_tyop (phi:phi_type) ctxt =
                | NONE => collect_params ret rev_arg_tys F'
       val T_params = collect_params [] rev_arg_tys T_term
       val x_ttys = map (#2 o #1) T_params
-      val preds = Name.invent_names (Variable.names_of ctxt) "Pr"
+      val preds = Name.invent_names (Variable.names_of ctxt) "P"
                                      (map (fn T => T --> HOLogic.boolT) x_ttys)
       val ctxt = Variable.add_fixes_direct (map fst preds) ctxt
       val preds = x_ttys ~~ map Free preds
       val ants = map2 (fn ((rev_args, x, m), T'h) => fn (_, pred) =>
             let val arity = length rev_args
                 val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - i)) rev_args T'h
-                val inh = \<^Const>\<open>Inhabited m\<close> $ (\<^Const>\<open>\<phi>Type x m\<close> $ Bound 0 $ T')
-                val body = \<^Const>\<open>Action_Tag\<close>
-                              $ (HOLogic.imp $ inh $ (pred $ Bound 0))
-                              $ \<^Const>\<open>\<A>EIF\<close>
-             in HOLogic.all_const x $ Abs("x", x, body)
+             in \<^Const>\<open>Abstract_Domain x m\<close> $ T' $ pred
              |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs("A", ty, X)) rev_args
             end
           ) T_params preds
    in guess_predicate ctxt preds x_ty
    |> Seq.map (fn (pred, ctxt) =>
-        (ants, HOLogic.Trueprop $ (HOLogic.all_const x_ty $ Abs ("x", x_ty, \<^Const>\<open>Action_Tag\<close>
-                    $ (HOLogic.imp
-                        $ (\<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T_term))
-                        $ (pred $ Bound 0))
-                    $ \<^Const>\<open>\<A>EIF\<close>)),
+        (ants, HOLogic.Trueprop $ (\<^Const>\<open>Abstract_Domain x_ty model_ty\<close> $ T_term $ pred),
          NONE :: parse_parameters_of_phi_type T_term, phi, ctxt))
   end
 
@@ -49,41 +41,20 @@ fun guess_property_inhab_atom (phi:phi_type) ctxt =
   let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (_,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val idx = phi_maxidx_of phi ~1 + 1
-      val Prop = HOLogic.Trueprop $ (HOLogic.all_const x_ty $ Abs ("x", x_ty, \<^Const>\<open>Action_Tag\<close>
-                    $ (\<^Const>\<open>HOL.implies\<close>
-                        $ (\<^Const>\<open>Inhabited model_ty\<close> $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T_term))
-                        $ (Var(("Pr",idx), x_ty --> HOLogic.boolT) $ Bound 0))
-                    $ \<^Const>\<open>\<A>EIF\<close>))
+      val Prop = HOLogic.Trueprop $
+                    (\<^Const>\<open>Abstract_Domain x_ty model_ty\<close> $ T_term $ Var(("P",idx), x_ty --> HOLogic.boolT))
    in Seq.single ([], Prop, NONE :: parse_parameters_of_phi_type T_term, phi, ctxt)
   end
 
-val NAME = "Implication"
-fun gen_inhab (der_id, name) hint00 (phi0 : phi_type) thy =
+val NAME = "Abstract_Domain"
+fun gen_inhab (der_id, name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val hint0 = Option.map (chk_abstract_object_quantified (
-            let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
-                  | target (Const(\<^const_name>\<open>HOL.implies\<close>, _)
-                              $ (Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ X $ T))
-                              $ _) =
-                        if Term.exists_subterm (fn x => x = X) T
-                        then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
-                        else SOME X
-             in target
-            end
-            ) ctxt0) hint00
-
       val guess_property = if is_Type_Opr (Term.fastype_of (#term phi0))
                            then guess_property_inhab_tyop
                            else guess_property_inhab_atom
       val mode_infer = not (is_some hint0 orelse is_Type_Opr (Term.fastype_of (#term phi0)))
 
-      val parse_hint = parse_hint_has_object_and_type (
-            fn Const(\<^const_name>\<open>HOL.All\<close>, _) $ (Abs (_,_,
-                  Const(\<^const_name>\<open>Action_Tag\<close>, _) $ 
-                    (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (
-                       Const(\<^const_name>\<open>Inhabited\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T)) $ _)
-                    $ _ ))
-                 => (x,T))
+      val parse_hint = parse_hint_has_type_only (fn Const(\<^const_name>\<open>Abstract_Domain\<close>, _) $ T $ _ => T)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []
 
@@ -128,7 +99,7 @@ fun gen_inhab (der_id, name) hint00 (phi0 : phi_type) thy =
                                   [Pretty.para "Obligation is obtained, but I fail to infer \
                                                \the expression of the implied pure fact from it."])
                         end
-                 | inst_Pr (vars,prems) (Var (v as (("Pr",_), \<^Type>\<open>fun tyv _\<close>)) $ Bound j)
+                 | inst_Pr (vars,prems) (Var (v as (("P",_), \<^Type>\<open>fun tyv _\<close>)) $ Bound j)
                       = Phi_Help.list_mk_conj prems
                           |> fold_index (fn (k, (N, ty)) => fn X =>
                                 if k = j then Abs (N, ty, X) $ Bound (length vars - 1 - k)
@@ -147,15 +118,13 @@ fun gen_inhab (der_id, name) hint00 (phi0 : phi_type) thy =
                   | _ => error "Internal bug"
            end)
         else K NONE
-      fun simp (_, ctxt) rule0 =
-        let val rule = rule0 RS' (ctxt, @{thm' spec})
-         in if is_some hint0
-            then rule
-            else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                    HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
-                      Conv.arg_conv (Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
-                    ))) ctxt) rule
-        end
+      fun simp (_, ctxt) rule =
+        if is_some hint0
+        then rule
+        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                HOLogic.Trueprop_conv (Conv.arg_conv (
+                  Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
+                )) ctxt) rule
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_Inh_rule},
                                       [(SOME ([0], ind_conv), Inh_reasoning)],

@@ -421,14 +421,14 @@ class raw_share =
     \<comment> \<open>\<open>n \<odivr> a\<close> divides \<open>a\<close> into \<open>n\<close> proportion of the original share, for \<open>0 < n < 1\<close>\<close>
 
 class share = raw_share + \<comment> \<open>share algebra for semigroup, where unit \<open>1\<close> is not defined\<close>
-  assumes share_share_assoc0: \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
+  assumes share_share_assoc0: \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (m * n) x\<close>
     and   share_left_one[simp]:  \<open>share 1 x = x\<close>
 
 class share_one = share + one +
   assumes share_right_one[simp]: \<open>share n 1 = 1\<close>
     and   share_left_0[simp]:    \<open>share 0 x = 1\<close>
 begin
-lemma share_share: \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
+lemma share_share: \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n (share m x) = share (m * n) x\<close>
   using less_eq_rat_def local.share_share_assoc0 by fastforce
 end
 
@@ -1042,8 +1042,8 @@ locale module_L_distr = module_for_sep +
                             \<Longrightarrow> smult (s + t) a = smult s a * smult t a \<close>
 
 locale module_scalar_assoc = module_for_sep +
-  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (s * t) a\<close>
-
+  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (t * s) a\<close>
+  \<comment> \<open>Recall we always follow the order of the associativity.\<close>
 
 lemma module_scalar_assoc_share0:
   \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::share \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
@@ -1498,6 +1498,11 @@ end
 
 
 subsection \<open>List\<close>
+
+text \<open>We always follow the order of associativity. The list appending is right associative,
+  meaning the new elements are at left, and multiplication is left associative where
+  new elements are at the right, so here there is a reverse between the multiplication of list
+  and concatenation.\<close>
 
 instantiation list :: (type) times begin
 definition "times_list a b = b @ a"
@@ -2666,7 +2671,7 @@ instance proof
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close> unfolding join_sub_def by simp
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by (case_tac x; case_tac y; case_tac z; simp)
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by (case_tac x; case_tac y; case_tac z; simp)
-  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close> by (cases x; simp)
+  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (m * n) x\<close> by (cases x; simp)
   show \<open>share 1 x = x\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close> by (cases x; simp)

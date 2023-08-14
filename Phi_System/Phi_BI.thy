@@ -199,11 +199,18 @@ lemma typing_inhabited: "p \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> In
 definition Abstract_Domain :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Abstract_Domain T d \<longleftrightarrow> (\<forall>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> d x)\<close>
 
+declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rightarrow> \<open>Abstract_Domain ?T _\<close> (100)]]
+
 lemma [\<phi>reason default 10]: (*TODO: not enabled*)
   \<open> Abstract_Domain T D
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D x\<close>
   unfolding Abstract_Domain_def Action_Tag_def
   by blast
+
+lemma [\<phi>reason default 1]:
+  \<open> Abstract_Domain T (\<lambda>_. True) \<close>
+  unfolding Abstract_Domain_def Action_Tag_def
+  by simp
 
 declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
