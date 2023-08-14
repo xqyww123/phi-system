@@ -754,13 +754,37 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
 
-lemma
-  \<open> module_L_distr \<psi> Ds (\<lambda>_. True)
-\<Longrightarrow> (\<forall>x. Is_Functional (x \<Ztypecolon> T))
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. (\<Zcomp>\<^sub>f) (\<psi> a)) T Ds (\<lambda>(x,y). x = y \<and> Dx y) (\<lambda>_ _. fst)\<close>
+
+lemma Semimodule_LDistr_Homo\<^sub>Z_by_function:
+  \<open> module_L_distr \<psi> Ds
+\<Longrightarrow> Functionality T Dx
+\<Longrightarrow> Object_Equiv T eq
+\<Longrightarrow> Abstract_Domain T D\<^sub>T
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. (\<Zcomp>\<^sub>f) (\<psi> a)) T Ds
+                            (\<lambda>(x,y). (D\<^sub>T x \<longrightarrow> eq x y \<and> Dx y) \<or> (D\<^sub>T y \<longrightarrow> eq y x \<and> Dx x))
+                            (\<lambda>_ _. fst)\<close>
   unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_L_distr_def Is_Functional_def
-  apply clarsimp
-apply blast
+            Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
+  by clarsimp metis
+
+text \<open>The domain of abstract objects constrains to ensure the two middle-level objects
+  (namely, the concrete objects of \<open>T\<close> and the abstract objects of \<open>\<psi>\<close>) are identical so that
+  we can apply the right distributive law \<open>smult (s + t) a = smult s a * smult t a\<close> of module,
+  which requires the group objects \<open>a\<close> at the two sides of \<open>*\<close> to be identical.
+
+  To this requirement, the instantiated domains above is the weakest.
+\<close>
+
+lemma \<comment> \<open>The instantiated domains above is the weakest upto using the \<open>module_L_distr \<psi> Ds\<close>,
+          i.e., \<open>smult (s + t) a = smult s a * smult t a\<close>, when the \<open>Dx\<close>, \<open>eq\<close>, and \<open>D\<^sub>T\<close> are the weakest. \<close>
+  \<open> (\<forall>x. p x \<longleftrightarrow> (\<forall>u v. u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v))
+\<Longrightarrow> (\<forall>x y. eq x y \<longleftrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T))
+\<Longrightarrow> (D\<^sub>Tx \<longleftrightarrow> (\<exists>u. u \<Turnstile> (x \<Ztypecolon> T))) \<and> (D\<^sub>Ty \<longleftrightarrow> (\<exists>u. u \<Turnstile> (y \<Ztypecolon> T)))
+\<Longrightarrow> (\<forall>u v. u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (y \<Ztypecolon> T) \<longrightarrow> u = v) \<longrightarrow> ((D\<^sub>Tx \<longrightarrow> eq x y \<and> p y) \<or> (D\<^sub>Ty \<longrightarrow> eq y x \<and> p x)) \<close>
+  unfolding Transformation_def
+  by auto metis
+  
+
 
 
 

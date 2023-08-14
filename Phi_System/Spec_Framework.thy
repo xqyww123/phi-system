@@ -172,6 +172,9 @@ subsection \<open>Functional\<close>
 definition Is_Functional :: \<open>'a BI \<Rightarrow> bool\<close>
   where \<open>Is_Functional S \<longleftrightarrow> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)\<close>
 
+definition Functionality :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Functionality T p \<longleftrightarrow> (\<forall>x u v. p x \<and> u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v)\<close>
+
 declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightarrow> \<open>Is_Functional ?S\<close> (100)]]
 
 (* lemma Is_Functional_alt:
@@ -196,12 +199,21 @@ lemma [\<phi>reason no explorative backtrack 0]:
   unfolding TRACE_FAIL_def
   by blast
 
+lemma [\<phi>reason default 10]:
+  \<open> Functionality T p
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> p x
+\<Longrightarrow> Is_Functional (x \<Ztypecolon> T)\<close>
+  unfolding Premise_def Is_Functional_def Functionality_def
+  by simp
+
 lemma [\<phi>reason 1200]:
-  \<open>Is_Functional (v \<Ztypecolon> Itself)\<close>
+  \<open>Functionality Itself (\<lambda>_. True)\<close>
+  unfolding Functionality_def
   by clarsimp
 
 lemma [\<phi>reason 1200]:
-  \<open>Is_Functional (any \<Ztypecolon> \<phi>None)\<close>
+  \<open>Functionality \<phi>None (\<lambda>_. True)\<close>
+  unfolding Functionality_def
   by clarsimp
 
 lemma [\<phi>reason 1200]:
@@ -212,11 +224,12 @@ lemma [\<phi>reason 1200]:
   by simp
 
 lemma [\<phi>reason 1200]:
-  \<open> Is_Functional (x \<Ztypecolon> T)
-\<Longrightarrow> Is_Functional (y \<Ztypecolon> U)
-\<Longrightarrow> Is_Functional ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
-  unfolding Is_Functional_def set_eq_iff
-  by (simp, blast)
+  \<open> Functionality T p\<^sub>T
+\<Longrightarrow> Functionality U p\<^sub>U
+\<Longrightarrow> Functionality (T \<^emph> U) (\<lambda>(x,y). p\<^sub>T x \<and> p\<^sub>U y)\<close>
+  unfolding Functionality_def
+  by clarsimp blast
+  
 
 lemma [\<phi>reason 1200]:
   \<open> Is_Functional A

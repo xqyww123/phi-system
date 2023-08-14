@@ -8,7 +8,7 @@ theory Phi_Preliminary
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
   keywords "optional_translations" :: thy_decl
        and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl
-  abbrevs "<implies>" =4 "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
+  abbrevs "<implies>" = "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
       and "<suffices>" = "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>"
 begin
 

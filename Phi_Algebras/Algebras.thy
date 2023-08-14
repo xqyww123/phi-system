@@ -479,6 +479,7 @@ subclass share_nun_semimodule proof
   show \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     by (simp add: local.share_sub)
 qed
+
 end
 
 class share_semimodule_total = share_one + monoid_mult +
@@ -1030,7 +1031,6 @@ text \<open>The right distributivity of a module forms a homomorphism over the g
 locale module_for_sep =
   fixes smult :: \<open>'s \<Rightarrow> 'a \<Rightarrow> 'a\<close>
     and Ds :: \<open>'s \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the scalars\<close>
-    and Dx :: \<open>'a \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the separation algebra\<close>
 
 text \<open>Again, we implicitly extend the carrier set to the universe. The scalar multiplication
   on those 'invalid' elements can be defined as returning to a specific 'zero element' where
@@ -1038,20 +1038,20 @@ text \<open>Again, we implicitly extend the carrier set to the universe. The sca
   axioms can be satisfied without any problem.\<close>
 
 locale module_L_distr = module_for_sep +
-  assumes module_right_distr: \<open> \<lbrakk> Ds (s::'s::partial_add_magma); Ds t; s ##\<^sub>+ t; Dx a \<rbrakk>
+  assumes module_right_distr: \<open> \<lbrakk> Ds (s::'s::partial_add_magma); Ds t; s ##\<^sub>+ t; smult s a ## smult t a \<rbrakk>
                             \<Longrightarrow> smult (s + t) a = smult s a * smult t a \<close>
 
 locale module_scalar_assoc = module_for_sep +
-  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t; Dx a \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (s * t) a\<close>
+  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (s * t) a\<close>
 
 
 lemma module_scalar_assoc_share0:
-  \<open>module_scalar_assoc share (\<lambda>n. 0 < n) (\<lambda>x::'a::share. True)\<close>
+  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::share \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
   unfolding module_scalar_assoc_def
   by (simp add: share_share_assoc0)
 
 lemma module_scalar_assoc_share:
-  \<open>module_scalar_assoc share (\<lambda>n. 0 \<le> n) (\<lambda>x::'a::share_one. True)\<close>
+  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::share_one \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
   unfolding module_scalar_assoc_def
   by (simp add: share_share)
 
@@ -1062,12 +1062,12 @@ instance by standard simp
 end
 
 lemma module_L_distr_share:
-  \<open>module_L_distr share (\<lambda>n. 0 \<le> n) (\<lambda>x::'a::share_semimodule. x ## x)\<close>
+  \<open>module_L_distr (share :: rat \<Rightarrow> 'a::share_semimodule \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
   unfolding module_L_distr_def
-  by (simp add: share_sep_left_distrib)
+  by (simp add: less_eq_rat_def share_sep_left_distrib)
 
 lemma module_L_distr_share_0:
-  \<open>module_L_distr share (\<lambda>n. 0 < n) (\<lambda>x::'a::share_nun_semimodule. x ## x)\<close>
+  \<open>module_L_distr (share :: rat \<Rightarrow> 'a::share_nun_semimodule \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
   unfolding module_L_distr_def
   by (simp add: share_sep_left_distrib_0)
 

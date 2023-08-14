@@ -120,6 +120,25 @@ declare order.refl[\<phi>reason for \<open>?X \<le> ?X\<close> (10000)
                                \<open>_ \<le> ?var\<close> (1) ]
 
 
+subsection \<open>\<phi>-Type\<close>
+
+type_synonym ('concrete,'abstract) \<phi> = " 'abstract \<Rightarrow> 'concrete BI "
+
+definition \<phi>Type :: "'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> 'a BI" (infix "\<Ztypecolon>" 20) where " x \<Ztypecolon> T \<equiv> T x"
+
+text \<open>Convention of name:
+
+In \<open>x \<Ztypecolon> T\<close>, we refer to \<open>x\<close> as the \<^emph>\<open>object\<close> or the \<^emph>\<open>\<phi>-type term\<close> and \<open>T\<close> as the \<^emph>\<open>\<phi>-type\<close>.
+For convenience, when the context is unambiguous, we also call the entire \<open>x \<Ztypecolon> T\<close> as '\<phi>-type',
+but as \<^emph>\<open>\<phi>-type assertion\<close> to be precise.
+\<close>
+
+lemma \<phi>Type_eqI:
+  \<open>(\<forall>x p. p \<Turnstile> (x \<Ztypecolon> a) \<longleftrightarrow> p \<Turnstile> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
+  unfolding \<phi>Type_def Satisfaction_def by blast
+
+ML_file \<open>library/tools/simp_congruence.ML\<close>
+
 subsection \<open>Inhabitance\<close>
 
 definition Inhabited :: " 'a BI \<Rightarrow> bool " where  "Inhabited S = (\<exists>p. p \<Turnstile> S)"
@@ -134,6 +153,7 @@ abbreviation Sufficient_Inhabitance :: \<open>bool \<Rightarrow> 'a BI \<Rightar
 
 declare [[
   \<phi>reason_default_pattern \<open>Inhabited ?X \<longrightarrow> _\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
+                      and \<open>_ \<longrightarrow> Inhabited ?X\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (100)
 ]]
 
 ML_file \<open>library/tools/inhabited_rule.ML\<close>
@@ -171,35 +191,19 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def Premise_def
   by blast
 
-(*
-lemma Membership_E_Inhabitance:
-  \<open> x \<Turnstile> S
-\<Longrightarrow> Inhabited S \<longrightarrow> C
-\<Longrightarrow> C\<close>
-  unfolding Inhabited_def by blast
-*)
-
-subsection \<open>\<phi>-Type\<close>
-
-type_synonym ('concrete,'abstract) \<phi> = " 'abstract \<Rightarrow> 'concrete BI "
-
-definition \<phi>Type :: "'b \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> 'a BI" (infix "\<Ztypecolon>" 20) where " x \<Ztypecolon> T \<equiv> T x"
-
-text \<open>Convention of name:
-
-In \<open>x \<Ztypecolon> T\<close>, we refer to \<open>x\<close> as the \<^emph>\<open>object\<close> or the \<^emph>\<open>\<phi>-type term\<close> and \<open>T\<close> as the \<^emph>\<open>\<phi>-type\<close>.
-For convenience, when the context is unambiguous, we also call the entire \<open>x \<Ztypecolon> T\<close> as '\<phi>-type',
-but as \<^emph>\<open>\<phi>-type assertion\<close> to be precise.
-\<close>
+subsubsection \<open>Inhabitance of \<phi>-Type\<close>
 
 lemma typing_inhabited: "p \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (x \<Ztypecolon> T)"
   unfolding Inhabited_def \<phi>Type_def by blast
 
-lemma \<phi>Type_eqI:
-  \<open>(\<forall>x p. p \<Turnstile> (x \<Ztypecolon> a) \<longleftrightarrow> p \<Turnstile> (x \<Ztypecolon> b)) \<Longrightarrow> a = b\<close>
-  unfolding \<phi>Type_def Satisfaction_def by blast
+definition Abstract_Domain :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Abstract_Domain T d \<longleftrightarrow> (\<forall>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> d x)\<close>
 
-ML_file \<open>library/tools/simp_congruence.ML\<close>
+lemma [\<phi>reason default 10]: (*TODO: not enabled*)
+  \<open> Abstract_Domain T D
+\<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D x\<close>
+  unfolding Abstract_Domain_def Action_Tag_def
+  by blast
 
 declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
@@ -222,6 +226,17 @@ declare [[
             Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
           ]) end)\<close> (1000)
 ]]
+
+
+
+(*
+lemma Membership_E_Inhabitance:
+  \<open> x \<Turnstile> S
+\<Longrightarrow> Inhabited S \<longrightarrow> C
+\<Longrightarrow> C\<close>
+  unfolding Inhabited_def by blast
+*)
+
 
 subsection \<open>Transformation of Abstraction\<close>
 
