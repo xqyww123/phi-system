@@ -541,6 +541,13 @@ lemma (*The above rule is reversible*)
     by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
                prems(2-3), blast) .
 
+(*
+lemma
+  \<open> Semimodule_LDistr_Homo\<^sub>O\<^sub>Z B Ds Dx' zz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z  (\<lambda>s. (\<Zcomp>) (B s)) Ds Dx z \<close>
+*)
+
+
 
 (* subsection \<open>Embedding Universal Quantification\<close>
 
@@ -715,7 +722,7 @@ lemma [\<phi>reason 1000]:
   by clarsimp
 
 
-subsection \<open>Vertical Composition of Func\<close>
+subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
@@ -747,6 +754,14 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
 
+lemma
+  \<open>Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. \<phi>Fun' (\<psi> a)) Ds Dx (\<lambda>_ _. fst)\<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def
+  apply clarsimp
+
+
+
+
 subsubsection \<open>Configuration\<close>
 
 setup \<open>Context.theory_map (Phi_Type_Algebra.Defining_Phi_Type.add 12 (fn phi => fn thy =>
@@ -769,8 +784,10 @@ setup \<open>Context.theory_map (Phi_Type_Algebra.Defining_Phi_Type.add 12 (fn p
    in thy
   end))\<close>
 
+
 subsection \<open>Multiplicative Finite Product\<close>
 
+(*TODO*)
 lemma
   \<open> (\<And>x \<in> S. A x \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x)
 \<Longrightarrow> finite S
@@ -1215,8 +1232,8 @@ paragraph \<open>Algebraic Properties\<close>
  
 
 lemma \<phi>MapAt_L_left_seminearring_functor[\<phi>reason 1100]:
-  \<open>Scala_Semimodule_Functor (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>
-  unfolding Scala_Semimodule_Functor_def
+  \<open>Semimodule_Scalar_Homo (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>
+  unfolding Semimodule_Scalar_Homo_def
   by (clarsimp simp add: \<phi>MapAt_L_\<phi>MapAt_L times_list_def)
 
 (*
@@ -1253,6 +1270,7 @@ declare [[\<phi>trace_reasoning = 0]]
        (*and Open_Abstraction_Full *)
        and Trivial_\<Sigma>
        and Separation_Homo
+       and SE_Trim_Empty
 
 term \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
 term \<open>Separation_Homo\<^sub>I ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
@@ -1300,7 +1318,7 @@ lemma \<phi>Share_\<phi>Share[simp, assertion_simps]:
   \<open> 0 < n \<and> 0 < m
 \<Longrightarrow> n \<odiv> m \<odiv> T = (m * n) \<odiv> T \<close>
   by (rule \<phi>Type_eqI; clarsimp;
-      metis mult.commute share_share_not0)
+      metis mult.commute share_share_assoc0)
 
 lemma \<phi>Share_share:
   \<open> 0 < n \<and> 0 < m
@@ -1470,8 +1488,8 @@ lemma share_merge_\<phi>app:
 paragraph \<open>Algebraic Properties\<close>
 
 lemma \<phi>Share_left_seminearring_functor[\<phi>reason add]:
-  \<open>Scala_Semimodule_Functor (\<odiv>) T {0<..1}\<close>
-  unfolding Scala_Semimodule_Functor_def
+  \<open>Semimodule_Scalar_Homo (\<odiv>) T {0<..1}\<close>
+  unfolding Semimodule_Scalar_Homo_def
   by clarsimp
 
 (*
@@ -1493,29 +1511,29 @@ interpretation \<phi>Share: Sep_Homo_Type_Functor_L
       metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
 
 lemma [\<phi>reason add]:
-  \<open> Near_Semimodule_Functor_zip ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+  \<open> Semimodule_LDistr_Homo\<^sub>Z ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
         (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Object_Equiv T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
         (\<lambda>_ _. fst) \<close>
-  unfolding Near_Semimodule_Functor_zip_def \<phi>Sep_Disj_Inj_def
+  unfolding Semimodule_LDistr_Homo\<^sub>Z_def \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn Premise_def;
       metis share_sep_left_distrib_0)
 
 lemma [\<phi>reason add]:
-  \<open> Near_Semimodule_Functor_zip_rev ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+  \<open> Semimodule_LDistr_Homo\<^sub>Z_rev ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
         (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Object_Equiv T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
         (\<lambda>_ _. fst) \<close>
-  unfolding Near_Semimodule_Functor_zip_rev_def \<phi>Sep_Disj_Inj_def
+  unfolding Semimodule_LDistr_Homo\<^sub>Z_rev_def \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn Premise_def;
       metis add.commute share_sep_left_distrib_0)
 
 lemma [\<phi>reason add]:
-  \<open> Near_Semimodule_Functor_unzip ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+  \<open> Semimodule_LDistr_Homo\<^sub>U ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
         (\<lambda>T x. \<phi>Sep_Disj_Inj (x \<Ztypecolon> T))
         (\<lambda>_ _ x. (x,x)) \<close>
-  unfolding Near_Semimodule_Functor_unzip_def \<phi>Sep_Disj_Inj_def
+  unfolding Semimodule_LDistr_Homo\<^sub>U_def \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn;
       metis share_sep_disj_left share_sep_disj_right share_sep_left_distrib_0)
 

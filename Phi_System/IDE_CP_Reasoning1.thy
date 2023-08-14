@@ -1261,7 +1261,7 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>d\<^sub>x d\<^sub>y. d\<^sub>x \<in> dm\<^sub>T x \<and> d\<^sub>y \<in> dm\<^sub>U y \<and> (has_\<psi>\<^sub>D \<longrightarrow> \<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y) \<longrightarrow> d\<^sub>x ## d\<^sub>y)
 \<Longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<close>
   for \<psi> :: \<open>'c::sep_magma \<Rightarrow> 'cc::sep_magma\<close>
-  unfolding Separation_Disj_def Domainoid_Homo\<^sub>U_def
+  unfolding Separation_Disj_def Domainoid_Homo\<^sub>U_def Orelse_shortcut_def
   by (clarsimp simp add: domainoid_def Premise_def homo_domainoid_def
                          closed_homo_sep_def closed_homo_sep_disj_def; metis)
 

@@ -92,7 +92,7 @@ class add_order_0 = ord + zero + plus +
 subclass (in ordered_comm_monoid_add) add_order_0
   by (standard; simp add: add_nonneg_nonneg add_pos_pos)
 
-subsection \<open>Separation Algebra\<close>
+subsection \<open>Separation Algebras\<close>
 
 subsubsection \<open>Separation Disjunction\<close>
 
@@ -257,7 +257,7 @@ lemma join_sub_ext_right:
 
 end
 
-subsubsection \<open>Special Separation Algebra\<close>
+subsubsection \<open>Special Separation Algebras\<close>
 
 class total_sep_algebra = comm_monoid_mult + positive_mult + total_sep_disj
 begin
@@ -368,6 +368,23 @@ proof
 qed
 
 
+subsubsection \<open>Module Structures for Separation\<close>
+
+text \<open>The right distributivity of a module forms a homomorphism over the group operation,
+  so we don't cover it here.\<close>
+
+locale module_for_sep =
+  fixes smult :: \<open>'s \<Rightarrow> 'a \<Rightarrow> 'a\<close>
+    and Ds :: \<open>'s \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the scalars\<close>
+    and Dx :: \<open>'a \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the separation algebra\<close>
+
+locale module_R_distr = module_for_sep +
+  assumes module_right_distr: \<open>\<lbrakk> Ds r; Ds s; Dx a \<rbrakk> \<Longrightarrow> smult (r + s) a = smult r a * smult s a\<close>
+
+locale module_scalar_assoc = module_for_sep +
+  assumes module_scalar_assoc: \<open>\<lbrakk> Ds r; Ds s; Dx a \<rbrakk> \<Longrightarrow> smult r (smult s a) = smult (r * s) a\<close>
+
+
 
 subsection \<open>Hierarchical Algebra\<close>
 
@@ -379,12 +396,15 @@ is composition of two separated parts of the data structure.
 It is different with semimodule in that the scalar is not a semiring but only a monoid.
 The scalar does not have addition operation.\<close>
 
-locale hierarchical_alg =
+(*It is nothing but just a semimodule, or even not, just containing scalar associativity
+  and separation homo*)
+
+(*locale hierarchical_alg =
   fixes locate :: \<open>'path::monoid_mult \<Rightarrow> 'a::sep_algebra \<Rightarrow> 'a\<close> (infixr ":\<tribullet>" 75)
   assumes locate_distrib_right: \<open>path :\<tribullet> (x * y) = path :\<tribullet> x * path :\<tribullet> y\<close>
     and   locate_assoc: \<open>pa :\<tribullet> pb :\<tribullet> x = (pa * pb) :\<tribullet> x\<close>
     and   locate_left_1:  \<open>1 :\<tribullet> x = x\<close>
-    and   locate_right_1: \<open>path :\<tribullet> 1 = 1\<close>
+    and   locate_right_1: \<open>path :\<tribullet> 1 = 1\<close>*)
 
 text \<open>As an example, a structure \<open>struct { struct {A a; B b} c; D d; }\<close> may be represented by
 \<open>c :\<tribullet> (a :\<tribullet> va * b :\<tribullet> vb) * d :\<tribullet> vd\<close>. \<close>
@@ -417,16 +437,26 @@ class raw_share =
     \<comment> \<open>\<open>n \<odivr> a\<close> divides \<open>a\<close> into \<open>n\<close> proportion of the original share, for \<open>0 < n < 1\<close>\<close>
 
 class share = raw_share + \<comment> \<open>share algebra for semigroup, where unit \<open>1\<close> is not defined\<close>
-  assumes share_share_not0: \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
+  assumes share_share_assoc0: \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
     and   share_left_one[simp]:  \<open>share 1 x = x\<close>
+
+lemma module_scalar_assoc_share0:
+  \<open>module_scalar_assoc share (\<lambda>n. 0 < n) (\<lambda>x::'a::share. True)\<close>
+  unfolding module_scalar_assoc_def
+  by (simp add: share_share_assoc0)
 
 class share_one = share + one +
   assumes share_right_one[simp]: \<open>share n 1 = 1\<close>
     and   share_left_0[simp]:    \<open>share 0 x = 1\<close>
 begin
 lemma share_share: \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
-  using less_eq_rat_def local.share_share_not0 by fastforce
+  using less_eq_rat_def local.share_share_assoc0 by fastforce
 end
+
+lemma module_scalar_assoc_share:
+  \<open>module_scalar_assoc share (\<lambda>n. 0 \<le> n) (\<lambda>x::'a::share_one. True)\<close>
+  unfolding module_scalar_assoc_def
+  by (simp add: share_share)
 
 class share_one_eq_one_iff = share_one +
   assumes share_one_eq_one_iff[simp]: \<open>0 < n \<Longrightarrow> share n x = 1 \<longleftrightarrow> x = 1\<close>
@@ -459,6 +489,11 @@ subclass sep_refl
 
 end
 
+lemma module_R_distr_share_0:
+  \<open>module_R_distr share (\<lambda>n. 0 < n) (\<lambda>x::'a::share_nun_semimodule. x ## x)\<close>
+  unfolding module_R_distr_def
+  by (simp add: share_sep_left_distrib_0)
+
 class share_semimodule = share_sep_disj + share_one + sep_algebra +
   assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
@@ -476,6 +511,11 @@ subclass share_nun_semimodule proof
     by (simp add: local.share_sub)
 qed
 end
+
+lemma module_R_distr_share:
+  \<open>module_R_distr share (\<lambda>n. 0 \<le> n) (\<lambda>x::'a::share_semimodule. x ## x)\<close>
+  unfolding module_R_distr_def
+  by (simp add: share_sep_left_distrib)
 
 class share_semimodule_total = share_one + monoid_mult +
   assumes share_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
@@ -1188,7 +1228,7 @@ lemma share_option_simps[simp]:
   \<open>share n None = None\<close> \<open>share 0 x = None\<close> \<open>0 < n \<Longrightarrow> share n (Some x') = Some (share n x')\<close>
   unfolding share_option_def by simp_all
 
-instance by (standard; simp add: share_option_def; case_tac x; simp add: share_share_not0)
+instance by (standard; simp add: share_option_def; case_tac x; simp add: share_share_assoc0)
 end
 
 instantiation option :: (sep_disj_distrib) sep_disj_distrib begin
@@ -1774,7 +1814,7 @@ instantiation "fun" :: (type, share) share begin
 definition share_fun :: \<open>rat \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'b\<close>
   where \<open>share_fun n f = share n o f\<close>
 
-instance by (standard; simp add: share_fun_def fun_eq_iff share_share_not0)
+instance by (standard; simp add: share_fun_def fun_eq_iff share_share_assoc0)
 end
 
 instantiation "fun" :: (type,share_one) share_one begin

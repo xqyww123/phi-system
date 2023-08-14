@@ -572,7 +572,7 @@ lemma partial_implies_raw:
     have t2: \<open>share (1/n) (share n (\<psi> x)) \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
       by (simp add: order_less_imp_le prems(2) share.\<psi>_self_disj share_sub t1)
     then have t3: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
-      using share_share_not0
+      using share_share_assoc0
       by (metis prems(2) share_left_one t0 t1)
     then show ?thesis
       by (metis join_sub_ext_left prems(10) prems(3) prems(8) resource_kind_axioms resource_kind_def sep_space_entry.sep_disj_get_name share.homo_join_sub)
