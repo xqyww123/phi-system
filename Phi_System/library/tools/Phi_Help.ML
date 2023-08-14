@@ -37,10 +37,6 @@ include PHI_HELP
 
   val string_of_term_generic : Context.generic -> term -> string
 
-  (*Find the most general instantiation of the given type to meet the given sort*)
-  val lift_type_sort : theory -> typ * sort -> Type.tyenv -> Type.tyenv
-  val lift_type_sort' : theory -> (typ * sort) list -> typ TVars.table
-
   (*For tyenv/tenv given from Pattern.match*)
   val subst_tyenv : Type.tyenv -> typ TVars.table
   val subst_tenv  : Type.tyenv -> Envir.tenv -> term Vars.table
@@ -221,24 +217,6 @@ val uncertify_tyvars = TVars.map (K Thm.typ_of)
 val uncertify_tmvars = Vars.map (K Thm.term_of)
 fun uncertify_vars (ty, tm) = (uncertify_tyvars ty, uncertify_tmvars tm)
 
-
-fun lift_type_sort thy (ty,sort) env00 =
-  let val idx = Term.maxidx_of_typ ty + 1
-   in if Sign.of_sort thy (ty, sort)
-      then env00
-      else let val var_a = TVar(("a", idx), sort)
-               val (env'1, _) = Sign.typ_unify thy (ty, var_a) (env00, idx)
-               val target = Envir.norm_type env'1 var_a
-            in Sign.typ_match thy (ty, target) env00
-           end
-           handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
-  end
-
-fun lift_type_sort' thy ty_sorts =
-  fold (fn (T,S) => fn env =>
-    lift_type_sort thy (Envir.subst_type env T, S) env
-  ) ty_sorts Vartab.empty
-    |> subst_tyenv
 
 (*
 fun tvars_table_to_tyenv tab =

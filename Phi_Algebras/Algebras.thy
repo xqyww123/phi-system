@@ -126,6 +126,11 @@ class positive_sep_magma = sep_magma +
 class strict_positive_sep_magma = sep_magma +
   assumes join_strict_positivity: \<open>b ## a \<Longrightarrow> a = b * a \<Longrightarrow> False\<close>
 
+class sep_refl = sep_magma +
+  assumes sep_refl_mult_I: \<open>a ## b \<Longrightarrow> a ## a \<Longrightarrow> b ## b \<Longrightarrow> a * b ## a * b\<close>
+  \<comment> \<open>Sometimes, \<open>x ## x\<close> can be used to represent if \<open>x\<close> is in the carrier set,
+      recall the sep algebras as partial algebras are implicitly extended to the whole universe
+      and leaving the elements out the carrier having no defined group operation. \<close>
 
 subsubsection \<open>Separation Semigroup\<close>
 
@@ -447,8 +452,11 @@ class share_nun_semimodule = share_sep_disj + sep_ab_semigroup +
     and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
 begin
-lemma self_disj_I: \<open>x ## y \<Longrightarrow> x ## x \<Longrightarrow> y ## y \<Longrightarrow> x * y ## x * y\<close>
-  by (smt (verit, best) less_numeral_extra(1) local.sep_disj_commuteI local.sep_disj_multI2 local.sep_mult_assoc local.sep_mult_commute local.share_sep_disj_left local.share_sep_left_distrib_0 local.share_sep_right_distrib_0 zero_less_two)
+
+subclass sep_refl
+  by (standard,
+      smt (verit, best) less_numeral_extra(1) local.sep_disj_commuteI local.sep_disj_multI2 local.sep_mult_assoc local.sep_mult_commute local.share_sep_disj_left local.share_sep_left_distrib_0 local.share_sep_right_distrib_0 zero_less_two)
+
 end
 
 class share_semimodule = share_sep_disj + share_one + sep_algebra +

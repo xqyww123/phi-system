@@ -69,15 +69,8 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
               Term_Subst.instantiateT instTy model_ty0,
               Term_Subst.instantiateT instTy ele_model0
             )
-      
-      val target_sort = case (Sign.of_sort thy (model_ty'1, \<^sort>\<open>share\<close>),
-                              Sign.of_sort thy (model_ty'1, \<^sort>\<open>one\<close>))
-                          of (true, true)  => \<^sort>\<open>share_semimodule\<close>
-                           | (true, false) => \<^sort>\<open>share_semimodule\<close>
-                           | (false,true)  => \<^sort>\<open>sep_magma_1\<close>
-                           | (false,false) => \<^sort>\<open>sep_magma\<close>
 
-      val inst  = Phi_Help.lift_type_sort' thy [(model_ty'1, target_sort), (ele_model'1, target_sort)]
+      val inst  = Phi_Help.lift_types_sort thy [(model_ty'1, \<^sort>\<open>sep_magma\<close>), (ele_model'1, \<^sort>\<open>sep_magma\<close>)]
                   handle TYPE _ => raise Automation_Fail (fn () => let open Pretty in
                       [paragraph (text "Fail to constrain" @
                                   [brk 1, Syntax.pretty_typ ctxt model_ty'1, brk 1, str "and", brk 1,

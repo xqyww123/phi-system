@@ -8,7 +8,7 @@ theory Phi_Preliminary
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
   keywords "optional_translations" :: thy_decl
        and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl
-  abbrevs "<implies>" = "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
+  abbrevs "<implies>" =4 "\<i>\<m>\<p>\<l>\<i>\<e>\<s>"
       and "<suffices>" = "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>"
 begin
 
@@ -60,6 +60,7 @@ ML_file \<open>library/tools/error.ML\<close>
 subsection \<open>Helper ML\<close>
 
 ML_file \<open>library/tools/Phi_Help.ML\<close>
+ML_file \<open>library/tools/lift_type_sort.ML\<close>
 ML_file \<open>library/syntax/helps.ML\<close>
 ML_file \<open>library/system/Phi_Envir0.ML\<close>
 ML_file \<open>library/system/Phi_ID.ML\<close>

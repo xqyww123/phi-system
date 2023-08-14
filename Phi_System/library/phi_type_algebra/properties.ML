@@ -289,7 +289,10 @@ val rule_template_pass__sender : rule_generation_pass option Unsynchronized.ref
       = Unsynchronized.ref NONE
 val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__sender_locker" ()
 
-fun setup_rule_generation (template_pos,mode,priority,(raw_dependences,pass),pats) rule0 ctxt =
+type pattern = term
+datatype generation_by = Reasonig_Rule of priority * ((pattern * priority option) list * pattern list)
+                       | Attributes of Thm.attribute list
+fun setup_rule_generation (template_pos,mode,(raw_dependences,pass),gen) rule0 ctxt =
   let val thy = Context.theory_of ctxt
       val rule = normalize rule0
       fun get_prop_kinds (TM::L) =
@@ -366,8 +369,14 @@ fun setup_rule_generation (template_pos,mode,priority,(raw_dependences,pass),pat
                              paragraph (text "Instantiate template rule for \<phi>-type operator" @
                                         here template_pos)
                              end) ;
-                   Phi_Reasoner.add_rules (
-                      map (fn rule => ([rule], pos, mode, priority, fst pats, snd pats, NONE) ) rules') ctxt)
+                   case gen
+                     of Reasonig_Rule (priority, (pats, blacklists)) =>
+                          Phi_Reasoner.add_rules (map (fn rule =>
+                            ([rule], pos, mode, priority, pats, blacklists, NONE) ) rules') ctxt
+                      | Attributes attrs =>
+                          let fun app attr = uncurry (Thm.apply_attribute attr)
+                           in fold (curry (snd o fold app attrs)) rules' ctxt
+                          end)
             end
             handle Inst_Fail => ctxt
 
@@ -400,15 +409,16 @@ val _ = Theory.setup (
 
   Attrib.setup \<^binding>\<open>\<phi>type_property\<close> (Scan.succeed (Thm.declaration_attribute (add_property' Position.none)))
     "Declare a \<phi>-type property that will be used to instantiate automation"
-
+                        
 #>Attrib.setup \<^binding>\<open>\<phi>reason_template\<close> (
     Phi_Reasoner.attr_syntax
       (Scan.option (
           Scan.lift (\<^keyword>\<open>requires\<close>) |--
               (Parse.and_list' (Scan.repeat ( Scan.lift (Args.$$$ "_") >> K NONE
-                                           || Args.const {proper=true,strict=true} >> SOME)) >> flat)) --
-       Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source)))
-      (fn (pos, mode, priority, (dependences, pass_src), pats, guard) =>
+                                           || Args.const {proper=true,strict=true} >> SOME)) >> flat))
+       -- Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
+       -- Attrib.opt_attribs)
+      (fn (pos, mode, priority, ((dependences, pass_src),attribs), pats, guard) =>
         Thm.declaration_attribute (fn thm => fn ctxt =>
           let val _ = case guard of NONE => ()
                          | _ => error "No guard is allowed here"
@@ -425,7 +435,15 @@ val _ = Theory.setup (
                      in pass
                     end
                   ) pass_src
-           in setup_rule_generation (pos,mode,priority,(dependences,pass),pats) thm ctxt
+              val gen = case (attribs, priority, pats)
+                          of (attrs as _ :: _, 100, ([], [])) =>
+                              Attributes (map (Context.cases Attrib.attribute_cmd_global Attrib.attribute_cmd ctxt) attrs)
+                           | (_ :: _, _, _) =>
+                              error "Prioirty and binding patterns are senseless and not allowed to\
+                                    \ be given once the attributes are given."
+                           | ([], _, _) =>
+                              Reasonig_Rule (priority, pats)
+           in setup_rule_generation (pos,mode,(dependences,pass),gen) thm ctxt
           end)
       ))
   "declare a \<phi>reasoning rule template which will be instantiated automatically when the depended \

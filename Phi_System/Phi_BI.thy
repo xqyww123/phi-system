@@ -1374,11 +1374,6 @@ lemma
   unfolding Transformation_def
   apply (auto simp add: Subjection_expn) *)
 
-lemma [\<phi>reason 1000]:
-  \<open>Object_Equiv \<top>\<^sub>\<phi> (\<lambda>_ _. True)\<close>
-  unfolding Object_Equiv_def \<phi>Any.unfold
-  by simp
-
 lemma Object_Equiv_Mul_Quant[\<phi>reason 1000]:
   \<open> (\<And>i\<in>S. Object_Equiv (\<lambda>x. A x i) (eq i))
 \<Longrightarrow> Object_Equiv (\<lambda>x. \<big_ast>i\<in>S. A x i) (\<lambda>x y. \<forall>i. eq i x y)\<close>

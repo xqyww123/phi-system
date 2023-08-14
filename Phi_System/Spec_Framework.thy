@@ -190,10 +190,10 @@ lemma Is_Functional_imp:
   unfolding Transformation_def Is_Functional_def
   by blast
 
-lemma [\<phi>reason 1]:
-  \<open> FAIL TEXT(\<open>Fail to prove\<close> S \<open>is functional\<close>)
+lemma [\<phi>reason no explorative backtrack 0]:
+  \<open> TRACE_FAIL TEXT(\<open>Fail to show\<close> S \<open>is functional\<close>)
 \<Longrightarrow> Is_Functional S\<close>
-  unfolding FAIL_def
+  unfolding TRACE_FAIL_def
   by blast
 
 lemma [\<phi>reason 1200]:
@@ -203,6 +203,13 @@ lemma [\<phi>reason 1200]:
 lemma [\<phi>reason 1200]:
   \<open>Is_Functional (any \<Ztypecolon> \<phi>None)\<close>
   by clarsimp
+
+lemma [\<phi>reason 1200]:
+  \<open> Is_Functional A
+\<Longrightarrow> Is_Functional B
+\<Longrightarrow> Is_Functional (A \<and>\<^sub>B\<^sub>I B) \<close>
+  unfolding Is_Functional_def
+  by simp
 
 lemma [\<phi>reason 1200]:
   \<open> Is_Functional (x \<Ztypecolon> T)
@@ -235,6 +242,59 @@ proof clarsimp
 qed
 
 
+subsection \<open>Separationally Functional\<close> \<comment> \<open>A weaker and more general concept\<close>
+
+definition Sep_Functional :: \<open>'a::sep_magma BI \<Rightarrow> bool\<close>
+  where \<open>Sep_Functional S \<longleftrightarrow> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<and> x ## y \<longrightarrow> x = y) \<close>
+
+declare [[\<phi>reason_default_pattern \<open>Sep_Functional ?S\<close> \<Rightarrow> \<open>Sep_Functional ?S\<close> (100)]]
+
+lemma [\<phi>reason no explorative backtrack 1]:
+  \<open> Is_Functional S
+\<Longrightarrow> Sep_Functional S \<close>
+  unfolding Sep_Functional_def Is_Functional_def
+  by simp
+
+lemma [\<phi>reason no explorative backtrack 0]:
+  \<open> TRACE_FAIL TEXT(\<open>Fail to show\<close> S \<open>is separationally functional\<close>)
+\<Longrightarrow> Sep_Functional S\<close>
+  unfolding TRACE_FAIL_def
+  by blast
+
+lemma [\<phi>reason 1200]:
+  \<open> Sep_Functional A
+\<Longrightarrow> Sep_Functional B
+\<Longrightarrow> Sep_Functional (A \<and>\<^sub>B\<^sub>I B) \<close>
+  unfolding Sep_Functional_def
+  by simp
+
+lemma [\<phi>reason 1200]:
+  \<open> Sep_Functional A
+\<Longrightarrow> Sep_Functional B
+\<Longrightarrow> Sep_Functional (A * B)\<close>
+  for A :: \<open>'a::sep_ab_semigroup BI\<close>
+  unfolding Sep_Functional_def
+  by (clarsimp; metis sep_disj_commute sep_disj_multD1 sep_disj_multD2)
+
+lemma [\<phi>reason 1200]:
+  \<open> Sep_Functional (fst x \<Ztypecolon> T)
+\<Longrightarrow> Sep_Functional (snd x \<Ztypecolon> U)
+\<Longrightarrow> Sep_Functional (x \<Ztypecolon> T \<^emph> U)\<close>
+  for T :: \<open>('c::sep_ab_semigroup, 'a) \<phi>\<close>
+  unfolding Sep_Functional_def
+  by (cases x; clarsimp;
+      metis sep_disj_commute sep_disj_multD1 sep_disj_multD2)
+
+(*
+lemma [\<phi>reason 1200]:
+  \<open> (\<And>i\<in>I. Sep_Functional (A i))
+\<Longrightarrow> Sep_Functional (\<big_ast>i\<in>I. A i) \<close>
+  unfolding Mul_Quant_def atomize_Ball Ball_def
+proof clarsimp
+  *)
+
+
+
 subsection \<open>Injective\<close>
 
 lemma is_singleton_I''[\<phi>reason 1000]:
@@ -247,6 +307,56 @@ lemma is_singleton_I''[\<phi>reason 1000]:
 lemma [\<phi>reason 1000]:
   \<open>is_singleton (x \<Ztypecolon> Itself)\<close>
   by (rule is_singleton_I''; simp add: Is_Functional_def)
+
+
+subsection \<open>Reflexive Separation\<close>
+
+text \<open>\<^prop>\<open>x ## x\<close> is used to represented \<open>x\<close> is in the carrier set in some algebras like permission algebra.\<close>
+
+definition Sep_Reflexive :: \<open>'a::sep_magma BI \<Rightarrow> bool\<close>
+  where \<open>Sep_Reflexive S \<longleftrightarrow> (\<forall>u. u \<Turnstile> S \<longrightarrow> u ## u) \<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> Sep_Reflexive A
+\<Longrightarrow> Sep_Reflexive B
+\<Longrightarrow> Sep_Reflexive (A * B) \<close>
+  for A :: \<open>'a::sep_refl BI\<close>
+  unfolding Sep_Reflexive_def
+  by (clarsimp simp add: sep_refl_mult_I)
+
+lemma [\<phi>reason 1000]:
+  \<open> Sep_Reflexive (fst x \<Ztypecolon> T)
+\<Longrightarrow> Sep_Reflexive (snd x \<Ztypecolon> U)
+\<Longrightarrow> Sep_Reflexive (x \<Ztypecolon> T \<^emph> U) \<close>
+  for T :: \<open>('c::sep_refl, 'a) \<phi>\<close>
+  unfolding Sep_Reflexive_def
+  by (clarsimp simp add: sep_refl_mult_I)
+
+lemma [\<phi>reason 1000]:
+  \<open> Sep_Reflexive A
+\<Longrightarrow> Sep_Reflexive B
+\<Longrightarrow> Sep_Reflexive (A + B) \<close>
+  unfolding Sep_Reflexive_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. Sep_Reflexive (A x))
+\<Longrightarrow> Sep_Reflexive (ExSet A) \<close>
+  unfolding Sep_Reflexive_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> Sep_Reflexive A
+\<Longrightarrow> Sep_Reflexive B
+\<Longrightarrow> Sep_Reflexive (A \<and>\<^sub>B\<^sub>I B) \<close>
+  unfolding Sep_Reflexive_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> Sep_Reflexive A
+\<Longrightarrow> Sep_Reflexive (A \<s>\<u>\<b>\<j> P) \<close>
+  unfolding Sep_Reflexive_def
+  by clarsimp
 
 
 section \<open>Specification of Monadic States\<close>

@@ -1123,6 +1123,20 @@ Do we really need it?*)
 end
 
 
+
+subsubsection \<open>Seminearing\<close>
+
+lemma [\<phi>reason_template [assertion_simps]]:
+  \<open> Scala_Semimodule_Functor F T D
+\<Longrightarrow> a \<in> D \<and> b \<in> D
+\<Longrightarrow> F a (F b T) = F (b * a) T\<close>
+  unfolding Scala_Semimodule_Functor_def
+  by simp
+
+
+
+
+
 subsubsection \<open>Reasonings in Separation Extraction\<close>
 
 paragraph \<open>Transformation Functor\<close>
@@ -1348,6 +1362,12 @@ declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>rea
 
 
 paragraph \<open>Seminearing\<close>
+
+
+
+
+
+
 
 declare [[\<phi>trace_reasoning = 2]]
 

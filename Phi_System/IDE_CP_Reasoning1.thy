@@ -713,7 +713,7 @@ lemma [\<phi>reason 1000]:
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by clarsimp
 
-lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolon> _) _\<close>]:
+lemma [\<phi>reason no explorative backtrack 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolon> _) _\<close>]:
   \<open> Identity_Element\<^sub>I (z \<Ztypecolon> T) P
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x z
@@ -721,7 +721,7 @@ lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolo
   unfolding Identity_Element\<^sub>I_def Object_Equiv_def Premise_def
   using transformation_trans by fastforce
 
-lemma [\<phi>reason 1 except \<open>Identity_Element\<^sub>E (?var_x \<Ztypecolon> _)\<close>]:
+lemma [\<phi>reason no explorative backtrack 1 except \<open>Identity_Element\<^sub>E (?var_x \<Ztypecolon> _)\<close>]:
   \<open> Identity_Element\<^sub>E (z \<Ztypecolon> T)
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq z x
