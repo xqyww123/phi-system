@@ -755,10 +755,12 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
 
 lemma
-  \<open>Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. \<phi>Fun' (\<psi> a)) Ds Dx (\<lambda>_ _. fst)\<close>
-  unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def
+  \<open> module_L_distr \<psi> Ds (\<lambda>_. True)
+\<Longrightarrow> (\<forall>x. Is_Functional (x \<Ztypecolon> T))
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. (\<Zcomp>\<^sub>f) (\<psi> a)) T Ds (\<lambda>(x,y). x = y \<and> Dx y) (\<lambda>_ _. fst)\<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_L_distr_def Is_Functional_def
   apply clarsimp
-
+apply blast
 
 
 

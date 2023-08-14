@@ -368,22 +368,6 @@ proof
 qed
 
 
-subsubsection \<open>Module Structures for Separation\<close>
-
-text \<open>The right distributivity of a module forms a homomorphism over the group operation,
-  so we don't cover it here.\<close>
-
-locale module_for_sep =
-  fixes smult :: \<open>'s \<Rightarrow> 'a \<Rightarrow> 'a\<close>
-    and Ds :: \<open>'s \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the scalars\<close>
-    and Dx :: \<open>'a \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the separation algebra\<close>
-
-locale module_R_distr = module_for_sep +
-  assumes module_right_distr: \<open>\<lbrakk> Ds r; Ds s; Dx a \<rbrakk> \<Longrightarrow> smult (r + s) a = smult r a * smult s a\<close>
-
-locale module_scalar_assoc = module_for_sep +
-  assumes module_scalar_assoc: \<open>\<lbrakk> Ds r; Ds s; Dx a \<rbrakk> \<Longrightarrow> smult r (smult s a) = smult (r * s) a\<close>
-
 
 
 subsection \<open>Hierarchical Algebra\<close>
@@ -440,11 +424,6 @@ class share = raw_share + \<comment> \<open>share algebra for semigroup, where u
   assumes share_share_assoc0: \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
     and   share_left_one[simp]:  \<open>share 1 x = x\<close>
 
-lemma module_scalar_assoc_share0:
-  \<open>module_scalar_assoc share (\<lambda>n. 0 < n) (\<lambda>x::'a::share. True)\<close>
-  unfolding module_scalar_assoc_def
-  by (simp add: share_share_assoc0)
-
 class share_one = share + one +
   assumes share_right_one[simp]: \<open>share n 1 = 1\<close>
     and   share_left_0[simp]:    \<open>share 0 x = 1\<close>
@@ -452,11 +431,6 @@ begin
 lemma share_share: \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n (share m x) = share (n * m) x\<close>
   using less_eq_rat_def local.share_share_assoc0 by fastforce
 end
-
-lemma module_scalar_assoc_share:
-  \<open>module_scalar_assoc share (\<lambda>n. 0 \<le> n) (\<lambda>x::'a::share_one. True)\<close>
-  unfolding module_scalar_assoc_def
-  by (simp add: share_share)
 
 class share_one_eq_one_iff = share_one +
   assumes share_one_eq_one_iff[simp]: \<open>0 < n \<Longrightarrow> share n x = 1 \<longleftrightarrow> x = 1\<close>
@@ -489,11 +463,6 @@ subclass sep_refl
 
 end
 
-lemma module_R_distr_share_0:
-  \<open>module_R_distr share (\<lambda>n. 0 < n) (\<lambda>x::'a::share_nun_semimodule. x ## x)\<close>
-  unfolding module_R_distr_def
-  by (simp add: share_sep_left_distrib_0)
-
 class share_semimodule = share_sep_disj + share_one + sep_algebra +
   assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
@@ -511,11 +480,6 @@ subclass share_nun_semimodule proof
     by (simp add: local.share_sub)
 qed
 end
-
-lemma module_R_distr_share:
-  \<open>module_R_distr share (\<lambda>n. 0 \<le> n) (\<lambda>x::'a::share_semimodule. x ## x)\<close>
-  unfolding module_R_distr_def
-  by (simp add: share_sep_left_distrib)
 
 class share_semimodule_total = share_one + monoid_mult +
   assumes share_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
@@ -1057,6 +1021,57 @@ subclass partial_add_ab_monoid proof
   show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y ##\<^sub>+ z \<Longrightarrow> x + y + z = x + (y + z)\<close> by force
 qed
 end
+
+subsection \<open>Module Structures for Separation\<close>
+
+text \<open>The right distributivity of a module forms a homomorphism over the group operation,
+  so we don't cover it here.\<close>
+
+locale module_for_sep =
+  fixes smult :: \<open>'s \<Rightarrow> 'a \<Rightarrow> 'a\<close>
+    and Ds :: \<open>'s \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the scalars\<close>
+    and Dx :: \<open>'a \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the separation algebra\<close>
+
+text \<open>Again, we implicitly extend the carrier set to the universe. The scalar multiplication
+  on those 'invalid' elements can be defined as returning to a specific 'zero element' where
+  the multiplication of any scalar on it still returns to itself, so that all the following
+  axioms can be satisfied without any problem.\<close>
+
+locale module_L_distr = module_for_sep +
+  assumes module_right_distr: \<open> \<lbrakk> Ds (s::'s::partial_add_magma); Ds t; s ##\<^sub>+ t; Dx a \<rbrakk>
+                            \<Longrightarrow> smult (s + t) a = smult s a * smult t a \<close>
+
+locale module_scalar_assoc = module_for_sep +
+  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t; Dx a \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (s * t) a\<close>
+
+
+lemma module_scalar_assoc_share0:
+  \<open>module_scalar_assoc share (\<lambda>n. 0 < n) (\<lambda>x::'a::share. True)\<close>
+  unfolding module_scalar_assoc_def
+  by (simp add: share_share_assoc0)
+
+lemma module_scalar_assoc_share:
+  \<open>module_scalar_assoc share (\<lambda>n. 0 \<le> n) (\<lambda>x::'a::share_one. True)\<close>
+  unfolding module_scalar_assoc_def
+  by (simp add: share_share)
+
+instantiation rat :: total_partial_add_ab_monoid
+begin
+definition dom_of_add_rat :: \<open>rat \<Rightarrow> rat \<Rightarrow> bool\<close> where [iff]: \<open>dom_of_add_rat _ _ \<longleftrightarrow> True\<close>
+instance by standard simp
+end
+
+lemma module_L_distr_share:
+  \<open>module_L_distr share (\<lambda>n. 0 \<le> n) (\<lambda>x::'a::share_semimodule. x ## x)\<close>
+  unfolding module_L_distr_def
+  by (simp add: share_sep_left_distrib)
+
+lemma module_L_distr_share_0:
+  \<open>module_L_distr share (\<lambda>n. 0 < n) (\<lambda>x::'a::share_nun_semimodule. x ## x)\<close>
+  unfolding module_L_distr_def
+  by (simp add: share_sep_left_distrib_0)
+
+
 
 
 section \<open>Instances of Algebras\<close>
@@ -2669,14 +2684,6 @@ instance agree :: (type) sep_disj_distrib
 instance agree :: (type) sep_cancel
   by (standard; case_tac a; case_tac c; case_tac b; simp)
 
-
-subsection \<open>Rational Number\<close>
-
-instantiation rat :: total_partial_add_ab_monoid
-begin
-definition dom_of_add_rat :: \<open>rat \<Rightarrow> rat \<Rightarrow> bool\<close> where [iff]: \<open>dom_of_add_rat _ _ \<longleftrightarrow> True\<close>
-instance by standard simp
-end
 
 
 end
