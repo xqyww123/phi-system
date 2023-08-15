@@ -43,7 +43,7 @@ fun guess_property_inhab_tyop upper (phi:phi_type) ctxt =
          NONE :: parse_parameters_of_phi_type T_term, phi, ctxt))
   end
 
-fun guess_property_inhab_atom upper (phi:phi_type) ctxt =
+(*fun guess_property_inhab_atom upper (phi:phi_type) ctxt =
   let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (_,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val idx = phi_maxidx_of phi ~1 + 1
@@ -52,6 +52,7 @@ fun guess_property_inhab_atom upper (phi:phi_type) ctxt =
       val Prop = HOLogic.Trueprop $ (head x_ty model_ty $ T_term $ Var(("P",idx), x_ty --> HOLogic.boolT))
    in Seq.single ([], Prop, NONE :: parse_parameters_of_phi_type T_term, phi, ctxt)
   end
+*)
 
 fun solver upper name (phi,ctxt,sequent) =
   let fun err () = raise Automation_Fail (fn () =>
@@ -95,7 +96,7 @@ fun solver upper name (phi,ctxt,sequent) =
         | inst_Lw _ _ = NONE
 
       fun inst_Lw' context X = case inst_Lw context X of SOME ret => ret
-                                  | NONE => Abs("_", snd var, \<^Const>\<open>True\<close>)
+                                  | NONE => \<^Const>\<open>True\<close>
 
       fun inst_Pr context (Const(\<^const_name>\<open>conj\<close>, _) $ A $ B)
             = binop \<^Const>\<open>HOL.disj\<close> (inst_Pr context A, inst_Pr context B)
@@ -112,7 +113,7 @@ fun solver upper name (phi,ctxt,sequent) =
         | inst_Pr _ _ = NONE
 
       fun inst_Pr' context X = case inst_Pr context X of SOME ret => ret
-                                  | NONE => Abs("_", snd var, \<^Const>\<open>False\<close>)
+                                  | NONE => \<^Const>\<open>False\<close>
 
   in case Thm.prop_of sequent
        of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _)
@@ -129,9 +130,9 @@ fun solver upper name (phi,ctxt,sequent) =
 
 fun gen_inhab upper (der_id, name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val guess_property = (if is_Type_Opr (Term.fastype_of (#term phi0))
+      val guess_property = guess_property_inhab_tyop upper (*(if is_Type_Opr (Term.fastype_of (#term phi0))
                             then guess_property_inhab_tyop
-                            else guess_property_inhab_atom) upper
+                            else guess_property_inhab_atom) upper*)
       val mode_infer = not (is_some hint0)
 
       val parse_hint = parse_hint_has_type_only (

@@ -2225,16 +2225,17 @@ lemma \<phi>TA_IsFunc_rule:
 
 lemma \<phi>TA_IsFunc_rewr:
   \<open> Trueprop (Ant \<longrightarrow> cond \<longrightarrow> Is_Functional S @action Any)
- \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)) \<close>
+ \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> Is_Functional S) \<close>
   unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
 
+(*
 lemma \<phi>TA_IsFunc_rewr_ants:
   \<open>Is_Functional S \<equiv> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v)\<close>
-  unfolding Premise_def Is_Functional_def by simp
-                                        
+  unfolding Premise_def Is_Functional_def by simp*)
+
 ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 
-\<phi>property_deriver Is_Functional 100 for (\<open>Is_Functional (_ \<Ztypecolon> _)\<close>)
+\<phi>property_deriver Functionality 100 for (\<open>Functionality _ _\<close>)
     = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
 
 

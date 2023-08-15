@@ -174,8 +174,21 @@ definition Is_Functional :: \<open>'a BI \<Rightarrow> bool\<close>
 
 definition Functionality :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Functionality T p \<longleftrightarrow> (\<forall>x u v. p x \<and> u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v)\<close>
+  \<comment> \<open>A lower bound of the set in which \<phi>-type assertions are functional\<close>
 
-declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightarrow> \<open>Is_Functional ?S\<close> (100)]]
+declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightarrow> \<open>Is_Functional ?S\<close> (100)
+                              and \<open>Functionality ?T _\<close> \<Rightarrow> \<open>Functionality ?T _\<close> (100)]]
+
+lemma Is_Functional_premise_extraction:
+  \<open>Is_Functional S \<equiv> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) \<and> True\<close>
+  unfolding Is_Functional_def atomize_eq
+  by blast
+
+lemma Functionality_premise_extraction:
+  \<open>Functionality T P \<equiv> (\<forall>x u v. P x \<and> u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v) \<and> True\<close>
+  unfolding Functionality_def atomize_eq
+  by blast
+  
 
 (* lemma Is_Functional_alt:
   \<open>Is_Functional S \<longleftrightarrow> (S = {} \<or> (\<exists>x. S = {x}))\<close>
@@ -221,6 +234,12 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Is_Functional B
 \<Longrightarrow> Is_Functional (A \<and>\<^sub>B\<^sub>I B) \<close>
   unfolding Is_Functional_def
+  by simp
+
+lemma [\<phi>reason 1200]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Is_Functional S)
+\<Longrightarrow> Is_Functional (S \<s>\<u>\<b>\<j> P) \<close>
+  unfolding Is_Functional_def Premise_def
   by simp
 
 lemma [\<phi>reason 1200]:

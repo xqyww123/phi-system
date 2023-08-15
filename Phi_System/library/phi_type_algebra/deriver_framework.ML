@@ -419,6 +419,9 @@ fun gen_guess_operator mk_term is_live mk_operator_for_dead atom_opr =
           of [] => (
             case x_ty
               of Type(Tname, Targs) =>
+                 if Sign.arity_number (Proof_Context.theory_of ctxt) Tname = 0
+                 then Seq.single (mk_operator_for_dead x_ty ctxt)
+                 else
                    let val bnf = eBNF_Info.get_bnf1 (Context.Proof ctxt) Tname
                        val (D,L) = eBNF_Info.classify_bnf_dead_live bnf Targs
                     in mk_term (ctxt, D, L, bnf)
