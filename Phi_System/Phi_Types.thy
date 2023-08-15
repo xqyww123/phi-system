@@ -33,7 +33,6 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Basic
-       and Abstract_Domain\<^sub>L
        (*and Is_Functional *)
        and Open_Abstraction_Full
 
@@ -394,7 +393,7 @@ ML_file \<open>library/phi_type_algebra/sigma_single_point.ML\<close>
 
 \<phi>property_deriver Trivial_\<Sigma> 130 for ( \<open>Trivial_\<Sigma> _ _ _ _ _\<close> )
   requires Warn_if_contains_Sat
-    = \<open> Phi_Type_Algebra_Derivers.sigma_trivial_homomorphism false \<close>
+    = \<open> Phi_Type_Algebra_Derivers.sigma_trivial_homomorphism \<close>
 
 hide_fact \<phi>TA_SgH_T_intro' \<phi>TA_SgH_T_intro \<phi>TA_SgH_rewr_C \<phi>TA_SgH_rewr_IH \<phi>TA_SgH_rule
 
@@ -754,7 +753,6 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Basic
        and \<open> homo_one f \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
        and \<open> homo_one f \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
-       and Abstract_Domain\<^sub>L
        (*and Is_Functional*)
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
@@ -858,7 +856,6 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
-       and Abstract_Domain\<^sub>L
        (*and Is_Functional*)
        and Open_Abstraction_Full
        and Functional_Transformation_Functor
@@ -882,7 +879,6 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
   deriving Basic
-       and Abstract_Domain\<^sub>L
        (*and Is_Functional*)
        and Open_Abstraction_Full
        and Identity_Element
@@ -1012,7 +1008,6 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Itself)\<close>
   deriving Basic
-       and Abstract_Domain\<^sub>L
   
 
 (*
@@ -1027,7 +1022,6 @@ lemma [\<phi>reason 10000]:
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
-       and Abstract_Domain\<^sub>L
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
@@ -1185,7 +1179,6 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (push_map k \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
-       and Abstract_Domain\<^sub>L
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo

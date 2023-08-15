@@ -503,14 +503,6 @@ ML_file \<open>library/phi_type_algebra/properties.ML\<close>
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
 
-
-
-
-
-
-
-
-
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
 term \<open>HOL.eq\<close>
 
@@ -1797,9 +1789,10 @@ ML_file \<open>library/phi_type_algebra/deriver_framework.ML\<close>
 
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
-\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn [] => fn phi => fn thy => (
+\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn quiet => fn [] => fn phi => fn thy => (
   if Phi_Type_Algebra.is_Type_Opr (Term.fastype_of (#term phi)) andalso
-     Phi_Type_Algebra.def_contains_satisfaction phi
+     Phi_Type_Algebra.def_contains_satisfaction phi andalso
+     not quiet
   then warning ("The \<phi>-type definition contains satisfaction operator (\<Turnstile>).\n\
                 \When a \<phi>-type is specified by satisfaction in a boolean assertion, it looses the ability to guide the reasoning.\n\
                 \The deriving may fail. It is recommended to use composition operator (\<Zcomp>) to replace the (\<Turnstile>) if possible.")
@@ -1855,13 +1848,15 @@ ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
 (*hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step*)
 
-\<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> ) = \<open>
-  Phi_Type_Algebra_Derivers.abstract_domain false
+
+\<phi>property_deriver Abstract_Domain\<^sub>L 89 for ( \<open>Abstract_Domain\<^sub>L _ _\<close> ) = \<open>
+  Phi_Type_Algebra_Derivers.abstract_domain_L
 \<close>
 
-\<phi>property_deriver Abstract_Domain\<^sub>L 90 for ( \<open>Abstract_Domain\<^sub>L _ _\<close> ) = \<open>
-  Phi_Type_Algebra_Derivers.abstract_domain_L false
+\<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> ) requires Abstract_Domain\<^sub>L ? = \<open>
+  Phi_Type_Algebra_Derivers.abstract_domain
 \<close>
+
 
 
 subsubsection \<open>Identity Element Intro \& Elim\<close>
@@ -1911,11 +1906,11 @@ hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
 
 \<phi>property_deriver Identity_Element\<^sub>I 101 for (\<open>Identity_Element\<^sub>I _ _\<close>)
     requires Warn_if_contains_Sat
-  = \<open>Phi_Type_Algebra_Derivers.identity_element_I false\<close>
+  = \<open>Phi_Type_Algebra_Derivers.identity_element_I\<close>
 
 \<phi>property_deriver Identity_Element\<^sub>E 102 for (\<open>Identity_Element\<^sub>E _\<close>)
     requires Warn_if_contains_Sat
-  = \<open>Phi_Type_Algebra_Derivers.identity_element_E false\<close>
+  = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
 
 \<phi>property_deriver Identity_Element 103 requires Identity_Element\<^sub>I and Identity_Element\<^sub>E
 
@@ -1998,14 +1993,11 @@ hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_
           Object_Equiv_rule_move_all2 Object_Equiv_rule_move_set_eq
           Object_Equiv_rule_move_set_eq_end *)
 
-\<phi>property_deriver Object_Equiv\<^sub>O 105 = \<open>
-     Phi_Type_Algebra_Derivers.object_equiv_singular false
-\<close>
+\<phi>property_deriver Object_Equiv\<^sub>O 104
+  = \<open>Phi_Type_Algebra_Derivers.object_equiv_singular\<close>
 
-\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) = \<open>fn Hs => fn phi =>
-     Phi_Type_Algebra_Derivers.object_equiv false Hs phi
-  #> null Hs ? Phi_Type_Algebra_Derivers.object_equiv_singular true [] phi
-\<close>
+\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) requires Object_Equiv\<^sub>O?
+  = \<open>Phi_Type_Algebra_Derivers.object_equiv\<close>
 
 \<phi>property_deriver Basic 109 requires Object_Equiv and Abstract_Domain
 
@@ -2057,13 +2049,13 @@ lemma \<phi>TA_FTF_rule:
 ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 
 \<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.transformation_functor false
+  Phi_Type_Algebra_Derivers.transformation_functor
 \<close>
 
 \<phi>property_deriver Functional_Transformation_Functor 111
   for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>)
   requires Transformation_Functor
-    = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor false\<close>
+    = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor\<close>
 
 (* TODO:
 hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr_IH \<phi>TA_TF_rewr_C \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
@@ -2176,15 +2168,14 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
           \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.separation_homo_I false
+  Phi_Type_Algebra_Derivers.separation_homo_I
 \<close>
 
 \<phi>property_deriver Separation_Homo\<^sub>E 121 for (\<open>Separation_Homo\<^sub>E _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.separation_homo_E false
+  Phi_Type_Algebra_Derivers.separation_homo_E
 \<close>
 
-\<phi>property_deriver Separation_Homo 122
-  requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E = \<open>K (K I)\<close>
+\<phi>property_deriver Separation_Homo 122 requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E
 
 
 
@@ -2215,7 +2206,7 @@ ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
                                                 | \<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>
                                                 | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
-    = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction false \<close>
+    = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction \<close>
 
 
 
@@ -2244,7 +2235,7 @@ lemma \<phi>TA_IsFunc_rewr_ants:
 ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 
 \<phi>property_deriver Is_Functional 100 for (\<open>Is_Functional (_ \<Ztypecolon> _)\<close>)
-    = \<open> Phi_Type_Algebra_Derivers.is_functional false \<close>
+    = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
 
 
 
@@ -2303,7 +2294,7 @@ lemma derive_\<A>SE_trim_E_TH:
 ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
 
 \<phi>property_deriver SE_Trim_Empty 110
-    = \<open> K (Phi_Type_Algebra_Derivers.SE_Trim_Empty false) \<close>
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.SE_Trim_Empty quiet) \<close>
 
 lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.SE_Trim_Empty__generation_pass\<close>] =
           derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH

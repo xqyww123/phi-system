@@ -56,11 +56,18 @@ val get_type_info : Context.generic -> string (*const name*) -> phi_type option
 (** Property Deriver from \<phi>-Type Definition **)
 type priority = int
 type deriver_name = string
+type is_weak = bool
+type quiet = bool (*report nothing even when fail*)
 type derive = phi_type -> generic_theory -> generic_theory
 type deriver = {
   priority: priority,
-  dependences: deriver_name list,
-  derive: hint list -> derive
+  dependences: (deriver_name * is_weak) list,
+      (*a weak dependency is invoked in quiet mode, meaning no error will be reported on failure,
+        and not activated when any hint is given to the deriver depending on the weak dependency.
+        Once users give an annotation, every implicit behavior is revoked, and this is the only
+        way to revoke the implicit behavior.
+        Users may declare a weak dependency by append a question mark after the dependency name.*)
+  derive: quiet -> hint list -> derive
 }
 
 val get_deriver : Context.generic -> deriver_name -> deriver
@@ -76,11 +83,11 @@ exception Unknown_Hint of term
 val match_deriver1 : Context.generic -> hint -> deriver_name * deriver
 
 structure Derivings : TABLE
-type derivings = (hint list * deriver) Derivings.table
+type derivings = (hint list * deriver * is_weak) Derivings.table
 val add_deriver : hint list * (deriver_name * deriver) -> derivings -> derivings
 val add_derivers_from_hint : Context.generic -> hint -> derivings -> derivings
 
-val add_deriver_dependences : Context.generic -> deriver_name list -> derivings -> derivings
+val add_deriver_dependences : bool -> Context.generic -> (deriver_name * is_weak) list -> derivings -> derivings
 val complete_deriver_dependences : Context.generic -> derivings -> derivings
 
 val report_potential_failure_reason : (unit -> Pretty.T) list -> unit
@@ -140,7 +147,7 @@ val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*x*) * typ 
 
 (* Internal Technical stuffs *)
 
-val ML_sender : (hint list -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
+val ML_sender : (quiet -> hint list -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
 
 end
 
@@ -338,10 +345,12 @@ fun fix_phi_term_params phi_term ctxt =
 type priority = int
 type deriver_name = string
 type derive = phi_type -> generic_theory -> generic_theory
+type is_weak = bool
+type quiet = bool
 type deriver = {
   priority: priority,
-  dependences: deriver_name list,
-  derive: hint list -> derive
+  dependences: (deriver_name * is_weak) list,
+  derive: quiet -> hint list -> derive
 }
 
 structure Derivers = Generic_Data (
@@ -351,7 +360,7 @@ structure Derivers = Generic_Data (
 )
 
 structure Derivings = Table (type key = priority * deriver_name; val ord = prod_ord int_ord string_ord)
-type derivings = (hint list * deriver) Derivings.table
+type derivings = (hint list * deriver * is_weak) Derivings.table
 
 type pattern = term
 structure Deriver_Bindings = Generic_Data (
@@ -363,7 +372,7 @@ structure Deriver_Bindings = Generic_Data (
 fun chk_deriver ctxt (derv : deriver) =
   let val names = Derivers.get ctxt
    in #dependences derv
-   |> map (Name_Space.get names)
+   |> map (Name_Space.get names o fst)
    |> forall (fn der' => #priority derv > #priority der')
    |> (fn true => derv
         | false => error "The priority of the deriver must be larger than its dependences.")
@@ -407,26 +416,37 @@ fun match_deriver1 ctxt term =
      | NONE => raise Unknown_Hint term
 
 fun add_deriver (hints,(derv_name, derv)) dervs =
-  Derivings.map_default ((#priority derv, derv_name), ([],derv))
-                        (fn (hints', der') => (hints @ hints', der')) dervs
+  Derivings.map_default ((#priority derv, derv_name), ([],derv, false))
+                        (fn (hints', der', _) => (hints @ hints', der', false)) dervs
 
 fun add_derivers_from_hint ctxt hint ders =
   add_deriver ([hint], match_deriver1 ctxt (Logic.strip_imp_concl hint)) ders
 
-fun add_deriver_dependences _ [] dervs = dervs
-  | add_deriver_dependences ctxt (dep::remain_deps) dervs =
-      if Derivings.exists (fn ((_,name),_) => name = dep) dervs
-      then add_deriver_dependences ctxt remain_deps dervs
-      else let val derv = get_deriver ctxt dep
-            in dervs
-            |> Derivings.update_new ((#priority derv, dep), ([], derv))
-            |> add_deriver_dependences ctxt (#dependences derv)
-            |> add_deriver_dependences ctxt remain_deps
-           end
+fun add_deriver_dependences _ _ [] dervs = dervs
+  | add_deriver_dependences count_weak ctxt deps dervs =
+      let val derivers = deriver_name_space ctxt
+          fun add [] dervs = dervs
+            | add ((dep,is_weak)::remain_deps) dervs =
+                if is_weak andalso not count_weak
+                then dervs
+                else let val derv = Name_Space.get derivers dep
+                         val key = (#priority derv, dep)
+                      in(case Derivings.lookup dervs key
+                      of SOME (hints, deriver, is_weak') =>
+                            if is_weak' = (is_weak' andalso is_weak)
+                            then dervs
+                            else Derivings.update (key, (hints, deriver, is_weak' andalso is_weak)) dervs
+                                    |> add (#dependences derv)
+                       | NONE => Derivings.update_new (key, ([], derv, is_weak)) dervs
+                                    |> add (#dependences derv)
+                       ) |> add remain_deps
+                     end
+       in add deps dervs
+      end
 
 fun complete_deriver_dependences ctxt dervs =
-  Derivings.fold (fn (_,(_,derv)) =>
-      add_deriver_dependences ctxt (#dependences derv)) dervs dervs
+  Derivings.fold (fn (_,(hints,derv,_)) =>
+      add_deriver_dependences (null hints) ctxt (#dependences derv)) dervs dervs
 
 (* Deriving *)
 
@@ -456,9 +476,9 @@ fun report_potential_failure_reason G =
 fun derive_properties dervs phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
-  |> Derivings.fold (fn ((_,name),(hints,derv)) => fn ctxt => (
+  |> Derivings.fold (fn ((_,name),(hints,derv,is_weak)) => fn ctxt => (
       Thread_Data.put reason_of_deriving_fails (SOME []) ;
-      #derive derv hints phityp ctxt
+      #derive derv is_weak hints phityp ctxt
       handle Automation_Fail msg => err_derive name (msg ()) hints)
      ) dervs
   |> Context_Position.restore_visible_generic thy
@@ -576,10 +596,11 @@ fun check_deriving_ast ctxt derv_ast =
 (* Interface for Deriver *)
 
 val ML_sender_locker = Synchronized.var "\<phi>TA.ML_sender_locker" ()
-val ML_sender : (hint list -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
+val ML_sender : (quiet -> hint list -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
   = Unsynchronized.ref NONE
 
-val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |-- Parse.and_list (Scan.repeat deriving_name) >> flat) []
+val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |--
+                            Parse.and_list (Scan.repeat (deriving_name -- Scan.optional (\<^keyword>\<open>?\<close> >> K true) false)) >> flat) []
 val patterns_parse = Scan.optional (\<^keyword>\<open>for\<close> |-- \<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> ) []
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<close>
           "declare deriver deriving properties when defining a \<phi>-type"
@@ -590,17 +611,17 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
             case ML' of SOME ML =>
                 let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := SOME ((" @
                                ML_Lex.read_source ML @
-                               ML_Lex.read "): Phi_Type_Algebra.hint list -> Phi_Type_Algebra.derive)"
+                               ML_Lex.read "): Phi_Type_Algebra.quiet -> Phi_Type_Algebra.hint list -> Phi_Type_Algebra.derive)"
                  in Synchronized.change_result ML_sender_locker (fn () => let
                       val _ = ML_Context.expression (Input.pos_of ML) expr (Context.Theory thy)
                       val ret = the (!ML_sender)
                        in (ret, ML_sender := NONE)
                       end)
                 end
-              | NONE => K (K I)
+              | NONE => K (K (K I))
        val deriver = {
           priority = priority,
-          dependences = map (fn dep => fst (check_deriver (Context.Theory thy) dep)) deps,
+          dependences = map (apfst (fst o check_deriver (Context.Theory thy))) deps,
           derive = derive
         } : deriver
        val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern (Proof_Context.init_global thy)
