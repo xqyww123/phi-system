@@ -62,8 +62,6 @@ declare [[\<phi>trace_reasoning = 0]]
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T) P) \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q) (Q \<and> P)\<close>
-       and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. P x \<and> Q) \<close>
-       and \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. P x \<and> Q) \<close>
        (*and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>*)
        and Open_Abstraction_Full
        and Identity_Element
@@ -124,8 +122,6 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Dependent Sum Type\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
   independently with the element. It seems to be a limitation. For example, we want to transform
   a list of unknown bit-length numbers \<open>l \<Ztypecolon> List T\<close> where \<open>x \<Ztypecolon> T \<equiv> (x \<Ztypecolon> \<nat>[b] \<s>\<u>\<b>\<j> b. x < 2^b)\<close>
@@ -133,14 +129,11 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-               
+                 
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
   
-  deriving \<open>(\<And>\<sigma>. Abstract_Domain (T \<sigma>) (P \<sigma>))
-        \<Longrightarrow> Abstract_Domain (\<phi>Dependent_Sum T) (\<lambda>(\<sigma>,x). P \<sigma> x) \<close>
-    and    \<open>(\<And>\<sigma>. Abstract_Domain\<^sub>L (T \<sigma>) (P \<sigma>))
-        \<Longrightarrow> Abstract_Domain\<^sub>L (\<phi>Dependent_Sum T) (\<lambda>(\<sigma>,x). P \<sigma> x) \<close>
+  deriving Abstract_Domain
     and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
     and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
@@ -747,7 +740,7 @@ subsection \<open>Vertical Composition of Function\<close>
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-   
+         
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   deriving Basic
@@ -973,7 +966,7 @@ thm list_all2_lengthD
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 0]]
-                                                                             
+                                                                                  
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -1308,8 +1301,6 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Basic
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
-       and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (n \<odiv> T) (\<lambda>x. P x \<and> 0 < n)\<close>
-       and \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (n \<odiv> T) (\<lambda>x. P x \<and> 0 < n)\<close>
        (*and Is_Functional*)
        and Functional_Transformation_Functor
        (*and Open_Abstraction_Full *)

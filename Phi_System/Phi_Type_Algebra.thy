@@ -2231,7 +2231,7 @@ lemma \<phi>TA_IsFunc_rewr:
 lemma \<phi>TA_IsFunc_rewr_ants:
   \<open>Is_Functional S \<equiv> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v)\<close>
   unfolding Premise_def Is_Functional_def by simp
-
+                                        
 ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 
 \<phi>property_deriver Is_Functional 100 for (\<open>Is_Functional (_ \<Ztypecolon> _)\<close>)
@@ -2460,6 +2460,13 @@ lemma Set_bind_insert[simp, \<phi>constraint_expansion for set]:
   unfolding Set.bind_def
   by auto
 
+
+subsubsection \<open>Production\<close>
+
+lemma [\<phi>constraint_expansion, simp]:
+  \<open>pred_prod (\<lambda>a. True) P x \<longleftrightarrow> P (snd x)\<close>
+  \<open>pred_prod Q (\<lambda>a. True) x \<longleftrightarrow> Q (fst x)\<close>
+  by (cases x; simp)+
 
 end
                                                           

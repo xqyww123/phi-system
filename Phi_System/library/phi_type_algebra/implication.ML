@@ -29,14 +29,17 @@ fun guess_property_inhab_tyop upper (phi:phi_type) ctxt =
                               else \<^Const>\<open>Abstract_Domain\<^sub>L x m\<close>
       val ants = map2 (fn ((rev_args, x, m), T'h) => fn (_, pred) =>
             let val arity = length rev_args
-                val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - i)) rev_args T'h
+                val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - 1 - i)) rev_args T'h
              in head x m $ T' $ pred
              |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs("A", ty, X)) rev_args
             end
           ) T_params preds
+      val idx = phi_maxidx_of phi ~1 + 1
+      val Pvar = Var(("P",idx), x_ty --> HOLogic.boolT)
    in guess_predicate ctxt preds x_ty
    |> Seq.map (fn (pred, ctxt) =>
-        (ants, HOLogic.Trueprop $ (head x_ty model_ty $ T_term $ pred),
+        (ants, HOLogic.Trueprop $ (head x_ty model_ty $ T_term $
+                  (Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (Pvar $ Bound 0) $ (pred $ Bound 0)))),
          NONE :: parse_parameters_of_phi_type T_term, phi, ctxt))
   end
 
@@ -56,6 +59,10 @@ fun solver upper name (phi,ctxt,sequent) =
                                      \the expression of the implied pure fact from it."])
       val var = case Thm.concl_of sequent
                   of _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $ Var v) => v
+                   | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
+                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound 0) $ _)) => v
+                   | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
+                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Var v $ _)) => v
                    | _ => err ()
 
       fun binop H (SOME sa, SOME sb) = SOME (H $ sa $ sb)
@@ -73,14 +80,18 @@ fun solver upper name (phi,ctxt,sequent) =
             = binop \<^Const>\<open>HOL.disj\<close> (inst_Lw context X, inst_Lw context Y)
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>All\<close>, _) $ Abs (N,ty,X))
             = inst_Lw ((N,ty)::vars, map (Term.incr_boundvars 1) prems) X
-        | inst_Lw (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ (P as Var v $ Bound j) $ X)
-            = if var = v
-              then fold (fn prem => fn X => \<^Const>\<open>HOL.implies\<close> $ prem $ X) prems X
-                |> quantifies j vars
-                |> SOME
-              else inst_Lw (vars, P::prems) X
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
-            = inst_Lw (vars, P::prems) X
+            = let fun meet v j = if var = v
+                                 then fold (fn prem => fn X => \<^Const>\<open>HOL.implies\<close> $ prem $ X) prems X
+                                  |> quantifies j vars
+                                  |> SOME
+                                 else inst_Lw (vars, P::prems) X
+               in case P
+               of Var v $ Bound j => meet v j
+                | Var v => meet v ~1
+                | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound j) $ _ => meet v j
+                | _ => inst_Lw (vars, P::prems) X
+              end
         | inst_Lw _ _ = NONE
 
       fun inst_Lw' context X = case inst_Lw context X of SOME ret => ret
@@ -94,8 +105,10 @@ fun solver upper name (phi,ctxt,sequent) =
             = inst_Pr ((N,ty)::vars, map (Term.incr_boundvars 1) prems) X
         | inst_Pr (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
             = inst_Pr (vars, P::prems) X
-        | inst_Pr (vars,prems) (Var (v as (("P",_),_)) $ Bound j)
+        | inst_Pr (vars,prems) (Var v $ Bound j)
             = if v = var then SOME (quantifies j vars (Phi_Help.list_mk_conj prems)) else NONE
+        | inst_Pr (vars,prems) (Var v)
+            = if v = var then SOME (quantifies ~1 vars (Phi_Help.list_mk_conj prems)) else NONE
         | inst_Pr _ _ = NONE
 
       fun inst_Pr' context X = case inst_Pr context X of SOME ret => ret
@@ -104,7 +117,10 @@ fun solver upper name (phi,ctxt,sequent) =
   in case Thm.prop_of sequent
        of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _)
             $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ X)) $ _
-            => let val X' = Abs ("x", domain_type (snd var), (if upper then inst_Pr' else inst_Lw') ([],[]) X)
+            => let val X'1 = (if upper then inst_Pr' else inst_Lw') ([],[]) X
+                   val X' = case snd var
+                              of \<^Type>\<open>fun D _\<close> => Abs ("x", D, X'1)
+                               | _ => X'1
                 in SOME (Thm.instantiate (TVars.empty, Vars.make [(var, Thm.cterm_of ctxt X')]) sequent
                       |> oblg_solver (#proof_id phi ^ "/" ^ name) ctxt)
                end
@@ -116,7 +132,7 @@ fun gen_inhab upper (der_id, name) hint0 (phi0 : phi_type) thy =
       val guess_property = (if is_Type_Opr (Term.fastype_of (#term phi0))
                             then guess_property_inhab_tyop
                             else guess_property_inhab_atom) upper
-      val mode_infer = not (is_some hint0 orelse is_Type_Opr (Term.fastype_of (#term phi0)))
+      val mode_infer = not (is_some hint0)
 
       val parse_hint = parse_hint_has_type_only (
               fn Const(\<^const_name>\<open>Abstract_Domain\<close>, _) $ T $ _ => T

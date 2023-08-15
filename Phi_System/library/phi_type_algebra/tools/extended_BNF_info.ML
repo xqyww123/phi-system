@@ -461,9 +461,11 @@ fun global_simps_of_rel (BNF bnf) = [BNF_Def.rel_eq_of_bnf (g_bnf bnf)]
   | global_simps_of_rel (qBNF bnf)= [#rel_eq bnf]
 fun global_simps_of_rel_safe bnf = global_simps_of_rel bnf handle Automation_Fail _ => []
 
-fun simps_of_pred (BNF bnf) = #pred_injects (#fp_bnf_sugar (g_fp bnf))
+fun simps_of_pred (BNF (_,bnf,fp,_,_)) =
+        the_default [] (Option.map (#pred_injects o #fp_bnf_sugar) fp)
+      @ the_default [] (Option.map (single o BNF_Def.pred_True_of_bnf) bnf)
   | simps_of_pred (qBNF bnf) = #pred_injects bnf @ #pred_simps bnf
-fun simps_of_pred_safe bnf = simps_of_pred bnf handle Automation_Fail _ => []
+val simps_of_pred_safe = simps_of_pred
 
 fun simps_of_map (BNF bnf) = #map_thms (#fp_bnf_sugar (g_fp bnf))
                            @ #map_disc_iffs (#fp_bnf_sugar (g_fp bnf))

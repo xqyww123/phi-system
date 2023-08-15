@@ -472,30 +472,29 @@ val contract_premise_imp' =
     @{lemma \<open>(P \<and> A \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (A &&& PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
             by (rule, (simp add: Premise_def conjunction_imp)+)}
 
+(*the term must be beta-eta normalized*)
 fun obligation_collect ctxt filter =
   let fun conv ctm =
-        Phi_Help.lambda_normalization_conv (fn ctm =>
-          case Thm.term_of ctm
-            of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-                  Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
-             | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
-                 =>(case filter ctxt (Thm.dest_arg1 ctm)
-                      of SOME NONE => (*A normal premises using the normal rule*)
-                           (Conv.implies_conv
-                              (Phi_Conv.atomize_conv ctxt then_conv
-                               Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
-                                                                        Premise_def[where mode=MODE_SIMP]})
-                              conv then_conv
-                            Conv.rewr_conv contract_premise_imp) ctm
-                       | SOME (SOME rule) => (*Not a direct premise but still has something can be extracted
-                                               so we apply the given rule to extract*)
-                           (Conv.implies_conv (Conv.rewr_conv rule) conv then_conv
-                            Conv.rewr_conv contract_premise_imp') ctm
-                       | NONE => (*Just waste*)
-                           (Conv.arg_conv conv then_conv
-                            Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm)
-             | _ => raise CTERM ("unexpected proof obligation form", [ctm])
-        ) ctm
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+                Conv.rewr_conv @{thm True_implies_equals[symmetric]} ctm
+           | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
+               =>(case filter ctxt (Thm.dest_arg1 ctm)
+                    of SOME NONE => (*A normal premises using the normal rule*)
+                         (Conv.implies_conv
+                            (Phi_Conv.atomize_conv ctxt then_conv
+                             Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
+                                                                      Premise_def[where mode=MODE_SIMP]})
+                            conv then_conv
+                          Conv.rewr_conv contract_premise_imp) ctm
+                     | SOME (SOME rule) => (*Not a direct premise but still has something can be extracted
+                                             so we apply the given rule to extract*)
+                         (Conv.implies_conv (Conv.rewr_conv rule) conv then_conv
+                          Conv.rewr_conv contract_premise_imp') ctm
+                     | NONE => (*Just waste*)
+                         (Conv.arg_conv conv then_conv
+                          Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm)
+           | _ => raise CTERM ("unexpected proof obligation form", [ctm])
    in conv
   end
 
@@ -530,50 +529,55 @@ fun obligation_conv_all ctxt ctm =
      | _ => raise CTERM ("internal bug 6733574a-42dc-4592-a08e-ddc223bb6b94", [ctm])
   ) ctm
 
-fun obligation_intro_Ex_conv conv_schematic ctxt thm =
-  Phi_Help.lambda_normalization_rule (fn thm =>
-    let fun dest' (\<^Const>\<open>Pure.imp\<close> $ (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (
-                        Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ P)) $ Q) = (P,Q)
-          | dest' tm = raise TERM ("obligation_intro_Ex", [tm])
-        fun dest ctm = dest' (Thm.term_of ctm)
-        (*fun dest_c ctm =
-              (dest ctm; (Thm.dest_arg (Thm.dest_arg1 ctm), Thm.dest_arg ctm))*)
-  
-        val (P,Q) = dest (Thm.cprop_of thm)
-        val vars = Term.add_vars Q []
-        fun collect_var ret (Var v) = if member (op =) vars v then ret
-                                      else insert (op =) v ret
-          | collect_var ret (A $ B) = collect_var (collect_var ret A) B
-          | collect_var ret (Abs(_,_,X)) = collect_var ret X
-          | collect_var ret _ = ret
-        val vars' = collect_var [] P
-                  |> map (fn (N,T) => Thm.var (N, Thm.ctyp_of ctxt T))
-        val mode = conv_schematic = 2
-        val contract_Ex_rule = if mode then @{thm' contract_intro_sp_Ex}
-                                       else @{thm' contract_intro_Ex}
-     (* val mv_Ex_All = if mode then Phi_Conv.move_sp_Ex_inside_All_recursive
-                                else Phi_Conv.move_Ex_inside_All_recursive
-        val mv_Ex_Disj = if mode then Phi_Conv.move_sp_Ex_downto_Disj_recursive
-                                 else Phi_Conv.move_Ex_downto_Disj_recursive *)
-        fun intro_Ex v thm =
-              Conv.fconv_rule (
-                  Conv.rewr_conv contract_Ex_rule then_conv (
-                  if mode
-                  then Phi_Conv.leading_antecedent_conv (
-                      PLPR_Syntax.premise_tag_conv (
-                        (fn ctm => Phi_Conv.move_sp_Ex_inside (K Conv.all_conv) ctxt ctm)
-                        (*mv_Ex_All (fn _ => mv_Ex_Disj Conv.all_conv) ctxt*) )
-                    )
-                  else Conv.all_conv)
-              ) (Thm.forall_intr v thm)
-     in fold intro_Ex vars' thm
-    end
-  ) thm
+fun obligation_intro_Ex_conv conv_schematic ctxt thm0 =
+  let val thm = Phi_Help.beta_eta_contract thm0
+             |> (fn th => if null (Thm.tpairs_of th) then th
+                          else case Seq.chop 2 (Thm.flexflex_rule (SOME ctxt) th)
+                                 of ([th'], _) => th'
+                                  | _ => th (*fails to solving flex-flex*))
+      fun dest' (\<^Const>\<open>Pure.imp\<close> $ (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (
+                      Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ P)) $ Q) = (P,Q)
+        | dest' tm = raise TERM ("obligation_intro_Ex", [tm])
+      fun dest ctm = dest' (Thm.term_of ctm)
+      (*fun dest_c ctm =
+            (dest ctm; (Thm.dest_arg (Thm.dest_arg1 ctm), Thm.dest_arg ctm))*)
+
+      val (P,Q) = dest (Thm.cprop_of thm)
+      val vars = Term.add_vars Q []
+              |> fold (fn (A,B) => Term.add_vars A o Term.add_vars B) (Thm.tpairs_of thm)
+      fun collect_var ret (Var v) = if member (op =) vars v then ret
+                                    else insert (op =) v ret
+        | collect_var ret (A $ B) = collect_var (collect_var ret A) B
+        | collect_var ret (Abs(_,_,X)) = collect_var ret X
+        | collect_var ret _ = ret
+      val vars' = collect_var [] P
+                |> map (fn (N,T) => Thm.var (N, Thm.ctyp_of ctxt T))
+      val mode = conv_schematic = 2
+      val contract_Ex_rule = if mode then @{thm' contract_intro_sp_Ex}
+                                     else @{thm' contract_intro_Ex}
+   (* val mv_Ex_All = if mode then Phi_Conv.move_sp_Ex_inside_All_recursive
+                              else Phi_Conv.move_Ex_inside_All_recursive
+      val mv_Ex_Disj = if mode then Phi_Conv.move_sp_Ex_downto_Disj_recursive
+                               else Phi_Conv.move_Ex_downto_Disj_recursive *)
+      fun intro_Ex v thm =
+            Conv.fconv_rule (
+                Conv.rewr_conv contract_Ex_rule then_conv (
+                if mode
+                then Phi_Conv.leading_antecedent_conv (
+                    PLPR_Syntax.premise_tag_conv (
+                      (fn ctm => Phi_Conv.move_sp_Ex_inside (K Conv.all_conv) ctxt ctm)
+                      (*mv_Ex_All (fn _ => mv_Ex_Disj Conv.all_conv) ctxt*) )
+                  )
+                else Conv.all_conv)
+            ) (Thm.forall_intr v thm)
+   in fold intro_Ex vars' thm
+  end
 
 type contraction_mode = bool * bool * int
 fun chk_option ctxt (a,b,~1) = (a,b,Config.get ctxt existential_obligation)
   | chk_option _ option = option
 
+(*the leading antecedent must be beta-eta normalized*)
 fun collect_obligation_premises option ctxt thm = let open Conv
   val (collect_premises,conv_all,conv_schematic) = chk_option ctxt option
   val filter = extract_prems_rewr (Context.Proof ctxt)
@@ -607,6 +611,7 @@ fun collect_obligation_premises option ctxt thm = let open Conv
 
 (*Config.get ctxt existential_obligation*)
 
+(*the leading antecedent must be beta-eta normalized*)
 fun contract_obligations mode ctxt thm = thm
     |> collect_obligation_premises mode ctxt
     |> Conv.fconv_rule (Conv.rewr_conv @{thm contract_obligations})
