@@ -1743,8 +1743,8 @@ lemma \<phi>TA_SuC_rule:
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> \<forall>x. P x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T\<close>
-  unfolding Action_Tag_def
+\<Longrightarrow> Abstract_Domain\<^sub>L T P\<close>
+  unfolding Action_Tag_def Abstract_Domain\<^sub>L_def
   by simp
 
 lemma \<phi>TA_Inh_rewr:
@@ -1759,22 +1759,28 @@ lemma \<phi>TA_Inh_step:
   unfolding Action_Tag_def Premise_def
   by blast
 
+lemma \<phi>TA_Suc_step:
+  \<open> Any \<longrightarrow> Inh @action \<A>ESC
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> Any)
+\<Longrightarrow> P \<longrightarrow> Inh @action \<A>ESC\<close>
+  unfolding Action_Tag_def Premise_def
+  by blast
+
 lemma \<phi>TA_Inh_extract_prem:
   \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> ((\<exists>v. v \<Turnstile> (x \<Ztypecolon> T)) \<longrightarrow> P) \<and> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P)\<close>
   unfolding Action_Tag_def Inhabited_def atomize_eq
   by blast
 
-
-ML \<open>Term_Subst.instantiate (TVars.make [((("'a",0),\<^sort>\<open>type\<close>), \<^typ>\<open>'b\<close>)],
-                             Vars.make [((("f",0),\<^typ>\<open>'b\<close>),\<^term>\<open>f::'b\<close>)]) \<^pattern>\<open>(?f::?'a)\<close>\<close>
-ML \<open>Envir.subst_term (Vartab.make [(("'a",0), (\<^sort>\<open>type\<close>, \<^typ>\<open>'b\<close>))], Vartab.empty) \<^pattern>\<open>(?f::?'a)\<close>\<close>
-
 ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
-hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step
+(*hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step*)
 
 \<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> ) = \<open>
-  Phi_Type_Algebra_Derivers.inhabitance false
+  Phi_Type_Algebra_Derivers.abstract_domain false
+\<close>
+
+\<phi>property_deriver Abstract_Domain\<^sub>L 90 for ( \<open>Abstract_Domain\<^sub>L _ _\<close> ) = \<open>
+  Phi_Type_Algebra_Derivers.abstract_domain_L false
 \<close>
 
 
@@ -2013,6 +2019,7 @@ text \<open>\<phi>-type embedding of separation quantifier \<open>x \<Ztypecolon
   As the scalar reduces by means of induction, the entire \<phi>-type assertion should also be able to reduce.
 \<close>
 
+(*TODO!!!
 thm nat_induct [induct rule = ....]
 
 lemma
@@ -2027,7 +2034,7 @@ lemma
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Semimodule_Scalar_Homo F T D \<close>
-
+*)
 
 subsubsection \<open>Separation Homo\<close>
 
@@ -2135,18 +2142,19 @@ ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
 subsubsection \<open>Is_Functional\<close>
 
 lemma \<phi>TA_IsFunc_rule:
-  \<open> (Ant @action \<phi>TA_ANT) \<longrightarrow>
-    Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined
+  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+          \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>
+          Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> Is_Functional (x \<Ztypecolon> T) \<close>
-  unfolding Action_Tag_def
-  by simp
+\<Longrightarrow> Functionality T P \<close>
+  unfolding Action_Tag_def Functionality_def Is_Functional_def Premise_def
+  by clarsimp
 
 lemma \<phi>TA_IsFunc_rewr:
-  \<open> Trueprop (Ant \<longrightarrow> Is_Functional S @action Any)
- \<equiv> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)) \<close>
+  \<open> Trueprop (Ant \<longrightarrow> cond \<longrightarrow> Is_Functional S @action Any)
+ \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. x \<Turnstile> S \<and> y \<Turnstile> S \<longrightarrow> x = y)) \<close>
   unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
 
 lemma \<phi>TA_IsFunc_rewr_ants:

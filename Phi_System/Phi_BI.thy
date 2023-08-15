@@ -198,13 +198,25 @@ lemma typing_inhabited: "p \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> In
 
 definition Abstract_Domain :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Abstract_Domain T d \<longleftrightarrow> (\<forall>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> d x)\<close>
+  \<comment> \<open>Upper Bound\<close>
 
-declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rightarrow> \<open>Abstract_Domain ?T _\<close> (100)]]
+definition Abstract_Domain\<^sub>L :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Abstract_Domain\<^sub>L T d \<longleftrightarrow> (\<forall>x. d x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T)\<close>
+  \<comment> \<open>Lower Bound\<close>
 
-lemma [\<phi>reason default 10]: (*TODO: not enabled*)
+declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rightarrow> \<open>Abstract_Domain ?T _\<close> (100)
+                              and \<open>Abstract_Domain\<^sub>L ?T _\<close> \<Rightarrow> \<open>Abstract_Domain\<^sub>L ?T _\<close> (100) ]]
+
+lemma [\<phi>reason default 10]:
   \<open> Abstract_Domain T D
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D x\<close>
   unfolding Abstract_Domain_def Action_Tag_def
+  by blast
+
+lemma [\<phi>reason default 10]:
+  \<open> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T\<close>
+  unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
   by blast
 
 lemma [\<phi>reason default 1]:
@@ -212,7 +224,12 @@ lemma [\<phi>reason default 1]:
   unfolding Abstract_Domain_def Action_Tag_def
   by simp
 
-declare [[
+lemma [\<phi>reason default 1]:
+  \<open> Abstract_Domain\<^sub>L T (\<lambda>_. False) \<close>
+  unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
+  by simp
+
+declare [[ \<comment> \<open>TODO\<close>
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
     fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*imp*) $ (
                             _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _)) =>
@@ -1044,12 +1061,14 @@ lemma Itself_inhabited[\<phi>reason 1000, simp, intro!]:
   by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> Itself \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
-  using Inhabited_fallback_True .
+  \<open> Abstract_Domain Itself (\<lambda>_. True) \<close>
+  unfolding Abstract_Domain_def
+  using Inhabited_fallback_True by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> False \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> Itself \<close>
-  using Suf_Inhabited_fallback_True .
+  \<open> Abstract_Domain\<^sub>L Itself (\<lambda>_. True) \<close>
+  unfolding Abstract_Domain\<^sub>L_def Action_Tag_def Inhabited_def
+  by simp
 
 lemma Itself_E[\<phi>reason 20]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<close>

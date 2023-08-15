@@ -27,13 +27,14 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+        
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Basic
-       and Is_Functional
+       and Abstract_Domain\<^sub>L
+       (*and Is_Functional *)
        and Open_Abstraction_Full
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -56,12 +57,15 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding Subjection into Type\<close>
 
+declare [[\<phi>trace_reasoning = 0]]
+  
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T) P) \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q) (Q \<and> P)\<close>
        and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. P x \<and> Q) \<close>
-       and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
+       and \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. P x \<and> Q) \<close>
+       (*and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)) \<Longrightarrow> Is_Functional (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>*)
        and Open_Abstraction_Full
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
@@ -136,6 +140,8 @@ text \<open>Transformation functor requires inner elements to be transformed int
   
   deriving \<open>(\<And>\<sigma>. Abstract_Domain (T \<sigma>) (P \<sigma>))
         \<Longrightarrow> Abstract_Domain (\<phi>Dependent_Sum T) (\<lambda>(\<sigma>,x). P \<sigma> x) \<close>
+    and    \<open>(\<And>\<sigma>. Abstract_Domain\<^sub>L (T \<sigma>) (P \<sigma>))
+        \<Longrightarrow> Abstract_Domain\<^sub>L (\<phi>Dependent_Sum T) (\<lambda>(\<sigma>,x). P \<sigma> x) \<close>
     and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
     and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
@@ -143,8 +149,8 @@ text \<open>Transformation functor requires inner elements to be transformed int
         \<Longrightarrow> Identity_Element\<^sub>I ((c, u) \<Ztypecolon> \<Sigma> T) P \<close>
     and    \<open>Identity_Element\<^sub>E (u \<Ztypecolon> T c)
         \<Longrightarrow> Identity_Element\<^sub>E ((c, u) \<Ztypecolon> \<Sigma> T) \<close>
-    and    \<open>Is_Functional (u \<Ztypecolon> T c)
-        \<Longrightarrow> Is_Functional ((c, u) \<Ztypecolon> \<Sigma> T)\<close>
+  (*and    \<open>Is_Functional (u \<Ztypecolon> T c)
+        \<Longrightarrow> Is_Functional ((c, u) \<Ztypecolon> \<Sigma> T)\<close> *)
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
 
@@ -157,6 +163,7 @@ declare [[simp_trace_depth_limit = 10]]
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
+       and \<open> Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
        and Identity_Element
@@ -450,11 +457,21 @@ text \<open>
 \<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
-\<Longrightarrow> (\<And>y. y \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> B y)
-\<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> A \<and> Ex B \<close>
-  unfolding Inhabited_def Action_Tag_def
+  \<open> Abstract_Domain U A
+\<Longrightarrow> Abstract_Domain T B
+\<Longrightarrow> Abstract_Domain (T \<Zcomp> U) (\<lambda>x. A x \<and> Ex B) \<close>
+  unfolding Inhabited_def Action_Tag_def Abstract_Domain_def
   by simp blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Abstract_Domain\<^sub>L U A
+\<Longrightarrow> Abstract_Domain\<^sub>L T B
+\<Longrightarrow> Abstract_Domain\<^sub>L (T \<Zcomp> U) (\<lambda>x. A x \<and> All B) \<close>
+  unfolding Inhabited_def Action_Tag_def Abstract_Domain\<^sub>L_def
+  by clarsimp blast
+
+text \<open>The space between the upper bound and the lower bound is inevitable as we lost the exact value
+  of the middle-level object in this vertical composition.\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> Is_Functional (x \<Ztypecolon> U)
@@ -469,7 +486,6 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> x \<Ztypecolon> T \<Zcomp> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>m. rT m y \<and> rU x m) @action to (Itself :: ('c,'c) \<phi>)\<close>
   unfolding Transformation_def Action_Tag_def
   by clarsimp  blast
-
 
    
 lemma [\<phi>reason 1000]:
@@ -655,6 +671,9 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving \<open>  Abstract_Domain A Pa
           \<Longrightarrow> Abstract_Domain B Pb
           \<Longrightarrow> Abstract_Domain (A \<or>\<^sub>\<phi> B) (\<lambda>(a,b). Pa a \<or> Pb b) \<close>
+       and \<open>  Abstract_Domain\<^sub>L A Pa
+          \<Longrightarrow> Abstract_Domain\<^sub>L B Pb
+          \<Longrightarrow> Abstract_Domain\<^sub>L (A \<or>\<^sub>\<phi> B) (\<lambda>(a,b). Pa a \<or> Pb b) \<close>
        and \<open>  Object_Equiv T eqa
           \<Longrightarrow> Object_Equiv U eqb
           \<Longrightarrow> Object_Equiv (T \<or>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
@@ -677,14 +696,16 @@ let_\<phi>type \<phi>Union deriving \<open>Object_Equiv (\<circle> \<or>\<^sub>\
 
 
 subsection \<open>Embedding Additive Conjunction\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
      
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
   deriving \<open>  Abstract_Domain T P
           \<Longrightarrow> Abstract_Domain U Q
           \<Longrightarrow> Abstract_Domain (T \<and>\<^sub>\<phi> U) (\<lambda>(x,y). P x \<and> Q y)\<close>
+       (*and \<open>  Abstract_Domain\<^sub>L T P
+          \<Longrightarrow> Abstract_Domain\<^sub>L U Q
+          \<Longrightarrow> Abstract_Domain\<^sub>L (T \<and>\<^sub>\<phi> U) (\<lambda>(x,y). P x \<and> Q y)\<close>
+         The lower bound of (T \<and>\<^sub>\<phi> U) is not derivable as there is no sufficiency reasoning for additive conjunction *)
        and \<open>  Object_Equiv T eqa
           \<Longrightarrow> Object_Equiv U eqb
           \<Longrightarrow> Object_Equiv (T \<and>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
@@ -733,7 +754,8 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Basic
        and \<open> homo_one f \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
        and \<open> homo_one f \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
-       and Is_Functional
+       and Abstract_Domain\<^sub>L
+       (*and Is_Functional*)
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
        and Open_Abstraction_Full
@@ -836,7 +858,8 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
-       and Is_Functional
+       and Abstract_Domain\<^sub>L
+       (*and Is_Functional*)
        and Open_Abstraction_Full
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
@@ -859,7 +882,8 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
   deriving Basic
-       and Is_Functional
+       and Abstract_Domain\<^sub>L
+       (*and Is_Functional*)
        and Open_Abstraction_Full
        and Identity_Element
 
@@ -982,14 +1006,13 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>([] \<Ztypecolon> List2 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List2 T) = (prod (\<lambda>x. x \<Ztypecolon> T) (set x)\<heavy_comma> l \<Ztypecolon> List2 T)\<close>
 *)
-consts Nat :: \<open>(nat,nat) \<phi>\<close>
  
 declare [[\<phi>trace_reasoning = 0]]
        
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
-  where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Nat)\<close>
+  where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Itself)\<close>
   deriving Basic
-
+       and Abstract_Domain\<^sub>L
   
 
 (*
@@ -997,18 +1020,19 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 3]]
+ declare [[\<phi>trace_reasoning = 0]]
 
 
   
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
        and Open_Abstraction_Full
-       and Is_Functional
+       (*and Is_Functional*)
        and Trivial_\<Sigma>
 
 
@@ -1161,11 +1185,12 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (push_map k \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
+       and Abstract_Domain\<^sub>L
        and Identity_Element
        and Functional_Transformation_Functor
        and Separation_Homo
        and Open_Abstraction_Full
-       and Is_Functional
+       (*and Is_Functional*)
        and Trivial_\<Sigma>
 
 thm \<phi>MapAt_L.unfold
@@ -1291,7 +1316,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and Identity_Element
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (n \<odiv> T) (\<lambda>x. P x \<and> 0 < n)\<close>
-       and Is_Functional
+       and \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (n \<odiv> T) (\<lambda>x. P x \<and> 0 < n)\<close>
+       (*and Is_Functional*)
        and Functional_Transformation_Functor
        (*and Open_Abstraction_Full *)
        and Trivial_\<Sigma>
