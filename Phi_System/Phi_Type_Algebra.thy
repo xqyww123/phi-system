@@ -13,7 +13,7 @@ most of logics only have semidecidable algorithms at best. As a consequence, cla
 tableaux, sequent calculus, can be very limited on automating the verification of practical low-level
 programs --- the search does not end in a reasonable time of human's life.
 
-Could the automation utilize the semantics by understanding it by some ways, to boost the performance?
+Could the automation utilize the semantics by understanding it by some means, to boost the performance?
 The performance means the portion of problems that an automation can solve in a reasonable time.
 
 Temporarily putting this stream of thought aside, we also notice coarse-grand type systems
@@ -30,9 +30,26 @@ details and lifting the verification onto abstraction, (from a bottom-up view fo
 verification instead of the top-down method for correctness-by-construction).
 
 When the three stream meet, we come up with the logic of \<open>\<phi>\<close>-type, namely the type of refinement,
-taking the homonym of re\<phi>ment. It provides an embedding of data refinement into the logic of
+taking the homonym of re\<phi>ment.
+It provides an embedding of data refinement into the logic of
 Bunched Implications (BI), and on the other hand guides the automatic reasoning by reasoning rules
 which can also be automatically generated.
+
+Each \<open>\<phi>\<close>-type assertion \<open>x \<Ztypecolon> T\<close> (which is a normal BI assertion) specifies how a concrete
+representation \<open>c \<Turnstile> x \<Ztypecolon> T\<close> of a data structure \<open>T\<close> is lifted to or equivalently refines
+the abstract representation \<open>x\<close> of the data structure.
+\<open>x\<close> is the fine portion complementing the coarse type \<open>T\<close> to support expressibility.
+\<open>T\<close> guides the automation to generate a proof obligation as a proposition about \<open>x\<close> and therefore on the abstract domain,
+thus lifting the verification onto abstraction.
+
+\<phi>-Type is able to characterize many properties of the data structure and raises a meta theory on which
+we can build a general automation, such as the general property of subtyping functor over a type operator \<open>F\<close>,
+\<open>(\<forall>a. a \<Ztypecolon> T \<longrightarrow> f(a) \<Ztypecolon> U) \<Longrightarrow> (\<forall>x. x \<Ztypecolon> F(T) \<longrightarrow> mapper f x \<Ztypecolon> F(U))\<close>,
+which specifies how the entire data structure is transformed when the abstraction of its element is transformed.
+By utilizing the algebraic properties of data structures, the automation captures the semantics of them (up to isomorphism).
+The properties can be given by manual annotations from users, or be guessed (can be wrong) and therefore fully automated (can fail)
+if the abstract representation is defined from Natural Bounded Functor (BNF), i.e., by algebraic data type tools
+in most of proof assistants.
 
 The attempt to introduce a type system in a logic is ubiquitous. However, they are rudimentary
 comparing with the abundant algebraic properties that \<phi>-type owns, which instantiate the automation,
@@ -40,21 +57,27 @@ and also the rule generation algorithms that our theory provides, which derive t
 RefinedC gives a theory diving into neither algebraic properties nor rule generation algorithms,
 but only the notion of coarse-grand types itself with reasoning rules written manually by human experts.
 The type in ReLoC is basically the syntactic notation of a logical connective without meta theory of the
-type such as subtyping and the functor of subtyping over type operators.
+type such as the functor of subtyping over type operators.
 Both of the works above are based on specific (concurrent) separation logics with complicated add-ons,
-whereas our work is based on pure BI logic and therefore is fundamental and general. 
+whereas our work is based on pure BI logic (with necessary but minimal add-ons) and therefore is fundamental and general. 
 
 There are also many works combining data refinement into separation logic. Comparing with our constructions
 where refinement relations are simply represented by predicates, their embedding is far from simple
-and clean, mostly consisting of heavy and standalone structures to bring (data) refinement inside.
+and clean, mostly attached with heavy and standalone structures to bring (data) refinement inside.
 Admittedly a limitation in our work is that, from a perspective of the more general refinement (instead of
 only the data refinement), our abstract program must be a relation and is not represented explicitly
-by a specific term in the logic, but we argue, the effect is the same if we only expect the refinement
-to simplify the workload of verifying a concrete program, instead of showing relationships between two
+as a specific term in the logic, but we argue, the effect is the same if we only expect the refinement
+to simplify the workload of verifying a concrete program, instead of showing the relationships between two
 given programs (known as relational reasoning). Under such condition,
 for the first time we show how simple and clean the data refinement can be embedded into BI.
 
+To measure our approach, we implement it on Isabelle/HOL. On a subset of C semantics, we show
+many algorithms and data structures can be verified automatically, reaching a degree of automation
+outperforming existing works as far as we know.
 
+\section{The Approach of \<open>\<phi>\<close>-Types}
+
+<overview first.>
 
 
 
