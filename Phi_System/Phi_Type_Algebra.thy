@@ -4,7 +4,64 @@ theory Phi_Type_Algebra
        and "deriving" :: quasi_command
 begin
 
-text \<open>Based on the abundant algebriac properties that \<phi>-type owns, we believe we found the correct
+text \<open>
+Motivation:
+
+Old school logicians may argue that the whole point of automated reasoning was to let computers do
+reasoning without understanding the semantics. However, particularly in the domain of program logic,
+most of logics only have semidecidable algorithms at best. As a consequence, classical methods including
+tableaux, sequent calculus, can be very limited on automating the verification of practical low-level
+programs --- the search does not end in a reasonable time of human's life.
+
+Could the automation utilize the semantics by understanding it by some ways, to boost the performance?
+The performance means the portion of problems that an automation can solve in a reasonable time.
+
+Temporarily putting this stream of thought aside, we also notice coarse-grand type systems
+give good automation to derive the coarse information of programs (by contrast with fine-grand type
+systems which have great expressiveness but no decidable algorithm, as they are isomorphic to some
+expressive program logics).
+
+Could we, figuratively, extract the coarse portion of the expressiveness of the logic, forming
+a type system in the logic, to guide the reasoning (on any fine-grand properties)
+and by an efficient automation that such type system can have, to improve the performance?
+
+Again we suspend the thought. Data refinement is an efficient approach hiding the complicated concrete
+details and lifting the verification onto abstraction, (from a bottom-up view for post-hoc
+verification instead of the top-down method for correctness-by-construction).
+
+When the three stream meet, we come up with the logic of \<open>\<phi>\<close>-type, namely the type of refinement,
+taking the homonym of re\<phi>ment. It provides an embedding of data refinement into the logic of
+Bunched Implications (BI), and on the other hand guides the automatic reasoning by reasoning rules
+which can also be automatically generated.
+
+The attempt to introduce a type system in a logic is ubiquitous. However, they are rudimentary
+comparing with the abundant algebraic properties that \<phi>-type owns, which instantiate the automation,
+and also the rule generation algorithms that our theory provides, which derive the algebraic properties.
+RefinedC gives a theory diving into neither algebraic properties nor rule generation algorithms,
+but only the notion of coarse-grand types itself with reasoning rules written manually by human experts.
+The type in ReLoC is basically the syntactic notation of a logical connective without meta theory of the
+type such as subtyping and the functor of subtyping over type operators.
+Both of the works above are based on specific (concurrent) separation logics with complicated add-ons,
+whereas our work is based on pure BI logic and therefore is fundamental and general. 
+
+There are also many works combining data refinement into separation logic. Comparing with our constructions
+where refinement relations are simply represented by predicates, their embedding is far from simple
+and clean, mostly consisting of heavy and standalone structures to bring (data) refinement inside.
+Admittedly a limitation in our work is that, from a perspective of the more general refinement (instead of
+only the data refinement), our abstract program must be a relation and is not represented explicitly
+by a specific term in the logic, but we argue, the effect is the same if we only expect the refinement
+to simplify the workload of verifying a concrete program, instead of showing relationships between two
+given programs (known as relational reasoning). Under such condition,
+for the first time we show how simple and clean the data refinement can be embedded into BI.
+
+
+
+
+
+
+Conclusion:
+
+Based on the abundant algebriac properties that \<phi>-type owns, we believe we found the correct
   counterpart of type theory in the domain of program logic for verification.
   Furthermore, forming a type system of a language built upon a program logic, it may bring new choices
   for certified programming. We are studying this as our future work.\<close>
