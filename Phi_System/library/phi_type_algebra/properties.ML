@@ -291,8 +291,10 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
        in if null rules' then ctxt
        else (
        Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
-         paragraph (text "Instantiate reasoning template" @ [brk 1] @
-                    here template_pos)
+         chunks ([paragraph (text "Instantiate reasoning template" @ [brk 1] @
+                             here template_pos)] @
+                 (case action of Reasonig_Rule _ => []
+                     | Attributes _ => map (fn rule => item [Thm.pretty_thm ctxt' rule]) rules'))
          end) ;
        case action
          of Reasonig_Rule ((mode, priority), (pats, blacklists)) =>

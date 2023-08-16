@@ -92,7 +92,7 @@ text \<open>Here we construct two inner transformations from \<open>a \<Ztypecol
            type is valid globally (this is a necessary condition).  \<close>
 
 
-lemma \<phi>\<s>\<u>\<b>\<j>_Homo:
+lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template [assertion_simps]]:
   \<open> Transformation_Functor Fa Fa D R mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a. a \<in> D x \<and> P \<longrightarrow> a \<in> R x) \<and> (\<forall>y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P)
 \<Longrightarrow> (x \<Ztypecolon> Fa (T \<phi>\<s>\<u>\<b>\<j> P)) \<equiv> (x \<Ztypecolon> Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
@@ -769,10 +769,10 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
 
 
-lemma Semimodule_Scalar_Homo_by_function[\<phi>reason 1000]:
+lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
   \<open> module_scalar_assoc \<psi> Ds
-\<Longrightarrow> Semimodule_Scalar_Homo (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds \<close>
-  unfolding module_scalar_assoc_def Semimodule_Scalar_Homo_def scalar_mult_def
+\<Longrightarrow> Semimodule_Scalar_Assoc (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds \<close>
+  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
@@ -1176,7 +1176,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
                    
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (push_map k \<Zcomp>\<^sub>f T)\<close>
@@ -1278,8 +1278,8 @@ paragraph \<open>Algebraic Properties\<close>
  
 
 lemma \<phi>MapAt_L_left_seminearring_functor[\<phi>reason 1100]:
-  \<open>Semimodule_Scalar_Homo (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>
-  unfolding Semimodule_Scalar_Homo_def
+  \<open>Semimodule_Scalar_Assoc (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>
+  unfolding Semimodule_Scalar_Assoc_def
   by (clarsimp simp add: \<phi>MapAt_L_\<phi>MapAt_L times_list_def)
 
 (*
@@ -1304,7 +1304,7 @@ lemma [\<phi>reason 1000]:
 subsection \<open>Permission Sharing\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-        
+         
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (scalar_mult share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Basic
@@ -1312,11 +1312,17 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Functional_Transformation_Functor
-       (*and Open_Abstraction_Full *)
+       and Open_Abstraction_Full
        and Trivial_\<Sigma>
        and Separation_Homo
        and SE_Trim_Empty
-      (*and Semimodule_Scalar_Homo*)
+       and Semimodule_Scalar_Assoc
+
+
+
+
+
+
 
 term \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
 term \<open>Separation_Homo\<^sub>I ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
@@ -1534,8 +1540,8 @@ lemma share_merge_\<phi>app:
 paragraph \<open>Algebraic Properties\<close>
 
 lemma \<phi>Share_left_seminearring_functor[\<phi>reason add]:
-  \<open>Semimodule_Scalar_Homo (\<odiv>) T {0<..1}\<close>
-  unfolding Semimodule_Scalar_Homo_def
+  \<open>Semimodule_Scalar_Assoc (\<odiv>) T {0<..1}\<close>
+  unfolding Semimodule_Scalar_Assoc_def
   by clarsimp
 
 (*

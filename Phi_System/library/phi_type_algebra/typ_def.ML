@@ -28,6 +28,9 @@ type phi_type = {
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
+  type_equations: thm list, (*the equations are given in between type assertions, \<open>x : T = y : U\<close>.
+                              This type equations are given in between types, \<open>T = U\<close>.
+                              Depending on definitions, not all \<phi>-types have such equations.*)
   cases: thm option,
   ind: thm,
     (*inductively destructive transformation, of form
@@ -177,6 +180,7 @@ type phi_type = {
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
+  type_equations: thm list,
   ind: thm,
   cases: thm option,
   intro_reasoning: thm list (*introduction transformations*),
@@ -191,6 +195,7 @@ fun map_phi_type (mtm,mth) (phi : phi_type) =
     pos = #pos phi,
     proof_id = #proof_id phi,
     equations = mth (#equations phi),
+    type_equations = mth (#type_equations phi),
     ind = singleton mth (#ind phi),
     cases = Option.map (singleton mth) (#cases phi),
     intro_reasoning = mth (#intro_reasoning phi),
@@ -717,6 +722,8 @@ structure Defining_Phi_Type = Hooks(
   type state = generic_theory
 )
 
+val refine_typeq = @{lemma \<open>(\<And>x. (x \<Ztypecolon> T) = (x \<Ztypecolon> U)) \<Longrightarrow> T = U\<close> by (rule \<phi>Type_eqI, simp)}
+
 fun add_type (def, pos, dervs) generic =
   let val ctxt = Context.proof_of generic
       val (idx,(name_ty,term)) =
@@ -759,6 +766,8 @@ fun add_type (def, pos, dervs) generic =
               |> map (conv_def_to_equaltion ctxt
                    #> normalize)
       val tagged_eqs = map (Conv.fconv_rule (add_premise_tag ctxt)) eqs
+
+      val typeqs = map_filter (fn eq => SOME (eq RS refine_typeq) handle THM _ => NONE) eqs
 
       val is_recursive = exists (fn eq =>
             case Thm.concl_of eq
@@ -861,6 +870,7 @@ fun add_type (def, pos, dervs) generic =
             pos = pos,
             proof_id = proof_id,
             equations = map chk_zero_index_thm eqs,
+            type_equations = typeqs,
             ind = chk_zero_index_thm ind,
             cases = cases,
             intro_reasoning = map chk_zero_index_thm intro_reasoning,

@@ -35,7 +35,7 @@ fun guess_property (phi : phi_type) ctxt =
                                     of _ (*Pure.prop*) $ (_ (*Trueprop*) $ (_ (*default_domain_of_scalar*) $ _ $ _ $ S)) => S
                                      | _ => error "BUG")
                    | _ => Abs("_", s_ty, \<^Const>\<open>True\<close>))
-   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_Scalar_Homo s_ty x_ty model_ty\<close>
+   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_Scalar_Assoc s_ty x_ty model_ty\<close>
                                             $ F_term $ T_term $ Sdom),
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end
@@ -43,7 +43,7 @@ fun guess_property (phi : phi_type) ctxt =
 fun gen_MS (der_id, name) hint0 (phi : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val parse_hint = parse_hint (
-              fn (Const(\<^const_name>\<open>Semimodule_Scalar_Homo\<close>, _) $ F1 $ _ $ _ $ _ $ _) => F1)
+              fn (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<close>, _) $ F1 $ _ $ _ $ _ $ _) => F1)
       val extract_oprs_from_hint = K []
       fun reasoning phi =
         default_reasoning false
@@ -56,7 +56,7 @@ fun gen_MS (der_id, name) hint0 (phi : phi_type) thy =
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_MS_rewr} then_conv
                   Conv.arg_conv (Conv.arg_conv (Phi_Conv.may_action_tag_conv (
-                    let val sctxt = Simps.equip ctxt addsimps (#equations phi)
+                    let val sctxt = Simps.equip ctxt addsimps (#equations phi @ #type_equations phi)
                      in Phi_Syntax.transformation_conv
                             (Simplifier.rewrite sctxt)
                             (Simplifier.rewrite sctxt)
@@ -77,6 +77,6 @@ fun gen_MS (der_id, name) hint0 (phi : phi_type) thy =
   end
 
 val semimodule_scalar = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Scalar_Homo") gen_MS
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Scalar_Assoc") gen_MS
 
 end
