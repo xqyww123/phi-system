@@ -768,8 +768,14 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
 
-
-lemma Semimodule_LDistr_Homo\<^sub>Z_by_function:
+ 
+lemma Semimodule_Scalar_Homo_by_function[\<phi>reason 1000]:
+  \<open> module_scalar_assoc \<psi> Ds
+\<Longrightarrow> Semimodule_Scalar_Homo (\<lambda>a. (\<Zcomp>\<^sub>f) (\<psi> a)) T Ds \<close>
+  unfolding module_scalar_assoc_def Semimodule_Scalar_Homo_def
+  by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
+ 
+lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_L_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Object_Equiv T eq
@@ -780,6 +786,7 @@ lemma Semimodule_LDistr_Homo\<^sub>Z_by_function:
   unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_L_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
   by clarsimp metis
+  
 
 text \<open>The domain of abstract objects constrains to ensure the two middle-level objects
   (namely, the concrete objects of \<open>T\<close> and the abstract objects of \<open>\<psi>\<close>) are identical so that
