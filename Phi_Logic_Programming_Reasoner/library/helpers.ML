@@ -8,12 +8,13 @@ val pos_parser : string -> Position.T parser
 val beta_eta_conversion : conv
 val beta_eta_contract : thm -> thm
 val beta_eta_contract_cterm : cterm -> cterm
+val beta_eta_contract_term : term -> term
 
 val lambda_normalization_ctac : ('a * thm -> 'b) -> ('a * thm -> 'b)
 val lambda_normalization_conv : conv -> conv
 val lambda_normalization_rule : (thm -> thm) -> thm -> thm
 
-val unique_flexflex : Proof.context option -> thm -> thm
+val unique_flexflex : Proof.context -> thm -> thm
 
 val list_mk_conj : term list -> term
 val list_mk_disj : term list -> term
@@ -47,7 +48,14 @@ fun beta_eta_contract th =
   else th
 
 fun beta_eta_contract_cterm x =
-  Thm.dest_arg (Thm.cprop_of (Drule.beta_eta_conversion x));
+  if Term.could_beta_eta_contract (Thm.term_of x)
+  then Thm.dest_arg (Thm.cprop_of (Drule.beta_eta_conversion x))
+  else x
+
+fun beta_eta_contract_term x =
+  if Term.could_beta_eta_contract x
+  then Envir.beta_eta_contract x
+  else x
 
 fun beta_eta_conversion ctm =
   if Term.could_beta_eta_contract (Thm.term_of ctm)
@@ -90,11 +98,67 @@ fun lambda_normalization_rule R thm =
            | e as TERM _  => fallback e
   end
 
+(*a naive but most general flex-flex solver, which works only when the structures are identical*)
+fun flex_solver_for_type (Type (N, args), Type(N', args')) =
+      if N = N' then maps flex_solver_for_type (args ~~ args')
+      else raise TYPE("naive_flex_solver", [Type (N, args), Type(N', args')], [])
+  | flex_solver_for_type (TFree A, TFree B) =
+      if A = B then [] else raise TYPE("naive_flex_solver", [TFree A, TFree B], [])
+  | flex_solver_for_type (TVar Va, TVar Vb) =
+      if Va = Vb then [] else [(Va, TVar Vb)]
+  | flex_solver_for_type (TVar Va, Tb) = [(Va, Tb)]
+
+fun flex_solver (Abs (_,T,X), Abs (_,T',X')) (instT,inst) =
+      flex_solver (X,X') (flex_solver_for_type (T,T') @ instT, inst)
+  | flex_solver (A $ B, A' $ B') inst =
+      flex_solver (A,A') (flex_solver (B,B') inst)
+  | flex_solver (Free (Na,Ta), Free (Nb,Tb)) (instT,inst) =
+      if Na = Nb then (flex_solver_for_type (Ta,Tb) @ instT, inst)
+      else raise TERM ("naive_flex_solver", [Free (Na,Ta), Free (Nb,Tb)])
+  | flex_solver (Bound a, Bound b) inst =
+      if a = b then inst
+      else raise TERM ("naive_flex_solver", [Bound a, Bound b])
+  | flex_solver (Const (Na,Ta), Const (Nb,Tb)) (instT,inst) =
+      if Na = Nb then (flex_solver_for_type (Ta,Tb) @ instT, inst)
+      else raise TERM ("naive_flex_solver", [Const (Na,Ta), Const (Nb,Tb)])
+  | flex_solver (Var (Na,Ta), Var (Nb,Tb)) (instT,inst) =
+      if Na = Nb andalso Ta = Tb then (instT,inst)
+      else (flex_solver_for_type (Ta, Tb) @ instT, (((Na,Ta), Var (Nb,Tb))) :: inst)
+  | flex_solver (Var (Na,Ta), B) (instT,inst) =
+      (flex_solver_for_type (Ta, Term.fastype_of B) @ instT, (((Na,Ta),B)) :: inst)
+
+fun naive_flex_solver ctxt thm =
+  let val tpairs = Thm.tpairs_of thm
+   in if null tpairs then thm
+  else let
+      val inst = fold flex_solver tpairs ([],[])
+      fun ty_add (k,v) tab = if TVars.defined tab k then raise TERM ("naive_flex_solver", [])
+                             else TVars.add (k,v) tab
+      fun tm_add (k,v) tab = if Vars.defined tab k then raise TERM ("naive_flex_solver", [])
+                             else Vars.add (k,v) tab
+      val instTy'= TVars.build (fold ty_add (fst inst))
+      val instTy = TVars.build (fold (ty_add o apsnd (Thm.ctyp_of ctxt)) (fst inst))
+      val instTm = Vars.build (fold (
+                      tm_add o apsnd (Thm.cterm_of ctxt o Term_Subst.instantiate (instTy', Vars.empty))
+                   ) (snd inst))
+      val thm1 = Thm.instantiate (instTy, instTm) thm
+      val frees = Term.declare_term_frees (Thm.prop_of thm) Name.context
+      val vars = fold (fn (a,b) => Term.add_vars a o Term.add_vars b) (Thm.tpairs_of thm1) []
+      val fix_names = Name.invent frees "\<x>" (length vars)
+      val fixes = map2 (fn N => fn (_,T) => Thm.cterm_of ctxt (Free (N,T))) fix_names vars
+   in Thm.instantiate (TVars.empty, Vars.make (vars ~~ fixes)) thm1
+   |> Thm.flexflex_rule (SOME ctxt)
+   |> Seq.pull
+   |> (fn SOME (x, _) => x | NONE => error "BUG: naive_flex_solver")
+   |> Thm.generalize (Names.empty, Names.make_set fix_names) (Thm.maxidx_of thm1)
+  end
+  end
+
 fun unique_flexflex ctxt thm =
-  case Seq.chop 2 (Thm.flexflex_rule ctxt thm)
-    of ([], _) => raise THM ("unique_flexflex: fail to solve flex-flex pairs", 0, [thm])
-     | ([th'], _) => th'
-     | (L, _) => raise THM ("unique_flexflex: multi unification of flex-flex pairs", 0, L)
+  if null (Thm.tpairs_of thm) then thm
+  else (*case try (naive_flex_solver ctxt) thm (*disabled because of deficiencies in Isabelle kernel*)
+    of SOME ret => ret
+     | NONE =>*) Drule.flexflex_unique (SOME ctxt) thm
 
 fun list_mk_conj [] = \<^const>\<open>True\<close>
   | list_mk_conj L = foldr1 HOLogic.mk_conj L

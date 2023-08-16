@@ -1,7 +1,9 @@
 local open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 in
 val _ = Theory.setup (Context.theory_map (
-  Phi_Type_Template_Properties.add_template_automation (99, [\<^const_name>\<open>Transformation_Functor\<close>]) (fn (phiopr, _, props) => fn ctxt =>
+  Phi_Type_Template_Properties.add_template false (99,
+      ([\<^const_name>\<open>Transformation_Functor\<close>], \<^here>, Phi_Type_Template_Properties.Free_Action (
+  fn (phiopr, _, props) => fn ctxt =>
     let val oprs = case Thm.concl_of (hd props)
                      of _ (*Trueprop*) $ (_ (*Transformation_Functor*) $ _ $ _ $ D $ R $ M ) => [D,R,M]
                       | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
@@ -26,5 +28,5 @@ val _ = Theory.setup (Context.theory_map (
                 end)
      in ctxt
      |> Function_Context_Tree.add_function_cong rule
-    end)))
+    end)))))
 end

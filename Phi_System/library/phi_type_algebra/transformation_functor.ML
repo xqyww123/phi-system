@@ -94,7 +94,7 @@ fun gen_TF (der_id, name) hint0 (phi0 : phi_type) generic =
                     Phi_Reasoners.Is_Premise_of_Obligation.add 123
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
                         | X => NONE)) *)
-      val parse_hint = parse_hint_has_type_operator_only (
+      val parse_hint = parse_hint (
               fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _) => F1)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M) = [D,R,M]
         | extract_oprs_from_hint _ = []
@@ -198,7 +198,7 @@ fun guess_property_FTF phi0 ctxt0 =
 
 fun gen_FTF (der_id,name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val parse_hint = parse_hint_has_type_operator_only (
+      val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M $ _ $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []

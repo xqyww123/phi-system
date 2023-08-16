@@ -135,7 +135,7 @@ fun gen_inhab upper (der_id, name) hint0 (phi0 : phi_type) thy =
                             else guess_property_inhab_atom) upper*)
       val mode_infer = not (is_some hint0)
 
-      val parse_hint = parse_hint_has_type_only (
+      val parse_hint = parse_hint (
               fn Const(\<^const_name>\<open>Abstract_Domain\<close>, _) $ T $ _ => T
                | Const(\<^const_name>\<open>Abstract_Domain\<^sub>L\<close>, _) $ T $ _ => T)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ P) = [P]

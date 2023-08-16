@@ -175,7 +175,7 @@ fun gen_trans_to_raw_abst (_,name) hint00 (phi0 : phi_type) thy =
             end
             ) ctxt0) hint00
 
-      fun parse_hint ctxt hint =
+      fun parse_hint ctxt _ hint =
             let fun extract (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract X
                   | extract (Const(\<^const_name>\<open>All\<close>, _) $ X) = extract X
                   | extract (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = extract X

@@ -16,15 +16,16 @@ type induct_inst_params = term option list
 (** Component: unify_hint **)
 
 type hint = term
-type parse_hint = Proof.context -> hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
+type parse_hint = Proof.context -> Phi_Type_Algebra.phi_type ->  hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
 
 (* Common choices of the unification *)
 
 val malformed_hint : Context.generic -> term -> 'a
 val parse_parameters_of_phi_type : term -> term option list
-val parse_hint_has_object_and_type : (term -> term * term) (*extract_object_and_phityp*) -> parse_hint
-val parse_hint_has_type_only : (term -> term) (*extract_phityp*) -> parse_hint
-val parse_hint_has_type_operator_only : (term -> term) (*extract_phityp_opr*) -> parse_hint
+(*default parsing*)
+val parse_hint : (term -> term) (*extract the phi-type part from the hint. can be either the type assertion,
+                                  the type itself, or the type operator*)
+              -> parse_hint
 
 (** Component: guess_property **)
 
@@ -973,7 +974,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
               let (*val idx = Phi_Type_Algebra.phi_maxidx_of phi0 ~1 + 1
                   val H = Logic.incr_indexes ([],[],idx) H0*)
                   val thy = Proof_Context.theory_of ctxt0
-                  val (typ_of_phi0, parameters0, H01) = parse_hint ctxt0 H0
+                  val (typ_of_phi0, parameters0, H01) = parse_hint ctxt0 phi0 H0
 
                   val (inst0, ctxt) = Variable.import_inst true [H01] ctxt0
                   val typ_of_phi = Term_Subst.instantiateT (fst inst0) typ_of_phi0
@@ -1083,7 +1084,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 
    in rule'4
    |> Thm.solve_constraints
-   |> Phi_Help.unique_flexflex (SOME ctxt0)
+   |> Phi_Help.unique_flexflex ctxt0
   end)
   end
 
@@ -1091,7 +1092,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 
 fun malformed_hint ctxt hint =
   raise Automation_Fail (let open Pretty in fn () =>
-          [str "Malformed Hint",
+          [str "Malformed Hint", brk 1,
            Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt hint]
     end)
 
@@ -1104,30 +1105,31 @@ fun extract_hhf (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extr
 in
 
 type hint = term
-type parse_hint = Proof.context -> hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
+type parse_hint = Proof.context -> phi_type -> hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
 
 fun parse_parameters_of_phi_type phity =
-  map SOME (rev (snd (Term.strip_comb (Envir.beta_eta_contract phity))))
+  map SOME (rev (snd (Term.strip_comb (Phi_Help.beta_eta_contract_term phity))))
 
-fun parse_hint_has_object_and_type extract_object_and_phityp ctxt hint =
-  let val (obj, phity) = extract_object_and_phityp (extract_hhf hint)
-                         handle Match => malformed_hint (Context.Proof ctxt) hint
-      val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
-   in (Term.fastype_of phiconst, map SOME (obj :: rev params), hint)
-  end
+fun identical_const (Free (N, _), Free (N', _)) = N = N'
+  | identical_const (Const (N, _), Const(N', _)) = N = N'
+  | identical_const _ = false
 
-fun parse_hint_has_type_only extract_phityp ctxt hint =
-  let val phity = extract_phityp (extract_hhf hint)
+fun chk_phi_const ctxt phi given hint =
+  if identical_const (#term phi, given) then () else malformed_hint ctxt hint
+
+
+fun parse_hint extract_phityp ctxt phi hint =
+  let val phity = (case extract_phityp (extract_hhf hint)
+                     of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T => T $ x
+                      | X => X)
                   handle Match => malformed_hint (Context.Proof ctxt) hint
-      val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
-   in (Term.fastype_of phiconst, NONE :: map SOME (rev params), hint)
-  end
-
-fun parse_hint_has_type_operator_only extract_phityp_opr ctxt hint =
-  let val phity = extract_phityp_opr (extract_hhf hint)
-                  handle Match => malformed_hint (Context.Proof ctxt) hint
-      val (phiconst, params) = Term.strip_comb (Envir.beta_eta_contract phity)
-   in (Term.fastype_of phiconst, NONE :: NONE :: map SOME (rev params), hint)
+      val (phiconst, params) =
+              fold (fn _ => fn X => X $ Term.dummy) (Term.binder_types (Term.fastype_of phity)) phity
+           |> Phi_Help.beta_eta_contract_term
+           |> Term.strip_comb
+           |> apsnd (rev #> map (fn tm => if tm = Term.dummy then NONE else SOME tm))
+      val _ = chk_phi_const (Context.Proof ctxt) phi phiconst hint
+   in (Term.fastype_of phiconst, params, hint)
   end
 
 end

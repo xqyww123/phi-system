@@ -56,6 +56,9 @@ signature NU_REASONER = sig
   val error : string -> 'a
   val bad_config : string -> 'a
 
+  val pretty_mode : mode -> Pretty.T option
+  val pretty_mode_priority : mode * priority -> Pretty.T
+
   (*auto level: 2 - fully auto, 1 - partially auto, 0 - fully manual*)
   val auto_level : int Config.T
   val reduce_auto_level : int -> Proof.context -> Proof.context
@@ -319,38 +322,60 @@ fun disable_success    delt msg = Success_Handlers.push_localctxt delt (fn _ => 
 type reasoner_id = serial
 (*fun hasher_eq ((_,s1),(_,s2)) = (s1 = s2)*)
 val hasher_net = Synchronized.var "Phi_Reasoner.reasoner_hasher"
-                                  (0, (Net.empty : (name * reasoner_id) Net.net))
+                                  (0, (iNet.empty : (name * reasoner_id) iNet.net))
 
 fun hash name =
   Synchronized.change_result hasher_net (fn (N,net) =>
-    case find_first (fn (x,_) => x = name) (Net.lookup net (Net.key_of_term name))
+    case find_first (fn (x,_) => x = name) (iNet.lookup net (iNet.key_of_term name))
       of SOME (_,s) => (s, (N,net))
-       | NONE => (N, (N+1, Net.insert_term (K false) (name, (name, N)) net))
+       | NONE => (N, (N+1, iNet.insert_term (K false) (name, (name, N)) net))
   )
 
 
 (** Main Registry **)
 fun registry_eq ((c1,pat1,id1,_),(c2,pat2,id2,_))
       = (c1 = c2 andalso pat1 = pat2 andalso id1 = id2)
-type reasoners = (priority * pattern * reasoner_id * reasoner) Net.net
+type reasoners = (priority * pattern * reasoner_id * reasoner) iNet.net
 
 structure Reasoners = Generic_Data (
   type T = reasoners
-  val empty : T = Net.empty
-  val merge : T * T -> T = Net.merge registry_eq
+  val empty : T = iNet.empty
+  val merge : T * T -> T = iNet.merge registry_eq
 )
 
 fun reasoners ctxt = Reasoners.get (Context.Proof ctxt)
-fun content net = Net.content net |> map (fn (_,_,_,r) => r)
+fun content net = iNet.content net |> map (fn (_,_,_,r) => r)
 
-fun pretty ctxt (r:reasoner) =
+fun pretty_mode (cmode, bmode) =
+  let open Pretty
+      val b = case bmode of ADMIT_BACKTRACK => NONE
+                          | NO_BACKTRACK => SOME (str "default")
+                          | NO_EXPLORATIVE_BACKTRACK => SOME (para "no explorative backtrack")
+      val c = case cmode of NO_CUT => NONE
+                          | LOCAL_CUT => SOME (str "!")
+                          | GLOBAL_CUT => SOME (str "!!")
+   in case (b,c)
+   of (SOME pb, SOME pc) => SOME (block [pb, pc])
+    | (NONE, SOME pc) => SOME pc
+    | (SOME pb, NONE) => SOME pb
+    | _ => NONE
+  end
+
+fun pretty_mode_priority (mode, priority) =
+  let open Pretty
+   in block ( [str "(", str (string_of_int priority)]
+            @ the_list (pretty_mode mode)
+            @ [str ")"] )
+  end
+
+fun pretty ctxt (r:reasoner) = let open Pretty in
   Pretty.chunks (
-    Pretty.block (Pretty.here (#pos r) @ [Pretty.str " ", Syntax.pretty_term ctxt (#name r)]) ::
+    Pretty.block (Pretty.here (#pos r) @ [brk 1, Syntax.pretty_term ctxt (#name r)]) ::
     map (fn (pat,n) => Pretty.item [
-          Pretty.str "(", Pretty.str (string_of_int n), Pretty.str "): ",
+          str "(", str (string_of_int n), str "): ",
           Syntax.pretty_term ctxt pat
         ]) (#pattern r)
-  )
+  ) end
 
 fun pretty' ctxt (priority, pat, _, (r:reasoner)) =
    Pretty.block (
@@ -368,9 +393,9 @@ fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
                        | _ => error "Bad reasoner, the pattern must be a proposition"
       val _ = List.app (chk o fst) (#pattern reasoner)
       val _ = List.app chk (#blacklist reasoner)
-   in Net.insert_term registry_eq (pat, x) net
-      handle Net.INSERT =>
-        let val dups = Net.lookup net (Net.key_of_term pat)
+   in iNet.insert_term registry_eq (pat, x) net
+      handle iNet.INSERT =>
+        let val dups = iNet.lookup net (iNet.key_of_term pat)
                    |> filter (fn y => registry_eq (x,y))
             val ctxt' = Context.proof_of ctxt
          in Exn.error (Pretty.string_of (Pretty.chunks (
@@ -467,7 +492,7 @@ fun apply_tactic bmode (Tac_ML tac) s = tac (bmode, s)
         |> Seq.map_filter (fn rule => Option.map (pair ctxt) (single_RS' rule ctxt sequent))
 
 fun get_reasoners' thy tactics term =
-  Net.match_term tactics term
+  iNet.match_term tactics term
     |> filter (fn (_,pat,_,reasoner) =>
         Pattern_Translation.does_match_term thy (pat,term)
         andalso forall (fn pat =>
@@ -481,9 +506,9 @@ fun get_reasoners thy tactics term =
 
 fun del_reasoners pattern filter ctxt =
   Reasoners.map (fn all_reasoners =>
-    let val to_remove = Net.unify_term all_reasoners pattern
+    let val to_remove = iNet.unify_term all_reasoners pattern
                      |> List.filter (fn (_,_,_,r) => filter r)
-     in fold (fn (c,p,id,R) => Net.delete_term registry_eq (p, (c,p,id,R)))
+     in fold (fn (c,p,id,R) => iNet.delete_term registry_eq (p, (c,p,id,R)))
              to_remove all_reasoners
     end) ctxt
 
@@ -491,7 +516,7 @@ fun del_reasoners_by_name pattern ctxt =
       del_reasoners pattern (match_reasoner (Context.theory_of ctxt) pattern) ctxt
 
 fun has_reasoner pattern filter ctxt =
-  Net.unify_term (Reasoners.get ctxt) pattern
+  iNet.unify_term (Reasoners.get ctxt) pattern
     |> exists (fn (_,_,_,r) => filter r)
 
 (*
@@ -759,10 +784,10 @@ val _ =
             val all_reasoners = Reasoners.get (Context.Proof ctxt)
             val reasoners = case power
                               of 0 => get_reasoners' thy all_reasoners pattern
-                               | 1 => Net.match_term all_reasoners pattern
+                               | 1 => iNet.match_term all_reasoners pattern
                                         |> distinct (fn (a,b) => #3 a = #3 b)
                                         |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
-                               | 2 => Net.entries all_reasoners
+                               | 2 => iNet.entries all_reasoners
                                         |> filter (fn (_,_,_,r) => match_reasoner thy pattern r)
                                         |> distinct (fn (a,b) => #3 a = #3 b)
                                         |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
@@ -800,15 +825,15 @@ type rule_pass = Position.T -> pass_data -> pass_data
 
 fun rule_pass_eq ((n1,_,_),(n2,_,_)) = (n1 = n2)
 structure Rule_Pass = Generic_Data (
-  type T = (string (*name*) * pattern * rule_pass) Net.net
-  val empty = Net.empty
-  val merge = Net.merge rule_pass_eq
+  type T = (string (*name*) * pattern * rule_pass) iNet.net
+  val empty = iNet.empty
+  val merge = iNet.merge rule_pass_eq
 )
 
 fun get_passes ctxt terms =
   let val thy = Context.theory_of ctxt
       fun get term =
-        Net.match_term (Rule_Pass.get ctxt) term
+        iNet.match_term (Rule_Pass.get ctxt) term
           |> filter (fn (_,pat,_) => Pattern.matches thy (pat,term))
    in fold (fn TM => union rule_pass_eq (get TM)) terms []
   end
@@ -817,7 +842,7 @@ fun run_passes pos (data as (rules, mode, _, _, ctxt)) =
   fold (fn (_,_,f) => f pos) (get_passes ctxt (map Thm.concl_of rules)) data
 
 fun add_pass rule_pass =
-  Rule_Pass.map (Net.insert_term rule_pass_eq (#2 rule_pass, rule_pass))
+  Rule_Pass.map (iNet.insert_term rule_pass_eq (#2 rule_pass, rule_pass))
 
 (*structure Rule_Pass *)
 

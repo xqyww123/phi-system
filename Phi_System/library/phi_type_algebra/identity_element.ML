@@ -114,9 +114,9 @@ fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
 
 fun gen_id_ele is_left (_,name) hint0 (phi0 : phi_type) generic =
   let val ctxt0 = Context.proof_of generic
-      val parse_hint = parse_hint_has_object_and_type (
-            fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ x $ T) $ _ => (x, T)
-             | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ (\<^Const>\<open>\<phi>Type _ _\<close> $ x $ T) => (x, T)
+      val parse_hint = parse_hint (
+            fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ X $ _ => X
+             | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ X => X
              | _ => raise TERM ("",[]))
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []

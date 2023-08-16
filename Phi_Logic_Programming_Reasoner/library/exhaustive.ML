@@ -44,13 +44,16 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
                | _ => let
                    val i = find_index (fn Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => true
                                         | _ => false) (Thm.prems_of sequent)
-                in if i >= 0 andalso (case try List.nth (Thm.prems_of sequent, i+1)
-                       of SOME (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                                   Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _))
-                            => true
-                        | _ => false)
-                   then (i, sequent)
-                   else error "Bad sequent: \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> tag should be attached immediately after the \<r>Success"
+                in if i = ~1
+                   then let val n = Thm.nprems_of sequent
+                         in (n, insert_tag \<^cprop>\<open>\<r>Success\<close> n (
+                                insert_tag \<^cprop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> n sequent))
+                        end
+                   else case try List.nth (Thm.prems_of sequent, i+1)
+                     of SOME (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                                 Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _))
+                          => (i, sequent)
+                      | _ => error "Bad sequent: \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> tag should be attached immediately after the \<r>Success"
                end
 
      val sequent' = Conv.fconv_rule (objectize_after_n ctxt (n+2)) sequent''

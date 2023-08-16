@@ -1314,6 +1314,9 @@ text \<open>\<^const>\<open>\<A>SEi\<close> is for algebras having no identity e
     It must has some unsolved further work because it is separation extraction, of form
       \<^prop>\<open>A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>, not the simple transformation of form \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U\<close>.
       To consume \<open>A\<close>, the transformation of \<open>B\<close> to \<open>y \<Ztypecolon> U\<close> must remain some further work.
+
+    Note non-associativity also implies non-commutativity, as in our formalization there is no
+    algebra that is non-associative but commutative.
 \<close>
 
 subsubsection \<open>\<phi>Type Insertion into Unital Algebra\<close>

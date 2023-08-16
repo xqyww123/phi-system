@@ -95,7 +95,7 @@ fun gen_SE_Trim_Empty _ (phi : phi_type) thy =
             else SOME (snd (red th)
                    |> simp ctxt'
                    |> Thm.solve_constraints
-                   |> Phi_Help.unique_flexflex (SOME ctxt'))
+                   |> Phi_Help.unique_flexflex ctxt')
         end
 
       val rules = map_filter (reason o Phi_Help.beta_eta_contract) (intros @ elims)
@@ -109,7 +109,7 @@ fun gen_SE_Trim_Empty _ (phi : phi_type) thy =
 
 val SE_Trim_Empty = deriver_framework_no_hints (ONLY_ONCE, "SE_Trim_Empty") gen_SE_Trim_Empty
 
-fun SE_Trim_Empty__generation_pass (_, gen, _, ctxt) th =
+fun SE_Trim_Empty__generation_pass (gen, _, ctxt) th =
   let val rctxt = Config.put Phi_Reasoner_solve_obligation_and_no_defer 1 ctxt
       fun reason th =
         let val concl = Thm.cconcl_of th

@@ -167,6 +167,8 @@ definition \<open>Separation_Homo\<^sub>I Ft Fu F3 Prem D z \<longleftrightarrow
 definition \<open>Separation_Homo\<^sub>E Ft Fu F3 un \<longleftrightarrow> \<comment> \<open>Does it need a domain constraint?\<close>
               (\<forall>T U z. z \<Ztypecolon> F3 (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)\<close>
 
+subsubsection \<open>Semimodule\<close>
+
 definition Semimodule_Scalar_Homo :: \<open>('s \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('s::semigroup_mult \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Semimodule_Scalar_Homo F T D \<longleftrightarrow> (\<forall>s t. D s \<and> D t \<longrightarrow> F s (F t T) = F (t * s) T)\<close>
   \<comment> \<open>Associativity of scalar multiplication\<close>
@@ -1033,15 +1035,6 @@ lemma functional_transformation:
           simplified]
   by blast
 
-lemma [\<phi>TA_internal_simplify_special_cases,
-       \<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>_structural _\<close>]:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a @action \<A>_structural Act)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x) 
-\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper P x @action \<A>_structural Act \<close>
-  unfolding Action_Tag_def
-  using functional_transformation[unfolded Argument_def] .
-
 (*
 lemma [\<phi>TA_internal_simplify_special_cases,
        \<phi>reason default 35 for \<open>_ \<Ztypecolon> Fa _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action as _\<close>]:
@@ -1206,7 +1199,37 @@ lemma [\<phi>reason_template [assertion_simps]]:
   unfolding Semimodule_Scalar_Homo_def
   by simp
 
+lemma [\<phi>reason_template default 190]:
+  \<open> Semimodule_Scalar_Homo F T D
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D a \<and> D b
+\<Longrightarrow> x \<Ztypecolon> F (b * a) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> F a (F b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Semimodule_Scalar_Homo_def Premise_def
+  by simp
 
+lemma [\<phi>reason_template default 190]:
+  \<open> Semimodule_Scalar_Homo F T D
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D a \<and> D b
+\<Longrightarrow> R * (x \<Ztypecolon> F (b * a) T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (x \<Ztypecolon> F a (F b T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Semimodule_Scalar_Homo_def Premise_def
+  by simp
+
+lemma [\<phi>reason_template default 190]:
+  \<open> Semimodule_Scalar_Homo F T D
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D a \<and> D b
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F a (F b T) \<w>\<i>\<t>\<h> P \<close>
+  unfolding Semimodule_Scalar_Homo_def Premise_def
+  by simp
+
+lemma [\<phi>reason_template default 190]:
+  \<open> Semimodule_Scalar_Homo F T D
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D a \<and> D b
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F a (F b T) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Semimodule_Scalar_Homo_def Premise_def
+  by simp
 
 
 
@@ -1434,30 +1457,25 @@ declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>rea
 *)
 
 
-paragraph \<open>Seminearing\<close>
-
-
-
-
-
+paragraph \<open>Semimodule\<close>
 
 
 declare [[\<phi>trace_reasoning = 2]]
 
 lemma SE_general_Semimodule_Scalar_left: (*need test, to be tested once we have usable test case*)
-  \<open> Semimodule_Scalar_Homo F3 U Ds
+  \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Prem
+\<Longrightarrow> Semimodule_Scalar_Homo F3 U Ds
 \<Longrightarrow> Semimodule_Scalar_Homo F4 W Ds
 \<Longrightarrow> Separation_Homo\<^sub>I (F1 a) (F4 a) F14 Prem_SH Dz z
 \<Longrightarrow> Prem_SH T (F4 c W) x
 \<Longrightarrow> Separation_Homo\<^sub>E (F3 a) (F2 a) F23 uz
-\<Longrightarrow> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
-\<Longrightarrow> Prem
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b \<and> Ds c
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
 \<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> F4 c W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F3 c U \<^emph> R \<w>\<i>\<t>\<h> P x @action \<A>SE )
 \<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz (func_mapper f (z x)) \<Ztypecolon> F3 b U \<^emph> F2 a R \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SE \<close>
-  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add] and _ and [\<phi>reason add] and _ and FTF and [\<phi>reason add]
+  \<medium_left_bracket> premises FTF and [\<phi>reason add] and LSF3[\<phi>reason add] and LSF4[\<phi>reason add] and _ and [\<phi>reason add] and _
              and _ and _ and _ and Tr
     interpret Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
       using FTF .
@@ -1473,24 +1491,25 @@ lemma SE_general_Semimodule_Scalar_left: (*need test, to be tested once we have 
     fold F3D
   \<medium_right_bracket> .
 
-declare SE_general_Semimodule_Scalar_left[THEN \<A>SE_clean_waste, \<phi>reason_template add 60]
+declare SE_general_Semimodule_Scalar_left[THEN \<A>SE_clean_waste, \<phi>reason_template default 35]
+  \<comment> \<open>The priority is smaller than the default rule of functional transformation\<close>
 
-lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we have usable test case*)
-  \<open> Semimodule_Scalar_Homo F3 U Ds
+lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we have usable test case*)
+  \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Prem \<comment> \<open>TODO: move!\<close>
+\<Longrightarrow> Functional_Transformation_Functor F14 (F3 a) Dom Rng'r mapper'r Prem'r pred_mapper func_mapper'r
+\<Longrightarrow> Prem'r
+\<Longrightarrow> Functional_Transformation_Functor (F1 a) F23 Dom'w Rng'w mapper'w Prem'w pred_mapper'w func_mapper'w
+\<Longrightarrow> Prem'w
+\<Longrightarrow> Functional_Transformation_Functor (F1 a) (F3 a) Dom'w Rng'b mapper'b Prem'b pred_mapper'w func_mapper'b
+\<Longrightarrow> Prem'b
+\<Longrightarrow> Semimodule_Scalar_Homo F3 U Ds
 \<Longrightarrow> Semimodule_Scalar_Homo F4 W Ds
 \<Longrightarrow> Separation_Homo\<^sub>I (F1 a) (F4 a) F14 Prem_SH Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E (F3 a) (F2 a) F23 uz
-\<Longrightarrow> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
-\<Longrightarrow> Functional_Transformation_Functor F14 (F3 a) Dom Rng'r mapper'r Prem'r pred_mapper func_mapper'r
-\<Longrightarrow> Functional_Transformation_Functor (F1 a) F23 Dom'w Rng'w mapper'w Prem'w pred_mapper'w func_mapper'w
-\<Longrightarrow> Functional_Transformation_Functor (F1 a) (F3 a) Dom'w Rng'b mapper'b Prem'b pred_mapper'w func_mapper'b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b \<and> Ds c
-\<Longrightarrow> Prem \<comment> \<open>TODO: move!\<close>
 \<Longrightarrow> Prem_SH T (F4 c W) x
-\<Longrightarrow> Prem'r
-\<Longrightarrow> Prem'w
-\<Longrightarrow> Prem'b
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Cw \<longrightarrow> x \<in> Dz) \<and>
            (if Cw then if Cr then (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
                              else (\<forall>a. a \<in> Dom (z x) \<longrightarrow> fst (f a) \<in> Rng'r (z x))
@@ -1511,11 +1530,10 @@ lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we hav
   apply (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod)
   apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def
                        "SE_general_Semimodule_Scalar_left"[unfolded Action_Tag_def])
-  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+  \<medium_left_bracket> premises [] and [] and FTF and [] and [] and [] and [] and []
+         and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
          and _ and []
-         and [] and FTF and [] and []
-         and _ and _
-         and [] and [\<phi>reason add] and [] and [] and []
+         and _ and _ and [\<phi>reason add]
          and _ and Tr
     interpret Functional_Transformation_Functor F14 \<open>F3 a\<close> Dom Rng'r mapper'r True pred_mapper func_mapper'r
       using FTF .
@@ -1529,11 +1547,10 @@ lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we hav
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
     fold F3D
   \<medium_right_bracket>
-  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+  \<medium_left_bracket> premises [] and [] and [] and [] and FTF and [] and [] and []
+         and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
          and [] and _
-         and [] and [] and FTF and []
-         and _ and _
-         and [] and [\<phi>reason add] and [] and [] and []
+         and _ and _ and [\<phi>reason add]
          and _ and Tr
     interpret Functional_Transformation_Functor \<open>F1 a\<close> F23 Dom'w Rng'w mapper'w True pred_mapper'w func_mapper'w
       using FTF .
@@ -1547,11 +1564,10 @@ lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we hav
     apply_rule apply_Separation_Functor_unzip[where x=\<open>func_mapper'w (\<lambda>x. f (x, undefined)) (fst x)\<close> and Fc = F23]
     fold F3D
   \<medium_right_bracket>
-  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+  \<medium_left_bracket> premises [] and [] and [] and [] and [] and [] and FTF and []
+         and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
          and _ and _
-         and [] and [] and [] and FTF
-         and _ and _
-         and [] and [\<phi>reason add] and [] and [] and []
+         and _ and _ and [\<phi>reason add]
          and _ and Tr
     interpret Functional_Transformation_Functor \<open>F1 a\<close> \<open>F3 a\<close> Dom'w Rng'b mapper'b True pred_mapper'w func_mapper'b
       using FTF .
@@ -1565,27 +1581,30 @@ lemma SE_general_Scala_Seminearing_left_b: (*need test, to be tested once we hav
     fold F3D
   \<medium_right_bracket> .
 
+declare SE_general_Semimodule_Scalar_left_b[(*THEN SE_clean_waste,*) \<phi>reason_template default 35]
 
 
-lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we have usable test case*)
-  \<open> Semimodule_Scalar_Homo F3 U Ds
+lemma SE_general_Semimodule_Scalar_left_a:
+  \<open> Functional_Transformation_Functor F14 (F3 a) Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Prem
+\<Longrightarrow> Semimodule_Scalar_Homo F3 U Ds
 \<Longrightarrow> Semimodule_Scalar_Homo F4 W Ds
 \<Longrightarrow> Separation_Homo\<^sub>I (F1 a) (F4 a) F14 Prem_SH Dz z
-\<Longrightarrow> Functional_Transformation_Functor F14 (F3 a) Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Prem_SH T (F4 c W) x
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b \<and> Ds c
-\<Longrightarrow> Prem
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
-\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> F4 c W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F3 c U \<w>\<i>\<t>\<h> P x @action \<A>SE False)
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f (z x) \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SE False\<close>
-  \<medium_left_bracket> premises LSF3[\<phi>reason add] and LSF4[\<phi>reason add] and _ and FTF
-             and _ and _ and [\<phi>reason add] and _ and Tr
+\<Longrightarrow> (\<And>x \<in> Dom (z x). x \<Ztypecolon> T \<^emph> F4 c W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F3 c U \<w>\<i>\<t>\<h> P x @action \<A>SEa )
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F4 b W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f (z x) \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> pred_mapper P (z x) @action \<A>SEa \<close>
+  \<medium_left_bracket> premises FTF and [\<phi>reason add] and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+         and _ and [\<phi>reason add]
+         and _ and _ and _ and Tr
     interpret Functional_Transformation_Functor F14 \<open>F3 a\<close> Dom Rng mapper Prem pred_mapper func_mapper
       using FTF .
     have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
       by (metis LSF4 Semimodule_Scalar_Homo_def \<open>Ds a \<and> Ds b \<and> Ds c\<close> the_\<phi>(6))
     have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
-      by (metis LSF3 Semimodule_Scalar_Homo_def \<open>a \<in> Ds \<and> b \<in> Ds \<and> c \<in> Ds\<close> the_\<phi>(6)) ;;
+      by (metis LSF3 Semimodule_Scalar_Homo_def \<open>Ds a \<and> Ds b \<and> Ds c\<close> the_\<phi>(6)) ;;
     unfold F4D
     apply_rule apply_Separation_Functor_zip[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
     apply_rule functional_transformation[where U=\<open>F3 c U\<close> and f=f and P=P]
@@ -1593,9 +1612,7 @@ lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we hav
     fold F3D
   \<medium_right_bracket> .
 
-declare SE_general_Scala_Seminearing_left_b[(*THEN SE_clean_waste,*) \<phi>reason_template add 60]
-
-
+declare SE_general_Semimodule_Scalar_left_a[THEN \<A>SEa_clean_waste, \<phi>reason_template default 35]
 
 subsection \<open>Properties for Specific Elements\<close>
 
@@ -1721,6 +1738,44 @@ lemma closed_homo_sep_share[\<phi>reason 1000]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding closed_homo_sep_def Premise_def
   by (simp add: homo_sep_share closed_homo_sep_disj_share)
+
+
+subsubsection \<open>Annotation of Scalar Multiplication\<close>
+
+definition scalar_mult :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'b\<close> where \<open>scalar_mult f \<equiv> f\<close>
+  \<comment> \<open>A tag annotating the function is a scalar multiplication so that the automation for semimodules
+      will be activated. It also distinguishes the function part and the parameter part, so that
+      resolves multi-unification.\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> homo_one (\<psi> s)
+\<Longrightarrow> homo_one (scalar_mult \<psi> s) \<close>
+  unfolding scalar_mult_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> homo_sep_mult (\<psi> s)
+\<Longrightarrow> homo_sep_mult (scalar_mult \<psi> s) \<close>
+  unfolding scalar_mult_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> homo_sep_disj (\<psi> s)
+\<Longrightarrow> homo_sep_disj (scalar_mult \<psi> s) \<close>
+  unfolding scalar_mult_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> closed_homo_sep_disj (\<psi> s)
+\<Longrightarrow> closed_homo_sep_disj (scalar_mult \<psi> s) \<close>
+  unfolding scalar_mult_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> homo_sep (\<psi> s)
+\<Longrightarrow> homo_sep (scalar_mult \<psi> s) \<close>
+  unfolding scalar_mult_def .
+
+lemma [\<phi>reason 1000]:
+  \<open> closed_homo_sep (\<psi> s)
+\<Longrightarrow> closed_homo_sep (scalar_mult \<psi> s) \<close>
+  unfolding scalar_mult_def .
 
 
 subsection \<open>Property Derivers\<close>
@@ -2087,9 +2142,52 @@ subsubsection \<open>Scalar Semimodule Homo\<close>
 
 text \<open>\<phi>-type embedding of separation quantifier \<open>x \<Ztypecolon> \<big_ast>[i\<in>I] T\<close> is a recursive example of this.
 
-  We apply structural induction over the scalar as the scalar usually gives the domain of the \<phi>-type abstraction.
-  As the scalar reduces by means of induction, the entire \<phi>-type assertion should also be able to reduce.
+  The induction of the \<phi>-type should expand the scalar as the scalar usually represents the domain of the \<phi>-type abstraction. 
 \<close>
+
+definition default_domain_of_scalar :: \<open>'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>default_domain_of_scalar _ _ _ \<equiv> True\<close>
+  \<comment> \<open>indicating the default domain of the scalar of the given types, used as the default guess in derivers\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>default_domain_of_scalar ?A ?B _\<close> \<Rightarrow> \<open>default_domain_of_scalar ?A ?B _\<close> (100)
+]]
+
+lemma [\<phi>reason 1000]:
+  \<open>default_domain_of_scalar TYPE(rat) TYPE('b::share) (\<lambda>x. 0 < x)\<close>
+  unfolding default_domain_of_scalar_def ..
+
+lemma [\<phi>reason 1010]:
+  \<open>default_domain_of_scalar TYPE(rat) TYPE('b::share_one) (\<lambda>x. 0 \<le> x)\<close>
+  unfolding default_domain_of_scalar_def ..
+
+
+
+lemma \<phi>TA_MS_rule:
+  \<open> (\<And>t s r x. (Ant @action \<phi>TA_ANT)
+         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D s \<and> D t \<and> r = t * s
+         \<longrightarrow> (x \<Ztypecolon> F s (F t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F r T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<And>t s x. (Ant @action \<phi>TA_ANT)
+         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D s \<and> D t
+         \<longrightarrow> (x \<Ztypecolon> F (t * s) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F s (F t T)) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Semimodule_Scalar_Homo F T D \<close>
+  unfolding Semimodule_Scalar_Homo_def Action_Tag_def Premise_def
+  by (clarsimp; rule \<phi>Type_eqI_Tr; blast)
+
+lemma \<phi>TA_MS_rewr:
+  \<open> Trueprop ((Ant @action \<phi>TA_ANT) \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> Q @action \<phi>TA_ind_target \<A>)
+\<equiv> (Ant \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Q @action \<A>)\<close>
+  unfolding atomize_imp Action_Tag_def ..
+
+ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
+
+\<phi>property_deriver Semimodule_Scalar_Homo 130 for (\<open>Semimodule_Scalar_Homo _ _ _\<close>)
+    = \<open>Phi_Type_Algebra_Derivers.semimodule_scalar\<close>
+
 
 (*TODO!!!
 thm nat_induct [induct rule = ....]

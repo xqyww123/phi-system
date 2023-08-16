@@ -350,7 +350,7 @@ text \<open>For antecedent \<^pattern_prop>\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>
 
 subsubsection \<open>Rules\<close>
 
-lemma \<phi>Type_eqI_imp:
+lemma \<phi>Type_eqI_Tr:
   \<open> (\<And>x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U)
 \<Longrightarrow> (\<And>x. x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T)
 \<Longrightarrow> T = U\<close>

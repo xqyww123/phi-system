@@ -184,7 +184,7 @@ fun SgTH_reasoning phi ctxt =
 
 fun gen_SgTH (_,name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val parse_hint = parse_hint_has_type_operator_only (
+      val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Trivial_\<Sigma>\<close>, _) $ F $ _ $ _ $ _ $ _ => F)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Trivial_\<Sigma>\<close>, _) $ _ $ _ $ D $ s $ z) = [D,s,z]
         | extract_oprs_from_hint _ = []

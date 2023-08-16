@@ -171,7 +171,7 @@ fun gen_obj_equal_singular (_,name) hint (phi0 : phi_type) thy =
                       end
                  else rule0
 
-      val parse_hint = parse_hint_has_type_only (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T $ _ => T)
+      val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T $ _ => T)
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
@@ -224,7 +224,7 @@ fun gen_obj_equal_singular (_,name) hint (phi0 : phi_type) thy =
 
 fun gen_obj_equal' (_,name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val parse_hint = parse_hint_has_type_only (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
+      val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
