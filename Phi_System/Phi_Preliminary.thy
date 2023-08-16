@@ -57,6 +57,14 @@ subsection \<open>Error Mechanism\<close>
 
 ML_file \<open>library/tools/error.ML\<close>
 
+
+subsection \<open>Helper Annotation\<close>
+
+definition NO_SIMP where \<open>NO_SIMP X \<equiv> X\<close>
+  \<comment> \<open>to prevent simplification on the inner terms\<close>
+
+lemma NO_SIMP_cong[cong]: \<open>NO_SIMP X \<equiv> NO_SIMP X\<close> .
+
 subsection \<open>Helper ML\<close>
 
 ML_file \<open>library/tools/Phi_Help.ML\<close>

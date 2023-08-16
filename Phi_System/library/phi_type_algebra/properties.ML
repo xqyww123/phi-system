@@ -28,7 +28,7 @@ structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
 datatype instantiation_action =
             Reasonig_Rule of (Phi_Reasoner.mode * priority) *
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
-          | Attributes of Thm.attribute list
+          | Attributes of Token.src list
 
 type dependences = property_name list (*corresponding to the premises respectively,
                                         being empty string if the premise in the position is
@@ -111,7 +111,7 @@ type rule_generation_pass = (thm -> thm list) * Position.T * Proof.context -> th
 datatype instantiation_action =
             Reasonig_Rule of (Phi_Reasoner.mode * priority) *
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
-          | Attributes of Thm.attribute list
+          | Attributes of Token.src list
 
 datatype template_action =
             Instantiate_Rule of thm * rule_generation_pass option *
@@ -160,6 +160,14 @@ fun pretty_templates ctxt (table : (priority * template) Ord_List.T Symtab.table
       open Pretty
    in chunks (map (item o single o pretty_template ctxt) templates)
   end
+
+fun trim_template ((deps, pos, act) : template) : template =
+  (deps, pos,
+  case act of Instantiate_Rule (rule, pass, inst) =>
+                Instantiate_Rule (Thm.trim_context rule, pass,
+                  (case inst of Reasonig_Rule _ => inst
+                              | Attributes srcs => Attributes (map Token.trim_context_src srcs)))
+            | Free_Action act => Free_Action act)
 
 fun close_phitype_operator phityp =
   let val i = maxidx_of_term phityp + 1
@@ -257,16 +265,17 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                             | NONE => error "Rule Generation fails"
                      end
                 else rule*)
-          fun simplify ctxt rules =
-                let val ((_,rules'1), ctxt'1) = Variable.import false rules ctxt
+          fun simplify ctxt rule =
+                let val ((_, [rule'1]), ctxt'1) = Variable.import false [rule] ctxt
                     val ctxt's = Template_Inst_SS.enhance ctxt'1
                               |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
-                 in Variable.export ctxt'1 ctxt
-                      (map ( Simplification_Protect.protect ctxt's
-                          #> Phi_Reasoners.asm_lr_simplify true ctxt's
-                          #> Simplification_Protect.unprotect ctxt's) rules'1)
+                 in singleton (Variable.export ctxt'1 ctxt)
+                      (  rule'1
+                      |> Simplification_Protect.protect ctxt's
+                      |> Phi_Reasoners.asm_lr_simplify true ctxt's
+                      |> Simplification_Protect.unprotect ctxt's )
                 end
-          val rule'1 = Phi_Help.beta_eta_contract (template OF props)
+          val rule'1 = Phi_Help.beta_eta_contract (Thm.transfer' ctxt' template OF props)
                 handle THM _ => let open Pretty in
                     Phi_Reasoner.info_pretty ctxt' 2 (fn () =>
                       chunks (block (str "Mismatch in instantiating a reasoning rule " :: here pos) ::
@@ -278,11 +287,12 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
           fun default_generation rule'1 =
             let val rule'2 = rule'1
                           (*|> do_reason*)
-                          |> singleton (simplify ctxt') 
-                val rule' = rule'2
+                          |> simplify ctxt'
                           |> Phi_Help.unique_flexflex ctxt'
-                          |> Phi_Help.instantiate_higher_order_schematic_var ~1 ctxt'
-                          |> singleton (simplify ctxt') 
+                val rule' = (case Phi_Help.instantiate_higher_order_schematic_var' ~1 ctxt' rule'2
+                               of SOME th => simplify ctxt' th
+                                | NONE => rule'2)
+                          |> Simplifier.rewrite_rule ctxt' @{thms' NO_SIMP_def}
                           |> normalize
              in [rule']
             end
@@ -301,7 +311,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
               Phi_Reasoner.add_rules (map (fn rule =>
                           ([rule], pos, mode, priority, pats, blacklists, NONE) ) rules') ctxt
           | Attributes attrs =>
-              let fun app attr = uncurry (Thm.apply_attribute attr)
+              let fun app attr = uncurry (Thm.apply_attribute (Attrib.attribute ctxt' attr))
                in fold (curry (snd o fold app attrs)) rules' ctxt
               end
        )
@@ -348,11 +358,14 @@ fun add_template invoke_on_existing_instantiations (priority, template) ctxt =
                  ) existing_ins ctxt
         end
       val dependencies' = distinct (op =) (filter (fn s => s <> "") (#1 template))
+      val template' = trim_template template
    in ctxt
-   |> fold (fn prop_kind =>
-          Property_Templates.map (Symtab.map_default (prop_kind,[])
-              (Ord_List.insert (prop_table_order prop_kind) (priority, template)))
+   |> Property_Templates.map (
+        fold (fn prop_kind =>
+          Symtab.map_default (prop_kind,[])
+              (Ord_List.insert (prop_table_order prop_kind) (priority, template'))
         ) dependencies'
+      )
    |> invoke_on_existing_instantiations ? invk_on_existing_instantiations
   end
 
@@ -408,7 +421,7 @@ fun add_property (phityp0,pos,property) ctxt =
          in Net.insert_term property_eq (k''', (k,pos,v)) net
         end
    in ctxt
-    |> Properties.map (insert_term (key, (phityp', pos, property)))
+    |> Properties.map (insert_term (key, (phityp', pos, Thm.trim_context property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
     |> invoke_automations_on_property (phityp0, pos, property)
    handle SKIP => ctxt
@@ -516,8 +529,7 @@ val _ = Theory.setup (
                     end
                   ) pass_src
               val gen = case (attribs, priority, pats)
-                          of (attrs as _ :: _, 100, ([], [])) =>
-                              Attributes (map (Context.cases Attrib.attribute_cmd_global Attrib.attribute_cmd ctxt) attrs)
+                          of (attrs as _ :: _, 100, ([], [])) => Attributes attrs
                            | (_ :: _, _, _) =>
                               error "Prioirty and binding patterns are senseless and not allowed to\
                                     \ be given once the attributes are given."

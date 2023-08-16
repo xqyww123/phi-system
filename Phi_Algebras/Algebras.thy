@@ -1045,6 +1045,14 @@ locale module_scalar_assoc = module_for_sep +
   assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (t * s) a\<close>
   \<comment> \<open>Recall we always follow the order of the associativity.\<close>
 
+locale module_scalar_identity = module_for_sep +
+  assumes module_scalar_identity: \<open>smult 1 a = a\<close>
+
+lemma module_scalar_identity_share[simp]:
+  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::share_one \<Rightarrow> 'a)\<close>
+  unfolding module_scalar_identity_def
+  by simp
+
 lemma module_scalar_assoc_share0[simp]:
   \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::share \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
   unfolding module_scalar_assoc_def

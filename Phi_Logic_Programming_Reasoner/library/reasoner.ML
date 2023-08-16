@@ -861,7 +861,7 @@ fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
 fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
   let
     val (rules01, (mode, priority), (patterns, blacklist), guard, ctxt) =
-            run_passes pos (rules0, (mode0, priority0), pats0, guard0, ctxt0)
+            run_passes pos (map (Thm.transfer'' ctxt0) rules0, (mode0, priority0), pats0, guard0, ctxt0)
     val rules = rules01
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
              |> map ( Phi_Help.beta_eta_contract

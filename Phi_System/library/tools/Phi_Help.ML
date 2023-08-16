@@ -111,6 +111,7 @@ include PHI_HELP
 
   val empty_ctxt : Proof.context
 
+  val instantiate_higher_order_schematic_var' : int (*N*) -> Proof.context -> thm -> thm option (*returns none if no change*)
   val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
   (*For the leading N antecedents only, if it contains any higher-order schematic
   variable where one of its parameters is always applied to constant argument, then instantiate
@@ -422,7 +423,7 @@ fun debug_RS ctxt tha thb =
 val empty_ctxt = Proof_Context.init_global Pure_Syn.bootstrap_thy
 
 
-fun instantiate_higher_order_schematic_var num ctxt thm =
+fun instantiate_higher_order_schematic_var' num ctxt thm =
   let fun get_concl (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs(_,_,X)) = get_concl X
         | get_concl (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_concl X
         | get_concl X = X
@@ -490,8 +491,12 @@ fun instantiate_higher_order_schematic_var num ctxt thm =
                            else if num = ~2 then Thm.prems_of thm @ [Thm.concl_of thm]
                            else List.take (Thm.prems_of thm, num))
                           ([],[])
-  in Thm.instantiate (TVars.empty, Vars.make ins) thm
+  in if null ins then NONE
+  else SOME (Thm.instantiate (TVars.empty, Vars.make ins) thm)
  end
+
+fun instantiate_higher_order_schematic_var num ctxt thm =
+  the_default thm (instantiate_higher_order_schematic_var' num ctxt thm)
 
 fun generic_theory_mapping f =
   Context.mapping (Context.theory_map (f Morphism.identity))

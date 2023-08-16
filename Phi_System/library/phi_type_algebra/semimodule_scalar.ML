@@ -43,7 +43,7 @@ fun guess_property (phi : phi_type) ctxt =
 fun gen_MS (der_id, name) hint0 (phi : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val parse_hint = parse_hint (
-              fn (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<close>, _) $ F1 $ _ $ _ $ _ $ _) => F1)
+              fn (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<close>, _) $ F1 $ _ $ _) => F1)
       val extract_oprs_from_hint = K []
       fun reasoning phi =
         default_reasoning false

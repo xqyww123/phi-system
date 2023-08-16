@@ -52,7 +52,7 @@ if the abstract representation is defined from Natural Bounded Functor (BNF), i.
 in most of proof assistants.
 
 The attempt to introduce a type system in a logic is ubiquitous. However, they are rudimentary
-comparing with the abundant algebraic properties that \<phi>-type owns, which instantiate the automation,
+comparing with the rich algebraic properties that \<phi>-type owns, which instantiate the automation,
 and also the rule generation algorithms that our theory provides, which derive the algebraic properties.
 RefinedC gives a theory diving into neither algebraic properties nor rule generation algorithms,
 but only the notion of coarse-grand types itself with reasoning rules written manually by human experts.
@@ -168,6 +168,9 @@ definition \<open>Separation_Homo\<^sub>E Ft Fu F3 un \<longleftrightarrow> \<co
               (\<forall>T U z. z \<Ztypecolon> F3 (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> un z \<Ztypecolon> Ft T \<^emph> Fu U)\<close>
 
 subsubsection \<open>Semimodule\<close>
+
+definition Semimodule_Identity :: \<open>('s::one \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Semimodule_Identity F T \<longleftrightarrow> F 1 T = T\<close>
 
 definition Semimodule_Scalar_Assoc :: \<open>('s \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('s::semigroup_mult \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Semimodule_Scalar_Assoc F T D \<longleftrightarrow> (\<forall>s t. D s \<and> D t \<longrightarrow> F s (F t T) = F (t * s) T)\<close>
@@ -289,7 +292,8 @@ declare [[
   and \<open>Semimodule_LDistr_Homo\<^sub>Z_rev ?F _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>Z_rev ?F _ _ _\<close> (100)
 ]]
 
-declare [[\<phi>reason_default_pattern \<open>module_scalar_assoc ?\<psi> _\<close> \<Rightarrow> \<open>module_scalar_assoc ?\<psi> _\<close> (100)]]
+declare [[\<phi>reason_default_pattern \<open>module_scalar_assoc ?\<psi> _\<close> \<Rightarrow> \<open>module_scalar_assoc ?\<psi> _\<close>   (100)
+                              and \<open>module_scalar_identity ?\<psi>\<close> \<Rightarrow> \<open>module_scalar_identity ?\<psi>\<close> (100)]]
 
 
 subsection \<open>Applications\<close>
@@ -419,6 +423,7 @@ Priority:
 \<^item> 1100: \<^const>\<open>Transformation_Functor\<close>
 \<close>
 
+
 subsubsection \<open>Implementation\<close>
 
 lemma \<phi>inductive_destruction_rule_from_direct_definition:
@@ -502,10 +507,8 @@ lemma \<phi>gen_expansion:
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
-
 ML_file \<open>library/phi_type_algebra/properties.ML\<close>
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
-
 
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
 term \<open>HOL.eq\<close>
@@ -620,6 +623,8 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
       (fn (_ $ F $ _ $ _ $ _ $ _ $ _ ) => F)
 #> add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>E\<close>
       (fn (_ $ F $ _ $ _ $ _ ) => F)
+#> add_property_kind \<^const_name>\<open>Semimodule_Identity\<close>
+      (fn (_ $ F $ _ ) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_Scalar_Assoc\<close>
       (fn (_ $ F $ _ $ _ ) => attach_var F)
 (* #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Unit_Functor\<close> (fn (_ $ F) => F) *)
@@ -1191,10 +1196,47 @@ Do we really need it?*)
 end
 
 
-
 subsubsection \<open>Semimodule\<close>
 
-lemma [\<phi>reason_template [assertion_simps]]:
+paragraph \<open>Identity\<close>
+
+lemma [\<phi>reason_template [assertion_simps, simp]]:
+  \<open> Semimodule_Identity F T
+\<Longrightarrow> F 1 T = T \<close>
+  unfolding Semimodule_Identity_def .
+
+lemma [\<phi>reason_template default 190]:
+  \<open> Semimodule_Identity F T
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F 1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Identity_def NO_SIMP_def
+  by simp
+
+lemma [\<phi>reason_template default 190]:
+  \<open> Semimodule_Identity F T
+\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F 1 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Identity_def NO_SIMP_def
+  by simp
+
+lemma [\<phi>reason_template default 190]:
+  \<open> Semimodule_Identity F T
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F 1 T \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Identity_def NO_SIMP_def
+  by simp
+
+lemma [\<phi>reason_template default 190]:
+  \<open> Semimodule_Identity F T
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F 1 T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Identity_def NO_SIMP_def
+  by simp
+
+
+paragraph \<open>Associative\<close>
+
+lemma [\<phi>reason_template [assertion_simps, simp]]:
   \<open> Semimodule_Scalar_Assoc F T D
 \<Longrightarrow> D a \<and> D b
 \<Longrightarrow> F a (F b T) = F (b * a) T\<close>
@@ -1204,33 +1246,33 @@ lemma [\<phi>reason_template [assertion_simps]]:
 lemma [\<phi>reason_template default 190]:
   \<open> Semimodule_Scalar_Assoc F T D
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D a \<and> D b
-\<Longrightarrow> x \<Ztypecolon> F (b * a) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> F a (F b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding Semimodule_Scalar_Assoc_def Premise_def
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F (b * a) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F a (F b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def
   by simp
 
 lemma [\<phi>reason_template default 190]:
   \<open> Semimodule_Scalar_Assoc F T D
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D a \<and> D b
-\<Longrightarrow> R * (x \<Ztypecolon> F (b * a) T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R * (x \<Ztypecolon> F a (F b T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding Semimodule_Scalar_Assoc_def Premise_def
+\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F (b * a) T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F a (F b T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def
   by simp
 
 lemma [\<phi>reason_template default 190]:
   \<open> Semimodule_Scalar_Assoc F T D
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D a \<and> D b
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F a (F b T) \<w>\<i>\<t>\<h> P \<close>
-  unfolding Semimodule_Scalar_Assoc_def Premise_def
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F a (F b T) \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def
   by simp
 
 lemma [\<phi>reason_template default 190]:
   \<open> Semimodule_Scalar_Assoc F T D
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D a \<and> D b
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F a (F b T) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Semimodule_Scalar_Assoc_def Premise_def
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F a (F b T) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def
   by simp
 
 
@@ -1239,7 +1281,7 @@ subsubsection \<open>Reasonings in Separation Extraction\<close>
 
 paragraph \<open>Transformation Functor\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>trace_reasoning = 1]]
 
 lemma "_Structural_Extract_general_rule_":
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
@@ -1462,7 +1504,7 @@ declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>rea
 paragraph \<open>Semimodule\<close>
 
 
-declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>trace_reasoning = 1]]
 
 lemma SE_general_Semimodule_Scalar_left: (*need test, to be tested once we have usable test case*)
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
@@ -1741,10 +1783,9 @@ lemma closed_homo_sep_share[\<phi>reason 1000]:
   unfolding closed_homo_sep_def Premise_def
   by (simp add: homo_sep_share closed_homo_sep_disj_share)
 
-declare module_scalar_assoc_share0[\<phi>reason 1000, assertion_simps]
-        module_scalar_assoc_share [\<phi>reason 1100, assertion_simps]
-
-thm module_scalar_assoc_share
+declare module_scalar_assoc_share0   [\<phi>reason 1000, assertion_simps]
+        module_scalar_assoc_share    [\<phi>reason 1100, assertion_simps]
+        module_scalar_identity_share [\<phi>reason 1000, assertion_simps]
 
 
 subsubsection \<open>Annotation of Scalar Multiplication\<close>
@@ -2144,8 +2185,33 @@ lemma function_congruence_template:
   
 ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 
+subsubsection \<open>Semimodule Scalar Identity\<close>
 
-subsubsection \<open>Scalar Semimodule Homo\<close>
+lemma \<phi>TA_MI_rule:
+  \<open> (\<And>x. (Ant @action \<phi>TA_ANT)
+      \<longrightarrow> (x \<Ztypecolon> F 1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<And>x. (Ant @action \<phi>TA_ANT)
+      \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F 1 T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Semimodule_Identity F T \<close>
+  unfolding Semimodule_Identity_def Action_Tag_def Premise_def
+  by (clarsimp; rule \<phi>Type_eqI_Tr; blast)
+
+lemma \<phi>TA_MI_rewr:
+  \<open> Trueprop ((Ant @action \<phi>TA_ANT) \<longrightarrow> Q @action \<phi>TA_ind_target \<A>)
+\<equiv> (Ant \<Longrightarrow> Q @action \<A>)\<close>
+  unfolding atomize_imp Action_Tag_def ..
+
+ML_file \<open>library/phi_type_algebra/semimodule_identity.ML\<close>
+
+\<phi>property_deriver Semimodule_Identity 130 for (\<open>Semimodule_Identity _ _\<close>)
+    = \<open>Phi_Type_Algebra_Derivers.semimodule_identity\<close>
+
+
+subsubsection \<open>Semimodule Scalar Associative\<close>
 
 text \<open>\<phi>-type embedding of separation quantifier \<open>x \<Ztypecolon> \<big_ast>[i\<in>I] T\<close> is a recursive example of this.
 
@@ -2167,7 +2233,6 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1010]:
   \<open>default_domain_of_scalar TYPE(rat) TYPE('b::share_one) (\<lambda>x. 0 \<le> x)\<close>
   unfolding default_domain_of_scalar_def ..
-
 
 
 lemma \<phi>TA_MS_rule:
@@ -2194,24 +2259,6 @@ ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
 
 \<phi>property_deriver Semimodule_Scalar_Assoc 130 for (\<open>Semimodule_Scalar_Assoc _ _ _\<close>)
     = \<open>Phi_Type_Algebra_Derivers.semimodule_scalar\<close>
-
-
-(*TODO!!!
-thm nat_induct [induct rule = ....]
-
-lemma
-  \<open> (\<And>t s x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s \<in> D \<and> t \<in> D
-         \<Longrightarrow> (Ant @action \<phi>TA_ANT)
-         \<longrightarrow> x \<Ztypecolon> F s (F t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (t * s) T @action \<phi>TA_ind_target NToA)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> (\<And>t s x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s \<in> D \<and> t \<in> D
-         \<Longrightarrow> (Ant @action \<phi>TA_ANT)
-         \<longrightarrow> x \<Ztypecolon> F (t * s) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F s (F t T) @action \<phi>TA_ind_target NToA)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
-\<Longrightarrow> Semimodule_Scalar_Assoc F T D \<close>
-*)
 
 subsubsection \<open>Separation Homo\<close>
 

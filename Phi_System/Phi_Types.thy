@@ -768,6 +768,11 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
 
+lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
+  \<open> module_scalar_identity \<psi>
+\<Longrightarrow> Semimodule_Identity (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T \<close>
+  unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def
+  by (rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
   \<open> module_scalar_assoc \<psi> Ds
@@ -1304,7 +1309,7 @@ lemma [\<phi>reason 1000]:
 subsection \<open>Permission Sharing\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-         
+          
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (scalar_mult share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Basic
@@ -1317,20 +1322,9 @@ declare [[\<phi>trace_reasoning = 0]]
        and Separation_Homo
        and SE_Trim_Empty
        and Semimodule_Scalar_Assoc
+       and Semimodule_Identity
 
 
-
-
-
-
-
-term \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
-term \<open>Separation_Homo\<^sub>I ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
-term \<open>Separation_Homo\<^sub>E ((\<odiv>) n :: ('c::share_nun_semimodule,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>) ((\<odiv>) n) ((\<odiv>) n) (\<lambda>x. x)\<close>
-term \<open>(\<And>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x) \<Longrightarrow> \<forall>x. x \<Ztypecolon> n \<odiv> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P x \<and> 0 < n\<close>
-
-
-thm \<phi>Share.expansion
 
 subparagraph \<open>Auxiliary Tag\<close>
 
