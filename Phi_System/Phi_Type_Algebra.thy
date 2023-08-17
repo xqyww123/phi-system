@@ -1,5 +1,5 @@
 theory Phi_Type_Algebra
-  imports IDE_CP_Reasoning2
+  imports IDE_CP_Reasoning2 Phi_Algebras.LCRO_Interval (*temporarily we add this for testing but will be moved later*)
   keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" :: thy_defn
        and "deriving" :: quasi_command
 begin
@@ -187,11 +187,11 @@ definition Semimodule_Scalar_Assoc :: \<open>('s \<Rightarrow> ('c,'a) \<phi> \<
 definition Semimodule_LDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                     \<Rightarrow> ('c::sep_magma,'a) \<phi>
                                     \<Rightarrow> ('s::partial_add_semigroup \<Rightarrow> bool)
-                                    \<Rightarrow> (('a \<times> 'a) \<Rightarrow> bool)
+                                    \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
                                     \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
                                     \<Rightarrow> bool\<close>
   where \<open>Semimodule_LDistr_Homo\<^sub>Z F T Ds Dx z \<longleftrightarrow>
-            (\<forall>s t x. Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx x \<longrightarrow>
+            (\<forall>s t x. Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x \<longrightarrow>
                   (x \<Ztypecolon> F t T \<^emph> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z s t x \<Ztypecolon> F (s + t) T ))\<close>
   \<comment> \<open>The left distributive law (i.e., the distributivity of scalar addition) of a left-module.
       Note the right distributive law (i.e., the distributivity of vector addition) is just the separation homomorphism.
@@ -2373,29 +2373,60 @@ ML_file \<open>library/phi_type_algebra/semimodule_identity.ML\<close>
     = \<open>Phi_Type_Algebra_Derivers.semimodule_identity\<close>
 
 
+subsubsection \<open>Configuration for guessing default Semimodule properties\<close>
+
+
+definition guess_domain_of_scalar :: \<open>'s itself \<Rightarrow> 'a itself \<Rightarrow> ('s \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>guess_domain_of_scalar _ _ _ \<equiv> True\<close>
+  \<comment> \<open>indicating the default domain of the scalar of the given types, used as the default guess in derivers\<close>
+
+definition guess_zip_of_semimodule :: \<open>'s itself \<Rightarrow> 'a itself \<Rightarrow> ('s \<Rightarrow> bool)
+                                      \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times>'a \<Rightarrow> bool)
+                                      \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
+                                      \<Rightarrow> bool\<close>
+  where \<open>guess_zip_of_semimodule _ _ _ _ _ \<equiv> True\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>guess_domain_of_scalar ?S ?A _\<close> \<Rightarrow> \<open>guess_domain_of_scalar ?S ?A _\<close> (100)
+                      and \<open>guess_zip_of_semimodule ?S ?A _ _ _\<close> \<Rightarrow> \<open>guess_zip_of_semimodule ?S ?A _ _ _\<close> (100)
+]]
+
+text \<open>To guess the zip operation of a semimodule is far beyond what can be inferred from BNF,
+      partially because a semimodule is over two algebraic sorts (i.e., two logical types).
+      Due to this, the guessing of the abstract operators of semimodules more relies on pre-registered
+      records over the logical types.\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open>guess_domain_of_scalar TYPE(rat) TYPE('b::share) (\<lambda>x. 0 < x)\<close>
+  unfolding guess_domain_of_scalar_def ..
+
+lemma [\<phi>reason 1010]:
+  \<open>guess_domain_of_scalar TYPE(rat) TYPE('b::share_one) (\<lambda>x. 0 \<le> x)\<close>
+  unfolding guess_domain_of_scalar_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open>guess_domain_of_scalar TYPE(nat lcro_interval) TYPE('a list) (\<lambda>_. True)\<close>
+  unfolding guess_domain_of_scalar_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open>guess_zip_of_semimodule TYPE(rat) TYPE('b::share_one) (\<lambda>x. 0 \<le> x) (\<lambda>s t (x,y). x = y) (\<lambda>_ _ (x,y). x)\<close>
+  unfolding guess_zip_of_semimodule_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open>guess_zip_of_semimodule TYPE(nat lcro_interval) TYPE('a list) (\<lambda>_. True)
+                           (\<lambda>s t (x,y). LCRO_Interval.width_of t = length x \<and> LCRO_Interval.width_of s = length y)
+                           (\<lambda>_ _ (x,y). y * x)\<close>
+  unfolding guess_zip_of_semimodule_def ..
+
+
+
+
 subsubsection \<open>Semimodule Scalar Associative\<close>
 
 text \<open>\<phi>-type embedding of separation quantifier \<open>x \<Ztypecolon> \<big_ast>[i\<in>I] T\<close> is a recursive example of this.
 
   The induction of the \<phi>-type should expand the scalar as the scalar usually represents the domain of the \<phi>-type abstraction. 
 \<close>
-
-definition default_domain_of_scalar :: \<open>'a itself \<Rightarrow> 'b itself \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
-  where \<open>default_domain_of_scalar _ _ _ \<equiv> True\<close>
-  \<comment> \<open>indicating the default domain of the scalar of the given types, used as the default guess in derivers\<close>
-
-declare [[
-  \<phi>reason_default_pattern \<open>default_domain_of_scalar ?A ?B _\<close> \<Rightarrow> \<open>default_domain_of_scalar ?A ?B _\<close> (100)
-]]
-
-lemma [\<phi>reason 1000]:
-  \<open>default_domain_of_scalar TYPE(rat) TYPE('b::share) (\<lambda>x. 0 < x)\<close>
-  unfolding default_domain_of_scalar_def ..
-
-lemma [\<phi>reason 1010]:
-  \<open>default_domain_of_scalar TYPE(rat) TYPE('b::share_one) (\<lambda>x. 0 \<le> x)\<close>
-  unfolding default_domain_of_scalar_def ..
-
 
 lemma \<phi>TA_MS_rule:
   \<open> (\<And>t s r x. (Ant @action \<phi>TA_ANT)

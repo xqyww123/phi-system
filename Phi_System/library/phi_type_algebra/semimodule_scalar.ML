@@ -10,14 +10,14 @@ structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun infer_the_default_scalar_domain ctxt (s_ty, model_ty) =
-  let val g_Sdom = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>default_domain_of_scalar s_ty model_ty\<close>
+  let val g_Sdom = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>guess_domain_of_scalar s_ty model_ty\<close>
                                         $ \<^Const>\<open>Pure.type s_ty\<close>
                                         $ \<^Const>\<open>Pure.type model_ty\<close>
                                         $ Var(("p",0), s_ty --> HOLogic.boolT))
    in Goal.init (Thm.cterm_of ctxt g_Sdom)
    |> Phi_Reasoner.reason NONE true ctxt
    |> (fn SOME ret => (case Thm.prop_of ret
-                         of _ (*Pure.prop*) $ (_ (*Trueprop*) $ (_ (*default_domain_of_scalar*) $ _ $ _ $ S)) => S
+                         of _ (*Pure.prop*) $ (_ (*Trueprop*) $ (_ (*guess_domain_of_scalar*) $ _ $ _ $ S)) => S
                           | _ => error "BUG")
         | _ => Abs("_", s_ty, \<^Const>\<open>True\<close>))
   end

@@ -161,16 +161,19 @@ text \<open>lcro_interval is also a good example where it is not dom_of_add_intu
 
 subsubsection \<open>Membership\<close>
 
-lift_definition interval_membership :: \<open>'a::preorder \<Rightarrow> 'a lcro_interval \<Rightarrow> bool\<close> (infix "\<in>\<^sub>I" 50)
-  is \<open>\<lambda>x (a,b). a \<le> x \<and> x < b\<close> .
-
-lemma interval_membership[simp]:
-  \<open>x \<in>\<^sub>I i \<longleftrightarrow> lower i \<le> x \<and> x < upper i\<close>
-  by (transfer; clarsimp)
+definition interval_membership :: \<open>'a::preorder \<Rightarrow> 'a lcro_interval \<Rightarrow> bool\<close> (infix "\<in>\<^sub>I" 50)
+  where [simp]: \<open>x \<in>\<^sub>I i \<longleftrightarrow> lower i \<le> x \<and> x < upper i\<close>
 
 lemma not_in_empty_interval[simp]:
   \<open>\<not> (x \<in>\<^sub>I [a,a))\<close>
   for x :: \<open>'a::order\<close>
   by (simp add: leD)
+
+subsubsection \<open>Width\<close>
+
+abbreviation width_of :: \<open>'a::{preorder, minus} lcro_interval \<Rightarrow> 'a\<close>
+  where \<open>width_of i \<equiv> (upper i - lower i)\<close>
+
+hide_const (open) width_of
 
 end
