@@ -1,6 +1,10 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
+val parse_semimodule_phityp : Proof.context
+                           -> Phi_Type_Algebra.phi_type
+                           -> sort * sort
+                           -> typ * typ * typ * Phi_Type_Algebra.phi_type
 val semimodule_identity : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
@@ -8,10 +12,10 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun guess_property (phi0 : phi_type) ctxt =
+fun parse_semimodule_phityp ctxt phi0 (sort_scalar, sort_model) =
   let val (reversed_argtys', x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       fun err_parse () = raise Automation_Fail (fn () => let open Pretty in
-                            [para "I can only the semimodule \<phi>-type giving its element \<phi>-type as \
+                            [para "I only accept the semimodule \<phi>-type giving its element \<phi>-type as \
                                   \its last parameter and the sclara as its second last paramter. \
                                   \However, the parameters of the given \<phi>-type does not seem to meet \
                                   \this requirement."]
@@ -21,9 +25,8 @@ fun guess_property (phi0 : phi_type) ctxt =
                       if T_x_ty = x_ty0 andalso T_model_ty = model_ty0 then s_ty
                       else err_parse ()
                    | _ => err_parse ()
-
       val inst = (Phi_Help.lift_types_sort (Proof_Context.theory_of ctxt)
-                                           [(s_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>share_one\<close>)]
+                                           [(s_ty0, sort_scalar), (model_ty0, sort_model)]
                  handle TYPE _ => raise Automation_Fail (let open Pretty in fn () =>
                           [paragraph (text "Fail to lift the scalar of type " @
                                       [brk 1, Syntax.pretty_typ ctxt s_ty0, brk 1] @
@@ -37,7 +40,11 @@ fun guess_property (phi0 : phi_type) ctxt =
       val model_ty = Term_Subst.instantiateT inst model_ty0
 
       val phi = instantiate_phi (inst',Vars.empty) phi0
+   in (s_ty, x_ty, model_ty, phi)
+  end
 
+fun guess_property (phi0 : phi_type) ctxt =
+  let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>one\<close>, \<^sort>\<open>share_one\<close>)
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
    in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_Identity s_ty x_ty model_ty\<close> $ F_term $ T_term),

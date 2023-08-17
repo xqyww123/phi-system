@@ -60,6 +60,11 @@ class mult_1 = times + one +
 subclass (in monoid_mult) mult_1
   by (standard; simp)
 
+(* TODO
+class add_left_neutral = plus +
+  fixes left_neutral_0 :: \<open>'a \<Rightarrow> 'a\<close> ("\<zero>\<^sub>L")
+  assumes \<open>\<zero>\<^sub>L x + x = x\<close>*)
+
 class add_0 = plus + zero +
   assumes add_0_add_0_left [simp]: \<open>0 + x = x\<close>
       and add_0_add_0_right[simp]: \<open>x + 0 = x\<close>

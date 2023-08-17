@@ -2333,8 +2333,7 @@ lemma \<phi>TA_M0c_rule:
   by (clarsimp simp add: BI_eq_iff Transformation_def; blast)
 
 lemma \<phi>TA_M0_rewr:
-  \<open> Trueprop ((Ant @action \<phi>TA_ANT) \<longrightarrow> Q @action \<phi>TA_ind_target Any)
-\<equiv> (Ant \<Longrightarrow> Q)\<close>
+  \<open> Trueprop (Ant \<longrightarrow> Q @action \<phi>TA_ind_target Any) \<equiv> (Ant \<Longrightarrow> Q)\<close>
   unfolding atomize_imp Action_Tag_def ..
 
 ML_file \<open>library/phi_type_algebra/semimodule_zero.ML\<close>
@@ -2422,6 +2421,36 @@ ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
 
 \<phi>property_deriver Semimodule_Scalar_Assoc 130 for (\<open>Semimodule_Scalar_Assoc _ _ _\<close>)
     = \<open>Phi_Type_Algebra_Derivers.semimodule_scalar\<close>
+
+
+subsubsection \<open>Semimodule Scalar Distributivity - Zip\<close>
+
+text \<open>Essentially the rules are derived from that of existing \<phi>-types, and the initial rules
+  are those from logical connectivities, function embedding \<open>\<phi>Fun\<close> into \<phi>-types and vertical
+  composition \<open>\<phi>Composition\<close>. 
+
+TODO: move me!
+\<close>
+
+lemma \<phi>TA_MD_rule:
+  \<open> (\<And>s t x. (Ant @action \<phi>TA_ANT)
+         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t
+         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Dx x
+         \<longrightarrow> (x \<Ztypecolon> F t T \<^emph> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z s t x \<Ztypecolon> F (s + t) T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F T Ds Dx z \<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>Z_def Action_Tag_def Premise_def Transformation_def
+  by clarsimp
+
+lemma \<phi>TA_MD_rewr:
+  \<open> Trueprop ((Ant @action \<phi>TA_ANT) \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> Q @action \<phi>TA_ind_target \<A>)
+\<equiv> (Ant \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Q @action \<A>)\<close>
+  unfolding atomize_imp Action_Tag_def ..
+
+ML_file \<open>library/phi_type_algebra/semimodule_distrib_zip.ML\<close>
+
 
 subsubsection \<open>Separation Homo\<close>
 
