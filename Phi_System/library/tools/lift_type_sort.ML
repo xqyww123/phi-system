@@ -93,6 +93,7 @@ val _ = Theory.setup (
   add_expected_sort_red [
     (\<^class>\<open>sep_magma\<close>, \<^class>\<open>one\<close>, \<^sort>\<open>sep_magma_1\<close>),
     (\<^class>\<open>sep_magma\<close>, \<^class>\<open>share\<close>, \<^sort>\<open>share_nun_semimodule\<close>),
+    (\<^class>\<open>sep_magma\<close>, \<^class>\<open>share_one\<close>, \<^sort>\<open>share_semimodule\<close>),
     (\<^class>\<open>share\<close>, \<^class>\<open>one\<close>, \<^sort>\<open>share_one\<close>),
     (\<^class>\<open>share_nun_semimodule\<close>, \<^class>\<open>one\<close>, \<^sort>\<open>share_semimodule\<close>)
   ]

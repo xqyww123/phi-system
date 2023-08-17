@@ -169,6 +169,9 @@ definition \<open>Separation_Homo\<^sub>E Ft Fu F3 un \<longleftrightarrow> \<co
 
 subsubsection \<open>Semimodule\<close>
 
+definition Semimodule_Zero :: \<open>('s::zero \<Rightarrow> ('c::one,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Semimodule_Zero F T \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F 0 T) = 1)\<close>
+
 definition Semimodule_Identity :: \<open>('s::one \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> bool\<close>
   where \<open>Semimodule_Identity F T \<longleftrightarrow> F 1 T = T\<close>
 
@@ -623,6 +626,8 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
       (fn (_ $ F $ _ $ _ $ _ $ _ $ _ ) => F)
 #> add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>E\<close>
       (fn (_ $ F $ _ $ _ $ _ ) => F)
+#> add_property_kind \<^const_name>\<open>Semimodule_Zero\<close>
+      (fn (_ $ F $ _ ) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_Identity\<close>
       (fn (_ $ F $ _ ) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_Scalar_Assoc\<close>
@@ -1198,6 +1203,13 @@ end
 
 subsubsection \<open>Semimodule\<close>
 
+paragraph \<open>Zero\<close>
+
+lemma [\<phi>reason_template [assertion_simps, simp]]:
+  \<open> Semimodule_Zero F T
+\<Longrightarrow> (x \<Ztypecolon> F 0 T) = 1 \<close>
+  unfolding Semimodule_Zero_def by blast
+
 paragraph \<open>Identity\<close>
 
 lemma [\<phi>reason_template [assertion_simps, simp]]:
@@ -1758,30 +1770,45 @@ lemma homo_one_share[\<phi>reason 1000]:
   unfolding homo_one_def
   by simp
 
-lemma homo_sep_mult_share[\<phi>reason 1000]:
+lemma homo_sep_mult_share0[\<phi>reason 1000]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_mult_def Premise_def
   by (simp add: share_sep_right_distrib_0)
 
-lemma homo_sep_disj_share[\<phi>reason 1000]:
+lemma homo_sep_mult_share[\<phi>reason 1010]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_semimodule \<Rightarrow> 'a)\<close>
+  unfolding homo_sep_mult_def Premise_def
+  by (simp add: share_sep_right_distrib)
+
+lemma homo_sep_disj_share0[\<phi>reason 1000]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
   unfolding homo_sep_disj_def Premise_def
   by simp
 
-lemma closed_homo_sep_disj_share[\<phi>reason 1000]:
+lemma homo_sep_disj_share [\<phi>reason 1010]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::{share_sep_disj, share_one, sep_magma_1} \<Rightarrow> 'a)\<close>
+  unfolding homo_sep_disj_def Premise_def
+  by (cases \<open>n = 0\<close>; simp)
+
+lemma closed_homo_sep_disj_share0[\<phi>reason 1000]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
   unfolding closed_homo_sep_disj_def Premise_def
   by simp
 
-lemma homo_sep_share[\<phi>reason 1000]:
+lemma homo_sep_share0[\<phi>reason 1000]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
+  unfolding homo_sep_def Premise_def
+  by (simp add: homo_sep_mult_share0 homo_sep_disj_share0)
+
+lemma homo_sep_share [\<phi>reason 1000]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_def Premise_def
   by (simp add: homo_sep_mult_share homo_sep_disj_share)
 
 lemma closed_homo_sep_share[\<phi>reason 1000]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding closed_homo_sep_def Premise_def
-  by (simp add: homo_sep_share closed_homo_sep_disj_share)
+  by (simp add: homo_sep_share0 closed_homo_sep_disj_share0)
 
 declare module_scalar_assoc_share0   [\<phi>reason 1000, assertion_simps]
         module_scalar_assoc_share    [\<phi>reason 1100, assertion_simps]
@@ -2184,6 +2211,33 @@ lemma function_congruence_template:
         auto) .
   
 ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
+
+subsubsection \<open>Semimodule Scalar Zero\<close>
+
+lemma \<phi>TA_M0_rule:
+  \<open> (\<And>x. (Ant @action \<phi>TA_ANT)
+      \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> F 0 T) True @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> (\<And>x. (Ant @action \<phi>TA_ANT)
+      \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> F 0 T) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Semimodule_Zero F T \<close>
+  unfolding Semimodule_Zero_def Action_Tag_def Premise_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
+  by (clarsimp simp add: BI_eq_iff Transformation_def; blast)
+
+lemma \<phi>TA_M0_rewr:
+  \<open> Trueprop ((Ant @action \<phi>TA_ANT) \<longrightarrow> Q @action \<phi>TA_ind_target Any)
+\<equiv> (Ant \<Longrightarrow> Q)\<close>
+  unfolding atomize_imp Action_Tag_def ..
+
+ML_file \<open>library/phi_type_algebra/semimodule_zero.ML\<close>
+
+\<phi>property_deriver Semimodule_Zero 130 for (\<open>Semimodule_Zero _ _\<close>)
+    = \<open>Phi_Type_Algebra_Derivers.semimodule_zero\<close>
+
+
 
 subsubsection \<open>Semimodule Scalar Identity\<close>
 

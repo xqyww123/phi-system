@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val semimodule_identity : quiet -> hint list -> Phi_Type_Algebra.derive
+val semimodule_zero : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -23,13 +23,13 @@ fun guess_property (phi0 : phi_type) ctxt =
                    | _ => err_parse ()
 
       val inst = (Phi_Help.lift_types_sort (Proof_Context.theory_of ctxt)
-                                           [(s_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>share_one\<close>)]
+                                           [(s_ty0, \<^sort>\<open>zero\<close>), (model_ty0, \<^sort>\<open>share_one\<close>)]
                  handle TYPE _ => raise Automation_Fail (let open Pretty in fn () =>
                           [paragraph (text "Fail to lift the scalar of type " @
                                       [brk 1, Syntax.pretty_typ ctxt s_ty0, brk 1] @
                                       text "and the concrete algebra" @
                                       [brk 1, Syntax.pretty_typ ctxt model_ty0, brk 1] @
-                                      text "onto sort \<open>one\<close> and \<open>share_one\<close> respectively.")]
+                                      text "onto sort \<open>zero\<close> and \<open>share_one\<close> respectively.")]
                           end))
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val s_ty = Term_Subst.instantiateT inst s_ty0
@@ -40,11 +40,11 @@ fun guess_property (phi0 : phi_type) ctxt =
 
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
-   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_Identity s_ty x_ty model_ty\<close> $ F_term $ T_term),
+   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_Zero s_ty x_ty model_ty\<close> $ F_term $ T_term),
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end
 
-fun gen_MI (der_id, name) hint0 (phi : phi_type) thy =
+fun gen_M0 (der_id, name) hint0 (phi : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val parse_hint = parse_hint (fn (Const(\<^const_name>\<open>Semimodule_Identity\<close>, _) $ F1 $ _ ) => F1)
       val extract_oprs_from_hint = K []
@@ -55,18 +55,15 @@ fun gen_MI (der_id, name) hint0 (phi : phi_type) thy =
           (exhaustive_PLPR_reasoner NONE)
       val simp = K I
       val ind_conv = default_ind_conv (
-             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MI_rewr},
+             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_M0_rewr},
              fn ctxt => fn phi =>
-                  Conv.rewr_conv @{thm \<phi>TA_MI_rewr} then_conv
+                  Conv.rewr_conv @{thm \<phi>TA_M0_rewr} then_conv
                   Conv.arg_conv (Phi_Conv.may_action_tag_conv (
                     let val sctxt = Simps.equip ctxt addsimps (#equations phi @ #type_equations phi)
-                     in Phi_Syntax.transformation_conv
-                            (Simplifier.rewrite sctxt)
-                            (Simplifier.rewrite sctxt)
-                            (Conv.all_conv)
+                     in Simplifier.rewrite sctxt
                     end)))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
-                                      guess_property, @{thm' \<phi>TA_MI_rule},
+                                      guess_property, @{thm' \<phi>TA_M0_rule},
                                       [(SOME ([0], ind_conv), reasoning),
                                        (SOME ([0], ind_conv), reasoning)], K NONE, simp)
                                     phi hint0 ctxt0
@@ -79,8 +76,8 @@ fun gen_MI (der_id, name) hint0 (phi : phi_type) thy =
         |> pair [rule']
   end
 
-val semimodule_identity = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Identity") gen_MI
+val semimodule_zero = deriver_framework
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Zero") gen_M0
 
 
 end

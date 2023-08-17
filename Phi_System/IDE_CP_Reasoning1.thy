@@ -666,7 +666,14 @@ lemma [\<phi>reason 3000 for \<open>Identity_Element\<^sub>E {_}\<close>]:
   \<open>Identity_Element\<^sub>E {1}\<close>
   unfolding Identity_Element\<^sub>E_def one_set_def by simp
 
+
 subsubsection \<open>Special Forms\<close>
+
+lemma [\<phi>reason 1000 for \<open>Identity_Element\<^sub>I _ True\<close>]:
+  \<open> Identity_Element\<^sub>I X Any
+\<Longrightarrow> Identity_Element\<^sub>I X True \<close>
+  unfolding Identity_Element\<^sub>I_def Transformation_def
+  by simp
 
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (If C (x \<Ztypecolon> A) (x \<Ztypecolon> B)) P
