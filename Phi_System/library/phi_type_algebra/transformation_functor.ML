@@ -190,7 +190,9 @@ fun guess_property_FTF phi0 ctxt0 =
    |> Seq.maps (fn (fm, ctxt'2) =>
         guess_pred_mapper ctxt'2 x_ty element_ty
      |> Seq.map (fn (pm, ctxt'3) =>
-          ([], \<^Const>\<open>Trueprop\<close> $ (FTF_head $ pm $ fm),
+          ([], \<^Const>\<open>Trueprop\<close> $ (FTF_head $ Abs ("f", element_ty --> target_ty element_ty, pm)
+                                           $ Abs ("f", element_ty --> target_ty element_ty,
+                                               Abs ("P", element_ty --> HOLogic.boolT, fm $ Bound 1))),
            NONE :: parse_parameters_of_phi_type FT_term, phi,
            load_simpset [fm,pm] ctxt'3)))
   end)

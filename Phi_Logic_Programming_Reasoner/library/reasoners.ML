@@ -334,16 +334,22 @@ fun gen_extract_prems_rewr ctxt =
                   of (SOME ruleA, SOME ruleB) =>
                       let val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> (Pa \<and> Pb) \<and> (A' \<and> B')\<close>
                                           by (simp add: atomize_eq, blast)}
-                       in SOME (ruleA RS' (ctxt, ruleB RS' (ctxt, merge)))
+                       in SOME (ruleB RS' (ctxt, ruleA RS' (ctxt, merge)))
                       end
                    | (SOME ruleA, NONE) =>
-                      let val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> A \<and> B \<equiv> Pa \<and> (A' \<and> B)\<close>
+                      let val idx = Thm.maxidx_of_cterm ctm + 1
+                          val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> A \<and> B \<equiv> Pa \<and> (A' \<and> B)\<close>
                                           by (simp add: atomize_eq)}
+                                   |> Thm.incr_indexes idx
+                                   |> Thm.instantiate (TVars.empty, Vars.make [((("B",idx),\<^Type>\<open>bool\<close>), Thm.dest_arg ctm)])
                        in SOME (ruleA RS' (ctxt, merge))
                       end
                    | (NONE, SOME ruleB) =>
-                      let val merge = @{lemma' \<open>B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> Pb \<and> (A \<and> B')\<close>
+                      let val idx = Thm.maxidx_of_cterm ctm + 1
+                          val merge = @{lemma' \<open>B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> Pb \<and> (A \<and> B')\<close>
                                           by (simp add: atomize_eq, blast)}
+                                   |> Thm.incr_indexes idx
+                                   |> Thm.instantiate (TVars.empty, Vars.make [((("A",idx),\<^Type>\<open>bool\<close>), Thm.dest_arg1 ctm)])
                        in SOME (ruleB RS' (ctxt, merge))
                       end
                    | (NONE, NONE) => NONE)

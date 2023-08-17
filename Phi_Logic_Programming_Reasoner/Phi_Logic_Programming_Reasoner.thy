@@ -899,7 +899,11 @@ ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver o snd\<close>
 
-(* TODO: reenable!
+lemma [\<phi>premise_extraction]:
+  \<open>A = B \<equiv> (A = B) \<and> True\<close>
+  unfolding atomize_eq by simp
+
+(* TODO: re-enable!
 hide_fact contract_drop_waste contract_obligations contract_premise_all
           contract_add_additional_prems
 *)

@@ -2,13 +2,14 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val semimodule_zero : quiet -> hint list -> Phi_Type_Algebra.derive
+val closed_semimodule_zero : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun guess_property (phi0 : phi_type) ctxt =
+fun guess_property closed (phi0 : phi_type) ctxt =
   let val (reversed_argtys', x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       fun err_parse () = raise Automation_Fail (fn () => let open Pretty in
                             [para "I can only the semimodule \<phi>-type giving its element \<phi>-type as \
@@ -40,11 +41,13 @@ fun guess_property (phi0 : phi_type) ctxt =
 
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
-   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_Zero s_ty x_ty model_ty\<close> $ F_term $ T_term),
+   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (
+                          (if closed then \<^Const>\<open>Closed_Semimodule_Zero s_ty x_ty model_ty\<close>
+                                     else \<^Const>\<open>Semimodule_Zero s_ty x_ty model_ty\<close>) $ F_term $ T_term),
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end
 
-fun gen_M0 (der_id, name) hint0 (phi : phi_type) thy =
+fun gen_M0 closed (der_id, name) hint0 (phi : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
       val parse_hint = parse_hint (fn (Const(\<^const_name>\<open>Semimodule_Identity\<close>, _) $ F1 $ _ ) => F1)
       val extract_oprs_from_hint = K []
@@ -62,10 +65,9 @@ fun gen_M0 (der_id, name) hint0 (phi : phi_type) thy =
                     let val sctxt = Simps.equip ctxt addsimps (#equations phi @ #type_equations phi)
                      in Simplifier.rewrite sctxt
                     end)))
-      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
-                                      guess_property, @{thm' \<phi>TA_M0_rule},
-                                      [(SOME ([0], ind_conv), reasoning),
-                                       (SOME ([0], ind_conv), reasoning)], K NONE, simp)
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property closed,
+                                      (if closed then @{thm' \<phi>TA_M0c_rule} else @{thm' \<phi>TA_M0_rule}),
+                                      [(SOME ([0], ind_conv), reasoning)], K NONE, simp)
                                     phi hint0 ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
@@ -76,8 +78,8 @@ fun gen_M0 (der_id, name) hint0 (phi : phi_type) thy =
         |> pair [rule']
   end
 
-val semimodule_zero = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Zero") gen_M0
+val semimodule_zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Zero") (gen_M0 false)
+val closed_semimodule_zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Zero") (gen_M0 true)
 
 
 end

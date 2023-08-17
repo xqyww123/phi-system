@@ -76,7 +76,7 @@ fun instantiate_the_var var ctxt sequent =
          in fold_index (fn (i,(N,ty)) => fn X =>
                   if vx = i then Abs(N,ty,X) $ Bound (qlen-i)
                             else HOLogic.exists_const ty $ Abs(N,ty,X))
-              quants (Phi_Help.list_mk_conj (prems @ concls))
+              quants (Phi_Help.list_mk_conj (concls @ prems))
         end
 
       fun mk_conj_inst concls (quants, prems) =

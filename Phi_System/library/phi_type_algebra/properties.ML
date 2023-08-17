@@ -21,6 +21,9 @@ val lookup_property_unify : Context.generic -> term (*same as the above*) -> pro
 val add_property : term * Position.T * thm -> Context.generic -> Context.generic
 (*val list_functors : Context.generic -> term list*)
 
+val adding_property : bool Config.T (*controlling if automatically for any new reasoning rules,
+  register to the property DB and invoking the related automation*)
+
 structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
 
 (* The Framework for Automation based on Algebraic Property *)
@@ -325,7 +328,7 @@ fun invoke_template ((deps, pos, action) : template) =
 fun add_template invoke_on_existing_instantiations (priority, template) ctxt =
   let val _ = Phi_Reasoner.info_pretty_generic ctxt 1 (fn () => let open Pretty
                   val consts = Context.cases Sign.consts_of Proof_Context.consts_of ctxt
-               in chunks (str "Installing \<phi>reasoning rule template depended on " ::
+               in chunks (str "Registered reasoning rule template depending on " ::
                     map (fn pk =>
                           if pk = "" then item [str "_"]
                           else pk |> Consts.the_const consts |> Const
@@ -385,6 +388,8 @@ fun invoke_automations_on_property phityp ctxt =
    in Net.match_term net key
         |> exists (fn (pat, _) => Pattern.matches thy (pat, the_functor))
   end *)
+
+val adding_property = Attrib.setup_config_bool \<^binding>\<open>\<phi>adding_property\<close> (K true)
 
 fun add_property (phityp0,pos,property) ctxt =
   let val thy = Context.theory_of ctxt
@@ -466,7 +471,10 @@ fun add_property_kind k extract thy =
    |> Context.theory_map (
         Phi_Reasoner.add_pass ("\<phi>type-operator$" ^ k, pat,
           fn pos => fn (rules, mode, pats, guard, ctxt) =>
-                       (rules, mode, pats, guard, add_prop pos rules ctxt)))
+                       (rules, mode, pats, guard,
+                        if Config.get_generic ctxt adding_property
+                        then add_prop pos rules ctxt
+                        else ctxt)))
   end
 
 
@@ -502,7 +510,7 @@ val _ = Theory.setup (
 
   Attrib.setup \<^binding>\<open>\<phi>type_property\<close> (Scan.succeed (Thm.declaration_attribute (add_property' Position.none)))
     "Declare a \<phi>-type property that will be used to instantiate automation"
-                        
+
 #>Attrib.setup \<^binding>\<open>\<phi>reason_template\<close> (
     Phi_Reasoner.attr_syntax
       (Scan.option (
