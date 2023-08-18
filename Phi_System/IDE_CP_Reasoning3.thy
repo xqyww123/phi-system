@@ -3,10 +3,11 @@ chapter \<open>Reasoning Processes in IDE-CP - Part III\<close>
 text \<open>Here we give the implementation of all large reasoning processes that are declared in
 the previous part I.\<close>
 
+(*
 theory IDE_CP_Reasoning3
   imports IDE_CP_App2 "HOL-Library.Word"
 begin
-
+*)
 
 (*subsubsection \<open>Syntax & Auxiliary\<close>
 
@@ -687,26 +688,6 @@ lemma apfst_apsnd_lambda_x_x[simp]:
 and [\<phi>reason add]*)
 
 
-(* [-----a-----][--d--]
-   [--c--][-----b-----] 
-   Give a, expect b; Need d, remain c.*)
-lemma SE_Near_Semimodule_adcb[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
-  \<open> Semimodule_LDistr_Homo\<^sub>U F1 Ds Dx uz
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z_rev F1 Ds Dx' z
-\<Longrightarrow> Parameter_Variant_of_the_Same_Type F1 F3
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> a + d = c + b @action non_trivial_partial_add_split
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<in> Ds \<and> d \<in> Ds \<and> c \<in> Ds \<and> b \<in> Ds \<and> c ##\<^sub>+ b \<and> a ##\<^sub>+ d
-\<Longrightarrow> Dx' T (fst x, fst (snd x))
-\<Longrightarrow> Dx T (z a d (fst x, fst (snd x)))
-\<Longrightarrow> (fst (uz c b (z a d (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz c b (z a d (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SE True \<close>
-  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
-  \<medium_left_bracket> premises _ and _ and _ and _ and [useful,simp] and _ and [\<phi>reason add] and [\<phi>reason add] and Tr
-    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_rev[where t=a and s=d and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
-    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where t=c and s=b and F=F1]
-    Tr
-  \<medium_right_bracket> .
 
 declare [[\<phi>trace_reasoning = 0]]
 

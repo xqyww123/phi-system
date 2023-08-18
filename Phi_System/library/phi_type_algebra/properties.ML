@@ -312,7 +312,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
        case action
          of Reasonig_Rule ((mode, priority), (pats, blacklists)) =>
               Phi_Reasoner.add_rules (map (fn rule =>
-                          ([rule], pos, mode, priority, pats, blacklists, NONE) ) rules') ctxt
+                          ([rule], template_pos, mode, priority, pats, blacklists, NONE) ) rules') ctxt
           | Attributes attrs =>
               let fun app attr = uncurry (Thm.apply_attribute (Attrib.attribute ctxt' attr))
                in fold (curry (snd o fold app attrs)) rules' ctxt

@@ -2,7 +2,7 @@ chapter \<open>IDE-CP Functions \& Applications - Part I\<close>
 
 
 theory IDE_CP_Applications1
-  imports IDE_CP_Core Phi_Algebras.Map_of_Tree
+  imports IDE_CP_Core
   keywords "val" :: quasi_command
   abbrevs "<vals>" = "\<v>\<a>\<l>s"
       and "<orelse>" = "\<o>\<r>\<e>\<l>\<s>\<e>"

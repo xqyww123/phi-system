@@ -125,10 +125,12 @@ val add_type : def * Position.T * derivings -> generic_theory -> phi_type * gene
 val is_Type_Opr : typ -> bool
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
+    (*note the T below is a \<phi>-type parameter*)
 val separate_type_operator_and_its_parameter : term (*F(T)*) -> (term (*T*) * term (*F*)) list
 val separate_type_operator_and_its_non_parameterized_parameter : term (*F(T)*) -> (term (*T*) * term (*F*)) list
 val separate_type_operator_and_its_parameter_safe : term (*F(T)*) -> (term (*T*) * term (*F*)) list
 val separate_type_operator_and_its_non_parameterized_parameter_safe : term (*F(T)*) -> (term (*T*) * term (*F*)) list
+val separate_tyop_semimodule_and_its_non_parameterized : term (*F\<^sub>c(T)*) -> (term (*T*) * term (*c*) * term (*F*)) list
 
 val def_contains_satisfaction : phi_type -> bool
 
@@ -666,27 +668,40 @@ fun assert_first_parameter_is_type ty =
   else raise Automation_Fail (fn () => [Pretty.str "Not a \<phi>-type operator!"])
 
 fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
-  let fun split prevs (F $ T) =
+  let datatype prev = Arg of term | Abst of string * typ
+      fun assemble (Arg a) X = X $ a
+        | assemble (Abst (N,ty)) X = Abs (N, ty, X)
+      fun split (lv, prevs) (F $ T) =
             if chk T
             then F
               |> not (null prevs) ? (fn F =>
-                      (F $ Bound 0)
-                   |> fold (fn a => fn X => X $ a) prevs 
+                      (F $ Bound lv)
+                   |> fold assemble prevs 
                    |> (fn X => Abs("T", Term.fastype_of T, X)))
-              |> (fn X => (T, X) :: split (T :: prevs) F )
-            else split (T :: prevs) F
+              |> (fn X => (T, X) :: split (lv, Arg T :: prevs) F )
+            else split (lv, Arg T :: prevs) F
+        | split (lv, prevs) (Abs (N,ty,X)) = split (lv+1, Abst (N,ty)::prevs) X
         | split _ _ = []
-   in split [] FT_term
+   in split (0, []) (Phi_Help.beta_eta_contract_term FT_term)
   end
 
 val separate_type_operator_and_its_parameter_safe =
   gen_separate_type_operator_and_its_non_parameter (can dest_parameterized_phi_ty o Term.fastype_of)
 
+fun is_non_parameterized tm =
+  case try dest_parameterized_phi_ty (Term.fastype_of tm)
+    of SOME ([],_,_) => true
+     | _ => false
+
 val separate_type_operator_and_its_non_parameterized_parameter_safe =
-  gen_separate_type_operator_and_its_non_parameter (fn tm =>
-    case try dest_parameterized_phi_ty (Term.fastype_of tm)
-      of SOME ([],_,_) => true
-       | _ => false)
+  gen_separate_type_operator_and_its_non_parameter is_non_parameterized
+
+val separate_tyop_semimodule_and_its_non_parameterized =
+  gen_separate_type_operator_and_its_non_parameter is_non_parameterized
+    #> maps (fn (Fc, T) =>
+          gen_separate_type_operator_and_its_non_parameter (K true) Fc
+            |> map (fn (F, c) => (T, c, F)))
+
 
 fun warn_separate_type_operator f FT_term =
   case f FT_term

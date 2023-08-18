@@ -130,6 +130,18 @@ lemma homo_one_push_map:
   unfolding homo_one_def
   by (simp add: fun_eq_iff times_fun_def)
 
+lemma module_scalar_assoc_push_map:
+  \<open>module_scalar_assoc push_map (\<lambda>_. True)\<close>
+  unfolding module_scalar_assoc_def
+  by (simp add: push_map_push_map times_list_def)
+
+lemma module_scalar_identity_push_map:
+  \<open>module_scalar_identity push_map\<close>
+  unfolding module_scalar_identity_def
+  by simp
+  
+
+
 subsection \<open>Pull a map at a location\<close>
 
 definition pull_map :: \<open>'a list \<Rightarrow> ('a list \<Rightarrow> 'b) \<Rightarrow> ('a list \<Rightarrow> 'b)\<close>

@@ -791,7 +791,7 @@ lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds
-                            (\<lambda>(x,y). (D\<^sub>T x \<longrightarrow> eq x y \<and> Dx y) \<or> (D\<^sub>T y \<longrightarrow> eq y x \<and> Dx x))
+                            (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> eq x y \<and> Dx y) \<or> (D\<^sub>T y \<longrightarrow> eq y x \<and> Dx x))
                             (\<lambda>_ _. fst)\<close>
   unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_L_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
@@ -1180,11 +1180,13 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
 declare [[\<phi>trace_reasoning = 0]]
                    
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
-  where \<open>\<phi>MapAt_L k T = (push_map k \<Zcomp>\<^sub>f T)\<close>
+  where \<open>\<phi>MapAt_L k T = (scalar_mult push_map k \<Zcomp>\<^sub>f T)\<close>
   deriving Separation_Monoid
        and Open_Abstraction_Full
        and Functionality
        and Trivial_\<Sigma>
+       and Semimodule_Scalar_Assoc
+       and Semimodule_Identity
 
 thm \<phi>MapAt_L.unfold
     \<phi>MapAt_L.expansion
@@ -1300,10 +1302,12 @@ lemma [\<phi>reason 1000]:
 
 
 subsection \<open>Permission Sharing\<close>
-           
+
+declare [[\<phi>trace_reasoning = 3]]
+
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (scalar_mult share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Separation_Monoid
+  deriving (*Separation_Monoid
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Open_Abstraction_Full
@@ -1311,6 +1315,7 @@ subsection \<open>Permission Sharing\<close>
        and SE_Trim_Empty
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
+       and*) Semimodule_LDistr_Homo\<^sub>Z
 
 
 

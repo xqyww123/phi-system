@@ -12,11 +12,59 @@ fun guess_property (phi0 : phi_type) ctxt =
   let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>type\<close>, \<^sort>\<open>share_nun_semimodule\<close>)
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
-      val Sdom = infer_the_default_scalar_domain ctxt (s_ty, model_ty)
+      val (Ds, Dx, z) = infer_zip_operator ctxt (s_ty, x_ty, model_ty)
    in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_LDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
-                          $ F_term $ T_term $ Sdom ),
+                          $ F_term $ T_term $ Ds $ Dx $ z ),
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end
 
+fun gen_MDz (der_id, name) hint0 (phi : phi_type) thy =
+  let val ctxt0 = Context.proof_of thy
+      val parse_hint = parse_hint (
+              fn (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
+                    F1 $ Term.dummy $ T_term)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ _ $ _ $ Ds $ Dx $ z)
+            = [Ds, Dx, z]
+        | extract_oprs_from_hint _ = []
+      fun reasoning phi =
+        default_reasoning false
+          (default_reasoning_configure [])
+          (K (K NONE))
+          (exhaustive_PLPR_reasoner NONE)
+      val mode_infer = not (is_some hint0)
+      fun simp (phi, ctxt) thm =
+        if mode_infer
+        then let val sctxt = ctxt
+                 val simp = Simplifier.rewrite sctxt
+              in Conv.fconv_rule (Conv.arg_conv (
+                    Conv.combination_conv (Conv.combination_conv (Conv.arg_conv
+                      simp)
+                      simp)
+                      simp)) thm
+             end
+        else thm
+      val ind_conv = default_ind_conv (
+             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MD_rewr},
+             fn ctxt => fn phi =>
+                  Conv.rewr_conv @{thm \<phi>TA_MD_rewr} then_conv
+                  Conv.arg_conv (Conv.arg_conv (
+                    let val sctxt = Simps.equip ctxt addsimps (#equations phi @ #type_equations phi)
+                     in Phi_Reasoners.asm_rewrite false sctxt
+                    end)))
+      val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
+                                      guess_property, @{thm' \<phi>TA_MD_rule},
+                                      [(SOME ([0,2,~1,~1,~1], ind_conv), reasoning)], K NONE, simp)
+                                    phi hint0 ctxt0
+   in case Seq.pull rules
+   of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
+    | SOME (rule', _) => thy
+        |> Phi_Help.generic_theory_mapping (fn m =>
+              Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE [Morphism.thm m rule'])
+        |> note_properties phi [(name, [rule'])]
+        |> pair [rule']
+  end
+
+val semimodule_distrib_zip = deriver_framework
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_LDistr_Homo\<^sub>Z") gen_MDz
 
 end
