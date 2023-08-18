@@ -2,15 +2,15 @@ local open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 in
 val _ = Theory.setup (Context.theory_map (
   Phi_Type_Template_Properties.add_template false (99,
-      ([\<^const_name>\<open>Transformation_Functor\<close>], \<^here>, Phi_Type_Template_Properties.Free_Action (
-  fn (phiopr, _, props) => fn ctxt =>
-    let val oprs = case Thm.concl_of (hd props)
+      ([SOME \<^const_name>\<open>Transformation_Functor\<close>], \<^here>, Phi_Type_Template_Properties.Free_Action (
+  fn (phiopr, _, [SOME prop]) => fn ctxt =>
+    let val oprs = case Thm.concl_of prop
                      of _ (*Trueprop*) $ (_ (*Transformation_Functor*) $ _ $ _ $ D $ R $ M ) => [D,R,M]
                       | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
         val ctxt' = Context.proof_of ctxt
                  |> load_simpset oprs
                  |> (fn ctxt => ctxt addsimps Simps.simp_rules ctxt)
-        val rule = (Thm.transfer'' ctxt @{thm' function_congruence_template} OF props)
+        val rule = (Thm.transfer'' ctxt @{thm' function_congruence_template} OF [prop])
         val rule = rule
                 |> Phi_Reasoner.reason NONE true ctxt'
                 |> (fn SOME ret => ret

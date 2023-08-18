@@ -232,7 +232,6 @@ declare [[
 (*TODO: if we can depreciate this, as the reasonings are by template*)
 
 declare [[
-  \<phi>premise_attribute? [\<phi>reason add] for \<open>Transformation_Functor _ _ _ _ _\<close>,
   \<phi>reason_default_pattern \<open>Object_Sep_Homo\<^sub>I ?T _\<close> \<Rightarrow> \<open>Object_Sep_Homo\<^sub>I ?T _\<close> (100),
 
   \<phi>reason_default_pattern_ML \<open>Separation_Homo\<^sub>I ?Ft ?Fu _ _ _ _\<close> \<Rightarrow>
@@ -263,11 +262,19 @@ declare [[
       end
     \<close> (100),
 
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Transformation_Functor _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Sep_Homo\<^sub>I _ _ \<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Sep_Homo\<^sub>E _ \<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Separation_Homo\<^sub>I _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Separation_Homo\<^sub>E _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_Zero _ _ \<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Closed_Semimodule_Zero _ _ \<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_Identity _ _ \<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_Scalar_Assoc _ _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_LDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_LDistr_Homo\<^sub>Z_rev _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_LDistr_Homo\<^sub>U _ _ _ _ _\<close>,
+
   \<phi>reason_default_pattern
       \<open>Semimodule_LDistr_Homo\<^sub>Z ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>Z ?F ?T _ _ _\<close> (100)
   and \<open>Semimodule_LDistr_Homo\<^sub>U ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>U ?F ?T _ _ _\<close> (100)
@@ -545,6 +552,9 @@ lemma \<phi>gen_expansion:
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
+consts \<A>_template_reason :: action \<comment> \<open>tagging the antecedent has to be solved during the time of
+                                       template instantiation.\<close>
+
 ML_file \<open>library/phi_type_algebra/properties.ML\<close>
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
@@ -636,7 +646,7 @@ thm fib.elims
 
 
 
-paragraph \<open>Configuration\<close>
+paragraph \<open>Configurations\<close>
 
 (* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
           \<phi>inductive_destruction_rule_from_direct_definition'
@@ -681,7 +691,7 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
 #> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
       (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) => T)
 (*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
-  \<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
+\<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
   it can have special overridings for singular points like that many type operators \<open>F\<close> have a
   wider reachability relation at \<open>F \<circle>\<close>. The overloadings multiply the resulted instantiations
   and they requires priority precedence which is not in the capability of the template
@@ -765,7 +775,7 @@ definition Type_Variant_of_the_Same_Type_Operator
       We use this to simulate the \<Lambda> operator in system-F\<close>
 
 definition Type_Variant_of_the_Same_Type_Operator2
-        :: \<open> ('a \<Rightarrow> 'b \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('a2 \<Rightarrow> 'b2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
+        :: \<open> ('s \<Rightarrow> 'a \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('s2 \<Rightarrow> 'a2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
   where \<open> Type_Variant_of_the_Same_Type_Operator2 Fa Fb \<longleftrightarrow> True \<close>
 
 (*definition Parameter_Variant_of_the_Same_Type :: \<open> ('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> bool \<close>
@@ -1272,7 +1282,7 @@ lemma [\<phi>reason_template 190 requires Closed_Semimodule_Zero]:
 
 paragraph \<open>Identity\<close>
 
-lemma [\<phi>reason_template [assertion_simps, simp]]:
+lemma [\<phi>reason_template name scalar_identity [assertion_simps, simp]]:
   \<open> Semimodule_Identity F T
 \<Longrightarrow> F 1 T = T \<close>
   unfolding Semimodule_Identity_def .
@@ -1308,7 +1318,7 @@ lemma [\<phi>reason_template default 190]:
 
 paragraph \<open>Associative\<close>
 
-lemma [\<phi>reason_template [assertion_simps, simp]]:
+lemma [\<phi>reason_template name scalar_assoc [assertion_simps, simp]]:
   \<open> Semimodule_Scalar_Assoc F T D
 \<Longrightarrow> D a \<and> D b
 \<Longrightarrow> F a (F b T) = F (b * a) T\<close>
@@ -1375,7 +1385,7 @@ subsubsection \<open>Reasonings in Separation Extraction\<close>
 paragraph \<open>Transformation Functor\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-
+    
 lemma "_Structural_Extract_general_rule_":
   \<open> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> Prem
@@ -1601,8 +1611,13 @@ declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>rea
 paragraph \<open>Semimodule Scalar Associative\<close>
 
 
-declare [[\<phi>trace_reasoning = 1]]
 
+
+
+
+
+declare [[\<phi>trace_reasoning = 1]]
+ 
 lemma SE_general_Semimodule_Scalar_left: (*need test, to be tested once we have usable test case*)
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b \<and> Ds c
@@ -1630,7 +1645,7 @@ lemma SE_general_Semimodule_Scalar_left: (*need test, to be tested once we have 
     apply_rule functional_transformation[where U=\<open>F3 c U \<^emph> R\<close> and f=f and P=P]
     \<medium_left_bracket> Tr \<medium_right_bracket>
     apply_rule apply_Separation_Functor_unzip[where x=\<open>func_mapper f P (z x)\<close>]
-    fold F3D
+    fold F3D 
   \<medium_right_bracket> .
 
 declare SE_general_Semimodule_Scalar_left[THEN \<A>SE_clean_waste, \<phi>reason_template default 30]
@@ -2470,6 +2485,17 @@ text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules 
   But if there are conditions, the system needs user's discretion to decide if to activate it.
   If so, activate deriver \<open>SE_Trim_Empty\<close>.
 \<close>
+
+lemma [\<phi>reason_template name \<phi>None [assertion_simps, simp]]:
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> Identity_Element\<^sub>I (yy \<Ztypecolon> F \<circle>) Any @action \<A>_template_reason
+\<Longrightarrow> Identity_Element\<^sub>E (u \<Ztypecolon> F \<circle>) @action \<A>_template_reason
+\<Longrightarrow> Object_Equiv (F \<circle>) eq @action \<A>_template_reason
+\<Longrightarrow> eq () ()
+\<Longrightarrow> NO_SIMP (F \<circle> = \<circle>) \<close>
+  unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def NO_SIMP_def Action_Tag_def
+  by (rule \<phi>Type_eqI_Tr; clarsimp simp add: transformation_weaken)
+  
 
 lemma derive_\<A>SE_trim_I:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'

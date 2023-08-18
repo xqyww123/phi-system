@@ -672,7 +672,7 @@ fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
       fun assemble (Arg a) X = X $ a
         | assemble (Abst (N,ty)) X = Abs (N, ty, X)
       fun split (lv, prevs) (F $ T) =
-            if chk T
+            if can Term.fastype_of T andalso chk T
             then F
               |> not (null prevs) ? (fn F =>
                       (F $ Bound lv)
@@ -698,9 +698,9 @@ val separate_type_operator_and_its_non_parameterized_parameter_safe =
 
 val separate_tyop_semimodule_and_its_non_parameterized =
   gen_separate_type_operator_and_its_non_parameter is_non_parameterized
-    #> maps (fn (Fc, T) =>
+    #> maps (fn (T, Fc) =>
           gen_separate_type_operator_and_its_non_parameter (K true) Fc
-            |> map (fn (F, c) => (T, c, F)))
+            |> map (fn (c, F) => (T, c, F)))
 
 
 fun warn_separate_type_operator f FT_term =

@@ -1272,8 +1272,8 @@ definition Object_Equiv :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow>
   where \<open>Object_Equiv T eq \<longleftrightarrow> (\<forall>x y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T))\<close>
 
 declare [[
-    \<phi>reason_default_pattern \<open>Object_Equiv ?T _\<close> \<Rightarrow> \<open>Object_Equiv ?T _\<close> (100),
-    \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Equiv _ _\<close>
+  \<phi>reason_default_pattern \<open>Object_Equiv ?T _\<close> \<Rightarrow> \<open>Object_Equiv ?T _\<close> (100),
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Equiv _ _\<close>
 ]]
 
 lemma ToA_by_Equive_Class
@@ -1298,6 +1298,7 @@ lemma ToA_by_Equive_Class'
 lemma Object_Equiv_fallback[\<phi>reason default 1]:
   \<open>Object_Equiv T (=)\<close>
   unfolding Object_Equiv_def by simp
+
 
 (*
 lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T' \<w>\<i>\<t>\<h> _\<close>]:

@@ -43,9 +43,9 @@ fun is_action_of P (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ A) =
   | is_action_of P (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_action_of P X
   | is_action_of _ _ = false
 
-fun dest_tags X = X
-  |> perhaps (try dest_Trueprop)
-  |> perhaps (try dest_action_tag)
+fun dest_tags (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_tags X
+  | dest_tags (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = dest_tags X
+  | dest_tags X = X
 fun dest_tags_c X = X
   |> perhaps (try dest_Trueprop_c)
   |> perhaps (try dest_action_tag_c)

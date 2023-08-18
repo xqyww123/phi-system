@@ -20,7 +20,7 @@ val data_eq = (op = o apply2 #1)
 
 structure Data = Generic_Data (
   (*It relies on that the serial is incremental with time*)
-  type T = (serial * bool * term (*pattern*) * attribute list) Net.net
+  type T = (serial * bool * term (*pattern*) * attribute list (*TODO: change this to Token.T!!*)) Net.net
   val empty = Net.empty
   val merge = Net.merge data_eq
 )

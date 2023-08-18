@@ -56,8 +56,8 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding Subjection into Type\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-     
+declare [[\<phi>trace_reasoning = 2]]
+ 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -128,7 +128,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
-                 
+                  
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
    
@@ -1024,7 +1024,7 @@ lemma [\<phi>reason 10000]:
  declare [[\<phi>trace_reasoning = 0]]
 
 
-  
+   
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Separation_Monoid
@@ -1177,8 +1177,8 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
-declare [[\<phi>trace_reasoning = 0]]
-                   
+declare [[\<phi>trace_reasoning = 2]]
+      
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (scalar_mult push_map k \<Zcomp>\<^sub>f T)\<close>
   deriving Separation_Monoid
@@ -1188,9 +1188,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
 
-thm \<phi>MapAt_L.unfold
-    \<phi>MapAt_L.expansion
-
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
 
@@ -1199,42 +1196,12 @@ abbreviation \<phi>MapAt_Lnil :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> 
 
 paragraph \<open>Simplification\<close>
 
-lemma \<phi>MapAt_L_\<phi>MapAt:
-  \<open>k1 \<^bold>\<rightarrow>\<^sub>@ k2 \<^bold>\<rightarrow> T = (k1 @ k2) \<^bold>\<rightarrow> T\<close>
-  by (rule \<phi>Type_eqI; simp add: \<phi>MapAt_def; force)
-
-lemma \<phi>MapAt_L_\<phi>MapAt_L:
-  \<open>k1 \<^bold>\<rightarrow>\<^sub>@ k2 \<^bold>\<rightarrow>\<^sub>@ T = (k1 @ k2) \<^bold>\<rightarrow>\<^sub>@ T\<close>
-  by (rule \<phi>Type_eqI; simp; metis push_map_push_map)
-
-lemma \<phi>MapAt_L_\<phi>None:
-  \<open>k \<^bold>\<rightarrow>\<^sub>@ \<circle> = \<circle>\<close>
-  by (rule \<phi>Type_eqI; clarsimp)
-
-(*
-lemma [\<phi>reason for \<open>?x \<Ztypecolon> ?k \<^bold>\<rightarrow>\<^sub># \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action (?Act::?'a::simplification action)\<close>]:
-  \<open>x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub># \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> () \<Ztypecolon> \<circle> @action Act\<close>
-  for Act :: \<open>'a::simplification action\<close>
-  unfolding Action_Tag_def by (simp add: transformation_refl \<phi>MapAt_L_\<phi>None) *)
-
-(*
-lemma \<phi>MapAt_L_simp_cong[folded atomize_eq]:
-  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
-\<Longrightarrow> (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T) = (x' \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T')\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-simproc_setup \<phi>MapAt_L_simp_cong ("x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T") = \<open>
-  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>MapAt_L_simp_cong} ctxt)
-\<close>*)
-
 lemma \<phi>MapAt_L_At:
   \<open>(ks \<^bold>\<rightarrow>\<^sub>@ [] \<^bold>\<rightarrow> T) = (ks \<^bold>\<rightarrow> T)\<close>
-  by (rule \<phi>Type_eqI; simp; metis append_self_conv push_map_unit)
+  by (rule \<phi>Type_eqI; simp add: scalar_mult_def; metis append_self_conv push_map_unit)
 
 
 paragraph \<open>Implication \& Action Rules\<close>
-
-thm \<phi>MapAt_L.transformation
 
 
 (* TESTING
@@ -1303,11 +1270,11 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
+declare [[\<phi>trace_reasoning = 2]]
+ 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (scalar_mult share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving (*Separation_Monoid
+  deriving Separation_Monoid
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Open_Abstraction_Full
@@ -1315,8 +1282,11 @@ declare [[\<phi>trace_reasoning = 3]]
        and SE_Trim_Empty
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
-       and*) Semimodule_LDistr_Homo\<^sub>Z
 
+thm \<phi>Share.\<phi>None
+thm \<phi>Share.scalar_assoc
+thm \<phi>Share.scalar_identity
+thm \<phi>Share.Semimodule_Scalar_Assoc
 
 
 subparagraph \<open>Auxiliary Tag\<close>
