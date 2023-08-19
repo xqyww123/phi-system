@@ -20,7 +20,6 @@ abbrevs
   and "<label>" = "\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l"
   and "<subty>" = "\<^bold>s\<^bold>u\<^bold>b\<^bold>t\<^bold>y\<^bold>p\<^bold>e"
   and "<by>" = "\<^bold>b\<^bold>y"
-  and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
   and "<try>" = "\<^bold>t\<^bold>r\<^bold>y"
   and "<obligation>" = "\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n>"
   and ">->" = "\<Zinj>"
@@ -651,12 +650,12 @@ text \<open>
   Occurring in the post-condition of a rule (either a procedure specification or a view shift
     or an implication), SYNTHESIS tags the target of the rule, i.e., the construct that this
     procedure or this transformation synthesises.
-  For example, \<^prop>\<open>\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> @action synthesis\<close>
+  For example, \<^prop>\<open>\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] Y \<rbrace> @action synthesis\<close>
     represents the procedure f generates
     something that meets Z, and it is a synthesis rule for synthesising the target \<open>Z\<close>.
 
   Occurring during reasoning, antecedent like
-    \<^schematic_prop>\<open>\<p>\<r>\<o>\<c> ?f \<lbrace> X \<longmapsto> \<lambda>ret. Y\<heavy_comma> \<blangle> Z ret \<brangle> \<rbrace> @action synthesis \<Longrightarrow> C\<close>,
+    \<^schematic_prop>\<open>\<p>\<r>\<o>\<c> ?f \<lbrace> X \<longmapsto> \<lambda>ret. Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] Y \<rbrace> @action synthesis \<Longrightarrow> C\<close>,
   represents a reasoning task to find some procedure or some transformation to synthesis
   something meeting Z.
 
@@ -664,10 +663,10 @@ TODO: update the comment.
 \<close>
 
 declare [[\<phi>reason_default_pattern
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (100)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (110)
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (100)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (110)
   and \<open>?X @action synthesis\<close> \<Rightarrow>
       \<open>ERROR TEXT(\<open>Malformed Synthesis rule\<close> \<newline> ?X \<newline> \<open>expect: \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?R \<heavy_comma> \<blangle> Target \<brangle> \<rbrace>\<close>\<close>)\<close> (0)
 ]]
@@ -694,9 +693,9 @@ text \<open>On programming mode, the synthesis operation always tries to find a 
   View shifts have to be wrapped in a procedure. The following is an automatic wrapper. \<close>
 
 lemma Synthesis_Proc_fallback_VS
-  [\<phi>reason 10 for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. _ \<heavy_comma> \<blangle> ?X' ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]:
-  \<open> S1 \<s>\<h>\<i>\<f>\<t>\<s> S2\<heavy_comma> \<blangle> X' \<brangle> \<w>\<i>\<t>\<h> Any
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' \<brangle> \<rbrace> @action synthesis\<close>
+  [\<phi>reason 10 for \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?X' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>]:
+  \<open> S1 \<s>\<h>\<i>\<f>\<t>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2 \<w>\<i>\<t>\<h> Any
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2 \<rbrace> @action synthesis\<close>
   unfolding \<phi>Procedure_def Return_def det_lift_def View_Shift_def Action_Tag_def Satisfaction_def
   by simp
 
@@ -710,7 +709,7 @@ lemma [\<phi>reason 1200
 ]:
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> S1 \<longmapsto> \<lambda>v. S2\<heavy_comma> \<blangle> X' v \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> S1 \<longmapsto> \<lambda>v. X' v \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
 \<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> Simplify post_synthesis_simp X'' X'
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
@@ -718,8 +717,8 @@ lemma [\<phi>reason 1200
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP DoSynthesis X
       (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S1))
-      (Trueprop (\<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. S2\<heavy_comma> X'' v) \<t>\<h>\<r>\<o>\<w>\<s> E''))"
-  unfolding FOCUS_TAG_def Action_Tag_def DoSynthesis_def Simplify_def
+      (Trueprop (\<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> (\<lambda>v. X'' v \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2) \<t>\<h>\<r>\<o>\<w>\<s> E''))"
+  unfolding REMAINS_def Action_Tag_def DoSynthesis_def Simplify_def
   using \<phi>apply_proc by fastforce
 
 paragraph \<open>Construction on View Shifting\<close>
@@ -730,33 +729,31 @@ lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (Trueprop (\<v>\<i>\<e>\<w> ?blk [?H] \<i>\<s> ?S1)) ?RET\<close>
 ]:
   " \<r>CALL Synthesis_Parse X X'
-\<Longrightarrow> S1 \<s>\<h>\<i>\<f>\<t>\<s> S2\<heavy_comma> \<blangle> X' \<brangle> \<w>\<i>\<t>\<h> P
+\<Longrightarrow> S1 \<s>\<h>\<i>\<f>\<t>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2 \<w>\<i>\<t>\<h> P
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Simplify post_synthesis_simp X'' X'
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP DoSynthesis X
       (Trueprop (\<v>\<i>\<e>\<w> blk [H] \<i>\<s> S1))
-      (Trueprop ((\<v>\<i>\<e>\<w> blk [H] \<i>\<s> S2\<heavy_comma> X'') \<and> P))"
-  unfolding FOCUS_TAG_def Action_Tag_def DoSynthesis_def Simplify_def
+      (Trueprop ((\<v>\<i>\<e>\<w> blk [H] \<i>\<s> X'' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2) \<and> P))"
+  unfolding REMAINS_def Action_Tag_def DoSynthesis_def Simplify_def
   using \<phi>apply_view_shift
   by metis
 
 paragraph \<open>Construction on ToA\<close>
 
-text \<open>On view shifting mode, the synthesis operation tries to find a view shifting.\<close>
-
 lemma [\<phi>reason 1200
     for \<open>PROP DoSynthesis ?X (Trueprop (\<v>\<i>\<e>\<w> ?blk [?H] \<i>\<s> ?S1)) ?RET\<close>
 ]:
   " \<r>CALL Synthesis_Parse X X'
-\<Longrightarrow> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S2\<heavy_comma> \<blangle> X' \<brangle> \<w>\<i>\<t>\<h> P
+\<Longrightarrow> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2 \<w>\<i>\<t>\<h> P
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> Simplify post_synthesis_simp X'' X'
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP DoSynthesis X
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S1))
-      (Trueprop ((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S2\<heavy_comma> X'') \<and> P))"
-  unfolding FOCUS_TAG_def Action_Tag_def DoSynthesis_def Simplify_def
+      (Trueprop ((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> X'' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2) \<and> P))"
+  unfolding REMAINS_def Action_Tag_def DoSynthesis_def Simplify_def
   by (meson \<phi>apply_implication_impl)
 
 
@@ -807,21 +804,21 @@ lemma [\<phi>reason 1200]:
 lemma [\<phi>reason 1210]:
   \<open> \<r>CALL Synthesis_Parse X' X
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> X ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
 \<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> Simplify post_synthesis_simp X'' X
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
-\<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> X'' ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' ))\<close>
+\<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. X'' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' ))\<close>
   unfolding Synthesis_by_def Action_Tag_def Simplify_def by fastforce
 
 lemma [\<phi>reason 1200]:
   \<open> \<r>CALL Synthesis_Parse X' X
 \<Longrightarrow> Begin_Optimum_Solution
-\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> X ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. X ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
 \<Longrightarrow> End_Optimum_Solution
 \<Longrightarrow> Simplify post_synthesis_simp X'' X
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
-\<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> X'' ret \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' ))\<close>
+\<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. X'' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' ))\<close>
   unfolding Synthesis_by_def Action_Tag_def Simplify_def by fastforce
 
 lemma [\<phi>reason 1200]:
@@ -838,8 +835,8 @@ lemma [\<phi>reason 1200]:
 subsubsection \<open>General Synthesis Rules\<close>
 
 lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<o>\<c> F \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> f x \<Ztypecolon> T ret \<brangle> \<rbrace> @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> case_named f (tag x) \<Ztypecolon> T ret \<brangle> \<rbrace> @action synthesis\<close>
+  \<open> \<p>\<r>\<o>\<c> F \<lbrace> R1 \<longmapsto> \<lambda>ret. f x \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<rbrace> @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R1 \<longmapsto> \<lambda>ret. case_named f (tag x) \<Ztypecolon> T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<rbrace> @action synthesis\<close>
   by simp
 
 lemma [\<phi>reason 1200]:
@@ -1172,7 +1169,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason 1000 for \<open>
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
 
 
@@ -1222,7 +1219,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason 1000 for \<open>
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<s>\<h>\<i>\<f>\<t>\<s> T' \<w>\<i>\<t>\<h> P2))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> (P1 \<and> P2))"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp, insert \<phi>apply_implication \<phi>apply_view_shift \<phi>view_shift_intro_frame, blast+)
 
 
@@ -1256,7 +1253,7 @@ lemma \<phi>apply_proc_fully[\<phi>reason 1000 for
     (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S))
     (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<p>\<e>\<n>\<d>\<i>\<n>\<g> f \<o>\<n> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> T \<t>\<h>\<r>\<o>\<w>\<s> E) \<and> P)\<close>
   unfolding \<phi>Application_def \<phi>IntroFrameVar'_def
-    FOCUS_TAG_def Simplify_def Action_Tag_def Simplify_def Remove_Values_def
+            Simplify_def Action_Tag_def Simplify_def Remove_Values_def
   apply rule
   subgoal premises prems
     apply (simp only: prems(1))
@@ -1353,7 +1350,7 @@ lemma [\<phi>reason 1200 for \<open>
 \<Longrightarrow> (\<And>ex.  E ex \<s>\<h>\<i>\<f>\<t>\<s> E' ex \<w>\<i>\<t>\<h> Any3 @action NToA)
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E ))
                            (Trueprop (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' ))\<close>
-  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def FOCUS_TAG_def Action_Tag_def
+  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def Action_Tag_def
   using \<phi>CONSEQ view_shift_by_implication by blast
 
 lemma [\<phi>reason 1200 for \<open>
@@ -1456,7 +1453,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def FOCUS_TAG_def Action_Tag_def
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
 *)
 
@@ -1657,8 +1654,8 @@ definition Set_Value :: \<open>'x \<Rightarrow> 'v \<Rightarrow> element_index_i
 
 declare [[
   \<phi>reason_default_pattern
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> _ <val-of> ?v <path> ?path \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> _ <val-of> ?v <path> ?path \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (120)
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. _ <val-of> ?v <path> ?path \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. _ <val-of> ?v <path> ?path \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (120)
 ]]
 
 subsubsection \<open>Syntax\<close>
@@ -1683,7 +1680,7 @@ subsubsection \<open>Rule \& Implementation\<close>
 
 lemma "__value_access_0__":
   \<open> \<p>\<r>\<o>\<c> F \<lbrace> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> Void \<brangle> \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> Void \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   by fastforce
 
 lemma implies_prod_right_1:

@@ -2383,39 +2383,7 @@ subsection \<open>Literal Evaluation\<close>
 subsubsection \<open>Check\<close>
 
 (*TODO: should use axiomatization since it is semantic-related*)
-
-definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Literal _ \<longleftrightarrow> True\<close>
-
-lemma Is_Literal_internal_rule:
-  \<open>Is_Literal any\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason 1]:
-  \<open> FAIL TEXT(x \<open>should be a literal\<close>)
-\<Longrightarrow> Is_Literal x\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Literal True\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Literal False\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Literal 0\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open> Is_Literal x
-\<Longrightarrow> Is_Literal (Suc x)\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Literal 1\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Literal (numeral x)\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason 1000]:
-  \<open> Is_Literal x
-\<Longrightarrow> Is_Literal (- x)\<close>
-  unfolding Is_Literal_def ..
+(*TODO: move me!*)
 
 declare [[\<phi>premise_attribute? [\<phi>reason add] for \<open>Is_Literal _\<close>]]
 

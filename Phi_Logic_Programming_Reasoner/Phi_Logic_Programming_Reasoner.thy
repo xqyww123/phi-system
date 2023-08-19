@@ -11,6 +11,7 @@ theory Phi_Logic_Programming_Reasoner
   and "<threshold>" = "\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d>"
   and "!!" = "!!"
   and "??" = "??"
+  and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
 begin
 
 subsubsection \<open>Prelude Settings\<close>
@@ -517,11 +518,13 @@ For example,
 \<close>
 
 
-subsubsection \<open>Compact Representation of Antecedents\<close>
+subsubsection \<open>Basic Reasoning Rules\<close>
 
 declare conjunctionI[\<phi>reason 1000] conjI[\<phi>reason 1000]
         allI[\<phi>reason 1000] impI[\<phi>reason 1000]
         HOL.refl[\<phi>reason 1000 for \<open>_ = _\<close>]
+
+text \<open>Antecedent \<open>x = y\<close> has a meaning of assignment, and is done by unification\<close>
 
 (*
 text \<open>Meta-programming is feasible on \<phi>-LPR.
@@ -608,6 +611,45 @@ lemma May_By_Assumption_I: \<open>PROP P \<Longrightarrow> PROP May_By_Assumptio
         |> Seq.map (pair ctxt)
   end
 \<close>
+
+subsubsection \<open>Literal Check\<close>
+
+text \<open>check if a term is evaluated to a literal.\<close>
+
+definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Literal _ \<longleftrightarrow> True\<close>
+
+paragraph \<open>Presets\<close>
+
+lemma Is_Literal_internal_rule:
+  \<open>Is_Literal any\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason 0]:
+  \<open> FAIL TEXT(\<open>Fail to evaluate\<close> x \<open>to a literal\<close>)
+\<Longrightarrow> Is_Literal x\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open>Is_Literal True\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open>Is_Literal False\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open>Is_Literal 0\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open> Is_Literal x
+\<Longrightarrow> Is_Literal (Suc x)\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open>Is_Literal 1\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open>Is_Literal (numeral x)\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason 1000]:
+  \<open> Is_Literal x
+\<Longrightarrow> Is_Literal (- x)\<close>
+  unfolding Is_Literal_def ..
 
 
 subsection \<open>Cut\<close>
@@ -715,7 +757,7 @@ lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by s
 lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
 lemma [simp]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close>
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
   unfolding Premise_def by simp+
 
 subsubsection \<open>Implementation of the reasoners\<close>
@@ -891,8 +933,11 @@ ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
   = \<open>Phi_Reasoners.wrap (fn ctxt =>
         case Config.get ctxt Phi_Reasoner_solve_obligation_and_no_defer
           of 0 => Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt
-           | 1 => Phi_Reasoners.safer_obligation_solver ctxt
-           | 2 => Phi_Reasoners.auto_obligation_solver ctxt
+           | 1 => (fn th => if Phi_Reasoners.has_obligations_tag th
+                            then Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt th
+                            else Phi_Reasoners.safer_obligation_solver ctxt th)
+           | 2 => Phi_Reasoners.safer_obligation_solver ctxt
+           | 3 => Phi_Reasoners.auto_obligation_solver ctxt
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
     ) o snd\<close>
 
@@ -1114,7 +1159,76 @@ ML_file \<open>library/Subgoal_Env.ML\<close>
 \<phi>reasoner_ML SOLVE_SUBGOAL 9900 (\<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal o snd\<close>
 
 
+subsection \<open>Simplification \& Rewrite\<close>
+
+text \<open>\<open>\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
+  \<open>mode\<close>. The \<open>?result\<close> should be an output variable for the result of the simplification.
+
+  We implement a \<open>default\<close> mode where the system simple-set is used to simplify
+  \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
+
+definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[_] _ :/ _" [10,1000,10] 9)
+  where "Simplify setting result origin \<longleftrightarrow> result = origin"
+
+(* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
+  where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close> *)
+
+lemma Simplify_cong[cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
+
+lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .
+lemma Simplify_I: \<open>A = B \<Longrightarrow> Simplify m A B\<close> unfolding Simplify_def .
+
+(* lemma Do_Simplification:
+  \<open>PROP Do_Simplificatin A B \<Longrightarrow> Simplify s A B\<close>
+  unfolding Do_Simplificatin_def Simplify_def atomize_eq . *)
+
+lemma End_Simplification : \<open>Simplify mode A A\<close> unfolding Simplify_def ..
+lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> Simplify mode A B\<close>
+  unfolding Simplify_def Premise_def atomize_eq .
+
+ML_file \<open>library/simplifier.ML\<close>
+
+hide_fact End_Simplification' End_Simplification
+
+subsubsection \<open>Default Simplifier\<close>
+
+abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [1000,10] 9)
+  where "Default_Simplify \<equiv> Simplify default"
+
+\<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I) o snd\<close>
+
+
+(* subsection \<open>Exhaustive Divergence\<close>
+
+ML_file \<open>library/exhaustive_divergen.ML\<close>
+
+definition \<open>Begin_Exhaustive_Divergence \<longleftrightarrow> True\<close>
+definition \<open>  End_Exhaustive_Divergence \<longleftrightarrow> True\<close>
+definition [iff]: \<open>Stop_Divergence \<longleftrightarrow> True\<close>
+
+lemma Stop_Divergence_I: \<open>Stop_Divergence\<close> unfolding Stop_Divergence_def ..
+
+lemma Begin_Exhaustive_Divergence_I: \<open>Begin_Exhaustive_Divergence\<close>
+  unfolding Begin_Exhaustive_Divergence_def ..
+
+lemma End_Exhaustive_Divergence_I: \<open>End_Exhaustive_Divergence\<close>
+  unfolding End_Exhaustive_Divergence_def ..
+
+\<phi>reasoner_ML Begin_Exhaustive_Divergence 1000 (\<open>Begin_Exhaustive_Divergence\<close>)
+  = \<open>PLPR_Exhaustive_Divergence.begin Seq.of_list\<close>
+
+\<phi>reasoner_ML Stop_Divergence 1000 (\<open>Stop_Divergence\<close>) =
+  \<open>apsnd (fn th => @{thm Stop_Divergence_I} RS th) #> PLPR_Exhaustive_Divergence.stop\<close>
+
+\<phi>reasoner_ML End_Exhaustive_Divergence 1000 (\<open>End_Exhaustive_Divergence\<close>)
+  = \<open>PLPR_Exhaustive_Divergence.exit\<close>
+*)
+
+
 subsection \<open>Branch\<close>
+
+subsubsection \<open>Meta Branch\<close>
 
 text \<open>\<open>A ||| B\<close> is an antecedent way to encode search branch.
 Compared with the ordinary approach using multiple submissive rules,
@@ -1136,7 +1250,7 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   unfolding Branch_embed_def atomize_Branch .
 
 
-subsubsection \<open>Implementation\<close>
+paragraph \<open>Implementation\<close>
 
 lemma Branch_L:
   \<open> PROP A
@@ -1208,6 +1322,31 @@ lemma Orelse_shortcut_I2:
 
 hide_fact Orelse_shortcut_I1 Orelse_shortcut_I2
 
+
+subsubsection \<open>Runtimely-Deterministic Branch\<close>
+
+text \<open>The condition \<open>C\<close> in \<open>If C P Q\<close> must be a constant boolean (after evaluation) in the reasoning
+      time. The reasoning is always runtimely-deterministic that only goes to one branch in the
+      reasoning time. It is not designed for branching reasoning.
+      If the condition is failed to be evaluated into a constant, the reasoning fails.\<close>
+
+lemma RDB_True[\<phi>reason 1010]:
+  \<open> P \<Longrightarrow> if True then P else Q\<close>
+  by simp
+
+lemma RDB_False[\<phi>reason 1010]:
+  \<open> Q \<Longrightarrow> if False then P else Q\<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> C' : C
+\<Longrightarrow> Is_Literal C'
+\<Longrightarrow> if C' then P else Q
+\<Longrightarrow> if C  then P else Q \<close>
+  unfolding Simplify_def
+  by simp
+
+
 subsubsection \<open>Try\<close>
 
 definition Try :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> where \<open>Try success_or_fail P = P\<close>
@@ -1253,71 +1392,6 @@ end)
 
 
 
-subsection \<open>Simplification \& Rewrite\<close>
-
-text \<open>\<open>\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
-  \<open>mode\<close>. The \<open>?result\<close> should be an output variable for the result of the simplification.
-
-  We implement a \<open>default\<close> mode where the system simple-set is used to simplify
-  \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
-
-definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[_] _ :/ _" [10,1000,10] 9)
-  where "Simplify setting result origin \<longleftrightarrow> result = origin"
-
-(* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
-  where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close> *)
-
-lemma Simplify_cong[cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
-
-lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .
-lemma Simplify_I: \<open>A = B \<Longrightarrow> Simplify m A B\<close> unfolding Simplify_def .
-
-(* lemma Do_Simplification:
-  \<open>PROP Do_Simplificatin A B \<Longrightarrow> Simplify s A B\<close>
-  unfolding Do_Simplificatin_def Simplify_def atomize_eq . *)
-
-lemma End_Simplification : \<open>Simplify mode A A\<close> unfolding Simplify_def ..
-lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> Simplify mode A B\<close>
-  unfolding Simplify_def Premise_def atomize_eq .
-
-ML_file \<open>library/simplifier.ML\<close>
-
-hide_fact End_Simplification' End_Simplification
-
-subsubsection \<open>Default Simplifier\<close>
-
-abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [1000,10] 9)
-  where "Default_Simplify \<equiv> Simplify default"
-
-\<phi>reasoner_ML Default_Simplify 1000 (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I) o snd\<close>
-
-
-(* subsection \<open>Exhaustive Divergence\<close>
-
-ML_file \<open>library/exhaustive_divergen.ML\<close>
-
-definition \<open>Begin_Exhaustive_Divergence \<longleftrightarrow> True\<close>
-definition \<open>  End_Exhaustive_Divergence \<longleftrightarrow> True\<close>
-definition [iff]: \<open>Stop_Divergence \<longleftrightarrow> True\<close>
-
-lemma Stop_Divergence_I: \<open>Stop_Divergence\<close> unfolding Stop_Divergence_def ..
-
-lemma Begin_Exhaustive_Divergence_I: \<open>Begin_Exhaustive_Divergence\<close>
-  unfolding Begin_Exhaustive_Divergence_def ..
-
-lemma End_Exhaustive_Divergence_I: \<open>End_Exhaustive_Divergence\<close>
-  unfolding End_Exhaustive_Divergence_def ..
-
-\<phi>reasoner_ML Begin_Exhaustive_Divergence 1000 (\<open>Begin_Exhaustive_Divergence\<close>)
-  = \<open>PLPR_Exhaustive_Divergence.begin Seq.of_list\<close>
-
-\<phi>reasoner_ML Stop_Divergence 1000 (\<open>Stop_Divergence\<close>) =
-  \<open>apsnd (fn th => @{thm Stop_Divergence_I} RS th) #> PLPR_Exhaustive_Divergence.stop\<close>
-
-\<phi>reasoner_ML End_Exhaustive_Divergence 1000 (\<open>End_Exhaustive_Divergence\<close>)
-  = \<open>PLPR_Exhaustive_Divergence.exit\<close>
-*)
 
 subsection \<open>Optimal Solution\<close>
 

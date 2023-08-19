@@ -397,8 +397,10 @@ lemma [\<phi>reason 1050]:
 
 lemma [\<phi>reason 1050]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A
-\<Longrightarrow> \<blangle> X \<brangle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
-  unfolding FOCUS_TAG_def .
+\<Longrightarrow> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item A
+\<Longrightarrow> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> (C \<longrightarrow> Q) @action \<A>_map_each_item A\<close>
+  unfolding REMAINS_def
+  by (cases C; simp add: Action_Tag_def implies_prod_bi_prod)
 
 lemma [\<phi>reason 1050]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A' \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>)
@@ -1187,7 +1189,7 @@ lemma [\<phi>reason !59]:
 
 lemma [\<phi>reason !59]: \<comment> \<open>Exactly higher than the entry point of Structural Extract\<close>
   \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> Y) 
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   unfolding FAIL_def
   by blast
 
@@ -1199,9 +1201,9 @@ lemma \<comment>\<open>fallback\<close>
   by blast
 
 lemma \<comment>\<open>fallback\<close>
-  [\<phi>reason default 3 for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _ \<close>]:
+  [\<phi>reason default 3 for \<open> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _ \<close>]:
   \<open> FAIL TEXT(\<open>Fail to construct \<phi>-type\<close> U)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding FAIL_def
   by blast
 
@@ -1211,7 +1213,7 @@ setup \<open>let
                           else data
 in Context.theory_map (
       Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _\<close>, pass_check)
-   #> Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close> ^ "'R", \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>, pass_check))
+   #> Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close> ^ "'R", \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>, pass_check))
 end\<close>
 
 

@@ -38,6 +38,7 @@ signature PHI_REASONERS = sig
   val defer_antecedent : (Proof.context -> thm -> thm) (*contract*)
                                  -> Proof.context -> thm -> thm Seq.seq
   val defer_obligation_tac : contraction_mode -> Proof.context -> thm -> thm Seq.seq
+  val has_obligations_tag : thm -> bool
 
   structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
       context before applying either the automatic solving*)
@@ -622,10 +623,14 @@ fun contract_obligations mode ctxt thm = thm
     |> collect_obligation_premises mode ctxt
     |> Conv.fconv_rule (Conv.rewr_conv @{thm contract_obligations})
 
+fun find_obligations_tag thm = tl (Thm.prems_of thm)
+      |> find_index (fn tm =>
+            case tm of (_ $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _)) => true
+                     | _ => false)
+fun has_obligations_tag thm = find_obligations_tag thm <> ~1
+
 fun defer_antecedent contract = oblg_template (fn ctxt => fn thm =>
-  let val idx = tl (Thm.prems_of thm) |> find_index (fn tm =>
-          case tm of (_ $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _)) => true
-                   | _ => false)
+  let val idx = find_obligations_tag thm
   in if idx = ~1
      then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
      else Thm.permute_prems 1 idx thm

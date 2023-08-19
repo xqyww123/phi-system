@@ -454,9 +454,12 @@ type guard = context_state -> bool
 
 (* Main Reasoning Function *)
 
-fun debug ctxt (c,_,_,({name,...} : reasoner)) =
-  tracing ("candicate reasoners (" ^ string_of_int c ^ "):\n"
-              ^ Syntax.string_of_term (Proof_Context.set_mode Proof_Context.mode_abbrev ctxt) name)
+fun debug ctxt (c,_,_,({name,pos,...} : reasoner)) = let open Pretty in
+      tracing (string_of (chunks [
+        block ([str "candidate reasoners (", str (string_of_int c), str "): "] @ here pos),
+        Syntax.pretty_term (Proof_Context.set_mode Proof_Context.mode_abbrev ctxt) name
+      ]))
+  end
 
 fun concl_of_goal st i =
   let val (gi, rfrees) = Logic.goal_params st i

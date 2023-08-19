@@ -327,25 +327,39 @@ text \<open>Semantics of antecedent \<^pattern_prop>\<open>X \<t>\<r>\<a>\<n>\<s
   Given the source \<^term>\<open>X\<close> and the target \<^term>\<open>Y\<close>, find a reasoning way to do the transformation,
   which may bring in additional pure facts \<^pattern_term>\<open>?P\<close> and generate proof obligations.\<close>
 
-definition FOCUS_TAG :: " 'a \<Rightarrow> 'a "  ("\<blangle> _ \<brangle>") where [iff]: "\<blangle> x \<brangle> = x"
+definition REMAINS :: \<open> 'a::sep_magma BI \<Rightarrow> bool \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<close> ("_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _" [14,10,14] 13)
+  where \<open>(X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<equiv> if C then R * X else X\<close>
+  \<comment> \<open>The \<open>C\<close> should be a variable sending to the later reasoning which decides if the transformation
+      results in some remainders. Or, exceptionally, \<open>C\<close> can be constant \<open>True\<close> for unital algebras
+      and the later reasoning sets the remainder to \<open>1\<close> if it does not really results in remainders.
 
-abbreviation Remains :: \<open> 'a::{sep_disj,times} BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<close> (infix "\<r>\<e>\<m>\<a>\<i>\<n>\<s>" 13)
-  where \<open>(X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<equiv> R * \<blangle> X \<brangle>\<close>
+      It means, every reasoning procedure should prepare two versions, the one for variable \<open>C\<close>
+      and another for the \<open>C\<close> of constant \<open>True\<close>.
+
+      A reasoning procedure can at any time if on a unital algebra, set a variable \<open>C\<close> to \<open>True\<close>
+      and turns the reasoning into the unital mode.\<close>
+
+lemma REMAINS_simp[simp]:
+  \<open>X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<equiv> R * X\<close>
+  \<open>X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] R \<equiv> X\<close>
+  unfolding REMAINS_def
+  by simp_all
 
 declare [[
-  \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> (20),
-  \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>fn _ =>
-    fn Trueprop $ (Transformation $ X $ (Times $ R $ (FOCUS $ (PhiTyp $ y $ U))) $ _) =>
+  \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> (20),
+  \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>fn _ =>
+    fn Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y $ U) $ C $ R) $ _) =>
       let val idx = Term.maxidx_term X (Term.maxidx_term y (Term.maxidx_term U ~1)) + 1
-          val P  = Var(("P", idx), HOLogic.boolT)
-          val R' = Var(("R", idx), Term.fastype_of R)
+          val P = Var(("P", idx), HOLogic.boolT)
+          val C = Var(("C", idx), HOLogic.boolT)
+          val R = Var(("R", idx), Term.fastype_of R)
           val y' = Var(("var_y", idx), Term.fastype_of y)
-       in if is_Var X then SOME [Trueprop $ (Transformation $ X $ (Times $ R' $ (FOCUS $ (PhiTyp $ y  $ U))) $ P)]
-                      else SOME [Trueprop $ (Transformation $ X $ (Times $ R' $ (FOCUS $ (PhiTyp $ y' $ U))) $ P)]
+       in if is_Var X then SOME [Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y  $ U) $ C $ R) $ P)]
+                      else SOME [Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y' $ U) $ C $ R) $ P)]
       end\<close> (30)
 ]]
    
-text \<open>For antecedent \<^pattern_prop>\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<w>\<i>\<t>\<h> _\<close>, the semantics is slightly different
+text \<open>For antecedent \<^pattern_prop>\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[?C] ?R \<w>\<i>\<t>\<h> _\<close>, the semantics is slightly different
   where it specifies extracting given \<^term>\<open>Y\<close> from given \<^term>\<open>X\<close> and leaving some \<^schematic_term>\<open>?R\<close>.\<close>
 
 subsubsection \<open>Rules\<close>
@@ -1116,8 +1130,8 @@ lemma [\<phi>reason 1000]:
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> UNIV \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<top>\<^sub>\<phi> \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P\<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> UNIV \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<top>\<^sub>\<phi> \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   unfolding \<phi>Any.unfold
   by simp
 
@@ -1285,15 +1299,17 @@ lemma ToA_by_Equive_Class
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def by clarsimp
 
+declare [[\<phi>trace_reasoning = 1]]
+
 lemma ToA_by_Equive_Class'
-      [\<phi>reason default 10 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>
-                          except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
+      [\<phi>reason default 10 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                          except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Object_Equiv U eq
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Transformation_def Premise_def FOCUS_TAG_def
-  by (clarsimp, meson Transformation_def implies_left_prod)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def
+  by (cases C; clarsimp; meson Transformation_def implies_left_prod)
 
 lemma Object_Equiv_fallback[\<phi>reason default 1]:
   \<open>Object_Equiv T (=)\<close>

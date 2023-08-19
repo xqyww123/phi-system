@@ -21,14 +21,15 @@ include PHI_REASONERS
   quick rule is the quick-cut used when the Y contains no schematic variables.
   *)
 val reasoner_ToA_conditioned_subgoals :
-        (thm (*normal rule*) * thm (*with R*)) *
-        (thm (*quick rule*) * thm (*with R*)) *
+          thm (*with R*) *
         ( string (*head of the conditional branch, e.g., If*) *
           int (*arity of the head, e.g., 3*) *
+          thm list (*rewrites degenerating the branch*) * 
           thm list (*rewrite rules to move the conditional branch to the top*)) *
         (Proof.context
             -> (indexname * typ) list (*vars in Y*) * cterm (*LHS, the Y*) * cterm (*RHS, the If C Y\<^sub>a Y\<^sub>B*)
-            -> cterm Vars.table (*instantiations*))
+            -> cterm Vars.table (*instantiations*)) *
+        Proof.context (*context for preparation time*)
      -> Proof.context * thm -> (Proof.context * thm) Seq.seq
 
 end
@@ -36,21 +37,52 @@ end
 structure Phi_Reasoners : PHI_REASONERS = struct
 open Phi_Reasoners
 
-fun reasoner_ToA_conditioned_subgoals ((rule, ruleR),
-                                       (quick_rule, quick_ruleR),
-                                       (head_const, arity, rewrs),
-                                       mk_insts)
-                                      (ctxt,sequent) =
-  Seq.make (fn () =>
-  let fun has_var tm = maxidx_of_term tm >= 0
-      val (no_var, has_remainder) =
-        case #2 (Phi_Syntax.dest_transformation (Thm.major_prem_of sequent))
-          of Const(\<^const_name>\<open>times\<close>, _) $ Y $ (Const(\<^const_name>\<open>FOCUS_TAG\<close>, _) $ _)
-               => (has_var Y, true)
-           | Y => (has_var Y, false)
+fun reasoner_ToA_conditioned_subgoals (ruleR, (head_const, arity, degenerates, rewrs),
+                                       mk_insts, ctxt_gen) =
+  let datatype has_remainder = No_Rem | Has_Rem | True_Rem
+      fun has_var tm = maxidx_of_term tm >= 0
+      fun dest_Tr tm =
+        case #2 (Phi_Syntax.dest_transformation (Logic.strip_assums_concl tm))
+          of Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ \<^Const>\<open>True\<close> $ _
+               => (Y, \<^Const>\<open>True\<close>, True_Rem)
+           | Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ C $ _
+               => (Y, C, Has_Rem)
+           | Y => (Y, Term.dummy, No_Rem)
+
+      fun mk_inst base abst (X $ _) = mk_inst base (abst+1) X
+        | mk_inst base abst (Var (N,ty)) =
+            let val args = (take abst (binder_types ty))
+             in fold_rev (fn Ty => fn Y => Abs ("_", Ty, Y)) args base
+             |> Thm.cterm_of ctxt_gen
+             |> pair ((N,ty))
+            end
+
+      fun mk_rule base rule =
+        let val Cs = map_filter (try (mk_inst base 0 o #2 o dest_Tr)) (Thm.prems_of rule)
+         in Thm.instantiate (TVars.empty, Vars.make Cs) rule
+         |> Simplifier.rewrite_rule ctxt_gen (@{thm' REMAINS_simp(2)} :: degenerates)
+         |> Thm.trim_context
+        end
+
+      fun mk_quick_rule rule =
+        let val Y = #1 (dest_Tr (Thm.concl_of rule))
+            val Ys = map_filter (try (mk_inst Y 0 o #1 o dest_Tr)) (Thm.prems_of rule)
+         in Thm.instantiate (TVars.empty, Vars.make Ys) rule
+         |> Simplifier.rewrite_rule ctxt_gen degenerates
+         |> (fn th => @{thm' Pure.reflexive} RS' (ctxt_gen, th))
+         |> Thm.trim_context
+        end
+
+      val (rule, ruleRT) = (mk_rule \<^Const>\<open>False\<close> ruleR, mk_rule \<^Const>\<open>True\<close> ruleR)
+      val (quick_rule, quick_ruleR, quick_ruleRT) =
+          (mk_quick_rule rule, mk_quick_rule ruleR, mk_quick_rule ruleRT)
+
+   in fn (ctxt,sequent) => Seq.make (fn () =>
+  let val (Y, _, has_rem) = dest_Tr (Thm.major_prem_of sequent)
+      val no_var = has_var Y
       val rule' = if no_var
-                  then if has_remainder then quick_ruleR else quick_rule
-                  else if has_remainder then ruleR else rule
+                  then case has_rem of No_Rem => quick_rule | Has_Rem => quick_ruleR | True_Rem => quick_ruleRT
+                  else case has_rem of No_Rem => rule | Has_Rem => ruleR | True_Rem => ruleRT
       val sequent' = rule' RS' (ctxt, sequent)
    in if no_var
    then SOME ((ctxt, sequent'), Seq.empty)
@@ -88,6 +120,7 @@ fun reasoner_ToA_conditioned_subgoals ((rule, ruleR),
    in SOME ((ctxt, sequent''), Seq.empty)
   end
   end)
+  end
 
 end
 

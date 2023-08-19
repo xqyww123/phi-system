@@ -66,7 +66,7 @@ fun apply_automatic_morphism (ctxt, sequent) =
 
 fun simplify_morphisms _   [] = []
   | simplify_morphisms ctxt L =
-      map (Raw_Simplifier.rewrite_rule ctxt @{thms FOCUS_TAG_def[folded atomize_eq]}) L
+      map (Raw_Simplifier.rewrite_rule ctxt @{thms' REMAINS_simp}) L
 
 fun move_lemmata' (ctxt, sequent) =
   let

@@ -164,13 +164,13 @@ lemma [\<phi>reason 1000]:
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action \<A>
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action \<A> \<close>
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @action \<A>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<lambda>\<^sub>\<beta> y. S y) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P @action \<A> \<close>
   by simp
 
 
@@ -260,6 +260,8 @@ lemmas [assertion_simps] =
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
   \<phi>V_simps
   \<phi>Prod_expn'' \<phi>Prod_expn'
+  REMAINS_simp
+  HOL.if_True HOL.if_False
 
 lemmas [assertion_simps_source] =
           ExSet_times_left ExSet_times_right ExSet_simps_adconj ExSet_simps_addisj
@@ -490,12 +492,12 @@ lemma \<phi>IntroFrameVar'_No:
   unfolding \<phi>IntroFrameVar'_def by simp
 
 lemma \<phi>IntroFrameVar_Yes:
-  "\<phi>IntroFrameVar (Some R) (R * \<blangle> S \<brangle>) S (R * T) T"
-  unfolding \<phi>IntroFrameVar_def FOCUS_TAG_def by simp
+  "\<phi>IntroFrameVar (if C then Some R else None) (S \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) S (T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) T"
+  unfolding \<phi>IntroFrameVar_def REMAINS_def by simp
 
 lemma \<phi>IntroFrameVar'_Yes:
-  " \<phi>IntroFrameVar' R (R * \<blangle> S \<brangle>) S (\<lambda>ret. R * T ret) T (\<lambda>ex. R * E ex) E"
-  unfolding \<phi>IntroFrameVar'_def FOCUS_TAG_def by blast
+  " \<phi>IntroFrameVar' R (S \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R) S (\<lambda>ret. R * T ret) T (\<lambda>ex. R * E ex) E"
+  unfolding \<phi>IntroFrameVar'_def REMAINS_def by simp
 
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
 \<open>fn (_, (ctxt, sequent)) =>
@@ -509,10 +511,10 @@ lemma \<phi>IntroFrameVar'_Yes:
   in
     if suppressed tail (* andalso fastype_of tail = \<^typ>\<open>assn\<close> *)
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
-    else if Sign.of_sort (Proof_Context.theory_of ctxt) (Ty, \<^sort>\<open>sep_magma_1\<close>)
-         then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
-         else Seq.of_list [(ctxt, @{thm \<phi>IntroFrameVar_Yes}  RS sequent),
-                           (ctxt, @{thm \<phi>IntroFrameVar_No} RS sequent)]
+    else if Sign.of_sort (Proof_Context.theory_of ctxt) (Ty, \<^sort>\<open>sep_semigroup\<close>)
+    then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
+    else Seq.of_list [(ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent),
+                      (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)]
   end\<close>
 
 \<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =

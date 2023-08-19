@@ -270,14 +270,25 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
           val rule'1 = (0, Thm.transfer' ctxt' template)
                     |> fold_pad (fn prop' => fn (i, thm) =>
-                        let val tagged =
+                        let datatype mode = Reason | Oblg | Normal
+                            val mode =
                                   case Logic.nth_prem (i+1, Thm.prop_of thm)
-                                    of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                                    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                           Const(\<^const_name>\<open>Action_Tag\<close>, _)
                                               $ _
-                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _))) => true
-                                     | _ => false
-                            val thm'1 = if tagged then @{thm' Action_Tag_I} RSN (i+1, thm) else thm
+                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) => Reason
+                                     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                                          Const(\<^const_name>\<open>Premise\<close>, _)
+                                              $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)
+                                              $ P) =>
+                                        if exists_subterm (fn (Const(\<^const_name>\<open>\<A>_template_condition\<close>, _)) => true
+                                                            | _ => false) P
+                                        then Oblg
+                                        else Normal
+                                     | _ => Normal
+                            val thm'1 = if mode = Reason
+                                        then @{thm' Action_Tag_I} RSN (i+1, thm)
+                                        else thm
                             val (delt,thm'2) = (case prop'
                                                   of SOME prop => ((Thm.nprems_of prop, prop RSN (i+1, thm'1))
                                                        handle THM _ => let open Pretty in
@@ -289,18 +300,22 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                                                              item [str "property:", brk 1, Thm.pretty_thm ctxt' prop]])
                                                         end)
                                                    | NONE => (1, thm'1))
-                            val thm'3 = if tagged then 
-                                  thm'2 |> Thm.permute_prems 0 i
-                                        |> Phi_Reasoner.reason (SOME delt) true ctxt'
-                                        |> (fn SOME th => th
-                                             | NONE => raise Automation_Fail (fn () =>
-                                                let open Pretty
-                                                 in [para "Fail to reason a compulsory antecedent",
-                                                     Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))]
-                                                end))
-                                        |> Thm.permute_prems 0 (~i)
-                                else thm'2
-                         in (if tagged then i else i + delt, thm'3)
+                            val thm'3 = case mode
+                                  of Reason =>
+                                      thm'2 |> Thm.permute_prems 0 i
+                                            |> Phi_Reasoner.reason (SOME delt) true ctxt'
+                                            |> (fn SOME th => th
+                                                 | NONE => raise Automation_Fail (fn () =>
+                                                    let open Pretty
+                                                     in [para "Fail to reason a compulsory antecedent",
+                                                         Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))]
+                                                    end))
+                                            |> Thm.permute_prems 0 (~i)
+                                   | Oblg => Conv.gconv_rule (
+                                                Raw_Simplifier.rewrite ctxt' false @{thms' \<A>_template_condition_def}
+                                             ) 1 thm'2
+                                   | _ => thm'2
+                         in (if mode = Reason then i else i + delt, thm'3)
                         end) (Thm.nprems_of template) props
                     |> snd
                     |> Phi_Help.beta_eta_contract
