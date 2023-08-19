@@ -395,6 +395,11 @@ declare NToA_finish'[\<phi>reason 4001 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o
                      \<phi>reason 900  for \<open>(?X::?'a::sep_magma_1 set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]
 
 lemma [\<phi>reason 4000]:
+  \<open> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<close>
+  unfolding REMAINS_def
+  by simp
+
+lemma [\<phi>reason 4000]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] X\<close>
   for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding REMAINS_def Action_Tag_def by simp
@@ -1359,7 +1364,7 @@ subsubsection \<open>\<phi>Type Insertion into Unital Algebra\<close>
 definition \<phi>None_freeobj :: \<open>('v::one, 'x) \<phi>\<close> ("\<circle>\<^sub>\<x>") where \<open>\<circle>\<^sub>\<x> = (\<lambda>x. 1)\<close>
 
 lemma \<phi>None_freeobj_expn[\<phi>expns, simp]:
-  \<open> p \<Turnstile> (x \<Ztypecolon> \<circle>\<^sub>\<x>) \<longleftrightarrow> p = 1\<close>
+  \<open> (x \<Ztypecolon> \<circle>\<^sub>\<x>) = 1\<close>
   unfolding \<phi>Type_def \<phi>None_freeobj_def
   by simp
 
@@ -1406,6 +1411,14 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<half_blkcirc>[C] T) \<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def Premise_def
   by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Cx = Cy
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Cy \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc>[Cx] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[Cy] U \<w>\<i>\<t>\<h> Cy \<longrightarrow> P\<close>
+  unfolding Premise_def Transformation_def
+  by clarsimp
+  
 
 subsubsection \<open>Auxiliary Rules\<close>
 
@@ -1723,6 +1736,46 @@ lemma [\<phi>reason 3000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (\<half_blkcirc>[True] U \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
   unfolding Action_Tag_def \<phi>Cond_Unital_Ins_unfold_simp .
 
+lemma [\<phi>reason 1000]:
+  \<open> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc>[True] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<half_blkcirc>[False] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> A * (x \<Ztypecolon> \<black_circle> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A * (x \<Ztypecolon> \<half_blkcirc>[True] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A * (x \<Ztypecolon> \<half_blkcirc>[False] T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[True] U \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[False] U \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[True] U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<half_blkcirc>[False] U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
 
 subsection \<open>Fall back\<close>
 
@@ -2034,6 +2087,17 @@ lemma enter_SE:
     apply_rule T1[THEN implies_left_prod, where R=RR]
   \<medium_right_bracket> .
 
+lemma enter_SE_TH:
+  \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
+          Auto_Transform_Hint (y'1 \<Ztypecolon> U' \<^emph> R') (x'1 \<Ztypecolon> T' \<^emph> W') \<and> P1 @action \<A>SE
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RR \<w>\<i>\<t>\<h>
+          Auto_Transform_Hint (y'2 \<Ztypecolon> W') A' \<and> P2
+\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RR * (snd y \<Ztypecolon> R) \<w>\<i>\<t>\<h>
+          Auto_Transform_Hint (y'3 \<Ztypecolon> U') (A' * (x'3 \<Ztypecolon> T')) \<and> P2 \<and> P1\<close>
+  for A :: \<open>'a::sep_semigroup BI\<close>
+  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
+  using enter_SE .
+
 lemma enter_SEi:
   \<open> (x,w) \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P1 @action \<A>SEi
 \<Longrightarrow> if Cw then (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2) else (P2, Crr) = (True, False)
@@ -2070,17 +2134,6 @@ lemma enter_SEi:
     apply_rule T1[THEN implies_left_prod, where R=A]
   \<medium_right_bracket> .
 
-lemma enter_SE_TH:
-  \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
-          Auto_Transform_Hint (y'1 \<Ztypecolon> U' \<^emph> R') (x'1 \<Ztypecolon> T' \<^emph> W') \<and> P1 @action \<A>SE
-\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RR \<w>\<i>\<t>\<h>
-          Auto_Transform_Hint (y'2 \<Ztypecolon> W') A' \<and> P2
-\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RR * (snd y \<Ztypecolon> R) \<w>\<i>\<t>\<h>
-          Auto_Transform_Hint (y'3 \<Ztypecolon> U') (A' * (x'3 \<Ztypecolon> T')) \<and> P2 \<and> P1\<close>
-  for A :: \<open>'a::sep_semigroup BI\<close>
-  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
-  using enter_SE .
-
 lemma enter_SEi_TH:
   \<open> (x,w) \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h>
         Auto_Transform_Hint (y'1 \<Ztypecolon> \<black_circle> U' \<^emph> \<half_blkcirc>[Cr] R') (x'1 \<Ztypecolon> \<black_circle> T' \<^emph> \<half_blkcirc>[Cw] W') \<and> P1 @action \<A>SEi
@@ -2098,6 +2151,61 @@ lemma enter_SEi_TH:
   for A :: \<open>'a::sep_semigroup BI\<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using enter_SEi .
+
+
+lemma enter_SEi_\<phi>Some:
+  \<open> (x, w) \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P1 @action \<A>SEi
+\<Longrightarrow> if Cw then (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> \<black_circle> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> P2) else (P2, Crr) = (True, False)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps undefined]
+        (C, R3) : (Cr \<or> Crr \<or> \<not> Cw,
+                   if Crr then if Cr then RR * (snd y \<Ztypecolon> \<black_circle> R) else RR
+                   else if Cw then if Cr then (snd y \<Ztypecolon> \<black_circle> R) else \<top>
+                   else if Cr then A * (snd y \<Ztypecolon> \<black_circle> R) else A)
+\<Longrightarrow> A * (x \<Ztypecolon> \<black_circle> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> \<black_circle> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R3 \<w>\<i>\<t>\<h> P2 \<and> P1\<close>
+  for A :: \<open>'a::sep_semigroup option BI\<close>
+  unfolding Action_Tag_def REMAINS_def Simplify_def
+  apply (cases Cw; cases Cr; cases Crr;
+         simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn')
+  \<medium_left_bracket> premises T1 and T2
+    apply_rule T2[THEN implies_right_prod, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
+    apply_rule T1[THEN implies_left_prod, where R=RR]
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises T1 and T2
+    apply_rule T2[THEN implies_right_prod, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
+    apply_rule T1
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises T1 and T2
+    apply_rule T2[THEN implies_right_prod, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
+    apply_rule T1[THEN implies_left_prod, where R=RR]
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises T1 and T2
+    apply_rule T2[THEN implies_right_prod, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
+    apply_rule T1
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises T1
+    apply_rule T1[THEN implies_left_prod, where R=A]
+  \<medium_right_bracket>
+  \<medium_left_bracket> premises T1
+    apply_rule T1[THEN implies_left_prod, where R=A]
+  \<medium_right_bracket> .
+
+lemma enter_SEi_\<phi>Some_TH:
+  \<open> (x, w) \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h>
+        Auto_Transform_Hint (y'1 \<Ztypecolon> \<black_circle> U' \<^emph> \<half_blkcirc>[Cr] R') (x'1 \<Ztypecolon> \<black_circle> T' \<^emph> \<half_blkcirc>[Cw] W') \<and> P1 @action \<A>SEi
+\<Longrightarrow> if Cw then (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> \<black_circle> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Crr] RR \<w>\<i>\<t>\<h> Auto_Transform_Hint (y'2 \<Ztypecolon> \<black_circle> W') A' \<and> P2)
+          else (P2, Crr) = (True, False)
+\<Longrightarrow> if Cw then ATH = (A' * (x'3 \<Ztypecolon> \<black_circle> T')) else ATH = (x'3 \<Ztypecolon> \<black_circle> T')
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps undefined]
+        (C, R3) : (Cr \<or> Crr \<or> \<not> Cw,
+                   if Crr then if Cr then RR * (snd y \<Ztypecolon> \<black_circle> R) else RR
+                   else if Cw then if Cr then (snd y \<Ztypecolon> \<black_circle> R) else \<top>
+                   else if Cr then A * (snd y \<Ztypecolon> \<black_circle> R) else A)
+\<Longrightarrow> A * (x \<Ztypecolon> \<black_circle> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> \<black_circle> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R3 \<w>\<i>\<t>\<h>
+        Auto_Transform_Hint (y'3 \<Ztypecolon> \<black_circle> U) ATH \<and> P2 \<and> P1\<close>
+  for A :: \<open>'a::sep_semigroup option BI\<close>
+  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
+  using enter_SEi_\<phi>Some .
+
 
 lemma enter_SEa:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
@@ -2137,17 +2245,6 @@ lemma enter_SEbi:
             Transformation_def
   by clarsimp fastforce
 
-
-lemma enter_SEb_TH:
-  \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
-        Auto_Transform_Hint (y' \<Ztypecolon> U') (x' \<Ztypecolon> T' \<^emph> W') \<and> P1 @action \<A>SE
-\<Longrightarrow> Identity_Element\<^sub>I (snd y \<Ztypecolon> R) Q
-\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> Auto_Transform_Hint (w' \<Ztypecolon> W') A' \<and> P2
-\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<w>\<i>\<t>\<h> P1 \<and> P2 \<and> Q\<close>
-  for A :: \<open>'a :: sep_magma_1 set\<close>
-  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
-  using enter_SEb .
-
 lemma enter_SEbi_TH:
   \<open> (x, w) \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> R \<w>\<i>\<t>\<h>
         Auto_Transform_Hint (y' \<Ztypecolon> \<black_circle> U') (x' \<Ztypecolon> \<black_circle> T' \<^emph> \<half_blkcirc>[C] W') \<and> P1 @action \<A>SEi
@@ -2159,6 +2256,39 @@ lemma enter_SEbi_TH:
   for A :: \<open>'a :: sep_magma set\<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using enter_SEbi .
+
+lemma enter_SEbi_\<phi>Some:
+  \<open> (x, w) \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> R \<w>\<i>\<t>\<h> P1 @action \<A>SEi
+\<Longrightarrow> Identity_Element\<^sub>I (snd y \<Ztypecolon> R) Q
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> \<black_circle> W \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> A * (x \<Ztypecolon> \<black_circle> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P2 \<and> Q \<and> P1 \<close>
+  for A :: \<open>'a :: sep_magma option set\<close>
+  unfolding Action_Tag_def \<phi>Prod_expn' Identity_Element\<^sub>I_def Premise_def
+            Transformation_def
+  by clarsimp fastforce
+
+lemma enter_SEbi_\<phi>Some_TH:
+  \<open> (x, w) \<Ztypecolon> \<black_circle> T \<^emph> \<half_blkcirc>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<^emph> R \<w>\<i>\<t>\<h>
+        Auto_Transform_Hint (y' \<Ztypecolon> \<black_circle> U') (x' \<Ztypecolon> \<black_circle> T' \<^emph> \<half_blkcirc>[C] W') \<and> P1 @action \<A>SEi
+\<Longrightarrow> Identity_Element\<^sub>I (snd y \<Ztypecolon> R) Q
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> \<black_circle> W \<w>\<i>\<t>\<h> Auto_Transform_Hint (w' \<Ztypecolon> \<black_circle> W') A' \<and> P2
+\<Longrightarrow> A * (x \<Ztypecolon> \<black_circle> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h>
+        Auto_Transform_Hint (y' \<Ztypecolon> \<black_circle> U') (A' * (x'' \<Ztypecolon> \<black_circle> T')) \<and> P2 \<and> Q \<and> P1 \<close>
+  for A :: \<open>'a :: sep_magma option set\<close>
+  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
+  using enter_SEbi_\<phi>Some .
+
+lemma enter_SEb_TH:
+  \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h>
+        Auto_Transform_Hint (y' \<Ztypecolon> U') (x' \<Ztypecolon> T' \<^emph> W') \<and> P1 @action \<A>SE
+\<Longrightarrow> Identity_Element\<^sub>I (snd y \<Ztypecolon> R) Q
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> Auto_Transform_Hint (w' \<Ztypecolon> W') A' \<and> P2
+\<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<w>\<i>\<t>\<h> P1 \<and> P2 \<and> Q\<close>
+  for A :: \<open>'a :: sep_magma_1 set\<close>
+  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
+  using enter_SEb .
 
 lemma enter_SEba:
   \<open> (x, w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>SEa
@@ -2182,11 +2312,21 @@ lemma enter_SEba_TH:
 
 ML \<open>
 fun SE_entry_point rules thy sequent =
-  let val (_, Y, P) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
+  let val (X, Y, P) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
       val ty = Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent)
+      fun is_non_unital_form (X, Y) =
+        let val X = case X of Const(\<^const_name>\<open>times\<close>, _) $ _ $ X => X | _ => X
+            val Y = case Y of Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ _ $ _ => Y | _ => Y
+         in case (X,Y)
+         of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>\<phi>Some\<close>, _) $ _),
+             Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>\<phi>Some\<close>, _) $ _)) => true
+          | _ => false
+        end
       val rules = (if Sign.of_sort thy (ty, \<^sort>\<open>sep_semigroup\<close>)
-                   then if Sign.of_sort thy (ty, \<^sort>\<open>sep_monoid\<close>) then #1 else #2
-                   else #3) rules
+                   then if Sign.of_sort thy (ty, \<^sort>\<open>sep_monoid\<close>)
+                   then if is_non_unital_form (X,Y) then #2 else #1
+                   else #3
+                   else #4) rules
                   (*there is no support for commutative non-semigroup in the system*)
       fun obj_is_var (Const(\<^const_name>\<open>times\<close>, _) $ _ $ X) = obj_is_var X
         | obj_is_var (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ _) = obj_is_var X
@@ -2202,6 +2342,8 @@ fun SE_entry_point rules thy sequent =
 val SE_entry_point_normal = SE_entry_point (
       ((@{thm' enter_SE}, @{thm' enter_SE_TH}),
            (@{thm' enter_SE[THEN ToA_by_Equive_Class']}, @{thm' enter_SE_TH[THEN ToA_by_Equive_Class']})),
+      ((@{thm' enter_SEi_\<phi>Some}, @{thm' enter_SEi_\<phi>Some_TH}),
+           (@{thm' enter_SEi_\<phi>Some[THEN ToA_by_Equive_Class']}, @{thm' enter_SEi_\<phi>Some_TH[THEN ToA_by_Equive_Class']})),
       ((@{thm' enter_SEi}, @{thm' enter_SEi_TH}),
            (@{thm' enter_SEi[THEN ToA_by_Equive_Class']}, @{thm' enter_SEi_TH[THEN ToA_by_Equive_Class']})),
       ((@{thm' enter_SEa}, @{thm' enter_SEa_TH}),
@@ -2210,6 +2352,8 @@ val SE_entry_point_normal = SE_entry_point (
 val SE_entry_point_b = SE_entry_point (
       ((@{thm' enter_SEb}, @{thm' enter_SEb_TH}),
            (@{thm' enter_SEb[THEN ToA_by_Equive_Class]}, @{thm' enter_SEb_TH[THEN ToA_by_Equive_Class]})),
+      ((@{thm' enter_SEbi_\<phi>Some}, @{thm' enter_SEbi_\<phi>Some_TH}),
+           (@{thm' enter_SEbi_\<phi>Some[THEN ToA_by_Equive_Class]}, @{thm' enter_SEbi_\<phi>Some_TH[THEN ToA_by_Equive_Class]})),
       ((@{thm' enter_SEbi}, @{thm' enter_SEbi_TH}),
            (@{thm' enter_SEbi[THEN ToA_by_Equive_Class]}, @{thm' enter_SEbi_TH[THEN ToA_by_Equive_Class]})),
       ((@{thm' enter_SEba}, @{thm' enter_SEba_TH}),

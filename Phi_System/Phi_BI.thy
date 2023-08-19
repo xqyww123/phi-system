@@ -1238,6 +1238,8 @@ lemma \<phi>Prod_expn'':
 \<Longrightarrow> (x \<Ztypecolon> A \<^emph> B) = (snd x \<Ztypecolon> B) * (fst x \<Ztypecolon> A)\<close>
   unfolding BI_eq_iff by (cases x; simp add: set_mult_expn)
 
+bundle \<phi>Prod_expn = \<phi>Prod_expn'[simp] \<phi>Prod_expn''[simp]
+
 lemma [\<phi>reason 1000]:
   \<open> fst x \<Ztypecolon> T1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> C1
 \<Longrightarrow> snd x \<Ztypecolon> T2 \<i>\<m>\<p>\<l>\<i>\<e>\<s> C2

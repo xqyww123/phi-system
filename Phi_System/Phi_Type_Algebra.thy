@@ -2050,8 +2050,8 @@ lemma SE_Semimodule_LDistr_a_dbc_nc[\<phi>reason_template 34]:
   for R :: \<open>('c::sep_monoid,'d) \<phi>\<close>
   unfolding Action_Tag_def
   \<medium_left_bracket> premises _ and _ and _ and a and _ and _ and Tr
-    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where s=\<open>d + b\<close> and t=c and F=F1, folded a]
-    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1]
+    ;; apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where s=\<open>d + b\<close> and t=c and F=F1, folded a]
+    ;; apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1]
     Tr
   \<medium_right_bracket> .
 
@@ -2127,7 +2127,7 @@ declare [[\<phi>trace_reasoning = 2]]
 (* [--d--][-----a-----]
    [-----b-----][--c--]
    Give a, expect b; Need d, remain c.*)
-lemma SE_Semimodule_LDistr_da_bc_i[\<phi>reason_template 38]:
+lemma SE_Semimodule_LDistr_da_bc_i[\<phi>reason_template 30]:
   \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
@@ -2137,7 +2137,7 @@ lemma SE_Semimodule_LDistr_da_bc_i[\<phi>reason_template 38]:
 \<Longrightarrow> (snd (uz b c (z d a (fst x, x\<^sub>d))), w) \<Ztypecolon> \<black_circle> F1 b T \<^emph> \<half_blkcirc>[Cw] W
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> F3 b U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P @action \<A>SEi
 \<Longrightarrow> (snd x \<Ztypecolon> \<half_blkcirc>[Cw'] W') = ((x\<^sub>d, w) \<Ztypecolon> \<half_blkcirc>[True] F1 d T \<^emph> \<half_blkcirc>[Cw] W) @action \<A>SE_internal
-\<Longrightarrow> ((fst (uz b c (z d a (fst x, fst (snd x)))), snd y) \<Ztypecolon> \<half_blkcirc>[True] F1 c T \<^emph> \<half_blkcirc>[Cr] R') = (r \<Ztypecolon> \<half_blkcirc>[Cr'] R') @action \<A>SE_internal
+\<Longrightarrow> ((fst (uz b c (z d a (fst x, x\<^sub>d))), snd y) \<Ztypecolon> \<half_blkcirc>[True] F1 c T \<^emph> \<half_blkcirc>[Cr] R) = (r \<Ztypecolon> \<half_blkcirc>[Cr'] R') @action \<A>SE_internal
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> F1 a T \<^emph> \<half_blkcirc>[Cw'] W'
     \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> \<black_circle> F3 b U \<^emph> \<half_blkcirc>[Cr'] R' \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
@@ -2147,8 +2147,7 @@ lemma SE_Semimodule_LDistr_da_bc_i[\<phi>reason_template 38]:
     ;; apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_\<phi>Some[where t=a and s=d and F=F1 and x=\<open>(fst x,x\<^sub>d)\<close>]
        apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_\<phi>Some[where t=c and s=b and F=F1]
        Tr
-      ;; b
-thm b
+       b
   \<medium_right_bracket> .
 
 
