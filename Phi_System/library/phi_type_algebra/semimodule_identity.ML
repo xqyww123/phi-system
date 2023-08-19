@@ -44,7 +44,7 @@ fun parse_semimodule_phityp ctxt phi0 (sort_scalar, sort_model) =
   end
 
 fun guess_property (phi0 : phi_type) ctxt =
-  let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>one\<close>, \<^sort>\<open>share_one\<close>)
+  let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>one\<close>, \<^sort>\<open>share\<close>)
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
    in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_Identity s_ty x_ty model_ty\<close> $ F_term $ T_term),

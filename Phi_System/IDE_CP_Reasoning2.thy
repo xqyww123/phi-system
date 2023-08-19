@@ -1438,6 +1438,12 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def BI_eq_iff
   by (clarsimp; force)+
 
+lemma [\<phi>reason 1010]:
+  \<open> ((x,y) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) = (x \<Ztypecolon> \<half_blkcirc>[True] A) @action \<A>SE_internal \<close>
+  \<open> ((x,y) \<Ztypecolon> \<half_blkcirc>[False] A \<^emph> \<half_blkcirc>[True] B) = (y \<Ztypecolon> \<half_blkcirc>[True] B) @action \<A>SE_internal \<close>
+  unfolding Action_Tag_def BI_eq_iff
+  by (clarsimp; force)+
+
 lemma [\<phi>reason 1000]:
   \<open> A = (if True then A else B) @action \<A>SE_internal \<close>
   unfolding Action_Tag_def
@@ -1691,13 +1697,6 @@ lemma [\<phi>reason 3001 for \<open>_ \<Ztypecolon> \<black_circle> ?T \<^emph> 
   by (cases x; simp add: \<phi>Prod_expn')
 
 
-lemma [\<phi>reason 3000 for \<open>_ \<Ztypecolon> (\<half_blkcirc>[True] _ \<^emph> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>SEi\<close>]:
-  \<open> x \<Ztypecolon> (\<black_circle> T \<^emph> W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi
-\<Longrightarrow> x \<Ztypecolon> (\<half_blkcirc>[True] T \<^emph> W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
-  unfolding Action_Tag_def \<phi>Cond_Unital_Ins_unfold_simp .
-
-
-
 lemma [\<phi>reason 3000 for \<open>_ \<Ztypecolon> ?T \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T' \<w>\<i>\<t>\<h> _ @action \<A>SEa \<close>]:
   \<open> x \<Ztypecolon> (T \<^emph> \<circle>) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst x \<Ztypecolon> T @action \<A>SEa \<close>
   for T :: \<open>'b \<Rightarrow> 'a :: sep_magma_1 set\<close>
@@ -1709,6 +1708,20 @@ lemma [\<phi>reason 3001 for \<open>_ \<Ztypecolon> ?T \<^emph> _ \<t>\<r>\<a>\<
   for T :: \<open>'b \<Rightarrow> 'a :: sep_magma_1 set\<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22) Action_Tag_def Transformation_def
   by clarsimp
+
+subsection \<open>Normalization\<close>
+
+subsubsection \<open>Non-Unital Algebra\<close>
+
+lemma [\<phi>reason 3000 for \<open>_ \<Ztypecolon> (\<half_blkcirc>[True] _ \<^emph> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>SEi\<close>]:
+  \<open> x \<Ztypecolon> (\<black_circle> T \<^emph> W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi
+\<Longrightarrow> x \<Ztypecolon> (\<half_blkcirc>[True] T \<^emph> W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
+  unfolding Action_Tag_def \<phi>Cond_Unital_Ins_unfold_simp .
+
+lemma [\<phi>reason 3000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> (\<half_blkcirc>[True] _ \<^emph> _) \<w>\<i>\<t>\<h> _ @action \<A>SEi\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (\<black_circle> U \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SEi
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (\<half_blkcirc>[True] U \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
+  unfolding Action_Tag_def \<phi>Cond_Unital_Ins_unfold_simp .
 
 
 subsection \<open>Fall back\<close>

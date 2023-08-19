@@ -1172,6 +1172,18 @@ lemma \<phi>apply_transformation_fully[\<phi>reason 1000 for \<open>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
 
+lemma [\<phi>reason 1000 for \<open>
+  PROP \<phi>Application (Trueprop (?S' = (?T' :: ?'a set)))
+      (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
+\<close>]:
+  "\<phi>IntroFrameVar R S'' S' T T'
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T'))
+      (Trueprop (CurrentConstruction mode blk RR S))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode blk RR T)"
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
+  by (cases R; simp; meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
+
 
 paragraph \<open>View Shift Methods\<close>
 
@@ -1414,6 +1426,17 @@ lemma [\<phi>reason 1000 for \<open>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication_impl implies_left_prod)
 
+lemma [\<phi>reason 1000 for \<open>
+  PROP \<phi>Application (Trueprop ((_ :: ?'a set) = _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
+\<close>]:
+  "\<phi>IntroFrameVar R S'' S' T T'
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T'))
+      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T))"
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
+  by (cases R; simp; meson \<phi>apply_implication_impl implies_left_prod)
 
 
 

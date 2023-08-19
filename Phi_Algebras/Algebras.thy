@@ -1057,7 +1057,7 @@ locale module_scalar_zero = module_for_sep +
   assumes module_scalar_zero: \<open>smult 0 a = 1\<close>
 
 lemma module_scalar_identity_share[simp]:
-  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::share_one \<Rightarrow> 'a)\<close>
+  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::share \<Rightarrow> 'a)\<close>
   unfolding module_scalar_identity_def
   by simp
 

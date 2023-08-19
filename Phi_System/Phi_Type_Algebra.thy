@@ -198,6 +198,16 @@ definition Semimodule_LDistr_Homo\<^sub>U :: \<open>('s \<Rightarrow> ('c::sep_m
             (\<forall>s t x. Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x \<longrightarrow>
                 (x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F t T \<^emph> F s T ))\<close>
 
+definition Semimodule_LDistr_Homo\<^sub>U_rev :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                        \<Rightarrow> ('c::sep_magma,'a) \<phi>
+                                        \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
+                                        \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> bool)
+                                        \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> 'a \<times> 'a)
+                                        \<Rightarrow> bool\<close>
+  where \<open>Semimodule_LDistr_Homo\<^sub>U_rev F T Ds Dx uz \<longleftrightarrow>
+            (\<forall>s t x. Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x \<longrightarrow>
+                (x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F s T \<^emph> F t T ))\<close>
+
 
 subsubsection \<open>Configurations\<close>
 
@@ -274,11 +284,13 @@ declare [[
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_LDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_LDistr_Homo\<^sub>Z_rev _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_LDistr_Homo\<^sub>U _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_LDistr_Homo\<^sub>U_rev _ _ _ _ _\<close>,
 
   \<phi>reason_default_pattern
       \<open>Semimodule_LDistr_Homo\<^sub>Z ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>Z ?F ?T _ _ _\<close> (100)
   and \<open>Semimodule_LDistr_Homo\<^sub>U ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>U ?F ?T _ _ _\<close> (100)
   and \<open>Semimodule_LDistr_Homo\<^sub>Z_rev ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>Z_rev ?F ?T _ _ _\<close> (100)
+  and \<open>Semimodule_LDistr_Homo\<^sub>U_rev ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>U_rev ?F ?T _ _ _\<close> (100)
 ]]
 
 
@@ -378,12 +390,26 @@ lemma apply_Semimodule_LDistr_Homo\<^sub>Z:
   unfolding Semimodule_LDistr_Homo\<^sub>Z_def Premise_def
   by blast
 
+lemma apply_Semimodule_LDistr_Homo\<^sub>Z_\<phi>Some:
+  \<open> Semimodule_LDistr_Homo\<^sub>Z F T Ds Dx z
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F t T \<^emph> \<black_circle> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z s t x \<Ztypecolon> \<black_circle> F (s + t) T \<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>Z_def Premise_def Transformation_def
+  by (clarsimp; metis prod.collapse)
+
 lemma apply_Semimodule_LDistr_Homo\<^sub>Z_rev:
   \<open> Semimodule_LDistr_Homo\<^sub>Z_rev F T Ds Dx z
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> t ##\<^sub>+ s \<and> Dx t s x
-\<Longrightarrow> x \<Ztypecolon> F t T \<^emph> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s x \<Ztypecolon> F (t + s) T \<close>
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
+\<Longrightarrow> x \<Ztypecolon> F s T \<^emph> F t T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z s t x \<Ztypecolon> F (s + t) T \<close>
   unfolding Semimodule_LDistr_Homo\<^sub>Z_rev_def Premise_def
   by blast
+
+lemma apply_Semimodule_LDistr_Homo\<^sub>Z_rev_\<phi>Some:
+  \<open> Semimodule_LDistr_Homo\<^sub>Z_rev F T Ds Dx z
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F s T \<^emph> \<black_circle> F t T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z s t x \<Ztypecolon> \<black_circle> F (s + t) T \<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>Z_rev_def Premise_def Transformation_def
+  by (clarsimp; metis prod.collapse)
 
 lemma apply_Semimodule_LDistr_Homo\<^sub>U:
   \<open> Semimodule_LDistr_Homo\<^sub>U F T Ds Dx uz
@@ -392,7 +418,26 @@ lemma apply_Semimodule_LDistr_Homo\<^sub>U:
   unfolding Semimodule_LDistr_Homo\<^sub>U_def Premise_def
   by blast
 
+lemma apply_Semimodule_LDistr_Homo\<^sub>U_\<phi>Some:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F T Ds Dx uz
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> \<black_circle> F t T \<^emph> \<black_circle> F s T \<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>U_def Premise_def Transformation_def
+  by (clarsimp; metis sep_disj_option(1) times_option(1))
 
+lemma apply_Semimodule_LDistr_Homo\<^sub>U_rev:
+  \<open> Semimodule_LDistr_Homo\<^sub>U_rev F T Ds Dx uz
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
+\<Longrightarrow> x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F s T \<^emph> F t T \<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>U_rev_def Premise_def
+  by blast
+
+lemma apply_Semimodule_LDistr_Homo\<^sub>U_rev_\<phi>Some:
+  \<open> Semimodule_LDistr_Homo\<^sub>U_rev F T Ds Dx uz
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> \<black_circle> F s T \<^emph> \<black_circle> F t T \<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>U_rev_def Premise_def Transformation_def
+  by (clarsimp; metis sep_disj_option(1) times_option(1))
 
 
 (*
@@ -687,6 +732,8 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
       (fn (_ $ F $ _ $ _ $ _ $ _) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U\<close>
       (fn (_ $ F $ _ $ _ $ _) => attach_var F)
+#> add_property_kind \<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U_rev\<close>
+      (fn (_ $ F $ _ $ _ $ _) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>I\<close>
       (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _) => T)
 #> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
@@ -762,6 +809,15 @@ lemma [\<phi>reason 1000]:
         ) MM DD RR FF
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_LDistr_Homo\<^sub>U F T Ds Dx uz)) MM DD RR FF\<close>
   unfolding \<phi>Programming_Method_def Semimodule_LDistr_Homo\<^sub>U_def Premise_def norm_hhf_eq
+  by (clarsimp simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method (\<And>s t x.
+              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
+          \<Longrightarrow> x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F s T \<^emph> F t T
+        ) MM DD RR FF
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_LDistr_Homo\<^sub>U_rev F T Ds Dx uz)) MM DD RR FF\<close>
+  unfolding \<phi>Programming_Method_def Semimodule_LDistr_Homo\<^sub>U_rev_def Premise_def norm_hhf_eq
   by (clarsimp simp add: \<phi>Prod_expn')
 
 
@@ -1371,7 +1427,7 @@ lemma [\<phi>adding_property = false,
   by (simp add: \<phi>Prod_expn'; metis mult.commute)
 
 lemma [\<phi>adding_property = false,
-       \<phi>reason default 10,
+       \<phi>reason default 9,
        \<phi>adding_property = true ]:
   \<open> Semimodule_LDistr_Homo\<^sub>Z F T Ds Dx z
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx t s) (\<lambda>s t. z t s)\<close>
@@ -1775,14 +1831,373 @@ lemma SE_general_Semimodule_Scalar_left_a:
 declare SE_general_Semimodule_Scalar_left_a[THEN \<A>SEa_clean_waste, \<phi>reason_template default 30]
 
 
-paragraph \<open>Semimodule Left Distributivity\<close>
+subsubsection \<open>Separation Extraction of Semimodule Left Distributivity\<close>
+
+text \<open>No need to clean the rules by \<A>SE_clean_waste\<close>
+
+paragraph \<open>Commutative, Monoidal, Additive Zero\<close>
+
+declare [[\<phi>trace_reasoning = 2]]
+
+(*TODO: the non-commutative version of rules*)
+
+(* [--d--][-----a-----]
+   [-----b-----][--c--]
+   Give a, expect b; Need d, remain c.*)
+lemma SE_Semimodule_LDistr_da_bc[\<phi>reason_template 38]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> d + a = b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> b ##\<^sub>+ c \<and> d ##\<^sub>+ a
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' d a (fst x, fst (snd x)) \<and> Dx  b c (z d a (fst x, fst (snd x)))
+\<Longrightarrow> (snd (uz b c (z d a (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, fst (uz b c (z d a (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and _ and [unfolded Action_Tag_def, useful, simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where t=a and s=d and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where t=c and s=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [-----a-----][--d--]
+   [--c--][-----b-----]
+   Give a, expect b; Need d, remain c.*)
+lemma SE_Semimodule_LDistr_ad_cb[\<phi>reason_template 38]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a + d = c + b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> c ##\<^sub>+ b \<and> a ##\<^sub>+ d
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' a d (fst (snd x), fst x) \<and> Dx  c b (z a d (fst (snd x), fst x))
+\<Longrightarrow> (fst (uz c b (z a d (fst (snd x), fst x))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz c b (z a d (fst (snd x), fst x))), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and _ and [unfolded Action_Tag_def, useful, simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where t=d and s=a and F=F1 and x=\<open>(fst (snd x), fst x)\<close>]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where t=b and s=c and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [---------a---------]
+   [--d--][--b--][--c--]
+   Give a, expect b, remain d, c. *) 
+lemma SE_Semimodule_LDistr_a_dbc[\<phi>reason_template 38]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a = d + b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds (d + b) \<and> Ds c \<and> d + b ##\<^sub>+ c \<and> Dx (d + b) c (fst x)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds d \<and> Ds b \<and> d ##\<^sub>+ b \<and> Dx d b (snd (uz (d + b) c (fst x)))
+\<Longrightarrow> (fst (uz d b (snd (uz (d + b) c (fst x)))), snd x) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz d b (snd (uz (d + b) c (fst x)))), fst (uz (d + b) c (fst x)), snd y) \<Ztypecolon> F3 b U \<^emph> F1 d T \<^emph> F1 c T \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and a and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d + b\<close> and t=c and F=F1, folded a]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [--d--][--a--][--c--]
+   [---------b---------]
+   Give a, expect b, need d, c. *)
+lemma SE_Semimodule_LDistr_dac_b[\<phi>reason_template 38]:
+  \<open> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> d + a + c = b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds (d + a) \<and> Ds c \<and> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> d + a ##\<^sub>+ c
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx d a (fst x, fst (snd x)) \<and> Dx (d + a) c (fst (snd (snd x)), z d a (fst x, fst (snd x)))
+\<Longrightarrow> (z (d + a) c (fst (snd (snd x)), z d a (fst x, fst (snd x))), snd (snd (snd x))) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> F1 c T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and [simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where s=d and t=a and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where s=\<open>d+a\<close> and t=c and F=F1 and x=\<open>(fst (snd (snd x)), z d a (fst x, fst (snd x)))\<close>]
+    Tr
+  \<medium_right_bracket> .
+
+(*DONE*)
+
+paragraph \<open>Commutative, Monoidal, No Additive Zero\<close>
+
+(* [--d--][-----a-----]
+   [---------b--------]
+   Give a, expect b; Need d, c = 0.
+   Also covers non-commutative *)
+lemma SE_Semimodule_LDistr_da_b[\<phi>reason_template 36]:
+  \<open> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> d + a = b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' d a (fst x, fst (snd x))
+\<Longrightarrow> (z d a (fst x, fst (snd x)), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and [unfolded Action_Tag_def, useful, simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where t=a and s=d and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
+    Tr
+  \<medium_right_bracket> .
+
+(* [--------a---------]
+   [-----b-----][--c--]
+   Give a, expect b; Remain c, d = 0. *)
+lemma SE_Semimodule_LDistr_a_bc[\<phi>reason_template 36]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a = b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds b \<and> Ds c \<and> b ##\<^sub>+ c
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx b c (fst x)
+\<Longrightarrow> (fst (uz b c (fst x)), snd x) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz b c (fst x)), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and a and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where t=c and s=b and F=F1, folded a]
+    Tr
+  \<medium_right_bracket> .
+
+(* [-----a-----][--d--]
+   [--------b---------]
+   Give a, expect b; Need d, c = 0.
+   Also covers non-commutative *)
+lemma SE_Semimodule_LDistr_ad_b[\<phi>reason_template 36]:
+  \<open> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a + d = b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> a ##\<^sub>+ d
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx a d (fst x, fst (snd x))
+\<Longrightarrow> (uz a d (fst x, fst (snd x)), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and [unfolded Action_Tag_def, useful, simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_rev[where s=a and t=d and F=F1 and x=\<open>(fst x, fst (snd x))\<close>]
+    Tr
+  \<medium_right_bracket> .
+
+(* [---------a--------]
+   [--c--][-----b-----]
+   Give a, expect b; Remain c, d = 0.*)
+lemma SE_Semimodule_LDistr_a_cb[\<phi>reason_template 36]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a = c + b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds c \<and> Ds b \<and> c ##\<^sub>+ b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx c b (fst x)
+\<Longrightarrow> (fst (uz c b (fst x)), snd x) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd (uz c b (fst x)), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and a and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where t=b and s=c and F=F1, folded a]
+    Tr
+  \<medium_right_bracket> .
+
+(*DONE*)
+
+paragraph \<open>Non-Commutative, Monoidal, Additive Zero\<close>
+
+(* [--d--][-----a-----]
+   [-----b-----][--c--]
+   Give a, expect b; Need d, remain c.*)
+lemma SE_Semimodule_LDistr_da_nc[\<phi>reason_template 34]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> d + a = b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> b ##\<^sub>+ c \<and> d ##\<^sub>+ a
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' d a x \<and> Dx  b c (z d a x)
+\<Longrightarrow> (fst (uz b c (z d a x)), ()) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd (uz b c (z d a x))) \<Ztypecolon> F3 b U \<^emph> R \<^emph> F1 c T \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::sep_monoid,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and _ and [unfolded Action_Tag_def, simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where t=a and s=d and F=F1 and x=x]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where t=c and s=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [-----a-----][--d--]
+   [--c--][-----b-----]
+   Give a, expect b; Need d, remain c.*)
+lemma SE_Semimodule_LDistr_ad_cb_nc[\<phi>reason_template 34]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx' z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a + d = c + b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> a ##\<^sub>+ d \<and> Ds c \<and> Ds b \<and> c ##\<^sub>+ b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' a d x \<and> Dx c b (z a d x)
+\<Longrightarrow> (fst (uz c b (z a d x)), ()) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd (uz c b (z a d x))) \<Ztypecolon> F3 b U \<^emph> R \<^emph> F1 c T \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::sep_monoid,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and _ and [unfolded Action_Tag_def, useful, simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_rev[where t=d and s=a and F=F1 and x=x]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where t=b and s=c and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [---------a---------]
+   [--d--][--b--][--c--]
+   Give a, expect b, remain d, c. *) 
+lemma SE_Semimodule_LDistr_a_dbc_nc[\<phi>reason_template 34]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx' uz'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a = d + b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds (d + b) \<and> Ds c \<and> d + b ##\<^sub>+ c \<and> Ds d \<and> Ds b \<and> d ##\<^sub>+ b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' (d + b) c (fst x) \<and> Dx d b (fst (uz' (d + b) c (fst x)))
+\<Longrightarrow> (fst (uz d b (fst (uz' (d + b) c (fst x)))), ()) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd (uz d b (fst (uz' (d + b) c (fst x)))), snd (uz' (d + b) c (fst x))) \<Ztypecolon> F3 b U \<^emph> R \<^emph> F1 d T \<^emph> F1 c T \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::sep_monoid,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and _ and a and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where s=\<open>d + b\<close> and t=c and F=F1, folded a]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [--d--][--a--][--c--]
+   [---------b---------]
+   Give a, expect b, need d, c. *)
+lemma SE_Semimodule_LDistr_dac_b_nc[\<phi>reason_template 34]:
+  \<open> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx z
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx' z'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> d + a + c = b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> Ds (d + a) \<and> Ds c \<and> d + a ##\<^sub>+ c
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx d a (fst x, fst (snd x)) \<and> Dx' (d + a) c (z d a (fst x, fst (snd x)), snd (snd x))
+\<Longrightarrow> (z' (d + a) c (z d a (fst x, fst (snd x)), snd (snd x)), ()) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> F1 c T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::sep_monoid,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and _ and [simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where s=d and t=a and F=F1 and x=\<open>(fst x, fst (snd x))\<close>]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_rev[where s=\<open>d+a\<close> and t=c and F=F1 and x=\<open>(z d a (fst x, fst (snd x)), snd (snd x))\<close>]
+    Tr
+  \<medium_right_bracket> .
+
+(*DONE*)
+
+paragraph \<open>Non-Commutative, Monoidal, No Additive Zero\<close>
+
+(* [--------a---------]
+   [-----b-----][--c--]
+   Give a, expect b; Remain c, d = 0. *)
+lemma SE_Semimodule_LDistr_a_bc_nc[\<phi>reason_template 32]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a = b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds b \<and> Ds c \<and> b ##\<^sub>+ c
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx b c (fst x)
+\<Longrightarrow> (fst (uz b c (fst x)), ()) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd (uz b c (fst x))) \<Ztypecolon> F3 b U \<^emph> R \<^emph> F1 c T \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::sep_monoid,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and a and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where t=c and s=b and F=F1, folded a]
+    Tr
+  \<medium_right_bracket> .
+
+(* [---------a--------]
+   [--c--][-----b-----]
+   Give a, expect b; Remain c, d = 0.*)
+lemma SE_Semimodule_LDistr_a_cb_nc[\<phi>reason_template 32]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a = c + b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds c \<and> Ds b \<and> c ##\<^sub>+ b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx c b (fst x)
+\<Longrightarrow> (fst (uz c b (fst x)), ()) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd (uz c b (fst x))) \<Ztypecolon> F3 b U \<^emph> R \<^emph> F1 c T \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::sep_monoid,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and a and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where t=b and s=c and F=F1, folded a]
+    Tr
+  \<medium_right_bracket> .
+
+(*DONE*)
+
+
+paragraph \<open>Commutative, Non-Unital, No Additive Zero\<close>
+
+text \<open>Non-unital algebra implies no additive zero.\<close>
 
 declare [[\<phi>trace_reasoning = 2]]
 
 (* [--d--][-----a-----]
    [-----b-----][--c--]
    Give a, expect b; Need d, remain c.*)
-lemma SE_Near_Semimodule_dabc[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
+lemma SE_Semimodule_LDistr_da_bc_i[\<phi>reason_template 38]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> d + a = b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> Ds b \<and> Ds c \<and> b ##\<^sub>+ c
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' d a (fst x, x\<^sub>d) \<and> Dx b c (z d a (fst x, x\<^sub>d))
+\<Longrightarrow> (snd (uz b c (z d a (fst x, x\<^sub>d))), w) \<Ztypecolon> \<black_circle> F1 b T \<^emph> \<half_blkcirc>[Cw] W
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> F3 b U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P @action \<A>SEi
+\<Longrightarrow> (snd x \<Ztypecolon> \<half_blkcirc>[Cw'] W') = ((x\<^sub>d, w) \<Ztypecolon> \<half_blkcirc>[True] F1 d T \<^emph> \<half_blkcirc>[Cw] W) @action \<A>SE_internal
+\<Longrightarrow> ((fst (uz b c (z d a (fst x, fst (snd x)))), snd y) \<Ztypecolon> \<half_blkcirc>[True] F1 c T \<^emph> \<half_blkcirc>[Cr] R') = (r \<Ztypecolon> \<half_blkcirc>[Cr'] R') @action \<A>SE_internal
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F1 a T \<^emph> \<half_blkcirc>[Cw'] W'
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> \<black_circle> F3 b U \<^emph> \<half_blkcirc>[Cr'] R' \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and _ and [unfolded Action_Tag_def, useful, simp] and _ and _ and Tr and [simp] and b
+    note \<phi>Prod_expn''[simp] \<phi>Prod_expn'[simp]
+    ;; apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_\<phi>Some[where t=a and s=d and F=F1 and x=\<open>(fst x,x\<^sub>d)\<close>]
+       apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_\<phi>Some[where t=c and s=b and F=F1]
+       Tr
+      ;; b
+thm b
+  \<medium_right_bracket> .
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(* [--------a---------]
+   [-----b-----][--c--]
+   Give a, expect b; Remain c, d = 0.
+   Supports non-commutative algebra, but requires \<open>W = 1\<close> *)
+lemma SE_Semimodule_LDistr_a_bc_nc[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a = b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds b \<and> Ds c \<and> b ##\<^sub>+ c \<and> Dx b c (fst x)
+\<Longrightarrow> (fst (uz b c (fst x)), ()) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd (uz b c (fst x))) \<Ztypecolon> F3 b U \<^emph> (R \<^emph> F1 c T) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::{sep_semigroup,sep_magma_1},'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and a and [useful,simp] and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where t=c and s=b and F=F1, folded a]
+    Tr
+  \<medium_right_bracket> .
+
+subparagraph \<open>Non-unital\<close> \<comment> \<open>implies non additive zero\<close>
+
+(* [--d--][-----a-----]
+   [-----b-----][--c--]
+   Give a, expect b; Need d, remain c.*)
+lemma SE_Semimodule_LDistr_da_bc_i[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
   \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
@@ -1790,8 +2205,10 @@ lemma SE_Near_Semimodule_dabc[(*THEN SE_clean_waste,*) \<phi>reason_template add
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> b ##\<^sub>+ c \<and> d ##\<^sub>+ a \<and>
             Dx' d a (fst x, fst (snd x)) \<and>
             Dx  b c (z d a (fst x, fst (snd x)))
-\<Longrightarrow> (snd (uz b c (z d a (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, fst (uz b c (z d a (fst x, fst (snd x))))) \<Ztypecolon> F3 b U \<^emph> (R \<^emph> F1 c T) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+\<Longrightarrow> (snd (uz b c (z d a (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> \<black_circle> F1 b T \<^emph> \<half_blkcirc>[Cw] W
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> F3 b U \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P @action \<A>SEi
+\<Longrightarrow> x \<Ztypecolon> \<black_circle> F1 a T \<^emph>  F1 d T \<^emph> W
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, fst (uz b c (z d a (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
   \<medium_left_bracket> premises _ and _ and _ and [unfolded Action_Tag_def, useful, simp] and [useful,simp] and Tr
     apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where t=a and s=d and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
@@ -1800,6 +2217,75 @@ lemma SE_Near_Semimodule_dabc[(*THEN SE_clean_waste,*) \<phi>reason_template add
   \<medium_right_bracket> .
 
 
+
+
+
+
+(* [--d--][-----a-----]
+   [-----b-----][--c--]
+   Give a, expect b; Need d, remain c.
+   Supports non-commutative algebra.
+   Does not support \<open>W\<close> due to non-commutativity
+*)
+lemma SE_Semimodule_LDistr_da_bc_i[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> d + a = b + c @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> b ##\<^sub>+ c \<and> d ##\<^sub>+ a \<and>
+            Dx' d a (fst x, fst (snd x)) \<and>
+            Dx  b c (z d a (fst x, fst (snd x)))
+\<Longrightarrow> (fst (uz b c (z d a (fst x, fst (snd x)))), ()) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd (uz b c (z d a (fst x, fst (snd x))))) \<Ztypecolon> F3 b U \<^emph> (R \<^emph> F1 c T) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::{sep_semigroup, sep_magma_1},'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and _ and [unfolded Action_Tag_def, useful, simp] and [useful,simp] and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where t=a and s=d and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where t=c and s=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+
+
+
+
+
+(* [--d--][-----a-----]
+   [--------b---------]
+   Give a, expect b; Need d.
+   Supports non-commutative algebra *)
+lemma SE_Semimodule_LDistr_da_b[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> d + a = b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> b ##\<^sub>+ c \<and> d ##\<^sub>+ a \<and>
+            Dx' d a (fst x, fst (snd x)) \<and>
+            Dx  b c (z d a (fst x, fst (snd x)))
+\<Longrightarrow> (snd (uz b c (z d a (fst x, fst (snd x)))), snd (snd x)) \<Ztypecolon> F1 b T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> F1 d T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, fst (uz b c (z d a (fst x, fst (snd x)))), snd y) \<Ztypecolon> F3 b U \<^emph> (F1 c T \<^emph> R) \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
+  \<medium_left_bracket> premises _ and _ and _ and [unfolded Action_Tag_def, useful, simp] and [useful,simp] and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where t=a and s=d and F=F1 and x=\<open>(fst x,fst (snd x))\<close>]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where t=c and s=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [---------a--------]
+   [--d--][-----b-----]
+   Give a, expect b, remain d.
+   Supports non-commutative algebra *)
+lemma SE_Semimodule_LDistr_a_db_i[(*THEN SE_clean_waste,*) \<phi>reason_template add]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> a = d + b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds b \<and> Ds d \<and> d ##\<^sub>+ b \<and> Dx d b (fst x)
+\<Longrightarrow> (fst (uz d b (fst x)), snd x) \<Ztypecolon> F1 b T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, snd y, snd (uz d b (fst x))) \<Ztypecolon> F3 b U \<^emph> R \<^emph> F1 d T \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
+  for R :: \<open>('c::{sep_semigroup, sep_magma_1},'d) \<phi>\<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and a and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1, folded a]
+    Tr
+  \<medium_right_bracket> .
 
 
 

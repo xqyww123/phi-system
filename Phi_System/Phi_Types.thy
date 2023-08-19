@@ -1316,16 +1316,6 @@ text \<open>Many read-only applicable rules require only non-zero permissions.
 
 subsubsection \<open>Simplification Rules\<close>
 
-lemma \<phi>Share_1[simp]:
-  \<open> 1 \<odiv> T = T \<close>
-  by (rule \<phi>Type_eqI; clarsimp)
-
-lemma \<phi>Share_\<phi>Share[simp, assertion_simps]:
-  \<open> 0 < n \<and> 0 < m
-\<Longrightarrow> n \<odiv> m \<odiv> T = (m * n) \<odiv> T \<close>
-  by (rule \<phi>Type_eqI; clarsimp;
-      metis mult.commute share_share_assoc0)
-
 lemma \<phi>Share_share:
   \<open> 0 < n \<and> 0 < m
 \<Longrightarrow> Sep_Functional (x \<Ztypecolon> T)
@@ -1334,14 +1324,14 @@ lemma \<phi>Share_share:
   for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
   unfolding BI_eq_iff Sep_Functional_def Sep_Reflexive_def
   apply (clarify; rule; clarsimp)
-  using share_sep_left_distrib_0 apply blast
-  by (metis share_sep_disj_left share_sep_disj_right share_sep_left_distrib_0)
+  using share_sep_left_distrib_0 apply blas
+  by (metis share_sep_disj_left share_sep_disj_right share_sep_left_distrib_0
 
 lemma \<phi>Share_\<phi>MapAt[assertion_simps]:
   \<open>n \<odiv> k \<^bold>\<rightarrow> T = k \<^bold>\<rightarrow> n \<odiv> T\<close>
   for T :: \<open>('a::share_one,'b) \<phi>\<close>
   by (rule \<phi>Type_eqI; clarsimp; rule; clarsimp;
-      metis share_fun_updt share_right_one)
+      metis share_fun_updt share_right_one
 
 lemma \<phi>Share_\<phi>MapAt_Lassertion_simps[]:
   \<open>n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T = k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T\<close>
