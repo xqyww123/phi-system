@@ -511,10 +511,7 @@ lemma \<phi>IntroFrameVar'_Yes:
   in
     if suppressed tail (* andalso fastype_of tail = \<^typ>\<open>assn\<close> *)
     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
-    else if Sign.of_sort (Proof_Context.theory_of ctxt) (Ty, \<^sort>\<open>sep_semigroup\<close>)
-    then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
-    else Seq.of_list [(ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent),
-                      (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)]
+    else Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
   end\<close>
 
 \<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
@@ -1406,7 +1403,7 @@ lemma [\<phi>reason 1200 for \<open>?S \<heavy_comma> ?x \<Ztypecolon> \<v>\<a>\
 lemma [\<phi>reason 1100 for \<open>?S\<heavy_comma> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value ?CLEAN\<close>]:
   \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> V @action collect_clean_value CLEAN
 \<Longrightarrow> S\<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'\<heavy_comma> X \<w>\<i>\<t>\<h> V @action collect_clean_value CLEAN\<close>
-  unfolding Action_Tag_def using implies_right_prod .
+  unfolding Action_Tag_def using implies_right_frame .
 
 lemma [\<phi>reason 1050 for \<open>?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S' \<w>\<i>\<t>\<h> ?V @action collect_clean_value True\<close>]:
   \<open> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void \<w>\<i>\<t>\<h> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<and> True

@@ -281,13 +281,13 @@ lemma [\<phi>reason 1020]:
 \<Longrightarrow> R * (TECHNICAL X) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' * (TECHNICAL X) \<w>\<i>\<t>\<h> P @action \<A>_leading_item' A\<close>
   \<comment> \<open>Never bind technical items\<close>
   unfolding Action_Tag_def
-  using implies_right_prod .
+  using implies_right_frame .
 
 lemma [\<phi>reason 1010]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
 \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * Y \<w>\<i>\<t>\<h> P @action \<A>_leading_item' A\<close>
   unfolding Action_Tag_def
-  using implies_left_prod .
+  using implies_left_frame .
 
 lemma [\<phi>reason 1000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
@@ -400,7 +400,7 @@ lemma [\<phi>reason 1050]:
 \<Longrightarrow> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item A
 \<Longrightarrow> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> (C \<longrightarrow> Q) @action \<A>_map_each_item A\<close>
   unfolding REMAINS_def
-  by (cases C; simp add: Action_Tag_def implies_prod_bi_prod)
+  by (cases C; simp add: Action_Tag_def implies_bi_frame)
 
 lemma [\<phi>reason 1050]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A' \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>)
@@ -936,14 +936,14 @@ lemma prod_transform_to1:
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action to U
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action to (T \<^emph> U)\<close>
   unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod transformation_trans)
+  by (meson implies_left_frame implies_right_frame transformation_trans)
 
 lemma prod_transform_to2:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action to U
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action to T
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action to (T \<^emph> U)\<close>
   unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod transformation_trans)
+  by (meson implies_left_frame implies_right_frame transformation_trans)
 
 declare [[\<phi>reason 1200 prod_transform_to1 prod_transform_to2
       for \<open>?A * ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (?T \<^emph> ?U)\<close>]]
@@ -955,7 +955,7 @@ lemma [\<phi>reason 1100]:
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action to T
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action to T\<close>
   unfolding Action_Tag_def
-  by (meson implies_left_prod implies_right_prod transformation_trans)
+  by (meson implies_left_frame implies_right_frame transformation_trans)
 *)
 
 text \<open>By default, the To-Transformation does not recognize \<open>to (A \<^emph> B \<^emph> C)\<close> as a request to
@@ -1262,7 +1262,7 @@ lemma [\<phi>reason 1110 for \<open>(?S::'a::sep_magma BI) \<t>\<r>\<a>\<n>\<s>\
   unfolding Action_Tag_def Simplify_def \<phi>Type_def Do_def atomize_conj atomize_Branch
   apply (cases single; simp)
   using transformation_trans apply fastforce
-  using implies_left_prod transformation_trans by fastforce
+  using implies_left_frame transformation_trans by fastforce
 
 lemma construct\<phi>_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (x \<Ztypecolon> T)

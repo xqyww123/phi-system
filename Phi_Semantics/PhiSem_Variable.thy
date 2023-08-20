@@ -195,7 +195,7 @@ lemma [\<phi>reason 1300 for \<open>_\<heavy_comma> _ \<Ztypecolon> Var _ _ \<t>
   " x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R\<heavy_comma> x \<Ztypecolon> Var var T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> x' \<Ztypecolon> Var var T' \<brangle> \<w>\<i>\<t>\<h> P "
   unfolding Action_Tag_def FOCUS_TAG_def
-  by (simp add: Var_transformation implies_left_prod)
+  by (simp add: Var_transformation implies_left_frame)
 
 lemma [\<phi>reason 1310]:
     \<comment> \<open>attempts the immediate cell\<close>
@@ -261,7 +261,7 @@ lemma [\<phi>reason 2000 for \<open>
       (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Var var T))
       (Trueprop ((\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
   unfolding \<phi>Application_def
-  by (meson Var_transformation \<phi>apply_implication implies_left_prod)
+  by (meson Var_transformation \<phi>apply_implication implies_left_frame)
 
 
 lemma [\<phi>reason 2000 for \<open>
@@ -279,7 +279,7 @@ lemma [\<phi>reason 2000 for \<open>
       (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Var var T))
       (Trueprop ((\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
   unfolding \<phi>Application_def
-  by (meson Var_transformation \<phi>apply_implication implies_left_prod)
+  by (meson Var_transformation \<phi>apply_implication implies_left_frame)
 
 
 section \<open>Instructions\<close>

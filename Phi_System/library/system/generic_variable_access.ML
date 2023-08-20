@@ -304,17 +304,17 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                                         case Phi_Syntax.dest_transformation (Thm.concl_of rule)
                                           of (_,Const(\<^const_name>\<open>one_class.one\<close>,_),_) =>
                                                @{thm implies_prod_right_1}
-                                           | _ => @{thm implies_prod_bi_prod}
+                                           | _ => @{thm implies_bi_frame}
                                   val m = Thm.nprems_of rule
                                in (rule RS (bi_prod_rule RS thm))
                                |> Phi_Reasoner.reason1 (gen_rule_err rule) (SOME m) true ctxt
                                |> gen_rule (num - 1)
                               end
-                              | _ => gen_rule num (@{thm implies_right_prod} RS thm))
-                       | _ => gen_rule num (@{thm implies_right_prod} RS thm)
+                              | _ => gen_rule num (@{thm implies_right_frame} RS thm))
+                       | _ => gen_rule num (@{thm implies_right_frame} RS thm)
                       )
            | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _ , _, _)
-                => gen_rule num (@{thm implies_right_prod} RS thm)
+                => gen_rule num (@{thm implies_right_frame} RS thm)
            | (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm, _ , _)
                 => (case head_of tm
                       of Const (C,_) => (

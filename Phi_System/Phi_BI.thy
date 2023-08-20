@@ -740,16 +740,23 @@ text \<open>There is no sufficiency reasoning for multiplicative conjunction, be
   separately, we loose the constraint about A and B are separatable, A ## B..\<close>
 
 
+lemma eq_left_frame:
+  \<open> A = B \<Longrightarrow> R * A = R * B \<close>
+  by simp
 
-lemma implies_left_prod:
+lemma eq_right_frame:
+  \<open> A = B \<Longrightarrow> A * R = B * R \<close>
+  by simp
+
+lemma implies_left_frame:
   "U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> R * U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * U \<w>\<i>\<t>\<h> P "
   unfolding Transformation_def split_paired_All sep_conj_expn by blast
 
-lemma implies_right_prod:
+lemma implies_right_frame:
   "U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> U' * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U * R \<w>\<i>\<t>\<h> P "
   unfolding Transformation_def split_paired_All sep_conj_expn by blast
 
-lemma implies_prod_bi_prod:
+lemma implies_bi_frame:
   " R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> L' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> L \<w>\<i>\<t>\<h> Q
 \<Longrightarrow> L' * R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> L * R \<w>\<i>\<t>\<h> P \<and> Q "
@@ -1311,7 +1318,7 @@ lemma ToA_by_Equive_Class'
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def
-  by (cases C; clarsimp; meson Transformation_def implies_left_prod)
+  by (cases C; clarsimp; meson Transformation_def implies_left_frame)
 
 lemma Object_Equiv_fallback[\<phi>reason default 1]:
   \<open>Object_Equiv T (=)\<close>

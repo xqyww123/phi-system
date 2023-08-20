@@ -1216,7 +1216,7 @@ instance option :: (positive_sep_magma) positive_sep_magma_1 proof
 qed
 
 
-instantiation option :: (sep_semigroup) sep_semigroup begin
+instantiation option :: (sep_semigroup) sep_monoid begin
 instance proof
   fix x y z :: \<open>'a option\<close>
   show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
@@ -1243,14 +1243,10 @@ instance option :: ("{strict_positive_sep_magma,sep_cancel}") sep_cancel
   using join_strict_positivity apply fastforce
   using sep_cancel by blast
 
-instance option :: (sep_ab_semigroup) sep_ab_semigroup proof
+instance option :: (sep_ab_semigroup) sep_algebra proof
   fix x y z :: \<open>'a option\<close>
   show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by (cases x; cases y; simp add: sep_disj_commute sep_mult_commute)
 qed
-
-instantiation option :: (sep_ab_semigroup) sep_algebra begin
-instance ..
-end
 
 instance option :: (nonsepable_semigroup) nonsepable_monoid
   by (standard; case_tac x; case_tac y; simp)

@@ -1158,7 +1158,7 @@ lemma [\<phi>reason 1100 for \<open>
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
   unfolding \<phi>Application_def
-  using \<phi>apply_implication implies_left_prod by blast
+  using \<phi>apply_implication implies_left_frame by blast
 
 lemma \<phi>apply_transformation_fully[\<phi>reason 1000 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T' \<w>\<i>\<t>\<h> ?P))
@@ -1170,7 +1170,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason 1000 for \<open>
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (cases R; simp; meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
+  by (cases R; simp; meson \<phi>apply_implication implies_left_frame \<phi>apply_view_shift)
 
 lemma [\<phi>reason 1000 for \<open>
   PROP \<phi>Application (Trueprop (?S' = (?T' :: ?'a set)))
@@ -1182,7 +1182,7 @@ lemma [\<phi>reason 1000 for \<open>
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode blk RR T)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (cases R; simp; meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
+  by (cases R; simp; meson \<phi>apply_implication implies_left_frame \<phi>apply_view_shift)
 
 
 paragraph \<open>View Shift Methods\<close>
@@ -1412,7 +1412,7 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
             (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> R * S))
             (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> ((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> R * T) \<and> P))\<close>
   unfolding \<phi>Application_def ToA_Construction_def
-  using implies_left_prod by (metis Transformation_def)
+  using implies_left_frame by (metis Transformation_def)
 
 lemma [\<phi>reason 1000 for \<open>
   PROP \<phi>Application (Trueprop (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
@@ -1424,7 +1424,7 @@ lemma [\<phi>reason 1000 for \<open>
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (cases R; simp; meson \<phi>apply_implication_impl implies_left_prod)
+  by (cases R; simp; meson \<phi>apply_implication_impl implies_left_frame)
 
 lemma [\<phi>reason 1000 for \<open>
   PROP \<phi>Application (Trueprop ((_ :: ?'a set) = _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
@@ -1436,7 +1436,7 @@ lemma [\<phi>reason 1000 for \<open>
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T))"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (cases R; simp; meson \<phi>apply_implication_impl implies_left_prod)
+  by (cases R; simp; meson \<phi>apply_implication_impl implies_left_frame)
 
 
 
@@ -1477,7 +1477,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason for \<open>
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (meson \<phi>apply_implication implies_left_prod \<phi>apply_view_shift)
+  by (meson \<phi>apply_implication implies_left_frame \<phi>apply_view_shift)
 *)
 
 subsection \<open>Action\<close>
