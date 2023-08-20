@@ -21,7 +21,7 @@ include PHI_REASONERS
   quick rule is the quick-cut used when the Y contains no schematic variables.
   *)
 val reasoner_ToA_conditioned_subgoals :
-          thm (*with R*) *
+          thm (*with R*) * thm (*with R to be instantiated to a constant*) *
         ( string (*head of the conditional branch, e.g., If*) *
           int (*arity of the head, e.g., 3*) *
           thm list (*rewrites degenerating the branch*) * 
@@ -37,12 +37,15 @@ end
 structure Phi_Reasoners : PHI_REASONERS = struct
 open Phi_Reasoners
 
-fun reasoner_ToA_conditioned_subgoals (ruleR, (head_const, arity, degenerates, rewrs),
+fun reasoner_ToA_conditioned_subgoals (ruleR, ruleR', (head_const, arity, degenerates, rewrs),
                                        mk_insts, ctxt_gen) =
   let datatype has_remainder = No_Rem | Has_Rem | True_Rem
       fun has_var tm = maxidx_of_term tm >= 0
+      fun strip (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = strip X
+        | strip (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ X) = strip X
+        | strip X = X
       fun dest_Tr tm =
-        case #2 (Phi_Syntax.dest_transformation (Logic.strip_assums_concl tm))
+        case #2 (Phi_Syntax.dest_transformation (strip (Logic.strip_assums_concl tm)))
           of Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ \<^Const>\<open>True\<close> $ _
                => (Y, \<^Const>\<open>True\<close>, True_Rem)
            | Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ C $ _
@@ -73,7 +76,7 @@ fun reasoner_ToA_conditioned_subgoals (ruleR, (head_const, arity, degenerates, r
          |> Thm.trim_context
         end
 
-      val (rule, ruleRT) = (mk_rule \<^Const>\<open>False\<close> ruleR, mk_rule \<^Const>\<open>True\<close> ruleR)
+      val (rule, ruleRT) = (mk_rule \<^Const>\<open>False\<close> ruleR', mk_rule \<^Const>\<open>True\<close> ruleR')
       val (quick_rule, quick_ruleR, quick_ruleRT) =
           (mk_quick_rule rule, mk_quick_rule ruleR, mk_quick_rule ruleRT)
 
@@ -100,13 +103,14 @@ fun reasoner_ToA_conditioned_subgoals (ruleR, (head_const, arity, degenerates, r
                  |> Phi_Help.dest_binop_c \<^const_name>\<open>Pure.eq\<close>
       val vars = Term.add_vars (Thm.term_of Y) []
       val inst = mk_insts ctxt'N (vars,Y,RHS)
+      val rewrs' = degenerates @ rewrs
       val move_to_top = Conv.bottom_conv (fn _ => fn ctm =>
             case Term.strip_comb (Thm.term_of ctm)
               of (Const (N, _), args) =>
                     if N = head_const andalso length args = arity
                     then (Phi_Help.beta_eta_conversion then_conv
                          (fn ctm =>
-                            case get_first (fn rule => try (Conv.rewr_conv rule) ctm) rewrs
+                            case get_first (fn rule => try (Conv.rewr_conv rule) ctm) rewrs'
                               of SOME ret => ret
                               | NONE => Conv.all_conv ctm)) ctm
                     else Conv.all_conv ctm

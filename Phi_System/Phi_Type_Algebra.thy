@@ -2544,27 +2544,48 @@ lemma SE_Semimodule_LDistr_a_db_i[(*THEN SE_clean_waste,*) \<phi>reason_template
 
 subsubsection \<open>Transformation of Semimodule Left Distributivity\<close>
 
+(* [---------a--------]
+   [--d--][-----b-----]
+   Give a, expect b, remain d.
+   Assuming no algebraic property, allow no R
+*)
+lemma [\<phi>reason_template 32]:
+  \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
+\<Longrightarrow> a = d + b @action \<A>arith_eval
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds b \<and> d ##\<^sub>+ b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx d b x
+\<Longrightarrow> fst (uz d b x) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] snd (uz d b x) \<Ztypecolon> F1 d T \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def
+  \<medium_left_bracket> premises _ and _ and [simp] and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
 
 (* [---------a--------]
    [--d--][-----b-----]
    Give a, expect b, remain d.
-   Supports non-commutative algebra *)
-
+   Assuming associativity, allow R
+*)
 lemma
   \<open> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator2 F1 F3
 \<Longrightarrow> a = d + b @action \<A>arith_eval
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds b \<and> d ##\<^sub>+ b
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx d b x
-\<Longrightarrow> fst (uz d b x) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yyy \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> if C then R' = (zzz \<Ztypecolon> F1 d T) * R else R' = (zzz \<Ztypecolon> F1 d T)
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yyy \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> fst (uz d b x) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> if C then R' = (snd (uz d b x) \<Ztypecolon> F1 d T) * R else R' = (snd (uz d b x) \<Ztypecolon> F1 d T)
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P \<close>
+  for R :: \<open>'c::sep_semigroup set\<close>
   unfolding Action_Tag_def
-  \<medium_left_bracket> premises _ and [simp] and _ and _ and Tr and C
-    have C': \<open>(if C then (zzz \<Ztypecolon> F1 d T) * R else (zzz \<Ztypecolon> F1 d T)) = R'\<close>
+  \<medium_left_bracket> premises _ and _ and [simp] and _ and _ and Tr and C
+    have C': \<open>(if C then (snd (uz d b x) \<Ztypecolon> F1 d T) * R else (snd (uz d b x) \<Ztypecolon> F1 d T)) = R'\<close>
       using C by (cases C; simp) ;;
     apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1]
     Tr
-    thm apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1]
+    apply_rule C'[THEN eq_right_frame[where R=\<open>y \<Ztypecolon> F3 b U\<close>]]
+  \<medium_right_bracket> .
 
 
 
