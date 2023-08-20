@@ -777,9 +777,6 @@ hide_fact NToA_disj_target_A' NToA_disj_target_B'
 
 subsubsection \<open>Conditional Branch\<close>
 
-text \<open>The condition should be regarded as an output, and the reasoning process assigns which
-the branch that it chooses to the output condition variable.\<close>
-
 paragraph \<open>Normalization\<close>
 
 lemma [\<phi>reason 2600]:
@@ -796,25 +793,25 @@ paragraph \<open>Reduction for constant boolean condition\<close>
 
 subparagraph \<open>Source\<close>
 
-lemma NToA_cond_source_A[\<phi>reason 2601]:
+lemma NToA_cond_source_A[\<phi>reason 2610]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> (if True then A else B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def
   by (simp add: Transformation_def distrib_left)
 
-lemma NToA_cond_source_B[\<phi>reason 2601]:
+lemma NToA_cond_source_B[\<phi>reason 2610]:
   \<open> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> (if False then A else B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def
   by (simp add: Transformation_def distrib_left)
 
-lemma NToA_cond_source_A'[\<phi>reason 2601]:
+lemma NToA_cond_source_A'[\<phi>reason 2610]:
   \<open> R * A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R * (if True then A else B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def
   by (simp add: Transformation_def distrib_left)
 
-lemma NToA_cond_source_B'[\<phi>reason 2601]:
+lemma NToA_cond_source_B'[\<phi>reason 2610]:
   \<open> R * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R * (if False then A else B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def
@@ -823,28 +820,31 @@ lemma NToA_cond_source_B'[\<phi>reason 2601]:
 
 subparagraph \<open>Target\<close>
 
-lemma NToA_cond_target_A[\<phi>reason 2601]:
+lemma NToA_cond_target_A[\<phi>reason 2610]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if True then A else B) \<w>\<i>\<t>\<h> P\<close>
   by simp
 
-lemma NToA_cond_target_B[\<phi>reason 2601]:
+lemma NToA_cond_target_B[\<phi>reason 2610]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if False then A else B) \<w>\<i>\<t>\<h> P\<close>
   by simp
 
-lemma NToA_cond_target_A'[\<phi>reason 2601]:
+lemma NToA_cond_target_A'[\<phi>reason 2610]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if True then A else B) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   by simp
 
-lemma NToA_cond_target_B'[\<phi>reason 2601]:
+lemma NToA_cond_target_B'[\<phi>reason 2610]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if False then A else B) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   by simp
 
 
 paragraph \<open>When the condition boolean is a variable\<close>
+
+text \<open>The condition should be regarded as an output, and the reasoning process assigns which
+the branch that it chooses to the output condition variable.\<close>
 
 subparagraph \<open>Source\<close>
 
@@ -919,13 +919,13 @@ lemma If_distrib_fx:
   unfolding atomize_eq
   by (cases C; simp)
 
-\<phi>reasoner_ML \<open>ML (case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)\<close> 2000 (\<open>If _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>)
+\<phi>reasoner_ML \<open>ML (If C A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)\<close> 2000 (\<open>If _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>)
   = \<open>Phi_Reasoners.reasoner_ToA_conditioned_subgoals
          (@{thm' ToA_cond_branch_src_R},
           (\<^const_name>\<open>If\<close>, 3, @{thms' if_cancel[folded atomize_eq]}, @{thms' If_distrib_fx if_distrib}),
           reasoner_ToA_conditioned_subgoals_If, \<^context>) o snd\<close>
 
-\<phi>reasoner_ML \<open>ML (W * case_sum A B x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)\<close> 2000 (\<open>_ * If _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>)
+\<phi>reasoner_ML \<open>ML (W * (If C A B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)\<close> 2000 (\<open>_ * If _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>)
   = \<open>Phi_Reasoners.reasoner_ToA_conditioned_subgoals
          (@{thm' ToA_cond_branch_src_WR},
           (\<^const_name>\<open>If\<close>, 3, @{thms' if_cancel[folded atomize_eq]}, @{thms' If_distrib_fx if_distrib}),
@@ -954,6 +954,94 @@ lemma [\<phi>reason 2601 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s
 
 
 subsubsection \<open>Conditioned Remains\<close>
+
+paragraph \<open>Reduction\<close>
+
+subparagraph \<open>Source\<close>
+
+lemma [\<phi>reason 2610]:
+  " R * Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P"
+  unfolding Transformation_def split_paired_All
+  by simp
+
+lemma [\<phi>reason 2610 for \<open>_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+                        \<open>_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[?var] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> ]:
+  " Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P"
+  unfolding Transformation_def split_paired_All
+  by simp
+
+lemma [\<phi>reason 2610]:
+  " A * (R * Y) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A * (Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P"
+  unfolding Transformation_def split_paired_All
+  by simp
+
+lemma [\<phi>reason 2610]:
+  " A * Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A * (Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P"
+  unfolding Transformation_def split_paired_All
+  by simp
+
+
+subparagraph \<open>Target\<close>
+
+lemma [\<phi>reason 2610]:
+  " Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<w>\<i>\<t>\<h> P"
+  by simp
+
+lemma [\<phi>reason 2610 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] _) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                        \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[?var] _) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  " Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] R) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<w>\<i>\<t>\<h> P"
+  by simp
+
+
+paragraph \<open>Case Split\<close>
+
+subparagraph \<open>Source\<close>
+
+lemma ToA_cond_remain_src_R:
+  \<open> Y \<equiv> If C Ya Yb
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> B * A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Ca] Ra \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Cb] Rb \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[If C Ca Cb] If C Ra Rb \<w>\<i>\<t>\<h> If C P Q \<close>
+  by (cases C; simp)
+
+lemma ToA_cond_remain_src_WR:
+  \<open> Y \<equiv> If C Ya Yb
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> W * (B * A) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Ca] Ra \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> W * A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb \<r>\<e>\<m>\<a>\<i>\<n>\<s>[Cb] Rb \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> W * (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[If C Ca Cb] If C Ra Rb \<w>\<i>\<t>\<h> If C P Q \<close>
+  by (cases C; simp)
+
+\<phi>reasoner_ML \<open>ML (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)\<close> 2000 (\<open>_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>)
+  = \<open>Phi_Reasoners.reasoner_ToA_conditioned_subgoals
+         (@{thm' ToA_cond_remain_src_R},
+          (\<^const_name>\<open>If\<close>, 3, @{thms' if_cancel[folded atomize_eq]}, @{thms' If_distrib_fx if_distrib}),
+          reasoner_ToA_conditioned_subgoals_If, \<^context>) o snd\<close>
+
+\<phi>reasoner_ML \<open>ML (W * (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)\<close> 2000 (\<open>_ * (_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>)
+  = \<open>Phi_Reasoners.reasoner_ToA_conditioned_subgoals
+         (@{thm' ToA_cond_remain_src_WR},
+          (\<^const_name>\<open>If\<close>, 3, @{thms' if_cancel[folded atomize_eq]}, @{thms' If_distrib_fx if_distrib}),
+          reasoner_ToA_conditioned_subgoals_If, \<^context>) o snd\<close>
+
+subparagraph \<open>Target\<close>
+
+lemma [\<phi>reason 2600 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if ?var then _ else _) \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[CCa] RRa \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[CCb] RRb \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[If C CCa CCb] If C RRa RRb \<w>\<i>\<t>\<h> If C P Q\<close>
+  by (cases C; simp)
+
+lemma [\<phi>reason 2600 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if ?var then _ else _) \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RRa \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RRb \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] If C RRa RRb \<w>\<i>\<t>\<h> If C P Q\<close>
+  by (cases C; simp)
 
 
 subsection \<open>Top\<close>
@@ -1024,13 +1112,6 @@ lemma [\<phi>reason 1050 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 
       a fallback here handles it.\<close>
   unfolding FOCUS_TAG_def Action_Tag_def .*)
 
-(*XXX: why this???*)
-lemma [\<phi>reason 2030]:
-  " Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2 \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R2) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] \<top> \<w>\<i>\<t>\<h> P"
-  for X :: \<open>'a::sep_magma_1 BI\<close>
-  unfolding REMAINS_def by simp
-
 (*
 lemma [\<phi>reason 2020
    except \<open> ?Y1 * ?Y2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] _ \<w>\<i>\<t>\<h> ?P\<close>
@@ -1076,22 +1157,7 @@ consts ToA_Annotation :: \<open>'a \<Rightarrow> 'a\<close>
       a fallback here handles it.\<close>
   unfolding FOCUS_TAG_def Action_Tag_def . *)
 
-subsection \<open>Confident Rules for Specific \<phi>-Types\<close>
-
-subsubsection \<open>FOCUS_TAG\<close>
-
-lemma [\<phi>reason 2000]:
-  " R * Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P"
-  unfolding Transformation_def split_paired_All
-  by simp
-
-lemma [\<phi>reason 2000]:
-  " Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P"
-  unfolding Transformation_def split_paired_All
-  by simp
-
+subsection \<open>For Specific \<phi>-Types\<close>
 
 subsubsection \<open>Value\<close>
 
