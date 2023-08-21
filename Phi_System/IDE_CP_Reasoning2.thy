@@ -173,13 +173,15 @@ Priority Convention:
 \<^item> 2600: Usual reasonings
 \<^item> 2100: Padding void holes after the last item. Rules capturing the whole items including
         the last item in the \<open>\<^emph>\<close>-sequence should have priority higher than this.
-\<^item> 2000: Step-by-step searching (only the target side, as the source side is by SE)
-\<^item> 1000 - 1999: Confident rules or shortcuts for specific \<phi>-types
+\<^item> 1000 - 1999: Cut rules for specific \<phi>-types
 \<^item> 800:  Disjunction in target part
-\<^item> 50-51: Enters Structural Extraction. Elim-rules \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A'\<close> having a priority
-         greater than 54, will be applied before Structural Extraction, and those less than 50,
-        will only be applied in the backtrack of the Structural Extraction.
-\<^item> 12: Instantiate existentially quantified variables in the target part
+\<^item> 50 :  Step-by-step searching that splits elements in the target into each individual subgoals
+        (the splitting of the source side is done by SE)
+\<^item> 50-51: Enters Structural Extraction.
+         Elim-rules \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A'\<close> having a priority greater than 52,
+         will be applied before Structural Extraction, and those less than 50,
+         will only be applied in the backtrack of the Structural Extraction.
+\<^item> 12: Instantiate existentially quantified variables in the target part;
       Divergence for additive disjunction in the target part
 \<close>
 
@@ -341,49 +343,59 @@ lemma NToA_finish':
   by simp
 
 ML \<open>
-(* X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P *)
-fun NToA_to_wild_card ctxt thm =
-  let val (vs, _, goal) = Phi_Help.leading_antecedent (Thm.prop_of thm)
+(* (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P) where ?Y is a variable.
+   When X contains some quantified variables \<open>x\<close> that do not parameterize ?Y, the procedure
+   existentially quantifies X, and assign \<open>\<exists>x. X x\<close> to ?Y.
+ *)
+fun NToA_to_wild_card ctxt thm0 =
+  let val thm = perhaps (try (fn th => @{thm' Action_Tag_I} RS th)) thm0
+      val (vs, _, goal) = Phi_Help.leading_antecedent (Thm.prop_of thm)
       val N = length vs
       val (X,Y0,_) = Phi_Syntax.dest_transformation goal
-      val Y = case Y0 of Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ _ => X
-                       | _ => Y0
-      val \<^Type>\<open>set \<open>TY\<close>\<close> = Term.fastype_of Y
+      val (refl, exintro, Y) =
+            case Y0 of Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ C $ _ =>
+                         if Term.is_Var (Term.head_of X)
+                         then (@{thm' NToA_finish'}, @{thm' ToA_ex_intro'}, X)
+                         else (@{thm' NToA_finish }, @{thm' ToA_ex_intro'}, X)
+                     | _ => (@{thm' transformation_refl}, @{thm' ToA_ex_intro}, Y0)
       val (Var V, args) = strip_comb Y
-      val bnos = map (fn Bound i => i) args
-      val N_bnos = length bnos
+      val bnos = map_filter (fn Bound i => SOME i | _ => NONE) args
       val bads = subtract (op =) bnos (Term.loose_bnos X)
+   in if null bads
+   then refl RS thm
+   else let
       val N_bads = length bads
-      val insts' = List.tabulate (N, (fn i =>
+      val N_bnos = length bnos
+      val (argTys, \<^Type>\<open>set \<open>TY\<close>\<close>) = Term.strip_type (snd V)
+      val insts' = List.tabulate (N, fn i =>
             let val bi = find_index (fn k => k = i) bads
                 val ci = find_index (fn k => k = i) bnos
              in if bi <> ~1
                 then Bound (N_bads - 1 - bi)
                 else if ci <> ~1
                 then Bound (N_bads + N_bnos - 1 - ci)
-                else Bound ~1
-            end))
+                else Term.dummy (*not occur*)
+            end)
       val Y'1 = subst_bounds (insts', X)
       val Y'2 = fold (fn j => fn TM =>
                   let val (name,T) = List.nth (vs, N-1-j)
                    in \<^Const>\<open>ExSet \<open>T\<close> \<open>TY\<close>\<close> $ Abs (name, T, TM)
                   end) bads Y'1
-      val Y'3 = fold (fn j => fn TM =>
-                  let val (name,T) = List.nth (vs, N-1-j)
-                   in Abs (name, T, TM)
-                  end) bnos Y'2
-      val thm' =
-            if null bads then thm
-            else Thm.instantiate (TVars.empty, Vars.make [(V, Thm.cterm_of ctxt Y'3)]) thm
-      val tac = REPEAT_DETERM (HEADGOAL (resolve0_tac @{thms Action_Tag_I}))
-                THEN REPEAT_DETERM_N N_bads (HEADGOAL (resolve0_tac @{thms ToA_ex_intro ToA_ex_intro'}))
-                THEN (HEADGOAL (resolve0_tac @{thms transformation_refl NToA_finish' NToA_finish}))
-   in tac thm'
+      val Y'3 = fold (fn (_, Bound j) => (fn TM =>
+                            let val (name,T) = List.nth (vs, N-1-j)
+                             in Abs (name, T, TM)
+                            end)
+                       | (ty, _) => (fn TM => Abs ("_", ty, TM))
+                     ) (argTys ~~ args) Y'2
+   in Thm.instantiate (TVars.empty, Vars.make [(V, Thm.cterm_of ctxt Y'3)]) thm
+   |> funpow N_bads (fn th => exintro RS th)
+   |> (fn th => refl RS th)
+  end
   end
 \<close>
 
 \<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P @action NToA\<close> 2015 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @action NToA\<close>) = \<open>
-  fn (_, (ctxt,thm)) => NToA_to_wild_card ctxt thm |> Seq.map (pair ctxt)
+  fn (_, (ctxt,thm)) => Seq.single (ctxt, NToA_to_wild_card ctxt thm)
 \<close>
 
 
@@ -409,8 +421,9 @@ lemma [\<phi>reason 4000]:
   for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding REMAINS_def Action_Tag_def by simp
 
-\<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> P @action NToA\<close> 4005 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>) = \<open>
-  fn (_, (ctxt,thm)) => NToA_to_wild_card ctxt thm |> Seq.map (pair ctxt)
+\<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> P\<close> 4005 ( \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> |
+                                                       \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _\<close> ) = \<open>
+  fn (_, (ctxt,thm)) => Seq.single (ctxt, NToA_to_wild_card ctxt thm)
 \<close>
 
 
@@ -1123,51 +1136,36 @@ lemma [\<phi>reason 0]:
 
 subsection \<open>Step-by-Step Searching Procedure\<close>
 
-(*
-lemma [\<phi>reason 2100
- except \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> (?X1 * ?X2) \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA ?mode ?G\<close>
-        \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> 1 \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA ?mode ?G\<close>
-        \<open> ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> TAIL ?X \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA ?mode ?G\<close>
-]:
-  " H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> 1 * X \<brangle> \<w>\<i>\<t>\<h> P @action reason_NToA mode G \<Longrightarrow>
-    H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> X \<brangle> \<w>\<i>\<t>\<h> P @action reason_NToA mode G"
-  for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding mult_1_left .
-
-
-lemma [\<phi>reason 1050 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA True ?G\<close>
-   except \<open>(?X'::?'a::sep_magma_1 set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> ?Y' \<brangle> \<w>\<i>\<t>\<h> ?P @action reason_NToA True ?G\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action reason_NToA True G\<close>
-  \<comment> \<open>If it doesn't have one, it cannot be reasoned by this procedure, so
-      a fallback here handles it.\<close>
-  unfolding FOCUS_TAG_def Action_Tag_def .*)
-
-(*
-lemma [\<phi>reason 2020
-   except \<open> ?Y1 * ?Y2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] _ \<w>\<i>\<t>\<h> ?P\<close>
-          \<open> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] _ \<w>\<i>\<t>\<h> ?P\<close>
-          \<open> TAIL ?H \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] _ \<w>\<i>\<t>\<h> ?P\<close>
-]:
-  " 1 * Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> X \<brangle> \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> X \<brangle> \<w>\<i>\<t>\<h> P"
-  for X :: \<open>'a::sep_magma_1 set\<close>
-  unfolding mult_1_left . *)
-
-lemma [\<phi>reason default 55]:
+lemma [\<phi>reason default ! 50 for \<open>(_ :: ?'a::sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * _ \<w>\<i>\<t>\<h> _\<close>]:
   " R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R1 \<w>\<i>\<t>\<h> P1
-\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P1 \<Longrightarrow> R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 \<w>\<i>\<t>\<h> P2)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<Longrightarrow> R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 \<w>\<i>\<t>\<h> P2)
 \<Longrightarrow> R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 * X \<w>\<i>\<t>\<h> P1 \<and> P2"
   unfolding Action_Tag_def REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
   by clarsimp blast
 
-lemma [\<phi>reason 2010]:
+lemma [\<phi>reason default ! 50]:
   " R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R1 \<w>\<i>\<t>\<h> P1
-\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P1 \<Longrightarrow> R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' \<w>\<i>\<t>\<h> P2)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<Longrightarrow> R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' \<w>\<i>\<t>\<h> P2)
 \<Longrightarrow> R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 * X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' \<w>\<i>\<t>\<h> P1 \<and> P2"
   for R :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
   by (cases C; clarsimp; metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc')
+
+lemma [\<phi>reason default ! 45 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
+\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q \<close>
+  unfolding Transformation_def
+  by clarsimp blast
+
+lemma [\<phi>reason default ! 45 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]:
+  \<comment> \<open>must be lower than the entry point of Separation Extraction\<close>
+  " (C,P) = (True, P1 \<and> P2) \<and> (B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P1) \<and> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P2)) \<or>\<^sub>c\<^sub>u\<^sub>t
+    C = False \<and> (A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P"
+  unfolding Orelse_shortcut_def Transformation_def REMAINS_def Premise_def
+  by clarsimp blast
+
 
 
 consts ToA_Annotation :: \<open>'a \<Rightarrow> 'a\<close>
