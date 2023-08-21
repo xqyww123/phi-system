@@ -7,23 +7,8 @@ end
 
 structure Phi_Sledgehammer_Solver : PHI_SLEDGEHAMMER_SOLVER = struct
 
-(*** Proof cache by hash ***)
-(*Useful when the user is editing the document causing many cache miss, which could be saved
-  by using term-based hash caching*)
 
-val hash_cache : Phi_Cache_DB.proof_cache Symtab.table Synchronized.var
-      = Synchronized.var "\<phi>System.proof_cache.hash" Symtab.empty
 
-fun access_hash_cache hash =
-  if Phi_Envir.runtime_mode () = Phi_Envir.NORMAL
-  then let val hc = Synchronized.value hash_cache
-        in Symtab.lookup hc hash end
-  else NONE
-
-fun update_hash_cache hash prf =
-  if Phi_Envir.runtime_mode () = Phi_Envir.NORMAL
-  then Synchronized.change hash_cache (Symtab.update (hash, prf))
-  else ()
 
 
 (*** Adapter of Sledgehammer ***)
@@ -380,7 +365,7 @@ fun auto' id (ctxt,sequent') =
               "Find proof (" ^ id ^ ", time: " ^ Value.print_time (fst prf') ^ "): " ^
                (if snd prf' = "" then "classical automation" else "\n" ^ snd prf')
            ) ;
-           update_hash_cache hash prf';
+           Phi_Cache_DB.update_hash_cache hash prf';
            Phi_Cache_DB.update_cached_proof thy (id, prf') ;
            sequent')
 
@@ -388,7 +373,7 @@ fun auto' id (ctxt,sequent') =
     in try_cached_proof (fn no_cache' => (let
           val hash = Hasher.goal (ctxt,sequent)
           val (no_cache, prf_result') =
-                case access_hash_cache hash
+                case Phi_Cache_DB.access_hash_cache hash
                   of SOME (t, prf) =>
                       let val ctxt' = if prf = "" then ctxt else Phi_Envir.freeze_dynamic_lemmas ctxt
                        in ((false, SOME (eval_prf_str (folerant_time t) prf (ctxt',sequent)))

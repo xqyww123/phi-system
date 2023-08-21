@@ -1170,8 +1170,6 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   \<open>Unit_Functor ((\<^bold>\<rightarrow>\<^sub>@) k)\<close>
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
-
-declare [[\<phi>trace_reasoning = 2]]
       
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (scalar_mult push_map k \<Zcomp>\<^sub>f T)\<close>

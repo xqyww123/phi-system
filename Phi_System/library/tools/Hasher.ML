@@ -1,15 +1,18 @@
 signature HASHER = sig
 
-val string : string -> string
-val class : class -> string
-val sort  : sort -> string
-val typ  : typ -> string
-val term : term -> string
-val goal : context_state -> string
+type digest = string
+val string : string -> digest
+val class : class -> digest
+val sort  : sort -> digest
+val typ  : typ -> digest
+val term : term -> digest
+val goal : context_state -> digest
 
 end
 
 structure Hasher : HASHER = struct
+
+type digest = string
 
 fun typ_str (Type (N,TYs)) ret = fold (typ_str) TYs (N::ret)
   | typ_str (TFree (N,S)) ret = N::S@ret

@@ -72,9 +72,8 @@ ML_file \<open>library/tools/lift_type_sort.ML\<close>
 ML_file \<open>library/syntax/helps.ML\<close>
 ML_file \<open>library/system/Phi_Envir0.ML\<close>
 ML_file \<open>library/system/Phi_ID.ML\<close>
-ML_file \<open>library/tools/cache_file.ML\<close>
-
 ML_file \<open>library/tools/Hasher.ML\<close>
+ML_file \<open>library/tools/cache_file.ML\<close>
 
 
 (*

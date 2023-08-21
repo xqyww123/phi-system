@@ -21,6 +21,21 @@ val report_cache_is_outdated : bool (*whether warn*) -> theory -> unit
 val get_cached_proof : theory -> proof_id -> (Time.time * string) option
 val update_cached_proof : theory -> proof_id * (Time.time * string) -> unit
 
+(*Here we provide another mechanism which records the proof to the hash digest of the proposition.
+  It is useful when the user is editing a code before a lemma of a cached proof, the proof-id of the
+  lemma can be changed due to the editing, but the hash digest will not only if the proposition of
+  the lemma itself is unchanged, so the proof can be still cached and saves the user from annoying
+  proof re-search.
+  However, the hash cache DB is heavy in both calculating the hash (having to enumerate every term
+  and type with many string concatenations, costing about hundreds milliseconds) and storing the
+  record as the hash has no way to be short (the scope is in global!) but of 20 bytes using SHA1.
+  Therefore, this feature is only enabled during the interactive editing time.
+*)
+
+val access_hash_cache : Hasher.digest -> proof_cache option
+val update_hash_cache : Hasher.digest -> proof_cache -> unit
+val clean_hash_cache  : unit -> unit
+
 end
 
 
@@ -200,5 +215,26 @@ val _ = Theory.setup (Theory.at_end (fn thy => (
                 ())
         end
   ; NONE)))
+
+(*** Proof cache by hash ***)
+
+val hash_cache : proof_cache Symtab.table Synchronized.var
+      = Synchronized.var "\<phi>System.proof_cache.hash" Symtab.empty
+
+fun access_hash_cache hash =
+  if Phi_Envir.runtime_mode () = Phi_Envir.EDITING
+  then let val hc = Synchronized.value hash_cache
+        in Symtab.lookup hc hash end
+  else NONE
+
+fun update_hash_cache hash prf =
+  if Phi_Envir.runtime_mode () = Phi_Envir.EDITING
+  then Synchronized.change hash_cache (Symtab.update (hash, prf))
+  else ()
+
+fun clean_hash_cache () =
+  if Phi_Envir.runtime_mode () = Phi_Envir.EDITING
+  then Synchronized.change hash_cache (K Symtab.empty)
+  else ()
 
 end
