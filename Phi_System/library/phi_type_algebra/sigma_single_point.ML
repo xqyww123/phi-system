@@ -169,7 +169,7 @@ fun reasoning_configure (subgoal, lsequent) (local_prems, ctxt) =
       fun mk_black' th = mk_black (Thm.concl_of th)
       val ctxt = Context.proof_map (
             Phi_Reasoner.add_rules (map (fn rule =>
-                ([rule], \<^here>, (Phi_Reasoner.LOCAL_CUT, Phi_Reasoner.ADMIT_BACKTRACK), 300, [], [mk_black' rule], NONE)) T_rules)
+                ([rule], \<^here>, (Phi_Reasoner.LOCAL_CUT, Phi_Reasoner.ALLOW_BACKTRACK), 300, [], [mk_black' rule], NONE)) T_rules)
           ) ctxt
    in default_reasoning_configure [] (subgoal, lsequent) (local_prems, ctxt)
   end

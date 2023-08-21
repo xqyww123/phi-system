@@ -15,7 +15,7 @@ signature NU_REASONER = sig
   type action = cterm
 
   datatype cut_mode = NO_CUT | LOCAL_CUT | GLOBAL_CUT
-  datatype backtrack_mode = ADMIT_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
+  datatype backtrack_mode = ALLOW_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
   type mode = cut_mode * backtrack_mode
   (* declare by NO_BACKTRACK to disable applying the reasoner during backtracking.
         It causes the reasoner will not be applied once there is another reasoner of a higher priority,
@@ -192,12 +192,30 @@ type ML_guard = context_state -> bool
 type action = cterm
 
 datatype cut_mode = NO_CUT | LOCAL_CUT | GLOBAL_CUT
-datatype backtrack_mode = ADMIT_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
+datatype backtrack_mode = ALLOW_BACKTRACK | NO_BACKTRACK | NO_EXPLORATIVE_BACKTRACK
 type mode = cut_mode * backtrack_mode
 
-val NORMAL_MODE = (NO_CUT, ADMIT_BACKTRACK)
-val NORMAL_LOCAL_CUT = (LOCAL_CUT, ADMIT_BACKTRACK)
+val NORMAL_MODE = (NO_CUT, ALLOW_BACKTRACK)
+val NORMAL_LOCAL_CUT = (LOCAL_CUT, ALLOW_BACKTRACK)
 val TO_BE_OVERRIDE = (NO_CUT, NO_BACKTRACK)
+
+(* NO_CUT < LOCAL_CUT < GLOBAL_CUT *)
+fun cut_mode_ord (GLOBAL_CUT, GLOBAL_CUT) = EQUAL
+  | cut_mode_ord (LOCAL_CUT, GLOBAL_CUT) = LESS
+  | cut_mode_ord (LOCAL_CUT, LOCAL_CUT) = EQUAL
+  | cut_mode_ord (NO_CUT, NO_CUT) = EQUAL
+  | cut_mode_ord (NO_CUT, _) = LESS
+  | cut_mode_ord _ = GREATER
+
+(* ALLOW_BACKTRACK < NO_EXPLORATIVE_BACKTRACK < NO_BACKTRACK *)
+fun backtrack_mode_ord (NO_BACKTRACK, NO_BACKTRACK) = EQUAL
+  | backtrack_mode_ord (NO_EXPLORATIVE_BACKTRACK, NO_BACKTRACK) = LESS
+  | backtrack_mode_ord (NO_EXPLORATIVE_BACKTRACK, NO_EXPLORATIVE_BACKTRACK) = EQUAL
+  | backtrack_mode_ord (ALLOW_BACKTRACK, ALLOW_BACKTRACK) = EQUAL
+  | backtrack_mode_ord (ALLOW_BACKTRACK, _) = LESS
+  | backtrack_mode_ord _ = GREATER
+
+val mode_ord = prod_ord cut_mode_ord backtrack_mode_ord
 
 
 datatype backtracking = NO_BACKTRACKING | BACKTRACKING | EXPLORATIVE_BACKTRACKING
@@ -225,7 +243,7 @@ fun print_cut_mode_ML NO_CUT = "Phi_Reasoner.NO_CUT"
   | print_cut_mode_ML LOCAL_CUT = "Phi_Reasoner.LOCAL_CUT"
   | print_cut_mode_ML GLOBAL_CUT = "Phi_Reasoner.GLOBAL_CUT"
 
-fun print_backtrack_mode_ML ADMIT_BACKTRACK = "Phi_Reasoner.ADMIT_BACKTRACK"
+fun print_backtrack_mode_ML ALLOW_BACKTRACK = "Phi_Reasoner.ALLOW_BACKTRACK"
   | print_backtrack_mode_ML NO_BACKTRACK = "Phi_Reasoner.NO_BACKTRACK"
   | print_backtrack_mode_ML NO_EXPLORATIVE_BACKTRACK = "Phi_Reasoner.NO_EXPLORATIVE_BACKTRACK"
 
@@ -348,7 +366,7 @@ fun content net = iNet.content net |> map (fn (_,_,_,r) => r)
 
 fun pretty_mode (cmode, bmode) =
   let open Pretty
-      val b = case bmode of ADMIT_BACKTRACK => NONE
+      val b = case bmode of ALLOW_BACKTRACK => NONE
                           | NO_BACKTRACK => SOME (str "default")
                           | NO_EXPLORATIVE_BACKTRACK => SOME (para "no explorative backtrack")
       val c = case cmode of NO_CUT => NONE
@@ -461,12 +479,13 @@ fun debug ctxt (c,_,_,({name,pos,...} : reasoner)) = let open Pretty in
       ]))
   end
 
+(*
 fun concl_of_goal st i =
   let val (gi, rfrees) = Logic.goal_params st i
       val B = Logic.strip_assums_concl gi
       (*val As = Logic.strip_assums_hyp gi*)
   in subst_bounds (rfrees, B)
-  end
+  end*)
 
 (* fun beta_eta_contract_leading_antecedent th =
   if (case Thm.prop_of th
@@ -485,7 +504,7 @@ fun distinct_rev eq lst =
   in dist ([], lst) end;
 
 fun apply_tactic bmode (Tac_ML tac) s = tac (bmode, s)
-  | apply_tactic _ (Tac_Rule []) (ctxt,sequent) = Seq.empty
+  | apply_tactic _ (Tac_Rule []) _ = Seq.empty
   | apply_tactic _ (Tac_Rule [rule]) (ctxt,sequent) = Seq.make (fn () =>
         case single_RS' rule ctxt sequent
           of SOME ret => SOME ((ctxt, ret), Seq.empty)
@@ -501,7 +520,9 @@ fun get_reasoners' thy tactics term =
         andalso forall (fn pat =>
           not (Pattern_Translation.does_match_term thy (pat,term)))
         (#blacklist reasoner))
-    |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))
+    |> sort (fn ((c1,_,_,r1),(c2,_,_,r2)) =>
+          case int_ord (c1,c2) of EQUAL => mode_ord (#mode r1, #mode r2)
+             | ord => ord)
     |> distinct_rev (fn (a,b) => #3 a = #3 b)
 
 fun get_reasoners thy tactics term =
@@ -558,29 +579,29 @@ fun gen_call_reasoners trace score tactics ctxt th =
 (*fun call_reasoners (ctxt,th) =
   gen_call_reasoners (Config.get ctxt trace) (Reasoners.get (Context.Proof ctxt)) ctxt th *)
 
-fun disabled_due_to_backtrack ADMIT_BACKTRACK _ = false
+fun disabled_due_to_backtrack ALLOW_BACKTRACK _ = false
   | disabled_due_to_backtrack NO_BACKTRACK NO_BACKTRACKING = false
   | disabled_due_to_backtrack NO_BACKTRACK _ = true
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK EXPLORATIVE_BACKTRACKING = true
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK _ = false
 
-fun gen_reason _ _ _ _ _ _ [] = NONE
-  | gen_reason N trace limit iter backtracking tactics ([]::L) =
+fun gen_reason (_, _, _, _, _, _, []) = NONE
+  | gen_reason (N, trace, limit, iter, backtracking, tactics, []::L) =
       (if 2 <= trace then tracing ("Backtracking...") else ();
-       gen_reason N trace limit iter
-          (if backtracking = EXPLORATIVE_BACKTRACKING then EXPLORATIVE_BACKTRACKING else BACKTRACKING)
-          tactics L)
-  | gen_reason N trace limit iter backtracking tactics (((score,pos,(mode as (cut_mode,backtrack_mode)),seq)::L')::L) =
-  let
-    val _ = if backtrack_mode = NO_EXPLORATIVE_BACKTRACK then () else ()
-    val _ = if iter > limit
-            then error "The reasoning reaches the limit of the number of reasoning steps.\n\
-                       \Perhaps an infinite loop is encountered.\nOtherwise, \
-                       \you can set \<phi>reasoning_step_limit to increase the limit of the steps\
-                       \if it is too small."
-            else ()
+       gen_reason (N, trace, limit, iter,
+          (if backtracking = EXPLORATIVE_BACKTRACKING then EXPLORATIVE_BACKTRACKING else BACKTRACKING),
+          tactics, L))
+  | gen_reason (N, trace, limit, iter, backtracking, tactics,
+                   ((score,pos,(mode as (cut_mode,backtrack_mode)),seq)::L')::L) =
+  let val _ = if backtrack_mode = NO_EXPLORATIVE_BACKTRACK then () else ()
+      val _ = if iter > limit
+              then error "The reasoning reaches the limit of the number of reasoning steps.\n\
+                         \Perhaps an infinite loop is encountered.\nOtherwise, \
+                         \you can set \<phi>reasoning_step_limit to increase the limit of the steps\
+                         \if it is too small."
+              else ()
   in if disabled_due_to_backtrack backtrack_mode backtracking
-  then gen_reason N trace limit iter backtracking tactics (L'::L)
+  then gen_reason (N, trace, limit, iter, backtracking, tactics, L'::L)
   else
   ((case Seq.pull seq
       of SOME ((ctxt,th), seq') =>
@@ -589,11 +610,6 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
                     then tracing ("\<phi>reasoning("^string_of_int score^"):"^
                                   Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                     else ()
-            val _ = if score = 3015 then () else ()
-         (* fun filter_out_TBO L =
-              if exists (fn (_,_,m,_) => m = TO_BE_OVERRIDE) L
-              then filter_out (fn (_,_,m,_) => m = TO_BE_OVERRIDE) L
-              else L *)
 
             val Z = if Thm.nprems_of th <= N
                     then raise Success (ctxt, th)
@@ -616,30 +632,47 @@ fun gen_reason _ _ _ _ _ _ [] = NONE
                                         if pointer_eq (seq',Seq.empty) then L
                                         else [(score,pos,mode,seq')]::L)
                        | NO_CUT => Z :: (
-                              let (*val L' = filter_out_TBO L'*)
-                                  val t = if pointer_eq (seq',Seq.empty) then L'
+                              let val t = if pointer_eq (seq',Seq.empty) then L'
                                           else (score,pos,mode,seq')::L' 
-                              in if null t then L else t::L end)
+
+                                  (*reasoning branches of identical priority are considered emitted
+                                    simultaneously of which failures are not considered as backtracking
+                                    to others.
+                                    Therefore, once one branch is invoked successfully, the other
+                                    candidates of identical priority will not check the backtracking anymore,
+                                    so we set their modes to ALLOW_BACKTRACK.*)
+                                  fun qchk [] = false
+                                    | qchk ((score',_,(_,bmode),_) :: ls) =
+                                        score = score' andalso (bmode <> ALLOW_BACKTRACK orelse qchk ls)
+                                  fun toggle_bmode [] = []
+                                    | toggle_bmode (origin as ((score',pos,(cmode,bmode),seq) :: ls)) =
+                                        if score = score' andalso bmode <> ALLOW_BACKTRACK
+                                        then (score',pos,(cmode,ALLOW_BACKTRACK),seq) :: toggle_bmode ls
+                                        else origin
+                                  fun toggle_bmode' t = if qchk t then toggle_bmode t else t
+
+                               in if null t then L else toggle_bmode' t ::L
+                              end)
           in
-            gen_reason N trace limit (iter+1) NO_BACKTRACKING tactics Z
+            gen_reason (N, trace, limit, iter+1, NO_BACKTRACKING, tactics, Z)
           end)
-       | NONE => gen_reason N trace limit iter backtracking tactics (L'::L) )
+       | NONE => gen_reason (N, trace, limit, iter, backtracking, tactics, L'::L) )
     handle Success s => Success_Handlers.invoke (fst s) s
                      |> map (fn (x,y) => (score,x,NORMAL_MODE,y))
-                     |> (fn Z => gen_reason N trace limit (iter+1) NO_BACKTRACKING tactics (Z :: L))
+                     |> (fn Z => gen_reason (N, trace, limit, iter+1, NO_BACKTRACKING, tactics, Z :: L))
          | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
                      |> map (fn (x,y) => (score,x,NORMAL_MODE,y))
-                     |> (fn Z => gen_reason N trace limit (iter+1) NO_BACKTRACKING tactics (Z :: L)) )
+                     |> (fn Z => gen_reason (N, trace, limit, iter+1, NO_BACKTRACKING, tactics, Z :: L)) )
     handle Explorative_Backtrack =>
-              gen_reason N trace limit iter EXPLORATIVE_BACKTRACKING tactics (L'::L)
+              gen_reason (N, trace, limit, iter, EXPLORATIVE_BACKTRACKING, tactics, L'::L)
   end
 
 (*Entry point*)
 fun gen_reason' ctxt N states =
   Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (fn () =>
-     (gen_reason N (Config.get ctxt trace) (Config.get ctxt step_limit)
-                 0 NO_BACKTRACKING (Reasoners.get (Context.Proof ctxt))
-                 (map (map (fn seq => (0, Position.none, NORMAL_MODE, seq))) states)
+     (gen_reason (N, Config.get ctxt trace, Config.get ctxt step_limit,
+                  0, NO_BACKTRACKING, Reasoners.get (Context.Proof ctxt),
+                  (map (map (fn seq => (0, Position.none, NORMAL_MODE, seq))) states))
       handle Success ret => SOME ret)
   )
 
@@ -742,7 +775,7 @@ val cut_mode_parser = (\<^keyword>\<open>!\<close> |-- \<^keyword>\<open>!\<clos
 val backtrack_mode_parser = (Args.$$$ "default" >> K NO_BACKTRACK)
                          || ((Args.$$$ "no" -- Args.$$$ "backtrack") >> K NO_BACKTRACK)
                          || ((Args.$$$ "no" -- Args.$$$ "explorative" -- Args.$$$ "backtrack") >> K NO_EXPLORATIVE_BACKTRACK)
-                         || Scan.succeed ADMIT_BACKTRACK
+                         || Scan.succeed ALLOW_BACKTRACK
 
 fun default_mode_of priority =
       if priority >= 1000000 then GLOBAL_CUT
@@ -841,7 +874,7 @@ fun get_passes ctxt terms =
    in fold (fn TM => union rule_pass_eq (get TM)) terms []
   end
 
-fun run_passes pos (data as (rules, mode, _, _, ctxt)) =
+fun run_passes pos (data as (rules, _, _, _, ctxt)) =
   fold (fn (_,_,f) => f pos) (get_passes ctxt (map Thm.concl_of rules)) data
 
 fun add_pass rule_pass =
@@ -1034,7 +1067,7 @@ val _ = Theory.setup (
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
                Method.modifier (gen_attr_add_intro' I (pos,NORMAL_MODE,100,([],NONE),([],[]),NONE)) \<^here>)
-] >> (fn num_prems => fn ctxt => fn ths => reason_tac num_prems true ctxt)
+] >> (fn num_prems => fn ctxt => fn ths (*what to do?*) => reason_tac num_prems true ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."
 
