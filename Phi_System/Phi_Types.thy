@@ -993,15 +993,12 @@ declare [[\<phi>trace_reasoning = 0]]
        and Trivial_\<Sigma>
        and SE_Trim_Empty
 
-        
-
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
   deriving Separation_Monoid
        and SE_Trim_Empty
        and Trivial_\<Sigma>
-
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>

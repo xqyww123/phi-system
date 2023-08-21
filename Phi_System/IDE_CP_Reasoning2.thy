@@ -174,13 +174,14 @@ Priority Convention:
 \<^item> 2100: Padding void holes after the last item. Rules capturing the whole items including
         the last item in the \<open>\<^emph>\<close>-sequence should have priority higher than this.
 \<^item> 1000 - 1999: Cut rules for specific \<phi>-types
-\<^item> 800:  Disjunction in target part
-\<^item> 50 :  Step-by-step searching that splits elements in the target into each individual subgoals
+\<^item> 900:  Step-by-step searching that splits elements in the target into each individual subgoals
         (the splitting of the source side is done by SE)
+\<^item> 800:  Disjunction in target part
 \<^item> 50-51: Enters Structural Extraction.
          Elim-rules \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A'\<close> having a priority greater than 52,
          will be applied before Structural Extraction, and those less than 50,
          will only be applied in the backtrack of the Structural Extraction.
+         Enters \<open>Identity_Element\<^sub>I\<^sub>&\<^sub>E\<close>
 \<^item> 12: Instantiate existentially quantified variables in the target part;
       Divergence for additive disjunction in the target part
 \<close>
@@ -421,6 +422,11 @@ lemma [\<phi>reason 4000]:
   for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding REMAINS_def Action_Tag_def by simp
 
+lemma [\<phi>reason 4001]:
+  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> () \<Ztypecolon> \<circle> \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] X\<close>
+  for X :: \<open>'a::sep_magma_1 BI\<close>
+  unfolding REMAINS_def Action_Tag_def by simp
+
 \<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> P\<close> 4005 ( \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> |
                                                        \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _\<close> ) = \<open>
   fn (_, (ctxt,thm)) => Seq.single (ctxt, NToA_to_wild_card ctxt thm)
@@ -538,7 +544,7 @@ ML \<open>fun ToA_ex_intro_reasoning (ctxt,sequent) =
    in SOME ((ctxt, rule0 RS sequent), Seq.empty)
   end\<close>
 
-\<phi>reasoner_ML ToA_ex_intro !10 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>)
+\<phi>reasoner_ML ToA_ex_intro default ! 10 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>)
   = \<open>fn stat => Seq.make (fn () => ToA_ex_intro_reasoning (snd stat))\<close>
 
 lemma [\<phi>reason 2800]:
@@ -1136,14 +1142,14 @@ lemma [\<phi>reason 0]:
 
 subsection \<open>Step-by-Step Searching Procedure\<close>
 
-lemma [\<phi>reason default ! 50 for \<open>(_ :: ?'a::sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason no explorative backtrack ! 900 for \<open>(_ :: ?'a::sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * _ \<w>\<i>\<t>\<h> _\<close>]:
   " R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R1 \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<Longrightarrow> R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 \<w>\<i>\<t>\<h> P2)
 \<Longrightarrow> R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 * X \<w>\<i>\<t>\<h> P1 \<and> P2"
   unfolding Action_Tag_def REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
   by clarsimp blast
 
-lemma [\<phi>reason default ! 50]:
+lemma [\<phi>reason no explorative backtrack ! 900]:
   " R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R1 \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<Longrightarrow> R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' \<w>\<i>\<t>\<h> P2)
 \<Longrightarrow> R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 * X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' \<w>\<i>\<t>\<h> P1 \<and> P2"
@@ -1152,6 +1158,7 @@ lemma [\<phi>reason default ! 50]:
   by (cases C; clarsimp; metis sep_disj_multD2 sep_disj_multI2 sep_mult_assoc')
 
 lemma [\<phi>reason default ! 45 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_ :: ?'a :: sep_semigroup set) \<w>\<i>\<t>\<h> _\<close>]:
+  \<comment> \<open>must be lower than the entry point of Separation Extraction\<close>
   \<open> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q \<close>
@@ -1281,35 +1288,35 @@ subsection \<open>Entry Point of Next Procedures\<close>
 text \<open>The entry point of Structural Extraction is given in the section for SE.
       It covers all the form of \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T\<close> and \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>\<close>
 
-lemma [\<phi>reason default 50]:
+lemma [\<phi>reason default ! 50]:
   \<open> Identity_Element\<^sub>I X P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P \<close>
   unfolding Identity_Element\<^sub>I_def .
 
-lemma [\<phi>reason default 51 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<circle> \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason default ! 51 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<circle> \<w>\<i>\<t>\<h> _\<close>]:
   \<open> Identity_Element\<^sub>I X P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> () \<Ztypecolon> \<circle> \<w>\<i>\<t>\<h> P \<close>
   unfolding Identity_Element\<^sub>I_def
   by simp
 
-lemma [\<phi>reason default 50 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<circle> \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason default ! 50]:
   \<open> Identity_Element\<^sub>I X P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<circle> \<w>\<i>\<t>\<h> P \<close>
   unfolding Identity_Element\<^sub>I_def
   by simp
 
-lemma [\<phi>reason default 50]:
+lemma [\<phi>reason default ! 50]:
   \<open> Identity_Element\<^sub>E X
 \<Longrightarrow> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<close>
   unfolding Identity_Element\<^sub>E_def .
 
-lemma [\<phi>reason default 51 for \<open>_ \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason default ! 51 for \<open>_ \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> Identity_Element\<^sub>E X
 \<Longrightarrow> () \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<close>
   unfolding Identity_Element\<^sub>E_def
   by simp
 
-lemma [\<phi>reason default 50 for \<open>_ \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason default ! 50]:
   \<open> Identity_Element\<^sub>E X
 \<Longrightarrow> x \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<close>
   unfolding Identity_Element\<^sub>E_def
@@ -1969,12 +1976,25 @@ lemma [\<phi>reason default 1]: \<comment> \<open>Structural_Extract_fail\<close
   unfolding \<phi>None_itself_is_one Action_Tag_def Attempt_Fallback_def
   by (cases x; simp add: mult.commute \<phi>Prod_expn')
 
-lemma [\<phi>reason default 2]:
+lemma [\<phi>reason default 2 for \<open>Attempt_Fallback ((_,_) \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @action \<A>SE)\<close>]:
+  \<open> Attempt_Fallback ((x,y) \<Ztypecolon> X \<^emph> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, x) \<Ztypecolon> Y \<^emph> X @action \<A>SE) \<close>
+  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
+  unfolding \<phi>None_itself_is_one Action_Tag_def Attempt_Fallback_def
+  by (simp add: mult.commute \<phi>Prod_expn')
+
+lemma [\<phi>reason default 3]:
   \<open> Attempt_Fallback (x \<Ztypecolon> X \<^emph> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, fst x) \<Ztypecolon> Y \<^emph> X \<w>\<i>\<t>\<h> Auto_Transform_Hint (y' \<Ztypecolon> Y' \<^emph> X') (x' \<Ztypecolon> X' \<^emph> Y') \<and> True @action \<A>SE) \<close>
   for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close> and X' :: \<open>('a'::sep_ab_semigroup,'b') \<phi>\<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   unfolding \<phi>None_itself_is_one Action_Tag_def Attempt_Fallback_def
   by (cases x; simp add: mult.commute \<phi>Prod_expn')
+
+lemma [\<phi>reason default 4 for \<open>Attempt_Fallback ((_,_) \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> Auto_Transform_Hint _ _ \<and> _ @action \<A>SE)\<close>]:
+  \<open> Attempt_Fallback ((x,y) \<Ztypecolon> X \<^emph> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, x) \<Ztypecolon> Y \<^emph> X \<w>\<i>\<t>\<h> Auto_Transform_Hint (y' \<Ztypecolon> Y' \<^emph> X') (x' \<Ztypecolon> X' \<^emph> Y') \<and> True @action \<A>SE) \<close>
+  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close> and X' :: \<open>('a'::sep_ab_semigroup,'b') \<phi>\<close>
+  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
+  unfolding \<phi>None_itself_is_one Action_Tag_def Attempt_Fallback_def
+  by (simp add: mult.commute \<phi>Prod_expn')
  
 lemma [\<phi>reason default 1]: \<comment> \<open>Structural_Extract_fail\<close>
   \<open> x \<Ztypecolon> X \<^emph> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, fst x) \<Ztypecolon> Y \<^emph> X @action \<A>SE \<close>
@@ -1982,12 +2002,25 @@ lemma [\<phi>reason default 1]: \<comment> \<open>Structural_Extract_fail\<close
   unfolding \<phi>None_itself_is_one Action_Tag_def
   by (cases x; simp add: mult.commute \<phi>Prod_expn')
 
-lemma [\<phi>reason default 2]:
+lemma [\<phi>reason default 2 for \<open>(_,_) \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ @action \<A>SE\<close>]: \<comment> \<open>Structural_Extract_fail\<close>
+  \<open> (x,y) \<Ztypecolon> X \<^emph> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, x) \<Ztypecolon> Y \<^emph> X @action \<A>SE \<close>
+  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
+  unfolding \<phi>None_itself_is_one Action_Tag_def
+  by (simp add: mult.commute \<phi>Prod_expn')
+
+lemma [\<phi>reason default 3]:
   \<open> x \<Ztypecolon> X \<^emph> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, fst x) \<Ztypecolon> Y \<^emph> X \<w>\<i>\<t>\<h> Auto_Transform_Hint (y' \<Ztypecolon> Y' \<^emph> X') (x' \<Ztypecolon> X' \<^emph> Y') \<and> True @action \<A>SE \<close>
   for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close> and X' :: \<open>('a'::sep_ab_semigroup,'b') \<phi>\<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   unfolding \<phi>None_itself_is_one Action_Tag_def
   by (cases x; simp add: mult.commute \<phi>Prod_expn')
+
+lemma [\<phi>reason default 4 for \<open>(_,_) \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> Auto_Transform_Hint _ _ \<and> _ @action \<A>SE\<close>]:
+  \<open> (x,y) \<Ztypecolon> X \<^emph> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, x) \<Ztypecolon> Y \<^emph> X \<w>\<i>\<t>\<h> Auto_Transform_Hint (y' \<Ztypecolon> Y' \<^emph> X') (x' \<Ztypecolon> X' \<^emph> Y') \<and> True @action \<A>SE \<close>
+  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close> and X' :: \<open>('a'::sep_ab_semigroup,'b') \<phi>\<close>
+  unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
+  unfolding \<phi>None_itself_is_one Action_Tag_def
+  by (simp add: mult.commute \<phi>Prod_expn')
 
 
 subsubsection \<open>Non-unital Semigroup\<close>
@@ -2083,15 +2116,40 @@ lemma [\<phi>reason 1000]:
   unfolding \<A>SE_trim\<^sub>I_def
   by simp
 
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>I (x,(r,())) (R \<^emph> \<circle>) (x,r) R True\<close>
+  for R :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>I_def
+  by (simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>I (x,((),r)) (\<circle> \<^emph> R) (x,r) R True\<close>
+  for R :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>I_def
+  by (simp add: \<phi>Prod_expn')
+
 lemma [\<phi>reason default 1]:
   \<open> \<A>SE_trim\<^sub>I_TH y R y R True R\<^sub>H R\<^sub>H \<close>
   unfolding \<A>SE_trim\<^sub>I_TH_def Auto_Transform_Hint_def HOL.simp_thms(22)
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> \<A>SE_trim\<^sub>I_TH (x,y) \<circle> (x, ()) \<circle> True R\<^sub>H R\<^sub>H \<close>
+  \<open> \<A>SE_trim\<^sub>I_TH (x,y) \<circle> (x, ()) \<circle> True \<circle> \<circle> \<close>
   unfolding \<A>SE_trim\<^sub>I_TH_def
   by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>I_TH (x,(r,())) (R \<^emph> \<circle>) (x,r) R True (\<circle> \<^emph> R\<^sub>H) R\<^sub>H\<close>
+  for R :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>I_TH_def
+  by (simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>I_TH (x,(r,())) (R \<^emph> \<circle>) (x,r) R True (R\<^sub>H \<^emph> \<circle>) R\<^sub>H\<close>
+  for R :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>I_TH_def
+  by (simp add: \<phi>Prod_expn')
+
 
 lemma [\<phi>reason default 1]:
   \<open> \<A>SE_trim\<^sub>E x W x W \<close>
@@ -2103,15 +2161,64 @@ lemma [\<phi>reason 1000]:
   unfolding \<A>SE_trim\<^sub>E_def
   by simp
 
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>E (fst xw,(snd xw,())) (W \<^emph> \<circle>) xw W \<close>
+  for W :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>E_def
+  by (cases xw; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1010]:
+  \<open> \<A>SE_trim\<^sub>E (x,(w,())) (W \<^emph> \<circle>) (x,w) W \<close>
+  for W :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>E_def
+  by (simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>E (fst xw,((), snd xw)) (\<circle> \<^emph> W) xw W \<close>
+  for W :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>E_def
+  by (cases xw; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1010]:
+  \<open> \<A>SE_trim\<^sub>E (x,((),w)) (\<circle> \<^emph> W) (x,w) W \<close>
+  for W :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>E_def
+  by (simp add: \<phi>Prod_expn')
+
+
 lemma [\<phi>reason default 1]:
   \<open> \<A>SE_trim\<^sub>E_TH x W x W W\<^sub>H W\<^sub>H \<close>
   unfolding \<A>SE_trim\<^sub>E_TH_def Auto_Transform_Hint_def HOL.simp_thms(22)
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> \<A>SE_trim\<^sub>E_TH (x,()) \<circle> (x,()) \<circle> W\<^sub>H W\<^sub>H \<close>
+  \<open> \<A>SE_trim\<^sub>E_TH (x,()) \<circle> (x,()) \<circle> \<circle> \<circle> \<close>
   unfolding \<A>SE_trim\<^sub>E_TH_def Auto_Transform_Hint_def HOL.simp_thms(22)
   by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>E_TH (fst xw,((), snd xw)) (\<circle> \<^emph> W) xw W W\<^sub>H (\<circle> \<^emph> W\<^sub>H)\<close>
+  for W :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>E_TH_def
+  by (cases xw; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1010]:
+  \<open> \<A>SE_trim\<^sub>E_TH (x,((),w)) (\<circle> \<^emph> W) (x,w) W W\<^sub>H (\<circle> \<^emph> W\<^sub>H)\<close>
+  for W :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>E_TH_def
+  by (simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1000]:
+  \<open> \<A>SE_trim\<^sub>E_TH (fst xw,(snd xw,())) (W \<^emph> \<circle>) xw W W\<^sub>H (W\<^sub>H \<^emph> \<circle>)\<close>
+  for W :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>E_TH_def
+  by (cases xw; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason 1010]:
+  \<open> \<A>SE_trim\<^sub>E_TH (x,(w,())) (W \<^emph> \<circle>) (x,w) W W\<^sub>H (W\<^sub>H \<^emph> \<circle>)\<close>
+  for W :: \<open>'b \<Rightarrow> 'c::sep_magma_1 set\<close>
+  unfolding \<A>SE_trim\<^sub>E_TH_def
+  by (simp add: \<phi>Prod_expn')
 
 
 
