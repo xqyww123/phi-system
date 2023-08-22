@@ -8,7 +8,7 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-val guess_property = guess_property__abst_domain (fn (x,m) => \<^Const>\<open>Carrier_Set x m\<close>, \<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier_set\<close>)
+val guess_property = guess_property__abst_domain (fn (x,m) => \<^Const>\<open>Carrier_Set x m\<close>, \<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier\<close>)
 
 fun gen_carrier_set (_,name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy

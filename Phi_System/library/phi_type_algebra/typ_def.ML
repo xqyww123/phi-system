@@ -61,7 +61,9 @@ type priority = int
 type deriver_name = string
 type is_weak = bool
 type quiet = bool (*report nothing even when fail*)
-type derive = phi_type -> generic_theory -> generic_theory
+type deriving_ctxt = Proof.context (*the context used for deriving rules, which may be prepared
+        specially with user configurations*)
+type derive = deriving_ctxt -> phi_type -> generic_theory -> generic_theory
 type deriver = {
   priority: priority,
   dependences: (deriver_name * is_weak) list,
@@ -95,7 +97,7 @@ val complete_deriver_dependences : Context.generic -> derivings -> derivings
 
 val report_potential_failure_reason : (unit -> Pretty.T) list -> unit
 (*no need to call it manually. It is invoked by `add_type` *)
-val derive_properties : derivings -> phi_type -> generic_theory -> generic_theory
+val derive_properties : deriving_ctxt -> derivings -> phi_type -> generic_theory -> generic_theory
 
 (* Derived Properties *)
 
@@ -118,7 +120,7 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 (** Define \<phi>-Type and invoke derivings **)
 
 structure Defining_Phi_Type : HOOKS (*invoked before any deriving*)
-val add_type : def * Position.T * derivings -> generic_theory -> phi_type * generic_theory
+val add_type : deriving_ctxt -> def * Position.T * derivings -> generic_theory -> phi_type * generic_theory
 
 (** Tools **)
 
@@ -150,9 +152,13 @@ val fix_phi_term_params : term -> Proof.context ->
 val raw_term_name_typ : term -> string * typ
 val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*x*) * typ (*concrete*)
 
+(* Auxiliaries *)
+
+val open_proof_ctxt : Bundle.name list -> Context.generic -> Proof.context
+
 (* Internal Technical stuffs *)
 
-val ML_sender : (quiet -> hint list -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
+val ML_sender : (quiet -> hint list -> derive) option Unsynchronized.ref
 
 end
 
@@ -162,6 +168,12 @@ end
 structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
 
 open Phi_Type_Algebra
+
+(** Library **)
+
+fun open_proof_ctxt bundles generic =
+  Context.proof_of generic
+    |> not (null bundles) ? Bundle.includes bundles
 
 (*** \<phi>-Type Definition \& Infos ***)
 
@@ -351,7 +363,8 @@ fun fix_phi_term_params phi_term ctxt =
 
 type priority = int
 type deriver_name = string
-type derive = phi_type -> generic_theory -> generic_theory
+type deriving_ctxt = Proof.context
+type derive = deriving_ctxt -> phi_type -> generic_theory -> generic_theory
 type is_weak = bool
 type quiet = bool
 type deriver = {
@@ -480,12 +493,12 @@ fun report_potential_failure_reason G =
     of SOME L => Thread_Data.put reason_of_deriving_fails (SOME (G @ L))
      | NONE => ()
 
-fun derive_properties dervs phityp thy = thy
+fun derive_properties ctxt_derv dervs phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
-  |> Derivings.fold (fn ((_,name),(hints,derv,is_weak)) => fn ctxt => (
+  |> Derivings.fold (fn ((_,name),(hints,derv,is_weak)) => fn thy'goal => (
       Thread_Data.put reason_of_deriving_fails (SOME []) ;
-      #derive derv is_weak hints phityp ctxt
+      #derive derv is_weak hints ctxt_derv phityp thy'goal
       handle Automation_Fail msg => err_derive name (msg ()) hints)
      ) dervs
   |> Context_Position.restore_visible_generic thy
@@ -603,7 +616,7 @@ fun check_deriving_ast ctxt derv_ast =
 (* Interface for Deriver *)
 
 val ML_sender_locker = Synchronized.var "\<phi>TA.ML_sender_locker" ()
-val ML_sender : (quiet -> hint list -> phi_type -> generic_theory -> generic_theory) option Unsynchronized.ref
+val ML_sender : (quiet -> hint list -> derive) option Unsynchronized.ref
   = Unsynchronized.ref NONE
 
 val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |--
@@ -625,7 +638,7 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
                        in (ret, ML_sender := NONE)
                       end)
                 end
-              | NONE => K (K (K I))
+              | NONE => K (K (K (K I)))
        val deriver = {
           priority = priority,
           dependences = map (apfst (fst o check_deriver (Context.Theory thy))) deps,
@@ -739,9 +752,9 @@ structure Defining_Phi_Type = Hooks(
 
 val refine_typeq = @{lemma \<open>(\<And>x. (x \<Ztypecolon> T) = (x \<Ztypecolon> U)) \<Longrightarrow> T = U\<close> by (rule \<phi>Type_eqI, simp)}
 
-fun add_type (def, pos, dervs) generic =
-  let val ctxt = Context.proof_of generic
-      val (idx,(name_ty,term)) =
+(*ctxt: the context used to derive properties*)
+fun add_type ctxt (def, pos, dervs) thy =
+  let val (idx,(name_ty,term)) =
            (case def of DIRECT_DEF (lhs, _) =>
                           (case Term.head_of lhs of X as Const name_ty => (~1, (name_ty, X))
                                                   | X as Free name_ty => (~1, (name_ty, X))
@@ -874,7 +887,7 @@ fun add_type (def, pos, dervs) generic =
       val proof_id =
         case term of Const _ => fst name_ty
            | Free _ =>
-              Context.cases Sign.full_name Local_Theory.full_name generic (Binding.name (fst name_ty))
+              Context.cases Sign.full_name Local_Theory.full_name thy (Binding.name (fst name_ty))
 
       val the_term = chk_zero_index_term term
       val _ = case the_term of Const _ => ()
@@ -892,7 +905,7 @@ fun add_type (def, pos, dervs) generic =
             is_recursive = is_recursive,
             is_impredicative = false
           } : phi_type
-   in generic
+   in thy
    |> Context.mapping
         (Context.theory_map (Phi_Types.map (Symtab.update_new (fst name_ty, phi_trim_context phi_type))))
         (Local_Theory.declaration {syntax=false, pervasive=false} (fn m =>
@@ -915,10 +928,22 @@ fun add_type (def, pos, dervs) generic =
          (expansionN, expansions)])
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)
-   |> Defining_Phi_Type.invoke generic phi_type
-   |> derive_properties dervs phi_type
-   |> Context_Position.restore_visible_generic generic
+   |> Defining_Phi_Type.invoke (Context.Proof ctxt) phi_type
+   |> derive_properties ctxt dervs phi_type
+   |> Context_Position.restore_visible_generic thy
    |> pair phi_type
+  end
+
+fun prep_deriving_and_ctxt raw_bundles raw_derv ctxt =
+  let val bundles = map (Bundle.check ctxt) raw_bundles
+      val ctxt'1 = Bundle.includes bundles ctxt
+      val dervs = check_deriving_ast (Context.Proof ctxt'1) raw_derv
+   in (dervs, ctxt'1)
+  end
+
+fun add_type_i (def, pos, raw_derv, raw_bundles) thy =
+  let val (dervs, ctxt_derv) = prep_deriving_and_ctxt raw_bundles raw_derv (Context.proof_of thy)
+   in add_type ctxt_derv (def, pos, dervs) thy
   end
 
 (** Interface **)
@@ -941,6 +966,7 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
    in (inst', phi, ctxt)
   end
 
+val bundle_parser = \<^keyword>\<open>includes\<close> |-- Scan.repeat1 Parse.name_position
 
 local
 
@@ -970,7 +996,7 @@ fun is_phi_type \<^Type>\<open>fun _ \<open>\<^Type>\<open>set _\<close>\<close>
   | is_phi_type \<^Type>\<open>fun _ T\<close> = is_phi_type T
   | is_phi_type _ = false
 
-fun gen_add_fun pos derv_ast add (generic : generic_theory) =
+fun gen_add_fun pos raw_derv raw_bundles add (thy : generic_theory) =
   let
     fun pat_completeness_auto ctxt =
       Pat_Completeness.pat_completeness_tac ctxt 1
@@ -981,16 +1007,15 @@ fun gen_add_fun pos derv_ast add (generic : generic_theory) =
         raise (ERROR (s ^ "\n\
           \Fail to show the termination automatically. \
           \May use command \<open>\<phi>type_definition\<close> to prove the termination manually"))
-    val (info, generic'1) = add pat_completeness_auto generic
+    val (info, thy'1) = add pat_completeness_auto thy
     val const = find_first (is_phi_type o Term.fastype_of) (#fs info)
               |> (fn SOME x => x
                    | NONE => error "No \<phi>-type is defined.")
-    val dervs = check_deriving_ast generic'1 derv_ast
-   in generic'1
+   in thy'1
    |> Context.mapping_result (
         Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
       ) prove_termination
-   |-> (fn info => add_type (WFREC_DEF (fst (raw_term_name_typ const), info), pos, dervs) #> snd)
+   |-> (fn info => add_type_i (WFREC_DEF (fst (raw_term_name_typ const), info), pos, raw_derv, raw_bundles) #> snd)
   end
 
 fun add_function_cmd a b c tac int lthy = lthy
@@ -1002,8 +1027,8 @@ fun add_function_cmd a b c tac int lthy = lthy
 in
 
 (* fun add_fun a b c = gen_add_fun (Function.add_function a b c) *)
-fun add_fun_cmd a b c hints int generic =
-  gen_add_fun (Binding.pos_of (#1 (hd a))) hints
+fun add_fun_cmd a b c raw_derv raw_bundles int generic =
+  gen_add_fun (Binding.pos_of (#1 (hd a))) raw_derv raw_bundles
     (fn tac =>
         Context.mapping_result
           (Named_Target.theory_map_result Function_Common.transform_function_data
@@ -1012,19 +1037,22 @@ fun add_fun_cmd a b c hints int generic =
 
 end
 
-fun let_phityp_deriving_cmd ((raw_const_name,pos), deriving_ast) thy =
-  let val Const (const_name, _) =
-            Proof_Context.read_const {proper=false, strict=false} (Context.proof_of thy) raw_const_name
+fun let_phityp_deriving_cmd (((raw_const_name, pos), raw_bundles), raw_derv) thy =
+  let val ctxt = Context.proof_of thy
+      val Const (const_name, _) = Proof_Context.read_const {proper=false, strict=false} ctxt raw_const_name
       val phi = case get_type_info thy const_name
                   of SOME phi => phi
                    | NONE => error ("No \<phi>-type named "^ const_name ^ " found")
-      val derivings = check_deriving_ast thy deriving_ast
-   in derive_properties derivings phi thy
+      val (derivings, ctxt_derv) = prep_deriving_and_ctxt raw_bundles raw_derv ctxt
+   in derive_properties ctxt_derv derivings phi thy
   end
 
 
-val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config -- deriving_parser
-      >> (fn ((config, (fixes, specs)), algebras) => add_fun_cmd fixes specs config algebras))
+val def_by_fun = (Function_Common.function_parser Function_Fun.fun_config
+               -- bundle_parser
+               -- deriving_parser
+      >> (fn (((config, (fixes, specs)), raw_bundles), raw_dervs) =>
+                add_fun_cmd fixes specs config raw_dervs raw_bundles))
 
 val def_by_function = (Function_Common.function_parser Function_Common.default_config
       >> (fn (config, (fixes, specs)) => Function.function_cmd fixes specs config))
@@ -1036,16 +1064,18 @@ fun my_definition decl params prems spec int lthy = lthy
   |> Specification.definition_cmd decl params prems spec int
 
 val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec.opt_thm_name ":" -- Parse.prop) --
-      Parse_Spec.if_assumes -- Parse.for_fixes -- deriving_parser
-        -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ()))
-   >> (fn (((((decl, (spec, pos)), prems), params), deriving), _) => fn int =>
+      Parse_Spec.if_assumes -- Parse.for_fixes
+        -- bundle_parser
+        -- deriving_parser
+        -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ())) (*to distinguish with the `def_by_fun` syntax*)
+   >> (fn ((((((decl, (spec, pos)), prems), params), raw_bundles), raw_dervs), _) => fn int =>
         Context.mapping_result
           (Named_Target.theory_map_result (fn m => fn (tm, (name, def)) =>
                     (Morphism.term m tm, (name, Morphism.thm m def)))
                 (my_definition decl params prems spec int))
           (my_definition decl params prems spec int)
            #> (fn (def, generic) =>
-                add_type (DIRECT_DEF def, pos, check_deriving_ast generic deriving) generic |> snd)
+                add_type_i (DIRECT_DEF def, pos, raw_dervs, raw_bundles) generic |> snd)
         ))
 in
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "define \<phi>-types"
@@ -1053,7 +1083,8 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "d
               Toplevel.theory' (fn int => Context.theory_map (f int)) Toplevel.no_presentation))
 
 val _ = Outer_Syntax.command \<^command_keyword>\<open>let_\<phi>type\<close> "derive properties of existing \<phi>-types"
-          ((Parse.position Parse.const -- deriving_parser) >> (fn const_deriving =>
+          ((Parse.position Parse.const -- bundle_parser -- deriving_parser)
+            >> (fn const_deriving =>
               Toplevel.theory (Context.theory_map (let_phityp_deriving_cmd const_deriving))))
 
 end

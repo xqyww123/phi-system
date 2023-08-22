@@ -276,16 +276,23 @@ qed
 
 subsection \<open>Carrier Set of Separation Algebra\<close>
 
-definition Within_Carrier_Set :: \<open>'c::sep_carrier_set set \<Rightarrow> bool\<close>
+definition Within_Carrier_Set :: \<open>'c::sep_carrier set \<Rightarrow> bool\<close>
   where \<open>Within_Carrier_Set A \<longleftrightarrow> (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v)\<close>
 
-definition Carrier_Set :: \<open>('c::sep_carrier_set,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+definition Carrier_Set :: \<open>('c::sep_carrier,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Carrier_Set T D \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> Within_Carrier_Set (x \<Ztypecolon> T))\<close>
 
 declare [[\<phi>reason_default_pattern
       \<open>Within_Carrier_Set ?A\<close> \<Rightarrow> \<open>Within_Carrier_Set ?A\<close> (100)
   and \<open>Carrier_Set ?T _\<close> \<Rightarrow> \<open>Carrier_Set ?T _\<close> (100)
 ]]
+
+subsubsection \<open>General Rules\<close>
+
+lemma prem_extract_Carrier_Set:
+  \<open>Carrier_Set T D \<equiv> (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) \<and> True\<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def atomize_eq
+  by (rule; clarsimp)
 
 subsubsection \<open>Rules for Logical Connectives\<close>
 
@@ -375,7 +382,7 @@ lemma [\<phi>reason 1000]:
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open>Carrier_Set (\<circle> :: ('c::sep_carrier_set_1, unit) \<phi>) (\<lambda>_. True)\<close>
+  \<open>Carrier_Set (\<circle> :: ('c::sep_carrier_1, unit) \<phi>) (\<lambda>_. True)\<close>
   unfolding Carrier_Set_def Within_Carrier_Set_def
   by clarsimp
 

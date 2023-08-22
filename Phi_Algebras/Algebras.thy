@@ -137,16 +137,16 @@ text \<open>Usually, we extend the carrier set of the partial algebra to the tot
   but an exception is in semimodule structures where a notion of carrier set is required, so we
   give this below.\<close>
 
-class mul_carrier_set =
+class mul_carrier =
   fixes mul_carrier :: \<open>'a \<Rightarrow> bool\<close>
 
 (*
-class extended_partial_mul_algebra = mul_carrier_set + sep_disj +
+class extended_partial_mul_algebra = mul_carrier + sep_disj +
   \<comment> \<open>characterizes the partial algebras extended to the universe carrier set\<close>
   assumes sep_disj_gives_carrier: \<open>a ## b \<Longrightarrow> mul_carrier a \<and> mul_carrier b\<close>
 *)
 
-class sep_carrier_set = mul_carrier_set + sep_magma +
+class sep_carrier = mul_carrier + sep_magma +
   assumes mul_carrier_closed: \<open> \<lbrakk> mul_carrier a; mul_carrier b; a ## b \<rbrakk> \<Longrightarrow> mul_carrier (a * b) \<close>
 
 class sep_refl = sep_magma +
@@ -201,11 +201,11 @@ class sep_magma_0 = sep_magma_1 + mult_zero + zero_neq_one +
   assumes sep_magma_0_left  [simp]: "x ## 0 \<longleftrightarrow> x = 1"
   assumes sep_magma_0_right [simp]: "0 ## x \<longleftrightarrow> x = 1"
 
-class sep_carrier_set_1 = sep_carrier_set + sep_magma_1 +
-  assumes sep_carrier_set_1[simp]: \<open>mul_carrier 1\<close>
+class sep_carrier_1 = sep_carrier + sep_magma_1 +
+  assumes sep_carrier_1[simp]: \<open>mul_carrier 1\<close>
 
-class sep_carrier_set_0 = sep_carrier_set + sep_magma_0 +
-  assumes sep_carrier_set_0[simp]: \<open>mul_carrier 0\<close>
+class sep_carrier_0 = sep_carrier + sep_magma_0 +
+  assumes sep_carrier_0[simp]: \<open>mul_carrier 0\<close>
 
 class sep_no_inverse = sep_magma_1 +
   assumes sep_no_inverse[simp]: \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
@@ -464,7 +464,16 @@ end
 class share_one_eq_one_iff = share_one +
   assumes share_one_eq_one_iff[simp]: \<open>0 < n \<Longrightarrow> share n x = 1 \<longleftrightarrow> x = 1\<close>
 
-class share_sep_disj = share + comm_sep_disj + sep_carrier_set +
+class share_carrier = sep_carrier + share +
+  assumes share_carrier_closed: \<open>0 < n \<Longrightarrow> mul_carrier x \<Longrightarrow> mul_carrier (share n x)\<close>
+
+class share_carrier_1 = sep_carrier_1 + share_one +
+  assumes share_carrier_closed_1: \<open>0 \<le> n \<Longrightarrow> mul_carrier x \<Longrightarrow> mul_carrier (share n x)\<close>
+begin
+subclass share_carrier by (standard; simp add: share_carrier_closed_1)
+end
+
+class share_sep_disj = share + comm_sep_disj + sep_carrier +
   assumes share_sep_disj_left[simp]: \<open>0 < n \<Longrightarrow> share n x ## y \<longleftrightarrow> x ## y\<close>
           \<comment> \<open>the share operation is independent with sep_disj. The multiplication defined between
               two elements are also defined on their shared portions. \<close>
@@ -481,13 +490,13 @@ lemma share_sep_disj_right[simp]:
 
 end
 
-class share_nun_semimodule = share_sep_disj + sep_ab_semigroup + sep_carrier_set +
+class share_nun_semimodule = share_sep_disj + sep_ab_semigroup + share_carrier +
       \<comment>\<open>nun stands for non-unital\<close>
   assumes share_sep_left_distrib_0:  \<open> \<lbrakk> 0 < n ; 0 < m ; mul_carrier x \<rbrakk> \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
 
-class share_semimodule = share_sep_disj + share_one + sep_algebra + sep_carrier_set_1 +
+class share_semimodule = share_sep_disj + share_one + sep_algebra + share_carrier_1 +
   assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
@@ -522,6 +531,17 @@ end
 
 
 subsection \<open>Homomorphisms\<close>
+
+locale homo_mul_carrier =
+  fixes \<psi> :: \<open>'a::mul_carrier \<Rightarrow> 'b::mul_carrier\<close>
+  assumes homo_mul_carrier: \<open>mul_carrier x \<Longrightarrow> mul_carrier (\<psi> x)\<close>
+
+lemma homo_mul_carrier_comp:
+  \<open> homo_mul_carrier g
+\<Longrightarrow> homo_mul_carrier f
+\<Longrightarrow> homo_mul_carrier (f o g)\<close>
+  unfolding homo_mul_carrier_def
+  by clarsimp
 
 locale homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
@@ -1019,7 +1039,7 @@ text \<open>The right distributivity of a module forms a homomorphism over the g
   so we don't cover it here.\<close>
 
 locale module_for_sep =
-  fixes smult :: \<open>'s \<Rightarrow> ('a::sep_carrier_set) \<Rightarrow> 'a\<close>
+  fixes smult :: \<open>'s \<Rightarrow> ('a::sep_carrier) \<Rightarrow> 'a\<close>
     and Ds :: \<open>'s \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the scalars\<close>
 
 text \<open>It seems there is not a standard definition for modules on partial rings.
@@ -1048,22 +1068,22 @@ locale module_scalar_zero = module_for_sep +
   assumes module_scalar_zero: \<open>smult 0 a = 1\<close>
 
 lemma module_scalar_identity_share[simp]:
-  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::{sep_carrier_set, share} \<Rightarrow> 'a)\<close>
+  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::{sep_carrier, share} \<Rightarrow> 'a)\<close>
   unfolding module_scalar_identity_def
   by simp
 
 lemma module_scalar_zero_share[simp]:
-  \<open>module_scalar_zero (share :: rat \<Rightarrow> 'a::{sep_carrier_set, share_one} \<Rightarrow> 'a)\<close>
+  \<open>module_scalar_zero (share :: rat \<Rightarrow> 'a::{sep_carrier, share_one} \<Rightarrow> 'a)\<close>
   unfolding module_scalar_zero_def
   by simp
 
 lemma module_scalar_assoc_share0[simp]:
-  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::{sep_carrier_set, share} \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
+  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::{sep_carrier, share} \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
   unfolding module_scalar_assoc_def
   by (simp add: share_share_assoc0)
 
 lemma module_scalar_assoc_share[simp]:
-  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::{sep_carrier_set, share_one} \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
+  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::{sep_carrier, share_one} \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
   unfolding module_scalar_assoc_def
   by (simp add: share_share)
 
@@ -1094,6 +1114,11 @@ section \<open>Instances of Algebras\<close>
 are not settled down properly.*)
 
 subsection \<open>Identity\<close>
+
+lemma homo_mul_carrier_id:
+  \<open>homo_mul_carrier (\<lambda>x. x)\<close>
+  unfolding homo_mul_carrier_def
+  by blast
 
 lemma closed_homo_sep_disj_id:
   \<open>closed_homo_sep_disj (\<lambda>x. x)\<close>
@@ -1194,7 +1219,7 @@ instance option :: ("{sep_disj,times}") sep_magma_1 proof
   show \<open>1 ## x\<close> by simp
 qed
 
-instantiation option :: (mul_carrier_set) mul_carrier_set begin
+instantiation option :: (mul_carrier) mul_carrier begin
 
 definition mul_carrier_option :: \<open>'a option \<Rightarrow> bool\<close>
   where \<open>mul_carrier_option = pred_option mul_carrier \<close>
@@ -1209,7 +1234,7 @@ instance ..
 
 end
 
-instance option :: (sep_carrier_set) sep_carrier_set
+instance option :: (sep_carrier) sep_carrier
   by (standard; case_tac a; case_tac b; simp add: mul_carrier_closed)
 
 instance option :: (positive_sep_magma) positive_sep_magma_1 proof
@@ -1225,7 +1250,7 @@ instance option :: (positive_sep_magma) positive_sep_magma_1 proof
       by (metis join_positivity join_sub_def) .
 qed
 
-instance option :: (sep_carrier_set) sep_carrier_set_1 by (standard; simp)
+instance option :: (sep_carrier) sep_carrier_1 by (standard; simp)
 
 instance option :: (sep_semigroup) sep_monoid proof
   fix x y z :: \<open>'a option\<close>
@@ -1296,6 +1321,8 @@ instance proof
     by (case_tac x; clarsimp simp add: share_option_def share_sep_left_distrib_0 order_less_le)
   show \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (case_tac x; case_tac y; clarsimp simp add: share_option_def share_sep_right_distrib_0)
+  show \<open>0 \<le> n \<Longrightarrow> mul_carrier x \<Longrightarrow> mul_carrier (n \<odivr> x)\<close>
+    by (cases \<open>n=0\<close>; cases x; simp add: share_carrier_closed)
   show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
     unfolding join_sub_def apply (cases x; clarsimp simp add: share_option_def)
     apply (cases \<open>n = 1\<close>)
@@ -1428,7 +1455,7 @@ end
 instance prod :: (sep_magma,sep_magma) sep_magma ..
 
 
-instantiation prod :: (mul_carrier_set, mul_carrier_set) mul_carrier_set  begin
+instantiation prod :: (mul_carrier, mul_carrier) mul_carrier  begin
 
 definition mul_carrier_prod :: \<open>'a \<times> 'b \<Rightarrow> bool\<close>
   where \<open>mul_carrier_prod = pred_prod mul_carrier mul_carrier\<close>
@@ -1441,13 +1468,13 @@ instance ..
 
 end
 
-instance prod :: (sep_carrier_set, sep_carrier_set) sep_carrier_set
+instance prod :: (sep_carrier, sep_carrier) sep_carrier
   by (standard; clarsimp simp add: mul_carrier_closed)
 
 instance prod :: (sep_magma_1, sep_magma_1) sep_magma_1
   by (standard; simp add: one_prod_def split_paired_all)
 
-instance prod :: (sep_carrier_set_1, sep_carrier_set_1) sep_carrier_set_1
+instance prod :: (sep_carrier_1, sep_carrier_1) sep_carrier_1
   by (standard; simp add: one_prod_def)
 
 instance prod :: (sep_no_inverse, sep_no_inverse) sep_no_inverse
@@ -1577,7 +1604,7 @@ definition sep_disj_list :: \<open>'a list \<Rightarrow> 'a list \<Rightarrow> b
 instance by (standard; simp)
 end
 
-instantiation list :: (mul_carrier_set) mul_carrier_set begin
+instantiation list :: (mul_carrier) mul_carrier begin
 
 definition mul_carrier_list :: \<open>'a list \<Rightarrow> bool\<close>
   where [simp]: \<open>mul_carrier_list = list_all mul_carrier\<close>
@@ -1585,13 +1612,13 @@ definition mul_carrier_list :: \<open>'a list \<Rightarrow> bool\<close>
 instance ..
 end
 
-instance list :: (sep_carrier_set) sep_carrier_set
+instance list :: (sep_carrier) sep_carrier
   by (standard; simp add: times_list_def)
 
 instance list :: (type) sep_monoid
   by (standard; clarsimp simp add: times_list_def join_sub_def)
 
-instance list :: (sep_carrier_set_1) sep_carrier_set_1
+instance list :: (sep_carrier_1) sep_carrier_1
   by (standard; simp add: times_list_def)
 
 instance list :: (type) sep_disj_distrib by (standard; simp)
@@ -1725,7 +1752,7 @@ instance "fun" :: (type,sep_magma) sep_magma ..
 instance "fun" :: (type,sep_magma_1) sep_magma_1
  by (standard; simp add: sep_disj_fun_def)
 
-instantiation "fun" :: (type, mul_carrier_set) mul_carrier_set begin
+instantiation "fun" :: (type, mul_carrier) mul_carrier begin
 
 definition mul_carrier_fun :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
   where [simp]: \<open>mul_carrier_fun f = (\<forall>k. mul_carrier (f k))\<close>
@@ -1733,10 +1760,10 @@ definition mul_carrier_fun :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> bool\<c
 instance ..
 end
 
-instance "fun" :: (type, sep_carrier_set) sep_carrier_set
+instance "fun" :: (type, sep_carrier) sep_carrier
   by (standard; simp add: times_fun mul_carrier_closed)
 
-instance "fun" :: (type, sep_carrier_set_1) sep_carrier_set_1
+instance "fun" :: (type, sep_carrier_1) sep_carrier_1
   by (standard; simp)
 
 instance "fun" :: (type, sep_cancel) sep_cancel
@@ -1907,16 +1934,21 @@ instance "fun" :: (type,share_one_eq_one_iff) share_one_eq_one_iff
 instance "fun" :: (type, share_sep_disj) share_sep_disj
   by (standard; simp add: share_fun_def fun_eq_iff sep_disj_fun_def share_disj_sdistr)
 
-instantiation "fun" :: (type, share_semimodule) share_semimodule begin
-instance apply (standard; simp_all add: share_fun_def fun_eq_iff times_fun_def share_sep_left_distrib
-      sep_disj_fun_def share_sep_right_distrib join_sub_def)
-  subgoal premises prems for n x proof -
-    have t1: \<open>\<forall>a. share n (x a) \<preceq>\<^sub>S\<^sub>L (x a)\<close>
-      by (simp add: prems share_sub)
-    show ?thesis apply (insert t1; clarsimp simp add: join_sub_def)
-      by metis
-  qed .
-end
+instance "fun" :: (type, share_semimodule) share_semimodule
+proof
+  fix n m :: rat
+  and x y :: \<open>'a \<Rightarrow> 'b\<close>
+  show \<open>0 \<le> n \<Longrightarrow> mul_carrier x \<Longrightarrow> mul_carrier (n \<odivr> x)\<close>
+    by (clarsimp simp add: share_fun_def share_carrier_closed_1)
+  show \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> mul_carrier x \<Longrightarrow> n \<odivr> x * m \<odivr> x = (n + m) \<odivr> x\<close>
+    by (clarsimp simp add: share_fun_def fun_eq_iff times_fun_def share_sep_left_distrib)
+  show \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> n \<odivr> x * n \<odivr> y = n \<odivr> (x * y)\<close>
+    by (clarsimp simp add: share_fun_def fun_eq_iff times_fun_def share_sep_right_distrib)
+  have t1: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> \<forall>k. mul_carrier (x k) \<Longrightarrow> \<forall>a. share n (x a) \<preceq>\<^sub>S\<^sub>L (x a)\<close>
+    using share_sub by blast
+  then show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> n \<odivr> x \<preceq>\<^sub>S\<^sub>L x\<close>
+    by (clarsimp simp add: join_sub_def share_fun_def fun_eq_iff times_fun_def sep_disj_fun_def; metis)
+qed
 
 lemma share_fun_updt[simp]:
   \<open>share n (f(k := v)) = (share n f)(k := share n v)\<close>
@@ -1961,7 +1993,7 @@ end
 
 instance "fmap" :: (type,sep_magma) sep_magma ..
 
-instantiation "fmap" :: (type, sep_carrier_set) sep_carrier_set begin
+instantiation "fmap" :: (type, sep_carrier) sep_carrier begin
 
 context includes fmap.lifting begin
 lift_definition mul_carrier_fmap :: \<open>('a, 'b) fmap \<Rightarrow> bool\<close>
@@ -2020,7 +2052,7 @@ instance unit :: sep_no_inverse by standard simp_all
 
 instance unit :: sep_cancel by standard simp
 
-instantiation unit :: sep_carrier_set_1 begin
+instantiation unit :: sep_carrier_1 begin
 
 definition mul_carrier_unit :: \<open>unit \<Rightarrow> bool\<close> where [simp]: \<open>mul_carrier_unit x = True \<close>
 
@@ -2490,7 +2522,7 @@ end
 instance share :: (type) strict_positive_sep_magma
   by (standard; case_tac a; case_tac b; simp)
 
-instantiation share :: (mul_carrier_set) mul_carrier_set begin
+instantiation share :: (mul_carrier) mul_carrier begin
 
 definition mul_carrier_share :: \<open>'a share \<Rightarrow> bool\<close>
   where \<open>mul_carrier_share x = (case x of Share n x' \<Rightarrow> 0 < n \<and> mul_carrier x')\<close>
@@ -2504,7 +2536,7 @@ instance ..
 
 end
 
-instance share :: (sep_carrier_set) sep_carrier_set
+instance share :: (sep_carrier) sep_carrier
   by (standard; case_tac a; case_tac b; simp)
 
 instance share :: (type) sep_ab_semigroup proof
@@ -2543,7 +2575,7 @@ instance by (standard; case_tac x; simp add: share_share_def mult.assoc mult_le_
 end
 
 
-instance share :: (sep_carrier_set) share_nun_semimodule proof
+instance share :: (sep_carrier) share_nun_semimodule proof
   fix x y :: \<open>'a share\<close>
   fix n n' m :: rat
 
@@ -2556,8 +2588,10 @@ instance share :: (sep_carrier_set) share_nun_semimodule proof
   show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (cases x; cases y; simp add: distrib_left)
   show \<open>0 < n \<and> n < 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
-    apply (cases x; cases y; simp add: join_sub_def share_exists)
-    by (metis add.commute add_le_same_cancel1 diff_add_cancel linorder_not_le mult_1_class.mult_1_left mult_less_cancel_right)
+    by (cases x; cases y; simp add: join_sub_def share_exists;
+        metis add.commute add_le_same_cancel1 diff_add_cancel linorder_not_le mult_1_class.mult_1_left mult_less_cancel_right)
+  show \<open>0 < n \<Longrightarrow> mul_carrier x \<Longrightarrow> mul_carrier (n \<odivr> x)\<close>
+    by (cases x; simp)
 qed
 
 instance share :: (type) sep_cancel
@@ -2571,7 +2605,7 @@ abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
 (* TODO!
 lemma share_orthogonal_homo_to_share[locale_witness]:
-  \<open>share_orthogonal_homo (to_share::'a::{sep_carrier_set, discrete_semigroup} option \<Rightarrow> 'a share option) UNIV\<close>
+  \<open>share_orthogonal_homo (to_share::'a::{sep_carrier, discrete_semigroup} option \<Rightarrow> 'a share option) UNIV\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
   fix a' a2 :: \<open>'a share option\<close>
@@ -2752,7 +2786,7 @@ definition sep_disj_agree :: \<open>'a agree \<Rightarrow> 'a agree \<Rightarrow
 instance ..
 end
 
-instantiation agree :: (mul_carrier_set) mul_carrier_set begin
+instantiation agree :: (mul_carrier) mul_carrier begin
 
 definition mul_carrier_agree :: \<open>'a agree \<Rightarrow> bool\<close>
   where \<open>mul_carrier_agree = pred_agree mul_carrier\<close>
@@ -2765,10 +2799,10 @@ lemma mul_carrier_agree:
 instance ..
 end
 
-instance agree :: (sep_carrier_set) sep_carrier_set
+instance agree :: (sep_carrier) sep_carrier
   by (standard; simp)
 
-instantiation agree :: (sep_carrier_set) share_nun_semimodule begin
+instantiation agree :: (sep_carrier) share_nun_semimodule begin
 
 definition share_agree :: \<open>rat \<Rightarrow> 'a agree \<Rightarrow> 'a agree\<close>
   where [simp]: \<open>share_agree _ x = x\<close>
@@ -2791,6 +2825,7 @@ instance proof
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close> by (cases x; cases y; cases z; simp)
   show \<open>0 < n \<Longrightarrow> share n x ## y = x ## y\<close> by (cases x; cases y; simp)
   show \<open>mul_carrier x \<Longrightarrow> x ## x\<close> by (cases x; simp)
+  show \<open>0 < n \<Longrightarrow> mul_carrier x \<Longrightarrow> mul_carrier (n \<odivr> x)\<close> by (cases x; simp)
 qed
 end
 

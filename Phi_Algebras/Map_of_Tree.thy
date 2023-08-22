@@ -115,13 +115,18 @@ lemma push_map_dom1_eq[simp]:
 
 subsubsection \<open>Algebraic Properties\<close>
 
+lemma homo_mul_carrier_push_map:
+  \<open>homo_mul_carrier (push_map k :: ('k list \<Rightarrow> 'a::sep_carrier_1) \<Rightarrow> ('k list \<Rightarrow> 'a))\<close>
+  unfolding homo_mul_carrier_def push_map_def
+  by clarsimp
+
 lemma closed_homo_sep_disj_push_map:
-  \<open>closed_homo_sep_disj (push_map k :: ('k list \<Rightarrow> 'a::sep_magma_1) \<Rightarrow> ('k list \<Rightarrow> 'a::sep_magma_1) )\<close>
+  \<open>closed_homo_sep_disj (push_map k :: ('k list \<Rightarrow> 'a::sep_magma_1) \<Rightarrow> ('k list \<Rightarrow> 'a) )\<close>
   unfolding closed_homo_sep_disj_def push_map_def
   by (auto simp add: sep_disj_fun_def, metis append_eq_conv_conj)
 
 lemma homo_sep_mult_push_map:
-  \<open>homo_sep_mult (push_map k :: ('k list \<Rightarrow> 'a::sep_magma_1) \<Rightarrow> ('k list \<Rightarrow> 'a::sep_magma_1))\<close>
+  \<open>homo_sep_mult (push_map k :: ('k list \<Rightarrow> 'a::sep_magma_1) \<Rightarrow> ('k list \<Rightarrow> 'a))\<close>
   unfolding homo_sep_mult_def push_map_def
   by (simp add: fun_eq_iff times_fun_def)
 

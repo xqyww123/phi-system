@@ -34,20 +34,23 @@ subsubsection \<open>Separation Algebra\<close>
 
 paragraph \<open>Setup Reasoning Rules\<close>
 
-declare (in homo_one) homo_one_axioms[\<phi>reason 1100]
+declare (in homo_one) homo_one_axioms[\<phi>reason 1000]
 
-lemma [\<phi>premise_extraction]:
+lemma extraction_homo_one[\<phi>premise_extraction]:
   \<open>homo_one \<psi> \<equiv> \<psi> 1 = 1 \<and> True\<close>
   unfolding homo_one_def
   by simp
 
-lemma (in homo_sep_mult) [\<phi>reason 1100]:
-  \<open>homo_sep_mult \<psi>\<close>
-  by (simp add: homo_sep_mult_axioms)
+declare (in homo_sep_mult) homo_sep_mult_axioms [\<phi>reason 1000]
 
-lemma (in closed_homo_sep_disj) [\<phi>reason 1100]:
-  \<open>closed_homo_sep_disj \<psi>\<close>
-  by (simp add: closed_homo_sep_disj_axioms)
+declare (in closed_homo_sep_disj) closed_homo_sep_disj_axioms [\<phi>reason 1000]
+
+declare (in homo_mul_carrier) homo_mul_carrier_axioms[\<phi>reason 1000]
+
+lemma extraction_homo_mul_carrier:
+  \<open>homo_mul_carrier \<psi> \<equiv> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<and> True\<close>
+  unfolding homo_mul_carrier_def
+  by simp
 
 paragraph \<open>Reasoning Hierarchy\<close>
 
@@ -103,17 +106,29 @@ lemmas [\<phi>reason 1000] =
     homo_one_id
     homo_sep_id
     closed_homo_sep
+    homo_mul_carrier_id
 
 subsubsection \<open>Functional Pointwise\<close>
 
+lemma homo_mul_carrier_fun_upd [\<phi>reason 1100]:
+  \<open>homo_mul_carrier (fun_upd (1::'k \<Rightarrow> 'a::sep_carrier_1) k)\<close>
+  unfolding homo_mul_carrier_def
+  by simp
+
+lemma homo_mul_carrier_fun_upd' [\<phi>reason 1100]:
+  \<open> homo_mul_carrier f
+\<Longrightarrow> homo_mul_carrier (\<lambda>x. fun_upd (1 :: 'k \<Rightarrow> 'a::sep_carrier_1) k (f x))\<close>
+  unfolding homo_mul_carrier_def
+  by clarsimp
+
 lemma closed_homo_sep_disj_fun_upd [\<phi>reason 1100]:
-  \<open>closed_homo_sep_disj (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
+  \<open>closed_homo_sep_disj (fun_upd (1 :: 'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
   unfolding closed_homo_sep_disj_def
   by (simp add: sep_disj_fun_def)
 
 lemma closed_homo_sep_disj_fun_upd' [\<phi>reason 1000]:
   \<open> closed_homo_sep_disj f
-\<Longrightarrow> closed_homo_sep_disj (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
+\<Longrightarrow> closed_homo_sep_disj (\<lambda>x. fun_upd (1 :: 'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
   unfolding closed_homo_sep_disj_def
   by (simp add: sep_disj_fun_def)
 
@@ -168,13 +183,24 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Push map\<close>
 
-declare closed_homo_sep_disj_push_map [\<phi>reason 1000]
+declare homo_mul_carrier_push_map [\<phi>reason 1000]
+        closed_homo_sep_disj_push_map [\<phi>reason 1000]
         homo_sep_mult_push_map [\<phi>reason 1000]
         homo_one_push_map [\<phi>reason 1000]
         module_scalar_identity_push_map [\<phi>reason 1000]
         module_scalar_assoc_push_map [\<phi>reason 1000]
 
 subsubsection \<open>Share Division\<close>
+
+lemma homo_mul_carrier_share [\<phi>reason 1000]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_mul_carrier ((\<odivr>) n :: 'a::share_carrier \<Rightarrow> 'a)\<close>
+  unfolding homo_mul_carrier_def Premise_def
+  by (clarsimp simp add: share_carrier_closed)
+
+lemma homo_mul_carrier_share_1[\<phi>reason 1100]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_mul_carrier ((\<odivr>) n :: 'a::share_carrier_1 \<Rightarrow> 'a)\<close>
+  unfolding homo_mul_carrier_def Premise_def
+  by (clarsimp simp add: share_carrier_closed_1)
 
 lemma homo_one_share[\<phi>reason 1000]:
   \<open>homo_one ((\<odivr>) n :: 'a::share_one \<Rightarrow> 'a)\<close>
@@ -232,6 +258,11 @@ declare module_scalar_assoc_share0   [\<phi>reason 1000, assertion_simps]
 
 
 subsubsection \<open>Annotation of Scalar Multiplication\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> homo_mul_carrier (\<psi> s)
+\<Longrightarrow> homo_mul_carrier (scalar_mult \<psi> s) \<close>
+  unfolding scalar_mult_def .
 
 lemma [\<phi>reason 1000]:
   \<open> homo_one (\<psi> s)
