@@ -743,7 +743,7 @@ subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
             
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
@@ -761,7 +761,7 @@ term \<open> homo_one f \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
- 
+  
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
 \<Longrightarrow> closed_homo_sep_disj \<psi> \<and> Prem = (\<lambda>T U xy. True)
@@ -786,18 +786,17 @@ lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
-  \<open> module_L_distr \<psi> Ds
+  \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds
                             (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> eq x y \<and> Dx y) \<or> (D\<^sub>T y \<longrightarrow> eq y x \<and> Dx x))
                             (\<lambda>_ _. fst)\<close>
-  unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_L_distr_def Is_Functional_def
+  unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def
   by clarsimp metis
-  
 
 text \<open>The domain of abstract objects constrains to ensure the two middle-level objects
   (namely, the concrete objects of \<open>T\<close> and the abstract objects of \<open>\<psi>\<close>) are identical so that
@@ -807,7 +806,7 @@ text \<open>The domain of abstract objects constrains to ensure the two middle-l
   To this requirement, the instantiated domains above is the weakest.
 \<close>
 
-lemma \<comment> \<open>The instantiated domains above is the weakest upto using the \<open>module_L_distr \<psi> Ds\<close>,
+lemma \<comment> \<open>The instantiated domains above is the weakest upto using the \<open>module_S_distr \<psi> Ds\<close>,
           i.e., \<open>smult (s + t) a = smult s a * smult t a\<close>, when the \<open>Dx\<close>, \<open>eq\<close>, and \<open>D\<^sub>T\<close> are the weakest. \<close>
   \<open> (\<forall>x. p x \<longleftrightarrow> (\<forall>u v. u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v))
 \<Longrightarrow> (\<forall>x y. eq x y \<longleftrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T))
@@ -816,6 +815,17 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
   unfolding Transformation_def
   by auto metis
   
+lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
+  \<open> module_S_distr \<psi> Ds
+\<Longrightarrow> Functionality T Dx
+\<Longrightarrow> Abstract_Domain T D\<^sub>T
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>U (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds
+                            (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x)
+                            (\<lambda>_ _ x. (x,x))\<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>U_def Transformation_def module_S_distr_def Is_Functional_def
+            Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
+            scalar_mult_def
+  apply clarsimp
 
 
 
@@ -1262,18 +1272,19 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
  
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (scalar_mult share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Separation_Monoid
+  deriving (*Separation_Monoid
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Open_Abstraction_Full
        and Trivial_\<Sigma>
        and SE_Trim_Empty
        and Semimodule_Scalar_Assoc
-       and Semimodule_Identity
+       and Semimodule_Identity*)
+        Semimodule_LDistr_Homo\<^sub>Z
 
 thm \<phi>Share.\<phi>None
 thm \<phi>Share.scalar_assoc

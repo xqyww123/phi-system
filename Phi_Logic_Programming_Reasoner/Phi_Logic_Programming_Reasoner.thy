@@ -60,10 +60,12 @@ ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 
 definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
-    \<comment> \<open>If guards of a rule fail, the rule will be considered not appliable, just like the pattern
-        mismatch. It makes difference for cut rule and default 'to-be-overrided' rules.
-        If the rule is considered not appliable, the cut will not make effect and it will not
-        override default 'to-be-overrided' rules. \<close>
+    \<comment> \<open>If the guard of a rule fails, the rule will be considered non-appliable, just like the case
+        when pattern mismatchs. The difference lies in cut rule and non-backtracking modes.
+        If a cut rule is considered non-appliable, it will not cut remaining candidates.
+
+        A rule can have at most one guard, and it must be the leading antecedent.
+\<close>
 
 typedecl action
 
@@ -525,6 +527,26 @@ declare conjunctionI[\<phi>reason 1000] conjI[\<phi>reason 1000]
         HOL.refl[\<phi>reason 1000 for \<open>_ = _\<close>]
 
 text \<open>Antecedent \<open>x = y\<close> has a meaning of assignment, and is done by unification\<close>
+
+definition Ant_Seq :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
+  where \<open>Ant_Seq \<equiv> (\<and>)\<close>
+
+lemma Ant_Seq_I[\<phi>reason 1000]:
+  \<open>P \<Longrightarrow> Q \<Longrightarrow> P \<and>\<^sub>\<r> Q\<close>
+  unfolding Ant_Seq_def ..
+
+text \<open>The key feature of \<^const>\<open>Ant_Seq\<close> is that its congruence rule is enabled by default,
+      as it implies a left-to-right evaluation order.\<close>
+
+lemma Ant_Seq_cong[cong]:
+  \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> Q \<equiv> Q') \<Longrightarrow> P \<and>\<^sub>\<r> Q \<equiv> P' \<and>\<^sub>\<r> Q'\<close>
+  unfolding Ant_Seq_def atomize_eq
+  by blast
+
+lemma Ant_Seq_imp:
+  \<open>(A \<and>\<^sub>\<r> B \<Longrightarrow> PROP Q) \<equiv> (A \<Longrightarrow> B \<Longrightarrow> PROP Q)\<close>
+  unfolding Ant_Seq_def
+  by (rule; simp)
 
 (*
 text \<open>Meta-programming is feasible on \<phi>-LPR.

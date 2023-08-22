@@ -270,23 +270,23 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
           val rule'1 = (0, Thm.transfer' ctxt' template)
                     |> fold_pad (fn prop' => fn (i, thm) =>
-                        let datatype mode = Reason | Oblg | Normal
-                            val mode =
+                        let (*datatype mode = Reason | Oblg | Normal*)
+                            val is_reasoning_goal =
                                   case Logic.nth_prem (i+1, Thm.prop_of thm)
                                     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                           Const(\<^const_name>\<open>Action_Tag\<close>, _)
                                               $ _
-                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) => Reason
-                                     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) => true
+                                   (*| Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                           Const(\<^const_name>\<open>Premise\<close>, _)
                                               $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)
                                               $ P) =>
                                         if exists_subterm (fn (Const(\<^const_name>\<open>\<A>_template_condition\<close>, _)) => true
                                                             | _ => false) P
                                         then Oblg
-                                        else Normal
-                                     | _ => Normal
-                            val thm'1 = if mode = Reason
+                                        else Normal*)
+                                     | _ => false
+                            val thm'1 = if is_reasoning_goal
                                         then @{thm' Action_Tag_I} RSN (i+1, thm)
                                         else thm
                             val (delt,thm'2) = (case prop'
@@ -300,9 +300,9 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                                                              item [str "property:", brk 1, Thm.pretty_thm ctxt' prop]])
                                                         end)
                                                    | NONE => (1, thm'1))
-                            val thm'3 = case mode
-                                  of Reason =>
-                                      thm'2 |> Thm.permute_prems 0 i
+                            val thm'3 =
+                                 if is_reasoning_goal
+                                 then thm'2 |> Thm.permute_prems 0 i
                                             |> Phi_Reasoner.reason (SOME delt) true ctxt'
                                             |> (fn SOME th => th
                                                  | NONE => raise Automation_Fail (fn () =>
@@ -311,23 +311,29 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                                                          Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))]
                                                     end))
                                             |> Thm.permute_prems 0 (~i)
-                                   | Oblg => Conv.gconv_rule (
+                                  (*| Oblg => Conv.gconv_rule (
                                                 Raw_Simplifier.rewrite ctxt' false @{thms' \<A>_template_condition_def}
-                                             ) 1 thm'2
-                                   | _ => thm'2
-                         in (if mode = Reason then i else i + delt, thm'3)
+                                             ) (i+1) thm'2*)
+                                 else thm'2
+                         in (if is_reasoning_goal then i else i + delt, thm'3)
                         end) (Thm.nprems_of template) props
                     |> snd
                     |> Phi_Help.beta_eta_contract
+          (*By default, we do not simplify the conclusion of the template*)
           fun simplify ctxt rule =
-                let val ((_, [rule'1]), ctxt'1) = Variable.import false [rule] ctxt
+                let val rule'1 = case Thm.concl_of rule
+                                   of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
+                                    | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
+                                    | _ => rule RS' (ctxt, @{thm' NO_SIMP'_I})
+                    val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt
                     val ctxt's = Template_Inst_SS.enhance ctxt'1
                               |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
                  in singleton (Variable.export ctxt'1 ctxt)
-                      (  rule'1
+                      (  rule'2
                       |> Simplification_Protect.protect ctxt's
                       |> Phi_Reasoners.asm_lr_simplify true ctxt's
-                      |> Simplification_Protect.unprotect ctxt's )
+                      |> Simplification_Protect.unprotect ctxt's
+                      |> @{print})
                 end
           fun default_generation rule'1 =
             let val rule'2 = rule'1
@@ -337,7 +343,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
              in (case Phi_Help.instantiate_higher_order_schematic_var' ~1 ctxt' rule'2
                      of SOME th => simplify ctxt' th
                       | NONE => rule'2)
-                   |> Simplifier.rewrite_rule ctxt' @{thms' NO_SIMP_def}
+                   |> Simplifier.rewrite_rule ctxt' @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
                    |> normalize
                    |> single
             end

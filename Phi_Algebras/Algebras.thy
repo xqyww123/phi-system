@@ -131,6 +131,24 @@ class positive_sep_magma = sep_magma +
 class strict_positive_sep_magma = sep_magma +
   assumes join_strict_positivity: \<open>b ## a \<Longrightarrow> a = b * a \<Longrightarrow> False\<close>
 
+text \<open>Usually, we extend the carrier set of the partial algebra to the total universe by
+  importing the outside elements with no defined multiplication on them (except that to
+  identity element and zero). It works in most cases
+  but an exception is in semimodule structures where a notion of carrier set is required, so we
+  give this below.\<close>
+
+class mul_carrier_set =
+  fixes mul_carrier :: \<open>'a \<Rightarrow> bool\<close>
+
+(*
+class extended_partial_mul_algebra = mul_carrier_set + sep_disj +
+  \<comment> \<open>characterizes the partial algebras extended to the universe carrier set\<close>
+  assumes sep_disj_gives_carrier: \<open>a ## b \<Longrightarrow> mul_carrier a \<and> mul_carrier b\<close>
+*)
+
+class sep_carrier_set = mul_carrier_set + sep_magma +
+  assumes mul_carrier_closed: \<open> \<lbrakk> mul_carrier a; mul_carrier b; a ## b \<rbrakk> \<Longrightarrow> mul_carrier (a * b) \<close>
+
 class sep_refl = sep_magma +
   assumes sep_refl_mult_I: \<open>a ## b \<Longrightarrow> a ## a \<Longrightarrow> b ## b \<Longrightarrow> a * b ## a * b\<close>
   \<comment> \<open>Sometimes, \<open>x ## x\<close> can be used to represent if \<open>x\<close> is in the carrier set,
@@ -440,8 +458,9 @@ end
 class share_one_eq_one_iff = share_one +
   assumes share_one_eq_one_iff[simp]: \<open>0 < n \<Longrightarrow> share n x = 1 \<longleftrightarrow> x = 1\<close>
 
-class share_sep_disj = share + comm_sep_disj +
+class share_sep_disj = share + comm_sep_disj + sep_carrier_set +
   assumes share_sep_disj_left[simp]: \<open>0 < n \<Longrightarrow> share n x ## y \<longleftrightarrow> x ## y\<close>
+      and share_sep_disj_singl: \<open>\<lbrakk> 0 < n ; 0 < m ; mul_carrier x \<rbrakk> \<Longrightarrow> share n x ## share m x\<close> 
 begin
 
 text \<open>There is no property \<open>n \<noteq> 0 \<Longrightarrow> m \<noteq> 0 \<Longrightarrow> n \<odivr> x ## m \<odivr> x\<close> though it is also intuitive
@@ -457,15 +476,16 @@ end
 
 class share_nun_semimodule = share_sep_disj + sep_ab_semigroup +
       \<comment>\<open>nun stands for non-unital\<close>
-  assumes share_sep_left_distrib_0:  \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
+  assumes share_sep_left_distrib_0:  \<open> \<lbrakk> 0 < n ; 0 < m ; mul_carrier x \<rbrakk> \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
 begin
 
+(*
 subclass sep_refl
-  by (standard,
+  b y (standard,
       smt (verit, best) less_numeral_extra(1) local.sep_disj_commuteI local.sep_disj_multI2 local.sep_mult_assoc local.sep_mult_commute local.share_sep_disj_left local.share_sep_left_distrib_0 local.share_sep_right_distrib_0 zero_less_two)
-
+*)
 end
 
 class share_semimodule = share_sep_disj + share_one + sep_algebra +
@@ -1034,20 +1054,19 @@ text \<open>The right distributivity of a module forms a homomorphism over the g
   so we don't cover it here.\<close>
 
 locale module_for_sep =
-  fixes smult :: \<open>'s \<Rightarrow> 'a \<Rightarrow> 'a\<close>
+  fixes smult :: \<open>'s \<Rightarrow> ('a::sep_carrier_set) \<Rightarrow> 'a\<close>
     and Ds :: \<open>'s \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the scalars\<close>
 
-text \<open>Again, we implicitly extend the carrier set to the universe. The scalar multiplication
-  on those 'invalid' elements can be defined as returning to a specific 'zero element' where
-  the multiplication of any scalar on it still returns to itself, so that all the following
-  axioms can be satisfied without any problem.\<close>
+text \<open>It seems there is not a standard definition for modules on partial rings.
+  In our formalization, we assume the scalar distributivity is available on any elements of the ring.
+\<close>
 
-locale module_L_distr = module_for_sep +
-  assumes module_right_distr: \<open> \<lbrakk> Ds (s::'s::partial_add_magma); Ds t; s ##\<^sub>+ t; smult s a ## smult t a \<rbrakk>
-                            \<Longrightarrow> smult (s + t) a = smult s a * smult t a \<close>
+locale module_S_distr = module_for_sep +
+  assumes module_scalar_distr: \<open> \<lbrakk> Ds (s::'s::partial_add_magma); Ds t; s ##\<^sub>+ t ; mul_carrier a \<rbrakk>
+                             \<Longrightarrow> smult (s + t) a = smult s a * smult t a \<and> smult s a ## smult t a \<close>
 
 locale module_scalar_assoc = module_for_sep +
-  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (t * s) a\<close>
+  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t; mul_carrier a \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (t * s) a\<close>
   \<comment> \<open>Recall we always follow the order of the associativity.\<close>
 
 locale module_scalar_identity = module_for_sep +
@@ -1082,14 +1101,14 @@ definition dom_of_add_rat :: \<open>rat \<Rightarrow> rat \<Rightarrow> bool\<cl
 instance by standard simp
 end
 
-lemma module_L_distr_share:
-  \<open>module_L_distr (share :: rat \<Rightarrow> 'a::share_semimodule \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
-  unfolding module_L_distr_def
+lemma module_S_distr_share:
+  \<open>module_S_distr (share :: rat \<Rightarrow> 'a::share_semimodule \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
+  unfolding module_S_distr_def
   by (simp add: less_eq_rat_def share_sep_left_distrib)
 
-lemma module_L_distr_share_0:
-  \<open>module_L_distr (share :: rat \<Rightarrow> 'a::share_nun_semimodule \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
-  unfolding module_L_distr_def
+lemma module_S_distr_share_0:
+  \<open>module_S_distr (share :: rat \<Rightarrow> 'a::share_nun_semimodule \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
+  unfolding module_S_distr_def
   by (simp add: share_sep_left_distrib_0)
 
 
@@ -1201,6 +1220,23 @@ instance option :: ("{sep_disj,times}") sep_magma_1 proof
   show \<open>1 ## x\<close> by simp
 qed
 
+instantiation option :: (mul_carrier_set) mul_carrier_set begin
+
+definition mul_carrier_option :: \<open>'a option \<Rightarrow> bool\<close>
+  where \<open>mul_carrier_option = pred_option mul_carrier \<close>
+
+lemma mul_carrier_option[simp]:
+  \<open>mul_carrier None\<close>
+  \<open>mul_carrier (Some x) \<longleftrightarrow> mul_carrier x\<close>
+  unfolding mul_carrier_option_def
+  by simp_all
+
+instance ..
+
+end
+
+instance option :: (sep_carrier_set) sep_carrier_set
+  by (standard; case_tac a; case_tac b; simp add: mul_carrier_closed)
 
 instance option :: (positive_sep_magma) positive_sep_magma_1 proof
   fix x y :: \<open>'a option\<close>
@@ -1216,8 +1252,8 @@ instance option :: (positive_sep_magma) positive_sep_magma_1 proof
 qed
 
 
-instantiation option :: (sep_semigroup) sep_monoid begin
-instance proof
+
+instance option :: (sep_semigroup) sep_monoid proof
   fix x y z :: \<open>'a option\<close>
   show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close>
     by (cases x; cases y; cases z; simp add: sep_disj_commute sep_mult_commute sep_mult_assoc)
@@ -1234,7 +1270,6 @@ instance proof
     apply (cases x; simp; cases y; simp; cases z; simp)
     using sep_disj_multI2 by blast
 qed
-end
 
 instance option :: ("{strict_positive_sep_magma,sep_cancel}") sep_cancel
   apply (standard)
@@ -1335,15 +1370,28 @@ lemma map_option_homo_one[simp]:
 
 subsection \<open>Product\<close>
 
+subsubsection \<open>Auxiliary\<close>
+
+instantiation prod :: (one, one) one begin
+definition "one_prod = (1,1)"
+instance ..
+end
+
+instance prod :: (numeral, numeral) numeral ..
+
+instantiation prod :: (divide, divide) divide begin
+definition divide_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<close> where
+  \<open>divide_prod x y = (fst x div fst y, snd x div snd y)\<close>
+instance ..
+end
+
+
+subsubsection \<open>Total Algebras\<close>
+
 instantiation prod :: (times, times) times begin
 definition "times_prod = (\<lambda>(x1,x2) (y1,y2). (x1 * y1, x2 * y2))"
 lemma times_prod[simp]: "(x1,x2) * (y1,y2) = (x1 * y1, x2 * y2)"
   unfolding times_prod_def by simp
-instance ..
-end
-
-instantiation prod :: (one, one) one begin
-definition "one_prod = (1,1)"
 instance ..
 end
 
@@ -1352,10 +1400,6 @@ lemma fst_one [simp]: "fst 1 = 1"
 
 lemma snd_one [simp]: "snd 1 = 1"
   unfolding one_prod_def by simp
-
-instantiation prod :: (numeral, numeral) numeral begin
-instance ..
-end
 
 instantiation prod :: (mult_zero, mult_zero) mult_zero begin
 instance by (standard, simp_all add: zero_prod_def split_paired_all)
@@ -1378,13 +1422,27 @@ instance prod :: (no_inverse, no_inverse) no_inverse
 instance prod :: (no_negative, no_negative) no_negative
   by (standard, simp add: zero_prod_def plus_prod_def split_paired_all split: prod.split, blast)
 
-instantiation prod :: (ab_semigroup_mult, ab_semigroup_mult) ab_semigroup_mult begin
-instance by (standard, metis mult.commute prod.collapse times_prod)
-end
+instance prod :: (ab_semigroup_mult, ab_semigroup_mult) ab_semigroup_mult
+  by (standard, metis mult.commute prod.collapse times_prod)
 
-instantiation prod :: (comm_monoid_mult, comm_monoid_mult) comm_monoid_mult begin
-instance by standard simp
-end
+instance prod :: (comm_monoid_mult, comm_monoid_mult) comm_monoid_mult by standard simp
+
+instance prod :: (semiring, semiring) semiring
+ by (standard, simp_all add: split_paired_all distrib_right distrib_left)
+
+instance prod :: (semiring_0, semiring_0) semiring_0 ..
+
+instance prod :: (comm_semiring, comm_semiring) comm_semiring
+ by (standard, simp add: split_paired_all comm_semiring_class.distrib)
+
+instance prod :: (semiring_0_cancel, semiring_0_cancel) semiring_0_cancel ..
+
+instance prod :: (ring, ring) ring ..
+
+instance prod :: (comm_ring, comm_ring) comm_ring ..
+
+
+subsubsection \<open>Partial Algebras\<close>
 
 instantiation prod :: (sep_disj,sep_disj) sep_disj begin
 definition \<open>sep_disj_prod x y = (case x of (x1,x2) \<Rightarrow> case y of (y1,y2) \<Rightarrow> x1 ## y1 \<and> x2 ## y2)\<close>
@@ -1394,8 +1452,22 @@ lemma sep_disj_prod[simp]:
 instance ..
 end
 
-instantiation prod :: (sep_magma,sep_magma) sep_magma begin
-instance ..
+instance prod :: (sep_magma,sep_magma) sep_magma ..
+
+
+instantiation prod :: (sep_carrier_set, sep_carrier_set) sep_carrier_set begin
+
+term pred_prod
+
+definition mul_carrier_prod :: \<open>'a \<times> 'b \<Rightarrow> bool\<close>
+  where \<open>mul_carrier_prod = pred_prod mul_carrier mul_carrier\<close>
+
+lemma mul_carrier_prod[simp]:
+  \<open> mul_carrier (x,y) \<longleftrightarrow> mul_carrier x \<and> mul_carrier y \<close>
+  unfolding mul_carrier_prod_def by simp
+
+instance by (standard; clarsimp simp add: mul_carrier_closed)
+
 end
 
 instance prod :: (sep_magma_1, sep_magma_1) sep_magma_1
@@ -1407,61 +1479,30 @@ instance prod :: (sep_no_inverse, sep_no_inverse) sep_no_inverse
 instance prod :: (sep_cancel,sep_cancel) sep_cancel
   by (standard; case_tac a; case_tac b; case_tac c; simp; meson sep_cancel)
 
-instantiation prod :: (sep_disj_distrib,sep_disj_distrib) sep_disj_distrib begin
-instance by (standard; case_tac a; case_tac b; case_tac c; simp; blast)
-end
+instance prod :: (sep_disj_distrib,sep_disj_distrib) sep_disj_distrib
+  by (standard; case_tac a; case_tac b; case_tac c; simp; blast)
 
-instantiation prod :: (semiring, semiring) semiring begin
-instance by (standard, simp_all add: split_paired_all distrib_right distrib_left)
-end
 
-instantiation prod :: (semiring_0, semiring_0) semiring_0 begin
-instance ..
-end
+instance prod :: (zero_neq_one, zero_neq_one) zero_neq_one
+  by (standard, simp add: zero_prod_def one_prod_def)
 
-instantiation prod :: (comm_semiring, comm_semiring) comm_semiring begin
-instance by (standard, simp add: split_paired_all comm_semiring_class.distrib)
-end
+instance prod :: (semiring_1, semiring_1) semiring_1 ..
 
-instantiation prod :: (semiring_0_cancel, semiring_0_cancel) semiring_0_cancel begin
-instance ..
-end
-
-instantiation prod :: (ring, ring) ring begin
-instance ..
-end
-
-instantiation prod :: (comm_ring, comm_ring) comm_ring begin
-instance ..
-end
-
-instantiation prod :: (zero_neq_one, zero_neq_one) zero_neq_one begin
-instance by (standard, simp add: zero_prod_def one_prod_def)
-end
-
-instantiation prod :: (semiring_1, semiring_1) semiring_1 begin
-instance ..
-end
-
-instantiation prod :: (ring_1, ring_1) ring_1 begin
-instance ..
-end
+instance prod :: (ring_1, ring_1) ring_1 ..
 
 instantiation prod :: (comm_ring_1, comm_ring_1) comm_ring_1 begin
 instance ..
 end
 
-instantiation prod :: (divide, divide) divide begin
-definition divide_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<close> where
-  \<open>divide_prod x y = (fst x div fst y, snd x div snd y)\<close>
-instance ..
-end
+
 
 instantiation prod :: (inverse, inverse) inverse begin
 definition inverse_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b\<close> where
   \<open>inverse_prod x = (case x of (a,b) \<Rightarrow> (inverse a, inverse b))\<close>
 instance ..
 end
+
+subsubsection \<open>Order\<close>
 
 instantiation prod :: (ord, ord) ord begin
 definition less_eq_prod :: \<open>'a \<times> 'b \<Rightarrow> 'a \<times> 'b \<Rightarrow> bool\<close>
@@ -1559,6 +1600,15 @@ definition sep_disj_list :: \<open>'a list \<Rightarrow> 'a list \<Rightarrow> b
 instance by (standard; simp)
 end
 
+instantiation list :: (sep_carrier_set) sep_carrier_set begin
+
+definition mul_carrier_list :: \<open>'a list \<Rightarrow> bool\<close>
+  where [simp]: \<open>mul_carrier_list = list_all mul_carrier\<close>
+
+instance by (standard; simp add: times_list_def)
+
+end
+
 instance list :: (type) sep_monoid
   by (standard; clarsimp simp add: times_list_def join_sub_def)
 
@@ -1570,7 +1620,9 @@ instance list :: (type) sep_cancel
 
 subsection \<open>Function\<close>
 
-paragraph \<open>Instantiations of Algebra\<close>
+subsubsection \<open>Instantiations of Algebra\<close>
+
+paragraph \<open>Basics\<close>
 
 instantiation "fun" :: (type,plus) plus begin
 definition "plus_fun f g = (\<lambda>x. f x + g x)"
@@ -1610,6 +1662,7 @@ lemma fun_updt_0_0[simp]:
   \<open>0(x := 0) = 0\<close>
   unfolding fun_eq_iff by simp
 
+paragraph \<open>Homomorphisms\<close>
 
 lemma homo_add_funcomp[locale_intro]:
   assumes hom_f: \<open>homo_add f\<close>
@@ -1652,28 +1705,25 @@ lemma fun_updt_single_point[simp]:
   unfolding fun_eq_iff homo_one_def by simp
 
 
+paragraph \<open>Partial Multiplicative Algebras\<close>
 
 instance "fun" :: (type, no_inverse) no_inverse
   by (standard, simp add: one_fun_def times_fun fun_eq_iff, blast)
 
-instantiation "fun" :: (type, no_negative) no_negative begin
-instance by (standard, simp del: zero_fun_eta add: zero_fun_def plus_fun fun_eq_iff, blast)
-end
+instance "fun" :: (type, no_negative) no_negative
+  by (standard, simp del: zero_fun_eta add: zero_fun_def plus_fun fun_eq_iff, blast)
 
-instantiation "fun" :: (type, semigroup_mult) semigroup_mult begin
-instance apply standard
-  by (simp add: mult.assoc times_fun_def)
-end
+instance "fun" :: (type, semigroup_mult) semigroup_mult
+  by (standard; simp add: mult.assoc times_fun_def)
 
 instantiation "fun" :: (type,sep_disj) sep_disj begin
 definition "sep_disj_fun m1 m2 = (\<forall>x. m1 x ## m2 x)"
 instance ..
 end
 
-instantiation "fun" :: (type,comm_sep_disj) comm_sep_disj begin
-instance by (standard, simp_all add: sep_disj_fun_def times_fun fun_eq_iff
-                                add: sep_disj_commute sep_mult_commute )
-end
+instance "fun" :: (type,comm_sep_disj) comm_sep_disj
+  by (standard, simp_all add: sep_disj_fun_def times_fun fun_eq_iff
+                         add: sep_disj_commute sep_mult_commute )
 
 lemma sep_disj_fun[simp]: \<open>(f ## g) \<Longrightarrow> f x ## g x\<close>
   unfolding sep_disj_fun_def by blast
@@ -1685,16 +1735,21 @@ lemma sep_disj_fun_nonsepable:
   by (metis sep_disj_fun sep_disj_option_nonsepable)+
 
 
-instantiation "fun" :: (type,mult_1) mult_1 begin
-instance by (standard; simp add: one_fun_def times_fun_def)
-end
+instance "fun" :: (type,mult_1) mult_1
+  by (standard; simp add: one_fun_def times_fun_def)
 
-instantiation "fun" :: (type,sep_magma) sep_magma begin
-instance ..
-end
+instance "fun" :: (type,sep_magma) sep_magma ..
 
-instantiation "fun" :: (type,sep_magma_1) sep_magma_1 begin
-instance by (standard; simp add: sep_disj_fun_def)
+instance "fun" :: (type,sep_magma_1) sep_magma_1
+ by (standard; simp add: sep_disj_fun_def)
+
+instantiation "fun" :: (type, sep_carrier_set) sep_carrier_set begin
+
+definition mul_carrier_fun :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
+  where [simp]: \<open>mul_carrier_fun f = (\<forall>k. mul_carrier (f k))\<close>
+
+instance by (standard; simp add: times_fun mul_carrier_closed)
+
 end
 
 instance "fun" :: (type, sep_cancel) sep_cancel
@@ -1760,7 +1815,8 @@ instance "fun" :: (type,comm_monoid_add) comm_monoid_add proof
   show \<open>0 + a = a\<close> unfolding plus_fun_def fun_eq_iff by simp
 qed
 
-paragraph \<open>Properties\<close>
+
+subsubsection \<open>Properties\<close>
 
 definition \<open>pointwise_set D = {f. \<forall> k. f k \<in> D}\<close>
 
@@ -1769,7 +1825,8 @@ lemma kernel_is_1_pointwise[simp, locale_intro]:
   unfolding kernel_is_1_def pointwise_set_def
   by (clarsimp simp add: Ball_def fun_eq_iff)
 
-paragraph \<open>Multiplication with Function Update\<close>
+
+subsubsection \<open>Multiplication with Function Update\<close>
 
 lemma times_fupdt_1_apply[simp]:
   "(f * 1(k := x)) k = f k * x" for f :: "'a \<Rightarrow> 'b::monoid_mult"
@@ -1844,7 +1901,7 @@ lemma [simp]: "NO_MATCH (a::'a) (1::'a::one) \<Longrightarrow> i \<noteq> k \<Lo
   using fun_upd_twist .
 
 
-paragraph \<open>Share\<close>
+subsubsection \<open>Share\<close>
 
 instantiation "fun" :: (type, share) share begin
 
@@ -1925,6 +1982,18 @@ end
 
 instance "fmap" :: (type,sep_magma) sep_magma ..
 
+instantiation "fmap" :: (type, sep_carrier_set) sep_carrier_set begin
+
+context includes fmap.lifting begin
+lift_definition mul_carrier_fmap :: \<open>('a, 'b) fmap \<Rightarrow> bool\<close>
+  is \<open>\<lambda>f. (\<forall>k. mul_carrier (f k))\<close> .
+
+instance by (standard; transfer; simp add: mul_carrier_closed)
+
+end
+
+end
+
 instance "fmap" :: (type,sep_magma_1) sep_magma_1
   including fmap.lifting
   by (standard; transfer; simp)
@@ -1972,6 +2041,13 @@ instance unit :: sep_no_inverse by standard simp_all
 
 instance unit :: sep_cancel by standard simp
 
+instantiation unit :: sep_carrier_set begin
+
+definition mul_carrier_unit :: \<open>unit \<Rightarrow> bool\<close> where [simp]: \<open>mul_carrier_unit x = True \<close>
+
+instance by (standard; simp)
+
+end
 
 subsection \<open>Set\<close>
 
