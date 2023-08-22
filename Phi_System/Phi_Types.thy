@@ -34,7 +34,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Basic
        and Functionality
-       (*d Open_Abstraction_Full*)
+       and Carrier_Set
+       and Open_Abstraction_Full
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -56,12 +57,13 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding Subjection into Type\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
-       and \<open>(\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Functionality T Q) \<Longrightarrow> Functionality (T \<phi>\<s>\<u>\<b>\<j> P) Q\<close>
+       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Functionality T Q) \<Longrightarrow> Functionality (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<longrightarrow> Q x)\<close>
+       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Carrier_Set T Q) \<Longrightarrow> Carrier_Set (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<longrightarrow> Q x)\<close>
        and Open_Abstraction_Full
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P) \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q) (Q \<and> P)\<close>
        and \<open>Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
@@ -141,6 +143,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
     and    \<open>Identity_Element\<^sub>E (u \<Ztypecolon> T c)
         \<Longrightarrow> Identity_Element\<^sub>E ((c, u) \<Ztypecolon> \<Sigma> T) \<close>
     and Functionality
+    and Carrier_Set
   (*and    \<open>Is_Functional (u \<Ztypecolon> T c)
         \<Longrightarrow> Is_Functional ((c, u) \<Ztypecolon> \<Sigma> T)\<close> *)
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
@@ -165,6 +168,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y}) True
                       (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x})\<close>
+       and Carrier_Set
+
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
@@ -440,6 +445,7 @@ subsection \<open>Vertical Composition\<close>
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving Functional_Transformation_Functor
+       and Carrier_Set
 
 text \<open>
   We do not use deriver here.
@@ -678,6 +684,7 @@ declare [[\<phi>trace_reasoning = 0]]
           \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) (P \<or> Q)\<close>
        and \<open>  Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<or> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) \<close>
+       and Carrier_Set (*TODO: the simplification is bad*)
 
 subsubsection \<open>Configurations\<close>
 
@@ -711,7 +718,8 @@ subsection \<open>Embedding Additive Conjunction\<close>
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
        and Functional_Transformation_Functor
-     (*DO NOT REMOVE, I'm thinking if we really should support so much additive conjunction
+       and Carrier_Set
+     (*DO NOT REMOVE, they are right but I'm thinking if we really should support so much additive conjunction
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>
               Transformation_Functor ((\<and>\<^sub>\<phi>) A) ((\<and>\<^sub>\<phi>) A') Basic_BNFs.snds (\<lambda>_. UNIV) (rel_prod (=))\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B' \<Longrightarrow>
@@ -743,8 +751,6 @@ subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-            
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   deriving Basic
@@ -755,6 +761,9 @@ declare [[\<phi>trace_reasoning = 1]]
        and Trivial_\<Sigma>
        and Open_Abstraction_Full
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<lambda>x. x)\<close>
+       and Carrier_Set
+
+term \<open>Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) (\<lambda>x. (\<forall>xa. xa \<Turnstile> (x \<Ztypecolon> ?Aa) \<longrightarrow> mul_carrier (?A xa)) \<and> ?P x) \<close>
 
 term \<open> homo_one f \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 f \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
 
@@ -790,13 +799,15 @@ lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
+\<Longrightarrow> Carrier_Set T D\<^sub>C
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds
-                            (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> eq x y \<and> Dx y) \<or> (D\<^sub>T y \<longrightarrow> eq y x \<and> Dx x))
+                            (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y) \<or> (D\<^sub>T y \<longrightarrow> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst)\<close>
   unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
-            scalar_mult_def
-  by clarsimp metis
+            scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
+  by (clarsimp, metis)
+  
 
 text \<open>The domain of abstract objects constrains to ensure the two middle-level objects
   (namely, the concrete objects of \<open>T\<close> and the abstract objects of \<open>\<psi>\<close>) are identical so that
@@ -815,18 +826,18 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
   unfolding Transformation_def
   by auto metis
   
-lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
+lemma Semimodule_LDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
+\<Longrightarrow> Carrier_Set T D\<^sub>C
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>U (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds
-                            (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x)
+                            (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))\<close>
   unfolding Semimodule_LDistr_Homo\<^sub>U_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
-            scalar_mult_def
-  apply clarsimp
-
+            scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
+  by (clarsimp, metis)
 
 
 
@@ -882,6 +893,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Open_Abstraction_Full
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
+       and Carrier_Set
 
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
@@ -904,7 +916,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Open_Abstraction_Full
        and Identity_Element
-
+       and Carrier_Set
 
 
 subsection \<open>Empty Type of Free Objects\<close>

@@ -229,7 +229,7 @@ lemma [\<phi>reason default 1]:
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
   by simp
 
-declare [[ \<comment> \<open>TODO\<close>
+declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
     fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*imp*) $ (
                             _ (*Inhabited*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _)) =>
@@ -251,6 +251,105 @@ declare [[ \<comment> \<open>TODO\<close>
           ]) end)\<close> (1000)
 ]]
 
+
+subsubsection \<open>The Variant of Inhabitance for Separation Carrier\<close>
+
+definition Inhabited\<^sub>M\<^sub>C :: " 'a::sep_carrier_set BI \<Rightarrow> bool " where  "Inhabited\<^sub>M\<^sub>C S = (\<exists>p. p \<Turnstile> S \<and> mul_carrier p)"
+
+abbreviation Inhabitance_Implication\<^sub>M\<^sub>C :: \<open>'a::sep_carrier_set BI \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C" 10)
+  where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C P \<equiv> Inhabited\<^sub>M\<^sub>C S \<longrightarrow> P @action \<A>EIF\<close>
+  \<comment> \<open>P is weaker than S. We want to get a simpler P and as strong as possible. \<close>
+
+abbreviation Sufficient_Inhabitance\<^sub>M\<^sub>C :: \<open>bool \<Rightarrow> 'a::sep_carrier_set BI \<Rightarrow> bool\<close> (infix "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C" 10)
+  where \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C S \<equiv> P \<longrightarrow> Inhabited\<^sub>M\<^sub>C S @action \<A>ESC\<close>
+  \<comment> \<open>P is stronger than S. We want to get a simpler P and as weak as possible. \<close>
+
+lemma Inhabited\<^sub>M\<^sub>C_fallback_True:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C True \<close>
+  unfolding Action_Tag_def by blast
+
+lemma Suf\<^sub>M\<^sub>C_Inhabited_fallback_True:
+  \<open> False \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C X \<close>
+  unfolding Action_Tag_def by blast
+
+\<phi>reasoner_ML Inhabited_fallback\<^sub>M\<^sub>C default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C _\<close>) =
+\<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
+  then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Inhabited\<^sub>M\<^sub>C_fallback_True} RS sequent), Seq.empty)
+)\<close>
+
+\<phi>reasoner_ML Suf_Inhabited_fallback\<^sub>M\<^sub>C default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C _\<close>) =
+\<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
+  then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Suf\<^sub>M\<^sub>C_Inhabited_fallback_True} RS sequent), Seq.empty)
+)\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C A
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
+\<Longrightarrow> Inhabited\<^sub>M\<^sub>C A\<close>
+  unfolding Action_Tag_def Premise_def
+  by blast
+
+
+subsubsection \<open>The Separation Carrier Variant for \<phi>-Type\<close>
+
+definition Abstract_Domain\<^sub>M\<^sub>C :: \<open>('c::sep_carrier_set,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Abstract_Domain\<^sub>M\<^sub>C T d \<longleftrightarrow> (\<forall>x. x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C d x)\<close>
+  \<comment> \<open>Upper Bound\<close>
+
+definition Abstract_Domain\<^sub>M\<^sub>C\<^sub>L :: \<open>('c::sep_carrier_set,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L T d \<longleftrightarrow> (\<forall>x. d x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C x \<Ztypecolon> T)\<close>
+  \<comment> \<open>Lower Bound\<close>
+
+declare [[\<phi>reason_default_pattern \<open>Abstract_Domain\<^sub>M\<^sub>C ?T _\<close> \<Rightarrow> \<open>Abstract_Domain\<^sub>M\<^sub>C ?T _\<close> (100)
+                              and \<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L ?T _\<close> \<Rightarrow> \<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L ?T _\<close> (100) ]]
+
+lemma [\<phi>reason default 10]:
+  \<open> Abstract_Domain\<^sub>M\<^sub>C T D
+\<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C D x\<close>
+  unfolding Abstract_Domain\<^sub>M\<^sub>C_def Action_Tag_def
+  by blast
+
+lemma [\<phi>reason default 10]:
+  \<open> Abstract_Domain\<^sub>M\<^sub>C\<^sub>L T D
+\<Longrightarrow> D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C x \<Ztypecolon> T\<close>
+  unfolding Abstract_Domain\<^sub>M\<^sub>C\<^sub>L_def Action_Tag_def
+  by blast
+
+lemma [\<phi>reason default 1]:
+  \<open> Abstract_Domain\<^sub>M\<^sub>C T (\<lambda>_. True) \<close>
+  unfolding Abstract_Domain\<^sub>M\<^sub>C_def Action_Tag_def
+  by simp
+
+lemma [\<phi>reason default 1]:
+  \<open> Abstract_Domain\<^sub>M\<^sub>C\<^sub>L T (\<lambda>_. False) \<close>
+  unfolding Abstract_Domain\<^sub>M\<^sub>C\<^sub>L_def Action_Tag_def
+  by simp
+
+declare [[
+  \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C _\<close> \<Rightarrow> \<open>
+    fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*imp*) $ (
+                            _ (*Inhabited\<^sub>M\<^sub>C*) $ (_ (*\<phi>Type*) $ x $ _)) $ _) $ _)) =>
+      if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
+      then NONE
+      else error (let open Pretty in string_of (chunks [
+            para "Malformed Implication Rule: in \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C _\<close> the x must be a schematic variable. But given",
+            Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
+          ]) end)\<close> (1000),
+
+  \<phi>reason_default_pattern_ML \<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C _ \<Ztypecolon> _\<close> \<Rightarrow> \<open>
+    fn ctxt => fn tm as (_ (*Trueprop*) $ (_ (*Action_Tag*) $ ( _ (*imp*) $ _ $ (
+                            _ (*Inhabited\<^sub>M\<^sub>C*) $ (_ (*\<phi>Type*) $ x $ _))) $ _)) =>
+      if is_Var x orelse not (Context_Position.is_visible_generic ctxt)
+      then NONE
+      else error (let open Pretty in string_of (chunks [
+            para "Malformed Sufficiency Rule: in \<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C x \<Ztypecolon> T\<close> the x must be a schematic variable. But given",
+            Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
+          ]) end)\<close> (1000)
+]]
 
 
 (*
@@ -1087,8 +1186,18 @@ lemma [\<phi>reason 1000]:
   using Inhabited_fallback_True by blast
 
 lemma [\<phi>reason 1000]:
+  \<open> Abstract_Domain\<^sub>M\<^sub>C Itself mul_carrier \<close>
+  unfolding Abstract_Domain\<^sub>M\<^sub>C_def Action_Tag_def Inhabited\<^sub>M\<^sub>C_def
+  by blast
+
+lemma [\<phi>reason 1000]:
   \<open> Abstract_Domain\<^sub>L Itself (\<lambda>_. True) \<close>
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def Inhabited_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> Abstract_Domain\<^sub>M\<^sub>C\<^sub>L Itself mul_carrier \<close>
+  unfolding Abstract_Domain\<^sub>M\<^sub>C\<^sub>L_def Action_Tag_def Inhabited\<^sub>M\<^sub>C_def
   by simp
 
 lemma Itself_E[\<phi>reason 20]:

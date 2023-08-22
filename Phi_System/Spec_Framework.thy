@@ -274,6 +274,118 @@ proof clarsimp
 qed
 
 
+subsection \<open>Carrier Set of Separation Algebra\<close>
+
+definition Within_Carrier_Set :: \<open>'c::sep_carrier_set set \<Rightarrow> bool\<close>
+  where \<open>Within_Carrier_Set A \<longleftrightarrow> (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v)\<close>
+
+definition Carrier_Set :: \<open>('c::sep_carrier_set,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Carrier_Set T D \<longleftrightarrow> (\<forall>x. D x \<longrightarrow> Within_Carrier_Set (x \<Ztypecolon> T))\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>Within_Carrier_Set ?A\<close> \<Rightarrow> \<open>Within_Carrier_Set ?A\<close> (100)
+  and \<open>Carrier_Set ?T _\<close> \<Rightarrow> \<open>Carrier_Set ?T _\<close> (100)
+]]
+
+subsubsection \<open>Rules for Logical Connectives\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> Carrier_Set T P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x
+\<Longrightarrow> Within_Carrier_Set (x \<Ztypecolon> T) \<close>
+  unfolding Carrier_Set_def Premise_def
+  by blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Within_Carrier_Set A
+\<Longrightarrow> Within_Carrier_Set B
+\<Longrightarrow> Within_Carrier_Set (A * B)\<close>
+  unfolding Within_Carrier_Set_def
+  by (clarsimp simp add: mul_carrier_closed)
+
+text \<open>Though the above rule is reasonable enough, it is not reversible, essentially because
+  the set of concrete objects satisfying \<open>A * B\<close> is far smaller than either of that satisfying \<open>A\<close> or \<open>B\<close>.\<close>
+
+lemma
+  \<open>Within_Carrier_Set (A * B) \<Longrightarrow> Within_Carrier_Set A \<and> Within_Carrier_Set B\<close>
+  oops
+
+lemma [\<phi>reason 1000]:
+  \<open> Carrier_Set T P
+\<Longrightarrow> Carrier_Set U Q
+\<Longrightarrow> Carrier_Set (T \<^emph> U) (pred_prod P Q)\<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def
+  by (clarsimp simp add: mul_carrier_closed)
+
+lemma [\<phi>reason 1000]:
+  \<open> Within_Carrier_Set A
+\<Longrightarrow> Within_Carrier_Set B
+\<Longrightarrow> Within_Carrier_Set (A + B)\<close>
+  unfolding Within_Carrier_Set_def
+  by clarsimp
+
+lemma \<comment> \<open>The above rule is reversible\<close>
+  \<open> Within_Carrier_Set (A + B) \<Longrightarrow> Within_Carrier_Set A \<and> Within_Carrier_Set B \<close>
+  unfolding Within_Carrier_Set_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>x. Within_Carrier_Set (A x))
+\<Longrightarrow> Within_Carrier_Set (ExSet A) \<close>
+  unfolding Within_Carrier_Set_def
+  by clarsimp
+
+lemma \<comment> \<open>The above rule is reversible\<close>
+  \<open> Within_Carrier_Set (ExSet A) \<Longrightarrow> Within_Carrier_Set (A x) \<close>
+  unfolding Within_Carrier_Set_def
+  by clarsimp blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Within_Carrier_Set A
+\<Longrightarrow> Within_Carrier_Set B
+\<Longrightarrow> Within_Carrier_Set (A \<and>\<^sub>B\<^sub>I B)\<close>
+  unfolding Within_Carrier_Set_def
+  by clarsimp
+
+
+text \<open>The above rule is also not reversible. Essentially the rules for conjunctive connectives are not
+  reversible due to the same reason as \<open>*\<close>. \<close>
+
+lemma \<open> Within_Carrier_Set (A \<and>\<^sub>B\<^sub>I B) \<Longrightarrow> Within_Carrier_Set A \<and> Within_Carrier_Set B \<close>
+  oops
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Within_Carrier_Set A)
+\<Longrightarrow> Within_Carrier_Set (A \<s>\<u>\<b>\<j> P)\<close>
+  unfolding Within_Carrier_Set_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> Within_Carrier_Set 0 \<close>
+  unfolding Within_Carrier_Set_def
+  by simp
+
+text \<open>Also not reversible in non-trivial cases.\<close>
+
+subsubsection \<open>Rules for Basic \<phi>-Types\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open>Carrier_Set Itself mul_carrier\<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open>Carrier_Set (\<circle> :: ('c::sep_carrier_set_1, unit) \<phi>) (\<lambda>_. True)\<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def
+  by clarsimp
+
+lemma [\<phi>reason 1000]:
+  \<open> Carrier_Set T S
+\<Longrightarrow> Carrier_Set (\<black_circle> T) S\<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def
+  by clarsimp
+
+
 subsection \<open>Separationally Functional\<close> \<comment> \<open>A weaker and more general concept\<close>
 
 definition Sep_Functional :: \<open>'a::sep_magma BI \<Rightarrow> bool\<close>

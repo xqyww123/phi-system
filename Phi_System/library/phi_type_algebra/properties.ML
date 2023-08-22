@@ -332,8 +332,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                       (  rule'2
                       |> Simplification_Protect.protect ctxt's
                       |> Phi_Reasoners.asm_lr_simplify true ctxt's
-                      |> Simplification_Protect.unprotect ctxt's
-                      |> @{print})
+                      |> Simplification_Protect.unprotect ctxt's )
                 end
           fun default_generation rule'1 =
             let val rule'2 = rule'1

@@ -3,13 +3,36 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 
 val is_functional : quiet -> hint list -> Phi_Type_Algebra.derive
 
+val guess_property__abst_domain : (typ * typ -> term) * sort * sort -> guess_property
+val solver__abst_domain : string -> solver
+
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun guess_property (phi:phi_type) ctxt =
-  let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+fun guess_property__abst_domain (prop_head, x_sort, model_sort) (phi0 : phi_type) ctxt =
+  let val (rev_arg_tys0, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val tpairs = map_filter (   try dest_parameterized_phi_ty
+                               #> Option.map (fn (_, x, m) => [(x, x_sort), (m, model_sort)])
+                              ) rev_arg_tys0
+                |> flat
+      val inst = (Phi_Help.lift_types_sort (Proof_Context.theory_of ctxt)
+                                           ((x_ty0, x_sort) :: (model_ty0, model_sort) :: tpairs)
+                 handle TYPE _ => raise Automation_Fail (let open Pretty in fn () =>
+                          [paragraph (text "Fail to lift the abstract algebra " @
+                                      [brk 1, Syntax.pretty_typ ctxt x_ty0, brk 1] @
+                                      text "and the concrete algebra" @
+                                      [brk 1, Syntax.pretty_typ ctxt model_ty0, brk 1] @
+                                      text "onto sort" @
+                                      [brk 1, Syntax.pretty_sort ctxt x_sort, brk 1, str "and",
+                                       brk 1, Syntax.pretty_sort ctxt model_sort, brk 1, str "repsectively."
+                                      ])]
+                          end))
+      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
+      val phi = instantiate_phi (inst',Vars.empty) phi0
+
+      val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun collect_params ret [] _  = ret
         | collect_params ret (arg_ty :: rev_arg_tys) (F' $ T') =
@@ -25,7 +48,7 @@ fun guess_property (phi:phi_type) ctxt =
       val ants = map2 (fn ((rev_args, x, m), T'h) => fn (_, pred) =>
             let val arity = length rev_args
                 val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - 1 - i)) rev_args T'h
-             in \<^Const>\<open>Functionality x m\<close> $ T' $ pred
+             in prop_head (x,m) $ T' $ pred
              |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs("A", ty, X)) rev_args
             end
           ) T_params preds
@@ -33,12 +56,14 @@ fun guess_property (phi:phi_type) ctxt =
       val Pvar = Var(("P",idx), x_ty --> HOLogic.boolT)
    in guess_predicate ctxt preds x_ty
    |> Seq.map (fn (pred, ctxt) =>
-        (ants, HOLogic.Trueprop $ (\<^Const>\<open>Functionality x_ty model_ty\<close> $ T_term $
+        (ants, HOLogic.Trueprop $ (prop_head (x_ty, model_ty) $ T_term $
                   (Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (Pvar $ Bound 0) $ (pred $ Bound 0)))),
          NONE :: parse_parameters_of_phi_type T_term, phi, ctxt))
   end
 
-fun solver name (phi,ctxt,sequent) =
+val guess_property = guess_property__abst_domain (fn (x,m) => \<^Const>\<open>Functionality x m\<close>, \<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)
+
+fun solver__abst_domain name (phi,ctxt,sequent) =
   let fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
                                      \the expression of the implied pure fact from it."])
@@ -113,7 +138,7 @@ fun gen_is_functional (_,name) hint0 (phi0 : phi_type) thy =
                           (exhaustive_PLPR_reasoner (SOME 1))
 
       val mode_infer = not (is_some hint0)
-      val solver = if mode_infer then solver name else K NONE
+      val solver = if mode_infer then solver__abst_domain name else K NONE
 
       fun simp (_, ctxt) rule =
         if is_some hint0

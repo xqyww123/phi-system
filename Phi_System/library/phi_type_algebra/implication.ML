@@ -4,6 +4,13 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 val abstract_domain : quiet -> hint list -> Phi_Type_Algebra.derive
 val abstract_domain_L : quiet -> hint list -> Phi_Type_Algebra.derive
 
+(*MC = multiplicative carrier*)
+val abstract_domain_MC : quiet -> hint list -> Phi_Type_Algebra.derive
+val abstract_domain_MCL : quiet -> hint list -> Phi_Type_Algebra.derive
+
+(*val guess_property_abst_dom : string -> guess_property
+val abstract_domain_solver : bool -> string (*name of proof cache*) -> solver*)
+
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
@@ -11,7 +18,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 (*** Inhabitance ***)
 
-fun guess_property_inhab_tyop upper (phi:phi_type) ctxt =
+fun guess_property_abst_dom head_const (phi:phi_type) ctxt =
   let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun collect_params ret [] _  = ret
@@ -25,8 +32,7 @@ fun guess_property_inhab_tyop upper (phi:phi_type) ctxt =
                                      (map (fn T => T --> HOLogic.boolT) x_ttys)
       val ctxt = Variable.add_fixes_direct (map fst preds) ctxt
       val preds = x_ttys ~~ map Free preds
-      fun head x m = if upper then \<^Const>\<open>Abstract_Domain x m\<close>
-                              else \<^Const>\<open>Abstract_Domain\<^sub>L x m\<close>
+      fun head x m = Const(head_const, \<^Type>\<open>fun \<^Type>\<open>fun x \<^Type>\<open>set m\<close>\<close> \<^Type>\<open>fun \<^Type>\<open>fun x \<^Type>\<open>bool\<close>\<close> \<^Type>\<open>bool\<close>\<close>\<close>)
       val ants = map2 (fn ((rev_args, x, m), T'h) => fn (_, pred) =>
             let val arity = length rev_args
                 val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - 1 - i)) rev_args T'h
@@ -54,7 +60,7 @@ fun guess_property_inhab_tyop upper (phi:phi_type) ctxt =
   end
 *)
 
-fun solver upper name (phi,ctxt,sequent) =
+fun abstract_domain_solver upper name (phi,ctxt,sequent) =
   let fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
                                      \the expression of the implied pure fact from it."])
@@ -128,16 +134,22 @@ fun solver upper name (phi,ctxt,sequent) =
         | _ => error "Internal bug"
  end
 
-fun gen_inhab upper (der_id, name) hint0 (phi0 : phi_type) thy =
+fun gen_inhab (upper, carrier) (der_id, name) hint0 (phi0 : phi_type) thy =
   let val ctxt0 = Context.proof_of thy
-      val guess_property = guess_property_inhab_tyop upper (*(if is_Type_Opr (Term.fastype_of (#term phi0))
-                            then guess_property_inhab_tyop
-                            else guess_property_inhab_atom) upper*)
+      val guess_property = guess_property_abst_dom
+                              (if carrier
+                               then if upper then \<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<close>
+                                             else \<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L\<close>
+                               else if upper then \<^const_name>\<open>Abstract_Domain\<close>
+                                             else \<^const_name>\<open>Abstract_Domain\<^sub>L\<close>)
       val mode_infer = not (is_some hint0)
 
       val parse_hint = parse_hint (
               fn Const(\<^const_name>\<open>Abstract_Domain\<close>, _) $ T $ _ => T
-               | Const(\<^const_name>\<open>Abstract_Domain\<^sub>L\<close>, _) $ T $ _ => T)
+               | Const(\<^const_name>\<open>Abstract_Domain\<^sub>L\<close>, _) $ T $ _ => T
+               | Const(\<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<close>, _) $ T $ _ => T
+               | Const(\<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L\<close>, _) $ T $ _ => T)
+
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []
 
@@ -154,7 +166,9 @@ fun gen_inhab upper (der_id, name) hint0 (phi0 : phi_type) thy =
 
       val prem_extractions =
         if def_contains_satisfaction phi0
-        then [Phi_Reasoners.Extract_Rule @{thm' \<phi>TA_Inh_extract_prem}]
+        then [Phi_Reasoners.Extract_Rule (if carrier
+                                          then @{thm' \<phi>TA_Inh\<^sub>M\<^sub>C_extract_prem}
+                                          else @{thm' \<phi>TA_Inh_extract_prem})]
         else []
 
       fun Inh_reasoning phi ctxt =
@@ -166,7 +180,7 @@ fun gen_inhab upper (der_id, name) hint0 (phi0 : phi_type) thy =
                     (K (chk_unfolded' ctxt phi)))
                 ctxt
 
-      val solver = if mode_infer then solver upper name else K NONE
+      val solver = if mode_infer then abstract_domain_solver upper name else K NONE
       fun simp (_, ctxt) rule =
         if is_some hint0
         then rule
@@ -189,8 +203,14 @@ fun gen_inhab upper (der_id, name) hint0 (phi0 : phi_type) thy =
             |> pair [rule']
   end
 
-val abstract_domain = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain") (gen_inhab true)
-val abstract_domain_L = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain\<^sub>L") (gen_inhab false)
+val abstract_domain =
+      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain") (gen_inhab (true, false))
+val abstract_domain_L =
+      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain\<^sub>L") (gen_inhab (false, false))
+val abstract_domain_MC =
+      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain\<^sub>M\<^sub>C") (gen_inhab (true, true))
+val abstract_domain_MCL =
+      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain\<^sub>M\<^sub>C\<^sub>L") (gen_inhab (false, true))
 
 
 end

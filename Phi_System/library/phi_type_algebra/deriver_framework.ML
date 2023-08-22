@@ -1345,7 +1345,7 @@ let fun has_disj_ants th =
        in get_first chk (#2 (Phi_Help.strip_meta_hhf (fst (Logic.dest_implies (Thm.prop_of th)))))
       end
 
-  fun reasoning ctxt0 sequent0 =
+fun reasoning ctxt0 sequent0 =
   case Thm.major_prem_of sequent0
     of _ (*Trueprop*) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
      | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>

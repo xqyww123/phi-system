@@ -57,9 +57,12 @@ fun guess_property (phi0 : phi_type) ctxt =
   let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
-      val Sdom = infer_the_default_scalar_domain ctxt (s_ty, x_ty, model_ty)
+      (*val ([Dx_name], ctxt) = Variable.add_fixes ["Dx"] ctxt
+      val Dx = Free(Dx_name, x_ty --> HOLogic.boolT)
+      val AD = \<^Const>\<open>Abstract_Domain\<^sub>M\<^sub>C x_ty model_ty\<close> $ T_term $ Dx*)
+      val Ds = infer_the_default_scalar_domain ctxt (s_ty, x_ty, model_ty)
    in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_Scalar_Assoc s_ty x_ty model_ty\<close>
-                                            $ F_term $ T_term $ Sdom),
+                                            $ F_term $ T_term $ Ds (* $ Dx *)),
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end
 

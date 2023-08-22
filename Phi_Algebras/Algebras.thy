@@ -201,6 +201,12 @@ class sep_magma_0 = sep_magma_1 + mult_zero + zero_neq_one +
   assumes sep_magma_0_left  [simp]: "x ## 0 \<longleftrightarrow> x = 1"
   assumes sep_magma_0_right [simp]: "0 ## x \<longleftrightarrow> x = 1"
 
+class sep_carrier_set_1 = sep_carrier_set + sep_magma_1 +
+  assumes sep_carrier_set_1[simp]: \<open>mul_carrier 1\<close>
+
+class sep_carrier_set_0 = sep_carrier_set + sep_magma_0 +
+  assumes sep_carrier_set_0[simp]: \<open>mul_carrier 0\<close>
+
 class sep_no_inverse = sep_magma_1 +
   assumes sep_no_inverse[simp]: \<open>x ## y \<Longrightarrow> x * y = 1 \<longleftrightarrow> x = 1 \<and> y = 1\<close>
 
@@ -481,7 +487,7 @@ class share_nun_semimodule = share_sep_disj + sep_ab_semigroup + sep_carrier_set
     and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
 
-class share_semimodule = share_sep_disj + share_one + sep_algebra + sep_carrier_set +
+class share_semimodule = share_sep_disj + share_one + sep_algebra + sep_carrier_set_1 +
   assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     and   share_sub: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
@@ -1025,8 +1031,15 @@ locale module_S_distr = module_for_sep +
                              \<Longrightarrow> smult (s + t) a = smult s a * smult t a \<and> smult s a ## smult t a \<close>
 
 locale module_scalar_assoc = module_for_sep +
-  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t; mul_carrier a \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (t * s) a\<close>
-  \<comment> \<open>Recall we always follow the order of the associativity.\<close>
+  assumes module_scalar_assoc: \<open>\<lbrakk> Ds s; Ds t \<rbrakk> \<Longrightarrow> smult s (smult t a) = smult (t * s) a\<close>
+  \<comment> \<open>Recall we always follow the order of the associativity.
+
+      Here we do not require \<open>mul_carrier a\<close> in order to get a type equation \<open>F s (F t T) = F (t * s) T\<close>
+      that is condition-less about abstract objects.
+
+      For elements outside the carrier set, simply extend the scalar multiplication on them to identity
+      function.
+\<close>
 
 locale module_scalar_identity = module_for_sep +
   assumes module_scalar_identity: \<open>smult 1 a = a\<close>
@@ -1212,7 +1225,7 @@ instance option :: (positive_sep_magma) positive_sep_magma_1 proof
       by (metis join_positivity join_sub_def) .
 qed
 
-
+instance option :: (sep_carrier_set) sep_carrier_set_1 by (standard; simp)
 
 instance option :: (sep_semigroup) sep_monoid proof
   fix x y z :: \<open>'a option\<close>
@@ -1415,9 +1428,7 @@ end
 instance prod :: (sep_magma,sep_magma) sep_magma ..
 
 
-instantiation prod :: (sep_carrier_set, sep_carrier_set) sep_carrier_set begin
-
-term pred_prod
+instantiation prod :: (mul_carrier_set, mul_carrier_set) mul_carrier_set  begin
 
 definition mul_carrier_prod :: \<open>'a \<times> 'b \<Rightarrow> bool\<close>
   where \<open>mul_carrier_prod = pred_prod mul_carrier mul_carrier\<close>
@@ -1426,12 +1437,18 @@ lemma mul_carrier_prod[simp]:
   \<open> mul_carrier (x,y) \<longleftrightarrow> mul_carrier x \<and> mul_carrier y \<close>
   unfolding mul_carrier_prod_def by simp
 
-instance by (standard; clarsimp simp add: mul_carrier_closed)
+instance ..
 
 end
 
+instance prod :: (sep_carrier_set, sep_carrier_set) sep_carrier_set
+  by (standard; clarsimp simp add: mul_carrier_closed)
+
 instance prod :: (sep_magma_1, sep_magma_1) sep_magma_1
   by (standard; simp add: one_prod_def split_paired_all)
+
+instance prod :: (sep_carrier_set_1, sep_carrier_set_1) sep_carrier_set_1
+  by (standard; simp add: one_prod_def)
 
 instance prod :: (sep_no_inverse, sep_no_inverse) sep_no_inverse
   by (standard, simp add: one_prod_def times_prod_def split: prod.split) force
@@ -1560,17 +1577,22 @@ definition sep_disj_list :: \<open>'a list \<Rightarrow> 'a list \<Rightarrow> b
 instance by (standard; simp)
 end
 
-instantiation list :: (sep_carrier_set) sep_carrier_set begin
+instantiation list :: (mul_carrier_set) mul_carrier_set begin
 
 definition mul_carrier_list :: \<open>'a list \<Rightarrow> bool\<close>
   where [simp]: \<open>mul_carrier_list = list_all mul_carrier\<close>
 
-instance by (standard; simp add: times_list_def)
-
+instance ..
 end
+
+instance list :: (sep_carrier_set) sep_carrier_set
+  by (standard; simp add: times_list_def)
 
 instance list :: (type) sep_monoid
   by (standard; clarsimp simp add: times_list_def join_sub_def)
+
+instance list :: (sep_carrier_set_1) sep_carrier_set_1
+  by (standard; simp add: times_list_def)
 
 instance list :: (type) sep_disj_distrib by (standard; simp)
 
@@ -1703,14 +1725,19 @@ instance "fun" :: (type,sep_magma) sep_magma ..
 instance "fun" :: (type,sep_magma_1) sep_magma_1
  by (standard; simp add: sep_disj_fun_def)
 
-instantiation "fun" :: (type, sep_carrier_set) sep_carrier_set begin
+instantiation "fun" :: (type, mul_carrier_set) mul_carrier_set begin
 
 definition mul_carrier_fun :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
   where [simp]: \<open>mul_carrier_fun f = (\<forall>k. mul_carrier (f k))\<close>
 
-instance by (standard; simp add: times_fun mul_carrier_closed)
-
+instance ..
 end
+
+instance "fun" :: (type, sep_carrier_set) sep_carrier_set
+  by (standard; simp add: times_fun mul_carrier_closed)
+
+instance "fun" :: (type, sep_carrier_set_1) sep_carrier_set_1
+  by (standard; simp)
 
 instance "fun" :: (type, sep_cancel) sep_cancel
   apply (standard; simp add: fun_eq_iff times_fun sep_disj_fun_def)
@@ -1993,7 +2020,7 @@ instance unit :: sep_no_inverse by standard simp_all
 
 instance unit :: sep_cancel by standard simp
 
-instantiation unit :: sep_carrier_set begin
+instantiation unit :: sep_carrier_set_1 begin
 
 definition mul_carrier_unit :: \<open>unit \<Rightarrow> bool\<close> where [simp]: \<open>mul_carrier_unit x = True \<close>
 
