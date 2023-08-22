@@ -2327,7 +2327,7 @@ subsection \<open>Potentially Uninitialized Structure\<close>
 
 datatype 'V uninit = initialized 'V | uninitialized
 
-instantiation uninit :: (nonsepable_semigroup) nonsepable_semigroup begin
+instantiation uninit :: (discrete_semigroup) discrete_semigroup begin
 definition \<open>sep_disj_uninit (x::'a uninit) (y::'a uninit) \<longleftrightarrow> False\<close>
 instance apply standard unfolding sep_disj_uninit_def by simp_all
 end

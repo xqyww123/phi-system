@@ -7,9 +7,9 @@ chapter \<open>Resource Bases and Templates\<close>
 
 section \<open>Preliminary\<close>
 
-interpretation to_share: cancl_share_orthogonal_homo \<open>to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option\<close> UNIV ..
+interpretation to_share: cancl_share_orthogonal_homo \<open>to_share::'a::discrete_semigroup option \<Rightarrow> 'a share option\<close> UNIV ..
 interpretation pointwise_to_share:
-  cancl_share_orthogonal_homo \<open>(o) (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option)\<close> \<open>pointwise_set UNIV\<close>
+  cancl_share_orthogonal_homo \<open>(o) (to_share::'a::discrete_semigroup option \<Rightarrow> 'a share option)\<close> \<open>pointwise_set UNIV\<close>
   by (standard; standard)
 
 section \<open>Bases\<close>
@@ -426,7 +426,7 @@ end
 
 
 section \<open>Non-separable Monolithic Resource\<close>
-  \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option\<close>\<close>
+  \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::discrete_semigroup option\<close>\<close>
 
 locale nonsepable_mono_resource =
   resource Res
@@ -658,8 +658,8 @@ subsection \<open>Resource\<close>
 
 locale partial_map_resource =
   mapping_resource Res
-  for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
-  and P :: \<open>'key \<Rightarrow> 'val::nonsepable_semigroup set\<close>
+  for Res :: "('key \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
+  and P :: \<open>'key \<Rightarrow> 'val::discrete_semigroup set\<close>
 + assumes domain0: \<open>domain = sep_homo_set {h. finite (dom h) \<and> (\<forall>k \<in> dom h. h k \<in> Some ` P k)}\<close>
 begin
 
@@ -743,7 +743,7 @@ lemma setter_refinement:
       using a2 prems(1) prems(5) by fastforce
     have x3: \<open>map_fun_at k (F \<circ> the) (get u * (r * 1(k \<mapsto> v))) \<in>\<^sub>S\<^sub>H domain\<close>
       unfolding q3
-      by (metis a3 mult_in_sep_homo_set nonsepable_semigroup_sepdisj_fun q4 sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 x1 x2) 
+      by (metis a3 mult_in_sep_homo_set discrete_semigroup_sepdisj_fun q4 sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 x1 x2) 
     have x5: \<open>w ## r * 1(k \<mapsto> v) \<Longrightarrow>
                   map_fun_at k (F \<circ> the) (w * (r * 1(k \<mapsto> v))) = w * (r * (1(k := F v)))\<close> for w
           unfolding map_fun_at_def apply (clarsimp simp add: fun_eq_iff times_fun)
@@ -753,11 +753,11 @@ lemma setter_refinement:
       subgoal premises prems for w
       proof -
         have x4: \<open>r ## 1(k := F v)\<close>
-          by (meson nonsepable_semigroup_sepdisj_fun x1)
+          by (meson discrete_semigroup_sepdisj_fun x1)
         have x4': \<open>w ## 1(k := F v)\<close>
-          by (meson nonsepable_semigroup_sepdisj_fun prems(10) sep_disj_commuteI sep_disj_multD2 x1)
+          by (meson discrete_semigroup_sepdisj_fun prems(10) sep_disj_commuteI sep_disj_multD2 x1)
         have x6: \<open>w ## (r * 1(k := F v))\<close>
-          by (meson nonsepable_semigroup_sepdisj_fun prems(10) sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 x1)
+          by (meson discrete_semigroup_sepdisj_fun prems(10) sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 x1)
         have x6': \<open>r ## (w * 1(k := F v))\<close>
           by (metis sep_disj_commute sep_disj_multI2 sep_mult_commute x4 x4' x6)
         have x7: \<open>clean u * mk w = u\<close>
@@ -777,7 +777,7 @@ locale pointwise_base_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res RP
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise I\<close>
 +  homo_one \<open>\<F>_pointwise I\<close>
-for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 and I :: \<open>'key \<Rightarrow> ('fic::sep_algebra, 'val option) interp\<close>
 and Fic :: "('key \<Rightarrow> 'fic) fiction_entry"
 and RP :: \<open>'key \<Rightarrow> 'val set\<close>
@@ -919,7 +919,7 @@ subsection \<open>Resource\<close>
 
 locale partial_map_resource2 =
   mapping_resource Res
-for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 begin
 
 subsubsection \<open>Getter\<close>
@@ -958,20 +958,20 @@ lemma setter_refinement:
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at k (map_fun_at k2 (\<lambda>_. u))\<close>]], assumption)
   unfolding Fictional_Forward_Simulation_def setter_transition
   apply (clarsimp simp add: basic_fiction_\<I> \<phi>expns prj.homo_mult times_fun_upd sep_disj_partial_map_upd
-        nonsepable_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
+        discrete_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
         times_fun inj.homo_mult[symmetric] inject_wand_homo)
   subgoal premises prems for r R x' u' a
   proof -
     have t1[simp]: \<open>a k k2 ## Some any\<close>
       by (metis fun_sep_disj_imply_v fun_upd_triv prems(5) prems(9) sep_disj_commuteI sep_disj_multD2)
     have t2[simp]: \<open>r k k2 ## a k k2 * Some any\<close>
-      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv nonsepable_semigroup_sepdisj_fun prems(5))
+      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv discrete_semigroup_sepdisj_fun prems(5))
     have t3[simp]: \<open>r k k2 * (a k k2 * Some any) = Some any\<close>
       using t1 t2 by force
     have t4[simp]: \<open>x' = clean u' * mk (map_fun_at k (map_fun_at k2 (\<lambda>_. u)) (r * (a * 1(k := 1(k2 \<mapsto> any))))) \<and> ret = Normal \<phi>V_none\<close>
       using prems(3) by fastforce
     have t5[simp]: \<open>r ## 1(k := 1(k2 := u))\<close>
-      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv nonsepable_semigroup_sepdisj_fun prems(5))
+      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv discrete_semigroup_sepdisj_fun prems(5))
     have t6[simp]: \<open>(r * a) k k2 = None\<close>
       by (metis sep_disj_multI1 sep_disj_option_nonsepable(1) t1 t2 times_fun)
     then have [simp]:
@@ -983,8 +983,8 @@ lemma setter_refinement:
       by (metis fun_split_1 prems(8))
     show ?thesis
       apply (simp, rule exI[where x=u']; simp add: prems; rule)
-      apply (smt (verit, del_insts) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.homo_mult inj.sep_disj_homo_semi inject_assoc_homo nonsepable_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_mult_commute sep_space_entry.times_fun_upd sep_space_entry_axioms times_fupdt_1_apply_sep)
-      by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo_semi nonsepable_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_disj_multI2)
+      apply (smt (verit, del_insts) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.homo_mult inj.sep_disj_homo_semi inject_assoc_homo discrete_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_mult_commute sep_space_entry.times_fun_upd sep_space_entry_axioms times_fupdt_1_apply_sep)
+      by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo_semi discrete_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_disj_multI2)
   qed .
 
 end
@@ -995,7 +995,7 @@ subsection \<open>Pointwise Base Fiction\<close>
 locale pointwise_base_fiction_for_partial_mapping_resource2 =
    R: partial_map_resource2 Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<lambda>k1. \<F>_pointwise (I k1))\<close>
-for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 and I :: \<open>'key \<Rightarrow> 'key2 \<Rightarrow> ('fic::sep_algebra, 'val option) interp\<close>
 and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'fic) fiction_entry"
 begin

@@ -667,7 +667,7 @@ end
 
 
 subsection \<open>Nosep Monolithic Resource\<close>
-  \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::nonsepable_semigroup option\<close>\<close>
+  \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::discrete_semigroup option\<close>\<close>
 
 (* locale nonsepable_mono_resource =
   resource Res
@@ -807,7 +807,7 @@ subsubsection \<open>Locale for Resource\<close>
 
 locale partial_map_resource =
   mapping_resource Res
-for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 begin
 
 lemma "__updt_rule__":
@@ -819,14 +819,14 @@ lemma "__updt_rule__":
   apply (clarsimp simp add: \<r>_valid_split' times_set_def inj.sep_orthogonal
           prj.homo_mult times_fun_upd )
   apply (clarsimp simp add: sep_disj_partial_map_upd
-          nonsepable_semigroup_sepdisj_fun mk_homo_mult)
+          discrete_semigroup_sepdisj_fun mk_homo_mult)
   subgoal premises prems for x aa proof -
     have t1: \<open>clean x * mk aa = x\<close>
       by (metis fun_split_1 prems(7))
     have t2: \<open>clean x ## (mk aa * mk (1(k := u)))\<close>
       by (simp add: fun_1upd_homo)
     show ?thesis
-      by (metis (no_types, opaque_lifting) fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) inj.sep_disj_homo_semi mult_1_class.mult_1_left nonsepable_semigroup_sepdisj_fun prems(5) prems(8) t1)
+      by (metis (no_types, opaque_lifting) fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) inj.sep_disj_homo_semi mult_1_class.mult_1_left discrete_semigroup_sepdisj_fun prems(5) prems(8) t1)
   qed .
 
 lemma "__dispose_rule__":
@@ -902,7 +902,7 @@ subsubsection \<open>Itself Fiction\<close>
 locale identity_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_it\<close>
-for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val option) fiction_entry"
 begin
 
@@ -916,7 +916,7 @@ subsubsection \<open>Permission Fiction\<close>
 locale share_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.share_fiction\<close>
-for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val share option) fiction_entry"
 begin
 
@@ -1003,7 +1003,7 @@ subsubsection \<open>Locale of Resource\<close>
 
 locale partial_map_resource2 =
   mapping_resource Res
-for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 begin
 
 lemma "__updt_rule__":
@@ -1186,7 +1186,7 @@ subsubsection \<open>Permission Fiction\<close>
 locale share_fiction_for_partial_mapping_resource2 =
   R: partial_map_resource2 Res
   +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.share_fiction\<close>
-  for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+  for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
     and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val share option) fiction_entry"
 begin
 

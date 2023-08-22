@@ -323,7 +323,7 @@ subclass sep_ab_semigroup proof
 qed
 end
 
-class nonsepable_semigroup = sep_disj + times +
+class discrete_semigroup = sep_disj + times +
   assumes nonsepable_disj[simp]: "\<not> x ## y"
 begin
 subclass sep_magma .
@@ -332,7 +332,7 @@ subclass sep_cancel by (standard; simp)
 subclass strict_positive_sep_magma by (standard; simp)
 end
 
-class nonsepable_monoid = sep_disj + mult_1 +
+class discrete_monoid = sep_disj + mult_1 +
   assumes nonsepable_disj_1[simp]: \<open>x ## y \<longleftrightarrow> x = 1 \<or> y = 1\<close>
 begin
 subclass sep_magma .
@@ -460,13 +460,14 @@ class share_one_eq_one_iff = share_one +
 
 class share_sep_disj = share + comm_sep_disj + sep_carrier_set +
   assumes share_sep_disj_left[simp]: \<open>0 < n \<Longrightarrow> share n x ## y \<longleftrightarrow> x ## y\<close>
-      and share_sep_disj_singl: \<open>\<lbrakk> 0 < n ; 0 < m ; mul_carrier x \<rbrakk> \<Longrightarrow> share n x ## share m x\<close> 
+          \<comment> \<open>the share operation is independent with sep_disj. The multiplication defined between
+              two elements are also defined on their shared portions. \<close>
+      and share_disj_sdistr: \<open> mul_carrier x \<Longrightarrow> x ## x\<close>
+          \<comment> \<open>The original form of the condition is,
+                  \<open>\<lbrakk> n < 0 ; m < 0 ; mul_carrier x \<rbrakk> \<Longrightarrow> share n x ## share m x\<close>
+              any element in the algebra can be divided into any portions.
+              By simplifying using share_sep_disj_left, we get the form above.\<close>
 begin
-
-text \<open>There is no property \<open>n \<noteq> 0 \<Longrightarrow> m \<noteq> 0 \<Longrightarrow> n \<odivr> x ## m \<odivr> x\<close> though it is also intuitive
-  iff \<open>x \<in> carrier\<close>. It is due to we do not use an explicit carrier set but extend the algebra
-  implicitly to the whole universe and define no operation on the elements not belonging to the
-  carrier, so that \<open>x ## x\<close> is not held on the elements out the carrier.\<close>
 
 lemma share_sep_disj_right[simp]:
         \<open>0 < n \<Longrightarrow> y ## share n x \<longleftrightarrow> y ## x\<close>
@@ -474,42 +475,32 @@ lemma share_sep_disj_right[simp]:
 
 end
 
-class share_nun_semimodule = share_sep_disj + sep_ab_semigroup +
+class share_nun_semimodule = share_sep_disj + sep_ab_semigroup + sep_carrier_set +
       \<comment>\<open>nun stands for non-unital\<close>
   assumes share_sep_left_distrib_0:  \<open> \<lbrakk> 0 < n ; 0 < m ; mul_carrier x \<rbrakk> \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib_0: \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
-    and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
-begin
+    and   share_sub_0: \<open>0 < n \<and> n < 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
 
-(*
-subclass sep_refl
-  b y (standard,
-      smt (verit, best) less_numeral_extra(1) local.sep_disj_commuteI local.sep_disj_multI2 local.sep_mult_assoc local.sep_mult_commute local.share_sep_disj_left local.share_sep_left_distrib_0 local.share_sep_right_distrib_0 zero_less_two)
-*)
-end
-
-class share_semimodule = share_sep_disj + share_one + sep_algebra +
-  assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
+class share_semimodule = share_sep_disj + share_one + sep_algebra + sep_carrier_set +
+  assumes share_sep_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
     and   share_sep_right_distrib: \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
-    and   share_sub: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
+    and   share_sub: \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
 begin
 
 subclass share_nun_semimodule proof
   fix x y :: 'a
   fix n m :: rat
-  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
+  show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (meson local.share_sep_left_distrib order_less_le)
   show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     using local.share_sep_right_distrib order_less_imp_le by blast
-  show \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
+  show \<open>0 < n \<and> n < 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     by (simp add: local.share_sub)
 qed
 
 end
 
-class share_semimodule_total = share_one + monoid_mult +
-  assumes share_left_distrib:  \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> share n x * share m x = share (n+m) x\<close>
-    and   share_right_distrib: \<open>0 \<le> n \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
+subsubsection \<open>Derivatives\<close>
 
 class share_resistence_nun = raw_share +
   assumes share_resistence_nun[simp]: \<open>share n x = x\<close>
@@ -518,24 +509,11 @@ subclass share by (standard; simp)
 end
 
 class share_resistence = raw_share + one +
-  assumes share_resistence_nun[simp]: \<open>share n x = (if n = 0 then 1 else x)\<close>
+  assumes share_resistence[simp]: \<open>share n x = (if n = 0 then 1 else x)\<close>
 begin
 subclass share by (standard; simp)
 end
 
-class share_resistence_sep_assms = raw_share + sep_disj + times +
-  assumes share_resistence_sep_mult[simp]: \<open>x ## x \<Longrightarrow> x * x = x\<close>
-
-class share_resistence_semimodule_sep = share_resistence_nun + sep_disj + sep_ab_semigroup + share_resistence_sep_assms
-begin
-subclass share_nun_semimodule by (standard; simp add: join_sub_def)
-end
-
-class share_resistence_module_sep = share_resistence + sep_disj + sep_algebra + share_resistence_sep_assms
-begin
-subclass share_semimodule apply (standard; clarsimp simp add: join_sub_def)
-  by (metis local.mult_1_left local.sep_magma_1_right)
-end
 
 subsection \<open>Homomorphisms\<close>
 
@@ -652,6 +630,7 @@ locale sep_orthogonal = homo_sep \<psi>
                         the introduction of \<open>d\<close> doesn't affect anything.
                         However here, if \<open>a = \<psi> d\<close> accidentally belongs to the target algebra, \<open>d\<close> matters,
                         so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
+      (*TODO: as now we have the mul_carrier, do we still need such D instead of using mul_carrier?*)
 + assumes sep_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
 begin
 
@@ -735,7 +714,7 @@ locale share_orthogonal_homo = sep_orthogonal_monoid \<psi> D
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_semimodule\<close> and D
 + assumes share_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
                            a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
-    and   \<psi>_self_disj: \<open>x \<in> D \<Longrightarrow> \<psi> x ## \<psi> x\<close>
+    and   \<psi>_self_disj: \<open>x \<in> D \<Longrightarrow> mul_carrier (\<psi> x) \<close>
 begin
 
 lemma share_orthogonal'[no_atp]:
@@ -748,7 +727,8 @@ lemma
   unfolding join_sub_def
   apply (rule; clarsimp simp add: homo_mult)
    apply (metis share_orthogonal)
-  by (metis \<psi>_self_disj join_sub_def join_sub_ext_left linorder_linear order_le_less_trans order_less_irrefl sep_disj_homo_semi share_sep_disj_right share_sub)
+  by (meson \<psi>_self_disj homo_sep_disj.sep_disj_homo_semi homo_sep_disj_axioms join_sub_def join_sub_ext_left less_eq_rat_def share_sep_disj_right share_sub)
+  
 
 (* lemma \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> x\<close>
   by (simp add: \<psi>_self_disj share_sub) *)
@@ -794,27 +774,6 @@ sublocale cancl_sep_orthogonal_monoid ..
 end
 
 
-
-
-
-(*
-lemma share_orthogonal_homo'_id[intro!,simp]:
-  \<open>share_orthogonal_homo' F \<Longrightarrow> id share_orthogonal_homo' F\<close>
-  by simp*)
-
-(*
-lemma
-  \<open>share_orthogonal_homo' f \<Longrightarrow> sep_orthogonal g \<and> inj_at_1 g \<Longrightarrow> share_orthogonal_homo' (f o g)\<close>
-  unfolding share_orthogonal_homo'_def share_orthogonal_homo'_axioms_def
-  apply (simp add: inj_at_1_comp sep_orthogonal_comp) *)
-
-
-
-(* class unital_mult = plus + one +
-  assumes unital_add_left[simp]: "1 * x = x"
-    and unital_add_right[simp]: "x * 1 = x"
-
-subclass (in monoid_mult) unital_mult .. simp_all *)
 
 subsection \<open>Partial Additive Structures\<close>
 
@@ -1076,22 +1035,22 @@ locale module_scalar_zero = module_for_sep +
   assumes module_scalar_zero: \<open>smult 0 a = 1\<close>
 
 lemma module_scalar_identity_share[simp]:
-  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::share \<Rightarrow> 'a)\<close>
+  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::{sep_carrier_set, share} \<Rightarrow> 'a)\<close>
   unfolding module_scalar_identity_def
   by simp
 
 lemma module_scalar_zero_share[simp]:
-  \<open>module_scalar_zero (share :: rat \<Rightarrow> 'a::share_one \<Rightarrow> 'a)\<close>
+  \<open>module_scalar_zero (share :: rat \<Rightarrow> 'a::{sep_carrier_set, share_one} \<Rightarrow> 'a)\<close>
   unfolding module_scalar_zero_def
   by simp
 
 lemma module_scalar_assoc_share0[simp]:
-  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::share \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
+  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::{sep_carrier_set, share} \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
   unfolding module_scalar_assoc_def
   by (simp add: share_share_assoc0)
 
 lemma module_scalar_assoc_share[simp]:
-  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::share_one \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
+  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::{sep_carrier_set, share_one} \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
   unfolding module_scalar_assoc_def
   by (simp add: share_share)
 
@@ -1104,12 +1063,14 @@ end
 lemma module_S_distr_share:
   \<open>module_S_distr (share :: rat \<Rightarrow> 'a::share_semimodule \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
   unfolding module_S_distr_def
-  by (simp add: less_eq_rat_def share_sep_left_distrib)
+  using share_disj_sdistr
+  by (auto simp add: less_eq_rat_def share_sep_left_distrib )
 
 lemma module_S_distr_share_0:
   \<open>module_S_distr (share :: rat \<Rightarrow> 'a::share_nun_semimodule \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
   unfolding module_S_distr_def
-  by (simp add: share_sep_left_distrib_0)
+  using share_disj_sdistr
+  by (auto simp add: share_sep_left_distrib_0)
 
 
 
@@ -1204,7 +1165,7 @@ end
 lemma sep_disj_option_nonsepable[simp]:
   \<open>x ## Some y \<longleftrightarrow> x = None\<close>
   \<open>Some y ## x \<longleftrightarrow> x = None\<close>
-  for y :: \<open>'a :: nonsepable_semigroup\<close>
+  for y :: \<open>'a :: discrete_semigroup\<close>
   by (cases x; simp)+
 
 instantiation option :: (comm_sep_disj) comm_sep_disj begin
@@ -1283,7 +1244,7 @@ instance option :: (sep_ab_semigroup) sep_algebra proof
   show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by (cases x; cases y; simp add: sep_disj_commute sep_mult_commute)
 qed
 
-instance option :: (nonsepable_semigroup) nonsepable_monoid
+instance option :: (discrete_semigroup) discrete_monoid
   by (standard; case_tac x; case_tac y; simp)
 
 
@@ -1310,20 +1271,19 @@ instantiation option :: (share) share_one_eq_one_iff begin
 instance by (standard; simp add: share_option_def; case_tac x; simp)
 end
 
-instantiation option :: (share_sep_disj) share_sep_disj begin
-instance by (standard; case_tac x; simp add: share_option_def; case_tac y;
-             simp add: share_sep_left_distrib_0 order_less_le)
-end
+instance option :: (share_sep_disj) share_sep_disj
+  by (standard; case_tac x; simp add: share_disj_sdistr;
+                case_tac y; simp)
 
 instantiation option :: (share_nun_semimodule) share_semimodule begin
 instance proof
   fix n m :: rat
   fix x y :: \<open>'a option\<close>
-  show \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> x ## x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
+  show \<open>0 \<le> n \<Longrightarrow> 0 \<le> m \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (case_tac x; clarsimp simp add: share_option_def share_sep_left_distrib_0 order_less_le)
   show \<open>0 \<le> n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (case_tac x; case_tac y; clarsimp simp add: share_option_def share_sep_right_distrib_0)
-  show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
+  show \<open>0 \<le> n \<and> n \<le> 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x\<close>
     unfolding join_sub_def apply (cases x; clarsimp simp add: share_option_def)
     apply (cases \<open>n = 1\<close>)
     apply (metis sep_disj_option(2) share_left_one times_option(3))
@@ -1347,9 +1307,9 @@ lemma times_option_none[simp]:
   \<open>x * y = None \<longleftrightarrow> x = None \<and> y = None\<close>
   by (simp add: option.case_eq_if times_option_def)
 
-lemma Some_nonsepable_semigroup_sub_join[simp]:
+lemma Some_discrete_semigroup_sub_join[simp]:
   \<open>Some x \<preceq>\<^sub>S\<^sub>L X \<longleftrightarrow> X = Some x\<close>
-  for x :: \<open>'a::nonsepable_semigroup\<close>
+  for x :: \<open>'a::discrete_semigroup\<close>
   by (simp add: join_sub_def)
 
 
@@ -1731,7 +1691,7 @@ lemma sep_disj_fun[simp]: \<open>(f ## g) \<Longrightarrow> f x ## g x\<close>
 lemma sep_disj_fun_nonsepable:
   \<open>f x = Some v \<Longrightarrow> f ## g \<Longrightarrow> g x = None\<close>
   \<open>f x = Some v \<Longrightarrow> g ## f \<Longrightarrow> g x = None\<close>
-  for v :: \<open>'a :: nonsepable_semigroup\<close>
+  for v :: \<open>'a :: discrete_semigroup\<close>
   by (metis sep_disj_fun sep_disj_option_nonsepable)+
 
 
@@ -1911,17 +1871,14 @@ definition share_fun :: \<open>rat \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightar
 instance by (standard; simp add: share_fun_def fun_eq_iff share_share_assoc0)
 end
 
-instantiation "fun" :: (type,share_one) share_one begin
-instance by (standard; simp add: share_fun_def fun_eq_iff)
-end
+instance "fun" :: (type,share_one) share_one
+  by (standard; simp add: share_fun_def fun_eq_iff)
 
-instantiation "fun" :: (type,share_one_eq_one_iff) share_one_eq_one_iff begin
-instance by (standard; simp add: share_fun_def fun_eq_iff)
-end
+instance "fun" :: (type,share_one_eq_one_iff) share_one_eq_one_iff
+  by (standard; simp add: share_fun_def fun_eq_iff)
 
-instantiation "fun" :: (type, share_sep_disj) share_sep_disj begin
-instance by (standard; simp add: share_fun_def fun_eq_iff sep_disj_fun_def)
-end
+instance "fun" :: (type, share_sep_disj) share_sep_disj
+  by (standard; simp add: share_fun_def fun_eq_iff sep_disj_fun_def share_disj_sdistr)
 
 instantiation "fun" :: (type, share_semimodule) share_semimodule begin
 instance apply (standard; simp_all add: share_fun_def fun_eq_iff times_fun_def share_sep_left_distrib
@@ -1934,14 +1891,9 @@ instance apply (standard; simp_all add: share_fun_def fun_eq_iff times_fun_def s
   qed .
 end
 
-instantiation "fun" :: (type, share_semimodule_total) share_semimodule_total begin
-instance by standard (simp_all add: share_fun_def fun_eq_iff times_fun_def share_left_distrib share_right_distrib)
-end
-
 lemma share_fun_updt[simp]:
   \<open>share n (f(k := v)) = (share n f)(k := share n v)\<close>
   unfolding share_fun_def fun_eq_iff by simp
-
 
 
 subsection \<open>Finite Map\<close>
@@ -2192,32 +2144,32 @@ lemma sep_disj_partial_map_del:
 
 lemma sep_disj_partial_map_disjoint:
   "f ## g \<longleftrightarrow> dom f \<inter> dom g = {}"
-  for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
+  for f :: "'a \<rightharpoonup> ('b :: discrete_semigroup)"
   unfolding sep_disj_fun_def sep_disj_option_def disjoint_iff
   by (smt (verit, ccfv_SIG) domD domIff nonsepable_disj option.simps(4) option.simps(5))
 
 
 lemma sep_disj_partial_map_some_none:
   \<open>f ## g \<Longrightarrow> g k = Some v \<Longrightarrow> f k = None\<close>
-  for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
+  for f :: "'a \<rightharpoonup> ('b :: discrete_semigroup)"
   using disjoint_iff sep_disj_partial_map_disjoint by fastforce
 
 lemma sep_disj_partial_map_not_1_1:
   \<open>f ## g \<Longrightarrow> g k \<noteq> 1 \<Longrightarrow> f k = 1\<close>
-  for f :: "'a \<Rightarrow> ('b :: nonsepable_monoid)"
+  for f :: "'a \<Rightarrow> ('b :: discrete_monoid)"
   unfolding sep_disj_fun_def apply simp
   by blast
 
 
 lemma sep_disj_partial_map_upd:
   \<open>f ## g \<Longrightarrow> k \<in> dom g \<Longrightarrow> (f * g)(k := v) = (f * g(k:=v))\<close>
-  for f :: "'a \<rightharpoonup> ('b :: nonsepable_semigroup)"
+  for f :: "'a \<rightharpoonup> ('b :: discrete_semigroup)"
   unfolding sep_disj_partial_map_disjoint fun_upd_def times_fun fun_eq_iff
   by simp (metis disjoint_iff domIff times_option(3))
 
-lemma nonsepable_semigroup_sepdisj_fun:
+lemma discrete_semigroup_sepdisj_fun:
   \<open>a ## 1(k \<mapsto> x) \<Longrightarrow> a ## 1(k := any)\<close>
-  for x :: \<open>'b::nonsepable_semigroup\<close>
+  for x :: \<open>'b::discrete_semigroup\<close>
   unfolding sep_disj_fun_def
   by (metis fun_upd_other fun_upd_same sep_magma_1_right sep_disj_option_nonsepable(1))
 
@@ -2288,7 +2240,7 @@ lemma dom1_disjoint_sep_disj:
 
 lemma sep_disj_dom1_disj_disjoint:
   \<open>g ## f \<longleftrightarrow> dom1 g \<inter> dom1 f = {}\<close>
-  for f :: \<open>'a \<Rightarrow> 'b::nonsepable_monoid\<close>
+  for f :: \<open>'a \<Rightarrow> 'b::discrete_monoid\<close>
   unfolding sep_disj_fun_def dom1_def set_eq_iff
   by clarsimp
 
@@ -2383,7 +2335,7 @@ proof (rule share_orthogonal_homo.intro, rule sep_orthogonal_monoid_pointwise,
   fix a' :: \<open>'a \<Rightarrow> 'c\<close>
   fix n :: rat
 
-  show \<open>x \<in> D' \<Longrightarrow> (\<psi> \<circ> x) ## (\<psi> \<circ> x)\<close>
+  show \<open>x \<in> D' \<Longrightarrow> mul_carrier (\<psi> \<circ> x)\<close>
     by (simp add: D' sep_disj_fun_def xx.\<psi>_self_disj pointwise_set_def)
   
   show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<psi> \<circ> b) \<Longrightarrow>
@@ -2432,11 +2384,11 @@ proof
     interpret xx: share_orthogonal_homo \<open>((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close> \<open>(pointwise_set D)\<close> using prem .
     fix x y a b c :: \<open>'b\<close> and a2 :: 'c and n :: rat
 
-    show \<open>x \<in> D \<Longrightarrow> \<psi> x ## \<psi> x\<close>
+    show \<open> x \<in> D \<Longrightarrow> mul_carrier (\<psi> x) \<close>
       using xx.\<psi>_self_disj[of \<open>\<lambda>_. x\<close>, simplified pointwise_set_def, simplified]
       by (auto simp add: sep_disj_fun_def)
 
-    show \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
+    show \<open> b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
             (a2 * n \<odivr> \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' * (1 - n) \<odivr> \<psi> b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
       by (insert xx.share_orthogonal[where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>];
           clarsimp simp add: sep_disj_fun_def share_fun_def fun_eq_iff times_fun pointwise_set_def; rule; auto)
@@ -2452,7 +2404,7 @@ subsubsection \<open>Subsumption\<close>
 
 lemma nonsepable_partial_map_subsumption:
   \<open>f \<preceq>\<^sub>S\<^sub>L g \<Longrightarrow> k \<in> dom1 f \<Longrightarrow> g k = f k\<close>
-  for f :: \<open>'k \<Rightarrow> 'v::nonsepable_monoid\<close>
+  for f :: \<open>'k \<Rightarrow> 'v::discrete_monoid\<close>
   unfolding join_sub_def
   apply (clarsimp simp add: times_fun)
   by (metis disjoint_dom1_eq_1(1) mult_1_class.mult_1_left sep_disj_commute sep_disj_dom1_disj_disjoint)
@@ -2461,14 +2413,14 @@ lemma nonsepable_1_fupdt_subsumption:
   \<open> 1(k := v) \<preceq>\<^sub>S\<^sub>L objs
 \<Longrightarrow> v \<noteq> 1
 \<Longrightarrow> objs k = v\<close>
-  for v :: \<open>'v::nonsepable_monoid\<close>
+  for v :: \<open>'v::discrete_monoid\<close>
   using nonsepable_partial_map_subsumption[where f=\<open>1(k := v)\<close>]
   by (clarsimp simp add: times_fun)
 
 lemma nonsepable_partial_map_subsumption_L2:
   \<open> 1(k := v) \<preceq>\<^sub>S\<^sub>L objs
 \<Longrightarrow> v \<subseteq>\<^sub>m objs k\<close>
-  for v :: \<open>'b \<Rightarrow> 'c::nonsepable_semigroup option\<close>
+  for v :: \<open>'b \<Rightarrow> 'c::discrete_semigroup option\<close>
   unfolding join_sub_def map_le_def
   apply (clarsimp simp add: times_fun)
   by (metis (mono_tags, opaque_lifting) fun_upd_same mult_1_class.mult_1_left one_option_def sep_disj_fun_def sep_disj_partial_map_some_none)
@@ -2511,6 +2463,23 @@ end
 instance share :: (type) strict_positive_sep_magma
   by (standard; case_tac a; case_tac b; simp)
 
+instantiation share :: (mul_carrier_set) mul_carrier_set begin
+
+definition mul_carrier_share :: \<open>'a share \<Rightarrow> bool\<close>
+  where \<open>mul_carrier_share x = (case x of Share n x' \<Rightarrow> 0 < n \<and> mul_carrier x')\<close>
+
+lemma mul_carrier_share[simp]:
+  \<open>mul_carrier (Share n x) \<longleftrightarrow> 0 < n \<and> mul_carrier x\<close>
+  unfolding mul_carrier_share_def
+  by simp
+
+instance ..
+
+end
+
+instance share :: (sep_carrier_set) sep_carrier_set
+  by (standard; case_tac a; case_tac b; simp)
+
 instance share :: (type) sep_ab_semigroup proof
   fix x y z :: "'a share"
   show "x ## y \<Longrightarrow> x * y = y * x" by (cases x; cases y) (simp add: add.commute)
@@ -2546,17 +2515,20 @@ instance by (standard; case_tac x; simp add: share_share_def mult.assoc mult_le_
 
 end
 
-instance share :: (type) share_nun_semimodule proof
+
+instance share :: (sep_carrier_set) share_nun_semimodule proof
   fix x y :: \<open>'a share\<close>
   fix n n' m :: rat
 
   show \<open>0 < n \<Longrightarrow> share n x ## y = x ## y\<close>
     by (cases x; cases y; simp add: zero_less_mult_iff)
+  show \<open>mul_carrier x \<Longrightarrow> x ## x\<close>
+    by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close>
     by (cases x; cases y; simp add: distrib_right)
   show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close>
     by (cases x; cases y; simp add: distrib_left)
-  show \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
+  show \<open>0 < n \<and> n < 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close>
     apply (cases x; cases y; simp add: join_sub_def share_exists)
     by (metis add.commute add_le_same_cancel1 diff_add_cancel linorder_not_le mult_1_class.mult_1_left mult_less_cancel_right)
 qed
@@ -2570,8 +2542,9 @@ subsubsection \<open>Convert a function to sharing or back\<close>
 abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
+(* TODO!
 lemma share_orthogonal_homo_to_share[locale_witness]:
-  \<open>share_orthogonal_homo (to_share::'a::nonsepable_semigroup option \<Rightarrow> 'a share option) UNIV\<close>
+  \<open>share_orthogonal_homo (to_share::'a::{sep_carrier_set, discrete_semigroup} option \<Rightarrow> 'a share option) UNIV\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
   fix a' a2 :: \<open>'a share option\<close>
@@ -2584,7 +2557,7 @@ proof
     subgoal for a'' by (cases a''; simp) .
   (* show \<open>inj to_share\<close>
     by (rule, simp, metis option.inj_map_strong share.inject) *)
-  show \<open>to_share x ## to_share x\<close> by (cases x; simp)
+  show \<open>mul_carrier (to_share x)\<close> apply (cases x; simp)
   show \<open>a2 ## to_share b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> (a2 * n \<odivr> to_share b = to_share c) = (\<exists>a'. a2 = to_share a' * (1 - n) \<odivr> to_share b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> UNIV)\<close>
     apply (cases a2; cases b; cases c; simp add: share_option_def)
     apply (cases \<open>n < 1\<close>; simp)
@@ -2592,6 +2565,7 @@ proof
     by (metis join_strict_positivity less_numeral_extra(1) sep_disj_multD2 sep_disj_share)
   show \<open>1 \<in> UNIV\<close> by simp
 qed
+*)
 
 lemma to_share_kernel_is_1[locale_witness]:
   \<open> 1 \<in> D
@@ -2664,7 +2638,7 @@ lemma to_share_wand_homo:
   \<open> a ## (to_share o b)
 \<Longrightarrow> a * (to_share o b) = to_share \<circ> y
 \<longleftrightarrow> (\<exists>a'. a = to_share o a' \<and> a' * b = y \<and> a' ## b)\<close>
-  for a :: \<open>'a \<Rightarrow> 'b::nonsepable_semigroup share option\<close>
+  for a :: \<open>'a \<Rightarrow> 'b::discrete_semigroup share option\<close>
   unfolding times_fun fun_eq_iff sep_disj_fun_def all_conj_distrib[symmetric]
   apply (simp, subst choice_iff[symmetric])
   apply (rule; clarsimp)
@@ -2678,7 +2652,7 @@ lemma to_share_wand_homo:
 
 lemma to_share_funcomp_sep_disj_I:
   \<open>a ## b \<Longrightarrow> (to_share o a) ## (to_share o b)\<close>
-  for a :: \<open>'a \<Rightarrow> 'b::nonsepable_semigroup option\<close>
+  for a :: \<open>'a \<Rightarrow> 'b::discrete_semigroup option\<close>
   unfolding sep_disj_fun_def apply simp
    apply clarsimp subgoal premises prems for x
     apply (insert prems[THEN spec[where x=x]])
@@ -2715,7 +2689,7 @@ lemma inj_nosep[simp]:
   \<open>inj nosep\<close>
   unfolding inj_def by simp
 
-instantiation nosep :: (type) nonsepable_semigroup begin
+instantiation nosep :: (type) discrete_semigroup begin
 definition \<open>sep_disj_nosep (x :: 'a nosep) (y :: 'a nosep) = False\<close>
 definition share_nosep :: \<open>rat \<Rightarrow> 'a nosep \<Rightarrow> 'a nosep\<close>
   where [simp]: \<open>share_nosep _ x = x\<close>
@@ -2751,7 +2725,23 @@ definition sep_disj_agree :: \<open>'a agree \<Rightarrow> 'a agree \<Rightarrow
 instance ..
 end
 
-instantiation agree :: (type) share_nun_semimodule begin
+instantiation agree :: (mul_carrier_set) mul_carrier_set begin
+
+definition mul_carrier_agree :: \<open>'a agree \<Rightarrow> bool\<close>
+  where \<open>mul_carrier_agree = pred_agree mul_carrier\<close>
+
+lemma mul_carrier_agree:
+  \<open>mul_carrier (agree x) \<longleftrightarrow> mul_carrier x\<close>
+  unfolding mul_carrier_agree_def
+  by simp
+
+instance ..
+end
+
+instance agree :: (sep_carrier_set) sep_carrier_set
+  by (standard; simp)
+
+instantiation agree :: (sep_carrier_set) share_nun_semimodule begin
 
 definition share_agree :: \<open>rat \<Rightarrow> 'a agree \<Rightarrow> 'a agree\<close>
   where [simp]: \<open>share_agree _ x = x\<close>
@@ -2768,11 +2758,12 @@ instance proof
   show \<open>share 1 x = x\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> 0 < m \<Longrightarrow> share n x * share m x = share (n + m) x\<close> by (cases x; simp)
   show \<open>0 < n \<Longrightarrow> x ## y \<Longrightarrow> share n x * share n y = share n (x * y)\<close> by (cases x; simp)
-  show \<open>0 < n \<and> n < 1 \<Longrightarrow> x ## x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close> by (cases x; simp)
+  show \<open>0 < n \<and> n < 1 \<Longrightarrow> mul_carrier x \<Longrightarrow> share n x \<preceq>\<^sub>S\<^sub>L x \<or> share n x = x\<close> by (cases x; simp)
   show \<open>x ## y \<Longrightarrow> y ## x\<close> by (cases x; cases y; simp)
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by (cases x; cases y; cases z; simp)
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close> by (cases x; cases y; cases z; simp)
   show \<open>0 < n \<Longrightarrow> share n x ## y = x ## y\<close> by (cases x; cases y; simp)
+  show \<open>mul_carrier x \<Longrightarrow> x ## x\<close> by (cases x; simp)
 qed
 end
 

@@ -301,20 +301,20 @@ lemma setter_refinement:
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k\<close>]], assumption)
   unfolding Fictional_Forward_Simulation_def setter_transition
   apply (clarsimp simp add: basic_fiction_\<I> \<phi>expns prj.homo_mult times_fun_upd sep_disj_partial_map_upd
-        nonsepable_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
+        discrete_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
         times_fun inj.homo_mult[symmetric] inject_wand_homo)
   subgoal premises prems for r R x' u' a
   proof -
     have t1[simp]: \<open>a k k2 ## Some any\<close>
       by (metis fun_sep_disj_imply_v fun_upd_triv prems(5) prems(9) sep_disj_commuteI sep_disj_multD2)
     have t2[simp]: \<open>r k k2 ## a k k2 * Some any\<close>
-      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv nonsepable_semigroup_sepdisj_fun prems(5))
+      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv discrete_semigroup_sepdisj_fun prems(5))
     have t3[simp]: \<open>r k k2 * (a k k2 * Some any) = Some any\<close>
       using t1 t2 by force
     have t4[simp]: \<open>x' = clean u' * mk (map_fun_at (map_fun_at (\<lambda>_. u) k2) k (r * (a * 1(k := 1(k2 \<mapsto> any))))) \<and> ret = Normal \<phi>V_none\<close>
       using prems(3) by fastforce
     have t5[simp]: \<open>r ## 1(k := 1(k2 := u))\<close>
-      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv nonsepable_semigroup_sepdisj_fun prems(5))
+      by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv discrete_semigroup_sepdisj_fun prems(5))
     have t6[simp]: \<open>(r * a) k k2 = None\<close>
       by (metis sep_disj_multI1 sep_disj_option_nonsepable(1) t1 t2 times_fun)
     then have [simp]:
@@ -326,8 +326,8 @@ lemma setter_refinement:
       by (metis fun_split_1 prems(8))
     show ?thesis
       apply (simp, rule exI[where x=u']; simp add: prems; rule)
-      apply (smt (verit, del_insts) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.homo_mult inj.sep_disj_homo_semi inject_assoc_homo nonsepable_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_mult_commute sep_space_entry.times_fun_upd sep_space_entry_axioms times_fupdt_1_apply_sep)
-      by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo_semi nonsepable_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_disj_multI2)
+      apply (smt (verit, del_insts) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.homo_mult inj.sep_disj_homo_semi inject_assoc_homo discrete_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_mult_commute sep_space_entry.times_fun_upd sep_space_entry_axioms times_fupdt_1_apply_sep)
+      by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv inj.sep_disj_homo_semi discrete_semigroup_sepdisj_fun prems(5) prems(8) prems(9) sep_disj_multD1 sep_disj_multI1 sep_disj_multI2)
   qed .
 
 end
@@ -461,7 +461,7 @@ lemma setter_refinement:
   apply (rule refinement_sub_fun[OF setter_transition[where F=\<open>\<lambda>f. f(k := u)\<close>]], assumption)
   unfolding Fictional_Forward_Simulation_def setter_transition
   apply (clarsimp simp add: basic_fiction_\<I> \<phi>expns prj.homo_mult times_fun_upd sep_disj_partial_map_upd
-        nonsepable_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
+        discrete_semigroup_sepdisj_fun SPACE_mult_homo \<r>_valid_split'
         times_fun inj.homo_mult[symmetric] inject_wand_homo dom_mult)
   subgoal premises prems for r R x' u' a
   proof -
@@ -477,8 +477,8 @@ lemma setter_refinement:
       by (metis fun_split_1 prems(8))
     show ?thesis
       apply (simp add: prems, rule exI[where x=u']; simp add: prems; rule)
-      apply (smt (verit, ccfv_threshold) mk_homo_mult nonsepable_semigroup_sepdisj_fun prems(5) prems(9) sep_disj_clean sep_disj_mk sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc' sep_mult_left_commute t4 t5)
-      by (smt (verit, best) fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) inj.sep_disj_homo mult_1_class.mult_1_left nonsepable_semigroup_sepdisj_fun sep_disj_commute sep_disj_multD1 sep_disj_multI1 sep_mult_commute t1 t2 t5)
+      apply (smt (verit, ccfv_threshold) mk_homo_mult discrete_semigroup_sepdisj_fun prems(5) prems(9) sep_disj_clean sep_disj_mk sep_disj_multD1 sep_disj_multI1 sep_disj_multI2 sep_mult_assoc' sep_mult_left_commute t4 t5)
+      by (smt (verit, best) fun_1upd_homo_right1 fun_sep_disj_1_fupdt(1) inj.sep_disj_homo mult_1_class.mult_1_left discrete_semigroup_sepdisj_fun sep_disj_commute sep_disj_multD1 sep_disj_multI1 sep_mult_commute t1 t2 t5)
   qed .
 
 end
@@ -489,7 +489,7 @@ subsubsection \<open>pointwise_fiction_for_partial_mapping_resource\<close>
 locale pointwise_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise I\<close>
-for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 and I :: \<open>('fic::sep_algebra, 'val option) interp\<close>
 and Fic :: "('key \<Rightarrow> 'fic) fiction_entry"
 begin
@@ -543,7 +543,7 @@ subsubsection \<open>pointwise_fiction_for_two_level_partial_mapping_resource\<c
 locale pointwise_fiction_for_two_level_partial_mapping_resource =
    R: partial_map_resource2 Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction ;\<^sub>\<I> \<F>_pointwise (\<F>_pointwise I)\<close>
-for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 and I :: \<open>('fic::sep_algebra, 'val option) interp\<close>
 and Fic :: "('key \<Rightarrow> 'key2 \<Rightarrow> 'fic) fiction_entry"
 begin
@@ -593,7 +593,7 @@ print_locale share_fiction_for_partial_mapping_resource
 
 locale share_fiction_for_partial_mapping_resource' =
    pointwise_fiction_for_partial_mapping_resource Res \<open>\<F>_functional to_share\<close> Fic
-for Res :: "('key \<Rightarrow> 'val::nonsepable_semigroup option) resource_entry"
+for Res :: "('key \<Rightarrow> 'val::discrete_semigroup option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val share option) fiction_entry"
 begin
 

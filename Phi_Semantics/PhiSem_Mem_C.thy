@@ -34,7 +34,7 @@ fiction_space (in agmem_sem) agmem_fic :: \<open>'RES_N \<Rightarrow> 'RES\<clos
 
 locale agmem = agmem_fic
   where TYPES = \<open>TYPE(('TY_N \<Rightarrow> 'TY)
-                    \<times> ('VAL_N \<Rightarrow> 'VAL::nonsepable_semigroup)
+                    \<times> ('VAL_N \<Rightarrow> 'VAL::discrete_semigroup)
                     \<times> ('RES_N \<Rightarrow> 'RES::{comm_monoid_mult,no_inverse}))\<close>
     and TYPE'NAME = \<open>TYPE('FIC_N)\<close>
     and TYPE'REP = \<open>TYPE('FIC::{no_inverse,comm_monoid_mult})\<close> 

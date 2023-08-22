@@ -224,7 +224,7 @@ lemma the_subtree_times_trim_subtree[simp]:
 lemma trim_subtree_subtract:
   \<open> a ## trim_subtree idx f
 \<Longrightarrow> (a * trim_subtree idx f = f) \<longleftrightarrow> a = the_subtree idx f\<close>
-  for f :: \<open>'a list \<Rightarrow> 'b::nonsepable_monoid\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::discrete_monoid\<close>
   unfolding fun_eq_iff trim_subtree_def the_subtree_def pull_map_def push_map_def
   apply (auto simp add: times_fun sep_disj_fun_def)
   apply (metis append_take_drop_id)
@@ -234,7 +234,7 @@ lemma trim_subtree_subtract:
 lemma the_subtree_subtract:
   \<open> a ## the_subtree idx f
 \<Longrightarrow> (a * the_subtree idx f = f) \<longleftrightarrow> a = trim_subtree idx f\<close>
-  for f :: \<open>'a list \<Rightarrow> 'b::nonsepable_monoid\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::discrete_monoid\<close>
   unfolding fun_eq_iff trim_subtree_def the_subtree_def pull_map_def push_map_def
   apply (auto simp add: times_fun sep_disj_fun_def)
   apply (metis append_take_drop_id mult_1_class.mult_1_right)
@@ -253,7 +253,7 @@ lemma trim_subtree_one[simp]:
 \<Longrightarrow> dom1 (the_subtree idx f) 
 \<Longrightarrow> a * the_subtree idx f = g
 \<Longrightarrow> the_subtree idx g = the_subtree idx f\<close>
-  for f :: \<open>'a list \<Rightarrow> 'b::nonsepable_monoid\<close>
+  for f :: \<open>'a list \<Rightarrow> 'b::discrete_monoid\<close>
   unfolding fun_eq_iff trim_subtree_def the_subtree_def
   apply (auto simp add: times_fun sep_disj_fun_def)
   subgoal premises prems for x x'
