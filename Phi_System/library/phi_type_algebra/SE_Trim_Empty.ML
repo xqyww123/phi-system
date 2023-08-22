@@ -28,7 +28,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 fun simp ctxt th =
   Conv.fconv_rule (Phi_Conv.hhf_concl_conv Simplifier.rewrite ctxt) th
 
-fun gen_SE_Trim_Empty _ (phi : phi_type) thy =
+fun gen_SE_Trim_Empty _ ctxt (phi : phi_type) thy =
   let fun fetch_properties name = Phi_Type_Template_Properties.lookup_property_unify thy (#term phi) name
                                |> map #3
       fun fetch_property name =
@@ -50,15 +50,14 @@ fun gen_SE_Trim_Empty _ (phi : phi_type) thy =
                 |> maps (fn rule => map_filter (fn TV => SOME (rule OF [TV, IE_E])
                                                          handle THM _ => NONE) TVs)
 
-      val ctxt' = Context.proof_of thy
-               |> Config.put Phi_Reasoner_solve_obligation_and_no_defer 1
+      val ctxt = Config.put Phi_Reasoner_solve_obligation_and_no_defer 1 ctxt
       fun red th = fold (fn tm => fn (i,th) =>
             let fun work (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = work X
                   | work (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = work X
                   | work (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = work X
-                  | work (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ eq) =
+                  | work (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ _) =
                       th |> Thm.permute_prems 0 i
-                         |> (fn th => case Phi_Reasoner.reason (SOME 1) true ctxt' th
+                         |> (fn th => case Phi_Reasoner.reason (SOME 1) true ctxt th
                                         of SOME ret => (i, Thm.permute_prems 0 (~i) ret)
                                          | NONE => (i+1, Thm.permute_prems 0 (~i) th))
                   | work (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _)
@@ -72,7 +71,7 @@ fun gen_SE_Trim_Empty _ (phi : phi_type) thy =
                       (i+1, @{lemma \<open>Premise any (x = y)\<close> for x :: unit by (simp add: Premise_def)} RSN (i+1, th))
                   | work (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) =
                       Thm.permute_prems 0 i th
-                        |> Phi_Reasoner.reason (SOME 1) true ctxt'
+                        |> Phi_Reasoner.reason (SOME 1) true ctxt
                         |> Option.map (Thm.permute_prems 0 (~i))
                         |> the_default th
                         |> pair i
@@ -93,9 +92,9 @@ fun gen_SE_Trim_Empty _ (phi : phi_type) thy =
          in if has_reasoned
             then NONE
             else SOME (snd (red th)
-                   |> simp ctxt'
+                   |> simp ctxt
                    |> Thm.solve_constraints
-                   |> Phi_Help.unique_flexflex ctxt')
+                   |> Phi_Help.unique_flexflex ctxt)
         end
 
       val rules = map_filter (reason o Phi_Help.beta_eta_contract) (intros @ elims)

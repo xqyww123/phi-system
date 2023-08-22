@@ -47,9 +47,8 @@ fun guess_property closed (phi0 : phi_type) ctxt =
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end
 
-fun gen_M0 closed (der_id, name) hint0 (phi : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val parse_hint = parse_hint (fn (Const(\<^const_name>\<open>Semimodule_Identity\<close>, _) $ F1 $ _ ) => F1)
+fun gen_M0 closed (der_id, name) hint0 ctxt0 (phi : phi_type) thy =
+  let val parse_hint = parse_hint (fn (Const(\<^const_name>\<open>Semimodule_Identity\<close>, _) $ F1 $ _ ) => F1)
       val extract_oprs_from_hint = K []
       fun reasoning phi =
         default_reasoning false

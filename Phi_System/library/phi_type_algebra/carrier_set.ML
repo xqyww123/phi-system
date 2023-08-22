@@ -10,9 +10,8 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 val guess_property = guess_property__abst_domain (fn (x,m) => \<^Const>\<open>Carrier_Set x m\<close>, \<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier\<close>)
 
-fun gen_carrier_set (_,name) hint0 (phi0 : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Carrier_Set\<close>, _) $ T $ _ => T )
+fun gen_carrier_set (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
+  let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Carrier_Set\<close>, _) $ T $ _ => T )
 
       val ind_conv = default_ind_conv (
             fn _ => fn _ => Conv.all_conv,

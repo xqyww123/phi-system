@@ -121,9 +121,8 @@ fun solver__abst_domain name (phi,ctxt,sequent) =
  end
 
 
-fun gen_is_functional (_,name) hint0 (phi0 : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Functionality\<close>, _) $ T $ _ => T )
+fun gen_is_functional (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
+  let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Functionality\<close>, _) $ T $ _ => T )
 
       val ind_conv = default_ind_conv (
             fn _ => fn _ => Conv.all_conv,

@@ -129,9 +129,8 @@ fun SH_reasoning is_intro phi ctxt =
           else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
          end) ctxt
 
-fun gen_SH is_intro (_,name) hint0 (phi0 : phi_type) generic =
-  let val ctxt0 = Context.proof_of generic
-      (*val phi0pr = make_phi_for_pair generic phi0*)
+fun gen_SH is_intro (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
+  let (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F
              | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ => F)

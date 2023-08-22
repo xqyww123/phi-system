@@ -97,7 +97,7 @@ val complete_deriver_dependences : Context.generic -> derivings -> derivings
 
 val report_potential_failure_reason : (unit -> Pretty.T) list -> unit
 (*no need to call it manually. It is invoked by `add_type` *)
-val derive_properties : deriving_ctxt -> derivings -> phi_type -> generic_theory -> generic_theory
+val derive_properties : derivings * Bundle.name list -> phi_type -> generic_theory -> generic_theory
 
 (* Derived Properties *)
 
@@ -120,7 +120,7 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 (** Define \<phi>-Type and invoke derivings **)
 
 structure Defining_Phi_Type : HOOKS (*invoked before any deriving*)
-val add_type : deriving_ctxt -> def * Position.T * derivings -> generic_theory -> phi_type * generic_theory
+val add_type : def * Position.T * derivings * Bundle.name list -> generic_theory -> phi_type * generic_theory
 
 (** Tools **)
 
@@ -493,13 +493,16 @@ fun report_potential_failure_reason G =
     of SOME L => Thread_Data.put reason_of_deriving_fails (SOME (G @ L))
      | NONE => ()
 
-fun derive_properties ctxt_derv dervs phityp thy = thy
+fun derive_properties (dervs, bundles) phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
-  |> Derivings.fold (fn ((_,name),(hints,derv,is_weak)) => fn thy'goal => (
-      Thread_Data.put reason_of_deriving_fails (SOME []) ;
-      #derive derv is_weak hints ctxt_derv phityp thy'goal
-      handle Automation_Fail msg => err_derive name (msg ()) hints)
+  |> Derivings.fold (fn ((_,name),(hints,derv,is_weak)) => fn thy'goal =>
+      let val _ = Thread_Data.put reason_of_deriving_fails (SOME [])
+          val ctxt_derv = Context.proof_of thy'goal
+                       |> Bundle.includes bundles
+       in #derive derv is_weak hints ctxt_derv phityp thy'goal
+          handle Automation_Fail msg => err_derive name (msg ()) hints
+      end
      ) dervs
   |> Context_Position.restore_visible_generic thy
 
@@ -753,8 +756,10 @@ structure Defining_Phi_Type = Hooks(
 val refine_typeq = @{lemma \<open>(\<And>x. (x \<Ztypecolon> T) = (x \<Ztypecolon> U)) \<Longrightarrow> T = U\<close> by (rule \<phi>Type_eqI, simp)}
 
 (*ctxt: the context used to derive properties*)
-fun add_type ctxt (def, pos, dervs) thy =
-  let val (idx,(name_ty,term)) =
+fun add_type (def, pos, dervs, bundles) thy =
+  let val ctxt = Context.proof_of thy
+              |> Bundle.includes bundles
+      val (idx,(name_ty,term)) =
            (case def of DIRECT_DEF (lhs, _) =>
                           (case Term.head_of lhs of X as Const name_ty => (~1, (name_ty, X))
                                                   | X as Free name_ty => (~1, (name_ty, X))
@@ -929,21 +934,21 @@ fun add_type ctxt (def, pos, dervs) thy =
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)
    |> Defining_Phi_Type.invoke (Context.Proof ctxt) phi_type
-   |> derive_properties ctxt dervs phi_type
+   |> derive_properties (dervs, bundles) phi_type
    |> Context_Position.restore_visible_generic thy
    |> pair phi_type
   end
 
-fun prep_deriving_and_ctxt raw_bundles raw_derv ctxt =
+fun prep_deriving_and_bundles raw_bundles raw_derv ctxt =
   let val bundles = map (Bundle.check ctxt) raw_bundles
       val ctxt'1 = Bundle.includes bundles ctxt
       val dervs = check_deriving_ast (Context.Proof ctxt'1) raw_derv
-   in (dervs, ctxt'1)
+   in (dervs, bundles)
   end
 
 fun add_type_i (def, pos, raw_derv, raw_bundles) thy =
-  let val (dervs, ctxt_derv) = prep_deriving_and_ctxt raw_bundles raw_derv (Context.proof_of thy)
-   in add_type ctxt_derv (def, pos, dervs) thy
+  let val (dervs, bundles) = prep_deriving_and_bundles raw_bundles raw_derv (Context.proof_of thy)
+   in add_type (def, pos, dervs, bundles) thy
   end
 
 (** Interface **)
@@ -966,7 +971,7 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
    in (inst', phi, ctxt)
   end
 
-val bundle_parser = \<^keyword>\<open>includes\<close> |-- Scan.repeat1 Parse.name_position
+val bundle_parser = Scan.optional (\<^keyword>\<open>includes\<close> |-- Scan.repeat1 Parse.name_position) []
 
 local
 
@@ -1043,8 +1048,7 @@ fun let_phityp_deriving_cmd (((raw_const_name, pos), raw_bundles), raw_derv) thy
       val phi = case get_type_info thy const_name
                   of SOME phi => phi
                    | NONE => error ("No \<phi>-type named "^ const_name ^ " found")
-      val (derivings, ctxt_derv) = prep_deriving_and_ctxt raw_bundles raw_derv ctxt
-   in derive_properties ctxt_derv derivings phi thy
+   in derive_properties (prep_deriving_and_bundles raw_bundles raw_derv ctxt) phi thy
   end
 
 

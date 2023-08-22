@@ -152,9 +152,8 @@ fun OE_reasoning phi ctxt rule =
           ctxt' rule
   end
 
-fun gen_obj_equal_singular (_,name) hint (phi0 : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
+fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
+  let val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
       val rule = if #is_recursive phi0
                  then let val base = Thm.prems_of (#ind phi0)
                                   |> get_first (fn tm =>
@@ -222,9 +221,8 @@ fun gen_obj_equal_singular (_,name) hint (phi0 : phi_type) thy =
   end
 
 
-fun gen_obj_equal' (_,name) hint0 (phi0 : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
+fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
+  let val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
@@ -270,11 +268,11 @@ fun chk_is_singular ctxt tm =
             | _ => false)
      | _ => malformed_hint ctxt tm
 
-fun gen_obj_equal'' name NONE phi thy = gen_obj_equal' name NONE phi thy
-  | gen_obj_equal'' name (SOME H) phi thy =
-      if chk_is_singular thy H
-      then gen_obj_equal_singular name (SOME H) phi thy
-      else gen_obj_equal' name (SOME H) phi thy
+fun gen_obj_equal'' name NONE ctxt_derv phi thy = gen_obj_equal' name NONE ctxt_derv phi thy
+  | gen_obj_equal'' name (SOME H) ctxt_derv phi thy =
+      if chk_is_singular ctxt_derv H
+      then gen_obj_equal_singular name (SOME H) ctxt_derv phi thy
+      else gen_obj_equal' name (SOME H) ctxt_derv phi thy
 
 in
 

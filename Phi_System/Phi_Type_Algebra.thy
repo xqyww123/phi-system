@@ -2752,7 +2752,7 @@ ML_file \<open>library/phi_type_algebra/deriver_framework.ML\<close>
 
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
-\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn quiet => fn [] => fn phi => fn thy => (
+\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn quiet => fn [] => fn _ => fn phi => fn thy => (
   if Phi_Type_Algebra.is_Type_Opr (Term.fastype_of (#term phi)) andalso
      Phi_Type_Algebra.def_contains_satisfaction phi andalso
      not quiet

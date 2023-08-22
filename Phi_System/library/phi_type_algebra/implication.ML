@@ -134,9 +134,8 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
         | _ => error "Internal bug"
  end
 
-fun gen_inhab (upper, carrier) (der_id, name) hint0 (phi0 : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val guess_property = guess_property_abst_dom
+fun gen_inhab (upper, carrier) (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy =
+  let val guess_property = guess_property_abst_dom
                               (if carrier
                                then if upper then \<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<close>
                                              else \<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L\<close>

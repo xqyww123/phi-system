@@ -162,9 +162,8 @@ fun chk_quantifier_place (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ 
       = \<^Const>\<open>Trueprop\<close> $ (H2 $ Abs (N, Ty, H $ X $ A))
   | chk_quantifier_place X = X
 
-fun gen_trans_to_raw_abst (_,name) hint00 (phi0 : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val hint0 = Option.map (chk_quantifier_place
+fun gen_trans_to_raw_abst (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
+  let val hint0 = Option.map (chk_quantifier_place
             #> chk_abstract_object_quantified (
             let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
                   | target (\<^Const>\<open>Transformation _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ X $ T) $ _ $ _) =

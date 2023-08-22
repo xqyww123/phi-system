@@ -112,9 +112,8 @@ fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
         phi, ctxt)
   end
 
-fun gen_id_ele is_left (_,name) hint0 (phi0 : phi_type) generic =
-  let val ctxt0 = Context.proof_of generic
-      val parse_hint = parse_hint (
+fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
+  let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ X $ _ => X
              | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ X => X
              | _ => raise TERM ("",[]))

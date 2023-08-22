@@ -16,11 +16,11 @@ type induct_inst_params = term option list
 (** Component: unify_hint **)
 
 type hint = term
-type parse_hint = Proof.context -> Phi_Type_Algebra.phi_type ->  hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
+type parse_hint = Phi_Type_Algebra.deriving_ctxt -> Phi_Type_Algebra.phi_type ->  hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
 
 (* Common choices of the unification *)
 
-val malformed_hint : Context.generic -> term -> 'a
+val malformed_hint : Phi_Type_Algebra.deriving_ctxt -> term -> 'a
 val parse_parameters_of_phi_type : term -> term option list
 (*default parsing*)
 val parse_hint : (term -> term) (*extract the phi-type part from the hint. can be either the type assertion,
@@ -229,6 +229,7 @@ type quiet = bool
 val deriver_framework : hint_mode * multiple_call * string (*name*)
                      -> (int (*the times that the deriver has been invoked*) * string (*name suffixed by the time*)
                           -> hint option
+                          -> Phi_Type_Algebra.deriving_ctxt
                           -> Phi_Type_Algebra.phi_type
                           -> generic_theory
                           -> thm list (*derived rule*) * generic_theory)
@@ -250,6 +251,7 @@ val deriver_framework : hint_mode * multiple_call * string (*name*)
 
 val deriver_framework_no_hints : multiple_call * string (*name*)
                      -> (string (*name*)
+                          -> Phi_Type_Algebra.deriving_ctxt
                           -> Phi_Type_Algebra.phi_type
                           -> generic_theory
                           -> thm list (*derived rule*) * generic_theory)
@@ -815,7 +817,7 @@ datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 type quiet = bool
 
 fun deriver_framework (hint_mode, multiple_call, name) deriver
-                      quiet hints phi thy =
+                      quiet hints ctxt_derv phi thy =
   let val ind = length (lookup_derived_properties thy phi name)
       val _ = let open Pretty in
           case (multiple_call, ind, hints)
@@ -853,7 +855,7 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
           end
       fun invoke (i,H) thy =
         let val iname = suffix_name_by_index (i+ind) name
-         in deriver (i+ind, iname) H phi thy
+         in deriver (i+ind, iname) H ctxt_derv phi thy
          |-> register_derived_properties phi (name, i+ind)
         end
    in (case hints
@@ -1092,8 +1094,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 
 fun malformed_hint ctxt hint =
   raise Automation_Fail (let open Pretty in fn () =>
-          [str "Malformed Hint", brk 1,
-           Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt hint]
+          [str "Malformed Hint", brk 1, Syntax.pretty_term ctxt hint]
     end)
 
 local
@@ -1122,13 +1123,13 @@ fun parse_hint extract_phityp ctxt phi hint =
   let val phity = (case extract_phityp (extract_hhf hint)
                      of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T => T $ x
                       | X => X)
-                  handle Match => malformed_hint (Context.Proof ctxt) hint
+                  handle Match => malformed_hint ctxt hint
       val (phiconst, params) =
               fold (fn _ => fn X => X $ Term.dummy) (Term.binder_types (Term.fastype_of phity)) phity
            |> Phi_Help.beta_eta_contract_term
            |> Term.strip_comb
            |> apsnd (rev #> map (fn tm => if tm = Term.dummy then NONE else SOME tm))
-      val _ = chk_phi_const (Context.Proof ctxt) phi phiconst hint
+      val _ = chk_phi_const ctxt phi phiconst hint
    in (Term.fastype_of phiconst, params, hint)
   end
 

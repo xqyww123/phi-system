@@ -88,9 +88,8 @@ fun TF_reasoning phi ctxt =
           ctxt
   end
 
-fun gen_TF (der_id, name) hint0 (phi0 : phi_type) generic =
-  let val ctxt0 = Context.proof_of generic
-            (*|> def_contains_satisfaction phi0 ? Context.proof_map (
+fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
+  let       (*|> def_contains_satisfaction phi0 ? Context.proof_map (
                     Phi_Reasoners.Is_Premise_of_Obligation.add 123
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
                         | X => NONE)) *)
@@ -198,9 +197,8 @@ fun guess_property_FTF phi0 ctxt0 =
   end)
   end
 
-fun gen_FTF (der_id,name) hint0 (phi0 : phi_type) thy =
-  let val ctxt0 = Context.proof_of thy
-      val parse_hint = parse_hint (
+fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
+  let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M $ _ $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []
