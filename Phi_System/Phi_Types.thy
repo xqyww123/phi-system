@@ -784,15 +784,15 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   by (clarsimp simp add: Ball_def; metis)
 
 lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
-  \<open> module_scalar_identity \<psi>
+  \<open> \<g>\<u>\<a>\<r>\<d> module_scalar_identity \<psi>
 \<Longrightarrow> Semimodule_Identity (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T \<close>
-  unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def
+  unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def \<r>Guard_def
   by (rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
-  \<open> module_scalar_assoc \<psi> Ds
+  \<open> \<g>\<u>\<a>\<r>\<d> module_scalar_assoc \<psi> Ds
 \<Longrightarrow> Semimodule_Scalar_Assoc (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds \<close>
-  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def
+  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def \<r>Guard_def
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:

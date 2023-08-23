@@ -1039,7 +1039,7 @@ text \<open>The right distributivity of a module forms a homomorphism over the g
   so we don't cover it here.\<close>
 
 locale module_for_sep =
-  fixes smult :: \<open>'s \<Rightarrow> ('a::sep_carrier) \<Rightarrow> 'a\<close>
+  fixes smult :: \<open>'s \<Rightarrow> 'a \<Rightarrow> 'a\<close>
     and Ds :: \<open>'s \<Rightarrow> bool\<close> \<comment> \<open>gives the carrier set of the scalars\<close>
 
 text \<open>It seems there is not a standard definition for modules on partial rings.
@@ -1047,7 +1047,7 @@ text \<open>It seems there is not a standard definition for modules on partial r
 \<close>
 
 locale module_S_distr = module_for_sep +
-  assumes module_scalar_distr: \<open> \<lbrakk> Ds (s::'s::partial_add_magma); Ds t; s ##\<^sub>+ t ; mul_carrier a \<rbrakk>
+  assumes module_scalar_distr: \<open> \<lbrakk> Ds (s::'s::partial_add_magma); Ds t; s ##\<^sub>+ t ; mul_carrier (a :: 'a :: sep_carrier) \<rbrakk>
                              \<Longrightarrow> smult (s + t) a = smult s a * smult t a \<and> smult s a ## smult t a \<close>
 
 locale module_scalar_assoc = module_for_sep +
@@ -1068,12 +1068,12 @@ locale module_scalar_zero = module_for_sep +
   assumes module_scalar_zero: \<open>smult 0 a = 1\<close>
 
 lemma module_scalar_identity_share[simp]:
-  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::{sep_carrier, share} \<Rightarrow> 'a)\<close>
+  \<open>module_scalar_identity (share :: rat \<Rightarrow> 'a::share \<Rightarrow> 'a)\<close>
   unfolding module_scalar_identity_def
   by simp
 
 lemma module_scalar_zero_share[simp]:
-  \<open>module_scalar_zero (share :: rat \<Rightarrow> 'a::{sep_carrier, share_one} \<Rightarrow> 'a)\<close>
+  \<open>module_scalar_zero (share :: rat \<Rightarrow> 'a::share_one \<Rightarrow> 'a)\<close>
   unfolding module_scalar_zero_def
   by simp
 
