@@ -1063,7 +1063,7 @@ subsubsection \<open>Simplifications\<close>
 lemma ExSet_pair: "ExSet T = (\<exists>*a b. T (a,b))"
   unfolding BI_eq_iff by clarsimp
 
-lemma ExSet_simps[simp,\<phi>programming_base_simps]:
+lemma ExSet_simps[simp, \<phi>programming_base_simps]:
   \<open>ExSet 0 = 0\<close>
   \<open>ExSet (\<lambda>_. T) = T\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y) = (F y)\<close>
@@ -1083,12 +1083,17 @@ lemma Ex_transformation_expn:
 
 paragraph \<open>With Multiplicative Conjunction\<close>
 
-lemma ExSet_times_left [simp]: "(ExSet T * R) = (\<exists>* c. T c * R )" by (simp add: BI_eq_iff, blast)
-lemma ExSet_times_right[simp]: "(L * ExSet T) = (\<exists>* c. L * T c)" by (simp add: BI_eq_iff, blast)
+lemma ExSet_times_left [simp, \<phi>programming_base_simps]:
+  "(ExSet T * R) = (\<exists>* c. T c * R )"
+  by (simp add: BI_eq_iff, blast)
+
+lemma ExSet_times_right[simp, \<phi>programming_base_simps]:
+  "(L * ExSet T) = (\<exists>* c. L * T c)"
+  by (simp add: BI_eq_iff, blast)
 
 paragraph \<open>With Additive Conjunction\<close>
 
-lemma ExSet_simps_adconj:
+lemma ExSet_adconj:
   \<open>A \<and>\<^sub>B\<^sub>I (\<exists>*c. B c) \<equiv> \<exists>*c. A \<and>\<^sub>B\<^sub>I B c\<close>
   \<open>(\<exists>*c. B c) \<and>\<^sub>B\<^sub>I A \<equiv> \<exists>*c. B c \<and>\<^sub>B\<^sub>I A\<close>
   unfolding atomize_eq BI_eq_iff
@@ -1096,7 +1101,7 @@ lemma ExSet_simps_adconj:
 
 paragraph \<open>With Additive Disjunction\<close>
 
-lemma ExSet_simps_addisj:
+lemma ExSet_addisj:
   \<open>A + (\<exists>*c. B c) \<equiv> \<exists>*c. A + B c\<close>
   \<open>(\<exists>*c. B c) + A \<equiv> \<exists>*c. B c + A\<close>
   unfolding atomize_eq BI_eq_iff

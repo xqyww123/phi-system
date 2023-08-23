@@ -54,7 +54,7 @@ fun infer_zip_operator ctxt (s_ty, x_ty, model_ty) =
   end
 
 fun guess_property (phi0 : phi_type) ctxt =
-  let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)
+  let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier\<close>)
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
       (*val ([Dx_name], ctxt) = Variable.add_fixes ["Dx"] ctxt

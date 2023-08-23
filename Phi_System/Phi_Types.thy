@@ -696,7 +696,7 @@ lemma [embed_into_\<phi>type]:
   \<open>(x \<Ztypecolon> T) + (y \<Ztypecolon> U) \<equiv> (x,y) \<Ztypecolon> T \<or>\<^sub>\<phi> U\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
-
+ 
 let_\<phi>type \<phi>Union deriving \<open>Object_Equiv (\<circle> \<or>\<^sub>\<phi> \<circle>) (\<lambda>_ _. True)\<close>
 
 
@@ -784,15 +784,15 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   by (clarsimp simp add: Ball_def; metis)
 
 lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
-  \<open> \<g>\<u>\<a>\<r>\<d> module_scalar_identity \<psi>
+  \<open>  module_scalar_identity \<psi>
 \<Longrightarrow> Semimodule_Identity (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T \<close>
-  unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def \<r>Guard_def
+  unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def
   by (rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
-  \<open> \<g>\<u>\<a>\<r>\<d> module_scalar_assoc \<psi> Ds
+  \<open> module_scalar_assoc \<psi> Ds
 \<Longrightarrow> Semimodule_Scalar_Assoc (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds \<close>
-  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def \<r>Guard_def
+  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
@@ -1196,16 +1196,16 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (scalar_mult push_map k \<Zcomp>\<^sub>f T)\<close>
-  deriving (*Separation_Monoid
+  deriving Separation_Monoid
        and Open_Abstraction_Full
        and Functionality
        and Trivial_\<Sigma>
        and Semimodule_Scalar_Assoc
-       and*) Semimodule_Identity
+       and Semimodule_Identity
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
@@ -1289,19 +1289,22 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (scalar_mult share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving (*Separation_Monoid
+  deriving Separation_Monoid
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Open_Abstraction_Full
        and Trivial_\<Sigma>
        and SE_Trim_Empty
        and Semimodule_Scalar_Assoc
-       and Semimodule_Identity*)
-        Semimodule_LDistr_Homo\<^sub>Z
+       and Semimodule_Identity
+       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
+       (*Semimodule_LDistr_Homo\<^sub>Z*)
+
+term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
 
 thm \<phi>Share.\<phi>None
 thm \<phi>Share.scalar_assoc

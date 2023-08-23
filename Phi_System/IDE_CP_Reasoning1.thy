@@ -248,23 +248,30 @@ structure Assertion_SS_Abnormal = Simpset (
         Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse})) o snd\<close>
 
 lemmas [assertion_simps] =
+  (*algebras*)
   mult_zero_right[where 'a=\<open>'a::sep_magma BI\<close>] mult_zero_left[where 'a=\<open>'a::sep_magma BI\<close>]
   mult_1_right[where 'a=\<open>'a::sep_magma_1 BI\<close>]
   mult_1_left[where 'a=\<open>'a::sep_magma_1 BI\<close>]
   add_0_right[where 'a=\<open>'a::sep_magma BI\<close>] add_0_left[where 'a=\<open>'a::sep_magma BI\<close>]
   zero_fun zero_fun_def[symmetric, where 'b=\<open>'a::sep_magma BI\<close>]
   plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
-  Subjection_Subjection Subjection_Zero Subjection_times Subjection_addconj
-  ExSet_simps(1,3,4,5,6)
   distrib_right[where 'a=\<open>'a::sep_semigroup BI\<close>]
   mult.assoc[symmetric, where 'a=\<open>'a::sep_semigroup BI\<close>]
-  \<phi>V_simps
+
+  (*BI connectives*)
+  Subjection_Subjection Subjection_Zero Subjection_True Subjection_Flase
+  Subjection_times Subjection_addconj
+
+  ExSet_simps
+
   \<phi>Prod_expn'' \<phi>Prod_expn'
   REMAINS_simp
   HOL.if_True HOL.if_False
 
+  \<phi>V_simps
+
 lemmas [assertion_simps_source] =
-          ExSet_times_left ExSet_times_right ExSet_simps_adconj ExSet_simps_addisj
+  ExSet_times_left ExSet_times_right ExSet_adconj ExSet_addisj
 
 
 

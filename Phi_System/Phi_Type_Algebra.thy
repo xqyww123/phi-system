@@ -607,7 +607,6 @@ ML_file \<open>library/phi_type_algebra/properties.ML\<close>
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
-term \<open>HOL.eq\<close>
 
 datatype yyy = YLeaf nat | YNode nat yyy
 datatype ('a,'b) xxx = Leaf 'a | LeafB 'b 'a | Node nat \<open>('a,'b) xxx\<close>
@@ -1341,7 +1340,7 @@ lemma [\<phi>reason_template default 190]:
   unfolding Semimodule_Identity_def NO_SIMP_def
   by simp
 
-lemma [\<phi>reason_template default 190]:
+lemma [\<phi>reason_template no explorative backtrack 190]:
   \<open> Semimodule_Identity F T
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F 1 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>

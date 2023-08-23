@@ -596,6 +596,7 @@ fun check_property_hint ctxt phi_typ_const hint =
 
 fun check_deriving_ast ctxt derv_ast =
   let val ctxt_parse = Proof_Context.set_mode Proof_Context.mode_pattern (Context.proof_of ctxt)
+      val thy = Context.theory_of ctxt
    in Derivings.empty
    |> fold_rev (
         fn Derv_By_Name name => add_deriver ([], check_deriver ctxt name)
@@ -603,6 +604,7 @@ fun check_deriving_ast ctxt derv_ast =
             let val term' = Syntax.parse_prop ctxt_parse term
                          |> Syntax.check_prop ctxt_parse
                          |> Envir.beta_eta_contract
+                         |> Phi_Help.refine_sorts_of_tm thy
                 val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
                 val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
              in add_derivers_from_hint ctxt term'1
