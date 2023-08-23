@@ -45,12 +45,25 @@ declare (in homo_sep_mult) homo_sep_mult_axioms [\<phi>reason 1000]
 
 declare (in closed_homo_sep_disj) closed_homo_sep_disj_axioms [\<phi>reason 1000]
 
+subparagraph \<open>homo_mul_carrier\<close>
+
 declare (in homo_mul_carrier) homo_mul_carrier_axioms[\<phi>reason 1000]
 
 lemma prem_extract_homo_mul_carrier:
   \<open>homo_mul_carrier \<psi> \<equiv> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<and> True\<close>
   unfolding homo_mul_carrier_def
   by simp
+
+lemma [\<phi>reason default 1]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x))
+\<Longrightarrow> homo_mul_carrier \<psi>\<close>
+  unfolding homo_mul_carrier_def Premise_def .
+
+lemma [\<phi>reason no explorative backtrack 0]:
+  \<open> TRACE_FAIL TEXT(\<open>Fail to show the multiplicative carrier homomorphism of\<close> \<psi>)
+\<Longrightarrow> homo_mul_carrier \<psi> \<close>
+  unfolding TRACE_FAIL_def
+  by blast
 
 paragraph \<open>Reasoning Hierarchy\<close>
 

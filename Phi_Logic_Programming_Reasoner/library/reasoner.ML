@@ -919,16 +919,17 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
                        | _ => error "Pattern of the reasoner is required"
                else map (apsnd (the_default priority)) patterns
     val rules_with_flag = map (fn rule =>
-      let fun is_Require (Const (\<^const_name>\<open>\<r>Guard\<close>, _) $ _) = true
-            | is_Require (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_Require X
-            | is_Require (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,X)) = is_Require X
-            | is_Require _ = false
+      let fun has_Gaurd (Const (\<^const_name>\<open>\<r>Guard\<close>, _) $ _) = true
+            | has_Gaurd (Const (\<^const_name>\<open>Trueprop\<close>, _) $ X) = has_Gaurd X
+            | has_Gaurd (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = has_Gaurd X
+            | has_Gaurd (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,X)) = has_Gaurd X
+            | has_Gaurd _ = false
        in case Thm.prems_of rule
             of []    => (rule, false)
-             | (r::L)=> if exists is_Require L
+             | (r::L)=> if exists has_Gaurd L
                         then error("A reasoning rule can contain one \<r>Guard antecedent at \
                                    \the leading position.")
-                        else (rule, is_Require r)
+                        else (rule, has_Gaurd r)
       end) rules
 
     fun tactic [] _ = Seq.empty
@@ -937,9 +938,13 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
             of NONE => Seq.pull (tactic R (bm, (ctxt,sequent)))
              | SOME sequent' =>
                 if has_semantic_guard
-                then (case internal_reason (SOME 1) false (ctxt, sequent')
-                        of SOME s' => SOME (s', tactic R (bm, (ctxt,sequent)))
-                         | NONE => Seq.pull (tactic R (bm, (ctxt,sequent))))
+                then let val _ = info_pretty ctxt 2 (fn () => let open Pretty in
+                                    block (str "Checking the guard ... " :: here pos)
+                                 end)
+                  in case internal_reason (SOME 1) false (ctxt, @{thm' \<r>Guard_I} RS' (ctxt, sequent'))
+                  of SOME s' => SOME (s', tactic R (bm, (ctxt, sequent)))
+                   | NONE => Seq.pull (tactic R (bm, (ctxt, sequent)))
+                 end
                 else SOME ((ctxt, sequent'), tactic R (bm, (ctxt,sequent)))
         )
     fun guarded_tac rules =

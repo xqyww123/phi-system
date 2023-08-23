@@ -442,6 +442,8 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Vertical Composition\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+ 
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving Functional_Transformation_Functor
@@ -751,7 +753,7 @@ subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
@@ -981,7 +983,7 @@ declare [[\<phi>trace_reasoning = 1]]
     \<comment> \<open>Forward Simulation\<close>
   where \<open>f \<Ztypecolon> T \<Rrightarrow> U \<equiv> g \<Ztypecolon> Itself \<s>\<u>\<b>\<j> g. (\<forall>v x. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> g v \<Turnstile> (f x \<Ztypecolon> U))\<close>
 
-text \<open>Again it is a form requiring satisfaction operator, so our deriver is very limited on this.\<close>
+text \<open>Again it is a form requiring satisfaction operator, and derivers are very limited on this.\<close>
 
 thm \<phi>Mapping.expansion
 
@@ -1001,8 +1003,6 @@ lemma [\<phi>inhabitance_rule 1000]:
 subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
-
-thm list_all2_lengthD
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
 declare [[\<phi>trace_reasoning = 0]]
@@ -1014,6 +1014,10 @@ declare [[\<phi>trace_reasoning = 0]]
        and Trivial_\<Sigma>
        and SE_Trim_Empty
 
+
+
+declare [[\<phi>trace_reasoning = 0]]
+     
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
@@ -1039,15 +1043,16 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 0]]
+ declare [[\<phi>trace_reasoning = 3]]
 
    
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
-  deriving Separation_Monoid
+  deriving Separation_Homo\<^sub>I
+(*Separation_Monoid
        and Open_Abstraction_Full
        and Functionality
-       and Trivial_\<Sigma>
+       and Trivial_\<Sigma>*)
 
 
 (*

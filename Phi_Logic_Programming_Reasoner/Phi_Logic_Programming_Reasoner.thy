@@ -14,7 +14,9 @@ theory Phi_Logic_Programming_Reasoner
   and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
 begin
 
-subsubsection \<open>Prelude Settings\<close>
+subsubsection \<open>Preliminaries\<close>
+
+paragraph \<open>ML Libraries\<close>
 
 setup \<open>
 let
@@ -59,13 +61,26 @@ ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 
-definition \<r>Guard :: \<open>prop \<Rightarrow> prop\<close> ("\<g>\<u>\<a>\<r>\<d> _" [2] 2) where \<open>\<r>Guard X \<equiv> X\<close>
-    \<comment> \<open>If the guard of a rule fails, the rule will be considered non-appliable, just like the case
-        when pattern mismatchs. The difference lies in cut rule and non-backtracking modes.
-        If a cut rule is considered non-appliable, it will not cut remaining candidates.
+paragraph \<open>Guard of Reasoning Rule\<close>
 
-        A rule can have at most one guard, and it must be the leading antecedent.
+text \<open>If the guard of a rule fails, the rule will be considered non-appliable, just like the case
+  when pattern mismatchs. The difference lies in the cutting and backtracking behavior.
+  If a cut rule is considered non-appliable, it will not cut remaining candidates.
+  If the prior rules before a no-backtrack-accepted rule are non-appliable, the no-backtrack-accepted
+  rule will be applied.
+
+  A rule can have at most one guard, and it must be at the leading place.
 \<close>
+
+definition \<r>Guard :: \<open>bool \<Rightarrow> bool\<close> ("\<g>\<u>\<a>\<r>\<d> _" [5] 5) where \<open>\<r>Guard X \<equiv> X\<close>
+
+lemma \<r>Guard_I: \<open>P \<Longrightarrow> \<r>Guard P\<close> unfolding \<r>Guard_def .
+
+lemma \<r>Guard_reduct[simp]:
+  \<open>\<r>Guard True \<equiv> True\<close>
+  unfolding \<r>Guard_def .
+
+paragraph \<open>General Syntax of Annotation\<close>
 
 typedecl action
 
@@ -76,13 +91,12 @@ lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
   unfolding Action_Tag_def .
 
-ML_file_debug \<open>library/reasoner.ML\<close>
-
-lemma \<r>Guard_I[\<phi>reason 1000]: \<open>PROP P \<Longrightarrow> PROP \<r>Guard P\<close> unfolding \<r>Guard_def .
-
-ML \<open>@{thm' equal_elim_rule2} RS @{thm equal_elim_rule2}\<close>
 
 section \<open>Introduction\<close>
+
+ML_file_debug \<open>library/reasoner.ML\<close>
+
+declare \<r>Guard_I[\<phi>reason 1000]
 
 text \<open>
   \<phi>-Logic Programming Reasoner is a extensible reasoning engine
@@ -530,6 +544,12 @@ text \<open>Antecedent \<open>x = y\<close> has a meaning of assignment, and is 
 
 definition Ant_Seq :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
   where \<open>Ant_Seq \<equiv> (\<and>)\<close>
+
+lemma Ant_Seq_reduct[simp]:
+  \<open>True \<and>\<^sub>\<r> P \<equiv> P\<close>
+  \<open>P \<and>\<^sub>\<r> True \<equiv> P\<close>
+  unfolding Ant_Seq_def
+  by simp_all
 
 lemma Ant_Seq_I[\<phi>reason 1000]:
   \<open>P \<Longrightarrow> Q \<Longrightarrow> P \<and>\<^sub>\<r> Q\<close>

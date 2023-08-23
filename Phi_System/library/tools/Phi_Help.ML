@@ -113,12 +113,11 @@ include PHI_HELP
 
   val instantiate_higher_order_schematic_var' : int (*N*) -> Proof.context -> thm -> thm option (*returns none if no change*)
   val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
-  (*For the leading N antecedents only, if it contains any higher-order schematic
-  variable where one of its parameters is always applied to constant argument, then instantiate
-  the schematic variable with \<open>\<lambda>_. ?var\<close>
+  (*For the leading N antecedents only, if there is any higher-order schematic variable
+  which is applied to a constant argument instead of a bound variable as usual,
+  instantiate the schematic variable to the constant function on that parameter, \<open>\<lambda>_. ?var\<close>.
 
-  N = ~1 means all antecedents, N = ~2 means to consider the conclusion of the thm in addition.
-*)
+  N = ~1 means all antecedents, N = ~2 means to consider the conclusion of the thm in addition.*)
 
   val generic_theory_mapping : (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
 

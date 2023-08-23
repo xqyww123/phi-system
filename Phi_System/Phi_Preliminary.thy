@@ -322,23 +322,29 @@ lemma Membership_E_Inhabitance:
   unfolding Inhabited_def by blast*)
 
 
+subsubsection \<open>Reduce trivial higher-order variable who applies to constant\<close>
+
+definition Reduce_HO_trivial_variable :: \<open>prop \<Rightarrow> prop\<close>
+  where \<open>Reduce_HO_trivial_variable X \<equiv> X\<close>
+
+lemma Reduce_HO_trivial_variable_I:
+  \<open>PROP P \<Longrightarrow> PROP Reduce_HO_trivial_variable P\<close>
+  unfolding Reduce_HO_trivial_variable_def .
+
+\<phi>reasoner_ML Reduce_HO_trivial_variable 1000 (\<open>PROP Reduce_HO_trivial_variable _\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+    SOME ((ctxt, Phi_Help.instantiate_higher_order_schematic_var 1 ctxt
+                      (@{thm' Reduce_HO_trivial_variable_I} RS sequent)), Seq.empty))
+\<close>
+
 
 subsubsection \<open>Meta Ball\<close>
 
 definition meta_Ball :: \<open>'a set \<Rightarrow> ('a \<Rightarrow> prop) \<Rightarrow> prop\<close>
   where \<open>meta_Ball S P \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)\<close>
 
-lemma meta_Ball_D:
-  \<open> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)
-\<Longrightarrow> PROP meta_Ball S P\<close>
-  unfolding meta_Ball_def .
-
 definition meta_case_prod :: \<open>('a \<Rightarrow> 'b \<Rightarrow> prop) \<Rightarrow> ('a \<times> 'b \<Rightarrow> prop)\<close>
   where \<open>meta_case_prod f \<equiv> (\<lambda>x. f (fst x) (snd x))\<close>
-
-lemma meta_case_prod_simp[iff]:
-  \<open>meta_case_prod f (x,y) \<equiv> f x y\<close>
-  unfolding meta_case_prod_def by simp
 
 syntax
   "_meta_Ball" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> prop \<Rightarrow> prop" ("(3\<And>(_/\<in>_)./ _)" [0, 0, 0] 0)
@@ -349,6 +355,20 @@ translations
   ("aprop") "CONST meta_Ball A (\<lambda>(x,y). P)" \<rightleftharpoons> ("aprop") "CONST meta_Ball A (CONST meta_case_prod (\<lambda>x y. P))"
   ("aprop") "CONST meta_case_prod (\<lambda>x (y,z,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_case_prod (\<lambda>x. CONST meta_case_prod (\<lambda>y (z,zs). P))"
   ("aprop") "CONST meta_case_prod (\<lambda>x (y,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_case_prod (\<lambda>x. CONST meta_case_prod (\<lambda>y zs. P))"
+
+paragraph \<open>Basic Rules\<close>
+
+subparagraph \<open>meta_Ball\<close>
+
+lemma meta_Ball_I:
+  \<open> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)
+\<Longrightarrow> PROP meta_Ball S P\<close>
+  unfolding meta_Ball_def .
+
+lemma meta_Ball_reduct[simp]:
+  \<open> PROP meta_Ball S (\<lambda>_. Trueprop True) \<equiv> Trueprop True \<close>
+  unfolding meta_Ball_def
+  by simp
 
 lemma meta_Ball_sing[simp]:
   \<open> (\<And>x \<in> {y}. PROP P x) \<equiv> PROP P y \<close>
@@ -362,25 +382,35 @@ lemma atomize_Ball:
   \<open> (\<And>x\<in>S. P x) \<equiv> Trueprop (\<forall>x\<in>S. P x) \<close>
   unfolding meta_Ball_def Premise_def Ball_def atomize_imp atomize_all .
 
-lemma [\<phi>reason 1000]:
-  \<open> PROP P y
-\<Longrightarrow> (\<And>x \<in> {y}. PROP P x)\<close>
-  unfolding meta_Ball_def Premise_def by simp
+lemma sing_times_sing:
+  \<open>{a} \<times> {b} = {(a,b)}\<close>
+  unfolding set_eq_iff
+  by simp
+
+lemma sing_if:
+  \<open>(if c then {a} else {b}) = {if c then a else b}\<close>
+  by simp
+
+
+subparagraph \<open>meta_case_prod\<close>
+
+lemma meta_case_prod_simp[iff]:
+  \<open>meta_case_prod f (x,y) \<equiv> f x y\<close>
+  unfolding meta_case_prod_def by simp
+
+
+paragraph \<open>Reasoning Rule\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> P y
-\<Longrightarrow> (\<forall>x \<in> {y}. P x)\<close>
+  \<open> PROP Reduce_HO_trivial_variable (P y)
+\<Longrightarrow> (\<And>x \<in> {y}. PROP P x)\<close>
+  unfolding meta_Ball_def Premise_def Reduce_HO_trivial_variable_def
   by simp
 
 lemma meta_Ball_pair[\<phi>reason 1010]:
   \<open> (\<And>y \<in> {y}. PROP P x y)
 \<Longrightarrow> (\<And>(x,y) \<in> {(x,y)}. PROP P x y)\<close>
   unfolding meta_Ball_def meta_case_prod_def Premise_def by simp
-
-lemma [\<phi>reason 1010]:
-  \<open> (\<forall>y \<in> {y}. P x y)
-\<Longrightarrow> (\<forall>(x,y) \<in> {(x,y)}. P x y) \<close>
-  by simp
 
 lemma [\<phi>reason 1000]:
   \<open> (Q \<Longrightarrow> (\<And>x \<in> S. PROP P x))
@@ -394,14 +424,6 @@ lemma [\<phi>reason 1000]:
   unfolding Ball_def Subjection_expn_set
   by simp
 
-lemma sing_times_sing:
-  \<open>{a} \<times> {b} = {(a,b)}\<close>
-  unfolding set_eq_iff
-  by simp
-
-lemma sing_if:
-  \<open>(if c then {a} else {b}) = {if c then a else b}\<close>
-  by simp
 
 ML_file \<open>library/tools/case_prod_conv.ML\<close>
 

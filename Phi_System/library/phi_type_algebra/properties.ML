@@ -5,7 +5,7 @@
 
 signature PHI_TYPE_TEMPLATE_PROPERTIES = sig
 
-(* Algebraic Properties *)
+(*** Algebraic Properties ***)
 
 type property_name = string
 
@@ -26,7 +26,9 @@ val adding_property : bool Config.T (*controlling if automatically for any new r
 
 structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
 
-(* The Framework for Automation based on Algebraic Property *)
+(*** The Framework for Automation based on Algebraic Property ***)
+
+(** Types **)
 
 datatype instantiation_action =
             Reasonig_Rule of (Phi_Reasoner.mode * priority) *
@@ -52,19 +54,26 @@ datatype template_action =
 
 type template = dependencies * Position.T * template_action
 
+(** Basic Operations: Add, List, Invoke **)
+
 val add_template : bool (*if to invoke on the existing instantiations if any*)
                 -> priority * template -> Context.generic -> Context.generic
 val list_templates : Context.generic -> (priority * template) Ord_List.T Symtab.table
-
-val pretty_template : Context.generic -> template -> Pretty.T
-val pretty_templates : Context.generic -> (priority * template) Ord_List.T Symtab.table -> Pretty.T
 
 type template_argument = term (*\<phi>-type (operator)*) * Position.T * thm (*property*)
 val invoke_template : template -> template_argument -> Context.generic -> Context.generic
 val invoke_automations_on_property : template_argument -> Context.generic -> Context.generic
     (*invokes any template depending on the given property and of all dependencies satisfied*)
 
-(* Internal Interfaces *)
+(** Auxiliaries **)
+
+val pretty_template : Context.generic -> template -> Pretty.T
+val pretty_templates : Context.generic -> (priority * template) Ord_List.T Symtab.table -> Pretty.T
+
+(* The default process simplifying a freshly instantiated rule *)
+val default_simplify : Proof.context -> thm -> thm
+
+(*** Internal Interfaces ***)
 
 val rule_template_pass__sender : rule_generation_pass option Unsynchronized.ref
 
@@ -217,10 +226,6 @@ structure Template_Inst_SS = Simpset (
   val attribute = NONE
 )
 
-fun normalize th = th
-  |> Phi_Help.beta_eta_contract
-  |> Drule.zero_var_indexes
-
 fun check_dependencies deps action (the_functor0,pos,property) ctxt =
   let exception Dep
       val the_functor = Phi_Help.beta_eta_contract_term the_functor0
@@ -260,6 +265,31 @@ fun short_name_of_tyop (Abs (_,_,X)) = short_name_of_tyop X
   | short_name_of_tyop (X $ _) = short_name_of_tyop X
   | short_name_of_tyop (Const (N, _)) = Long_Name.base_name N
   | short_name_of_tyop (Free (N, _)) = N
+
+fun normalize th = th
+  |> Phi_Help.beta_eta_contract
+  |> Drule.zero_var_indexes
+
+fun default_simplify ctxt rule =
+  let val rule'1 = case Thm.concl_of rule
+                     of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
+                      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
+                      | _ => rule RS' (ctxt, @{thm' NO_SIMP'_I})
+      val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt
+      val ctxt's = Template_Inst_SS.enhance ctxt'1
+                |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
+      val rule'3 = rule'2
+                |> Simplification_Protect.protect ctxt's
+                |> Phi_Reasoners.asm_lr_simplify true ctxt's
+                |> Simplification_Protect.unprotect ctxt's
+                |> singleton (Variable.export ctxt'1 ctxt)
+                |> Phi_Help.unique_flexflex ctxt
+   in (case Phi_Help.instantiate_higher_order_schematic_var' ~1 ctxt rule'3
+         of SOME th => simplify ctxt th
+          | NONE => rule'3)
+   |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
+   |> normalize
+  end
 
 fun invoke_template_action template_pos (Instantiate_Rule (template, pass, action, bind))
                            (tyop, pos, props) ctxt =
@@ -319,35 +349,8 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                         end) (Thm.nprems_of template) props
                     |> snd
                     |> Phi_Help.beta_eta_contract
-          (*By default, we do not simplify the conclusion of the template*)
-          fun simplify ctxt rule =
-                let val rule'1 = case Thm.concl_of rule
-                                   of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
-                                    | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
-                                    | _ => rule RS' (ctxt, @{thm' NO_SIMP'_I})
-                    val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt
-                    val ctxt's = Template_Inst_SS.enhance ctxt'1
-                              |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
-                 in singleton (Variable.export ctxt'1 ctxt)
-                      (  rule'2
-                      |> Simplification_Protect.protect ctxt's
-                      |> Phi_Reasoners.asm_lr_simplify true ctxt's
-                      |> Simplification_Protect.unprotect ctxt's )
-                end
-          fun default_generation rule'1 =
-            let val rule'2 = rule'1
-                          (*|> do_reason*)
-                          |> simplify ctxt'
-                          |> Phi_Help.unique_flexflex ctxt'
-             in (case Phi_Help.instantiate_higher_order_schematic_var' ~1 ctxt' rule'2
-                     of SOME th => simplify ctxt' th
-                      | NONE => rule'2)
-                   |> Simplifier.rewrite_rule ctxt' @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
-                   |> normalize
-                   |> single
-            end
-          val rules' = case pass of SOME ps => ps (default_generation, pos, ctxt') rule'1
-                                  | NONE => default_generation rule'1
+          val rules' = case pass of SOME ps => ps (single o default_simplify ctxt', pos, ctxt') rule'1
+                                  | NONE => single (default_simplify ctxt' rule'1)
        in if null rules' then ctxt
        else (
        Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
@@ -415,7 +418,7 @@ fun add_template invoke_on_existing_instantiations (priority, (template : templa
                       ) bb
                   ) aa
               | cross_product NONE bb = map (apsnd (fn rb => NONE :: rb)) bb
-            fun mk_existing_ins prev [] = []
+            fun mk_existing_ins _ [] = []
               | mk_existing_ins prev (NONE::L) = mk_existing_ins (NONE::prev) L
               | mk_existing_ins prev (SOME h :: L) =
                     fold cross_product L (map (fn (tm,_,rule) => (tm, SOME rule :: prev)) h)
@@ -621,6 +624,17 @@ val _ = Theory.setup (
   \It is able to parse the depended properties from the leading antecedents greedily for all possible, \
   \and may caputre more dependencies than the expected. If so, you can specify the exact dependency \
   \explicilty by [[\<phi>reason_template requires \<open>dependencies\<close>]]"
+
+#> let fun rule_attribute f (x, th) =
+            if Thm.is_free_dummy th
+            then (NONE, NONE)
+            else (SOME x, SOME (f x th))
+ in Attrib.setup \<^binding>\<open>\<phi>simplify_reasoning_rule\<close> (
+    Scan.succeed (rule_attribute (default_simplify o Context.proof_of)))
+  "Simplify a reasoning rule, using the same process as that in template instantiation.\n\
+  \The conclusion of the rule is remained untouched and any antecedents are simplified and reduced\
+  \if possible. \<open>NO_SIMP\<close> tag is recognized and supresses the simplification on the protected terms."
+end
 )
 
 
