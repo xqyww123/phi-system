@@ -161,7 +161,7 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
   val proc =
            Phi_Reasoner.reason1 (fn _ =>
             "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
-           ) (SOME (Thm.nprems_of proc'3 - 2)) true ctxt proc'3
+           ) (SOME (Thm.nprems_of proc'3 - 2)) ctxt proc'3
         |> Phi_Reasoners.safer_obligation_solver' (fn _ =>
             error "Fail to solve proof obligations in the assignment automatically. \
                   \It is a limitation for now that it cannot be proven manually. \

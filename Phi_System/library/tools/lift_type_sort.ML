@@ -17,7 +17,7 @@ include PHI_HELP
   val lift_types_sort : theory -> (typ * sort) list -> typ TVars.table
 
   val add_expected_sort_red : (class (*A*) * class (*B*) * sort (*C*)) list -> theory -> theory
-        (*register that C is the expected smaller intersection of A and B. *)
+        (*register that C is the expected stronger intersection of A and B. *)
 
 end
 
@@ -25,37 +25,43 @@ structure Phi_Help : PHI_HELP = struct
 open Phi_Help
 
 structure Sort_Expection_Red = Theory_Data (
-  type T = (class (*A*) * sort (*C*)) list Symtab.table (*key: B*)
-  val empty = Symtab.empty
-  val merge = Symtab.join (K (AList.merge (op =) (eq_set (op =))))
+  type T = sort (*C*) Symreltab.table (*key: A and B*)
+  val empty = Symreltab.empty
+  val merge = Symreltab.join (K (uncurry (inter (op =))))
 )
 
 fun add_expected_sort_red ABC thy =
   Sort_Expection_Red.map (
     fold (fn (A,B,C) =>
-      Symtab.map_default (B,[]) (AList.map_default (op =) (A,[]) (curry (Sign.inter_sort thy) C)) #>
-      Symtab.map_default (A,[]) (AList.map_default (op =) (B,[]) (curry (Sign.inter_sort thy) C))
+      if A <= B
+      then Symreltab.map_default ((A,B), []) (curry (Sign.inter_sort thy) C)
+      else Symreltab.map_default ((B,A), []) (curry (Sign.inter_sort thy) C)
+    (*Symtab.map_default (B,[]) (AList.map_default (op =) (A,[]) (curry (Sign.inter_sort thy) C)) #>
+      Symtab.map_default (A,[]) (AList.map_default (op =) (B,[]) (curry (Sign.inter_sort thy) C)) *)
     ) ABC
   ) thy
 
-fun get_expected_sort_red_S thy (A,B) =
+fun get_expected_sort_red_S thy =
   let val tsig = Sign.tsig_of thy
-   in (B @ maps (fn B =>
-        the_default [] (Symtab.lookup (Sort_Expection_Red.get thy) B)
-          |> maps (fn (K,V) => if Type.subsort tsig (A,[K]) then V else [])
-      ) B)
-   |> Type.minimize_sort tsig
+      val reds = Sort_Expection_Red.get thy
+   in fn (A,B) =>
+      Symreltab.fold (fn ((A',B'),C') => fn B =>
+        if Type.subsort tsig (A,[A']) andalso Type.subsort tsig (B,[B']) then Type.inter_sort tsig (C', B)
+        else if Type.subsort tsig (A,[B']) andalso Type.subsort tsig (B,[A']) then Type.inter_sort tsig (C', B)
+        else B
+      ) reds B
   end
 
-fun get_expected_sort_red_T thy (A,B) =
+fun get_expected_sort_red_T thy =
   let val tsig = Sign.tsig_of thy
-   in (B @ maps (fn B =>
-        the_default [] (Symtab.lookup (Sort_Expection_Red.get thy) B)
-          |> maps (fn (K,V) => if Type.of_sort tsig (A,[K]) then V else [])
-      ) B)
-   |> Type.minimize_sort tsig
+      val reds = Sort_Expection_Red.get thy
+   in fn (A,B) =>
+      Symreltab.fold (fn ((A',B'),C') => fn B =>
+        if Type.of_sort tsig (A,[A']) andalso Type.subsort tsig (B,[B']) then Type.inter_sort tsig (C', B)
+        else if Type.of_sort tsig (A,[B']) andalso Type.subsort tsig (B,[A']) then Type.inter_sort tsig (C', B)
+        else B
+      ) reds B
   end
-
 
 fun gen_lift_type_sort thy (ty,sort) (env00,idx) =
   if Sign.of_sort thy (ty, sort)
@@ -91,11 +97,13 @@ fun lift_types_sort thy ty_sorts =
 
 val _ = Theory.setup (
   add_expected_sort_red [
+    (\<^class>\<open>sep_disj\<close>, \<^class>\<open>times\<close>, \<^sort>\<open>sep_magma\<close>),
     (\<^class>\<open>sep_magma\<close>, \<^class>\<open>one\<close>, \<^sort>\<open>sep_magma_1\<close>),
     (\<^class>\<open>sep_magma\<close>, \<^class>\<open>share\<close>, \<^sort>\<open>share_nun_semimodule\<close>),
-    (\<^class>\<open>sep_magma\<close>, \<^class>\<open>share_one\<close>, \<^sort>\<open>share_semimodule\<close>),
+    (\<^class>\<open>share_nun_semimodule\<close>, \<^class>\<open>one\<close>, \<^sort>\<open>share_semimodule\<close>),
     (\<^class>\<open>share\<close>, \<^class>\<open>one\<close>, \<^sort>\<open>share_one\<close>),
-    (\<^class>\<open>share_nun_semimodule\<close>, \<^class>\<open>one\<close>, \<^sort>\<open>share_semimodule\<close>)
+    (\<^class>\<open>mul_carrier\<close>, \<^class>\<open>sep_magma\<close>, \<^sort>\<open>sep_carrier\<close>),
+    (\<^class>\<open>sep_carrier\<close>, \<^class>\<open>one\<close>, \<^sort>\<open>sep_carrier_1\<close>)
   ]
 )
 

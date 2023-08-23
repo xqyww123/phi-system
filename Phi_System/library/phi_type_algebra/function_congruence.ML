@@ -12,7 +12,7 @@ val _ = Theory.setup (Context.theory_map (
                  |> (fn ctxt => ctxt addsimps Simps.simp_rules ctxt)
         val rule = (Thm.transfer'' ctxt @{thm' function_congruence_template} OF [prop])
         val rule = rule
-                |> Phi_Reasoner.reason NONE true ctxt'
+                |> Phi_Reasoner.reason NONE ctxt'
                 |> (fn SOME ret => ret
                      | NONE => raise Automation_Fail (fn () => let open Pretty in
                                  [para "Fail to derive the congruence rule for Isabelle function package. \

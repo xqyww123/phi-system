@@ -17,7 +17,7 @@ fun infer_the_default_scalar_domain ctxt (s_ty, x_ty, model_ty) =
                                         $ \<^Const>\<open>Pure.type x_ty\<close>
                                         $ Var(("p",0), s_ty --> HOLogic.boolT))
    in Goal.init (Thm.cterm_of ctxt g_Sdom)
-   |> Phi_Reasoner.reason NONE true ctxt
+   |> Phi_Reasoner.reason NONE ctxt
    |> (fn SOME ret => (case Thm.prop_of ret
                          of _ (*Pure.prop*) $ (_ (*Trueprop*) $ (_ (*guess_domain_of_scalar*)
                                     $ _ $ _ $ _ $ S)) => S
@@ -34,7 +34,7 @@ fun infer_zip_operator ctxt (s_ty, x_ty, model_ty) =
                                         $ Var(("abstract_domain",0), s_ty --> s_ty --> \<^Type>\<open>prod x_ty x_ty\<close> --> HOLogic.boolT)
                                         $ Var(("zip", 0), s_ty --> s_ty --> \<^Type>\<open>prod x_ty x_ty\<close> --> x_ty))
    in Goal.init (Thm.cterm_of ctxt sequent)
-   |> Phi_Reasoner.reason NONE true ctxt
+   |> Phi_Reasoner.reason NONE ctxt
    |> (fn SOME ret => (case Thm.prop_of ret
                          of _ (*Pure.prop*) $ (_ (*Trueprop*) $ (_ (*guess_zip_of_semimodule*)
                                   $ _ $ _ $ _ $ Ds $ Dx $ z)) => (Ds, Dx, z)

@@ -25,7 +25,7 @@ fun get_element_of_abstract_object ctxt (x,T,path) =
       val goal = Thm.incr_indexes idx get_element_of_abstract_object_goal
               |> Drule.infer_instantiate ctxt [(("x",idx),x), (("T",idx),T), (("path",idx),path)]
       val ret = Phi_Reasoner.reason1 (fn _ => error "Get_Abstract_Element reasoning fails.")
-                                     (SOME 1) true ctxt goal
+                                     (SOME 1) ctxt goal
    in case Thm.prop_of ret
         of _ $ (Const (\<^const_name>\<open>Get_Abstract_Element\<close>, _) $ _ $ _ $ _ $ _) =>
                 Thm.dest_arg (Thm.dest_arg (Thm.cprop_of ret))

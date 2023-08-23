@@ -97,24 +97,18 @@ signature NU_REASONER = sig
        to attack all if it is None;
        to attack until a sequent remains at most |N| premises, if N is negative*)
   val internal_reason  : int option (*N*)
-             -> bool (*if to open new context*)
-             -> context_state -> context_state option
+             -> context_state
+             -> context_state option
   val reason  : int option (*N*)
-             -> bool (*if to open new context. It affects the scope of Success and Global_Cut handlers.
-                       Set to true if you are initiating a fresh new work, or false if it is just a sub-part of
-                       the on-going work.*)
              -> Proof.context -> thm -> thm option
   val reason1 : (unit -> string) (*error message*)
              -> int option (*N*)
-             -> bool (*if to open new context*)
              -> Proof.context -> thm -> thm
   val internal_reason_s :
-                 bool (*if to open new context*)
-              -> Proof.context (*the context for accessing reasoner db*)
+                 Proof.context (*the context for accessing reasoner db*)
               -> (Proof.context -> 'a * context_state Seq.seq)
               -> 'a * context_state option
-  val reason_sXXX : bool (*if to open new context*)
-              -> Proof.context (*the context for accessing reasoner db*)
+  val reason_sXXX : Proof.context (*the context for accessing reasoner db*)
               -> (Proof.context -> 'a * context_state Seq.seq)
               -> 'a * thm option
   (*Note it returns at most one state in the returned sequence.*)
@@ -298,10 +292,10 @@ structure Environ = Proof_Data (
 
 val enter_reasoning_envir = Environ.map (fn x => x + 1)
 val exit_reasoning_envir  = Environ.map (fn x => x - 1)
-fun enter_reasoning_envir' opewn_newctxt ctxt =
+(*fun enter_reasoning_envir' opewn_newctxt ctxt =
   if opewn_newctxt then enter_reasoning_envir ctxt else ctxt
 fun exit_reasoning_envir' opewn_newctxt ctxt =
-  if opewn_newctxt then exit_reasoning_envir ctxt else ctxt
+  if opewn_newctxt then exit_reasoning_envir ctxt else ctxt*)
 
 val nested_level = Environ.get
 
@@ -684,38 +678,38 @@ fun num_of_protected_prems  _  NONE = 0
   | num_of_protected_prems thm (SOME N) =
       if N >= 0 then Thm.nprems_of thm - N else ~N
 
-fun internal_reason (SOME 0) _ S = SOME S
-  | internal_reason N open_newctxt (ctxt,sequent) =
+fun internal_reason (SOME 0) S = SOME S
+  | internal_reason N (ctxt,sequent) =
       if Thm.nprems_of sequent = 0 then SOME (ctxt, sequent)
       else gen_reason' ctxt (num_of_protected_prems sequent N)
-                  [[ (Seq.single (enter_reasoning_envir' open_newctxt ctxt, sequent))]]
-        |> Option.map (apfst (exit_reasoning_envir' open_newctxt))
+                  [[ (Seq.single (enter_reasoning_envir ctxt, sequent))]]
+        |> Option.map (apfst exit_reasoning_envir)
 
-fun reason num open_newctxt ctxt sequent =
-  case internal_reason num open_newctxt (ctxt,sequent)
+fun reason num ctxt sequent =
+  case internal_reason num (ctxt,sequent)
     of SOME (ctxt', sequent') =>
                SOME (singleton (Proof_Context.export ctxt' ctxt) sequent')
      | NONE => NONE
 
-fun reason1 G N ON ctxt sequent =
-  case reason N ON ctxt sequent of SOME x => x | NONE => error (G ())
+fun reason1 G N ctxt sequent =
+  case reason N ctxt sequent of SOME x => x | NONE => error (G ())
 
-fun internal_reason_s open_newctxt ctxt seqs =
-  let val (ret,seqs') = seqs (enter_reasoning_envir' open_newctxt ctxt)
+fun internal_reason_s ctxt seqs =
+  let val (ret,seqs') = seqs (enter_reasoning_envir ctxt)
    in (ret, gen_reason' ctxt 0 [[ seqs' ]]
-              |> Option.map (apfst (exit_reasoning_envir' open_newctxt)))
+              |> Option.map (apfst exit_reasoning_envir))
   end
 
-fun reason_sXXX open_newctxt ctxt seqs =
-  case internal_reason_s open_newctxt ctxt seqs
+fun reason_sXXX ctxt seqs =
+  case internal_reason_s ctxt seqs
     of (ret, SOME ( ctxt', sequent')) =>
                (ret, SOME (singleton (Proof_Context.export ctxt' ctxt) sequent'))
      | (ret, NONE) => (ret, NONE)
 
 fun reason_tac N open_newctxt ctxt stat = Seq.make (fn () =>
       gen_reason' ctxt (num_of_protected_prems (snd stat) N)
-                  [[ (Seq.single (apfst (enter_reasoning_envir' open_newctxt) stat)) ]]
-       |> Option.map ( apfst (exit_reasoning_envir' open_newctxt)
+                  [[ (Seq.single (apfst enter_reasoning_envir stat)) ]]
+       |> Option.map ( apfst exit_reasoning_envir
                     #> Seq.Result
                     #> rpair Seq.empty)
     )
@@ -941,7 +935,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
                 then let val _ = info_pretty ctxt 2 (fn () => let open Pretty in
                                     block (str "Checking the guard ... " :: here pos)
                                  end)
-                  in case internal_reason (SOME 1) false (ctxt, @{thm' \<r>Guard_I} RS' (ctxt, sequent'))
+                  in case internal_reason (SOME 1) (ctxt, @{thm' \<r>Guard_I} RS' (ctxt, sequent'))
                   of SOME s' => SOME (s', tactic R (bm, (ctxt, sequent)))
                    | NONE => Seq.pull (tactic R (bm, (ctxt, sequent)))
                  end

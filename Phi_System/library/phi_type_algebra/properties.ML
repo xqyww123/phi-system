@@ -333,7 +333,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                             val thm'3 =
                                  if is_reasoning_goal
                                  then thm'2 |> Thm.permute_prems 0 i
-                                            |> Phi_Reasoner.reason (SOME delt) true ctxt'
+                                            |> Phi_Reasoner.reason (SOME delt) ctxt'
                                             |> (fn SOME th => th
                                                  | NONE => raise Automation_Fail (fn () =>
                                                     let open Pretty

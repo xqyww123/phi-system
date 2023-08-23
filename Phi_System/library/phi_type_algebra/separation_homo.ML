@@ -97,19 +97,19 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
 
       val Fa = Term.map_types (subst_ty [(element_ty, fst target)]) F_term
       val Fb = Term.map_types (subst_ty [(element_ty, snd target)]) F_term
+      val ([T_name, U_name], ctxt) = Variable.add_fixes ["T","U"] ctxt
+      val T = Free (T_name, subst_ty [(element_ty, fst target)] (Term.fastype_of T_term))
+      val U = Free (U_name, subst_ty [(element_ty, snd target)] (Term.fastype_of T_term))
       val SH = (case (Term.fastype_of Fa, Term.fastype_of Fb)
                   of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                       \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
                     (if flag
                      then \<^Const>\<open>Separation_Homo\<^sub>I a b c d e f x_ty\<close>
-                       $ Fa $ Fb $ F_term
-                       $ (Abs ("_", \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close>,
-                          Abs ("_", \<^Type>\<open>fun e \<^Type>\<open>set b\<close>\<close>,
-                          Abs ("_", \<^Type>\<open>prod c f\<close>, \<^Const>\<open>True\<close>))))
+                       $ Fa $ Fb $ F_term $ T $ U
                        $ (\<^Const>\<open>Collect \<^Type>\<open>prod c f\<close>\<close> $ (\<^Const>\<open>case_prod c f \<^Type>\<open>bool\<close>\<close> $ dom))
                        $ zip
                      else \<^Const>\<open>Separation_Homo\<^sub>E a b c d e f x_ty\<close>
-                       $ Fa $ Fb $ F_term $ zip)
+                       $ Fa $ Fb $ F_term $ T $ U $ zip)
                    | _ => error "Internal bug")
 
    in Seq.single ([], HOLogic.Trueprop $ SH, NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
@@ -132,10 +132,10 @@ fun SH_reasoning is_intro phi ctxt =
 fun gen_SH is_intro (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
   let (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint (
-            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F
-             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ => F)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ u) = [u]
+            fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
+             | Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ => F)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ _ $ _ $ _ $ D $ z) = [D,z]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
         | extract_oprs_from_hint _ = []
 
       val ind_conv_z = default_ind_conv (
@@ -178,7 +178,7 @@ fun gen_SH is_intro (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
                                      (if is_intro then @{thm' \<phi>TA_SH\<^sub>I_rule} else @{thm' \<phi>TA_SH\<^sub>E_rule}),
-                                     [(SOME ([0,~1,~1], ind_conv), SH_reasoning is_intro)],
+                                     [(SOME ([0], ind_conv), SH_reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

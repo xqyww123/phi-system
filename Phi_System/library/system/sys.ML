@@ -299,7 +299,7 @@ fun synthesis term ctxt sequent =
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ => "reasoning synthesis..." ^ Position.here \<^here>)
   in Phi_Reasoner.reason1 (fn () =>
         error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
-      ) NONE true ctxt sequent'
+      ) NONE ctxt sequent'
   end
 
 

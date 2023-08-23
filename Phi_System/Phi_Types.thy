@@ -58,7 +58,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -528,13 +528,13 @@ subsubsection \<open>Algebraic Properties\<close>
 
 lemma \<phi>Composition_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>I B UNIV
-\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>_ _ _. True) UNIV (\<lambda>x. x)\<close>
+\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U UNIV (\<lambda>x. x)\<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
   by (clarsimp, insert times_set_I, blast)
 
 lemma (*The above rule is reversible. requiring the sep homo domain being the univ is already the weakest.*)
   \<open> S \<noteq> {}
-\<Longrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>_ _ _. True) S (\<lambda>x. x)
+\<Longrightarrow> \<forall>T U. Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U S (\<lambda>x. x)
 \<Longrightarrow> Object_Sep_Homo\<^sub>I B UNIV \<close>
   unfolding Separation_Homo\<^sub>I_def Object_Sep_Homo\<^sub>I_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
@@ -547,13 +547,13 @@ lemma (*The above rule is reversible. requiring the sep homo domain being the un
   
 lemma \<phi>Composition_separatio_functor_unzip[\<phi>reason 1000]:
   \<open> Object_Sep_Homo\<^sub>E B
-\<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)\<close>
+\<Longrightarrow> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x)\<close>
   for B :: \<open>('d::sep_magma,'e::sep_magma) \<phi>\<close>
   unfolding Separation_Homo\<^sub>E_def Transformation_def Object_Sep_Homo\<^sub>E_def
   by (clarsimp simp add: set_mult_expn; blast)
 
 lemma (*The above rule is reversible*)
-  \<open> Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
+  \<open> \<forall>T U. Separation_Homo\<^sub>E ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) T U (\<lambda>x. x) \<Longrightarrow> Object_Sep_Homo\<^sub>E B \<close>
   unfolding Separation_Homo\<^sub>E_def Object_Sep_Homo\<^sub>E_def Transformation_def
   apply (clarsimp simp add: set_mult_expn)
   apply (simp add: \<phi>Type_def Satisfaction_def)
@@ -753,7 +753,7 @@ subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
@@ -765,7 +765,7 @@ declare [[\<phi>trace_reasoning = 1]]
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
        and Open_Abstraction_Full
-       and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<lambda>x. x)\<close>
+       and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
@@ -774,14 +774,14 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
-\<Longrightarrow> closed_homo_sep_disj \<psi> \<and> Prem = (\<lambda>T U xy. True)
-    \<or>\<^sub>c\<^sub>u\<^sub>t Prem = (\<lambda>T U xy. Separation_Disj \<psi> (snd xy \<Ztypecolon> U) (fst xy \<Ztypecolon> T))
-    \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
-\<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) Prem UNIV (\<lambda>x. x) \<close>
+\<Longrightarrow> closed_homo_sep_disj \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t
+    (\<forall>(x,y) \<in> Dx. Separation_Disj \<psi> (y \<Ztypecolon> U) (x \<Ztypecolon> T)) \<or>\<^sub>c\<^sub>u\<^sub>t
+    TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
+\<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U Dx (\<lambda>x. x) \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
             Separation_Disj_def closed_homo_sep_def homo_sep_def closed_homo_sep_disj_def
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
-  by (clarsimp; metis (no_types, lifting) fst_conv snd_conv)
+  by (clarsimp simp add: Ball_def; metis)
 
 lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
@@ -1043,17 +1043,16 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 3]]
+ declare [[\<phi>trace_reasoning = 0]]
 
-   
+      
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
-  deriving Separation_Homo\<^sub>I
-(*Separation_Monoid
+  deriving Separation_Monoid
        and Open_Abstraction_Full
        and Functionality
-       and Trivial_\<Sigma>*)
-
+       and Trivial_\<Sigma>
+       and Carrier_Set
 
 (*
 TESTING
@@ -1196,15 +1195,17 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   \<open>Unit_Functor ((\<^bold>\<rightarrow>\<^sub>@) k)\<close>
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
-      
+
+declare [[\<phi>trace_reasoning = 3]]
+
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (scalar_mult push_map k \<Zcomp>\<^sub>f T)\<close>
-  deriving Separation_Monoid
+  deriving (*Separation_Monoid
        and Open_Abstraction_Full
        and Functionality
        and Trivial_\<Sigma>
        and Semimodule_Scalar_Assoc
-       and Semimodule_Identity
+       and*) Semimodule_Identity
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
