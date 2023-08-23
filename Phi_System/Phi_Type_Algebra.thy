@@ -3396,6 +3396,10 @@ ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 
 subsubsection \<open>Carrier Set\<close>
 
+bundle extract_premise_in_Carrier_Set =
+  prem_extract_Carrier_Set[\<phi>premise_extraction]
+  prem_extract_homo_mul_carrier[\<phi>premise_extraction]
+
 lemma \<phi>TA_CarS_rule:
   \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
           \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>

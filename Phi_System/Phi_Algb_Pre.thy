@@ -47,7 +47,7 @@ declare (in closed_homo_sep_disj) closed_homo_sep_disj_axioms [\<phi>reason 1000
 
 declare (in homo_mul_carrier) homo_mul_carrier_axioms[\<phi>reason 1000]
 
-lemma extraction_homo_mul_carrier:
+lemma prem_extract_homo_mul_carrier:
   \<open>homo_mul_carrier \<psi> \<equiv> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<and> True\<close>
   unfolding homo_mul_carrier_def
   by simp
