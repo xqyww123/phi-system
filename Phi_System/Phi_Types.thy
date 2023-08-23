@@ -784,15 +784,15 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   by (clarsimp simp add: Ball_def; metis)
 
 lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
-  \<open>  module_scalar_identity \<psi>
+  \<open> module_scalar_identity \<psi>
 \<Longrightarrow> Semimodule_Identity (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T \<close>
   unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def
   by (rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
-  \<open> module_scalar_assoc \<psi> Ds
+  \<open> \<g>\<u>\<a>\<r>\<d> module_scalar_assoc \<psi> Ds
 \<Longrightarrow> Semimodule_Scalar_Assoc (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds \<close>
-  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def
+  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def \<r>Guard_def
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
@@ -1196,7 +1196,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
 
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (scalar_mult push_map k \<Zcomp>\<^sub>f T)\<close>

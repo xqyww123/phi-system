@@ -1,4 +1,5 @@
 signature PLPR_SYNTAX = sig
+include PLPR_SYNTAX
 
 val dest_premise_tag : term -> term * term
 val dest_premise_tag_opt : term -> (term * term) option
@@ -11,6 +12,7 @@ val provide_premise_condition : thm -> thm -> thm
 end
 
 structure PLPR_Syntax : PLPR_SYNTAX = struct
+open PLPR_Syntax
 
 fun has_head c (Const (c', _)) = (c = c')
   | has_head c (h $ _) = has_head c h

@@ -16,6 +16,36 @@ begin
 
 subsubsection \<open>Preliminaries\<close>
 
+paragraph \<open>Guard of Reasoning Rule\<close>
+
+text \<open>If the guard of a rule fails, the rule will be considered non-appliable, just like the case
+  when pattern mismatchs. The difference lies in the cutting and backtracking behavior.
+  If a cut rule is considered non-appliable, it will not cut remaining candidates.
+  If the prior rules before a no-backtrack-accepted rule are non-appliable, the no-backtrack-accepted
+  rule will be applied.
+
+  A rule can have at most one guard, and it must be at the leading place.
+\<close>
+
+definition \<r>Guard :: \<open>bool \<Rightarrow> bool\<close> ("\<g>\<u>\<a>\<r>\<d> _" [5] 5) where \<open>\<r>Guard X \<equiv> X\<close>
+
+lemma \<r>Guard_I: \<open>P \<Longrightarrow> \<r>Guard P\<close> unfolding \<r>Guard_def .
+
+lemma \<r>Guard_reduct[simp]:
+  \<open>\<r>Guard True \<equiv> True\<close>
+  unfolding \<r>Guard_def .
+
+paragraph \<open>General Syntax of Annotation\<close>
+
+typedecl action
+
+definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [10,10] 9)
+  where \<open>Action_Tag P A \<equiv> P\<close>
+
+lemma Action_Tag_I:
+  \<open>P \<Longrightarrow> P @action A\<close>
+  unfolding Action_Tag_def .
+
 paragraph \<open>ML Libraries\<close>
 
 setup \<open>
@@ -60,36 +90,6 @@ ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
-
-paragraph \<open>Guard of Reasoning Rule\<close>
-
-text \<open>If the guard of a rule fails, the rule will be considered non-appliable, just like the case
-  when pattern mismatchs. The difference lies in the cutting and backtracking behavior.
-  If a cut rule is considered non-appliable, it will not cut remaining candidates.
-  If the prior rules before a no-backtrack-accepted rule are non-appliable, the no-backtrack-accepted
-  rule will be applied.
-
-  A rule can have at most one guard, and it must be at the leading place.
-\<close>
-
-definition \<r>Guard :: \<open>bool \<Rightarrow> bool\<close> ("\<g>\<u>\<a>\<r>\<d> _" [5] 5) where \<open>\<r>Guard X \<equiv> X\<close>
-
-lemma \<r>Guard_I: \<open>P \<Longrightarrow> \<r>Guard P\<close> unfolding \<r>Guard_def .
-
-lemma \<r>Guard_reduct[simp]:
-  \<open>\<r>Guard True \<equiv> True\<close>
-  unfolding \<r>Guard_def .
-
-paragraph \<open>General Syntax of Annotation\<close>
-
-typedecl action
-
-definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [10,10] 9)
-  where \<open>Action_Tag P A \<equiv> P\<close>
-
-lemma Action_Tag_I:
-  \<open>P \<Longrightarrow> P @action A\<close>
-  unfolding Action_Tag_def .
 
 
 section \<open>Introduction\<close>
@@ -545,6 +545,14 @@ text \<open>Antecedent \<open>x = y\<close> has a meaning of assignment, and is 
 definition Ant_Seq :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
   where \<open>Ant_Seq \<equiv> (\<and>)\<close>
 
+text \<open>The key distinction of \<^const>\<open>Ant_Seq\<close> is that its congruence rule is enabled by default,
+      as it implies a left-to-right evaluation order.\<close>
+
+lemma Ant_Seq_cong[cong]:
+  \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> Q \<equiv> Q') \<Longrightarrow> P \<and>\<^sub>\<r> Q \<equiv> P' \<and>\<^sub>\<r> Q'\<close>
+  unfolding Ant_Seq_def atomize_eq
+  by blast
+
 lemma Ant_Seq_reduct[simp]:
   \<open>True \<and>\<^sub>\<r> P \<equiv> P\<close>
   \<open>P \<and>\<^sub>\<r> True \<equiv> P\<close>
@@ -555,18 +563,18 @@ lemma Ant_Seq_I[\<phi>reason 1000]:
   \<open>P \<Longrightarrow> Q \<Longrightarrow> P \<and>\<^sub>\<r> Q\<close>
   unfolding Ant_Seq_def ..
 
-text \<open>The key feature of \<^const>\<open>Ant_Seq\<close> is that its congruence rule is enabled by default,
-      as it implies a left-to-right evaluation order.\<close>
-
-lemma Ant_Seq_cong[cong]:
-  \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> Q \<equiv> Q') \<Longrightarrow> P \<and>\<^sub>\<r> Q \<equiv> P' \<and>\<^sub>\<r> Q'\<close>
-  unfolding Ant_Seq_def atomize_eq
-  by blast
+lemma Ant_Seq_assoc:
+  \<open> (A \<and>\<^sub>\<r> B) \<and>\<^sub>\<r> C \<equiv> A \<and>\<^sub>\<r> B \<and>\<^sub>\<r> C \<close>
+  unfolding Ant_Seq_def
+  by simp
 
 lemma Ant_Seq_imp:
   \<open>(A \<and>\<^sub>\<r> B \<Longrightarrow> PROP Q) \<equiv> (A \<Longrightarrow> B \<Longrightarrow> PROP Q)\<close>
   unfolding Ant_Seq_def
   by (rule; simp)
+
+
+ML_file_debug \<open>library/PLPR_Syntax0.ML\<close>
 
 (*
 text \<open>Meta-programming is feasible on \<phi>-LPR.
@@ -722,6 +730,7 @@ subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}
 definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,27] 26)
   where "Premise mode x \<equiv> x"
 
+(*TODO: increase the syntactic priority to 40*)
 abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
 abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [27] 26)

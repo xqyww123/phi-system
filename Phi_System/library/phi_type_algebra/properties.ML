@@ -288,6 +288,7 @@ fun default_simplify ctxt rule =
          of SOME th => simplify ctxt th
           | NONE => rule'3)
    |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
+   |> PLPR_Syntax.merge_guards ctxt
    |> normalize
   end
 
