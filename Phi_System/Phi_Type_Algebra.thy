@@ -1201,6 +1201,13 @@ lemma Separation_Homo_functor[\<phi>reason_template 50]:
       by (clarsimp simp add: Transformation_def; blast)
   qed .
 
+lemma [\<phi>reason_template name \<phi>Prod []]:
+  \<open> Separation_Homo\<^sub>I Ft Fu Fc T U UNIV (\<lambda>x. x)
+\<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U (\<lambda>x. x)
+\<Longrightarrow> Fc (T \<^emph> U) = Ft T \<^emph> Fu U \<close>
+  unfolding Separation_Homo\<^sub>I_def Separation_Homo\<^sub>E_def
+  by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
+
 
 (* \<p>\<r>\<e>\<m>\<i>\<s>\<e> mapper {(a * b, (a, b)) |a b. a ## b} = {(a * b, (a, b)) |a b. a ## b}
 \<Longrightarrow>  *)
