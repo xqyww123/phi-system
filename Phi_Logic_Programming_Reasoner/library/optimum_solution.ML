@@ -93,7 +93,7 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
   let val var = Synchronized.var "PLPR_Optimum_Solution" (0, Candidates.empty)
       val (sh, ctxt) = ctxt
         |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn s =>
-                    SOME [ (\<^here>, gen_finish SUPER_REACH s) ])
+                    SOME (gen_finish SUPER_REACH s))
       val (gcut, ctxt) = ctxt
         |> Phi_Reasoner.disable_global_cut 1
                     "Global Cut is prohibited during Optimum_Solution reasoning"

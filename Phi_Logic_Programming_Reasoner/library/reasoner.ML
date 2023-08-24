@@ -312,7 +312,7 @@ exception Explorative_Backtrack
 
 structure Global_Cut_Handlers = Local_Handlers(
   type domT = context_state
-  type retT = (Position.T * context_state Seq.seq) list
+  type retT = context_state Seq.seq
   fun default s = raise Global_Cut s
   val current_level = nested_level
   val ctxt_of = fst
@@ -320,7 +320,7 @@ structure Global_Cut_Handlers = Local_Handlers(
 
 structure Success_Handlers = Local_Handlers(
   type domT = context_state
-  type retT = (Position.T * context_state Seq.seq) list
+  type retT = context_state Seq.seq
   fun default s = raise Success s
   val current_level = nested_level
   val ctxt_of = fst
@@ -620,77 +620,76 @@ fun gen_reason (trace, limit, tactics) =
                                    \you can set \<phi>reasoning_step_limit to increase the limit of the steps\
                                    \if it is too small."
                         else ()
+                datatype transition = NORMAL of (context_state * context_state Seq.seq) option
+                                    | GO_EXPLORATIVE_BACKTRACKING
+                fun pull seq = NORMAL (Seq.pull seq)
+                  handle Success s => (pull (Success_Handlers.invoke (fst s) s)
+                                      handle Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING)
+                       | Global_Cut s => pull (Success_Handlers.invoke (fst s) s)
+                       | Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING
             in if disabled_due_to_backtrack backtrack_mode backtracking
             then loop (N, iter, backtracking, L'::L)
-            else
-            ((case Seq.pull seq
-                of SOME ((ctxt,th), seq') =>
-                    (let
-                      val _ = if 2 <= trace
-                              then tracing ("\<phi>reasoning("^string_of_int score^"):"^
-                                            Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
-                              else ()
-          
-                      val Z = if Thm.nprems_of th <= N
-                              then raise Success (ctxt, th)
-                              else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
-                                                 then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
-                                                 else th
-                                       fun chk_guard M (ctxt, th) =
-                                             (loop (Thm.nprems_of th - M, iter, NO_BACKTRACKING,
-                                                   [[(score, pos, NORMAL_MODE, Seq.single (enter_sub_envir ctxt, th))]])
-                                              handle Success s => SOME s
-                                             ) |> Option.map (apfst exit_sub_envir)
-                                in get_reasoners' (Proof_Context.theory_of ctxt) tactics (Thm.major_prem_of th')
-                                      |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
-                                      |> map (fn (priority, _, _, r : reasoner) =>
-                                            (priority + score, #pos r, #mode r,
-                                             apply_tactic chk_guard backtracking (#tactic r) (ctxt,th')))
-                               end
-          
-                      val Z = case cut_mode
-                                of GLOBAL_CUT => let val _ = if 2 <= trace
-                                                             then tracing ("\<phi>reasoning cut:\n" ^ Thm.string_of_thm ctxt th)
-                                                             else ()
-                                                  in [[(score, pos, NORMAL_MODE, Seq.single (ctxt,th))]]
-                                                 end
-                                 | LOCAL_CUT => Z :: (
-                                                  if pointer_eq (seq',Seq.empty) then L
-                                                  else [(score,pos,mode,seq')]::L)
-                                 | NO_CUT => Z :: (
-                                        let val t = if pointer_eq (seq',Seq.empty) then L'
-                                                    else (score,pos,mode,seq')::L' 
-          
-                                            (*reasoning branches of identical priority are considered emitted
-                                              simultaneously of which failures are not considered as backtracking
-                                              to others.
-                                              Therefore, once one branch is invoked successfully, the other
-                                              candidates of identical priority will not check the backtracking anymore,
-                                              so we set their modes to ALLOW_BACKTRACK.*)
-                                            fun qchk [] = false
-                                              | qchk ((score',_,(_,bmode),_) :: ls) =
-                                                  score = score' andalso (bmode <> ALLOW_BACKTRACK orelse qchk ls)
-                                            fun toggle_bmode [] = []
-                                              | toggle_bmode (origin as ((score',pos,(cmode,bmode),seq) :: ls)) =
-                                                  if score = score' andalso bmode <> ALLOW_BACKTRACK
-                                                  then (score',pos,(cmode,ALLOW_BACKTRACK),seq) :: toggle_bmode ls
-                                                  else origin
-                                            fun toggle_bmode' t = if qchk t then toggle_bmode t else t
-          
-                                         in if null t then L else toggle_bmode' t ::L
-                                        end)
-                    in
-                      loop (N, iter+1, NO_BACKTRACKING, Z)
-                    end)
-                 | NONE => loop (N, iter, backtracking, L'::L) )
-              handle Success s => Success_Handlers.invoke (fst s) s
-                               |> map (fn (x,y) => (score,x,NORMAL_MODE,y))
-                               |> (fn Z => loop (N, iter+1, NO_BACKTRACKING, Z :: L))
-                   | Global_Cut s => Global_Cut_Handlers.invoke (fst s) s
-                               |> map (fn (x,y) => (score,x,NORMAL_MODE,y))
-                               |> (fn Z => loop (N, iter+1, NO_BACKTRACKING, Z :: L)) )
-              handle Explorative_Backtrack =>
-                        loop (N, iter, EXPLORATIVE_BACKTRACKING, L'::L)
+            else case pull seq
+              of NORMAL (SOME ((ctxt,th), seq')) =>
+                  (let
+                    val _ = if 2 <= trace
+                            then tracing ("\<phi>reasoning("^string_of_int score^"):"^
+                                          Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
+                            else ()
+        
+                    val Z = if Thm.nprems_of th <= N
+                            then raise Success (ctxt, th)
+                            else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
+                                               then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
+                                               else th
+                                     fun chk_guard M (ctxt, th) =
+                                           (loop (Thm.nprems_of th - M, iter, NO_BACKTRACKING,
+                                                 [[(score, pos, NORMAL_MODE, Seq.single (enter_sub_envir ctxt, th))]])
+                                            handle Success s => SOME s
+                                           ) |> Option.map (apfst exit_sub_envir)
+                              in get_reasoners' (Proof_Context.theory_of ctxt) tactics (Thm.major_prem_of th')
+                                    |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
+                                    |> map (fn (priority, _, _, r : reasoner) =>
+                                          (priority + score, #pos r, #mode r,
+                                           apply_tactic chk_guard backtracking (#tactic r) (ctxt,th')))
+                             end
+        
+                    val Z = case cut_mode
+                              of GLOBAL_CUT => let val _ = if 2 <= trace
+                                                           then tracing ("\<phi>reasoning cut:\n" ^ Thm.string_of_thm ctxt th)
+                                                           else ()
+                                                in [[(score, pos, NORMAL_MODE, Seq.single (ctxt,th))]]
+                                               end
+                               | LOCAL_CUT => Z :: (
+                                                if pointer_eq (seq',Seq.empty) then L
+                                                else [(score,pos,mode,seq')]::L)
+                               | NO_CUT => Z :: (
+                                      let val t = if pointer_eq (seq',Seq.empty) then L'
+                                                  else (score,pos,mode,seq')::L' 
+        
+                                          (*reasoning branches of identical priority are considered emitted
+                                            simultaneously of which failures are not considered as backtracking
+                                            to others.
+                                            Therefore, once one branch is invoked successfully, the other
+                                            candidates of identical priority will not check the backtracking anymore,
+                                            so we set their modes to ALLOW_BACKTRACK.*)
+                                          fun qchk [] = false
+                                            | qchk ((score',_,(_,bmode),_) :: ls) =
+                                                score = score' andalso (bmode <> ALLOW_BACKTRACK orelse qchk ls)
+                                          fun toggle_bmode [] = []
+                                            | toggle_bmode (origin as ((score',pos,(cmode,bmode),seq) :: ls)) =
+                                                if score = score' andalso bmode <> ALLOW_BACKTRACK
+                                                then (score',pos,(cmode,ALLOW_BACKTRACK),seq) :: toggle_bmode ls
+                                                else origin
+                                          fun toggle_bmode' t = if qchk t then toggle_bmode t else t
+        
+                                       in if null t then L else toggle_bmode' t ::L
+                                      end)
+                  in
+                    loop (N, iter+1, NO_BACKTRACKING, Z)
+                  end)
+               | NORMAL NONE => loop (N, iter, backtracking, L'::L)
+               | GO_EXPLORATIVE_BACKTRACKING => loop (N, iter, EXPLORATIVE_BACKTRACKING, L'::L)
             end
    in loop
   end

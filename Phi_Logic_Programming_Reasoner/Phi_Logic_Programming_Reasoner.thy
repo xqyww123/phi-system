@@ -728,8 +728,8 @@ lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
 
 declare [[ML_debugger]]
 
-\<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (_,(ctxt,sequent)) =>
-  raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent)\<close>
+\<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
+  raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent))\<close>
 
 
 subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}\<close>
