@@ -2977,8 +2977,65 @@ hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_
 \<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) requires Object_Equiv\<^sub>O?
   = \<open>Phi_Type_Algebra_Derivers.object_equiv\<close>
 
-\<phi>property_deriver Basic 109 requires Object_Equiv and Abstract_Domain
 
+subsubsection \<open>Is_Functional\<close>
+
+lemma \<phi>TA_IsFunc_rule:
+  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+          \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>
+          Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Functionality T P \<close>
+  unfolding Action_Tag_def Functionality_def Is_Functional_def Premise_def
+  by clarsimp
+
+lemma \<phi>TA_IsFunc_rewr:
+  \<open> Trueprop (Ant \<longrightarrow> cond \<longrightarrow> P @action Any)
+ \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> P) \<close>
+  unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
+
+(*
+lemma \<phi>TA_IsFunc_rewr_ants:
+  \<open>Is_Functional S \<equiv> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v)\<close>
+  unfolding Premise_def Is_Functional_def by simp*)
+
+ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
+
+\<phi>property_deriver Functionality 100 for (\<open>Functionality _ _\<close>)
+    = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
+
+
+subsubsection \<open>Carrier Set\<close>
+
+bundle extract_premise_in_Carrier_Set =
+  prem_extract_Carrier_Set[\<phi>premise_extraction]
+  prem_extract_homo_mul_carrier[\<phi>premise_extraction]
+
+lemma \<phi>TA_CarS_rule:
+  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x \<longrightarrow>
+          Within_Carrier_Set (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Carrier_Set T P \<close>
+  unfolding Carrier_Set_def Action_Tag_def Premise_def
+  by clarsimp
+
+lemma \<phi>TA_CarS_rewr:
+  \<open> Trueprop (Ant \<longrightarrow> cond \<longrightarrow> P @action Any)
+ \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> P) \<close>
+  unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
+
+ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
+
+\<phi>property_deriver Carrier_Set 100 for (\<open>Carrier_Set _ _\<close>)
+    = \<open> Phi_Type_Algebra_Derivers.carrier_set \<close>
+
+\<phi>property_deriver Basic 109
+  requires Object_Equiv and Abstract_Domain and Carrier_Set ?
 
 
 subsubsection \<open>Transformation Functor\<close>
@@ -3345,62 +3402,6 @@ ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
 
 
 
-subsubsection \<open>Is_Functional\<close>
-
-lemma \<phi>TA_IsFunc_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-          \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>
-          Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
-\<Longrightarrow> Functionality T P \<close>
-  unfolding Action_Tag_def Functionality_def Is_Functional_def Premise_def
-  by clarsimp
-
-lemma \<phi>TA_IsFunc_rewr:
-  \<open> Trueprop (Ant \<longrightarrow> cond \<longrightarrow> P @action Any)
- \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> P) \<close>
-  unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
-
-(*
-lemma \<phi>TA_IsFunc_rewr_ants:
-  \<open>Is_Functional S \<equiv> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v)\<close>
-  unfolding Premise_def Is_Functional_def by simp*)
-
-ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
-
-\<phi>property_deriver Functionality 100 for (\<open>Functionality _ _\<close>)
-    = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
-
-
-subsubsection \<open>Carrier Set\<close>
-
-bundle extract_premise_in_Carrier_Set =
-  prem_extract_Carrier_Set[\<phi>premise_extraction]
-  prem_extract_homo_mul_carrier[\<phi>premise_extraction]
-
-lemma \<phi>TA_CarS_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x \<longrightarrow>
-          Within_Carrier_Set (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
-\<Longrightarrow> Carrier_Set T P \<close>
-  unfolding Carrier_Set_def Action_Tag_def Premise_def
-  by clarsimp
-
-lemma \<phi>TA_CarS_rewr:
-  \<open> Trueprop (Ant \<longrightarrow> cond \<longrightarrow> P @action Any)
- \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> P) \<close>
-  unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
-
-ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
-
-\<phi>property_deriver Carrier_Set 100 for (\<open>Carrier_Set _ _\<close>)
-    = \<open> Phi_Type_Algebra_Derivers.carrier_set \<close>
-
 
 subsubsection \<open>Trim Empty Generated during Separation Extraction\<close>
 
@@ -3482,7 +3483,7 @@ subsection \<open>Deriving Configures for Specific Abstract Algebras\<close>
 
 subsubsection \<open>Common\<close>
 
-setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Simps.map (fn ctxt => ctxt addsimps
+setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Expansion.map (fn ctxt => ctxt addsimps
   @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
           prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
           ExSet_simps
@@ -3653,6 +3654,8 @@ lemma [\<phi>constraint_expansion, simp]:
   \<open>pred_prod (\<lambda>a. True) P x \<longleftrightarrow> P (snd x)\<close>
   \<open>pred_prod Q (\<lambda>a. True) x \<longleftrightarrow> Q (fst x)\<close>
   by (cases x; simp)+
+
+declare Lifting.pred_prod_beta[\<phi>deriver_simp]
 
 end
                                                           

@@ -104,9 +104,9 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
                             Conv.implies_concl_conv (Conv.implies_concl_conv (
                                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                               Phi_Syntax.transformation_conv
-                              (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)) then_conv
+                              (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
                                conv_chk_unfolded phi ctxt)
-                              (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)) then_conv
+                              (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
                                conv_chk_unfolded phi ctxt)
                               Conv.all_conv)))))
       fun simp (_, ctxt) =

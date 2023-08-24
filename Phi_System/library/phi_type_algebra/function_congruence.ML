@@ -9,7 +9,7 @@ val _ = Theory.setup (Context.theory_map (
                       | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
         val ctxt' = Context.proof_of ctxt
                  |> load_simpset oprs
-                 |> (fn ctxt => ctxt addsimps Simps.simp_rules ctxt)
+                 |> (fn ctxt => ctxt addsimps Expansion.simp_rules ctxt)
         val rule = (Thm.transfer'' ctxt @{thm' function_congruence_template} OF [prop])
         val rule = rule
                 |> Phi_Reasoner.reason NONE NONE ctxt'

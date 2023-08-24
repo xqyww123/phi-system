@@ -27,14 +27,13 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+    
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Basic
        and Functionality
-       and Carrier_Set
        and Open_Abstraction_Full
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -133,7 +132,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
                   
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
-  deriving Abstract_Domain
+  deriving Basic
     and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
     and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
@@ -142,7 +141,6 @@ text \<open>Transformation functor requires inner elements to be transformed int
     and    \<open>Identity_Element\<^sub>E (u \<Ztypecolon> T c)
         \<Longrightarrow> Identity_Element\<^sub>E ((c, u) \<Ztypecolon> \<Sigma> T) \<close>
     and Functionality
-    and Carrier_Set
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
 
@@ -171,7 +169,6 @@ declare [[\<phi>trace_reasoning = 0]]
                       (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
        and Open_Abstraction_Full
-       and Carrier_Set
 
 
 text \<open>Read it as 'the abstract object is certain element in the set'
@@ -611,8 +608,6 @@ subsection \<open>Embedding Additive Disjunction\<close>
 
 subsubsection \<open>Preliminary Settings\<close>
 
-term case_sum
-
 declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason 1020]:
@@ -713,7 +708,6 @@ declare [[\<phi>trace_reasoning = 0]]
           \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) (P \<or> Q)\<close>
        and \<open>  Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<or> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) \<close>
-       and Carrier_Set (*TODO: the simplification is bad*)
 
 subsubsection \<open>Configurations\<close>
 
@@ -731,7 +725,8 @@ subsection \<open>Embedding Additive Conjunction\<close>
      
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
-  deriving \<open>  Abstract_Domain T P
+  deriving Basic
+       and \<open>  Abstract_Domain T P
           \<Longrightarrow> Abstract_Domain U Q
           \<Longrightarrow> Abstract_Domain (T \<and>\<^sub>\<phi> U) (\<lambda>(x,y). P x \<and> Q y)\<close>
        (*and \<open>  Abstract_Domain\<^sub>L T P
@@ -747,7 +742,6 @@ subsection \<open>Embedding Additive Conjunction\<close>
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
        and Functional_Transformation_Functor
-       and Carrier_Set
      (*DO NOT REMOVE, they are right but I'm thinking if we really should support so much additive conjunction
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>
               Transformation_Functor ((\<and>\<^sub>\<phi>) A) ((\<and>\<^sub>\<phi>) A') Basic_BNFs.snds (\<lambda>_. UNIV) (rel_prod (=))\<close>
@@ -921,7 +915,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Open_Abstraction_Full
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
-       and Carrier_Set
 
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
@@ -944,7 +937,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Open_Abstraction_Full
        and Identity_Element
-       and Carrier_Set
 
 
 subsection \<open>Empty Type of Free Objects\<close>
@@ -1040,7 +1032,6 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Separation_Monoid
        and Trivial_\<Sigma>
        and SE_Trim_Empty
-       and Carrier_Set
 
 
 term \<open>1 :: (nat list)\<close>
@@ -1054,7 +1045,6 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Separation_Monoid
        and SE_Trim_Empty
        and Trivial_\<Sigma>
-       and Carrier_Set
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -1067,7 +1057,7 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Itself)\<close>
   deriving Basic
-  
+
 
 (*
 lemma [\<phi>reason 10000]:
@@ -1082,7 +1072,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Open_Abstraction_Full
        and Functionality
        and Trivial_\<Sigma>
-       and Carrier_Set
 
 (*
 TESTING
@@ -1236,7 +1225,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Trivial_\<Sigma>
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
-       and Carrier_Set
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>

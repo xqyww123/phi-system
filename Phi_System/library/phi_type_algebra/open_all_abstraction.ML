@@ -211,7 +211,7 @@ fun gen_trans_to_raw_abst (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
                 Conv.rewr_conv @{thm' \<phi>TA_TrRA_rewr} then_conv
                 Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
                   Phi_Syntax.transformation_conv
-                    (Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))
+                    (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)))
                     Conv.all_conv Conv.all_conv)))
       fun simp (_, ctxt) rule = rule
          |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (Phi_Conv.hol_all_conv (fn (_, ctxt) =>

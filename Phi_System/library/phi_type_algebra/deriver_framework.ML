@@ -261,7 +261,7 @@ val deriver_framework_no_hints : multiple_call * string (*name*)
 (** Misc Tools **)
 
 exception Automation_Fail of (unit -> Pretty.T list)
-structure Simps : SIMPSET (*The standard simpset for deriving*)
+structure Expansion : SIMPSET (*The standard simpset for deriving*)
 
 (*
 val accept : (hint option -> Phi_Type_Algebra.derive) -> hint list -> Phi_Type_Algebra.derive
@@ -337,6 +337,13 @@ fun get_type_specific_simp ctxt Tname =
   Net.unify_term (Type_specific_Simps.get ctxt) (Const(Tname, Term.dummyT) $ Var (("",0),TVar(("",0),[])))
 
 structure Simps = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = SOME \<^binding>\<open>\<phi>deriver_simp\<close>
+  val comment = "Simplification rules that derivers use to simplify the guessed or infered properties."
+  val attribute = NONE
+)
+
+structure Expansion = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
   val binding = SOME \<^binding>\<open>\<phi>constraint_expansion\<close>
   val comment = "Rules unfolding constraints and conditions in property deriving of \<phi>-type algebra.\n\
@@ -396,7 +403,7 @@ end *)
 
 val _ = Theory.setup (Context.theory_map (
 
-  Simps.map (fn ctxt =>
+  Expansion.map (fn ctxt =>
     (ctxt addsimprocs [\<^simproc>\<open>HOL.defined_Ex\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>ExSet_expand_quantifier\<close>,
                        \<^simproc>\<open>HOL.defined_All\<close>(*, eq_simproc*), \<^simproc>\<open>NO_MATCH\<close>,
                        \<^simproc>\<open>Funcomp_Lambda\<close>])
@@ -462,7 +469,7 @@ fun guess_operator mk_term is_live mk_operator_for_dead atom_opr =
   end
 
 fun add_global_simps thms ctxt = ctxt
-  |> Simps.add_simps' thms
+  |> Expansion.add_simps' thms
   |> (fn ctxt => ctxt addsimps thms)
 
 fun proof_map_result f ctxt = f (Context.Proof ctxt) |> apsnd (Context.proof_of)
@@ -475,7 +482,7 @@ fun load_ss (set,pred,rel,map,zip) bnf ctxt =
       val (additional, ctxt) = ([], ctxt)
             |> more_rules rel (proof_map_result (eBNF_Info.relator_on_const_true bnf))
    in ctxt
-   |> Simps.add_simps' ( eBNF_Info.simps_of_ctr_safe bnf
+   |> Expansion.add_simps' ( eBNF_Info.simps_of_ctr_safe bnf
                        @ (if set then eBNF_Info.simps_of_set_safe bnf else [])
                        @ (if pred then eBNF_Info.simps_of_pred_safe bnf else [])
                        @ (if rel then eBNF_Info.simps_of_rel_safe bnf else [])
@@ -947,12 +954,12 @@ fun oblg_solver proof_id ctxt sequent =
   (*case Thm.major_prem_of sequent
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
-   let val ctxt'' = Simps.equip ctxt
+   let val ctxt'' = Expansion.equip ctxt
                  |> Simplifier.del_cong @{thm HOL.conj_cong}
        val sequent'1 = Phi_Reasoners.asm_lr_simp_tac true ctxt'' 1 sequent
                     |> Seq.hd
                     (*|> @{print}*)
-    in Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Simps.simp_rules ctxt, sequent'1)
+    in Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Expansion.simp_rules ctxt, sequent'1)
           |> (fn th => case Thm.major_prem_of th
                          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
                               @{thm' Premise_True} RS th
@@ -1079,7 +1086,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
       val rule'4 =(case solver (phi, ctxt, rule'3)
                      of SOME ret => ret
                       | NONE => oblg_solver (#proof_id phi ^ "/" ^ name) ctxt rule'3)
-                |> simp (phi,ctxt)
+                |> simp (phi, Simps.enhance ctxt)
                 |> Conv.fconv_rule (
                       Phi_Conv.expand_aggregated_imps_hol 
                           (Phi_Conv.hol_alls_to_meta_alls (K Conv.all_conv) ctxt)
@@ -1212,9 +1219,9 @@ fun instantiate_ToA (pure_info,ctxt) ToA =
                      THEN Method.insert_tac ctxt [pure_info] 1)
                   |> Seq.hd
                   (*|> @{print}
-                  |> Simplifier.full_simp_tac (Simps.equip ctxt') 1 |> Seq.hd
+                  |> Simplifier.full_simp_tac (Expansion.equip ctxt') 1 |> Seq.hd
                   |> @{print} *)
-                  |> Clasimp.fast_force_tac (Simps.equip ctxt) 1
+                  |> Clasimp.fast_force_tac (Expansion.equip ctxt) 1
                   |> timed_chop (Time.fromMilliseconds 50) 21 |> fst
                   |> map Goal.conclude
                   |> simplify_distinct ctxt

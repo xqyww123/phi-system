@@ -114,7 +114,7 @@ fun guess_ssp_top ctxt sigma_ty T =
                  |> map Free
    in guess_ssp ctxt (sigma_ty, sigma) T
    |> Option.map (fn (P, S, M, cd_ruls, ctxt) =>
-        let val sctxt = Simps.equip ctxt addsimps (@{thms' option.case option.sel} @ cd_ruls)
+        let val sctxt = Expansion.equip ctxt addsimps (@{thms' option.case option.sel} @ cd_ruls)
             val S' = Thm.cterm_of ctxt (Abs ("x", T, \<^Const>\<open>the sigma_ty\<close> $ (S $ Bound 0)))
                   |> Simplifier.rewrite sctxt
                   |> Thm.cprop_of
@@ -195,9 +195,9 @@ fun gen_SgTH (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SgH_rewr_C}) then_conv
                 Conv.implies_concl_conv (Conv.implies_conv
                   (PLPR_Syntax.premise_tag_conv (
-                    Phi_Reasoners.asm_rewrite true (Simps.equip ctxt addsimps (#equations phi0))))
+                    Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0))))
                   (Phi_Conv.action_tag_conv (
-                    Phi_Reasoners.asm_rewrite true (Simps.equip ctxt
+                    Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt
                         addsimps (@{thms' \<phi>Dependent_Sum.unfold \<phi>Dependent_Sum.unfold[folded \<phi>Auto_\<Sigma>_def]}
                                   @ #equations phi0))
                   )))

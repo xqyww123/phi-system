@@ -45,7 +45,7 @@ fun gen_MDz (_, name) hint0 ctxt0 (phi : phi_type) thy =
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_MD_rewr} then_conv
                   Conv.arg_conv (Conv.arg_conv (
-                    let val sctxt = Simps.equip ctxt addsimps (#equations phi @ #type_equations phi)
+                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ #type_equations phi)
                      in Phi_Reasoners.asm_rewrite false sctxt
                     end)))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,

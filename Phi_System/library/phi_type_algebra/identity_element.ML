@@ -37,7 +37,7 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
           val unit = case Thm.concl_of unit_simp
                        of _ (*Trueprop*) $ (_ (*eq*) $ LHS $ _) => LHS
        in (inst, unit,
-           Context.the_proof (Simps.map (fn ctxt => ctxt addsimps [unit_simp]) ctxt'))
+           Context.the_proof (Expansion.map (fn ctxt => ctxt addsimps [unit_simp]) ctxt'))
       end
 
 (*strategy: lift the logic type of the abstract objects onto \<^sort>\<open>one\<close>. If fails, guess fails.
@@ -111,7 +111,7 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
       val ind_conv = default_ind_conv (K (K Conv.all_conv),
                        fn ctxt => fn _ =>
                             HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Action_Tag_def}) then_conv
-                            Phi_Reasoners.asm_rewrite true (Simps.equip ctxt addsimps (#equations phi0)))
+                            Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)))
       val varify_subgoal =
             if is_left
             then K (fn Trueprop $ (Identity_Element $ S $ P) =>
@@ -160,7 +160,7 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
       fun simp (_, ctxt) th = set_the_infer_tail ctxt th
         |> (if is_some hint0 then I
             else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                  let val sctxt = Simps.enhance ctxt addsimps @{thms special_Ex_def}
+                  let val sctxt = Expansion.enhance ctxt addsimps @{thms special_Ex_def}
                    in HOLogic.Trueprop_conv (
                         if is_left
                         then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite sctxt))

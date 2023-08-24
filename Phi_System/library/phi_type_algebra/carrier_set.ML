@@ -18,7 +18,7 @@ fun gen_carrier_set (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
             fn ctxt => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_CarS_rewr} then_conv
                 Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (
-                    Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0))
+                    Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0))
                 )))))
       fun reasoning phi ctxt =
             default_reasoning true (default_reasoning_configure []) (K (K NONE))
@@ -32,7 +32,8 @@ fun gen_carrier_set (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
         then rule
         else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 HOLogic.Trueprop_conv (Conv.arg_conv (
-                  Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
+                  Simplifier.rewrite (Simplifier.add_cong @{thm' HOL.conj_cong} ctxt
+                                      addsimps @{thms special_Ex_def} ))
                 )) ctxt) rule
 
       val ctxt = ctxt0

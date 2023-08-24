@@ -79,7 +79,7 @@ fun gen_MS (_, name) hint0 ctxt0 (phi : phi_type) thy =
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_MS_rewr} then_conv
                   Conv.arg_conv (Conv.arg_conv (Phi_Conv.may_action_tag_conv (
-                    let val sctxt = Simps.equip ctxt addsimps (#equations phi @ #type_equations phi)
+                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ #type_equations phi)
                      in Phi_Syntax.transformation_conv
                             (Simplifier.rewrite sctxt)
                             (Simplifier.rewrite sctxt)

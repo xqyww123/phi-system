@@ -175,7 +175,7 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
         | extract_oprs_from_hint _ = []
 
       fun simp_conv ex_quantified_single_var ctxt phi = 
-        let val sctxt = Simps.equip ctxt addsimps (#equations phi)
+        let val sctxt = Expansion.equip ctxt addsimps (#equations phi)
          in Phi_Conv.may_action_tag_conv (Phi_Syntax.transformation_conv
                 (Simplifier.rewrite sctxt)
                 (if ex_quantified_single_var
@@ -229,7 +229,7 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_OE_rewr_IH})),
                        fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_OE_rewr_C} then_conv
                             Conv.implies_concl_conv (HOLogic.Trueprop_conv (fn ctm =>
-                              Phi_Reasoners.asm_rewrite true (Simps.equip ctxt addsimps (#equations phi0)) ctm)
+                              Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) ctm)
                               then_conv Phi_Conv.hol_alls_to_meta_alls (fn _ =>
                                   conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
                                 ) ctxt))

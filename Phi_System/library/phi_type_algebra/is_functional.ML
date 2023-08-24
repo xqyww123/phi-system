@@ -47,7 +47,7 @@ fun guess_property__abst_domain (prop_head, x_sort, model_sort) (phi0 : phi_type
    in guess_predicate ctxt preds x_ty
    |> Seq.map (fn (pred, ctxt) =>
         (ants, HOLogic.Trueprop $ (prop_head (x_ty, model_ty) $ T_term $
-                  (Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (Pvar $ Bound 0) $ (pred $ Bound 0)))),
+                  (Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (pred $ Bound 0) $ (Pvar $ Bound 0)))),
          NONE :: parse_parameters_of_phi_type T_term, phi, ctxt))
   end
 
@@ -60,9 +60,9 @@ fun solver__abst_domain name (phi,ctxt,sequent) =
       val var = case Thm.concl_of sequent
                   of _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $ Var v) => v
                    | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
-                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound 0) $ _)) => v
+                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0) )) => v
                    | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
-                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Var v $ _)) => v
+                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ Var v )) => v
                    | _ => err ()
 
       fun binop H (SOME sa, SOME sb) = SOME (H $ sa $ sb)
@@ -89,7 +89,7 @@ fun solver__abst_domain name (phi,ctxt,sequent) =
                in case P
                of Var v $ Bound j => meet v j
                 | Var v => meet v ~1
-                | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound j) $ _ => meet v j
+                | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound j) => meet v j
                 | _ => inst_Lw (vars, P::prems) X
               end
         | inst_Lw _ _ = NONE
@@ -119,7 +119,7 @@ fun gen_is_functional (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
             fn ctxt => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_IsFunc_rewr} then_conv
                 Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (
-                    Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0))
+                    Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0))
                 )))))
             
       fun reasoning phi ctxt =

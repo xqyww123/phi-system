@@ -157,7 +157,7 @@ fun gen_inhab (upper, carrier) (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy 
                  (Conv.rewr_conv @{thm' \<phi>TA_Inh_rewr} then_conv
                   Conv.implies_concl_conv (HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                     (if upper then Conv.arg1_conv else Conv.arg_conv) (Conv.arg_conv (
-                      Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0)))))))))
+                      Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)))))))))
 
       fun varify_subgoal _ (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
             SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
