@@ -18,6 +18,8 @@ include PHI_HELP
   val lift_type_sort : theory -> typ * sort -> Type.tyenv -> Type.tyenv
   val lift_types_sort : theory -> (typ * sort) list -> typ TVars.table
 
+  exception LIFT_FAIL of typ * sort
+
   val add_expected_sort_red : (class (*A*) * class (*B*) * sort (*C*)) list -> theory -> theory
         (*register that C is the expected stronger intersection of A and B. *)
 
@@ -71,6 +73,8 @@ fun get_refined_sort_of_lifting_T thy =
       ) reds B
   end
 
+exception LIFT_FAIL of typ * sort
+
 fun gen_lift_type_sort thy (ty,sort) (env00,idx) =
   if Sign.of_sort thy (ty, sort)
   then (env00,idx)
@@ -79,7 +83,7 @@ fun gen_lift_type_sort thy (ty,sort) (env00,idx) =
            val target = Envir.norm_type env'1 var_a
         in (Sign.typ_match thy (ty, target) env00, idx'1)
        end
-       handle Type.TUNIFY => raise TYPE ("fail to unify the type to separation magma", [ty], [])
+       handle Type.TUNIFY => raise LIFT_FAIL (ty, sort)
 
 fun raw_lift_type_sort thy (ty,sort) env00 =
   let val idx = Vartab.fold (fn ((_,i1), (_,ty)) => Term.maxidx_typ ty o curry Int.max i1) env00

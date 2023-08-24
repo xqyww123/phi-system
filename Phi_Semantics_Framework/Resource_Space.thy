@@ -51,8 +51,7 @@ by a uniform deep representation, a finite partial map of type
 where \<open>'NAME\<close> is the type of the names of resource kinds that identify each resource kind;
 type \<open>'REP\<close> is the deep representation of states of resources.
 
-We reuse \<^typ>\<open>('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind\<close>
-to represent resource kinds.
+We reuse \<^typ>\<open>('NAME, 'REP::sep_algebra, 'T::sep_algebra) kind\<close> to represent resource kinds.
 A resource kind is a triple of \<open>name::'NAME\<close> and \<open>project :: 'REP \<Rightarrow> 'T, inject :: 'T \<Rightarrow> 'REP\<close> between
   the deep representation \<open>'REP\<close> of the states and the model \<open>'T\<close> of this kind of resource.
 

@@ -372,6 +372,11 @@ lemma [\<phi>reason 1000]:
   unfolding Within_Carrier_Set_def
   by simp
 
+lemma [\<phi>reason 1000]:
+  \<open> Within_Carrier_Set (1 :: 'a::sep_carrier_1 set) \<close>
+  unfolding Within_Carrier_Set_def
+  by simp
+
 text \<open>Also not reversible in non-trivial cases.\<close>
 
 subsubsection \<open>Rules for Basic \<phi>-Types\<close>

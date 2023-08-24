@@ -258,7 +258,7 @@ val deriver_framework_no_hints : multiple_call * string (*name*)
                      -> quiet
                      -> Phi_Type_Algebra.derive
 
-(** Other Misc Tools **)
+(** Misc Tools **)
 
 exception Automation_Fail of (unit -> Pretty.T list)
 structure Simps : SIMPSET (*The standard simpset for deriving*)
@@ -278,6 +278,8 @@ val conv_chk_unfolded : Phi_Type_Algebra.phi_type -> Proof.context -> conv
 
 val chk_abstract_object_quantified : (term -> term option) (*get the abstract object*)
                                   -> Proof.context -> term -> term
+
+val lift_types_sort : theory -> (typ * sort) list -> typ TVars.table
 
 end
 
@@ -1522,6 +1524,15 @@ fun chk_abstract_object_quantified get_x ctxt hint =
     | NONE => hint
   end
 
+
+fun lift_types_sort thy typ_sorts =
+  Phi_Help.lift_types_sort thy typ_sorts
+  handle Phi_Help.LIFT_FAIL (ty, sort) => raise Automation_Fail (let open Pretty in fn () =>
+    [paragraph (text "Fail to constrain type " @
+                [brk 1, Syntax.pretty_typ_global thy ty, brk 1] @
+                text "by sort" @
+                [brk 1, Syntax.pretty_sort_global thy sort])]
+    end)
 
 
 (* (** Misc **)

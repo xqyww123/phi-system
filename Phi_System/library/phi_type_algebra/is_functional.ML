@@ -17,18 +17,8 @@ fun guess_property__abst_domain (prop_head, x_sort, model_sort) (phi0 : phi_type
                                #> Option.map (fn (_, x, m) => [(x, x_sort), (m, model_sort)])
                               ) rev_arg_tys0
                 |> flat
-      val inst = (Phi_Help.lift_types_sort (Proof_Context.theory_of ctxt)
-                                           ((x_ty0, x_sort) :: (model_ty0, model_sort) :: tpairs)
-                 handle TYPE _ => raise Automation_Fail (let open Pretty in fn () =>
-                          [paragraph (text "Fail to lift the abstract algebra " @
-                                      [brk 1, Syntax.pretty_typ ctxt x_ty0, brk 1] @
-                                      text "and the concrete algebra" @
-                                      [brk 1, Syntax.pretty_typ ctxt model_ty0, brk 1] @
-                                      text "onto sort" @
-                                      [brk 1, Syntax.pretty_sort ctxt x_sort, brk 1, str "and",
-                                       brk 1, Syntax.pretty_sort ctxt model_sort, brk 1, str "repsectively."
-                                      ])]
-                          end))
+      val inst = lift_types_sort (Proof_Context.theory_of ctxt)
+                                 ((x_ty0, x_sort) :: (model_ty0, model_sort) :: tpairs)
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi = instantiate_phi (inst',Vars.empty) phi0
 

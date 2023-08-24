@@ -14,7 +14,7 @@ fun gen_carrier_set (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Carrier_Set\<close>, _) $ T $ _ => T )
 
       val ind_conv = default_ind_conv (
-            fn _ => fn _ => Conv.all_conv,
+            fn _ => fn _ => Conv.rewr_conv @{thm' \<phi>TA_CarS_rewr},
             fn ctxt => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_CarS_rewr} then_conv
                 Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (

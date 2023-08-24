@@ -23,15 +23,8 @@ fun guess_property closed (phi0 : phi_type) ctxt =
                       else err_parse ()
                    | _ => err_parse ()
 
-      val inst = (Phi_Help.lift_types_sort (Proof_Context.theory_of ctxt)
-                                           [(s_ty0, \<^sort>\<open>zero\<close>), (model_ty0, \<^sort>\<open>share_one\<close>)]
-                 handle TYPE _ => raise Automation_Fail (let open Pretty in fn () =>
-                          [paragraph (text "Fail to lift the scalar of type " @
-                                      [brk 1, Syntax.pretty_typ ctxt s_ty0, brk 1] @
-                                      text "and the concrete algebra" @
-                                      [brk 1, Syntax.pretty_typ ctxt model_ty0, brk 1] @
-                                      text "onto sort \<open>zero\<close> and \<open>share_one\<close> respectively.")]
-                          end))
+      val inst = lift_types_sort (Proof_Context.theory_of ctxt)
+                                 [(s_ty0, \<^sort>\<open>zero\<close>), (model_ty0, \<^sort>\<open>share_one\<close>)]
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val s_ty = Term_Subst.instantiateT inst s_ty0
       val x_ty = Term_Subst.instantiateT inst x_ty0

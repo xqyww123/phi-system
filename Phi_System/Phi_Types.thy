@@ -1032,16 +1032,19 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 0]]
-                                                                                  
+declare [[\<phi>trace_reasoning = 3]]
+                                                                                   
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Separation_Monoid
+  deriving (*Separation_Monoid
        and Trivial_\<Sigma>
        and SE_Trim_Empty
+       and*) Carrier_Set
 
 
+term \<open>1 :: (nat list)\<close>
+term \<open>1 :: (FIC_N \<Rightarrow> FIC)\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
      
@@ -1232,6 +1235,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Trivial_\<Sigma>
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
+       and Carrier_Set
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>

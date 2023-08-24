@@ -136,7 +136,11 @@ consts DOMAIN :: \<open>RES_N \<Rightarrow> RES sep_homo_set\<close>
 
 debt_axiomatization sort: \<open>OFCLASS(RES, sep_algebra_class)\<close>
 
+setup \<open>Sign.parent_path\<close>
+
 instance RES :: sep_algebra using RES.sort .
+
+setup \<open>Sign.mandatory_path "RES"\<close>
 
 debt_axiomatization ex_RES_not_1: \<open>\<exists>r::RES. r \<noteq> 1\<close>
 
@@ -146,6 +150,12 @@ lemma ex_two_distinct:
   by (meson RES.ex_RES_not_1)
 
 setup \<open>Sign.parent_path\<close>
+
+instantiation RES :: sep_carrier_1 begin
+definition mul_carrier_RES :: \<open>RES \<Rightarrow> bool\<close> where \<open>mul_carrier_RES = (\<lambda>_. True)\<close>
+  \<comment> \<open>As a type specially defined to represent the representation of resources, it is noisy-free.\<close>
+instance by (standard; simp add: mul_carrier_RES_def)
+end
 
 interpretation RES: "resource_space" RES.DOMAIN .
 
@@ -220,6 +230,12 @@ debt_axiomatization sort: \<open>OFCLASS(FIC, sep_algebra_class)\<close>
 setup \<open>Sign.parent_path\<close>
 
 instance FIC :: sep_algebra using FIC.sort .
+
+instantiation FIC :: sep_carrier_1 begin
+definition mul_carrier_FIC :: \<open>FIC \<Rightarrow> bool\<close> where \<open>mul_carrier_FIC = (\<lambda>_. True)\<close>
+  \<comment> \<open>As a type specially defined to represent the representation of fictions, it can be noisy-free.\<close>
+instance by (standard; simp add: mul_carrier_FIC_def)
+end
 
 consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) unital_homo_interp\<close>
 

@@ -25,15 +25,8 @@ fun parse_semimodule_phityp ctxt phi0 (sort_scalar, sort_model) =
                       if T_x_ty = x_ty0 andalso T_model_ty = model_ty0 then s_ty
                       else err_parse ()
                    | _ => err_parse ()
-      val inst = (Phi_Help.lift_types_sort (Proof_Context.theory_of ctxt)
-                                           [(s_ty0, sort_scalar), (model_ty0, sort_model)]
-                 handle TYPE _ => raise Automation_Fail (let open Pretty in fn () =>
-                          [paragraph (text "Fail to lift the scalar of type " @
-                                      [brk 1, Syntax.pretty_typ ctxt s_ty0, brk 1] @
-                                      text "and the concrete algebra" @
-                                      [brk 1, Syntax.pretty_typ ctxt model_ty0, brk 1] @
-                                      text "onto sort \<open>one\<close> and \<open>share_one\<close> respectively.")]
-                          end))
+      val inst = lift_types_sort (Proof_Context.theory_of ctxt)
+                                 [(s_ty0, sort_scalar), (model_ty0, sort_model)]
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val s_ty = Term_Subst.instantiateT inst s_ty0
       val x_ty = Term_Subst.instantiateT inst x_ty0

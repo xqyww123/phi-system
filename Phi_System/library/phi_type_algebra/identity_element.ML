@@ -20,12 +20,7 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
                               text "which is a fixed variable not of sort \<open>one\<close>")]
                  end)
   | guess_id_ele (typ as TVar _) ctxt =
-      let val inst  = (Phi_Help.lift_types_sort (Proof_Context.theory_of ctxt) [(typ, \<^sort>\<open>one\<close>)]
-                       handle TYPE _ => raise Automation_Fail (let open Pretty in fn () =>
-                                [paragraph (text "Fail to guess the identity element for type" @
-                                            [brk 1, Syntax.pretty_typ ctxt typ, brk 1] @
-                                            text "because fail to constrain it by sort \<open>one\<close>")]
-                                end))
+      let val inst  = lift_types_sort (Proof_Context.theory_of ctxt) [(typ, \<^sort>\<open>one\<close>)]
           val typ' = Term_Subst.instantiateT inst typ
        in (Phi_Help.certify_tyvars (Context.Proof ctxt) inst,
            \<^Const>\<open>one_class.one typ'\<close>, ctxt)
@@ -56,15 +51,8 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
 fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
   let val thy = Proof_Context.theory_of ctxt
       val (_,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
-      val inst  = (Phi_Help.lift_types_sort (Proof_Context.theory_of ctxt)
-                                            [(x_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>one\<close>)]
-                  handle TYPE _ => raise Automation_Fail (fn () => let open Pretty in
-                          [paragraph (text "Fail to lift the type " @
-                                      [brk 1, Syntax.pretty_typ ctxt x_ty0, brk 1] @
-                                      text "and" @
-                                      [brk 1, Syntax.pretty_typ ctxt model_ty0, brk 1] @
-                                      text " into sort \<open>one\<close>.")]
-                          end))
+      val inst  = lift_types_sort (Proof_Context.theory_of ctxt)
+                                  [(x_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>one\<close>)]
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi01 = instantiate_phi (inst',Vars.empty) phi0
       val subst = Term_Subst.instantiate (inst, Vars.empty)
