@@ -203,7 +203,7 @@ fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M $ _ $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []
 
-      val reasoning = exhaustive_PLPR_reasoner NONE
+      fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi)) ctxt
       fun simp (_, ctxt) thm =
         if is_some hint0 then thm
         else Conv.fconv_rule (
@@ -216,7 +216,7 @@ fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
              ) ctxt) thm
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_FTF, @{thm' \<phi>TA_FTF_rule},
-                                      [(NONE, K reasoning)], K NONE, simp)
+                                      [(NONE, reasoning)], K NONE, simp)
                                     phi0 hint0 ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

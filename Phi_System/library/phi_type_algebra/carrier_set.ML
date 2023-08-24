@@ -20,10 +20,9 @@ fun gen_carrier_set (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                 Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (
                     Simplifier.rewrite (Simps.equip ctxt addsimps (#equations phi0))
                 )))))
-      val reasoning = default_reasoning true
-                          (default_reasoning_configure [])
-                          (K (K NONE))
-                          (exhaustive_PLPR_reasoner (SOME 1))
+      fun reasoning phi ctxt =
+            default_reasoning true (default_reasoning_configure []) (K (K NONE))
+                              (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' ctxt phi))) ctxt
 
       val mode_infer = not (is_some hint0)
       val solver = if mode_infer then solver__abst_domain name else K NONE
@@ -38,7 +37,7 @@ fun gen_carrier_set (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
 
       val ctxt = ctxt0
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_CarS_rule},
-                                      [(SOME ([0], ind_conv), K reasoning)], solver, simp)
+                                      [(SOME ([0], ind_conv), reasoning)], solver, simp)
                                     phi0 hint0 ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy

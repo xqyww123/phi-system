@@ -3382,7 +3382,7 @@ bundle extract_premise_in_Carrier_Set =
 
 lemma \<phi>TA_CarS_rule:
   \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-          \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x \<longrightarrow>
           Within_Carrier_Set (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True

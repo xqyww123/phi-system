@@ -43,11 +43,9 @@ fun guess_property closed (phi0 : phi_type) ctxt =
 fun gen_M0 closed (der_id, name) hint0 ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (fn (Const(\<^const_name>\<open>Semimodule_Identity\<close>, _) $ F1 $ _ ) => F1)
       val extract_oprs_from_hint = K []
-      fun reasoning phi =
-        default_reasoning false
-          (default_reasoning_configure [])
-          (K (K NONE))
-          (exhaustive_PLPR_reasoner NONE)
+      fun reasoning phi ctxt =
+        default_reasoning false (default_reasoning_configure []) (K (K NONE))
+                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) ctxt
       val simp = K I
       val ind_conv = default_ind_conv (
              fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_M0_rewr},

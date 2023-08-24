@@ -26,8 +26,8 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
+declare [[\<phi>trace_reasoning = 0]]
+ 
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
@@ -1032,15 +1032,15 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
   
 declare [[ML_print_depth = 1000, \<phi>trace_reasoning = 1]]
-declare [[\<phi>trace_reasoning = 3]]
-                                                                                   
+declare [[\<phi>trace_reasoning = 0]]
+                                                                                    
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving (*Separation_Monoid
+  deriving Separation_Monoid
        and Trivial_\<Sigma>
        and SE_Trim_Empty
-       and*) Carrier_Set
+       and Carrier_Set
 
 
 term \<open>1 :: (nat list)\<close>
@@ -1054,6 +1054,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Separation_Monoid
        and SE_Trim_Empty
        and Trivial_\<Sigma>
+       and Carrier_Set
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>

@@ -296,7 +296,7 @@ lemma prem_extract_Carrier_Set:
 
 subsubsection \<open>Rules for Logical Connectives\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason default 1]:
   \<open> Carrier_Set T P
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x
 \<Longrightarrow> Within_Carrier_Set (x \<Ztypecolon> T) \<close>

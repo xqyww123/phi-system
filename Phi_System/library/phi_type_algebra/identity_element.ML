@@ -128,19 +128,21 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
                          by (simp add: Identity_Element\<^sub>E_def Transformation_def)})]
         else []
 
-      val reasoner =
-            if is_left
-            then (fn ctxt => fn th =>
-              case Thm.major_prem_of th
-                of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
-                    let val rule = (case P of Var _ => @{thm' \<phi>TA_Ident_I_rule_step_infer}
-                                            | _     => @{thm' \<phi>TA_Ident_I_rule_step})
-                     in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded' ctxt phi0)) ctxt th
-                    end
-                 | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
-            else exhaustive_PLPR_reasoner (SOME 1)
-      fun reasoning _ = default_reasoning true
-                            (default_reasoning_configure prem_extractions) varify_subgoal reasoner
+      fun reasoning phi =
+        let val reasoner =
+              if is_left
+              then (fn ctxt => fn th =>
+                case Thm.major_prem_of th
+                  of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
+                      let val rule = (case P of Var _ => @{thm' \<phi>TA_Ident_I_rule_step_infer}
+                                              | _     => @{thm' \<phi>TA_Ident_I_rule_step})
+                       in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded' ctxt phi)) ctxt th
+                      end
+                   | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
+              else (fn ctxt => exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' ctxt phi)) ctxt)
+         in default_reasoning true (default_reasoning_configure prem_extractions)
+                                    varify_subgoal reasoner
+        end
 
       fun set_the_infer_tail ctxt th =
         if is_left then

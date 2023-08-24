@@ -25,11 +25,9 @@ fun gen_MDz (_, name) hint0 ctxt0 (phi : phi_type) thy =
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ _ $ _ $ Ds $ Dx $ z)
             = [Ds, Dx, z]
         | extract_oprs_from_hint _ = []
-      fun reasoning _ =
-        default_reasoning false
-          (default_reasoning_configure [])
-          (K (K NONE))
-          (exhaustive_PLPR_reasoner NONE)
+      fun reasoning phi ctxt =
+        default_reasoning false (default_reasoning_configure []) (K (K NONE))
+                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) ctxt
       val mode_infer = not (is_some hint0)
       fun simp (_, ctxt) thm =
         if mode_infer
