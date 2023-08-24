@@ -87,7 +87,7 @@ fun gen_SE_Trim_Empty _ ctxt (phi : phi_type) thy =
               | get_target (X $ _) = get_target X
             val has_reasoned = Phi_Reasoner.has_reasoner concl (fn r =>
                   case #tactic r of Phi_Reasoner.Tac_Rule ths =>
-                          exists (fn th => Pattern.matches thy' (get_target concl, get_target (Thm.concl_of th))) ths
+                          exists (fn (_,th) => Pattern.matches thy' (get_target concl, get_target (Thm.concl_of th))) ths
                      | _ => false) thy
          in if has_reasoned
             then NONE
