@@ -13,8 +13,7 @@ type quasi_BNF = {
   set_thms : thm list,
   ctr_simps: thm list,
   rel: term,
-  rel_distincts: thm list,
-  rel_injects: thm list,
+  rel_simps: thm list, (*includes distinct rules, inject rules*)
   rel_eq: thm,
   pred: term,
   pred_injects: thm list,
@@ -123,8 +122,7 @@ type quasi_BNF = {
   set_thms : thm list,
   ctr_simps: thm list,
   rel: term,
-  rel_distincts: thm list,
-  rel_injects: thm list,
+  rel_simps: thm list,
   rel_eq: thm,
   pred: term,
   pred_injects: thm list,
@@ -151,7 +149,11 @@ structure qBNFs = Generic_Data (
   val merge = Symtab.merge (K true)
 )
 
-val add_BNF = qBNFs.map o Symtab.update_new
+fun add_BNF (Tname, qbnf) =
+      qBNFs.map (Symtab.update_new (Tname, qbnf))
+   #> (case #fp_more qbnf
+         of SOME fpm => BNF_FP_Sugar_More.add_fp_more (Tname, fpm)
+          | NONE => I)
 
 (*** Auxiliaries ***)
 
@@ -454,7 +456,7 @@ fun simps_of_set_safe bnf = simps_of_set bnf handle Automation_Fail _ => []
 
 fun simps_of_rel (BNF bnf) = #rel_distincts (#fp_bnf_sugar (g_fp bnf))
                            @ #rel_injects (#fp_bnf_sugar (g_fp bnf))
-  | simps_of_rel (qBNF bnf) = #rel_distincts bnf @ #rel_injects bnf
+  | simps_of_rel (qBNF bnf) = #rel_simps bnf
 fun simps_of_rel_safe bnf = simps_of_rel bnf handle Automation_Fail _ => []
 
 fun global_simps_of_rel (BNF bnf) = [BNF_Def.rel_eq_of_bnf (g_bnf bnf)]

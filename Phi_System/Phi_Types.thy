@@ -125,15 +125,14 @@ subsection \<open>Dependent Sum Type\<close>
 
 text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
   independently with the element. It seems to be a limitation. For example, we want to transform
-  a list of unknown bit-length numbers \<open>l \<Ztypecolon> List T\<close> where \<open>x \<Ztypecolon> T \<equiv> (x \<Ztypecolon> \<nat>[b] \<s>\<u>\<b>\<j> b. x < 2^b)\<close>
+  a list of unknown bit-length numbers \<open>l \<Ztypecolon> List \<nat>\<^sub>f\<^sub>r\<^sub>e\<^sub>e\<close> where \<open>x \<Ztypecolon> \<nat>\<^sub>f\<^sub>r\<^sub>e\<^sub>e \<equiv> (x \<Ztypecolon> \<nat>[b] \<s>\<u>\<b>\<j> b. x < 2^b)\<close>
   into a set of all lists of such numbers \<open>{l | ? } \<Ztypecolon> List \<nat>[?]\<close> where the question marks denote
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
                   
-\<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma> _" [26] 26)
+\<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
-   
   deriving Abstract_Domain
     and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
@@ -144,30 +143,34 @@ text \<open>Transformation functor requires inner elements to be transformed int
         \<Longrightarrow> Identity_Element\<^sub>E ((c, u) \<Ztypecolon> \<Sigma> T) \<close>
     and Functionality
     and Carrier_Set
-  (*and    \<open>Is_Functional (u \<Ztypecolon> T c)
-        \<Longrightarrow> Is_Functional ((c, u) \<Ztypecolon> \<Sigma> T)\<close> *)
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
 
-
-
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
+text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation functor not a separation homomoprhism
+  as the element \<phi>-type \<open>T\<close> is parameterized,
+  there can be properties very akin to them, see the section \<open>Pseudo properties of \<Sigma>\<close> below.\<close>
+
+
 declare SubjectionTY_def[embed_into_\<phi>type del]
+
 declare [[\<phi>trace_reasoning = 0]]
- 
-\<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S> _" [26] 26)
+   
+\<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
        and \<open> Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
-       and Identity_Element
-       and Open_Abstraction_Full
-       and \<open>Transformation_Functor Set_Abstraction Set_Abstraction (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
+                  \<comment> \<open>An example for which it is a non-symmetric reachability relation\<close>
+       and Separation_Monoid
+       and \<open>Transformation_Functor \<S> \<S> (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y}) True
-                      (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x})\<close>
+                      (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
+       and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
+       and Open_Abstraction_Full
        and Carrier_Set
 
 
@@ -250,7 +253,7 @@ lemma \<phi>\<s>\<u>\<b>\<j>_over_\<Sigma>[\<phi>programming_simps]:
 
 lemma [embed_into_\<phi>type]:
   \<open> NO_MATCH (\<lambda>_. T') T
-\<Longrightarrow> f x \<Ztypecolon> T x \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. P x } \<Ztypecolon> \<S> \<Sigma> T\<close>
+\<Longrightarrow> f x \<Ztypecolon> T x \<phi>\<s>\<u>\<b>\<j> P x \<s>\<u>\<b>\<j> x. \<top> \<equiv> { (x, f x) |x. P x } \<Ztypecolon> \<S> (\<Sigma> T)\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
 
@@ -266,7 +269,7 @@ lemma [embed_into_\<phi>type]:
 
 lemma [embed_into_\<phi>type]:
   \<open> NO_MATCH (\<lambda>_. T') T
-\<Longrightarrow> {x. P c x} \<Ztypecolon> \<S> (T c) \<s>\<u>\<b>\<j> c. \<top> \<equiv> {x. \<exists>c y. x = (c, y) \<and> P c y} \<Ztypecolon> \<S> \<Sigma> T\<close>
+\<Longrightarrow> {x. P c x} \<Ztypecolon> \<S> (T c) \<s>\<u>\<b>\<j> c. \<top> \<equiv> {x. \<exists>c y. x = (c, y) \<and> P c y} \<Ztypecolon> \<S> (\<Sigma> T)\<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp
 
@@ -318,6 +321,30 @@ lemma [\<phi>reason 2800]:
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> (\<S> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
   unfolding Action_Tag_def Premise_def Transformation_def
   by (cases x; clarsimp; blast)
+
+subsubsection \<open>Pseudo properties of \<Sigma>\<close>
+
+text \<open>Any non-constantly parameterized \<phi>-types are represented by \<open>\<Sigma>\<close>. Therefore,
+  \<open>\<Sigma>\<close> is the only parameterized \<phi>-type for which we need to configure its reasoning rules manually.\<close>
+
+lemma \<Sigma>_pseudo_Transformation_Functor:
+  \<open> (\<And>a c. a \<Ztypecolon> T c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c' \<s>\<u>\<b>\<j> b c'. g (c,a) (c',b))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<Sigma> U \<s>\<u>\<b>\<j> y. g x y \<close>
+  unfolding Transformation_def
+  by (cases x; clarsimp; blast)
+
+lemma \<Sigma>_pseudo_Separation_Homo\<^sub>I:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst (fst x) = fst (snd x)
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> T \<^emph> \<Sigma> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst (fst x), (snd (fst x), snd (snd x))) \<Ztypecolon> \<Sigma> c. (T c \<^emph> U c) \<close>
+  unfolding Transformation_def Premise_def
+  by clarsimp
+
+lemma \<Sigma>_pseudo_Separation_Homo\<^sub>E:
+  \<open> x \<Ztypecolon> \<Sigma> c. (T c \<^emph> U c) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((fst x, fst (snd x)), (fst x, snd (snd x))) \<Ztypecolon> \<Sigma> T \<^emph> \<Sigma> U \<close>
+  unfolding Transformation_def Premise_def
+  by clarsimp
+
+(*TODO: reasoning rules based on the above pseudo properties*)
 
 
 subsubsection \<open>\<Sigma>-Homomorphism\<close>
@@ -1043,8 +1070,8 @@ lemma [\<phi>reason 10000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   sorry  *)
- declare [[\<phi>trace_reasoning = 0]]
-      
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Separation_Monoid
@@ -1195,7 +1222,7 @@ lemma \<phi>MapAt_L_void_functor[\<phi>reason 1100]:
   unfolding \<phi>MapAt_L_def
   by \<phi>reason *)
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (scalar_mult push_map k \<Zcomp>\<^sub>f T)\<close>
@@ -1258,30 +1285,6 @@ lemma [simp]:
   \<open>(k \<^bold>\<rightarrow>\<^sub>@ (T \<phi>\<s>\<u>\<b>\<j> P)) = (k \<^bold>\<rightarrow>\<^sub>@ T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
 *)
-
-paragraph \<open>Algebraic Properties\<close>
- 
-
-lemma \<phi>MapAt_L_left_seminearring_functor[\<phi>reason 1100]:
-  \<open>Semimodule_Scalar_Assoc (\<^bold>\<rightarrow>\<^sub>@) T UNIV\<close>
-  unfolding Semimodule_Scalar_Assoc_def
-  by (clarsimp simp add: \<phi>MapAt_L_\<phi>MapAt_L times_list_def)
-
-(*
-lemma \<phi>MapAt_L_void_functor[\<phi>reason add]:
-  \<open>Unit_Functor ((\<^bold>\<rightarrow>\<^sub>@) k)\<close>
-  unfolding Unit_Functor_def Transformation_def
-  by (clarsimp simp add: \<phi>expns; metis fun_1upd1)
-
-interpretation \<phi>MapAt_L: Union_Functor \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close> \<open>(\<^bold>\<rightarrow>\<^sub>@) k\<close>
-  by (standard; rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-lemma [\<phi>reason 1000]:
-  \<open>Type_Variant_of_the_Same_Type_Operator ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k)\<close>
-  unfolding Type_Variant_of_the_Same_Type_Operator_def ..
-*)
-
-
 
 
 

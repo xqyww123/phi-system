@@ -603,10 +603,14 @@ fun gen_reason (handlers, trace, limit, tactics) =
                         else ()
                 datatype transition = NORMAL of (context_state * context_state Seq.seq) option
                                     | GO_EXPLORATIVE_BACKTRACKING
+                                    | GO_GLOBAL_CUT of context_state
                 fun pull seq = NORMAL (Seq.pull seq)
                   handle Success s => (pull (fst handlers s)
-                                      handle Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING)
-                       | Global_Cut s => pull (snd handlers s)
+                                      handle Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING
+                                           | Global_Cut s => GO_GLOBAL_CUT s)
+                       | Global_Cut s => (pull (snd handlers s)
+                                      handle Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING
+                                           | Global_Cut s => GO_GLOBAL_CUT s)
                        | Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING
             in if disabled_due_to_backtrack backtrack_mode backtracking
             then loop (N, iter, backtracking, L'::L)
@@ -670,6 +674,13 @@ fun gen_reason (handlers, trace, limit, tactics) =
                   end)
                | NORMAL NONE => loop (N, iter, backtracking, L'::L)
                | GO_EXPLORATIVE_BACKTRACKING => loop (N, iter, EXPLORATIVE_BACKTRACKING, L'::L)
+               | GO_GLOBAL_CUT s =>
+                  let val _ = if 2 <= trace
+                              then tracing ("\<phi>reasoning("^string_of_int score^"):"^
+                                            Position.here pos ^"\n" ^ "Global cut.")
+                              else ()
+                   in loop (N, iter+1, NO_BACKTRACKING, [[(score, pos, NORMAL_MODE, Seq.single s)]])
+                  end
             end
    in loop
   end

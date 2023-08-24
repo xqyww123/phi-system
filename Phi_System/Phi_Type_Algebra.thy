@@ -630,12 +630,11 @@ ML \<open>(the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx
 
 declare [[ML_print_depth = 1000]]
 
-ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
-|> #ctr_sugar
+ML \<open> (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
 
 \<close>
 
-ML \<open>BNF_Def.pred_of_bnf (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>xxx\<close>))\<close>
+ML \<open>BNF_Def.rel_eq_of_bnf (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
 ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
@@ -3592,6 +3591,12 @@ lemma pred_sum_eq_case_sum[\<phi>constraint_expansion]:
 
 subsubsection \<open>Set\<close>
 
+(*definition \<open>zip_set = case_prod (\<times>)\<close>
+definition \<open>unzip_set s = (Domain s, Range s)\<close> *)
+
+lemma rel_set__const_True[simp]:
+  \<open>rel_set (\<lambda>x y. True) = (\<lambda>x y. x = {} \<longleftrightarrow> y = {})\<close>
+  by (clarsimp simp add: fun_eq_iff rel_set_def; blast)
 
 setup \<open> Context.theory_map (eBNF_Info.add_BNF (\<^type_name>\<open>Set.set\<close>, 
 let val a = TFree ("a", \<^sort>\<open>type\<close>)
@@ -3607,8 +3612,7 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
   set_thms = [],
   ctr_simps = [],
   rel = \<^Const>\<open>rel_set a b\<close>,
-  rel_distincts = [],
-  rel_injects = @{thms' Lifting_Set.empty_transfer},
+  rel_simps = @{thms' Lifting_Set.empty_transfer rel_set__const_True},
   rel_eq = @{thm' rel_set_eq},
   pred = Abs("P", a --> HOLogic.boolT, Abs ("S", \<^Type>\<open>Set.set a\<close>, \<^Const>\<open>Ball a\<close> $ Bound 0 $ Bound 1)),
   pred_injects = @{thms' Set.ball_simps(5) Set.ball_Un Set.ball_simps(7)},
@@ -3618,14 +3622,20 @@ let val a = TFree ("a", \<^sort>\<open>type\<close>)
   map_disc_iffs = @{thms' image_is_empty},
   map_ident = @{thm' Set.image_ident},
   map_comp_of = @{thm' Set.image_image},
-  fp_more = NONE (*{ TODO!
+  fp_more = SOME {
     deads = [],
     lives = [a],
     lives'= [b],
-    
-  }*)
+    zip = \<^term>\<open>case_prod (\<times>) :: 'a set \<times> 'b set \<Rightarrow> ('a \<times> 'b) set\<close>,
+    unzip = \<^term>\<open>(\<lambda>s. (Domain s, Range s)) :: ('a \<times> 'b) set \<Rightarrow> 'a set \<times> 'b set\<close>,
+    zip_simps = []
+  }
 } end)
 )\<close>
+
+term \<open>(\<times>)\<close>
+term \<open>(\<lambda>s. (Domain s, Range s)) :: ('a \<times> 'b) set \<Rightarrow> 'a set \<times> 'b set\<close>
+term \<open>case_prod (\<times>)\<close>
 
 lemmas [\<phi>constraint_expansion for set] =
   Set.ball_Un Fun.bind_image Set.empty_bind Set.bind_singleton_conv_image

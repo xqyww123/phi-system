@@ -723,10 +723,11 @@ val separate_tyop_semimodule_and_its_non_parameterized =
 
 fun warn_separate_type_operator f FT_term =
   case f FT_term
-    of [] => raise Automation_Fail (fn () =>
-                      [Pretty.str "Fail to parse ",
-                       Pretty.str (Term.term_name (Term.head_of FT_term)),
-                       Pretty.str " as a type operator."])
+    of [] => raise Automation_Fail (fn () => let open Pretty in
+                [block [str "Fail to parse", brk 1,
+                        str (Term.term_name (Term.head_of FT_term)),
+                        str "as a type operator."]]
+             end)
      | ret => ret
 
 val separate_type_operator_and_its_parameter =
