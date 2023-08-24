@@ -59,7 +59,7 @@ fun extract_implied_facts ctxt statement =
           ])
    in (statement RS @{thm Do_Extract_Implied_Facts})
    |> Phi_Reasoner.reason1 (K "fail to extract implied fact. It is an internal error and some reasonig rules are miss-configured.")
-                           (SOME 1) ctxt
+                           NONE (SOME 1) ctxt
    |> Simplifier.simplify (Inhabitance_SS.enhance ctxt)
    |> Phi_Help.conj_elims
   end
@@ -85,7 +85,7 @@ fun generate_extraction_rule ctxt0 thm0 =
     val state = (thm RS @{thm Do_Generate_Implication_Reasoning})
               |> Thm.permute_prems 0 n
               |> Thm.permute_prems 2 (~n)
-   in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE
+   in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE NONE
                            (Config.put mode_generate_extraction_rule true ctxt)
                            state
    |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>

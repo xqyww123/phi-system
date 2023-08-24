@@ -19,7 +19,9 @@ fun gen_memoize_safe f (ctxt, sequent) =
   let val goal = fst (Thm.dest_implies (Thm.cprop_of sequent))
    in if Thm.maxidx_of_cterm goal <> ~1
    then NONE
-   else case Phi_Reasoner.reason NONE ctxt (Goal.init goal)
+   else case Phi_Reasoner.reason (SOME (fn _ => Phi_Reasoner.bad_config "\<r>Success is not allowed during memoization reasoning",
+                                        Phi_Reasoner.default_global_cut_handler))
+                                 NONE ctxt (Goal.init goal)
      of SOME ret' =>
           let val ret = Goal.conclude ret'
               val save = ret

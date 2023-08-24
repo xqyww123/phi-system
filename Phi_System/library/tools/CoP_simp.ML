@@ -87,7 +87,7 @@ fun del_simp_trigger (pat,serial) ctxt =
 
 fun force_invoke (ctxt, mode) sequent =
   let val sequent' = @{thm' \<A>simp_stage_1} RS (sequent RS' (ctxt, #transformation_rule mode))
-   in Phi_Reasoner.reason1 (fn () => "Simplification fails") (SOME 1) ctxt sequent'
+   in Phi_Reasoner.reason1 (fn () => "Simplification fails") NONE (SOME 1) ctxt sequent'
   end
 
 fun invoke_when_needed (ctxt, mode) sequent =

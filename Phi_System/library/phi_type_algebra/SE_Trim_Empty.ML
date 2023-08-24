@@ -57,7 +57,7 @@ fun gen_SE_Trim_Empty _ ctxt (phi : phi_type) thy =
                   | work (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = work X
                   | work (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ _) =
                       th |> Thm.permute_prems 0 i
-                         |> (fn th => case Phi_Reasoner.reason (SOME 1) ctxt th
+                         |> (fn th => case Phi_Reasoner.reason NONE (SOME 1) ctxt th
                                         of SOME ret => (i, Thm.permute_prems 0 (~i) ret)
                                          | NONE => (i+1, Thm.permute_prems 0 (~i) th))
                   | work (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _)
@@ -71,7 +71,7 @@ fun gen_SE_Trim_Empty _ ctxt (phi : phi_type) thy =
                       (i+1, @{lemma \<open>Premise any (x = y)\<close> for x :: unit by (simp add: Premise_def)} RSN (i+1, th))
                   | work (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) =
                       Thm.permute_prems 0 i th
-                        |> Phi_Reasoner.reason (SOME 1) ctxt
+                        |> Phi_Reasoner.reason NONE (SOME 1) ctxt
                         |> Option.map (Thm.permute_prems 0 (~i))
                         |> the_default th
                         |> pair i
@@ -119,7 +119,7 @@ fun SE_Trim_Empty__generation_pass (gen, _, ctxt) th =
                  | (_ $ _) => fix_target (Thm.dest_fun ctm)
             val ((inst, _), ctxt') = Variable.import true (fix_target concl) rctxt
             val th' = Thm.instantiate inst th
-         in Phi_Reasoner.reason NONE ctxt' th'
+         in Phi_Reasoner.reason NONE NONE ctxt' th'
          |> Option.map (singleton (Variable.export ctxt' rctxt)
                      #> simp ctxt)
         end

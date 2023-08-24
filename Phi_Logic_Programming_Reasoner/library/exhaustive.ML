@@ -58,15 +58,15 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
 
      val sequent' = Conv.fconv_rule (objectize_after_n ctxt (n+2)) sequent''
      val branches : thm list Synchronized.var = Synchronized.var "PLPR_Exhaustive.branches" []
-     val (_, ctxt') = ctxt
+     val ctxt' = ctxt
               |> Config.put PLPR_exhaustive_mode true
               |> Reached_Branches.map (fn L => branches :: L)
-              |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn (ctxt',sequent) => (
+     fun success_handler (ctxt',sequent) = (
                     Synchronized.change (hd (Reached_Branches.get ctxt'))
                               (fn L => singleton (Proof_Context.export ctxt' ctxt) sequent :: L) ;
-                    raise Phi_Reasoner.Explorative_Backtrack
-               ))
-     val _ = Phi_Reasoner.reason NONE ctxt' sequent'
+                    raise Phi_Reasoner.Explorative_Backtrack )
+     val _ = Phi_Reasoner.reason (SOME (success_handler, Phi_Reasoner.default_global_cut_handler))
+                                 NONE ctxt' sequent'
            |> (fn SOME _ => error "Internal bug b4c19005-f87c-4c03-9012-8fa0280a3154"
                 | NONE => ())
 

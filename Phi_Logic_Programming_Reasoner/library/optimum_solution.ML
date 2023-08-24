@@ -31,7 +31,7 @@ structure Cost = Proof_Data (
 )
 
 structure Stack = Proof_Data (
-  type T = ((int * Candidates.T) Synchronized.var * serial * serial) list
+  type T = (int * Candidates.T) Synchronized.var list
   val init = K []
 )
 
@@ -64,7 +64,7 @@ fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
                    ])
    in case Stack.get ctxt
         of [] => SOME ((ctxt,sequent), Seq.empty)
-         | ((heap_sync,_,_) :: _) =>
+         | (heap_sync :: _) =>
               Synchronized.change_result heap_sync (fn (min_cost, heap) =>
                  if cost <= min_cost
                  then (SOME ((ctxt,sequent), Seq.empty), (min_cost, heap))
@@ -75,14 +75,11 @@ fun report_cost (INC,THR) (ctxt,sequent) = Seq.make (fn _ =>
 fun gen_finish reach (ctxt,sequent) = Seq.make (fn _ => (
   case Stack.get ctxt
     of [] => raise Fail "Not in a PLPR_Optimum_Solution environment"
-     | ((_,sh,gcut) :: L ) =>
+     | (_ :: L ) =>
         let val _ = Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.block [
                       Pretty.str "PLPR_Optimum_Solution reaches a solution with cost ",
                       Pretty.str (string_of_int (eval (Cost.get ctxt)))])
-            val ctxt' = ctxt
-                 |> Stack.put L
-                 |> Phi_Reasoner.Success_Handlers.remove sh
-                 |> Phi_Reasoner.Global_Cut_Handlers.remove gcut
+            val ctxt' = Stack.put L ctxt
          in raise reach (ctxt',sequent)
         end
 ))
@@ -91,13 +88,9 @@ val internal_finish = gen_finish REACH
 
 fun gen_start ctxt candidates = Seq.make (fn () =>
   let val var = Synchronized.var "PLPR_Optimum_Solution" (0, Candidates.empty)
-      val (sh, ctxt) = ctxt
-        |> Phi_Reasoner.Success_Handlers.push_localctxt 1 (fn s =>
-                    SOME (gen_finish SUPER_REACH s))
-      val (gcut, ctxt) = ctxt
-        |> Phi_Reasoner.disable_global_cut 1
-                    "Global Cut is prohibited during Optimum_Solution reasoning"
-      val ctxt = Stack.map (fn L => (var,sh,gcut) :: L) ctxt
+      val success_handler = gen_finish SUPER_REACH
+      val gcut_handler = (fn _ => Phi_Reasoner.bad_config "Global Cut is prohibited during Optimum_Solution reasoning")
+      val ctxt = Stack.map (fn L => var :: L) ctxt
       val _ = Synchronized.change var (apsnd (
                   Candidates.insert (0, 0, Seq.of_list (map (pair ctxt) candidates))))
       fun get_heap (mc,heap) =
@@ -118,7 +111,7 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
                 "PLPR_Optimum_Solution: all choices are traversed, no solution found.");
               NONE)
            | SOME s =>
-               (case Phi_Reasoner.internal_reason NONE s
+               (case Phi_Reasoner.internal_reason (SOME (success_handler, gcut_handler)) NONE s
                   of NONE => (Phi_Reasoner.info_print ctxt 2 (fn _ =>
                                 "PLPR_Optimum_Solution: the search branch fails, try another");
                               next_candidate ())
@@ -132,13 +125,15 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
 fun internal_start (ctxt,sequent) = gen_start ctxt [sequent]
 
 fun best_among (_, []) = NONE
-  | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE ctxt thm
+  | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE NONE ctxt thm
   | best_among (ctxt,candidates) =
     ( Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.chunks (
           Pretty.str "PLPR_Optimum_Solution: reasoning the optimal solution from candidates:" ::
           map (fn th => Pretty.item [Thm.pretty_thm ctxt th]) candidates
         ));
-      Phi_Reasoner.reason_sXXX ctxt (fn ctxt => ((), gen_start ctxt candidates))
-        |> snd)
+      Seq.pull (gen_start ctxt candidates)
+        |> Option.map (fn ((ctxt', ret), _) => singleton (Proof_Context.export ctxt' ctxt) ret)
+      (*Phi_Reasoner.reason_sXXX NONE ctxt (fn ctxt => ((), gen_start ctxt candidates))
+        |> snd *))
 
 end

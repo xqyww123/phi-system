@@ -2065,7 +2065,7 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
 
       andalso not (Phi_Sys_Reasoner.is_user_dependent_antecedent (Thm.major_prem_of sequent))
       andalso not (Phi_Sys_Reasoner.is_proof_obligation (Thm.major_prem_of sequent))
-   then case Phi_Reasoner.reason (SOME 1) ctxt sequent
+   then case Phi_Reasoner.reason NONE (SOME 1) ctxt sequent
           of SOME sequent' => (ctxt, sequent')
            | NONE => raise Bypass (SOME (ctxt,sequent0))
    else raise Bypass NONE

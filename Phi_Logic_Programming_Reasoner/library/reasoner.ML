@@ -6,7 +6,6 @@ signature NU_REASONER = sig
   (* This file is the major hot point of the whole system.
      TODO: optimize it as much as possible! *)
 
-
   type priority = int
   type pattern = term
   type name = term
@@ -70,10 +69,12 @@ signature NU_REASONER = sig
   exception Global_Cut of context_state
   exception Explorative_Backtrack
 
-  structure Global_Cut_Handlers : PLPR_HANDLERS
-  structure Success_Handlers : PLPR_HANDLERS
-  val disable_global_cut : int -> string -> Proof.context -> serial * Proof.context
-  val disable_success    : int -> string -> Proof.context -> serial * Proof.context
+  type success_handler = context_state -> context_state Seq.seq
+  type global_cut_handler = context_state -> context_state Seq.seq
+  type handlers = success_handler * global_cut_handler
+  val default_success_handler : success_handler
+  val default_global_cut_handler : global_cut_handler
+  val default_handlers : handlers
 
   val add : reasoner -> Context.generic -> Context.generic
   val adds : reasoner list -> Context.generic -> Context.generic
@@ -98,29 +99,33 @@ signature NU_REASONER = sig
   (*N: number of premises to be attacked at most, if it is positive;
        to attack all if it is None;
        to attack until a sequent remains at most |N| premises, if N is negative*)
-  val internal_reason  : int option (*N*)
+  val internal_reason  :
+                handlers option
+             -> int option (*N*)
              -> context_state
              -> context_state option
-  val reason  : int option (*N*)
+  val reason  : handlers option
+             -> int option (*N*)
              -> Proof.context -> thm -> thm option
   val reason1 : (unit -> string) (*error message*)
+             -> handlers option
              -> int option (*N*)
              -> Proof.context -> thm -> thm
   val internal_reason_s :
-                 Proof.context (*the context for accessing reasoner db*)
+                 handlers option
+              -> Proof.context (*the context for accessing reasoner db*)
               -> (Proof.context -> 'a * context_state Seq.seq)
               -> 'a * context_state option
-  val reason_sXXX : Proof.context (*the context for accessing reasoner db*)
+  val reason_sXXX : 
+                 handlers option
+              -> Proof.context (*the context for accessing reasoner db*)
               -> (Proof.context -> 'a * context_state Seq.seq)
               -> 'a * thm option
   (*Note it returns at most one state in the returned sequence.*)
-  val reason_tac : int option (*N*)
-                -> bool (*if to open new context*)
-                -> Proof.context (*the context for accessing reasoner db*)
-                -> context_tactic
-
-  (*The nested level of the current reasoning*)
-  val nested_level : Proof.context -> int (*Starting from 1*)
+  val reason_tac : handlers option
+              -> int option (*N*)
+              -> Proof.context (*the context for accessing reasoner db*)
+              -> context_tactic
 
   type guard = context_state -> bool
   val default_mode_of : priority -> cut_mode
@@ -288,49 +293,25 @@ fun error msg = Exn.error (msg ^ "\nReasoning Fail! You may turn on \<phi>trace_
       \ \<phi>trace_reasoning_candidates to debug.")
 fun bad_config msg = Exn.error (msg ^ "\nSome rule is configured incorrectly!")
 
-(* Reasoning Environ *)
-
-structure Environ = Proof_Data (
-  type T = int (*nested level*)
-  val init = K 0
-)
-
-val enter_sub_envir = Environ.map (fn x => x + 1)
-val exit_sub_envir  = Environ.map (fn x => x - 1)
-(*fun enter_sub_envir' opewn_newctxt ctxt =
-  if opewn_newctxt then enter_sub_envir ctxt else ctxt
-fun exit_sub_envir' opewn_newctxt ctxt =
-  if opewn_newctxt then exit_sub_envir ctxt else ctxt*)
-
-val nested_level = Environ.get
-
-(* Cut, Abrupt Termination, and Handlers *)
+(* Reasoning Frame *)
 
 exception Success    of context_state
 exception Global_Cut of context_state
 exception Explorative_Backtrack
 
-structure Global_Cut_Handlers = Local_Handlers(
-  type domT = context_state
-  type retT = context_state Seq.seq
-  fun default s = raise Global_Cut s
-  val current_level = nested_level
-  val ctxt_of = fst
-)
+type success_handler = context_state -> context_state Seq.seq
+type global_cut_handler = context_state -> context_state Seq.seq
+type handlers = success_handler * global_cut_handler
+type frame = handlers
 
-structure Success_Handlers = Local_Handlers(
-  type domT = context_state
-  type retT = context_state Seq.seq
-  fun default s = raise Success s
-  val current_level = nested_level
-  val ctxt_of = fst
-)
+fun default_success_handler s = raise Success s
+fun default_global_cut_handler s = raise Global_Cut s
+val default_handlers = (default_success_handler, default_global_cut_handler)
 
-
-(*delt: 0 for the current reasoning context
-        1 for the sub-calling environment*)
-fun disable_global_cut delt msg = Global_Cut_Handlers.push_localctxt delt (fn _ => bad_config msg)
-fun disable_success    delt msg = Success_Handlers.push_localctxt delt (fn _ => bad_config msg)
+(*fun enter_sub_envir' opewn_newctxt ctxt =
+  if opewn_newctxt then enter_sub_envir ctxt else ctxt
+fun exit_sub_envir' opewn_newctxt ctxt =
+  if opewn_newctxt then exit_sub_envir ctxt else ctxt*)
 
 (*** Reasoner Registry ***)
 
@@ -605,7 +586,7 @@ fun disabled_due_to_backtrack ALLOW_BACKTRACK _ = false
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK EXPLORATIVE_BACKTRACKING = true
   | disabled_due_to_backtrack NO_EXPLORATIVE_BACKTRACK _ = false
 
-fun gen_reason (trace, limit, tactics) =
+fun gen_reason (handlers, trace, limit, tactics) =
   let fun loop (_, _, _, []) = NONE
         | loop (N, iter, backtracking, []::L) =
             (if 2 <= trace then tracing ("Backtracking...") else () ;
@@ -623,9 +604,9 @@ fun gen_reason (trace, limit, tactics) =
                 datatype transition = NORMAL of (context_state * context_state Seq.seq) option
                                     | GO_EXPLORATIVE_BACKTRACKING
                 fun pull seq = NORMAL (Seq.pull seq)
-                  handle Success s => (pull (Success_Handlers.invoke (fst s) s)
+                  handle Success s => (pull (fst handlers s)
                                       handle Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING)
-                       | Global_Cut s => pull (Success_Handlers.invoke (fst s) s)
+                       | Global_Cut s => pull (snd handlers s)
                        | Explorative_Backtrack => GO_EXPLORATIVE_BACKTRACKING
             in if disabled_due_to_backtrack backtrack_mode backtracking
             then loop (N, iter, backtracking, L'::L)
@@ -643,10 +624,9 @@ fun gen_reason (trace, limit, tactics) =
                                                then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
                                                else th
                                      fun chk_guard M (ctxt, th) =
-                                           (loop (Thm.nprems_of th - M, iter, NO_BACKTRACKING,
-                                                 [[(score, pos, NORMAL_MODE, Seq.single (enter_sub_envir ctxt, th))]])
+                                           loop (Thm.nprems_of th - M, iter, NO_BACKTRACKING,
+                                                 [[(score, pos, NORMAL_MODE, Seq.single (ctxt, th))]])
                                             handle Success s => SOME s
-                                           ) |> Option.map (apfst exit_sub_envir)
                               in get_reasoners' (Proof_Context.theory_of ctxt) tactics (Thm.major_prem_of th')
                                     |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
                                     |> map (fn (priority, _, _, r : reasoner) =>
@@ -694,9 +674,10 @@ fun gen_reason (trace, limit, tactics) =
    in loop
   end
 (*Entry point*)
-fun gen_reason' ctxt N states =
+fun gen_reason' handlers ctxt N states =
   Timing.cond_timeit (Config.get ctxt count_performance) "Time spent by \<phi>-LPR reasoning:" (fn () =>
-     (gen_reason (Config.get ctxt trace, Config.get ctxt step_limit, Reasoners.get (Context.Proof ctxt))
+     (gen_reason (the_default default_handlers handlers,
+                  Config.get ctxt trace, Config.get ctxt step_limit, Reasoners.get (Context.Proof ctxt))
                  (N, 0, NO_BACKTRACKING, map (map (fn seq => (0, Position.none, NORMAL_MODE, seq))) states)
       handle Success ret => SOME ret)
   )
@@ -709,39 +690,36 @@ fun num_of_protected_prems  _  NONE = 0
   | num_of_protected_prems thm (SOME N) =
       if N >= 0 then Thm.nprems_of thm - N else ~N
 
-fun internal_reason (SOME 0) S = SOME S
-  | internal_reason N (ctxt,sequent) =
+fun internal_reason _ (SOME 0) S = SOME S
+  | internal_reason handlers N (ctxt,sequent) =
       if Thm.nprems_of sequent = 0 then SOME (ctxt, sequent)
-      else gen_reason' ctxt (num_of_protected_prems sequent N)
-                  [[ (Seq.single (enter_sub_envir ctxt, sequent))]]
-        |> Option.map (apfst exit_sub_envir)
+      else gen_reason' handlers ctxt (num_of_protected_prems sequent N)
+                       [[ (Seq.single (ctxt, sequent))]]
 
-fun reason num ctxt sequent =
-  case internal_reason num (ctxt,sequent)
+fun reason handlers num ctxt sequent =
+  case internal_reason handlers num (ctxt,sequent)
     of SOME (ctxt', sequent') =>
                SOME (singleton (Proof_Context.export ctxt' ctxt) sequent')
      | NONE => NONE
 
-fun reason1 G N ctxt sequent =
-  case reason N ctxt sequent of SOME x => x | NONE => error (G ())
+fun reason1 G handlers N ctxt sequent =
+  case reason handlers N ctxt sequent of SOME x => x | NONE => error (G ())
 
-fun internal_reason_s ctxt seqs =
-  let val (ret,seqs') = seqs (enter_sub_envir ctxt)
-   in (ret, gen_reason' ctxt 0 [[ seqs' ]]
-              |> Option.map (apfst exit_sub_envir))
+fun internal_reason_s handlers ctxt seqs =
+  let val (ret,seqs') = seqs ctxt
+   in (ret, gen_reason' handlers ctxt 0 [[ seqs' ]])
   end
 
-fun reason_sXXX ctxt seqs =
-  case internal_reason_s ctxt seqs
+fun reason_sXXX handlers ctxt seqs =
+  case internal_reason_s handlers ctxt seqs
     of (ret, SOME ( ctxt', sequent')) =>
                (ret, SOME (singleton (Proof_Context.export ctxt' ctxt) sequent'))
      | (ret, NONE) => (ret, NONE)
 
-fun reason_tac N open_newctxt ctxt stat = Seq.make (fn () =>
-      gen_reason' ctxt (num_of_protected_prems (snd stat) N)
-                  [[ (Seq.single (apfst enter_sub_envir stat)) ]]
-       |> Option.map ( apfst exit_sub_envir
-                    #> Seq.Result
+fun reason_tac handlers N ctxt stat = Seq.make (fn () =>
+      gen_reason' handlers ctxt (num_of_protected_prems (snd stat) N)
+                  [[ (Seq.single stat) ]]
+       |> Option.map ( Seq.Result
                     #> rpair Seq.empty)
     )
 
@@ -958,7 +936,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
       end) rules
     val tac = case ML_guard
                 of NONE => Tac_Rule rules_with_flag
-                 | SOME G => let val app = apply_reasoning_rules (internal_reason o SOME) rules_with_flag
+                 | SOME G => let val app = apply_reasoning_rules (internal_reason NONE o SOME) rules_with_flag
                               in Tac_ML (fn (_,s) => if G s then app s else Seq.empty)
                              end
 
@@ -1080,7 +1058,7 @@ val _ = Theory.setup (
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
                Method.modifier (gen_attr_add_intro' I (pos,NORMAL_MODE,100,([],NONE),([],[]),NONE)) \<^here>)
-] >> (fn num_prems => fn ctxt => fn ths (*what to do?*) => reason_tac num_prems true ctxt)
+] >> (fn num_prems => fn ctxt => fn ths (*what to do?*) => reason_tac NONE num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."
 

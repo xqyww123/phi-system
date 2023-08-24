@@ -726,8 +726,6 @@ the result.\<close>
 definition \<r>Success :: bool where \<open>\<r>Success = True\<close>
 lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
 
-declare [[ML_debugger]]
-
 \<phi>reasoner_ML \<r>Success 10000 (\<open>\<r>Success\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
   raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent))\<close>
 
