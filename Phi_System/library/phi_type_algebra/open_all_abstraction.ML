@@ -8,6 +8,8 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
+(*Guessing is not supported for recursive \<phi>-types*)
+
 fun guess_property (phi:phi_type) ctxt =
   let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val _ = if #is_recursive phi
@@ -206,9 +208,9 @@ fun gen_trans_to_raw_abst (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
 
       val ind_conv = default_ind_conv (
             fn _ => fn _ =>
-                Conv.rewr_conv @{thm' \<phi>TA_TrRA_rewr},
+                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1},
             fn ctxt => fn _ =>
-                Conv.rewr_conv @{thm' \<phi>TA_TrRA_rewr} then_conv
+                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
                 Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
                   Phi_Syntax.transformation_conv
                     (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)))

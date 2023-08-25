@@ -419,6 +419,10 @@ datatype eBNF = BNF of BNF_Def.bnf | qBNF of quasi_BNF
 
 (* Library *)
 
+fun extract_hhf (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extract_hhf X
+  | extract_hhf (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_hhf X
+  | extract_hhf (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = extract_hhf X
+  | extract_hhf X = Envir.beta_eta_contract X
 
 (* fun permute_seq (s::L) =
       Seq.maps (fn s' => permute_seq L |> Seq.map (fn L' => s'::L')) s
@@ -1001,12 +1005,8 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                           |> Phi_Help.certify_tyvars (Context.Proof ctxt)
 
                   val phi = Phi_Type_Algebra.instantiate_phi (inst, Vars.empty) phi0
-                  
 
-                  fun extract_oprs_from_hint' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_oprs_from_hint' X
-                    | extract_oprs_from_hint' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = extract_oprs_from_hint' X
-                    | extract_oprs_from_hint' X = extract_oprs_from_hint X
-                  val oprs = extract_oprs_from_hint' (Logic.strip_imp_concl H)
+                  val oprs = extract_oprs_from_hint (extract_hhf H)
                   val ctxt = load_simpset oprs ctxt
 
                in Seq.single (Logic.strip_imp_prems H, Logic.strip_imp_concl H, parameters, phi, ctxt)
@@ -1106,13 +1106,6 @@ fun malformed_hint ctxt hint =
           [str "Malformed Hint", brk 1, Syntax.pretty_term ctxt hint]
     end)
 
-local
-fun extract_hhf (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = extract_hhf X
-  | extract_hhf (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract_hhf X
-  | extract_hhf (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = extract_hhf X
-  | extract_hhf X = Envir.beta_eta_contract X
-
-in
 
 type hint = term
 type parse_hint = Proof.context -> phi_type -> hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
@@ -1142,7 +1135,6 @@ fun parse_hint extract_phityp ctxt phi hint =
    in (Term.fastype_of phiconst, params, hint)
   end
 
-end
 
 (* Default Conversion of the Induction Rule *)
 

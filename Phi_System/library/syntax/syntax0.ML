@@ -87,7 +87,7 @@ fun dest_transformation_typ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X
 
 fun transformation_conv C_s C_t C_p ctm = (
   dest_transformation_c ctm;
-  Phi_Conv.may_Trueprop_conv (
+  Phi_Conv.tag_conv (
     Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p) ctm
 )
 

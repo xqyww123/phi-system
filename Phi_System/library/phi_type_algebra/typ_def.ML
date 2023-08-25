@@ -124,6 +124,7 @@ val add_type : def * Position.T * derivings * Bundle.name list -> generic_theory
 
 (** Tools **)
 
+val is_phi_term : phi_type -> term -> bool (*ignores type*)
 val is_Type_Opr : typ -> bool
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
@@ -663,6 +664,12 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
 
 (** Tools **)
 
+fun is_phi_term phi term =
+  case (#term phi, term)
+    of (Const(N, _), Const(N', _)) => N = N'
+     | (Free(N, _), Free(N',_)) => N = N'
+     | _ => false
+
 fun is_Type_Opr ty =
   case dest_parameterized_phi_ty ty
     of ([],_,_) => false
@@ -974,7 +981,7 @@ fun fix_phi_type is_open (phi0 : phi_type) ctxt0 =
    in (inst', phi, ctxt)
   end
 
-val bundle_parser = Scan.optional (\<^keyword>\<open>includes\<close> |-- Scan.repeat1 Parse.name_position) []
+val bundle_parser = Scan.optional (\<^keyword>\<open>opening\<close> |-- Scan.repeat1 Parse.name_position) []
 
 local
 

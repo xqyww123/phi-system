@@ -17,7 +17,7 @@ lemma Subjection_image:
   \<open>f ` (S \<s>\<u>\<b>\<j> P) = (f ` S \<s>\<u>\<b>\<j> P)\<close>
   by (auto simp add: Subjection_expn_set)
 
-definition ExSet :: " ('c \<Rightarrow> 'a set) \<Rightarrow> 'a set" (binder "\<exists>*" 14)
+definition ExSet :: " ('x \<Rightarrow> 'c set) \<Rightarrow> 'c set" (binder "\<exists>*" 14)
   where "ExSet S = {p. (\<exists>c. p \<in> S c)}"
 notation ExSet (binder "\<exists>\<^sup>s" 14)
 

@@ -27,14 +27,17 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-    
+     
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
+  opening  extract_premises_in_local_inverse
   deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Basic
        and Functionality
        and Open_Abstraction_Full
+       and \<open>local_inverse Rng f g \<Longrightarrow> \<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> c \<in> Rng \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f c \<Ztypecolon> \<phi>Fun g @action to (\<phi>Fun g))\<close>
+
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -53,11 +56,10 @@ lemma [\<phi>reason add]:
                          homo_sep_mult.homo_mult homo_sep_def)
 
 
-
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+       
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -68,6 +70,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
        and Separation_Homo
+       and Construct_Abstraction_from_Raw
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -169,6 +172,7 @@ declare [[\<phi>trace_reasoning = 0]]
                       (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
        and Open_Abstraction_Full
+       and Construct_Abstraction_from_Raw
 
 
 text \<open>Read it as 'the abstract object is certain element in the set'
@@ -778,7 +782,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
-  includes extract_premise_in_Carrier_Set
+  opening extract_premises_in_Carrier_Set
   deriving Basic
        and \<open> homo_one f \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 f \<and> P = True \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
        and \<open> homo_one f \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
@@ -907,7 +911,7 @@ subsection \<open>List Item \& Empty List\<close>
 subsubsection \<open>List Item\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+  
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
@@ -915,6 +919,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Open_Abstraction_Full
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
+       and Construct_Abstraction_from_Raw
 
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
@@ -1052,7 +1057,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 
 declare [[\<phi>trace_reasoning = 0]]
-
+ 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Separation_Monoid

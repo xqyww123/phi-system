@@ -227,7 +227,7 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_OE_rewr_IH})),
-                       fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_OE_rewr_C} then_conv
+                       fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp1_noact} then_conv
                             Conv.implies_concl_conv (HOLogic.Trueprop_conv (fn ctm =>
                               Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) ctm)
                               then_conv Phi_Conv.hol_alls_to_meta_alls (fn _ =>

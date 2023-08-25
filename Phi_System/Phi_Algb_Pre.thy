@@ -25,6 +25,20 @@ lemma [\<phi>reason 1000]:
   unfolding scalar_mult_def Premise_def by simp
 
 
+subsection \<open>Definitions of Properties\<close>
+
+subsubsection \<open>Local Inverse\<close>
+
+definition local_inverse
+  where \<open>local_inverse D f g \<longleftrightarrow> (\<forall>x \<in> D. g (f x) = x)\<close>
+
+lemma prem_extract_local_inverse:
+  \<open>local_inverse D f g \<equiv> (\<forall>x \<in> D. g (f x) = x) \<and> True\<close>
+  unfolding local_inverse_def by simp
+
+bundle extract_premises_in_local_inverse =
+  prem_extract_local_inverse[\<phi>premise_extraction]
+
 subsection \<open>Configuration of Existing Procedures\<close>
 
 declare [[\<phi>reason_default_pattern \<open>module_scalar_assoc ?\<psi> _\<close> \<Rightarrow> \<open>module_scalar_assoc ?\<psi> _\<close>   (100)
