@@ -501,7 +501,7 @@ subsubsection \<open>Convention\<close>
 
 text \<open>
 Priority:
-\<^item> 30: Destruction \<open>to RAW\<close>
+\<^item> 30: Destruction \<open>to OPEN\<close>
 \<^item> 40: Transformations, To-Transformations
 \<^item> 40: \<^const>\<open>Identity_Element\<^sub>I\<close>, \<^const>\<open>Identity_Element\<^sub>E\<close>
       \<^const>\<open>Object_Equiv\<close>
@@ -577,7 +577,7 @@ lemma \<phi>elim'SE_transformation:
 
 lemma \<phi>open_abstraction:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to RAW \<close>
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to OPEN \<close>
   unfolding Action_Tag_def Simplify_def
   by simp
 
@@ -3381,35 +3381,37 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
 subsubsection \<open>Construct Abstraction from Concrete Representation (by Itself)\<close>
 
 lemma \<phi>TA_TrCstr_rule:
-  \<open> (\<And>c x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-         \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<and> x = f c \<longrightarrow>
-         (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) @action \<phi>TA_ind_target NToA)
+  \<open> (Ant @action \<phi>TA_ANT) \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A) @action \<phi>TA_ind_target undefined
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> \<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = f c @action to T) \<close>
+\<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
+  unfolding Action_Tag_def
+  by simp
+
+ML_file \<open>library/phi_type_algebra/constr_abst_weak.ML\<close>
+
+(*
+lemma \<phi>TA_TrCstr_rule:
+  \<open> (\<And>c x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+         \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<and> x = f c \<longrightarrow>
+         (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE_from_RAW T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> \<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<longrightarrow> MAKE_from_RAW c ()(c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f c \<Ztypecolon> MAKE_from_RAW T) \<close>
   \<comment> \<open>If one concrete representation is related to multiple abstract objects, just choose any one
       that is most representative.\<close>
   unfolding Action_Tag_def
   by simp
 
 ML_file \<open>library/phi_type_algebra/constr_abst.ML\<close>
-
+*)
 \<phi>property_deriver Construct_Abstraction_from_Raw 130
-  for ( \<open>\<forall>x. Premise _ _ \<longrightarrow> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T @action to ?T)\<close>
-      | \<open>\<forall>x. Premise _ _ \<longrightarrow> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T) @action to ?T\<close>
-      | \<open>Premise _ _ \<longrightarrow> (?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T @action to ?T)\<close>
-      | \<open>Premise _ _ \<longrightarrow> (?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T) @action to ?T\<close>
-      | \<open>\<forall>x. (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T @action to ?T)\<close>
-      | \<open>\<forall>x. (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T) @action to ?T\<close>
-      | \<open>?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T @action to ?T\<close>
-      | \<open>\<forall>x. Premise _ _ \<longrightarrow> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. y = ?f x @action to ?T)\<close>
-      | \<open>\<forall>x. Premise _ _ \<longrightarrow> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. y = ?f x) @action to ?T\<close>
-      | \<open>Premise _ _ \<longrightarrow> (?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. y = ?f x @action to ?T)\<close>
-      | \<open>Premise _ _ \<longrightarrow> (?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. y = ?f x) @action to ?T\<close>
-      | \<open>\<forall>x. (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. y = ?f x @action to ?T)\<close>
-      | \<open>\<forall>x. (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. y = ?f x) @action to ?T\<close>
-      | \<open>?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> ?T \<s>\<u>\<b>\<j> y. y = ?f x @action to ?T\<close>)
+  for ( \<open>\<forall>x. Premise _ _ \<longrightarrow> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T)\<close>
+      | \<open>Premise _ _ \<longrightarrow> (?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T)\<close>
+      | \<open>\<forall>x. x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T\<close>
+      | \<open>?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T\<close> )
   requires Warn_if_contains_Sat
     = \<open> Phi_Type_Algebra_Derivers.construct_abstraction_from_raw \<close>
 

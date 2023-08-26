@@ -718,6 +718,7 @@ lemma NToA_conj_src_B:
   unfolding Transformation_def
   by simp blast
 
+(*diverges to 3 branches, left branch, right branch, and instantiating the Ex in the domain if any. *)
 \<phi>reasoner_ML NToA_conj_src !13  (\<open>_ \<and>\<^sub>B\<^sub>I _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val tail = (case Thm.major_prem_of sequent
                     of _ (*Trueprop*) $ (_ (*Transformation*) $ _ $ (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) $ _) =>

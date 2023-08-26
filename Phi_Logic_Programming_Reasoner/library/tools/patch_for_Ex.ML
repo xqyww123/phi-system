@@ -1,10 +1,12 @@
 signature PHI_REASONERS = sig
+include PHI_REASONERS
 
 val existential_obligation : int Config.T
 
 end
 
 structure Phi_Reasoners : PHI_REASONERS = struct
+open Phi_Reasoners
 
 val existential_obligation = Config.declare_int ("Phi_Reasoners.existential_obligation", \<^here>) (K 2)
 

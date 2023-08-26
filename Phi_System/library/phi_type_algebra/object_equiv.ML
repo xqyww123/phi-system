@@ -266,7 +266,7 @@ fun chk_is_singular ctxt tm =
         (case Envir.beta_eta_contract eq
            of Abs (_, _, Abs (_, _, \<^Const>\<open>True\<close>)) => true
             | _ => false)
-     | _ => malformed_hint ctxt tm
+     | _ => malformed_hint ctxt tm (K [])
 
 fun gen_obj_equal'' name NONE ctxt_derv phi thy = gen_obj_equal' name NONE ctxt_derv phi thy
   | gen_obj_equal'' name (SOME H) ctxt_derv phi thy =

@@ -20,7 +20,7 @@ type parse_hint = Phi_Type_Algebra.deriving_ctxt -> Phi_Type_Algebra.phi_type ->
 
 (* Common choices of the unification *)
 
-val malformed_hint : Phi_Type_Algebra.deriving_ctxt -> term -> 'a
+val malformed_hint : Phi_Type_Algebra.deriving_ctxt -> term -> (unit -> Pretty.T list) -> 'a
 val parse_parameters_of_phi_type : term -> term option list
 (*default parsing*)
 val parse_hint : (term -> term) (*extract the phi-type part from the hint. can be either the type assertion,
@@ -172,6 +172,7 @@ val default_ind_conv : (Proof.context -> Phi_Type_Algebra.phi_type -> conv) (*co
 
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
+val varify_all_vars : varifier
 
 type reasoner = Proof.context -> thm -> thm
 val default_reasoning :
@@ -1101,9 +1102,11 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 
 (* Default Hint Parser *)
 
-fun malformed_hint ctxt hint =
+fun malformed_hint ctxt hint msg =
   raise Automation_Fail (let open Pretty in fn () =>
-          [str "Malformed Hint", brk 1, Syntax.pretty_term ctxt hint]
+          [str "Malformed Hint",
+           Syntax.pretty_term ctxt hint] @
+          msg ()
     end)
 
 
@@ -1113,25 +1116,22 @@ type parse_hint = Proof.context -> phi_type -> hint -> typ (*of the phi-typ cons
 fun parse_parameters_of_phi_type phity =
   map SOME (rev (snd (Term.strip_comb (Phi_Help.beta_eta_contract_term phity))))
 
-fun identical_const (Free (N, _), Free (N', _)) = N = N'
-  | identical_const (Const (N, _), Const(N', _)) = N = N'
-  | identical_const _ = false
-
-fun chk_phi_const ctxt phi given hint =
-  if identical_const (#term phi, given) then () else malformed_hint ctxt hint
-
-
 fun parse_hint extract_phityp ctxt phi hint =
   let val phity = (case extract_phityp (extract_hhf hint)
                      of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T => T $ x
                       | X => X)
-                  handle Match => malformed_hint ctxt hint
+                  handle Match => malformed_hint ctxt hint (K [])
       val (phiconst, params) =
               fold (fn _ => fn X => X $ Term.dummy) (Term.binder_types (Term.fastype_of phity)) phity
            |> Phi_Help.beta_eta_contract_term
            |> Term.strip_comb
            |> apsnd (rev #> map (fn tm => if tm = Term.dummy then NONE else SOME tm))
-      val _ = chk_phi_const ctxt phi phiconst hint
+      val _ = if is_phi_term phi phiconst then ()
+              else malformed_hint ctxt hint (fn () => let open Pretty in
+                  [block (text "It specifies a irrelavent \<phi>-type" @
+                          [brk 1, Syntax.pretty_term ctxt phiconst, brk 1] @
+                          text "instead of the defining \<phi>-type.")]
+                end)
    in (Term.fastype_of phiconst, params, hint)
   end
 
@@ -1280,13 +1280,24 @@ fun varify_subgoal mk ctxt focus sequent =
                   |> Goal.conclude
                   |> Thm.permute_prems 0 ~1
                   |> singleton (Variable.export ctxt' ctxt)
-      in rule RS sequent
+      in Goal.protect 1 (rule RS sequent)
      end
-        | NONE => sequent
+        | NONE => Goal.protect 1 sequent
   end
+
+val varify_subgoal_finale0 = Goal.conclude
 
 fun varify_subgoal_finale sequent =
   Phi_Help.repeat (fn th => @{thm' Pure.reflexive} RS th) sequent
+
+fun varify_all_vars (focus : Subgoal.focus) tm =
+  let val frees = snd (#schematics focus)
+               |> Vars.dest
+               |> map (Thm.term_of o snd)
+   in SOME (frees, fn frees' =>
+              Term_Subst.instantiate_frees (TFrees.empty,
+                                            Frees.make (map2 (fn Free a => fn b => (a,b)) frees frees')) tm)
+  end
 
 type reasoning = Proof.context -> thm -> thm
 type subgoal_configure = (int list (*quant_interps*) * ind_conv) option (*If not given, no induction will be applied*)
@@ -1412,6 +1423,7 @@ fun reasoning ctxt0 sequent0 =
                     |> ALLGOALS (Method.insert_tac ctxt'' prem_ants)
                     |> Seq.hd
                     |> reasoner ctxt''
+                    |> varify_subgoal_finale0
 
       (*val lsequent'' = fold PLPR_Syntax.provide_premise_condition prem_ants lsequent'*)
 

@@ -28,18 +28,15 @@ fun guess_property (phi:phi_type) ctxt =
       fun mk_prop (P_term, f_term) ((rev_arg_tys, x_ty, model_ty), T_term) =
         let val arity = length rev_arg_tys
             val T'_term = fold_index (fn (i,_) => fn X => X $ Bound (arity - i)) rev_arg_tys T_term
-         in (HOLogic.all_const model_ty $ Abs ("x", model_ty,
+         in HOLogic.all_const model_ty $ Abs ("x", model_ty,
               \<^Const>\<open>HOL.implies\<close>
                 $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>default\<close> $ (P_term $ Bound 0))
-                $ (\<^Const>\<open>Action_Tag\<close>
-                  $ (\<^Const>\<open>Transformation model_ty\<close>
-                      $ (\<^Const>\<open>\<phi>Type model_ty model_ty\<close> $ Bound 0 $ \<^Const>\<open>Itself model_ty\<close>)
-                      $ (\<^Const>\<open>ExSet x_ty model_ty\<close> $ Abs ("x", x_ty,
-                            \<^Const>\<open>Subjection model_ty\<close>
-                              $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ T'_term)
-                              $ (\<^Const>\<open>HOL.eq x_ty\<close> $ Bound 0 $ (f_term $ Bound 1))))
-                      $ \<^Const>\<open>True\<close>)
-                  $ (\<^Const>\<open>to x_ty model_ty\<close> $ T'_term))))
+                $ (\<^Const>\<open>Transformation model_ty\<close>
+                    $ (\<^Const>\<open>\<phi>Type model_ty model_ty\<close> $ Bound 0 $ \<^Const>\<open>Itself model_ty\<close>)
+                    $ (\<^Const>\<open>\<phi>Type x_ty model_ty\<close>
+                          $ (f_term $ Bound 0)
+                          $ (\<^Const>\<open>MAKE_from_RAW x_ty model_ty\<close> $ T'_term))
+                    $ \<^Const>\<open>True\<close>))
          |> fold (fn T => fn X => HOLogic.all_const T $ Abs ("A", T, X)) rev_arg_tys
         end
 
@@ -73,9 +70,10 @@ fun reasoning phi ctxt =
 
 fun instantiate_the_var (vP, vf) ctxt sequent =
   let fun fail () = raise Automation_Fail (fn () => let open Pretty in
-                      [para "The reasoning succeeded, but I fail to infer the expression of the property\
+                      [para "The reasoning has succeeded, but I fail to infer the expression of the property\
                             \ from the generated proof obligations. Sorry but you have to indicate the \
-                            \expression manually."]
+                            \expression manually."] @
+                      [Thm.pretty_thm ctxt sequent]
                     end)
       val target = case Phi_Help.leading_antecedent' sequent
                      of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_COLLECT\<close> $ X) => X
@@ -115,14 +113,16 @@ fun instantiate_the_var (vP, vf) ctxt sequent =
                         List.tabulate (i'+1, fn i => if i = i' then Bound 0 else Term.dummy), RHS)))
             else fail ()
         | pass (bvs, prems, SOME i) Pr =
-            let val cl = fold (fn P => fn X => \<^Const>\<open>HOL.conj\<close> $ P $ X) prems Pr
-                      |> fold_index (fn (j,(N,Ty)) => fn X =>
-                            if j = i
-                            then Abs(N, Ty, X) $ Bound (length bvs - 1 - i)
-                            else \<^Const>\<open>HOL.Ex Ty\<close> $ Abs (N, Ty, X)
-                         ) bvs
-             in ([cl], NONE)
-            end
+            if Term.is_schematic Pr
+            then fail ()
+            else let val cl = fold (fn P => fn X => \<^Const>\<open>HOL.conj\<close> $ P $ X) prems Pr
+                           |> fold_index (fn (j,(N,Ty)) => fn X =>
+                                  if j = i
+                                  then Abs(N, Ty, X) $ Bound (length bvs - 1 - i)
+                                  else \<^Const>\<open>HOL.Ex Ty\<close> $ Abs (N, Ty, X)
+                              ) bvs
+                  in ([cl], NONE)
+                 end
         | pass _ _ = ([], NONE)
 
       val m_ty = Term.domain_type (snd vP)
@@ -149,58 +149,50 @@ val rewr_ant = @{lemma \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Zt
 
 fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
   let fun chk_hint H =
-        let fun chk_Tr ((H as Const(\<^const_name>\<open>Transformation\<close>, _) $ X) $ Y $ P) = (
+        let fun chk_Tr (origin as Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ P) = (
+                  (case Y of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _
+                                $ (Const(\<^const_name>\<open>MAKE_from_RAW\<close>, _) $ _) => ()
+                           | _ => raise Fail "") ;
                   (case X of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Bound _ $ _ => ()
-                           | _ => ()) ;
-                  H $ (case Y of Const(\<^const_name>\<open>ExSet\<close>, _) $ _ => Y
-                               | \<^Const_>\<open>\<phi>Type a c\<close> $ x $ T =>
-                                  \<^Const>\<open>ExSet a c\<close> $ Abs ("x", a,
-                                    \<^Const>\<open>Subjection c\<close>
-                                      $ (\<^Const>\<open>\<phi>Type a c\<close> $ Bound 0 $ Term.incr_boundvars 1 T)
-                                      $ (\<^Const>\<open>HOL.eq a\<close> $ Bound 0 $ Term.incr_boundvars 1 x))
-                               | _ => raise Fail "")
-                    $ P
+                           | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _ =>
+                                malformed_hint ctxt0 H (fn () => let open Pretty in
+                                      [block (text "The abstract object" @
+                                              [brk 1, Syntax.pretty_term ctxt0 x, brk 1] @
+                                              text "must be universally quantified")]
+                                  end)
+                           | _ => malformed_hint ctxt0 H (K [])) ;
+                  origin
                   )
               | chk_Tr _ = raise Fail ""
-            fun chk_tag (org as (Const(\<^const_name>\<open>to\<close>, _) $ X)) =
-                  if is_phi_term phi0 (Term.head_of X) then org else raise Fail ""
-              | chk_tag _ = raise Fail ""
-            fun chk_imp ((H as Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _)
-                          $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ tag))
-                  = H $ (\<^Const>\<open>Action_Tag\<close> $ chk_Tr X $ chk_tag tag)
-              | chk_imp (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ tag) =
-                  (case X of (H as Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _) $ Tr =>
-                                H $ (\<^Const>\<open>Action_Tag\<close> $ chk_Tr Tr $ chk_tag tag)
-                           | Tr => \<^Const>\<open>HOL.implies\<close>
+            fun chk_imp _ ((H as Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _) $ X) = H $ (chk_Tr X)
+              | chk_imp premised ((H as Const(\<^const_name>\<open>HOL.All\<close>, _)) $ Abs (N,Ty,X))
+                  = H $ Abs (N, Ty, chk_imp premised X)
+              | chk_imp true  X = chk_Tr X
+              | chk_imp false X = \<^Const>\<open>HOL.implies\<close>
                                     $ (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>default\<close> $ \<^Const>\<open>True\<close>)
-                                    $ (\<^Const>\<open>Action_Tag\<close> $ chk_Tr Tr $ chk_tag tag))
-              | chk_imp _ = raise Fail ""
-            fun chk (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ B)
-                  = \<^Const>\<open>Pure.imp\<close> $ chk A $ chk B
-              | chk ((H as Const(\<^const_name>\<open>Pure.all\<close>, _)) $ Abs (N,Ty,X))
-                  = H $ Abs (N,Ty, chk X)
-              | chk (org as (\<^Const>\<open>Trueprop\<close> $ P0)) =
-                ((case P0 of (H as Const(\<^const_name>\<open>Action_Tag\<close>, _))
-                                $ ((H2 as Const(\<^const_name>\<open>HOL.All\<close>, _)) $ Abs (N,Ty,X))
-                                $ A
-                               => \<^Const>\<open>Trueprop\<close> $ (H2 $ Abs (N, Ty, chk_imp (H $ X $ A)))
-                           | ((H as Const(\<^const_name>\<open>HOL.All\<close>, _)) $ Abs (N, Ty, X))
-                               => \<^Const>\<open>Trueprop\<close> $ (H $ Abs (N, Ty, chk_imp X))
-                           | _ => org)
-                 handle Fail _ => org)
-              | chk X = X
-         in chk H
+                                    $ chk_Tr X
+            fun chk _ (Const(\<^const_name>\<open>Pure.imp\<close>, _)
+                      $ (A as (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _)))
+                      $ B)
+                  = \<^Const>\<open>Pure.imp\<close> $ A $ chk true B
+              | chk premised (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ B)
+                  = \<^Const>\<open>Pure.imp\<close> $ chk true A $ chk premised B
+              | chk premised ((H as Const(\<^const_name>\<open>Pure.all\<close>, _)) $ Abs (N,Ty,X))
+                  = H $ Abs (N,Ty, chk premised X)
+              | chk premised (origin as (\<^Const>\<open>Trueprop\<close> $ X))
+                  = (\<^Const>\<open>Trueprop\<close> $ chk_imp premised X
+                     handle Fail _ => origin)
+              | chk _ X = X
+         in chk false H
         end
 
       val hint0 = Option.map chk_hint hint00
 
       val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _
-                  $ (Const(\<^const_name>\<open>Action_Tag\<close>, _)
-                      $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _
-                            $ (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _,
-                                Const(\<^const_name>\<open>Subjection\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _))
-                            $ _)
+                  $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _
+                      $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _
+                          $ (Const(\<^const_name>\<open>MAKE_from_RAW\<close>, _) $ T))
                       $ _))
                 => T
              | X => X)
@@ -208,11 +200,9 @@ fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint
            (Const(\<^const_name>\<open>HOL.All\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _)
                   $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ Px)
-                  $ (Const(\<^const_name>\<open>Action_Tag\<close>, _)
-                      $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _
-                            $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ fx $ _))
-                            $ _)
-                      $ _)) = [Px, fx]
+                  $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _
+                      $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ fx $ _))
+                      $ _ )) = [Px, fx]
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (
@@ -224,7 +214,6 @@ fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
                   (Conv.top_rewrs_conv [rewr_ant] ctxt)
                   (let val sctxt = Expansion.equip ctxt addsimps (#equations phi)
                     in Phi_Reasoners.asm_rewrite false sctxt
-                       #> @{print}
                    end))
 
       val mode_infer = not (is_some hint0)
@@ -239,9 +228,7 @@ fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
                       (Simplifier.rewrite sctxt)
                       (Phi_Syntax.transformation_conv
                           Conv.all_conv
-                          (Phi_Syntax.ExSet_conv (fn (_, ctxt) =>
-                              Phi_Syntax.Subjection_conv Conv.all_conv (Simplifier.rewrite ctxt)
-                              ) sctxt)
+                          (Conv.arg1_conv (Simplifier.rewrite sctxt))
                           Conv.all_conv) ctm
                 end
               ) ctxt)) ctxt)
@@ -253,13 +240,8 @@ fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
               of _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ Abs (_, _,
                       \<^Const>\<open>HOL.implies\<close>
                         $ (\<^Const>\<open>Premise\<close> $ _ $ P)
-                        $ (\<^Const>\<open>Action_Tag\<close>
-                            $ (\<^Const>\<open>Transformation _\<close>
-                                 $ _
-                                 $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _,
-                                      \<^Const>\<open>Subjection _\<close> $ _ $ (\<^Const>\<open>HOL.eq _\<close> $ _ $ f)))
-                                 $ _)
-                            $ _)))
+                        $ (\<^Const>\<open>Transformation _\<close> $ _ $ (\<^Const>\<open>\<phi>Type _ _\<close> $ f $ _) $ _ )
+                      ))
                    => (case (P,f) of (Var vP $ _ , Var vf $ _) =>
                                     instantiate_the_var (vP,vf) ctxt sequent
                                  |> oblg_solver (#proof_id phi ^ "/" ^ name) ctxt

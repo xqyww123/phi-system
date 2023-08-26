@@ -1205,7 +1205,7 @@ lemma [\<phi>reason 1000]:
   unfolding Abstract_Domain\<^sub>M\<^sub>C\<^sub>L_def Action_Tag_def Inhabited\<^sub>M\<^sub>C_def
   by simp
 
-lemma Itself_E[\<phi>reason 20]:
+lemma Itself_E[\<phi>reason default 10]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<close>
   unfolding Transformation_def Premise_def by simp
 

@@ -26,8 +26,8 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-     
+declare [[\<phi>trace_reasoning = 3]]
+
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
@@ -36,7 +36,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Basic
        and Functionality
        and Open_Abstraction_Full
-       and \<open>local_inverse Rng f g \<Longrightarrow> \<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> c \<in> Rng \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f c \<Ztypecolon> \<phi>Fun g @action to (\<phi>Fun g))\<close>
+       and Construct_Abstraction_from_Raw
 
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -146,6 +146,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
     and Functionality
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
+    and Construct_Abstraction_from_Raw
 
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
@@ -155,9 +156,7 @@ text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation fun
 
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
-
-declare [[\<phi>trace_reasoning = 0]]
-   
+          
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
@@ -172,8 +171,7 @@ declare [[\<phi>trace_reasoning = 0]]
                       (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
        and Open_Abstraction_Full
-       and Construct_Abstraction_from_Raw
-
+       and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
@@ -469,8 +467,6 @@ lemma [\<phi>reason 1000]:
 
 
 subsection \<open>Vertical Composition\<close>
-
-declare [[\<phi>trace_reasoning = 1]]
  
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
@@ -520,6 +516,12 @@ lemma [\<phi>reason 1000]:
   unfolding Transformation_def Action_Tag_def
   by clarsimp  blast
 
+lemma [\<phi>reason 1000]:
+  \<open> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m \<Ztypecolon> T
+\<Longrightarrow> m \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U
+\<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<Zcomp> U \<close>
+  unfolding Action_Tag_def Transformation_def Premise_def
+  by clarsimp blast
    
 lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> B) P \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) Q \<or>\<^sub>c\<^sub>u\<^sub>t (\<forall>x. Identity_Element\<^sub>I (x \<Ztypecolon> B) P) \<and> Q = True
@@ -712,6 +714,14 @@ declare [[\<phi>trace_reasoning = 0]]
           \<Longrightarrow> Identity_Element\<^sub>I (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) (P \<or> Q)\<close>
        and \<open>  Identity_Element\<^sub>E (1 \<Ztypecolon> T) \<or> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<or>\<^sub>\<phi> U) \<close>
+       and \<open> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) \<and> y = undefined \<or>\<^sub>c\<^sub>u\<^sub>t
+             (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U) \<and> x = undefined
+          \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x,y) \<Ztypecolon> T \<or>\<^sub>\<phi> U \<close>
+
+(*       and \<open>\<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x = f c @action to T)
+        \<Longrightarrow> \<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> Q c \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> U \<s>\<u>\<b>\<j> x. x = g c @action to U)
+        \<Longrightarrow> \<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<or> Q c \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<or>\<^sub>\<phi> U \<s>\<u>\<b>\<j> y. y = (f c, g c) @action to (T \<or>\<^sub>\<phi> U))\<close>*)
+
 
 subsubsection \<open>Configurations\<close>
 
@@ -726,7 +736,9 @@ let_\<phi>type \<phi>Union deriving \<open>Object_Equiv (\<circle> \<or>\<^sub>\
 
 
 subsection \<open>Embedding Additive Conjunction\<close>
-     
+
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
   deriving Basic
@@ -746,6 +758,11 @@ subsection \<open>Embedding Additive Conjunction\<close>
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
        and Functional_Transformation_Functor
+       and (*Construct_Abstraction_from_Raw (*TODO:simplification*)*)
+          \<open> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T
+        \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U
+        \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x,y) \<Ztypecolon> T \<and>\<^sub>\<phi> U \<close>
+
      (*DO NOT REMOVE, they are right but I'm thinking if we really should support so much additive conjunction
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A = A' \<Longrightarrow>
               Transformation_Functor ((\<and>\<^sub>\<phi>) A) ((\<and>\<^sub>\<phi>) A') Basic_BNFs.snds (\<lambda>_. UNIV) (rel_prod (=))\<close>
@@ -792,6 +809,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and Open_Abstraction_Full
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
+       and Construct_Abstraction_from_Raw
+
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
 
@@ -940,6 +959,7 @@ subsubsection \<open>Empty List\<close>
        and Functionality
        and Open_Abstraction_Full
        and Identity_Element
+       and Construct_Abstraction_from_Raw
 
 
 subsection \<open>Empty Type of Free Objects\<close>
@@ -1054,6 +1074,7 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Itself)\<close>
   deriving Basic
+       and Construct_Abstraction_from_Raw
 
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -1064,17 +1085,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Open_Abstraction_Full
        and Functionality
        and Trivial_\<Sigma>
-
-
-(*
-TODO!
-lemma [\<phi>reason 1200]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> k = k'
-\<Longrightarrow> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> 1(k := v) \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> k' \<^bold>\<rightarrow> T \<w>\<i>\<t>\<h> P\<close>
-  by (clarsimp simp add: \<phi>expns Transformation_def, blast)
-
-*)
+       and Construct_Abstraction_from_Raw
 
 subsubsection \<open>By List of Keys\<close>
 
@@ -1088,6 +1099,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Trivial_\<Sigma>
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
+       and Construct_Abstraction_from_Raw
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
@@ -1143,6 +1155,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_Identity
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        (*Semimodule_LDistr_Homo\<^sub>Z*)
+       and Construct_Abstraction_from_Raw
 
 term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
 

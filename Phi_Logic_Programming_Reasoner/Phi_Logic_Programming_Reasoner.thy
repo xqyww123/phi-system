@@ -135,6 +135,7 @@ lemma Action_Tag_I:
 section \<open>Introduction\<close>
 
 ML_file_debug \<open>library/reasoner.ML\<close>
+ML_file \<open>library/tools/helpers1.ML\<close>
 
 declare \<r>Guard_I [\<phi>reason 1000]
         Ant_Seq_I[\<phi>reason 1000]
