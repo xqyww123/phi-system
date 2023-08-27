@@ -81,11 +81,11 @@ lemma [\<phi>reason no explorative backtrack 0]:
 
 paragraph \<open>Reasoning Hierarchy\<close>
 
-lemmas [\<phi>reason 20] =
+lemmas [\<phi>reason default 20] =
         closed_homo_sep.intro
         homo_sep.intro
 
-lemma [\<phi>reason 10]:
+lemma [\<phi>reason default 10]:
   \<open> closed_homo_sep_disj \<psi>
 \<Longrightarrow> homo_sep_disj \<psi>\<close>
   unfolding homo_sep_disj_def closed_homo_sep_disj_def

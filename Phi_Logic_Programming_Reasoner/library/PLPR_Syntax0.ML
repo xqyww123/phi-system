@@ -32,7 +32,8 @@ fun guardize ctxt =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ P =>
             (case P of Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _ => Conv.all_conv ctm
-                     | _ => Conv.arg_conv (Conv.rewr_conv @{thm' \<r>Guard_def[symmetric]}) ctm)
+                     | _ => Conv.arg_conv (Conv.rewr_conv (
+                              Thm.transfer' ctxt @{thm' \<r>Guard_def[symmetric]})) ctm)
            | _ => (Phi_Conv.atomize_conv ctxt then_conv conv) ctm
       fun move_and_merge_ants N ctm =
         case N of 0 => Conv.all_conv ctm
@@ -61,7 +62,7 @@ fun reduce_constant_True ctm =
      | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _,
           Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _)) =>
           Conv.rewr_conv @{lemma \<open>(\<And>x. True) \<equiv> Trueprop True\<close>
-                              by (rule, simp) } ctm
+                              by (rule, simp) } ctm (*TODO!*)
      | _ => Conv.all_conv ctm
 
 fun reduce_constant_True_left ctm =
@@ -71,18 +72,62 @@ fun reduce_constant_True_left ctm =
                               by (rule, simp) } ctm
      | _ => Conv.all_conv ctm
 
+fun elim_leading_All ctxt rule =
+  let fun rename_all2 NONE rule = rule
+        | rename_all2 (SOME (N1, N2)) rule =
+            let val (A1 $ Abs (_, T1, A2 $ Abs (_, T2, X))) = Thm.prop_of rule
+             in Thm.renamed_prop (A1 $ Abs (N1, T1, A2 $ Abs (N2, T2, X))) rule
+            end
+      fun conv ctxt ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ =>
+              (Conv.rewr_conv @{thm' meta_Ball_def} then_conv
+               Phi_Conv.meta_all_conv (conv o snd) ctxt) ctm
+           | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ (Const(\<^const_name>\<open>Pure.all\<close>, _) $ _) =>
+              (Conv.rewr_conv Drule.norm_hhf_eq then_conv conv ctxt) ctm
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _,
+                (Const(\<^const_name>\<open>meta_case_prod\<close>, _) $ B $ _)) =>
+              let val names = case B of Abs (N,_,Abs (N',_,_)) => SOME (N,N') | _ => NONE
+                  val rule = @{lemma' \<open>(\<And>x. PROP meta_case_prod P x) \<equiv> (\<And>a b. PROP P a b)\<close>
+                                  by (simp add: split_paired_all)}
+               in rename_all2 names (Conv.rewr_conv rule ctm)
+              end
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, Const(\<^const_name>\<open>Trueprop\<close>, _) $ 
+                (Const(\<^const_name>\<open>case_prod\<close>, _) $ B $ _)) =>
+              let val names = case B of Abs (N,_,Abs (N',_,_)) => SOME (N,N') | _ => NONE
+                  val rule = @{lemma' \<open>(\<And>x. case_prod P x) \<equiv> (\<And>a b. P a b)\<close>
+                                  by (simp add: split_paired_all)}
+               in rename_all2 names (Conv.rewr_conv rule ctm)
+              end
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
+              Phi_Conv.meta_all_conv (conv o snd) ctxt ctm
+   in rule
+  end
+
 fun rulify_antecedent deep =
-  let fun conv ctxt ctm =
+  let fun rulify_case_prods ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
             (case X
-               of Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
+               of Const(\<^const_name>\<open>case_prod\<close>, _) $ _ $ _ =>
+                    (Conv.rewr_conv @{thm' atomize_case_prod[symmetric]} then_conv
+                     Phi_Conv.meta_case_prod_conv (rulify_case_prods o snd) Conv.all_conv ctxt) ctm
+            )
+      fun conv ctxt ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
+            (case X
+               of Const(\<^const_name>\<open>HOL.All\<close>, _) $ A =>
                     (Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
                      Phi_Conv.meta_all_conv (conv o snd) ctxt then_conv
                      reduce_constant_True) ctm
                 | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
                     (Conv.rewr_conv @{thm' atomize_imp[symmetric]} then_conv
                      Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) then_conv
+                     reduce_constant_True) ctm
+                | Const(\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ F =>
+                    (Conv.rewr_conv @{thm' atomize_Ball[symmetric]} then_conv
+                     Phi_Conv.meta_ball_conv Conv.all_conv (conv o snd) ctxt then_conv
                      reduce_constant_True) ctm
                 | _ => if deep then Phi_Conv.iso_rulify_conv ctxt ctm
                        else Conv.all_conv ctm)
@@ -92,7 +137,6 @@ fun rulify_antecedent deep =
   end
 
 
-(*the inverse operation of rulify_antecedent roughly if we don't consider the constant True antecedent*)
 fun atomize_antecedent deep =
   let fun conv ctxt ctm =
         case Thm.term_of ctm

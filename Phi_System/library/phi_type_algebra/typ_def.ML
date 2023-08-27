@@ -126,6 +126,7 @@ val add_type : def * Position.T * derivings * Bundle.name list -> generic_theory
 
 val is_phi_term : phi_type -> term -> bool (*ignores type*)
 val is_Type_Opr : typ -> bool
+val is_non_parameterized_phityp : typ -> bool
 val assert_Type_Opr : typ -> unit
 val assert_first_parameter_is_type : typ -> unit
     (*note the T below is a \<phi>-type parameter*)
@@ -713,19 +714,19 @@ fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
 val separate_type_operator_and_its_parameter_safe =
   gen_separate_type_operator_and_its_non_parameter (can dest_parameterized_phi_ty o Term.fastype_of)
 
-fun is_non_parameterized tm =
-  case try dest_parameterized_phi_ty (Term.fastype_of tm)
+fun is_non_parameterized_phityp typ =
+  case try dest_parameterized_phi_ty typ
     of SOME ([],_,_) => true
      | _ => false
 
 val separate_type_operator_and_its_non_parameterized_parameter_safe =
-  gen_separate_type_operator_and_its_non_parameter is_non_parameterized
+  gen_separate_type_operator_and_its_non_parameter (is_non_parameterized_phityp o Term.fastype_of)
 
-val separate_tyop_semimodule_and_its_non_parameterized =
-  gen_separate_type_operator_and_its_non_parameter is_non_parameterized
-    #> maps (fn (T, Fc) =>
-          gen_separate_type_operator_and_its_non_parameter (K true) Fc
-            |> map (fn (c, F) => (T, c, F)))
+fun separate_tyop_semimodule_and_its_non_parameterized tm = tm
+  |> gen_separate_type_operator_and_its_non_parameter (is_non_parameterized_phityp o Term.fastype_of)
+  |> maps (fn (T, Fc) =>
+        gen_separate_type_operator_and_its_non_parameter (K true) Fc
+          |> map (fn (c, F) => (T, c, F)))
 
 
 fun warn_separate_type_operator f FT_term =

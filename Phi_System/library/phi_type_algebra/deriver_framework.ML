@@ -1336,23 +1336,43 @@ fun default_reasoning_configure extractions
   end
 
 fun default_reasoning always_diverge_disj configure varify reasoner =
-let fun has_disj_ants th =
+let fun has_disj_ants ctxt th =
       let val no_schematic_in_concl = Thm.maxidx_of_cterm (Thm.cconcl_of th) = ~1
-          fun give rule =
-                if always_diverge_disj orelse no_schematic_in_concl
-                then SOME rule else NONE
-          fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
-            | chk (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) = give @{thm' disjE}
-            | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) $ _)
-                = give @{lemma \<open> P \<or> Q @action A \<Longrightarrow> (P @action A \<Longrightarrow> C) \<Longrightarrow> (Q @action A \<Longrightarrow> C) \<Longrightarrow> C \<close>
-                            by (unfold Action_Tag_def Orelse_shortcut_def, blast)}
-            | chk (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _)
-                = give @{thm' disjE[folded Orelse_shortcut_def]}
-            | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _) $ _)
-                = give @{lemma \<open> P \<or>\<^sub>c\<^sub>u\<^sub>t Q @action A \<Longrightarrow> (P @action A \<Longrightarrow> C) \<Longrightarrow> (Q @action A \<Longrightarrow> C) \<Longrightarrow> C \<close>
-                            by (unfold Action_Tag_def Orelse_shortcut_def, blast)}
-            | chk _ = NONE
-       in get_first chk (#2 (Phi_Help.strip_meta_hhf (fst (Logic.dest_implies (Thm.prop_of th)))))
+          fun check ctm =
+            case Thm.term_of ctm
+              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => check (Thm.dest_arg ctm)
+               | Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => SOME @{thm' disjE}
+               | Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _ => SOME @{thm' disjE[folded Orelse_shortcut_def]}
+               | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+                  let val (A,B) = (Thm.dest_arg1 ctm, Thm.dest_arg ctm)
+                   in case check (Thm.dest_arg1 ctm)
+                   of SOME tha =>
+                        SOME (tha COMP_INCR \<^instantiate>\<open>B in
+                                  lemma \<open>\<And>P X Y C. (P \<Longrightarrow> (X \<Longrightarrow> C) \<Longrightarrow> (Y \<Longrightarrow> C) \<Longrightarrow> C)
+                                                \<Longrightarrow> (P \<and> B \<Longrightarrow> (X \<and> B \<Longrightarrow> C) \<Longrightarrow> (Y \<and> B \<Longrightarrow> C) \<Longrightarrow> C)\<close>
+                                     by blast\<close>)
+                    | NONE =>
+                  (case check (Thm.dest_arg ctm)
+                     of SOME thb =>
+                        SOME (thb COMP_INCR \<^instantiate>\<open>A in
+                                  lemma \<open>\<And>P X Y C. (P \<Longrightarrow> (X \<Longrightarrow> C) \<Longrightarrow> (Y \<Longrightarrow> C) \<Longrightarrow> C)
+                                                \<Longrightarrow> (A \<and> P \<Longrightarrow> (A \<and> X \<Longrightarrow> C) \<Longrightarrow> (A \<and> Y \<Longrightarrow> C) \<Longrightarrow> C)\<close>
+                                     by blast\<close>)
+                      | NONE => NONE)
+                  end
+               | Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ _ =>
+                  check (Thm.dest_arg1 ctm)
+                    |> Option.map (fn rule =>
+                        let val X = Thm.dest_arg ctm
+                         in rule COMP_INCR
+                            \<^instantiate>\<open>X in lemma \<open>\<And>P A C B. (P \<Longrightarrow> (A \<Longrightarrow> C) \<Longrightarrow> (B \<Longrightarrow> C) \<Longrightarrow> C)
+                                                \<Longrightarrow> (P @action X \<Longrightarrow> (A @action X \<Longrightarrow> C) \<Longrightarrow> (B @action X \<Longrightarrow> C) \<Longrightarrow> C) \<close>
+                                              by (unfold Action_Tag_def, blast)\<close>
+                        end)
+               | _ => NONE
+       in if always_diverge_disj orelse no_schematic_in_concl
+       then get_first check (#2 (Phi_Help.strip_meta_hhf_c (Thm.dest_arg1 (Thm.cprop_of th)) ctxt))
+       else NONE
       end
 
 fun reasoning ctxt0 sequent0 =
@@ -1361,7 +1381,7 @@ fun reasoning ctxt0 sequent0 =
      | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
               reasoning ctxt0 (@{thm' allI} RS sequent0)
      | _ =>
-  case has_disj_ants sequent0
+  case has_disj_ants ctxt0 sequent0
     of SOME erule =>
        Seq.hd (Thm.biresolution (SOME ctxt0) true [(true, erule)] 1 sequent0)
         |> reasoning ctxt0

@@ -38,6 +38,12 @@ val _ = Theory.setup (Context.theory_map (
           map_filter (mk_rule @{thm' Type_Variant_of_the_Same_Type_Operator2_I} o #3)
             (separate_tyop_semimodule_and_its_non_parameterized (Thm.term_of ctm))
 
+        fun mk_variant_of_scalar_mul (F $ _ $ T) =
+              if can Term.fastype_of T andalso is_non_parameterized_phityp (Term.fastype_of T)
+              then the_list (mk_rule @{thm' Type_Variant_of_the_Same_Scalar_Mul_I} F)
+              else []
+          | mk_variant_of_scalar_mul _ = []
+
       (*fun mk_parameter_variants tm =
           let val d = Thm.maxidx_of_cterm tm + 1
               val tm' = Thm.incr_indexes_cterm d tm
@@ -48,7 +54,7 @@ val _ = Theory.setup (Context.theory_map (
 
         val rules = mk_variant_of_type_operator  ctm (*@ mk_parameter_variants ctm*)
                   @ mk_variant_of_type_operator2 ctm
-        val _ = @{print} rules
+                  @ mk_variant_of_scalar_mul (Thm.term_of ctm)
      in thy
      |> Phi_Reasoner.add_rules (
           map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT, 1000, [], [], NONE)) rules)

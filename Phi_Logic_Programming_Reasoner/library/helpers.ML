@@ -204,6 +204,8 @@ val unprotect_conv : conv
 
 val inverse_eta_conv : conv
 val quant_conv : string -> (cterm * Proof.context -> conv) -> Proof.context -> conv
+val meta_case_prod_conv : ((cterm * cterm) * Proof.context -> conv) -> conv -> Proof.context -> conv
+val meta_ball_conv : conv -> (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_alls_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
@@ -257,16 +259,33 @@ fun inverse_eta_conv ctm =
                           inverse_eta
      | _ => raise CTERM ("inverse_eta_conv: not a function", [ctm])
 
+fun abs_conv cv ctxt ctm =
+  case Thm.term_of ctm
+    of Abs _ => Conv.abs_conv cv ctxt ctm
+     | _ => (inverse_eta_conv then_conv Conv.abs_conv cv ctxt) ctm
+
 fun meta_all_conv cv ctxt ct =
   (case Thm.term_of ct of
-    Const ("Pure.all", _) $ Abs _ => arg_conv (abs_conv cv ctxt) ct
-  | Const ("Pure.all", _) $ _ => arg_conv (inverse_eta_conv then_conv abs_conv cv ctxt) ct
+    Const ("Pure.all", _) $ _ => arg_conv (abs_conv cv ctxt) ct
   | _ => raise CTERM ("meta_all_conv", [ct]))
 
 fun meta_alls_conv cv ctxt ctm =
   case Thm.term_of ctm
     of Const ("Pure.all", _) $ _ => meta_all_conv (meta_alls_conv cv o snd) ctxt ctm
      | _ => cv ctxt ctm
+
+fun meta_ball_conv cs cv ctxt ctm =
+  (case Thm.term_of ctm of
+    Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ =>
+        combination_conv (arg_conv cs) (abs_conv cv ctxt) ctm
+  | _ => raise CTERM ("meta_all_conv", [ctm]))
+
+fun meta_case_prod_conv cv cx ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>meta_case_prod\<close>, _) $ _ $ _ =>
+        combination_conv (arg_conv (abs_conv (fn (x,ctxt) =>
+              abs_conv (fn (y,ctxt) => cv ((x,y), ctxt)) ctxt) ctxt)) cx ctm
+     | _ => raise CTERM ("meta_case_prod_conv", [ctm])
 
 fun is_strict_reflexive th = (op =) (Logic.dest_equals (Thm.prop_of th))
   handle TERM _ => false;

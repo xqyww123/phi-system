@@ -55,11 +55,6 @@ end\<close>
 ML_file \<open>library/imporved_net.ML\<close>
 ML_file \<open>library/tools/ml_thms.ML\<close>
 ML_file \<open>library/pattern.ML\<close>
-ML_file \<open>library/helpers.ML\<close>
-ML_file \<open>library/tools/Hook.ML\<close>
-ML_file \<open>library/handlers.ML\<close>
-ML_file \<open>library/pattern_translation.ML\<close>
-ML_file \<open>library/tools/simpset.ML\<close>
 
 subsubsection \<open>Guard of Reasoning Rule\<close>
 
@@ -81,8 +76,202 @@ lemma \<r>Guard_reduct[simp]:
   \<open>\<r>Guard True \<equiv> True\<close>
   unfolding \<r>Guard_def .
 
+subsubsection \<open>General Annotation\<close>
+
+typedecl action
+
+definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [10,10] 9)
+  where \<open>Action_Tag P A \<equiv> P\<close>
+
+lemma Action_Tag_I:
+  \<open>P \<Longrightarrow> P @action A\<close>
+  unfolding Action_Tag_def .
+
+
+subsubsection \<open>General Mode\<close>
+
+text \<open>Modes are general annotations used in various antecedents, which may configure
+  for the specific reasoning behavior among slight different options.
+  The exact meaning of them depend on the specific antecedent using them.
+  An example can be found in \cref{sec:proof-obligation}.\<close>
+
+type_synonym mode = action
+
+text \<open>We provide a serial of predefined modes, which may be commonly useful.\<close>
+
+consts default :: mode
+consts MODE_SIMP :: mode \<comment> \<open>relating to simplification\<close>
+consts MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
+consts MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close>
+
+
+subsubsection \<open>Annotations for Proof Obligations\<close>
+
+definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,27] 26)
+  where "Premise mode x \<equiv> x"
+
+(*TODO: increase the syntactic priority to 40*)
+abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
+  where "Normal_Premise \<equiv> Premise default"
+abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [27] 26)
+  where "Simp_Premise \<equiv> Premise MODE_SIMP"
+abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27] 26)
+  where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
+
+
+text \<open>
+  \<^prop>\<open>Premise mode P\<close> represents an ordinary proposition has to be proved during the reasoning.
+  There are different modes expressing different roles in the reasoning.
+
+  \<^descr> \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is a \<^emph>\<open>guard\<close> of a rule, which constrains that the rule is appliable only
+  when \<^prop>\<open>P\<close> can be solved \<^emph>\<open>automatically\<close> during the reasoning.
+  If \<^prop>\<open>P\<close> fails to be solved, even if it is actually valid, the rule will not be applied.
+  Therefore, \<^prop>\<open>P\<close> has to be as simple as possible. The tactic used to solve \<^prop>\<open>P\<close> is
+  @{method clarsimp}.
+  A more powerful tactic like @{method auto} is not adoptable because the tactic must be safe and
+  non-blocking commonly.
+  A blocking search branch blocks the whole reasoning, which is not acceptable.
+
+  \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is not for proof obligations that are intended to be solved by users.
+  It is more like 'controller or switch' of the rules, i.e. \<^emph>\<open>guard\<close>.
+
+  \<^descr> \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> represents a proof obligation.
+  Proof obligations in reasoning rules should be represented by it.
+
+  \<^descr> \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> by contrast
+  represents proof obligations \<open>Q\<close> that are ready to be solved by user (or by automatic tools).
+\<close>
+text \<open>
+  The difference between \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> and \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> is subtle:
+  In a reasoning process, many reasoning rules may be applied, which may generate many
+  \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>.
+  The engine tries to solve \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> automatically but if it fails the search branch
+  would be stuck. Because the search has not been finished, it is bad to ask users' intervention
+  to solve the goal because the search branch may high-likely fail later.
+  It is \<^emph>\<open>not ready\<close> for user to solve \<open>P\<close> here, and suggestively \<open>P\<close> should be deferred to
+  an ideal moment for user solving obligations.
+  This is `ideal moment' is \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>. If any \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> exists in the antecedents
+  of the sequent, the engine contracts \<open>P\<close> into the latest \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>, e.g., from
+  \[ \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> A1 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q' \<Longrightarrow> \<cdots> \<close> \]
+  it deduces
+  \[ \<open>A1 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<and> P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q' \<Longrightarrow> \<cdots> \<close> \]
+  In short, \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> collects obligations generated during a reasoning process,
+  and enables user to solve them at an idea moment.
+
+  A typical reasoning request (the initial reasoning state namely the argument of the reasoning
+  process) is of the following form,
+ \[ \<open>Problem \<Longrightarrow> \<r>Success \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> Conclusion\<close> \]
+  The \<open>True\<close> represents empty collection or none obligation.
+  If the reasoning succeeds, it returns sequent in form
+ \[ \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<and> P1 \<and> P2 \<and> \<cdots> \<Longrightarrow> Conclusion\<close> \]
+  where \<open>P1, P2, \<cdots>\<close> are obligations generated by reasoning \<open>Problem\<close>.
+  And then, user may solve the obligations manually or by automatic tools.
+
+  For antecedent \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>,
+  if there is another \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q'\<close> in the remaining antecedents,
+  the reasoner also defer \<open>Q\<close> to \<open>Q'\<close>, just like \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> is a \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close>.
+
+  If no \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q'\<close> exists in the remaining antecedents,
+  the reasoner of \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> and \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> raises
+  an error aborting the whole reasoning, because the reasoning request is not configured correctly.
+
+  Semantically, \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> represents a proof obligation \<open>Q\<close> intended to be addressed by
+  user. It can be deferred but the reasoner never attempts to solve \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> practically.
+
+  Nonetheless, we still provide tool for reasoning obligations automatically, albeit they have
+  to be called separately with the reasoning engine. See \<^verbatim>\<open>auto_obligation_solver\<close> and
+  \<^verbatim>\<open>safer_obligation_solver\<close> in \<^file>\<open>library/reasoners.ML\<close>.
+\<close>
+
+lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
+lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
+lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
+
+lemma [simp]:
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
+  unfolding Premise_def by simp+
+
+
+subsubsection \<open>Meta Ball\<close>
+
+definition meta_Ball :: \<open>'a set \<Rightarrow> ('a \<Rightarrow> prop) \<Rightarrow> prop\<close>
+  where \<open>meta_Ball S P \<equiv> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> S \<Longrightarrow> PROP P x)\<close>
+
+definition meta_case_prod :: \<open>('a \<Rightarrow> 'b \<Rightarrow> prop) \<Rightarrow> ('a \<times> 'b \<Rightarrow> prop)\<close>
+  where \<open>meta_case_prod f \<equiv> (\<lambda>x. f (fst x) (snd x))\<close>
+
+syntax
+  "_meta_Ball" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> prop \<Rightarrow> prop" ("(3\<And>(_/\<in>_)./ _)" [0, 0, 0] 0)
+
+translations
+  ("aprop") "_meta_Ball x A P" \<rightleftharpoons> ("aprop") "CONST meta_Ball A (\<lambda>x. P)"
+  ("aprop") "CONST meta_Ball A (\<lambda>(x,y,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_Ball A (CONST meta_case_prod (\<lambda>x (y, zs). P))"
+  ("aprop") "CONST meta_Ball A (\<lambda>(x,y). P)" \<rightleftharpoons> ("aprop") "CONST meta_Ball A (CONST meta_case_prod (\<lambda>x y. P))"
+  ("aprop") "CONST meta_case_prod (\<lambda>x (y,z,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_case_prod (\<lambda>x. CONST meta_case_prod (\<lambda>y (z,zs). P))"
+  ("aprop") "CONST meta_case_prod (\<lambda>x (y,zs). P)" \<rightleftharpoons> ("aprop") "CONST meta_case_prod (\<lambda>x. CONST meta_case_prod (\<lambda>y zs. P))"
+
+paragraph \<open>Basic Rules\<close>
+
+subparagraph \<open>meta_Ball\<close>
+
+lemma meta_Ball_I:
+  \<open> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> S \<Longrightarrow> PROP P x)
+\<Longrightarrow> PROP meta_Ball S P\<close>
+  unfolding meta_Ball_def .
+
+lemma meta_Ball_reduct[simp]:
+  \<open> PROP meta_Ball S (\<lambda>_. Trueprop True) \<equiv> Trueprop True \<close>
+  unfolding meta_Ball_def
+  by simp
+
+lemma meta_Ball_sing[simp]:
+  \<open> (\<And>x \<in> {y}. PROP P x) \<equiv> PROP P y \<close>
+  unfolding meta_Ball_def Premise_def by simp
+
+lemma Ball_for_reason:
+  \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> A \<Longrightarrow> P x)\<close>
+  unfolding atomize_imp atomize_all Ball_def Premise_def .
+
+lemma atomize_Ball:
+  \<open> (\<And>x\<in>S. P x) \<equiv> Trueprop (\<forall>x\<in>S. P x) \<close>
+  unfolding meta_Ball_def Premise_def Ball_def atomize_imp atomize_all .
+
+lemma sing_times_sing:
+  \<open>{a} \<times> {b} = {(a,b)}\<close>
+  unfolding set_eq_iff
+  by simp
+
+lemma sing_if:
+  \<open>(if c then {a} else {b}) = {if c then a else b}\<close>
+  by simp
+
+
+subparagraph \<open>meta_case_prod\<close>
+
+lemma atomize_case_prod:
+  \<open>meta_case_prod (\<lambda>x y. Trueprop (f x y)) x \<equiv> Trueprop (case_prod f x)\<close>
+  unfolding meta_case_prod_def
+  by (rule; cases x; simp)
+
+lemma meta_case_prod_simp[iff]:
+  \<open>meta_case_prod f (x,y) \<equiv> f x y\<close>
+  unfolding meta_case_prod_def by simp
+
+
+subsubsection \<open>ML Libraries - II\<close>
+
+ML_file \<open>library/helpers.ML\<close>
+ML_file \<open>library/tools/Hook.ML\<close>
+ML_file \<open>library/handlers.ML\<close>
+ML_file \<open>library/pattern_translation.ML\<close>
+ML_file \<open>library/tools/simpset.ML\<close>
 
 subsubsection \<open>Isomorphic Atomize\<close>
+
+ML \<open>\<^term>\<open>(\<forall>(a,b) \<in>S. T)\<close>\<close>
+
+thm split_paired_All
+term case_prod
 
 text \<open>The system \<open>Object_Logic.atomize\<close> and \<open>Object_Logic.rulify\<close> is not isomorphic in the sense
   that for any given rule \<open>R\<close>, \<open>Object_Logic.rulify (Object_Logic.atomize R)\<close> does not exactly
@@ -119,6 +308,8 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
 lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   \<open>PROP Pure.prop (Trueprop P) \<equiv> Trueprop (pure_prop_embed P)\<close>
   unfolding Pure.prop_def pure_prop_embed_def .
+
+declare atomize_Ball[iso_atomize_rules, symmetric, iso_rulify_rules]
 
 
 subsubsection \<open>Antecedent Sequence\<close>
@@ -158,19 +349,11 @@ lemma Ant_Seq_imp:
   by (rule; simp)
 
 
+subsubsection \<open>ML Library - III\<close>
+
 ML_file_debug \<open>library/PLPR_Syntax0.ML\<close>
 
 
-paragraph \<open>General Syntax of Annotation\<close>
-
-typedecl action
-
-definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [10,10] 9)
-  where \<open>Action_Tag P A \<equiv> P\<close>
-
-lemma Action_Tag_I:
-  \<open>P \<Longrightarrow> P @action A\<close>
-  unfolding Action_Tag_def .
 
 
 section \<open>Introduction\<close>
@@ -544,21 +727,6 @@ lemma Conv_Action_Tag_I:
 
 ML_file \<open>library/action_tag.ML\<close>
 
-subsubsection \<open>Mode\<close>
-
-text \<open>Modes are general annotations used in various antecedents, which may configure
-  for the specific reasoning behavior among slight different options.
-  The exact meaning of them depend on the specific antecedent using them.
-  An example can be found in \cref{sec:proof-obligation}.\<close>
-
-type_synonym mode = action
-
-text \<open>We provide a serial of predefined modes, which may be commonly useful.\<close>
-
-consts default :: mode
-consts MODE_SIMP :: mode \<comment> \<open>relating to simplification\<close>
-consts MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
-consts MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close>
 
 
 
@@ -733,91 +901,7 @@ lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
   raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent))\<close>
 
 
-subsection \<open>Proof Obligation \& Guard of Rule \label{sec:proof-obligation}\<close>
-
-definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[_] _ " [1000,27] 26)
-  where "Premise mode x \<equiv> x"
-
-(*TODO: increase the syntactic priority to 40*)
-abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
-  where "Normal_Premise \<equiv> Premise default"
-abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [27] 26)
-  where "Simp_Premise \<equiv> Premise MODE_SIMP"
-abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27] 26)
-  where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
-
-
-text \<open>
-  \<^prop>\<open>Premise mode P\<close> represents an ordinary proposition has to be proved during the reasoning.
-  There are different modes expressing different roles in the reasoning.
-
-  \<^descr> \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is a \<^emph>\<open>guard\<close> of a rule, which constrains that the rule is appliable only
-  when \<^prop>\<open>P\<close> can be solved \<^emph>\<open>automatically\<close> during the reasoning.
-  If \<^prop>\<open>P\<close> fails to be solved, even if it is actually valid, the rule will not be applied.
-  Therefore, \<^prop>\<open>P\<close> has to be as simple as possible. The tactic used to solve \<^prop>\<open>P\<close> is
-  @{method clarsimp}.
-  A more powerful tactic like @{method auto} is not adoptable because the tactic must be safe and
-  non-blocking commonly.
-  A blocking search branch blocks the whole reasoning, which is not acceptable.
-
-  \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is not for proof obligations that are intended to be solved by users.
-  It is more like 'controller or switch' of the rules, i.e. \<^emph>\<open>guard\<close>.
-
-  \<^descr> \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> represents a proof obligation.
-  Proof obligations in reasoning rules should be represented by it.
-
-  \<^descr> \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> by contrast
-  represents proof obligations \<open>Q\<close> that are ready to be solved by user (or by automatic tools).
-\<close>
-text \<open>
-  The difference between \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> and \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> is subtle:
-  In a reasoning process, many reasoning rules may be applied, which may generate many
-  \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>.
-  The engine tries to solve \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> automatically but if it fails the search branch
-  would be stuck. Because the search has not been finished, it is bad to ask users' intervention
-  to solve the goal because the search branch may high-likely fail later.
-  It is \<^emph>\<open>not ready\<close> for user to solve \<open>P\<close> here, and suggestively \<open>P\<close> should be deferred to
-  an ideal moment for user solving obligations.
-  This is `ideal moment' is \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>. If any \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> exists in the antecedents
-  of the sequent, the engine contracts \<open>P\<close> into the latest \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>, e.g., from
-  \[ \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> A1 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q' \<Longrightarrow> \<cdots> \<close> \]
-  it deduces
-  \[ \<open>A1 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<and> P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q' \<Longrightarrow> \<cdots> \<close> \]
-  In short, \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> collects obligations generated during a reasoning process,
-  and enables user to solve them at an idea moment.
-
-  A typical reasoning request (the initial reasoning state namely the argument of the reasoning
-  process) is of the following form,
- \[ \<open>Problem \<Longrightarrow> \<r>Success \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> Conclusion\<close> \]
-  The \<open>True\<close> represents empty collection or none obligation.
-  If the reasoning succeeds, it returns sequent in form
- \[ \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<and> P1 \<and> P2 \<and> \<cdots> \<Longrightarrow> Conclusion\<close> \]
-  where \<open>P1, P2, \<cdots>\<close> are obligations generated by reasoning \<open>Problem\<close>.
-  And then, user may solve the obligations manually or by automatic tools.
-
-  For antecedent \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>,
-  if there is another \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q'\<close> in the remaining antecedents,
-  the reasoner also defer \<open>Q\<close> to \<open>Q'\<close>, just like \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> is a \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close>.
-
-  If no \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q'\<close> exists in the remaining antecedents,
-  the reasoner of \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> and \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> raises
-  an error aborting the whole reasoning, because the reasoning request is not configured correctly.
-
-  Semantically, \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> represents a proof obligation \<open>Q\<close> intended to be addressed by
-  user. It can be deferred but the reasoner never attempts to solve \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> practically.
-
-  Nonetheless, we still provide tool for reasoning obligations automatically, albeit they have
-  to be called separately with the reasoning engine. See \<^verbatim>\<open>auto_obligation_solver\<close> and
-  \<^verbatim>\<open>safer_obligation_solver\<close> in \<^file>\<open>library/reasoners.ML\<close>.
-\<close>
-
-lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
-lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
-lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
-
-lemma [simp]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
-  unfolding Premise_def by simp+
+subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>
 
 subsubsection \<open>Implementation of the reasoners\<close>
 

@@ -173,7 +173,7 @@ fun strip_meta_hhf_c cterm ctxt =
     fun strip (V,P) (Const("Pure.imp", _) $ H $ B) ctm ctxt
           = strip (V, Thm.dest_arg1 ctm :: P) B (Thm.dest_arg ctm) ctxt
       | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) ctm ctxt
-          = let val ([name'],ctxt') = Variable.add_fixes [a] ctxt
+          = let val ([name'],ctxt') = Variable.variant_fixes [a] ctxt
                 val (v', B') = Thm.dest_abs_fresh name' (Thm.dest_arg ctm)
              in strip (v'::V,P) B B' ctxt'
             end
