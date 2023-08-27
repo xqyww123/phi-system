@@ -28,7 +28,10 @@ signature PHI_CONV = sig
 
 include PHI_CONV
 
-(* (P \<longrightarrow> Q1) \<and> (P \<longrightarrow> Q2) \<and> \<dots> \<and> (P --> Qn) *)
+(* (P \<longrightarrow> Q1) \<and> (P \<longrightarrow> Q2) \<and> \<dots> \<and> (P --> Qn)
+ --------------------------------------------
+   P \<longrightarrow> (Q1 \<and> Q2 \<and> ... \<and> Qn)
+ *)
 val zip_conjs : conv
 (*recursively for each nested implication*)
 val zip_conjs_recursively : conv

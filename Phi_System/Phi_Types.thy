@@ -811,10 +811,11 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Construct_Abstraction_from_Raw
 
+subsubsection \<open>Reasoning Rules\<close>
 
 text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> T\<close> as it in addition supports non-closed homomorphism.\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 2]]
 
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
@@ -827,16 +828,41 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp simp add: Ball_def; metis)
 
+
+subsection \<open>Vertical Composition of Scalar Multiplication\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+     
+\<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
+  where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
+  deriving Basic
+       and \<open> homo_one (f s) \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> P = True
+         \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) P \<close>
+       and \<open> homo_one (f s) \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T)
+         \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) \<close>
+       and Functionality
+       and Functional_Transformation_Functor
+       and Trivial_\<Sigma>
+       and Open_Abstraction_Full
+       and Construct_Abstraction_from_Raw
+       and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
+         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
+       and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
+
+subsubsection \<open>Reasoning Rules\<close>
+
+declare [[\<phi>trace_reasoning = 2]]
+
 lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
-\<Longrightarrow> Semimodule_Identity (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T \<close>
+\<Longrightarrow> Semimodule_Identity (\<phi>ScalarMul \<psi>) T \<close>
   unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def
   by (rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
-  \<open> \<g>\<u>\<a>\<r>\<d> module_scalar_assoc \<psi> Ds
-\<Longrightarrow> Semimodule_Scalar_Assoc (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds \<close>
-  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def \<r>Guard_def
+  \<open> module_scalar_assoc \<psi> Ds
+\<Longrightarrow> Semimodule_Scalar_Assoc (\<phi>ScalarMul \<psi>) T Ds \<close>
+  unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
 
 lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
@@ -845,9 +871,9 @@ lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Carrier_Set T D\<^sub>C
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<lambda>a. (\<Zcomp>\<^sub>f) (scalar_mult \<psi> a)) T Ds
-                            (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y) \<or> (D\<^sub>T y \<longrightarrow> eq y x \<and> Dx x \<and> D\<^sub>C x))
-                            (\<lambda>_ _. fst)\<close>
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<phi>ScalarMul \<psi>) T Ds
+                            (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
+                            (\<lambda>_ _. fst) \<close>
   unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
@@ -883,6 +909,7 @@ lemma Semimodule_LDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
+
 
 
 
@@ -1141,11 +1168,11 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
  
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (scalar_mult share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Separation_Monoid
+  deriving (*Separation_Monoid
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Open_Abstraction_Full
@@ -1154,8 +1181,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       (*Semimodule_LDistr_Homo\<^sub>Z*)
-       and Construct_Abstraction_from_Raw
+       and*) Semimodule_LDistr_Homo\<^sub>Z
+       (*and Construct_Abstraction_from_Raw*)
 
 term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
 

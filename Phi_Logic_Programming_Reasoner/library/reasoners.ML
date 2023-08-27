@@ -291,6 +291,7 @@ val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>premise_extraction\<c
 fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = is_syntactic_premise M
   | is_syntactic_premise (Const(\<^const_name>\<open>default\<close>, _)) = true
   | is_syntactic_premise (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+  | is_syntactic_premise (Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)) = true
   | is_syntactic_premise (Abs (_,_,X)) = is_syntactic_premise X
   | is_syntactic_premise (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_syntactic_premise X
   | is_syntactic_premise (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_syntactic_premise X
@@ -321,16 +322,25 @@ fun gen_extract_prems_rewr ctxt =
                             by (simp add: atomize_eq, blast)}
                      ))) L))
 
+      fun qchk_obj (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
+            qchk_obj A orelse qchk_obj B
+        | qchk_obj (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
+            qchk_obj A orelse qchk_obj B
+        | qchk_obj tm = not (null (match_extraction tm))
+
       fun quick_check (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check X
         | quick_check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = quick_check X
-        | quick_check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = quick_check X
-        | quick_check (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
-            quick_check A orelse quick_check B
-        | quick_check tm = not (null (match_extraction tm))
+        | quick_check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk_obj X
+        | quick_check _ = false
 
       fun extract ctxt ctm =
         case Thm.term_of ctm
-          of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+          of Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _ =>
+               let val eq1 = Conv.fun_conv (Conv.fun_conv (Conv.rewr_conv @{thm' Ant_Seq_def})) ctm
+                in extract ctxt (Thm.rhs_of eq1)
+                |> Option.map (Thm.transitive eq1)
+               end
+           | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
                (case (extract ctxt (Thm.dest_arg1 ctm), extract ctxt (Thm.dest_arg ctm))
                   of (SOME ruleA, SOME ruleB) =>
                       let val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> (Pa \<and> Pb) \<and> (A' \<and> B')\<close>

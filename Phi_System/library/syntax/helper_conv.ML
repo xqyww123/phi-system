@@ -6,13 +6,17 @@ val aggregate_imps : conv -> conv
 val expand_aggregated_imps : conv -> conv
 
 (*Converting \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<dots> \<Longrightarrow> An \<Longrightarrow> C\<close> to \<open>A1 \<and> A2 \<and> \<dots> \<and> An \<and> True \<Longrightarrow> C\<close>*)
+(*depreciated, use aggregate_imps_hol instead*)
 val aggregate_imps_obj : (Proof.context -> conv) -> Proof.context -> conv
 val expand_aggregated_imps_obj : (Proof.context -> conv) -> Proof.context -> conv
 
+
+(*depreciated
 (*for HOL only, no objectize.
 Converting \<open>A1 \<Longrightarrow> A2 \<Longrightarrow> \<dots> \<Longrightarrow> An \<Longrightarrow> C\<close> to \<open>A1 \<and> A2 \<and> \<dots> \<and> An \<and> True \<Longrightarrow> C*)
 val aggregate_imps_hol : conv -> conv
 val expand_aggregated_imps_hol : conv (*for Ai*) -> conv (*for C*) -> conv
+*)
 
 (*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
 val move_Ex_for_set_notation : simproc
@@ -59,6 +63,7 @@ fun expand_aggregated_imps_obj C ctxt ctm =
                           (expand_aggregated_imps_obj C ctxt)) ctm
      | _ => raise CTERM ("expand_aggregated_imps_obj", [ctm])
 
+(*
 fun aggregate_imps_hol C ctm =
  ((implies_conv C (aggregate_imps_hol C)
    then_conv rewr_conv @{thm conj_imp_eq_imp_imp[symmetric]})
@@ -74,16 +79,16 @@ fun expand_aggregated_imps_hol Cp Cc ctm =
              implies_conv Cp (expand_aggregated_imps_hol Cp Cc)) ctm
      | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
             (implies_conv Cp Cc) ctm
-     | _ => Cc ctm
+     | _ => Cc ctm*)
 
 (*\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b*)
 val move_Ex_for_set_notation =
   Simplifier.make_simproc \<^context> "Embed_into_Phi_Type.move_Ex" {
   lhss = [\<^term>\<open>\<exists>y. x = f y \<and> (\<exists>b. P y b)\<close>],
-  proc = fn m => fn ctxt => fn ctm =>
+  proc = fn _ => fn _ => fn ctm =>
     case Thm.term_of ctm
       of _ $ Abs (y, _, _ $ _ $ (_ $ Abs (b, _, _))) =>
-        let val ret = Conv.rewr_conv @{lemma \<open>\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b\<close>
+       (let val ret = Conv.rewr_conv @{lemma \<open>\<exists>y. x = f y \<and> (\<exists>b. P y b) \<equiv> \<exists>b y. x = f y \<and> P y b\<close>
                                           by (unfold atomize_eq, blast)} ctm
             val prop = case Thm.prop_of ret
                          of Eq $ LHS $ (Exb $ Abs (_, Tb, Exy $ Abs (_, Ty, Body))) =>
@@ -91,7 +96,7 @@ val move_Ex_for_set_notation =
                           | _ => raise CTERM ("",[])
          in SOME (Thm.renamed_prop prop ret)
         end
-        handle CTERM _ => NONE
+        handle CTERM _ => NONE)
        | _ => NONE
 }
 

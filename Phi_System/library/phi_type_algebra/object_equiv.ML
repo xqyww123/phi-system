@@ -186,12 +186,12 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
         end
 
       fun ind_conv step1 = default_ind_conv (
-                       fn ctxt => fn phi => fn ctm =>
-                        @{print}  ((Phi_Conv.may_action_tag_conv (Phi_Conv.hol_imp_conv Conv.all_conv (simp_conv step1 ctxt phi)) then_conv
-                            Conv.rewr_conv (if step1 then @{thm \<phi>TA_OE\<^sub>O_rewr_IH1} else @{thm \<phi>TA_OE\<^sub>O_rewr_IH2})) ctm),
-                       fn ctxt => fn phi => fn ctm =>
-                        @{print} ((Phi_Conv.may_action_tag_conv (Phi_Conv.hol_imp_conv Conv.all_conv (simp_conv step1 ctxt phi)) then_conv
-                            Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr}) ctm))
+                       fn ctxt => fn phi =>
+                         (Phi_Conv.may_action_tag_conv (Phi_Conv.hol_imp_conv Conv.all_conv (simp_conv step1 ctxt phi)) then_conv
+                            Conv.rewr_conv (if step1 then @{thm \<phi>TA_OE\<^sub>O_rewr_IH1} else @{thm \<phi>TA_OE\<^sub>O_rewr_IH2})),
+                       fn ctxt => fn phi =>
+                         (Phi_Conv.may_action_tag_conv (Phi_Conv.hol_imp_conv Conv.all_conv (simp_conv step1 ctxt phi)) then_conv
+                            Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr}))
 
       fun OEO_reasoning1 phi ctxt = default_reasoning false
             (default_reasoning_configure [])

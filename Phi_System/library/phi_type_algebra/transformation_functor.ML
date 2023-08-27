@@ -132,7 +132,8 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
                   of _ (*Trueprop*) $ (_ $ Var v) =>
                       Thm.instantiate (TVars.empty, Vars.make [(v, \<^cterm>\<open>True\<close>)]) rule
                    | _ => rule
-              val locale_rule = (rule' RS' (ctxt0, @{thm' Transformation_Functor_L.intro}))
+              val rule'2 = PLPR_Syntax.contract_leading_antecedents true (Thm.nprems_of rule') ctxt0 rule'
+              val locale_rule = (rule'2 RS' (ctxt0, @{thm' Transformation_Functor_L.intro}))
                               |> (fn th => case Thm.nprems_of th
                                              of 0 => set_prem_to_True th
                                               | 1 => Seq.hd (Thm.assumption (SOME ctxt0) 1 th)
@@ -174,7 +175,7 @@ fun guess_property_FTF phi0 ctxt0 =
       val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
       
-      val ant = Phi_Help.list_mk_conj ants
+      val ant = PLPR_Syntax.mk_ant_sequence ants
       val FTF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
                         of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                             \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>

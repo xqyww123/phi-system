@@ -1088,10 +1088,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                      of SOME ret => ret
                       | NONE => oblg_solver (#proof_id phi ^ "/" ^ name) ctxt rule'3)
                 |> simp (phi, Simps.enhance ctxt)
-                |> Conv.fconv_rule (
-                      Phi_Conv.expand_aggregated_imps_hol 
-                          (Phi_Conv.hol_alls_to_meta_alls (K Conv.all_conv) ctxt)
-                          Conv.all_conv)
+                |> PLPR_Syntax.unfold_antecedents false ctxt
                 |> singleton (Proof_Context.export ctxt ctxt0)
 
    in rule'4

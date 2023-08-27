@@ -300,14 +300,22 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
             | fold_pad f n [] x = fold_pad f (n-1) [] (f NONE x)
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
           val rule'1 = (0, Thm.transfer' ctxt' template)
-                    |> fold_pad (fn prop' => fn (i, thm) =>
+                    |> fold_pad (fn prop'' => fn (i, thm) =>
                         let (*datatype mode = Reason | Oblg | Normal*)
-                            val is_reasoning_goal =
+                            val (is_reasoning_goal, prop', thm'1) =
                                   case Logic.nth_prem (i+1, Thm.prop_of thm)
                                     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                           Const(\<^const_name>\<open>Action_Tag\<close>, _)
                                               $ _
-                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) => true
+                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) =>
+                                            (true, prop'', @{thm' Action_Tag_I} RSN (i+1, thm))
+                                     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) =>
+                                        (case prop'' of SOME prop' =>
+                                                (false,
+                                                 SOME (PLPR_Syntax.guardize ctxt' (Thm.nprems_of prop') prop'),
+                                                 @{thm' \<r>Guard_I} RSN (i+1, thm))
+                                            | _ => (false, prop'', thm)
+                                            )
                                    (*| Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                           Const(\<^const_name>\<open>Premise\<close>, _)
                                               $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)
@@ -316,12 +324,9 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                                                             | _ => false) P
                                         then Oblg
                                         else Normal*)
-                                     | _ => false
-                            val thm'1 = if is_reasoning_goal
-                                        then @{thm' Action_Tag_I} RSN (i+1, thm)
-                                        else thm
+                                     | _ => (false, prop'', thm)
                             val (delt,thm'2) = (case prop'
-                                                  of SOME prop => ((Thm.nprems_of prop, prop RSN (i+1, thm'1))
+                                                  of SOME prop => ((Thm.nprems_of prop, prop RSN' (ctxt', i+1, thm'1))
                                                        handle THM _ => let open Pretty in
                                                           raise Automation_Fail (fn () =>
                                                             [block (text "Unification fails in instantiating the" @
@@ -554,6 +559,7 @@ fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 c
            let val base = case get_prop_kinds L of [NONE] => [] | L => L
                fun dest (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest X
                  | dest (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) = dest X
+                 | dest (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = dest X
                  | dest X = X
             in case Term.head_of (dest TM)
             of Const (k, _) => if is_a_kind_of_property thy k then SOME k :: base else NONE :: base

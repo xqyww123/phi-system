@@ -14,9 +14,9 @@ theory Phi_Logic_Programming_Reasoner
   and "<simplify>" = "\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>"
 begin
 
-subsubsection \<open>Preliminaries\<close>
+subsection \<open>Preliminaries\<close>
 
-paragraph \<open>ML Libraries - I\<close>
+subsubsection \<open>ML Libraries - I\<close>
 
 setup \<open>
 let
@@ -61,7 +61,7 @@ ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 
-paragraph \<open>Guard of Reasoning Rule\<close>
+subsubsection \<open>Guard of Reasoning Rule\<close>
 
 text \<open>If the guard of a rule fails, the rule will be considered non-appliable, just like the case
   when pattern mismatchs. The difference lies in the cutting and backtracking behavior.
@@ -75,12 +75,53 @@ text \<open>If the guard of a rule fails, the rule will be considered non-applia
 definition \<r>Guard :: \<open>bool \<Rightarrow> bool\<close> ("\<g>\<u>\<a>\<r>\<d> _" [5] 5) where \<open>\<r>Guard X \<equiv> X\<close>
 
 lemma \<r>Guard_I: \<open>P \<Longrightarrow> \<r>Guard P\<close> unfolding \<r>Guard_def .
+lemma \<r>Guard_D: \<open>\<r>Guard P \<Longrightarrow> P\<close> unfolding \<r>Guard_def .
 
 lemma \<r>Guard_reduct[simp]:
   \<open>\<r>Guard True \<equiv> True\<close>
   unfolding \<r>Guard_def .
 
-paragraph \<open>Antecedent Sequence\<close>
+
+subsubsection \<open>Isomorphic Atomize\<close>
+
+text \<open>The system \<open>Object_Logic.atomize\<close> and \<open>Object_Logic.rulify\<close> is not isomorphic in the sense
+  that for any given rule \<open>R\<close>, \<open>Object_Logic.rulify (Object_Logic.atomize R)\<close> does not exactly
+  equal \<open>R\<close>. The section gives a way addressing this issue.\<close>
+
+ML_file \<open>library/iso_atomize.ML\<close>
+
+definition \<open>pure_imp_embed \<equiv> (\<longrightarrow>)\<close>
+definition pure_all_embed :: \<open>('a \<Rightarrow> bool) \<Rightarrow> bool\<close> (binder \<open>\<forall>\<^sub>e\<^sub>m\<^sub>b\<^sub>e\<^sub>d \<close> 10)
+    \<comment> \<open>We give it a binder syntax to prevent eta-contraction which
+        deprives names of quantifier variables\<close>
+  where \<open>pure_all_embed \<equiv> (All)\<close>
+definition \<open>pure_conj_embed \<equiv> (\<and>)\<close>
+definition \<open>pure_prop_embed x \<equiv> x\<close>
+definition \<open>pure_eq_embed \<equiv> (=)\<close>
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(X \<equiv> Y) \<equiv> Trueprop (pure_eq_embed X Y)\<close>
+  unfolding pure_eq_embed_def atomize_eq .
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(P \<Longrightarrow> Q) \<equiv> Trueprop (pure_imp_embed P Q)\<close>
+  unfolding atomize_imp pure_imp_embed_def .
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(P &&& Q) \<equiv> Trueprop (pure_conj_embed P Q)\<close>
+  unfolding atomize_conj pure_conj_embed_def .
+
+(*TODO: find a way to preserve the name*)
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>(\<And>x. P x) \<equiv> Trueprop (pure_all_embed (\<lambda>x. P x))\<close>
+  unfolding atomize_all pure_all_embed_def .
+
+lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
+  \<open>PROP Pure.prop (Trueprop P) \<equiv> Trueprop (pure_prop_embed P)\<close>
+  unfolding Pure.prop_def pure_prop_embed_def .
+
+
+subsubsection \<open>Antecedent Sequence\<close>
 
 definition Ant_Seq :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
   where \<open>Ant_Seq \<equiv> (\<and>)\<close>
@@ -117,7 +158,7 @@ lemma Ant_Seq_imp:
   by (rule; simp)
 
 
-ML_file \<open>library/PLPR_Syntax0.ML\<close>
+ML_file_debug \<open>library/PLPR_Syntax0.ML\<close>
 
 
 paragraph \<open>General Syntax of Annotation\<close>
@@ -468,45 +509,6 @@ section \<open>Predefined Antecedents, Reasoners, and Rules\<close>
 
 
 subsection \<open>Auxiliary Structures\<close>
-
-subsubsection \<open>Isomorphic Atomize\<close>
-
-text \<open>The system \<open>Object_Logic.atomize\<close> and \<open>Object_Logic.rulify\<close> is not isomorphic in the sense
-  that for any given rule \<open>R\<close>, \<open>Object_Logic.rulify (Object_Logic.atomize R)\<close> does not exactly
-  equal \<open>R\<close>. The section gives a way addressing this issue.\<close>
-
-ML_file \<open>library/iso_atomize.ML\<close>
-
-definition \<open>pure_imp_embed \<equiv> (\<longrightarrow>)\<close>
-definition pure_all_embed :: \<open>('a \<Rightarrow> bool) \<Rightarrow> bool\<close> (binder \<open>\<forall>\<^sub>e\<^sub>m\<^sub>b\<^sub>e\<^sub>d \<close> 10)
-    \<comment> \<open>We give it a binder syntax to prevent eta-contraction which
-        deprives names of quantifier variables\<close>
-  where \<open>pure_all_embed \<equiv> (All)\<close>
-definition \<open>pure_conj_embed \<equiv> (\<and>)\<close>
-definition \<open>pure_prop_embed x \<equiv> x\<close>
-definition \<open>pure_eq_embed \<equiv> (=)\<close>
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>(X \<equiv> Y) \<equiv> Trueprop (pure_eq_embed X Y)\<close>
-  unfolding pure_eq_embed_def atomize_eq .
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>(P \<Longrightarrow> Q) \<equiv> Trueprop (pure_imp_embed P Q)\<close>
-  unfolding atomize_imp pure_imp_embed_def .
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>(P &&& Q) \<equiv> Trueprop (pure_conj_embed P Q)\<close>
-  unfolding atomize_conj pure_conj_embed_def .
-
-(*TODO: find a way to preserve the name*)
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>(\<And>x. P x) \<equiv> Trueprop (pure_all_embed (\<lambda>x. P x))\<close>
-  unfolding atomize_all pure_all_embed_def .
-
-lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
-  \<open>PROP Pure.prop (Trueprop P) \<equiv> Trueprop (pure_prop_embed P)\<close>
-  unfolding Pure.prop_def pure_prop_embed_def .
-
 
 subsubsection \<open>Action\<close>
 
@@ -981,7 +983,7 @@ ML \<open>val a = @{lemma \<open>\<forall>x. x \<or> True\<close> by blast}
 
 paragraph \<open>Setup\<close>
 
-ML_file "library/reasoners.ML"
+ML_file_debug "library/reasoners.ML"
 
 ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
           Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)\<close>
@@ -1004,6 +1006,13 @@ ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
 lemma [\<phi>premise_extraction]:
   \<open>A = B \<equiv> (A = B) \<and> True\<close>
   unfolding atomize_eq by simp
+
+lemma [\<phi>premise_extraction]:
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<equiv> P \<and> True\<close>
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
+  \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
+  unfolding Premise_def
+  by simp_all
 
 (* TODO: re-enable!
 hide_fact contract_drop_waste contract_obligations contract_premise_all

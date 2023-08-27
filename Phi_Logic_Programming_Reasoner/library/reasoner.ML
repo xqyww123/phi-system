@@ -451,7 +451,7 @@ fun guarded_RS chk_guard (guarded,rule) ctxt thm =
   if guarded
   then single_RS' rule ctxt thm
     |> Option.mapPartial (fn th => 
-        let val (delt, th') = PLPR_Syntax.unfold_leading_antecedent ctxt (@{thm' \<r>Guard_I} RS th)
+        let val (delt, th') = PLPR_Syntax.unfold_leading_antecedent false ctxt (@{thm' \<r>Guard_I} RS th)
             val _ = info_pretty ctxt 2 (fn () => let open Pretty in
                       block [str "Checking", brk 1, str (string_of_int (delt+1)), brk 1, str "guards ..."]
                     end)
