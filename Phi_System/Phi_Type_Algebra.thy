@@ -1554,7 +1554,9 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
     interpret Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w True pred_mapper'w func_mapper'w
       using FTF . ;;
     apply_rule functional_transformation[where U=\<open>U \<^emph> R\<close> and f=\<open>\<lambda>x. f (x, undefined)\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
-    \<medium_left_bracket> Tr \<medium_right_bracket> ;;
+      note [[\<phi>trace_reasoning = 2]]
+      thm Tr
+    \<medium_left_bracket> ;;   Tr \<medium_right_bracket> ;;
     apply_Separation_Functor_unzip
   \<medium_right_bracket>
   \<medium_left_bracket> premises [] and [] and [] and []
@@ -3121,20 +3123,24 @@ hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr_IH \<phi>TA_TF_rewr_C \<phi>TA_TF_pa
 subsubsection \<open>Congruence in Function Definition\<close>
 
 lemma function_congruence_template:
-  \<open> Transformation_Functor F F D R M
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<subseteq> R x \<and> (\<forall>x y. M (=) x y \<longrightarrow> x = y)
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Transformation_Functor F F' D R M)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Transformation_Functor F' F D' R' M')
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<subseteq> R x \<and> (\<forall>x y. M (=) x y \<longrightarrow> x = y) \<and> (\<forall>x. D x = D' x) \<and>
+            D y \<subseteq> R' y \<and> (\<forall>x y. M' (=) x y \<longrightarrow> x = y)
 \<Longrightarrow> \<r>Success
+\<Longrightarrow> eqs
 \<Longrightarrow> x = y
-\<Longrightarrow> (\<And>a \<in> D x. T a = U a)
-\<Longrightarrow> F T x = F U y \<close>
+\<Longrightarrow> (\<And>a \<in> D y. T a = U a)
+\<Longrightarrow> F T x = F' U y \<close>
+  unfolding fun_eq_iff[symmetric, where f=D]
   unfolding Transformation_Functor_def Premise_def Transformation_def \<phi>Type_def BI_eq_iff
             subset_iff meta_Ball_def Ball_def
   apply clarify
   subgoal premises prems for u
     by (insert prems(1)[THEN spec[where x=T], THEN spec[where x=U], THEN spec[where x=y], THEN spec[where x=\<open>(=)\<close>]]
-               prems(1)[THEN spec[where x=U], THEN spec[where x=T], THEN spec[where x=y], THEN spec[where x=\<open>(=)\<close>]]
-               prems(3-6) ;
-        auto; blast) .
+               prems(2)[THEN spec[where x=U], THEN spec[where x=T], THEN spec[where x=y], THEN spec[where x=\<open>(=)\<close>]]
+               prems(4-);
+        clarsimp; rule; blast) .
   
 ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 

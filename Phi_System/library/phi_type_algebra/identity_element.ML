@@ -180,7 +180,7 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 40 ([],[]) NONE
                                               [Morphism.thm m rule'])
-            |> note_properties phi0 [(name, [rule'])]
+            |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']
   end
 

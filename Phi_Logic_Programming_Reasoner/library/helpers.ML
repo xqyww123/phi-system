@@ -22,6 +22,15 @@ val conj_intros: Proof.context -> thm list -> thm
 val conj_elim  : thm -> thm * thm
 val conj_elims : thm -> thm list
 
+val instantiate_higher_order_schematic_var' : int (*N*) -> Proof.context -> thm -> thm option (*returns none if no change*)
+val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
+(*For the leading N antecedents only, if there is any higher-order schematic variable
+which is applied to a constant argument instead of a bound variable as usual,
+instantiate the schematic variable to the constant function on that parameter, \<open>\<lambda>_. ?var\<close>.
+
+N = ~1 means all antecedents, N = ~2 means to consider the conclusion of the thm in addition.*)
+
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -193,6 +202,82 @@ fun conj_intros _ [] = @{thm' TrueI}
   | conj_intros ctxt L = foldr1 (uncurry (HOLogic.conj_intr ctxt)) L
 
 
+fun instantiate_higher_order_schematic_var' num ctxt thm =
+  let fun get_concl (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs(_,_,X)) = get_concl X
+        | get_concl (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_concl X
+        | get_concl X = X
+      fun mk_ins ant (escape,ins0) =
+        let
+          fun count ret (X $ _) = count (ret + 1) X
+            | count ret (Var v) = if member (op =) escape (fst v)
+                                  then (ret, NONE)
+                                  else (ret, SOME v)
+            | count ret _ = (ret, NONE)
+          val eq = ((op =) o apply2 fst)
+          fun eq' ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 = b2)
+          fun eqle ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 <= b2)
+          fun sift set (X as _ $ _) =
+               (case count 0 X
+                  of (N, SOME v) =>
+                      let fun visit (set,i) (X $ A) =
+                                if exists_subterm (fn Bound _ => true | _ => false) A
+                                then visit (sift (insert eq' (v,N-i) set) A, i+1) X
+                                else visit (sift set A, i+1) X
+                            | visit (set,_) _ = set
+                       in visit (insert eqle (v, ~1 - N) set,1) X end
+                   | _ =>
+                      let fun visit set (A $ B) = visit (sift set B) A
+                            | visit set X = sift set X
+                       in visit set X end)
+            | sift set (Abs(_,_,X)) = sift set X
+            | sift set (Var v) =
+                  if member (op =) escape (fst v)
+                  then set
+                  else insert eqle (v, ~1) set
+            | sift set _ = set
+          val set = sift [] ant
+          fun calc_arity ret ((v,n)::L) =
+                if n >= 0 orelse AList.defined eq ret v
+                then calc_arity ret L
+                else calc_arity ((v, fold (fn (v',m) => fn n' =>
+                        if fst v' = fst v andalso m < 0 andalso ~1-m < n' then ~1-m else n') L (~1-n)) :: ret) L
+            | calc_arity ret [] = ret
+         val arity = calc_arity [] set
+         fun forall_num n P = n < 0 orelse (P n andalso forall_num (n-1) P)
+         val ins = map_filter (fn (v,n) =>
+                if forall_num (n-1) (fn i => member eq' set (v,i))
+                then NONE
+                else let fun mk_term targs bs 0 T =
+                                fold (fn b => fn X => X $ b) bs
+                                  (Var (fst v, fold (fn a => fn T => \<^Type>\<open>fun a T\<close>) targs T))
+                           | mk_term targs bs i \<^Type>\<open>fun a T\<close> =
+                                if member (op =) set (v,n-i)
+                                then Abs ("", a, mk_term (a::targs) (Bound (i-1) :: bs) (i-1) T)
+                                else Abs ("", a, mk_term targs bs (i-1) T)
+                           | mk_term _ _ _ _ = error "Internal bug #bb923326-bb1c-4ba6-9039-84963749ee92"
+                         val term' = mk_term [] [] n (snd v)
+                      in SOME (v, Thm.cterm_of ctxt term')
+                     end
+             ) arity
+          fun collect_var ret (Var (v,_)) = insert (op =) v ret
+            | collect_var ret (A $ B) = collect_var (collect_var ret A) B
+            | collect_var ret (Abs(_,_,X)) = collect_var ret X
+            | collect_var ret _ = ret
+         in (collect_var escape ant, ins@ins0)
+        end
+      val (_, ins) = fold (fn prem => mk_ins (get_concl prem))
+                          (if num = ~1 then Thm.prems_of thm
+                           else if num = ~2 then Thm.prems_of thm @ [Thm.concl_of thm]
+                           else List.take (Thm.prems_of thm, num))
+                          ([],[])
+  in if null ins then NONE
+  else SOME (Thm.instantiate (TVars.empty, Vars.make ins) thm)
+ end
+
+fun instantiate_higher_order_schematic_var num ctxt thm =
+  the_default thm (instantiate_higher_order_schematic_var' num ctxt thm)
+
+
 end
 
 signature PHI_CONV = sig
@@ -209,10 +294,14 @@ val meta_ball_conv : conv -> (cterm * Proof.context -> conv) -> Proof.context ->
 val meta_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_alls_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
+val hol_ball_conv : conv -> (cterm * Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val hol_alls_to_meta_alls: (Proof.context -> conv) -> Proof.context -> conv
+val exhausitively_expand_meta_and_hol_ball : (Proof.context -> conv) -> Proof.context -> conv
 
 val hol_imp_conv : conv -> conv -> conv
+
+val prod_case_split_in_all_conv : (Proof.context -> conv) -> Proof.context -> conv
 
 val leading_antecedent_conv : conv -> conv
 val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
@@ -280,6 +369,12 @@ fun meta_ball_conv cs cv ctxt ctm =
         combination_conv (arg_conv cs) (abs_conv cv ctxt) ctm
   | _ => raise CTERM ("meta_all_conv", [ctm]))
 
+fun hol_ball_conv cs cv ctxt ctm =
+  (case Thm.term_of ctm of
+    Const (\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ _ =>
+        combination_conv (arg_conv cs) (abs_conv cv ctxt) ctm
+  | _ => raise CTERM ("hol_ball_conv", [ctm]))
+
 fun meta_case_prod_conv cv cx ctxt ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>meta_case_prod\<close>, _) $ _ $ _ =>
@@ -328,6 +423,53 @@ fun hol_imp_conv cv1 cv2 ct =
           Conv.combination_conv (Conv.arg_conv cv1) cv2 ct
       | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (hol_imp_conv cv1 cv2) ct
       | _ => raise CTERM ("imp_conv", [ct]));
+
+
+
+(*requires eta-beta normalization!*)
+fun prod_case_split_in_all_conv C ctxt ctm =
+  let fun get_bnames (Abs (N,_,Abs (N',_,_))) = SOME (N,N')
+        | get_bnames _ = NONE
+      fun rename_all2 NONE rule = rule
+        | rename_all2 (SOME (N1, N2)) rule =
+            let val (A1 $ Abs (_, T1, A2 $ Abs (_, T2, X))) = Thm.prop_of rule
+             in Thm.renamed_prop (A1 $ Abs (N1, T1, A2 $ Abs (N2, T2, X))) rule
+            end
+
+      fun has_case_prod (Const (\<^const_name>\<open>meta_case_prod\<close>, _) $ f $ _)
+            = SOME (get_bnames f, @{thm meta_case_prod_simp})
+        | has_case_prod (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>case_prod\<close>, _) $ f $ _))
+            = SOME (get_bnames f, @{thm prod.case[folded atomize_eq]})
+        | has_case_prod _ = NONE
+
+   in case Thm.term_of ctm
+        of Const(\<^const_name>\<open>Pure.all\<close>, _) $ X =>
+            (case has_case_prod X
+               of SOME (bnames, rule) =>
+                    ((rename_all2 bnames o Conv.rewr_conv @{thm split_paired_all}) then_conv
+                     meta_all_conv (fn (_,ctxt') =>
+                        meta_all_conv (K (Conv.rewr_conv rule)) ctxt' then_conv
+                        prod_case_split_in_all_conv C ctxt') ctxt) ctm
+                | NONE => C ctxt ctm)
+         | _ => raise CTERM ("prod_case_split_in_all_conv: not a meta-all quantification", [ctm])
+  end
+
+
+
+fun exhausitively_expand_meta_and_hol_ball C ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ =>
+         (Conv.rewr_conv @{thm meta_Ball_def} then_conv
+          prod_case_split_in_all_conv (meta_all_conv (fn (_,ctxt') =>
+              Conv.implies_concl_conv (exhausitively_expand_meta_and_hol_ball C ctxt'))) ctxt
+         ) ctm
+     | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>Ball\<close>, _) $ _ $ _ ) =>
+         (Conv.rewr_conv @{thm Ball_for_reason} then_conv
+          prod_case_split_in_all_conv (meta_all_conv (fn (_,ctxt') =>
+              Conv.implies_concl_conv (exhausitively_expand_meta_and_hol_ball C ctxt'))) ctxt
+         ) ctm
+     | _ => C ctxt ctm
+
 
 
 

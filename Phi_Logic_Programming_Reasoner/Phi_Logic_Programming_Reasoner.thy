@@ -195,7 +195,7 @@ lemma [simp]:
 subsubsection \<open>Meta Ball\<close>
 
 definition meta_Ball :: \<open>'a set \<Rightarrow> ('a \<Rightarrow> prop) \<Rightarrow> prop\<close>
-  where \<open>meta_Ball S P \<equiv> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> S \<Longrightarrow> PROP P x)\<close>
+  where \<open>meta_Ball S P \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)\<close>
 
 definition meta_case_prod :: \<open>('a \<Rightarrow> 'b \<Rightarrow> prop) \<Rightarrow> ('a \<times> 'b \<Rightarrow> prop)\<close>
   where \<open>meta_case_prod f \<equiv> (\<lambda>x. f (fst x) (snd x))\<close>
@@ -215,7 +215,7 @@ paragraph \<open>Basic Rules\<close>
 subparagraph \<open>meta_Ball\<close>
 
 lemma meta_Ball_I:
-  \<open> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> S \<Longrightarrow> PROP P x)
+  \<open> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> S \<Longrightarrow> PROP P x)
 \<Longrightarrow> PROP meta_Ball S P\<close>
   unfolding meta_Ball_def .
 
@@ -228,22 +228,13 @@ lemma meta_Ball_sing[simp]:
   \<open> (\<And>x \<in> {y}. PROP P x) \<equiv> PROP P y \<close>
   unfolding meta_Ball_def Premise_def by simp
 
-lemma Ball_for_reason:
-  \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> A \<Longrightarrow> P x)\<close>
-  unfolding atomize_imp atomize_all Ball_def Premise_def .
-
 lemma atomize_Ball:
   \<open> (\<And>x\<in>S. P x) \<equiv> Trueprop (\<forall>x\<in>S. P x) \<close>
   unfolding meta_Ball_def Premise_def Ball_def atomize_imp atomize_all .
 
-lemma sing_times_sing:
-  \<open>{a} \<times> {b} = {(a,b)}\<close>
-  unfolding set_eq_iff
-  by simp
-
-lemma sing_if:
-  \<open>(if c then {a} else {b}) = {if c then a else b}\<close>
-  by simp
+lemma Ball_for_reason:
+  \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> A \<Longrightarrow> P x)\<close>
+  unfolding atomize_imp atomize_all Ball_def Premise_def .
 
 
 subparagraph \<open>meta_case_prod\<close>
@@ -691,9 +682,9 @@ There are two commands defining reasoners, respectively by Eisbach expression an
 section \<open>Predefined Antecedents, Reasoners, and Rules\<close>
 
 
-subsection \<open>Auxiliary Structures\<close>
+subsection \<open>Auxiliary Structures \& Small Reasoning Procedures\<close>
 
-subsubsection \<open>Action\<close>
+subsubsection \<open>Action (continued)\<close>
 
 text \<open>In the reasoning, antecedents of the same form may have different purposes, e.g.,
   antecedent \<open>P = ?Q\<close> may except a complete simplification or numeric calculation only or any other
@@ -727,6 +718,74 @@ lemma Conv_Action_Tag_I:
 
 ML_file \<open>library/action_tag.ML\<close>
 
+
+subsubsection \<open>Reduce trivial higher-order variable who applies to constant\<close>
+
+definition Reduce_HO_trivial_variable :: \<open>prop \<Rightarrow> prop\<close>
+  where \<open>Reduce_HO_trivial_variable X \<equiv> X\<close>
+
+lemma Reduce_HO_trivial_variable_I:
+  \<open>PROP P \<Longrightarrow> PROP Reduce_HO_trivial_variable P\<close>
+  unfolding Reduce_HO_trivial_variable_def .
+
+\<phi>reasoner_ML Reduce_HO_trivial_variable 1000 (\<open>PROP Reduce_HO_trivial_variable _\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+    SOME ((ctxt, Phi_Help.instantiate_higher_order_schematic_var 1 ctxt
+                      (@{thm' Reduce_HO_trivial_variable_I} RS sequent)), Seq.empty))
+\<close>
+
+
+subsubsection \<open>Meta-Ball (continued)\<close>
+
+paragraph \<open>Supporting Rules\<close>
+
+lemma sing_times_sing:
+  \<open>{a} \<times> {b} = {(a,b)}\<close>
+  unfolding set_eq_iff
+  by simp
+
+lemma sing_if:
+  \<open>(if c then {a} else {b}) = {if c then a else b}\<close>
+  by simp
+
+paragraph \<open>Reasoning Rule\<close>
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP Reduce_HO_trivial_variable (P y)
+\<Longrightarrow> (\<And>x \<in> {y}. PROP P x)\<close>
+  unfolding meta_Ball_def Premise_def Reduce_HO_trivial_variable_def
+  by simp
+
+lemma meta_Ball_pair[\<phi>reason 1010]:
+  \<open> (\<And>y \<in> {y}. PROP P x y)
+\<Longrightarrow> (\<And>(x,y) \<in> {(x,y)}. PROP P x y)\<close>
+  unfolding meta_Ball_def meta_case_prod_def Premise_def by simp
+
+ML_file_debug \<open>library/tools/case_prod_conv.ML\<close>
+
+declare [[ML_debugger]]
+
+\<phi>reasoner_ML meta_case_prod_in_meta_Ball !1 (\<open>PROP meta_Ball _ _\<close>) = \<open>
+  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                Conv.rewr_conv @{thm meta_Ball_def} then_conv
+                Phi_Conv.prod_case_split_in_all_conv (K Conv.all_conv) ctxt
+            ) ctxt) 1 sequent
+   in SOME ((ctxt, sequent'), Seq.empty)
+  end)
+\<close>
+
+\<phi>reasoner_ML case_prod_in_Ball !1 (\<open>Ball _ _\<close>) = \<open>
+  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                Conv.rewr_conv @{thm Ball_for_reason} then_conv
+                Phi_Conv.prod_case_split_in_all_conv (K Conv.all_conv) ctxt
+            ) ctxt) 1 sequent
+   in SOME ((ctxt, sequent'), Seq.empty)
+  end)
+\<close>
+
+hide_fact Ball_for_reason
 
 
 
@@ -902,8 +961,6 @@ lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
 
 
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>
-
-subsubsection \<open>Implementation of the reasoners\<close>
 
 lemma Premise_True[\<phi>reason 5000]: "Premise mode True" unfolding Premise_def ..
 

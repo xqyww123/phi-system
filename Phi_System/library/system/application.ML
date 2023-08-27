@@ -34,7 +34,7 @@ structure Phi_Apply : PHI_APPLICATION = struct
 open Phi_Help
 
 fun normalize_app_rule ctxt =
-  Conv.fconv_rule (Phi_Conv.meta_ball_conv_all (K Conv.all_conv) ctxt)
+  Conv.fconv_rule (Phi_Conv.exhausitively_expand_meta_and_hol_ball (K Conv.all_conv) ctxt)
 
 fun expand_appliant ctxt rule = rule
   |> repeat (fn th => th RS' (ctxt, @{thm' spec}))

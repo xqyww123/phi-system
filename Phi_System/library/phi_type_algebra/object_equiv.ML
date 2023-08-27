@@ -216,7 +216,7 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80 ([],[]) NONE [Morphism.thm m rule'])
-            |> note_properties phi0 [(name, [rule'])]
+            |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule'])
   end
 
@@ -256,7 +256,7 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE [Morphism.thm m rule'])
-            |> note_properties phi0 [(name, [rule'])]
+            |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule'])
   end
 

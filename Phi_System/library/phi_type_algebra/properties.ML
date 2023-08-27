@@ -292,6 +292,8 @@ fun default_simplify ctxt rule =
    |> normalize
   end
 
+
+
 fun invoke_template_action template_pos (Instantiate_Rule (template, pass, action, bind))
                            (tyop, pos, props) ctxt =
      (let val ctxt' = Context.proof_of ctxt

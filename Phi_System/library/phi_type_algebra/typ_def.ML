@@ -107,7 +107,14 @@ val lookup_derived_properties : Context.generic -> phi_type -> string (*name*) -
 val register_derived_properties : phi_type -> string * int -> thm list -> generic_theory -> generic_theory
       (*It will also bind in Isabelle the properties to names <phi_type_name.property_names\<^sub>i>
         for the i-th property each.*)
-val note_properties : phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
+val note_properties' : term -> (binding * thm list) list -> generic_theory -> generic_theory
+val note_properties  : phi_type -> (binding * thm list) list -> generic_theory -> generic_theory
+val note_properties_s: phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
+
+val local_note_properties' : term -> (binding * thm list) list -> Context.generic -> Context.generic
+val local_note_properties  : phi_type -> (binding * thm list) list -> Context.generic -> Context.generic
+val local_note_properties_s: phi_type -> (bstring * thm list) list -> Context.generic -> Context.generic
+
 val suffix_name_by_index : int -> string -> string
 
 (* Syntax *)
@@ -521,13 +528,44 @@ fun lookup_derived_properties ctxt phi name =
     of SOME ret => ret
      | NONE => []
 
-fun note_properties (phi : phi_type) notes =
-  let val short_name = Term.term_name (#term phi)
-      fun mk_binding name = Binding.make (name, (#pos phi))
-                         |> Binding.qualify true short_name
-   in Context.mapping (fold (fn (N,Th) => snd o Global_Theory.note_thms "" ((mk_binding N, []), [(Th,[])])) notes)
-                      (fold (fn (N,Th) => snd o Local_Theory.note ((mk_binding N, []), Th)) notes)
+fun short_name_of_tyop (Abs (_,_,X)) = short_name_of_tyop X
+  | short_name_of_tyop (X $ _) = short_name_of_tyop X
+  | short_name_of_tyop (Const (N, _)) = Long_Name.base_name N
+  | short_name_of_tyop (Free (N, _)) = N
+  | short_name_of_tyop X = raise TERM ("Not a \<phi>-type term", [X])
+
+fun note_properties' phityp_term notes =
+  let val short_name = short_name_of_tyop phityp_term
+      val qualify = Binding.qualify true short_name
+   in Context.mapping (fold (fn (b,Th) => snd o Global_Theory.note_thms "" ((qualify b, []), [(Th,[])])) notes)
+                      (fold (fn (b,Th) => snd o Local_Theory.note ((qualify b, []), Th)) notes)
   end
+
+fun local_note_properties' phityp_term notes ctxt =
+  let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
+      fun varify_binding i b =
+        let val b' = if i = 0 then b else Binding.suffix_name ("_" ^ string_of_int i) b
+            val iname = Context.cases Sign.full_name Proof_Context.full_name ctxt b'
+         in if Facts.defined facts iname
+            then varify_binding (i+1) b
+            else b
+        end
+      val notes' = map (fn (b',rules') =>
+            let val b = varify_binding 0 (Binding.qualify true (short_name_of_tyop phityp_term) b')
+             in ((b, []), [(rules',[])])
+            end) notes
+   in Context.mapping (fold (snd oo Global_Theory.note_thms "") notes')
+                      (fold (snd oo Proof_Context.note_thms "") notes') ctxt
+  end
+
+fun note_properties (phi : phi_type) = note_properties' (#term phi)
+fun note_properties_s (phi : phi_type) notes =
+      note_properties' (#term phi) (map (fn (N,th) => (Binding.make (N, #pos phi), th)) notes)
+
+fun local_note_properties (phi : phi_type) = local_note_properties' (#term phi)
+fun local_note_properties_s (phi : phi_type) notes =
+      local_note_properties' (#term phi) (map (fn (N,th) => (Binding.make (N, #pos phi), th)) notes)
+
 
 fun suffix_name_by_index ind name =
       if ind = 0 then name else suffix ("\<^sub>" ^ string_of_int ind) name
@@ -937,7 +975,7 @@ fun add_type (def, pos, dervs, bundles) thy =
          #> Phi_Expansions.add_simps expns
          #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
-   |> note_properties phi_type (
+   |> note_properties_s phi_type (
         (* (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @ *)
         [(unfoldN, eqs), (introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning),
          (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ the_default [] elim'SE_ToA),

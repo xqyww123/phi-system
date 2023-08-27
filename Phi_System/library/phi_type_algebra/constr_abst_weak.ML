@@ -109,7 +109,7 @@ fun gen_constr_from_raw (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
         |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])
-        |> note_properties phi0 [(name, [rule])]
+        |> note_properties_s phi0 [(name, [rule])]
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end

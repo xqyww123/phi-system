@@ -11,6 +11,8 @@ val rulify_antecedent : bool (*deep*) -> Proof.context -> conv (*converts an ant
       (*deep: if true, rulify by Phi_Conv.iso_rulify_conv, pure connectives embedded into HOL*)
 val atomize_antecedent : bool (*deep*) -> Proof.context -> conv (*converts an antecedent*)
       (*deep: if true, atomize by Phi_Conv.iso_atomize_conv, pure connectives into HOL*)
+val elim_leading_All : Proof.context -> thm -> thm
+      (*eliminates the leading Pure.all and meta_Balls to schematic variables*)
 
 val unfold_antecedents : bool (*deep*) -> Proof.context -> thm -> thm (*unfolding \<and>, \<and>\<^sub>\<r>, \<longrightarrow>, \<forall>, for all antecedents in a rule*)
 val unfold_leading_antecedent : bool (*deep*) -> Proof.context -> thm -> int * thm
@@ -54,16 +56,23 @@ fun merge_guards ctxt rule =
       else guardize ctxt (Thm.nprems_of rule - last_ind) rule
   end
 
-fun reduce_constant_True ctm =
+(*fun reduce_constant_True ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _)) =>
-          Conv.rewr_conv @{lemma \<open>(PROP P \<Longrightarrow> True) \<equiv> Trueprop True\<close>
+          Conv.rewr_conv @{lemma' \<open>(PROP P \<Longrightarrow> True) \<equiv> Trueprop True\<close>
                               by (rule, simp) } ctm
      | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _,
           Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _)) =>
-          Conv.rewr_conv @{lemma \<open>(\<And>x. True) \<equiv> Trueprop True\<close>
-                              by (rule, simp) } ctm (*TODO!*)
+          Conv.rewr_conv @{lemma' \<open>(\<And>x. True) \<equiv> Trueprop True\<close>
+                              by (rule, simp) } ctm
+     | Const(\<^const_name>\<open>meta_case_prod\<close>, _) $ Abs (_, _, Abs (_, _, \<^Const>\<open>True\<close>)) $ _ =>
+          Conv.rewr_conv @{lemma' \<open>meta_case_prod (\<lambda>_ _. Trueprop True) x \<equiv> Trueprop True\<close>
+                              by (unfold meta_case_prod_def)} ctm
+     | Const(\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ Abs (_, _, \<^Const>\<open>True\<close>) =>
+          Conv.rewr_conv @{lemma' \<open>meta_Ball S (\<lambda>_. Trueprop True) \<equiv> Trueprop True\<close>
+                              by (unfold meta_Ball_def, rule, blast)} ctm
      | _ => Conv.all_conv ctm
+*)
 
 fun reduce_constant_True_left ctm =
   case Thm.term_of ctm
@@ -101,34 +110,45 @@ fun elim_leading_All ctxt rule =
               end
            | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
               Phi_Conv.meta_all_conv (conv o snd) ctxt ctm
+           | _ => Conv.all_conv ctm
    in rule
+   |> Conv.fconv_rule (conv ctxt)
+   |> Thm.forall_elim_vars (Thm.maxidx_of rule)
   end
 
 fun rulify_antecedent deep =
-  let fun rulify_case_prods ctxt ctm =
+  let fun rulify_case_prods cv ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
             (case X
                of Const(\<^const_name>\<open>case_prod\<close>, _) $ _ $ _ =>
                     (Conv.rewr_conv @{thm' atomize_case_prod[symmetric]} then_conv
-                     Phi_Conv.meta_case_prod_conv (rulify_case_prods o snd) Conv.all_conv ctxt) ctm
+                     Phi_Conv.meta_case_prod_conv (rulify_case_prods cv o snd) Conv.all_conv ctxt then_conv
+                     Conv.try_conv (Conv.rewr_conv (Thm.transfer' ctxt
+                          @{lemma' \<open>meta_case_prod (\<lambda>_ _. Trueprop True) x \<equiv> Trueprop True\<close>
+                               by (unfold meta_case_prod_def)}))) ctm
+                | _ => cv ctxt ctm
             )
+           | _ => cv ctxt ctm
       fun conv ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
             (case X
-               of Const(\<^const_name>\<open>HOL.All\<close>, _) $ A =>
+               of Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
                     (Conv.rewr_conv @{thm' atomize_all[symmetric]} then_conv
                      Phi_Conv.meta_all_conv (conv o snd) ctxt then_conv
-                     reduce_constant_True) ctm
+                     Conv.try_conv (Conv.rewr_conv @{lemma' \<open>(\<And>x. True) \<equiv> Trueprop True\<close>
+                                                        by (rule, simp) })) ctm
                 | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
                     (Conv.rewr_conv @{thm' atomize_imp[symmetric]} then_conv
                      Conv.combination_conv (Conv.arg_conv (conv ctxt)) (conv ctxt) then_conv
-                     reduce_constant_True) ctm
-                | Const(\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ F =>
+                     Conv.try_conv (Conv.rewr_conv @{lemma' \<open>(PROP P \<Longrightarrow> True) \<equiv> Trueprop True\<close>
+                                                        by (rule, simp) })) ctm
+                | Const(\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ _ =>
                     (Conv.rewr_conv @{thm' atomize_Ball[symmetric]} then_conv
-                     Phi_Conv.meta_ball_conv Conv.all_conv (conv o snd) ctxt then_conv
-                     reduce_constant_True) ctm
+                     Phi_Conv.meta_ball_conv Conv.all_conv (rulify_case_prods conv o snd) ctxt then_conv
+                     Conv.try_conv (Conv.rewr_conv @{lemma' \<open>meta_Ball S (\<lambda>_. Trueprop True) \<equiv> Trueprop True\<close>
+                                                        by (unfold meta_Ball_def, rule, blast)})) ctm
                 | _ => if deep then Phi_Conv.iso_rulify_conv ctxt ctm
                        else Conv.all_conv ctm)
            | _ => if deep then Phi_Conv.iso_rulify_conv ctxt ctm

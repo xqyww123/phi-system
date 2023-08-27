@@ -111,14 +111,6 @@ include PHI_HELP
 
   val empty_ctxt : Proof.context
 
-  val instantiate_higher_order_schematic_var' : int (*N*) -> Proof.context -> thm -> thm option (*returns none if no change*)
-  val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
-  (*For the leading N antecedents only, if there is any higher-order schematic variable
-  which is applied to a constant argument instead of a bound variable as usual,
-  instantiate the schematic variable to the constant function on that parameter, \<open>\<lambda>_. ?var\<close>.
-
-  N = ~1 means all antecedents, N = ~2 means to consider the conclusion of the thm in addition.*)
-
   val generic_theory_mapping : (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
 
   (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
@@ -420,82 +412,6 @@ fun debug_RS ctxt tha thb =
 
 
 val empty_ctxt = Proof_Context.init_global Pure_Syn.bootstrap_thy
-
-
-fun instantiate_higher_order_schematic_var' num ctxt thm =
-  let fun get_concl (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs(_,_,X)) = get_concl X
-        | get_concl (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_concl X
-        | get_concl X = X
-      fun mk_ins ant (escape,ins0) =
-        let
-          fun count ret (X $ _) = count (ret + 1) X
-            | count ret (Var v) = if member (op =) escape (fst v)
-                                  then (ret, NONE)
-                                  else (ret, SOME v)
-            | count ret _ = (ret, NONE)
-          val eq = ((op =) o apply2 fst)
-          fun eq' ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 = b2)
-          fun eqle ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 <= b2)
-          fun sift set (X as _ $ _) =
-               (case count 0 X
-                  of (N, SOME v) =>
-                      let fun visit (set,i) (X $ A) =
-                                if exists_subterm (fn Bound _ => true | _ => false) A
-                                then visit (sift (insert eq' (v,N-i) set) A, i+1) X
-                                else visit (sift set A, i+1) X
-                            | visit (set,_) _ = set
-                       in visit (insert eqle (v, ~1 - N) set,1) X end
-                   | _ =>
-                      let fun visit set (A $ B) = visit (sift set B) A
-                            | visit set X = sift set X
-                       in visit set X end)
-            | sift set (Abs(_,_,X)) = sift set X
-            | sift set (Var v) =
-                  if member (op =) escape (fst v)
-                  then set
-                  else insert eqle (v, ~1) set
-            | sift set _ = set
-          val set = sift [] ant
-          fun calc_arity ret ((v,n)::L) =
-                if n >= 0 orelse AList.defined eq ret v
-                then calc_arity ret L
-                else calc_arity ((v, fold (fn (v',m) => fn n' =>
-                        if fst v' = fst v andalso m < 0 andalso ~1-m < n' then ~1-m else n') L (~1-n)) :: ret) L
-            | calc_arity ret [] = ret
-         val arity = calc_arity [] set
-         fun forall_num n P = n < 0 orelse (P n andalso forall_num (n-1) P)
-         val ins = map_filter (fn (v,n) =>
-                if forall_num (n-1) (fn i => member eq' set (v,i))
-                then NONE
-                else let fun mk_term targs bs 0 T =
-                                fold (fn b => fn X => X $ b) bs
-                                  (Var (fst v, fold (fn a => fn T => \<^Type>\<open>fun a T\<close>) targs T))
-                           | mk_term targs bs i \<^Type>\<open>fun a T\<close> =
-                                if member (op =) set (v,n-i)
-                                then Abs ("", a, mk_term (a::targs) (Bound (i-1) :: bs) (i-1) T)
-                                else Abs ("", a, mk_term targs bs (i-1) T)
-                           | mk_term _ _ _ _ = error "Internal bug #bb923326-bb1c-4ba6-9039-84963749ee92"
-                         val term' = mk_term [] [] n (snd v)
-                      in SOME (v, Thm.cterm_of ctxt term')
-                     end
-             ) arity
-          fun collect_var ret (Var (v,_)) = insert (op =) v ret
-            | collect_var ret (A $ B) = collect_var (collect_var ret A) B
-            | collect_var ret (Abs(_,_,X)) = collect_var ret X
-            | collect_var ret _ = ret
-         in (collect_var escape ant, ins@ins0)
-        end
-      val (_, ins) = fold (fn prem => mk_ins (get_concl prem))
-                          (if num = ~1 then Thm.prems_of thm
-                           else if num = ~2 then Thm.prems_of thm @ [Thm.concl_of thm]
-                           else List.take (Thm.prems_of thm, num))
-                          ([],[])
-  in if null ins then NONE
-  else SOME (Thm.instantiate (TVars.empty, Vars.make ins) thm)
- end
-
-fun instantiate_higher_order_schematic_var num ctxt thm =
-  the_default thm (instantiate_higher_order_schematic_var' num ctxt thm)
 
 fun generic_theory_mapping f =
   Context.mapping (Context.theory_map (f Morphism.identity))

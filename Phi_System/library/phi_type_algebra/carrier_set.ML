@@ -42,7 +42,7 @@ fun gen_carrier_set (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                                     phi0 hint0 ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy
-        |> note_properties phi0 [(name, [rule])]
+        |> note_properties_s phi0 [(name, [rule])]
         |> Phi_Help.generic_theory_mapping (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
                                               ([],[]) NONE [Morphism.thm m rule])

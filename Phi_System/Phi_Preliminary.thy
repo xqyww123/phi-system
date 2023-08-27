@@ -322,35 +322,9 @@ lemma Membership_E_Inhabitance:
   unfolding Inhabited_def by blast*)
 
 
-subsubsection \<open>Reduce trivial higher-order variable who applies to constant\<close>
 
-definition Reduce_HO_trivial_variable :: \<open>prop \<Rightarrow> prop\<close>
-  where \<open>Reduce_HO_trivial_variable X \<equiv> X\<close>
-
-lemma Reduce_HO_trivial_variable_I:
-  \<open>PROP P \<Longrightarrow> PROP Reduce_HO_trivial_variable P\<close>
-  unfolding Reduce_HO_trivial_variable_def .
-
-\<phi>reasoner_ML Reduce_HO_trivial_variable 1000 (\<open>PROP Reduce_HO_trivial_variable _\<close>) = \<open>
-  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
-    SOME ((ctxt, Phi_Help.instantiate_higher_order_schematic_var 1 ctxt
-                      (@{thm' Reduce_HO_trivial_variable_I} RS sequent)), Seq.empty))
-\<close>
-
-
-(TODO!!)
 paragraph \<open>Reasoning Rule\<close>
 
-lemma [\<phi>reason 1000]:
-  \<open> PROP Reduce_HO_trivial_variable (P y)
-\<Longrightarrow> (\<And>x \<in> {y}. PROP P x)\<close>
-  unfolding meta_Ball_def Premise_def Reduce_HO_trivial_variable_def
-  by simp
-
-lemma meta_Ball_pair[\<phi>reason 1010]:
-  \<open> (\<And>y \<in> {y}. PROP P x y)
-\<Longrightarrow> (\<And>(x,y) \<in> {(x,y)}. PROP P x y)\<close>
-  unfolding meta_Ball_def meta_case_prod_def Premise_def by simp
 
 lemma [\<phi>reason 1000]:
   \<open> (Q \<Longrightarrow> (\<And>x \<in> S. PROP P x))
@@ -365,29 +339,6 @@ lemma [\<phi>reason 1000]:
   by simp
 
 
-ML_file \<open>library/tools/case_prod_conv.ML\<close>
-
-\<phi>reasoner_ML meta_case_prod_in_meta_Ball !1 (\<open>PROP meta_Ball _ _\<close>) = \<open>
-  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                Conv.rewr_conv @{thm meta_Ball_def} then_conv
-                Phi_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
-            ) ctxt) 1 sequent
-   in SOME ((ctxt, sequent'), Seq.empty)
-  end)
-\<close>
-
-\<phi>reasoner_ML case_prod_in_Ball !1 (\<open>Ball _ _\<close>) = \<open>
-  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                Conv.rewr_conv @{thm Ball_for_reason} then_conv
-                Phi_Conv.prod_case_meta_all_split_conv (K Conv.all_conv) ctxt
-            ) ctxt) 1 sequent
-   in SOME ((ctxt, sequent'), Seq.empty)
-  end)
-\<close>
-
-hide_fact Ball_for_reason
 
 
 

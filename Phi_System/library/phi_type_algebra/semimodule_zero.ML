@@ -64,7 +64,7 @@ fun gen_M0 closed (der_id, name) hint0 ctxt0 (phi : phi_type) thy =
     | SOME (rule', _) => thy
         |> Phi_Help.generic_theory_mapping (fn m =>
               Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE [Morphism.thm m rule'])
-        |> note_properties phi [(name, [rule'])]
+        |> note_properties_s phi [(name, [rule'])]
         |> pair [rule']
   end
 
