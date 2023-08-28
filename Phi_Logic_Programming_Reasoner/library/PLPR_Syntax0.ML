@@ -117,20 +117,7 @@ fun elim_leading_All ctxt rule =
   end
 
 fun rulify_antecedent deep =
-  let fun rulify_case_prods cv ctxt ctm =
-        case Thm.term_of ctm
-          of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
-            (case X
-               of Const(\<^const_name>\<open>case_prod\<close>, _) $ _ $ _ =>
-                    (Conv.rewr_conv @{thm' atomize_case_prod[symmetric]} then_conv
-                     Phi_Conv.meta_case_prod_conv (rulify_case_prods cv o snd) Conv.all_conv ctxt then_conv
-                     Conv.try_conv (Conv.rewr_conv (Thm.transfer' ctxt
-                          @{lemma' \<open>meta_case_prod (\<lambda>_ _. Trueprop True) x \<equiv> Trueprop True\<close>
-                               by (unfold meta_case_prod_def)}))) ctm
-                | _ => cv ctxt ctm
-            )
-           | _ => cv ctxt ctm
-      fun conv ctxt ctm =
+  let fun conv ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
             (case X
@@ -145,8 +132,7 @@ fun rulify_antecedent deep =
                      Conv.try_conv (Conv.rewr_conv @{lemma' \<open>(PROP P \<Longrightarrow> True) \<equiv> Trueprop True\<close>
                                                         by (rule, simp) })) ctm
                 | Const(\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ _ =>
-                    (Conv.rewr_conv @{thm' atomize_Ball[symmetric]} then_conv
-                     Phi_Conv.meta_ball_conv Conv.all_conv (rulify_case_prods conv o snd) ctxt then_conv
+                    (Phi_Conv.rulify_Ball conv ctxt then_conv
                      Conv.try_conv (Conv.rewr_conv @{lemma' \<open>meta_Ball S (\<lambda>_. Trueprop True) \<equiv> Trueprop True\<close>
                                                         by (unfold meta_Ball_def, rule, blast)})) ctm
                 | _ => if deep then Phi_Conv.iso_rulify_conv ctxt ctm

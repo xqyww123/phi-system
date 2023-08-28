@@ -2228,7 +2228,7 @@ subsection \<open>Stepwise of Product Separations\<close>
 paragraph \<open>Monoidal\<close>
 
 declare [[\<phi>trace_reasoning = 2]]
- 
+  
 lemma Structural_Extract_\<phi>Prod_right:
   \<open> Try S1 ((fst a, fst (snd a)) \<Ztypecolon> A \<^emph> WY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Y \<^emph> B \<w>\<i>\<t>\<h> P1 @action \<A>SE )
 \<Longrightarrow> Try S2 ((snd b, snd (snd a)) \<Ztypecolon> B \<^emph> WX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> c \<Ztypecolon> X \<^emph> C \<w>\<i>\<t>\<h> P2 @action \<A>SE )

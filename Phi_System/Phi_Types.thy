@@ -343,10 +343,14 @@ lemma \<Sigma>_pseudo_Separation_Homo\<^sub>E:
   unfolding Transformation_def Premise_def
   by clarsimp
 
-lemma \<Sigma>_funcong:
+lemma \<Sigma>_fundef_cong[fundef_cong]:
   \<comment> \<open>The rule fails to be derived due to the absence of the standard
       Transformation Functor property\<close>
-  \<open>  \<close>
+  \<open> x = y
+\<Longrightarrow> (F (fst y) (snd y) = G (fst y) (snd y))
+\<Longrightarrow> \<Sigma> F x = \<Sigma> G y \<close>
+  unfolding \<phi>Dependent_Sum_def \<phi>Type_def
+  by simp
 
 (*TODO: reasoning rules based on the above pseudo properties*)
 

@@ -229,18 +229,27 @@ lemma meta_Ball_sing[simp]:
   unfolding meta_Ball_def Premise_def by simp
 
 lemma atomize_Ball:
-  \<open> (\<And>x\<in>S. P x) \<equiv> Trueprop (\<forall>x\<in>S. P x) \<close>
+  \<open> PROP meta_Ball S (\<lambda>x. Trueprop (P x)) \<equiv> Trueprop (Ball S (\<lambda>x. P x)) \<close>
   unfolding meta_Ball_def Premise_def Ball_def atomize_imp atomize_all .
 
+
+
 lemma Ball_for_reason:
-  \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x \<in> A \<Longrightarrow> P x)\<close>
+  \<open>Trueprop (Ball A P) \<equiv> (\<And>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> A \<Longrightarrow> P x)\<close>
   unfolding atomize_imp atomize_all Ball_def Premise_def .
 
+lemma meta_Ball_pair:
+  \<open> (\<And>(x,y) \<in> {(x,y)}. PROP P x y) \<equiv>(\<And>y \<in> {y}. PROP P x y) \<close>
+  unfolding meta_Ball_def meta_case_prod_def Premise_def by simp
+
+lemma Ball_pair:
+  \<open> (\<forall>(x,y) \<in> {(x,y)}. P x y) \<equiv> (\<forall>y \<in> {y}. P x y) \<close>
+  by simp
 
 subparagraph \<open>meta_case_prod\<close>
 
 lemma atomize_case_prod:
-  \<open>meta_case_prod (\<lambda>x y. Trueprop (f x y)) x \<equiv> Trueprop (case_prod f x)\<close>
+  \<open>meta_case_prod (\<lambda>x y. Trueprop (f x y)) x \<equiv> Trueprop (case_prod (\<lambda>x y. f x y) x)\<close>
   unfolding meta_case_prod_def
   by (rule; cases x; simp)
 
@@ -251,7 +260,7 @@ lemma meta_case_prod_simp[iff]:
 
 subsubsection \<open>ML Libraries - II\<close>
 
-ML_file \<open>library/helpers.ML\<close>
+ML_file_debug \<open>library/helpers.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
@@ -354,6 +363,11 @@ ML_file \<open>library/tools/helpers1.ML\<close>
 
 declare \<r>Guard_I [\<phi>reason 1000]
         Ant_Seq_I[\<phi>reason 1000]
+        meta_Ball_pair[THEN equal_elim_rule2, \<phi>reason 1010]
+        Ball_pair[unfolded atomize_eq, THEN iffD2, \<phi>reason 1010]
+
+thm equal_elim_rule2
+thm Ball_pair[unfolded atomize_eq, THEN iffD2]
 
 text \<open>
   \<phi>-Logic Programming Reasoner is a extensible reasoning engine
@@ -756,25 +770,23 @@ lemma [\<phi>reason 1000]:
   unfolding meta_Ball_def Premise_def Reduce_HO_trivial_variable_def
   by simp
 
-lemma meta_Ball_pair[\<phi>reason 1010]:
-  \<open> (\<And>y \<in> {y}. PROP P x y)
-\<Longrightarrow> (\<And>(x,y) \<in> {(x,y)}. PROP P x y)\<close>
-  unfolding meta_Ball_def meta_case_prod_def Premise_def by simp
-
 ML_file_debug \<open>library/tools/case_prod_conv.ML\<close>
 
 declare [[ML_debugger]]
 
-\<phi>reasoner_ML meta_case_prod_in_meta_Ball !1 (\<open>PROP meta_Ball _ _\<close>) = \<open>
+\<phi>reasoner_ML meta_case_prod_in_meta_Ball !1 (\<open>PROP meta_Ball _ _\<close> | \<open>Ball _ _\<close>) = \<open>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+  let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv
+                        (Phi_Conv.expand_meta_and_hol_ball (K Conv.all_conv) (K Conv.all_conv))
+(*fn ctxt =>
                 Conv.rewr_conv @{thm meta_Ball_def} then_conv
                 Phi_Conv.prod_case_split_in_all_conv (K Conv.all_conv) ctxt
-            ) ctxt) 1 sequent
+            *) ctxt) 1 sequent
    in SOME ((ctxt, sequent'), Seq.empty)
   end)
 \<close>
 
+(*
 \<phi>reasoner_ML case_prod_in_Ball !1 (\<open>Ball _ _\<close>) = \<open>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
   let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
@@ -784,6 +796,7 @@ declare [[ML_debugger]]
    in SOME ((ctxt, sequent'), Seq.empty)
   end)
 \<close>
+*)
 
 hide_fact Ball_for_reason
 

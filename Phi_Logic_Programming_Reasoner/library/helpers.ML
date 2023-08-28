@@ -295,9 +295,16 @@ val meta_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_alls_conv : (Proof.context -> conv) -> Proof.context -> conv
 val meta_all_body_conv : (Proof.context -> conv) -> Proof.context -> conv
 val hol_ball_conv : conv -> (cterm * Proof.context -> conv) -> Proof.context -> conv
+val rulify_Ball : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val hol_alls_to_meta_alls: (Proof.context -> conv) -> Proof.context -> conv
-val exhausitively_expand_meta_and_hol_ball : (Proof.context -> conv) -> Proof.context -> conv
+
+val expand_meta_and_hol_ball : (Proof.context -> conv) (*converts the set*)
+                            -> (Proof.context -> conv) (*converts the body*)
+                            -> Proof.context -> conv
+val exhausitively_expand_meta_and_hol_ball : (Proof.context -> conv) (*converts the set*)
+                                          -> (Proof.context -> conv) (*converts the body*)
+                                          -> Proof.context -> conv
 
 val hol_imp_conv : conv -> conv -> conv
 
@@ -425,52 +432,91 @@ fun hol_imp_conv cv1 cv2 ct =
       | _ => raise CTERM ("imp_conv", [ct]));
 
 
+fun rulify_case_prods cv ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
+      (case X
+         of Const(\<^const_name>\<open>case_prod\<close>, _) $ _ $ _ =>
+              (Conv.rewr_conv @{thm' atomize_case_prod[symmetric]} then_conv
+               meta_case_prod_conv (rulify_case_prods cv o snd) Conv.all_conv ctxt then_conv
+               Conv.try_conv (Conv.rewr_conv (Thm.transfer' ctxt
+                    @{lemma' \<open>meta_case_prod (\<lambda>_ _. Trueprop True) x \<equiv> Trueprop True\<close>
+                         by (unfold meta_case_prod_def)}))) ctm
+          | _ => cv ctxt ctm
+      )
+     | _ => cv ctxt ctm
+
+fun rulify_Ball C ctxt =
+  Conv.rewr_conv @{thm' atomize_Ball[symmetric]} then_conv
+  meta_ball_conv Conv.all_conv (rulify_case_prods C o snd) ctxt
 
 (*requires eta-beta normalization!*)
-fun prod_case_split_in_all_conv C ctxt ctm =
+fun prod_case_split_in_all_conv C ctxt =
   let fun get_bnames (Abs (N,_,Abs (N',_,_))) = SOME (N,N')
         | get_bnames _ = NONE
       fun rename_all2 NONE rule = rule
         | rename_all2 (SOME (N1, N2)) rule =
-            let val (A1 $ Abs (_, T1, A2 $ Abs (_, T2, X))) = Thm.prop_of rule
-             in Thm.renamed_prop (A1 $ Abs (N1, T1, A2 $ Abs (N2, T2, X))) rule
-            end
+            case Thm.prop_of rule
+              of (A1 $ Abs (_, T1, A2 $ Abs (_, T2, X))) =>
+                  Thm.renamed_prop (A1 $ Abs (N1, T1, A2 $ Abs (N2, T2, X))) rule
+               | _ => rule
 
-      fun has_case_prod (Const (\<^const_name>\<open>meta_case_prod\<close>, _) $ f $ _)
-            = SOME (get_bnames f, @{thm meta_case_prod_simp})
-        | has_case_prod (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>case_prod\<close>, _) $ f $ _))
-            = SOME (get_bnames f, @{thm prod.case[folded atomize_eq]})
-        | has_case_prod _ = NONE
-
-   in case Thm.term_of ctm
-        of Const(\<^const_name>\<open>Pure.all\<close>, _) $ X =>
-            (case has_case_prod X
-               of SOME (bnames, rule) =>
-                    ((rename_all2 bnames o Conv.rewr_conv @{thm split_paired_all}) then_conv
-                     meta_all_conv (fn (_,ctxt') =>
-                        meta_all_conv (K (Conv.rewr_conv rule)) ctxt' then_conv
-                        prod_case_split_in_all_conv C ctxt') ctxt) ctm
-                | NONE => C ctxt ctm)
-         | _ => raise CTERM ("prod_case_split_in_all_conv: not a meta-all quantification", [ctm])
+      fun conv ctxt ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>Pure.all\<close>, _) $ X =>
+              (case X
+                 of Const (\<^const_name>\<open>meta_case_prod\<close>, _) $ f $ _ =>
+                      ((rename_all2 (get_bnames f) o Conv.rewr_conv @{thm split_paired_all}) then_conv
+                        meta_all_conv (fn (_,ctxt') =>
+                          meta_all_conv (K (Conv.rewr_conv @{thm meta_case_prod_simp})) ctxt' then_conv
+                          prod_case_split_in_all_conv C ctxt') ctxt) ctm
+                  | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>case_prod\<close>, _) $ _ $ _) =>
+                      (rulify_case_prods (K Conv.all_conv) ctxt then_conv conv ctxt) ctm
+                  | _ => C ctxt ctm)
+           | _ => raise CTERM ("prod_case_split_in_all_conv: not a meta-all quantification", [ctm])
+   in conv ctxt
   end
 
+fun meta_ball_special_reduce on_fail on_success =
+  let fun conv ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>meta_Ball\<close>, _)
+              $ (Const(\<^const_name>\<open>Set.insert\<close>, _) $ (Const(\<^const_name>\<open>Pair\<close>, _) $ _ $ _) $ Const(\<^const_name>\<open>bot\<close>, _))
+              $ _ =>
+                  (Conv.rewr_conv @{thm' meta_Ball_pair} then_conv conv) ctm
+           | Const(\<^const_name>\<open>meta_Ball\<close>, _)
+              $ (Const(\<^const_name>\<open>Set.insert\<close>, _) $ _ $ Const(\<^const_name>\<open>bot\<close>, _))
+              $ _ =>
+                  (Conv.rewr_conv @{thm' meta_Ball_sing} then_conv on_success) ctm
+           | Const(\<^const_name>\<open>Ball\<close>, _)
+              $ (Const(\<^const_name>\<open>Set.insert\<close>, _) $ (Const(\<^const_name>\<open>Pair\<close>, _) $ _ $ _) $ Const(\<^const_name>\<open>bot\<close>, _))
+              $ _ =>
+                  (Conv.rewr_conv @{thm' meta_Ball_pair} then_conv conv) ctm
+           | _ => on_fail ctm
+   in conv
+  end
 
-
-fun exhausitively_expand_meta_and_hol_ball C ctxt ctm =
+fun expand_meta_and_hol_ball Cs C ctxt ctm =
   case Thm.term_of ctm
     of Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ =>
-         (Conv.rewr_conv @{thm meta_Ball_def} then_conv
-          prod_case_split_in_all_conv (meta_all_conv (fn (_,ctxt') =>
-              Conv.implies_concl_conv (exhausitively_expand_meta_and_hol_ball C ctxt'))) ctxt
-         ) ctm
+        (Conv.arg1_conv (Cs ctxt) then_conv
+         meta_ball_special_reduce
+           (Conv.rewr_conv @{thm meta_Ball_def} then_conv
+            prod_case_split_in_all_conv (meta_all_conv (fn (_,ctxt') =>
+                Conv.implies_concl_conv (C ctxt'))) ctxt)
+           (C ctxt))
+         ctm
      | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>Ball\<close>, _) $ _ $ _ ) =>
-         (Conv.rewr_conv @{thm Ball_for_reason} then_conv
-          prod_case_split_in_all_conv (meta_all_conv (fn (_,ctxt') =>
-              Conv.implies_concl_conv (exhausitively_expand_meta_and_hol_ball C ctxt'))) ctxt
-         ) ctm
+         rulify_Ball C ctxt ctm
      | _ => C ctxt ctm
 
-
+fun exhausitively_expand_meta_and_hol_ball Cs C ctxt ctm =
+  case Thm.term_of ctm
+    of Const (\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ _ =>
+            expand_meta_and_hol_ball Cs (exhausitively_expand_meta_and_hol_ball Cs C) ctxt ctm
+     | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>Ball\<close>, _) $ _ $ _ ) =>
+            expand_meta_and_hol_ball Cs (exhausitively_expand_meta_and_hol_ball Cs C) ctxt ctm
+     | _ => C ctxt ctm
 
 
 fun leading_antecedent_conv C = implies_conv C all_conv
