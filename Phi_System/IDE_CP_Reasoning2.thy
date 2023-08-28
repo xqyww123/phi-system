@@ -2364,7 +2364,9 @@ subsection \<open>Entry Point\<close>
 
 lemma enter_SE:
   \<open> (x,w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P1 @action \<A>SE
-\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RR \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RR \<w>\<i>\<t>\<h> P2 \<comment> \<open>Here, we force the reasoning entering a mode where
+                                    it always yields a remainder. We can do so as \<A>SE reasoning
+                                    assumes unital algebra.\<close>
 \<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] RR * (snd y \<Ztypecolon> R) \<w>\<i>\<t>\<h> P2 \<and> P1\<close>
   for A :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def REMAINS_simp
@@ -2672,6 +2674,26 @@ val SE_entry_point_b = SE_entry_point (
 hide_fact enter_SE enter_SE_TH enter_SEb enter_SEb_TH
 
 
+section \<open>Transformation of Single \<phi>-Type with Remainders\<close>
+
+text \<open>NToA procedure addresses the transformation between any-to-many \<phi>-type items.
+  Separation Extraction addresses that from many to one \<phi>-type item.
+  The \<phi>-type themselves should provide the rules for one-to-one transformations, as they are primitive.
+  Transformation Functor presented later provides an automation for this.
+
+  However, a small supplementary is one-to-one with remainders.
+  For unital algebras, the issue is easy as we can always force yielding remainders.
+  For non-semigroups, after a reasoning branch splitting the cases for having remainder or not,
+  the issue reduces immediately.
+  For associative but non-unital algebras, a bit of work is required. 
+\<close>
+
+lemma [\<phi>reason 50]: \<comment> \<open>the priority of ASE entry point\<close>
+  \<open> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[C] R
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<close>
+  by (cases C; clarsimp simp add: \<phi>Some_\<phi>Prod \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip \<phi>Prod_expn'')
+
+text \<open>where we need to reuse \<open>\<half_blkcirc>[C]\<close>.\<close>
 
 
 section \<open>Programming Methods for Proving Specific Properties\<close>

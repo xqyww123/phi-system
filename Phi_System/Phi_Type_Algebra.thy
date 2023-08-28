@@ -1221,10 +1221,7 @@ lemma [\<phi>reason_template name \<phi>Prod []]:
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 
 
-lemma
-  \<open> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, r) \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[C] R
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] r \<Ztypecolon> R \<close>
-  by (cases C; clarsimp simp add: \<phi>Some_\<phi>Prod \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip \<phi>Prod_expn')
+subsubsection \<open>Transformation of Single \<phi>-Type with Remainders\<close>
 
 lemma
   \<open> Functional_Transformation_Functor F1 F23 Dom Rng mapper Prem pred_mapper func_mapper
