@@ -558,11 +558,13 @@ lemma \<phi>elim_reasoning_transformation:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   by simp
 
+(* preserved for documenting
 lemma \<phi>elim'SE_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
 \<Longrightarrow> (case x of (a,b) \<Rightarrow> (y a, b)) \<Ztypecolon> U (fst x) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE\<close>
   by (cases x; simp add: \<phi>Prod_expn')
+*)
 
 lemma \<phi>elim'SEi_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
@@ -1503,6 +1505,7 @@ subsubsection \<open>Separation Extraction\<close>
 
 paragraph \<open>Transformation Functor\<close>
 
+(* preserved for documenting
 declare [[\<phi>trace_reasoning = 1]]
 
 lemma "_Structural_Extract_general_rule_":
@@ -1540,6 +1543,9 @@ lemma [THEN \<A>SE_clean_waste_TH, \<phi>reason_template default 81]:
       Auto_Transform_Hint (y'\<^sub>H \<Ztypecolon> F3' U\<^sub>H \<^emph> F2' R\<^sub>H) (x'\<^sub>H \<Ztypecolon> F1' T\<^sub>H \<^emph> F4' W\<^sub>H) \<and> pred_mapper f P (z x) @action \<A>SE \<close>
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using "_Structural_Extract_general_rule_"[where f=f and uz=uz and func_mapper=func_mapper and z=z and pred_mapper=pred_mapper] .
+*)
+
+
 
 
 (* This crazy rule is for the boundary cases when we reason the last element and when the algebra doesn't
@@ -1569,8 +1575,7 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
 \<Longrightarrow> Functional_Transformation_Functor F1 F3  Dom'w Rng'b mapper'b Prem'b pred_mapper'b func_mapper'b
 \<Longrightarrow> Separation_Homo\<^sub>I F1 F4 F14 T W Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 U R uz
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e>
-        (Cw \<longrightarrow> x \<in> Dz) \<and>
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Cw \<longrightarrow> x \<in> Dz) \<and>
         (if Cw then if Cr then (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x))
                           else (\<forall>a. a \<in> Dom (z x) \<longrightarrow> fst (f a) \<in> Rng'r (z x))
                else if Cr then (\<forall>a. a \<in> Dom'w (fst x) \<longrightarrow> f (a, undefined) \<in> Rng'w (fst x))
@@ -1593,8 +1598,17 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
                            else pred_mapper'b (\<lambda>x. fst (f (x, undefined))) (\<lambda>x. P (x, undefined)) (fst x))
     @action \<A>SEi \<close>
   apply (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod \<r>Guard_def Ant_Seq_imp)
-  apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def
-                       "_Structural_Extract_general_rule_"[unfolded Action_Tag_def \<r>Guard_def Ant_Seq_imp])
+  apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def)
+  \<medium_left_bracket> premises [] and [] and [] and []
+         and FTF and [] and [] and []
+         and _ and _ and _ and Tr
+    interpret Functional_Transformation_Functor F14 F23 Dom Rng mapper True pred_mapper func_mapper
+      using FTF . ;;
+    apply_rule apply_Separation_Functor_zip[where Fu=F4 and Ft=F1]
+    apply_rule functional_transformation[where U=\<open>U \<^emph> R\<close> and f=\<open>f\<close> and P=\<open>P\<close>]
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+    apply_Separation_Functor_unzip
+  \<medium_right_bracket>
   \<medium_left_bracket> premises [] and [] and [] and []
          and [] and FTF and [] and []
          and _ and [] and _ and Tr
@@ -1744,13 +1758,13 @@ text \<open>The proof search is inefficient for semimodule \<phi>-type that sati
   is fully addressed, and consequently, in the subsequent reasoning, we can exclusively focus on
   the scalar distribution rules.
 
-  Sure it raises further works for deriving the homomorphic rules. It can be done by a deriver generator
+  Sure it raises further works for deriving the homomorphic rules. It can be done by a deriver generating
   that ....
 \<close>
 
-
-
 text \<open>According to the discussion above, the rule below should be used only for non-distributive scalars.\<close>
+
+(*preserved for documenting
 
 declare [[\<phi>trace_reasoning = 2]]
 
@@ -1785,6 +1799,7 @@ lemma SE_general_Semimodule_Scalar_left: (*need test, to be tested once we have 
 
 declare SE_general_Semimodule_Scalar_left[THEN \<A>SE_clean_waste, \<phi>reason_template default 30]
   \<comment> \<open>The priority is smaller than the default rule of functional transformation\<close>
+*)
 
 lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we have usable test case*)
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b) \<and>\<^sub>\<r> Prem \<and>\<^sub>\<r> Prem'r \<and>\<^sub>\<r> Prem'w \<and>\<^sub>\<r> Prem'b
@@ -1817,8 +1832,24 @@ lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we hav
                            else pred_mapper'b (\<lambda>x. fst (f (x, undefined))) (\<lambda>x. P (x, undefined)) (fst x))
     @action \<A>SEi \<close>
   apply (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod \<r>Guard_def Ant_Seq_imp)
-  apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def
-                       "SE_general_Semimodule_Scalar_left"[unfolded Action_Tag_def \<r>Guard_def Ant_Seq_imp])
+  apply (simp_all add: \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip Action_Tag_def)
+  \<medium_left_bracket> premises _ and [] and [] and [] and [] and _
+         and FTF and [] and [] and []
+         and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
+         and _ and _ and _ and Tr
+    interpret Functional_Transformation_Functor F14 F23 Dom Rng mapper True pred_mapper func_mapper
+      using FTF .
+    have F4D: \<open>F4 b W = F4 a (F4 c W)\<close>
+      by (simp add: \<open>Ds a \<and> Ds b \<and> Ds c\<close> the_\<phi>(6))
+    have F3D: \<open>F3 b U = F3 a (F3 c U)\<close>
+      by (simp add: \<open>Ds a \<and> Ds b \<and> Ds c\<close> the_\<phi>(6)) ;;
+    unfold F4D
+    apply_rule apply_Separation_Functor_zip[where Fu=\<open>F4 a\<close> and Ft=\<open>F1 a\<close>]
+    apply_rule functional_transformation[where U=\<open>F3 c U \<^emph> R\<close> and f=f and P=P]
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+    apply_rule apply_Separation_Functor_unzip[where x=\<open>func_mapper f P (z x)\<close>]
+    fold F3D
+  \<medium_right_bracket>
   \<medium_left_bracket> premises _ and [] and [] and [] and [] and _
          and [] and FTF and [] and []
          and LSF3[\<phi>reason add] and LSF4[\<phi>reason add]
@@ -1895,6 +1926,8 @@ declare SE_general_Semimodule_Scalar_left_a[THEN \<A>SEa_clean_waste, \<phi>reas
 
 
 subsubsection \<open>Separation Extraction of Semimodule Left Distributivity\<close>
+
+(* preserved for documenting
 
 text \<open>No need to clean the rules by \<A>SE_clean_waste\<close>
 
@@ -2183,7 +2216,7 @@ lemma SE_Semimodule_LDistr_a_cb_nc[\<phi>reason_template 32]:
   \<medium_right_bracket> .
 
 (*DONE*)
-
+*)
 
 paragraph \<open>Commutative, Non-Unital Associative, No Additive Zero\<close>
 

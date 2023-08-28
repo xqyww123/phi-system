@@ -934,7 +934,7 @@ fun add_type (def, pos, dervs, bundles) thy =
                            @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
                               handle THM _ => [])
 
-      val elim'SE_ToA = Option.map (fn eqs => gen_from_eqs @{thm' \<phi>elim'SE_transformation} I eqs
+      val elim'SE_ToA = Option.map (fn eqs => gen_from_eqs @{thm' \<phi>elim'SEi_transformation} I eqs
                                               handle THM _ => []
                         ) tagged_eqs_in_type
 
