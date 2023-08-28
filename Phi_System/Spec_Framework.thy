@@ -248,7 +248,6 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Functionality (T \<^emph> U) (\<lambda>(x,y). p\<^sub>T x \<and> p\<^sub>U y)\<close>
   unfolding Functionality_def
   by clarsimp blast
-  
 
 lemma [\<phi>reason 1200]:
   \<open> Is_Functional A
@@ -256,6 +255,20 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Is_Functional (A * B)\<close>
   unfolding Is_Functional_def set_eq_iff
   by (simp add: set_mult_expn, blast)
+
+lemma [\<phi>reason 1200]:
+  \<open> Is_Functional A
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Is_Functional B)
+\<Longrightarrow> Is_Functional (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B)\<close>
+  unfolding Is_Functional_def set_eq_iff REMAINS_def
+  by (simp add: set_mult_expn, blast)
+
+lemma [\<phi>reason 1200]:
+  \<open> Functionality T p\<^sub>T
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Functionality U p\<^sub>U)
+\<Longrightarrow> Functionality (T \<^emph>[C] U) (\<lambda>(x,y). p\<^sub>T x \<and> (C \<longrightarrow> p\<^sub>U y))\<close>
+  unfolding Functionality_def
+  by clarsimp blast
 
 lemma [\<phi>reason 1200]:
   \<open> (\<And>i\<in>S. Is_Functional (A i))

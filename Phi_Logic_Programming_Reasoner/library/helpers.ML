@@ -2,6 +2,8 @@ exception REQUIRE_LAMBDA_NORMLAIZTION
 
 signature PHI_HELP = sig
 
+val warn_when_visible : Context.generic -> string -> unit
+
 val leading_antecedent' : thm -> term
 
 val pos_parser : string -> Position.T parser
@@ -51,6 +53,11 @@ val instantiate_higher_order_schematic_var_for_rule  :
 end
 
 structure Phi_Help : PHI_HELP = struct
+
+fun warn_when_visible ctxt msg =
+  if Context_Position.is_visible_generic ctxt
+  then warning msg
+  else ()
 
 fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))
 

@@ -451,6 +451,13 @@ definition REMAINS :: \<open> 'a::sep_magma BI \<Rightarrow> bool \<Rightarrow> 
       A reasoning procedure can at any time if on a unital algebra, set a variable \<open>C\<close> to \<open>True\<close>
       and turns the reasoning into the unital mode.\<close>
 
+definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 70)
+  where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
+
+definition Cond_\<phi>Prod :: \<open> ('v,'x) \<phi> \<Rightarrow> bool \<Rightarrow> ('v,'y) \<phi> \<Rightarrow> ('v::sep_magma,'x \<times> 'y) \<phi> \<close> ("_ \<^emph>[_] _" [71,40,70] 70)
+    \<comment> \<open>\<phi>Type embedding of conditional remainder\<close>
+  where \<open>(T \<^emph>[C] U) \<equiv> if C then T \<^emph> U else (\<lambda>x. fst x \<Ztypecolon> T)\<close>
+
 lemma REMAINS_simp[simp]:
   \<open>X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<equiv> R * X\<close>
   \<open>X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] R \<equiv> X\<close>
@@ -459,20 +466,62 @@ lemma REMAINS_simp[simp]:
 
 declare [[
   \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> (20),
-  \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>fn _ =>
-    fn Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y $ U) $ C $ R) $ _) =>
+  \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>fn ctxt =>
+    fn (origin as Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y $ U) $ _ $ R) $ _)) =>
       let val idx = Term.maxidx_term X (Term.maxidx_term y (Term.maxidx_term U ~1)) + 1
           val P = Var(("P", idx), HOLogic.boolT)
           val C = Var(("C", idx), HOLogic.boolT)
           val R = Var(("R", idx), Term.fastype_of R)
           val y' = Var(("var_y", idx), Term.fastype_of y)
+          fun is_Phi_Typ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) = true
+            | is_Phi_Typ _ = false
+          open Pretty
        in if is_Var X then SOME [Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y  $ U) $ C $ R) $ P)]
-                      else SOME [Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y' $ U) $ C $ R) $ P)]
+          else if is_Phi_Typ X then (
+                Phi_Help.warn_when_visible ctxt (string_of (chunks [
+                    block (text "Transformations from single \<phi>-type and of remainders should use" @
+                           [brk 1, Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt
+                                      (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, dummyT) $ Free ("T", dummyT)
+                                          $ Free ("C",dummyT) $ Free ("U", dummyT)), brk 1] @
+                           text "instead of the given"),
+                    Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt origin
+                  ])) ;
+               SOME [Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y' $ U) $ C $ R) $ P)])
+          else SOME [Trueprop $ (Transformation $ X $ (Remains $ (PhiTyp $ y' $ U) $ C $ R) $ P)]
+      end\<close> (30),
+  \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>fn ctxt =>
+    fn (origin as Trueprop $ (Transformation $ X $ (PhiTyp $ y $ (Remains $ U $ _ $ R)) $ _)) =>
+      let val idx = Term.maxidx_term X (Term.maxidx_term y (Term.maxidx_term U ~1)) + 1
+          val P = Var(("P", idx), HOLogic.boolT)
+          val C = Var(("C", idx), HOLogic.boolT)
+          val R = Var(("R", idx), Term.fastype_of R)
+          val y' = Var(("var_y", idx), Term.fastype_of y)
+          fun is_Phi_Typ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _) = true
+            | is_Phi_Typ _ = false
+          open Pretty
+       in if is_Var X then SOME [Trueprop $ (Transformation $ X $ (PhiTyp $ y $ (Remains $ U $ C $ R)) $ P)]
+          else if is_Phi_Typ X
+          then SOME [Trueprop $ (Transformation $ X $ (PhiTyp $ y' $ (Remains $ U $ C $ R)) $ P)]
+          else error (string_of (chunks [
+                    block (text "Type-level remainder should be only used in transformation from a single \
+                                \\<phi>-type to another \<phi>-type. Please use" @
+                           [brk 1, Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt
+                                      (Const(\<^const_name>\<open>REMAINS\<close>, dummyT) $ Free ("A", dummyT)
+                                          $ Free ("C",dummyT) $ Free ("R", dummyT)), brk 1] @
+                           text "instead of the given"),
+                    Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt origin
+                  ]))
       end\<close> (30)
 ]]
    
 text \<open>For antecedent \<^pattern_prop>\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[?C] ?R \<w>\<i>\<t>\<h> _\<close>, the semantics is slightly different
   where it specifies extracting given \<^term>\<open>Y\<close> from given \<^term>\<open>X\<close> and leaving some \<^schematic_term>\<open>?R\<close>.\<close>
+
+lemma REMAINS_expn[\<phi>expns]:
+  \<open> p \<Turnstile> (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<longleftrightarrow> (if C then p \<Turnstile> R * A else p \<Turnstile> A) \<close>
+  unfolding REMAINS_def
+  by simp
+
 
 subsubsection \<open>Rules\<close>
 
@@ -1354,10 +1403,8 @@ lemma \<phi>Some_eq_term_strip:
   unfolding atomize_eq BI_eq_iff
   by clarsimp blast
 
-subsubsection \<open>Embedding of Separation Conjunction\<close>
 
-definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 70)
-  where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
+subsubsection \<open>Embedding of Separation Conjunction\<close>
 
 lemma \<phi>Prod_expn[\<phi>expns, simp]:
   "concrete \<Turnstile> (x \<Ztypecolon> A \<^emph> B) \<longleftrightarrow> (\<exists>cb ca. concrete = cb * ca \<and> cb \<Turnstile> (snd x \<Ztypecolon> B) \<and> ca \<Turnstile> (fst x \<Ztypecolon> A) \<and> cb ## ca)"
@@ -1412,6 +1459,30 @@ lemma [\<phi>reason 1001 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x,y) \<Ztypecolon> N \<^emph> M \<w>\<i>\<t>\<h> P"
   by (simp add: \<phi>Prod_expn')
 
+
+subsubsection \<open>Type-level Remainders\<close>
+
+lemma Cond_\<phi>Prod_expn:
+  \<open> (x \<Ztypecolon> T \<^emph>[C] U) = (if C then (x \<Ztypecolon> T \<^emph> U) else (fst x \<Ztypecolon> T)) \<close>
+  unfolding Cond_\<phi>Prod_def \<phi>Type_def
+  by clarsimp
+
+lemma Cond_\<phi>Prod_expn'[simp, \<phi>expns]:
+  \<open> p \<Turnstile> (x \<Ztypecolon> T \<^emph>[C] U) = (if C then p \<Turnstile> (x \<Ztypecolon> T \<^emph> U) else p \<Turnstile> (fst x \<Ztypecolon> T)) \<close>
+  unfolding Cond_\<phi>Prod_def \<phi>Type_def
+  by clarsimp
+
+lemma Cond_\<phi>Prod_expn_const[simp]:
+  \<open>T \<^emph>[True] U \<equiv> T \<^emph> U\<close>
+  \<open>x \<Ztypecolon> T \<^emph>[False] U \<equiv> fst x \<Ztypecolon> T\<close>
+  by (simp_all add: Cond_\<phi>Prod_def \<phi>Type_def)
+
+lemma [\<phi>reason 1000]:
+  \<open> fst x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> snd x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[C] U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> (C \<longrightarrow> Q) \<close>
+  unfolding Action_Tag_def Inhabited_def
+  by clarsimp blast
 
 
 
@@ -1585,5 +1656,14 @@ lemma Object_Equiv_Mul_Quant[\<phi>reason 1000]:
           clarsimp simp add: set_mult_expn;
           metis)
   qed
+
+subsection \<open>Final Settings\<close>
+
+lemma [\<phi>reason 50 for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _\<close>]:
+  \<comment> \<open>the priority of ASE entry point\<close>
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> U \<^emph>[C] R
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<close>
+  by (cases C; clarsimp simp add: \<phi>Some_transformation_strip \<phi>Prod_expn'')
+
 
 end

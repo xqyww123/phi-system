@@ -642,6 +642,33 @@ declare [[ \<phi>reason_default_pattern
   and \<open>Identity_Element\<^sub>E (_ \<Ztypecolon> ?T)\<close> \<Rightarrow> \<open>Identity_Element\<^sub>E (_ \<Ztypecolon> ?T)\<close> (110)
 ]]
 
+subsubsection \<open>Fallback\<close>
+
+lemma [\<phi>reason 1]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
+\<Longrightarrow> Identity_Element\<^sub>I S False\<close>
+  unfolding Premise_def
+  by blast
+
+lemma [\<phi>reason 1]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
+\<Longrightarrow> Identity_Element\<^sub>E S\<close>
+  unfolding Premise_def
+  by blast
+
+lemma [\<phi>reason 0]:
+  \<open> TRACE_FAIL TEXT(\<open>Fail to show\<close> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1))
+\<Longrightarrow> Identity_Element\<^sub>I S Any \<close>
+  unfolding TRACE_FAIL_def
+  by blast
+
+lemma [\<phi>reason 0]:
+  \<open> TRACE_FAIL TEXT(\<open>Fail to show\<close> (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S))
+\<Longrightarrow> Identity_Element\<^sub>E S \<close>
+  unfolding TRACE_FAIL_def
+  by blast
+
+
 subsubsection \<open>Termination\<close>
 
 lemma [\<phi>reason 3000]:
@@ -742,7 +769,7 @@ lemma [\<phi>reason no explorative backtrack 1 except \<open>Identity_Element\<^
   unfolding Identity_Element\<^sub>E_def Object_Equiv_def Premise_def
   using transformation_trans by fastforce
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I A P1
 \<Longrightarrow> Identity_Element\<^sub>I B P2
 \<Longrightarrow> Identity_Element\<^sub>I (A + B) (P1 \<or> P2)\<close>
@@ -754,7 +781,7 @@ lemma (*The above rule is local complete*)
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by clarsimp
 
-lemma [\<phi>reason 3000]:
+lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>E A \<or> Identity_Element\<^sub>E B
 \<Longrightarrow> Identity_Element\<^sub>E (A + B)\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
@@ -764,14 +791,14 @@ lemma (*The above rule is not local complete*)
   \<open> Identity_Element\<^sub>E (A + B) \<Longrightarrow> Identity_Element\<^sub>E A \<and> Identity_Element\<^sub>E B\<close>
   oops
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (A x) P
 \<Longrightarrow> Identity_Element\<^sub>I (AllSet A) P\<close>
   unfolding Identity_Element\<^sub>I_def
   by (metis AllSet_expn Transformation_def)
 (*The rule is not local complete*)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> (\<And>x. Identity_Element\<^sub>E (A x))
 \<Longrightarrow> Identity_Element\<^sub>E (AllSet A)\<close>
   unfolding Identity_Element\<^sub>E_def
@@ -782,7 +809,7 @@ lemma (*The above rule is local complete*)
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by clarsimp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open>(\<And>x. Identity_Element\<^sub>I (A x) (P x))
 \<Longrightarrow> Identity_Element\<^sub>I (ExSet A) (Ex P)\<close>
   unfolding Identity_Element\<^sub>I_def
@@ -793,7 +820,7 @@ lemma (*The above rule is local complete*)
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by (clarsimp; blast)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>E (A x)
 \<Longrightarrow> Identity_Element\<^sub>E (ExSet A)\<close>
   unfolding Identity_Element\<^sub>E_def Transformation_def
@@ -804,7 +831,7 @@ lemma (*The above rule is not local complete*)
   unfolding Identity_Element\<^sub>E_def Transformation_def ExSet_expn
   by clarsimp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>I A Q)
 \<Longrightarrow> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q)\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
@@ -815,7 +842,7 @@ lemma
   unfolding Identity_Element\<^sub>I_def Transformation_def Inhabited_def
   by (cases P; clarsimp)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P
 \<Longrightarrow> Identity_Element\<^sub>E (A \<s>\<u>\<b>\<j> P)\<close>
@@ -827,7 +854,7 @@ lemma (*The above rule is local complete*)
   unfolding Identity_Element\<^sub>E_def Transformation_def Premise_def
   by (clarsimp; blast)
 
-lemma [\<phi>reason 1200]: 
+lemma [\<phi>reason 1000]: 
   \<open> Identity_Element\<^sub>I A P
 \<Longrightarrow> Identity_Element\<^sub>I B Q
 \<Longrightarrow> Identity_Element\<^sub>I (A * B) (P \<and> Q) \<close>
@@ -838,7 +865,7 @@ lemma [\<phi>reason 1200]:
      on the unit, x ## y \<longleftrightarrow> x = e \<and> y = e.
      Let A = B = {e,a}, we have A * B = {e}. Both A B are not stateless but A * B is. *)
 
-lemma [\<phi>reason 1200]: 
+lemma [\<phi>reason 1000]: 
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> Identity_Element\<^sub>E B
 \<Longrightarrow> Identity_Element\<^sub>E (A * B) \<close>
@@ -851,7 +878,7 @@ lemma (*the above rule is not local complete*)
   for A :: \<open>'a::sep_magma_1 BI\<close>
   oops
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I (x \<Ztypecolon> T) P
 \<Longrightarrow> Identity_Element\<^sub>I (y \<Ztypecolon> U) Q
 \<Longrightarrow> Identity_Element\<^sub>I ((x,y) \<Ztypecolon> T \<^emph> U) (P \<and> Q)\<close>
@@ -860,7 +887,7 @@ lemma [\<phi>reason 1200]:
   apply (simp add: set_mult_expn)
   using mult_1_class.mult_1_left by blast
 
-lemma [\<phi>reason 1200]: 
+lemma [\<phi>reason 1000]: 
   \<open> Identity_Element\<^sub>E (x \<Ztypecolon> T)
 \<Longrightarrow> Identity_Element\<^sub>E (y \<Ztypecolon> U)
 \<Longrightarrow> Identity_Element\<^sub>E ((x,y) \<Ztypecolon> T \<^emph> U) \<close>
@@ -868,8 +895,40 @@ lemma [\<phi>reason 1200]:
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp simp add: \<phi>Prod_expn', insert set_mult_expn, fastforce)
 
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>I (fst x \<Ztypecolon> T) P
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Identity_Element\<^sub>I (snd x \<Ztypecolon> U) Q)
+\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T \<^emph>[C] U) (P \<and> (C \<longrightarrow> Q)) \<close>
+  for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
+  unfolding Identity_Element\<^sub>I_def Transformation_def Premise_def
+  by (clarsimp, insert mult_1_class.mult_1_right, blast)
 
-lemma [\<phi>reason 1200]: 
+
+lemma [\<phi>reason 1000]: 
+  \<open> Identity_Element\<^sub>E A
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Identity_Element\<^sub>E B)
+\<Longrightarrow> Identity_Element\<^sub>E (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B) \<close>
+  for A :: \<open>'a::sep_magma_1 BI\<close>
+  unfolding Identity_Element\<^sub>E_def Transformation_def REMAINS_def
+  by (clarsimp, insert mult_1_class.mult_1_left sep_magma_1_left, blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>I A P
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Identity_Element\<^sub>I B Q)
+\<Longrightarrow> Identity_Element\<^sub>I (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B) (P \<and> (C \<longrightarrow> Q)) \<close>
+  for A :: \<open>'a::sep_magma_1 BI\<close>
+  unfolding Identity_Element\<^sub>I_def Transformation_def Premise_def REMAINS_def
+  by (clarsimp, insert mult_1_class.mult_1_right, blast)
+
+lemma [\<phi>reason 1000]:
+  \<open> Identity_Element\<^sub>E (fst x \<Ztypecolon> T)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Identity_Element\<^sub>E (snd x \<Ztypecolon> U))
+\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T \<^emph>[C] U) \<close>
+  for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
+  unfolding Identity_Element\<^sub>E_def Transformation_def Premise_def
+  by (clarsimp, insert mult_1_class.mult_1_right sep_magma_1_left, blast)
+
+lemma [\<phi>reason 1000]: 
   \<open> Identity_Element\<^sub>E A
 \<Longrightarrow> Identity_Element\<^sub>E B
 \<Longrightarrow> Identity_Element\<^sub>E (A \<and>\<^sub>B\<^sub>I B) \<close>
@@ -881,7 +940,7 @@ lemma (*the above rule is local complete*)
   unfolding Identity_Element\<^sub>E_def Transformation_def
   by (clarsimp)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> Identity_Element\<^sub>I A P \<or> Identity_Element\<^sub>I B Q
 \<Longrightarrow> Identity_Element\<^sub>I (A \<and>\<^sub>B\<^sub>I B) (P \<or> Q)\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
@@ -894,25 +953,15 @@ lemma (*the above rule is not local complete*)
   A = {a\<^sub>3}
   B = {a\<^sub>1} *)
 
-lemma [\<phi>reason 1200]:
-  \<open>Identity_Element\<^sub>I (1 \<Ztypecolon> Itself) True\<close>
-  unfolding Identity_Element\<^sub>I_def Transformation_def Itself_expn
-  by simp
-
-lemma [\<phi>reason 1200]:
-  \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> Itself)\<close>
-  unfolding Identity_Element\<^sub>E_def Transformation_def Itself_expn
-  by simp
-
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open>Identity_Element\<^sub>I (any \<Ztypecolon> \<phi>None) True\<close>
   unfolding Identity_Element\<^sub>I_def by simp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open>Identity_Element\<^sub>E (any \<Ztypecolon> \<phi>None)\<close>
   unfolding Identity_Element\<^sub>E_def by simp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> (\<And>i. Identity_Element\<^sub>I (A i) (P i))
 \<Longrightarrow> Identity_Element\<^sub>I (\<big_ast>i\<in>S. A i) (\<forall>i\<in>S. P i)\<close>
   unfolding Identity_Element\<^sub>I_def Mul_Quant_def Transformation_def
@@ -925,7 +974,7 @@ proof clarsimp
     by (insert prems; induct rule: finite_induct[OF \<open>finite S\<close>]; clarsimp; fastforce)
 qed
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason 1000]:
   \<open> (\<And>i. Identity_Element\<^sub>E (A i))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> finite S
 \<Longrightarrow> Identity_Element\<^sub>E (\<big_ast>i\<in>S. A i) \<close>

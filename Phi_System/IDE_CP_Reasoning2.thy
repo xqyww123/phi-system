@@ -1542,7 +1542,23 @@ text \<open>\<^const>\<open>\<A>SEi\<close> is for algebras having no identity e
     algebra that is non-associative but commutative.
 \<close>
 
+
 subsubsection \<open>\<phi>Type Insertion into Unital Algebra\<close>
+
+text \<open>\<^term>\<open>T \<^emph>[C] R\<close> is identical to \<open>\<black_circle> T \<^emph> \<half_blkcirc>[C] R\<close> to certain degree but however cannot replace it
+as \<open>\<half_blkcirc>\<close> is convenient to specify elementwise existence, and makes the rule \<open>Structural_Extract_\<phi>Prod_right_i\<close>
+easy. 
+
+  \<open> Try S1 ((fst a, wy) \<Ztypecolon> \<black_circle> A \<^emph> \<half_blkcirc>[Cy] WY \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> \<black_circle> Y \<^emph> \<half_blkcirc>[Cb] B \<w>\<i>\<t>\<h> P1 @action \<A>SEi )
+\<Longrightarrow> Try S2 ((snd b, wx) \<Ztypecolon> \<half_blkcirc>[Cb] B \<^emph> \<half_blkcirc>[Cx] WX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> c \<Ztypecolon> \<black_circle> X \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> P2 @action \<A>SEi )
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> S1 \<or> S2
+\<Longrightarrow> (snd a \<Ztypecolon> \<half_blkcirc>[Cw] W) = ((wy, wx) \<Ztypecolon> \<half_blkcirc>[Cy] WY \<^emph> \<half_blkcirc>[Cx] WX) @action \<A>SE_internal
+\<Longrightarrow> a \<Ztypecolon> \<black_circle> A \<^emph> \<half_blkcirc>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((fst b, fst c), snd c) \<Ztypecolon> \<black_circle> (Y \<^emph> X) \<^emph> \<half_blkcirc>[Cr] R \<w>\<i>\<t>\<h> (P1 \<and> P2) @action \<A>SEi \<close>
+
+By \<open>\<half_blkcirc>\<close>, we can easily merge the two remainders of the transformation two-side. However, using \<open>T \<^emph>[C] U\<close>
+is not as easy as this.
+Nonetheless, \<open>T \<^emph>[C] R\<close> is suitable for the one-to-one transformation with remainders.
+\<close>
 
 definition \<phi>None_freeobj :: \<open>('v::one, 'x) \<phi>\<close> ("\<circle>\<^sub>\<x>") where \<open>\<circle>\<^sub>\<x> = (\<lambda>x. 1)\<close>
 
@@ -2688,10 +2704,6 @@ text \<open>NToA procedure addresses the transformation between any-to-many \<ph
   For associative but non-unital algebras, a bit of work is required. 
 \<close>
 
-lemma [\<phi>reason 50]: \<comment> \<open>the priority of ASE entry point\<close>
-  \<open> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[C] R
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<close>
-  by (cases C; clarsimp simp add: \<phi>Some_\<phi>Prod \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip \<phi>Prod_expn'')
 
 text \<open>where we need to reuse \<open>\<half_blkcirc>[C]\<close>.\<close>
 
