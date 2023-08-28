@@ -1587,7 +1587,8 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
                                 else (func_mapper'b (\<lambda>x. fst (f (x, undefined))) (\<lambda>x. P (x, undefined)) (fst x), undefined))
                 \<Ztypecolon> \<black_circle> F3 U \<^emph> \<half_blkcirc>[Cr] F2 R
 
-    \<w>\<i>\<t>\<h> (if Cw then if Cr then pred_mapper f P (z x) else pred_mapper'r (fst o f) P (z x)
+    \<w>\<i>\<t>\<h> (if Cw then if Cr then pred_mapper f P (z x)
+                           else pred_mapper'r (fst o f) P (z x)
                 else if Cr then pred_mapper'w (\<lambda>x. f (x, undefined)) (\<lambda>x. P (x, undefined)) (fst x)
                            else pred_mapper'b (\<lambda>x. fst (f (x, undefined))) (\<lambda>x. P (x, undefined)) (fst x))
     @action \<A>SEi \<close>

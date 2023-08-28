@@ -1512,6 +1512,14 @@ text \<open>Extract a \<phi>-type assertion with potential remainders from a \<o
 text \<open>The canonical form is where all permission annotation are on leaves.
   It minimizes fragments. (TODO: move this)\<close>
 
+text \<open>Log:
+The assumption of identity element is bad. Consider a transformation functor whose container algebra
+is unital but element algebra is not. The container goes to \<A>SE and leads us to apply \<A>SE on the
+elements also, but that is wrong. We cannot assume the element algebra is also unital.
+So then, instead of splitting the case of unitral elements or not, why not from the very beginning
+we only assume non-unital algebra and use \<A>SEi only?
+\<close>
+
 consts \<A>SE  :: action  \<comment> \<open>Monoidal\<close>
        \<A>SEi :: action \<comment> \<open>Non-unital semigroup\<close>
        \<A>SEa :: action \<comment> \<open>Non-Associative\<close>
@@ -2635,7 +2643,7 @@ fun SE_entry_point rules thy sequent =
         end
       val rules = (if Sign.of_sort thy (ty, \<^sort>\<open>sep_semigroup\<close>)
                    then if Sign.of_sort thy (ty, \<^sort>\<open>sep_monoid\<close>)
-                   then if is_non_unital_form (X,Y) then #2 else #1
+                   then if is_non_unital_form (X,Y) then #2 else #3
                    else #3
                    else #4) rules
                   (*there is no support for commutative non-semigroup in the system*)
