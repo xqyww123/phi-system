@@ -574,70 +574,6 @@ lemma assertion_eq_intro:
   unfolding Transformation_def BI_eq_iff by blast
 
 
-subsubsection \<open>Reasoning Setup - II\<close>
-
-lemma [\<phi>reason default 1]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close>
-  unfolding Premise_def by blast
-
-declare transformation_refl [\<phi>reason 4000 for \<open>?A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A \<w>\<i>\<t>\<h> ?P\<close> \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _\<close>]
-declare transformation_refl [
-    \<phi>reason 900 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> if \<open>fn (ctxt, sequent) =>
-        let val _ (*Trueprop*) $ (_ (*Transformation*) $ A $ B $ _) = Thm.major_prem_of sequent
-            fun chk_var (Var _) = true
-              | chk_var (X $ _) = chk_var X
-              | chk_var _ = false
-            (*check if is an atom BI assertion, or a \<phi>-type whose abstract object is schematic var.
-              If so, we will try to apply `transformation_refl` with backtrack*)
-            fun chk (Const(\<^const_name>\<open>times\<close>, _)) = false
-              | chk (Var _) = true
-              | chk (Free _) = true
-              | chk (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) = chk_var x
-              | chk (X $ _) = chk X
-              | chk (Const(\<^const_name>\<open>plus\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>Subjection\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>ExSet\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>inf\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>sup\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>top\<close>, _)) = false
-              | chk (Const(\<^const_name>\<open>bot\<close>, _)) = false
-              | chk (Abs _) = raise REQUIRE_LAMBDA_NORMLAIZTION
-              | chk (Const _) = true
-              | chk _ = false
-         in chk B
-         handle REQUIRE_LAMBDA_NORMLAIZTION => (
-            chk (Envir.beta_eta_contract B)
-            handle REQUIRE_LAMBDA_NORMLAIZTION => false)
-        end \<close>]
-
-ML \<open>fun check_ToA_rule rule =
-  let fun chk_target (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) =
-            (case x of Var _ => true
-                     | _ => false)
-        | chk_target (Const(\<^const_name>\<open>times\<close>, _) $ A $ B) = chk_target A andalso chk_target B
-        | chk_target (Const(\<^const_name>\<open>Subjection\<close>, _) $ X) = chk_target X
-        | chk_target (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = chk_target X
-        | chk_target (Abs (_,_,X)) = chk_target X
-        | chk_target _ = true
-      fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
-        | chk (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _) = is_Var X orelse chk_target Y
-        | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = chk X
-        | chk (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = chk X
-        | chk (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = chk X
-        | chk _ = true
-   in if forall chk (Thm.prems_of rule)
-      then ()
-      else warning "In the antecedents of a ToA rule, the target object should be a variable."
-  end
-\<close>
-
-setup \<open>Context.theory_map (Phi_Reasoner.add_pass ("Phi_BI.ToA_rule_chk", \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>,
-  fn _ => fn (rules, mode, pats, guard, ctxt) =>
-             (if null (fst pats) then List.app check_ToA_rule rules else () ;
-              (rules, mode, pats, guard, ctxt))))\<close>
-
-
 paragraph \<open>Inhabitance Reasoning - Part II\<close>
 
 lemma [\<phi>reason 1100]:
@@ -1659,11 +1595,86 @@ lemma Object_Equiv_Mul_Quant[\<phi>reason 1000]:
 
 subsection \<open>Final Settings\<close>
 
-lemma [\<phi>reason 50 for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _\<close>]:
+ML_file \<open>library/syntax/Phi_Syntax0.ML\<close>
+
+subsubsection \<open>Reasoning Setup - II\<close>
+
+lemma [\<phi>reason default 1]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close>
+  unfolding Premise_def by blast
+
+declare transformation_refl [\<phi>reason 4000 for \<open>?A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A \<w>\<i>\<t>\<h> _\<close> \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _\<close>]
+declare transformation_refl [
+    \<phi>reason 900 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> if \<open>fn (ctxt, sequent) =>
+        let val _ (*Trueprop*) $ (_ (*Transformation*) $ A $ B $ _) = Thm.major_prem_of sequent
+            (*check if is an atom BI assertion, or a \<phi>-type whose abstract object is schematic var.
+              If so, we will try to apply `transformation_refl` with backtrack*)
+            fun chk (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) = is_Var (Term.head_of x)
+              | chk tm = not (Phi_Syntax.is_BI_connective tm)
+         in chk B
+        end \<close>]
+
+ML \<open>fun check_ToA_rule rule =
+  let fun chk_target (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) =
+            (case x of Var _ => true
+                     | _ => false)
+        | chk_target (Const(\<^const_name>\<open>times\<close>, _) $ A $ B) = chk_target A andalso chk_target B
+        | chk_target (Const(\<^const_name>\<open>Subjection\<close>, _) $ X) = chk_target X
+        | chk_target (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = chk_target X
+        | chk_target (Abs (_,_,X)) = chk_target X
+        | chk_target _ = true
+      fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
+        | chk (Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _) = is_Var X orelse chk_target Y
+        | chk (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = chk X
+        | chk (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = chk X
+        | chk (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = chk X
+        | chk _ = true
+   in if forall chk (Thm.prems_of rule)
+      then ()
+      else warning "In the antecedents of a ToA rule, the target object should be a variable."
+  end
+\<close>
+
+setup \<open>Context.theory_map (Phi_Reasoner.add_pass ("Phi_BI.ToA_rule_chk", \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>,
+  fn _ => fn (rules, mode, pats, guard, ctxt) =>
+             (if null (fst pats) then List.app check_ToA_rule rules else () ;
+              (rules, mode, pats, guard, ctxt))))\<close>
+
+subsubsection \<open>One-to-one Transformation with Potential Remainder\<close>
+
+text \<open>NToA procedure addresses the transformation between any-to-many \<phi>-type items.
+  Separation Extraction addresses that from many to one \<phi>-type item.
+  The \<phi>-type themselves should provide the rules for one-to-one transformations, as they are primitive.
+  Transformation Functor presented later provides an automation for this.
+
+  However, a small supplementary is one-to-one with remainders.
+  For unital algebras, the issue is easy as we can always force yielding remainders.
+  For non-semigroups, after a reasoning branch splitting the cases for having remainder or not,
+  the issue reduces immediately.
+  For associative but non-unital algebras, a bit of work is required. 
+
+\<close>
+
+
+lemma [\<phi>reason 50 for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<comment> \<open>the priority of ASE entry point\<close>
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> U \<^emph>[C] R
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<close>
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yr \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<w>\<i>\<t>\<h> P \<close>
   by (cases C; clarsimp simp add: \<phi>Some_transformation_strip \<phi>Prod_expn'')
 
+paragraph \<open>Termination\<close>
+
+lemma [\<phi>reason for \<open>_ \<Ztypecolon> ?T \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> ?T \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close> (4000)
+                   \<open>?x \<Ztypecolon> ?T \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> ?T \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>  (4000)
+                   \<open>_ \<Ztypecolon> _ \<^emph> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>  (900)]:
+  \<open>x \<Ztypecolon> T \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph>[True] U\<close>
+  by simp
+
+lemma [\<phi>reason for \<open>_ \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> ?T \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close> (4000)
+                   \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (?x, undefined) \<Ztypecolon> ?T \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>  (4000)
+                   \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>  (900)]:
+  \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x, undefined) \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi>\<close>
+  by simp
 
 end

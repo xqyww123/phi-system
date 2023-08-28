@@ -366,6 +366,7 @@ lemma apply_Separation_Functor_unzip:
   unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'[symmetric]
   by simp
 
+
 subsubsection \<open>Semimodule\<close>
 
 paragraph \<open>Left Distributivity\<close>
@@ -1169,6 +1170,11 @@ end
 
 hide_fact Transformation_Functor_L_simp_cong
 
+declare [[\<phi>reason_default_pattern
+      \<open>Functional_Transformation_Functor ?Fa ?Fb _ _ _ _ _ _\<close>
+   \<Rightarrow> \<open>Functional_Transformation_Functor ?Fa ?Fb _ _ _ _ _ _\<close> (100)
+]]
+
 
 
 subsubsection \<open>Separation Homomorphism\<close>
@@ -1220,16 +1226,43 @@ lemma [\<phi>reason_template name \<phi>Prod []]:
   unfolding Separation_Homo\<^sub>I_def Separation_Homo\<^sub>E_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 
+lemma apply_conditioned_Separation_Functor_unzip:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U un)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Functional_Transformation_Functor Fc Ft D R mapper Prem pred_mapper func_mapper)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Prem)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<and> \<not> C \<longrightarrow> fst a \<in> R x)
+\<Longrightarrow> x \<Ztypecolon> Fc(T \<^emph>[C] U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then un x else (func_mapper fst (\<lambda>_. True) x, undefined)) \<Ztypecolon> Ft(T) \<^emph>[C] Fu(U)\<close>
+  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'[symmetric] Premise_def
+  apply (cases C; simp)
+  \<medium_left_bracket> premises FTF and [] and [useful] and []
+    interpret Functional_Transformation_Functor Fc Ft D R mapper True pred_mapper func_mapper
+      using FTF . ;;
+    apply_rule functional_transformation[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>]
+    \<medium_left_bracket> ;; \<medium_right_bracket> ;;
+  \<medium_right_bracket> .
+
 
 subsubsection \<open>Transformation of Single \<phi>-Type with Remainders\<close>
 
-lemma
-  \<open> Functional_Transformation_Functor F1 F23 Dom Rng mapper Prem pred_mapper func_mapper
+lemma [\<phi>reason_template default 80]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Prem \<and>\<^sub>\<r> Prem'
+\<Longrightarrow> Functional_Transformation_Functor F1 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Functional_Transformation_Functor F23 F3 Dom' Rng' mapper' Prem' pred_mapper' func_mapper'
 \<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 U R uz
-\<Longrightarrow> (\<And>x \<in> Dom x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x \<w>\<i>\<t>\<h> P x )
-\<Longrightarrow> x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xxx
-\<close>
-
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> Dom x \<longrightarrow> f a \<in> Rng x) \<and>
+           (\<forall>a. a \<in> Dom' (func_mapper f P x) \<and> \<not> C \<longrightarrow> fst a \<in> Rng' (func_mapper f P x))
+\<Longrightarrow> (\<And>x \<in> Dom x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P x )
+\<Longrightarrow> x \<Ztypecolon> F1 T
+    \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then uz (func_mapper f P x) else (func_mapper' fst (\<lambda>_. True) (func_mapper f P x), undefined)) \<Ztypecolon> F3 U \<^emph>[C] F2 R
+    \<w>\<i>\<t>\<h> pred_mapper f P x \<close>
+  unfolding \<r>Guard_def Ant_Seq_imp
+  \<medium_left_bracket> premises [\<phi>reason add] and [\<phi>reason add] and FTF and [\<phi>reason add] and _ and _ and Tr
+    interpret Functional_Transformation_Functor F1 F23 Dom Rng mapper Prem pred_mapper func_mapper
+      using FTF . ;;
+    apply_rule functional_transformation[where U=\<open>U \<^emph>[C] R\<close> and f=\<open>f\<close> and P=\<open>P\<close>]
+    \<medium_left_bracket> Tr \<medium_right_bracket>
+    apply_rule apply_conditioned_Separation_Functor_unzip[where Fc=F23 and Ft=F3 and Fu=F2]
+  \<medium_right_bracket> .
 
 paragraph \<open>\<open>Separation_Homo\<^sub>I\<close> for Non-semigroup\<close> \<comment> \<open>as they cannot be handled by stepwise rule and
                                                     therefore the NToA procedure\<close>
@@ -1578,7 +1611,7 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
     apply_rule functional_transformation[where U=\<open>U \<^emph> R\<close> and f=\<open>\<lambda>x. f (x, undefined)\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
       note [[\<phi>trace_reasoning = 2]]
       thm Tr
-    \<medium_left_bracket> ;;   Tr \<medium_right_bracket> ;;
+    \<medium_left_bracket> Tr \<medium_right_bracket>
     apply_Separation_Functor_unzip
   \<medium_right_bracket>
   \<medium_left_bracket> premises [] and [] and [] and []

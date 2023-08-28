@@ -177,7 +177,8 @@ fun rulify_antecedents deep N ctxt ctm =
            | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
                   Phi_Conv.meta_all_conv (conv N o snd) ctxt ctm
            | _ => Conv.all_conv ctm
-   in (!num, conv N ctxt ctm)
+      val ret = conv N ctxt ctm
+   in (!num, ret)
   end
 
 fun rulify_antecedents' deep N ctxt thm =

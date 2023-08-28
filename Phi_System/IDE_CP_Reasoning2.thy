@@ -2690,24 +2690,6 @@ val SE_entry_point_b = SE_entry_point (
 hide_fact enter_SE enter_SE_TH enter_SEb enter_SEb_TH
 
 
-section \<open>Transformation of Single \<phi>-Type with Remainders\<close>
-
-text \<open>NToA procedure addresses the transformation between any-to-many \<phi>-type items.
-  Separation Extraction addresses that from many to one \<phi>-type item.
-  The \<phi>-type themselves should provide the rules for one-to-one transformations, as they are primitive.
-  Transformation Functor presented later provides an automation for this.
-
-  However, a small supplementary is one-to-one with remainders.
-  For unital algebras, the issue is easy as we can always force yielding remainders.
-  For non-semigroups, after a reasoning branch splitting the cases for having remainder or not,
-  the issue reduces immediately.
-  For associative but non-unital algebras, a bit of work is required. 
-\<close>
-
-
-text \<open>where we need to reuse \<open>\<half_blkcirc>[C]\<close>.\<close>
-
-
 section \<open>Programming Methods for Proving Specific Properties\<close>
 
 subsection \<open>Functional\<close>
