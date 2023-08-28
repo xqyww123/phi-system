@@ -191,6 +191,25 @@ lemma [simp]:
   \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
   unfolding Premise_def by simp+
 
+subsubsection \<open>Annotation Distinguishing IN-Argument \& OUT-Argument\<close>
+
+text \<open>Schematic variables in the conclusion of a reasoning rule falls into two sorts, \<^emph>\<open>IN-Argument\<close>
+  and \<^emph>\<open>OUT-Argument\<close>, in which the former accepts (by instantiating to) arguments given from the
+  reasoning goal to be solved, and therefore should be considered fixed,
+  whereas the later assigns result to the reasoning goal (by instantiating the schematic variable
+  of the goal), and therefore can be freely instantiated. \<close>
+
+definition With_IN_Arg :: \<open>prop \<Rightarrow> 'a \<Rightarrow> prop\<close> (infixl "<with-IN-arg>" 5)
+    where \<open>With_IN_Arg P x \<equiv> PROP P\<close>
+
+translations
+  ("prop") "P <with-IN-arg> (x,y)" \<rightleftharpoons> ("prop") "P <with-IN-arg> x <with-IN-arg> y"
+
+lemma With_IN_Arg_I:
+  \<open>PROP P \<Longrightarrow> PROP P <with-IN-arg> x\<close>
+  unfolding With_IN_Arg_def .
+
+ML_file \<open>library/syntax/with_IN_arg.ML\<close>
 
 subsubsection \<open>Meta Ball\<close>
 
@@ -267,11 +286,6 @@ ML_file \<open>library/pattern_translation.ML\<close>
 ML_file \<open>library/tools/simpset.ML\<close>
 
 subsubsection \<open>Isomorphic Atomize\<close>
-
-ML \<open>\<^term>\<open>(\<forall>(a,b) \<in>S. T)\<close>\<close>
-
-thm split_paired_All
-term case_prod
 
 text \<open>The system \<open>Object_Logic.atomize\<close> and \<open>Object_Logic.rulify\<close> is not isomorphic in the sense
   that for any given rule \<open>R\<close>, \<open>Object_Logic.rulify (Object_Logic.atomize R)\<close> does not exactly
@@ -770,7 +784,7 @@ lemma [\<phi>reason 1000]:
   unfolding meta_Ball_def Premise_def Reduce_HO_trivial_variable_def
   by simp
 
-ML_file_debug \<open>library/tools/case_prod_conv.ML\<close>
+(*ML_file_debug \<open>library/tools/case_prod_conv.ML\<close> *)
 
 declare [[ML_debugger]]
 

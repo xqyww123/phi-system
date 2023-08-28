@@ -1221,6 +1221,31 @@ lemma [\<phi>reason_template name \<phi>Prod []]:
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 
 
+lemma
+  \<open> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, r) \<Ztypecolon> \<black_circle> U \<^emph> \<half_blkcirc>[C] R
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] r \<Ztypecolon> R \<close>
+  by (cases C; clarsimp simp add: \<phi>Some_\<phi>Prod \<phi>Some_\<phi>None_freeobj \<phi>Some_transformation_strip \<phi>Prod_expn')
+
+lemma
+  \<open> Functional_Transformation_Functor F1 F23 Dom Rng mapper Prem pred_mapper func_mapper
+\<Longrightarrow> Separation_Homo\<^sub>E F3 F2 F23 U R uz
+\<Longrightarrow> (\<And>x \<in> Dom x. x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R x \<w>\<i>\<t>\<h> P x )
+\<Longrightarrow> x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xxx
+\<close>
+
+
+paragraph \<open>\<open>Separation_Homo\<^sub>I\<close> for Non-semigroup\<close> \<comment> \<open>as they cannot be handled by stepwise rule and
+                                                    therefore the NToA procedure\<close>
+
+
+(*
+thm apply_Separation_Functor_unzip[unfolded \<phi>Prod_expn''[simplified]]
+declare apply_Separation_Functor_unzip
+        [unfolded \<phi>Prod_expn''[simplified],
+         \<phi>reason_template 45 except \<open>(_ :: ?'a :: sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _\<close>]
+*)
+
+
 (* \<p>\<r>\<e>\<m>\<i>\<s>\<e> mapper {(a * b, (a, b)) |a b. a ## b} = {(a * b, (a, b)) |a b. a ## b}
 \<Longrightarrow>  *)
 
@@ -1444,7 +1469,7 @@ lemma [\<phi>adding_property = false,
 
 
 
-subsubsection \<open>Reasonings in Separation Extraction\<close>
+subsubsection \<open>Separation Extraction\<close>
 
 paragraph \<open>Transformation Functor\<close>
 
@@ -3478,9 +3503,7 @@ lemma [\<phi>reason_template name \<phi>None [assertion_simps, simp]]:
 \<Longrightarrow> NO_SIMP (F \<circle> = \<circle>) \<close>
   unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def NO_SIMP_def Action_Tag_def
   by (rule \<phi>Type_eqI_Tr; clarsimp simp add: transformation_weaken)
-  
 
-declare [[\<phi>trace_reasoning = 2]]
 
 lemma derive_\<A>SE_trim_I:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'

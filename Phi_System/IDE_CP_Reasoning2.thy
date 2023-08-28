@@ -182,6 +182,7 @@ Priority Convention:
          will be applied before Structural Extraction, and those less than 50,
          will only be applied in the backtrack of the Structural Extraction.
          Enters \<open>Identity_Element\<^sub>I\<^sub>&\<^sub>E\<close>
+\<^item> 45: Rules for non-semigroup algebras as there are no stepwise rules for them
 \<^item> 12: Instantiate existentially quantified variables in the target part;
       Divergence for additive disjunction in the target part
 \<close>
@@ -355,7 +356,7 @@ fun NToA_to_wild_card ctxt thm0 =
       val (X,Y0,_) = Phi_Syntax.dest_transformation goal
       val (refl, exintro, Y) =
             case Y0 of Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ C $ _ =>
-                         if Term.is_Var (Term.head_of X)
+                         if Term.is_Var (Term.head_of C)
                          then (@{thm' NToA_finish'}, @{thm' ToA_ex_intro'}, X)
                          else (@{thm' NToA_finish }, @{thm' ToA_ex_intro'}, X)
                      | _ => (@{thm' transformation_refl}, @{thm' ToA_ex_intro}, Y0)
@@ -363,7 +364,7 @@ fun NToA_to_wild_card ctxt thm0 =
       val bnos = map_filter (fn Bound i => SOME i | _ => NONE) args
       val bads = subtract (op =) bnos (Term.loose_bnos X)
    in if null bads
-   then refl RS thm
+   then Phi_Reasoner.single_RS refl ctxt thm
    else let
       val N_bads = length bads
       val N_bnos = length bnos
@@ -390,13 +391,14 @@ fun NToA_to_wild_card ctxt thm0 =
                      ) (argTys ~~ args) Y'2
    in Thm.instantiate (TVars.empty, Vars.make [(V, Thm.cterm_of ctxt Y'3)]) thm
    |> funpow N_bads (fn th => exintro RS th)
-   |> (fn th => refl RS th)
+   |> Phi_Reasoner.single_RS refl ctxt
+   handle THM _ => Seq.empty
   end
   end
 \<close>
 
 \<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P @action NToA\<close> 2015 (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _ @action NToA\<close>) = \<open>
-  fn (_, (ctxt,thm)) => Seq.single (ctxt, NToA_to_wild_card ctxt thm)
+  fn (_, (ctxt,thm)) => Seq.map (pair ctxt) (NToA_to_wild_card ctxt thm)
 \<close>
 
 
@@ -429,7 +431,7 @@ lemma [\<phi>reason 4001]:
 
 \<phi>reasoner_ML \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> P\<close> 4005 ( \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> |
                                                        \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_Y \<w>\<i>\<t>\<h> _\<close> ) = \<open>
-  fn (_, (ctxt,thm)) => Seq.single (ctxt, NToA_to_wild_card ctxt thm)
+  fn (_, (ctxt,thm)) => Seq.map (pair ctxt) (NToA_to_wild_card ctxt thm)
 \<close>
 
 
@@ -1143,7 +1145,7 @@ lemma [\<phi>reason 0]:
 
 subsection \<open>Step-by-Step Searching Procedure\<close>
 
-lemma [\<phi>reason no explorative backtrack ! 900 for \<open>(_ :: ?'a::sep_semigroup set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason no explorative backtrack ! 900]:
   " R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R1 \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<Longrightarrow> R1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 \<w>\<i>\<t>\<h> P2)
 \<Longrightarrow> R  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2 * X \<w>\<i>\<t>\<h> P1 \<and> P2"
@@ -2492,23 +2494,23 @@ lemma enter_SEi_\<phi>Some_TH:
 
 
 lemma enter_SEa:
-  \<open> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P) \<and> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q) \<and> C = True \<or>\<^sub>c\<^sub>u\<^sub>t 
-    ((x, w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>SEa) \<and> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> Q) \<and> C = False
+  \<open> C = True \<and>\<^sub>\<r> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P) \<and>\<^sub>\<r> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q) \<or>\<^sub>c\<^sub>u\<^sub>t 
+    C = False \<and>\<^sub>\<r> ((x, w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>SEa) \<and>\<^sub>\<r> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> Q)
 \<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> Q \<close>
-  unfolding Action_Tag_def Orelse_shortcut_def Transformation_def REMAINS_def
+  unfolding Action_Tag_def Orelse_shortcut_def Transformation_def REMAINS_def Ant_Seq_def
   by (clarsimp; blast)
 
 lemma enter_SEa_TH:
-  \<open> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> Auto_Transform_Hint (y'2 \<Ztypecolon> U') (x'2 \<Ztypecolon> T') \<and> P) \<and>
-    (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q) \<and>
-    (C, ATH) = (True, x'2 \<Ztypecolon> T')
-    \<or>\<^sub>c\<^sub>u\<^sub>t 
-    ((x, w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> Auto_Transform_Hint (y'1 \<Ztypecolon> U') (x'1 \<Ztypecolon> T' \<^emph> W') \<and> P @action \<A>SEa) \<and>
-    (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> Auto_Transform_Hint (y'2 \<Ztypecolon> W') A' \<and> Q) \<and>
-    (C, ATH) = (False, A' * (x'2) \<Ztypecolon> T')
+  \<open> (C, ATH) = (True, x'2 \<Ztypecolon> T') \<and>\<^sub>\<r>
+    (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> Auto_Transform_Hint (y'2 \<Ztypecolon> U') (x'2 \<Ztypecolon> T') \<and> P) \<and>\<^sub>\<r>
+    (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q)
+    \<or>\<^sub>c\<^sub>u\<^sub>t
+    (C, ATH) = (False, A' * (x'2) \<Ztypecolon> T') \<and>\<^sub>\<r>
+    ((x, w) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> Auto_Transform_Hint (y'1 \<Ztypecolon> U') (x'1 \<Ztypecolon> T' \<^emph> W') \<and> P @action \<A>SEa) \<and>\<^sub>\<r>
+    (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> w \<Ztypecolon> W \<w>\<i>\<t>\<h> Auto_Transform_Hint (y'2 \<Ztypecolon> W') A' \<and> Q)
 \<Longrightarrow> A * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h>
         Auto_Transform_Hint (y'2 \<Ztypecolon> U') ATH \<and> P \<and> Q \<close>
-  unfolding Action_Tag_def Orelse_shortcut_def Transformation_def REMAINS_def Auto_Transform_Hint_def
+  unfolding Action_Tag_def Orelse_shortcut_def Transformation_def REMAINS_def Auto_Transform_Hint_def Ant_Seq_def
   by (clarsimp; blast)
 
 lemma enter_SEb:

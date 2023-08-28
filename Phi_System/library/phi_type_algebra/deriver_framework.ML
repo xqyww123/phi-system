@@ -1088,7 +1088,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                      of SOME ret => ret
                       | NONE => oblg_solver (#proof_id phi ^ "/" ^ name) ctxt rule'3)
                 |> simp (phi, Simps.enhance ctxt)
-                |> PLPR_Syntax.unfold_antecedents false ctxt
+                |> Conv.fconv_rule (snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt)
                 |> singleton (Proof_Context.export ctxt ctxt0)
 
    in rule'4
@@ -1422,12 +1422,13 @@ fun reasoning ctxt0 sequent0 =
 
       val local_prems = (maps pass_out_ant out_ants @ local_prems'1)
                      |> maps pass_prem
+                     |> map (Conv.fconv_rule (snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt)
+                          #> PLPR_Syntax.elim_leading_All ctxt)
 
       val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (focus, lsequent) (local_prems, ctxt)
       val reasoner_ants = reasoner_ants'
-            |> map ( Object_Logic.rulify ctxt
-                  #> Simplifier.rewrite_rule ctxt rewrs
-                  #> Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt )
+            |> map ( Simplifier.rewrite_rule ctxt rewrs
+                  #> Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess (~1, []) ctxt )
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_rules (

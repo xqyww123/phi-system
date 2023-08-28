@@ -25,11 +25,28 @@ val conj_elims : thm -> thm list
 val instantiate_higher_order_schematic_var' : int (*N*) -> Proof.context -> thm -> thm option (*returns none if no change*)
 val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
 (*For the leading N antecedents only, if there is any higher-order schematic variable
-which is applied to a constant argument instead of a bound variable as usual,
+which is applied to an argument other than a bound variable as usual (including another schematic variable),
 instantiate the schematic variable to the constant function on that parameter, \<open>\<lambda>_. ?var\<close>.
 
-N = ~1 means all antecedents, N = ~2 means to consider the conclusion of the thm in addition.*)
+N = ~1 means all antecedents
 
+It assumes all variables can be instantiated arbitrarily.
+However, for a reasoning rule, not all variables can be instantiated arbitrarily.
+Some of them are IN-arguments which matches the input of a reasoning goal, so they should be considered
+fixed, while others are OUT-arguments which assigns output to the reasoning goal, so they can be
+instantiated arbitrarily.
+
+Due to this issue, to simplify the higher order variables of a reasoning rule, the role of the
+variables have to be given.
+
+Also see Phi_Help.guess_IN_arguments_of_a_rule given latter
+*)
+val instantiate_higher_order_schematic_var_for_rule' :
+        int (*N*) * indexname list (*IN-arguments to be fixed*) ->
+        Proof.context -> thm -> thm option (*returns none if no change*)
+val instantiate_higher_order_schematic_var_for_rule  :
+        int (*N*) * indexname list (*IN-arguments to be fixed*) ->
+        Proof.context -> thm -> thm
 
 end
 
@@ -220,7 +237,7 @@ fun instantiate_higher_order_schematic_var' num ctxt thm =
                (case count 0 X
                   of (N, SOME v) =>
                       let fun visit (set,i) (X $ A) =
-                                if exists_subterm (fn Bound _ => true | _ => false) A
+                                if Term.loose_bvar (A, 0)
                                 then visit (sift (insert eq' (v,N-i) set) A, i+1) X
                                 else visit (sift set A, i+1) X
                             | visit (set,_) _ = set
@@ -236,6 +253,12 @@ fun instantiate_higher_order_schematic_var' num ctxt thm =
                   else insert eqle (v, ~1) set
             | sift set _ = set
           val set = sift [] ant
+          (*for elements in this set, if the second projection is negative 'n',
+            '~1-n' is the number of arguments applied to an occurrence of the variable;
+            else if is non-negative 'n', i.e., if (v,n) occurs in the set,
+            the nth argument of the variable contains bound variable and therefore cannot be trimmed.
+    
+            calc_arity calculates the minimally number of occurred arguments applied to the variable*)
           fun calc_arity ret ((v,n)::L) =
                 if n >= 0 orelse AList.defined eq ret v
                 then calc_arity ret L
@@ -247,7 +270,9 @@ fun instantiate_higher_order_schematic_var' num ctxt thm =
          val ins = map_filter (fn (v,n) =>
                 if forall_num (n-1) (fn i => member eq' set (v,i))
                 then NONE
-                else let fun mk_term targs bs 0 T =
+                else let (*make the residue of the variable trimming upto the minimally number of
+                           occurred arguments, leaving those argument containing loose bound untouched.*)
+                         fun mk_term targs bs 0 T =
                                 fold (fn b => fn X => X $ b) bs
                                   (Var (fst v, fold (fn a => fn T => \<^Type>\<open>fun a T\<close>) targs T))
                            | mk_term targs bs i \<^Type>\<open>fun a T\<close> =
@@ -267,7 +292,6 @@ fun instantiate_higher_order_schematic_var' num ctxt thm =
         end
       val (_, ins) = fold (fn prem => mk_ins (get_concl prem))
                           (if num = ~1 then Thm.prems_of thm
-                           else if num = ~2 then Thm.prems_of thm @ [Thm.concl_of thm]
                            else List.take (Thm.prems_of thm, num))
                           ([],[])
   in if null ins then NONE
@@ -277,6 +301,21 @@ fun instantiate_higher_order_schematic_var' num ctxt thm =
 fun instantiate_higher_order_schematic_var num ctxt thm =
   the_default thm (instantiate_higher_order_schematic_var' num ctxt thm)
 
+fun instantiate_higher_order_schematic_var_for_rule' (N, fixes) ctxt rule =
+  let val vars0 = Term.add_vars (Thm.concl_of rule) []
+      val typs = map (fn x => case AList.lookup (op =) vars0 x
+                                of SOME ret => ret
+                                 | _ => raise THM ("Not a variable occuring in the conclusion", 0, [rule])
+                     ) fixes
+      val (names, ctxt') = Variable.variant_fixes (map fst fixes) ctxt
+      val frees = map (Thm.cterm_of ctxt' o Free) (names ~~ typs)
+      val rule' = Thm.instantiate (TVars.empty, Vars.make ((fixes ~~ typs) ~~ frees)) rule
+   in instantiate_higher_order_schematic_var' N ctxt rule'
+   |> Option.map (singleton (Variable.export ctxt' ctxt))
+  end
+
+fun instantiate_higher_order_schematic_var_for_rule num_fixes ctxt thm =
+  the_default thm (instantiate_higher_order_schematic_var_for_rule' num_fixes ctxt thm)
 
 end
 
@@ -299,6 +338,10 @@ val rulify_Ball : (Proof.context -> conv) -> Proof.context -> conv
 val hol_all_conv : (cterm * Proof.context -> conv) -> Proof.context -> conv
 val hol_alls_to_meta_alls: (Proof.context -> conv) -> Proof.context -> conv
 
+val prod_case_split_in_all_conv : (Proof.context -> conv) -> Proof.context -> conv
+      (*converts \<open>\<And>x. meta_case_prod (meta_case_prod f) x\<close>, \<open>\<And>x. prem \<Longrightarrow>  meta_case_prod (meta_case_prod f) x\<close>
+                 \<open>\<And>x. case_prod (case_prod f) x\<close>, \<open>\<And>x. prem \<longrightarrow> case_prod (case_prod f) x\<close>,
+                 \<open>prem \<Longrightarrow> \<And>x. case_prod (case_prod f) x\<close>*)
 val expand_meta_and_hol_ball : (Proof.context -> conv) (*converts the set*)
                             -> (Proof.context -> conv) (*converts the body*)
                             -> Proof.context -> conv
@@ -307,8 +350,6 @@ val exhausitively_expand_meta_and_hol_ball : (Proof.context -> conv) (*converts 
                                           -> Proof.context -> conv
 
 val hol_imp_conv : conv -> conv -> conv
-
-val prod_case_split_in_all_conv : (Proof.context -> conv) -> Proof.context -> conv
 
 val leading_antecedent_conv : conv -> conv
 val hhf_concl_conv : (Proof.context -> conv) -> Proof.context -> conv
@@ -355,10 +396,17 @@ fun inverse_eta_conv ctm =
                           inverse_eta
      | _ => raise CTERM ("inverse_eta_conv: not a function", [ctm])
 
-fun abs_conv cv ctxt ctm =
-  case Thm.term_of ctm
-    of Abs _ => Conv.abs_conv cv ctxt ctm
-     | _ => (inverse_eta_conv then_conv Conv.abs_conv cv ctxt) ctm
+fun is_strict_reflexive th = (op =) (Logic.dest_equals (Thm.prop_of th))
+  handle TERM _ => false;
+
+fun abs_conv cv ctxt ct =
+  (case Thm.term_of ct of
+    Abs (a, _, _) =>
+      let
+        val ((v, ct'), ctxt') = Variable.dest_abs_cterm ct ctxt;
+        val eq = cv (v, ctxt') ct';
+      in if is_strict_reflexive eq then all_conv ct else Thm.abstract_rule a v eq end
+  | _ => raise CTERM ("abs_conv", [ct]));
 
 fun meta_all_conv cv ctxt ct =
   (case Thm.term_of ct of
@@ -388,18 +436,6 @@ fun meta_case_prod_conv cv cx ctxt ctm =
         combination_conv (arg_conv (abs_conv (fn (x,ctxt) =>
               abs_conv (fn (y,ctxt) => cv ((x,y), ctxt)) ctxt) ctxt)) cx ctm
      | _ => raise CTERM ("meta_case_prod_conv", [ctm])
-
-fun is_strict_reflexive th = (op =) (Logic.dest_equals (Thm.prop_of th))
-  handle TERM _ => false;
-
-fun abs_conv cv ctxt ct =
-  (case Thm.term_of ct of
-    Abs (a, _, _) =>
-      let
-        val ((v, ct'), ctxt') = Variable.dest_abs_cterm ct ctxt;
-        val eq = cv (v, ctxt') ct';
-      in if is_strict_reflexive eq then all_conv ct else Thm.abstract_rule a v eq end
-  | _ => raise CTERM ("abs_conv", [ct]));
 
 fun quant_conv head cv ctxt ct =
   (case Thm.term_of ct
@@ -457,22 +493,38 @@ fun prod_case_split_in_all_conv C ctxt =
       fun rename_all2 NONE rule = rule
         | rename_all2 (SOME (N1, N2)) rule =
             case Thm.prop_of rule
-              of (A1 $ Abs (_, T1, A2 $ Abs (_, T2, X))) =>
-                  Thm.renamed_prop (A1 $ Abs (N1, T1, A2 $ Abs (N2, T2, X))) rule
+              of Eq $ LHS $ (A1 $ Abs (_, T1, A2 $ Abs (_, T2, X))) =>
+                  Thm.renamed_prop (Eq $ LHS $ (A1 $ Abs (N1, T1, A2 $ Abs (N2, T2, X)))) rule
                | _ => rule
 
       fun conv ctxt ctm =
         case Thm.term_of ctm
-          of Const(\<^const_name>\<open>Pure.all\<close>, _) $ X =>
+          of Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X) =>
               (case X
-                 of Const (\<^const_name>\<open>meta_case_prod\<close>, _) $ f $ _ =>
+                 of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ (Const (\<^const_name>\<open>meta_case_prod\<close>, _) $ f $ _) =>
+                      ((rename_all2 (get_bnames f) o Conv.rewr_conv @{thm split_paired_all}) then_conv
+                        meta_all_conv (fn (_,ctxt') =>
+                          meta_all_conv (K (Conv.arg_conv (Conv.rewr_conv @{thm meta_case_prod_simp}))) ctxt' then_conv
+                          conv ctxt') ctxt) ctm
+                  | Const (\<^const_name>\<open>meta_case_prod\<close>, _) $ f $ _ =>
                       ((rename_all2 (get_bnames f) o Conv.rewr_conv @{thm split_paired_all}) then_conv
                         meta_all_conv (fn (_,ctxt') =>
                           meta_all_conv (K (Conv.rewr_conv @{thm meta_case_prod_simp})) ctxt' then_conv
-                          prod_case_split_in_all_conv C ctxt') ctxt) ctm
+                          conv ctxt') ctxt) ctm
+                  | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _
+                      $ (Const (\<^const_name>\<open>case_prod\<close>, _) $ _ $ _)) =>
+                      (Conv.rewr_conv @{thm' atomize_imp[symmetric]} then_conv
+                       rulify_case_prods (K Conv.all_conv) ctxt then_conv
+                       conv ctxt) ctm
                   | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>case_prod\<close>, _) $ _ $ _) =>
                       (rulify_case_prods (K Conv.all_conv) ctxt then_conv conv ctxt) ctm
+                  | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $
+                      (Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>case_prod\<close>, _) $ _ $ _)) =>
+                      (Conv.arg_conv (rulify_case_prods (K Conv.all_conv) ctxt) then_conv
+                       conv ctxt) ctm
                   | _ => C ctxt ctm)
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
+                  (Conv.arg_conv inverse_eta_conv then_conv conv ctxt) ctm
            | _ => raise CTERM ("prod_case_split_in_all_conv: not a meta-all quantification", [ctm])
    in conv ctxt
   end

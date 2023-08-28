@@ -956,6 +956,15 @@ The motivation to infer such compatibility is based on two reasons.
 definition Separation_Disj :: \<open>('a::sep_magma \<Rightarrow> 'b::sep_magma) \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
   where \<open>Separation_Disj \<psi> X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
 
+definition Separation_Disj\<^sub>\<phi> :: \<open>('ca::sep_magma \<Rightarrow> 'cb::sep_magma) \<Rightarrow> ('ay \<times> 'ax) set \<Rightarrow> ('ca, 'ax) \<phi> \<Rightarrow> ('ca, 'ay) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Separation_Disj\<^sub>\<phi> \<psi> D T U \<longleftrightarrow> (\<forall>x y. (y,x) \<in> D \<longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U))\<close>
+
+declare [[
+\<phi>reason_default_pattern
+      \<open>Separation_Disj ?\<psi> ?A ?B\<close> \<Rightarrow> \<open>Separation_Disj ?\<psi> ?A ?B\<close> (100)
+  and \<open>Separation_Disj\<^sub>\<phi> ?\<psi> _ ?W ?T\<close> \<Rightarrow> \<open>Separation_Disj\<^sub>\<phi> ?\<psi> _ _ ?T\<close> (130)
+]]
+
 text \<open>
   The standard homomorphism from a partial algebra \<open>\<A>\<close> to another \<open>\<B>\<close> only assumes the group operation
   defined (between two certain elements) in \<open>\<A>\<close>, is also defined in \<open>\<B>\<close>, but not reversely, i.e.,
@@ -1267,17 +1276,22 @@ lemma \<comment> \<open>The above rule is reversible for any domainoid \<open>d\
 
 subsection \<open>Domainoid gives Separation_Disj\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason default 10]:
   \<open> Domainoid_Homo\<^sub>U dm\<^sub>A T dm\<^sub>T
 \<Longrightarrow> Domainoid_Homo\<^sub>U dm\<^sub>A U dm\<^sub>U
 \<Longrightarrow> homo_domainoid dm\<^sub>A dm\<^sub>B \<psi> \<psi>\<^sub>D \<and> has_\<psi>\<^sub>D = True \<or>\<^sub>c\<^sub>u\<^sub>t has_\<psi>\<^sub>D = False
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>d\<^sub>x d\<^sub>y. d\<^sub>x \<in> dm\<^sub>T x \<and> d\<^sub>y \<in> dm\<^sub>U y \<and> (has_\<psi>\<^sub>D \<longrightarrow> \<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y) \<longrightarrow> d\<^sub>x ## d\<^sub>y)
-\<Longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<close>
+\<Longrightarrow> Separation_Disj\<^sub>\<phi> \<psi> ({(y,x). \<forall>d\<^sub>x d\<^sub>y. d\<^sub>x \<in> dm\<^sub>T x \<and> d\<^sub>y \<in> dm\<^sub>U y \<and> (has_\<psi>\<^sub>D \<longrightarrow> \<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y) \<longrightarrow> d\<^sub>x ## d\<^sub>y}) T U \<close>
   for \<psi> :: \<open>'c::sep_magma \<Rightarrow> 'cc::sep_magma\<close>
-  unfolding Separation_Disj_def Domainoid_Homo\<^sub>U_def Orelse_shortcut_def
+  unfolding Separation_Disj\<^sub>\<phi>_def Separation_Disj_def Domainoid_Homo\<^sub>U_def Orelse_shortcut_def
   by (clarsimp simp add: domainoid_def Premise_def homo_domainoid_def
                          closed_homo_sep_def closed_homo_sep_disj_def; metis)
 
+lemma [\<phi>reason 1000]:
+  \<open> Separation_Disj\<^sub>\<phi> \<psi> D T U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y,x) \<in> D
+\<Longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<close>
+  unfolding Separation_Disj\<^sub>\<phi>_def Premise_def
+  by simp
 
 lemma [\<phi>reason 1000]:
   \<open> MEMOIZE homo_sep \<psi>

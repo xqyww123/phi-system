@@ -71,7 +71,9 @@ val pretty_template : Context.generic -> template -> Pretty.T
 val pretty_templates : Context.generic -> (priority * template) Ord_List.T Symtab.table -> Pretty.T
 
 (* The default process simplifying a freshly instantiated rule *)
-val default_simplify : Proof.context -> thm -> thm
+val default_simplify : term list option (*pattern used in Phi_Reasoner.instantiate_higher_order_schematic_var_for_rule_guess
+                            can be None by default*)
+                    -> Proof.context -> thm -> thm
 
 (*** Internal Interfaces ***)
 
@@ -270,7 +272,7 @@ fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
 
-fun default_simplify ctxt rule =
+fun default_simplify pattern ctxt rule =
   let val rule'1 = case Thm.concl_of rule
                      of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
                       | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
@@ -284,7 +286,7 @@ fun default_simplify ctxt rule =
                 |> Simplification_Protect.unprotect ctxt's
                 |> singleton (Variable.export ctxt'1 ctxt)
                 |> Phi_Help.unique_flexflex ctxt
-   in (case Phi_Help.instantiate_higher_order_schematic_var' ~1 ctxt rule'3
+   in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess' (~1, the_default [] pattern) ctxt rule'3
          of SOME th => simplify ctxt th
           | NONE => rule'3)
    |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
@@ -357,8 +359,11 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                         end) (Thm.nprems_of template) props
                     |> snd
                     |> Phi_Help.beta_eta_contract
-          val rules' = case pass of SOME ps => ps (single o default_simplify ctxt', pos, ctxt') rule'1
-                                  | NONE => single (default_simplify ctxt' rule'1)
+          val pattern = (case action
+                           of Reasonig_Rule (_, (pats, _)) => SOME (map fst pats)
+                            | Attributes _ => NONE)
+          val rules' = case pass of SOME ps => ps (single o default_simplify pattern ctxt', pos, ctxt') rule'1
+                                  | NONE => single (default_simplify pattern ctxt' rule'1)
        in if null rules' then ctxt
        else (
        Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
@@ -639,7 +644,7 @@ val _ = Theory.setup (
             then (NONE, NONE)
             else (SOME x, SOME (f x th))
  in Attrib.setup \<^binding>\<open>\<phi>simplify_reasoning_rule\<close> (
-    Scan.succeed (rule_attribute (default_simplify o Context.proof_of)))
+    Scan.succeed (rule_attribute (default_simplify NONE o Context.proof_of)))
   "Simplify a reasoning rule, using the same process as that in template instantiation.\n\
   \The conclusion of the rule is remained untouched and any antecedents are simplified and reduced\
   \if possible. \<open>NO_SIMP\<close> tag is recognized and supresses the simplification on the protected terms."

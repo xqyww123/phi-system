@@ -426,6 +426,19 @@ text \<open>Semantics of antecedent \<^pattern_prop>\<open>X \<t>\<r>\<a>\<n>\<s
   Given the source \<^term>\<open>X\<close> and the target \<^term>\<open>Y\<close>, find a reasoning way to do the transformation,
   which may bring in additional pure facts \<^pattern_term>\<open>?P\<close> and generate proof obligations.\<close>
 
+text \<open>TODO: move me
+
+Transformation \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. f x y\<close> and its dual \<open>y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. g x y\<close>
+constitute a classical Galios connection \<open>(f,g)\<close>. However, our method does not apply the Galios
+connection directly as our method is synthetic (we do not analysis the relation between
+concrete sets and abstract sets once after defining a \<phi>-type,
+but do deductions by means of transformation rules).
+Comparing to analytic methods (the classical methods for data refinement), synthetic methods based
+on a higher abstraction simplify representations and give more chances for automation (by means of an inference system),
+and in addition, can be combined in program logics more natively.
+\<close>
+
+
 definition REMAINS :: \<open> 'a::sep_magma BI \<Rightarrow> bool \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<close> ("_ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _" [14,10,14] 13)
   where \<open>(X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R) \<equiv> if C then R * X else X\<close>
   \<comment> \<open>The \<open>C\<close> should be a variable sending to the later reasoning which decides if the transformation
