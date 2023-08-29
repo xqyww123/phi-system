@@ -409,7 +409,7 @@ declare NToA_finish'[(*\<phi>reason 4001 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\
         (*NToA_finish [\<phi>reason 4000 for \<open>(?X::?'a::sep_magma_1 set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X  \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>,
                      \<phi>reason 900  for \<open>(?X::?'a::sep_magma_1 set) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]*)
 
-lemma [\<phi>reason 4000]:
+lemma [\<phi>reason 400]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] X\<close>
   for X :: \<open>'a::sep_magma_1 BI\<close>
   unfolding REMAINS_def Action_Tag_def by simp
@@ -2710,15 +2710,15 @@ fun SE_entry_point rules thy sequent =
 
 val SE_entry_point_normal = SE_entry_point (
       ((@{thm' enter_SEi}, @{thm' enter_SEi_TH}),
-           (@{thm' enter_SEi[THEN ToA_by_Equive_Class']}, @{thm' enter_SEi_TH[THEN ToA_by_Equive_Class']})),
+           (@{thm' enter_SEi[THEN ToA_by_Equiv_Class']}, @{thm' enter_SEi_TH[THEN ToA_by_Equiv_Class']})),
       ((@{thm' enter_SEa}, @{thm' enter_SEa_TH}),
-           (@{thm' enter_SEa[THEN ToA_by_Equive_Class']}, @{thm' enter_SEa_TH[THEN ToA_by_Equive_Class']})))
+           (@{thm' enter_SEa[THEN ToA_by_Equiv_Class']}, @{thm' enter_SEa_TH[THEN ToA_by_Equiv_Class']})))
 
 val SE_entry_point_b = SE_entry_point (
       ((@{thm' enter_SEbi}, @{thm' enter_SEbi_TH}),
-           (@{thm' enter_SEbi[THEN ToA_by_Equive_Class]}, @{thm' enter_SEbi_TH[THEN ToA_by_Equive_Class]})),
+           (@{thm' enter_SEbi[THEN ToA_by_Equiv_Class]}, @{thm' enter_SEbi_TH[THEN ToA_by_Equiv_Class]})),
       ((@{thm' enter_SEbi}, @{thm' enter_SEbi_TH}),
-           (@{thm' enter_SEbi[THEN ToA_by_Equive_Class]}, @{thm' enter_SEbi_TH[THEN ToA_by_Equive_Class]})))
+           (@{thm' enter_SEbi[THEN ToA_by_Equiv_Class]}, @{thm' enter_SEbi_TH[THEN ToA_by_Equiv_Class]})))
 \<close>
  
 \<phi>reasoner_ML \<A>SE_Entry 50 (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
