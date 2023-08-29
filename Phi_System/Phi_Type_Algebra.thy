@@ -1679,7 +1679,7 @@ lemma "_Structural_Extract_general_rule_i_TH_"[\<phi>reason_template default 81]
           and func_mapper'r=func_mapper'r and func_mapper'w=func_mapper'w
           and func_mapper'b=func_mapper'b] .
 
-  
+(*
 lemma "_Structural_Extract_general_rule_a_":
   \<open> \<g>\<u>\<a>\<r>\<d> Prem
 \<Longrightarrow> Functional_Transformation_Functor F14 F3 Dom Rng mapper Prem pred_mapper func_mapper
@@ -1713,6 +1713,7 @@ lemma "_Structural_Extract_general_rule_a_TH_"[\<phi>reason_template default 81]
   unfolding Auto_Transform_Hint_def HOL.simp_thms(22)
   using "_Structural_Extract_general_rule_a_"[where func_mapper=func_mapper and P=P
             and pred_mapper=pred_mapper] .
+*)
 
 (*
 lemma "_Structural_Extract_general_rule_b_":
@@ -1894,7 +1895,7 @@ lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we hav
 
 declare SE_general_Semimodule_Scalar_left_b[(*THEN SE_clean_waste,*) \<phi>reason_template default 30]
 
-
+(*
 lemma SE_general_Semimodule_Scalar_left_a:
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c * a = b) \<and>\<^sub>\<r> Prem
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b \<and> Ds c
@@ -1923,7 +1924,7 @@ lemma SE_general_Semimodule_Scalar_left_a:
   \<medium_right_bracket> .
 
 declare SE_general_Semimodule_Scalar_left_a[THEN \<A>SEa_clean_waste, \<phi>reason_template default 30]
-
+*)
 
 subsubsection \<open>Separation Extraction of Semimodule Left Distributivity\<close>
 
@@ -2513,6 +2514,7 @@ lemma SE_Semimodule_LDistr_dac_b_nc_i[\<phi>reason_template 28]:
 
 (*DONE*)
 
+(*
 paragraph \<open>Non-Associative\<close>
 
 subparagraph \<open>Assuming no algebraic property, allowing no further demand in the element transformation\<close>
@@ -2634,7 +2636,7 @@ lemma SE_Semimodule_LDistr_ad_b_na_W[\<phi>reason_template 36]:
     apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_rev[where s=a and t=d and F=F1 and x=\<open>(fst x, fst (snd x))\<close>]
     Tr
   \<medium_right_bracket> .
-
+*)
 
 subsubsection \<open>Transformation of Semimodule Left Distributivity\<close>
 
