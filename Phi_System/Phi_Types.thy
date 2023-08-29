@@ -827,24 +827,24 @@ declare [[\<phi>trace_reasoning = 2]]
 
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
-\<Longrightarrow> closed_homo_sep_disj \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> closed_homo_sep_disj \<psi> \<and>\<^sub>\<r> Dx = UNIV \<or>\<^sub>c\<^sub>u\<^sub>t
     Separation_Disj\<^sub>\<phi> \<psi> Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
     TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
 \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U Dx (\<lambda>x. x) \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
             Separation_Disj\<^sub>\<phi>_def Separation_Disj_def closed_homo_sep_def
-            homo_sep_def closed_homo_sep_disj_def
+            homo_sep_def closed_homo_sep_disj_def Ant_Seq_def
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp simp add: Ball_def; metis)
 
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 3]]
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
-  deriving Basic
+  deriving (*Basic
        and \<open> homo_one (f s) \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> P = True
          \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) P \<close>
        and \<open> homo_one (f s) \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T)
@@ -854,14 +854,14 @@ declare [[\<phi>trace_reasoning = 1]]
        and Trivial_\<Sigma>
        and Open_Abstraction_Full
        and Construct_Abstraction_from_Raw
-       and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
+       and*) \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> closed_homo_sep_disj (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
              Separation_Disj\<^sub>\<phi> (\<psi> s) Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
              TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
-       and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
+       (*and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
-       and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
+       and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>*)
 
 thm apply_Separation_Functor_unzip
         [unfolded \<phi>Prod_expn''[simplified]]
