@@ -585,6 +585,7 @@ lemma [\<phi>reason 1000]:
   unfolding Generate_Implication_Reasoning_def Transformation_def Inhabited_def by blast
 
 
+
 subsection \<open>Bottom\<close>
 
 text \<open>Despite of semantically \<open>0 = \<bottom>\<close> where syntactically \<open>\<bottom> \<equiv> {}\<close>, but there is not syntactically
@@ -1419,7 +1420,6 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[C] U \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> (C \<longrightarrow> Q) \<close>
   unfolding Action_Tag_def Inhabited_def
   by clarsimp blast
-
 
 
 

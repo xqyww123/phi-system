@@ -120,9 +120,12 @@ definition \<open>Transformation_Functor F1 F2 D R mapper \<longleftrightarrow>
   \<open>R\<close> constrains the range of the transformation of the inner elements, which will be a proof obligation
       reported to user for each transformation application.
   It is useful especially for dependent data types like a list of even numbers.
-  Such constraint usually assumes the logic type (the algbera) of the transformation target.
+  As \<open>R\<close> is parameterized by the abstract container \<open>x\<close>, by assigning \<open>R\<close> to empty set on certain
+  invalid abstract containers, it also constraints the domain of abstract containers on which
+  the transformation functor is available.
+
   For general data structures which do not assumes such, tt is usually \<open>\<lambda>_. \<top>\<close>.
-  Our automatic deriver always assigns it to \<open>\<lambda>_. \<top>\<close> if no user hint is given.
+  Our automatic deriver by default assumes it to \<open>\<lambda>_. \<top>\<close> if no user hint is given.
 \<close>
 
 
@@ -1567,6 +1570,31 @@ free from explosion of expression, and can be simplified easily because the bool
 assigned by constants after the reasoning.
 
 *)
+
+
+definition \<open>Separation_Homo\<^sub>I\<^sub>C Ft Fu F3 T U D z Cw \<longleftrightarrow>
+              (\<forall>x y. (x,y) \<in> D \<longrightarrow> ((x,y) \<Ztypecolon> Ft(T) \<^emph>[Cw] Fu(U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z (x,y) \<Ztypecolon> F3 (T \<^emph>[Cw] U)))\<close>
+
+declare [[\<phi>trace_reasoning = 2]]
+
+(* WIP TODO
+lemma
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Cw \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U Dz z)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> Cw \<Longrightarrow> Functional_Transformation_Functor Ft F3 Dom Rng mapper Prem pred_mapper func_mapper)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> Cw \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Prem)
+\<Longrightarrow> Separation_Homo\<^sub>I\<^sub>C Ft Fu F3 T U
+                     (if Cw then Dz else {x. \<forall>a \<in> Dom (fst x). (a, undefined) \<in> Rng (fst x)})
+                     (if Cw then z else (\<lambda>x. func_mapper (\<lambda>a. (a, undefined)) (\<lambda>_. True) (fst x))) Cw \<close>
+  unfolding Separation_Homo\<^sub>I\<^sub>C_def Premise_def Separation_Homo\<^sub>I_def \<r>Guard_def
+  apply (cases Cw; clarsimp)
+  \<medium_left_bracket> premises FTF and _ and _ and [useful]
+    interpret Functional_Transformation_Functor Ft F3 Dom Rng mapper True pred_mapper func_mapper
+      using FTF . ;;
+    apply_rule functional_transformation[where f=\<open>\<lambda>a. (a, undefined)\<close> and P=\<open>\<lambda>_. True\<close> and U=\<open>T \<^emph>[Cw] U\<close>]
+    \<medium_left_bracket> \<medium_right_bracket>
+*)
+
+
 lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
   \<open> \<g>\<u>\<a>\<r>\<d> Prem \<and>\<^sub>\<r> Prem'r \<and>\<^sub>\<r> Prem'w \<and>\<^sub>\<r> Prem'b
 \<Longrightarrow> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper

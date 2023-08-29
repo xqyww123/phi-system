@@ -990,6 +990,10 @@ lemma [\<phi>reason 2601 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (
   by (cases C; simp add: Premise_def Orelse_shortcut_def)
 
 
+subsubsection \<open>Type-embedding of Conditioned Remains\<close>
+
+
+
 subsubsection \<open>Conditioned Remains\<close>
 
 paragraph \<open>Reduction\<close>
