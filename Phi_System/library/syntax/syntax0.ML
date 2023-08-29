@@ -1,29 +1,12 @@
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
-  val is_action_of : (term -> bool) -> (term -> bool)
-  val dest_tags   :  term ->  term
-  val dest_tags_c : cterm -> cterm
-
   val dest_procedure   : term -> term * term * term * term
   val dest_procedure_c : cterm -> cterm * cterm * cterm * cterm
   val proc_monad_conv : conv -> conv
 
   val dest_view_shift   : term  -> term * term * term
   val dest_view_shift_c : cterm -> cterm * cterm * cterm
-
-  val dest_transformation_typ : term -> typ
-  val dest_transformation   : term  -> term * term * term
-  val dest_transformation_c : cterm -> cterm * cterm * cterm
-  val transformation_conv : conv -> conv -> conv -> conv
-
-  val is_transformation_intro_rule : thm -> bool
-  val is_transformation_elim_rule : thm -> bool
-  val pass_ensures_intro_transformation : Phi_Reasoner.rule_pass
-  val pass_ensures_elim_transformation : Phi_Reasoner.rule_pass
-
-  val strip_separations : term -> term list
-  val mk_separations : term list -> term
 
   val dest_sem_value_T: typ -> typ
   val mk_sem_value_T: typ -> typ
@@ -40,20 +23,6 @@ end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Thm Term HOLogic Phi_Help Phi_Syntax
-
-val dest_action_tag   = dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
-val dest_action_tag_c = dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
-
-fun is_action_of P (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ A) = P A
-  | is_action_of P (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_action_of P X
-  | is_action_of _ _ = false
-
-fun dest_tags (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_tags X
-  | dest_tags (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = dest_tags X
-  | dest_tags X = X
-fun dest_tags_c X = X
-  |> perhaps (try dest_Trueprop_c)
-  |> perhaps (try dest_action_tag_c)
 
 val dest_procedure   =
      dest_tags
@@ -76,66 +45,6 @@ val dest_view_shift    =
 val dest_view_shift_c  =
          dest_tags_c
       #> dest_triop_c @{const_name View_Shift}
-
-val dest_transformation   =
-         dest_tags
-      #> dest_triop @{const_name "Transformation"}
-val dest_transformation_c =
-         dest_tags_c
-      #> dest_triop_c @{const_name "Transformation"}
-
-fun dest_transformation_typ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_transformation_typ X
-  | dest_transformation_typ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = dest_transformation_typ X
-  | dest_transformation_typ (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ X) = dest_transformation_typ X
-  | dest_transformation_typ (Const(\<^const_name>\<open>Transformation\<close>, \<^Type>\<open>fun \<^Type>\<open>set a\<close> _\<close>) $ _ $ _ $ _) = a
-  | dest_transformation_typ X = raise TERM ("dest_transformation_typ", [X])
-
-fun is_transformation_intro_rule rule =
-  let val (prems, concl) = Logic.strip_horn (Thm.prop_of rule)
-   in case dest_transformation concl
-   of (Var v, _, _) =>
-        exists (fn prem => case dest_transformation prem
-                             of (Var v', _, _) => v' = v
-                              | _ => false) prems
-    | _ => false
-  end
-
-fun is_transformation_elim_rule rule =
-  let val (prems, concl) = Logic.strip_horn (Thm.prop_of rule)
-   in case dest_transformation concl
-   of (_, Var v, _) =>
-        exists (fn prem => case dest_transformation prem
-                             of (_, Var v', _) => v' = v
-                              | _ => false) prems
-    | _ => false
-  end
-
-fun pass_ensures_intro_transformation _ (rules, (mode, priority), (pattern, except), guard, ctxt) =
-  let fun chk rule = if is_transformation_intro_rule rule then rule
-                     else rule RS' (Context.proof_of ctxt, @{thm' mk_intro_transformation})
-   in (map chk rules, (mode, priority), (pattern, except), guard, ctxt)
-  end
-
-fun pass_ensures_elim_transformation _ (rules, (mode, priority), (pattern, except), guard, ctxt) =
-  let fun chk rule = if is_transformation_elim_rule rule then rule
-                     else rule RS' (Context.proof_of ctxt, @{thm' mk_elim_transformation})
-   in (map chk rules, (mode, priority), (pattern, except), guard, ctxt)
-  end
-
-
-fun transformation_conv C_s C_t C_p ctm = (
-  dest_transformation_c ctm;
-  Phi_Conv.tag_conv (
-    Conv.combination_conv (Conv.combination_conv (Conv.combination_conv Conv.all_conv C_s) C_t) C_p) ctm
-)
-
-fun strip_separations (Const (@{const_name Subjection}, _) $ T) = strip_separations T
-  | strip_separations (Const (@{const_name ExSet}, _) $ T) = strip_separations T
-  | strip_separations (Abs (_, _, T)) = strip_separations T
-  | strip_separations T = strip_binop_l @{const_name times} T
-
-fun mk_separations [] = \<^term>\<open>Void\<close>
-  | mk_separations L = foldr1 (fn (A,X) => @{const times(assn)} $ A $ X) L
 
 val dest_sem_value_T = dest_monop_ty \<^type_name>\<open>\<phi>arg\<close>
 fun mk_sem_value_T T = Type(\<^type_name>\<open>\<phi>arg\<close>, [T])
