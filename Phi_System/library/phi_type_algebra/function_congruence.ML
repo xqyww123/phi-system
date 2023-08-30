@@ -56,7 +56,7 @@ val _ = Theory.setup (Context.theory_map (
                                   Thm.pretty_thm ctxt rule]
                                end))
                 |> Conv.gconv_rule (Simplifier.rewrite (ctxt addsimps @{thms' sing_times_sing sing_if})) 3
-                |> Conv.fconv_rule (snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt)
+                |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
                 |> singleton (Variable.export ctxt ctxt0)
                 |> Drule.zero_var_indexes
                 |> @{print}

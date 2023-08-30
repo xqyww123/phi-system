@@ -14,13 +14,11 @@ val elim_leading_All : Proof.context -> thm -> thm
       (*eliminates the leading Pure.all and meta_Balls to schematic variables*)
 
 val rulify_antecedents : bool (*deep*) -> int (*number of antecedents to be rulified at most*)
-                      -> Proof.context -> cterm -> int * thm
+                      -> Proof.context -> thm -> int * thm
       (*unfolds \<and>, \<and>\<^sub>\<r>, \<longrightarrow>, \<forall>, for all antecedents in a rule
         deep: if true, rulify by Phi_Conv.iso_rulify_conv, pure connectives embedded into HOL
         number of antecedents: ~1 for exhaustively all, Thm.nprems_of + 1 means to rulify the conclusion
         returns how many new antecedent are introduced.*)
-val rulify_antecedents' : bool (*deep*) -> int (*number of antecedents to be rulified at most*)
-                      -> Proof.context -> thm -> int * thm
 
 val contract_leading_antecedents : bool (*deep*) -> int -> Proof.context -> thm -> thm
       (*the int: how many leading antecedents are considered.*)
@@ -138,9 +136,8 @@ fun atomize_antecedent deep =
 
 (*N: numbers of leading antecedents to be rulified at most
   returns: numbers of new antecedent extracted*)
-fun rulify_antecedents deep N ctxt ctm =
-  let val num = Unsynchronized.ref 0
-      fun conv N ctxt ctm =
+fun rulify_antecedents deep N ctxt thm =
+  let fun conv N ctxt ctm =
         if N = 0 then Conv.all_conv ctm else
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ X =>
@@ -151,11 +148,10 @@ fun rulify_antecedents deep N ctxt ctm =
                      Conv.try_conv (Conv.rewr_conv @{lemma' \<open>(\<And>x. True) \<equiv> Trueprop True\<close>
                                                         by (rule, simp) })) ctm
                 | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
-                    (num := !num + 1 ;
                     (Conv.rewr_conv @{thm' atomize_imp[symmetric]} then_conv
                      Conv.combination_conv (Conv.arg_conv (conv ~1 ctxt)) (conv (N-1) ctxt) then_conv
                      Conv.try_conv (Conv.rewr_conv @{lemma' \<open>(PROP P \<Longrightarrow> True) \<equiv> Trueprop True\<close>
-                                                        by (rule, simp) })) ctm)
+                                                        by (rule, simp) })) ctm
                 | Const(\<^const_name>\<open>Set.Ball\<close>, _) $ _ $ _ =>
                     (Phi_Conv.rulify_Ball (conv N) ctxt then_conv
                      Conv.try_conv (Conv.rewr_conv @{lemma' \<open>meta_Ball S (\<lambda>_. Trueprop True) \<equiv> Trueprop True\<close>
@@ -163,31 +159,38 @@ fun rulify_antecedents deep N ctxt ctm =
                 | _ => if deep then Phi_Conv.iso_rulify_conv ctxt ctm
                        else Conv.all_conv ctm)
            | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ Y $ _ =>
-             (case Y
-                of Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _) =>
-                    (num := !num + 1 ;
-                    (Conv.rewr_conv @{thm' Ant_Seq_imp} then_conv conv (N+1) ctxt) ctm)
-                 | Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
-                    (num := !num + 1 ;
-                    (Conv.rewr_conv @{thm' conj_imp_eq_imp_imp} then_conv conv (N+1) ctxt) ctm)
-                 | _ =>
-                    (Conv.combination_conv (Conv.arg_conv (conv ~1 ctxt))
-                                           (conv (N-1) ctxt) then_conv
-                     reduce_constant_True_left) ctm)
+               (Conv.combination_conv (Conv.arg_conv (conv ~1 ctxt))
+                                      (conv (N-1) ctxt) then_conv
+                reduce_constant_True_left) ctm
            | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
                   Phi_Conv.meta_all_conv (conv N o snd) ctxt ctm
            | _ => Conv.all_conv ctm
-      val ret = conv N ctxt ctm
-   in (!num, ret)
-  end
 
-fun rulify_antecedents' deep N ctxt thm =
-  let val ret = Unsynchronized.ref 0
-      val thm' = Conv.fconv_rule (fn ctm =>
-                    let val (N', eq) = rulify_antecedents deep N ctxt ctm
-                     in ret := N' ; eq
-                    end) thm
-   in (!ret, thm')
+      val num = Unsynchronized.ref 0
+
+      fun rule_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _))
+            = SOME @{thm' Ant_Seq_I}
+        | rule_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _))
+            = SOME @{thm' HOL.conjI}
+        | rule_of _ = NONE
+      exception OUT
+      fun pass 0 _ thm = thm
+        | pass N i thm =
+           (case (rule_of (Logic.strip_assums_concl (Logic.nth_prem (i+1, Thm.prop_of thm)))
+                       handle TERM _ => raise OUT)
+              of SOME rule => ( num := !num + 1 ;
+                                pass (if N < 0 then N else N+1) i (rule RSN' (ctxt, i+1, thm)) )
+               | NONE => thm
+                      |> Conv.gconv_rule (conv ~1 ctxt) 1
+                      |> pass (N-1) (i+1))
+            handle OUT =>
+              let val thm = Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (conv N ctxt)) thm
+               in if i < Thm.nprems_of thm
+               then pass N i thm
+               else thm
+              end
+      val thm = pass N 0 thm
+   in (!num, thm)
   end
 
 fun contract_leading_antecedents deep N ctxt rule =

@@ -28,9 +28,9 @@ type phi_type = {
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
-  type_equations: thm list, (*the equations are given in between type assertions, \<open>x : T = y : U\<close>.
-                              This type equations are given in between types, \<open>T = U\<close>.
-                              Depending on definitions, not all \<phi>-types have such equations.*)
+  type_equations: thm list, (*the equations are given between BI assertions, \<open>x : T = y : U\<close>.
+                              Here the type equations are given between types, \<open>T = U\<close>.
+                              However, depending on definitions, not all \<phi>-types have such equations.*)
   cases: thm option,
   ind: thm,
     (*inductively destructive transformation, of form
@@ -188,6 +188,7 @@ fun open_proof_ctxt bundles generic =
 
 val introN = "intro"
 val intro_reasoningN = "intro_reasoning" (*rules for reasoning*)
+val intro_reasoning_R_N = "intro_reasoning\<^sub>R"
 val elimN = "elim"
 val elim_reasoningN = "elim_reasoning"
 val unfoldN = "unfold"
@@ -851,6 +852,18 @@ fun add_type (def, pos, dervs, bundles) thy =
 
       val typeqs = map_filter (fn eq => SOME (eq RS refine_typeq) handle THM _ => NONE) eqs
 
+      val tagged_eqs_in_type = map (try (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+              HOLogic.Trueprop_conv (Conv.arg_conv (fn ctm =>
+                Phi_Conv.embed_BI_assertion ctxt ctm
+                handle CTERM (s, ctms) => (
+                warning (Pretty.string_of (Pretty.chunks (
+                    Pretty.str s :: map (Syntax.pretty_term ctxt o Thm.term_of) ctms
+                    @ [Pretty.str "As a consequence, fail to generate the \<open>open_abstraction\<close> \<open>elim_SE\<close> lemmas"]
+                  )));
+                  raise CTERM (s, ctms)
+              )))) ctxt
+            ))) tagged_eqs
+
       val is_recursive = exists (fn eq =>
             case Thm.concl_of eq
               of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ RHS)
@@ -893,50 +906,52 @@ fun add_type (def, pos, dervs, bundles) thy =
       val cases_VS = SOME (mk_cases_rule eqs mk_cases_shift cases_origin term ctxt)
                      handle Unavailable => NONE*)
 
-
       fun gen_from_eqs rule f eq =
             map (fn eq => (eq RS' (ctxt, rule))
                        |> f
                        |> normalize) eq
-      exception Auto_Fail
+      fun gen_from_tagged_eq f rule = map_filter (Option.mapPartial (
+                fn eq => (eq RS' (ctxt, rule))
+                            |> f
+                            |> normalize
+                            |> SOME
+                         handle THM _ => NONE
+                )) tagged_eqs_in_type
+
+    (*fun LHS_obj_is_var thm =
+        case Thm.concl_of thm
+          of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) $ _) => is_Var x
+           | _ => error ("BUG: the generated equations is malformed")*)
+
       val intro_ToA = gen_from_eqs @{thm' \<phi>intro_transformation} I tagged_eqs
       val intro_reasoning   = gen_from_eqs @{thm' \<phi>intro_reasoning_transformation} I tagged_eqs
-      val intro'R_reasoning = (gen_from_eqs @{thm' \<phi>intro'_reasoning_transformation} I tagged_eqs
-                               handle THM _ => [] (*in case of not a separation magma*))
+      val intro_reasoning_R = gen_from_eqs @{thm' \<phi>intro'_reasoning_transformation} I tagged_eqs
+                              handle THM _ => [] (*in case of not a separation magma*)
+      val intro'R_reasoning = map2 (normalize oo (
+              fn eq => (fn SOME tyeq => tyeq RS' (ctxt, @{thm' \<phi>intro'_reasoning_transformation_ty})
+                         | NONE      =>   eq RS' (ctxt, @{thm' \<phi>intro'_reasoning_transformation}))
+            )) tagged_eqs tagged_eqs_in_type
+            handle THM _ => [] (*in case of not a separation magma*)
       val elim_ToA = gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
       val elim_reasoning = gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
+      val elim'SE_ToA = gen_from_tagged_eq I @{thm' \<phi>elim'SEi_transformation}
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
                            (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                                   Conv.arg_conv (Simplifier.rewrite (
                                       Phi_Expansions.enhance (Simplifier.clear_simpset ctxt)))
                                 ) ctxt)) tagged_eqs
 
-      val tagged_eqs_in_type = SOME (map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-            HOLogic.Trueprop_conv (Conv.arg_conv (fn ctm =>
-              Phi_Conv.embed_BI_assertion ctxt ctm
-              handle CTERM (s, ctms) => (
-                warning (Pretty.string_of (Pretty.chunks (
-                    Pretty.str s :: map (Syntax.pretty_term ctxt o Thm.term_of) ctms
-                    @ [Pretty.str "As a consequence, fail to generate the \<open>open_abstraction\<close> \<open>elim_SE\<close> lemmas"]
-                  )));
-                raise Auto_Fail)
-            ))) ctxt)) tagged_eqs)
-          handle Auto_Fail => NONE
+      val open_abstraction = gen_from_tagged_eq
+                (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                  HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
+                      Phi_Syntax.transformation_conv Conv.all_conv
+                          (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
+                          Conv.all_conv))) ctxt))
+                @{thm' \<phi>open_abstraction}
 
-      val open_abstraction = tagged_eqs_in_type
-            |> Option.map ( gen_from_eqs @{thm' \<phi>open_abstraction} I
-                         #> map (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                            HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
-                                Phi_Syntax.transformation_conv Conv.all_conv
-                                    (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
-                                    Conv.all_conv))) ctxt)) )
       val make_abstraction = gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
                            @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
                               handle THM _ => [])
-
-      val elim'SE_ToA = Option.map (fn eqs => gen_from_eqs @{thm' \<phi>elim'SEi_transformation} I eqs
-                                              handle THM _ => []
-                        ) tagged_eqs_in_type
 
       val proof_id =
         case term of Const _ => fst name_ty
@@ -970,15 +985,16 @@ fun add_type (def, pos, dervs, bundles) thy =
             fun add_rules mode priority rules =
                   Phi_Reasoner.add_rules (map (fn rule =>
                       ([Morphism.thm m rule], pos, mode, priority, [], [], NONE)) rules)
-         in add_rules Phi_Reasoner.TO_BE_OVERRIDE 30 (case open_abstraction of SOME x => x | _ => [])
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE 80 make_abstraction
+         in add_rules Phi_Reasoner.TO_BE_OVERRIDE 30 (Morphism.fact m open_abstraction)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE 80 (Morphism.fact m make_abstraction)
          #> Phi_Expansions.add_simps expns
          #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
    |> note_properties_s phi_type (
         (* (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @ *)
-        [(unfoldN, eqs), (introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning),
-         (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ the_default [] elim'SE_ToA),
+        [(unfoldN, eqs), (introN, intro_ToA),
+         (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),
+         (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ elim'SE_ToA),
          (expansionN, expansions)])
    |> Context.mapping (Context_Position.set_visible_global false)
                       (Context_Position.set_visible false)

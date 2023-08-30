@@ -27,7 +27,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-   
+
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
@@ -57,7 +57,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
-
+  
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -292,19 +292,42 @@ ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified
 
 paragraph \<open>ToA Reasoning\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+
 declare \<phi>Dependent_Sum.intro_reasoning(1)
-        [where x=\<open>(a,b)\<close> for a b, simplified,
+        [where x=\<open>(a,b)\<close> for a b, simplified apfst_conv apsnd_conv fst_conv snd_conv,
          \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_, _) \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>
                           \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<w>\<i>\<t>\<h> _\<close>]
 
         \<phi>Dependent_Sum.intro_reasoning(2)
-        [where x=\<open>(a,b)\<close> for a b, simplified,
+        [where x=\<open>(a,b)\<close> for a b, simplified apfst_conv apsnd_conv fst_conv snd_conv,
+         \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((_, _), _) \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>]
+
+        \<phi>Dependent_Sum.intro_reasoning\<^sub>R
+        [where x=\<open>(a,b)\<close> for a b, simplified fst_conv snd_conv,
          \<phi>reason 1000 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (_, _) \<Ztypecolon> \<Sigma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
-                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]
+                          \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<Sigma> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> ]
 
         \<phi>Dependent_Sum.elim_reasoning[\<phi>reason 1000]
+        \<phi>Dependent_Sum.elim_reasoning(1)
+        [where x=\<open>(a,b)\<close> for a b, simplified fst_conv snd_conv,
+         \<phi>reason 1010 for \<open>(_, _) \<Ztypecolon> \<Sigma> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]
 
-declare Set_Abstraction.intro_reasoning  [\<phi>reason 60 (*TODO 60*)]
+        \<phi>Dependent_Sum.elim_reasoning(2)
+        [where x=\<open>((a,b),w)\<close> for a b w, simplified apfst_conv fst_conv snd_conv,
+         \<phi>reason 1010 for \<open>((_,_),_) \<Ztypecolon> \<Sigma> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]
+
+thm Set_Abstraction.intro_reasoning\<^sub>R
+thm Set_Abstraction.intro_reasoning
+thm Set_Abstraction.elim_reasoning
+
+text \<open>Type-level \<open>Set_Abstraction.intro_reasoning\<close> is not activated as the reasoning uses
+  transformation functor.
+
+NG! TODO!\<close>
+
+thm Set_Abstraction.intro_reasoning(1)  [\<phi>reason 60]
         Set_Abstraction.elim_reasoning(1)[\<phi>reason 1000]
 
 lemma [\<phi>reason 2800]:
@@ -323,6 +346,11 @@ subsubsection \<open>Pseudo properties of \<Sigma>\<close>
 
 text \<open>Any non-constantly parameterized \<phi>-types are represented by \<open>\<Sigma>\<close>. Therefore,
   \<open>\<Sigma>\<close> is the only parameterized \<phi>-type for which we need to configure its reasoning rules manually.\<close>
+
+text \<open>The following properties are nice but essentially useless for reasoning as we have registered
+  the intro- and elim-rules for \<open>\<Sigma>\<close> destructing any \<open>\<Sigma>\<close> occurring in the reasoning.
+  So, the properties below are just listed for aesthetics of math.
+\<close>
 
 lemma \<Sigma>_pseudo_Transformation_Functor:
   \<open> (\<And>a c. a \<Ztypecolon> T c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U c' \<s>\<u>\<b>\<j> b c'. g (c,a) (c',b))
@@ -827,20 +855,20 @@ declare [[\<phi>trace_reasoning = 2]]
 
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   \<open> homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
-\<Longrightarrow> closed_homo_sep_disj \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t
+\<Longrightarrow> closed_homo_sep_disj \<psi> \<and>\<^sub>\<r> Dx = UNIV \<or>\<^sub>c\<^sub>u\<^sub>t
     Separation_Disj\<^sub>\<phi> \<psi> Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
     TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
 \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U Dx (\<lambda>x. x) \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
             Separation_Disj\<^sub>\<phi>_def Separation_Disj_def closed_homo_sep_def
-            homo_sep_def closed_homo_sep_disj_def
+            homo_sep_def closed_homo_sep_disj_def Ant_Seq_def
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp simp add: Ball_def; metis)
 
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
