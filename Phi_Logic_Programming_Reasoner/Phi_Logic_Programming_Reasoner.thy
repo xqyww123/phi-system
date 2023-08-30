@@ -1,8 +1,10 @@
 theory Phi_Logic_Programming_Reasoner
   imports PLPR_error_msg "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
   keywords "except" "@action" :: quasi_command
-    and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
-    and "print_\<phi>reasoners" :: diag
+       and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
+       and "\<phi>reasoner_group" :: thy_defn
+       and "print_\<phi>reasoners" "print_\<phi>reasoner_groups" :: diag
+       and ">" :: quasi_command
   abbrevs
       "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
   and "<guard>" = "\<g>\<u>\<a>\<r>\<d>"
@@ -55,6 +57,8 @@ end\<close>
 ML_file \<open>library/imporved_net.ML\<close>
 ML_file \<open>library/tools/ml_thms.ML\<close>
 ML_file \<open>library/pattern.ML\<close>
+ML_file_debug \<open>library/reasoner_decl.ML\<close>
+ML_file \<open>library/priority_group.ML\<close>
 
 subsubsection \<open>Guard of Reasoning Rule\<close>
 

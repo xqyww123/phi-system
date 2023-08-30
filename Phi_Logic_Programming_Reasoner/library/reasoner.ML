@@ -145,12 +145,13 @@ signature NU_REASONER = sig
   val run_passes : Position.T -> pass_data -> pass_data
   val add_pass : string (*identifier*) * pattern * rule_pass -> Context.generic -> Context.generic
 
+  (*
   val setup_cmd : (((string (*name term*) * Position.T) * (mode * priority (*default priority*)))
                    * ((bool (*true for matching, false for not matching*)
                       * string (*pattern term*))
                       * priority option) list
                   ) * Input.source (* tactic source*)
-        -> local_theory -> local_theory
+        -> local_theory -> local_theory*)
 
   (* Default Pattern of Reasoning Rule *)
   structure Default_Pattern : PATTERN_REWRITE
@@ -738,9 +739,18 @@ fun reason_tac handlers N ctxt stat = Seq.make (fn () =>
 
 (*** Command Interface ***)
 
+fun default_mode_of priority =
+      if priority >= 1000000 then GLOBAL_CUT
+      else if priority >= 1000 then LOCAL_CUT
+      else NO_CUT
+
+fun check_mode prio (SOME cm, bm) = (cm, bm)
+  | check_mode prio (NONE, bm) = (default_mode_of prio, bm)
+
 fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
+    val priority = Reasoner_Group.check_priority (Context.Proof ctxt) priority
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
     val patterns = map2 (fn ((flag,_),c) => fn tm => (flag,(tm, the_default priority c)))
@@ -752,13 +762,14 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
     val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (_, (ctxt,thm)) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
-  in add_lthy {name=name', pos=Binding.pos_of name, mode=mode,
+  in add_lthy {name=name', pos=Binding.pos_of name, mode = check_mode priority mode,
                pattern=pos_pats, blacklist=neg_pats, tactic= Tac_ML method'''} lthy'
   end
 
 fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
+    val priority = Reasoner_Group.check_priority (Context.Proof ctxt) priority
     val name = Syntax.read_term ctxt name
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
@@ -773,7 +784,7 @@ fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
         (ML_Lex.read "Theory.local_setup (Phi_Reasoner.add_lthy {name=(" @
          ML_Lex.read (print_term name) @ ML_Lex.read ("), pos=(") @
          ML_Lex.read (print_position pos) @ ML_Lex.read "), mode=(" @
-         ML_Lex.read (print_mode_ML mode) @ ML_Lex.read "), pattern=(" @
+         ML_Lex.read (print_mode_ML (check_mode priority mode)) @ ML_Lex.read "), pattern=(" @
          ML_Lex.read (print_list (print_pair print_term print_int) pos_pats) @
          ML_Lex.read "), blacklist=(" @ ML_Lex.read (print_list print_term neg_pats) @
          ML_Lex.read "), tactic= Phi_Reasoner.Tac_ML ((let in " @
@@ -791,15 +802,14 @@ val backtrack_mode_parser = (Args.$$$ "default" >> K NO_BACKTRACK)
                          || ((Args.$$$ "no" -- Args.$$$ "explorative" -- Args.$$$ "backtrack") >> K NO_EXPLORATIVE_BACKTRACK)
                          || Scan.succeed ALLOW_BACKTRACK
 
-fun default_mode_of priority =
-      if priority >= 1000000 then GLOBAL_CUT
-      else if priority >= 1000 then LOCAL_CUT
-      else NO_CUT
-
 val mode_and_priority =
-      (backtrack_mode_parser -- cut_mode_parser -- Scan.optional Parse.int 100) >> 
-      (fn ((bm, SOME m), i) => ((m,bm),i)
-        | ((bm, NONE), i) => ((default_mode_of i, bm), i))
+      ((backtrack_mode_parser -- cut_mode_parser >> swap) -- Reasoner_Group.parser_with_default 100)
+
+val mode_and_priority' =
+      Scan.peek (fn ctxt => mode_and_priority >> (fn (mode, priority) =>
+        let val priority = Reasoner_Group.check_priority ctxt priority
+         in (check_mode priority mode, priority)
+        end))
 
 val patterns = Parse.$$$ "(" |-- Parse.enum "|"
       (Scan.optional (\<^keyword>\<open>except\<close> >> K false) true -- Parse.term
@@ -990,7 +1000,7 @@ fun attr_syntax ext gen =
     val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
   in
     lift pos_parser
-    -- lift (option add |-- mode_and_priority)
+    -- (lift (option add) |-- mode_and_priority')
     -- ext
     -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
       -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
