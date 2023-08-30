@@ -9,8 +9,8 @@ type priority = int
 type T = {
   base: int,
   range: int * int, (*left closed, right closed*)
-  task: term, (*the predicate or any illustrative term that exhibits the sort of reasoning problems
-                that the group of reasoners tackles*)
+  tasks: term list, (*the predicate or any illustrative term that exhibits the sort of reasoning problems
+                      that the group of reasoners tackles*)
   comment: string
 }
 
@@ -36,8 +36,8 @@ type priority = int
 type T = {
   base: int,
   range: int * int, (*left closed, right closed*)
-  task: term, (*the predicate or any illustrative term that exhibits the sort of reasoning problems
-                that the group of reasoners tackles*)
+  tasks: term list, (*the predicate or any illustrative term that exhibits the sort of reasoning problems
+                     that the group of reasoners tackles*)
   comment: string
 }
 
@@ -81,14 +81,14 @@ fun check_priority _ (Literal i) = i
 
 fun pretty ctxt = let val names = Name_Space.space_of_table (Entries.get ctxt)
                       val ctxt' = Context.proof_of ctxt in
-  fn (name, {base, range, task, comment}) => let open Pretty in
-      block [chunks [block [Name_Space.pretty ctxt' names name,
+  fn (name, {base, range, tasks, comment}) => let open Pretty in
+      block [chunks ([block [Name_Space.pretty ctxt' names name,
                             brk 1, str "of priority between", brk 1,
                             str "[", str (string_of_int (fst range)), str ", ", str (string_of_int (snd range)), str "]",
                             brk 1, str "(default ", str (string_of_int base), str ")",
-                            brk 1, str "for task", brk 1,
-                            Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt task],
-                     para comment]]
+                            brk 1, str "for tasks"]] @
+                      map (item o single o Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt) tasks @
+                      [para comment])]
   end
   end
 
@@ -137,20 +137,22 @@ val _ = Outer_Syntax.local_theory' \<^command_keyword>\<open>\<phi>reasoner_grou
   (let open Parse in and_list1 (Scan.repeat1 (
      binding --| \<^keyword>\<open>=\<close> --
         ((\<^keyword>\<open>(\<close> |--
-            nat (*base*) --| \<^keyword>\<open>,\<close>
-                         -- (\<^keyword>\<open>[\<close> |-- nat --| \<^keyword>\<open>,\<close> -- nat --| \<^keyword>\<open>]\<close>) (*priority interval*)
+            parser (*base*) --| \<^keyword>\<open>,\<close>
+                            -- (\<^keyword>\<open>[\<close> |-- parser --| \<^keyword>\<open>,\<close> -- parser --| \<^keyword>\<open>]\<close>) (*priority interval*)
           --| \<^keyword>\<open>)\<close>) --
-         (\<^keyword>\<open>for\<close> |-- prop (*task*)) --
+         (\<^keyword>\<open>for\<close> |-- ((\<^keyword>\<open>(\<close> |-- list1 prop --| \<^keyword>\<open>)\<close>) || prop >> single) (*tasks*)) --
          constraints_parser --
          document_source)
    )) >> flat end >> (fn data => fn int =>
-   fold (fn (binding, ((((base, range), raw_task), constrains), comment)) => fn lthy =>
-     let val task = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern lthy) raw_task
+   fold (fn (binding, ((((raw_base, raw_range), raw_tasks), constrains), comment)) => fn lthy =>
+     let val base = check_priority (Context.Proof lthy) raw_base
+         val range = apply2 (check_priority (Context.Proof lthy)) raw_range
+         val tasks = map (Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern lthy)) raw_tasks
          val _ = if int then (
                     Document_Output.check_comments lthy (Input.source_explode comment) ;
                     Context_Position.reports lthy (Document_Output.document_reports comment)
                  ) else ()
-         val group = {base=base, range=range, task=task, comment=Input.string_of comment}
+         val group = {base=base, range=range, tasks=tasks, comment=Input.string_of comment}
          val _ = verify lthy (binding, group) (map (check_constraints (Context.Proof lthy)) constrains)
       in snd (define binding group lthy)
      end) data
@@ -163,7 +165,7 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>print_\<phi>reasoner_grou
         val thy = Proof_Context.theory_of ctxt
         val pattern = Option.map (Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt)) raw_pattern
         val match = case pattern
-                      of SOME pat => (fn group => Pattern.matches thy (pat, #task group))
+                      of SOME pat => (fn group => exists (fn X => Pattern.matches thy (pat, X)) (#tasks group))
                        | NONE => K true
         val groups = Name_Space.fold_table (fn (name, T) => fn L =>
                         if match T then pretty (Context.Proof ctxt) (name, T) :: L
