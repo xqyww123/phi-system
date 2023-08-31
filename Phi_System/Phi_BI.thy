@@ -1638,7 +1638,7 @@ ML_file \<open>library/syntax/Phi_Syntax0.ML\<close>
                     \<open>Fallbacks of transformation rules\<close>
   ToA_Equiv_Class = (5, [5,5]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_fallback
                     \<open>Varifies the fixed target object, using Object_Equiv\<close>
-  ToA_top         = (4000, [3960, 4299]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in overriding
+  ToA_top         = (4000, [3960, 4299]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
                     \<open>Transformation rules of the highest priority\<close>
   ToA_refl        = (4000, [3990, 4019]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_top
                     \<open>Reflexive tranformation cutting rules\<close>

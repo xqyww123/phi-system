@@ -369,28 +369,34 @@ subsubsection \<open>ML Library - III\<close>
 
 ML_file_debug \<open>library/PLPR_Syntax0.ML\<close>
 
+subsubsection \<open>Predefined Reasoner Groups\<close>
 
+text \<open>Below we provide a set of predefined reasoner groups serving for default options of standalone
+  rules which do not cooperate with other rules. The ranges of the default groups are narrow and any
+  cooperating rules spanning a larger range of priorities should declare a specific group
+  as they actually form a sub-system for a specific reasoning procedure.
+  The preset also serves as a guideline configure suggesting users recommended allocation of priority space. \<close>
+
+\<phi>reasoner_group cutting = (1000, [1000, 1010]) for \<open>_\<close>
+                           \<open>Normal cutting rules\<close>
+                normalizing = (2000, [2000,2010]) for \<open>_\<close> > cutting
+                           \<open>Rules normaling reasoning goals and therefore of higher priority
+                            than normal cutting rules\<close>
+                overriding = (4000, [4000,4010]) for \<open>_\<close> > normalizing
+                           \<open>Precedent rules overriding the normal process and may lead to faster
+                            sucess or cut a wrong branch earlier4.\<close>
+                general = (20, [20,22]) for \<open>_\<close>
+                          \<open>Rules solving some problem generally, and maybe slowly, therefore of
+                           low priority and expecting rules of higher priority can optimize the reasoning
+                           on certain specific cases.\<close>
+                fail = (0, [0,0]) for (\<open>ERROR _\<close>, \<open>FAIL _\<close>, \<open>TRACE_FAIL _\<close>)
+                       \<open>Rules reporting failures\<close>
 
 
 section \<open>Introduction\<close>
 
 ML_file_debug \<open>library/reasoner.ML\<close>
 ML_file \<open>library/tools/helpers1.ML\<close>
-
-\<phi>reasoner_group cutting = (1000, [900, 1299]) for \<open>_\<close>
-                           \<open>Normal cutting rules\<close>
-                normalizing = (2000, [1900,2299]) for \<open>_\<close> > cutting
-                           \<open>Rules normaling reasoning goals and therefore of higher priority
-                            than normal cutting rules\<close>
-                overriding = (4000, [3900,4299]) for \<open>_\<close> > normalizing
-                           \<open>Precedent rules overriding the normal process and may lead to faster
-                            sucess or cut a wrong branch earlier4.\<close>
-                general = (20, [11,39]) for \<open>_\<close>
-                          \<open>Rules solving some problem generally, and maybe slowly, therefore of
-                           low priority and expecting rules of higher priority can optimize the reasoning
-                           on certain specific cases.\<close>
-                fail = (0, [0,0]) for (\<open>ERROR _\<close>, \<open>FAIL _\<close>, \<open>TRACE_FAIL _\<close>)
-                       \<open>Rules reporting failures\<close>
 
 declare \<r>Guard_I [\<phi>reason %cutting]
         Ant_Seq_I [\<phi>reason %cutting]
@@ -774,7 +780,7 @@ lemma Reduce_HO_trivial_variable_I:
 
 subsubsection \<open>Meta-Ball (continued)\<close>
 
-\<phi>reasoner_group meta_ball = (1000, [1000,1050]) for \<open>(\<And>_ \<in> _. _)\<close> in cutting
+\<phi>reasoner_group meta_ball = (%cutting, [%cutting,%cutting+50]) for \<open>(\<And>_ \<in> _. _)\<close>
                             \<open>Cutting rules for meta bounded quantification (meta_Ball)\<close>
                 meta_ball_fallback = (%general, [%general, %general]) for \<open>(\<And>_ \<in> _. _)\<close> in general
                             \<open>Slow but universal reasoning for meta bounded quantification (meta_Ball)\<close>
@@ -950,7 +956,7 @@ text \<open>check if a term is evaluated to a literal.\<close>
 
 definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Literal _ \<longleftrightarrow> True\<close>
 
-\<phi>reasoner_group is_literal = (%cutting, [%cutting, %cutting+99]) for \<open>Is_Literal _\<close> in cutting
+\<phi>reasoner_group is_literal = (%cutting, [%cutting, %cutting+99]) for \<open>Is_Literal _\<close>
                               \<open>Cutting rules reasoning \<^const>\<open>Is_Literal\<close>\<close>
 
 paragraph \<open>Presets\<close>

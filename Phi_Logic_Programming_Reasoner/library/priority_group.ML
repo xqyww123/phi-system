@@ -23,7 +23,7 @@ val space : Context.generic -> T Name_Space.table
 datatype priority_syntax = Literal of int | Relative of (xstring * Position.T) * offset
 val parser : priority_syntax parser
 val parser_with_default : priority -> priority_syntax parser
-val check_priority : Context.generic -> priority_syntax -> priority
+val check_priority : bool -> Context.generic -> priority_syntax -> priority
 
 end
 
@@ -64,11 +64,11 @@ in val parser = (\<^keyword>\<open>%\<close> |-- name_position -- offset >> Rela
    fun parser_with_default default = parser || (Scan.succeed (Literal default) >> @{print})
 end
 
-fun check_priority _ (Literal i) = i
-  | check_priority ctxt (Relative (name, offset)) =
+fun check_priority _ _ (Literal i) = i
+  | check_priority chk_range ctxt (Relative (name, offset)) =
       let val (name, group) = check ctxt name
           val ret = #base group + offset
-          val _ = if fst (#range group) <= ret andalso ret <= snd (#range group) then ()
+          val _ = if not chk_range orelse (fst (#range group) <= ret andalso ret <= snd (#range group)) then ()
                   else error (let open Pretty
                                   val names = Name_Space.space_of_table (Entries.get ctxt)
                                in string_of (block (
@@ -145,8 +145,8 @@ val _ = Outer_Syntax.local_theory' \<^command_keyword>\<open>\<phi>reasoner_grou
          document_source)
    )) >> flat end >> (fn data => fn int =>
    fold (fn (binding, ((((raw_base, raw_range), raw_tasks), constrains), comment)) => fn lthy =>
-     let val base = check_priority (Context.Proof lthy) raw_base
-         val range = apply2 (check_priority (Context.Proof lthy)) raw_range
+     let val base = check_priority true (Context.Proof lthy) raw_base
+         val range = apply2 (check_priority false (Context.Proof lthy)) raw_range
          val tasks = map (Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern lthy)) raw_tasks
          val _ = if int then (
                     Document_Output.check_comments lthy (Input.source_explode comment) ;

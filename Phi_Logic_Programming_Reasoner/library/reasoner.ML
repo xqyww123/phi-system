@@ -750,7 +750,7 @@ fun check_mode prio (SOME cm, bm) = (cm, bm)
 fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
-    val priority = Reasoner_Group.check_priority (Context.Proof ctxt) priority
+    val priority = Reasoner_Group.check_priority true (Context.Proof ctxt) priority
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
     val patterns = map2 (fn ((flag,_),c) => fn tm => (flag,(tm, the_default priority c)))
@@ -769,7 +769,7 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
 fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
-    val priority = Reasoner_Group.check_priority (Context.Proof ctxt) priority
+    val priority = Reasoner_Group.check_priority true (Context.Proof ctxt) priority
     val name = Syntax.read_term ctxt name
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
@@ -807,7 +807,7 @@ val mode_and_priority =
 
 val mode_and_priority' =
       Scan.peek (fn ctxt => mode_and_priority >> (fn (mode, priority) =>
-        let val priority = Reasoner_Group.check_priority ctxt priority
+        let val priority = Reasoner_Group.check_priority true ctxt priority
          in (check_mode priority mode, priority)
         end))
 
