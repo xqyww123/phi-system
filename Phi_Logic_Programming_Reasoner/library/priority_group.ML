@@ -93,11 +93,11 @@ fun pretty ctxt = let val names = Name_Space.space_of_table (Entries.get ctxt)
   end
 
 datatype 'a constraints = Less of 'a | Greater of 'a | Included_In of 'a
-val constraints_parser = Parse.and_list (Scan.repeat (
-          (\<^keyword>\<open><\<close> |-- (Scan.repeat (Parse.name_position >> Less))) ||
-          (\<^keyword>\<open>>\<close> |-- (Scan.repeat (Parse.name_position >> Greater))) ||
-          (\<^keyword>\<open>in\<close> |-- (Scan.repeat (Parse.name_position >> Included_In)))
-      )) >> (flat o flat)
+val constraint_parser =
+      (\<^keyword>\<open><\<close> |-- (Scan.repeat (Parse.name_position >> Less))) ||
+      (\<^keyword>\<open>>\<close> |-- (Scan.repeat (Parse.name_position >> Greater))) ||
+      (\<^keyword>\<open>in\<close> |-- (Scan.repeat (Parse.name_position >> Included_In)))
+val constraints_parser = Parse.and_list (Scan.repeat constraint_parser) >> (flat o flat)
 
 fun check_constraints ctxt (Less x) = Less (check ctxt x)
   | check_constraints ctxt (Greater x) = Greater (check ctxt x)
@@ -105,7 +105,7 @@ fun check_constraints ctxt (Less x) = Less (check ctxt x)
 
 fun verify_fail opr ctxt xname iname = let open Pretty in
     error (string_of (block (text "the priorities of group" @
-                             [brk 1, Binding.pretty xname, brk 1, str "must be", brk 1, str opr, brk 1] @
+                             [brk 1, xname, brk 1, str "must be", brk 1, str opr, brk 1] @
                              text "the group" @
                              [brk 1, Name_Space.pretty ctxt (Name_Space.space_of_table (Entries.get (Context.Proof ctxt))) iname])))
   end
@@ -124,7 +124,7 @@ fun verify ctxt (xname, group) constraints =
   if fst (#range group) <= #base group andalso #base group <= snd (#range group)
   then List.app (verify_constraints ctxt (xname, group)) constraints
   else error (let open Pretty in string_of (
-                block (text "The base priority of group" @ [brk 1, Binding.pretty xname, brk 1] @
+                block (text "The base priority of group" @ [brk 1, xname, brk 1] @
                        text "is not within its declared range" @
                        [brk 1, str "(", str (string_of_int (fst (#range group))), str ", ",
                         str (string_of_int (snd (#range group))), str ")"])
@@ -153,10 +153,26 @@ val _ = Outer_Syntax.local_theory' \<^command_keyword>\<open>\<phi>reasoner_grou
                     Context_Position.reports lthy (Document_Output.document_reports comment)
                  ) else ()
          val group = {base=base, range=range, tasks=tasks, comment=Input.string_of comment}
-         val _ = verify lthy (binding, group) (map (check_constraints (Context.Proof lthy)) constrains)
+         val _ = verify lthy (Binding.pretty binding, group)
+                             (map (check_constraints (Context.Proof lthy)) constrains)
       in snd (define binding group lthy)
      end) data
   ))
+
+val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>reasoner_group_assert\<close>
+  "Asserts constraints between \<phi>reasoner groups"
+  (Parse.and_list (Scan.repeat (Parse.name_position -- constraint_parser)) >> (
+  fn raw_constraints => Toplevel.keep (fn s =>
+    let val ctxt = Toplevel.context_of s
+        val generic = Context.Proof ctxt
+        val names = Name_Space.space_of_table (Entries.get generic)
+        val pretty = Name_Space.pretty ctxt names
+        val constraints = maps (map (fn (a,b) =>
+                (apfst pretty (check generic a), map (check_constraints generic) b))
+              ) raw_constraints
+     in List.app (uncurry (List.app o verify_constraints ctxt)) constraints
+    end
+  )))
 
 val _ = Outer_Syntax.command \<^command_keyword>\<open>print_\<phi>reasoner_groups\<close>
   "Prints existing reasoner groups. Supports search by matching the task of the reasoner groups."

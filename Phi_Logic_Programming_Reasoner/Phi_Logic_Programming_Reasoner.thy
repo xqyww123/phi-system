@@ -3,6 +3,7 @@ theory Phi_Logic_Programming_Reasoner
   keywords "except" "@action" :: quasi_command
        and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
        and "\<phi>reasoner_group" :: thy_defn
+       and "\<phi>reasoner_group_assert" :: thy_decl
        and "print_\<phi>reasoners" "print_\<phi>reasoner_groups" :: diag
        and ">" :: quasi_command
   abbrevs
@@ -780,7 +781,7 @@ lemma Reduce_HO_trivial_variable_I:
 
 subsubsection \<open>Meta-Ball (continued)\<close>
 
-\<phi>reasoner_group meta_ball = (%cutting, [%cutting,%cutting+50]) for \<open>(\<And>_ \<in> _. _)\<close>
+\<phi>reasoner_group meta_ball = (%cutting, [%cutting,%cutting+49]) for \<open>(\<And>_ \<in> _. _)\<close>
                             \<open>Cutting rules for meta bounded quantification (meta_Ball)\<close>
                 meta_ball_fallback = (%general, [%general, %general]) for \<open>(\<And>_ \<in> _. _)\<close> in general
                             \<open>Slow but universal reasoning for meta bounded quantification (meta_Ball)\<close>

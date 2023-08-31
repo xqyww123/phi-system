@@ -876,4 +876,34 @@ lemma norm_precond_ex:
 ML_file \<open>library/syntax/syntax0.ML\<close>
 
 
+section \<open>Reasoning Configuration\<close>
+
+subsection \<open>Normalization of Assertions\<close>
+
+consts semantic_mode :: mode
+       ABNORMAL :: mode
+
+ML \<open>
+structure Assertion_SS_Abnormal = Simpset (
+  val initial_ss = Simpset_Configure.Empty_SS
+  val binding = SOME \<^binding>\<open>assertion_simps_abnormal\<close>
+  val comment = "Simp rules normalizing particularly the abnormal spec of a triple."
+  val attribute = NONE
+)
+\<close>
+
+\<phi>reasoner_ML assertion_simp_abnormal 1300
+  (\<open>Simplify (assertion_simps ABNORMAL) ?X' ?X\<close>)
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Abnormal.get' ctxt))) o snd\<close>
+
+\<phi>reasoner_ML semantic_simps 1200
+  (\<open>Premise semantic_mode _\<close> | \<open>Simplify semantic_mode ?X' ?X\<close>
+     )
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
+        Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse})) o snd\<close>
+
+lemmas [assertion_simps] =
+  \<phi>V_simps
+
 end

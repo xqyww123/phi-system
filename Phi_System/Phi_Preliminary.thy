@@ -263,6 +263,11 @@ declare [[
   and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
 ]]
 
+\<phi>reasoner_group extract_pure = (%cutting, [%cutting, %cutting]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+    \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
+  and extract_pure_fallback = (1, [1,1]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>) < extract_pure
+    \<open>Fallbacks of extracting pure facts, typically returning the unsimplified original term\<close>
+
 lemma Do_Generate_Implication_Reasoning:
   \<open> IN
 \<Longrightarrow> Generate_Implication_Reasoning IN OUT_L OUT_R
@@ -286,23 +291,23 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Generate_Implication_Reasoning (P @action A) OL OR\<close>
   unfolding Generate_Implication_Reasoning_def Action_Tag_def .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %extract_pure]:
   \<open> A \<longrightarrow> A' @action \<A>EIF
 \<Longrightarrow> B \<longrightarrow> B' @action \<A>EIF
 \<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %extract_pure]:
   \<open> A \<longrightarrow> A' @action \<A>ESC
 \<Longrightarrow> B \<longrightarrow> B' @action \<A>ESC
 \<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>ESC \<close>
   unfolding Action_Tag_def by blast
 
-lemma Extact_implied_facts_Iden[\<phi>reason default 1]:
+lemma Extact_implied_facts_Iden[\<phi>reason default %extract_pure_fallback]:
   \<open> A \<longrightarrow> A @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast
 
-lemma Extact_sufficient_conditions_Iden[\<phi>reason default 1]:
+lemma Extact_sufficient_conditions_Iden[\<phi>reason default %extract_pure_fallback]:
   \<open> A \<longrightarrow> A @action \<A>ESC \<close>
   unfolding Action_Tag_def by blast
 
@@ -323,22 +328,19 @@ lemma Membership_E_Inhabitance:
 
 
 
-paragraph \<open>Reasoning Rule\<close>
+subsubsection \<open>Supplementary of Meta-Ball\<close>
 
-
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %meta_ball]:
   \<open> (Q \<Longrightarrow> (\<And>x \<in> S. PROP P x))
 \<Longrightarrow> (\<And>x \<in> S \<s>\<u>\<b>\<j> Q. PROP P x)\<close>
   unfolding meta_Ball_def Premise_def Subjection_expn_set
   by (clarsimp simp add: atomize_conj[symmetric] conjunction_imp norm_hhf_eq)
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %meta_ball]:
   \<open> (Q \<Longrightarrow> \<forall>x \<in> S. P x)
 \<Longrightarrow> (\<forall>x \<in> S \<s>\<u>\<b>\<j> Q. P x)\<close>
   unfolding Ball_def Subjection_expn_set
   by simp
-
-
 
 
 

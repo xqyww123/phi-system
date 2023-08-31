@@ -518,6 +518,10 @@ Priority:
 \<^item> 1100: \<^const>\<open>Transformation_Functor\<close>
 \<close>
 
+\<phi>reasoner_group deriving_IH = (200, [200,200]) for \<open>_\<close>
+  \<open>The priority of induction hypotheses used during deriving.\<close>
+
+\<phi>reasoner_group_assert deriving_IH > Identity_Element_ToA
 
 subsubsection \<open>Implementation\<close>
 
@@ -2282,7 +2286,7 @@ lemma SE_Semimodule_LDistr_da_bc_i[where Cw' = True, \<phi>reason_template 30]:
   \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and _ and Tr and [simp] and b
     note \<phi>Prod_expn''[simp] \<phi>Prod_expn'[simp]
     ;; apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_\<phi>Some[where t=a and s=d and F=F1 and x=\<open>(fst x,x\<^sub>d)\<close>]
-       apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_\<phi>Some[where t=c and s=b and F=F1]
+     ;;  apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_\<phi>Some[where t=c and s=b and F=F1]
        Tr
        b
   \<medium_right_bracket> .
