@@ -933,37 +933,6 @@ lemma [\<phi>reason 1000]:
 
 section \<open>Declaration of Reasonig Process\<close>
 
-subsection \<open>ToA Reasoning\<close>
-
-text \<open>NToA : Normalized ToA reasoning, the usual ToA reasoning having simplification and other
-             normalization at the beginning. \<close>
-
-consts NToA' :: \<open>bool \<comment> \<open>whether to reason deeper transformation for each desired \<phi>-type
-                          by invoking more time-consuming reasoning process,
-                          or just apply unification to match the desired.\<close>
-              \<Rightarrow> mode\<close>
-
-text \<open>The boolean flag indicates whether to reason the transformation of \<phi>-types in depth.
-For \<open>X\<^sub>1 * \<cdots> * X\<^sub>n \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<^sub>1 * \<cdots> * Y\<^sub>m @action NToA' ?flag\<close>,
-
-\<^item> If the flag is turned on, for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close>, the reasoner
-  infers in depth whether some source \<phi>-Type \<^term>\<open>X\<^sub>j\<close> can be transformed into \<^term>\<open>Y\<^sub>i\<close>,
-  by invoking any configured reasoning rules bound on the type of \<^term>\<open>Y\<^sub>i\<close>.
-
-\<^item> If the flag is turned off, such in-depth inference is not applied, so the
-  reasoning succeeds only if for every desired \<phi>-Type \<^term>\<open>Y\<^sub>i\<close> there is another
-  \<^term>\<open>X\<^sub>j\<close> that unifies \<^term>\<open>Y\<^sub>i\<close>.
-
-The the flag is turned off, obviously the performance can be improved a lot though
-the reasoning is weaker.
-\<close>
-
-abbreviation \<open>NToA \<equiv> NToA' True\<close>
-
-lemma [\<phi>reason 3000 for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X \<w>\<i>\<t>\<h> ?P @action NToA' ?mode\<close>]:
-  \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action NToA' mode\<close>
-  unfolding Action_Tag_def using transformation_refl .
-
 subsection \<open>Declaration of Convergence of Branch\<close>
 
 consts invoke_branch_convergence :: \<open>action\<close>
