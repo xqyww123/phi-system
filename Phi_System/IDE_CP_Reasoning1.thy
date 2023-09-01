@@ -447,7 +447,7 @@ lemma \<phi>IntroFrameVar'_Yes:
 hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes \<phi>IntroFrameVar'_Yes
 
 
-subsubsection \<open>Reasoning Embedded in BI Assertion\<close>
+subsubsection \<open>Reasoning Goals Embedded in BI Assertion\<close>
 
 definition Subjec_Reasoning :: \<open> 'p set \<Rightarrow> bool \<Rightarrow> 'p set \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
   where \<open>Subjec_Reasoning \<equiv> Subjection\<close>
@@ -537,6 +537,98 @@ lemma [\<phi>reason 1200]:
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def Inhabited_def Subjection_expn
   by clarsimp
 
+
+subsection \<open>Removing Values\<close> (*TODO: depreciate me*)
+
+definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Output)\<close>
+
+text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> removes value assertions \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
+  from the assertion \<open>Input\<close>. Bounded values such the return value of a procedure are not removed.\<close>
+
+text \<open>Given an assertion X, antecedent \<^term>\<open>Remove_Values X X'\<close>
+  returns X' where all free value assertions \<^term>\<open>x \<Ztypecolon> Val raw T\<close> filtered out, where \<^term>\<open>raw\<close>
+  contains at least one free variable of \<^typ>\<open>'a \<phi>arg\<close>.
+
+  It is typically used in exception. When a computation triggers an exception at state X,
+    the state recorded in the exception is exactly X' where value assertions are filtered out.\<close>
+
+declare [[\<phi>reason_default_pattern \<open>Remove_Values ?X _\<close> \<Rightarrow> \<open>Remove_Values ?X _\<close> (100)]]
+
+(* lemma [\<phi>reason for \<open>Remove_Values ?ex ?var_X ?Z\<close>]:
+  \<open>Remove_Values ex X X\<close>
+  unfolding Remove_Values_def using transformation_refl . *)
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>c. Remove_Values (T c) (T' c))
+\<Longrightarrow> Remove_Values (ExSet T) (ExSet T')\<close>
+  unfolding Remove_Values_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason 1200]:
+  \<open>(\<And>c. Remove_Values (R * T c) (R' * T' c))
+\<Longrightarrow> Remove_Values (R * ExSet T) (R' * ExSet T')\<close>
+  unfolding Remove_Values_def Transformation_def
+  by simp blast
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values T T'
+\<Longrightarrow> Remove_Values (T \<s>\<u>\<b>\<j> P) (T' \<s>\<u>\<b>\<j> P)\<close>
+  unfolding Remove_Values_def Transformation_def
+  by simp
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values (R * T) (R' * T')
+\<Longrightarrow> Remove_Values (R * (T \<s>\<u>\<b>\<j> P)) (R' * (T' \<s>\<u>\<b>\<j> P))\<close>
+  unfolding Remove_Values_def Transformation_def
+  by simp
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values A A'
+\<Longrightarrow> Remove_Values B B'
+\<Longrightarrow> Remove_Values (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B) (A' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B')\<close>
+  unfolding REMAINS_def Remove_Values_def Transformation_def
+  by (cases C; simp; blast)
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values A A'
+\<Longrightarrow> Remove_Values B B'
+\<Longrightarrow> Remove_Values (A + B) (A' + B')\<close>
+  unfolding Remove_Values_def Transformation_def
+  by blast
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values R R'
+\<Longrightarrow> Remove_Values (R * (x \<Ztypecolon> Val raw T)) R'\<close>
+  unfolding Remove_Values_def Transformation_def by (simp add: Val_expn)
+
+lemma [\<phi>reason 1200]:
+  \<open>Remove_Values (x \<Ztypecolon> Val raw T) 1\<close>
+  unfolding Remove_Values_def Transformation_def by (simp add: Val_expn)
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values A A'
+\<Longrightarrow> Remove_Values (1 * A) A'\<close>
+  unfolding Remove_Values_def Transformation_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open> Remove_Values A A'
+\<Longrightarrow> Remove_Values (A * 1) A'\<close>
+  unfolding Remove_Values_def Transformation_def by simp
+
+lemma [\<phi>reason 1200]:
+  \<open>Remove_Values (A * 0) 0\<close>
+  unfolding Remove_Values_def Transformation_def by simp
+
+lemma [\<phi>reason 1100]:
+  \<open> Remove_Values B B'
+\<Longrightarrow> Remove_Values A A'
+\<Longrightarrow> Remove_Values (A * B) (A' * B')\<close>
+  unfolding Remove_Values_def Transformation_def by simp blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Remove_Values A A\<close>
+  unfolding Remove_Values_def
+  by simp
 
 
 section \<open>Determine Separation Disjunction on Specification Level\<close>
@@ -937,13 +1029,6 @@ subsection \<open>Declaration of Convergence of Branch\<close>
 
 consts invoke_branch_convergence :: \<open>action\<close>
 
-
-subsection \<open>Removing Values\<close> (*TODO: depreciate me*)
-
-definition \<open>Remove_Values (Input::assn) (Output::assn) \<longleftrightarrow> (Input \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Output)\<close>
-
-text \<open>The process \<^prop>\<open>Remove_Values Input Output\<close> removes value assertions \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
-  from the assertion \<open>Input\<close>. Bounded values such the return value of a procedure are not removed.\<close>
 
 
 subsection \<open>Value Operations\<close> (*TODO: depreciate me*)

@@ -353,6 +353,26 @@ lemma [\<phi>reason 1000]:
 hide_fact \<phi>make_implication \<phi>make_view_shift \<phi>reassemble_proc_final
 
 
+context begin
+
+private lemma Is_Functional_imp'':
+  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Is_Functional S'
+\<Longrightarrow> Is_Functional S\<close>
+  unfolding Transformation_def Is_Functional_def
+  by blast
+
+lemma [\<phi>reason 1000]:
+  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> Is_Functional S')) M D R F
+\<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show\<close> S \<open>is functional\<close>
+      \<open>Now you entered the programming mode and you need to transform the specification to\<close>
+      \<open>someone which is functional, so that we can verify your claim.\<close>)
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Is_Functional S)) M D R F\<close>
+  unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
+            Subjec_Reasoning_def
+  by (rule Is_Functional_imp''[where S'=S']; simp)
+
+end
+
 subsubsection \<open>General Rules Normalizing Programming Methods\<close>
 
 lemma [\<phi>reason 1000]:

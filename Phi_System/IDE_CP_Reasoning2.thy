@@ -1,102 +1,11 @@
 chapter \<open>Reasoning Processes in IDE-CP - Part I\<close>
 
-text \<open>The part includes some reasoning processes that can already be defined
-  after the IDE-CP is ready.\<close>
+(*Entirely depreciated!*)
 
 theory IDE_CP_Reasoning2
   imports IDE_CP_Applications1
 begin
 
-section \<open>Small Reasoning Processes\<close>
-
-text \<open>The section includes several processes handling values used in different scenarios.\<close>
-
-subsection \<open>Removing Values\<close>
-
-text \<open>Given an assertion X, antecedent \<^term>\<open>Remove_Values X X'\<close>
-  returns X' where all free value assertions \<^term>\<open>x \<Ztypecolon> Val raw T\<close> filtered out, where \<^term>\<open>raw\<close>
-  contains at least one free variable of \<^typ>\<open>'a \<phi>arg\<close>.
-
-  It is typically used in exception. When a computation triggers an exception at state X,
-    the state recorded in the exception is exactly X' where value assertions are filtered out.\<close>
-
-declare [[\<phi>reason_default_pattern \<open>Remove_Values ?X _\<close> \<Rightarrow> \<open>Remove_Values ?X _\<close> (100)]]
-
-(* lemma [\<phi>reason for \<open>Remove_Values ?ex ?var_X ?Z\<close>]:
-  \<open>Remove_Values ex X X\<close>
-  unfolding Remove_Values_def using transformation_refl . *)
-
-lemma [\<phi>reason 1200]:
-  \<open>(\<And>c. Remove_Values (T c) (T' c))
-\<Longrightarrow> Remove_Values (ExSet T) (ExSet T')\<close>
-  unfolding Remove_Values_def Transformation_def
-  by simp blast
-
-lemma [\<phi>reason 1200]:
-  \<open>(\<And>c. Remove_Values (R * T c) (R' * T' c))
-\<Longrightarrow> Remove_Values (R * ExSet T) (R' * ExSet T')\<close>
-  unfolding Remove_Values_def Transformation_def
-  by simp blast
-
-lemma [\<phi>reason 1200]:
-  \<open> Remove_Values T T'
-\<Longrightarrow> Remove_Values (T \<s>\<u>\<b>\<j> P) (T' \<s>\<u>\<b>\<j> P)\<close>
-  unfolding Remove_Values_def Transformation_def
-  by simp
-
-lemma [\<phi>reason 1200]:
-  \<open> Remove_Values (R * T) (R' * T')
-\<Longrightarrow> Remove_Values (R * (T \<s>\<u>\<b>\<j> P)) (R' * (T' \<s>\<u>\<b>\<j> P))\<close>
-  unfolding Remove_Values_def Transformation_def
-  by simp
-
-lemma [\<phi>reason 1200]:
-  \<open> Remove_Values A A'
-\<Longrightarrow> Remove_Values B B'
-\<Longrightarrow> Remove_Values (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B) (A' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B')\<close>
-  unfolding REMAINS_def Remove_Values_def Transformation_def
-  by (cases C; simp; blast)
-
-lemma [\<phi>reason 1200]:
-  \<open> Remove_Values A A'
-\<Longrightarrow> Remove_Values B B'
-\<Longrightarrow> Remove_Values (A + B) (A' + B')\<close>
-  unfolding Remove_Values_def Transformation_def
-  by blast
-
-lemma [\<phi>reason 1200]:
-  \<open> Remove_Values R R'
-\<Longrightarrow> Remove_Values (R * (x \<Ztypecolon> Val raw T)) R'\<close>
-  unfolding Remove_Values_def Transformation_def by (simp add: Val_expn)
-
-lemma [\<phi>reason 1200]:
-  \<open>Remove_Values (x \<Ztypecolon> Val raw T) 1\<close>
-  unfolding Remove_Values_def Transformation_def by (simp add: Val_expn)
-
-lemma [\<phi>reason 1200]:
-  \<open> Remove_Values A A'
-\<Longrightarrow> Remove_Values (1 * A) A'\<close>
-  unfolding Remove_Values_def Transformation_def by simp
-
-lemma [\<phi>reason 1200]:
-  \<open> Remove_Values A A'
-\<Longrightarrow> Remove_Values (A * 1) A'\<close>
-  unfolding Remove_Values_def Transformation_def by simp
-
-lemma [\<phi>reason 1200]:
-  \<open>Remove_Values (A * 0) 0\<close>
-  unfolding Remove_Values_def Transformation_def by simp
-
-lemma [\<phi>reason 1100]:
-  \<open> Remove_Values B B'
-\<Longrightarrow> Remove_Values A A'
-\<Longrightarrow> Remove_Values (A * B) (A' * B')\<close>
-  unfolding Remove_Values_def Transformation_def by simp blast
-
-lemma [\<phi>reason 1000]:
-  \<open> Remove_Values A A\<close>
-  unfolding Remove_Values_def
-  by simp
 
 (*
 subsection \<open>Extract a Value\<close>
@@ -142,7 +51,7 @@ lemma apply_extract_a_value:
 
 
 
-
+(*moved*)
 section \<open>\<exists>-free ToA Reasoning with Normalization\<close>
 
 (*TODO: move me*)
@@ -756,16 +665,10 @@ lemma [\<phi>reason default 4 for \<open>(_,_) \<Ztypecolon> _ \<t>\<r>\<a>\<n>\
   by (simp add: mult.commute \<phi>Prod_expn')
 *)
 
-subsubsection \<open>Non-unital Semigroup\<close>
-
-
-subsubsection \<open>Non-associative\<close>
-
-text \<open>Non-associative algebras have no fallback on this\<close>
-
-
 
 subsection \<open>Trim Waste\<close>
+
+text \<open>Do we still need it?\<close>
 
 definition \<open>\<A>SE_trim\<^sub>I y R y' R' Q \<equiv> \<forall>U. y \<Ztypecolon> U \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<^emph> R' \<w>\<i>\<t>\<h> Q\<close>
 definition \<open>\<A>SE_trim\<^sub>E x W x' W' \<equiv> \<forall>T. x' \<Ztypecolon> T \<^emph> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph> W\<close>
@@ -1132,27 +1035,6 @@ lemma enter_SEbi_\<phi>Some_TH:
   using enter_SEbi_\<phi>Some .
 *)
 
-
-
-section \<open>Programming Methods for Proving Specific Properties\<close>
-
-subsection \<open>Functional\<close>
-
-lemma Is_Functional_imp'':
-  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Is_Functional S'
-\<Longrightarrow> Is_Functional S\<close>
-  unfolding Transformation_def Is_Functional_def
-  by blast
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> Is_Functional S')) M D R F
-\<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show\<close> S \<open>is functional\<close>
-      \<open>Now you entered the programming mode and you need to transform the specification to\<close>
-      \<open>someone which is functional, so that we can verify your claim.\<close>)
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Is_Functional S)) M D R F\<close>
-  unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
-            Subjec_Reasoning_def
-  by (rule Is_Functional_imp''[where S'=S']; simp)
 
 
 
