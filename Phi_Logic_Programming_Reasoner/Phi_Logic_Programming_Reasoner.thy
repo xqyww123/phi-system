@@ -216,6 +216,30 @@ lemma With_IN_Arg_I:
 
 ML_file \<open>library/syntax/with_IN_arg.ML\<close>
 
+
+subsubsection \<open>Embedded Pattern Annotations\<close>
+
+text \<open>Sometimes, especially for rule generated from template instantiation, giving patterns in the
+  proposition of the rule (template) can be useful as the embedded patterns are instantiated together
+  with instantiating the rule template.\<close>
+
+definition With_Pattern :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixl "<with-pattern>" 5)
+  where \<open>With_Pattern Prop Pattern \<equiv> PROP Prop\<close>
+
+definition Except_Pattern :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixl "<except-pattern>" 5)
+  where \<open>Except_Pattern Prop Pattern \<equiv> PROP Prop\<close>
+
+lemma With_Pattern_I:
+  \<open>PROP P \<Longrightarrow> PROP With_Pattern P pat\<close>
+  unfolding With_Pattern_def .
+
+lemma Except_Pattern_I:
+  \<open>PROP P \<Longrightarrow> PROP Except_Pattern P pat\<close>
+  unfolding Except_Pattern_def .
+
+ML_file \<open>library/syntax/embedded_pattern.ML\<close>
+
+
 subsubsection \<open>Meta Ball\<close>
 
 definition meta_Ball :: \<open>'a set \<Rightarrow> ('a \<Rightarrow> prop) \<Rightarrow> prop\<close>

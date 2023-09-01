@@ -122,6 +122,8 @@ subsubsection \<open>Partial Addition\<close>
 text \<open>Solving \<open>?d + a = ?b + c @action \<A>arith_eval\<close>\<close>
 
 
+
+
 subsection \<open>Preset Properties for Specific Elements\<close>
 
 subsubsection \<open>Identity Function\<close>

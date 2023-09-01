@@ -2321,8 +2321,10 @@ text \<open>Non-unital algebra implies no additive zero.\<close>
 
 (* [--d--][-----a-----]
    [-----b-----][--c--]
-   Give a, expect b; Need d, remain c.*)
-lemma SE_Semimodule_LDistr_da_bc_i[where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
+   Give a, expect b; Need d, remain c.
+   d, c \<noteq> 0; the scalar is non-commutative, else go either \<open>SE_Semimodule_LDistr_da_b_i\<close> or \<open>SE_Semimodule_LDistr_a_cb_i\<close>*)
+lemma SE_Semimodule_LDistr_da_bc_i
+      [where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a = b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
@@ -2347,7 +2349,8 @@ lemma SE_Semimodule_LDistr_da_bc_i[where Cw' = True, \<phi>reason_template %deri
 
 (* [-----a-----][--d--]
    [--c--][-----b-----]
-   Give a, expect b; Need d, remain c.*)
+   Give a, expect b; Need d, remain c.
+   d, c \<noteq> 0; the scalar is non-commutative, else go either \<open>SE_Semimodule_LDistr_da_b_i\<close> or \<open>SE_Semimodule_LDistr_a_cb_i\<close>*)
 lemma SE_Semimodule_LDistr_ad_cb_i[where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a + d = c + b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
@@ -2396,7 +2399,8 @@ declare [[\<phi>trace_reasoning = 0]]
 
 (* [---------a---------]
    [--d--][--b--][--c--]
-   Give a, expect b, remain d, c. *) 
+   Give a, expect b, remain d, c.
+   d, c \<noteq> 0; scalar is non-commutative; otherwise go \<open>SE_Semimodule_LDistr_a_cb_i\<close>*) 
 lemma SE_Semimodule_LDistr_a_dbc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = d + b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
@@ -2419,7 +2423,8 @@ lemma SE_Semimodule_LDistr_a_dbc_i[where Cr'=True, \<phi>reason_template %derive
 
 (* [--d--][--a--][--c--]
    [---------b---------]
-   Give a, expect b, need d, c. *)
+   Give a, expect b, need d, c.
+   d, c \<noteq> 0; scalar is non-commutative; otherwise go \<open>SE_Semimodule_LDistr_da_b_i\<close> *)
 lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a + c = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx z
@@ -2442,7 +2447,7 @@ lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template %derive
 (* [--d--][-----a-----]
    [---------b--------]
    Give a, expect b; Need d, c = 0.
-   Also covers non-commutative *)
+   Also covers non-commutative. d \<noteq> 0*)
 lemma SE_Semimodule_LDistr_da_b_i[where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
@@ -2463,7 +2468,7 @@ lemma SE_Semimodule_LDistr_da_b_i[where Cw'=True, \<phi>reason_template %derived
 
 (* [--------a---------]
    [-----b-----][--c--]
-   Give a, expect b; Remain c, d = 0. *)
+   Give a, expect b; Remain c, d = 0. c \<noteq> 0*)
 lemma SE_Semimodule_LDistr_a_bc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
@@ -2485,7 +2490,7 @@ lemma SE_Semimodule_LDistr_a_bc_i[where Cr'=True, \<phi>reason_template %derived
 (* [-----a-----][--d--]
    [--------b---------]
    Give a, expect b; Need d, c = 0.
-   Also covers non-commutative *)
+   Also covers non-commutative. d \<noteq> 0*)
 lemma SE_Semimodule_LDistr_ad_b_i[where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a + d = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx uz
@@ -2506,7 +2511,7 @@ lemma SE_Semimodule_LDistr_ad_b_i[where Cw' = True, \<phi>reason_template %deriv
 
 (* [---------a--------]
    [--c--][-----b-----]
-   Give a, expect b; Remain c, d = 0.*)
+   Give a, expect b; Remain c, d = 0. c \<noteq> 0*)
 lemma SE_Semimodule_LDistr_a_cb_i[\<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = c + b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz

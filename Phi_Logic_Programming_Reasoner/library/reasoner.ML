@@ -628,7 +628,7 @@ fun gen_reason (handlers, trace, limit, tactics) =
                             else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
                                                then Conv.gconv_rule Phi_Help.beta_eta_conversion 1 th
                                                else th
-                                     fun chk_guard M (ctxt, th) =
+                                     fun chk_guard pos M (ctxt, th) =
                                            loop (Thm.nprems_of th - M, iter, NO_BACKTRACKING,
                                                  [[(score, pos, NORMAL_MODE, Seq.single (ctxt, th))]])
                                             handle Success s => SOME s
@@ -636,7 +636,7 @@ fun gen_reason (handlers, trace, limit, tactics) =
                                     |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
                                     |> map (fn (priority, _, _, r : reasoner) =>
                                           (priority + score, #pos r, #mode r,
-                                           apply_tactic chk_guard backtracking (#tactic r) (ctxt,th')))
+                                           apply_tactic (chk_guard (#pos r)) backtracking (#tactic r) (ctxt,th')))
                              end
         
                     val Z = case cut_mode
@@ -928,58 +928,77 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
                    #> Drule.zero_var_indexes
                    #> Thm.trim_context )
     val _ = if null rules then error ("No rule is given!") else ()
-    val pats = if null patterns
-               then case rules
-                      of [rule] =>
-                        let val concl = Thm.concl_of rule
-                            val pat' = the_default_pattern_of ctxt concl
-                            val pat = case pat' of [] => [concl]
-                                         | _ => List.filter (process_error_rule ctxt) pat'
-                          (* val _ = info_pretty_generic ctxt 1 (fn () => Pretty.chunks (
-                                    Pretty.str "No pattern is given, use the default pattern:" ::
-                                    map (Syntax.pretty_term (Context.proof_of ctxt)) pat
-                                )) *)
-                        in map (rpair priority) pat end
-                       | _ => error "Pattern of the reasoner is required"
-               else map (apsnd (the_default priority)) patterns
-    val rules_with_flag = map (fn rule =>
-      let fun has_Gaurd (Const (\<^const_name>\<open>\<r>Guard\<close>, _) $ _) = true
-            | has_Gaurd (Const (\<^const_name>\<open>Trueprop\<close>, _) $ X) = has_Gaurd X
-            | has_Gaurd (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = has_Gaurd X
-            | has_Gaurd (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,X)) = has_Gaurd X
-            | has_Gaurd _ = false
-       in case Thm.prems_of rule
-            of []    => (false, rule)
-             | (r::L)=> if exists has_Gaurd L
-                        then error("A reasoning rule can contain one \<r>Guard antecedent at \
-                                   \the leading position.")
-                        else (has_Gaurd r, rule)
-      end) rules
-    val tac = case ML_guard
-                of NONE => Tac_Rule rules_with_flag
-                 | SOME G => let val app = apply_reasoning_rules (internal_reason NONE o SOME) rules_with_flag
-                              in Tac_ML (fn (_,s) => if G s then app s else Seq.empty)
-                             end
 
-  in ({name = name_of_intro_reasoner rules,
-       pos = pos,
-       mode = mode,
-       pattern = pats,
-       blacklist = blacklist,
-       tactic = tac},
-     ctxt)
+    fun complete_prio ((e_pat, e_except, inargs), rule) = ((map (rpair NONE) e_pat, e_except, inargs), rule)
+    val embedding_rules = map (complete_prio o PLPR_Syntax.elim_embedded_patterns) rules
+
+    val _ = if exists (fn ((_,_,inargs), _) => not (null inargs)) embedding_rules
+            then error "Embedded IN-arguments are not supported yet."
+            else ()
+
+    fun mk_reasoner (rules, patterns, blacklist) =
+      let val pats = if null patterns
+                     then case rules
+                            of [rule] =>
+                              let val concl = Thm.concl_of rule
+                                  val pat' = the_default_pattern_of ctxt concl
+                                  val pat = case pat' of [] => [concl]
+                                               | _ => List.filter (process_error_rule ctxt) pat'
+                                (* val _ = info_pretty_generic ctxt 1 (fn () => Pretty.chunks (
+                                          Pretty.str "No pattern is given, use the default pattern:" ::
+                                          map (Syntax.pretty_term (Context.proof_of ctxt)) pat
+                                      )) *)
+                              in map (rpair priority) pat end
+                             | _ => error "Pattern of the reasoner is required"
+                     else map (apsnd (the_default priority)) patterns
+          val rules_with_flag = map (fn rule =>
+            let fun has_Gaurd (Const (\<^const_name>\<open>\<r>Guard\<close>, _) $ _) = true
+                  | has_Gaurd (Const (\<^const_name>\<open>Trueprop\<close>, _) $ X) = has_Gaurd X
+                  | has_Gaurd (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = has_Gaurd X
+                  | has_Gaurd (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,X)) = has_Gaurd X
+                  | has_Gaurd _ = false
+             in case Thm.prems_of rule
+                  of []    => (false, rule)
+                   | (r::L)=> if exists has_Gaurd L
+                              then error("A reasoning rule can contain one \<r>Guard antecedent at \
+                                         \the leading position.")
+                              else (has_Gaurd r, rule)
+            end) rules
+          val tac = case ML_guard
+                      of NONE => Tac_Rule rules_with_flag
+                       | SOME G => let val app = apply_reasoning_rules (internal_reason NONE o SOME) rules_with_flag
+                                    in Tac_ML (fn (_,s) => if G s then app s else Seq.empty)
+                                   end
+      
+       in {name = name_of_intro_reasoner rules,
+           pos = pos,
+           mode = mode,
+           pattern = pats,
+           blacklist = blacklist,
+           tactic = tac}
+       end
+   in case embedding_rules
+   of [] => ([], ctxt)
+    | [((e_pattern, e_except, _), rule)] =>
+          ([mk_reasoner ([rule], e_pattern @ patterns, e_except @ blacklist)], ctxt)
+    | emb_rules =>
+           if forall (fn ((pats, excepts, _), _) => null pats andalso null excepts) emb_rules
+           then ([mk_reasoner (map snd emb_rules, patterns, blacklist)], ctxt)
+           else (map (fn ((pats, excepts, _), rule) =>
+                    mk_reasoner ([rule], pats @ patterns, excepts @ blacklist)
+                    ) emb_rules, ctxt)
   end
 
 fun add_rule pos mode priority pats guard rules ctxt =
       intro_reasoner ctxt pos mode priority pats guard rules
-        |-> add
+        |-> adds
 
 fun add_rules [] ctxt = ctxt
   | add_rules rules ctxt =
       if null rules then ctxt
       else fold_map (fn (rule,pos,mode,priority,pattern,blacklist,guard) => fn ctxt =>
                     intro_reasoner ctxt pos mode priority (pattern,blacklist) guard rule) rules ctxt
-            |-> adds
+            |-> adds o flat
 
 (** Interfaces **)
 

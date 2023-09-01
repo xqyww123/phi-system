@@ -1213,21 +1213,21 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
  
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
-  where \<open>\<phi>Share n T = (scalar_mult share n \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Separation_Monoid
+  where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
+  deriving (*Separation_Monoid
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Open_Abstraction_Full
        and Trivial_\<Sigma>
        and SE_Trim_Empty
-       (*and Semimodule_Scalar_Assoc*)
-       (*and Semimodule_Identity*)
+       and Semimodule_Scalar_Assoc
+       and Semimodule_Identity
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       (*and Semimodule_LDistr_Homo\<^sub>Z*)
-       and Construct_Abstraction_from_Raw
+       and*) Semimodule_LDistr_Homo\<^sub>Z
+       (*and Construct_Abstraction_from_Raw*)
 
 term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
 
