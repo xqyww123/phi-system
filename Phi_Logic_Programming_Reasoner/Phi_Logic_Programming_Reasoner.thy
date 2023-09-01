@@ -378,7 +378,9 @@ text \<open>Below we provide a set of predefined reasoner groups serving for def
   as they actually form a sub-system for a specific reasoning procedure.
   The preset also serves as a guideline configure suggesting users recommended allocation of priority space. \<close>
 
-\<phi>reasoner_group cutting = (1000, [1000, 1010]) for \<open>_\<close>
+\<phi>reasoner_group default = (100, [100,100]) for \<open>_\<close>
+                           \<open>The default priority of reasoning rules\<close>
+                cutting = (1000, [1000, 1010]) for \<open>_\<close>
                            \<open>Normal cutting rules\<close>
                 normalizing = (2000, [2000,2010]) for \<open>_\<close> > cutting
                            \<open>Rules normaling reasoning goals and therefore of higher priority

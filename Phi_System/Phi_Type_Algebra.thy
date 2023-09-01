@@ -217,7 +217,6 @@ definition Semimodule_LDistr_Homo\<^sub>U_rev :: \<open>('s \<Rightarrow> ('c::s
 
 subsubsection \<open>Configurations\<close>
 
-
 declare [[
   \<phi>reason_default_pattern_ML
       \<open>Transformation_Functor ?F1 ?F2 _ _ _\<close> \<Rightarrow> \<open>fn generic => fn term =>
@@ -298,6 +297,91 @@ declare [[
   and \<open>Semimodule_LDistr_Homo\<^sub>Z_rev ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>Z_rev ?F ?T _ _ _\<close> (100)
   and \<open>Semimodule_LDistr_Homo\<^sub>U_rev ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_LDistr_Homo\<^sub>U_rev ?F ?T _ _ _\<close> (100)
 ]]
+
+
+
+subsection \<open>Convention\<close>
+
+text \<open>
+Priority:
+\<^item> 30: Destruction \<open>to OPEN\<close>
+\<^item> 40: Transformations, To-Transformations
+\<^item> 40: \<^const>\<open>Identity_Element\<^sub>I\<close>, \<^const>\<open>Identity_Element\<^sub>E\<close>
+      \<^const>\<open>Object_Equiv\<close>
+\<^item> 45: Simplification for \<open>\<^emph>\<^sub>\<A>\<close>
+\<^item> 80: Construction \<open>to T\<close> where \<open>T\<close> is the type just defined
+\<^item> 80: Implication \<^prop>\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>,
+      \<^prop>\<open>Is_Functional (x \<Ztypecolon> T)\<close>
+      Open_All_Abstraction \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself\<close>
+\<^item> 1000: Type_Variant_of_the_Same_Type_Operator
+\<^item> 1100: \<^const>\<open>Transformation_Functor\<close>
+\<close>
+
+subsubsection \<open>General Groups of Properties\<close>
+
+\<phi>reasoner_group \<phi>type_algebra_all_properties = (100, [0,4000]) for \<open>_\<close>
+    \<open>The universe group containing every sort of \<phi>-type algebraic properties\<close>
+ and \<phi>TA_system_bottom = (1, [0,19]) for \<open>_\<close> in \<phi>type_algebra_all_properties
+    \<open>Systematic rules of \<phi>-type algebraic properties, of the lowest priority.\<close>
+ and \<phi>TA_fallback_lattice = (14, [10,19]) for \<open>_\<close> in \<phi>TA_system_bottom
+    \<open>Rules of \<phi>-type algebraic forming a lattice giving fallbacks from weak properties to strong properties\<close>
+ and \<phi>type_algebra_properties = (100, [20, 3800]) for \<open>_\<close> in \<phi>type_algebra_all_properties
+                                                          and > \<phi>TA_system_bottom
+    \<open>User rules of \<phi>-type algebraic properties\<close>
+ and \<phi>TA_varify_out = (3900, [3900,3900]) for \<open>_\<close> in \<phi>type_algebra_all_properties and > \<phi>type_algebra_properties
+    \<open>Systematic rules of \<phi>-type algebraic properties that varifies OUT arguments that are not varibales\<close>
+
+subsubsection \<open>Groups for Specific Properties\<close>
+
+\<phi>reasoner_group Object_Sep_Homo_functor = (50, [50,50]) for (\<open>Object_Sep_Homo\<^sub>I T D\<close>, \<open>Object_Sep_Homo\<^sub>E T\<close>)
+                                                         in \<phi>type_algebra_properties
+    \<open>Object_Sep_Homo for functors\<close>
+
+subsubsection \<open>Derived Rules\<close>
+
+\<phi>reasoner_group deriving_IH = (200, [200,200]) for \<open>_\<close> > default
+    \<open>The priority of induction hypotheses used during deriving.\<close>
+
+ and ToA_derived_one_to_one_functor = (70, [70,70]) for \<open>x \<Ztypecolon> F(T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U)\<close> in ToA_derived
+    \<open>Derived transformation in form \<open>x \<Ztypecolon> F(T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U)\<close>, of a high priority as this is what
+     should be attempted in reasoning.\<close>
+ and to_trans_derived_Tr_functor = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                                  in to_trans_derived
+    \<open>Derived To-Transformation rules for transformation functor\<close>
+ and \<phi>simp_derived_Tr_functor = (55, [55,60]) for \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>simp\<close>
+                                               in \<phi>simp_derived
+    \<open>Derived transformation-based simplification for transformation functor\<close>
+ and derived_SE_functor = (70, [70,70]) for \<open>x \<Ztypecolon> F(T) \<^emph>[Cw] F(W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U) \<^emph>[Cr] F(R)\<close> in ToA_derived
+    \<open>Derived rules of Separation Extraction, of a high priority as this is what
+     should be attempted in reasoning. No confliction with %ToA_derived_one_to_one_functor\<close>
+
+\<phi>reasoner_group_assert identity_element_ToA < deriving_IH
+
+paragraph \<open>Separation Extraction on Semimodule\<close>
+
+\<phi>reasoner_group derived_SE_scalar_assoc = (30, [30,30]) for \<open>x \<Ztypecolon> F (a * b) T \<^emph>[Cw] F (a * b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c*d) U \<^emph>[Cr] F (c*d) R\<close>
+                                              in ToA_derived and < derived_SE_functor
+    \<open>Derived rules for scalar associativity, of a low priority as  it can conflict to scalar distributive rule,
+     see \cref{Semimodule-Scalar-Associative}\<close>
+ and derived_SE_scalar_distr = (35, [31, 39]) for \<open>x \<Ztypecolon> F (a + b) T \<^emph>[Cw] F (a + b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c+d) U \<^emph>[Cr] F (c+d) R\<close>
+                                               in ToA_derived and > derived_SE_scalar_assoc and < derived_SE_functor
+    \<open>Derived rules for scalar distributivity.\<close>
+ and derived_SE_sdistr_comm = (39, [39, 39]) for \<open>x \<Ztypecolon> F (a + b) T \<^emph>[Cw] F (a + b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c+d) U \<^emph>[Cr] F (c+d) R\<close>
+                                              in derived_SE_scalar_distr
+    \<open>Derived rules for scalar distributivity on commutative semigroup\<close>
+ and derived_SE_sdistr_noncomm = (36, [36, 36]) for \<open>x \<Ztypecolon> F (a + b) T \<^emph>[Cw] F (a + b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c+d) U \<^emph>[Cr] F (c+d) R\<close>
+                                                 in derived_SE_scalar_distr < derived_SE_sdistr_comm
+    \<open>Derived rules for scalar distributivity on non-commutative semigroup\<close>
+ and derived_SE_sdistr_noassoc = (33, [33, 33]) for \<open>x \<Ztypecolon> F (a + b) T \<^emph>[Cw] F (a + b) W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (c+d) U \<^emph>[Cr] F (c+d) R\<close>
+                                                 in derived_SE_scalar_distr < derived_SE_sdistr_noncomm
+    \<open>Derived rules for scalar distributivity on separational magma\<close>
+
+subsubsection \<open>Guess Algebraic Operators\<close>
+
+\<phi>reasoner_group guess_algebraic_oprs = (100, [0, 3000]) for \<open>_\<close>
+    \<open>A general group consisting of reasoning rules derivign or guessing operators for algbebraic properties\<close>
+ and guess_algebraic_oprs_cut = (1000, [1000, 1030]) for \<open>_\<close> in guess_algebraic_oprs
+    \<open>Cutting rules derivign or guessing operators for algbebraic properties\<close>
 
 
 subsection \<open>Direct Applications \& Properties\<close>
@@ -381,7 +465,7 @@ lemma Semimodule_LDistr_Homo\<^sub>Z_sub:
   unfolding Semimodule_LDistr_Homo\<^sub>Z_def le_fun_def le_bool_def
   by blast
 
-lemma [\<phi>reason default 10 except \<open>Semimodule_LDistr_Homo\<^sub>Z _ _ ?var_Ds ?var_Dx _\<close> ]:
+lemma [\<phi>reason %\<phi>TA_varify_out except \<open>Semimodule_LDistr_Homo\<^sub>Z _ _ ?var_Ds ?var_Dx _\<close> ]:
   \<open> Semimodule_LDistr_Homo\<^sub>Z F T Ds' Dx' z
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds \<le> Ds' \<and> Dx \<le> Dx'
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F T Ds Dx z\<close>
@@ -500,28 +584,6 @@ text \<open>The @{command \<phi>type_def} command always generate 4 sorts of rul
 If a definition like those recursive definitions is characterized by multiple equations.
 The above rules are generated for each equation correspondingly.
 \<close>
-
-subsubsection \<open>Convention\<close>
-
-text \<open>
-Priority:
-\<^item> 30: Destruction \<open>to OPEN\<close>
-\<^item> 40: Transformations, To-Transformations
-\<^item> 40: \<^const>\<open>Identity_Element\<^sub>I\<close>, \<^const>\<open>Identity_Element\<^sub>E\<close>
-      \<^const>\<open>Object_Equiv\<close>
-\<^item> 45: Simplification for \<open>\<^emph>\<^sub>\<A>\<close>
-\<^item> 80: Construction \<open>to T\<close> where \<open>T\<close> is the type just defined
-\<^item> 80: Implication \<^prop>\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>,
-      \<^prop>\<open>Is_Functional (x \<Ztypecolon> T)\<close>
-      Open_All_Abstraction \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself\<close>
-\<^item> 1000: Type_Variant_of_the_Same_Type_Operator
-\<^item> 1100: \<^const>\<open>Transformation_Functor\<close>
-\<close>
-
-\<phi>reasoner_group deriving_IH = (200, [200,200]) for \<open>_\<close>
-  \<open>The priority of induction hypotheses used during deriving.\<close>
-
-\<phi>reasoner_group_assert deriving_IH > identity_element_ToA
 
 subsubsection \<open>Implementation\<close>
 
@@ -771,17 +833,10 @@ end
 
 subsection \<open>Programming Methods to Prove the Properties\<close>
 
-subsubsection \<open>Equiv Object\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method (\<And>x y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T) M D R F
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Object_Equiv T eq)) M D R F\<close>
-  unfolding \<phi>Programming_Method_def Object_Equiv_def Premise_def
-  by clarsimp
 
 subsubsection \<open>Transformation Functor\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (\<And>T U x g.
             \<forall>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b
         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -804,7 +859,7 @@ lemma
 
 subsubsection \<open>Semimodule Functor\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (\<And>s t x y.
               \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t (x,y)
           \<Longrightarrow> (y \<Ztypecolon> F s T) * (x \<Ztypecolon> F t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z s t (x,y) \<Ztypecolon> F (s + t) T
@@ -813,7 +868,7 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Programming_Method_def Semimodule_LDistr_Homo\<^sub>Z_def Premise_def norm_hhf_eq
   by (clarsimp simp add: \<phi>Prod_expn')
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (\<And>s t x y.
               \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds t \<and> Ds s \<and> t ##\<^sub>+ s \<and> Dx t s (x,y)
           \<Longrightarrow> (y \<Ztypecolon> F s T) * (x \<Ztypecolon> F t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s (x,y) \<Ztypecolon> F (t + s) T
@@ -822,7 +877,7 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Programming_Method_def Semimodule_LDistr_Homo\<^sub>Z_rev_def Premise_def norm_hhf_eq
   by (clarsimp simp add: \<phi>Prod_expn')
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (\<And>s t x.
               \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
           \<Longrightarrow> x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F t T \<^emph> F s T
@@ -831,7 +886,7 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Programming_Method_def Semimodule_LDistr_Homo\<^sub>U_def Premise_def norm_hhf_eq
   by (clarsimp simp add: \<phi>Prod_expn')
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (\<And>s t x.
               \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
           \<Longrightarrow> x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F s T \<^emph> F t T
@@ -996,8 +1051,7 @@ locale Transformation_Functor_L =
     \<open>Prem \<Longrightarrow> Transformation_Functor Fa Fb D R mapper\<close>
 begin
  
-lemma transformation[\<phi>simplify_reasoning_rule,
-                     \<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Fb _ \<s>\<u>\<b>\<j> y. _\<close>]:
+lemma transformation[\<phi>simplify_reasoning_rule]:
   \<open> \<g>\<u>\<a>\<r>\<d> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1046,7 +1100,7 @@ lemma [\<phi>TA_internal_simplify_special_cases,
 *)
 
 lemma [\<phi>simplify_reasoning_rule,
-       \<phi>reason default 40]:
+       \<phi>reason default %to_trans_derived_Tr_functor]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1055,7 +1109,7 @@ lemma [\<phi>simplify_reasoning_rule,
   using transformation[unfolded \<r>Guard_def] .
 
 lemma [\<phi>simplify_reasoning_rule,
-       \<phi>reason default 40]:
+       \<phi>reason default %to_trans_derived_Tr_functor]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1064,7 +1118,7 @@ lemma [\<phi>simplify_reasoning_rule,
   using transformation[unfolded \<r>Guard_def] .
    
 lemma [\<phi>simplify_reasoning_rule,
-       \<phi>transformation_based_simp default 40 no trigger]:
+       \<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1094,7 +1148,7 @@ lemma [\<phi>reason_template default 50 requires Separation_Homo\<^sub>E]:
   by (rule transformation_trans[where P=True and Q=True and B=\<open>y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y\<close>, simplified], blast)
 *)
 
-lemma [\<phi>reason_template default 45]:
+lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5]:
   \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def \<phi>Auto_Prod_def
@@ -1126,12 +1180,12 @@ setup \<open>Phi_Type_Template_Properties.add_property_kind \<^const_name>\<open
 context Functional_Transformation_Functor
 begin
 
-lemma Functional_Transformation_Functor[\<phi>reason add]:
+lemma Functional_Transformation_Functor[\<phi>reason add (*pirority?*)]:
   \<open>Functional_Transformation_Functor Fa Fb D R mapper Prem pred_mapper func_mapper\<close>
   by (simp add: Functional_Transformation_Functor_axioms)
 
 lemma [\<phi>simplify_reasoning_rule,
-       \<phi>reason default 40 for \<open>_ \<Ztypecolon> Fa _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Fb _ \<w>\<i>\<t>\<h> _\<close>]:
+       \<phi>reason default %ToA_derived_one_to_one_functor for \<open>_ \<Ztypecolon> Fa _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Fb _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> Prem
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x) 
@@ -1198,7 +1252,7 @@ declare [[\<phi>reason_default_pattern
 
 subsubsection \<open>Separation Homomorphism\<close>
 
-lemma Object_Sep_Homo\<^sub>I_subdom[\<phi>reason default 1]:
+lemma Object_Sep_Homo\<^sub>I_subdom[\<phi>reason %\<phi>TA_varify_out except \<open>Object_Sep_Homo\<^sub>I _ ?var\<close>]:
   \<open> Object_Sep_Homo\<^sub>I T Da
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Db \<subseteq> Da
 \<Longrightarrow> Object_Sep_Homo\<^sub>I T Db\<close>
@@ -1214,7 +1268,7 @@ Object_Sep_Homo\<^sub>I B \<longleftrightarrow> Separation_Homo\<^sub>I ((\<Zcom
   Note here \<open>c = b * a\<close> only if the \<open>*\<close> is defined between b and a.
 *)
 
-lemma Separation_Homo_functor[\<phi>reason_template 50]:
+lemma Separation_Homo_functor[\<phi>reason_template %Object_Sep_Homo_functor]:
   \<open> Separation_Homo\<^sub>I F F F' T T Ds zz
 \<Longrightarrow> Transformation_Functor F' F D R m
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y z. m (\<lambda>(a, b) c. c = b * a \<and> b ## a \<and> (a, b) \<in> D (zz (x, y))) (zz (x, y)) z
@@ -1375,7 +1429,7 @@ subsubsection \<open>Semimodule\<close>
 paragraph \<open>Zero\<close>
 
 lemma [\<phi>adding_property = false,
-       \<phi>reason default 10,
+       \<phi>reason default %\<phi>TA_fallback_lattice,
        \<phi>adding_property = true]:
   \<open> Closed_Semimodule_Zero F T
 \<Longrightarrow> Semimodule_Zero F T \<close>
@@ -1387,31 +1441,31 @@ lemma [\<phi>reason_template [assertion_simps, simp]]:
 \<Longrightarrow> (x \<Ztypecolon> F 0 T) = 1 \<close>
   unfolding Closed_Semimodule_Zero_def by blast
 
-lemma [\<phi>reason_template 190 requires Semimodule_Zero]:
+lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
   \<open> Semimodule_Zero F T
-\<Longrightarrow> Identity_Element\<^sub>E Y
+\<Longrightarrow> NO_SIMP (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F 0 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   unfolding Semimodule_Zero_def Identity_Element\<^sub>E_def NO_SIMP_def
   using mk_elim_transformation by blast
 
-lemma [\<phi>reason_template 190 requires Semimodule_Zero]:
+lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
   \<open> Semimodule_Zero F T
-\<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y
+\<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F 0 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
   unfolding Semimodule_Zero_def Identity_Element\<^sub>E_def NO_SIMP_def
   using implies_bi_frame by fastforce
 
-lemma [\<phi>reason_template 190 requires Closed_Semimodule_Zero]:
+lemma [\<phi>reason_template %ToA_derived_red requires Closed_Semimodule_Zero]:
   \<open> Closed_Semimodule_Zero F T
-\<Longrightarrow> Identity_Element\<^sub>I X P
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F 0 T \<w>\<i>\<t>\<h> P) \<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def
   by simp
 
-lemma [\<phi>reason_template 190 requires Closed_Semimodule_Zero]:
+lemma [\<phi>reason_template %ToA_derived_red requires Closed_Semimodule_Zero]:
   \<open> Closed_Semimodule_Zero F T
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F 0 T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<w>\<i>\<t>\<h> P) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
   unfolding Closed_Semimodule_Zero_def Identity_Element\<^sub>I_def NO_SIMP_def
@@ -1425,28 +1479,28 @@ lemma [\<phi>reason_template name scalar_identity [assertion_simps, simp]]:
 \<Longrightarrow> F 1 T = T \<close>
   unfolding Semimodule_Identity_def .
 
-lemma [\<phi>reason_template default 190]:
+lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_Identity F T
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F 1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
   unfolding Semimodule_Identity_def NO_SIMP_def \<r>Guard_def
   by simp
 
-lemma [\<phi>reason_template no explorative backtrack 190]:
+lemma [\<phi>reason_template no explorative backtrack %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_Identity F T
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F 1 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
   unfolding Semimodule_Identity_def NO_SIMP_def \<r>Guard_def
   by simp
 
-lemma [\<phi>reason_template default 190]:
+lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_Identity F T
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F 1 T \<w>\<i>\<t>\<h> P) \<close>
   unfolding Semimodule_Identity_def NO_SIMP_def \<r>Guard_def
   by simp
 
-lemma [\<phi>reason_template default 190]:
+lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_Identity F T
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F 1 T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
@@ -1463,7 +1517,7 @@ lemma [\<phi>reason_template name scalar_assoc [assertion_simps, simp]]:
   unfolding Semimodule_Scalar_Assoc_def
   by simp
 
-lemma [\<phi>reason_template default 190]:
+lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> Semimodule_Scalar_Assoc F T Ds
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F (b * a) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
@@ -1471,7 +1525,7 @@ lemma [\<phi>reason_template default 190]:
   unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def \<r>Guard_def
   by simp
 
-lemma [\<phi>reason_template default 190]:
+lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> Semimodule_Scalar_Assoc F T Ds
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F (b * a) T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
@@ -1479,7 +1533,7 @@ lemma [\<phi>reason_template default 190]:
   unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def \<r>Guard_def
   by simp
 
-lemma [\<phi>reason_template default 190]:
+lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> Semimodule_Scalar_Assoc F T Ds
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<w>\<i>\<t>\<h> P)
@@ -1487,7 +1541,7 @@ lemma [\<phi>reason_template default 190]:
   unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def \<r>Guard_def
   by simp
 
-lemma [\<phi>reason_template default 190]:
+lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> Semimodule_Scalar_Assoc F T Ds
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
@@ -1499,7 +1553,7 @@ lemma [\<phi>reason_template default 190]:
 paragraph \<open>Left Distributivity\<close>
 
 lemma [\<phi>adding_property = false,
-       \<phi>reason default 10,
+       \<phi>reason default %\<phi>TA_fallback_lattice,
        \<phi>adding_property = true ]:
   \<open> Semimodule_LDistr_Homo\<^sub>Z F T Ds Dx z
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx s t o prod.swap) (\<lambda>s t. z s t o prod.swap)\<close>
@@ -1508,7 +1562,7 @@ lemma [\<phi>adding_property = false,
   by (simp add: \<phi>Prod_expn'; metis mult.commute)
 
 lemma [\<phi>adding_property = false,
-       \<phi>reason default 9,
+       \<phi>reason default %\<phi>TA_fallback_lattice-1,
        \<phi>adding_property = true ]:
   \<open> Semimodule_LDistr_Homo\<^sub>Z F T Ds Dx z
 \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx t s) (\<lambda>s t. z t s)\<close>
@@ -1609,7 +1663,7 @@ lemma
 *)
 
 
-lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default 80]:
+lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %derived_SE_functor]:
   \<open> \<g>\<u>\<a>\<r>\<d> Prem \<and>\<^sub>\<r> Prem'r \<and>\<^sub>\<r> Prem'w \<and>\<^sub>\<r> Prem'b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r Prem'r pred_mapper'r func_mapper'r
@@ -1779,7 +1833,7 @@ declare "_Structural_Extract_general_rule_b_"[(*THEN SE_clean_waste,*) \<phi>rea
 *)
 
 
-paragraph \<open>Semimodule Scalar Associative\<close>
+paragraph \<open>Semimodule Scalar Associative \label{Semimodule-Scalar-Associative}\<close>
 
 text \<open>The proof search is inefficient for semimodule \<phi>-type that satisfies both scalar associativity
   and scalar distributivity.
@@ -1935,7 +1989,7 @@ lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we hav
     fold F3D
   \<medium_right_bracket> .
 
-declare SE_general_Semimodule_Scalar_left_b[(*THEN SE_clean_waste,*) \<phi>reason_template default 30]
+declare SE_general_Semimodule_Scalar_left_b[(*THEN SE_clean_waste,*) \<phi>reason_template default %derived_SE_scalar_assoc]
 
 (*
 lemma SE_general_Semimodule_Scalar_left_a:
@@ -2268,7 +2322,7 @@ text \<open>Non-unital algebra implies no additive zero.\<close>
 (* [--d--][-----a-----]
    [-----b-----][--c--]
    Give a, expect b; Need d, remain c.*)
-lemma SE_Semimodule_LDistr_da_bc_i[where Cw' = True, \<phi>reason_template 30]:
+lemma SE_Semimodule_LDistr_da_bc_i[where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a = b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
@@ -2294,7 +2348,7 @@ lemma SE_Semimodule_LDistr_da_bc_i[where Cw' = True, \<phi>reason_template 30]:
 (* [-----a-----][--d--]
    [--c--][-----b-----]
    Give a, expect b; Need d, remain c.*)
-lemma SE_Semimodule_LDistr_ad_cb_i[where Cw' = True, \<phi>reason_template 30]:
+lemma SE_Semimodule_LDistr_ad_cb_i[where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a + d = c + b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
@@ -2317,20 +2371,20 @@ lemma SE_Semimodule_LDistr_ad_cb_i[where Cw' = True, \<phi>reason_template 30]:
        b
   \<medium_right_bracket> .
 
-lemma [\<phi>reason 1000 for \<open>((_,_,_) \<Ztypecolon> \<half_blkcirc>[_] _ \<^emph> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[True] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>]:
+lemma [\<phi>reason %\<A>merge for \<open>((_,_,_) \<Ztypecolon> \<half_blkcirc>[_] _ \<^emph> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[True] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>]:
   \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) = ((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) @action \<A>merge\<close>
   \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[False] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True] R) = ((y,z) \<Ztypecolon> \<half_blkcirc>[True] (U \<^emph> R)) @action \<A>merge\<close>
   unfolding Action_Tag_def
   by (clarsimp simp add: \<phi>Some_\<phi>Prod \<phi>Some_\<phi>None_freeobj)+
 
-lemma [\<phi>reason 1000 for \<open>((_,_,_) \<Ztypecolon> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>]:
+lemma [\<phi>reason %\<A>merge for \<open>((_,_,_) \<Ztypecolon> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>]:
   \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) = ((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) @action \<A>merge\<close>
   \<open>((x,y,z) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) = ((x,y) \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) @action \<A>merge\<close>
   unfolding Action_Tag_def
   by (clarsimp simp add: \<phi>Some_\<phi>Prod \<phi>Some_\<phi>None_freeobj;
       metis \<phi>Prod_expn' \<phi>Some_\<phi>None_freeobj(1) \<phi>Some_\<phi>Prod fst_conv)+
 
-lemma [\<phi>reason 1000 for \<open>((_,_,_) \<Ztypecolon> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>]:
+lemma [\<phi>reason %\<A>merge for \<open>((_,_,_) \<Ztypecolon> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[True] _ \<^emph> \<half_blkcirc>[_] _) = (_ \<Ztypecolon> \<half_blkcirc>[_] _) @action \<A>merge\<close>]:
   \<open>(x3 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U \<^emph> R)) = ((fst x3, fst (snd x3), snd (snd x3)) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[True]  R) @action \<A>merge\<close>
   \<open>(x2 \<Ztypecolon> \<half_blkcirc>[True] (T \<^emph> U)) = ((fst x2, snd x2, ()) \<Ztypecolon> \<half_blkcirc>[True] T \<^emph> \<half_blkcirc>[True] U \<^emph> \<half_blkcirc>[False] R) @action \<A>merge\<close>
   unfolding Action_Tag_def
@@ -2343,7 +2397,7 @@ declare [[\<phi>trace_reasoning = 0]]
 (* [---------a---------]
    [--d--][--b--][--c--]
    Give a, expect b, remain d, c. *) 
-lemma SE_Semimodule_LDistr_a_dbc_i[where Cr'=True, \<phi>reason_template 30]:
+lemma SE_Semimodule_LDistr_a_dbc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = d + b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2366,7 +2420,7 @@ lemma SE_Semimodule_LDistr_a_dbc_i[where Cr'=True, \<phi>reason_template 30]:
 (* [--d--][--a--][--c--]
    [---------b---------]
    Give a, expect b, need d, c. *)
-lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template 30]:
+lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a + c = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2389,7 +2443,7 @@ lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template 30]:
    [---------b--------]
    Give a, expect b; Need d, c = 0.
    Also covers non-commutative *)
-lemma SE_Semimodule_LDistr_da_b_i[where Cw'=True, \<phi>reason_template 30]:
+lemma SE_Semimodule_LDistr_da_b_i[where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2410,7 +2464,7 @@ lemma SE_Semimodule_LDistr_da_b_i[where Cw'=True, \<phi>reason_template 30]:
 (* [--------a---------]
    [-----b-----][--c--]
    Give a, expect b; Remain c, d = 0. *)
-lemma SE_Semimodule_LDistr_a_bc_i[where Cr'=True, \<phi>reason_template 30]:
+lemma SE_Semimodule_LDistr_a_bc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2432,7 +2486,7 @@ lemma SE_Semimodule_LDistr_a_bc_i[where Cr'=True, \<phi>reason_template 30]:
    [--------b---------]
    Give a, expect b; Need d, c = 0.
    Also covers non-commutative *)
-lemma SE_Semimodule_LDistr_ad_b_i[where Cw' = True, \<phi>reason_template 30]:
+lemma SE_Semimodule_LDistr_ad_b_i[where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a + d = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2453,7 +2507,7 @@ lemma SE_Semimodule_LDistr_ad_b_i[where Cw' = True, \<phi>reason_template 30]:
 (* [---------a--------]
    [--c--][-----b-----]
    Give a, expect b; Remain c, d = 0.*)
-lemma SE_Semimodule_LDistr_a_cb_i[\<phi>reason_template 36]:
+lemma SE_Semimodule_LDistr_a_cb_i[\<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = c + b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2479,7 +2533,7 @@ paragraph \<open>Non-Commutative, Non-Unital Associative, No Additive Zero\<clos
 (* [--d--][-----a-----]
    [-----b-----][--c--]
    Give a, expect b; Need d, remain c.*)
-lemma SE_Semimodule_LDistr_da_nc_i[where Cr'=True, \<phi>reason_template 28]:
+lemma SE_Semimodule_LDistr_da_nc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_noncomm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a = b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
@@ -2502,7 +2556,7 @@ lemma SE_Semimodule_LDistr_da_nc_i[where Cr'=True, \<phi>reason_template 28]:
 (* [-----a-----][--d--]
    [--c--][-----b-----]
    Give a, expect b; Need d, remain c.*)
-lemma SE_Semimodule_LDistr_ad_cb_nc_i[where Cr'=True, \<phi>reason_template 28]:
+lemma SE_Semimodule_LDistr_ad_cb_nc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_noncomm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a + d = c + b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx' z
@@ -2525,7 +2579,7 @@ lemma SE_Semimodule_LDistr_ad_cb_nc_i[where Cr'=True, \<phi>reason_template 28]:
 (* [---------a---------]
    [--d--][--b--][--c--]
    Give a, expect b, remain d, c. *) 
-lemma SE_Semimodule_LDistr_a_dbc_nc_i[where Cr'=True, \<phi>reason_template 28]:
+lemma SE_Semimodule_LDistr_a_dbc_nc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_noncomm]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = d + b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx' uz'
@@ -2549,7 +2603,7 @@ lemma SE_Semimodule_LDistr_a_dbc_nc_i[where Cr'=True, \<phi>reason_template 28]:
 (* [--d--][--a--][--c--]
    [---------b---------]
    Give a, expect b, need d, c. *)
-lemma SE_Semimodule_LDistr_dac_b_nc_i[\<phi>reason_template 28]:
+lemma SE_Semimodule_LDistr_dac_b_nc_i[\<phi>reason_template %derived_SE_sdistr_noncomm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a + c = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx' z'
@@ -2694,9 +2748,51 @@ lemma SE_Semimodule_LDistr_ad_b_na_W[\<phi>reason_template 36]:
   \<medium_right_bracket> .
 *)
 
+paragraph \<open>Assuming no algebraic property supporting even non-associative group,
+  and as a consequence allowing no remainder in the element transformation\<close>
+
+(* [---------a--------]
+   [--c--][-----b-----]
+   Give a, expect b, remain d.
+*)
+
+lemma SE_Semimodule_LDistr_a_cb_noassoc[\<phi>reason_template %derived_SE_sdistr_noassoc]:
+  \<open> \<g>\<u>\<a>\<r>\<d> a = c + b @action \<A>arith_eval
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds c \<and> Ds b \<and> c ##\<^sub>+ b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx c b (fst x)
+\<Longrightarrow> fst (uz c b (fst x)) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, snd (uz c b (fst x))) \<Ztypecolon> F3 b U \<^emph>[True] F1 c T \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def \<r>Guard_def
+  \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>c\<close> and t=b and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [---------a--------]
+   [-----b-----][--d--]
+   Give a, expect b, remain d.
+*)
+lemma SE_Semimodule_LDistr_a_bd_Tr[\<phi>reason_template %derived_SE_sdistr_noassoc]:
+  \<open> \<g>\<u>\<a>\<r>\<d> a = b + d @action \<A>arith_eval
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds b \<and> b ##\<^sub>+ d
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx b d (fst x)
+\<Longrightarrow> fst (uz b d (fst x)) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] snd (uz b d (fst x)) \<Ztypecolon> F1 d T \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def \<r>Guard_def
+  \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where s=\<open>b\<close> and t=d and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(*
 subsubsection \<open>Transformation of Semimodule Left Distributivity\<close>
 
-paragraph \<open>Assuming no algebraic property, allowing no remainder in the element transformation\<close>
+paragraph \<open>Assuming no algebraic property supporting even non-associative group,
+  and as a consequence allowing no remainder in the element transformation\<close>
 
 subparagraph \<open>Has Additive Zero\<close>
 
@@ -2718,20 +2814,20 @@ for non-associative algebras (I cannot imagine any).
 subparagraph \<open>No Additive Zero\<close>
 
 (* [---------a--------]
-   [--d--][-----b-----]
+   [--c--][-----b-----]
    Give a, expect b, remain d.
 *)
-lemma SE_Semimodule_LDistr_a_db_Tr[\<phi>reason_template 30]:
-  \<open> \<g>\<u>\<a>\<r>\<d> a = d + b @action \<A>arith_eval
+lemma SE_Semimodule_LDistr_a_db_Tr[\<phi>reason_template %derived_SE_sdistr_noassoc]:
+  \<open> \<g>\<u>\<a>\<r>\<d> a = c + b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds b \<and> d ##\<^sub>+ b
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx d b x
-\<Longrightarrow> fst (uz d b x) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] snd (uz d b x) \<Ztypecolon> F1 d T \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds c \<and> Ds b \<and> c ##\<^sub>+ b
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx c b x
+\<Longrightarrow> fst (uz c b x) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] snd (uz c b x) \<Ztypecolon> F1 c T \<w>\<i>\<t>\<h> P \<close>
   unfolding Action_Tag_def \<r>Guard_def
   \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and Tr
-    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>d\<close> and t=b and F=F1]
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where s=\<open>c\<close> and t=b and F=F1]
     Tr
   \<medium_right_bracket> .
 
@@ -2739,7 +2835,7 @@ lemma SE_Semimodule_LDistr_a_db_Tr[\<phi>reason_template 30]:
    [-----b-----][--d--]
    Give a, expect b, remain d.
 *)
-lemma SE_Semimodule_LDistr_a_bd_Tr[\<phi>reason_template 30]:
+lemma SE_Semimodule_LDistr_a_bd_Tr[\<phi>reason_template %derived_SE_sdistr_noassoc]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = b + d @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2836,6 +2932,7 @@ lemma SE_Semimodule_LDistr_a_bd_Tr_R[\<phi>reason_template 32]:
 (*DONE*)
 
 (*The dual of the above rules is \<A>SEa*)
+*)
 
 subsection \<open>Property Derivers\<close>
 
@@ -3380,23 +3477,23 @@ text \<open>To guess the zip operation of a semimodule is far beyond what can be
       Due to this, the guessing of the abstract operators of semimodules more relies on pre-registered
       records over the logical types.\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %guess_algebraic_oprs_cut]:
   \<open>guess_domain_of_scalar TYPE(rat) TYPE('c::share) TYPE('a) (\<lambda>x. 0 < x)\<close>
   unfolding guess_domain_of_scalar_def ..
 
-lemma [\<phi>reason 1010]:
+lemma [\<phi>reason %guess_algebraic_oprs_cut+10]:
   \<open>guess_domain_of_scalar TYPE(rat) TYPE('c::share_one) TYPE('a) (\<lambda>x. 0 \<le> x)\<close>
   unfolding guess_domain_of_scalar_def ..
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %guess_algebraic_oprs_cut]:
   \<open>guess_domain_of_scalar TYPE(nat lcro_interval) TYPE('c) TYPE('a list) (\<lambda>_. True)\<close>
   unfolding guess_domain_of_scalar_def ..
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %guess_algebraic_oprs_cut]:
   \<open>guess_zip_of_semimodule TYPE(rat) TYPE('c) TYPE('a) (\<lambda>x. 0 \<le> x) (\<lambda>s t (x,y). x = y) (\<lambda>_ _ (x,y). x)\<close>
   unfolding guess_zip_of_semimodule_def ..
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %guess_algebraic_oprs_cut]:
   \<open>guess_zip_of_semimodule TYPE(nat lcro_interval) TYPE('c) TYPE('a list) (\<lambda>_. True)
                            (\<lambda>s t (x,y). LCRO_Interval.width_of t = length x \<and> LCRO_Interval.width_of s = length y)
                            (\<lambda>_ _ (x,y). y * x)\<close>
@@ -3608,6 +3705,8 @@ ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
 
 subsubsection \<open>Trim Empty Generated during Separation Extraction\<close>
 
+(*TODO: reform.*)
+
 text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules that eliminates into \<open>\<circle>\<close>
   any \<open>F \<circle>\<close> generated during Separation Extraction process.
 
@@ -3635,8 +3734,7 @@ lemma derive_\<A>SE_trim_I:
 \<Longrightarrow> \<A>SE_trim\<^sub>I y (F \<circle>) (fst y, ()) \<circle> P \<close>
   unfolding \<A>SE_trim\<^sub>I_def
   \<medium_left_bracket> premises _ and R1[unfolded Identity_Element\<^sub>I_def]
-    note [[\<phi>trace_reasoning = 2]]
-    ;; apply_rule R1[THEN implies_right_frame]
+    apply_rule R1[THEN implies_right_frame]
   \<medium_right_bracket> .
 
 lemma derive_\<A>SE_trim_I_TH:

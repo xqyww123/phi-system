@@ -603,9 +603,9 @@ subsubsection \<open>Allocation of Priorities\<close>
 \<phi>reasoner_group
   ToA_all         = (100, [1, 4999]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
                     \<open>Rules of transformation\<close>
-  ToA_bottom      = (1, [1, 11]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_all
+  ToA_bottom      = (1, [1, 13]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_all
                     \<open>System transformation rules, of the lowest priority\<close>
-  ToA             = (100, [12, 4999]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_all
+  ToA             = (100, [14, 4999]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_all > ToA_bottom
                     \<open>User rules for transformation\<close>
   ToA_cut         = (1000, [1000, 1399]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
                     \<open>Deterministic transformation rules without backtracking, meaning the reasoning
@@ -634,26 +634,31 @@ subsubsection \<open>Allocation of Priorities\<close>
                      normal process of the reasoning, and may cause unexpected exception in them.\<close>
   ToA_refl        = (4000, [3990, 4019]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
                     \<open>Reflexive tranformation rules\<close>
-  ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut and > ToA_bottom in ToA
+  ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
                     \<open>split the separation sequent in the source part and reason the tranformation for
                      each separated item one by one.\<close>
+  ToA_derived     = (50, [20,79]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA < default
+                    \<open>Automatically derived transformations. Many substructures are contained in this large range.\<close>
+  ToA_derived_red = (150, [130,170]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> > ToA_derived > default in ToA
+                    \<open>Automatically derived transformation reductions.\<close>
+
 
 paragraph \<open>Bottom Groups\<close>
 
 \<phi>reasoner_group
-  ToA_falling_latice = (1, [1,2]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom
+  ToA_falling_latice = (1, [1,4]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom
                     \<open>Fallbacks of transformation rules\<close>
-  ToA_unified_refl = (3, [3,4]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+  ToA_unified_refl = (5, [5,6]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
                                 in ToA_bottom and > ToA_falling_latice
                      \<open>Reflexive tranformation rules with unification, of a low priority because
                       unification is aggresive.\<close>
-  ToA_Equiv_Class = (5, [5,5]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_unified_refl
+  ToA_varify_target_object = (7, [7,7]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_unified_refl
                     \<open>Varifies the fixed target object, using Object_Equiv\<close>
-  ToA_inst_qunat  = (6, [6,6]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_Equiv_Class
+  ToA_inst_qunat  = (8, [8,8]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_varify_target_object
                     \<open>Transformation rules instantiating quantified variables. It is unsafe unless
                      all fixable variables are fixed. If any variable is fixed later than the instantiation,
                      the instantiated schematic variable cannot caputure the later fixed variable.\<close>
-  ToA_branches    = (8, [7,11]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_inst_qunat
+  ToA_branches    = (10, [9,13]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_bottom and > ToA_inst_qunat
                     \<open>Branching transformation rules.\<close>
 
 
@@ -1787,22 +1792,39 @@ lemma satisfication_encoding:
   \<open> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<w>\<i>\<t>\<h> P) \<longleftrightarrow> x \<Turnstile> (y \<Ztypecolon> T) \<and> P \<close>
   unfolding Transformation_def by simp
 
-subsubsection \<open>Construction from \& Destruction to Raw Abstraction represented by Itself \<close>
+
+subsubsection \<open>Construction from Raw Abstraction represented by Itself \<close>
   \<comment> \<open>is a sort of reasoning process useful later in making initial Hoare triples from semantic raw
       representation (which are represented by Itself, i.e., no abstraction).\<close>
 
-\<phi>reasoner_group abstract_from_raw = (100, [12, 1399]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close>
+\<phi>reasoner_group abstract_from_raw = (100, [14, 1399]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close>
       > ToA_bottom and < ToA_splitting_target
       \<open>Rules constructing abstraction from raw representations\<close>
-  and concretize_to_raw = (100, [12, 1399]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y\<close> (*TODO: add \<open>to Itself\<close>*)
-      > ToA_bottom and < ToA_splitting_target
-      \<open>Rules destructing abstraction from raw representations\<close>
+  and abstract_from_raw_cut = (1000, [1000, 1030]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close> in abstract_from_raw
+      \<open>Cutting rules constructing abstraction from raw representations\<close>
 
-  and abstract_from_raw_fallback = (12, [12,12]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close>
-      in abstract_from_raw
-      \<open>Fallback rules constructing abstraction from raw representations\<close>
+declare [[\<phi>reason_default_pattern
+      \<open> _ \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open> _ \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _ \<close> (1120)
+  and \<open> _ \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open> _ \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A \<w>\<i>\<t>\<h> _ \<close> (1110)
+  and \<open> _ \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open>_\<close> (1100)
+]]
 
-declare Itself_E[\<phi>reason default %abstract_from_raw_fallback]
+declare Itself_E[\<phi>reason default %ToA_falling_latice]
+
+lemma [\<phi>reason default %ToA_falling_latice+1 except \<open>?var \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _\<close>]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> c = c' \<Longrightarrow> c' \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> c = c'
+\<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
+  unfolding Premise_def
+  by simp
+
+lemma [\<phi>reason %abstract_from_raw_cut]:
+  \<open> c\<^sub>a \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A
+\<Longrightarrow> c\<^sub>b \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> c\<^sub>a ## c\<^sub>b
+\<Longrightarrow> (c\<^sub>a * c\<^sub>b) \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A * B\<close>
+  unfolding Transformation_def Premise_def
+  by (clarsimp; blast)
 
 subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 
@@ -2393,6 +2415,29 @@ declare [[
  and object_equiv_fallback = (1, [1,1]) for \<open>Object_Equiv T eq\<close> in object_equiv and < derived_object_equiv
     \<open>Fallback rules for reasonig Object_Equiv\<close>
 
+
+subsubsection \<open>Its Role in ToA\<close>
+
+lemma ToA_by_Equiv_Class
+      [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
+                                        except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Object_Equiv U eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Transformation_def Premise_def by clarsimp
+
+lemma ToA_by_Equiv_Class'
+      [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                                        except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> Object_Equiv U eq
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def
+  by (cases C; clarsimp; meson Transformation_def implies_left_frame)
+
+
 subsubsection \<open>Reasoning Rules\<close>
 
 lemma Object_Equiv_fallback[\<phi>reason default %object_equiv_fallback]:
@@ -2966,30 +3011,15 @@ lemma [\<phi>reason default %ToA_falling_latice]:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fst yr \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] snd yr \<Ztypecolon> R \<w>\<i>\<t>\<h> P \<close>
   by (cases C; clarsimp simp add: \<phi>Some_transformation_strip \<phi>Prod_expn'')
 
-lemma ToA_by_Equiv_Class
-      [\<phi>reason default %ToA_Equiv_Class for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
-                                        except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Object_Equiv U eq
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Transformation_def Premise_def by clarsimp
-
-lemma ToA_by_Equiv_Class'
-      [\<phi>reason default %ToA_Equiv_Class for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
-                                        except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Object_Equiv U eq
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def
-  by (cases C; clarsimp; meson Transformation_def implies_left_frame)
-
-text \<open>Convention: Any meaningful transformation rules should be of priority greater than 5
-  (the of \<open>ToA_by_Equiv_Class\<close>)
-
-TODO: move me!\<close>
-
+lemma [\<phi>reason %ToA_red for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<^emph>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                         except \<open>_ \<Ztypecolon> _ \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+      \<comment> \<open>\<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] R\<close> is invalid when \<open>T \<noteq> (_ \<^emph>[_] _)\<close>. The rule corrects
+          such mistake eagerly (though may affect the overall performance).\<close>
+  \<open> (x, undefined) \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> Cw
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Premise_def
+  by simp
 
 subsubsection \<open>Reflexive Transformation\<close>
 

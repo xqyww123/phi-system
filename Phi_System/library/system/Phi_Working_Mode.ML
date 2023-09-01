@@ -1,7 +1,7 @@
 signature PHI_WORKING_MODE = sig
 
 type working_mode = {
-  name: string,
+  name: string, (*the name of the constant binding the working mode*)
   domain: term -> bool,
   is_on_going_construction: term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term (*the BI assertion*),

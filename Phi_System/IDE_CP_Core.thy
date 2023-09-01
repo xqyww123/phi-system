@@ -290,6 +290,21 @@ declare [[\<phi>reason_default_pattern
       \<open>PROP \<phi>Programming_Method ?T _ _ _ _\<close> \<Rightarrow> \<open>PROP \<phi>Programming_Method ?T _ _ _ _\<close> (100)
 ]]
 
+\<phi>reasoner_group \<phi>programming_method = (1000, [1000,1999])
+  for \<open>PROP \<phi>Programming_Method Target mode Programming_Deduction Post_Reasoning Future_Works\<close>
+  \<open>Rules indicating how to derive the given property \<open>Target\<close>, under what \<open>mode\<close>, with what reasoning
+   goals \<open>Post_Reasoning\<close> to be processed using \<phi>-LPR after the programming, and with what remaining
+   goals \<open>Future_Works\<close> presenting to the user to be processed later.
+   The Programming_Deduction have to be in Harrop form:
+      \<open>\<And>xs. premses \<Longrightarrow> conclsion\<close>
+   where \<open>xs\<close> are local variables to be fixed, \<open>premises\<close> are local assumptions which can be prefixed
+   by \<open>name\<^bold>:\<close> (see \<^const>\<open>Labelled\<close>) giving the name binding the premise. Among the premises, there
+   must be one of name \<open>\<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<close> which is the initial sequent of user deduction. From the inital sequent,
+   users are expected to deduce the conclusion proposition.
+
+   Any rule specifying programming methods should be cutting.
+\<close>
+
 lemma reason_programming:
   \<open> PROP \<phi>Programming_Method Target working_mode Programming_Deduction Post_Reasoning Future_Works
 \<Longrightarrow> TERM working_mode
@@ -307,75 +322,9 @@ hide_fact introduce_Ex_ToA_subj_P introduce_Ex_ToA_subj introduce_Ex_ToA
           introduce_Ex_pending_E introduce_Ex_pending introduce_Ex_subj introduce_Ex
 
 
-subsubsection \<open>Built-in Programming Methods\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method
-            (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
-            working_mode_implication
-            (\<And>\<CC>c. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> X) \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> Y \<s>\<u>\<b>\<j> P)
-            (Trueprop True)
-            (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
-            Labelled_def
-  using \<phi>make_implication .
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method
-            (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P))
-            working_mode_view_shift
-            (\<And>\<CC>c \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> X) \<Longrightarrow> \<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> Y \<s>\<u>\<b>\<j> P)
-            (Trueprop True)
-            (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
-  using \<phi>make_view_shift .
-
-lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P)) _ _ _ _\<close>]:
-  \<open> PROP \<phi>Programming_Method
-            (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y))
-            working_mode_view_shift
-            (\<And>\<CC>c \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> X) \<Longrightarrow> \<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> Y \<s>\<u>\<b>\<j> True)
-            (Trueprop True)
-            (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
-  using \<phi>make_view_shift .
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method
-            (Trueprop (\<p>\<r>\<o>\<c> G \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
-            working_mode_procedure
-            (\<And>\<SS>s \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<SS>s [\<RR>r] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> X) \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> G \<o>\<n> \<SS>s [\<RR>r] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E)
-            (Trueprop True)
-            (Trueprop True)\<close>
-  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
-  using \<phi>reassemble_proc_final .
-
-hide_fact \<phi>make_implication \<phi>make_view_shift \<phi>reassemble_proc_final
-
-
-context begin
-
-private lemma Is_Functional_imp'':
-  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Is_Functional S'
-\<Longrightarrow> Is_Functional S\<close>
-  unfolding Transformation_def Is_Functional_def
-  by blast
-
-lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> Is_Functional S')) M D R F
-\<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show\<close> S \<open>is functional\<close>
-      \<open>Now you entered the programming mode and you need to transform the specification to\<close>
-      \<open>someone which is functional, so that we can verify your claim.\<close>)
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Is_Functional S)) M D R F\<close>
-  unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
-            Subjec_Reasoning_def
-  by (rule Is_Functional_imp''[where S'=S']; simp)
-
-end
-
 subsubsection \<open>General Rules Normalizing Programming Methods\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (Trueprop Q) M D R F
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (P \<longrightarrow> Q)) M (P \<Longrightarrow> PROP D) (P \<Longrightarrow> PROP R) (P \<Longrightarrow> PROP F)\<close>
   unfolding \<phi>Programming_Method_def
@@ -388,7 +337,7 @@ proof (intro impI)
   show \<open>Q\<close> using A[OF D[OF P] R[OF P] F[OF P]] .
 qed
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method Q M D R F
 \<Longrightarrow> PROP \<phi>Programming_Method (PROP P \<Longrightarrow> PROP Q) M (PROP P \<Longrightarrow> PROP D) (PROP P \<Longrightarrow> PROP R)
                              (PROP P \<Longrightarrow> PROP F)\<close>
@@ -457,6 +406,105 @@ qed
 \<close>
 
 hide_fact \<phi>Programming_Method_All \<phi>Programming_Method_ALL
+
+
+subsubsection \<open>Built-in Programming Methods\<close>
+
+paragraph \<open>Transformation\<close>
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
+            working_mode_implication
+            (\<And>\<CC>c. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> X) \<Longrightarrow> \<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>c) \<i>\<s> Y \<s>\<u>\<b>\<j> P)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def
+            Labelled_def
+  using \<phi>make_implication .
+
+paragraph \<open>View Shift\<close>
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P))
+            working_mode_view_shift
+            (\<And>\<CC>c \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> X) \<Longrightarrow> \<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> Y \<s>\<u>\<b>\<j> P)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
+  using \<phi>make_view_shift .
+
+(* I think we can allow users to still deduce some pure facts?
+lemma [\<phi>reason 1100 for \<open>PROP \<phi>Programming_Method (Trueprop (?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P)) _ _ _ _\<close>]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y))
+            working_mode_view_shift
+            (\<And>\<CC>c \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> X) \<Longrightarrow> \<v>\<i>\<e>\<w> \<CC>c [\<RR>r] \<i>\<s> Y \<s>\<u>\<b>\<j> True)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
+  using \<phi>make_view_shift . *)
+
+paragraph \<open>Procedure\<close>
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method
+            (Trueprop (\<p>\<r>\<o>\<c> G \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
+            working_mode_procedure
+            (\<And>\<SS>s \<RR>r. \<phi>\<i>\<n>\<i>\<t>\<i>\<a>\<l>\<^bold>: (\<c>\<u>\<r>\<r>\<e>\<n>\<t> \<SS>s [\<RR>r] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> X) \<Longrightarrow> \<p>\<e>\<n>\<d>\<i>\<n>\<g> G \<o>\<n> \<SS>s [\<RR>r] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E)
+            (Trueprop True)
+            (Trueprop True)\<close>
+  unfolding \<phi>Programming_Method_def conjunction_imp all_conjunction Action_Tag_def Labelled_def
+  using \<phi>reassemble_proc_final .
+
+hide_fact \<phi>make_implication \<phi>make_view_shift \<phi>reassemble_proc_final
+
+
+paragraph \<open>Object_Equiv\<close>
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (\<And>x y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T) M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Object_Equiv T eq)) M D R F\<close>
+  unfolding \<phi>Programming_Method_def Object_Equiv_def Premise_def
+  by clarsimp
+
+paragraph \<open>Identity Element\<close>
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (Trueprop (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P)) M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Identity_Element\<^sub>I A P)) M D R F \<close>
+  unfolding \<phi>Programming_Method_def Identity_Element\<^sub>I_def
+  by simp
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (Trueprop (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A)) M D R F
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Identity_Element\<^sub>E A)) M D R F \<close>
+  unfolding \<phi>Programming_Method_def Identity_Element\<^sub>E_def
+  by simp
+
+paragraph \<open>Is_Functional\<close>
+
+context begin
+
+private lemma Is_Functional_imp'':
+  \<open> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<w>\<i>\<t>\<h> Is_Functional S'
+\<Longrightarrow> Is_Functional S\<close>
+  unfolding Transformation_def Is_Functional_def
+  by blast
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> Is_Functional S')) M D R F
+\<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show\<close> S \<open>is functional\<close>
+      \<open>Now you entered the programming mode and you need to transform the specification to\<close>
+      \<open>someone which is functional, so that we can verify your claim.\<close>)
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Is_Functional S)) M D R F\<close>
+  unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
+            Subjec_Reasoning_def
+  by (rule Is_Functional_imp''[where S'=S']; simp)
+
+end
+
 
 
 subsection \<open>Automation\<close>

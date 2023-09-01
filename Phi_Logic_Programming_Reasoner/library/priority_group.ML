@@ -145,7 +145,7 @@ val _ = Outer_Syntax.local_theory' \<^command_keyword>\<open>\<phi>reasoner_grou
          document_source)
    )) >> flat end >> (fn data => fn int =>
    fold (fn (binding, ((((raw_base, raw_range), raw_tasks), constrains), comment)) => fn lthy =>
-     let val base = check_priority true (Context.Proof lthy) raw_base
+     let val base = check_priority false (Context.Proof lthy) raw_base
          val range = apply2 (check_priority false (Context.Proof lthy)) raw_range
          val tasks = map (Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern lthy)) raw_tasks
          val _ = if int then (
