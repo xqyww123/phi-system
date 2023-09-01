@@ -81,6 +81,43 @@ lemma \<r>Guard_reduct[simp]:
   \<open>\<r>Guard True \<equiv> True\<close>
   unfolding \<r>Guard_def .
 
+subsubsection \<open>Antecedent Sequence\<close>
+
+definition Ant_Seq :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
+  where \<open>Ant_Seq \<equiv> (\<and>)\<close>
+
+text \<open>The key distinction of \<^const>\<open>Ant_Seq\<close> is that its congruence rule is enabled by default,
+      as it implies a left-to-right evaluation order.\<close>
+
+(*TODO: as we have a specific term for antecedent sequence, we should depreciate and prohibit
+  the legacy use of \<open>\<and>\<close> as the connective for antecedent sequence.*)
+
+lemma Ant_Seq_cong[cong]:
+  \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> Q \<equiv> Q') \<Longrightarrow> P \<and>\<^sub>\<r> Q \<equiv> P' \<and>\<^sub>\<r> Q'\<close>
+  unfolding Ant_Seq_def atomize_eq
+  by blast
+
+lemma Ant_Seq_reduct[simp]:
+  \<open>True \<and>\<^sub>\<r> P \<equiv> P\<close>
+  \<open>P \<and>\<^sub>\<r> True \<equiv> P\<close>
+  unfolding Ant_Seq_def
+  by simp_all
+
+lemma Ant_Seq_I:
+  \<open>P \<Longrightarrow> Q \<Longrightarrow> P \<and>\<^sub>\<r> Q\<close>
+  unfolding Ant_Seq_def ..
+
+lemma Ant_Seq_assoc:
+  \<open> (A \<and>\<^sub>\<r> B) \<and>\<^sub>\<r> C \<equiv> A \<and>\<^sub>\<r> B \<and>\<^sub>\<r> C \<close>
+  unfolding Ant_Seq_def
+  by simp
+
+lemma Ant_Seq_imp:
+  \<open>(A \<and>\<^sub>\<r> B \<Longrightarrow> PROP Q) \<equiv> (A \<Longrightarrow> B \<Longrightarrow> PROP Q)\<close>
+  unfolding Ant_Seq_def
+  by (rule; simp)
+
+
 subsubsection \<open>General Annotation\<close>
 
 typedecl action
@@ -92,6 +129,7 @@ lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
   unfolding Action_Tag_def .
 
+ML_file_debug \<open>library/syntax/action_tag.ML\<close>
 
 subsubsection \<open>General Mode\<close>
 
@@ -352,43 +390,6 @@ lemma [iso_atomize_rules, symmetric, iso_rulify_rules]:
   unfolding Pure.prop_def pure_prop_embed_def .
 
 declare atomize_Ball[iso_atomize_rules, symmetric, iso_rulify_rules]
-
-
-subsubsection \<open>Antecedent Sequence\<close>
-
-definition Ant_Seq :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close> (infixr "\<and>\<^sub>\<r>" 35)
-  where \<open>Ant_Seq \<equiv> (\<and>)\<close>
-
-text \<open>The key distinction of \<^const>\<open>Ant_Seq\<close> is that its congruence rule is enabled by default,
-      as it implies a left-to-right evaluation order.\<close>
-
-(*TODO: as we have a specific term for antecedent sequence, we should depreciate and prohibit
-  the legacy use of \<open>\<and>\<close> as the connective for antecedent sequence.*)
-
-lemma Ant_Seq_cong[cong]:
-  \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> Q \<equiv> Q') \<Longrightarrow> P \<and>\<^sub>\<r> Q \<equiv> P' \<and>\<^sub>\<r> Q'\<close>
-  unfolding Ant_Seq_def atomize_eq
-  by blast
-
-lemma Ant_Seq_reduct[simp]:
-  \<open>True \<and>\<^sub>\<r> P \<equiv> P\<close>
-  \<open>P \<and>\<^sub>\<r> True \<equiv> P\<close>
-  unfolding Ant_Seq_def
-  by simp_all
-
-lemma Ant_Seq_I:
-  \<open>P \<Longrightarrow> Q \<Longrightarrow> P \<and>\<^sub>\<r> Q\<close>
-  unfolding Ant_Seq_def ..
-
-lemma Ant_Seq_assoc:
-  \<open> (A \<and>\<^sub>\<r> B) \<and>\<^sub>\<r> C \<equiv> A \<and>\<^sub>\<r> B \<and>\<^sub>\<r> C \<close>
-  unfolding Ant_Seq_def
-  by simp
-
-lemma Ant_Seq_imp:
-  \<open>(A \<and>\<^sub>\<r> B \<Longrightarrow> PROP Q) \<equiv> (A \<Longrightarrow> B \<Longrightarrow> PROP Q)\<close>
-  unfolding Ant_Seq_def
-  by (rule; simp)
 
 
 subsubsection \<open>ML Library - III\<close>

@@ -79,7 +79,7 @@ val default_simplify : term list option (*pattern used in Phi_Reasoner.instantia
 
 (*** Internal Interfaces ***)
 
-val rule_template_pass__sender : rule_generation_pass option Unsynchronized.ref
+val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
 
 end
 
@@ -378,10 +378,11 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
          end) ;
       (case action
          of Reasonig_Rule ((mode, priority), (pats, blacklists)) =>
-            let val (rules', mode', priority', (pats', blacklists'), guard', ctxrt') =
-                    case pass of SOME (_, ps) => ps 
+            let val (rules', (mode', priority'), (pats', blacklists'), guard', ctxrt') =
+                    case pass of SOME (_, ps) => ps template_pos (rules', (mode, priority), (pats, blacklists), NONE, ctxt)
+                               | NONE => (rules', (mode, priority), (pats, blacklists), NONE, ctxt)
              in Phi_Reasoner.add_rules (map (fn rule =>
-                          ([rule], template_pos, mode, priority, pats, blacklists, NONE) ) rules') ctxt
+                          ([rule], template_pos, mode', priority', pats', blacklists', guard') ) rules') ctxt
             end
           | Attributes attrs =>
               let fun app attr = uncurry (Thm.apply_attribute (Attrib.attribute ctxt' attr))
@@ -592,7 +593,7 @@ fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 c
 
 (** Interfaces for Automation over Property **)
 
-val rule_template_pass__sender : rule_generation_pass option Unsynchronized.ref
+val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
       = Unsynchronized.ref NONE
 val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__sender_locker" ()
 
@@ -618,9 +619,9 @@ val _ = Theory.setup (
               val pass = Option.map (fn src =>
                     let val _ = Synchronized.change rule_template_pass__sender_locker (fn () => (
                                   ML_Context.expression (Input.pos_of src)
-                                    (ML_Lex.read "Phi_Type_Template_Properties.rule_template_pass__sender := SOME ((" @
+                                    (ML_Lex.read "Phi_Type_Template_Properties.rule_template_pass__sender := SOME (" @
                                      ML_Lex.read_source src @
-                                     ML_Lex.read ") : Phi_Type_Template_Properties.rule_generation_pass)")
+                                     ML_Lex.read ")")
                                     ctxt;
                                   ()))
                         val pass = the (!rule_template_pass__sender)

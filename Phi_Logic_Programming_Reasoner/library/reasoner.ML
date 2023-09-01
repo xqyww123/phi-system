@@ -33,7 +33,7 @@ signature NU_REASONER = sig
   val TO_BE_OVERRIDE : mode
 
 
-  type guarded = bool
+  type guarded = bool (*if has the \<open>\<r>Guard\<close> tag*)
   datatype backtracking = NO_BACKTRACKING | BACKTRACKING | EXPLORATIVE_BACKTRACKING
   datatype tactic = Tac_ML of backtracking * context_state -> context_state Seq.seq
                   | Tac_Rule of (guarded * thm) list
@@ -873,7 +873,28 @@ structure Default_Pattern = Pattern_Translation (
                                 \\<open>\<phi>reason for \<open>pattern\<close>\<close>"
 )
 
-val the_default_pattern_of = Default_Pattern.translate
+val the_default_pattern_of' = Default_Pattern.translate
+
+fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>ERROR\<close>, _) $ text))
+      = (Exn.error (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>TRACING\<close>, _) $ text))
+      = (tracing (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>WARNING\<close>, _) $ text))
+      = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>FAIL\<close>, _) $ text))
+      = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>TRACE_FAIL\<close>, _) $ text))
+      = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
+  | process_error_rule _ _ = true
+
+fun is_error (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>ERROR\<close>, _) $ _)) = true
+  | is_error (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>TRACING\<close>, _) $ _)) = true
+  | is_error (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>WARNING\<close>, _) $ _)) = true
+  | is_error (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>FAIL\<close>, _) $ _)) = true
+  | is_error (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>TRACE_FAIL\<close>, _) $ _)) = true
+  | is_error _ = false
+
+val the_default_pattern_of = filter_out is_error oo the_default_pattern_of'
 
 val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>reason_default_pattern\<close>
           "set the default pattern of a reasoning rule once its conclusion matches some pattern")
@@ -908,16 +929,6 @@ fun add_pass rule_pass =
 
 (** Main Function **)
 
-fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>ERROR\<close>, _) $ text))
-      = (Exn.error (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
-  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>TRACING\<close>, _) $ text))
-      = (tracing (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
-  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>WARNING\<close>, _) $ text))
-      = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
-  | process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>FAIL\<close>, _) $ text))
-      = (warning (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
-  | process_error_rule _ _ = true
-
 fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
   let
     val (rules01, (mode, priority), (patterns, blacklist), ML_guard, ctxt) =
@@ -941,7 +952,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
                      then case rules
                             of [rule] =>
                               let val concl = Thm.concl_of rule
-                                  val pat' = the_default_pattern_of ctxt concl
+                                  val pat' = the_default_pattern_of' ctxt concl
                                   val pat = case pat' of [] => [concl]
                                                | _ => List.filter (process_error_rule ctxt) pat'
                                 (* val _ = info_pretty_generic ctxt 1 (fn () => Pretty.chunks (

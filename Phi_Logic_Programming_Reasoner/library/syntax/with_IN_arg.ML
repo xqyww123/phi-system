@@ -1,4 +1,5 @@
 signature PLPR_SYNTAX = sig
+include PLPR_SYNTAX
 
 val dest_with_IN_arg : term -> indexname list * term
 val elim_with_IN_arg : thm -> indexname list * thm
@@ -10,6 +11,7 @@ val minimal_pattern_implied_by_IN_arg : indexname list -> term -> term
 end
 
 structure PLPR_Syntax : PLPR_SYNTAX = struct
+open PLPR_Syntax
 
 fun dest_with_IN_arg tm =
   let fun dest ret (Const(\<^const_name>\<open>With_IN_Arg\<close>, _) $ P $ X) =

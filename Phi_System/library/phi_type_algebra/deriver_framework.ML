@@ -1174,8 +1174,7 @@ fun instantiate_ToA (pure_info,ctxt) ToA =
         => let
           val (i,target_prem) =
                 case get_index (fn ctm =>
-                        if Phi_Syntax.is_action_of (fn Const (\<^const_name>\<open>\<phi>TA_pure_facts\<close>, _) => true
-                                                     | _ => false)
+                        if PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_pure_facts\<close>
                            (Thm.term_of ctm)
                         then SOME ctm
                         else NONE)
@@ -1306,14 +1305,8 @@ type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> th
 
 fun default_reasoning_configure extractions
                                 (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
-  let val is_pure_fact = Phi_Syntax.is_action_of (
-                          fn Const(\<^const_name>\<open>\<phi>TA_pure_facts\<close>, _) => true
-                           | _ => false
-                        ) o Thm.concl_of
-      val is_ToA_template = Phi_Syntax.is_action_of (
-                          fn Const(\<^const_name>\<open>\<phi>TA_conditioned_ToA_template\<close>, _) => true
-                           | _ => false
-                        ) o Thm.concl_of
+  let val is_pure_fact = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_pure_facts\<close> o Thm.concl_of
+      val is_ToA_template = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_conditioned_ToA_template\<close> o Thm.concl_of
       val pure_facts = filter is_pure_fact local_prems
                     |> map (fn th => th RS' (ctxt, @{thm' Action_Tag_D}))
       val ToAs = filter is_ToA_template local_prems
@@ -1394,10 +1387,7 @@ fun reasoning ctxt0 sequent0 =
       val ctxt = #context focus
       val lsequent = varify_subgoal varify ctxt focus lsequent'0
 
-      val is_out_ant = Phi_Syntax.is_action_of (
-                          fn Const(\<^const_name>\<open>\<phi>TA_ANT\<close>, _) => true
-                           | _ => false
-                        ) o Thm.concl_of
+      val is_out_ant = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_ANT\<close> o Thm.concl_of
       val out_ants = filter is_out_ant (#prems focus)
       val local_prems' = filter_out is_out_ant (#prems focus)
 

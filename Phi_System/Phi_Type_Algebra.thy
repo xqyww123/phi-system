@@ -2319,16 +2319,19 @@ paragraph \<open>Commutative, Non-Unital Associative, No Additive Zero\<close>
 
 text \<open>Non-unital algebra implies no additive zero.\<close>
 
+ML_file \<open>library/phi_type_algebra/semimodule_rule_pass.ML\<close>
+                                            
 (* [--d--][-----a-----]
    [-----b-----][--c--]
    Give a, expect b; Need d, remain c.
-   d, c \<noteq> 0; the scalar is non-commutative, else go either \<open>SE_Semimodule_LDistr_da_b_i\<close> or \<open>SE_Semimodule_LDistr_a_cb_i\<close>*)
+   d, c \<noteq> 0; the scalar has to be non-commutative, else go either \<open>SE_Semimodule_LDistr_da_b_i\<close> or \<open>SE_Semimodule_LDistr_a_cb_i\<close>*)
 lemma SE_Semimodule_LDistr_da_bc_i
-      [where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
+      [where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a = b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_add_ab_semigroup) a @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> Ds b \<and> Ds c \<and> b ##\<^sub>+ c
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' d a (fst x, x\<^sub>d) \<and> Dx b c (z d a (fst x, x\<^sub>d))
 \<Longrightarrow> (snd (uz b c (z d a (fst x, x\<^sub>d))), w) \<Ztypecolon> F1 b T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
@@ -2350,12 +2353,14 @@ lemma SE_Semimodule_LDistr_da_bc_i
 (* [-----a-----][--d--]
    [--c--][-----b-----]
    Give a, expect b; Need d, remain c.
-   d, c \<noteq> 0; the scalar is non-commutative, else go either \<open>SE_Semimodule_LDistr_da_b_i\<close> or \<open>SE_Semimodule_LDistr_a_cb_i\<close>*)
-lemma SE_Semimodule_LDistr_ad_cb_i[where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
+   d, c \<noteq> 0; the scalar has to be non-commutative, else go either \<open>SE_Semimodule_LDistr_da_b_i\<close> or \<open>SE_Semimodule_LDistr_a_cb_i\<close>*)
+lemma SE_Semimodule_LDistr_ad_cb_i
+      [where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
   \<open> \<g>\<u>\<a>\<r>\<d> a + d = c + b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_add_ab_semigroup) a @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> Ds c \<and> Ds b \<and> c ##\<^sub>+ b \<and> a ##\<^sub>+ d
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx' a d (x\<^sub>d, fst x) \<and> Dx  c b (z a d (x\<^sub>d, fst x))
 \<Longrightarrow> (fst (uz c b (z a d (x\<^sub>d, fst x))), w) \<Ztypecolon> F1 b T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
@@ -2400,11 +2405,13 @@ declare [[\<phi>trace_reasoning = 0]]
 (* [---------a---------]
    [--d--][--b--][--c--]
    Give a, expect b, remain d, c.
-   d, c \<noteq> 0; scalar is non-commutative; otherwise go \<open>SE_Semimodule_LDistr_a_cb_i\<close>*) 
-lemma SE_Semimodule_LDistr_a_dbc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
+   d, c \<noteq> 0; scalar has to be non-commutative; otherwise go \<open>SE_Semimodule_LDistr_a_cb_i\<close>*) 
+lemma SE_Semimodule_LDistr_a_dbc_i
+      [where Cr'=True, \<phi>reason_template %derived_SE_sdistr_comm pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = d + b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_add_ab_semigroup) a @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds (d + b) \<and> Ds c \<and> d + b ##\<^sub>+ c \<and> Dx (d + b) c (fst x)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds d \<and> Ds b \<and> d ##\<^sub>+ b \<and> Dx d b (snd (uz (d + b) c (fst x)))
 \<Longrightarrow> (fst (uz d b (snd (uz (d + b) c (fst x)))), snd x) \<Ztypecolon> F1 b T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
@@ -2421,13 +2428,12 @@ lemma SE_Semimodule_LDistr_a_dbc_i[where Cr'=True, \<phi>reason_template %derive
        b (*simplify the abstract object during reasoning*)
   \<medium_right_bracket> .
 
-term \<open>(PROP A <with-pattern> PROP P)\<close>
-
 (* [--d--][--a--][--c--]
    [---------b---------]
    Give a, expect b, need d, c.
-   d, c \<noteq> 0; scalar is non-commutative; otherwise go \<open>SE_Semimodule_LDistr_da_b_i\<close> *)
-lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm for \<open>XX F1\<close>]:
+   d, c \<noteq> 0; scalar has to be non-commutative; otherwise go to \<open>SE_Semimodule_LDistr_da_b_i\<close> *)
+lemma SE_Semimodule_LDistr_dac_b_i
+      [where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a + c = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2450,8 +2456,9 @@ lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template %derive
 (* [--d--][-----a-----]
    [---------b--------]
    Give a, expect b; Need d, c = 0.
-   Also covers non-commutative. d \<noteq> 0*)
-lemma SE_Semimodule_LDistr_da_b_i[where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
+   Also covers non-commutative separation algebra. d \<noteq> 0*)
+lemma SE_Semimodule_LDistr_da_b_i
+      [where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
@@ -2471,11 +2478,14 @@ lemma SE_Semimodule_LDistr_da_b_i[where Cw'=True, \<phi>reason_template %derived
 
 (* [--------a---------]
    [-----b-----][--c--]
-   Give a, expect b; Remain c, d = 0. c \<noteq> 0*)
-lemma SE_Semimodule_LDistr_a_bc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
+   Give a, expect b; Remain c, d = 0.
+   c \<noteq> 0; scalar has to be non-commutative; otherwise go \<open>SE_Semimodule_LDistr_a_cb_i\<close>*)
+lemma SE_Semimodule_LDistr_a_bc_i
+  [where Cr'=True, \<phi>reason_template %derived_SE_sdistr_comm pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_add_ab_semigroup) a @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds b \<and> Ds c \<and> b ##\<^sub>+ c
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx b c (fst x)
 \<Longrightarrow> (fst (uz b c (fst x)), snd x) \<Ztypecolon> F1 b T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
@@ -2493,11 +2503,14 @@ lemma SE_Semimodule_LDistr_a_bc_i[where Cr'=True, \<phi>reason_template %derived
 (* [-----a-----][--d--]
    [--------b---------]
    Give a, expect b; Need d, c = 0.
-   Also covers non-commutative. d \<noteq> 0*)
-lemma SE_Semimodule_LDistr_ad_b_i[where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm]:
+   Also covers non-commutative separation algebra.
+   d \<noteq> 0; scalar has to be non-commutative; otherwise go to \<open>SE_Semimodule_LDistr_da_b_i\<close>*)
+lemma SE_Semimodule_LDistr_ad_b_i
+      [where Cw' = True, \<phi>reason_template %derived_SE_sdistr_comm pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
   \<open> \<g>\<u>\<a>\<r>\<d> a + d = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_add_ab_semigroup) a @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> a ##\<^sub>+ d
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx a d (fst x, x\<^sub>d)
 \<Longrightarrow> (uz a d (fst x, x\<^sub>d), w) \<Ztypecolon> F1 b T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
@@ -2540,8 +2553,9 @@ paragraph \<open>Non-Commutative, Non-Unital Associative, No Additive Zero\<clos
 
 (* [--d--][-----a-----]
    [-----b-----][--c--]
-   Give a, expect b; Need d, remain c.*)
-lemma SE_Semimodule_LDistr_da_nc_i[where Cr'=True, \<phi>reason_template %derived_SE_sdistr_noncomm]:
+   Give a, expect b; Need d, remain c. *)
+lemma SE_Semimodule_LDistr_da_nc_i
+      [where Cr'=True, \<phi>reason_template %derived_SE_sdistr_noncomm]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a = b + c @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx' z
@@ -2757,13 +2771,12 @@ lemma SE_Semimodule_LDistr_ad_b_na_W[\<phi>reason_template 36]:
 *)
 
 paragraph \<open>Assuming no algebraic property supporting even non-associative group,
-  and as a consequence allowing no remainder in the element transformation\<close>
+  and as a consequence allowing no remainder and subsequent target in the element transformation\<close>
 
 (* [---------a--------]
    [--c--][-----b-----]
-   Give a, expect b, remain d.
+   Give a, expect b, remain d. c \<noteq> 0
 *)
-
 lemma SE_Semimodule_LDistr_a_cb_noassoc[\<phi>reason_template %derived_SE_sdistr_noassoc]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = c + b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U F1 T Ds Dx uz
@@ -2781,18 +2794,60 @@ lemma SE_Semimodule_LDistr_a_cb_noassoc[\<phi>reason_template %derived_SE_sdistr
 (* [---------a--------]
    [-----b-----][--d--]
    Give a, expect b, remain d.
+   d \<noteq> 0; scalar has to be non-commutative; otherwise go to \<open>SE_Semimodule_LDistr_a_cb_noassoc\<close>
 *)
-lemma SE_Semimodule_LDistr_a_bd_Tr[\<phi>reason_template %derived_SE_sdistr_noassoc]:
+lemma SE_Semimodule_LDistr_a_bd_Tr
+      [\<phi>reason_template %derived_SE_sdistr_noassoc pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
   \<open> \<g>\<u>\<a>\<r>\<d> a = b + d @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>U_rev F1 T Ds Dx uz
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_add_ab_semigroup) a @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds b \<and> b ##\<^sub>+ d
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx b d (fst x)
 \<Longrightarrow> fst (uz b d (fst x)) \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] snd (uz b d (fst x)) \<Ztypecolon> F1 d T \<w>\<i>\<t>\<h> P \<close>
   unfolding Action_Tag_def \<r>Guard_def
-  \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and Tr
+  \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and _ and Tr
     apply_rule apply_Semimodule_LDistr_Homo\<^sub>U_rev[where s=\<open>b\<close> and t=d and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [--d--][-----a-----]
+   [---------b--------]
+   Give a, expect b, remain d. c \<noteq> 0
+*)
+lemma SE_Semimodule_LDistr_da_b_noassoc[\<phi>reason_template %derived_SE_sdistr_noassoc]:
+  \<open> \<g>\<u>\<a>\<r>\<d> d + a = b @action \<A>arith_eval
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx z
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds d \<and> Ds a \<and> d ##\<^sub>+ a
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx d a x
+\<Longrightarrow> z d a x \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[True] F1 d T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, undefined) \<Ztypecolon> F3 b U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def \<r>Guard_def
+  \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where s=\<open>d\<close> and t=a and F=F1]
+    Tr
+  \<medium_right_bracket> .
+
+(* [-----a-----][--d--]
+   [---------b--------]
+   Give a, expect b, remain d.
+   d \<noteq> 0; scalar has to be non-commutative; otherwise go to \<open>SE_Semimodule_LDistr_da_b_noassoc\<close>
+*)
+lemma SE_Semimodule_LDistr_ad_b_noassoc
+      [\<phi>reason_template %derived_SE_sdistr_noassoc pass: phi_TA_semimodule_sdistrib_rule_pass_no_comm_scalar]:
+  \<open> \<g>\<u>\<a>\<r>\<d> a + d = b @action \<A>arith_eval
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z_rev F1 T Ds Dx z
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_add_ab_semigroup) a @action \<A>_template_reason
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds d \<and> a ##\<^sub>+ d
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx a d x
+\<Longrightarrow> z a d x \<Ztypecolon> F1 b T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[True] F1 d T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, undefined) \<Ztypecolon> F3 b U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def \<r>Guard_def
+  \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and _ and Tr
+    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z_rev[where s=\<open>a\<close> and t=d and F=F1]
     Tr
   \<medium_right_bracket> .
 
@@ -3780,7 +3835,7 @@ ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
 \<phi>property_deriver SE_Trim_Empty 110
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.SE_Trim_Empty quiet) \<close>
 
-lemmas [\<phi>reason_template default 40 pass: \<open>Phi_Type_Algebra_Derivers.SE_Trim_Empty__generation_pass\<close>] =
+lemmas [\<phi>reason_template default 40 pass: \<open>(Phi_Type_Algebra_Derivers.SE_Trim_Empty__generation_pass, K I)\<close>] =
           derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH
           derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
 

@@ -909,7 +909,7 @@ lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
 \<Longrightarrow> Semimodule_Scalar_Assoc (\<phi>ScalarMul \<psi>) T Ds \<close>
   unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
-
+ 
 lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx

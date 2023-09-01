@@ -88,14 +88,14 @@ val current_block_var =
     #> block_var_of_Constuction
 
 val dest_ToA_Construction =
-         dest_tags
+         PLPR_Syntax.dest_tags
       #> dest_binop   @{const_name ToA_Construction}
 val dest_ToA_Construction_c =
-         dest_tags_c
+         PLPR_Syntax.dest_tags_c
       #> dest_binop_c @{const_name ToA_Construction}
 
 val dest_satisfaction =
-      dest_tags #> dest_binop \<^const_name>\<open>Satisfaction\<close>
+      PLPR_Syntax.dest_tags #> dest_binop \<^const_name>\<open>Satisfaction\<close>
 
 
 end

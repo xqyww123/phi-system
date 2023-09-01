@@ -1,10 +1,6 @@
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
-  val is_action_of : (term -> bool) -> (term -> bool)
-  val dest_tags   :  term ->  term
-  val dest_tags_c : cterm -> cterm
-
   val is_transformation_intro_rule : thm -> bool
   val is_transformation_elim_rule : thm -> bool
   val pass_ensures_intro_transformation : Phi_Reasoner.rule_pass
@@ -24,22 +20,12 @@ open Phi_Syntax
 val dest_action_tag   = Phi_Help.dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
 val dest_action_tag_c = Phi_Help.dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
 
-fun is_action_of P (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ A) = P A
-  | is_action_of P (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_action_of P X
-  | is_action_of _ _ = false
-
-fun dest_tags (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_tags X
-  | dest_tags (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = dest_tags X
-  | dest_tags X = X
-fun dest_tags_c X = X
-  |> perhaps (try Phi_Help.dest_Trueprop_c)
-  |> perhaps (try dest_action_tag_c)
 
 val dest_transformation   =
-         dest_tags
+         PLPR_Syntax.dest_tags
       #> Phi_Help.dest_triop @{const_name "Transformation"}
 val dest_transformation_c =
-         dest_tags_c
+         PLPR_Syntax.dest_tags_c
       #> Phi_Help.dest_triop_c @{const_name "Transformation"}
 
 
