@@ -44,11 +44,13 @@ type rule_generation_pass = (thm -> thm list) (*default generation process*)
                           * Proof.context
                          -> thm -> thm list
 
+val no_rule_generation_pass : rule_generation_pass
+
 type free_template_action =
         term (*\<phi>-type (operator)*) * Position.T * thm (*properties*) option list -> Context.generic -> Context.generic
 
 datatype template_action =
-            Instantiate_Rule of thm * rule_generation_pass option *
+            Instantiate_Rule of thm * (rule_generation_pass * Phi_Reasoner.rule_pass) option *
                                 instantiation_action * Binding.binding option
           | Free_Action of free_template_action (*accept Automation_Fail*)
 
@@ -120,13 +122,15 @@ type dependencies = property_name option list
 
 type rule_generation_pass = (thm -> thm list) * Position.T * Proof.context -> thm -> thm list
 
+fun no_rule_generation_pass (default, _, _) = default
+
 datatype instantiation_action =
             Reasonig_Rule of (Phi_Reasoner.mode * priority) *
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
           | Attributes of Token.src list
 
 datatype template_action =
-            Instantiate_Rule of thm * rule_generation_pass option *
+            Instantiate_Rule of thm * (rule_generation_pass * Phi_Reasoner.rule_pass) option *
                                 instantiation_action * Binding.binding option
           | Free_Action of free_template_action
 
@@ -362,7 +366,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
           val pattern = (case action
                            of Reasonig_Rule (_, (pats, _)) => SOME (map fst pats)
                             | Attributes _ => NONE)
-          val rules' = case pass of SOME ps => ps (single o default_simplify pattern ctxt', pos, ctxt') rule'1
+          val rules' = case pass of SOME (ps, _) => ps (single o default_simplify pattern ctxt', pos, ctxt') rule'1
                                   | NONE => single (default_simplify pattern ctxt' rule'1)
        in if null rules' then ctxt
        else (
@@ -374,8 +378,11 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
          end) ;
       (case action
          of Reasonig_Rule ((mode, priority), (pats, blacklists)) =>
-              Phi_Reasoner.add_rules (map (fn rule =>
+            let val (rules', mode', priority', (pats', blacklists'), guard', ctxrt') =
+                    case pass of SOME (_, ps) => ps 
+             in Phi_Reasoner.add_rules (map (fn rule =>
                           ([rule], template_pos, mode, priority, pats, blacklists, NONE) ) rules') ctxt
+            end
           | Attributes attrs =>
               let fun app attr = uncurry (Thm.apply_attribute (Attrib.attribute ctxt' attr))
                in fold (curry (snd o fold app attrs)) rules' ctxt

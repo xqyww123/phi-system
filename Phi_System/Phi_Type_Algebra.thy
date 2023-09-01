@@ -2421,19 +2421,22 @@ lemma SE_Semimodule_LDistr_a_dbc_i[where Cr'=True, \<phi>reason_template %derive
        b (*simplify the abstract object during reasoning*)
   \<medium_right_bracket> .
 
+term \<open>(PROP A <with-pattern> PROP P)\<close>
+
 (* [--d--][--a--][--c--]
    [---------b---------]
    Give a, expect b, need d, c.
    d, c \<noteq> 0; scalar is non-commutative; otherwise go \<open>SE_Semimodule_LDistr_da_b_i\<close> *)
-lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm]:
+lemma SE_Semimodule_LDistr_dac_b_i[where Cw'=True, \<phi>reason_template %derived_SE_sdistr_comm for \<open>XX F1\<close>]:
   \<open> \<g>\<u>\<a>\<r>\<d> d + a + c = b @action \<A>arith_eval
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_LDistr_Homo\<^sub>Z F1 T Ds Dx z
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F1 F3
+\<Longrightarrow> NO_MATCH (a'::'s'::partial_add_ab_semigroup) a @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds (d + a) \<and> Ds c \<and> Ds d \<and> Ds a \<and> d ##\<^sub>+ a \<and> d + a ##\<^sub>+ c
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Dx d a (fst x, x\<^sub>d) \<and> Dx (d + a) c (x\<^sub>c, z d a (fst x, x\<^sub>d))
 \<Longrightarrow> (z (d + a) c (x\<^sub>c, z d a (fst x, x\<^sub>d)), w) \<Ztypecolon> F1 b T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> (snd x \<Ztypecolon> \<half_blkcirc>[Cw'] W') = ((x\<^sub>d, x\<^sub>c, w) \<Ztypecolon> \<half_blkcirc>[True] F1 d T \<^emph> \<half_blkcirc>[True] F1 c T \<^emph> \<half_blkcirc>[Cw] W) @action \<A>merge
-\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[Cw'] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P \<close>
+\<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[Cw'] W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F3 b U \<^emph>[Cr] R \<w>\<i>\<t>\<h> P\<close>
   for W :: \<open>('c::sep_ab_semigroup,'d) \<phi>\<close>
   unfolding Action_Tag_def \<r>Guard_def
   apply (simp add: cond_prod_transformation_rewr; simp add:  Cond_\<phi>Prod_expn_\<phi>Some)

@@ -204,7 +204,8 @@ text \<open>Schematic variables in the conclusion of a reasoning rule falls into
   whereas the later assigns result to the reasoning goal (by instantiating the schematic variable
   of the goal), and therefore can be freely instantiated. \<close>
 
-definition With_IN_Arg :: \<open>prop \<Rightarrow> 'a \<Rightarrow> prop\<close> (infixl "<with-IN-arg>" 5)
+
+definition With_IN_Arg :: \<open>prop \<Rightarrow> 'a \<Rightarrow> prop\<close> (infixl "<with-IN-arg>" 4)
     where \<open>With_IN_Arg P x \<equiv> PROP P\<close>
 
 translations
@@ -223,10 +224,10 @@ text \<open>Sometimes, especially for rule generated from template instantiation
   proposition of the rule (template) can be useful as the embedded patterns are instantiated together
   with instantiating the rule template.\<close>
 
-definition With_Pattern :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixl "<with-pattern>" 5)
+definition With_Pattern :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixl "<with-pattern>" 4)
   where \<open>With_Pattern Prop Pattern \<equiv> PROP Prop\<close>
 
-definition Except_Pattern :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixl "<except-pattern>" 5)
+definition Except_Pattern :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> (infixl "<except-pattern>" 4)
   where \<open>Except_Pattern Prop Pattern \<equiv> PROP Prop\<close>
 
 lemma With_Pattern_I:
