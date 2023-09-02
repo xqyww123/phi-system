@@ -120,11 +120,33 @@ consts \<A>arith_eval :: action
 
 subsection \<open>Arithmetic Evaluation for Partial Addition\<close>
 
-text \<open>Solving \<open>?d + a = ?b + c @action \<A>arith_eval\<close>\<close>
+text \<open>Solves partial addition equations consisting of
 
-text \<open>Because addition can be associative, we use \<open>id\<close> to annotate explicitly each element in the equation.\<close>
+\<^item> \<open>given + ?unknown = given\<close>, \<open>?unknown + given = given\<close>,
+  \<open>given = given + ?unknown\<close>, \<open>given = ?unknown + given\<close>
+\<^item> \<open>given + ?unknown = ?unknown + given\<close>, \<open>?unknown + given = given + ?unknown\<close> (only for non-commutative group)
+\<^item> \<open>?unknown + given + ?unknown = given\<close>, \<open>given = ?unknown + given + ?unknown\<close> (only for non-commutative group)
 
-text \<open>The idea is reducing every equation to \<open>_ + _ = _\<close>\<close>
+Note some forms are only meaningful for non-commutative group as if not they can be reduced to the
+first form.
+Also not, as addition can be associative, we use \<open>id\<close> to annotate explicitly each element in the equation.
+For instance, \<open>id a + id b + id c = id d\<close> to distinguish with \<open>id (a + b) + id c = id d\<close>.
+
+System rules first normalize the problem into one of
+\<^item> \<open>?unknown + given = given\<close> or \<open>given + ?unknown = given\<close>
+\<^item> \<open>?unknown + given = given + ?unknown\<close> (only for non-commutative group)
+\<^item> \<open>?unknown + given + ?unknown = given\<close> (only for non-commutative group)
+
+Then the above three forms are what user rules have to handle for specific algebras.
+
+There are pre-built reasoning rules for,
+\<^item> cancellative and canonically ordered commutative monoid, including the version for both partial algebras
+  and total. This is the weakest algebraic structure to have a general algorithm,
+  if an algorithm deciding the order relation is assumed.
+\<^item> group, (only that for total algebra is installed), which is though not the minimal requirement,
+  the weakest one available in Isabelle standard library, as the minimal one, quasigroup, is not
+  formalized in Isabelle standard library.
+\<close>
 
 \<phi>reasoner_group \<A>_partial_add = (1000, [1, 4000]) for \<open>_ = _ @action \<A>arith_eval\<close>
     \<open>Decision procedure solving equantions of partial additive groups, with finding appropriate instantiations
@@ -144,7 +166,7 @@ text \<open>The idea is reducing every equation to \<open>_ + _ = _\<close>\<clo
 declare [[\<phi>reason_default_pattern \<open>?Eq @action \<A>arith_eval\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eval\<close> (100)]]
 
 
-subsubsection \<open>System rules reducing every equation to the minimal form \<open>_ + _ = _\<close>\<close>
+subsubsection \<open>Normalizing Equations\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_success]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a = b
@@ -152,27 +174,42 @@ lemma [\<phi>reason %\<A>_partial_add_success]:
   unfolding Premise_def Action_Tag_def
   by simp
 
+paragraph \<open>Flipping\<close>
+
 lemma [\<phi>reason %\<A>_partial_add_normalizing]:
   \<open> A = id a @action \<A>arith_eval
 \<Longrightarrow> id a = A @action \<A>arith_eval\<close>
   unfolding Action_Tag_def
   by simp
 
-(*has problem!*)
-lemma [\<phi>reason %\<A>_partial_add_splitting except \<open>_ = (_::?'a::partial_ab_semigroup_add) @action \<A>arith_eval\<close>]:
-  \<open> id c + id b = id (a + d) @action \<A>arith_eval
-\<Longrightarrow> id a + id d = id (c + b) @action \<A>arith_eval
-\<Longrightarrow> id c + id b = id a + id d @action \<A>arith_eval\<close>
-  by simp
-
-lemma [\<phi>reason %\<A>_partial_add_splitting except \<open>_ = (_::?'a::partial_ab_semigroup_add) @action \<A>arith_eval\<close>]:
-  \<open> id (d + b) + c = id a @action \<A>arith_eval
-\<Longrightarrow> id d + id b = id (d + b) @action \<A>arith_eval
-\<Longrightarrow> id d + id b + id c = id a @action \<A>arith_eval \<close>
+lemma [\<phi>reason %\<A>_partial_add_normalizing for \<open>id _ + id ?var_d = id ?var_c + id _ @action \<A>arith_eval\<close>
+                                           except \<open>id ?var_d + _ = _ + id ?var_c @action _\<close>]:
+  \<open> id c + id b = id a + id d @action \<A>arith_eval
+\<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eval \<close>
   unfolding Action_Tag_def
   by simp
 
-subsubsection \<open>Solving the minimal equation\<close>
+paragraph \<open>Error Check\<close>
+
+lemma [\<phi>reason %\<A>_partial_add_normalizing
+               for \<open>id _ + id _ = (id _ + id _ :: ?'a :: partial_ab_semigroup_add) @action \<A>arith_eval\<close>]:
+  \<open> ERROR TEXT(\<open>Invalid equation\<close> (id a + id d = id c + id b) \<open>on commutative group,\<close>
+               \<open>which can always be reduced to either \<open>c + a = b\<close> or \<open>c + b = a\<close>. Some reasoning rule is configured wrong.\<close>)
+\<Longrightarrow> id a + id d = id c + id b @action \<A>arith_eval \<close>
+  unfolding ERROR_def
+  by blast
+
+lemma [\<phi>reason %\<A>_partial_add_normalizing
+               for \<open>id _ + id _ + id _ = (id _ :: ?'a :: partial_ab_semigroup_add) @action \<A>arith_eval\<close>]:
+  \<open> ERROR TEXT(\<open>Invalid equation\<close> (id c + id a + id d = id b) \<open>on commutative group,\<close>
+               \<open>which can always be reduced to \<open>c + a = b\<close>. Some reasoning rule is configured wrong.\<close>)
+\<Longrightarrow> id c + id a + id d = id b @action \<A>arith_eval \<close>
+  unfolding ERROR_def
+  by blast
+
+
+
+subsubsection \<open>Solving the Equations on Specific Algberas\<close>
 
 paragraph \<open>Direct Success\<close>
 
@@ -183,12 +220,28 @@ lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?a + id ?b = id (?a 
   unfolding Action_Tag_def
   by simp
 
+lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?a + id ?b + id ?c = id (?a + ?b + ?c) @action \<A>arith_eval\<close>
+                                           \<open>id ?var_a + id ?b + id ?var_c = id (_ + ?b + _) @action \<A>arith_eval\<close>]:
+  \<open> id a + id b + id c = id (a + b + c) @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def
+  by simp
 
-paragraph \<open>Cancellative and Canonically Ordered Monoid \<close>
+lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?c + id (?x + ?d) = id (?c + ?x) + id ?d @action \<A>arith_eval\<close>
+                                           \<open>id ?var_c + id (?x + ?d) = id (?c + ?x) + id ?var_d @action \<A>arith_eval\<close>]:
+  \<open> id c + id (x + d) = id (c + x) + id d @action \<A>arith_eval \<close>
+  for x :: \<open>'a :: semigroup_add\<close>
+  unfolding Action_Tag_def
+  by (simp add: add.assoc)
+
+
+paragraph \<open>Cancellative and Canonically Ordered Commutative Partial Monoid\<close>
+
+text \<open>The rules do not conflict with those for groups because a canonically ordered monoid can never
+  be a group.\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id (?a :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) @action \<A>arith_eval\<close> 
                                       \<open>id _ + (?var :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) = id _ @action \<A>arith_eval\<close>]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b      
 \<Longrightarrow> id a + id (b - a) = id b @action \<A>arith_eval \<close>
   for a :: \<open>'a::{partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}\<close>
   unfolding Action_Tag_def Premise_def
@@ -203,8 +256,50 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id (
   by (simp, metis partial_add_commute partial_add_diff_cancel_left' partial_le_iff_add)
 
 
-paragraph \<open>LCRO Interval\<close>
+paragraph \<open>Cancellative and Canonically Ordered Commutative Total Monoid\<close>
 
+text \<open>The rules do not conflict with those for groups because a canonically ordered monoid can never
+  be a group.\<close>
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id (?a :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) @action \<A>arith_eval\<close> 
+                                      \<open>id _ + (?var :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) = id _ @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b
+\<Longrightarrow> id a + id (b - a) = id b @action \<A>arith_eval \<close>
+  for a :: \<open>'a::{canonically_ordered_monoid_add, cancel_ab_semigroup_add}\<close>
+  \<comment>\<open>The unital property is not required.
+     It can be even weaker as {canonically_ordered_ab_semigroup_add, cancel_ab_semigroup_add}, but
+     the Isabelle std-lib only formalizes canonically_ordered_monoid_add.\<close>
+  unfolding Action_Tag_def Premise_def
+  by (simp, metis add_diff_cancel_left' le_iff_add)
+  
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id (?a :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) @action \<A>arith_eval\<close>
+                                       \<open>(?var :: ?'a :: {canonically_ordered_monoid_add, cancel_ab_semigroup_add}) + id _ = id _ @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b
+\<Longrightarrow> id (b - a) + id a = id b @action \<A>arith_eval \<close>
+  for a :: \<open>'a::{canonically_ordered_monoid_add, cancel_ab_semigroup_add}\<close>
+  unfolding Action_Tag_def Premise_def
+  by (simp, metis add.commute add_diff_cancel_left' le_iff_add)
+
+
+paragraph \<open>Total Group\<close>
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id ?b @action \<A>arith_eval\<close>
+                                       \<open>id ?var + id ?a = id ?b @action \<A>arith_eval\<close> ]:
+  \<open> id (b - a) + id a = id b @action \<A>arith_eval \<close>
+  for a :: \<open>'a::group_add\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id ?b @action \<A>arith_eval\<close>
+                                       \<open>id ?a + id ?var = id ?b @action \<A>arith_eval\<close> ]:
+  \<open> id a + id (b - a) = id b @action \<A>arith_eval \<close>
+  for a :: \<open>'a::ab_group_add\<close>
+  unfolding Action_Tag_def
+  by (simp add: algebra_simps)
+
+
+paragraph \<open>LCRO Interval\<close>
 
 lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) = id [?a,?c) @action \<A>arith_eval\<close>
                                        \<open>id [?a,?b) + id ?var = id [?a,?c) @action \<A>arith_eval\<close>
@@ -214,6 +309,19 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) = i
   unfolding Premise_def Action_Tag_def
   by simp
 
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?d) = id [?a,?c) + id [?c,?d) @action \<A>arith_eval\<close>
+                                       \<open>id ?var_c + id [?b,?d) = id [?a,?c) + id ?var_d @action \<A>arith_eval\<close> ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<and> b \<le> d \<and> a \<le> c \<and> c \<le> d
+\<Longrightarrow> id [a,b) + id [b,d) = id [a,c) + id [c,d) @action \<A>arith_eval \<close>
+  unfolding Premise_def Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) + id [?c,?d) = id [?a,?d) @action \<A>arith_eval\<close>
+                                       \<open>id ?var_c + id [?b,?c) + id ?var_d = id [?a,?d) @action \<A>arith_eval\<close> ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<and> b \<le> c \<and> c \<le> d
+\<Longrightarrow> id [a,b) + id [b,c) + id [c,d) = id [a,d) @action \<A>arith_eval \<close>
+  unfolding Premise_def Action_Tag_def
+  by (simp, insert order_trans, fastforce)
 
 
 
