@@ -24,8 +24,12 @@ val contract_leading_antecedents : bool (*deep*) -> int -> Proof.context -> thm 
       (*the int: how many leading antecedents are considered.*)
 
 val mk_ant_sequence : term list -> term
-val intro_ant_sequence : Proof.context -> thm list -> thm
+val dest_ant_sequence : term -> term list
+val dest_ant_sequence_or_HOL_conj : term -> term list
+val intro_ant_sequence : thm list -> thm
 val elim_ant_sequence : thm -> thm list
+val elim_ant_seq_or_HOL_conj : thm -> thm * thm
+val elim_ant_sequence_or_HOL_conj : thm -> thm list
 
 end
 
@@ -211,15 +215,29 @@ val ant_seq = \<^Const>\<open>Ant_Seq\<close>
 fun mk_ant_sequence [] = \<^const>\<open>True\<close>
   | mk_ant_sequence L = foldr1 (fn (t1,t2) => ant_seq $ t1 $ t2) L
 
-fun intr_ant_seq ctxt thP thQ =
+fun dest_ant_sequence tm =
+  let fun dest ret (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) = dest (dest ret A) B
+        | dest ret (Const(\<^const_name>\<open>True\<close>, _)) = ret
+        | dest ret X = X :: ret
+   in dest [] tm
+  end
+fun dest_ant_sequence_or_HOL_conj tm =
+  let fun dest ret (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) = dest (dest ret A) B
+        | dest ret (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) = dest (dest ret A) B
+        | dest ret (Const(\<^const_name>\<open>True\<close>, _)) = ret
+        | dest ret X = X :: ret
+   in dest [] tm
+  end
+
+fun intr_ant_seq thP thQ =
   let
-    val (P, Q) = apply2 (Object_Logic.dest_judgment ctxt o Thm.cprop_of) (thP, thQ)
+    val (P, Q) = apply2 (Thm.dest_arg o Thm.cprop_of) (thP, thQ)
       handle CTERM (msg, _) => raise THM (msg, 0, [thP, thQ]);
     val rule = \<^instantiate>\<open>P and Q in lemma (open) \<open>P \<Longrightarrow> Q \<Longrightarrow> P \<and>\<^sub>\<r> Q\<close> by (rule Ant_Seq_I)\<close>
   in Drule.implies_elim_list rule [thP, thQ] end;
 
-fun intro_ant_sequence _ [] = @{thm' TrueI}
-  | intro_ant_sequence ctxt L = foldr1 (uncurry (intr_ant_seq ctxt)) L
+fun intro_ant_sequence [] = @{thm' TrueI}
+  | intro_ant_sequence L = foldr1 (uncurry intr_ant_seq) L
 
 fun elim_ant_seq thPQ =
   let
@@ -232,13 +250,42 @@ fun elim_ant_seq thPQ =
       Thm.implies_elim \<^instantiate>\<open>P and Q in lemma (open) \<open>P \<and>\<^sub>\<r> Q \<Longrightarrow> P\<close> by (unfold Ant_Seq_def, rule conjunct1)\<close> thPQ;
     val thQ =
       Thm.implies_elim \<^instantiate>\<open>P and Q in lemma (open) \<open>P \<and>\<^sub>\<r> Q \<Longrightarrow> Q\<close> by (unfold Ant_Seq_def, rule conjunct2)\<close> thPQ;
-  in (thP, thQ) end;
+  in (thP, thQ) end
+
+fun elim_conj thPQ =
+  let
+    val _ = case Thm.prop_of thPQ
+              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) => ()
+               | _ => raise THM ("elim_conj", 0, [thPQ])
+    val (P, Q) = Thm.dest_binop (Thm.dest_arg (Thm.cprop_of thPQ))
+      handle CTERM (msg, _) => raise THM (msg, 0, [thPQ]);
+    val thP =
+      Thm.implies_elim \<^instantiate>\<open>P and Q in lemma (open) \<open>P \<and> Q \<Longrightarrow> P\<close> by (rule conjunct1)\<close> thPQ;
+    val thQ =
+      Thm.implies_elim \<^instantiate>\<open>P and Q in lemma (open) \<open>P \<and> Q \<Longrightarrow> Q\<close> by (rule conjunct2)\<close> thPQ;
+  in (thP, thQ) end
+
+fun elim_ant_seq_or_HOL_conj thPQ =
+  case Thm.prop_of thPQ
+    of _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) => elim_conj thPQ
+     | _ (*Trueprop*) $ (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _) => elim_ant_seq thPQ
+     | _ => raise THM ("elim_ant_seq_or_HOL_conj", 0, [thPQ])
 
 fun elim_ant_sequence th =
   case Thm.prop_of th
-    of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => []
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) => []
      | _ => let fun elim th =
                   let val (th1, th2) = elim_ant_seq th
+                   in elim th1 @ elim th2
+                  end handle THM _ => [th]
+             in elim th
+            end
+
+fun elim_ant_sequence_or_HOL_conj th =
+  case Thm.prop_of th
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) => []
+     | _ => let fun elim th =
+                  let val (th1, th2) = elim_ant_seq_or_HOL_conj th
                    in elim th1 @ elim th2
                   end handle THM _ => [th]
              in elim th

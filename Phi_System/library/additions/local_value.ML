@@ -181,8 +181,8 @@ fun optimized_value_assign bs stat =
               |> (fn rule => @{thm "__fast_assign_val_0__"} RS rule)
         val sequent = Phi_Apply.apply [rule] ctxt sequent
               |> Phi_Reasoners.safer_obligation_solver1 ctxt
-        val (sequent, vals) = HOLogic.conj_elim ctxt sequent
-        val vals = HOLogic.conj_elims ctxt vals
+        val (sequent, vals) = PLPR_Syntax.elim_ant_seq_or_HOL_conj sequent
+        val vals = PLPR_Syntax.elim_ant_sequence_or_HOL_conj vals
               |> Phi_Help.front
       in fold2 (fn ((x,_),_) => update_val x) bs vals ctxt
       |> rpair sequent

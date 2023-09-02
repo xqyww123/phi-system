@@ -20,7 +20,8 @@ val check : Context.generic -> xstring * Position.T -> name * T
 val pretty : Context.generic -> name * T -> Pretty.T
 val space : Context.generic -> T Name_Space.table
 
-datatype priority_syntax = Literal of int | Relative of (xstring * Position.T) * offset
+datatype priority_base = Base | Top | Bottom
+datatype priority_syntax = Literal of int | Relative of ((xstring * Position.T) * priority_base) * offset
 val parser : priority_syntax parser
 val parser_with_default : priority -> priority_syntax parser
 val check_priority : bool -> Context.generic -> priority_syntax -> priority
@@ -57,17 +58,24 @@ val define = Entity.define data_ops
 fun check ctxt = Name_Space.check ctxt (Entries.get ctxt)
 val space = Entries.get
 
-datatype priority_syntax = Literal of int | Relative of (xstring * Position.T) * offset
+datatype priority_base = Base | Top | Bottom
+datatype priority_syntax = Literal of int
+                         | Relative of ((xstring * Position.T) * priority_base) * offset
 local open Parse
 val offset = (\<^keyword>\<open>+\<close> |-- int) || (Args.$$$ "-" |-- int >> (op ~)) || Scan.succeed 0
-in val parser = (\<^keyword>\<open>%\<close> |-- name_position -- offset >> Relative) || (int >> Literal)
+val priority_base = Scan.optional (\<^keyword>\<open>[\<close> |-- (Args.$$$ "top" >> K Top ||
+                                                   Args.$$$ "bottom" >> K Bottom) --| \<^keyword>\<open>]\<close>) Base
+in val parser = ((\<^keyword>\<open>%\<close> |-- name_position -- priority_base) -- offset >> Relative)
+             || (int >> Literal)
    fun parser_with_default default = parser || (Scan.succeed (Literal default) >> @{print})
 end
 
 fun check_priority _ _ (Literal i) = i
-  | check_priority chk_range ctxt (Relative (name, offset)) =
+  | check_priority chk_range ctxt (Relative ((name, base), offset)) =
       let val (name, group) = check ctxt name
-          val ret = #base group + offset
+          val ret = (case base of Base => #base group
+                                | Top => snd (#range group)
+                                | Bottom => fst (#range group)) + offset
           val _ = if not chk_range orelse (fst (#range group) <= ret andalso ret <= snd (#range group)) then ()
                   else error (let open Pretty
                                   val names = Name_Space.space_of_table (Entries.get ctxt)

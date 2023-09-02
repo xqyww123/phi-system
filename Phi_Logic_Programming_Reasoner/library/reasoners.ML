@@ -428,7 +428,9 @@ fun extract_prems ctxt strip thm =
            | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
                 simp (Thm.forall_elim_var (Thm.maxidx_of th) th)
            | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
-                maps simp (Phi_Help.conj_elims th)
+                maps simp (PLPR_Syntax.elim_ant_sequence_or_HOL_conj th)
+           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _) =>
+                maps simp (PLPR_Syntax.elim_ant_sequence_or_HOL_conj th)
            | _ => [th]
    in the_default [] (Option.map simp (extract_prem ctxt strip thm))
   end

@@ -1196,7 +1196,6 @@ lemma module_S_distr_share_0:
 
 
 
-
 section \<open>Instances of Algebras\<close>
 
 (*TODO: some structures like partial map contain many helper lemmas that

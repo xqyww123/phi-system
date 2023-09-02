@@ -57,7 +57,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
-
+     
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -120,6 +120,16 @@ lemma [\<phi>reason 1000]:
   unfolding Transformation_Functor_def Transformation_def Action_Tag_def
   by simp
 
+subsubsection \<open>Guessing Antecedents\<close>
+
+lemma Guess_Antecedent_contravariant_\<phi>subj:
+  \<open> Guess_Antecedent PC (x \<Ztypecolon> T) a c
+\<Longrightarrow> Guess_Antecedent PC (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> c)\<close>
+  unfolding Guess_Antecedent_def ..
+
+declare Guess_Antecedent_contravariant_\<phi>subj[where PC=\<open>Carrier_Set\<close>, \<phi>reason %\<phi>TA_guess_ant]
+        Guess_Antecedent_contravariant_\<phi>subj[where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason %\<phi>TA_guess_ant]
+
 
 subsection \<open>Dependent Sum Type\<close>
 
@@ -154,7 +164,7 @@ text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation fun
 
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
-
+ 
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
@@ -1213,11 +1223,11 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving (*Separation_Monoid
+  deriving Separation_Monoid
        and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Open_Abstraction_Full
@@ -1226,7 +1236,7 @@ declare [[\<phi>trace_reasoning = 3]]
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       and*) Semimodule_LDistr_Homo\<^sub>Z
+       (*and Semimodule_LDistr_Homo\<^sub>Z*)
        (*and Construct_Abstraction_from_Raw*)
 
 term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>

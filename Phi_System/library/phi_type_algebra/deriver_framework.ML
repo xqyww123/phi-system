@@ -1,4 +1,5 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
+include PHI_TYPE_ALGEBRA_DERIVERS
 
 (*** A common framework to build derivers fast ***)
 
@@ -287,7 +288,7 @@ end
 (**** Implementation ****)
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra
+open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 type induct_inst_params = term option list
 type guess_property =
@@ -1012,7 +1013,23 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 
                in Seq.single (Logic.strip_imp_prems H, Logic.strip_imp_concl H, parameters, phi, ctxt)
               end
-           | _ => guess_property phi0 ctxt0)
+           | _ => guess_property phi0 ctxt0
+               |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
+                    let val property_const = Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
+                        val (rev_params_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+                        fun recover_assertion i [] [] = #term phi 
+                          | recover_assertion i (param_ty :: Tys) (NONE :: params)
+                              = recover_assertion (i+1) Tys params $ Var(("\<pp>", i), param_ty)
+                                (*parameters should contain no variable, though I am not very sure*)
+                          | recover_assertion i (_ :: Tys) (SOME param :: params)
+                              = recover_assertion (i+1) Tys params $ param
+                          | recover_assertion _ _ _ = error "BUG: length of parameters is incorrect"
+                        val assertion = case recover_assertion 0 (x_ty :: rev_params_tys) parameters
+                                          of T $ x => \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x $ T
+                                           | _ => error "BUG"
+                        val ants' = guess_antecedent (Expansion.equip ctxt) phi property_const assertion ants
+                     in (ants', property, parameters, phi, ctxt)
+                    end ))
    |> Seq.map (fn (ants01, property01, phi_typ_parameters01, phi01, ctxt01) => 
   let val (ants, property, phi_typ_parameters, phi, ctxt) =
         if is_phi_type_fixed phi01
@@ -1025,13 +1042,8 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
       val _ = if phityp_arity = length phi_typ_parameters then ()
               else error "Bad Argument: phi_typ_parameters"
 
-      fun chk_ant (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = X
-        | chk_ant X = case Term.fastype_of X
-                        of \<^Type>\<open>bool\<close> => X
-                         | _ => error ("Fail to atomize an antecedent:\n" ^
-                                       Syntax.string_of_term ctxt X)
-      val ant = map (chk_ant o Object_Logic.atomize_term ctxt) ants
-             |> Phi_Help.list_mk_conj
+      val ant = map (Phi_Conv.atomize_term ctxt) ants
+             |> PLPR_Syntax.mk_ant_sequence
       val inst_rule = (Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
                                      (Vartab.empty, Vartab.empty)
                        handle Pattern.MATCH =>
@@ -1111,7 +1123,9 @@ type hint = term
 type parse_hint = Proof.context -> phi_type -> hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
 
 fun parse_parameters_of_phi_type phity =
-  map SOME (rev (snd (Term.strip_comb (Phi_Help.beta_eta_contract_term phity))))
+  case Term.strip_comb (Phi_Help.beta_eta_contract_term phity)
+    of (Abs _, _) => raise TERM ("parse_parameters_of_phi_type", [phity])
+     | (_, args) => map (fn Bound _ => NONE | X => SOME X) (rev args)
 
 fun parse_hint extract_phityp ctxt phi hint =
   let val phity = (case extract_phityp (extract_hhf hint)
@@ -1353,6 +1367,23 @@ let fun has_disj_ants ctxt th =
                                      by blast\<close>)
                       | NONE => NONE)
                   end
+               | Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _ =>
+                  let val (A,B) = (Thm.dest_arg1 ctm, Thm.dest_arg ctm)
+                   in case check (Thm.dest_arg1 ctm)
+                   of SOME tha =>
+                        SOME (tha COMP_INCR \<^instantiate>\<open>B in
+                                  lemma \<open>\<And>P X Y C. (P \<Longrightarrow> (X \<Longrightarrow> C) \<Longrightarrow> (Y \<Longrightarrow> C) \<Longrightarrow> C)
+                                                \<Longrightarrow> (P \<and>\<^sub>\<r> B \<Longrightarrow> (X \<and>\<^sub>\<r> B \<Longrightarrow> C) \<Longrightarrow> (Y \<and>\<^sub>\<r> B \<Longrightarrow> C) \<Longrightarrow> C)\<close>
+                                     by (unfold Ant_Seq_def, blast)\<close>)
+                    | NONE =>
+                  (case check (Thm.dest_arg ctm)
+                     of SOME thb =>
+                        SOME (thb COMP_INCR \<^instantiate>\<open>A in
+                                  lemma \<open>\<And>P X Y C. (P \<Longrightarrow> (X \<Longrightarrow> C) \<Longrightarrow> (Y \<Longrightarrow> C) \<Longrightarrow> C)
+                                                \<Longrightarrow> (A \<and>\<^sub>\<r> P \<Longrightarrow> (A \<and>\<^sub>\<r> X \<Longrightarrow> C) \<Longrightarrow> (A \<and>\<^sub>\<r> Y \<Longrightarrow> C) \<Longrightarrow> C)\<close>
+                                     by (unfold Ant_Seq_def, blast)\<close>)
+                      | NONE => NONE)
+                  end
                | Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ _ =>
                   check (Thm.dest_arg1 ctm)
                     |> Option.map (fn rule =>
@@ -1399,7 +1430,7 @@ fun reasoning ctxt0 sequent0 =
       val local_prems'1 = map elim_out_ants local_prems'
 
       fun pass_out_ant ant = (ant RS' (ctxt, @{thm' Action_Tag_D}))
-            |> Phi_Help.conj_elims
+            |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
             |> map ( Thm.forall_elim_vars (Thm.maxidx_of lsequent)
                    o Phi_Help.repeat (fn th => th RS' (ctxt, @{thm' spec})))
 

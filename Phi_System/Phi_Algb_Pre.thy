@@ -6,119 +6,12 @@ theory Phi_Algb_Pre
           Phi_Algebras.LCRO_Interval
 begin 
 
-subsection \<open>Auxiliary Annotations\<close>
 
-definition scalar_mult :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'b\<close> where \<open>scalar_mult f \<equiv> f\<close>
-  \<comment> \<open>A tag annotating the function is a scalar multiplication so that the automation for semimodules
-      will be activated. It also distinguishes the function part and the parameter part, so that
-      resolves multi-unification.\<close>
-
-lemma [\<phi>reason 1000]:
-  \<open> f = g
-\<Longrightarrow> u = v
-\<Longrightarrow> scalar_mult f u = scalar_mult g v\<close>
-  unfolding scalar_mult_def by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f = g
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> u = v
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> scalar_mult f u = scalar_mult g v\<close>
-  unfolding scalar_mult_def Premise_def by simp
-
-
-subsection \<open>Definitions of Properties\<close>
-
-subsubsection \<open>Local Inverse\<close>
-
-definition local_inverse
-  where \<open>local_inverse D f g \<longleftrightarrow> (\<forall>x \<in> D. g (f x) = x)\<close>
-
-lemma prem_extract_local_inverse:
-  \<open>local_inverse D f g \<equiv> (\<forall>x \<in> D. g (f x) = x) \<and> True\<close>
-  unfolding local_inverse_def by simp
-
-bundle extract_premises_in_local_inverse =
-  prem_extract_local_inverse[\<phi>premise_extraction]
-
-subsection \<open>Configuration of Existing Procedures\<close>
-
-declare [[\<phi>reason_default_pattern \<open>module_scalar_assoc ?\<psi> _\<close> \<Rightarrow> \<open>module_scalar_assoc ?\<psi> _\<close>   (100)
-                              and \<open>module_scalar_identity ?\<psi>\<close> \<Rightarrow> \<open>module_scalar_identity ?\<psi>\<close> (100)]]
-
-subsubsection \<open>Separation Algebra\<close>
-
-paragraph \<open>Setup Reasoning Rules\<close>
-
-declare (in homo_one) homo_one_axioms[\<phi>reason 1000]
-
-lemma extraction_homo_one[\<phi>premise_extraction]:
-  \<open>homo_one \<psi> \<equiv> \<psi> 1 = 1 \<and> True\<close>
-  unfolding homo_one_def
-  by simp
-
-declare (in homo_sep_mult) homo_sep_mult_axioms [\<phi>reason 1000]
-
-declare (in closed_homo_sep_disj) closed_homo_sep_disj_axioms [\<phi>reason 1000]
-
-subparagraph \<open>homo_mul_carrier\<close>
-
-declare (in homo_mul_carrier) homo_mul_carrier_axioms[\<phi>reason 1000]
-
-lemma prem_extract_homo_mul_carrier:
-  \<open>homo_mul_carrier \<psi> \<equiv> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<and> True\<close>
-  unfolding homo_mul_carrier_def
-  by simp
-
-lemma [\<phi>reason default 1]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x))
-\<Longrightarrow> homo_mul_carrier \<psi>\<close>
-  unfolding homo_mul_carrier_def Premise_def .
-
-lemma [\<phi>reason no explorative backtrack 0]:
-  \<open> TRACE_FAIL TEXT(\<open>Fail to show the multiplicative carrier homomorphism of\<close> \<psi>)
-\<Longrightarrow> homo_mul_carrier \<psi> \<close>
-  unfolding TRACE_FAIL_def
-  by blast
-
-paragraph \<open>Reasoning Hierarchy\<close>
-
-lemmas [\<phi>reason default 20] =
-        closed_homo_sep.intro
-        homo_sep.intro
-
-lemma [\<phi>reason default 10]:
-  \<open> closed_homo_sep_disj \<psi>
-\<Longrightarrow> homo_sep_disj \<psi>\<close>
-  unfolding homo_sep_disj_def closed_homo_sep_disj_def
-  by blast
-
-lemmas [\<phi>reason 30] =
-        closed_homo_sep_disj_comp
-        homo_sep_disj_comp
-        homo_sep_comp
-        homo_sep_mult_comp
-
-
-subsection \<open>Constant Functions\<close>
-
-definition \<open>constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1)\<close>
-
-lemma [\<phi>premise_extraction]:
-  \<open> constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1) \<and> True \<close>
-  unfolding constant_1_def atomize_eq
-  by simp
-
-lemma [\<phi>reason default 1]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. \<psi> x = 1)
-\<Longrightarrow> constant_1 \<psi>\<close>
-  unfolding constant_1_def Premise_def
-  by simp
-
-subsection \<open>Arithmetic Evaluation\<close>
+section \<open>Arithmetic Evaluation\<close>
 
 consts \<A>arith_eval :: action
 
-subsection \<open>Arithmetic Evaluation for Partial Addition\<close>
+subsection \<open>Partial Addition\<close>
 
 text \<open>Solves partial addition equations consisting of
 
@@ -325,11 +218,134 @@ lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) + i
 
 
 
+subsection \<open>Auxiliary Annotations\<close>
+
+definition scalar_mult :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'b\<close> where \<open>scalar_mult f \<equiv> f\<close>
+  \<comment> \<open>A tag annotating the function is a scalar multiplication so that the automation for semimodules
+      will be activated. It also distinguishes the function part and the parameter part, so that
+      resolves multi-unification.\<close>
+
+lemma [\<phi>reason %cutting]:
+  \<open> f = g
+\<Longrightarrow> u = v
+\<Longrightarrow> scalar_mult f u = scalar_mult g v\<close>
+  unfolding scalar_mult_def by simp
+
+lemma [\<phi>reason %cutting]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> f = g
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> u = v
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> scalar_mult f u = scalar_mult g v\<close>
+  unfolding scalar_mult_def Premise_def by simp
+
+
+subsection \<open>Definitions of Properties\<close>
+
+subsubsection \<open>Local Inverse\<close>
+
+definition local_inverse
+  where \<open>local_inverse D f g \<longleftrightarrow> (\<forall>x \<in> D. g (f x) = x)\<close>
+
+lemma prem_extract_local_inverse:
+  \<open>local_inverse D f g \<equiv> (\<forall>x \<in> D. g (f x) = x) \<and> True\<close>
+  unfolding local_inverse_def by simp
+
+bundle extract_premises_in_local_inverse =
+  prem_extract_local_inverse[\<phi>premise_extraction]
+
+subsection \<open>Configuration of Existing Procedures\<close>
+
+declare [[\<phi>reason_default_pattern \<open>module_scalar_assoc ?\<psi> _\<close> \<Rightarrow> \<open>module_scalar_assoc ?\<psi> _\<close>   (100)
+                              and \<open>module_scalar_identity ?\<psi>\<close> \<Rightarrow> \<open>module_scalar_identity ?\<psi>\<close> (100)
+                              and \<open>module_S_distr ?\<psi> _\<close> \<Rightarrow> \<open>module_S_distr ?\<psi> _\<close> (100) ]]
+
+\<phi>reasoner_group algb_prop_all = (100, [1, 4000]) for \<open>_\<close>
+    \<open>General group of algberaic properties\<close>
+ and algb_falling_lattice = (10,[1,29]) for \<open>_\<close> in algb_prop_all
+    \<open>General lattice of fallbacks for deriving algberaic properties\<close>
+ and algb_default = (50, [30,60]) for \<open>_\<close> in algb_prop_all and > algb_falling_lattice
+    \<open>Default rules for general structures\<close>
+ and algb_funcomp = (40, [40,40]) for \<open>_\<close> in algb_default
+    \<open>Default rules for function composition\<close>
+ and algb_prop = (100, [61, 4000]) for \<open>_\<close> in algb_prop_all
+    \<open>Normalrules giving algberaic properties\<close>
+ and algb_cut = (1000, [1000,1030]) for \<open>_\<close> in algb_prop
+    \<open>General group of cutting rules giving algberaic properties\<close>
+  
+
+subsubsection \<open>Separation Algebra\<close>
+
+paragraph \<open>Setup Reasoning Rules\<close>
+
+declare (in homo_one) homo_one_axioms[\<phi>reason %algb_cut]
+
+lemma extraction_homo_one[\<phi>premise_extraction]:
+  \<open>homo_one \<psi> \<equiv> \<psi> 1 = 1 \<and> True\<close>
+  unfolding homo_one_def
+  by simp
+
+declare (in homo_sep_mult) homo_sep_mult_axioms [\<phi>reason %algb_cut]
+
+declare (in closed_homo_sep_disj) closed_homo_sep_disj_axioms [\<phi>reason %algb_cut]
+
+subparagraph \<open>homo_mul_carrier\<close>
+
+declare (in homo_mul_carrier) homo_mul_carrier_axioms[\<phi>reason %algb_cut]
+
+lemma prem_extract_homo_mul_carrier:
+  \<open>homo_mul_carrier \<psi> \<equiv> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<and> True\<close>
+  unfolding homo_mul_carrier_def
+  by simp
+
+lemma [\<phi>reason default %algb_falling_lattice]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x))
+\<Longrightarrow> homo_mul_carrier \<psi>\<close>
+  unfolding homo_mul_carrier_def Premise_def .
+
+lemma [\<phi>reason no explorative backtrack %fail]:
+  \<open> TRACE_FAIL TEXT(\<open>Fail to show the multiplicative carrier homomorphism of\<close> \<psi>)
+\<Longrightarrow> homo_mul_carrier \<psi> \<close>
+  unfolding TRACE_FAIL_def
+  by blast
+
+paragraph \<open>Reasoning Hierarchy\<close>
+
+lemmas [\<phi>reason default %algb_falling_lattice] =
+        closed_homo_sep.intro
+        homo_sep.intro
+
+lemma [\<phi>reason default %algb_falling_lattice]:
+  \<open> closed_homo_sep_disj \<psi>
+\<Longrightarrow> homo_sep_disj \<psi>\<close>
+  unfolding homo_sep_disj_def closed_homo_sep_disj_def
+  by blast
+
+lemmas [\<phi>reason %algb_funcomp] =
+        closed_homo_sep_disj_comp
+        homo_sep_disj_comp
+        homo_sep_comp
+        homo_sep_mult_comp
+
+
+subsection \<open>Constant Functions\<close>
+
+definition \<open>constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1)\<close>
+
+lemma [\<phi>premise_extraction]:
+  \<open> constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1) \<and> True \<close>
+  unfolding constant_1_def atomize_eq
+  by simp
+
+lemma [\<phi>reason default %algb_falling_lattice]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. \<psi> x = 1)
+\<Longrightarrow> constant_1 \<psi>\<close>
+  unfolding constant_1_def Premise_def
+  by simp
+
 subsection \<open>Preset Properties for Specific Elements\<close>
 
 subsubsection \<open>Identity Function\<close>
 
-lemmas [\<phi>reason 1000] =
+lemmas [\<phi>reason %algb_cut] =
     closed_homo_sep_disj_id
     homo_sep_disj_id
     homo_sep_mult_id
@@ -340,71 +356,77 @@ lemmas [\<phi>reason 1000] =
 
 subsubsection \<open>Functional Pointwise\<close>
 
-lemma homo_mul_carrier_fun_upd [\<phi>reason 1100]:
+\<phi>reasoner_group algb_fun_upd_1 = (1300, [1300, 1330]) for \<open>_ (fun_upd 1 k)\<close> in algb_prop
+    \<open>Algebraic properties for \<open>fun_upd 1 k\<close>\<close>
+ and algb_fun_upd_1_comp = (1000, [1000, 1030]) for \<open>_ (\<lambda>x. fun_upd 1 k (f x))\<close>
+                                                in algb_prop and < algb_fun_upd_1
+    \<open>Algebraic properties for \<open>\<lambda>x. fun_upd 1 k (f x)\<close>\<close>
+
+lemma homo_mul_carrier_fun_upd [\<phi>reason %algb_fun_upd_1]:
   \<open>homo_mul_carrier (fun_upd (1::'k \<Rightarrow> 'a::sep_carrier_1) k)\<close>
   unfolding homo_mul_carrier_def
   by simp
 
-lemma homo_mul_carrier_fun_upd' [\<phi>reason 1100]:
+lemma homo_mul_carrier_fun_upd' [\<phi>reason %algb_fun_upd_1_comp]:
   \<open> homo_mul_carrier f
 \<Longrightarrow> homo_mul_carrier (\<lambda>x. fun_upd (1 :: 'k \<Rightarrow> 'a::sep_carrier_1) k (f x))\<close>
   unfolding homo_mul_carrier_def
   by clarsimp
 
-lemma closed_homo_sep_disj_fun_upd [\<phi>reason 1100]:
+lemma closed_homo_sep_disj_fun_upd [\<phi>reason %algb_fun_upd_1]:
   \<open>closed_homo_sep_disj (fun_upd (1 :: 'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
   unfolding closed_homo_sep_disj_def
   by (simp add: sep_disj_fun_def)
 
-lemma closed_homo_sep_disj_fun_upd' [\<phi>reason 1000]:
+lemma closed_homo_sep_disj_fun_upd' [\<phi>reason %algb_fun_upd_1_comp]:
   \<open> closed_homo_sep_disj f
 \<Longrightarrow> closed_homo_sep_disj (\<lambda>x. fun_upd (1 :: 'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
   unfolding closed_homo_sep_disj_def
   by (simp add: sep_disj_fun_def)
 
-lemma homo_sep_mult_fun_upd[\<phi>reason 1100]:
+lemma homo_sep_mult_fun_upd[\<phi>reason %algb_fun_upd_1]:
   \<open>homo_sep_mult (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k)\<close>
   unfolding homo_sep_mult_def
   by (simp add: fun_eq_iff times_fun_def)
 
-lemma homo_sep_mult_fun_upd'[\<phi>reason 100]:
+lemma homo_sep_mult_fun_upd'[\<phi>reason %algb_fun_upd_1_comp]:
   \<open> homo_sep_mult f
 \<Longrightarrow> homo_sep_mult (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x))\<close>
   unfolding homo_sep_mult_def
   by (simp add: fun_eq_iff times_fun_def)
 
-lemma homo_one_fun_upd[\<phi>reason 1100]:
+lemma homo_one_fun_upd[\<phi>reason %algb_fun_upd_1]:
   \<open>homo_one (fun_upd 1 k)\<close>
   unfolding homo_one_def
   by (simp add: fun_eq_iff times_fun_def)
 
-lemma homo_one_fun_upd'[\<phi>reason 1000]:
+lemma homo_one_fun_upd'[\<phi>reason %algb_fun_upd_1_comp]:
   \<open> homo_one f
 \<Longrightarrow> homo_one (\<lambda>x. fun_upd 1 k (f x))\<close>
   unfolding homo_one_def
   by (simp add: fun_eq_iff times_fun_def)
 
-lemma homo_sep_fun_upd[\<phi>reason 1100]:
+lemma homo_sep_fun_upd[\<phi>reason %algb_fun_upd_1]:
   \<open> homo_sep (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k) \<close>
   by (rule homo_sep.intro; simp add: homo_sep_mult_fun_upd homo_sep_disj_def)
 
-lemma homo_sep_fun_upd'[\<phi>reason 1000]:
+lemma homo_sep_fun_upd'[\<phi>reason %algb_fun_upd_1_comp]:
   \<open> homo_sep f
 \<Longrightarrow> homo_sep (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x)) \<close>
   unfolding homo_sep_def
   by (simp add: homo_sep_mult_fun_upd' homo_sep_disj_def)
 
-lemma closed_homo_sep_fun_upd[\<phi>reason 1100]:
+lemma closed_homo_sep_fun_upd[\<phi>reason %algb_fun_upd_1]:
   \<open> closed_homo_sep (fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k) \<close>
   by (rule closed_homo_sep.intro; simp add: homo_sep_fun_upd closed_homo_sep_disj_fun_upd)
 
-lemma closed_homo_sep_fun_upd'[\<phi>reason 1000]:
+lemma closed_homo_sep_fun_upd'[\<phi>reason %algb_fun_upd_1_comp]:
   \<open> closed_homo_sep f
 \<Longrightarrow> closed_homo_sep (\<lambda>x. fun_upd (1::'k \<Rightarrow> 'a::sep_magma_1) k (f x)) \<close>
   unfolding closed_homo_sep_def
   by (simp add: closed_homo_sep_disj_fun_upd' homo_sep_fun_upd')
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_fun_upd_1_comp]:
   \<open> constant_1 \<psi>
 \<Longrightarrow> constant_1 (\<lambda>x. fun_upd 1 k (\<psi> x))\<close>
   unfolding constant_1_def
@@ -413,118 +435,120 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Push map\<close>
 
-declare homo_mul_carrier_push_map [\<phi>reason 1000]
-        closed_homo_sep_disj_push_map [\<phi>reason 1000]
-        homo_sep_mult_push_map [\<phi>reason 1000]
-        homo_one_push_map [\<phi>reason 1000]
-        module_scalar_identity_push_map [\<phi>reason 1000]
-        module_scalar_assoc_push_map [\<phi>reason 1000]
+declare homo_mul_carrier_push_map [\<phi>reason %algb_cut]
+        closed_homo_sep_disj_push_map [\<phi>reason %algb_cut]
+        homo_sep_mult_push_map [\<phi>reason %algb_cut]
+        homo_one_push_map [\<phi>reason %algb_cut]
+        module_scalar_identity_push_map [\<phi>reason %algb_cut]
+        module_scalar_assoc_push_map [\<phi>reason %algb_cut]
 
 subsubsection \<open>Share Division\<close>
 
-lemma homo_mul_carrier_share [\<phi>reason 1000]:
+lemma homo_mul_carrier_share [\<phi>reason %algb_cut]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_mul_carrier ((\<odivr>) n :: 'a::share_carrier \<Rightarrow> 'a)\<close>
   unfolding homo_mul_carrier_def Premise_def
   by (clarsimp simp add: share_carrier_closed)
 
-lemma homo_mul_carrier_share_1[\<phi>reason 1100]:
+lemma homo_mul_carrier_share_1[\<phi>reason %algb_cut+10]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_mul_carrier ((\<odivr>) n :: 'a::share_carrier_1 \<Rightarrow> 'a)\<close>
   unfolding homo_mul_carrier_def Premise_def
   by (clarsimp simp add: share_carrier_closed_1)
 
-lemma homo_one_share[\<phi>reason 1000]:
+lemma homo_one_share[\<phi>reason %algb_cut]:
   \<open>homo_one ((\<odivr>) n :: 'a::share_one \<Rightarrow> 'a)\<close>
   unfolding homo_one_def
   by simp
 
-lemma homo_sep_mult_share0[\<phi>reason 1000]:
+lemma homo_sep_mult_share0[\<phi>reason %algb_cut]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_mult_def Premise_def
   by (simp add: share_sep_right_distrib_0)
 
-lemma homo_sep_mult_share[\<phi>reason 1010]:
+lemma homo_sep_mult_share[\<phi>reason %algb_cut+10]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep_mult ((\<odivr>) n :: 'a::share_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_mult_def Premise_def
   by (simp add: share_sep_right_distrib)
 
-lemma homo_sep_disj_share0[\<phi>reason 1000]:
+lemma homo_sep_disj_share0[\<phi>reason %algb_cut]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
   unfolding homo_sep_disj_def Premise_def
   by simp
 
-lemma homo_sep_disj_share [\<phi>reason 1010]:
+lemma homo_sep_disj_share [\<phi>reason %algb_cut+10]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep_disj ((\<odivr>) n :: 'a::{share_sep_disj, share_one, sep_magma_1} \<Rightarrow> 'a)\<close>
   unfolding homo_sep_disj_def Premise_def
   by (cases \<open>n = 0\<close>; simp)
 
-lemma closed_homo_sep_disj_share0[\<phi>reason 1000]:
+lemma closed_homo_sep_disj_share0[\<phi>reason %algb_cut]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep_disj ((\<odivr>) n :: 'a::share_sep_disj \<Rightarrow> 'a)\<close>
   unfolding closed_homo_sep_disj_def Premise_def
   by simp
 
-lemma homo_sep_share0[\<phi>reason 1000]:
+lemma homo_sep_share0[\<phi>reason %algb_cut]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_def Premise_def
   by (simp add: homo_sep_mult_share0 homo_sep_disj_share0)
 
-lemma homo_sep_share [\<phi>reason 1000]:
+lemma homo_sep_share [\<phi>reason %algb_cut]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 \<le> n \<Longrightarrow> homo_sep ((\<odivr>) n :: 'a::share_semimodule \<Rightarrow> 'a)\<close>
   unfolding homo_sep_def Premise_def
   by (simp add: homo_sep_mult_share homo_sep_disj_share)
 
-lemma closed_homo_sep_share[\<phi>reason 1000]:
+lemma closed_homo_sep_share[\<phi>reason %algb_cut]:
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> closed_homo_sep ((\<odivr>) n :: 'a::share_nun_semimodule \<Rightarrow> 'a)\<close>
   unfolding closed_homo_sep_def Premise_def
   by (simp add: homo_sep_share0 closed_homo_sep_disj_share0)
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open>constant_1 ((\<odivr>) 0 :: 'a::share_one \<Rightarrow> 'a)\<close>
   unfolding constant_1_def
   by simp
 
-declare module_scalar_assoc_share0   [\<phi>reason 1000, assertion_simps]
-        module_scalar_assoc_share    [\<phi>reason 1100, assertion_simps]
-        module_scalar_identity_share [\<phi>reason 1000, assertion_simps]
+declare module_scalar_assoc_share0   [\<phi>reason %algb_cut, assertion_simps]
+        module_scalar_assoc_share    [\<phi>reason %algb_cut+10, assertion_simps]
+        module_scalar_identity_share [\<phi>reason %algb_cut, assertion_simps]
+        module_S_distr_share         [\<phi>reason %algb_cut+10]
+        module_S_distr_share_0       [\<phi>reason %algb_cut]
 
 
 subsubsection \<open>Annotation of Scalar Multiplication\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open> homo_mul_carrier (\<psi> s)
 \<Longrightarrow> homo_mul_carrier (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open> homo_one (\<psi> s)
 \<Longrightarrow> homo_one (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open> homo_sep_mult (\<psi> s)
 \<Longrightarrow> homo_sep_mult (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open> homo_sep_disj (\<psi> s)
 \<Longrightarrow> homo_sep_disj (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open> closed_homo_sep_disj (\<psi> s)
 \<Longrightarrow> closed_homo_sep_disj (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open> homo_sep (\<psi> s)
 \<Longrightarrow> homo_sep (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open> closed_homo_sep (\<psi> s)
 \<Longrightarrow> closed_homo_sep (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %algb_cut]:
   \<open> constant_1 (\<psi> s)
 \<Longrightarrow> constant_1 (scalar_mult \<psi> s)\<close>
   unfolding scalar_mult_def

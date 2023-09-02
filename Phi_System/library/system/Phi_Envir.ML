@@ -201,7 +201,7 @@ fun get_thesis ctxt =
 
 fun process_lemmata rules ctxt thm =
        Simplifier.asm_full_simplify (ctxt addsimps rules ctxt) thm
-    |> HOLogic.conj_elims ctxt
+    |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
 
 val simplify_lemmata = Attrib.setup_config_bool \<^binding>\<open>\<phi>simplify_lemmata\<close> (K true)
 
@@ -209,7 +209,7 @@ fun process_useful_lemmata simp_lemmata ctxt thm =
        (if simp_lemmata andalso Config.get ctxt simplify_lemmata
         then Simplifier.asm_full_simplify (ctxt addsimps Useful_Thms.get ctxt) thm
         else thm)
-    |> HOLogic.conj_elims ctxt
+    |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
 
 
 

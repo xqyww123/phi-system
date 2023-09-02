@@ -21,8 +21,8 @@ val unique_flexflex : Proof.context -> thm -> thm
 val list_mk_conj : term list -> term
 val list_mk_disj : term list -> term
 val conj_intros: Proof.context -> thm list -> thm
-val conj_elim  : thm -> thm * thm
-val conj_elims : thm -> thm list
+(*val conj_elim  : thm -> thm * thm
+val conj_elims : thm -> thm list*)
 
 val instantiate_higher_order_schematic_var' : int (*N*) -> Proof.context -> thm -> thm option (*returns none if no change*)
 val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
@@ -199,6 +199,7 @@ fun list_mk_conj [] = \<^const>\<open>True\<close>
 fun list_mk_disj [] = \<^const>\<open>True\<close>
   | list_mk_disj L = foldr1 HOLogic.mk_disj L
 
+(*
 fun conj_elim thPQ =
   let
     val _ = case Thm.prop_of thPQ
@@ -221,6 +222,7 @@ fun conj_elims th =
                   end handle THM _ => [th]
              in elim th
             end
+*)
 
 fun conj_intros _ [] = @{thm' TrueI}
   | conj_intros ctxt L = foldr1 (uncurry (HOLogic.conj_intr ctxt)) L

@@ -332,8 +332,8 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
       val initial = sequent RS #transformation_rule mode
       val rule = gen_rule num_limit initial
       val (sequent', vals) = rule
-                |> HOLogic.conj_elim ctxt
-                |> apsnd (fn th => th |> HOLogic.conj_elims ctxt |> rev
+                |> PLPR_Syntax.elim_ant_seq_or_HOL_conj
+                |> apsnd (fn th => th |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj |> rev
                                       |> (fn [] => []
                                            | (H::L) => case Thm.prop_of H
                                                          of _ $ (Const (\<^const_name>\<open>True\<close>, _)) => L
@@ -457,7 +457,7 @@ fun extract_and_remove_leading_values num (ctxt,sequent) =
           (ctxt, rule RS (sequent COMP #transformation_rule mode))
             |> Phi_Reasoner.reason NONE
             |> (fn SOME (ctxt', sequent'') =>
-                      (case HOLogic.conj_elim ctxt' sequent''
+                      (case PLPR_Syntax.elim_ant_seq_or_HOL_conj sequent''
                          of (sequent', value) => (value::ret, (ctxt', sequent')))
                  | NONE => Phi_Reasoner.error "Internal bug #vb7iop23")
    in funpow num extract ([], (ctxt,sequent))
@@ -468,7 +468,7 @@ fun push_values values (ctxt,sequent) =
     val mode = Phi_Working_Mode.mode1 ctxt
     val initial = sequent RS #transformation_rule mode
     val sequent' = fold_rev (fn v => fn th => (v RS @{thm "_rule_push_a_value_"}) RS th) values initial
-   in (ctxt, fst (HOLogic.conj_elim ctxt (@{thm transformation_refl} RS sequent')))
+   in (ctxt, fst (PLPR_Syntax.elim_ant_seq_or_HOL_conj (@{thm transformation_refl} RS sequent')))
   end
 
 fun is_local_value (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Val\<close>, _) $ _ $ _)) = true

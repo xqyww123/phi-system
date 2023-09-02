@@ -80,7 +80,7 @@ fun move_lemmata' (ctxt, sequent) =
         of \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Generated_Rule\<close>, _) $ _ $ _ $ _) => true
          | _ => false
     val all_lemmas = (sequent RS @{thm conjunct2})
-                  |> HOLogic.conj_elims ctxt
+                  |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
                   |> map_filter filter_lemma
     val lemmas = all_lemmas |> filter (not o is_generated_stuff)
     val generated_stuffs = all_lemmas |> filter is_generated_stuff |> simplify_morphisms ctxt

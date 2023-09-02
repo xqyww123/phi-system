@@ -1,6 +1,8 @@
 signature PHI_SYNTAX = sig
 include PHI_SYNTAX
 
+  val dest_BI_ty : typ -> typ (*typ of concrete algebra*)
+
   val is_transformation_intro_rule : thm -> bool
   val is_transformation_elim_rule : thm -> bool
   val pass_ensures_intro_transformation : Phi_Reasoner.rule_pass
@@ -16,6 +18,9 @@ end
 
 structure Phi_Syntax : PHI_SYNTAX = struct
 open Phi_Syntax
+
+fun dest_BI_ty (\<^Type>\<open>set ty\<close>) = ty
+  | dest_BI_ty ty = raise TYPE ("Not of a type of BI assertion", [ty], [])
 
 val dest_action_tag   = Phi_Help.dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
 val dest_action_tag_c = Phi_Help.dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
