@@ -805,6 +805,8 @@ subsection \<open>Partial Additive Structures\<close>
 
 subsubsection \<open>Domain of the Addition\<close>
 
+paragraph \<open>Addition\<close>
+
 class dom_of_add =
   fixes dom_of_add :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> (infix "##\<^sub>+" 60)
 
@@ -817,6 +819,23 @@ begin
 lemma dom_of_add_commute: "x ##\<^sub>+ y \<longleftrightarrow> y ##\<^sub>+ x"
   by (blast intro: dom_of_add_commuteI)
 end
+
+paragraph \<open>Subtraction\<close>
+
+class dom_of_minus =
+  fixes dom_of_minus :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> (infix "##\<^sub>-" 60)
+
+class total_dom_of_minus = dom_of_minus +
+  assumes total_dom_of_minus[simp]: \<open>x ##\<^sub>- y\<close>
+
+class comm_dom_of_minus = dom_of_minus +
+  assumes dom_of_minus_commuteI: "x ##\<^sub>- y \<Longrightarrow> y ##\<^sub>- x"
+begin
+lemma dom_of_minus_commute: "x ##\<^sub>- y \<longleftrightarrow> y ##\<^sub>- x"
+  by (blast intro: dom_of_minus_commuteI)
+end
+
+
 
 subsubsection \<open>Partial Additive Magma\<close>
 
@@ -840,7 +859,7 @@ class strict_positive_partial_add_magma = partial_add_magma +
 
 subsubsection \<open>Partial Additive Semigroup\<close>
 
-class partial_add_semigroup = partial_add_magma +
+class partial_semigroup_add = partial_add_magma +
   assumes partial_add_assoc:
     "\<lbrakk> x ##\<^sub>+ y; x + y ##\<^sub>+ z \<rbrakk> \<Longrightarrow> (x + y) + z = x + (y + z)"
   assumes partial_add_dom_multD1: "\<lbrakk> x ##\<^sub>+ y + z; y ##\<^sub>+ z \<rbrakk> \<Longrightarrow> x ##\<^sub>+ y"
@@ -856,11 +875,11 @@ lemma partial_add_assoc':
 end
 
 lemma positive_join_sub_antisym: \<open>x \<preceq>\<^sub>+ y \<Longrightarrow> y \<preceq>\<^sub>+ x \<Longrightarrow> False\<close>
-  for x :: \<open>'a :: {partial_add_semigroup, strict_positive_partial_add_magma}\<close>
+  for x :: \<open>'a :: {partial_semigroup_add, strict_positive_partial_add_magma}\<close>
   unfolding additive_join_sub_def
   by (clarsimp, metis additive_join_strict_positivity partial_add_assoc' partial_add_dom_multI1)
 
-class partial_add_ab_semigroup = partial_add_semigroup + comm_dom_of_add +
+class partial_ab_semigroup_add = partial_semigroup_add + comm_dom_of_add +
   assumes partial_add_commute: "x ##\<^sub>+ y \<Longrightarrow> x + y = y + x"
 begin
 
@@ -875,6 +894,116 @@ end
 class dom_of_add_intuitive = partial_add_magma +
   assumes dom_of_add_intuitive_right[simp]: \<open>b ##\<^sub>+ c \<Longrightarrow> a ##\<^sub>+ b + c \<longleftrightarrow> a ##\<^sub>+ b \<and> a ##\<^sub>+ c\<close>
   assumes dom_of_add_intuitive_left [simp]: \<open>a ##\<^sub>+ b \<Longrightarrow> a + b ##\<^sub>+ c \<longleftrightarrow> a ##\<^sub>+ c \<and> b ##\<^sub>+ c\<close>
+
+paragraph \<open>Cancellative\<close>
+
+class partial_cancel_semigroup_add = partial_semigroup_add +
+  assumes partial_add_left_imp_eq : "\<lbrakk> a ##\<^sub>+ b; a ##\<^sub>+ c \<rbrakk> \<Longrightarrow> a + b = a + c \<Longrightarrow> b = c"
+  assumes partial_add_right_imp_eq: "\<lbrakk> b ##\<^sub>+ a; c ##\<^sub>+ a \<rbrakk> \<Longrightarrow> b + a = c + a \<Longrightarrow> b = c"
+begin
+
+lemma partial_add_left_cancel [simp]: "\<lbrakk> a ##\<^sub>+ b ; a ##\<^sub>+ c \<rbrakk> \<Longrightarrow> a + b = a + c \<longleftrightarrow> b = c"
+  using local.partial_add_left_imp_eq by blast
+  
+lemma partial_add_right_cancel [simp]: "\<lbrakk> b ##\<^sub>+ a ; c ##\<^sub>+ a \<rbrakk> \<Longrightarrow> b + a = c + a \<longleftrightarrow> b = c"
+  using local.partial_add_right_imp_eq by blast
+
+end
+
+class partial_cancel_ab_semigroup_add = partial_ab_semigroup_add + comm_dom_of_minus + minus +
+  assumes partial_add_diff_cancel_left'[simp]: \<open>a ##\<^sub>+ b \<Longrightarrow> (a + b) - a = b\<close>
+      and partial_add_diff_cancel_left'_dom: \<open>a ##\<^sub>+ b \<Longrightarrow> (a + b) ##\<^sub>- a\<close>
+  assumes partial_diff_diff_add: \<open>b ##\<^sub>+ c \<Longrightarrow> a ##\<^sub>- (b + c) \<Longrightarrow> a - b - c = a - (b + c)\<close>
+      and partial_diff_diff_add_dom: \<open>a ##\<^sub>- b \<and> (a - b) ##\<^sub>- c \<longleftrightarrow> b ##\<^sub>+ c \<and> a ##\<^sub>- (b + c)\<close>
+begin
+
+lemma partial_add_diff_cancel_right'_dom [simp]:
+  \<open>a ##\<^sub>+ b \<Longrightarrow> a + b ##\<^sub>- b\<close>
+  by (metis local.dom_of_add_commute local.partial_add_commute local.partial_add_diff_cancel_left'_dom)
+
+lemma partial_add_diff_cancel_right' [simp]:
+  "a ##\<^sub>+ b \<Longrightarrow> (a + b) - b = a"
+  by (metis local.dom_of_add_commute local.partial_add_commute local.partial_add_diff_cancel_left')
+
+subclass partial_cancel_semigroup_add
+  by (standard,
+      metis local.partial_add_diff_cancel_left',
+      metis partial_add_diff_cancel_right')
+
+lemma partial_add_diff_cancel_left_dom[simp]:
+  \<open>\<lbrakk> c ##\<^sub>+ a ; c ##\<^sub>+ b \<rbrakk> \<Longrightarrow> c + a ##\<^sub>- c + b \<longleftrightarrow> a ##\<^sub>- b\<close>
+  by (metis local.partial_add_diff_cancel_left' local.partial_add_diff_cancel_left'_dom local.partial_diff_diff_add_dom)
+
+lemma partial_add_diff_cancel_left [simp]:
+  "\<lbrakk> c ##\<^sub>+ a ; c ##\<^sub>+ b ; a ##\<^sub>- b \<rbrakk> \<Longrightarrow> (c + a) - (c + b) = a - b"
+  by (metis local.partial_add_diff_cancel_left' local.partial_diff_diff_add partial_add_diff_cancel_left_dom)
+
+lemma partial_add_diff_cancel_right_dom [simp]:
+  "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c \<rbrakk> \<Longrightarrow> a + c ##\<^sub>- b + c = a ##\<^sub>- b"
+  by (metis local.dom_of_add_commute local.partial_add_commute partial_add_diff_cancel_left_dom)
+
+lemma add_diff_cancel_right [simp]:
+  "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c; a ##\<^sub>- b \<rbrakk> \<Longrightarrow> (a + c) - (b + c) = a - b"
+  by (metis local.dom_of_add_commute local.partial_add_commute partial_add_diff_cancel_left)
+
+
+lemma partial_diff_right_commute: "b ##\<^sub>+ c \<Longrightarrow> a ##\<^sub>- (b + c) \<Longrightarrow> a - c - b = a - b - c"
+  by (simp add: dom_of_add_commute local.partial_add_commute local.partial_diff_diff_add)
+
+lemma partial_add_implies_diff_dom:
+  \<open>c ##\<^sub>+ b \<Longrightarrow> c + b = a \<Longrightarrow> a ##\<^sub>- b\<close>
+  by fastforce
+
+lemma partial_add_implies_diff:
+  \<open>c ##\<^sub>+ b \<Longrightarrow> c + b = a \<Longrightarrow> c = a - b\<close>
+  by fastforce
+
+end
+
+paragraph \<open>Ordered\<close>
+
+class partial_ordered_ab_semigroup_add = order + partial_ab_semigroup_add +
+  assumes partial_add_left_mono: "\<lbrakk> c ##\<^sub>+ a ; c ##\<^sub>+ b \<rbrakk> \<Longrightarrow> a \<le> b \<Longrightarrow> c + a \<le> c + b"
+begin
+
+lemma partial_add_right_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c \<rbrakk> \<Longrightarrow> a \<le> b \<Longrightarrow> a + c \<le> b + c"
+  by (metis local.dom_of_add_commute local.partial_add_commute local.partial_add_left_mono)
+
+lemma partial_add_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c ; b ##\<^sub>+ d \<rbrakk> \<Longrightarrow> a \<le> b \<Longrightarrow> c \<le> d \<Longrightarrow> a + c \<le> b + d"
+  by (meson local.order_trans local.partial_add_left_mono partial_add_right_mono)
+
+end
+
+class partial_strict_ordered_ab_semigroup_add = partial_ordered_ab_semigroup_add +
+  assumes partial_add_strict_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c ; b ##\<^sub>+ d \<rbrakk> \<Longrightarrow> a < b \<Longrightarrow> c < d \<Longrightarrow> a + c < b + d"
+
+
+class partial_ordered_cancel_ab_semigroup_add =
+  partial_ordered_ab_semigroup_add + partial_cancel_ab_semigroup_add
+begin
+
+lemma partial_add_strict_left_mono: "\<lbrakk> c ##\<^sub>+ a; c ##\<^sub>+ b \<rbrakk> \<Longrightarrow> a < b \<Longrightarrow> c + a < c + b"
+  using local.order.strict_iff_order local.partial_add_left_mono by force
+
+lemma partial_add_strict_right_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c \<rbrakk> \<Longrightarrow> a < b \<Longrightarrow> a + c < b + c"
+  by (simp add: local.order.strict_iff_order local.partial_add_right_mono)
+
+subclass partial_strict_ordered_ab_semigroup_add
+  by (standard; metis local.transp_less partial_add_strict_left_mono partial_add_strict_right_mono transp_def)
+
+lemma partial_add_less_le_mono: "\<lbrakk> a ##\<^sub>+ c; b ##\<^sub>+ c; b ##\<^sub>+ d \<rbrakk> \<Longrightarrow> a < b \<Longrightarrow> c \<le> d \<Longrightarrow> a + c < b + d"
+  using local.le_imp_less_or_eq local.partial_add_strict_mono partial_add_strict_right_mono by blast
+
+lemma add_le_less_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c ; b ##\<^sub>+ d \<rbrakk> \<Longrightarrow> a \<le> b \<Longrightarrow> c < d \<Longrightarrow> a + c < b + d"
+  by (metis local.order.strict_iff_order local.partial_add_strict_mono partial_add_strict_left_mono)
+
+end
+
+
+
+
+class partial_canonically_ordered_ab_semigroup_add = partial_cancel_semigroup_add + order +
+  assumes partial_le_iff_add: "a \<le> b \<longleftrightarrow> (\<exists>c. b = a + c \<and> a ##\<^sub>+ c)"
 
 
 subsubsection \<open>Unital Partial Additive Structures\<close>
@@ -894,7 +1023,7 @@ end
 
 subsubsection \<open>Partial Additive Monoid\<close>
 
-class partial_add_monoid = partial_add_magma_0 + partial_add_semigroup
+class partial_add_monoid = partial_add_magma_0 + partial_semigroup_add
 
 (* definition (in plus) additive_subsume (infix "\<preceq>\<^sub>+''" 50)
   where \<open>additive_subsume y z \<longleftrightarrow> (\<exists>x. z = x + y)\<close>
@@ -930,7 +1059,7 @@ end
 
 subsubsection \<open>Partial Commutative Addition Monoid\<close>
 
-class partial_add_ab_monoid = partial_add_magma_0 + partial_add_ab_semigroup
+class partial_add_ab_monoid = partial_add_magma_0 + partial_ab_semigroup_add
 begin
 
 subclass partial_add_monoid ..
@@ -979,12 +1108,12 @@ qed
 subclass total_partial_add_monoid ..
 end
 
-class discrete_partial_add_semigroup = dom_of_add + plus +
+class discrete_partial_semigroup_add = dom_of_add + plus +
   assumes discrete_dom_of_add[simp]: "x ##\<^sub>+ y \<longleftrightarrow> x = y"
     and discrete_add[simp]: "x + y = (if x = y then x else undefined)"
 begin
 subclass partial_add_magma .
-subclass partial_add_ab_semigroup proof
+subclass partial_ab_semigroup_add proof
   fix x y z :: 'a
   show \<open>x ##\<^sub>+ y \<Longrightarrow> x + y = y + x\<close> by simp
 (*  show \<open>x \<preceq>\<^sub>+ y \<Longrightarrow> y \<preceq>\<^sub>+ x \<Longrightarrow> x = y\<close> unfolding additive_join_sub_def by force *)
@@ -999,11 +1128,11 @@ subclass partial_add_ab_semigroup proof
 qed
 end
 
-class empty_partial_add_semigroup = dom_of_add + plus +
+class empty_partial_semigroup_add = dom_of_add + plus +
   assumes empty_dom_of_add[simp]: "\<not> x ##\<^sub>+ y"
 begin
 subclass partial_add_magma .
-subclass partial_add_ab_semigroup by (standard; simp add: additive_join_sub_def)
+subclass partial_ab_semigroup_add by (standard; simp add: additive_join_sub_def)
 subclass partial_add_cancel by (standard; simp)
 subclass strict_positive_partial_add_magma by (standard; simp)
 end

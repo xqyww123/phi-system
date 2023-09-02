@@ -153,7 +153,7 @@ instance lcro_interval :: (order) positive_partial_add_magma
 
 text \<open>lcro_interval is not strict positive as there are zero element [x,x)\<close>
 
-instance lcro_interval :: (order) partial_add_semigroup
+instance lcro_interval :: (order) partial_semigroup_add
   by (standard; clarsimp simp add: interval_eq_iff)
 
 text \<open>lcro_interval is also a good example where it is not dom_of_add_intuitive,

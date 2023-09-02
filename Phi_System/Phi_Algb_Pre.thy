@@ -121,6 +121,11 @@ subsubsection \<open>Partial Addition\<close>
 
 text \<open>Solving \<open>?d + a = ?b + c @action \<A>arith_eval\<close>\<close>
 
+paragraph \<open>Cancellative and Canonically Ordered Monoid \<close>
+
+paragraph \<open>Commutative Partial Addition\<close>
+
+
 
 
 
