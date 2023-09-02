@@ -3062,9 +3062,19 @@ lemma Guess_Antecedent_contravariant_preset:
 \<Longrightarrow> Guess_Antecedent PC B a2 c2
 \<Longrightarrow> Guess_Antecedent PC (A * B) (a1 \<and>\<^sub>\<r> a2) (c1 \<and>\<^sub>\<r> c2)\<close>
   \<open> Guess_Antecedent PC A a c
-\<Longrightarrow> Guess_Antecedent PC (A \<s>\<u>\<b>\<j> P) a (P \<and>\<^sub>\<r> c)\<close>
+\<Longrightarrow> Guess_Antecedent PC (A \<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> c)\<close>
   \<open> (\<And>x. Guess_Antecedent PC (A' x) (a' x) (c' x))
 \<Longrightarrow> Guess_Antecedent PC (ExSet A') (All a') (Ex c')\<close>
+  unfolding Guess_Antecedent_def ..
+
+lemma Guess_Antecedent_covariant_preset:
+  \<open> Guess_Antecedent PC A a1 c1
+\<Longrightarrow> Guess_Antecedent PC B a2 c2
+\<Longrightarrow> Guess_Antecedent PC (A * B) (a1 \<and>\<^sub>\<r> a2) (c1 \<and>\<^sub>\<r> c2)\<close>
+  \<open> Guess_Antecedent PC A a c
+\<Longrightarrow> Guess_Antecedent PC (A \<s>\<u>\<b>\<j> P) ((\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<and>\<^sub>\<r> a) c\<close>
+  \<open> (\<And>x. Guess_Antecedent PC (A' x) (a' x) (c' x))
+\<Longrightarrow> Guess_Antecedent PC (ExSet A') (Ex a') (All c')\<close>
   unfolding Guess_Antecedent_def ..
 
 
@@ -3293,6 +3303,9 @@ paragraph \<open>Guessing Antecedents\<close>
 
 declare Guess_Antecedent_contravariant_preset
         [where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason default %\<phi>TA_guess_ant_default]
+
+        Guess_Antecedent_covariant_preset
+        [where PC=\<open>Identity_Element\<^sub>E\<close>, \<phi>reason default %\<phi>TA_guess_ant_default]
 
 
 subsubsection \<open>Object Equivalence\<close>

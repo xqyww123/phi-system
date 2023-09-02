@@ -127,8 +127,15 @@ lemma Guess_Antecedent_contravariant_\<phi>subj:
 \<Longrightarrow> Guess_Antecedent PC (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> c)\<close>
   unfolding Guess_Antecedent_def ..
 
+lemma Guess_Antecedent_covariant_\<phi>subj:
+  \<open> Guess_Antecedent PC (x \<Ztypecolon> T) a c
+\<Longrightarrow> Guess_Antecedent PC (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) ((\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<and>\<^sub>\<r> a) c\<close>
+  unfolding Guess_Antecedent_def ..
+
 declare Guess_Antecedent_contravariant_\<phi>subj[where PC=\<open>Carrier_Set\<close>, \<phi>reason %\<phi>TA_guess_ant]
         Guess_Antecedent_contravariant_\<phi>subj[where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason %\<phi>TA_guess_ant]
+
+        Guess_Antecedent_covariant_\<phi>subj[where PC=\<open>Identity_Element\<^sub>E\<close>, \<phi>reason %\<phi>TA_guess_ant]
 
 
 subsection \<open>Dependent Sum Type\<close>
@@ -1224,11 +1231,10 @@ lemma [\<phi>reason 1013]:
 subsection \<open>Permission Sharing\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Separation_Monoid
-       and \<open>Identity_Element\<^sub>E (1 \<Ztypecolon> (T::('c::share_one,'a::one) \<phi>)) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 < n \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> n \<odiv> T)\<close>
        and Functionality
        and Open_Abstraction_Full
        and Trivial_\<Sigma>

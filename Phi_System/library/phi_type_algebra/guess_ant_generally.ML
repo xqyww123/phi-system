@@ -43,7 +43,7 @@ fun guess_antecedent ctxt0 phi const assertion existing_antecedents =
                   = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, agument_cond X)
               | agument_cond X = \<^Const>\<open>HOL.implies\<close> $ cond' $ X
 
-         in (guessed @ maps PLPR_Syntax.dest_ant_sequence_or_HOL_conj existing_antecedents)
+         in (maps PLPR_Syntax.dest_ant_sequence_or_HOL_conj existing_antecedents @ guessed)
          |> not (null cond) ? map agument_cond
         end
   end

@@ -72,9 +72,8 @@ fun gen_SE_Trim_Empty _ ctxt (phi : phi_type) thy =
                   | work (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _) =
                       Thm.permute_prems 0 i th
                         |> Phi_Reasoner.reason NONE (SOME 1) ctxt
-                        |> Option.map (Thm.permute_prems 0 (~i))
-                        |> the_default th
-                        |> pair i
+                        |> (fn SOME ret => (i, Thm.permute_prems 0 (~i) ret)
+                             | NONE => (i+1, th))
                   | work _ = (i+1, th)
              in work tm
             end) (Thm.prems_of th) (0, th)
