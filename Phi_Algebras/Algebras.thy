@@ -962,46 +962,6 @@ end
 
 paragraph \<open>Ordered\<close>
 
-class partial_ordered_ab_semigroup_add = order + partial_ab_semigroup_add +
-  assumes partial_add_left_mono: "\<lbrakk> c ##\<^sub>+ a ; c ##\<^sub>+ b \<rbrakk> \<Longrightarrow> a \<le> b \<Longrightarrow> c + a \<le> c + b"
-begin
-
-lemma partial_add_right_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c \<rbrakk> \<Longrightarrow> a \<le> b \<Longrightarrow> a + c \<le> b + c"
-  by (metis local.dom_of_add_commute local.partial_add_commute local.partial_add_left_mono)
-
-lemma partial_add_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c ; b ##\<^sub>+ d \<rbrakk> \<Longrightarrow> a \<le> b \<Longrightarrow> c \<le> d \<Longrightarrow> a + c \<le> b + d"
-  by (meson local.order_trans local.partial_add_left_mono partial_add_right_mono)
-
-end
-
-class partial_strict_ordered_ab_semigroup_add = partial_ordered_ab_semigroup_add +
-  assumes partial_add_strict_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c ; b ##\<^sub>+ d \<rbrakk> \<Longrightarrow> a < b \<Longrightarrow> c < d \<Longrightarrow> a + c < b + d"
-
-
-class partial_ordered_cancel_ab_semigroup_add =
-  partial_ordered_ab_semigroup_add + partial_cancel_ab_semigroup_add
-begin
-
-lemma partial_add_strict_left_mono: "\<lbrakk> c ##\<^sub>+ a; c ##\<^sub>+ b \<rbrakk> \<Longrightarrow> a < b \<Longrightarrow> c + a < c + b"
-  using local.order.strict_iff_order local.partial_add_left_mono by force
-
-lemma partial_add_strict_right_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c \<rbrakk> \<Longrightarrow> a < b \<Longrightarrow> a + c < b + c"
-  by (simp add: local.order.strict_iff_order local.partial_add_right_mono)
-
-subclass partial_strict_ordered_ab_semigroup_add
-  by (standard; metis local.transp_less partial_add_strict_left_mono partial_add_strict_right_mono transp_def)
-
-lemma partial_add_less_le_mono: "\<lbrakk> a ##\<^sub>+ c; b ##\<^sub>+ c; b ##\<^sub>+ d \<rbrakk> \<Longrightarrow> a < b \<Longrightarrow> c \<le> d \<Longrightarrow> a + c < b + d"
-  using local.le_imp_less_or_eq local.partial_add_strict_mono partial_add_strict_right_mono by blast
-
-lemma add_le_less_mono: "\<lbrakk> a ##\<^sub>+ c ; b ##\<^sub>+ c ; b ##\<^sub>+ d \<rbrakk> \<Longrightarrow> a \<le> b \<Longrightarrow> c < d \<Longrightarrow> a + c < b + d"
-  by (metis local.order.strict_iff_order local.partial_add_strict_mono partial_add_strict_left_mono)
-
-end
-
-
-
-
 class partial_canonically_ordered_ab_semigroup_add = partial_cancel_semigroup_add + order +
   assumes partial_le_iff_add: "a \<le> b \<longleftrightarrow> (\<exists>c. b = a + c \<and> a ##\<^sub>+ c)"
 

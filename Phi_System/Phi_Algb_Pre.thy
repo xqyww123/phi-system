@@ -3,6 +3,7 @@ section \<open>Preliminary for \<open>\<phi>\<close>-Type Algebra\<close>
 theory Phi_Algb_Pre
   imports IDE_CP_Reasoning1
           Phi_Algebras.Map_of_Tree
+          Phi_Algebras.LCRO_Interval
 begin 
 
 subsection \<open>Auxiliary Annotations\<close>
@@ -117,14 +118,101 @@ subsection \<open>Arithmetic Evaluation\<close>
 
 consts \<A>arith_eval :: action
 
-subsubsection \<open>Partial Addition\<close>
+subsection \<open>Arithmetic Evaluation for Partial Addition\<close>
 
 text \<open>Solving \<open>?d + a = ?b + c @action \<A>arith_eval\<close>\<close>
 
+text \<open>Because addition can be associative, we use \<open>id\<close> to annotate explicitly each element in the equation.\<close>
+
+text \<open>The idea is reducing every equation to \<open>_ + _ = _\<close>\<close>
+
+\<phi>reasoner_group \<A>_partial_add = (1000, [1, 4000]) for \<open>_ = _ @action \<A>arith_eval\<close>
+    \<open>Decision procedure solving equantions of partial additive groups, with finding appropriate instantiations
+     for schematic variables inside.\<close>
+ and \<A>_partial_add_success = (4000, [4000, 4000]) for \<open>_ = _ @action \<A>arith_eval\<close> in \<A>_partial_add
+    \<open>Rules leading to success directly\<close>
+ and \<A>_partial_add_normalizing = (3000, [2801, 3399]) for \<open>_ = _ @action \<A>arith_eval\<close>
+                                                       in \<A>_partial_add and < \<A>_partial_add_success
+    \<open>Rules normalizing the reasoning\<close>
+ and \<A>_partial_add_splitting = (2500, [2500, 2599]) for \<open>_ = _ @action \<A>arith_eval\<close>
+                                                     in \<A>_partial_add and < \<A>_partial_add_normalizing
+    \<open>Spliting a complicated equation like \<open>a + b + c = d\<close> into several minimal equations \<open>a + b = c\<close>\<close>
+ and \<A>_partial_add_cut = (1000, [1000, 1030]) for \<open>_ = _ @action \<A>arith_eval\<close>
+                                               in \<A>_partial_add and < \<A>_partial_add_splitting
+    \<open>Cutting rules\<close>
+
+declare [[\<phi>reason_default_pattern \<open>?Eq @action \<A>arith_eval\<close> \<Rightarrow> \<open>?Eq @action \<A>arith_eval\<close> (100)]]
+
+
+subsubsection \<open>System rules reducing every equation to the minimal form \<open>_ + _ = _\<close>\<close>
+
+lemma [\<phi>reason %\<A>_partial_add_success]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a = b
+\<Longrightarrow> id a = id b @action \<A>arith_eval \<close>
+  unfolding Premise_def Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_normalizing]:
+  \<open> A = id a @action \<A>arith_eval
+\<Longrightarrow> id a = A @action \<A>arith_eval\<close>
+  unfolding Action_Tag_def
+  by simp
+
+(*has problem!*)
+lemma [\<phi>reason %\<A>_partial_add_splitting except \<open>_ = (_::?'a::partial_ab_semigroup_add) @action \<A>arith_eval\<close>]:
+  \<open> id c + id b = id (a + d) @action \<A>arith_eval
+\<Longrightarrow> id a + id d = id (c + b) @action \<A>arith_eval
+\<Longrightarrow> id c + id b = id a + id d @action \<A>arith_eval\<close>
+  by simp
+
+lemma [\<phi>reason %\<A>_partial_add_splitting except \<open>_ = (_::?'a::partial_ab_semigroup_add) @action \<A>arith_eval\<close>]:
+  \<open> id (d + b) + c = id a @action \<A>arith_eval
+\<Longrightarrow> id d + id b = id (d + b) @action \<A>arith_eval
+\<Longrightarrow> id d + id b + id c = id a @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def
+  by simp
+
+subsubsection \<open>Solving the minimal equation\<close>
+
+paragraph \<open>Direct Success\<close>
+
+lemma [\<phi>reason %\<A>_partial_add_success for \<open>id ?a + id ?b = id (?a + ?b) @action \<A>arith_eval\<close>
+                                           \<open>id ?a + id ?var = id (?a + ?b) @action \<A>arith_eval\<close>
+                                           \<open>id ?var + id ?b = id (?a + ?b) @action \<A>arith_eval\<close> ]:
+  \<open> id a + id b = id (a + b) @action \<A>arith_eval \<close>
+  unfolding Action_Tag_def
+  by simp
+
+
 paragraph \<open>Cancellative and Canonically Ordered Monoid \<close>
 
-paragraph \<open>Commutative Partial Addition\<close>
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id ?a + id (?b - ?a) = id (?a :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) @action \<A>arith_eval\<close> 
+                                      \<open>id _ + (?var :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) = id _ @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b
+\<Longrightarrow> id a + id (b - a) = id b @action \<A>arith_eval \<close>
+  for a :: \<open>'a::{partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}\<close>
+  unfolding Action_Tag_def Premise_def
+  by (simp add: partial_le_iff_add; force)
 
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id (?b - ?a) + id ?a = id (?a :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) @action \<A>arith_eval\<close>
+                                       \<open>(?var :: ?'a :: {partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}) + id _ = id _ @action \<A>arith_eval\<close>]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b
+\<Longrightarrow> id (b - a) + id a = id b @action \<A>arith_eval \<close>
+  for a :: \<open>'a::{partial_canonically_ordered_ab_semigroup_add, partial_cancel_ab_semigroup_add}\<close>
+  unfolding Action_Tag_def Premise_def
+  by (simp, metis partial_add_commute partial_add_diff_cancel_left' partial_le_iff_add)
+
+
+paragraph \<open>LCRO Interval\<close>
+
+
+lemma [\<phi>reason %\<A>_partial_add_cut for \<open>id [?a,?b) + id [?b,?c) = id [?a,?c) @action \<A>arith_eval\<close>
+                                       \<open>id [?a,?b) + id ?var = id [?a,?c) @action \<A>arith_eval\<close>
+                                       \<open>id ?var + id [?b,?c) = id [?a,?c) @action \<A>arith_eval\<close> ]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a \<le> b \<and> b \<le> c
+\<Longrightarrow> id [a,b) + id [b,c) = id [a,c) @action \<A>arith_eval \<close>
+  unfolding Premise_def Action_Tag_def
+  by simp
 
 
 

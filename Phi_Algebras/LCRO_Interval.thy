@@ -126,13 +126,21 @@ lemma dom_of_add_lcro_interval[simp]:
   \<open>a ##\<^sub>+ b \<longleftrightarrow> upper a = lower b\<close>
   by (transfer; clarsimp)
 
-lemma add_lcro_interval[simp]:
+lemma add_lcro_interval_inj[simp]:
   \<open>a ##\<^sub>+ b \<Longrightarrow> lower (a + b) = lower a\<close>
   \<open>a ##\<^sub>+ b \<Longrightarrow> upper (a + b) = upper b\<close>
   by (transfer; clarsimp)+
 
 instance by (standard; clarsimp simp add: interval_eq_iff)
 end
+
+lemma dom_of_add_lcro_interval'[simp]:
+  \<open>\<lbrakk> a \<le> b ; c \<le> d \<rbrakk> \<Longrightarrow> [a,b) ##\<^sub>+ [c,d) \<longleftrightarrow> b = c\<close>
+  by simp
+
+lemma add_lcro_interval [simp]:
+  \<open>\<lbrakk> a \<le> b ; b \<le> c \<rbrakk> \<Longrightarrow> [a,b) + [b,c) = [a,c)\<close>
+  using interval_eq_iff order_trans by fastforce
 
 lemma set_of_add_interval:
   \<open>a ##\<^sub>+ b \<Longrightarrow> set_of (a + b) = set_of a \<union> set_of b\<close>
@@ -143,7 +151,7 @@ lemma additive_join_sub_interval:
   \<open>y \<preceq>\<^sub>+ z \<longleftrightarrow> upper y = upper z \<and> lower z \<le> lower y\<close>
   unfolding additive_join_sub_def
   by (simp add: interval_eq_iff, rule,
-      metis add_lcro_interval(1) add_lcro_interval(2) dom_of_add_lcro_interval lower_le_upper,
+      metis add_lcro_interval_inj dom_of_add_lcro_interval lower_le_upper,
       rule exI[where x=\<open>[lower z, lower y)\<close>]; clarsimp)
 
 instance lcro_interval :: (order) positive_partial_add_magma
@@ -158,6 +166,10 @@ instance lcro_interval :: (order) partial_semigroup_add
 
 text \<open>lcro_interval is also a good example where it is not dom_of_add_intuitive,
       and also where has unique neutral for each element but not a unique one.\<close>
+
+instance lcro_interval :: (order) partial_cancel_semigroup_add
+  by (standard; clarsimp simp add: interval_eq_iff)
+
 
 subsubsection \<open>Membership\<close>
 
