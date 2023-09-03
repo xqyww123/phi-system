@@ -1,6 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 
-val guess_entire_property : Proof.context -> Phi_Type_Algebra.phi_type -> term -> term option
+(*lame!
+val guess_entire_property : Proof.context -> Phi_Type_Algebra.phi_type -> term -> term option*)
 
 val guess_antecedent : Proof.context -> Phi_Type_Algebra.phi_type
                     -> term (*constant of the property predicate*) -> term
@@ -15,7 +16,7 @@ open Phi_Type_Algebra
 
 fun flt tm = not (Term.is_schematic tm) andalso
              not (Term.exists_Const (fn (\<^const_name>\<open>Satisfaction\<close>, _) => true | _ => false) tm)
-
+(*lame! DO NOT REMOVE
 fun guess_entire_property ctxt0 (phi : phi_type) property_const =
   let val idx = phi_maxidx_of phi ~1 + 1
       val property_const = Logic.incr_indexes ([], [], idx) property_const
@@ -57,6 +58,7 @@ fun guess_entire_property ctxt0 (phi : phi_type) property_const =
                   end
            | _ => error "BUG")
   end
+*)
 
 fun guess_antecedent ctxt0 phi const assertion existing_antecedents =
   let val ([assertion], ctxt) = Variable.import_terms false [assertion] ctxt0
