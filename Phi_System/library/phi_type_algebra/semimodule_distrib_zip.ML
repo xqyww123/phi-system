@@ -8,12 +8,23 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun guess_property (phi0 : phi_type) ctxt =
-  let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>type\<close>, \<^sort>\<open>share_nun_semimodule\<close>)
-      val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
-      val (F_term $ _ $ T_term) = FT_term
-      val (Ds, Dx, z) = infer_zip_operator ctxt (s_ty, x_ty, model_ty)
-   in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_LDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
+fun guess_property (phi00 : phi_type) ctxt =
+  let val (s_ty0, x_ty0, model_ty0, phi0) = parse_semimodule_phityp ctxt phi00 (\<^sort>\<open>type\<close>, \<^sort>\<open>share_nun_semimodule\<close>)
+      val ((_, FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
+      val (F_term0 $ _ $ T_term0) = FT_term0
+      val (Ds, Dx, z, ants, inst) =
+              Guess_Zip_of_Semimodule ctxt phi0 (s_ty0, x_ty0, model_ty0,
+                  Abs ("s", s_ty0, Abs ("x", x_ty0,
+                      \<^Const>\<open>\<phi>Type x_ty0 model_ty0\<close> $ Bound 0 $ (F_term0 $ Bound 1 $ T_term0))))
+      val inst' = Phi_Help.uncertify_tyvars inst
+      val phi = instantiate_phi (inst, Vars.empty) phi0
+      val [FT_term, F_term, T_term] = [FT_term0, F_term0, T_term0]
+            |> map (Term_Subst.instantiate (inst', Vars.empty))
+      val [s_ty, x_ty, model_ty] = map (Term_Subst.instantiateT inst') [s_ty0, x_ty0, model_ty0]
+      val xxx = Thm.cterm_of ctxt (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_LDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
+                          $ F_term $ T_term $ Ds $ Dx $ z))
+              |> @{print}
+   in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_LDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
                           $ F_term $ T_term $ Ds $ Dx $ z ),
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end
@@ -31,25 +42,24 @@ fun gen_MDz (_, name) hint0 ctxt0 (phi : phi_type) thy =
       val mode_infer = not (is_some hint0)
       fun simp (_, ctxt) thm =
         if mode_infer
-        then let val sctxt = ctxt
-                 val simp = Simplifier.rewrite sctxt
-              in Conv.fconv_rule (Conv.arg_conv (
-                    Conv.combination_conv (Conv.combination_conv (Conv.arg_conv
-                      simp)
-                      simp)
-                      simp)) thm
-             end
+        then Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                let val sctxt = ctxt
+                    val simp = Simplifier.rewrite sctxt
+                 in HOLogic.Trueprop_conv (
+                    Conv.combination_conv (Conv.combination_conv (Conv.arg_conv simp) simp) simp)
+                end
+             ) ctxt) thm
         else thm
       val ind_conv = default_ind_conv (
-             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MD_rewr},
+             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MD\<^sub>Z_rewr},
              fn ctxt => fn phi =>
-                  Conv.rewr_conv @{thm \<phi>TA_MD_rewr} then_conv
+                  Conv.rewr_conv @{thm \<phi>TA_MD\<^sub>Z_rewr} then_conv
                   Conv.arg_conv (Conv.arg_conv (
                     let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ #type_equations phi)
                      in Phi_Reasoners.asm_rewrite false sctxt
                     end)))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
-                                      guess_property, @{thm' \<phi>TA_MD_rule},
+                                      guess_property, @{thm' \<phi>TA_MD\<^sub>Z_rule},
                                       [(SOME ([0,2,~1,~1,~1], ind_conv), reasoning)], K NONE, simp)
                                     phi hint0 ctxt0
    in case Seq.pull rules

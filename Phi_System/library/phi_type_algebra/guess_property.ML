@@ -3,6 +3,8 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 (*lame!
 val guess_entire_property : Proof.context -> Phi_Type_Algebra.phi_type -> term -> term option*)
 
+val constrain_antecedents : term (*condition*) -> term (*antecedents*) -> term list (*enhanced*)
+
 val guess_antecedent : Proof.context -> Phi_Type_Algebra.phi_type
                     -> term (*constant of the property predicate*) -> term
                     -> term list (*existing guessed antecedents*)
@@ -13,6 +15,13 @@ end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra
+
+fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
+  | constrain_antecedents cond =
+      let fun constrain (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X)) = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, constrain X)
+            | constrain X = \<^Const>\<open>HOL.implies\<close> $ cond $ X
+       in map constrain o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
+      end
 
 fun flt tm = not (Term.is_schematic tm) andalso
              not (Term.exists_Const (fn (\<^const_name>\<open>Satisfaction\<close>, _) => true | _ => false) tm)
@@ -94,12 +103,9 @@ fun guess_antecedent ctxt0 phi const assertion existing_antecedents =
                | _ => error "BUG" )
 
             val cond' = PLPR_Syntax.mk_ant_sequence cond
-            fun agument_cond (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X))
-                  = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, agument_cond X)
-              | agument_cond X = \<^Const>\<open>HOL.implies\<close> $ cond' $ X
 
          in (maps PLPR_Syntax.dest_ant_sequence_or_HOL_conj existing_antecedents @ guessed)
-         |> not (null cond) ? map agument_cond
+         |> not (null cond) ? maps (constrain_antecedents cond')
         end
   end
 

@@ -654,7 +654,7 @@ fun check_deriving_ast ctxt derv_ast =
    |> complete_deriver_dependences ctxt
    handle Unknown_Hint term =>
       error (Pretty.string_of (Pretty.chunks [
-          Pretty.str "Do not know how to derive from the given hint:",
+          Pretty.para "Do not know how to derive from the given hint. There is no known deriver for it.",
           Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term
         ]))
   end

@@ -377,12 +377,14 @@ paragraph \<open>Separation Extraction on Semimodule\<close>
     \<open>Derived rules for scalar distributivity on separational magma\<close>
 
 subsubsection \<open>Guess Algebraic Operators\<close>
-
+(*
 \<phi>reasoner_group guess_algebraic_oprs = (100, [0, 3000]) for \<open>_\<close>
     \<open>A general group consisting of reasoning rules derivign or guessing operators for algbebraic properties\<close>
+ and guess_algebraic_oprs_default = (1000, [1000, 1030]) for \<open>_\<close> in guess_algebraic_oprs
+    \<open>Cutting rules derivign or guessing operators for algbebraic properties\<close>
  and guess_algebraic_oprs_cut = (1000, [1000, 1030]) for \<open>_\<close> in guess_algebraic_oprs
     \<open>Cutting rules derivign or guessing operators for algbebraic properties\<close>
-
+*)
 
 subsection \<open>Direct Applications \& Properties\<close>
 
@@ -3055,10 +3057,10 @@ declare [[
                       and \<open>Guess_Property ?PC ?V ?A _ _ None\<close> \<Rightarrow> \<open>Guess_Property ?PC ?V ?A _ _ None\<close> (120)
 ]]
 
-\<phi>reasoner_group \<phi>TA_guesser = (100, [40, 3000]) for \<open>Guess_Property PC V A a c C\<close>
+\<phi>reasoner_group \<phi>TA_guesser = (1000, [80, 3000]) for \<open>Guess_Property PC V A a c C\<close>
     \<open>User heuristics overriding or extending the guesser mechanism of \<phi>type derivers.\<close>
- and \<phi>TA_guesser_default = (20, [2, 39]) for \<open>Guess_Property PC V A a c C\<close> < \<phi>TA_guesser
-    \<open>Default rules handling logical connectives, basically using variantness to guess\<close>
+ and \<phi>TA_guesser_default = (30, [2, 79]) for \<open>Guess_Property PC V A a c C\<close> < \<phi>TA_guesser
+    \<open>Default rules handling logical connectives\<close>
  and \<phi>TA_guesser_assigning_variant = (2200, [2200,2200]) for \<open>Guess_Property PC V A a c C\<close>
                                                           in \<phi>TA_guesser and > \<phi>TA_guesser_default
     \<open>Fallbacks using common default rules\<close>
@@ -3655,21 +3657,22 @@ definition guess_domain_of_scalar :: \<open>'s itself \<Rightarrow> 'c itself \<
   where \<open>guess_domain_of_scalar _ _ _ _ \<equiv> True\<close>
   \<comment> \<open>indicating the default domain of the scalar of the given types, used as the default guess in derivers\<close>
 
-definition guess_zip_of_semimodule :: \<open>'s itself \<Rightarrow> 'c itself \<Rightarrow> 'a itself
+definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c itself \<Rightarrow> 'a itself
+                                      \<Rightarrow> ('s \<Rightarrow> 'a \<Rightarrow> 'c BI)
                                       \<Rightarrow> ('s \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times>'a \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
+                                      \<Rightarrow> bool \<Rightarrow> bool
                                       \<Rightarrow> bool\<close>
-  where \<open>guess_zip_of_semimodule type_scalar type_concrete type_abstract
-                                 domain_of_scalar domain_of_abstract
-                                 zip_opr
+  where \<open>Guess_Zip_of_Semimodule type_scalar type_concrete type_abstract unfolded_typ_def
+                                 domain_of_scalar domain_of_abstract zip_opr
+                                 antecedents conditions_of_antecedents
        \<equiv> True\<close>
-
-
 
 declare [[
   \<phi>reason_default_pattern \<open>guess_domain_of_scalar ?S ?C ?A _\<close> \<Rightarrow> \<open>guess_domain_of_scalar ?S ?C ?A _\<close> (100)
-                      and \<open>guess_zip_of_semimodule ?S ?C ?A _ _ _\<close> \<Rightarrow> \<open>guess_zip_of_semimodule ?S ?C ?A _ _ _\<close> (100)
+                      and \<open>Guess_Zip_of_Semimodule ?S ?C ?A ?assertion _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Zip_of_Semimodule ?S ?C ?A ?assertion _ _ _ _ _\<close>   (100)
 ]]
 
 text \<open>To guess the zip operation of a semimodule is far beyond what can be inferred from BNF,
@@ -3677,27 +3680,30 @@ text \<open>To guess the zip operation of a semimodule is far beyond what can be
       Due to this, the guessing of the abstract operators of semimodules more relies on pre-registered
       records over the logical types.\<close>
 
-lemma [\<phi>reason %guess_algebraic_oprs_cut]:
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>guess_domain_of_scalar TYPE(rat) TYPE('c::share) TYPE('a) (\<lambda>x. 0 < x)\<close>
   unfolding guess_domain_of_scalar_def ..
 
-lemma [\<phi>reason %guess_algebraic_oprs_cut+10]:
+lemma [\<phi>reason %\<phi>TA_guesser_default+1]:
   \<open>guess_domain_of_scalar TYPE(rat) TYPE('c::share_one) TYPE('a) (\<lambda>x. 0 \<le> x)\<close>
   unfolding guess_domain_of_scalar_def ..
 
-lemma [\<phi>reason %guess_algebraic_oprs_cut]:
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>guess_domain_of_scalar TYPE(nat lcro_interval) TYPE('c) TYPE('a list) (\<lambda>_. True)\<close>
   unfolding guess_domain_of_scalar_def ..
 
-lemma [\<phi>reason %guess_algebraic_oprs_cut]:
-  \<open>guess_zip_of_semimodule TYPE(rat) TYPE('c) TYPE('a) (\<lambda>x. 0 \<le> x) (\<lambda>s t (x,y). x = y) (\<lambda>_ _ (x,y). x)\<close>
-  unfolding guess_zip_of_semimodule_def ..
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Zip_of_Semimodule TYPE(rat) TYPE('c) TYPE('a) Any_assertion
+                           (\<lambda>x. 0 \<le> x) (\<lambda>s t (x,y). x = y) (\<lambda>_ _ (x,y). x)
+                           True True \<close>
+  unfolding Guess_Zip_of_Semimodule_def ..
 
-lemma [\<phi>reason %guess_algebraic_oprs_cut]:
-  \<open>guess_zip_of_semimodule TYPE(nat lcro_interval) TYPE('c) TYPE('a list) (\<lambda>_. True)
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_interval) TYPE('c) TYPE('a list) Any_assertion (\<lambda>_. True)
                            (\<lambda>s t (x,y). LCRO_Interval.width_of t = length x \<and> LCRO_Interval.width_of s = length y)
-                           (\<lambda>_ _ (x,y). y * x)\<close>
-  unfolding guess_zip_of_semimodule_def ..
+                           (\<lambda>_ _ (x,y). y * x)
+                           True True\<close>
+  unfolding Guess_Zip_of_Semimodule_def ..
 
 
 
@@ -3743,7 +3749,7 @@ text \<open>Essentially the rules are derived from that of existing \<phi>-types
 TODO: move me!
 \<close>
 
-lemma \<phi>TA_MD_rule:
+lemma \<phi>TA_MD\<^sub>Z_rule:
   \<open> (\<And>s t x r z. (Ant @action \<phi>TA_ANT)
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r = s + t \<and> Dx s t x \<and> zi s t x = z
@@ -3755,7 +3761,19 @@ lemma \<phi>TA_MD_rule:
   unfolding Semimodule_LDistr_Homo\<^sub>Z_def Action_Tag_def Premise_def Transformation_def
   by clarsimp blast
 
-lemma \<phi>TA_MD_rewr:
+lemma \<phi>TA_MD\<^sub>U_rule:
+  \<open> (\<And>s t x. (Ant @action \<phi>TA_ANT)
+         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t
+         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Dx s t x
+         \<longrightarrow> (x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F t T \<^emph> F s T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>U F T Ds Dx uz \<close>
+  unfolding Semimodule_LDistr_Homo\<^sub>U_def Action_Tag_def Premise_def Transformation_def
+  by clarsimp
+
+lemma \<phi>TA_MD\<^sub>Z_rewr:
   \<open> Trueprop (Ant \<longrightarrow> P1 \<longrightarrow> P2 \<longrightarrow> Q @action \<phi>TA_ind_target \<A>)
  \<equiv> (Ant \<Longrightarrow> P1 \<Longrightarrow> P2 \<Longrightarrow> Q @action \<A>)\<close>
   unfolding atomize_imp Action_Tag_def ..
