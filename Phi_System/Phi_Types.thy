@@ -8,7 +8,7 @@ ML \<open>Phi_Conv.set_rules__type_form_to_ex_quantified [] ;
     Phi_Conv.set_rules__type_form_to_ex_quantified_single_var [] \<close>
 
 section \<open>Basics\<close>
- 
+
 subsection \<open>Preliminary Sugars\<close>
 
 consts \<phi>coercion :: \<open>('c1,'a) \<phi> \<Rightarrow> ('c2,'a) \<phi>\<close> ("\<coercion> _" [61] 60)
@@ -122,20 +122,20 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Guessing Antecedents\<close>
 
-lemma Guess_Antecedent_contravariant_\<phi>subj:
-  \<open> Guess_Antecedent PC (x \<Ztypecolon> T) a c
-\<Longrightarrow> Guess_Antecedent PC (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> c)\<close>
-  unfolding Guess_Antecedent_def ..
+lemma [\<phi>reason default %\<phi>TA_guesser_default]:
+  \<open> Guess_Property PC False (x \<Ztypecolon> T) a c C
+\<Longrightarrow> Guess_Property PC False (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> c) C\<close>
+  unfolding Guess_Property_def ..
 
-lemma Guess_Antecedent_covariant_\<phi>subj:
-  \<open> Guess_Antecedent PC (x \<Ztypecolon> T) a c
-\<Longrightarrow> Guess_Antecedent PC (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) ((\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<and>\<^sub>\<r> a) c\<close>
-  unfolding Guess_Antecedent_def ..
+lemma [\<phi>reason default %\<phi>TA_guesser_default]:
+  \<open> Guess_Property PC True (x \<Ztypecolon> T) a c C
+\<Longrightarrow> Guess_Property PC True (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) ((\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<and>\<^sub>\<r> a) c C\<close>
+  unfolding Guess_Property_def ..
 
-declare Guess_Antecedent_contravariant_\<phi>subj[where PC=\<open>Carrier_Set\<close>, \<phi>reason %\<phi>TA_guess_ant]
-        Guess_Antecedent_contravariant_\<phi>subj[where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason %\<phi>TA_guess_ant]
-
-        Guess_Antecedent_covariant_\<phi>subj[where PC=\<open>Identity_Element\<^sub>E\<close>, \<phi>reason %\<phi>TA_guess_ant]
+lemma [\<phi>reason default %\<phi>TA_guesser_default]:
+  \<open> Guess_Property PC undefined (x \<Ztypecolon> T) a c C
+\<Longrightarrow> Guess_Property PC undefined (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a c C\<close>
+  unfolding Guess_Property_def ..
 
 
 subsection \<open>Dependent Sum Type\<close>
@@ -942,7 +942,6 @@ lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
-  
 
 text \<open>The domain of abstract objects constrains to ensure the two middle-level objects
   (namely, the concrete objects of \<open>T\<close> and the abstract objects of \<open>\<psi>\<close>) are identical so that
@@ -974,7 +973,16 @@ lemma Semimodule_LDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
 
+subsubsection \<open>Guessing Antecedents\<close>
 
+lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Property Semimodule_LDistr_Homo\<^sub>Z ?V (?x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) _ _ (Some _) \<close>]:
+  \<open> Guess_Property Semimodule_LDistr_Homo\<^sub>Z V (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T)
+          (module_S_distr \<psi> Ds \<and>\<^sub>\<r> Functionality T Dx \<and>\<^sub>\<r> Object_Equiv T eq \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
+          True
+          (Some (Semimodule_LDistr_Homo\<^sub>Z (\<phi>ScalarMul \<psi>) T Ds
+                                         (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
+                                         (\<lambda>_ _. fst)))\<close>
+  unfolding Guess_Property_def ..
 
 
 subsubsection \<open>Configuration\<close>
@@ -1233,7 +1241,7 @@ lemma [\<phi>reason 1013]:
 subsection \<open>Permission Sharing\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+ 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Separation_Monoid
@@ -1244,8 +1252,24 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       (*and Semimodule_LDistr_Homo\<^sub>Z*)
-       (*and Construct_Abstraction_from_Raw*)
+       and \<open>module_S_distr share Ds 
+        \<Longrightarrow> Functionality T Dx
+        \<Longrightarrow> Object_Equiv T eq
+        \<Longrightarrow> Abstract_Domain T D\<^sub>T
+        \<Longrightarrow> Carrier_Set T D\<^sub>C
+        \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<phi>Share) T Ds
+                                    (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
+                                    (\<lambda>_ _. fst)\<close>
+       and Construct_Abstraction_from_Raw
+
+term \<open>module_S_distr share Ds
+\<Longrightarrow> Functionality T Dx
+\<Longrightarrow> Object_Equiv T eq
+\<Longrightarrow> Abstract_Domain T D\<^sub>T
+\<Longrightarrow> Carrier_Set T D\<^sub>C
+\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<phi>ScalarMul share) T Ds
+                            (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
+                            (\<lambda>_ _. fst)\<close>
 
 term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
 

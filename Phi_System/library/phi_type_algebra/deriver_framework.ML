@@ -987,7 +987,10 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                       (phi0 : phi_type) hint ctxt0 =
   let (*val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0*)
       (*val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0*)
-   in (case hint of SOME H0 =>
+      val property_const = Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
+      val hint' = case hint of NONE => guess_entire_property ctxt0 phi0 property_const
+                             | some => some
+   in (case hint' of SOME H0 =>
               let (*val idx = Phi_Type_Algebra.phi_maxidx_of phi0 ~1 + 1
                   val H = Logic.incr_indexes ([],[],idx) H0*)
                   val thy = Proof_Context.theory_of ctxt0
@@ -1015,8 +1018,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
               end
            | _ => guess_property phi0 ctxt0
                |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
-                    let val property_const = Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
-                        val (rev_params_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+                    let val (rev_params_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
                         fun recover_assertion i [] [] = #term phi 
                           | recover_assertion i (param_ty :: Tys) (NONE :: params)
                               = recover_assertion (i+1) Tys params $ Var(("\<pp>", i), param_ty)

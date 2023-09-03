@@ -2149,6 +2149,8 @@ definition \<phi>Cond_Unital_Ins :: \<open>bool \<Rightarrow> ('v, 'x) \<phi> \<
   \<comment> \<open>Conditional Unital Insertion\<close>
   where \<open>\<half_blkcirc>[C] T = (if C then \<black_circle> T else \<circle>\<^sub>\<x>)\<close>
 
+
+
 paragraph \<open>Rewrites\<close>
 
 lemma \<phi>Cond_Unital_Ins_unfold:
@@ -2278,6 +2280,14 @@ lemma [\<phi>reason %ToA_red]:
 lemma [\<phi>reason %ToA_success]:
   \<open> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (undefined, fst x) \<Ztypecolon> \<half_blkcirc>[False] U \<^emph>[True] T \<close>
   by (clarsimp simp add: \<phi>Some_\<phi>None_freeobj)
+
+paragraph \<open>Simplification Protects\<close>
+
+definition [simplification_protect]:
+  \<open>\<A>merge_SP P \<equiv> P @action \<A>merge\<close>
+
+lemma [cong]:
+  \<open>\<A>merge_SP P \<equiv> \<A>merge_SP P\<close> .
 
 paragraph \<open>Merging Conditioned \<phi>-Types\<close>
 
@@ -2423,21 +2433,30 @@ lemma ToA_by_Equiv_Class
                                         except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Object_Equiv U eq
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y = y' \<or> eq y y')
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
-  unfolding Object_Equiv_def Transformation_def Premise_def by clarsimp
+  unfolding Object_Equiv_def Transformation_def Premise_def
+  by clarsimp blast
 
 lemma ToA_by_Equiv_Class'
       [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
                                         except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Object_Equiv U eq
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = y' \<or> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def
   by (cases C; clarsimp; meson Transformation_def implies_left_frame)
 
+subsubsection \<open>Basic Rules\<close>
+(*
+lemma
+  \<open>Object_Equiv T eq \<Longrightarrow> \<forall>x. eq x x\<close>
+  unfolding Object_Equiv_def
 
+lemma
+  \<open>Object_Equiv T eq \<equiv> (\<forall>x. eq x x) \<and> Object_Equiv T eq\<close>
+*)
 subsubsection \<open>Reasoning Rules\<close>
 
 lemma Object_Equiv_fallback[\<phi>reason default %object_equiv_fallback]:
