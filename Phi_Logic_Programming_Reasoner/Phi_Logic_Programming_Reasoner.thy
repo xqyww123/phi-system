@@ -226,13 +226,22 @@ text \<open>
   \<^verbatim>\<open>safer_obligation_solver\<close> in \<^file>\<open>library/reasoners.ML\<close>.
 \<close>
 
+paragraph \<open>Basic Rules\<close>
+
 lemma Premise_I[intro!]: "P \<Longrightarrow> Premise mode P" unfolding Premise_def by simp
 lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by simp
 lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
-lemma [simp]:
+lemma Premise_const_True[simp]:
   \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
   unfolding Premise_def by simp+
+
+lemma Premise_norm:
+  \<open>P \<longrightarrow> Premise mode Q \<equiv> Premise mode (P \<longrightarrow> Q)\<close>
+  \<open>(\<forall>x. Premise mode (R x)) \<equiv> Premise mode (\<forall>x. R x)\<close>
+  \<open>(\<exists>x. Premise mode (R x)) \<equiv> Premise mode (\<exists>x. R x)\<close>
+  unfolding Premise_def
+  by simp_all
 
 subsubsection \<open>Annotation Distinguishing IN-Argument \& OUT-Argument\<close>
 
@@ -888,6 +897,7 @@ subsubsection \<open>Basic Reasoning Rules\<close>
 declare conjunctionI [\<phi>reason %cutting]
         conjI [\<phi>reason %cutting]
         allI [\<phi>reason %cutting]
+        exI  [\<phi>reason %cutting]
         impI [\<phi>reason %cutting]
         HOL.refl [\<phi>reason %cutting for \<open>_ = _\<close>]
 

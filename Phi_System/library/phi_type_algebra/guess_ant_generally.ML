@@ -28,7 +28,11 @@ fun guess_antecedent ctxt0 phi const assertion existing_antecedents =
                          not (Term.exists_Const (fn (\<^const_name>\<open>Satisfaction\<close>, _) => true | _ => false) tm)
             val (guessed, cond) = @{print} (
             case ret
-              |> Simplifier.simplify ctxt
+              |> Simplifier.simplify (ctxt addsimps @{thms' Premise_norm[where mode=\<open>default\<close>]
+                                                            Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+                                                            Ant_Seq_reduct
+                                                            HOL.imp_conjR[folded Ant_Seq_def]
+                                                            HOL.all_conj_distrib[folded Ant_Seq_def]})
               |> singleton (Variable.export ctxt ctxt0)
               |> Thm.prop_of
               of _ (*Pure.protect*) $ (_ (*Trueprop*) $ (

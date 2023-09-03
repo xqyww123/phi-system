@@ -2611,25 +2611,25 @@ declare [[ \<phi>reason_default_pattern
 
 subsubsection \<open>Fallback\<close>
 
-lemma [\<phi>reason %identity_element_fallback]:
+lemma [\<phi>reason default %identity_element_fallback]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
 \<Longrightarrow> Identity_Element\<^sub>I S False\<close>
   unfolding Premise_def
   by blast
 
-lemma [\<phi>reason %identity_element_fallback]:
+lemma [\<phi>reason default %identity_element_fallback]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> False
 \<Longrightarrow> Identity_Element\<^sub>E S\<close>
   unfolding Premise_def
   by blast
 
-lemma [\<phi>reason %fail]:
+lemma [\<phi>reason default %fail]:
   \<open> TRACE_FAIL TEXT(\<open>Fail to show\<close> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1))
 \<Longrightarrow> Identity_Element\<^sub>I S Any \<close>
   unfolding TRACE_FAIL_def
   by blast
 
-lemma [\<phi>reason %fail]:
+lemma [\<phi>reason default %fail]:
   \<open> TRACE_FAIL TEXT(\<open>Fail to show\<close> (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S))
 \<Longrightarrow> Identity_Element\<^sub>E S \<close>
   unfolding TRACE_FAIL_def

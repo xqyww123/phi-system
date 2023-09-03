@@ -3057,10 +3057,13 @@ ML_file \<open>library/phi_type_algebra/guess_ant_generally.ML\<close>
 
 paragraph \<open>Predefined Rules Hoping to be Useful\<close>
 
-lemma Guess_Antecedent_contravariant_preset:
+lemma Guess_Antecedent_common_preset:
   \<open> Guess_Antecedent PC A a1 c1
 \<Longrightarrow> Guess_Antecedent PC B a2 c2
 \<Longrightarrow> Guess_Antecedent PC (A * B) (a1 \<and>\<^sub>\<r> a2) (c1 \<and>\<^sub>\<r> c2)\<close>
+  unfolding Guess_Antecedent_def ..
+
+lemma Guess_Antecedent_contravariant_preset:
   \<open> Guess_Antecedent PC A a c
 \<Longrightarrow> Guess_Antecedent PC (A \<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> c)\<close>
   \<open> (\<And>x. Guess_Antecedent PC (A' x) (a' x) (c' x))
@@ -3068,9 +3071,6 @@ lemma Guess_Antecedent_contravariant_preset:
   unfolding Guess_Antecedent_def ..
 
 lemma Guess_Antecedent_covariant_preset:
-  \<open> Guess_Antecedent PC A a1 c1
-\<Longrightarrow> Guess_Antecedent PC B a2 c2
-\<Longrightarrow> Guess_Antecedent PC (A * B) (a1 \<and>\<^sub>\<r> a2) (c1 \<and>\<^sub>\<r> c2)\<close>
   \<open> Guess_Antecedent PC A a c
 \<Longrightarrow> Guess_Antecedent PC (A \<s>\<u>\<b>\<j> P) ((\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<and>\<^sub>\<r> a) c\<close>
   \<open> (\<And>x. Guess_Antecedent PC (A' x) (a' x) (c' x))
@@ -3301,7 +3301,12 @@ hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
 
 paragraph \<open>Guessing Antecedents\<close>
 
-declare Guess_Antecedent_contravariant_preset
+declare Guess_Antecedent_common_preset
+        [where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason default %\<phi>TA_guess_ant_default]
+        Guess_Antecedent_common_preset
+        [where PC=\<open>Identity_Element\<^sub>E\<close>, \<phi>reason default %\<phi>TA_guess_ant_default]
+
+        Guess_Antecedent_contravariant_preset
         [where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason default %\<phi>TA_guess_ant_default]
 
         Guess_Antecedent_covariant_preset
@@ -3450,6 +3455,7 @@ ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
   requires Object_Equiv and Abstract_Domain and Carrier_Set ?
 
 declare Guess_Antecedent_contravariant_preset[where PC=\<open>Carrier_Set\<close>, \<phi>reason default %\<phi>TA_guess_ant_default]
+        Guess_Antecedent_common_preset[where PC=\<open>Carrier_Set\<close>, \<phi>reason default %\<phi>TA_guess_ant_default]
 
 
 subsubsection \<open>Transformation Functor\<close>
@@ -3722,6 +3728,8 @@ ML_file \<open>library/phi_type_algebra/semimodule_distrib_zip.ML\<close>
 
 \<phi>property_deriver Semimodule_LDistr_Homo\<^sub>Z 130 for (\<open>Semimodule_LDistr_Homo\<^sub>Z _ _ _ _ _\<close>)
     = \<open>Phi_Type_Algebra_Derivers.semimodule_distrib_zip\<close>
+
+declare Guess_Antecedent_common_preset[where PC=\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, \<phi>reason default %\<phi>TA_guess_ant_default]
 
 
 subsubsection \<open>Separation Homo\<close>

@@ -1027,7 +1027,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                         val assertion = case recover_assertion 0 (x_ty :: rev_params_tys) parameters
                                           of T $ x => \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ x $ T
                                            | _ => error "BUG"
-                        val ants' = guess_antecedent (Expansion.equip ctxt) phi property_const assertion ants
+                        val ants' = guess_antecedent (*(Expansion.equip*) ctxt phi property_const assertion ants
                      in (ants', property, parameters, phi, ctxt)
                     end ))
    |> Seq.map (fn (ants01, property01, phi_typ_parameters01, phi01, ctxt01) => 

@@ -171,7 +171,9 @@ text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation fun
 
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
- 
+
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
