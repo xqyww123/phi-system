@@ -128,11 +128,11 @@ fun simple_simp ctxt sequent =
   case PLPR_Syntax.dest_premise_tag (major_prem_of sequent)
     of (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y) =>
          if need_conv_LRHS X orelse need_conv_LRHS Y
-         then Conv.fconv_rule (Phi_Conv.leading_antecedent_conv (Phi_Conv.hhf_concl_conv (fn _ =>
+         then Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn _ =>
                  Conv.arg_conv (Conv.arg_conv (
                       HOLogic.eq_conv (Conv.repeat_conv conv_LRHS) (Conv.repeat_conv conv_LRHS)))
                  ) ctxt
-              )) sequent
+              ) 1 sequent
          else sequent
      | _ => sequent
 
@@ -157,11 +157,22 @@ fun apply ctxt tactic  mode =
 
 (** Tactic Template **)
 
+structure Very_Safe_Oblg_Simp_SS = Simpset(
+  val initial_ss = Simpset_Configure.Minimal_SS_configure (fn ctxt =>
+                      ctxt addsimps @{thms' HOL.simp_thms})
+  val binding = NONE
+  val attribute = NONE
+  val comment = "Very safe rewrite rules normalizing proof obligations"
+)
+
 fun oblg_template f ctxt th00 = Seq.make (fn () =>
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
-      val th = simple_simp ctxt th01
+      val th = simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                  HOLogic.Trueprop_conv (Conv.arg_conv (
+                    Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
+               ) ctxt) 1 th01)
    in case PLPR_Syntax.dest_premise_tag (major_prem_of th)
         of (_, Const (\<^const_name>\<open>True\<close>, _)) =>
                 SOME (@{thm Premise_True} RS th, Seq.empty)
