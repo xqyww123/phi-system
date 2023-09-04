@@ -4,6 +4,8 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 val infer_the_default_scalar_domain : Proof.context -> typ * typ * typ -> term
 val Guess_Zip_of_Semimodule : Proof.context -> Phi_Type_Algebra.phi_type
                            -> typ * typ * typ * term -> term * term * term * term list * ctyp TVars.table
+val Guess_Unzip_of_Semimodule : Proof.context -> Phi_Type_Algebra.phi_type
+                           -> typ * typ * typ * term -> term * term * term * term list * ctyp TVars.table
 val semimodule_scalar : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
@@ -61,6 +63,50 @@ fun reason_tracing_tyinst ctxt reason goal_term =
             val ty_insts = map (Thm.dest_ctyp0 o Thm.ctyp_of_cterm o Drule.dest_term) ty_insts
          in (TVars.make (tvars ~~ ty_insts), th)
         end)
+  end
+
+fun Guess_Unzip_of_Semimodule ctxt (phi : phi_type) (s_ty, x_ty, model_ty, typ_expr) =
+  let val goal_term =
+            \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Unzip_of_Semimodule s_ty model_ty x_ty\<close>
+                $ \<^Const>\<open>Pure.type s_ty\<close>
+                $ \<^Const>\<open>Pure.type model_ty\<close>
+                $ \<^Const>\<open>Pure.type x_ty\<close>
+                $ typ_expr
+                $ Var(("scalar_domain",0), s_ty --> HOLogic.boolT)
+                $ Var(("abstract_domain",0), s_ty --> s_ty --> x_ty --> HOLogic.boolT)
+                $ Var(("zip", 0), s_ty --> s_ty --> x_ty --> \<^Type>\<open>prod x_ty x_ty\<close>)
+                $ Var(("antecedents", 0), HOLogic.boolT)
+                $ Var(("conditions", 0), HOLogic.boolT))
+      val reason = Conv.gconv_rule (HOLogic.Trueprop_conv (funpow 4 Conv.fun_conv (Conv.arg1_conv (
+                      Conv.top_rewrs_conv (map (fn th => th RS' (ctxt, @{thm' HOL.eq_reflection}))
+                                               (#equations phi)) ctxt
+                      )))) 1
+                #> Phi_Reasoner.reason NONE NONE ctxt
+   in case reason_tracing_tyinst ctxt reason goal_term
+   of SOME (inst, ret) =>
+        (case Thm.prop_of ( ret
+                         |> Simplifier.simplify (ctxt addsimps
+                                @{thms' Premise_norm[where mode=\<open>default\<close>]
+                                        Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+                                        Ant_Seq_reduct
+                                        HOL.imp_conjR[folded Ant_Seq_def]
+                                        HOL.all_conj_distrib[folded Ant_Seq_def]}) )
+           of _ (*Trueprop*) $ (_ (*Guess_Unzip_of_Semimodule*)
+                    $ _ $ _ $ _ $ _ $ Ds $ Dx $ zi $ ants $ cond)
+                => (Ds, Dx, zi, constrain_antecedents cond ants, inst)
+            | _ => error "BUG")
+    | NONE => raise Automation_Fail (fn () => let open Pretty in
+              [block (text "Fail to guess the semimodule unzip operation as there is no registered \
+                           \record giving the semimodule between scalar algebra" @
+                      [brk 1, Syntax.pretty_typ ctxt s_ty, brk 1] @
+                      text "abstrct algebra" @
+                      [brk 1, Syntax.pretty_typ ctxt x_ty, brk 1] @
+                      text "and concrete algebra" @
+                      [brk 1, Syntax.pretty_typ ctxt model_ty, str ".", brk 1] @
+                      text "You may either annotate the form of the rule or provide the record by"),
+               block ([keyword1 "lemma", brk 1, str "[\<phi>reasoner]", brk 1,
+                       str "\<open>", Syntax.pretty_term ctxt goal_term, str "\<close>"])]
+            end)
   end
 
 fun Guess_Zip_of_Semimodule ctxt (phi : phi_type) (s_ty, x_ty, model_ty, typ_expr) =

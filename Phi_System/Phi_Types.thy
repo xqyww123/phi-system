@@ -140,7 +140,7 @@ lemma [\<phi>reason default %\<phi>TA_guesser_default]:
 lemma [\<phi>reason default %\<phi>TA_guesser_default]:
   \<open> Guess_Zip_of_Semimodule TS TC TA (\<lambda>s x. f s x \<Ztypecolon> T s x) Ds Dx zi ants conds
 \<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA (\<lambda>s x. f s x \<Ztypecolon> T s x \<phi>\<s>\<u>\<b>\<j> P s x)
-                            Ds (\<lambda>s t (x,y). P t x \<and> P s y \<longrightarrow> Dx s t (x,y)) zi ants conds \<close>
+                            Ds (\<lambda>s t (x,y). P s x \<and> P t y \<longrightarrow> Dx s t (x,y)) zi ants conds \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 
@@ -1246,11 +1246,11 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
     
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Separation_Monoid
+  deriving (*Separation_Monoid
        and Functionality
        and Open_Abstraction_Full
        and Trivial_\<Sigma>
@@ -1258,14 +1258,14 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       and Semimodule_LDistr_Homo\<^sub>Z
-       (*and \<open>Functionality T Dx
+       and Semimodule_LDistr_Homo\<^sub>Z*)
+       \<open>Functionality T Dx
         \<Longrightarrow> Abstract_Domain T D\<^sub>T
         \<Longrightarrow> Carrier_Set T D\<^sub>C
-        \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>U \<phi>Share T Ds
+        \<Longrightarrow> Semimodule_LDistr_Homo\<^sub>U \<phi>Share T (\<lambda>s. 0 < s)
                                     (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
-                                    (\<lambda>_ _ x. (x,x))\<close>*)
-       and Construct_Abstraction_from_Raw
+                                    (\<lambda>_ _ x. (x,x))\<close>
+       (*and Construct_Abstraction_from_Raw*)
 
 term \<open>Functionality T Dx
 \<Longrightarrow> Abstract_Domain T D\<^sub>T

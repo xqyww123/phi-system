@@ -2,44 +2,54 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val semimodule_distrib_zip : quiet -> hint list -> Phi_Type_Algebra.derive
+val semimodule_distrib_unzip : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun guess_property (phi00 : phi_type) ctxt =
+fun guess_property is_zip (phi00 : phi_type) ctxt =
   let val (s_ty0, x_ty0, model_ty0, phi0) = parse_semimodule_phityp ctxt phi00 (\<^sort>\<open>type\<close>, \<^sort>\<open>share_nun_semimodule\<close>)
       val ((_, FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
       val (F_term0 $ _ $ T_term0) = FT_term0
       val (Ds, Dx, z, ants, inst) =
-              Guess_Zip_of_Semimodule ctxt phi0 (s_ty0, x_ty0, model_ty0,
-                  Abs ("s", s_ty0, Abs ("x", x_ty0,
-                      \<^Const>\<open>\<phi>Type x_ty0 model_ty0\<close> $ Bound 0 $ (F_term0 $ Bound 1 $ T_term0))))
+              (if is_zip then Guess_Zip_of_Semimodule else Guess_Unzip_of_Semimodule)
+                ctxt phi0 (s_ty0, x_ty0, model_ty0,
+                Abs ("s", s_ty0, Abs ("x", x_ty0,
+                    \<^Const>\<open>\<phi>Type x_ty0 model_ty0\<close> $ Bound 0 $ (F_term0 $ Bound 1 $ T_term0))))
       val inst' = Phi_Help.uncertify_tyvars inst
       val phi = instantiate_phi (inst, Vars.empty) phi0
       val [FT_term, F_term, T_term] = [FT_term0, F_term0, T_term0]
             |> map (Term_Subst.instantiate (inst', Vars.empty))
       val [s_ty, x_ty, model_ty] = map (Term_Subst.instantiateT inst') [s_ty0, x_ty0, model_ty0]
-      val xxx = Thm.cterm_of ctxt (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_LDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
-                          $ F_term $ T_term $ Ds $ Dx $ z))
+      val Head = if is_zip then \<^Const>\<open>Semimodule_LDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
+                           else \<^Const>\<open>Semimodule_LDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>
+      val xxx = Thm.cterm_of ctxt (\<^Const>\<open>Trueprop\<close> $ (
+                          Head $ F_term $ T_term $ Ds $ Dx $ z))
               |> @{print}
-   in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Semimodule_LDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
-                          $ F_term $ T_term $ Ds $ Dx $ z ),
+   in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (Head $ F_term $ T_term $ Ds $ Dx $ z ),
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end
 
-fun gen_MDz (_, name) hint0 ctxt0 (phi : phi_type) thy =
+fun gen_MDz is_zip (_, name) hint0 ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
               fn (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
-                    F1 $ Term.dummy $ T_term)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ _ $ _ $ Ds $ Dx $ z)
-            = [Ds, Dx, z]
+                    F1 $ Term.dummy $ T_term
+               | (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
+                    F1 $ Term.dummy $ T_term
+               )
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ _ $ _ $ Ds $ Dx $ zi)
+            = [Ds, Dx, zi]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U\<close>, _) $ _ $ _ $ Ds $ Dx $ uz)
+            = [Ds, Dx, uz]
         | extract_oprs_from_hint _ = []
+
       fun reasoning phi ctxt =
         default_reasoning false (default_reasoning_configure []) (K (K NONE))
                           (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) ctxt
       val mode_infer = not (is_some hint0)
+
       fun simp (_, ctxt) thm =
         if mode_infer
         then Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
@@ -50,17 +60,20 @@ fun gen_MDz (_, name) hint0 ctxt0 (phi : phi_type) thy =
                 end
              ) ctxt) thm
         else thm
+
       val ind_conv = default_ind_conv (
-             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MD\<^sub>Z_rewr},
+             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MD_rewr},
              fn ctxt => fn phi =>
-                  Conv.rewr_conv @{thm \<phi>TA_MD\<^sub>Z_rewr} then_conv
+                  Conv.rewr_conv @{thm \<phi>TA_MD_rewr} then_conv
                   Conv.arg_conv (Conv.arg_conv (
                     let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ #type_equations phi)
                      in Phi_Reasoners.asm_rewrite false sctxt
                     end)))
+
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
-                                      guess_property, @{thm' \<phi>TA_MD\<^sub>Z_rule},
-                                      [(SOME ([0,2,~1,~1,~1], ind_conv), reasoning)], K NONE, simp)
+                                      guess_property is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
+                                      [(SOME (if is_zip then [0,2,~1,~1,~1] else [0,2,~1,~1], ind_conv), reasoning)],
+                                      K NONE, simp)
                                     phi hint0 ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
@@ -72,6 +85,8 @@ fun gen_MDz (_, name) hint0 ctxt0 (phi : phi_type) thy =
   end
 
 val semimodule_distrib_zip = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_LDistr_Homo\<^sub>Z") gen_MDz
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_LDistr_Homo\<^sub>Z") (gen_MDz true)
+val semimodule_distrib_unzip = deriver_framework
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_LDistr_Homo\<^sub>U") (gen_MDz false)
 
 end
