@@ -796,32 +796,32 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
   "set the pattern rewrite to parse the functor part and the argument part from a term\
   \ matching the patter"
 #>*)add_property_kind \<^const_name>\<open>Transformation_Functor\<close>
-      (fn (_ $ F $ _ $ _ $ _ $ _) => F)
+      (fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F $ _ $ _ $ _ $ _) => F)
 #> add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>I\<close>
-      (fn (_ $ F $ _ $ _ $ _ $ _ $ _ $ _ ) => F)
+      (fn (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ ) => F)
 #> add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>E\<close>
-      (fn (_ $ F $ _ $ _ $ _ $ _ $ _ ) => F)
+      (fn (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ ) => F)
 #> add_property_kind \<^const_name>\<open>Closed_Semimodule_Zero\<close>
-      (fn (_ $ F $ _ ) => attach_var F)
+      (fn (Const(\<^const_name>\<open>Closed_Semimodule_Zero\<close>, _) $ F $ _ ) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_Zero\<close>
-      (fn (_ $ F $ _ ) => attach_var F)
+      (fn (Const(\<^const_name>\<open>Semimodule_Zero\<close>, _) $ F $ _ ) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_Identity\<close>
-      (fn (_ $ F $ _ ) => attach_var F)
+      (fn (Const(\<^const_name>\<open>Semimodule_Identity\<close>, _) $ F $ _ ) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_Scalar_Assoc\<close>
-      (fn (_ $ F $ _ $ _ ) => attach_var F)
+      (fn (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<close>, _) $ F $ _ $ _ ) => attach_var F)
 (* #> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Unit_Functor\<close> (fn (_ $ F) => F) *)
 #> add_property_kind \<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>
-      (fn (_ $ F $ _ $ _ $ _ $ _) => attach_var F)
+      (fn (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ F $ _ $ _ $ _ $ _) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z_rev\<close>
-      (fn (_ $ F $ _ $ _ $ _ $ _) => attach_var F)
+      (fn (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z_rev\<close>, _) $ F $ _ $ _ $ _ $ _) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U\<close>
-      (fn (_ $ F $ _ $ _ $ _) => attach_var F)
+      (fn (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U\<close>, _) $ F $ _ $ _ $ _ $ _) => attach_var (@{print} F))
 #> add_property_kind \<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U_rev\<close>
-      (fn (_ $ F $ _ $ _ $ _) => attach_var F)
+      (fn (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U_rev\<close>, _) $ F $ _ $ _ $ _ $ _) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>I\<close>
-      (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _) => T)
+      (fn (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _) => T)
 #> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
-      (fn (_ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) => T)
+      (fn (Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) => T)
 (*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
 \<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
   it can have special overridings for singular points like that many type operators \<open>F\<close> have a

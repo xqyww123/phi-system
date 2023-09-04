@@ -1274,7 +1274,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_Identity
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        and Semimodule_LDistr_Homo\<^sub>Z
-        and Semimodule_LDistr_Homo\<^sub>U
+       and Semimodule_LDistr_Homo\<^sub>U
        and Construct_Abstraction_from_Raw
 
 term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>

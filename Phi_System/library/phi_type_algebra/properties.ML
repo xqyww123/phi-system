@@ -11,7 +11,9 @@ type property_name = string
 
 val is_a_kind_of_property : theory -> property_name -> bool
 val assert_property_kind : theory -> property_name -> unit
-val add_property_kind : property_name -> (term -> term) -> theory -> theory
+val add_property_kind : property_name
+                     -> (term -> term) (*extract the type operator for which the given property specifies*)
+                     -> theory -> theory
 
 val lookup_property_exact : Context.generic -> term (*pattern of the \<phi>-type or type operator*)
                          -> property_name -> (term * Position.T * thm) list
@@ -498,17 +500,20 @@ fun add_property (phityp0,pos,property) ctxt =
                     else let open Pretty
                         val ctxt' = Context.proof_of ctxt
                      in warning (string_of (chunks (
-                           block [str "The property ", str property_name, str " of \<phi>-type ",
-                                  Syntax.pretty_term ctxt' phityp0,
-                                  str " either covers or is covered by other existing rules."] ::
-                           str "We prohibit redundancy of \<phi>-type properties because it causes \
-                               \a great amount of redundancy in the generated reasoning rules.\n\
+                          [block (text "The property" @ [brk 1, str property_name, brk 1] @
+                                  text "of \<phi>-type" @ [brk 1, Syntax.pretty_term ctxt' phityp0, brk 1] @
+                                  text "either covers or is covered by other existing rules."),
+                           block (text "Given property:" @ [brk 1,
+                                  Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt property]),
+                           block [str "Clashes", brk 1,
+                                  chunks (map (fn (_,pos,rule) => block (
+                                             here pos @ [Syntax.pretty_term ctxt' (Thm.prop_of rule)]
+                                           )) clashes)],
+                           para "We prohibit redundancy of \<phi>-type properties as the redundancy \
+                               \would be multiplied by template instantiation.\n\
                                \No automation will be invoked on this.\n\
                                \Instead, you should provide the most general rule and, if you want, \
-                               \specialized (branched) reasoning on its antecedents." ::
-                           map (fn (_,pos,rule) => block (
-                               here pos @ [Syntax.pretty_term ctxt' (Thm.prop_of rule)]
-                             )) clashes
+                               \specialized (branched) reasoning on its antecedents."]
                          ))) ;
                         raise SKIP
                     end
