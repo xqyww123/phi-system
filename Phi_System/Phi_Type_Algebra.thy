@@ -170,11 +170,11 @@ definition Semimodule_Scalar_Assoc\<^sub>I :: \<open> ('s\<^sub>s \<Rightarrow> 
                                      \<Rightarrow> ('s\<^sub>s \<Rightarrow> bool)
                                      \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
                                      \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> bool)
-                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> 's\<^sub>s \<Rightarrow> 's\<^sub>c)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 's\<^sub>c)
                                      \<Rightarrow> ('a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
                                      \<Rightarrow> bool\<close>
   where \<open>Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
-      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> Fc (smul t s) T))\<close>
+      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> Fc (smul s t) T))\<close>
   \<comment> \<open>An extension overcoming the type limitation of the simple type theory of Isabelle.
       It can cover mul quant\<close>
 
@@ -192,6 +192,9 @@ definition Semimodule_Scalar_Assoc\<^sub>E :: \<open> ('s\<^sub>s \<Rightarrow> 
       \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (x \<Ztypecolon> Fc (smul t s) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g x \<Ztypecolon> Fs s (Ft t T)))\<close>
   \<comment> \<open>An extension overcoming the type limitation of the simple type theory of Isabelle.
       It can cover mul quant\<close>
+
+text \<open>The extended scalar association operator for Finite Multiplicative Quantification is just uncurrying.\<close>
+
 
 definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                     \<Rightarrow> ('c::sep_magma,'a) \<phi>
@@ -1539,6 +1542,41 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   unfolding Semimodule_Identity_def NO_SIMP_def \<r>Guard_def
   by simp
 
+paragraph \<open>Extended Associative\<close>
+
+lemma [\<phi>reason_template default %ToA_derived_red]:
+  \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
+\<Longrightarrow> NO_SIMP (f x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
+  unfolding NO_SIMP_def Semimodule_Scalar_Assoc\<^sub>I_def \<r>Guard_def Premise_def
+  using mk_elim_transformation by blast
+
+lemma [\<phi>reason_template default %ToA_derived_red]:
+  \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
+\<Longrightarrow> NO_SIMP (R * (f x \<Ztypecolon> Fc (smul s t) T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> Fs s (Ft t T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Scalar_Assoc\<^sub>I_def Premise_def NO_SIMP_def \<r>Guard_def
+  using implies_left_frame mk_elim_transformation by blast
+
+(* TODO
+lemma [\<phi>reason_template default %ToA_derived_red]:
+  \<open> Semimodule_Scalar_Assoc F T Ds
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F a (F b T) \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def \<r>Guard_def
+  by simp
+
+lemma [\<phi>reason_template default %ToA_derived_red]:
+  \<open> Semimodule_Scalar_Assoc F T Ds
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds a \<and> Ds b
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F (b * a) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F a (F b T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Scalar_Assoc_def Premise_def NO_SIMP_def \<r>Guard_def
+  by simp
+*)
 
 paragraph \<open>Associative\<close>
 
