@@ -86,7 +86,7 @@ fun guess_antecedent ctxt0 phi const assertion existing_antecedents =
    in case Phi_Reasoner.reason NONE NONE ctxt goal
    of NONE => existing_antecedents
     | SOME ret =>
-        let val (guessed, cond) = @{print} (
+        let val (guessed, cond) = (*@{print}*) (
             case ret
               |> Simplifier.simplify (ctxt addsimps @{thms' Premise_norm[where mode=\<open>default\<close>]
                                                             Premise_norm[where mode=\<open>MODE_SIMP\<close>]

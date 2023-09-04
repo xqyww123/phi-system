@@ -260,7 +260,7 @@ fun gen_trans_to_raw_abst (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val open_all_abstraction = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Open_Abstraction_Full") gen_trans_to_raw_abst
+val open_all_abstraction = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Open_Abstraction_to_Raw") gen_trans_to_raw_abst
 
 end
 

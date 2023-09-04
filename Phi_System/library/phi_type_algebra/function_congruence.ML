@@ -59,7 +59,7 @@ val _ = Theory.setup (Context.theory_map (
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
                 |> singleton (Variable.export ctxt ctxt0)
                 |> Drule.zero_var_indexes
-                |> @{print}
+                (*|> @{print}*)
         val _ = Phi_Reasoner.info_pretty_generic ctxt00 1 (fn () => let open Pretty in
                   chunks [str "Setup the congruence rule for Isabelle function package",
                           Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt00 rule]

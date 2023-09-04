@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val construct_abstraction_from_raw : quiet -> hint list -> Phi_Type_Algebra.derive
+val Make_Abstraction_from_Raw : quiet -> hint list -> Phi_Type_Algebra.derive
 
 end
 
@@ -267,8 +267,8 @@ fun gen_constr_from_raw (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val construct_abstraction_from_raw = deriver_framework
-      (ACCEPT_ONE_HINT, ONLY_ONCE, "Construct_Abstraction_from_Raw") gen_constr_from_raw
+val Make_Abstraction_from_Raw = deriver_framework
+      (ACCEPT_ONE_HINT, ONLY_ONCE, "Make_Abstraction_from_Raw") gen_constr_from_raw
 
 end
 

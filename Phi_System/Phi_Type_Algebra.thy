@@ -815,7 +815,7 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
 #> add_property_kind \<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z_rev\<close>
       (fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z_rev\<close>, _) $ F $ _ $ _ $ _ $ _) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>
-      (fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, _) $ F $ _ $ _ $ _ $ _) => attach_var (@{print} F))
+      (fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, _) $ F $ _ $ _ $ _ $ _) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U_rev\<close>
       (fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U_rev\<close>, _) $ F $ _ $ _ $ _ $ _) => attach_var F)
 #> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>I\<close>
@@ -3766,6 +3766,12 @@ ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
 \<phi>property_deriver Semimodule_Scalar_Assoc 130 for (\<open>Semimodule_Scalar_Assoc _ _ _\<close>)
     = \<open>Phi_Type_Algebra_Derivers.semimodule_scalar\<close>
 
+\<phi>property_deriver Semimodule_NonDistr_no0 131
+  requires Semimodule_Scalar_Assoc and Semimodule_Identity
+
+\<phi>property_deriver Semimodule_NonDistr 132
+  requires Semimodule_NonDistr_no0 and Semimodule_Zero
+
 
 subsubsection \<open>Semimodule Scalar Distributivity - Zip\<close>
 
@@ -3812,6 +3818,15 @@ ML_file \<open>library/phi_type_algebra/semimodule_distrib_zip.ML\<close>
 
 \<phi>property_deriver Semimodule_SDistr_Homo\<^sub>U 130 for (\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>)
     = \<open>Phi_Type_Algebra_Derivers.semimodule_distrib_unzip\<close>
+
+\<phi>property_deriver Semimodule_SDistr_Homo 131
+  requires Semimodule_SDistr_Homo\<^sub>Z and Semimodule_SDistr_Homo\<^sub>U
+
+\<phi>property_deriver Semimodule_no0 132
+  requires Semimodule_NonDistr_no0 and Semimodule_SDistr_Homo
+
+\<phi>property_deriver Semimodule 133
+  requires Semimodule_no0 and Semimodule_Zero
 
 declare Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
         Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
@@ -3922,13 +3937,13 @@ lemma \<phi>TA_TrCstr_rule:
 
 ML_file \<open>library/phi_type_algebra/constr_abst.ML\<close>
 *)
-\<phi>property_deriver Construct_Abstraction_from_Raw 130
+\<phi>property_deriver Make_Abstraction_from_Raw 130
   for ( \<open>\<forall>x. Premise _ _ \<longrightarrow> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T)\<close>
       | \<open>Premise _ _ \<longrightarrow> (?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T)\<close>
       | \<open>\<forall>x. x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T\<close>
       | \<open>?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T\<close> )
   requires Warn_if_contains_Sat
-    = \<open> Phi_Type_Algebra_Derivers.construct_abstraction_from_raw \<close>
+    = \<open> Phi_Type_Algebra_Derivers.Make_Abstraction_from_Raw \<close>
 
 
 subsubsection \<open>Destruct Abstraction down to Concrete Representation (by Itself)\<close>
@@ -3945,13 +3960,14 @@ lemma \<phi>TA_TrRA_rule:
 
 ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
 
-\<phi>property_deriver Open_Abstraction_Full 130 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
+\<phi>property_deriver Open_Abstraction_to_Raw 130 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
                                                 | \<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>
                                                 | \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r' y @action to Itself\<close>)
   requires Warn_if_contains_Sat
     = \<open> Phi_Type_Algebra_Derivers.open_all_abstraction \<close>
 
-
+\<phi>property_deriver Abstraction_to_Raw 131
+  requires Open_Abstraction_to_Raw and Make_Abstraction_from_Raw
 
 
 subsubsection \<open>Trim Empty Generated during Separation Extraction\<close>

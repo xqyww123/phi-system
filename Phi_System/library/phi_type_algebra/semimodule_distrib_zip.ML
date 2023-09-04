@@ -25,9 +25,9 @@ fun guess_property is_zip (phi00 : phi_type) ctxt =
       val [s_ty, x_ty, model_ty] = map (Term_Subst.instantiateT inst') [s_ty0, x_ty0, model_ty0]
       val Head = if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
                            else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>
-      val xxx = Thm.cterm_of ctxt (\<^Const>\<open>Trueprop\<close> $ (
+    (*val xxx = Thm.cterm_of ctxt (\<^Const>\<open>Trueprop\<close> $ (
                           Head $ F_term $ T_term $ Ds $ Dx $ z))
-              |> @{print}
+              |> @{print}*)
    in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (Head $ F_term $ T_term $ Ds $ Dx $ z ),
                   NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
   end

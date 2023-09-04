@@ -35,8 +35,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Basic
        and Functionality
-       and Open_Abstraction_Full
-       and Construct_Abstraction_from_Raw
+       and Abstraction_to_Raw
 
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -63,12 +62,11 @@ subsection \<open>Embedding Subjection into Type\<close>
   deriving Basic
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Functionality T Q) \<Longrightarrow> Functionality (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<longrightarrow> Q x)\<close>
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Carrier_Set T Q) \<Longrightarrow> Carrier_Set (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<longrightarrow> Q x)\<close>
-       and Open_Abstraction_Full
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P) \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q) (Q \<and> P)\<close>
        and \<open>Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
        and Functional_Transformation_Functor
        and Separation_Homo
-       and Construct_Abstraction_from_Raw
+       and Abstraction_to_Raw
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
@@ -173,7 +171,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
     and Functionality
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
-    and Construct_Abstraction_from_Raw
+    and Abstraction_to_Raw
 
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
@@ -199,7 +197,7 @@ declare [[\<phi>trace_reasoning = 0]]
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y}) True
                       (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
-       and Open_Abstraction_Full
+       and Open_Abstraction_to_Raw
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
 
 text \<open>Read it as 'the abstract object is certain element in the set'
@@ -824,7 +822,7 @@ declare [[\<phi>trace_reasoning = 0]]
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> U)
           \<Longrightarrow> Identity_Element\<^sub>E (1 \<Ztypecolon> T \<and>\<^sub>\<phi> U)\<close>
        and Functional_Transformation_Functor
-       and (*Construct_Abstraction_from_Raw (*TODO:simplification*)*)
+       and (*Make_Abstraction_from_Raw (*TODO:simplification*)*)
           \<open> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T
         \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U
         \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x,y) \<Ztypecolon> T \<and>\<^sub>\<phi> U \<close>
@@ -873,10 +871,9 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
-       and Open_Abstraction_Full
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
-       and Construct_Abstraction_from_Raw
+       and Abstraction_to_Raw
 
 subsubsection \<open>Reasoning Rules\<close>
 
@@ -911,8 +908,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
-       and Open_Abstraction_Full
-       and Construct_Abstraction_from_Raw
+       and Abstraction_to_Raw
        and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> closed_homo_sep_disj (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
              Separation_Disj\<^sub>\<phi> (\<psi> s) Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
@@ -1055,10 +1051,9 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
        and Functionality
-       and Open_Abstraction_Full
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
-       and Construct_Abstraction_from_Raw
+       and Abstraction_to_Raw
 
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
@@ -1077,9 +1072,8 @@ subsubsection \<open>Empty List\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
   deriving Basic
        and Functionality
-       and Open_Abstraction_Full
        and Identity_Element
-       and Construct_Abstraction_from_Raw
+       and Abstraction_to_Raw
 
 
 subsection \<open>Empty Type of Free Objects\<close>
@@ -1092,7 +1086,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Basic
        and \<open> Identity_Element\<^sub>I (x \<Ztypecolon> \<circle>\<^sub>\<x>) True \<close>
        and \<open> Identity_Element\<^sub>E (x \<Ztypecolon> \<circle>\<^sub>\<x>) \<close>
-       and Open_Abstraction_Full
+       and Open_Abstraction_to_Raw
 
 declare \<phi>None_freeobj.intro_reasoning[\<phi>reason 1000]
         \<phi>None_freeobj.elim_reasoning[\<phi>reason 1000]
@@ -1194,7 +1188,7 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def rounded_Nat :: \<open>nat \<Rightarrow> (nat,nat) \<phi>\<close>
   where \<open>(x \<Ztypecolon> rounded_Nat m) = (x mod m \<Ztypecolon> Itself)\<close>
   deriving Basic
-       and Construct_Abstraction_from_Raw
+       and Make_Abstraction_from_Raw
 
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -1202,10 +1196,9 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Separation_Monoid
-       and Open_Abstraction_Full
        and Functionality
        and Trivial_\<Sigma>
-       and Construct_Abstraction_from_Raw
+       and Abstraction_to_Raw
 
 subsubsection \<open>By List of Keys\<close>
 
@@ -1214,12 +1207,10 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Separation_Monoid
-       and Open_Abstraction_Full
        and Functionality
        and Trivial_\<Sigma>
-       and Semimodule_Scalar_Assoc
-       and Semimodule_Identity
-       and Construct_Abstraction_from_Raw
+       and Semimodule_NonDistr_no0
+       and Abstraction_to_Raw
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
@@ -1267,17 +1258,11 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Separation_Monoid
        and Functionality
-       and Open_Abstraction_Full
        and Trivial_\<Sigma>
        and SE_Trim_Empty
-       and Semimodule_Scalar_Assoc
-       and Semimodule_Identity
+       and Semimodule_no0
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       and Semimodule_SDistr_Homo\<^sub>Z
-       and Semimodule_SDistr_Homo\<^sub>U
-       and Construct_Abstraction_from_Raw
-
-term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
+       and Abstraction_to_Raw
 
 thm \<phi>Share.\<phi>Prod
 thm \<phi>Share.\<phi>None
@@ -1717,7 +1702,7 @@ declare [[\<phi>trace_reasoning = 3]]
   where \<open>\<phi>sep_homo \<psi> T = (\<phi>Fun \<psi> \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> homo_sep \<psi>)\<close>
   deriving Implication
        (*and Is_Functional
-       and Open_Abstraction_Full*)
+       and Open_Abstraction_to_Raw*)
 
 lemma [\<phi>reason add]:
   \<open> Object_Sep_Homo\<^sub>I (\<phi>sep_homo \<psi>) {(y,x). \<psi> x ## \<psi> y \<longrightarrow> x ## y} \<close>

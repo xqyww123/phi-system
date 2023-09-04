@@ -67,7 +67,7 @@ val priority_base = Scan.optional (\<^keyword>\<open>[\<close> |-- (Args.$$$ "to
                                                    Args.$$$ "bottom" >> K Bottom) --| \<^keyword>\<open>]\<close>) Base
 in val parser = ((\<^keyword>\<open>%\<close> |-- name_position -- priority_base) -- offset >> Relative)
              || (int >> Literal)
-   fun parser_with_default default = parser || (Scan.succeed (Literal default) >> @{print})
+   fun parser_with_default default = parser || Scan.succeed (Literal default)
 end
 
 fun check_priority _ _ (Literal i) = i
