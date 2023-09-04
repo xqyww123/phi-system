@@ -693,10 +693,10 @@ declare [[\<phi>trace_reasoning = 0]]
 
 lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
       [(*THEN SE_clean_waste',*) \<phi>reason_template add]:
-  \<open> Semimodule_LDistr_Homo\<^sub>U F1 Ds Dx uz
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z_rev F1 Ds Dx' z
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z F1' Ds Dx'' z'
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>U F1' Ds Dx'c uz'
+  \<open> Semimodule_SDistr_Homo\<^sub>U F1 Ds Dx uz
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z_rev F1 Ds Dx' z
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F1' Ds Dx'' z'
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U F1' Ds Dx'c uz'
 \<Longrightarrow> Parameter_Variant_of_the_Same_Type F1 F3
 \<Longrightarrow> Parameter_Variant_of_the_Same_Type F1' F3'
 \<Longrightarrow> \<r>Success
@@ -733,8 +733,8 @@ lemma (*SE_Near_Semimodule_adcb equipped with the reverse transformation*)
   \<medium_left_bracket> premises _ and _ and _ and _ and [symmetric,simp] and _ and _ and _ and _ and _
          and [\<phi>reason add] and [\<phi>reason add] and _ and Tr
     Tr
-    apply_rule apply_Semimodule_LDistr_Homo\<^sub>Z[where t=c and s=b and F=F1' and x=\<open>(fst y',fst (snd x'))\<close>]
-    apply_rule apply_Semimodule_LDistr_Homo\<^sub>U[where t=a and s=d and F=F1']
+    apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z[where t=c and s=b and F=F1' and x=\<open>(fst y',fst (snd x'))\<close>]
+    apply_rule apply_Semimodule_SDistr_Homo\<^sub>U[where t=a and s=d and F=F1']
   \<medium_right_bracket> .
 
 

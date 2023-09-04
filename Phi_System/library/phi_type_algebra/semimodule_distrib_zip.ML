@@ -23,8 +23,8 @@ fun guess_property is_zip (phi00 : phi_type) ctxt =
       val [FT_term, F_term, T_term] = [FT_term0, F_term0, T_term0]
             |> map (Term_Subst.instantiate (inst', Vars.empty))
       val [s_ty, x_ty, model_ty] = map (Term_Subst.instantiateT inst') [s_ty0, x_ty0, model_ty0]
-      val Head = if is_zip then \<^Const>\<open>Semimodule_LDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
-                           else \<^Const>\<open>Semimodule_LDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>
+      val Head = if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
+                           else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>
       val xxx = Thm.cterm_of ctxt (\<^Const>\<open>Trueprop\<close> $ (
                           Head $ F_term $ T_term $ Ds $ Dx $ z))
               |> @{print}
@@ -34,14 +34,14 @@ fun guess_property is_zip (phi00 : phi_type) ctxt =
 
 fun gen_MDz is_zip (_, name) hint0 ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
-              fn (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
+              fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
                     F1 $ Term.dummy $ T_term
-               | (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
+               | (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
                     F1 $ Term.dummy $ T_term
                )
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>Z\<close>, _) $ _ $ _ $ Ds $ Dx $ zi)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ _ $ _ $ Ds $ Dx $ zi)
             = [Ds, Dx, zi]
-        | extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_LDistr_Homo\<^sub>U\<close>, _) $ _ $ _ $ Ds $ Dx $ uz)
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, _) $ _ $ _ $ Ds $ Dx $ uz)
             = [Ds, Dx, uz]
         | extract_oprs_from_hint _ = []
 
@@ -85,8 +85,8 @@ fun gen_MDz is_zip (_, name) hint0 ctxt0 (phi : phi_type) thy =
   end
 
 val semimodule_distrib_zip = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_LDistr_Homo\<^sub>Z") (gen_MDz true)
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_SDistr_Homo\<^sub>Z") (gen_MDz true)
 val semimodule_distrib_unzip = deriver_framework
-        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_LDistr_Homo\<^sub>U") (gen_MDz false)
+        (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_SDistr_Homo\<^sub>U") (gen_MDz false)
 
 end

@@ -659,8 +659,8 @@ lemma (*The above rule is reversible*)
 
 (*
 lemma
-  \<open> Semimodule_LDistr_Homo\<^sub>O\<^sub>Z B Ds Dx' zz
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z  (\<lambda>s. (\<Zcomp>) (B s)) Ds Dx z \<close>
+  \<open> Semimodule_SDistr_Homo\<^sub>O\<^sub>Z B Ds Dx' zz
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z  (\<lambda>s. (\<Zcomp>) (B s)) Ds Dx z \<close>
 *)
 
 
@@ -941,16 +941,16 @@ lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
   unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
  
-lemma Semimodule_LDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
+lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Object_Equiv T eq
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Carrier_Set T D\<^sub>C
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>Z (\<phi>ScalarMul \<psi>) T Ds
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z (\<phi>ScalarMul \<psi>) T Ds
                             (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst) \<close>
-  unfolding Semimodule_LDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
+  unfolding Semimodule_SDistr_Homo\<^sub>Z_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
@@ -972,15 +972,15 @@ lemma \<comment> \<open>The instantiated domains above is the weakest upto using
   unfolding Transformation_def
   by auto metis
     
-lemma Semimodule_LDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
+lemma Semimodule_SDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
 \<Longrightarrow> Abstract_Domain T D\<^sub>T
 \<Longrightarrow> Carrier_Set T D\<^sub>C
-\<Longrightarrow> Semimodule_LDistr_Homo\<^sub>U (\<phi>ScalarMul \<psi>) T Ds
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<phi>ScalarMul \<psi>) T Ds
                             (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))\<close>
-  unfolding Semimodule_LDistr_Homo\<^sub>U_def Transformation_def module_S_distr_def Is_Functional_def
+  unfolding Semimodule_SDistr_Homo\<^sub>U_def Transformation_def module_S_distr_def Is_Functional_def
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
@@ -1273,8 +1273,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_Scalar_Assoc
        and Semimodule_Identity
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       and Semimodule_LDistr_Homo\<^sub>Z
-       and Semimodule_LDistr_Homo\<^sub>U
+       and Semimodule_SDistr_Homo\<^sub>Z
+       and Semimodule_SDistr_Homo\<^sub>U
        and Construct_Abstraction_from_Raw
 
 term \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
@@ -1507,29 +1507,29 @@ interpretation \<phi>Share: Sep_Homo_Type_Functor_L
       metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
 
 lemma [\<phi>reason add]:
-  \<open> Semimodule_LDistr_Homo\<^sub>Z ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+  \<open> Semimodule_SDistr_Homo\<^sub>Z ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
         (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Object_Equiv T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
         (\<lambda>_ _. fst) \<close>
-  unfolding Semimodule_LDistr_Homo\<^sub>Z_def \<phi>Sep_Disj_Inj_def
+  unfolding Semimodule_SDistr_Homo\<^sub>Z_def \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn Premise_def;
       metis share_sep_left_distrib_0)
 
 lemma [\<phi>reason add]:
-  \<open> Semimodule_LDistr_Homo\<^sub>Z_rev ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+  \<open> Semimodule_SDistr_Homo\<^sub>Z_rev ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
         (\<lambda>T x. \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T) \<and> Object_Equiv T eq \<and> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq (snd x) (fst x)))
         (\<lambda>_ _. fst) \<close>
-  unfolding Semimodule_LDistr_Homo\<^sub>Z_rev_def \<phi>Sep_Disj_Inj_def
+  unfolding Semimodule_SDistr_Homo\<^sub>Z_rev_def \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn Premise_def;
       metis add.commute share_sep_left_distrib_0)
 
 lemma [\<phi>reason add]:
-  \<open> Semimodule_LDistr_Homo\<^sub>U ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
+  \<open> Semimodule_SDistr_Homo\<^sub>U ((\<odiv>) :: _ \<Rightarrow> ('a::share_nun_semimodule,'b) \<phi> \<Rightarrow> _)
         {n. 0 < n}
         (\<lambda>T x. \<phi>Sep_Disj_Inj (x \<Ztypecolon> T))
         (\<lambda>_ _ x. (x,x)) \<close>
-  unfolding Semimodule_LDistr_Homo\<^sub>U_def \<phi>Sep_Disj_Inj_def
+  unfolding Semimodule_SDistr_Homo\<^sub>U_def \<phi>Sep_Disj_Inj_def
   by (clarsimp simp add: Transformation_def \<phi>Prod_expn Object_Equiv_def \<phi>Share_expn;
       metis share_sep_disj_left share_sep_disj_right share_sep_left_distrib_0)
 
