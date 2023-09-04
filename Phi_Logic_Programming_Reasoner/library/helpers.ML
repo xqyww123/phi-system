@@ -230,6 +230,7 @@ fun conj_intros _ [] = @{thm' TrueI}
 
 fun instantiate_higher_order_schematic_var' num ctxt thm =
   let fun get_concl (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs(_,_,X)) = get_concl X
+        | get_concl (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = get_concl (Term.incr_boundvars 1 X $ Bound 0)
         | get_concl (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_concl X
         | get_concl X = X
       fun mk_ins ant (escape,ins0) =
@@ -583,25 +584,25 @@ fun exhausitively_expand_meta_and_hol_ball Cs C ctxt ctm =
 fun leading_antecedent_conv C = implies_conv C all_conv
 fun hhf_concl_conv C ctxt ctm =
   case Thm.term_of ctm
-    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (hhf_concl_conv C o snd) ctxt ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => meta_all_conv (hhf_concl_conv C o snd) ctxt ctm
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.arg_conv (hhf_concl_conv C ctxt) ctm
      | _ => C ctxt ctm
 
 fun hhf_conv Cp Cc ctxt ctm =
   case Thm.term_of ctm
-    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (hhf_conv Cp Cc o snd) ctxt ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => meta_all_conv (hhf_conv Cp Cc o snd) ctxt ctm
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (hhf_conv Cp Cc ctxt) ctm
      | _ => Cc ctxt ctm
 
 fun premises_conv Cp Cc ctxt ctm =
   case Thm.term_of ctm
-    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs _ => meta_all_conv (premises_conv Cp Cc o snd) ctxt ctm
+    of Const (\<^const_name>\<open>Pure.all\<close>, _) $ _ => meta_all_conv (premises_conv Cp Cc o snd) ctxt ctm
      | Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => Conv.implies_conv (Cp ctxt) (premises_conv Cp Cc ctxt) ctm
      | Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.arg_conv (premises_conv Cp Cc ctxt) ctm
      | Const (\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
           Conv.combination_conv (Conv.arg_conv (Cp ctxt)) (premises_conv Cp Cc ctxt) ctm
-     | Const (\<^const_name>\<open>HOL.All\<close>, _) $ Abs _ =>
-          Conv.arg_conv (Conv.abs_conv (premises_conv Cp Cc o snd) ctxt) ctm
+     | Const (\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
+          Conv.arg_conv (abs_conv (premises_conv Cp Cc o snd) ctxt) ctm
      | _ => Cc ctxt ctm
 
 fun recursive_premises_conv C ctxt ctm =

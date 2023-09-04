@@ -142,6 +142,8 @@ fun strip_meta_hhf term =
   let
     fun strip (V,P) (Const("Pure.imp", _) $ H $ B) = strip (V,H::P) B
       | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) = strip ((a,T)::V,P) B
+      | strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ X) =
+          strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
       | strip (V,P) X = (rev V, rev P, X)
   in strip ([],[]) term end
 
@@ -168,6 +170,12 @@ fun strip_meta_hhf_c cterm ctxt =
           = let val ([name'],ctxt') = Variable.variant_fixes [a] ctxt
                 val (v', B') = Thm.dest_abs_fresh name' (Thm.dest_arg ctm)
              in strip (v'::V,P) B B' ctxt'
+            end
+      | strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ B) ctm ctxt
+          = let val ([name'],ctxt') = Variable.variant_fixes ["_"] ctxt
+                val v' = Thm.cterm_of ctxt (Free (name', ty))
+                val B' = Thm.apply (Thm.dest_arg ctm) v'
+             in strip (v' :: V, P) B B' ctxt'
             end
       | strip (V,P) X ctm ctxt = (rev V, rev P, ctm, ctxt)
   in strip ([],[]) (Thm.term_of cterm) cterm ctxt end
@@ -375,9 +383,13 @@ val strip_binder_c = strip_binder_nc ~1 *)
 
 fun strip_binder_vars binder (Const (binder', _) $ Abs (name, ty, body))
       = if binder' = binder then (name,ty) :: strip_binder_vars binder body else []
+  | strip_binder_vars binder (Const (binder', \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ _)
+      = if binder' = binder then [("_",ty)] else []
   | strip_binder_vars _ _ = []
 fun strip_binder_raw_body binder (tm as (Const (binder', _) $ Abs (_, _, body)))
       = if binder' = binder then strip_binder_raw_body binder body else tm
+  | strip_binder_raw_body binder (tm as (Const (binder', _) $ X))
+      = if binder' = binder then Term.incr_boundvars 1 X $ Bound 0 else tm
   | strip_binder_raw_body _ tm = tm
 fun strip_binder_raw binder tm =
   (strip_binder_vars binder tm, strip_binder_raw_body binder tm)

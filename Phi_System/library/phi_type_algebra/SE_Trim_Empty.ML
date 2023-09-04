@@ -55,6 +55,8 @@ fun gen_SE_Trim_Empty _ ctxt (phi : phi_type) thy =
             let fun work (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = work X
                   | work (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = work X
                   | work (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = work X
+                  | work (\<^Const>\<open>Pure.all ty\<close> $ X) =
+                      work (\<^Const>\<open>Pure.all ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
                   | work (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ _) =
                       th |> Thm.permute_prems 0 i
                          |> (fn th => case Phi_Reasoner.reason NONE (SOME 1) ctxt th

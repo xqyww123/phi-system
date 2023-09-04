@@ -26,16 +26,16 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-  
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
-  deriving (*\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
+  deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
-       and*) Abstract_Domain
-       (*and Functionality
-       and Abstraction_to_Raw*)
+       and Basic
+       and Functionality
+       and Abstraction_to_Raw
 
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -945,12 +945,14 @@ lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
   unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def
   by (rule \<phi>Type_eqI; clarsimp; metis)
 
+(* TODO!
 lemma Semimodule_Scalar_Assoc_by_function[\<phi>reason 1000]:
   \<open> module_scalar_assoc \<psi> Ds
 \<Longrightarrow> Semimodule_Scalar_Assoc (\<phi>ScalarMul \<psi>) T Ds \<close>
   unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc_def scalar_mult_def
   by (clarify; rule \<phi>Type_eqI; clarsimp; metis)
- 
+*)
+
 lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
@@ -1174,7 +1176,7 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-                                                                                    
+                            
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -1223,7 +1225,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Separation_Monoid
        and Functionality
        and Trivial_\<Sigma>
-       and Semimodule_NonDistr_no0
+       (*and Semimodule_NonDistr_no0*)
        and Abstraction_to_Raw
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
@@ -1274,7 +1276,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Trivial_\<Sigma>
        and SE_Trim_Empty
-       and Semimodule_no0
+       (*and Semimodule_no0*)
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        and Abstraction_to_Raw
 

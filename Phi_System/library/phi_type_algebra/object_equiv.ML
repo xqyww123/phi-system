@@ -44,10 +44,16 @@ fun infer_equiv ctxt sequent =
             \<^Const>\<open>HOL.disj\<close> $ infer lev X $ infer lev Y
         | infer lev ((H as Const(\<^const_name>\<open>HOL.All\<close>, _)) $ Abs (N, Ty, X)) =
             H $ Abs (N, Ty, infer (lev+1) X)
+        | infer lev (\<^Const>\<open>HOL.All ty\<close> $ X) =
+            infer lev (\<^Const>\<open>HOL.All ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | infer lev ((H as Const(\<^const_name>\<open>HOL.Ex\<close>, _)) $ Abs (N, Ty, X)) =
             H $ Abs (N, Ty, infer (lev+1) X)
+        | infer lev (\<^Const>\<open>HOL.Ex ty\<close> $ X) =
+            infer lev (\<^Const>\<open>HOL.Ex ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | infer lev ((H as Const(\<^const_name>\<open>special_Ex\<close>, _)) $ Abs (N, Ty, X)) =
             H $ Abs (N, Ty, infer (lev+1) X)
+        | infer lev (\<^Const>\<open>special_Ex ty\<close> $ X) =
+            infer lev (\<^Const>\<open>special_Ex ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | infer _ _ = \<^Const>\<open>True\<close>
 
       val eq = Abs ("x", tya, Abs ("y", tyb, infer 0 oblg))

@@ -19,6 +19,7 @@ open Phi_Type_Algebra
 fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
   | constrain_antecedents cond =
       let fun constrain (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X)) = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, constrain X)
+            | constrain (\<^Const>\<open>HOL.All t\<close> $ X) = \<^Const>\<open>HOL.All t\<close> $ Abs ("_", t, constrain (Term.incr_boundvars 1 X $ Bound 0))
             | constrain X = \<^Const>\<open>HOL.implies\<close> $ cond $ X
        in map constrain o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
       end
@@ -58,7 +59,7 @@ fun guess_entire_property ctxt0 (phi : phi_type) property_const =
           of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Guess_Property\<close>, _) $ _ $ _ $ _ $ GA $ CA $ (Const(\<^const_name>\<open>Some\<close>, _) $ GC))
                => let val (GA,CA) = apply2 (filter flt o PLPR_Syntax.dest_ant_sequence_or_HOL_conj) (GA,CA)
                       val cond' = PLPR_Syntax.mk_ant_sequence CA
-                      fun agument_cond (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X))
+                      fun agument_cond (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X)) (*TODO: eta reduction!*)
                             = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, agument_cond X)
                         | agument_cond X = \<^Const>\<open>HOL.implies\<close> $ cond' $ X
                       val ants = GA |> not (null CA) ? map agument_cond

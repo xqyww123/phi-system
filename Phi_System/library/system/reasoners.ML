@@ -81,9 +81,13 @@ fun is_user_dependent_antecedent (Const(\<^const_name>\<open>Trueprop\<close>, _
   | is_user_dependent_antecedent (Const(\<^const_name>\<open>ParamTag\<close>, _) $ _ ) = true
   | is_user_dependent_antecedent (Const(\<^const_name>\<open>\<phi>Procedure\<close>, _) $ _ $ _ $ _ $ _) = true
   | is_user_dependent_antecedent (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = is_user_dependent_antecedent X
+  | is_user_dependent_antecedent (\<^Const>\<open>Pure.all ty\<close> $ X) =
+      is_user_dependent_antecedent (\<^Const>\<open>Pure.all ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
   | is_user_dependent_antecedent (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = is_user_dependent_antecedent X
   | is_user_dependent_antecedent (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = is_user_dependent_antecedent X
   | is_user_dependent_antecedent (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X)) = is_user_dependent_antecedent X
+  | is_user_dependent_antecedent (\<^Const>\<open>HOL.All ty\<close> $ X) =
+      is_user_dependent_antecedent (\<^Const>\<open>HOL.All ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
   | is_user_dependent_antecedent (Const(\<^const_name>\<open>Labelled\<close>, _) $ _ $ X) = is_user_dependent_antecedent X
   | is_user_dependent_antecedent (Const(\<^const_name>\<open>Technical\<close>, _) $ X) = is_user_dependent_antecedent X
 (*  | is_user_dependent_antecedent (Const(\<^const_name>\<open>meta_Ball\<close>, _) $ _ $ Abs (_, _, X)) = is_user_dependent_antecedent X *)

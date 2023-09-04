@@ -141,11 +141,6 @@ fun norm_def ctxt (m,n,instance) def = let
       |> Drule.eta_contraction_rule
   end
 
-fun concl_of (Const (\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_,_,x)) = concl_of x
-  | concl_of (\<^const>\<open>Pure.imp\<close> $ _ $ x) = concl_of x
-  | concl_of x = x
-
-
 fun closure ctxt substT f =
   let
   (*val tvars = Term.add_tvars f []
@@ -191,7 +186,7 @@ fun simp_monads ctxt sequent =
 
 fun importT_proc th ctxt =
   let
-    val (f,_,_,_) = Thm.concl_of th |> concl_of |> Phi_Syntax.dest_procedure
+    val (f,_,_,_) = Thm.concl_of th |> Phi_Syntax.dest_procedure
     val (instT, ctxt') = Variable.importT_inst [f] ctxt;
     val instT' = TVars.map (K (Thm.ctyp_of ctxt')) instT;
     val th' = Thm.instantiate (instT', Vars.empty) th;
@@ -202,7 +197,7 @@ fun gen_define def_const (binding,attrs) (lthy0,sequent0) =
   let
     val ((substT, sequent), lthy) = importT_proc sequent0 lthy0
 
-    val (f,_,_,_) = Thm.concl_of sequent |> concl_of |> Phi_Syntax.dest_procedure
+    val (f,_,_,_) = Thm.concl_of sequent |> Phi_Syntax.dest_procedure
 
     (*all variables are in the procedure body*)
     (*then f' is the standard form of a definition*)

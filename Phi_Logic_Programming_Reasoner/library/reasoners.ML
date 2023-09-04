@@ -341,6 +341,7 @@ fun gen_extract_prems_rewr ctxt =
 
       fun quick_check (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check X
         | quick_check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = quick_check X
+        | quick_check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = quick_check (Term.incr_boundvars 1 X $ Bound 0)
         | quick_check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk_obj X
         | quick_check _ = false
 

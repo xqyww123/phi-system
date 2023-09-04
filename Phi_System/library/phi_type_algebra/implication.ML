@@ -87,6 +87,8 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
             = binop \<^Const>\<open>HOL.disj\<close> (inst_Lw context X, inst_Lw context Y)
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>All\<close>, _) $ Abs (N,ty,X))
             = inst_Lw ((N,ty)::vars, map (Term.incr_boundvars 1) prems) X
+        | inst_Lw (vars,prems) (\<^Const>\<open>All T\<close> $ X)
+            = inst_Lw (vars,prems) (\<^Const>\<open>All T\<close> $ (Abs ("_", T, Term.incr_boundvars 1 X $ Bound 0)))
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
             = let fun meet v j = if var = v
                                  then fold (fn prem => fn X => \<^Const>\<open>HOL.implies\<close> $ prem $ X) prems X
@@ -110,6 +112,8 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
             = binop \<^Const>\<open>HOL.conj\<close> (inst_Pr context A, inst_Pr context B)
         | inst_Pr (vars,prems) (Const(\<^const_name>\<open>All\<close>, _) $ Abs (N,ty,X))
             = inst_Pr ((N,ty)::vars, map (Term.incr_boundvars 1) prems) X
+        | inst_Pr (vars,prems) (\<^Const>\<open>HOL.All ty\<close> $ X)
+            = inst_Pr (vars,prems) (\<^Const>\<open>HOL.All ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | inst_Pr (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
             = inst_Pr (vars, P::prems) X
         | inst_Pr (vars,prems) (Var v $ Bound j)

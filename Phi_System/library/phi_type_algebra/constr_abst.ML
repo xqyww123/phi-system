@@ -94,6 +94,8 @@ fun instantiate_the_var (vP, vf) ctxt sequent =
             disj_join (pass c A, pass c B)
         | pass (bvs,prems,meet) (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (N, Ty, X)) =
             pass ((N,Ty) :: bvs, map (Term.incr_boundvars 1) prems, Option.map (fn i => i + 1) meet) X
+        | pass (bvs,prems,meet) (\<^Const>\<open>HOL.All T\<close> $ X) =
+            pass (bvs,prems,meet) (\<^Const>\<open>HOL.All T\<close> $ Abs ("_", T, Term.incr_boundvars 1 X $ Bound 0))
         | pass (bvs,prems,meet) (Const(\<^const_name>\<open>HOL.implies\<close>, _)
                 $ (P as (Const(\<^const_name>\<open>HOL.conj\<close>, _)
                             $ (Var vP' $ Bound i)

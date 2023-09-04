@@ -111,6 +111,8 @@ fun instantiate_the_var var ctxt sequent =
             = inst_body ret (quants, P::prems) X
         | inst_body ret (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
             = inst_body ret ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
+        | inst_body ret (quants, prems) (\<^Const>\<open>HOL.All ty\<close> $ X)
+            = inst_body ret (quants, prems) (\<^Const>\<open>HOL.All ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | inst_body (disj, conj) qp P
             = case pass_conjs ([],NONE) P
                 of (concls, SOME vx)  => (mk_disj_inst vx concls qp :: disj, conj)
@@ -123,6 +125,8 @@ fun instantiate_the_var var ctxt sequent =
             = inst (quants, P::prems) X
         | inst (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
             = inst ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
+        | inst (quants, prems) (\<^Const>\<open>HOL.All ty\<close> $ X)
+            = inst (quants, prems) (\<^Const>\<open>HOL.All ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | inst qp (\<^Const>\<open>HOL.conj\<close> $ A $ B)
             = let val (dA,cA) = inst qp A
                   val (dB,cB) = inst qp B
@@ -137,6 +141,8 @@ fun instantiate_the_var var ctxt sequent =
             = if ty = y_ty
               then inst_body ([],[]) qp (Term.subst_bounds ([y], X))
               else raise Automation_Fail (fn () => [Pretty.str "patch_for_Ex.ML fails to normalize the \<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R"])
+        | inst qp (\<^Const>\<open>special_Ex ty\<close> $ X)
+            = inst qp (\<^Const>\<open>special_Ex ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | inst qp P
             = if has_the_var P
               then inst_body ([],[]) qp P

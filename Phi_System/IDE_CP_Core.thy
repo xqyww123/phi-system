@@ -2086,7 +2086,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
       val mode = Phi_Working_Mode.mode1 ctxt
     in
       case #spec_of mode (Thm.concl_of sequent)
-        of Const (\<^const_name>\<open>ExSet\<close>, _) $ Abs _ =>
+        of Const (\<^const_name>\<open>ExSet\<close>, _) $ _ =>
             (* the auto choose works only when the lambda variable is given explicitly,
                i.e. no eta contract. *)
             raise Process_State_Call ((ctxt,sequent), NuObtain.auto_choose)
