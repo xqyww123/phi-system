@@ -159,7 +159,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
                   
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
-  where \<open>cx \<Ztypecolon> \<phi>Dependent_Sum T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
+  where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
   deriving Basic
     and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
@@ -700,8 +700,11 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>\<phi>-Type Embedding of Multiplicative Finite Quantification\<close>
 
-\<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
-  where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T i)\<close>
+\<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
+  where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
+
+text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
+  as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
 
 thm \<phi>Mul_Quant.expansion
 thm \<phi>Mul_Quant.elim_reasoning
@@ -709,19 +712,20 @@ thm \<phi>Mul_Quant.elim_reasoning
 definition \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T i)\<close> *)
 
+term Pair
+
+nonterminal "dom_idx"
+
 syntax
-  "_\<phi>Mul_Quant" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_/\<in>_]/ _)" [0, 51, 1000] 1000)
-  "_\<phi>Mul_Quant_print" :: "pttrn \<Rightarrow> pttrn \<Rightarrow> 'x \<Rightarrow> 'a set \<Rightarrow> 'T \<Rightarrow> logic"
+  "_one_dom" :: \<open>pttrns \<Rightarrow> 'a set \<Rightarrow> dom_idx\<close> ("_/\<in>_" [0,51] 50)
+  "_more_dom":: \<open>dom_idx \<Rightarrow> dom_idx \<Rightarrow> dom_idx\<close> ("_,/ _" [49, 50] 49)
+  "_\<phi>Mul_Quant" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_]/ _)" [49, 1000] 1000)
+  "_\<phi>Mul_Quant_mid" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"
+
 translations
-  "x \<Ztypecolon> \<big_ast>[i\<in>I] T" => "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I (\<lambda>i. T))"
-  "x \<Ztypecolon> \<big_ast>[i\<in>I] T" <= "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I (\<lambda>j. T))"
+  "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" == "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I T)"
+  "CONST \<phi>Type x (_\<phi>Mul_Quant (_more_dom d (_one_dom i I)) T)" == "CONST \<phi>Type (\<lambda>i. x) (_\<phi>Mul_Quant d (CONST \<phi>Mul_Quant I T))"
 
-print_translation \<open>[
-  (\<^syntax_const>\<open>_\<phi>Mul_Quant_print\<close>, (fn ctxt =>fn L => hd (@{print} L)))
-]\<close>
-
-term \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I (\<lambda>i. \<big_ast>\<^sup>\<phi> J (\<lambda>j. T))\<close>
-term \<open>x i + z \<Ztypecolon> \<big_ast>[i\<in>I] \<big_ast>[j\<in>J] (T i + U)\<close>
 
 
 
