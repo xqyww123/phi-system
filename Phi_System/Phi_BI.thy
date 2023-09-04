@@ -1489,7 +1489,7 @@ lemma Subjection_transformation:
 \<Longrightarrow> S \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P\<close>
   unfolding Transformation_def by (simp; blast)
 
-lemma Subjection_transformation_expn:
+lemma Subjection_transformation_rewr:
   \<open> (A \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longleftrightarrow> (Q \<longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P))\<close>
   unfolding Transformation_def by (simp; blast)
 
@@ -1654,7 +1654,58 @@ syntax
 translations
   "\<big_ast>x|P. t" => "CONST Mul_Quant (\<lambda>x. t) {x. P}"
 
-subsubsection \<open>Rules\<close>
+
+subsubsection \<open>Rewrites\<close>
+
+lemma finite_prod_subjection:
+  \<open>finite I \<Longrightarrow> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<Prod>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
+  unfolding BI_eq_iff
+proof (clarify; rule; clarsimp)
+  fix u
+  assume \<open>finite I\<close>
+  have \<open>u \<Turnstile> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i) \<longrightarrow> u \<Turnstile> prod A I \<and> (\<forall>x\<in>I. P x)\<close>
+    by (induct arbitrary: u rule: finite_induct[OF \<open>finite I\<close>]; simp; blast)
+  moreover assume \<open>u \<Turnstile> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i)\<close>
+  ultimately show \<open>u \<Turnstile> prod A I \<and> (\<forall>x\<in>I. P x)\<close>
+    by blast
+qed 
+
+lemma sep_quant_subjection:
+  \<open>(\<big_ast>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<big_ast>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
+  unfolding BI_eq_iff
+  by (clarify; rule; clarsimp simp add: Mul_Quant_def finite_prod_subjection)
+
+lemma sep_quant_swap:
+  \<open>\<lbrakk> finite I; finite J \<rbrakk> \<Longrightarrow>(\<big_ast>i\<in>I. \<big_ast>j\<in>J. A i j) = (\<big_ast>j\<in>J. \<big_ast>i\<in>I. A i j)\<close>
+  unfolding BI_eq_iff Mul_Quant_def
+  by (clarsimp; metis prod.swap)
+
+lemma sep_quant_scalar_assoc:
+  \<open>(\<big_ast>i\<in>I. \<big_ast>j\<in>J. A i j) = ((\<big_ast>(i,j) \<in> I \<times> J. A i j) \<s>\<u>\<b>\<j> finite I)\<close>
+  unfolding BI_eq_iff Mul_Quant_def
+  by (clarsimp; rule;
+      clarsimp simp add: finite_prod_subjection ex_in_conv finite_cartesian_product_iff;
+      cases \<open>I = {}\<close>; cases \<open>J = {}\<close>; simp add: prod.cartesian_product)
+
+lemma sep_quant_sep:
+  \<open>(\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i) = (\<big_ast>i\<in>I. A i * B i)\<close>
+  unfolding BI_eq_iff Mul_Quant_def
+  proof (clarsimp; rule; clarify)
+    fix u ua v
+    assume \<open>finite I\<close>
+    show \<open>ua \<Turnstile> prod A I \<Longrightarrow> v \<Turnstile> prod B I \<Longrightarrow> ua ## v \<Longrightarrow> ua * v \<Turnstile> (\<Prod>i\<in>I. A i * B i)\<close>
+      by (induct arbitrary: v u ua rule: finite_induct[OF \<open>finite I\<close>] ; clarsimp ;
+          smt (verit, best) sep_disj_commuteI sep_disj_multD1 sep_disj_multI1 sep_mult_assoc sep_mult_commute)
+  next
+    fix u
+    assume \<open>finite I\<close>
+    show \<open>u \<Turnstile> (\<Prod>i\<in>I. A i * B i) \<Longrightarrow> \<exists>ua v. u = ua * v \<and> ua \<Turnstile> prod A I \<and> v \<Turnstile> prod B I \<and> ua ## v\<close>
+      by (induct arbitrary: u rule: finite_induct[OF \<open>finite I\<close>] ; clarsimp ;
+          smt (verit) sep_disj_commuteI sep_disj_multD1 sep_disj_multI1 sep_mult_assoc sep_mult_commute)
+qed
+
+
+subsubsection \<open>Basic Rules\<close>
 
 lemma [\<phi>reason %cutting]:
   \<open> (\<And>i\<in>S. A i \<i>\<m>\<p>\<l>\<i>\<e>\<s> P i)
@@ -1679,31 +1730,66 @@ proof -
   by (metis (full_types) BI_bot_ord Subjection_Flase Subjection_True)
 qed
 
-lemma finite_prod_subjection:
-  \<open>finite I \<Longrightarrow> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<Prod>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
-  unfolding BI_eq_iff
-proof (clarify; rule; clarsimp)
-  fix u
-  assume \<open>finite I\<close>
-  have \<open>u \<Turnstile> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i) \<longrightarrow> u \<Turnstile> prod A I \<and> (\<forall>x\<in>I. P x)\<close>
-    by (induct arbitrary: u rule: finite_induct[OF \<open>finite I\<close>]; simp; blast)
-  moreover assume \<open>u \<Turnstile> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i)\<close>
-  ultimately show \<open>u \<Turnstile> prod A I \<and> (\<forall>x\<in>I. P x)\<close>
-    by blast
-qed 
 
-lemma sep_quant_subjection:
-  \<open>(\<big_ast>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<big_ast>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
-  unfolding BI_eq_iff
-  by (clarify; rule; clarsimp simp add: Mul_Quant_def finite_prod_subjection)
+subsubsection \<open>Transformation\<close>
 
-lemma sep_quant_contract:
-  \<open>(\<big_ast>i\<in>I. \<big_ast>j\<in>J. A i j) = ((\<big_ast>ij \<in> I \<times> J. case_prod A ij) \<s>\<u>\<b>\<j> finite I)\<close>
-  unfolding BI_eq_iff Mul_Quant_def
-  by (clarsimp; rule;
-      clarsimp simp add: finite_prod_subjection ex_in_conv finite_cartesian_product_iff;
-      cases \<open>I = {}\<close>; cases \<open>J = {}\<close>; simp add: prod.cartesian_product)
-  thm prod.cartesian_product
+paragraph \<open>Functor\<close>
+
+lemma sep_quant_transformation[\<phi>reason %ToA_cut]:
+  \<open> (\<And>i\<in>I. A i \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B i \<w>\<i>\<t>\<h> P i)
+\<Longrightarrow> (\<big_ast>i\<in>I. A i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. B i) \<w>\<i>\<t>\<h> (\<forall>i\<in>I. P i) \<close>
+  unfolding Transformation_def Mul_Quant_def meta_Ball_def Premise_def
+  proof clarsimp
+    fix v
+    assume \<open>finite I\<close>
+    show \<open> (\<And>x. x \<in> I \<Longrightarrow> \<forall>v. v \<Turnstile> A x \<longrightarrow> v \<Turnstile> B x \<and> P x)
+        \<Longrightarrow> v \<Turnstile> prod A I \<Longrightarrow> v \<Turnstile> prod B I \<and> (\<forall>x\<in>I. P x) \<close>
+      by (induct arbitrary: v rule: finite_induct[OF \<open>finite I\<close>]; clarsimp; blast)
+  qed
+
+lemma [\<phi>reason %ToA_cut]:
+  \<open> (\<And>i\<in>I. A i \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B i \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R i \<w>\<i>\<t>\<h> P i)
+\<Longrightarrow> (\<big_ast>i\<in>I. A i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. B i) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] (\<big_ast>i\<in>I. R i) \<w>\<i>\<t>\<h> (\<forall>i\<in>I. P i) \<close>
+  unfolding REMAINS_def
+  by (cases C; simp add: sep_quant_sep sep_quant_transformation)
+
+lemma sep_quant_reindex:
+  \<open> inj_on f I
+\<Longrightarrow> \<big_ast>i\<in>f`I. A i \<equiv> \<big_ast>i\<in>I. A (f i)\<close>
+  unfolding Mul_Quant_def BI_eq_iff atomize_eq
+  by (clarsimp; rule; clarsimp simp add: finite_image_iff prod.reindex_cong)
+
+
+paragraph \<open>Scalar Associative\<close>
+
+lemma [\<phi>reason %ToA_normalizing]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> finite I \<Longrightarrow> (\<big_ast>(i,j) \<in> I \<times> J. A i j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> (\<big_ast>i\<in>I. \<big_ast>j\<in>J. A i j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<close>
+  unfolding sep_quant_scalar_assoc Premise_def Subjection_transformation_rewr
+  by simp
+
+lemma [\<phi>reason %ToA_normalizing]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> finite I \<Longrightarrow> R * (\<big_ast>(i,j) \<in> I \<times> J. A i j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> R * (\<big_ast>i\<in>I. \<big_ast>j\<in>J. A i j) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<close>
+  unfolding sep_quant_scalar_assoc Premise_def Subjection_transformation_rewr Subjection_times
+  by simp
+
+lemma [\<phi>reason %ToA_normalizing]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>(i,j) \<in> I \<times> J. B i j) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> finite I
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. \<big_ast>j\<in>J. B i j) \<w>\<i>\<t>\<h> P \<close>
+  unfolding sep_quant_scalar_assoc Premise_def
+  by simp
+
+lemma [\<phi>reason %ToA_normalizing]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>(i,j) \<in> I \<times> J. B i j) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> finite I
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. \<big_ast>j\<in>J. B i j) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding sep_quant_scalar_assoc Premise_def
+  by simp
+
+
+
 
 
 subsection \<open>Universal Quantification\<close>

@@ -698,10 +698,16 @@ lemma [\<phi>reason 1000]:
 
 
 
-subsubsection \<open>\<phi>-Type Embedding of Multiplicative Finite Quantification\<close>
+subsection \<open>\<phi>-Type Embedding of Multiplicative Finite Quantification\<close>
 
+\<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
+  where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T i)\<close>
+
+thm \<phi>Mul_Quant.expansion
+thm \<phi>Mul_Quant.elim_reasoning
+(*
 definition \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c::sep_algebra, 'x) \<phi>) \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
-  where \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T i)\<close>
+  where \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T i)\<close> *)
 
 syntax
   "_\<phi>Mul_Quant" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_/\<in>_]/ _)" [0, 51, 1000] 1000)
@@ -713,6 +719,10 @@ translations
 print_translation \<open>[
   (\<^syntax_const>\<open>_\<phi>Mul_Quant_print\<close>, (fn ctxt =>fn L => hd (@{print} L)))
 ]\<close>
+
+term \<open>x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I (\<lambda>i. \<big_ast>\<^sup>\<phi> J (\<lambda>j. T))\<close>
+term \<open>x i + z \<Ztypecolon> \<big_ast>[i\<in>I] \<big_ast>[j\<in>J] (T i + U)\<close>
+
 
 
 subsubsection \<open>Separation Extraction\<close>

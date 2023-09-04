@@ -163,6 +163,36 @@ definition Semimodule_Scalar_Assoc :: \<open> ('s \<Rightarrow> ('c,'a) \<phi> \
   where \<open>Semimodule_Scalar_Assoc F T Ds \<longleftrightarrow> (\<forall>s t. Ds s \<and> Ds t \<longrightarrow> F s (F t T) = F (t * s) T)\<close>
   \<comment> \<open>Associativity of scalar multiplication\<close>
 
+definition Semimodule_Scalar_Assoc\<^sub>I :: \<open> ('s\<^sub>s \<Rightarrow> ('c,'a\<^sub>t) \<phi> \<Rightarrow> ('c,'a\<^sub>s\<^sub>_\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>c \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a\<^sub>s\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('c,'a) \<phi>
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> 's\<^sub>s \<Rightarrow> 's\<^sub>c)
+                                     \<Rightarrow> ('a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
+                                     \<Rightarrow> bool\<close>
+  where \<open>Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f
+      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> Fc (smul t s) T))\<close>
+  \<comment> \<open>An extension overcoming the type limitation of the simple type theory of Isabelle.
+      It can cover mul quant\<close>
+
+definition Semimodule_Scalar_Assoc\<^sub>E :: \<open> ('s\<^sub>s \<Rightarrow> ('c,'a\<^sub>t) \<phi> \<Rightarrow> ('c,'a\<^sub>s\<^sub>_\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('s\<^sub>c \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a\<^sub>s\<^sub>t) \<phi>)
+                                     \<Rightarrow> ('c,'a) \<phi>
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>t \<Rightarrow> 's\<^sub>s \<Rightarrow> 's\<^sub>c)
+                                     \<Rightarrow> ('a\<^sub>s\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t)
+                                     \<Rightarrow> bool\<close>
+  where \<open>Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul g
+      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (x \<Ztypecolon> Fc (smul t s) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g x \<Ztypecolon> Fs s (Ft t T)))\<close>
+  \<comment> \<open>An extension overcoming the type limitation of the simple type theory of Isabelle.
+      It can cover mul quant\<close>
+
 definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                     \<Rightarrow> ('c::sep_magma,'a) \<phi>
                                     \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
@@ -1154,7 +1184,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5]:
   \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def \<phi>Auto_Prod_def
-  by (clarsimp simp add: Subjection_transformation_expn Ex_transformation_expn)
+  by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
 
 
 locale Functional_Transformation_Functor =
