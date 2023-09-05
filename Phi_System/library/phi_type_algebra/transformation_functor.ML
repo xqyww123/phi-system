@@ -127,7 +127,7 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) =>
-          let fun set_prem_to_True rule =
+          let (*fun set_prem_to_True rule =
                 case Thm.prop_of rule
                   of _ (*Trueprop*) $ (_ $ Var v) =>
                       Thm.instantiate (TVars.empty, Vars.make [(v, \<^cterm>\<open>True\<close>)]) rule
@@ -152,10 +152,14 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
                            [])))], []) [] lthy
                       |> Proof.refine_primitive (fn _ => fn th => locale_rule' RS th)
                       |> Proof.global_done_proof
-                end
+                end*)
            in generic
-           |> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
-                              (setup_locale Interpretation.sublocale)
+           |> note_properties_s phi0 [(name, [rule'])]
+           |> Phi_Help.generic_theory_mapping (fn m =>
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
+                                              ([],[]) NONE [Morphism.thm m rule'])
+         (*|> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
+                              (setup_locale Interpretation.sublocale)*)
            |> pair [rule']
           end)
   end

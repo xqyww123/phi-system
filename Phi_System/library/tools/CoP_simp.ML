@@ -169,7 +169,8 @@ val _ = Theory.setup (Context.theory_map (
         |> Phi_Reasoner.add_rule pos mode priority patterns guard [rule]
         |> Config.restore_generic extract_pattern_trigger ctxt
     ))
-) ""
+) "Basically the ordinary \<phi>reason but of a special flag \<open>no trigger\<close> to prevent the left hand side \
+  \of the rule being registered as a trigger activating the simplification reasoning"
 )
 
 (*
