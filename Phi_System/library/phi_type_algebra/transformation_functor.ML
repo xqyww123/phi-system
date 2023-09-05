@@ -174,8 +174,7 @@ fun guess_property_FTF phi0 ctxt0 =
    |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt) => let
       val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
-      
-      val ant = PLPR_Syntax.mk_ant_sequence ants
+
       val FTF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
                         of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                             \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
@@ -183,16 +182,15 @@ fun guess_property_FTF phi0 ctxt0 =
                               $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
                               $ Var(("R",0), c --> \<^Type>\<open>set e\<close>)
                               $ Var(("mapper",0), (a --> e --> \<^Type>\<open>bool\<close>) --> c --> f --> \<^Type>\<open>bool\<close>)
-                              $ ant
                          | _ => error "BUG")
       val target_ty = Term_Subst.instantiateT_frees inst_ty
    in guess_func_mapper target_ty ctxt x_ty element_ty
    |> Seq.maps (fn (fm, ctxt'2) =>
         guess_pred_mapper ctxt'2 x_ty element_ty
      |> Seq.map (fn (pm, ctxt'3) =>
-          ([], \<^Const>\<open>Trueprop\<close> $ (FTF_head $ Abs ("f", element_ty --> target_ty element_ty, pm)
-                                           $ Abs ("f", element_ty --> target_ty element_ty,
-                                               Abs ("P", element_ty --> HOLogic.boolT, fm $ Bound 1))),
+          (ants, \<^Const>\<open>Trueprop\<close> $ (FTF_head $ Abs ("f", element_ty --> target_ty element_ty, pm)
+                                             $ Abs ("f", element_ty --> target_ty element_ty,
+                                                  Abs ("P", element_ty --> HOLogic.boolT, fm $ Bound 1))),
            NONE :: parse_parameters_of_phi_type (F_term $ Bound 42), phi,
            load_simpset [fm,pm] ctxt'3)))
   end)
@@ -200,8 +198,8 @@ fun guess_property_FTF phi0 ctxt0 =
 
 fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
-            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M $ _ $ p $ f) = [D,R,M,p,f]
+            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ => F1)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []
 
       fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi)) ctxt
@@ -221,8 +219,8 @@ fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
                                     phi0 hint0 ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
-        | SOME (rule'0, _) =>
-          let fun set_prem_to_True rule =
+        | SOME (rule, _) =>
+          let (*fun set_prem_to_True rule =
                 case Thm.prop_of rule
                   of _ (*Trueprop*) $ (_ $ Var v $ _ $ _) =>
                       Thm.instantiate (TVars.empty, Vars.make [(v, \<^cterm>\<open>True\<close>)]) rule
@@ -243,11 +241,13 @@ fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
                                  [])))], []) [] lthy
                             |> Proof.refine_primitive (fn _ => fn th => locale_rule' RS th)
                             |> Proof.global_done_proof
-                end
+                end*)
            in thy
-           |> Context.mapping (Named_Target.theory_map (setup_functional_TF Interpretation.global_interpretation))
-                              (setup_functional_TF Interpretation.sublocale)
-           |> pair [rule']
+           |> note_properties_s phi0 [(name, [rule])]
+           |> Phi_Help.generic_theory_mapping (fn m =>
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
+                                              ([],[]) NONE [Morphism.thm m rule])
+           |> pair [rule]
           end)
   end
 

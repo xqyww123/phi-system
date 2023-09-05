@@ -56,7 +56,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
-     
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -64,8 +64,7 @@ subsection \<open>Embedding Subjection into Type\<close>
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Carrier_Set T Q) \<Longrightarrow> Carrier_Set (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<longrightarrow> Q x)\<close>
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P) \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> Q) (Q \<and> P)\<close>
        and \<open>Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) \<close>
-       and Functional_Transformation_Functor
-       and Separation_Homo
+       and Separation_Monoid
        and Abstraction_to_Raw
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
@@ -194,7 +193,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Separation_Monoid
        and \<open>Transformation_Functor \<S> \<S> (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction
-                      (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y}) True
+                      (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})
                       (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
        and Open_Abstraction_to_Raw

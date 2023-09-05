@@ -128,6 +128,18 @@ definition \<open>Transformation_Functor F1 F2 D R mapper \<longleftrightarrow>
   Our automatic deriver by default assumes it to \<open>\<lambda>_. \<top>\<close> if no user hint is given.
 \<close>
 
+definition Functional_Transformation_Functor :: \<open>(('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>)
+                                               \<Rightarrow> (('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>)
+                                               \<Rightarrow> ('c \<Rightarrow> 'a set)
+                                               \<Rightarrow> ('c \<Rightarrow> 'e set)
+                                               \<Rightarrow> (('a \<Rightarrow> 'e \<Rightarrow> bool) \<Rightarrow> 'c \<Rightarrow> 'f \<Rightarrow> bool)
+                                               \<Rightarrow> (('a \<Rightarrow> 'e) \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> 'c \<Rightarrow> bool)
+                                               \<Rightarrow> (('a \<Rightarrow> 'e) \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> 'c \<Rightarrow> 'f)
+                                               \<Rightarrow> bool\<close>
+  where \<open>Functional_Transformation_Functor Fa Fb D R mapper pred_mapper func_mapper \<longleftrightarrow>
+            Transformation_Functor Fa Fb D R mapper \<and>
+            (\<forall>x y f P. mapper (\<lambda>a b. b = f a \<and> P a) x y \<longrightarrow> y = func_mapper f P x \<and> pred_mapper f P x)\<close>
+
 
 
 subsubsection \<open>Separation\<close>
@@ -266,8 +278,10 @@ declare [[
           end\<close> (100)
 ]]
 
-(*The default patterns of the rules are more general here by varifying types.
-  This is designed specially.
+(* TODO: depreciate!!!
+
+The default patterns of the rules are more general here by varifying types.
+  This is specially designed.
   In \<^const>\<open>Reverse_Transformation\<close>, as the reverse transformation can have different type,
     and in the algebraic general rule \<open>_Structural_Extract_general_rule'_\<close> the functors are
     represented by variables, it means we have no simple way to varify the type of the functors.
@@ -313,6 +327,7 @@ declare [[
     \<close> (100),
 
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Transformation_Functor _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Sep_Homo\<^sub>I _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Sep_Homo\<^sub>E _ \<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
@@ -328,7 +343,10 @@ declare [[
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_SDistr_Homo\<^sub>U_rev _ _ _ _ _\<close>,
 
   \<phi>reason_default_pattern
-      \<open>Semimodule_SDistr_Homo\<^sub>Z ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>Z ?F ?T _ _ _\<close> (100)
+      \<open>Functional_Transformation_Functor ?Fa ?Fb _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Functional_Transformation_Functor ?Fa _ _ _ _ _ _\<close>
+      \<open>Functional_Transformation_Functor _ ?Fb _ _ _ _ _\<close>   (100)
+  and \<open>Semimodule_SDistr_Homo\<^sub>Z ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>Z ?F ?T _ _ _\<close> (100)
   and \<open>Semimodule_SDistr_Homo\<^sub>U ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>U ?F ?T _ _ _\<close> (100)
   and \<open>Semimodule_SDistr_Homo\<^sub>Z_rev ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>Z_rev ?F ?T _ _ _\<close> (100)
   and \<open>Semimodule_SDistr_Homo\<^sub>U_rev ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>U_rev ?F ?T _ _ _\<close> (100)
@@ -456,6 +474,23 @@ lemma apply_Transformation_Functor:
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y \<close>
   unfolding Transformation_Functor_def Premise_def
   by simp
+
+lemma apply_Functional_Transformation_Functor:
+  \<open> Functional_Transformation_Functor Fa Fb D R mapper pred_mapper func_mapper
+\<Longrightarrow> (\<And>a \<in> D x. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x) 
+\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper f P x\<close>
+  unfolding meta_Ball_def Argument_def Premise_def
+            Functional_Transformation_Functor_def Transformation_Functor_def
+  apply clarify
+  subgoal premises prems
+    by (insert prems(1,2,4)
+                prems(3)[THEN spec[where x=T], THEN spec[where x=U], THEN spec[where x=x],
+                         THEN spec[where x=\<open>(\<lambda>a b. b = f a \<and> P a)\<close>], simplified] ;
+      clarsimp simp add: Transformation_def ;
+      blast) .
+
+
 
 subsubsection \<open>Separation Homo / Functor\<close>
 
@@ -850,6 +885,8 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
   \ matching the patter"
 #>*)add_property_kind \<^const_name>\<open>Transformation_Functor\<close>
       (fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F $ _ $ _ $ _ $ _) => F)
+#> Phi_Type_Template_Properties.add_property_kind \<^const_name>\<open>Functional_Transformation_Functor\<close>
+      (fn (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _) => F)
 #> add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>I\<close>
       (fn (Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ ) => F)
 #> add_property_kind \<^const_name>\<open>Separation_Homo\<^sub>E\<close>
@@ -1212,7 +1249,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5]:
   by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
 
 
-locale Functional_Transformation_Functor =
+(*locale Functional_Transformation_Functor =
   Transformation_Functor_L Fa Fb D R mapper Prem
   for Fa :: \<open>('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>\<close>
   and Fb :: \<open>('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>\<close>
@@ -1230,42 +1267,17 @@ locale Functional_Transformation_Functor =
           \<^verbatim>\<open>pred_mapper\<close> is the predicate mapper of an ADT. An exceptional example is set,
           \<open>func_mapper\<^sub>s\<^sub>e\<^sub>t f P S = { f x |x \<in> S. P x }\<close> and \<open>pred_mapper\<^sub>s\<^sub>e\<^sub>t f P S = \<top>\<close>,
           whose (generalized) algebraic mappers are however set image and set-forall (of its element).\<close>
+*)
 
-setup \<open>Phi_Type_Template_Properties.add_property_kind \<^const_name>\<open>Functional_Transformation_Functor\<close>
-            (fn (_ $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F)\<close>
-
-context Functional_Transformation_Functor
-begin
-
-lemma Functional_Transformation_Functor[\<phi>reason add (*pirority?*)]:
-  \<open>Functional_Transformation_Functor Fa Fb D R mapper Prem pred_mapper func_mapper\<close>
-  by (simp add: Functional_Transformation_Functor_axioms)
-
-lemma [\<phi>simplify_reasoning_rule,
-       \<phi>reason default %ToA_derived_one_to_one_functor for \<open>_ \<Ztypecolon> Fa _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Fb _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> Prem
+lemma [\<phi>reason_template default %ToA_derived_one_to_one_functor]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor Fa Fb D R mapper pred_mapper func_mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x) 
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper f P x\<close>
-  unfolding meta_Ball_def Premise_def
-  using Transformation_Functor[unfolded Transformation_Functor_def,
-          THEN spec[where x=T], THEN spec[where x=U], THEN spec[where x=x],
-          THEN spec[where x=\<open>(\<lambda>a b. b = f a \<and> P a)\<close>], simplified]
-        functional_mapper
-  by (clarsimp simp add: Transformation_def, blast)
-  
+  unfolding \<r>Guard_def
+  using apply_Functional_Transformation_Functor[unfolded Argument_def,
+            where func_mapper=func_mapper and pred_mapper=pred_mapper] .
 
-lemma functional_transformation:
-  \<open> Prem
-\<Longrightarrow> (\<And>a \<in> D x. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x) 
-\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper f P x\<close>
-  unfolding meta_Ball_def Argument_def Premise_def
-  using Transformation_Functor[unfolded Transformation_Functor_def,
-          THEN spec[where x=T], THEN spec[where x=U], THEN spec[where x=x],
-          THEN spec[where x=\<open>(\<lambda>a b. b = f a \<and> P a)\<close>], simplified]
-        functional_mapper
-  by (clarsimp simp add: Transformation_def, blast)
 
 (*
 lemma [\<phi>TA_internal_simplify_special_cases,
@@ -1296,15 +1308,8 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   using functional_transformation[unfolded Argument_def] .
 *)
 
-end
 
 hide_fact Transformation_Functor_L_simp_cong
-
-declare [[\<phi>reason_default_pattern
-      \<open>Functional_Transformation_Functor ?Fa ?Fb _ _ _ _ _ _\<close>
-   \<Rightarrow> \<open>Functional_Transformation_Functor ?Fa ?Fb _ _ _ _ _ _\<close> (100)
-]]
-
 
 
 subsubsection \<open>Separation Homomorphism\<close>
@@ -1358,16 +1363,13 @@ lemma [\<phi>reason_template name \<phi>Prod []]:
 
 lemma apply_conditioned_Separation_Functor_unzip:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U un)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Functional_Transformation_Functor Fc Ft D R mapper Prem pred_mapper func_mapper)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Prem)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Functional_Transformation_Functor Fc Ft D R mapper pred_mapper func_mapper)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<and> \<not> C \<longrightarrow> fst a \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fc(T \<^emph>[C] U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then un x else (func_mapper fst (\<lambda>_. True) x, undefined)) \<Ztypecolon> Ft(T) \<^emph>[C] Fu(U)\<close>
   unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'[symmetric] Premise_def
   apply (cases C; simp)
-  \<medium_left_bracket> premises FTF and [] and [useful] and []
-    interpret Functional_Transformation_Functor Fc Ft D R mapper True pred_mapper func_mapper
-      using FTF . ;;
-    apply_rule functional_transformation[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>]
+  \<medium_left_bracket> premises FTF[] and [useful] and []
+    apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
     \<medium_left_bracket> ;; \<medium_right_bracket> ;;
   \<medium_right_bracket> .
 
@@ -1794,11 +1796,10 @@ lemma
 
 
 lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %derived_SE_functor]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Prem \<and>\<^sub>\<r> Prem'r \<and>\<^sub>\<r> Prem'w \<and>\<^sub>\<r> Prem'b
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F23 Dom Rng mapper Prem pred_mapper func_mapper
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r Prem'r pred_mapper'r func_mapper'r
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w Prem'w pred_mapper'w func_mapper'w
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F1 F3  Dom'w Rng'b mapper'b Prem'b pred_mapper'b func_mapper'b
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F23 Dom Rng mapper pred_mapper func_mapper
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r pred_mapper'r func_mapper'r
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w pred_mapper'w func_mapper'w
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F1 F3  Dom'w Rng'b mapper'b pred_mapper'b func_mapper'b
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I F1 F4 F14 T W Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E F3 F2 F23 U R uz
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Cw \<longrightarrow> x \<in> Dz) \<and>
@@ -1823,42 +1824,30 @@ lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %deriv
                 else if Cr then pred_mapper'w (\<lambda>x. f (x, undefined)) (\<lambda>x. P (x, undefined)) (fst x)
                            else pred_mapper'b (\<lambda>x. fst (f (x, undefined))) (\<lambda>x. P (x, undefined)) (fst x)) \<close>
   apply (cases Cw; cases Cr; simp add: \<phi>Some_\<phi>Prod \<r>Guard_def Ant_Seq_imp)
-  \<medium_left_bracket> premises [] and [] and [] and []
-         and FTF and [] and [] and []
+  \<medium_left_bracket> premises FTF[] and [] and [] and []
          and _ and _ and _ and Tr
-    interpret Functional_Transformation_Functor F14 F23 Dom Rng mapper True pred_mapper func_mapper
-      using FTF . ;;
     apply_rule apply_Separation_Functor_zip[where Fu=F4 and Ft=F1]
-    apply_rule functional_transformation[where U=\<open>U \<^emph> R\<close> and f=\<open>f\<close> and P=\<open>P\<close>]
+    apply_rule apply_Functional_Transformation_Functor[where U=\<open>U \<^emph> R\<close> and f=\<open>f\<close> and P=\<open>P\<close>, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket>
     apply_Separation_Functor_unzip
   \<medium_right_bracket>
-  \<medium_left_bracket> premises [] and [] and [] and []
-         and [] and FTF and [] and []
+  \<medium_left_bracket> premises [] and FTF[] and [] and []
          and _ and [] and _ and Tr
-    interpret Functional_Transformation_Functor F14 F3 Dom Rng'r mapper'r True pred_mapper'r func_mapper'r
-      using FTF . ;;
     apply_rule apply_Separation_Functor_zip[where Fu=F4 and Ft=F1]
-    apply_rule functional_transformation[where U=\<open>U\<close> and f=\<open>fst o f\<close> and P=\<open>P\<close>]
+    apply_rule apply_Functional_Transformation_Functor[where U=\<open>U\<close> and f=\<open>fst o f\<close> and P=\<open>P\<close>, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
   \<medium_right_bracket>
-  \<medium_left_bracket> premises [] and [] and [] and []
-         and [] and [] and FTF and []
+  \<medium_left_bracket> premises [] and [] and FTF[] and []
          and [] and _ and _ and Tr
-    interpret Functional_Transformation_Functor F1 F23 Dom'w Rng'w mapper'w True pred_mapper'w func_mapper'w
-      using FTF . ;;
-    apply_rule functional_transformation[where U=\<open>U \<^emph> R\<close> and f=\<open>\<lambda>x. f (x, undefined)\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
-      note [[\<phi>trace_reasoning = 2]]
-      thm Tr
+    apply_rule apply_Functional_Transformation_Functor
+               [where U=\<open>U \<^emph> R\<close> and f=\<open>\<lambda>x. f (x, undefined)\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket>
     apply_Separation_Functor_unzip
   \<medium_right_bracket>
-  \<medium_left_bracket> premises [] and [] and [] and []
-         and [] and [] and [] and FTF
+  \<medium_left_bracket> premises [] and [] and [] and FTF[]
          and [] and [] and _ and Tr
-    interpret Functional_Transformation_Functor F1 F3 Dom'w Rng'b mapper'b True pred_mapper'b func_mapper'b
-      using FTF . ;;
-    apply_rule functional_transformation[where U=\<open>U\<close> and f=\<open>\<lambda>x. fst (f (x, undefined))\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>]
+    apply_rule apply_Functional_Transformation_Functor
+               [where U=\<open>U\<close> and f=\<open>\<lambda>x. fst (f (x, undefined))\<close> and P=\<open>\<lambda>x. P (x, undefined)\<close>, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket> ;;
   \<medium_right_bracket> .
 
@@ -3676,15 +3665,14 @@ lemma \<phi>TA_TF_pattern_IH:
 subsubsection \<open>Functional Transformation Functor\<close>
 
 lemma \<phi>TA_FTF_rule:
-  \<open> (Ant @action \<phi>TA_ANT \<Longrightarrow> Prem \<Longrightarrow> Transformation_Functor F1 F2 D R mapper)
-\<Longrightarrow> (Ant @action \<phi>TA_ANT \<Longrightarrow> Prem \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P a' b'. mapper (\<lambda>a b. b = f a \<and> P a) a' b' \<longrightarrow> b' = fm f P a' \<and> pm f P a'))
+  \<open> (Ant \<Longrightarrow> Transformation_Functor F1 F2 D R mapper)
+\<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P a' b'. mapper (\<lambda>a b. b = f a \<and> P a) a' b' \<longrightarrow> b' = fm f P a' \<and> pm f P a'))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> Functional_Transformation_Functor F1 F2 D R mapper Prem pm fm\<close>
+\<Longrightarrow> Functional_Transformation_Functor F1 F2 D R mapper pm fm\<close>
   unfolding Functional_Transformation_Functor_def Premise_def fun_eq_iff
-            Functional_Transformation_Functor_axioms_def Transformation_Functor_L_def
-            Action_Tag_def
+            Action_Tag_def Transformation_Functor_L_def
   by blast
 
 lemma [\<phi>reason %\<phi>TA_guesser[top]]:
@@ -3702,7 +3690,7 @@ ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 \<close>
 
 \<phi>property_deriver Functional_Transformation_Functor 111
-  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>)
+  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _\<close>)
   requires Transformation_Functor
     = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor\<close>
 
