@@ -581,7 +581,7 @@ fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 c
                  | dest (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) = dest X
                  | dest (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = dest X
                  | dest X = X
-            in case Term.head_of (dest TM)
+            in case Term.head_of (dest (Logic.strip_assums_concl TM))
             of Const (k, _) => if is_a_kind_of_property thy k then SOME k :: base else NONE :: base
              | _ => NONE :: base
            end
