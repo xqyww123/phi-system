@@ -31,7 +31,7 @@ lemma [\<phi>reason 1100]:
   \<open> Extract_a_Value R R' V
 \<Longrightarrow> Extract_a_Value (R\<heavy_comma> X) (R'\<heavy_comma> X) V\<close>
   unfolding Extract_a_Value_def
-  by (rule implies_right_frame)
+  by (rule transformation_right_frame)
 
 lemma [\<phi>reason 1000]:
   \<open> ERROR TEXT(\<open>The assertion has no value.\<close>)
@@ -95,7 +95,7 @@ lemma "_NToA_init_by_focus_":
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<and> Q\<close>
   for X :: \<open>'a::sep_magma_1 set\<close>
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def
-  by (simp; metis Transformation_def implies_right_frame mult_1_class.mult_1_left) *)
+  by (simp; metis Transformation_def transformation_right_frame mult_1_class.mult_1_left) *)
 
 
 
@@ -143,13 +143,13 @@ lemma [\<phi>reason 1200]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R \<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R'\<heavy_comma> X \<w>\<i>\<t>\<h> P"
   unfolding REMAINS_def split_paired_All
-  by (simp; metis implies_left_frame mult.assoc mult.commute)
+  by (simp; metis transformation_left_frame mult.assoc mult.commute)
 
 lemma [\<phi>reason 1200 except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> \<v>\<a>\<l>[?v] ?V \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] V \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[v] V \<w>\<i>\<t>\<h> P"
   unfolding REMAINS_def
-  by (metis (no_types, opaque_lifting) implies_right_frame mult.assoc mult.commute)
+  by (metis (no_types, opaque_lifting) transformation_right_frame mult.assoc mult.commute)
 
 
 
@@ -850,8 +850,8 @@ lemma Structural_Extract_\<phi>Prod_right:
   for A :: \<open>('a::sep_semigroup,'b) \<phi>\<close>
   unfolding Action_Tag_def Try_def
 \<medium_left_bracket> premises Y and X
-  apply_rule Y[THEN implies_left_frame, where R=\<open>snd (snd a) \<Ztypecolon> WX\<close>]
-  apply_rule X[THEN implies_right_frame, where R=\<open>fst b \<Ztypecolon> Y\<close>]
+  apply_rule Y[THEN transformation_left_frame, where R=\<open>snd (snd a) \<Ztypecolon> WX\<close>]
+  apply_rule X[THEN transformation_right_frame, where R=\<open>fst b \<Ztypecolon> Y\<close>]
 \<medium_right_bracket> .
 
 declare Structural_Extract_\<phi>Prod_right [THEN \<A>SE_clean_waste, \<phi>reason 1200]
@@ -875,8 +875,8 @@ lemma Structural_Extract_\<phi>Prod_left:
   for T :: \<open>('a::sep_semigroup,'b) \<phi>\<close>
   unfolding Action_Tag_def Try_def
   \<medium_left_bracket> premises T and U
-    apply_rule U[THEN implies_right_frame, where R=\<open>fst (fst x) \<Ztypecolon> T\<close>]
-    apply_rule T[THEN implies_left_frame, where R=\<open>snd w_ru \<Ztypecolon> Ru\<close>]
+    apply_rule U[THEN transformation_right_frame, where R=\<open>fst (fst x) \<Ztypecolon> T\<close>]
+    apply_rule T[THEN transformation_left_frame, where R=\<open>snd w_ru \<Ztypecolon> Ru\<close>]
   \<medium_right_bracket> .
 
 declare Structural_Extract_\<phi>Prod_left [THEN \<A>SE_clean_waste, \<phi>reason 1200]
@@ -907,8 +907,8 @@ lemma enter_SE:
   for A :: \<open>'a::sep_semigroup BI\<close>
   unfolding Action_Tag_def REMAINS_simp
   \<medium_left_bracket> premises T1 and T2
-    apply_rule T2[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
-    apply_rule T1[THEN implies_left_frame, where R=RR]
+    apply_rule T2[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+    apply_rule T1[THEN transformation_left_frame, where R=RR]
   \<medium_right_bracket> .
 
 lemma enter_SE_TH:
@@ -940,26 +940,26 @@ lemma enter_SEi_\<phi>Some:
   apply (cases Cw; cases Cr; cases Crr;
          simp add: \<phi>Some_\<phi>None_freeobj \<phi>Prod_expn')
   \<medium_left_bracket> premises T1 and T2
-    apply_rule T2[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
-    apply_rule T1[THEN implies_left_frame, where R=RR]
+    apply_rule T2[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
+    apply_rule T1[THEN transformation_left_frame, where R=RR]
   \<medium_right_bracket>
   \<medium_left_bracket> premises T1 and T2
-    apply_rule T2[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
+    apply_rule T2[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
     apply_rule T1
   \<medium_right_bracket>
   \<medium_left_bracket> premises T1 and T2
-    apply_rule T2[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
-    apply_rule T1[THEN implies_left_frame, where R=RR]
+    apply_rule T2[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
+    apply_rule T1[THEN transformation_left_frame, where R=RR]
   \<medium_right_bracket>
   \<medium_left_bracket> premises T1 and T2
-    apply_rule T2[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
+    apply_rule T2[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> \<black_circle> T\<close>]
     apply_rule T1
   \<medium_right_bracket>
   \<medium_left_bracket> premises T1
-    apply_rule T1[THEN implies_left_frame, where R=A]
+    apply_rule T1[THEN transformation_left_frame, where R=A]
   \<medium_right_bracket>
   \<medium_left_bracket> premises T1
-    apply_rule T1[THEN implies_left_frame, where R=A]
+    apply_rule T1[THEN transformation_left_frame, where R=A]
   \<medium_right_bracket> .
 
 lemma enter_SEi_\<phi>Some_TH:
@@ -992,9 +992,9 @@ lemma enter_SEb:
   for A :: \<open>'a :: sep_magma_1 set\<close>
   unfolding Action_Tag_def \<phi>Prod_expn' Identity_Element\<^sub>I_def
   \<medium_left_bracket> premises T and R and A
-    apply_rule A[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+    apply_rule A[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
     T
-    apply_rule R[THEN implies_right_frame, where R=\<open>fst y \<Ztypecolon> U\<close>]
+    apply_rule R[THEN transformation_right_frame, where R=\<open>fst y \<Ztypecolon> U\<close>]
   \<medium_right_bracket> .
 
 lemma enter_SEb_TH:

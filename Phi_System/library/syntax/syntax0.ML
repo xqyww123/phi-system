@@ -11,7 +11,7 @@ include PHI_SYNTAX
   val dest_sem_value_T: typ -> typ
   val mk_sem_value_T: typ -> typ
 
-  val mk_phi_type_ty : typ (*abstract*) * typ (*concrete*) -> typ
+  val mk_phi_type_ty : typ (*concrete*) * typ (*abstract*) -> typ
   val mk_phi_type : term * term -> term
   val dest_phi_type_ty : typ -> typ (*abstract*) * typ (*concrete*)
   val dest_phi_type_ty_c : ctyp -> ctyp (*abstract*) * ctyp (*concrete*)  
@@ -53,7 +53,7 @@ fun mk_phi_type (x,T) =
   let val \<^Type>\<open>fun \<open>a\<close> \<open>\<^Type>\<open>set \<open>b\<close>\<close>\<close>\<close> = Phi_Help.safe_fastype_of  T
    in \<^Const>\<open>\<phi>Type a b\<close> $ x $ T end
 
-fun mk_phi_type_ty (tx, tm) = \<^Type>\<open>fun tx \<^Type>\<open>set tm\<close>\<close>
+fun mk_phi_type_ty (tm, tx) = \<^Type>\<open>fun tx \<^Type>\<open>set tm\<close>\<close>
 
 fun dest_phi_type_ty \<^Type>\<open>fun x \<^Type>\<open>set model\<close>\<close> = (x, model)
   | dest_phi_type_ty T = raise TYPE ("dest_phi_type_ty", [T], [])
@@ -71,3 +71,5 @@ fun Subjection_conv CX CP ctm =
      | _ => raise CTERM ("Subjection_conv", [ctm])
 
 end
+
+val mk_phi_type_ty = Phi_Syntax.mk_phi_type_ty

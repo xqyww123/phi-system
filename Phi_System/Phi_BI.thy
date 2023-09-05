@@ -1624,15 +1624,15 @@ lemma eq_right_frame:
   \<open> A = B \<Longrightarrow> A * R = B * R \<close>
   by simp
 
-lemma implies_left_frame:
+lemma transformation_left_frame:
   "U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> R * U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * U \<w>\<i>\<t>\<h> P "
   unfolding Transformation_def split_paired_All sep_conj_expn by blast
 
-lemma implies_right_frame:
+lemma transformation_right_frame:
   "U' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> U' * R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U * R \<w>\<i>\<t>\<h> P "
   unfolding Transformation_def split_paired_All sep_conj_expn by blast
 
-lemma implies_bi_frame:
+lemma transformation_bi_frame:
   " R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> L' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> L \<w>\<i>\<t>\<h> Q
 \<Longrightarrow> L' * R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> L * R \<w>\<i>\<t>\<h> P \<and> Q "
@@ -1993,6 +1993,21 @@ lemma [\<phi>reason %extract_pure]:
   unfolding Inhabited_def Action_Tag_def
   by (cases x; simp, blast)
 
+paragraph \<open>Frame Rules\<close>
+
+lemma transformation_right_frame_ty:
+  \<open>(\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a = fst x \<Longrightarrow> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(a) \<Ztypecolon> U \<w>\<i>\<t>\<h> P(a))
+\<Longrightarrow> x \<Ztypecolon> T \<^emph> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P(fst x) \<close>
+  unfolding Transformation_def
+  by (cases x; clarsimp; blast)
+
+lemma transformation_left_frame_ty:
+  \<open>(\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a = snd x \<Longrightarrow> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(a) \<Ztypecolon> U \<w>\<i>\<t>\<h> P(a))
+\<Longrightarrow> x \<Ztypecolon> R \<^emph> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apsnd f x \<Ztypecolon> R \<^emph> U \<w>\<i>\<t>\<h> P(snd x) \<close>
+  unfolding Transformation_def
+  by (cases x; clarsimp; blast)
+
+
 subsubsection \<open>Transformation Rules\<close>
 
 lemma destruct_\<phi>Prod_\<phi>app: (*TODO: merge this into general destruction*)
@@ -2046,6 +2061,8 @@ lemma Cond_\<phi>Prod_expn_const[simp]:
   \<open>x \<Ztypecolon> T \<^emph>[False] U \<equiv> fst x \<Ztypecolon> T\<close>
   by (simp_all add: Cond_\<phi>Prod_def \<phi>Type_def)
 
+subsubsection \<open>Basic Rules\<close>
+
 lemma [\<phi>reason %extract_pure]:
   \<open> fst x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
 \<Longrightarrow> snd x \<Ztypecolon> U \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
@@ -2053,10 +2070,24 @@ lemma [\<phi>reason %extract_pure]:
   unfolding Action_Tag_def Inhabited_def
   by (cases C; clarsimp; blast)
 
+paragraph \<open>Frame Rules\<close>
+
+lemma transformation_right_frame_conditioned_ty:
+  \<open>(\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a = fst x \<Longrightarrow> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(a) \<Ztypecolon> U \<w>\<i>\<t>\<h> P(a))
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[C] R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P(fst x) \<close>
+  unfolding Transformation_def
+  by (cases C; cases x; clarsimp; blast)
+
+lemma transformation_left_frame_conditioned_ty:
+  \<open>(\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a = snd x \<Longrightarrow> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(a) \<Ztypecolon> U \<w>\<i>\<t>\<h> P(a))
+\<Longrightarrow> x \<Ztypecolon> R \<^emph>[C] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apsnd f x \<Ztypecolon> R \<^emph>[C] U \<w>\<i>\<t>\<h> C \<longrightarrow> P(snd x) \<close>
+  unfolding Transformation_def
+  by (cases C; cases x; clarsimp; blast)
+
+
 subsubsection \<open>Transformation Rules\<close>
 
 text \<open>see \<section>\<open>Reasoning/Supplementary Transformations/Type-embedding of Conditioned Remains\<close>\<close>
-
 
 subsection \<open>Embedding of Empty\<close>
 
@@ -2434,10 +2465,10 @@ lemma Structural_Extract_\<phi>Prod_right_i[\<phi>reason %ToA_cut]:
   apply (cases Cb; simp add: cond_prod_transformation_rewr;
          clarsimp simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
   subgoal premises prems
-    by (insert prems(1)[THEN implies_left_frame, where R=\<open>wx \<Ztypecolon> \<half_blkcirc>[Cx] WX\<close>]
-               prems(2)[THEN implies_right_frame, where R=\<open>fst b \<Ztypecolon> \<black_circle> Y\<close>],
+    by (insert prems(1)[THEN transformation_left_frame, where R=\<open>wx \<Ztypecolon> \<half_blkcirc>[Cx] WX\<close>]
+               prems(2)[THEN transformation_right_frame, where R=\<open>fst b \<Ztypecolon> \<black_circle> Y\<close>],
         simp add: mult.assoc transformation_trans)
-  by (simp add: implies_left_frame mult.assoc)
+  by (simp add: transformation_left_frame mult.assoc)
 
 (* TODO!
 lemma [\<phi>reason 1201]:
@@ -2465,11 +2496,11 @@ lemma Structural_Extract_\<phi>Prod_left_i [\<phi>reason %ToA_cut]:
   apply (cases Cw; simp add: cond_prod_transformation_rewr;
          simp add: \<phi>Prod_expn'' \<phi>Prod_expn' \<phi>Some_\<phi>Prod[symmetric] Cond_\<phi>Prod_expn_\<phi>Some)
   subgoal premises prems
-    by (insert prems(1)[THEN implies_left_frame, where R=\<open>snd wr \<Ztypecolon> \<half_blkcirc>[Crb] Ru\<close>]
-               prems(2)[THEN implies_right_frame, where R=\<open>fst (fst x) \<Ztypecolon> \<black_circle> T\<close>],
+    by (insert prems(1)[THEN transformation_left_frame, where R=\<open>snd wr \<Ztypecolon> \<half_blkcirc>[Crb] Ru\<close>]
+               prems(2)[THEN transformation_right_frame, where R=\<open>fst (fst x) \<Ztypecolon> \<black_circle> T\<close>],
         simp add: mult.assoc[symmetric] prems(4)[symmetric],
         smt (z3) Transformation_def)
-  by (metis (no_types, lifting) implies_left_frame mult.assoc)
+  by (metis (no_types, lifting) transformation_left_frame mult.assoc)
 
 
 (* TODO
@@ -2532,7 +2563,7 @@ lemma ToA_by_Equiv_Class'
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = y' \<or> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def
-  by (cases C; clarsimp; meson Transformation_def implies_left_frame)
+  by (cases C; clarsimp; meson Transformation_def transformation_left_frame)
 
 subsubsection \<open>Basic Rules\<close>
 (*
@@ -3469,31 +3500,31 @@ lemma enter_SEi:
          simp add: \<phi>Some_\<phi>Prod \<phi>Some_transformation_strip \<phi>Prod_expn')
 
   subgoal premises prems for a b
-    by (insert prems(2)[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
-               prems(1)[THEN implies_left_frame, where R=RR],
+    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+               prems(1)[THEN transformation_left_frame, where R=RR],
         simp add: mult.assoc transformation_trans)
 
   subgoal premises prems for a b
-    by (insert prems(2)[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
                prems(1),
         simp add: mult.assoc transformation_trans)
 
   subgoal premises prems for a b
-    by (insert prems(2)[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
-               prems(1)[THEN implies_left_frame, where R=RR],
+    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+               prems(1)[THEN transformation_left_frame, where R=RR],
         simp add: mult.assoc transformation_trans)
 
   subgoal premises prems for a b
-    by (insert prems(2)[THEN implies_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
+    by (insert prems(2)[THEN transformation_right_frame, where R=\<open>x \<Ztypecolon> T\<close>]
                prems(1),
         simp add: mult.assoc transformation_trans)
 
   subgoal premises prems for a b
-    by (insert prems(1)[THEN implies_left_frame, where R=A],
+    by (insert prems(1)[THEN transformation_left_frame, where R=A],
         simp add: mult.assoc transformation_trans)
 
   subgoal premises prems for a b
-    by (insert prems(1)[THEN implies_left_frame, where R=A],
+    by (insert prems(1)[THEN transformation_left_frame, where R=A],
         simp add: mult.assoc transformation_trans) .
 
 (* TODO: DO NOT REMOVE

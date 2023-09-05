@@ -203,7 +203,7 @@ lemma NToA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecol
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R \<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<w>\<i>\<t>\<h> P"
   unfolding Action_Tag_def FOCUS_TAG_def split_paired_All Action_Tag_def
-  by (metis ab_semigroup_mult_class.mult_ac(1) implies_left_frame mult.commute)
+  by (metis ab_semigroup_mult_class.mult_ac(1) transformation_left_frame mult.commute)
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act

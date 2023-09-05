@@ -169,8 +169,8 @@ lemma [\<phi>reason 1000]:
   unfolding sift_brking_frame_def Simplify_def Action_Tag_def sift_brking_frame'_def
            Brking_Frame_def
   \<medium_left_bracket> premises X and Y and E
-    X cases \<medium_left_bracket> apply_rule E[THEN implies_right_frame] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
-            \<medium_left_bracket> apply_rule Y[THEN implies_right_frame] \<medium_right_bracket>
+    X cases \<medium_left_bracket> apply_rule E[THEN transformation_right_frame] \<medium_right_bracket> for \<open>(\<exists>*v. Y' v\<heavy_comma> to_vals (\<phi>arg.dest v) \<Ztypecolon> _) + (E'\<heavy_comma> TECHNICAL Brk_Frame l)\<close>
+            \<medium_left_bracket> apply_rule Y[THEN transformation_right_frame] \<medium_right_bracket>
   \<medium_right_bracket>.
 
 
@@ -252,7 +252,7 @@ lemma [\<phi>reason 2200]:
 \<Longrightarrow> Brking_Frame l S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   unfolding Brking_Frame_def FOCUS_TAG_def
   \<medium_left_bracket> premises X
-    apply_rule X[THEN implies_right_frame]
+    apply_rule X[THEN transformation_right_frame]
   \<medium_right_bracket>.
 
 lemma [\<phi>reason 2201]:
@@ -261,7 +261,7 @@ lemma [\<phi>reason 2201]:
 \<Longrightarrow> TECHNICAL Brking_Frame l S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL Brking_Frame l R \<heavy_comma> \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P\<close>
   unfolding Brking_Frame_def FOCUS_TAG_def Technical_def
   \<medium_left_bracket> premises X
-    apply_rule X[THEN implies_right_frame]
+    apply_rule X[THEN transformation_right_frame]
   \<medium_right_bracket>.
 
 

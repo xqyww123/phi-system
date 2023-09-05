@@ -386,7 +386,7 @@ lemma NToA_by_structural_extraction:
   unfolding Premise_def FOCUS_TAG_def Structural_Extract_def Simplify_def Try_def
   \<medium_left_bracket> premises SI and Q and SE and A
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-  ;;  A[THEN implies_right_frame]
+  ;;  A[THEN transformation_right_frame]
      SE[OF \<open>Q'\<close>]
   \<medium_right_bracket> certified using \<phi> by simp .
 
@@ -403,13 +403,13 @@ lemma NToA_by_structural_extraction__reverse_transformation:
             Generated_Rule_def Compact_Antecedent_def Try_def
   \<medium_left_bracket> premises SI and Q and SE and A
   have \<open>Q'\<close> using \<phi> SI[unfolded Structure_Info_def] Q by blast
-  ;; A[THEN implies_right_frame]
+  ;; A[THEN transformation_right_frame]
      SE[OF \<open>Q'\<close>]
   \<medium_right_bracket> certified apply  (simp add: \<phi>)
   \<medium_left_bracket>
     have A : \<open>R2' \<heavy_comma> W' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A' \<w>\<i>\<t>\<h> P1'\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
     have SE: \<open>(R1' \<heavy_comma> x' \<Ztypecolon> \<phi> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> W' \<heavy_comma> y' \<Ztypecolon> \<phi> U' \<w>\<i>\<t>\<h> P2')\<close> using \<phi>_previous \<open>RP2 \<and> RP1\<close> by simp
-    ;; SE A[THEN implies_right_frame]
+    ;; SE A[THEN transformation_right_frame]
   \<medium_right_bracket>. .
 
 
@@ -417,7 +417,7 @@ lemma NToA_skip [\<phi>reason 1200 except \<open> _ \<heavy_comma> ?y \<Ztypecol
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R'\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R \<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R'\<heavy_comma> X\<heavy_comma> \<blangle> x \<Ztypecolon> \<phi> T \<brangle> \<w>\<i>\<t>\<h> P"
   unfolding Action_Tag_def FOCUS_TAG_def split_paired_All Action_Tag_def
-  by (metis ab_semigroup_mult_class.mult_ac(1) implies_left_frame mult.commute)
+  by (metis ab_semigroup_mult_class.mult_ac(1) transformation_left_frame mult.commute)
 
 lemma [\<phi>reason 1200]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act

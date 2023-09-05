@@ -925,7 +925,7 @@ declare [[\<phi>trace_reasoning = 1]]
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
 
-thm apply_Separation_Functor_unzip
+thm apply_Separation_Homo\<^sub>E
         [unfolded \<phi>Prod_expn''[simplified]]
 
 subsubsection \<open>Reasoning Rules\<close>

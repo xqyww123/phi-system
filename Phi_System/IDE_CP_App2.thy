@@ -90,7 +90,7 @@ lemma [\<phi>reason 2100 for \<open>
       (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P)\<close>
   unfolding \<phi>Application_def
-  using \<phi>apply_implication Val_transformation implies_left_frame by metis
+  using \<phi>apply_implication Val_transformation transformation_left_frame by metis
 
 
 lemma [\<phi>reason 2000 for \<open>
@@ -108,7 +108,7 @@ lemma [\<phi>reason 2000 for \<open>
       (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Val raw T))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Val raw U) \<and> P)\<close>
   unfolding \<phi>Application_def
-  by (meson Val_transformation \<phi>apply_implication implies_left_frame)
+  by (meson Val_transformation \<phi>apply_implication transformation_left_frame)
 
 
 subsection \<open>Synthesis\<close>

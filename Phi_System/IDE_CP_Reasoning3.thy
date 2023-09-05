@@ -461,7 +461,7 @@ lemma NToA_by_structural_extraction:
 \<Longrightarrow> A \<heavy_comma> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R2\<heavy_comma> snd xr \<Ztypecolon> R\<heavy_comma> \<blangle> x \<Ztypecolon> T \<brangle> \<w>\<i>\<t>\<h> P1 \<and> P2"
   unfolding FOCUS_TAG_def Try_def
   \<medium_left_bracket> premises _ and SE and _ and A
-    apply_rule A[THEN implies_right_frame]
+    apply_rule A[THEN transformation_right_frame]
     SE
   \<medium_right_bracket> .
 
@@ -479,7 +479,7 @@ lemma NToA_by_structural_extraction__reverse_transformation:
           \<and> P1 \<and> P2)"
   unfolding FOCUS_TAG_def Generated_Rule_def Try_def
   \<medium_left_bracket> premises _ and SE and _ and A
-    apply_rule A[THEN implies_right_frame]
+    apply_rule A[THEN transformation_right_frame]
     SE
   \<medium_right_bracket> certified apply (clarsimp simp add: \<phi>)
   \<medium_left_bracket> premises _ and _ and [simp] and [simp]
@@ -583,8 +583,8 @@ lemma Structural_Extract_from_mult:
   unfolding Structural_Extract_def Simplify_def Try_def
   \<medium_left_bracket> premises R and L
     fold mult.assoc
-    apply_rule L[THEN implies_right_frame]
-    apply_rule R[THEN implies_left_frame, unfolded mult.assoc[symmetric]]
+    apply_rule L[THEN transformation_right_frame]
+    apply_rule R[THEN transformation_left_frame, unfolded mult.assoc[symmetric]]
   \<medium_right_bracket> .
 
 declare Structural_Extract_from_mult [THEN SE_clean_waste,  \<phi>reason 1200] *)
@@ -916,9 +916,9 @@ lemma Structural_Extract_share_half:
   for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
   unfolding Structural_Extract_def half_def Action_Tag_def
   \<medium_left_bracket> premises [\<phi>reason] and X
-    apply_rule share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_frame]
+    apply_rule share_split_\<phi>app[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN transformation_left_frame]
     fold mult.assoc
-    apply_rule X[THEN implies_right_frame]
+    apply_rule X[THEN transformation_right_frame]
   \<medium_right_bracket> .
 
 declare Structural_Extract_share_half[THEN SE_clean_waste,
@@ -934,8 +934,8 @@ lemma Structural_Extract_share_half_rev:
   have t1: \<open>(r \<Ztypecolon> R) * (x \<Ztypecolon> m / 2 \<odiv> T) * (y \<Ztypecolon> m / 2 \<odiv> U) = (r \<Ztypecolon> R) * (y \<Ztypecolon> m / 2 \<odiv> U) * (x \<Ztypecolon> m / 2 \<odiv> T)\<close>
     by (metis (mono_tags, lifting) mult.assoc mult.commute)
   ;; unfold t1
-     apply_rule X[THEN implies_right_frame]
-     apply_rule share_merge[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN implies_left_frame, folded mult.assoc]
+     apply_rule X[THEN transformation_right_frame]
+     apply_rule share_merge[where n=\<open>m/2\<close> and m=\<open>m/2\<close>, simplified, THEN transformation_left_frame, folded mult.assoc]
   \<medium_right_bracket> .
 
 (* declare Structural_Extract_share_half_rev[THEN SE_clean_waste] *)
@@ -1000,7 +1000,7 @@ lemma Structural_Extract_share_ge:
     apply_rule share_split_\<phi>app[where n=\<open>n\<close> and m=\<open>m-n\<close>, simplified]
     fold mult.assoc
     apply_rule X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
-                 THEN implies_right_frame]
+                 THEN transformation_right_frame]
   have t1: \<open>(r \<Ztypecolon> n \<odiv> R) * (y \<Ztypecolon> n \<odiv> U) * (x \<Ztypecolon> m - n \<odiv> T) = (x \<Ztypecolon> m - n \<odiv> T) * (r \<Ztypecolon> n \<odiv> R) * (y \<Ztypecolon> n \<odiv> U)\<close>
     using mult.assoc mult.commute by blast
   ;; unfold t1
@@ -1019,7 +1019,7 @@ lemma Structural_Extract_share_le:
   unfolding Structural_Extract_def \<phi>Prod_expn' conjunction_imp \<r>Guard_def
   \<medium_left_bracket> premises LE[unfolded Premise_def, useful] and SDI[\<phi>reason] and _ and X
     apply_rule X[folded \<phi>Prod_expn', THEN \<phi>Share_transformation, unfolded \<phi>Share_\<phi>Prod \<phi>Prod_expn',
-                 THEN implies_left_frame, folded mult.assoc]
+                 THEN transformation_left_frame, folded mult.assoc]
 
   have \<open>(y \<Ztypecolon> n - m \<odiv> U) * (y \<Ztypecolon> m \<odiv> U) = (y \<Ztypecolon> n \<odiv> U)\<close>
     using \<phi>Share_share[where n=\<open>n-m\<close> and m=m, simplified] \<phi>
@@ -1796,7 +1796,7 @@ lemma Gen_Synthesis_Rule_transformation_12:
       (PROP Ant \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * Yr * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action synthesis) \<close>
   for R :: \<open>'a::sep_semigroup set\<close>
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
-  by (simp; rule implies_left_frame[where U=\<open>Yr * Y\<close>, simplified mult.assoc[symmetric]]; simp)
+  by (simp; rule transformation_left_frame[where U=\<open>Yr * Y\<close>, simplified mult.assoc[symmetric]]; simp)
 
 lemma Gen_Synthesis_Rule_transformation_11:
   \<open> PROP Gen_Synthesis_Rule
@@ -1804,7 +1804,7 @@ lemma Gen_Synthesis_Rule_transformation_11:
       Ant
       (PROP Ant \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * \<blangle> Y \<brangle> \<w>\<i>\<t>\<h> P @action synthesis) \<close>
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
-  by (simp; rule implies_left_frame; simp)
+  by (simp; rule transformation_left_frame; simp)
 
 lemma Gen_Synthesis_Rule_transformation_10:
   \<open> PROP Gen_Synthesis_Rule
@@ -1812,7 +1812,7 @@ lemma Gen_Synthesis_Rule_transformation_10:
       Ant
       (PROP Ant \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R * Y \<w>\<i>\<t>\<h> P @action synthesis) \<close>
   unfolding Gen_Synthesis_Rule_def Action_Tag_def
-  by (rule implies_left_frame; simp)
+  by (rule transformation_left_frame; simp)
 
 lemma Gen_Synthesis_Rule_transformation_01:
   \<open> PROP Gen_Synthesis_Rule
