@@ -21,6 +21,7 @@ ML \<open>structure Phi_Expansions = Simpset (
   val binding = SOME \<^binding>\<open>\<phi>expns\<close>
   val comment = "Semantics Expansions, used to expand assertions semantically."
   val attribute = NONE
+  val post_merging = I
 )\<close>
 
 declare set_mult_expn[\<phi>expns] Premise_def[\<phi>expns]
@@ -32,6 +33,7 @@ structure Phi_Programming_Simp_SS = Simpset (
   val comment = "Simplification rules used in the deductive programming.\n\
                 \Any rule declared here is also declared in the system global simp set automatically."
   val attribute = NONE
+  val post_merging = I
 )
 \<comment> \<open>A trick: if a \<phi>programming_simp rule is also declared in the system simpset, just declare it
     by \<phi>programming_base_simps, and it can improve the performance.\<close>
@@ -41,6 +43,7 @@ structure Phi_Programming_Base_Simp_SS = Simpset (
   val binding = SOME \<^binding>\<open>\<phi>programming_base_simps\<close>
   val comment = "Simplification rules used only in low level automation"
   val attribute = NONE
+  val post_merging = I
 )
 \<close>
 

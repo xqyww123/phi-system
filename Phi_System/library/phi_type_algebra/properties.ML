@@ -232,6 +232,9 @@ structure Template_Inst_SS = Simpset (
   val binding = SOME \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
   val comment = "Rules simplifying the reasoning rules instantiated from templates."
   val attribute = NONE
+  fun post_merging ctxt = ctxt
+        |> Simplifier.del_cong @{thm' if_weak_cong}
+        |> Simplifier.add_cong @{thm' if_cong}
 )
 
 fun check_dependencies deps action (the_functor0,pos,property) ctxt =
@@ -290,12 +293,12 @@ fun default_simplify pattern ctxt rule =
                 |> Simplification_Protect.protect ctxt's
                 |> Phi_Reasoners.asm_lr_simplify true ctxt's
                 |> Simplification_Protect.unprotect ctxt's
+                |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
                 |> singleton (Variable.export ctxt'1 ctxt)
                 |> Phi_Help.unique_flexflex ctxt
    in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess' (~1, the_default [] pattern) ctxt rule'3
          of SOME th => simplify ctxt th
           | NONE => rule'3)
-   |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
    |> PLPR_Syntax.merge_guards ctxt
    |> normalize
   end
@@ -435,7 +438,7 @@ fun add_template invoke_on_existing_instantiations (priority, (template : templa
             fun cross_product (SOME aa) bb =
                   maps (fn (ta,_,ra) =>
                       map_filter (fn (tb,rb) =>
-                        case try (Pattern.unify ctxt (ta, Logic.incr_indexes ([],[],1) tb)) Envir.init
+                        case try (Pattern.unify ctxt (ta, Logic.incr_indexes ([],[],2 + Term.maxidx_of_term ta) tb)) Envir.init
                           of SOME e => SOME (Envir.norm_term e ta, SOME ra :: rb)
                            | NONE   => NONE
                       ) bb

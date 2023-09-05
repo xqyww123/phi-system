@@ -6,8 +6,8 @@ val _ = Theory.setup (Context.theory_map (
   fn (_, pos, [SOME prop]) => fn ctxt00 =>
     let val (F, oprs) =
            case Thm.concl_of prop
-             of _ (*Trueprop*) $ (_ (*Transformation_Functor*) $ F $ F' $ D $ R $ M )
-                  => (Thm.cconcl_of prop |> Thm.dest_arg |> funpow 3 Thm.dest_fun |> Thm.dest_arg1,
+             of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F $ F' $ _ $ _ $ D $ R $ M )
+                  => (Thm.cconcl_of prop |> Thm.dest_arg |> funpow 5 Thm.dest_fun |> Thm.dest_arg1,
                       [D,R,M])
               | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
 

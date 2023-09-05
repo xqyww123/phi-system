@@ -52,10 +52,12 @@ open Phi_Help
 fun guess_IN_arguments_of_a_rule ctxt patterns rule =
   let val concl = Thm.concl_of rule
       val default_patterns = case patterns
-                               of [] => Phi_Reasoner.the_default_pattern_of ctxt concl
+                               of [] => (case Phi_Reasoner.the_default_pattern_of ctxt (@{print} concl)
+                                           of [] => [concl]
+                                            | L => L)
                                 | L => L
       fun filter_inargs inargs (Var (v, _), Var (v', _)) =
-            if fst v = fst v' then inargs else insert (op =) v inargs
+            if fst v = fst v' then insert (op =) v inargs else inargs
         | filter_inargs inargs (_, Var _) = inargs
         | filter_inargs inargs (f $ x, f' $ x') = filter_inargs (filter_inargs inargs (x, x')) (f, f')
         | filter_inargs inargs (Abs (_, _, x), Abs (_, _, x')) = filter_inargs inargs (x, x')
@@ -65,7 +67,8 @@ fun guess_IN_arguments_of_a_rule ctxt patterns rule =
             if N = N' then inargs else raise Match
         | filter_inargs _ _ = raise Match
    in fold (fn X => fn inargs => filter_inargs inargs (Thm.concl_of rule, X) handle Match => inargs)
-           default_patterns []
+           (@{print} default_patterns) []
+   |> @{print}
   end
 
 fun instantiate_higher_order_schematic_var_for_rule_guess' (N, patterns) ctxt thm =

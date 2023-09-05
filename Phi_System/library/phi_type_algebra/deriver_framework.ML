@@ -343,6 +343,7 @@ structure Simps = Simpset (
   val binding = SOME \<^binding>\<open>\<phi>deriver_simp\<close>
   val comment = "Simplification rules that derivers use to simplify the guessed or infered properties."
   val attribute = NONE
+  val post_merging = I
 )
 
 structure Expansion = Simpset (
@@ -383,6 +384,7 @@ structure Expansion = Simpset (
              || Scan.succeed NONE)
      >> (fn (attr, target) => attr target)
     end)
+  val post_merging = I
 )
 
 (*

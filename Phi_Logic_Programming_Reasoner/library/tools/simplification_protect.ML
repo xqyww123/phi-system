@@ -20,6 +20,7 @@ structure Protectors = Simpset (
   val binding = NONE
   val comment = "Rewrite rules applied before simplification in order to protect any specific assertion forms"
   val attribute = NONE
+  val post_merging = I
 )
 
 structure Un_Protectors = Simpset (
@@ -27,6 +28,7 @@ structure Un_Protectors = Simpset (
   val binding = NONE
   val comment = "Rewrite rules applied after simplification to recovery the protected form"
   val attribute = NONE
+  val post_merging = I
 )
 
 fun protect ctxt = Simplifier.full_simplify (Protectors.equip ctxt)

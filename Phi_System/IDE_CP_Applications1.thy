@@ -1200,8 +1200,8 @@ structure Gen_Open_Abstraction_SS = Simpset (
   val binding = SOME \<^binding>\<open>gen_open_abstraction_simps\<close>
   val comment = "Simplification rules used when generating open-abstraction rules"
   val attribute = NONE
-)
-\<close>
+  val post_merging = I
+) \<close>
 
 setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
           ctxt addsimprocs [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]

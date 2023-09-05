@@ -302,6 +302,7 @@ ML \<open>structure Proc_Monad_SS = Simpset(
   val binding = SOME \<^binding>\<open>procedure_simps\<close>
   val comment = "declare the rules for simplifying procedure monad."
   val attribute = NONE
+  val post_merging = I
 )\<close>
 
 consts procedure_simplification :: mode

@@ -3298,6 +3298,7 @@ structure Assertion_SS = Simpset (
   val comment = "Simplification rules normalizing an assertion. \
                        \It is applied before NToA process."
   val attribute = NONE
+  val post_merging = I
 )
 
 val _ = Theory.setup (Context.theory_map (Assertion_SS.map (fn ctxt =>
@@ -3315,6 +3316,7 @@ structure Assertion_SS_Source = Simpset (
   val binding = SOME \<^binding>\<open>assertion_simps_source\<close>
   val comment = "Simp rules normalizing particularly source part of an assertion."
   val attribute = NONE
+  val post_merging = I
 )
 
 structure Assertion_SS_Target = Simpset (
@@ -3322,6 +3324,7 @@ structure Assertion_SS_Target = Simpset (
   val binding = SOME \<^binding>\<open>assertion_simps_target\<close>
   val comment = "Simp rules normalizing particularly target part of an assertion."
   val attribute = NONE
+  val post_merging = I
 )
 
 \<close>

@@ -72,6 +72,7 @@ structure Embed_into_Phi_Type = Simpset (
               end)
          in Attrib.add_del add' del'
         end)
+  val post_merging = I
 )
 
 val _ = Theory.setup (Context.theory_map (

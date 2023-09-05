@@ -56,7 +56,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
-
+  
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -91,21 +91,20 @@ text \<open>Here we construct two inner transformations from \<open>a \<Ztypecol
 
 
 lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template name \<phi>subj [assertion_simps]]:
-  \<open> Transformation_Functor Fa Fa D R mapper
+  \<open> Transformation_Functor Fa Fa (T \<phi>\<s>\<u>\<b>\<j> P) T D R mapper
+\<Longrightarrow> Transformation_Functor Fa Fa T (T \<phi>\<s>\<u>\<b>\<j> P) D R mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a. a \<in> D x \<and> P \<longrightarrow> a \<in> R x) \<and> (\<forall>y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P)
 \<Longrightarrow> (x \<Ztypecolon> Fa (T \<phi>\<s>\<u>\<b>\<j> P)) = (x \<Ztypecolon> Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
   unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def BI_eq_iff
   apply (clarsimp; rule)
   subgoal premises prems for p
-    by (insert prems(1)[THEN spec[where x=\<open>T \<phi>\<s>\<u>\<b>\<j> P\<close>], THEN spec[where x=T], THEN spec[where x=x],
-                           THEN spec[where x=\<open>\<lambda>a b. a = b \<and> P\<close>], simplified]
-               prems(2-4),
+    by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>a b. a = b \<and> P\<close>], simplified]
+               prems(3-5),
         clarsimp,
         blast)
   subgoal premises prems for p
-    by (insert prems(1)[THEN spec[where x=\<open>T\<close>], THEN spec[where x=\<open>T \<phi>\<s>\<u>\<b>\<j> P\<close>], THEN spec[where x=x],
-                           THEN spec[where x=\<open>\<lambda>a b. a = b\<close>], simplified]
-               prems(2-4),
+    by (insert prems(2)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>a b. a = b\<close>], simplified]
+               prems(3-5),
         clarsimp,
         blast) .
 
@@ -191,8 +190,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
                   \<comment> \<open>An example for which it is a non-symmetric reachability relation\<close>
        and Separation_Monoid
-       and \<open>Transformation_Functor \<S> \<S> (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
-       and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction
+       and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
+       and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction T U
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})
                       (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
@@ -497,26 +496,19 @@ subsubsection \<open>\<S>-Homomorphism\<close>
 text \<open>The homomorphism of \<open>\<S>\<close> type is entailed in the transformation functor directly.\<close>
 
 lemma \<S>_Homo\<^sub>E (*[\<phi>reason_template name \<S>\<^sub>E []]*):
-  \<open> Transformation_Functor Fa Fb D R mapper
+  \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
 \<Longrightarrow> s \<Ztypecolon> Fa (\<S> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb T \<s>\<u>\<b>\<j> y. mapper (\<lambda>S x. x \<in> S) s y\<close>
   unfolding Transformation_Functor_def Transformation_def Premise_def
-  apply clarsimp
-  subgoal premises prems for v
-    by (insert prems(1)[THEN spec[where x=\<open>\<S> T\<close>], THEN spec[where x=\<open>T\<close>],
-                        THEN spec[where x=s], THEN spec[where x=\<open>\<lambda>S x. x \<in> S\<close>],
-                        simplified]
-               prems(2,3),
-        clarsimp) .
+  by clarsimp
 
 lemma \<S>_Homo\<^sub>I (*[\<phi>reason_template name \<S>\<^sub>I []]*):
-  \<open> Transformation_Functor Fa Fb D R mapper
+  \<open> Transformation_Functor Fa Fb T (\<S> T) D R mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
 \<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> Fb (\<S> T) \<s>\<u>\<b>\<j> s'. mapper (\<lambda>a b. b = {a}) s s' \<close>
   unfolding Action_Tag_def Transformation_Functor_def Premise_def
   subgoal premises prems
-    by (insert prems(1)[THEN spec[where x=T], THEN spec[where x=\<open>\<S> T\<close>], THEN spec[where x=s],
-                        THEN spec[where x=\<open>\<lambda>a b. b = {a}\<close>], simplified]
+    by (insert prems(1)[THEN spec[where x=s], THEN spec[where x=\<open>\<lambda>a b. b = {a}\<close>], simplified]
                prems(2),
         clarsimp) .
 
@@ -909,8 +901,10 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+thm if_cong
 
+declare [[\<phi>trace_reasoning = 1]]
+       
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
@@ -1217,15 +1211,16 @@ declare [[\<phi>trace_reasoning = 0]]
 
 subsubsection \<open>By List of Keys\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
 
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
-  deriving Separation_Monoid
+  deriving Separation_Homo\<^sub>I
+(*Separation_Monoid
        and Functionality
        and Trivial_\<Sigma>
        (*and Semimodule_NonDistr_no0*)
-       and Abstraction_to_Raw
+       and Abstraction_to_Raw*)
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>

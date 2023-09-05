@@ -889,6 +889,7 @@ structure Assertion_SS_Abnormal = Simpset (
   val binding = SOME \<^binding>\<open>assertion_simps_abnormal\<close>
   val comment = "Simp rules normalizing particularly the abnormal spec of a triple."
   val attribute = NONE
+  val post_merging = I
 )
 \<close>
 

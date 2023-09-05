@@ -54,7 +54,8 @@ functor Simpset(Config : sig
   val initial_ss : Simpset_Configure.initial_ss_configure
   val binding : binding option
   val comment : string
-  val attribute : (attribute -> attribute -> attribute context_parser) option
+  val attribute : (attribute -> attribute -> attribute context_parser) option (*a way extending the default attribute*)
+  val post_merging : Proof.context -> Proof.context (*A way to override existing settings like removing a congruence rule.*)
 end) : SIMPSET = struct
 
 structure Data = Generic_Data (
@@ -69,6 +70,7 @@ val get' = get o Context.Proof
 fun equip ctxt = Raw_Simplifier.put_simpset (get' ctxt) ctxt
 fun enhance ctxt =
   Simplifier.put_simpset (Simplifier.merge_ss (Simplifier.simpset_of ctxt, get' ctxt)) ctxt
+    |> Config.post_merging
 
 fun map f generic = Data.map (Raw_Simplifier.simpset_map (Context.proof_of generic) f) generic
 fun map' f = Context.proof_map (map f)

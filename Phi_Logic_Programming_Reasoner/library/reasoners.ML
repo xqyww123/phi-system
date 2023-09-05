@@ -163,6 +163,7 @@ structure Very_Safe_Oblg_Simp_SS = Simpset(
   val binding = NONE
   val attribute = NONE
   val comment = "Very safe rewrite rules normalizing proof obligations"
+  val post_merging = I
 )
 
 fun oblg_template f ctxt th00 = Seq.make (fn () =>

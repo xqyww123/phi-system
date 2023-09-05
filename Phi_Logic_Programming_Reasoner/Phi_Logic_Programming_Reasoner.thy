@@ -434,7 +434,7 @@ text \<open>Below we provide a set of predefined reasoner groups serving for def
 section \<open>Introduction\<close>
 
 ML_file_debug \<open>library/reasoner.ML\<close>
-ML_file \<open>library/tools/helpers1.ML\<close>
+ML_file_debug \<open>library/tools/helpers1.ML\<close>
 
 declare \<r>Guard_I [\<phi>reason %cutting]
         Ant_Seq_I [\<phi>reason %cutting]
@@ -1494,6 +1494,7 @@ subsubsection \<open>Default Simplifier\<close>
 
 abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [1000,10] 9)
   where "Default_Simplify \<equiv> Simplify default"
+
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I) o snd\<close>

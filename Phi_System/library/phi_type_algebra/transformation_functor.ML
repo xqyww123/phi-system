@@ -27,31 +27,32 @@ fun mk_TF's_two_instantiations ctxt0 (FT_term0, phi0) =
       val F'1_term = Term_Subst.instantiate_frees (inst_ty, Frees.empty) F_term
 
       val params = Term.add_frees F'1_term []      
-      val (param_names', ctxt') = Variable.variant_fixes (map fst params) ctxt'1
+      val (U_name :: param_names', ctxt') = Variable.variant_fixes ("U" :: map fst params) ctxt'1
       val params' = map2 (fn N => fn (_,T) => Free(N,T)) param_names' params
       val inst = Frees.make (params ~~ params')
       val F'_term = Term_Subst.instantiate_frees (TFrees.empty, inst) F'1_term
+      val U_term = Free(U_name, Term_Subst.instantiateT_frees inst_ty T_ty)
       
 
       val ants = map2 (fn (N,T) => fn p' =>
                       \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_SIMP\<close> $ (\<^Const>\<open>HOL.eq T\<close> $ Free(N,T) $ p')
                  ) params params'
 
-   in (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt')
+   in (ants, F_term, F'_term, T_term, U_term, inst_ty, phi, ctxt')
   end)
   end
 
 fun guess_property_TF phi0 ctxt =
   let val ((_,FT_term), ctxt) = fix_phi_term_params (#term phi0) ctxt
    in mk_TF's_two_instantiations ctxt (FT_term, phi0)
-   |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt') =>
+   |> Seq.maps (fn (ants, F_term, F'_term, T_term, U_term, inst_ty, phi, ctxt') =>
   let val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
 
       val TF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
                        of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                            \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
-                          \<^Const>\<open>Transformation_Functor a b c d e f\<close> $ F_term $ F'_term
+                          \<^Const>\<open>Transformation_Functor a b c d e f\<close> $ F_term $ F'_term $ T_term $ U_term
                         | _ => error "BUG")
       val target_ty = Term_Subst.instantiateT_frees inst_ty
       val Rng = Abs("_", x_ty, \<^Const>\<open>top \<^Type>\<open>set \<open>target_ty element_ty\<close>\<close>\<close>)
@@ -94,8 +95,8 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
                         | X => NONE)) *)
       val parse_hint = parse_hint (
-              fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _) => F1)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M) = [D,R,M]
+              fn (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _) => F1)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ M) = [D,R,M]
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (K (K (fn ctm => Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C} ctm)),
@@ -121,7 +122,7 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
                ) ctxt)
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_TF, @{thm' \<phi>TA_TF_rule},
-                                      [(SOME ([0,~1,~1,~1], ind_conv), TF_reasoning)],
+                                      [(SOME ([0,~1], ind_conv), TF_reasoning)],
                                       K NONE, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules
@@ -175,14 +176,14 @@ end
 fun guess_property_FTF phi0 ctxt0 =
   let val ((_, FT_term), ctxt0) = fix_phi_term_params (#term phi0) ctxt0
    in mk_TF's_two_instantiations ctxt0 (FT_term, phi0)
-   |> Seq.maps (fn (ants, F_term, F'_term, T_term, inst_ty, phi, ctxt) => let
+   |> Seq.maps (fn (ants, F_term, F'_term, T_term, U_term, inst_ty, phi, ctxt) => let
       val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val ([],element_ty,_) = dest_parameterized_phi_ty (Term.fastype_of T_term)
 
       val FTF_head = (case (Term.fastype_of F_term, Term.fastype_of F'_term)
                         of (\<^Type>\<open>fun \<^Type>\<open>fun a \<^Type>\<open>set b\<close>\<close> \<^Type>\<open>fun c \<^Type>\<open>set d\<close>\<close>\<close>,
                             \<^Type>\<open>fun \<^Type>\<open>fun e \<^Type>\<open>set _\<close>\<close> \<^Type>\<open>fun f \<^Type>\<open>set _\<close>\<close>\<close>) =>
-                           \<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F_term $ F'_term
+                           \<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F_term $ F'_term $ T_term $ U_term
                               $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
                               $ Var(("R",0), c --> \<^Type>\<open>set e\<close>)
                               $ Var(("mapper",0), (a --> e --> \<^Type>\<open>bool\<close>) --> c --> f --> \<^Type>\<open>bool\<close>)
@@ -202,8 +203,8 @@ fun guess_property_FTF phi0 ctxt0 =
 
 fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
-            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ => F1)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
+            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []
 
       fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi)) ctxt
