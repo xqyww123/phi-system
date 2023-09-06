@@ -465,8 +465,8 @@ paragraph \<open>Object_Equiv\<close>
 
 lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (\<And>x y. \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T) M D R F
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Object_Equiv T eq)) M D R F\<close>
-  unfolding \<phi>Programming_Method_def Object_Equiv_def Premise_def
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Object_Equiv T eq)) M D R ((\<forall>x. eq x x) &&& PROP F)\<close>
+  unfolding \<phi>Programming_Method_def Object_Equiv_def Premise_def conjunction_imp
   by clarsimp
 
 paragraph \<open>Identity Element\<close>

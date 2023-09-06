@@ -192,7 +192,9 @@ val default_reasoning :
   It receives the subgoal context, local premises, local sequent, and should classify the local premises
   into three sorts, pure conditions, rewrites and reasoners respectively.
 *)
+val pure_PLPR_reasoning : int -> reasoning
 
+val pure_PLPR_reasoner : reasoner
 val exhaustive_PLPR_reasoner : int option -> (int -> term -> unit) (*chk*) -> reasoner (*TODO: supports chk*)
 val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> reasoner
   (*The chk may check if the ith argument of the target reasoning goal is in a good form and
@@ -1533,6 +1535,20 @@ fun chk_unfolded' ctxt = chk_unfolded (Context.Proof ctxt)
 
 fun conv_chk_unfolded (phi : phi_type) ctxt ctm =
       (chk_unfolded' ctxt phi (Thm.term_of ctm); Conv.all_conv ctm)
+
+fun pure_PLPR_reasoning num ctxt sequent =
+  case Phi_Reasoner.reason NONE (SOME num) ctxt sequent
+    of SOME th => th
+     | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR reasoning fails"])
+
+fun pure_PLPR_reasoner ctxt sequent =
+  case sequent
+    |> Thm.implies_intr \<^cprop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
+    |> Thm.implies_intr \<^cprop>\<open>\<r>Success\<close>
+    |> Thm.permute_prems 0 2
+    |> Phi_Reasoner.reason NONE NONE ctxt
+    of SOME th => th
+     | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR reasoning fails"])
 
 fun exhaustive_PLPR_reasoner num chk_unfolds ctxt sequent =
   let fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X

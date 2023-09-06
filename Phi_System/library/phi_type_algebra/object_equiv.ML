@@ -253,9 +253,13 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
         else Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
                (K (Conv.arg_conv (Conv.arg_conv (
                   Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))))) ctxt)
+
+
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
-                                      [(SOME ([0], ind_conv), OE_reasoning)], infer, simp)
+                                      [(NONE, K (pure_PLPR_reasoning 1)),
+                                       (SOME ([0], ind_conv), OE_reasoning)],
+                                      infer, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

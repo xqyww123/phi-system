@@ -2547,7 +2547,7 @@ text \<open>The two properties are essential for reasoning the general transform
 subsection \<open>Equivalence of Objects\<close>
 
 definition Object_Equiv :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool\<close>
-  where \<open>Object_Equiv T eq \<longleftrightarrow> (\<forall>x y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T))\<close>
+  where \<open>Object_Equiv T eq \<longleftrightarrow> (\<forall>x. eq x x) \<and> (\<forall>x y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T))\<close>
 
 declare [[
   \<phi>reason_default_pattern \<open>Object_Equiv ?T _\<close> \<Rightarrow> \<open>Object_Equiv ?T _\<close> (100),
@@ -2572,30 +2572,28 @@ lemma ToA_by_Equiv_Class
                                         except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Object_Equiv U eq
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (y = y' \<or> eq y y')
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def
-  by clarsimp blast
+  by clarsimp
 
 lemma ToA_by_Equiv_Class'
       [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
                                         except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y  \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> Object_Equiv U eq
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = y' \<or> eq y y'
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def
   by (cases C; clarsimp; meson Transformation_def transformation_left_frame)
 
 subsubsection \<open>Basic Rules\<close>
-(*
-lemma
-  \<open>Object_Equiv T eq \<Longrightarrow> \<forall>x. eq x x\<close>
-  unfolding Object_Equiv_def
 
-lemma
+lemma [\<phi>premise_extraction]:
   \<open>Object_Equiv T eq \<equiv> (\<forall>x. eq x x) \<and> Object_Equiv T eq\<close>
-*)
+  unfolding Object_Equiv_def atomize_eq
+  by blast
+
 subsubsection \<open>Reasoning Rules\<close>
 
 lemma Object_Equiv_fallback[\<phi>reason default %object_equiv_fallback]:
@@ -2719,8 +2717,10 @@ lemma
   unfolding Transformation_def
   apply (auto simp add: Subjection_expn) *)
 
+
 lemma Object_Equiv_Mul_Quant[\<phi>reason %object_equiv_cut]:
-  \<open> (\<And>i\<in>S. Object_Equiv (\<lambda>x. A x i) (eq i))
+  \<open> (\<forall>i x. eq i x x)
+\<Longrightarrow> (\<And>i\<in>S. Object_Equiv (\<lambda>x. A x i) (eq i))
 \<Longrightarrow> Object_Equiv (\<lambda>x. \<big_ast>i\<in>S. A x i) (\<lambda>x y. \<forall>i. eq i x y)\<close>
   unfolding Object_Equiv_def Transformation_def \<phi>Type_def
             meta_Ball_def Premise_def Mul_Quant_def

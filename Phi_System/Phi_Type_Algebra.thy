@@ -3402,7 +3402,8 @@ declare Is_Contravariant[where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi
 subsubsection \<open>Object Equivalence\<close>
 
 lemma Object_Equiv_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+  \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
+\<Longrightarrow> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
             (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
