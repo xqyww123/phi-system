@@ -3285,8 +3285,8 @@ lemma \<phi>TA_Suc_step:
   by blast
 
 lemma \<phi>TA_Inh_extract_prem:
-  \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> ((\<exists>v. v \<Turnstile> (x \<Ztypecolon> T)) \<longrightarrow> P) \<and> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P)\<close>
-  unfolding Action_Tag_def Inhabited_def atomize_eq
+  \<open>PROP Extract_Premise (Trueprop (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P)) ((\<exists>v. v \<Turnstile> (x \<Ztypecolon> T)) \<longrightarrow> P)\<close>
+  unfolding Action_Tag_def Inhabited_def atomize_eq Extract_Premise_def
   by blast
 
 
@@ -3311,8 +3311,8 @@ lemma \<phi>TA_SuC\<^sub>M\<^sub>C_rule:
   by simp
 
 lemma \<phi>TA_Inh\<^sub>M\<^sub>C_extract_prem:
-  \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C P \<equiv> ((\<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> mul_carrier v) \<longrightarrow> P) \<and> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C P)\<close>
-  unfolding Action_Tag_def Inhabited\<^sub>M\<^sub>C_def atomize_eq
+  \<open>PROP Extract_Premise (Trueprop (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C P)) ((\<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> mul_carrier v) \<longrightarrow> P)\<close>
+  unfolding Action_Tag_def Inhabited\<^sub>M\<^sub>C_def atomize_eq Extract_Premise_def
   by blast
 
 
@@ -3513,8 +3513,8 @@ ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 subsubsection \<open>Carrier Set\<close>
 
 bundle extract_premises_in_Carrier_Set =
-  prem_extract_Carrier_Set[\<phi>premise_extraction]
-  prem_extract_homo_mul_carrier[\<phi>premise_extraction]
+  prem_extract_Carrier_Set[\<phi>reason %\<phi>extract_premise]
+  prem_extract_homo_mul_carrier[\<phi>reason %\<phi>extract_premise]
 
 
 lemma \<phi>TA_CarS_rule:

@@ -1125,7 +1125,7 @@ lemma provide_premise_condition_p:
 
 ML_file \<open>library/PLPR_Syntax.ML\<close>
 
-paragraph \<open>Contract Premises for Reporting Obligation\<close>
+subsubsection \<open>Contract Premises for Reporting Obligation\<close>
 
 lemma contract_add_additional_prems:
   \<open> Q
@@ -1165,7 +1165,7 @@ text \<open>PLPR can infer existentially quantified obligation. However, the bui
   having the irreversible \<open>\<exists>\<^sub>I\<close> rule configured into the automation, in order to enhance the
   deficiency in Isabelle's automation.\<close>
 
-paragraph \<open>A Special Ex-quantifier Patching the Reasoning\<close>
+subsubsection \<open>A Special Ex-quantifier Patching the Reasoning\<close>
 
 definition special_Ex (binder "\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>R" 10)
   where [iff]: \<open>special_Ex \<equiv> Ex\<close>
@@ -1215,12 +1215,86 @@ ML \<open>val a = @{lemma \<open>\<forall>x. x \<or> True\<close> by blast}
          |> Thm.forall_elim_var 20\<close>
 
 
-paragraph \<open>Setup\<close>
+subsubsection \<open>Extract Premises From Any Antecedent\<close> \<comment> \<open>to augment the exported proof obligation\<close>
+
+definition \<open>Extract_Premise P Q \<equiv> (PROP P \<Longrightarrow> Q)\<close>
+
+declare [[\<phi>reason_default_pattern \<open>PROP Extract_Premise ?P _\<close> \<Rightarrow> \<open>PROP Extract_Premise ?P _\<close> (100)]]
+
+\<phi>reasoner_group \<phi>extract_premise = (1000, [10, 3000]) for \<open>PROP Extract_Premise P Q\<close>
+    \<open>Rules extracting premises from specific antecedents\<close>
+ and \<phi>extract_premise_fallback = (1, [1,1]) for \<open>PROP Extract_Premise P Q\<close>
+    \<open>System fallback that extracts nothing\<close>
+
+paragraph \<open>Basic Rules\<close>
+
+lemma [\<phi>reason default %\<phi>extract_premise_fallback]:
+  \<open> PROP Extract_Premise Any True \<close>
+  unfolding Extract_Premise_def
+  by blast
+
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open> PROP Extract_Premise (Trueprop A) P
+\<Longrightarrow> PROP Extract_Premise (Trueprop B) Q
+\<Longrightarrow> PROP Extract_Premise (Trueprop (A \<and> B)) (P \<and> Q)\<close>
+  unfolding Extract_Premise_def
+  by blast
+  
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open> (\<And>x. PROP Extract_Premise (Trueprop (A x)) (P x))
+\<Longrightarrow> PROP Extract_Premise (Trueprop (\<forall>x. A x)) (\<forall>x. P x)\<close>
+  unfolding Extract_Premise_def
+  by blast
+
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open> (\<And>x. PROP Extract_Premise (A x) (P x))
+\<Longrightarrow> PROP Extract_Premise (\<And>x. PROP A x) (\<forall>x. P x)\<close>
+  unfolding Extract_Premise_def
+proof
+  fix x
+  assume P: \<open>\<And>x. PROP A x \<Longrightarrow> P x\<close>
+  assume A: \<open>\<And>x. PROP A x\<close>
+  from P[of x, OF A] show \<open>P x\<close> .
+qed
+
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open> PROP Extract_Premise (Trueprop B) P
+\<Longrightarrow> PROP Extract_Premise (Trueprop (A \<longrightarrow> B)) (A \<longrightarrow> P) \<close>
+  unfolding Extract_Premise_def
+  by blast
+
+(*TODO:
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open> PROP Extract_Premise (Trueprop B) P
+\<Longrightarrow> PROP Extract_Premise (PROP A \<Longrightarrow> PROP B) (A \<longrightarrow> P) \<close>
+  unfolding Extract_Premise_def
+  by blast
+*)
+
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open>PROP Extract_Premise (Trueprop (A = B)) (A = B)\<close>
+  unfolding Extract_Premise_def .
+
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open>PROP Extract_Premise (Trueprop (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P)) P\<close>
+  \<open>PROP Extract_Premise (Trueprop (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P)) P\<close>
+  \<open>PROP Extract_Premise (Trueprop (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P)) P\<close>
+  unfolding Premise_def Extract_Premise_def
+  by simp_all
+  
+
+subsubsection \<open>Setup\<close>
 
 ML_file_debug "library/reasoners.ML"
 
 ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
           Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)\<close>
+
+lemma
+  \<open>(\<And>x. A x \<equiv> E x \<and> B x) \<Longrightarrow> (\<forall>x. A x) \<equiv> (\<forall>x. E x) \<and> (\<forall>x. B x)\<close>
+  unfolding atomize_eq
+  by blast
+
 
 \<phi>reasoner_ML Normal_Premise %general (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap (fn ctxt =>
@@ -1237,16 +1311,7 @@ ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
 \<phi>reasoner_ML Simp_Premise %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver o snd\<close>
 
-lemma [\<phi>premise_extraction]:
-  \<open>A = B \<equiv> (A = B) \<and> True\<close>
-  unfolding atomize_eq by simp
 
-lemma [\<phi>premise_extraction]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<equiv> P \<and> True\<close>
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
-  \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
-  unfolding Premise_def
-  by simp_all
 
 (* TODO: re-enable!
 hide_fact contract_drop_waste contract_obligations contract_premise_all

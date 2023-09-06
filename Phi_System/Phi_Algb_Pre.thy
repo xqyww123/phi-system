@@ -246,11 +246,12 @@ definition local_inverse
   where \<open>local_inverse D f g \<longleftrightarrow> (\<forall>x \<in> D. g (f x) = x)\<close>
 
 lemma prem_extract_local_inverse:
-  \<open>local_inverse D f g \<equiv> (\<forall>x \<in> D. g (f x) = x) \<and> True\<close>
-  unfolding local_inverse_def by simp
+  \<open>PROP Extract_Premise (Trueprop (local_inverse D f g)) (\<forall>x \<in> D. g (f x) = x)\<close>
+  unfolding local_inverse_def Extract_Premise_def
+  by simp
 
 bundle extract_premises_in_local_inverse =
-  prem_extract_local_inverse[\<phi>premise_extraction]
+  prem_extract_local_inverse[\<phi>reason %\<phi>extract_premise]
 
 subsection \<open>Configuration of Existing Procedures\<close>
 
@@ -278,9 +279,9 @@ paragraph \<open>Setup Reasoning Rules\<close>
 
 declare (in homo_one) homo_one_axioms[\<phi>reason %algb_cut]
 
-lemma extraction_homo_one[\<phi>premise_extraction]:
-  \<open>homo_one \<psi> \<equiv> \<psi> 1 = 1 \<and> True\<close>
-  unfolding homo_one_def
+lemma extraction_homo_one[\<phi>reason %\<phi>extract_premise]:
+  \<open>PROP Extract_Premise (Trueprop (homo_one \<psi>)) (\<psi> 1 = 1)\<close>
+  unfolding homo_one_def Extract_Premise_def
   by simp
 
 declare (in homo_sep_mult) homo_sep_mult_axioms [\<phi>reason %algb_cut]
@@ -292,8 +293,8 @@ subparagraph \<open>homo_mul_carrier\<close>
 declare (in homo_mul_carrier) homo_mul_carrier_axioms[\<phi>reason %algb_cut]
 
 lemma prem_extract_homo_mul_carrier:
-  \<open>homo_mul_carrier \<psi> \<equiv> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<and> True\<close>
-  unfolding homo_mul_carrier_def
+  \<open>PROP Extract_Premise (Trueprop (homo_mul_carrier \<psi>)) (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x))\<close>
+  unfolding homo_mul_carrier_def Extract_Premise_def
   by simp
 
 lemma [\<phi>reason default %algb_falling_lattice]:
@@ -330,9 +331,9 @@ subsection \<open>Constant Functions\<close>
 
 definition \<open>constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1)\<close>
 
-lemma [\<phi>premise_extraction]:
-  \<open> constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1) \<and> True \<close>
-  unfolding constant_1_def atomize_eq
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open> PROP Extract_Premise (Trueprop (constant_1 \<psi>)) (\<forall>x. \<psi> x = 1) \<close>
+  unfolding constant_1_def atomize_eq Extract_Premise_def
   by simp
 
 lemma [\<phi>reason default %algb_falling_lattice]:

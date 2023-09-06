@@ -45,10 +45,6 @@ signature PHI_REASONERS = sig
 
   (* Premise Extraction from arbitrary antecedent *)
   type pattern = term
-  datatype extraction = Extract_Rule of thm | Extract_Fun of pattern * (Proof.context -> cterm -> thm option)
-  val add_premise_extractions : extraction list -> Context.generic -> Context.generic
-  val add_premise_extraction_rules : thm list -> Context.generic -> Context.generic
-  val del_premise_extractions : extraction list -> Context.generic -> Context.generic
   val extract_prem  : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
   val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm list
   val extract_prems_rewr : Context.generic (*the context used to fetch the extractions*)
@@ -225,80 +221,6 @@ fun context_tactic_to_state_transition tac fail ctxt sequent =
   proof obligation?*)
 (*Convention: the rule of premise extraction has form \<open>A \<equiv> Premise \<and> A\<close>*)
 type pattern = term
-datatype extraction = Extract_Rule of thm | Extract_Fun of pattern * (Proof.context -> cterm -> thm option)
-
-fun extraction_eq (Extract_Rule tha, Extract_Rule thb) = Thm.eq_thm_prop (tha, thb)
-  | extraction_eq (Extract_Fun fa, Extract_Fun fb) = pointer_eq (fa, fb)
-  | extraction_eq _ = false
-
-structure Premise_Extraction = Generic_Data (
-  type T = extraction Net.net
-  val empty = Net.empty
-  val merge = Net.merge extraction_eq
-)
-
-fun pattern_of_rule th =
-  case Thm.prop_of th
-    of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ _ => X
-     | _ => raise THM ("Bad rule of premise extraction", 0, [th])
-
-fun chk_pattern ctxt tm =
-  let val ty = Term.fastype_of tm
-      open Pretty
-   in if ty <> \<^Type>\<open>bool\<close>
-   then error (string_of (chunks [
-     paragraph ( text "The premise extraction should bind on"
-               @ [Context.cases Syntax.pretty_typ_global Syntax.pretty_typ ctxt HOLogic.boolT,
-                  brk 1, str "instead of", brk 1,
-                  Context.cases Syntax.pretty_typ_global Syntax.pretty_typ ctxt ty]),
-     Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
-   ]))
-   else (case tm
-     of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-          error (string_of (chunks [
-              para "The premise extraction cannot bind on HOL conjunction",
-              Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
-          ]))
-      | _ => tm)
-  end
-
-fun chk_extraction ctxt (Extract_Rule rule) =
-      let open Pretty
-          fun err msg = error (string_of (chunks [
-                            paragraph (text "Bad rule of premise extraction:" @ [brk 1] @ text msg),
-                            Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt rule
-                         ]))
-       in case Thm.prop_of rule
-       of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-              Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
-                  (chk_pattern ctxt X, Extract_Rule (rule RS @{thm' eq_reflection}))
-        | Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
-                  (chk_pattern ctxt X, Extract_Rule rule)
-        | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-               err "cannot have premises"
-        | _ => err "malformed rule, must of form \<open>A \<equiv> Prem \<and> A'\<close> where Prem is the extracted premise"
-      end
-  | chk_extraction ctxt (Extract_Fun (pat, f)) = (chk_pattern ctxt pat, Extract_Fun (pat, f))
-
-fun add_premise_extractions [] ctxt = ctxt
-  | add_premise_extractions extrs ctxt =
-      Premise_Extraction.map (fold (
-        Net.insert_term_safe extraction_eq o chk_extraction ctxt
-      ) extrs) ctxt
-
-val add_premise_extraction_rules = add_premise_extractions o map Extract_Rule
-
-fun del_premise_extractions extrs ctxt =
-  Premise_Extraction.map (fold (Net.delete_term_safe extraction_eq o chk_extraction ctxt) extrs) ctxt
-
-val del_premise_extraction_rules = del_premise_extractions o map Extract_Rule
-
-val premise_extraction =
-      Attrib.add_del (Thm.declaration_attribute (add_premise_extraction_rules o single))
-                     (Thm.declaration_attribute (del_premise_extraction_rules o single))
-
-val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>premise_extraction\<close> premise_extraction
-                      "Declare rewrite rules to extract premises augmenting the proof obligation")
 
 fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = is_syntactic_premise M
   | is_syntactic_premise (Const(\<^const_name>\<open>default\<close>, _)) = true
@@ -313,99 +235,60 @@ fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _
   | is_syntactic_premise _ = false
 
 fun gen_extract_prems_rewr ctxt =
-  let val net = Premise_Extraction.get ctxt
-      val thy = Context.theory_of ctxt
+  let val thy = Context.theory_of ctxt
+      val reasoners = Phi_Reasoner.reasoners ctxt
+      fun quick_check ctm =
+        let val idx = Thm.maxidx_of_cterm ctm + 1
+            fun has_extraction_obj tm =
+                  exists (fn (prio, _, _, _) => prio > 9)
+                    (Phi_Reasoner.get_reasoners' thy reasoners
+                        (\<^Const>\<open>Extract_Premise\<close> $ (HOLogic.Trueprop $ tm) $ Var(("_", idx), TVar(("_", idx), []))))
+      
+            fun qchk_obj (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
+                  qchk_obj A orelse qchk_obj B
+              | qchk_obj (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
+                  qchk_obj A orelse qchk_obj B
+              | qchk_obj (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = qchk_obj X
+              | qchk_obj (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X)) = qchk_obj X
+              | qchk_obj (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = qchk_obj (Term.incr_boundvars 1 X $ Bound 0)
+              | qchk_obj tm = has_extraction_obj tm
+      
+            fun check (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = check X
+              | check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = check X
+              | check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = check (Term.incr_boundvars 1 X $ Bound 0)
+              | check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk_obj X
+              | check _ = false
+         in check (Thm.term_of ctm)
+        end
 
-      fun match_extraction tm =
-            Net.match_term net tm
-              |> filter (fn Extract_Rule rule => Pattern_Translation.does_match_term thy (pattern_of_rule rule, tm)
-                          | Extract_Fun (pat, _) => Pattern_Translation.does_match_term thy (pat, tm))
-
-      fun apply_extraction ctxt ctm =
-        match_extraction (Thm.term_of ctm)
-         |> map_filter (fn Extract_Rule rule => SOME (Conv.rewr_conv rule ctm)
-                         | Extract_Fun (_, f) => f ctxt ctm)
-         |> (fn [] => NONE
-              | [th] => SOME th
-              | L => SOME (foldr1 (fn (tha,thb) =>
-                        thb RS' (ctxt,
-                        tha RS' (ctxt,
-                        @{lemma' \<open>A \<equiv> P1 \<and> W1 \<Longrightarrow> A \<equiv> P2 \<and> W2 \<Longrightarrow> A \<equiv> (P1 \<and> P2) \<and> (W1 \<and> W2)\<close>
-                            by (simp add: atomize_eq, blast)}
-                     ))) L))
-
-      fun qchk_obj (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
-            qchk_obj A orelse qchk_obj B
-        | qchk_obj (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
-            qchk_obj A orelse qchk_obj B
-        | qchk_obj tm = not (null (match_extraction tm))
-
-      fun quick_check (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check X
-        | quick_check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = quick_check X
-        | quick_check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = quick_check (Term.incr_boundvars 1 X $ Bound 0)
-        | quick_check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk_obj X
-        | quick_check _ = false
-
-      fun extract ctxt ctm =
-        case Thm.term_of ctm
-          of Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _ =>
-               let val eq1 = Conv.fun_conv (Conv.fun_conv (Conv.rewr_conv @{thm' Ant_Seq_def})) ctm
-                in extract ctxt (Thm.rhs_of eq1)
-                |> Option.map (Thm.transitive eq1)
-               end
-           | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-               (case (extract ctxt (Thm.dest_arg1 ctm), extract ctxt (Thm.dest_arg ctm))
-                  of (SOME ruleA, SOME ruleB) =>
-                      let val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> (Pa \<and> Pb) \<and> (A' \<and> B')\<close>
-                                          by (simp add: atomize_eq, blast)}
-                       in SOME (ruleB RS' (ctxt, ruleA RS' (ctxt, merge)))
-                      end
-                   | (SOME ruleA, NONE) =>
-                      let val idx = Thm.maxidx_of_cterm ctm + 1
-                          val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> A \<and> B \<equiv> Pa \<and> (A' \<and> B)\<close>
-                                          by (simp add: atomize_eq)}
-                                   |> Thm.incr_indexes idx
-                                   |> Thm.instantiate (TVars.empty, Vars.make [((("B",idx),\<^Type>\<open>bool\<close>), Thm.dest_arg ctm)])
-                       in SOME (ruleA RS' (ctxt, merge))
-                      end
-                   | (NONE, SOME ruleB) =>
-                      let val idx = Thm.maxidx_of_cterm ctm + 1
-                          val merge = @{lemma' \<open>B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> Pb \<and> (A \<and> B')\<close>
-                                          by (simp add: atomize_eq, blast)}
-                                   |> Thm.incr_indexes idx
-                                   |> Thm.instantiate (TVars.empty, Vars.make [((("A",idx),\<^Type>\<open>bool\<close>), Thm.dest_arg1 ctm)])
-                       in SOME (ruleB RS' (ctxt, merge))
-                      end
-                   | (NONE, NONE) => NONE)
-           | _ => apply_extraction ctxt ctm
-
-
-      fun simp_tag ctxt = Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
-                                                                   Premise_def[where mode=MODE_SIMP]}
-
-      exception Not_Meet
       fun extract' ctxt ctm =
-        case Thm.term_of ctm
-          of Const(\<^const_name>\<open>HOL.Trueprop\<close>, _) $ _ =>
-              (case extract ctxt (Thm.dest_arg ctm)
-                 of SOME rule => Conv.arg_conv (K rule) ctm
-                  | NONE => raise Not_Meet)
-           | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-              (Conv.implies_conv (Phi_Conv.atomize_conv ctxt then_conv simp_tag ctxt) (extract' ctxt) then_conv
-               Conv.rewr_conv @{lemma' \<open>(A \<Longrightarrow> P \<and> W) \<equiv> Trueprop ((A \<longrightarrow> P) \<and> (A \<longrightarrow> W))\<close>
-                                  by (unfold atomize_imp, rule, blast, blast)}) ctm
-           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, _) =>
-              (Phi_Conv.meta_all_conv (extract' o snd) ctxt then_conv
-               Conv.rewr_conv @{lemma' \<open>(\<And>c. P c \<and> W c) \<equiv> Trueprop (All P \<and> All W)\<close>
-                                  by (unfold atomize_all, rule, blast, blast)}) ctm
-           | _ => raise Not_Meet
+        let val vP = Thm.var (("P", 0), \<^ctyp>\<open>bool\<close>)
+            val is_prop = case Thm.typ_of_cterm ctm
+                            of Type(\<^type_name>\<open>prop\<close>, _) => true
+                             | Type(\<^type_name>\<open>bool\<close>, _) => false
+                             | _ => raise CTERM ("extract_prems_rewr: must be a prop or a boolean", [ctm])
+            val ((_, [ctm'embedded]), ctxt') = Variable.import false [Drule.mk_term ctm] ctxt
+            val ctm't = Drule.dest_term ctm'embedded
+            val ctm' = if is_prop then ctm't else Thm.apply \<^cterm>\<open>Trueprop\<close> ctm't
+         in Thm.apply (Thm.apply \<^cterm>\<open>Extract_Premise\<close> ctm') vP
+         |> Goal.init
+         |> Phi_Reasoner.reason NONE NONE ctxt
+         |> Option.map (fn th =>
+              (Goal.conclude th RS
+                (if is_prop then @{lemma \<open>PROP Extract_Premise P Q \<Longrightarrow> PROP P \<equiv> (Q &&& PROP P)\<close>
+                                      by (unfold Extract_Premise_def, (rule, rule conjunctionI),
+                                          simp, simp, simp add: conjunction_imp)}
+                            else @{lemma \<open>PROP Extract_Premise (Trueprop P) Q \<Longrightarrow> P \<equiv> (Q \<and> P)\<close>
+                                      by (unfold Extract_Premise_def atomize_eq, blast)}))
+              |> singleton (Variable.export ctxt' ctxt))
+        end
+
    in (quick_check,
    fn ctxt => fn ctm =>
    if is_syntactic_premise (Thm.term_of ctm)
    then SOME NONE
-   else if quick_check (Thm.term_of ctm)
-   then SOME (SOME (extract' ctxt ctm))
-        handle Not_Meet => NONE
+   else if quick_check ctm
+   then Option.map SOME (extract' ctxt ctm)
    else NONE)
   end
 
@@ -419,14 +302,14 @@ fun extract_prem ctxt strip =
    then SOME (if strip
               then (Raw_Simplifier.norm_hhf ctxt' thm) RS' (ctxt', @{thm' Premise_D})
               else thm)
-   else if qchk (Thm.prop_of thm)
+   else if qchk (Thm.cprop_of thm)
         then let val thm = Raw_Simplifier.norm_hhf ctxt' thm
               in (case conv ctxt' (Thm.cprop_of thm)
                     of SOME NONE => SOME (if strip
                                           then thm RS' (ctxt', @{thm' Premise_D})
                                           else thm)
                      | SOME (SOME rule) => SOME (
-                         (Thm.equal_elim rule thm RS' (ctxt', conjunct1))
+                         (fst (Conjunction.elim (Conv.fconv_rule (Conv.rewr_conv rule) thm)))
                            |> not strip ? (fn th => th RS' (ctxt', @{thm' Premise_I[where mode=MODE_SIMP]})))
                      | NONE => NONE)
              end
@@ -501,7 +384,7 @@ val contract_premise_imp =
     @{lemma \<open>(P \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
             by (rule, (simp add: Premise_def)+)}
 val contract_premise_imp' =
-    @{lemma \<open>(P \<and> A \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (A &&& PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
+    @{lemma \<open>(P &&& PROP A \<Longrightarrow> PROP Waste \<Longrightarrow> Premise mode G) \<equiv> (PROP A &&& PROP Waste \<Longrightarrow> Premise mode (P \<longrightarrow> G))\<close>
             by (rule, (simp add: Premise_def conjunction_imp)+)}
 
 (*the term must be beta-eta normalized*)

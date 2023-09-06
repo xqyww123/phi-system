@@ -2589,9 +2589,9 @@ lemma ToA_by_Equiv_Class'
 
 subsubsection \<open>Basic Rules\<close>
 
-lemma [\<phi>premise_extraction]:
-  \<open>Object_Equiv T eq \<equiv> (\<forall>x. eq x x) \<and> Object_Equiv T eq\<close>
-  unfolding Object_Equiv_def atomize_eq
+lemma [\<phi>reason %\<phi>extract_premise]:
+  \<open>PROP Extract_Premise (Trueprop (Object_Equiv T eq)) (\<forall>x. eq x x)\<close>
+  unfolding Extract_Premise_def Object_Equiv_def
   by blast
 
 subsubsection \<open>Reasoning Rules\<close>

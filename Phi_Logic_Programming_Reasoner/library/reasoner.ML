@@ -84,8 +84,8 @@ signature NU_REASONER = sig
                   -> Context.generic -> Context.generic
   val del_reasoners_by_name: term (*pattern matching the name*)
                   -> Context.generic -> Context.generic
-  val has_reasoner : pattern -> (reasoner -> bool) -> Context.generic -> bool
-  val reasoners : Proof.context -> reasoners
+  val has_reasoner : Context.generic -> pattern -> (reasoner -> bool) -> bool
+  val reasoners : Context.generic -> reasoners
   val content : reasoners -> reasoner list
   (*val call_reasoners : reasoners -> Proof.context -> *)
   val get_reasoners : theory -> reasoners -> pattern -> reasoner list
@@ -342,7 +342,7 @@ structure Reasoners = Generic_Data (
   val merge : T * T -> T = iNet.merge registry_eq
 )
 
-fun reasoners ctxt = Reasoners.get (Context.Proof ctxt)
+val reasoners = Reasoners.get
 fun content net = iNet.content net |> map (fn (_,_,_,r) => r)
 
 fun pretty_mode (cmode, bmode) =
@@ -541,9 +541,12 @@ fun del_reasoners pattern filter ctxt =
 fun del_reasoners_by_name pattern ctxt =
       del_reasoners pattern (match_reasoner (Context.theory_of ctxt) pattern) ctxt
 
-fun has_reasoner pattern filter ctxt =
-  iNet.unify_term (Reasoners.get ctxt) pattern
-    |> exists (fn (_,_,_,r) => filter r)
+fun has_reasoner ctxt =
+  let val reasoners = Reasoners.get ctxt
+   in fn pattern => fn filter =>
+      iNet.unify_term reasoners pattern
+        |> exists (fn (_,_,_,r) => filter r)
+  end
 
 (*
 fun gen_call_reasoners trace score tactics ctxt th =

@@ -169,9 +169,8 @@ fun gen_inhab (upper, carrier) (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy 
 
       val prem_extractions =
         if def_contains_satisfaction phi0
-        then [Phi_Reasoners.Extract_Rule (if carrier
-                                          then @{thm' \<phi>TA_Inh\<^sub>M\<^sub>C_extract_prem}
-                                          else @{thm' \<phi>TA_Inh_extract_prem})]
+        then [(if carrier then @{thm' \<phi>TA_Inh\<^sub>M\<^sub>C_extract_prem}
+                          else @{thm' \<phi>TA_Inh_extract_prem})]
         else []
 
       fun Inh_reasoning phi ctxt =

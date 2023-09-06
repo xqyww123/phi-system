@@ -202,7 +202,7 @@ val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> r
 
 (* Default Reasoning Configure *)
 
-val default_reasoning_configure : Phi_Reasoners.extraction list -> reasoning_configure
+val default_reasoning_configure : thm list -> reasoning_configure
 (*classify local premises by syntactic tags. allows to extract additional local condition
   by Phi_Reasoners.extraction.
 
@@ -1352,7 +1352,10 @@ fun default_reasoning_configure extractions
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
       val extract_prem = Phi_Reasoners.extract_prem (
-              Phi_Reasoners.add_premise_extractions extractions (Context.Proof ctxt)) false
+            Phi_Reasoner.add_rules (map (fn rule =>
+                 ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT, 1000, [], [], NONE)
+              ) extractions) (Context.Proof ctxt)
+            ) false
       val prem_ants = map_filter extract_prem local_prems
 (*maps (fn th =>
             case extract_prems ctxt th

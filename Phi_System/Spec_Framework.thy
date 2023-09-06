@@ -303,8 +303,8 @@ declare [[\<phi>reason_default_pattern
 subsubsection \<open>General Rules\<close>
 
 lemma prem_extract_Carrier_Set:
-  \<open>Carrier_Set T D \<equiv> (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) \<and> True\<close>
-  unfolding Carrier_Set_def Within_Carrier_Set_def atomize_eq
+  \<open>PROP Extract_Premise (Trueprop (Carrier_Set T D)) (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) \<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def atomize_eq Extract_Premise_def
   by (rule; clarsimp)
 
 subsubsection \<open>Rules for Logical Connectives\<close>
