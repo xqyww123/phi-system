@@ -312,6 +312,8 @@ fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _
   | is_syntactic_premise (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = is_syntactic_premise X
   | is_syntactic_premise _ = false
 
+(*TODO: merge the \<phi>-LPR based extraction given in git tag PLPR-based-Premise-Extraction
+        which gives a quick way to extend the extraction universally but heavily and slowly.*)
 fun gen_extract_prems_rewr ctxt =
   let val net = Premise_Extraction.get ctxt
       val thy = Context.theory_of ctxt
@@ -338,6 +340,8 @@ fun gen_extract_prems_rewr ctxt =
             qchk_obj A orelse qchk_obj B
         | qchk_obj (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
             qchk_obj A orelse qchk_obj B
+        | qchk_obj (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X)) = qchk_obj X
+        | qchk_obj (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = qchk_obj (Term.incr_boundvars 1 X $ Bound 0)
         | qchk_obj tm = not (null (match_extraction tm))
 
       fun quick_check (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check X
@@ -346,6 +350,7 @@ fun gen_extract_prems_rewr ctxt =
         | quick_check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk_obj X
         | quick_check _ = false
 
+      exception Not_Meet
       fun extract ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _ =>
@@ -353,11 +358,19 @@ fun gen_extract_prems_rewr ctxt =
                 in extract ctxt (Thm.rhs_of eq1)
                 |> Option.map (Thm.transitive eq1)
                end
+           | Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
+               (SOME ((Phi_Conv.hol_all_conv (fn (_, ctxt) => fn ctm =>
+                          case extract ctxt ctm
+                            of SOME ret => ret
+                             | NONE => raise Not_Meet
+                       ) ctxt then_conv
+                       Conv.rewr_conv @{thm' all_conj_distrib[folded atomize_eq]}) ctm)
+                handle Not_Meet => NONE)
            | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
                (case (extract ctxt (Thm.dest_arg1 ctm), extract ctxt (Thm.dest_arg ctm))
                   of (SOME ruleA, SOME ruleB) =>
                       let val merge = @{lemma' \<open>A \<equiv> Pa \<and> A' \<Longrightarrow> B \<equiv> Pb \<and> B' \<Longrightarrow> A \<and> B \<equiv> (Pa \<and> Pb) \<and> (A' \<and> B')\<close>
-                                          by (simp add: atomize_eq, blast)}
+                                          by (simp add: atomize_eq, blast)} (*TODO: optimize! replace the RS!*)
                        in SOME (ruleB RS' (ctxt, ruleA RS' (ctxt, merge)))
                       end
                    | (SOME ruleA, NONE) =>
@@ -383,7 +396,6 @@ fun gen_extract_prems_rewr ctxt =
       fun simp_tag ctxt = Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
                                                                    Premise_def[where mode=MODE_SIMP]}
 
-      exception Not_Meet
       fun extract' ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>HOL.Trueprop\<close>, _) $ _ =>

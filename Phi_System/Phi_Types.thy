@@ -160,10 +160,10 @@ declare [[\<phi>trace_reasoning = 3]]
     
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
-  deriving (*Basic
-    and*)    \<open>(\<And>A. Object_Equiv (T A) (eq A))
+  deriving Basic
+    and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
-    (*and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
+    and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
     and    \<open>Identity_Element\<^sub>I (u \<Ztypecolon> T c) P
         \<Longrightarrow> Identity_Element\<^sub>I ((c, u) \<Ztypecolon> \<Sigma> T) P \<close>
     and    \<open>Identity_Element\<^sub>E (u \<Ztypecolon> T c)
@@ -171,7 +171,7 @@ declare [[\<phi>trace_reasoning = 3]]
     and Functionality
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
-    and Abstraction_to_Raw*)
+    and Abstraction_to_Raw
 
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
@@ -705,6 +705,7 @@ lemma
 
 subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
 
+(*
 declare [[\<phi>trace_reasoning = 2]]
  
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
@@ -790,7 +791,7 @@ thm old.sum.simps
 term \<open>(fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U)\<close>
 *)
 
-
+*)
 subsection \<open>Embedding Additive Disjunction\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
