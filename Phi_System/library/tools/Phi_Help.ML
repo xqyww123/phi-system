@@ -462,7 +462,7 @@ fun subst_free_with_loose_bounds [] = I
                 aconv_bound_diff d (t1,t2) andalso aconv_bound_diff d (u1,u2)
             | aconv_bound_diff d (Abs (_, T1, t1), Abs (_, T2, t2)) =
                 aconv_bound_diff d (t1,t2) andalso T1 = T2
-            | aconv_bound_diff d (Bound i, Bound j) = i + d = j
+            | aconv_bound_diff d (Bound i, Bound j) = i = j + d
             | aconv_bound_diff _ (a1,a2) = a1 = a2
 
           fun substf i u =
