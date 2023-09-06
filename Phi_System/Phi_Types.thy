@@ -688,11 +688,37 @@ lemma [\<phi>reason 1000]:
   by (cases x; simp)
 
 
+lemma
+  \<open>(\<And>x xa. \<exists>uu. (A = Ab \<longrightarrow> rel_fun (=) x xa uu) \<and> (A = Ab \<longrightarrow> (\<forall>xb. xb \<in> Ab \<longrightarrow> (\<forall>xaa. x (xa xb) xaa \<longrightarrow> xaa = uu xb))))\<close>
+  apply (auto simp add: rel_fun_def)
 
-subsection \<open>\<phi>-Type Embedding of Multiplicative Finite Quantification\<close>
+lemma
+  \<open>\<exists>uu. (I = J \<longrightarrow> (\<forall>xc\<in>J. x (xa xc) (xb xc)) \<longrightarrow> (\<forall>i. (i \<in> J \<longrightarrow> x (xa i) (uu i)) \<and> (i \<notin> J \<longrightarrow> xa i = uu i))) \<and>
+          (I = J \<longrightarrow> (\<forall>xc\<in>J. x (xa xc) (xb xc)) \<longrightarrow> (\<forall>xa. xa \<in> J \<longrightarrow> xb xa = uu xa))\<close>
+  apply (rule exI[where x=\<open>\<lambda>i. if i \<in> J then xb i else xa i\<close>])
+  apply clarsimp
 
+
+
+
+subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
+
+declare [[\<phi>trace_reasoning = 2]]
+ 
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
+  deriving Object_Equiv
+       (*and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P (x i)) \<close>
+       and Basic
+       (*and Abstract_Domain\<^sub>L (*TODO*)*)*)
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
+
+thm \<phi>Mul_Quant.fundef_cong
+
+term \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
+term \<open>Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV)
+                                        (\<lambda>g x y. \<forall>i. if i \<in> I then g (x i) (y i) else x i = y i)
+                                        (\<lambda>_ P. \<forall>i \<in> I. P i) (\<lambda>f _. ) \<close>
 
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>

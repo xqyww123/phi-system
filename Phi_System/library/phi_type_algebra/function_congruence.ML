@@ -2,7 +2,8 @@ local open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 in
 val _ = Theory.setup (Context.theory_map (
   Phi_Type_Template_Properties.add_template false (99,
-      ([SOME \<^const_name>\<open>Transformation_Functor\<close>], \<^here>, Phi_Type_Template_Properties.Free_Action (
+      ([SOME \<^const_name>\<open>Transformation_Functor\<close>], \<^here>,
+       Phi_Type_Template_Properties.Free_Action (
   fn (_, pos, [SOME prop]) => fn ctxt00 =>
     let val (F, oprs) =
            case Thm.concl_of prop
@@ -46,7 +47,7 @@ val _ = Theory.setup (Context.theory_map (
                        (("U",0), Ti') , (("x",0), xi), (("y" ,0), xi')]
         val rule = rulexx OF [prop, prop]
         val rule = rule
-                |> Phi_Reasoner.reason NONE NONE ctxt
+                |> Phi_Reasoner.reason NONE NONE (Config.put Phi_Reasoner_solve_obligation_and_no_defer 3 ctxt)
                 |> (fn SOME ret => ret
                      | NONE => raise Automation_Fail (fn () => let open Pretty in
                                  [para "Fail to derive the congruence rule for Isabelle function package. \
@@ -59,7 +60,7 @@ val _ = Theory.setup (Context.theory_map (
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
                 |> singleton (Variable.export ctxt ctxt0)
                 |> Drule.zero_var_indexes
-                (*|> @{print}*)
+                |> @{print}
         val _ = Phi_Reasoner.info_pretty_generic ctxt00 1 (fn () => let open Pretty in
                   chunks [str "Setup the congruence rule for Isabelle function package",
                           Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt00 rule]

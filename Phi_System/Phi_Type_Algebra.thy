@@ -3594,9 +3594,8 @@ lemma [\<phi>reason %\<phi>TA_guesser[top]]:
 
 ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 
-\<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.transformation_functor
-\<close>
+\<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _ _ _ _\<close>)
+  = \<open> Phi_Type_Algebra_Derivers.transformation_functor \<close>
 
 \<phi>property_deriver Functional_Transformation_Functor 111
   for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _ _\<close>)
@@ -3611,24 +3610,27 @@ hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr_IH \<phi>TA_TF_rewr_C \<phi>TA_TF_pa
 subsubsection \<open>Congruence in Function Definition\<close>
 
 lemma function_congruence_template:
-  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Transformation_Functor F F' T U D R M)
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Transformation_Functor F' F U T D' R' M')
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<subseteq> R x \<and> (\<forall>x y. M (=) x y \<longrightarrow> x = y) \<and> (\<forall>x. D x = D' x) \<and>
-            D y \<subseteq> R' y \<and> (\<forall>x y. M' (=) x y \<longrightarrow> x = y)
+  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Transformation_Functor F F' T U D R M)
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Transformation_Functor F' F U T D' R' M')
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Object_Equiv (F' U) eq')
+\<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Object_Equiv (F T) eq)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (x = y \<and> eqs \<longrightarrow>
+              D x \<subseteq> R x \<and> (\<forall>x y. M (=) x y \<longrightarrow> eq' y x) \<and> (\<forall>x. D x = D' x) \<and>
+              D' y \<subseteq> R' y \<and> (\<forall>x y. M' (=) y x \<longrightarrow> eq x y))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> eqs
 \<Longrightarrow> x = y
-\<Longrightarrow> (\<And>a \<in> D y. T a = U a)
+\<Longrightarrow> (\<And>a. a \<in> D y \<Longrightarrow> T a = U a)
 \<Longrightarrow> F T x = F' U y \<close>
   unfolding fun_eq_iff[symmetric, where f=D]
   unfolding Transformation_Functor_def Premise_def Transformation_def \<phi>Type_def BI_eq_iff
-            subset_iff meta_Ball_def Ball_def
+            subset_iff meta_Ball_def Ball_def Object_Equiv_def
   apply clarify
   subgoal premises prems for u
     by (insert prems(1)[THEN spec[where x=y], THEN spec[where x=\<open>(=)\<close>]]
                prems(2)[THEN spec[where x=y], THEN spec[where x=\<open>(=)\<close>]]
-               prems(4-);
-        clarsimp; rule; blast) .
+               prems(3-);
+        clarsimp; rule; meson) .
   
 ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 

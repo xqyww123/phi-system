@@ -1647,12 +1647,12 @@ definition Mul_Quant :: \<open>('a \<Rightarrow> 'b::sep_algebra BI) \<Rightarro
   where \<open>Mul_Quant A S \<equiv> (prod A S \<s>\<u>\<b>\<j> finite S)\<close>
 
 syntax
-  "_Mul_Quant" :: "pttrn => 'a set => 'b => 'b::comm_monoid_mult"  ("(2\<big_ast>(_/\<in>_)./ _)" [0, 51, 10] 10)
+  "_Mul_Quant" :: "pttrn => 'a set => 'b => 'b::comm_monoid_mult"  ("(2\<big_ast>(_/\<in>_)./ _)" [0, 51, 14] 14)
 translations \<comment> \<open>Beware of argument permutation!\<close>
   "\<big_ast>i\<in>A. b" == "CONST Mul_Quant (\<lambda>i. b) A"
 
 syntax
-  "_qMul_Quant" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  ("(2\<big_ast>_ | (_)./ _)" [0, 0, 10] 10)
+  "_qMul_Quant" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  ("(2\<big_ast>_ | (_)./ _)" [0, 0, 14] 14)
 translations
   "\<big_ast>x|P. t" => "CONST Mul_Quant (\<lambda>x. t) {x. P}"
 
@@ -1676,6 +1676,26 @@ lemma sep_quant_subjection:
   \<open>(\<big_ast>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<big_ast>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
   unfolding BI_eq_iff
   by (clarify; rule; clarsimp simp add: Mul_Quant_def finite_prod_subjection)
+
+lemma sep_quant_ExSet:
+  \<open>(\<big_ast>i\<in>I. \<exists>*j. A i j) = (\<exists>*j. \<big_ast>i\<in>I. A i (j i))\<close>
+proof -
+  have t1: \<open>\<And>u. finite I \<Longrightarrow> u \<Turnstile> (\<Prod>i\<in>I. ExSet (A i)) \<longleftrightarrow> (\<exists>x. u \<Turnstile> (\<Prod>i\<in>I. A i (x i)))\<close> (is \<open>\<And>u. _ \<Longrightarrow> ?goal u\<close>)
+  proof -
+    fix u
+    assume \<open>finite I\<close>
+    show \<open>?goal u\<close>
+      apply (induct arbitrary: u rule: finite_induct[OF \<open>finite I\<close>]; clarsimp)
+      apply (rule; clarsimp)
+      subgoal for x F xa ua v xb
+        by (rule exI[where x=\<open>\<lambda>i. if i = x then xa else xb i\<close>], rule exI[where x=ua], rule exI[where x=v],
+            simp, smt (verit) prod.cong)
+      by blast
+  qed
+  show ?thesis
+    unfolding BI_eq_iff Mul_Quant_def
+    by (clarsimp; rule; clarsimp simp add: t1)
+qed
 
 lemma sep_quant_swap:
   \<open>\<lbrakk> finite I; finite J \<rbrakk> \<Longrightarrow>(\<big_ast>i\<in>I. \<big_ast>j\<in>J. A i j) = (\<big_ast>j\<in>J. \<big_ast>i\<in>I. A i j)\<close>
@@ -3378,6 +3398,8 @@ lemmas [assertion_simps] =
   Subjection_times Subjection_addconj
 
   ExSet_simps
+
+  sep_quant_subjection sep_quant_ExSet
 
   \<phi>Prod_expn'' \<phi>Prod_expn'
   REMAINS_simp

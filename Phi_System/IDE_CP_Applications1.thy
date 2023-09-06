@@ -332,91 +332,104 @@ declare [[\<phi>reason_default_pattern
       \<open>?X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item _\<close>    (100)
 ]]
 
+\<phi>reasoner_group \<A>_map_each_item = (1050, [1010, 3000]) for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item \<A>\<close>,
+                                                             \<open>X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item \<A>\<close>)
+      \<open>Reasoning rules applying action \<open>\<A>\<close> onto each atomic items in \<open>X\<close>\<close>
+  and \<A>_map_each_item_fallback = (1000, [1000, 1000]) for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item \<A>\<close>,
+                                                           \<open>X \<s>\<h>\<i>\<f>\<t>\<s>  _ \<w>\<i>\<t>\<h> _ @action \<A>_map_each_item \<A>\<close>)
+      \<open>Fallback rules ending \<A>_map_each_item\<close>
+
 
 paragraph \<open>Implication\<close>
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 @action \<A>_map_each_item A \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> 0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 0 @action \<A>_map_each_item A \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> \<top> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<top> @action \<A>_map_each_item A \<close>
   unfolding Action_Tag_def
   by simp
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A)
 \<Longrightarrow> X \<s>\<u>\<b>\<j> Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j> Q \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
   unfolding Action_Tag_def Premise_def Transformation_def
   by simp blast
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item \<A>
 \<Longrightarrow> A \<and>\<^sub>B\<^sub>I B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<and>\<^sub>B\<^sub>I Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_map_each_item \<A>\<close>
   unfolding Action_Tag_def Transformation_def
   by simp blast
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item \<A>
 \<Longrightarrow> A + B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X + Y \<w>\<i>\<t>\<h> P \<or> Q @action \<A>_map_each_item \<A>\<close>
   unfolding Action_Tag_def Transformation_def
   by simp
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A)
 \<Longrightarrow> ExSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
   unfolding Action_Tag_def
   using ExSet_transformation .
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> (\<And>c. X c \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y c \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A)
 \<Longrightarrow> AllSet X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> AllSet Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
   unfolding Action_Tag_def Transformation_def
   by simp blast
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> TECHNICAL X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> TECHNICAL X @action \<A>_map_each_item \<A>\<close>
   \<comment> \<open>Never bind technical items\<close>
   unfolding Action_Tag_def Technical_def
   by simp
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>
 \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item \<A>
 \<Longrightarrow> A * B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Y \<w>\<i>\<t>\<h> P \<and> Q @action \<A>_map_each_item \<A> \<close>
   unfolding Action_Tag_def Transformation_def
   by simp blast
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A
 \<Longrightarrow> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item A
 \<Longrightarrow> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> (C \<longrightarrow> Q) @action \<A>_map_each_item A\<close>
   unfolding REMAINS_def
   by (cases C; simp add: Action_Tag_def transformation_bi_frame)
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>   C \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A' \<w>\<i>\<t>\<h> P @action \<A>_map_each_item \<A>)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B' \<w>\<i>\<t>\<h> Q @action \<A>_map_each_item \<A>)
 \<Longrightarrow> If C A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If C A' B' \<w>\<i>\<t>\<h> If C P Q @action \<A>_map_each_item \<A>\<close>
   unfolding Action_Tag_def Premise_def
   by (cases C; simp)
 
-lemma [\<phi>reason 1050]:
+lemma [\<phi>reason %\<A>_map_each_item]:
   \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A' a \<w>\<i>\<t>\<h> P a @action \<A>_map_each_item \<A>)
 \<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> B b \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B' b \<w>\<i>\<t>\<h> Q b @action \<A>_map_each_item \<A>)
 \<Longrightarrow> (case_sum A B x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (case_sum A' B' x) \<w>\<i>\<t>\<h> case_sum P Q x @action \<A>_map_each_item \<A>\<close>
   unfolding Action_Tag_def Premise_def
   by (cases x; simp)
 
-lemma [\<phi>reason 1000]: \<comment> \<open>fallback\<close>
+lemma [\<phi>reason %\<A>_map_each_item]:
+  \<open> (\<And>i\<in>I. A i \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B i \<w>\<i>\<t>\<h> P i @action \<A>_map_each_item \<A>)
+\<Longrightarrow> (\<big_ast>i\<in>I. A i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. B i) \<w>\<i>\<t>\<h> (\<forall>i \<in> I. P i) @action \<A>_map_each_item \<A> \<close>
+  unfolding Action_Tag_def Premise_def
+  by (clarsimp simp add: sep_quant_transformation)
+
+lemma [\<phi>reason %\<A>_map_each_item_fallback]: \<comment> \<open>fallback\<close>
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_map_each_item A\<close>
   unfolding Action_Tag_def .
@@ -1021,6 +1034,7 @@ lemma [\<phi>reason %to_trans_cut+10]:
 \<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xy' \<Ztypecolon> (T' \<^emph> U') \<s>\<u>\<b>\<j> xy'. ra (fst xy') \<and> rb (snd xy') @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Target)\<close>
   unfolding Action_Tag_def Transformation_def
   by (cases x; simp; blast)
+
 
 (* Is this still required?
 
