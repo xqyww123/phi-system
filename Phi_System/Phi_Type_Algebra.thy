@@ -3700,7 +3700,7 @@ ML_file \<open>library/phi_type_algebra/semimodule_identity.ML\<close>
 
 subsubsection \<open>Configuration for guessing default Semimodule properties\<close>
 
-definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for Scalar_Assoc\<^sub>I, False for Scalar_Assoc\<^sub>E\<close>
+definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for \<open>Scalar_Assoc\<^sub>I\<close>, False for \<open>Scalar_Assoc\<^sub>E\<close>\<close>
                                  \<Rightarrow> 's\<^sub>c itself \<Rightarrow> 'c itself \<Rightarrow> 'a itself \<Rightarrow> 'a\<^sub>s\<^sub>t itself
                                  \<Rightarrow> ('s\<^sub>s \<Rightarrow> ('c,'a\<^sub>t) \<phi> \<Rightarrow> ('c,'a\<^sub>s\<^sub>_\<^sub>t) \<phi>)
                                  \<Rightarrow> ('s\<^sub>t \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a\<^sub>t) \<phi>)
@@ -3711,7 +3711,7 @@ definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for Scalar_
                                  \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
                                  \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> bool)
                                  \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 's\<^sub>c)
-                                 \<Rightarrow> ('a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
+                                 \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
                                  \<Rightarrow> bool \<Rightarrow> bool
                                  \<Rightarrow> bool\<close>
   where \<open>Guess_Scalar_Assoc _ _ _ _ _ Fs Ft Fc unfolded_Fc T Ds Dt Dx smul f ants conds \<equiv> True\<close>
@@ -3756,17 +3756,17 @@ text \<open>Guessing the zip operation of a semimodule is far beyond what can be
 
 lemma [\<phi>reason %\<phi>TA_guesser_default[bottom]]:
   \<open>Guess_Scalar_Assoc both_mode TYPE('s::times) TYPE('c) TYPE('a) TYPE('a)
-                      F F F whatever T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (*) (\<lambda>x. x) True True\<close>
+                      F F F whatever T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
   unfolding Guess_Scalar_Assoc_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Scalar_Assoc both_mode TYPE(rat) TYPE('c::share) TYPE('a) TYPE('a)
-                      F F F whatever T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (*) (\<lambda>x. x) True True\<close>
+                      F F F whatever T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
   unfolding Guess_Scalar_Assoc_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default+1]:
   \<open>Guess_Scalar_Assoc both_mode TYPE(rat) TYPE('c::share_one) TYPE('a) TYPE('a)
-                      F F F whatever T ((\<le>) 0) ((\<le>) 0) (\<lambda>_ _ _. True) (*) (\<lambda>x. x) True True\<close>
+                      F F F whatever T ((\<le>) 0) ((\<le>) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
   unfolding Guess_Scalar_Assoc_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
@@ -3832,13 +3832,19 @@ lemma \<phi>TA_MS_rewr:
 
 ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
 
-\<phi>property_deriver Semimodule_Scalar_Assoc 130 for (\<open>Semimodule_Scalar_Assoc _ _ _\<close>)
-    = \<open>Phi_Type_Algebra_Derivers.semimodule_scalar\<close>
+\<phi>property_deriver Semimodule_Scalar_Assoc\<^sub>I 130 for (\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>)
+    = \<open>Phi_Type_Algebra_Derivers.semimodule_assoc_I\<close>
 
-\<phi>property_deriver Semimodule_NonDistr_no0 131
+\<phi>property_deriver Semimodule_Scalar_Assoc\<^sub>E 130 for (\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>)
+    = \<open>Phi_Type_Algebra_Derivers.semimodule_assoc_E\<close>
+
+\<phi>property_deriver Semimodule_Scalar_Assoc 131
+  requires Semimodule_Scalar_Assoc\<^sub>I and Semimodule_Scalar_Assoc\<^sub>E
+
+\<phi>property_deriver Semimodule_NonDistr_no0 132
   requires Semimodule_Scalar_Assoc and Semimodule_Identity
 
-\<phi>property_deriver Semimodule_NonDistr 132
+\<phi>property_deriver Semimodule_NonDistr 133
   requires Semimodule_NonDistr_no0 and Semimodule_Zero
 
 
@@ -3891,10 +3897,10 @@ ML_file \<open>library/phi_type_algebra/semimodule_distrib_zip.ML\<close>
 \<phi>property_deriver Semimodule_SDistr_Homo 131
   requires Semimodule_SDistr_Homo\<^sub>Z and Semimodule_SDistr_Homo\<^sub>U
 
-\<phi>property_deriver Semimodule_no0 132
+\<phi>property_deriver Semimodule_no0 133
   requires Semimodule_NonDistr_no0 and Semimodule_SDistr_Homo
 
-\<phi>property_deriver Semimodule 133
+\<phi>property_deriver Semimodule 134
   requires Semimodule_no0 and Semimodule_Zero
 
 declare Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]

@@ -121,6 +121,12 @@ include PHI_HELP
   val subst_free_with_loose_bounds : (term * term) list -> term -> term
           (*supports loose bounds either in the redex or the residue*)
 
+  val reason_tracing_inst : Proof.context -> (thm -> thm option)
+                         -> term -> ((ctyp TVars.table * cterm Vars.table) * thm) option
+
+  val reason_tracing_tyinst : Proof.context -> (thm -> thm option)
+                           -> term -> (ctyp TVars.table * thm) option
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -466,6 +472,46 @@ fun subst_free_with_loose_bounds [] = I
                                   | t$u' => substf i t $ substf i u'
                                   | _ => u)
        in substf 0 end
+
+
+fun reason_tracing_inst ctxt reason goal_term =
+  let val tvars = Term.add_tvars goal_term []
+      val vars  = Term.add_vars goal_term []
+      val goal_term = goal_term
+              |> fold_rev (fn NS => fn X => Logic.mk_conjunction (Logic.mk_term (Logic.mk_type (TVar NS)), X)) tvars
+              |> fold_rev (fn NT => fn X => Logic.mk_conjunction (Logic.mk_term (Var NT), X)) vars
+      val goal = Thm.cterm_of ctxt goal_term
+              |> Goal.init
+              |> funpow (length tvars) (fn th => Drule.termI RS (Conjunction.conjunctionI RS th))
+              |> funpow (length vars) (fn th => Drule.termI RS (Conjunction.conjunctionI RS th))
+   in reason goal
+   |> Option.map (fn th =>
+        let val th = Goal.conclude th
+            val (tm_insts, th) = funpow_yield (length  vars) Conjunction.elim th
+            val (ty_insts, th) = funpow_yield (length tvars) Conjunction.elim th
+            val tm_insts = map Drule.dest_term tm_insts
+            val ty_insts = map (Thm.dest_ctyp0 o Thm.ctyp_of_cterm o Drule.dest_term) ty_insts
+         in ((TVars.make (tvars ~~ ty_insts), Vars.make (vars ~~ tm_insts)), th)
+        end)
+  end
+
+fun reason_tracing_tyinst ctxt reason goal_term =
+  let val tvars = Term.add_tvars goal_term []
+      val goal_term = goal_term
+              |> fold_rev (fn NS => fn X => Logic.mk_conjunction (Logic.mk_term (Logic.mk_type (TVar NS)), X)) tvars
+      val goal = Thm.cterm_of ctxt goal_term
+              |> Goal.init
+              |> funpow (length tvars) (fn th => Drule.termI RS (Conjunction.conjunctionI RS th))
+   in reason goal
+   |> Option.map (fn th =>
+        let val th = Goal.conclude th
+            val (ty_insts, th) = funpow_yield (length tvars) Conjunction.elim th
+            val ty_insts = map (Thm.dest_ctyp0 o Thm.ctyp_of_cterm o Drule.dest_term) ty_insts
+         in (TVars.make (tvars ~~ ty_insts), th)
+        end)
+  end
+
+
 
 end
 

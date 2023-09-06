@@ -1167,12 +1167,12 @@ lemma module_scalar_zero_share[simp]:
   by simp
 
 lemma module_scalar_assoc_share0[simp]:
-  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::{sep_carrier, share} \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
+  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::share \<Rightarrow> 'a) (\<lambda>n. 0 < n)\<close>
   unfolding module_scalar_assoc_def
   by (simp add: share_share_assoc0)
 
 lemma module_scalar_assoc_share[simp]:
-  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::{sep_carrier, share_one} \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
+  \<open>module_scalar_assoc (share :: rat \<Rightarrow> 'a::share_one \<Rightarrow> 'a) (\<lambda>n. 0 \<le> n)\<close>
   unfolding module_scalar_assoc_def
   by (simp add: share_share)
 

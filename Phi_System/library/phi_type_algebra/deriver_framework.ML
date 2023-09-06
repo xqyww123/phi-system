@@ -1,6 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
+type phi_type = Phi_Type_Algebra.phi_type
+
 (*** A common framework to build derivers fast ***)
 
 type induct_inst_params = term option list
@@ -263,6 +265,8 @@ val deriver_framework_no_hints : multiple_call * string (*name*)
 (** Misc Tools **)
 
 exception Automation_Fail of (unit -> Pretty.T list)
+val guess_fail : Proof.context -> phi_type -> (unit -> Pretty.T list) -> 'a
+
 structure Expansion : SIMPSET (*The standard simpset for deriving*)
 
 (*
@@ -289,6 +293,15 @@ end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
+
+type phi_type = Phi_Type_Algebra.phi_type
+
+fun guess_fail ctxt phi msg =
+  let open Pretty in raise Automation_Fail (fn () =>
+    [block (text "Fail to guess the form of the property for \<phi>-type" @
+            [brk 1, Syntax.pretty_term ctxt (#term phi)])]
+    @ msg ()
+  ) end
 
 type induct_inst_params = term option list
 type guess_property =
@@ -1130,7 +1143,9 @@ type parse_hint = Proof.context -> phi_type -> hint -> typ (*of the phi-typ cons
 fun parse_parameters_of_phi_type phity =
   case Term.strip_comb (Phi_Help.beta_eta_contract_term phity)
     of (Abs _, _) => raise TERM ("parse_parameters_of_phi_type", [phity])
-     | (_, args) => map (fn Bound _ => NONE | X => SOME X) (rev args)
+     | (_, args) => map (fn Bound _ => NONE
+                          | X => if Term.is_dummy_pattern X then NONE else SOME X)
+                        (rev args)
 
 fun parse_hint extract_phityp ctxt phi hint =
   let val phity = (case extract_phityp (extract_hhf hint)

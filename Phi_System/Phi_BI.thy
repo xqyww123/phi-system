@@ -442,6 +442,8 @@ lemma assertion_eq_intro:
 \<Longrightarrow> P = Q\<close>
   unfolding Transformation_def BI_eq_iff by blast
 
+lemma transformation_protector:
+  \<open>A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<equiv> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P\<close> .
 
 subsubsection \<open>Basic Transformation Form\<close>
 
