@@ -691,8 +691,8 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
+declare [[\<phi>trace_reasoning = 3]]
+  
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
   deriving Basic
@@ -705,6 +705,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>(\<forall>i\<in>I. Identity_Element\<^sub>E (x i \<Ztypecolon> T))
         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> finite I
         \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T)\<close>
+       and Separation_Monoid
 
 thm \<phi>Mul_Quant.fundef_cong
 

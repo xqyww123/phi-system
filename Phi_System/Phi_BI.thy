@@ -639,10 +639,14 @@ subsubsection \<open>Allocation of Priorities\<close>
   ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
                     \<open>split the separation sequent in the source part and reason the tranformation for
                      each separated item one by one.\<close>
-  ToA_derived     = (50, [20,79]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA < default
+  ToA_weak        = (20, [20,24]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA < default
+                    \<open>Weak transformation rules giving some reasoning support temporarily and expecting to be orverride\<close>
+  ToA_derived     = (50, [25,79]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA < default and > ToA_weak
                     \<open>Automatically derived transformations. Many substructures are contained in this large range.\<close>
   ToA_derived_red = (150, [130,170]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> > ToA_derived > default in ToA
                     \<open>Automatically derived transformation reductions.\<close>
+  ToA_weak_red    = (120, [120,129]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_derived_red in ToA
+                    \<open>Weak reduction rules giving some reasoning support temporarily and expecting to be orverride\<close>
 
 
 paragraph \<open>Bottom Groups\<close>
@@ -1726,6 +1730,23 @@ lemma sep_quant_sep:
           smt (verit) sep_disj_commuteI sep_disj_multD1 sep_disj_multI1 sep_mult_assoc sep_mult_commute)
 qed
 
+lemma sep_quant_merge_additive_disj:
+  \<open>(\<big_ast>i\<in>I. A i) + (\<big_ast>i\<in>I. B i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. A i + B i)\<close>
+  \<comment> \<open>but not held reversely\<close>
+unfolding Transformation_def Mul_Quant_def
+proof (clarsimp; rule; clarsimp)
+  fix v
+  assume \<open>finite I\<close>
+  show \<open>v \<Turnstile> prod A I \<Longrightarrow> v \<Turnstile> (\<Prod>i\<in>I. A i + B i)\<close>
+    by (induct arbitrary: v rule: finite_induct[OF \<open>finite I\<close>]; clarsimp; blast)
+next
+  fix v
+  assume \<open>finite I\<close>
+  show \<open>v \<Turnstile> prod B I \<Longrightarrow> v \<Turnstile> (\<Prod>i\<in>I. A i + B i)\<close>
+    by (induct arbitrary: v rule: finite_induct[OF \<open>finite I\<close>]; clarsimp; blast)
+qed
+
+
 
 subsubsection \<open>Basic Rules\<close>
 
@@ -1754,6 +1775,59 @@ qed
 
 
 subsubsection \<open>Transformation\<close>
+
+paragraph \<open>Normalization\<close>
+
+text \<open>Source side is normalized by merging separations together
+        \<open>(\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i) \<longrightarrow> (\<big_ast>i\<in>I. A i * B i)\<close>
+  while the target side is normalized by splitting sep-quants into small separations
+        \<open>(\<big_ast>i\<in>I. A i * B i) \<longrightarrow> (\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i)\<close>.
+  It is because our reasoning strategy is splitting the target side first and scanning the source
+    side \<phi>-type-by-type for each separated individual \<open>\<phi>\<close>-type items.
+  The first step works in assertion form while the second step is between \<phi>-types.
+  The \<open>\<big_ast>\<close> is in assertion level, so the target side has to be split before the first step.
+  Before the second step, for each individual target item \<open>(\<big_ast>i\<in>I. x \<Ztypecolon> T)\<close> we shall apply
+    \<open>sep_quant_transformation\<close> to strip off the outer \<open>\<big_ast>\<close> in order to enter inside into \<phi>-type level
+    so that the second step can continue.
+  This \<open>sep_quant_transformation\<close> may fail and if it fails, there is no way to enter the second step
+    \<^emph>\<open>in this unfinished reasoning mechanism right now\<close>.
+
+  Later after the type embedding of \<open>\<big_ast>\<close> is completed, the reasoning of \<open>\<big_ast>\<close> will be forwarded to the
+  type embedding which provides full power of competence on that level.
+\<close>
+
+lemma [\<phi>reason %ToA_weak_red]:
+  \<open> (\<big_ast>i\<in>I. A i * B i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  unfolding sep_quant_sep
+  by simp
+
+lemma [\<phi>reason %ToA_weak_red]:
+  \<open> R * (\<big_ast>i\<in>I. A i * B i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  unfolding sep_quant_sep[symmetric]
+  by (simp add: mult.assoc)
+
+lemma [\<phi>reason %ToA_weak_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. A i * B i) \<w>\<i>\<t>\<h> P \<close>
+  unfolding sep_quant_sep
+  by simp
+
+lemma [\<phi>reason %ToA_weak_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i) * R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. A i * B i) * R \<w>\<i>\<t>\<h> P \<close>
+  unfolding sep_quant_sep
+  by simp
+
+lemma [\<phi>reason %ToA_weak_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>I. A i * B i) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding sep_quant_sep
+  by simp
+
+
+
 
 paragraph \<open>Functor\<close>
 
@@ -3406,6 +3480,11 @@ lemmas [assertion_simps] =
 
 lemmas [assertion_simps_source] =
   ExSet_times_left ExSet_times_right ExSet_adconj ExSet_addisj
+
+  sep_quant_sep
+
+lemmas [assertion_simps_target] =
+  sep_quant_sep[symmetric]
 
 
 subsubsection \<open>Reasoners\<close>

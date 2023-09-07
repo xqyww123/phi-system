@@ -4005,6 +4005,9 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
        and Identity_Element
        and Basic
 
+  (*TODO: I'm thinking why I gave it this name... yes, there is identity element, but then.. what?
+          for what reason it can be called monoidal?*)
+
 
 subsubsection \<open>Construct Abstraction from Concrete Representation (by Itself)\<close>
 
@@ -4311,6 +4314,52 @@ lemma Set_bind_insert[simp, \<phi>constraint_expansion for set]:
   \<open>Set.bind (insert x S) f = f x \<union> Set.bind S f\<close>
   unfolding Set.bind_def
   by auto
+
+
+subsubsection \<open>Function\<close>
+
+definition \<open>zip_fun = case_prod BNF_Def.convol\<close>
+definition \<open>unzip_fun f = (fst o f, snd o f)\<close>
+
+lemma zip_fun_inj[simp]:
+  \<open>fst o (zip_fun f) = fst f\<close>
+  \<open>snd o (zip_fun f) = snd f\<close>
+  unfolding zip_fun_def fun_eq_iff BNF_Def.convol_def
+  by (cases f; clarsimp)+
+
+lemma zip_fun_inj'[simp]:
+  \<open>fst (zip_fun f x) = fst f x\<close>
+  \<open>snd (zip_fun f x) = snd f x\<close>
+  unfolding zip_fun_def fun_eq_iff BNF_Def.convol_def
+  by (cases f; clarsimp)+
+
+lemma zip_fun_map:
+  \<open>zip_fun (f o x, y) = apfst f o zip_fun (x, y)\<close>
+  \<open>zip_fun (x, g o y) = apsnd g o zip_fun (x, y)\<close>
+  unfolding zip_fun_def BNF_Def.convol_def
+  by clarsimp+
+
+lemma zip_fun_prj[simp]:
+  \<open>fst (unzip_fun x) = fst o x\<close>
+  \<open>snd (unzip_fun x) = snd o x\<close>
+  unfolding unzip_fun_def
+  by clarsimp+
+
+lemma map_fun_prod_case_analysis:
+  \<open>(\<lambda>x. (f x, g x)) o a = b \<equiv> f o a = fst o b \<and> g o a = snd o b\<close>
+  unfolding atomize_eq fun_eq_iff
+  by (clarsimp, rule, metis fst_eqD snd_conv, clarsimp)
+
+setup \<open> Context.theory_map(
+  let val (i, a, b) = (\<^typ>\<open>'i\<close>, \<^typ>\<open>'a\<close>, \<^typ>\<open>'b\<close>)
+   in BNF_FP_Sugar_More.add_fp_more (\<^type_name>\<open>fun\<close>, {
+        deads = [i], lives = [a], lives'= [b],
+        zip = \<^Const>\<open>zip_fun i a b\<close>,
+        unzip = \<^Const>\<open>unzip_fun i a b\<close>,
+        zip_simps = @{thms' zip_fun_inj zip_fun_inj' zip_fun_map zip_fun_prj map_fun_prod_case_analysis}
+  }) end)
+\<close>
+
 
 
 subsubsection \<open>Production\<close>
