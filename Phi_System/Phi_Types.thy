@@ -691,8 +691,8 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-  
+declare [[\<phi>trace_reasoning = 0]]
+    
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
   deriving Basic
@@ -706,6 +706,10 @@ declare [[\<phi>trace_reasoning = 3]]
         \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> finite I
         \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T)\<close>
        and Separation_Monoid
+       and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i)))\<close>
+       and Semimodule_Identity
+
+term \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i))) \<close>
 
 thm \<phi>Mul_Quant.fundef_cong
 

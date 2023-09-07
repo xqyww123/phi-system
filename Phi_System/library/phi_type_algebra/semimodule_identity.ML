@@ -21,9 +21,8 @@ fun parse_semimodule_phityp ctxt phi0 (sort_scalar, sort_model) =
                                   \this requirement."]
                         end)
       val s_ty0 = case reversed_argtys'
-                  of (\<^Type>\<open>fun T_x_ty \<^Type>\<open>set T_model_ty\<close>\<close> :: s_ty :: _) =>
-                      if T_x_ty = x_ty0 andalso T_model_ty = model_ty0 then s_ty
-                      else err_parse ()
+                  of (\<^Type>\<open>fun _ \<^Type>\<open>set T_model_ty\<close>\<close> :: s_ty :: _) =>
+                      if T_model_ty = model_ty0 then s_ty else err_parse ()
                    | _ => err_parse ()
       val inst = lift_types_sort (Proof_Context.theory_of ctxt)
                                  [(s_ty0, sort_scalar), (model_ty0, sort_model)]
@@ -33,7 +32,7 @@ fun parse_semimodule_phityp ctxt phi0 (sort_scalar, sort_model) =
       val model_ty = Term_Subst.instantiateT inst model_ty0
 
       val phi = instantiate_phi (inst',Vars.empty) phi0
-   in (s_ty, x_ty, model_ty, phi)
+   in (s_ty, x_ty, model_ty, phi) (*TODO: extend me! return x_ele_ty!*)
   end
 
 fun guess_property (phi0 : phi_type) ctxt =
