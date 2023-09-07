@@ -186,7 +186,6 @@ fun guess_property_FTF phi0 ctxt0 =
                            \<^Const>\<open>Functional_Transformation_Functor a b c d e f\<close> $ F_term $ F'_term $ T_term $ U_term
                               $ Var(("D",0), c --> \<^Type>\<open>set a\<close>)
                               $ Var(("R",0), c --> \<^Type>\<open>set e\<close>)
-                              $ Var(("mapper",0), (a --> e --> \<^Type>\<open>bool\<close>) --> c --> f --> \<^Type>\<open>bool\<close>)
                          | _ => error "BUG")
       val target_ty = Term_Subst.instantiateT_frees inst_ty
    in guess_func_mapper target_ty ctxt x_ty element_ty
@@ -203,8 +202,8 @@ fun guess_property_FTF phi0 ctxt0 =
 
 fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
-            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
+            fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []
 
       fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi)) ctxt

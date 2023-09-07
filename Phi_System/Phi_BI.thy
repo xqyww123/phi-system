@@ -2564,7 +2564,6 @@ declare [[
  and object_equiv_fallback = (1, [1,1]) for \<open>Object_Equiv T eq\<close> in object_equiv and < derived_object_equiv
     \<open>Fallback rules for reasonig Object_Equiv\<close>
 
-
 subsubsection \<open>Its Role in ToA\<close>
 
 lemma ToA_by_Equiv_Class

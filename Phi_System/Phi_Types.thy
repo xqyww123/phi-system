@@ -194,8 +194,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Separation_Monoid
        and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction T U
-                      (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})
-                      (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
+                      (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
        and Open_Abstraction_to_Raw
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
@@ -690,21 +689,7 @@ lemma [\<phi>reason 1000]:
   by (cases x; simp)
 
 
-lemma
-  \<open>(\<And>x xa. \<exists>uu. (A = Ab \<longrightarrow> rel_fun (=) x xa uu) \<and> (A = Ab \<longrightarrow> (\<forall>xb. xb \<in> Ab \<longrightarrow> (\<forall>xaa. x (xa xb) xaa \<longrightarrow> xaa = uu xb))))\<close>
-  apply (auto simp add: rel_fun_def)
-
-lemma
-  \<open>\<exists>uu. (I = J \<longrightarrow> (\<forall>xc\<in>J. x (xa xc) (xb xc)) \<longrightarrow> (\<forall>i. (i \<in> J \<longrightarrow> x (xa i) (uu i)) \<and> (i \<notin> J \<longrightarrow> xa i = uu i))) \<and>
-          (I = J \<longrightarrow> (\<forall>xc\<in>J. x (xa xc) (xb xc)) \<longrightarrow> (\<forall>xa. xa \<in> J \<longrightarrow> xb xa = uu xa))\<close>
-  apply (rule exI[where x=\<open>\<lambda>i. if i \<in> J then xb i else xa i\<close>])
-  apply clarsimp
-
-
-
-
 subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
-
 
 declare [[\<phi>trace_reasoning = 0]]
 
@@ -715,13 +700,9 @@ declare [[\<phi>trace_reasoning = 0]]
        and Basic
        (*and Abstract_Domain\<^sub>L (*TODO*)*)
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
+       and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>I. P (x i)) (\<lambda>f _. (o) f)\<close>
 
 thm \<phi>Mul_Quant.fundef_cong
-
-term \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
-term \<open>Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV)
-                                        (\<lambda>g x y. \<forall>i. if i \<in> I then g (x i) (y i) else x i = y i)
-                                        (\<lambda>_ P. \<forall>i \<in> I. P i) (\<lambda>f _. ) \<close>
 
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
@@ -791,7 +772,7 @@ thm old.sum.simps
 term \<open>(fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U)\<close>
 *)
 
-*)
+
 subsection \<open>Embedding Additive Disjunction\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
@@ -932,7 +913,7 @@ subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
 thm if_cong
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
        
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>

@@ -128,6 +128,11 @@ definition \<open>Transformation_Functor F1 F2 T U D R mapper \<longleftrightarr
   Our automatic deriver by default assumes it to \<open>\<lambda>_. \<top>\<close> if no user hint is given.
 \<close>
 
+text \<open>A transformation functor \<open>mapper\<close> is complete iff for a given complete transformation relation
+family \<open>{g\<^sub>i}\<close>, \<open>{mapper g\<^sub>i}\<close> is also complete (the notion of completeness can be extended to relations naturally
+by converting a relation as a function to a set).\<close>
+
+
 definition Functional_Transformation_Functor :: \<open>(('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>)
                                                \<Rightarrow> (('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>)
                                                \<Rightarrow> ('b,'a) \<phi>
@@ -142,6 +147,31 @@ definition Functional_Transformation_Functor :: \<open>(('b,'a) \<phi> \<Rightar
                 \<longrightarrow> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x)
                 \<longrightarrow> (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper f P x))\<close>
 
+text \<open>When the element transformation is applied with a partial function (with \<open>P\<close> giving the domain),
+  the entire transformation is also a partial function.
+  The \<^verbatim>\<open>func_mapper\<close> is usually the functional mapper and the
+  \<^verbatim>\<open>pred_mapper\<close> is the predicate mapper of an ADT. An exceptional example is set,
+  \<open>func_mapper\<^sub>s\<^sub>e\<^sub>t f P S = { f x |x \<in> S. P x }\<close> and \<open>pred_mapper\<^sub>s\<^sub>e\<^sub>t f P S = \<top>\<close>,
+  whose (generalized) algebraic mappers are however set image and set-forall (of its element).
+
+  \<open>P\<close> gives the domain of the partial map \<open>f\<close>.
+  \<open>D\<close> gives the domain of the inner elements of the functor.
+\<close>
+
+
+lemma infer_FTF_from_FT:
+  \<open> Transformation_Functor F1 F2 T U D R mapper
+\<Longrightarrow> Object_Equiv (F2 U) eq
+\<Longrightarrow> (\<forall>f P x y. mapper (\<lambda>a b. b = f a \<and> P a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x)
+\<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R pm fm \<close>
+  unfolding Functional_Transformation_Functor_def Transformation_Functor_def
+            Object_Equiv_def
+  apply clarsimp
+  subgoal premises prems for x f P
+    by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>a b. b = f a \<and> P a\<close>]]
+               prems(2-),
+        clarsimp simp add: Transformation_def,
+        blast) .
 
 
 subsubsection \<open>Separation\<close>
@@ -1288,12 +1318,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name \<A>s
     and func_mapper :: \<open>('a \<Rightarrow> 'e) \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> 'c \<Rightarrow> 'f\<close>
   assumes functional_mapper:
       \<open>Prem \<Longrightarrow> (\<forall>a' b'. mapper (\<lambda>a b. b = f a \<and> P a) a' b' \<longrightarrow> b' = func_mapper f P a' \<and> pred_mapper f P a')\<close>
-      \<comment> \<open>When the element transformation is applied with a partial function (with \<open>P\<close> giving the domain),
-          the entire transformation is also a partial function.
-          The \<^verbatim>\<open>func_mapper\<close> is usually the functional mapper and the
-          \<^verbatim>\<open>pred_mapper\<close> is the predicate mapper of an ADT. An exceptional example is set,
-          \<open>func_mapper\<^sub>s\<^sub>e\<^sub>t f P S = { f x |x \<in> S. P x }\<close> and \<open>pred_mapper\<^sub>s\<^sub>e\<^sub>t f P S = \<top>\<close>,
-          whose (generalized) algebraic mappers are however set image and set-forall (of its element).\<close>
+     
 *)
 
 lemma [\<phi>reason_template default %ToA_derived_one_to_one_functor name functional_transformation]:
@@ -1818,7 +1843,7 @@ assigned by constants after the reasoning.
 
 
 lemma "_Structural_Extract_general_rule_i_"[\<phi>reason_template default %derived_SE_functor]:
-  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F23 (T \<^emph>[Cw] W) (U \<^emph>[Cr] R) Dom Rng mapper pred_mapper func_mapper
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor F14 F23 (T \<^emph>[Cw] W) (U \<^emph>[Cr] R) Dom Rng pred_mapper func_mapper
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>I_Cond F1 F4 F14 Cw T W Dz z
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Separation_Homo\<^sub>E_Cond F3 F2 F23 Cr U R Du uz
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x \<in> Dz \<and> (\<forall>a. a \<in> Dom (z x) \<longrightarrow> f a \<in> Rng (z x)) \<and> func_mapper f P (z x) \<in> Du
@@ -2014,7 +2039,7 @@ lemma force_unfold_apsnd:
 lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we have usable test case*)
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> smul a c = b)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>a a \<and> D\<^sub>c c
-\<Longrightarrow> Functional_Transformation_Functor F14 F23 (T \<^emph>[Cw] W) (F3\<^sub>c c U \<^emph>[Cr] R) Dom Rng mapper pred_mapper func_mapper
+\<Longrightarrow> Functional_Transformation_Functor F14 F23 (T \<^emph>[Cw] W) (F3\<^sub>c c U \<^emph>[Cr] R) Dom Rng pred_mapper func_mapper
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I F3\<^sub>a F3\<^sub>c F3\<^sub>b U D\<^sub>a D\<^sub>c D\<^sub>x smul g\<^sub>s
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond (F1 a) (F4 a) F14 Cw T W Dz z
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond (F3\<^sub>a a) (F2 a) F23 Cr (F3\<^sub>c c U) R Du uz
@@ -3571,13 +3596,14 @@ subsubsection \<open>Functional Transformation Functor\<close>
 
 lemma \<phi>TA_FTF_rule:
   \<open> (Ant \<Longrightarrow> Transformation_Functor F1 F2 T U D R mapper)
-\<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P a' b'. mapper (\<lambda>a b. b = f a \<and> P a) a' b' \<longrightarrow> b' = fm f P a' \<and> pm f P a'))
+\<Longrightarrow> (Ant \<Longrightarrow> Object_Equiv (F2 U) eq)
+\<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P x y. mapper (\<lambda>a b. b = f a \<and> P a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R mapper pm fm\<close>
-  unfolding Functional_Transformation_Functor_def Premise_def fun_eq_iff Action_Tag_def
-  by blast
+\<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R pm fm\<close>
+  unfolding Premise_def fun_eq_iff Action_Tag_def
+  using infer_FTF_from_FT .
 
 lemma [\<phi>reason %\<phi>TA_guesser[top]]:
   \<comment> \<open>Guess_Property in Functional_Transformation_Functor is prohibited\<close>
@@ -3593,7 +3619,7 @@ ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
   = \<open> Phi_Type_Algebra_Derivers.transformation_functor \<close>
 
 \<phi>property_deriver Functional_Transformation_Functor 111
-  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _ _\<close>)
+  for (\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>)
   requires Transformation_Functor
     = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor\<close>
 
