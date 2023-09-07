@@ -3104,26 +3104,26 @@ lemma (*the above rule is not local complete*)
   B = {a\<^sub>1} *)
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> (\<And>i. Identity_Element\<^sub>I (A i) (P i))
-\<Longrightarrow> Identity_Element\<^sub>I (\<big_ast>i\<in>S. A i) (\<forall>i\<in>S. P i)\<close>
-  unfolding Identity_Element\<^sub>I_def Mul_Quant_def Transformation_def
+  \<open> (\<And>i\<in>I. Identity_Element\<^sub>I (A i) (P i))
+\<Longrightarrow> Identity_Element\<^sub>I (\<big_ast>i\<in>I. A i) (\<forall>i\<in>I. P i)\<close>
+  unfolding Identity_Element\<^sub>I_def Mul_Quant_def Transformation_def meta_Ball_def Premise_def
 proof clarsimp
   fix v
-  assume prems: \<open>(\<And>i. \<forall>v. v \<Turnstile> A i \<longrightarrow> v = 1 \<and> P i)\<close>
-                \<open>v \<Turnstile> prod A S\<close>
-     and \<open>finite S\<close>
-  show \<open>v = 1 \<and> (\<forall>x\<in>S. P x)\<close>
-    by (insert prems; induct rule: finite_induct[OF \<open>finite S\<close>]; clarsimp; fastforce)
+  assume prems: \<open>(\<And>i. i \<in> I \<Longrightarrow> \<forall>v. v \<Turnstile> A i \<longrightarrow> v = 1 \<and> P i)\<close>
+                \<open>v \<Turnstile> prod A I\<close>
+     and \<open>finite I\<close>
+  show \<open>v = 1 \<and> (\<forall>x\<in>I. P x)\<close>
+    by (insert prems; induct rule: finite_induct[OF \<open>finite I\<close>]; clarsimp; fastforce)
 qed
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> (\<And>i. Identity_Element\<^sub>E (A i))
+  \<open> (\<And>i\<in>S. Identity_Element\<^sub>E (A i))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> finite S
 \<Longrightarrow> Identity_Element\<^sub>E (\<big_ast>i\<in>S. A i) \<close>
-  unfolding Identity_Element\<^sub>E_def Mul_Quant_def Transformation_def Premise_def
+  unfolding Identity_Element\<^sub>E_def Mul_Quant_def Transformation_def Premise_def meta_Ball_def
 proof clarsimp
   fix v
-  assume prems: \<open>(\<And>i. 1 \<Turnstile> A i)\<close>
+  assume prems: \<open>(\<And>i. i \<in> S \<Longrightarrow> 1 \<Turnstile> A i)\<close>
      and \<open>finite S\<close>
   show \<open>1 \<Turnstile> prod A S\<close>
     by (insert prems;

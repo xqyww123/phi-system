@@ -695,12 +695,16 @@ declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
-  deriving Object_Equiv
+  deriving Basic
        and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P (x i)) \<close>
-       and Basic
        (*and Abstract_Domain\<^sub>L (*TODO*)*)
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>I. P (x i)) (\<lambda>f _. (o) f)\<close>
+       and \<open>(\<forall>i\<in>I. Identity_Element\<^sub>I (x i \<Ztypecolon> T) (P i))
+        \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T) (\<forall>i\<in>I. P i)\<close>
+       and \<open>(\<forall>i\<in>I. Identity_Element\<^sub>E (x i \<Ztypecolon> T))
+        \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> finite I
+        \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T)\<close>
 
 thm \<phi>Mul_Quant.fundef_cong
 
