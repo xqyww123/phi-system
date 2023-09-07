@@ -1645,10 +1645,14 @@ lemma transformation_bi_frame:
   unfolding Transformation_def split_paired_All sep_conj_expn by blast
 
 
-subsection \<open>Multiplicative Finite Quantification\<close>
+subsection \<open>Finite Multiplicative Quantification (FMQ)\<close>
 
 definition Mul_Quant :: \<open>('a \<Rightarrow> 'b::sep_algebra BI) \<Rightarrow> 'a set \<Rightarrow> 'b BI\<close> ("\<big_ast>")
   where \<open>Mul_Quant A S \<equiv> (prod A S \<s>\<u>\<b>\<j> finite S)\<close>
+
+text \<open>Finite Multiplicative Quantification \<open>\<big_ast>i\<in>I. A\<^sub>i\<close> is inductively applying separation conjunction
+  over a finite family \<open>{A\<^sub>i}\<close> of assertions indexed by \<open>i\<in>I\<close>, e.g., \<open>(\<big_ast>i\<in>I. A\<^sub>i) = A\<^sub>1 * A\<^sub>2 * \<dots> * A\<^sub>n\<close> for
+  \<open>I = {1,2,\<dots>,n}\<close>\<close>
 
 syntax
   "_Mul_Quant" :: "pttrn => 'a set => 'b => 'b::comm_monoid_mult"  ("(2\<big_ast>(_/\<in>_)./ _)" [0, 51, 14] 14)
@@ -1662,6 +1666,16 @@ translations
 
 
 subsubsection \<open>Rewrites\<close>
+
+lemma sep_quant_sing[simp]:
+  \<open>\<big_ast> A {i} = A i\<close>
+  unfolding Mul_Quant_def
+  by simp
+
+lemma sep_quant_empty[simp]:
+  \<open>\<big_ast> A {} = 1\<close>
+  unfolding Mul_Quant_def
+  by simp
 
 lemma finite_prod_subjection:
   \<open>finite I \<Longrightarrow> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<Prod>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
@@ -1752,7 +1766,7 @@ subsubsection \<open>Basic Rules\<close>
 
 lemma [\<phi>reason %cutting]:
   \<open> (\<And>i\<in>S. A i \<i>\<m>\<p>\<l>\<i>\<e>\<s> P i)
-\<Longrightarrow> (\<big_ast>i\<in>S. A i) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>i\<in>S. P i)\<close>
+\<Longrightarrow> (\<big_ast>i\<in>S. A i) \<i>\<m>\<p>\<l>\<i>\<e>\<s> (\<forall>i\<in>S. P i) \<close>
   unfolding Mul_Quant_def Action_Tag_def Inhabited_def meta_Ball_def Premise_def
   by (clarsimp; metis Satisfaction_def ex_in_conv prod_zero zero_set_iff)
 
@@ -1776,7 +1790,50 @@ qed
 
 subsubsection \<open>Transformation\<close>
 
-paragraph \<open>Normalization\<close>
+paragraph \<open>Reduction\<close>
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> A x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (\<big_ast>i\<in>{x}. A i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (\<big_ast>i\<in>{}. A i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> R * A x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (\<big_ast>i\<in>{x}. A i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (\<big_ast>i\<in>{}. A i) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A x \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>{x}. A i) \<w>\<i>\<t>\<h> P\<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>{}. A i) \<w>\<i>\<t>\<h> P\<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A x \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>{x}. A i) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1 \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<big_ast>i\<in>{}. A i) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
+  by simp
+
+
+paragraph \<open>Weak Normalization\<close>
 
 text \<open>Source side is normalized by merging separations together
         \<open>(\<big_ast>i\<in>I. A i) * (\<big_ast>i\<in>I. B i) \<longrightarrow> (\<big_ast>i\<in>I. A i * B i)\<close>

@@ -399,6 +399,7 @@ fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
             val ctxt' = Context.proof_of ctxt
          in Exn.error (Pretty.string_of (Pretty.chunks (
               Pretty.str "Clash with existing reasoner!" ::
+              pretty' ctxt' (priority, pat, pat, reasoner) ::
               map (fn d => pretty' ctxt' d) dups
            )))
         end

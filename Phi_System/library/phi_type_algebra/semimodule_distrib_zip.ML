@@ -10,7 +10,8 @@ structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun guess_property is_zip (phi00 : phi_type) ctxt =
-  let val (s_ty0, x_ty0, model_ty0, phi0) = parse_semimodule_phityp ctxt phi00 (\<^sort>\<open>type\<close>, \<^sort>\<open>share_nun_semimodule\<close>)
+  let val (s_ty0, _, x_ty0, model_ty0, phi0) =
+            parse_semimodule_phityp ctxt phi00 (SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>share_nun_semimodule\<close>))
       val ((_, FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
       val (F_term0 $ _ $ T_term0) = FT_term0
       val (Ds, Dx, z, ants, inst) =

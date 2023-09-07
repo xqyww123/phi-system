@@ -953,9 +953,9 @@ declare [[\<phi>trace_reasoning = 2]]
 
 lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
-\<Longrightarrow> Semimodule_Identity (\<phi>ScalarMul \<psi>) T \<close>
-  unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def
-  by (rule \<phi>Type_eqI; clarsimp; metis)
+\<Longrightarrow> Semimodule_Identity\<^sub>E (\<phi>ScalarMul \<psi>) T 1 (\<lambda>_. True) (\<lambda>x. x) \<close>
+  unfolding Semimodule_Identity\<^sub>E_def module_scalar_identity_def scalar_mult_def BI_eq_iff
+  by clarsimp
 
 lemma Semimodule_Scalar_Assoc\<^sub>I_by_function[\<phi>reason 1000]:
   \<open> module_scalar_assoc \<psi> Ds
@@ -1235,7 +1235,7 @@ declare [[\<phi>trace_reasoning = 0]]
 subsubsection \<open>By List of Keys\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-        
+         
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Separation_Monoid
