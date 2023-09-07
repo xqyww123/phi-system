@@ -19,8 +19,7 @@ fun guess_property closed (phi0 : phi_type) ctxt =
                         end)
       val s_ty0 = case reversed_argtys'
                   of (\<^Type>\<open>fun T_x_ty \<^Type>\<open>set T_model_ty\<close>\<close> :: s_ty :: _) =>
-                      if T_x_ty = x_ty0 andalso T_model_ty = model_ty0 then s_ty
-                      else err_parse ()
+                      if T_model_ty = model_ty0 then s_ty else err_parse ()
                    | _ => err_parse ()
 
       val inst = lift_types_sort (Proof_Context.theory_of ctxt)

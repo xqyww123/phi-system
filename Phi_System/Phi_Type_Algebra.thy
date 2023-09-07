@@ -196,10 +196,10 @@ definition \<open>Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U D un \<lon
 
 subsubsection \<open>Semimodule\<close>
 
-definition Semimodule_Zero :: \<open>('s::zero \<Rightarrow> ('c::one,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> bool\<close>
+definition Semimodule_Zero :: \<open>('s::zero \<Rightarrow> ('c::one,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> bool\<close>
   where \<open>Semimodule_Zero F T \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F 0 T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> 1)\<close>
 
-definition Closed_Semimodule_Zero :: \<open>('s::zero \<Rightarrow> ('c::one,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> bool\<close>
+definition Closed_Semimodule_Zero :: \<open>('s::zero \<Rightarrow> ('c::one,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>) \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> bool\<close>
   where \<open>Closed_Semimodule_Zero F T \<longleftrightarrow> (\<forall>x. (x \<Ztypecolon> F 0 T) = 1)\<close>
   \<comment> \<open>It is actually a very strong property particularly when \<open>T\<close> is an empty \<phi>-type of empty
       abstract domain. It excludes functional homomorphism like \<open>F c T \<equiv> \<psi> c \<Zcomp>\<^sub>f T\<close>.\<close>
