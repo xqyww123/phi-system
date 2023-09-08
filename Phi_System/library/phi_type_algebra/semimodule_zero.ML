@@ -38,7 +38,7 @@ fun gen_M0 closed (der_id, name) hint0 ctxt0 (phi : phi_type) thy =
   end
 
 val semimodule_zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Zero") (gen_M0 false)
-val closed_semimodule_zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Semimodule_Zero") (gen_M0 true)
+val closed_semimodule_zero = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Closed_Semimodule_Zero") (gen_M0 true)
 
 
 end

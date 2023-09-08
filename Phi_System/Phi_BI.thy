@@ -1682,6 +1682,12 @@ lemma sep_quant_empty[simp]:
   unfolding Mul_Quant_def
   by simp
 
+lemma sep_quant_insert:
+  \<open>i \<notin> I \<Longrightarrow> \<big_ast> A (insert i I) = \<big_ast> A I * A i\<close>
+  unfolding Mul_Quant_def
+  by (clarsimp simp add: Subjection_eq mult.commute)
+  
+
 lemma finite_prod_subjection:
   \<open>finite I \<Longrightarrow> (\<Prod>i\<in>I. A i \<s>\<u>\<b>\<j> P i) = ((\<Prod>i\<in>I. A i) \<s>\<u>\<b>\<j> (\<forall>i\<in>I. P i))\<close>
   unfolding BI_eq_iff

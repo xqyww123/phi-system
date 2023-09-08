@@ -707,6 +707,8 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Separation_Monoid
        and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i)))\<close>
        and Semimodule_NonDistr
+       and Closed_Semimodule_Zero
+       and Semimodule_Identity
        (*Semimodule_SDistr_Homo\<^sub>Z*)
 
 subsubsection \<open>Syntax\<close>
@@ -724,7 +726,7 @@ translations
   "CONST \<phi>Type x (_\<phi>Mul_Quant (_more_dom d (_one_dom i I)) T)" == "CONST \<phi>Type (\<lambda>i. x) (_\<phi>Mul_Quant d (CONST \<phi>Mul_Quant I T))"
 
 
-subsubsection \<open>Rules that cannot be derived\<close>
+subsubsection \<open>Supplementary Algebraic Properties\<close>
 
 text \<open>Instead of deriving the Scalar Distributivity automatically, we give them manually, as the scalar
   distribution of the assertion-level \<open>\<big_ast>\<close> is not activated in the reasoning system by default
@@ -741,6 +743,40 @@ lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>U[\<phi>reason 1000]:
   unfolding Semimodule_SDistr_Homo\<^sub>U_def dom_of_add_set_def
   by (clarsimp simp add: \<phi>Mul_Quant.unfold \<phi>Prod_expn' sep_quant_scalar_distr)
 
+
+subsubsection \<open>Supplementary Rewrites\<close>
+
+thm \<phi>Mul_Quant.scalar_zero
+thm \<phi>Mul_Quant.scalar_one
+
+lemma \<phi>Mul_Quant_insert:
+  \<open> k \<notin> I
+\<Longrightarrow> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T) = ((x k, x) \<Ztypecolon> T \<^emph> \<big_ast>\<^sup>\<phi> I T) \<close>
+  unfolding \<phi>Mul_Quant.unfold \<phi>Prod_expn'
+  by (clarsimp simp add: sep_quant_insert)
+
+subsubsection \<open>Supplementary Transformations\<close>
+
+lemma [\<phi>reason %ToA_derived_red-10]: \<comment>\<open>The priority must be lower than the derived \<open> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> {x} T\<close>\<close>
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T) * (x k \<Ztypecolon> T) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T \<w>\<i>\<t>\<h> P \<close>
+  unfolding \<phi>Mul_Quant.unfold \<r>Guard_def Premise_def
+  by (clarsimp simp add: sep_quant_insert)
+
+lemma [\<phi>reason %ToA_derived_red-10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T) * (x k \<Ztypecolon> T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding \<phi>Mul_Quant.unfold \<r>Guard_def Premise_def
+  by (clarsimp simp add: sep_quant_insert)
+
+lemma [\<phi>reason %ToA_derived_red-10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst (\<lambda>f. (f k, f)) x \<Ztypecolon> (T \<^emph> \<big_ast>\<^sup>\<phi> I T) \<^emph>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding \<r>Guard_def Premise_def
+  by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn' \<phi>Mul_Quant_insert)
 
 
 term \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i))) \<close>

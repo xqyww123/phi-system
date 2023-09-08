@@ -1707,11 +1707,18 @@ lemma [\<phi>reason_template %ToA_derived_red requires Closed_Semimodule_Zero]:
 
 paragraph \<open>Identity\<close>
 
-lemma [\<phi>reason_template name scalar_identity [assertion_simps, simp]]:
+lemma [\<phi>reason_template name scalar_one_ty [assertion_simps, simp]]:
   \<open> Semimodule_Identity\<^sub>E F T one (\<lambda>_. True) (\<lambda>x. x)
 \<Longrightarrow> F one T = T \<close>
   unfolding Semimodule_Identity\<^sub>E_def
   by (rule \<phi>Type_eqI_Tr; clarsimp)
+
+lemma [\<phi>reason_template name scalar_one [assertion_simps, simp]]:
+  \<open> Semimodule_Identity\<^sub>E F T one D f
+\<Longrightarrow> D x
+\<Longrightarrow> (x \<Ztypecolon> F one T) = (f x \<Ztypecolon> T) \<close>
+  unfolding Semimodule_Identity\<^sub>E_def BI_eq_iff
+  by clarsimp
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
   \<open> \<g>\<u>\<a>\<r>\<d> Semimodule_Identity\<^sub>E F T one D f
