@@ -1807,7 +1807,7 @@ lemma [\<phi>reason_template no explorative backtrack %ToA_derived_red]:
 \<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D (fst x)
 \<Longrightarrow> NO_SIMP (apfst f x \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F one T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F one' T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) \<close>
   unfolding Semimodule_Identity\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Simplify_def Action_Tag_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
 
@@ -1861,8 +1861,8 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 \<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D (fst x)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f x \<Ztypecolon> T \<^emph>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<^emph>[C] R \<w>\<i>\<t>\<h> P) \<close>
-  unfolding Semimodule_Identity\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one' T \<^emph>[C] R \<w>\<i>\<t>\<h> P) \<close>
+  unfolding Semimodule_Identity\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Simplify_def Action_Tag_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
 
 
@@ -1986,6 +1986,17 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 *)
 
 paragraph \<open>Left Distributivity\<close>
+
+
+lemma [\<phi>reason_template name unfold_sdistr[]]:
+  \<open> Semimodule_SDistr_Homo\<^sub>U F T Ds Du uz
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dz zi
+\<Longrightarrow> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Du t s x \<and> Dz t s (uz t s x) \<and>
+    zi t s (uz t s x) = x
+\<Longrightarrow> (x \<Ztypecolon> F (s + t) T) = (uz t s x \<Ztypecolon> F t T \<^emph> F s T) \<close>
+  unfolding Semimodule_SDistr_Homo\<^sub>Z_def Semimodule_SDistr_Homo\<^sub>U_def
+  by (rule assertion_eq_intro; clarsimp simp del: split_paired_All; metis)
+
 
 subparagraph \<open>Zip\<close>
 

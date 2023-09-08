@@ -129,6 +129,8 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 structure Defining_Phi_Type : HOOKS (*invoked before any deriving*)
 val add_type : def * Position.T * derivings * Bundle.name list -> generic_theory -> phi_type * generic_theory
 
+val override_ind_rule : string * thm -> Context.generic -> Context.generic
+
 (** Tools **)
 
 val is_phi_term : phi_type -> term -> bool (*ignores type*)
@@ -227,6 +229,21 @@ fun map_phi_type (mtm,mth) (phi : phi_type) =
     is_impredicative = #is_impredicative phi
   } : phi_type
 
+fun set_ind ind (phi : phi_type) =
+  {
+    term = #term phi,
+    cterm = #cterm phi,
+    pos = #pos phi,
+    proof_id = #proof_id phi,
+    equations = #equations phi,
+    type_equations = #type_equations phi,
+    ind = ind,
+    cases = #cases phi,
+    intro_reasoning = #intro_reasoning phi,
+    is_recursive = #is_recursive phi,
+    is_impredicative = #is_impredicative phi
+  } : phi_type
+
 fun fold_phi_type (fold_tm, fold_thm) (phi : phi_type) x = x
   |> fold_tm (#term phi)
   |> fold fold_thm (#equations phi)
@@ -241,13 +258,16 @@ val phi_maxidx_of = fold_phi_type (Term.maxidx_term, Thm.maxidx_thm)
 type hint = term
 
 structure Phi_Types = Generic_Data (
-  type T = phi_type Symtab.table
+  type T = phi_type Symtab.table (*key: name of constant*)
   val empty = Symtab.empty
   val merge = Symtab.merge (K true)
 )
 
 fun get_type_info ctxt k =
       Option.map (phi_transfer (Context.theory_of ctxt)) (Symtab.lookup (Phi_Types.get ctxt) k)
+
+fun override_ind_rule (name, ind) =
+  Phi_Types.map (Symtab.map_entry name (set_ind (Thm.trim_context ind)))
 
 (*
 fun add_automation_on_def priority automation ctxt =
