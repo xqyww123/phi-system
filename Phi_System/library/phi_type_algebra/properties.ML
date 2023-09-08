@@ -523,9 +523,9 @@ fun add_property (phityp0,pos,property) ctxt =
          in Net.insert_term property_eq (k''', (k,pos,v)) net
         end
    in ctxt
+    |> invoke_automations_on_property (phityp0, pos, property)
     |> Properties.map (insert_term (key, (phityp', pos, Thm.trim_context property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
-    |> invoke_automations_on_property (phityp0, pos, property)
    handle SKIP => ctxt
  (* handle Net.INSERT => let open Pretty
       val term = Context.cases Syntax.pretty_term_global Syntax.pretty_term

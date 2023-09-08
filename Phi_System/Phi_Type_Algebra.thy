@@ -278,6 +278,9 @@ definition Semimodule_SDistr_Homo\<^sub>Z_rev :: \<open>('s \<Rightarrow> ('c::s
   where \<open>Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds Dx z \<longleftrightarrow>
             (\<forall>s t x. Ds s \<and> Ds t \<and> t ##\<^sub>+ s \<and> Dx t s x \<longrightarrow>
                   (x \<Ztypecolon> F t T \<^emph> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s x \<Ztypecolon> F (t + s) T ))\<close>
+  \<comment> \<open>Should be only used when assuming non-commutative separation algebra and non-commutative scalar,
+      else should use \<open>Semimodule_SDistr_Homo\<^sub>Z\<close> instead, see \<open>SDirst_in_comm_sep_implies_rev\<close>
+      and \<open>SDirst_in_comm_scalar_implies_rev\<close>\<close>
 
 
 definition Semimodule_SDistr_Homo\<^sub>O\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi>)
@@ -306,8 +309,8 @@ definition Semimodule_SDistr_Homo\<^sub>U_rev :: \<open>('s \<Rightarrow> ('c::s
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> 'a \<times> 'a)
                                         \<Rightarrow> bool\<close>
   where \<open>Semimodule_SDistr_Homo\<^sub>U_rev F T Ds Dx uz \<longleftrightarrow>
-            (\<forall>s t x. Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x \<longrightarrow>
-                (x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F s T \<^emph> F t T ))\<close>
+            (\<forall>s t x. Ds s \<and> Ds t \<and> t ##\<^sub>+ s \<and> Dx t s x \<longrightarrow>
+                (x \<Ztypecolon> F (t + s) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> F t T \<^emph> F s T ))\<close>
 
 
 subsubsection \<open>Configurations\<close>
@@ -1856,24 +1859,65 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 
 paragraph \<open>Left Distributivity\<close>
 
-lemma [\<phi>adding_property = false,
-       \<phi>reason default %\<phi>TA_fallback_lattice,
-       \<phi>adding_property = true ]:
-  \<open> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx t s o prod.swap) (\<lambda>s t. z t s o prod.swap)\<close>
-  for F :: \<open>('s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>Z_rev_def Semimodule_SDistr_Homo\<^sub>Z_def
-  by (simp add: \<phi>Prod_expn'; metis mult.commute)
+subparagraph \<open>Zip\<close>
 
-lemma [\<phi>adding_property = false,
-       \<phi>reason default %\<phi>TA_fallback_lattice-1,
-       \<phi>adding_property = true ]:
+lemma SDirst_in_comm_scalar_implies_rev\<^sub>Z
+      [\<phi>adding_property = false,
+       \<phi>reason default %\<phi>TA_fallback_lattice,
+       \<phi>adding_property = true,
+       \<phi>reason_template default %\<phi>TA_derived_properties]:
   \<open> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx s t) (\<lambda>s t. z s t)\<close>
   for F :: \<open>('s::partial_ab_semigroup_add \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_rev_def Semimodule_SDistr_Homo\<^sub>Z_def
   by (simp add: dom_of_add_commute partial_add_commute)
 
+lemma SDirst_in_comm_sep_implies_rev\<^sub>Z
+      [\<phi>adding_property = false,
+       \<phi>reason default %\<phi>TA_fallback_lattice-1,
+       \<phi>adding_property = true]:
+  \<open> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx t s o prod.swap) (\<lambda>s t. z t s o prod.swap)\<close>
+  for F :: \<open>('s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
+  unfolding Semimodule_SDistr_Homo\<^sub>Z_rev_def Semimodule_SDistr_Homo\<^sub>Z_def
+  by (simp add: \<phi>Prod_expn'; metis mult.commute)
+
+lemma [\<phi>reason_template default %\<phi>TA_derived_properties]:
+  \<open> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z
+\<Longrightarrow> NO_MATCH TYPE('s2::partial_ab_semigroup_add) TYPE('s) @action \<A>_template_reason
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx t s o prod.swap) (\<lambda>s t. z t s o prod.swap)\<close>
+  for F :: \<open>('s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
+  using SDirst_in_comm_sep_implies_rev\<^sub>Z .
+
+subparagraph \<open>Unzip\<close>
+
+lemma SDirst_in_comm_scalar_implies_rev\<^sub>U
+      [\<phi>adding_property = false,
+       \<phi>reason default %\<phi>TA_fallback_lattice,
+       \<phi>adding_property = true,
+       \<phi>reason_template default %\<phi>TA_derived_properties]:
+  \<open> Semimodule_SDistr_Homo\<^sub>U F T Ds Dx uz
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U_rev F T Ds (\<lambda>s t. Dx s t) (\<lambda>s t. uz s t)\<close>
+  for F :: \<open>('s::partial_ab_semigroup_add \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
+  unfolding Semimodule_SDistr_Homo\<^sub>U_rev_def Semimodule_SDistr_Homo\<^sub>U_def
+  by (simp add: dom_of_add_commute partial_add_commute)
+
+lemma SDirst_in_comm_sep_implies_rev\<^sub>U
+      [\<phi>adding_property = false,
+       \<phi>reason default %\<phi>TA_fallback_lattice-1,
+       \<phi>adding_property = true]:
+  \<open> Semimodule_SDistr_Homo\<^sub>U F T Ds Dx z
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U_rev F T Ds (\<lambda>s t. Dx t s) (\<lambda>s t. prod.swap o z t s)\<close>
+  for F :: \<open>('s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
+  unfolding Semimodule_SDistr_Homo\<^sub>U_rev_def Semimodule_SDistr_Homo\<^sub>U_def
+  by (clarsimp simp add: \<phi>Prod_expn'' mult.commute)
+
+lemma [\<phi>reason_template default %\<phi>TA_derived_properties]:
+  \<open> Semimodule_SDistr_Homo\<^sub>U F T Ds Dx z
+\<Longrightarrow> NO_MATCH TYPE('s2::partial_ab_semigroup_add) TYPE('s) @action \<A>_template_reason
+\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U_rev F T Ds (\<lambda>s t. Dx t s) (\<lambda>s t. prod.swap o z t s)\<close>
+  for F :: \<open>('s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
+  using SDirst_in_comm_sep_implies_rev\<^sub>U .
 
 
 subsubsection \<open>Separation Extraction\<close>

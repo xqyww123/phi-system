@@ -695,6 +695,9 @@ subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
+text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
+  as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
+
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
   deriving Basic
@@ -709,20 +712,30 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T)\<close>
        and Separation_Monoid
        and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i)))\<close>
-       and Semimodule_Identity
-       and Semimodule_Zero
-       and Semimodule_Scalar_Assoc
+       and Semimodule_NonDistr
        (*Semimodule_SDistr_Homo\<^sub>Z*)
 
+thm \<phi>Mul_Quant.unfold
 
-thm zero_set_def
+subsubsection \<open>Rules that cannot be derived\<close>
+
+lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>Z[\<phi>reason 1000]:
+  \<open> Semimodule_SDistr_Homo\<^sub>Z \<big_ast>\<^sup>\<phi> T (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
+  unfolding Semimodule_SDistr_Homo\<^sub>Z_def dom_of_add_set_def
+  by (clarsimp simp add: \<phi>Prod_expn' \<phi>Mul_Quant.unfold sep_quant_scalar_distr;
+      smt (verit) Mul_Quant_def Transformation_def disjoint_iff plus_set_in_iff prod.cong)
+
+lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>U[\<phi>reason 1000]:
+  \<open> Semimodule_SDistr_Homo\<^sub>U \<big_ast>\<^sup>\<phi> T (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f ,f)) \<close>
+  unfolding Semimodule_SDistr_Homo\<^sub>U_def dom_of_add_set_def
+  by (clarsimp simp add: \<phi>Mul_Quant.unfold \<phi>Prod_expn' sep_quant_scalar_distr)
+
+
 
 term \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i))) \<close>
 
 thm \<phi>Mul_Quant.fundef_cong
 
-text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
-  as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
 
 thm \<phi>Mul_Quant.expansion
 thm \<phi>Mul_Quant.elim_reasoning
@@ -977,6 +990,8 @@ lemma Semimodule_Scalar_Assoc\<^sub>E_by_function[\<phi>reason 1000]:
   unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc\<^sub>E_def scalar_mult_def Transformation_def
   by clarsimp metis
 
+declare [[\<phi>trace_reasoning = 1]]
+ 
 lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx

@@ -1468,6 +1468,11 @@ lemma Subjection_cong[cong]:
   \<open>P \<equiv> P' \<Longrightarrow> (P' \<Longrightarrow> S \<equiv> S') \<Longrightarrow> (S \<s>\<u>\<b>\<j> P) \<equiv> (S' \<s>\<u>\<b>\<j> P')\<close>
   unfolding atomize_eq BI_eq_iff by (simp, blast)
 
+lemma Subjection_eq:
+  \<open>(A \<s>\<u>\<b>\<j> P) = (A' \<s>\<u>\<b>\<j> P) \<longleftrightarrow> (P \<longrightarrow> A = A')\<close>
+  unfolding BI_eq_iff
+  by clarsimp blast
+
 lemma Subjection_imp_simp[simp]:
   \<open> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q) \<longleftrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P \<and> Q) \<close>
   unfolding Transformation_def by simp
@@ -1760,10 +1765,12 @@ next
     by (induct arbitrary: v rule: finite_induct[OF \<open>finite I\<close>]; clarsimp; blast)
 qed
 
-(*
 lemma sep_quant_scalar_distr:
-  \<open>(\<big_ast>i\<in>I. A i) * (\<big_ast>j\<in>J. B j)\<close>
-*)
+  \<open>I \<inter> J = {} \<Longrightarrow> (\<big_ast>i\<in>I. A i) * (\<big_ast>j\<in>J. B j) = (\<big_ast>k\<in>I + J. (if k \<in> J then B k else A k))\<close> (*TODO: syntax priority!*)
+  unfolding Mul_Quant_def plus_set_def Subjection_times Subjection_Subjection
+  by (clarsimp simp add: Subjection_eq,
+      smt (verit) disjoint_iff prod.cong prod.union_disjoint)
+
 
 subsubsection \<open>Basic Rules\<close>
 
