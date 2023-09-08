@@ -61,19 +61,6 @@ subsection \<open>Error Mechanism\<close>
 ML_file \<open>library/tools/error.ML\<close>
 
 
-subsection \<open>Helper Annotation\<close>
-
-definition NO_SIMP where \<open>NO_SIMP X \<equiv> X\<close>
-  \<comment> \<open>to prevent simplification on the inner terms\<close>
-
-definition NO_SIMP' where \<open>NO_SIMP' (X::prop) \<equiv> X\<close>
-
-lemma NO_SIMP_cong[cong]: \<open>NO_SIMP X \<equiv> NO_SIMP X\<close> .
-lemma NO_SIMP'_cong[cong]: \<open>NO_SIMP' X \<equiv> NO_SIMP' X\<close> .
-
-lemma NO_SIMP_I: \<open>P \<Longrightarrow> NO_SIMP P\<close> unfolding NO_SIMP_def .
-lemma NO_SIMP'_I: \<open>PROP P \<Longrightarrow> PROP NO_SIMP' P\<close> unfolding NO_SIMP'_def .
-
 subsection \<open>Helper ML\<close>
 
 ML_file \<open>library/tools/Phi_Help.ML\<close>

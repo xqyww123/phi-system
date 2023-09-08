@@ -16,7 +16,9 @@ structure Protectors = Simpset (
           Context.the_local_context ()
             |> Raw_Simplifier.clear_simpset
             |> Simplifier.set_mksimps ( map Thm.symmetric
-                                     oo Simpdata.mksimps Simpdata.mksimps_pairs)))
+                                     oo Simpdata.mksimps Simpdata.mksimps_pairs)
+            |> Simplifier.add_cong @{thm' NO_SIMP_cong}
+            |> Simplifier.add_cong @{thm' NO_SIMP'_cong}))
   val binding = NONE
   val comment = "Rewrite rules applied before simplification in order to protect any specific assertion forms"
   val attribute = NONE
@@ -24,7 +26,9 @@ structure Protectors = Simpset (
 )
 
 structure Un_Protectors = Simpset (
-  val initial_ss = Simpset_Configure.Minimal_SS
+  val initial_ss = Simpset_Configure.Minimal_SS_configure (
+                      Simplifier.add_cong @{thm' NO_SIMP_cong}
+                   #> Simplifier.add_cong @{thm' NO_SIMP'_cong})
   val binding = NONE
   val comment = "Rewrite rules applied after simplification to recovery the protected form"
   val attribute = NONE

@@ -711,6 +711,16 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Semimodule_Identity
        (*Semimodule_SDistr_Homo\<^sub>Z*)
 
+(* TODO: use finite set \<open>fset\<close>. Otherwise, there is no way to give a simple induction rule for \<open>\<big_ast>\<^sup>\<phi>\<close>
+         in the current system.
+lemma
+  \<open> (\<And>T. P {} T)
+\<Longrightarrow> (\<And>I T i. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> finite I \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<notin> I \<Longrightarrow> P I T \<Longrightarrow> P (insert i I) T)
+\<Longrightarrow> P I T\<close>
+  unfolding Premise_def
+  using finite_induct
+*)
+
 subsubsection \<open>Syntax\<close>
 
 nonterminal "dom_idx"
@@ -757,6 +767,8 @@ lemma \<phi>Mul_Quant_insert:
 
 subsubsection \<open>Supplementary Transformations\<close>
 
+paragraph \<open>Reduction for individually inserted elements\<close>
+
 lemma [\<phi>reason %ToA_derived_red-10]: \<comment>\<open>The priority must be lower than the derived \<open> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> {x} T\<close>\<close>
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k \<notin> I
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T) * (x k \<Ztypecolon> T) \<w>\<i>\<t>\<h> P
@@ -777,6 +789,38 @@ lemma [\<phi>reason %ToA_derived_red-10]:
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> (insert k I) T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding \<r>Guard_def Premise_def
   by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn' \<phi>Mul_Quant_insert)
+
+
+(* The proof cannot continue as it requires the \<phi>-type commutativity \<open>x \<Ztypecolon> \<black_circle> \<big_ast>\<^sup>\<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> \<black_circle> T\<close>
+   The commutativity between \<phi>-type operators! It should be a meta deriver...
+
+lemma
+  \<open> \<g>\<u>\<a>\<r>\<d> NO_MATCH {e} I
+\<Longrightarrow> (fst x i, fst wr) \<Ztypecolon> T \<^emph>[Cwi] Wi \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Y \<^emph>[Cri] Ri \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<in> I \<comment> \<open>The domain of the \<open>\<big_ast>\<close> must be known during reasoning time\<close>
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> J : Set.remove i I
+\<Longrightarrow> if Cwi then (fst x, snd x) \<Ztypecolon> \<big_ast>\<^sup>\<phi> J T \<^emph>[Cw] Ws \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> wr \<Ztypecolon> Wi \<^emph>[Crj] Rs \<w>\<i>\<t>\<h> Q \<and>\<^sub>\<r>
+                (((snd y, snd wr) \<Ztypecolon> \<half_blkcirc>[Cri] Ri \<^emph> \<half_blkcirc>[Crj] Rs) = (r \<Ztypecolon> \<half_blkcirc>[Cr] R) @action \<A>merge)
+           else (Cw, Ws) = (False, \<top>\<^sub>\<phi>) \<and>\<^sub>\<r>
+                (((snd y, fst x) \<Ztypecolon> \<half_blkcirc>[Cri] Ri \<^emph> \<half_blkcirc>[True] \<big_ast>\<^sup>\<phi> J T) = (r \<Ztypecolon> \<half_blkcirc>[Cr] R) @action \<A>merge)
+\<Longrightarrow> x \<Ztypecolon> \<big_ast>\<^sup>\<phi> I T \<^emph>[Cw] Ws \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fst y, r) \<Ztypecolon> Y \<^emph>[Cr] R \<w>\<i>\<t>\<h> Q \<and> P\<close>
+  unfolding Action_Tag_def \<r>Guard_def NO_MATCH_def Ant_Seq_def
+  apply (cases Cwi; simp add: cond_prod_transformation_rewr;
+         simp add: Cond_\<phi>Prod_expn_\<phi>Some \<phi>Prod_expn' \<phi>Prod_expn'')
+
+  \<medium_left_bracket> premises Tr1 and I and J[] and Tr2
+    have [simp]: \<open>I = insert i J\<close> using I J by force
+    have th1[simp]: \<open>i \<notin> J\<close> using J by fastforce ;; ;;
+
+    simplify (\<phi>Prod_expn'', \<phi>Mul_Quant_insert)
+
+thm \<phi>Mul_Quant_insert
+thm Tr2
+*)
+
+
+
+
 
 
 term \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i))) \<close>
@@ -1257,6 +1301,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and Trivial_\<Sigma>
        and SE_Trim_Empty
 
+thm List.induct
+
 declare [[\<phi>trace_reasoning = 0]]
      
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -1356,7 +1402,7 @@ declare [[\<phi>trace_reasoning = 1]]
 thm \<phi>Share.\<phi>Prod
 thm \<phi>Share.\<phi>None
 thm \<phi>Share.scalar_assoc
-thm \<phi>Share.scalar_identity
+thm \<phi>Share.scalar_one
 thm \<phi>Share.Semimodule_Scalar_Assoc\<^sub>E
 
 

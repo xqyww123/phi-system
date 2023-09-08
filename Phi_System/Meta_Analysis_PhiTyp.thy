@@ -13,6 +13,12 @@ Such of a family \<open>{f\<^sub>i}\<^sub>i\<^sub>\<in>\<^sub>\<I>\<close> is co
 family, \<open>\<forall>x y. (x \<Ztypecolon> T \<longrightarrow> y \<Ztypecolon> U) \<longrightarrow> y \<in> \<Union>\<^sub>i \<R>(f\<^sub>i(x))\<close>. The above reasoning is complete iff the \<open>{f\<^sub>i}\<^sub>i\<^sub>\<in>\<^sub>\<I>\<close> that
 we have inferred is complete (also note usually we only infer a lower bound of \<open>\<R>\<close>).
 
+About implementation, a family \<open>{f\<^sub>i}\<close> can be simply represented by a single lambda term parameterized
+by free variables.
+The domains of the partial maps can be given by boolean conditions constraining the transformation
+in a way which also gives the proof obligation of applying the transformation. In this way, it enables
+representing them by total maps as that only supported in most of proof assistance.
+
 Note: have to distinguish \<open>{f\<^sub>i}\<^sub>i\<^sub>\<in>\<^sub>\<I>\<close> and the relation \<open>r\<close> in \<open>x \<Ztypecolon> T \<longrightarrow> {y \<Ztypecolon> U |y. r(x,y)}\<close>
 In the latter \<open>r\<close>, the \<open>x\<close> is transformed to one of the \<open>y \<in> r(x)\<close> uncertainly, but the in the former,
 \<open>x\<close> can be transformed to any of \<open>y \<in> \<Union>\<^sub>i{f\<^sub>i(x)}\<close> arbitrarily.

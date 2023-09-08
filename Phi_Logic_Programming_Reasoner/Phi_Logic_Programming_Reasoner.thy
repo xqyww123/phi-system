@@ -352,6 +352,20 @@ lemma meta_case_prod_simp[iff]:
   unfolding meta_case_prod_def by simp
 
 
+subsubsection \<open>NO_SIMP\<close>
+
+definition NO_SIMP where \<open>NO_SIMP X \<equiv> X\<close>
+  \<comment> \<open>to prevent simplification on the inner terms\<close>
+
+definition NO_SIMP' where \<open>NO_SIMP' (X::prop) \<equiv> X\<close>
+
+lemma NO_SIMP_cong[cong]: \<open>NO_SIMP X \<equiv> NO_SIMP X\<close> .
+lemma NO_SIMP'_cong[cong]: \<open>NO_SIMP' X \<equiv> NO_SIMP' X\<close> .
+
+lemma NO_SIMP_I: \<open>P \<Longrightarrow> NO_SIMP P\<close> unfolding NO_SIMP_def .
+lemma NO_SIMP'_I: \<open>PROP P \<Longrightarrow> PROP NO_SIMP' P\<close> unfolding NO_SIMP'_def .
+
+
 subsubsection \<open>ML Libraries - II\<close>
 
 ML_file_debug \<open>library/helpers.ML\<close>
