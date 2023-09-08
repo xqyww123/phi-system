@@ -711,15 +711,6 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Semimodule_Identity
        (*Semimodule_SDistr_Homo\<^sub>Z*)
 
-(* TODO: use finite set \<open>fset\<close>. Otherwise, there is no way to give a simple induction rule for \<open>\<big_ast>\<^sup>\<phi>\<close>
-         in the current system.
-lemma
-  \<open> (\<And>T. P {} T)
-\<Longrightarrow> (\<And>I T i. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> finite I \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<notin> I \<Longrightarrow> P I T \<Longrightarrow> P (insert i I) T)
-\<Longrightarrow> P I T\<close>
-  unfolding Premise_def
-  using finite_induct
-*)
 
 subsubsection \<open>Syntax\<close>
 
@@ -734,6 +725,19 @@ syntax
 translations
   "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" == "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I T)"
   "CONST \<phi>Type x (_\<phi>Mul_Quant (_more_dom d (_one_dom i I)) T)" == "CONST \<phi>Type (\<lambda>i. x) (_\<phi>Mul_Quant d (CONST \<phi>Mul_Quant I T))"
+
+
+subsubsection \<open>Configure\<close>
+
+lemma \<phi>Mul_Quant_induct:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> finite I
+\<Longrightarrow> (\<And>T. P {} T)
+\<Longrightarrow> (\<And>I T i. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> finite I \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i \<notin> I \<Longrightarrow> P I T \<Longrightarrow> P (insert i I) T)
+\<Longrightarrow> P I T\<close>
+  unfolding Premise_def
+  subgoal premises prems
+    by (insert prems(2-);
+        induct rule: finite_induct[OF prems(1)]; clarsimp) .
 
 
 subsubsection \<open>Supplementary Algebraic Properties\<close>
