@@ -1025,7 +1025,7 @@ subsubsection \<open>Guessing Antecedents\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) U Ds
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) T Ds
                             (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst)
                             (Functionality T Dx \<and>\<^sub>\<r> Object_Equiv T eq \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
@@ -1034,7 +1034,7 @@ lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ _
 
 lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) U Ds
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) T Ds
                             (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))
                             (Functionality T Dx \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
@@ -1292,18 +1292,17 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>trace_reasoning = 0]]
       
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Semimodule_SDistr_Homo\<^sub>U
-(*Separation_Monoid
+  deriving Separation_Monoid
        and Functionality
        and Trivial_\<Sigma>
        and SE_Trim_Empty
        and Semimodule_no0
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       and Abstraction_to_Raw*)
+       and Abstraction_to_Raw
 
 thm \<phi>Share.\<phi>Prod
 thm \<phi>Share.\<phi>None
