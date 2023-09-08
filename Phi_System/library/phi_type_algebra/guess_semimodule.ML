@@ -82,8 +82,12 @@ fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result)
    of SOME (inst, ret) =>
         let val (prop, params, conds, ants) = parse_result (Thm.prop_of ret)
             val ants = constrain_antecedents conds ants
+            val (inst'2, ctxt) = Variable.import_inst true (prop :: ants) ctxt
+            val (prop :: ants) = map (Term_Subst.instantiate inst'2) (prop :: ants)
+            val params = map (Option.map (Term_Subst.instantiate inst'2)) params
          in Seq.single (ants, prop, params,
-                        instantiate_phi (inst, Vars.empty) phi,
+                        phi |> instantiate_phi (inst, Vars.empty)
+                            |> instantiate_phi (Phi_Help.certify_vars (Context.Proof ctxt) inst'2),
                         ctxt)
         end
     | NONE => guess_fail ctxt phi (K [])

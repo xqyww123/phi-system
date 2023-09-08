@@ -216,14 +216,14 @@ fun mk_ant_sequence [] = \<^const>\<open>True\<close>
   | mk_ant_sequence L = foldr1 (fn (t1,t2) => ant_seq $ t1 $ t2) L
 
 fun dest_ant_sequence tm =
-  let fun dest ret (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) = dest (dest ret A) B
+  let fun dest ret (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) = dest (dest ret B) A
         | dest ret (Const(\<^const_name>\<open>True\<close>, _)) = ret
         | dest ret X = X :: ret
    in dest [] tm
   end
 fun dest_ant_sequence_or_HOL_conj tm =
-  let fun dest ret (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) = dest (dest ret A) B
-        | dest ret (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) = dest (dest ret A) B
+  let fun dest ret (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) = dest (dest ret B) A
+        | dest ret (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) = dest (dest ret B) A
         | dest ret (Const(\<^const_name>\<open>True\<close>, _)) = ret
         | dest ret X = X :: ret
    in dest [] tm
