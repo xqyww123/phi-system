@@ -691,11 +691,11 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
 
-declare [[\<phi>trace_reasoning = ]]
-    
+declare [[\<phi>trace_reasoning = 0]]
+      
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
-  deriving Basic
+  deriving (*Basic
        and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P (x i)) \<close>
        (*and Abstract_Domain\<^sub>L (*TODO*)*)
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
@@ -709,6 +709,9 @@ declare [[\<phi>trace_reasoning = ]]
        and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i)))\<close>
        and Semimodule_Identity
        and Semimodule_Zero
+       and Semimodule_Scalar_Assoc*)
+       Semimodule_SDistr_Homo\<^sub>Z
+
 
 thm zero_set_def
 

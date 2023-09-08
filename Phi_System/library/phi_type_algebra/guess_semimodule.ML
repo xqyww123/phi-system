@@ -1,6 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
+val parse_semimodule_phityp' : typ -> typ * typ * typ * typ
+
 val parse_semimodule_phityp : Proof.context
                            -> Phi_Type_Algebra.phi_type
                            -> (sort * sort) option (*optionally lift the types to (sort_scalar, sort_model)*)
@@ -14,6 +16,7 @@ val Guess_Unzip_of_Semimodule : Proof.context -> Phi_Type_Algebra.phi_type
 
 val Guess_Scalar_Zero : bool -> guess_property
 val Guess_Scalar_One_E : guess_property
+val Guess_Scalar_Assoc : bool -> guess_property
 
 end
 
@@ -27,6 +30,22 @@ fun simplify_guessing_reasoning ctxt = Simplifier.simplify (Simplifier.clear_sim
               HOL.imp_conjR[folded Ant_Seq_def]
               HOL.all_conj_distrib[folded Ant_Seq_def]})
 
+fun parse_semimodule_phityp' ty =
+  let val (reversed_argtys', x_ty0, model_ty0) = dest_parameterized_phi_ty ty
+      fun err_parse () = raise Automation_Fail (fn () => let open Pretty in
+                            [para "I only accept the semimodule \<phi>-type giving its element \<phi>-type as \
+                                  \its last parameter and the sclara as its second last paramter. \
+                                  \However, the parameters of the given \<phi>-type does not seem to meet \
+                                  \this requirement."]
+                        end)
+      val (x_ele_ty0, s_ty0) = case reversed_argtys'
+                  of (\<^Type>\<open>fun x_ele_ty \<^Type>\<open>set T_model_ty\<close>\<close> :: s_ty :: _) =>
+                      if T_model_ty = model_ty0 then (x_ele_ty, s_ty) else err_parse ()
+                   | _ => err_parse ()
+   in (s_ty0, x_ele_ty0, x_ty0, model_ty0)
+  end
+
+(*depreciated*)
 fun parse_semimodule_phityp ctxt phi0 lift_sorts =
   let val (reversed_argtys', x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       fun err_parse () = raise Automation_Fail (fn () => let open Pretty in
@@ -67,7 +86,7 @@ fun Guess_Scalar_framework (unfold_place, mk_goal_term_and_parse_result)
       val eta_F_term = Abs ("s", s_ty, Abs ("T", Term.fastype_of T_term, Abs ("x", x_ty,
                           \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ (Term.incr_boundvars 3 F_term $ Bound 2 $ Bound 1))))
       val (goal_term, parse_result) =
-              mk_goal_term_and_parse_result (s_ty, x_ele_ty, x_ty, model_ty, idx, F_term, eta_F_term, T_term)
+              mk_goal_term_and_parse_result (s_ty, x_ele_ty, x_ty, model_ty, idx, F_term, eta_F_term, T_term, ctxt)
       val reason = Conv.gconv_rule (HOLogic.Trueprop_conv (funpow unfold_place Conv.fun_conv (Conv.arg1_conv (
                       Conv.abs_conv (Conv.abs_conv (Conv.abs_conv (fn (_, ctxt) =>
                       fn ctm => Conv.rewrs_conv (map (fn th => th RS' (ctxt, @{thm' HOL.eq_reflection}))
@@ -87,7 +106,7 @@ fun Guess_Scalar_framework (unfold_place, mk_goal_term_and_parse_result)
   end
 
 fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (3,
-      fn (s_ty, x_ele_ty, x_ty, model_ty, idx, F_term, eta_F_term, T_term) =>
+      fn (s_ty, x_ele_ty, x_ty, model_ty, idx, F_term, eta_F_term, T_term, _) =>
           (HOLogic.Trueprop $ (\<^Const>\<open>Guess_Scalar_Zero s_ty model_ty x_ele_ty x_ty\<close>
               $ \<^Const>\<open>Pure.type s_ty\<close>
               $ \<^Const>\<open>Pure.type model_ty\<close>
@@ -108,7 +127,7 @@ fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (3,
       )
 
 val Guess_Scalar_One_E = Guess_Scalar_framework (5,
-      fn (s_ty, x_ele_ty, x_ty, model_ty, idx, F_term, eta_F_term, T_term) =>
+      fn (s_ty, x_ele_ty, x_ty, model_ty, idx, F_term, eta_F_term, T_term, _) =>
            (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_One\<^sub>E s_ty model_ty x_ele_ty x_ty\<close>
                 $ \<^Const>\<open>Pure.type s_ty\<close>
                 $ \<^Const>\<open>Pure.type model_ty\<close>
@@ -127,6 +146,43 @@ val Guess_Scalar_One_E = Guess_Scalar_framework (5,
                  NONE :: parse_parameters_of_phi_type (F $ Term.dummy $ T),
                  conds, ants))
        )
+
+fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (7,
+      fn (s_ty, x_ele_ty, x_ty, model_ty, idx, F_term, eta_F_term, T_term, ctxt) =>
+        let val (ss, st) = (TVar (("s\<^sub>s", idx), \<^sort>\<open>type\<close>), TVar (("s\<^sub>t", idx), \<^sort>\<open>type\<close>))
+            val (at, as_t) = (TVar (("a\<^sub>t", idx), \<^sort>\<open>type\<close>), TVar (("a\<^sub>s\<^sub>_\<^sub>t", idx), \<^sort>\<open>type\<close>))
+            val (Fs, Ft) = (Var (("F\<^sub>s", idx), ss --> mk_phi_type_ty(model_ty, at) --> mk_phi_type_ty(model_ty, as_t)),
+                            Var (("F\<^sub>t", idx), st --> mk_phi_type_ty(model_ty, x_ele_ty) --> mk_phi_type_ty(model_ty, at)))
+            
+            val as_t = TVar (("a\<^sub>s\<^sub>_\<^sub>t", idx), \<^sort>\<open>type\<close>)
+         in (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_Assoc s_ty model_ty x_ele_ty x_ty ss at as_t st\<close>
+                $ (if is_intro then \<^Const>\<open>True\<close> else \<^Const>\<open>False\<close>)
+                $ \<^Const>\<open>Pure.type s_ty\<close>
+                $ \<^Const>\<open>Pure.type model_ty\<close>
+                $ \<^Const>\<open>Pure.type x_ele_ty\<close>
+                $ \<^Const>\<open>Pure.type x_ty\<close>
+                $ Fs $ Ft $ F_term $ eta_F_term $ T_term
+                $ Var(("Ds",0), ss --> HOLogic.boolT)
+                $ Var(("Dt",0), st --> HOLogic.boolT)
+                $ Var(("Dx",0), ss --> st --> as_t --> HOLogic.boolT)
+                $ Var(("smul",0), ss --> st --> s_ty)
+                $ Var(("f", 0), ss --> st --> as_t --> x_ty)
+                $ Var(("ants", 0), HOLogic.boolT)
+                $ Var(("conds", 0), HOLogic.boolT)),
+
+             fn _ (*Trueprop*) $ (_ (*Guess_Scalar_Assoc*) $ _ $ _ $ _ $ _ $ _
+                    $ Fs $ Ft $ Fc $ _ $ T $ Ds $ Dt $ Dx $ smul $ f $ ants $ conds) =>
+                 let val \<^Type>\<open>fun ss' \<^Type>\<open>fun st' \<^Type>\<open>fun as_t' ast'\<close>\<close>\<close> = Term.fastype_of f
+                     val \<^Type>\<open>fun _ \<^Type>\<open>fun \<^Type>\<open>fun a' \<open>Type(_, [c'])\<close>\<close> \<^Type>\<open>fun at' _\<close>\<close>\<close> = Term.fastype_of Ft
+                     val \<^Type>\<open>fun sc' _\<close> = Term.fastype_of Fc
+                     val head = if is_intro then \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>I ss' at' c' as_t' st' a' sc' ast'\<close>
+                                            else \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>E ss' at' c' as_t' st' a' sc' ast'\<close>
+                     val xx = Thm.cterm_of ctxt (HOLogic.Trueprop $ (head $ Fs $ Ft $ Fc $ T $ Ds $ Dt $ Dx $ smul $ f))
+                  in (HOLogic.Trueprop $ (head $ Fs $ Ft $ Fc $ T $ Ds $ Dt $ Dx $ smul $ f),
+                      NONE :: parse_parameters_of_phi_type (Fc $ Term.dummy $ T),
+                      conds, ants)
+                 end)
+        end)
 
 (*
 fun Guess_Scalar_One_E (phi : phi_type) ctxt =

@@ -26,7 +26,7 @@ fun infer_the_default_scalar_domain ctxt (s_ty, x_ty, model_ty) =
         | _ => Abs("_", s_ty, \<^Const>\<open>True\<close>))
   end
 *)
-
+(*
 fun Guess_Scalar_Assoc is_intro (phi : phi_type) ctxt =
   let val (s_ty, x_ele_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi NONE
       val idx = phi_maxidx_of phi ~1 + 1
@@ -86,7 +86,7 @@ fun Guess_Scalar_Assoc is_intro (phi : phi_type) ctxt =
             | _ => error "BUG")
     | NONE => guess_fail ctxt phi (K [])
   end
-
+*)
 (*
 fun guess_property is_intro (phi0 : phi_type) ctxt =
   let val (s_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi0 (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier\<close>)
@@ -103,7 +103,7 @@ fun guess_property is_intro (phi0 : phi_type) ctxt =
   end
 *)
 
-fun gen_MS is_intro (_, name) hint0 ctxt0 (phi : phi_type) thy =
+fun gen_MS is_intro (_, name) hint0 ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<^sub>I\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
              | (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<^sub>E\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
@@ -115,24 +115,24 @@ fun gen_MS is_intro (_, name) hint0 ctxt0 (phi : phi_type) thy =
       val simp = K I
       val ind_conv = default_ind_conv (
              fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MS_rewr},
-             fn ctxt => fn phi =>
+             fn ctxt => fn _ =>
                   Conv.rewr_conv @{thm \<phi>TA_MS_rewr} then_conv
                   Conv.arg_conv (fn ctm =>
-                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ #type_equations phi)
+                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi0 @ #type_equations phi0)
                      in Phi_Reasoners.asm_rewrite false sctxt ctm
                     end))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_Assoc is_intro,
                                       (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rule} else @{thm' \<phi>TA_MS\<^sub>E_rule}),
-                                      [(SOME (if is_intro then [0,2,~1,~1,~1] else [0,2,~1,~1], ind_conv), reasoning)],
+                                      [(SOME ([0,2,~1,~1,~1], ind_conv), reasoning)],
                                       K NONE, simp)
-                                    phi hint0 ctxt0
+                                    phi0 hint0 ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
         |> Phi_Help.generic_theory_mapping (fn m =>
-              Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE [Morphism.thm m rule'])
-        |> note_properties_s phi [(name, [rule'])]
+              Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE [Morphism.thm m rule'])
+        |> note_properties_s phi0 [(name, [rule'])]
         |> pair [rule']
   end
 

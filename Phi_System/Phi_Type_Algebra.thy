@@ -242,20 +242,20 @@ definition Semimodule_Scalar_Assoc\<^sub>E :: \<open> ('s\<^sub>s \<Rightarrow> 
                                      \<Rightarrow> ('c,'a) \<phi>
                                      \<Rightarrow> ('s\<^sub>s \<Rightarrow> bool)
                                      \<Rightarrow> ('s\<^sub>t \<Rightarrow> bool)
-                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t \<Rightarrow> bool)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> bool)
                                      \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 's\<^sub>c)
-                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t)
+                                     \<Rightarrow> ('s\<^sub>s \<Rightarrow> 's\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>_\<^sub>t \<Rightarrow> 'a\<^sub>s\<^sub>t)
                                      \<Rightarrow> bool\<close>
-  where \<open>Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul g
-      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g s t x \<Ztypecolon> Fs s (Ft t T)))\<close>
+  where \<open>Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
+      \<longleftrightarrow> (\<forall>s t x. Ds s \<and> Dt t \<and> Dx s t x \<longrightarrow> (f s t x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T)))\<close>
   \<comment> \<open>An extension overcoming the type limitation of the simple type theory of Isabelle.
       It can cover mul quant\<close>
 
 text \<open>The extended scalar association operator for Finite Multiplicative Quantification is just uncurrying.\<close>
 
 
-definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                    \<Rightarrow> ('c::sep_magma,'a) \<phi>
+definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                    \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
                                     \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                     \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
                                     \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
@@ -269,8 +269,8 @@ definition Semimodule_SDistr_Homo\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_m
       homomorphism of identity element, are satisfied, it is then a semimodule.
 \<close>
 
-definition Semimodule_SDistr_Homo\<^sub>Z_rev :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                        \<Rightarrow> ('c::sep_magma,'a) \<phi>
+definition Semimodule_SDistr_Homo\<^sub>Z_rev :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                        \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
                                         \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
@@ -280,13 +280,17 @@ definition Semimodule_SDistr_Homo\<^sub>Z_rev :: \<open>('s \<Rightarrow> ('c::s
                   (x \<Ztypecolon> F t T \<^emph> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s x \<Ztypecolon> F (t + s) T ))\<close>
 
 
-definition Semimodule_SDistr_Homo\<^sub>O\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi>) \<Rightarrow> 's::partial_add_magma set \<Rightarrow> (('a \<times> 'a) \<Rightarrow> bool) \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a) \<Rightarrow> bool\<close>
+definition Semimodule_SDistr_Homo\<^sub>O\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi>)
+                                    \<Rightarrow> 's::partial_add_magma set
+                                    \<Rightarrow> (('a \<times> 'a) \<Rightarrow> bool)
+                                    \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
+                                    \<Rightarrow> bool\<close>
   where \<open>Semimodule_SDistr_Homo\<^sub>O\<^sub>Z T Ds Dx z \<longleftrightarrow> (\<forall>s \<in> Ds. \<forall> t \<in> Ds. \<forall>x. s ##\<^sub>+ t \<and> Dx x \<longrightarrow> (x \<Ztypecolon> T t \<^emph> T s \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s x \<Ztypecolon> T (s + t) ))\<close>
   \<comment> \<open>the subscript O stands for \<^emph>\<open>non-type-Operator\<close>\<close>
 
 
-definition Semimodule_SDistr_Homo\<^sub>U :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                        \<Rightarrow> ('c::sep_magma,'a) \<phi>
+definition Semimodule_SDistr_Homo\<^sub>U :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                        \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
                                         \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> 'a \<times> 'a)
@@ -295,8 +299,8 @@ definition Semimodule_SDistr_Homo\<^sub>U :: \<open>('s \<Rightarrow> ('c::sep_m
             (\<forall>s t x. Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx t s x \<longrightarrow>
                 (x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> F t T \<^emph> F s T ))\<close>
 
-definition Semimodule_SDistr_Homo\<^sub>U_rev :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                        \<Rightarrow> ('c::sep_magma,'a) \<phi>
+definition Semimodule_SDistr_Homo\<^sub>U_rev :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                        \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
                                         \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> bool)
                                         \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> 'a \<times> 'a)
@@ -620,9 +624,9 @@ lemma apply_Semimodule_SAssoc\<^sub>I:
   by clarsimp
 
 lemma apply_Semimodule_SAssoc\<^sub>E:
-  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul g
+  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Dt t \<and> Dx s t x
-\<Longrightarrow> x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g s t x \<Ztypecolon> Fs s (Ft t T) \<close>
+\<Longrightarrow> f s t x \<Ztypecolon> Fc (smul s t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T) \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def
   by clarsimp
 
@@ -1790,18 +1794,18 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
   using transformation_left_frame mk_elim_transformation by blast
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul g
+  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fc (smul s t) T \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g s t x \<Ztypecolon> Fs s (Ft t T) \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fc (smul s t) T \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T) \<w>\<i>\<t>\<h> P) \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def NO_SIMP_def \<r>Guard_def
   using mk_intro_transformation by blast
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
-  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul g
+  \<open> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fc (smul s t) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g s t x \<Ztypecolon> Fs s (Ft t T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f s t x \<Ztypecolon> Fc (smul s t) T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T) \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P) \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Premise_def NO_SIMP_def \<r>Guard_def
   apply (cases C; simp)
   using transformation_left_frame mk_intro_transformation apply blast
@@ -1857,7 +1861,7 @@ lemma [\<phi>adding_property = false,
        \<phi>adding_property = true ]:
   \<open> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx t s o prod.swap) (\<lambda>s t. z t s o prod.swap)\<close>
-  for F :: \<open>('s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
+  for F :: \<open>('s::partial_add_magma \<Rightarrow> ('c::sep_ab_semigroup,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_rev_def Semimodule_SDistr_Homo\<^sub>Z_def
   by (simp add: \<phi>Prod_expn'; metis mult.commute)
 
@@ -1866,7 +1870,7 @@ lemma [\<phi>adding_property = false,
        \<phi>adding_property = true ]:
   \<open> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds (\<lambda>s t. Dx s t) (\<lambda>s t. z s t)\<close>
-  for F :: \<open>('s::partial_ab_semigroup_add \<Rightarrow> ('c::sep_magma,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
+  for F :: \<open>('s::partial_ab_semigroup_add \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)\<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_rev_def Semimodule_SDistr_Homo\<^sub>Z_def
   by (simp add: dom_of_add_commute partial_add_commute)
 
@@ -3803,14 +3807,17 @@ definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for \<open>
                                  \<Rightarrow> bool\<close>
   where \<open>Guess_Scalar_Assoc _ _ _ _ _ Fs Ft Fc unfolded_Fc T Ds Dt Dx smul f ants conds \<equiv> True\<close>
 
-definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c itself \<Rightarrow> 'a itself
-                                      \<Rightarrow> ('s \<Rightarrow> 'a \<Rightarrow> 'c BI)
+definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
+                                      \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                      \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                      \<Rightarrow> ('c,'a\<^sub>T) \<phi>
                                       \<Rightarrow> ('s \<Rightarrow> bool)
-                                      \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times>'a \<Rightarrow> bool)
+                                      \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
                                       \<Rightarrow> bool \<Rightarrow> bool
                                       \<Rightarrow> bool\<close>
-  where \<open>Guess_Zip_of_Semimodule type_scalar type_concrete type_abstract unfolded_typ_def
+  where \<open>Guess_Zip_of_Semimodule type_scalar type_concrete type_element_abstract type_abstract
+                                 F unfolded_F_def T
                                  domain_of_scalar domain_of_abstract zip_opr
                                  antecedents conditions_of_antecedents
        \<equiv> True\<close>
@@ -3895,6 +3902,26 @@ lemma [\<phi>reason %\<phi>TA_guesser_default+1]:
                       F F F whatever T ((\<le>) 0) ((\<le>) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) True True\<close>
   unfolding Guess_Scalar_Assoc_def ..
 
+lemma [\<phi>reason %\<phi>TA_guesser_default for
+        \<open>Guess_Scalar_Assoc True TYPE(_ set) TYPE(_) TYPE(_) TYPE(_) _ _ _ (\<lambda>s T x. \<big_ast> (?A s T x) s) _
+                            _ _ _ _ _ _ _\<close>]:
+  \<open> Type_Variant_of_the_Same_Scalar_Mul Fc Fs
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul Fc Ft
+\<Longrightarrow> Guess_Scalar_Assoc True TYPE(('i \<times> 'j) set) TYPE('c::sep_algebra) TYPE('a) TYPE('i \<times> 'j \<Rightarrow> 'a)
+                      Fs Ft Fc (\<lambda>s T x. \<big_ast> (A s T x) s) T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True)
+                      (\<times>) (\<lambda>_ _. case_prod) True True \<close>
+  unfolding Guess_Scalar_Assoc_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default for
+        \<open>Guess_Scalar_Assoc False TYPE(_ set) TYPE(_) TYPE(_) TYPE(_) _ _ _ (\<lambda>s T x. \<big_ast> (?A s T x) s) _
+                            _ _ _ _ _ _ _\<close>]:
+  \<open> Type_Variant_of_the_Same_Scalar_Mul Fc Fs
+\<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul Fc Ft
+\<Longrightarrow> Guess_Scalar_Assoc False TYPE(('i \<times> 'j) set) TYPE('c::sep_algebra) TYPE('a) TYPE('i \<times> 'j \<Rightarrow> 'a)
+                      Fs Ft Fc (\<lambda>s T x. \<big_ast> (A s T x) s) T finite finite (\<lambda>_ _ _. True)
+                      (\<times>) (\<lambda>_ _. case_prod) True True \<close>
+  unfolding Guess_Scalar_Assoc_def ..
+
 
 paragraph \<open>Guess_(Un)Zip_of_Semimodule\<close>
 
@@ -3909,6 +3936,13 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
                              (\<lambda>x. 0 \<le> x) (\<lambda>s t x. True) (\<lambda>_ _ x. (x,x))
                              True True \<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
+
+lemma
+  \<open>Guess_Zip_of_Semimodule TYPE('i set) TYPE('c) TYPE() \<close>
+
+  term \<open>\<oplus>\<^sub>f\<close>
+typ \<open>'a set\<close>
+term fun_upd
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
   \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_interval) TYPE('c) TYPE('a list) Any_assertion (\<lambda>_. True)
@@ -4022,13 +4056,13 @@ lemma \<phi>TA_MS\<^sub>I_rule:
   by clarsimp
 
 lemma \<phi>TA_MS\<^sub>E_rule:
-  \<open> (\<And>t s r x. (Ant @action \<phi>TA_ANT)
-         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> r = smul s t \<and> Dx s t x
-         \<longrightarrow> (x \<Ztypecolon> Fc r T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g s t x \<Ztypecolon> Fs s (Ft t T)) @action \<phi>TA_ind_target NToA)
+  \<open> (\<And>t s x r y. (Ant @action \<phi>TA_ANT)
+         \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> r = smul s t \<and> Dx s t x \<and> f s t x = y
+         \<longrightarrow> (y \<Ztypecolon> Fc r T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T)) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
-\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul g \<close>
+\<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Action_Tag_def Premise_def
   by clarsimp
 

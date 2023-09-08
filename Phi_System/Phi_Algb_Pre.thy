@@ -1,5 +1,3 @@
-section \<open>Preliminary for \<open>\<phi>\<close>-Type Algebra\<close>
-
 theory Phi_Algb_Pre
   imports IDE_CP_Reasoning1
           Phi_Algebras.Map_of_Tree
@@ -237,6 +235,8 @@ lemma [\<phi>reason %cutting]:
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> scalar_mult f u = scalar_mult g v\<close>
   unfolding scalar_mult_def Premise_def by simp
 
+
+section \<open>Preliminary for \<open>\<phi>\<close>-Type Algebra\<close>
 
 subsection \<open>Definitions of Properties\<close>
 
@@ -553,6 +553,16 @@ lemma [\<phi>reason %algb_cut]:
 \<Longrightarrow> constant_1 (scalar_mult \<psi> s)\<close>
   unfolding scalar_mult_def
   by simp
+
+
+section \<open>Supplementary Algebraic Operations\<close>
+
+subsection \<open>Disjoint Union of Function\<close>
+
+abbreviation fun_disj_union :: \<open>('k \<Rightarrow> 'v) \<Rightarrow> 'k set \<Rightarrow> ('k \<Rightarrow> 'v) \<Rightarrow> 'k \<Rightarrow> 'v\<close> ("_ \<oplus>\<^sub>f[_] _" [65,10,66] 65)
+  where \<open>fun_disj_union f K\<^sub>g g \<equiv> (\<lambda>k. if k \<in> K\<^sub>g then g k else f k)\<close>
+
+
 
 
 end

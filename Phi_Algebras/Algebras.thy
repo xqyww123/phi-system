@@ -828,14 +828,6 @@ class dom_of_minus =
 class total_dom_of_minus = dom_of_minus +
   assumes total_dom_of_minus[simp]: \<open>x ##\<^sub>- y\<close>
 
-class comm_dom_of_minus = dom_of_minus +
-  assumes dom_of_minus_commuteI: "x ##\<^sub>- y \<Longrightarrow> y ##\<^sub>- x"
-begin
-lemma dom_of_minus_commute: "x ##\<^sub>- y \<longleftrightarrow> y ##\<^sub>- x"
-  by (blast intro: dom_of_minus_commuteI)
-end
-
-
 
 subsubsection \<open>Partial Additive Magma\<close>
 
@@ -910,7 +902,7 @@ lemma partial_add_right_cancel [simp]: "\<lbrakk> b ##\<^sub>+ a ; c ##\<^sub>+ 
 
 end
 
-class partial_cancel_ab_semigroup_add = partial_ab_semigroup_add + comm_dom_of_minus + minus +
+class partial_cancel_ab_semigroup_add = partial_ab_semigroup_add + dom_of_minus + minus +
   assumes partial_add_diff_cancel_left'[simp]: \<open>a ##\<^sub>+ b \<Longrightarrow> (a + b) - a = b\<close>
       and partial_add_diff_cancel_left'_dom: \<open>a ##\<^sub>+ b \<Longrightarrow> (a + b) ##\<^sub>- a\<close>
   assumes partial_diff_diff_add: \<open>b ##\<^sub>+ c \<Longrightarrow> a ##\<^sub>- (b + c) \<Longrightarrow> a - b - c = a - (b + c)\<close>
@@ -2233,42 +2225,64 @@ instance set :: (sep_ab_semigroup) ab_semigroup_mult
   apply (standard; simp add: times_set_def set_eq_iff)
   using sep_disj_commute sep_mult_commute by blast
 
-instantiation set :: (sep_algebra) comm_monoid_mult begin
-instance by (standard; simp_all add: one_set_def times_set_def)
-end
+instance set :: (sep_algebra) comm_monoid_mult
+  by (standard; simp_all add: one_set_def times_set_def)
 
 instantiation set :: (type) comm_monoid_add begin
 definition \<open>plus_set = union\<close>
 instance by standard (auto simp add: plus_set_def zero_set_def)
 end
 
-instantiation set :: (type) ordered_comm_monoid_add begin
-instance by standard (auto simp add: plus_set_def zero_set_def)
-end
+instance set :: (type) ordered_comm_monoid_add
+  by standard (auto simp add: plus_set_def zero_set_def)
 
 lemma plus_set_in_iff[iff]:
   \<open>x \<in> A + B \<longleftrightarrow> x \<in> A \<or> x \<in> B\<close> unfolding plus_set_def by simp
 
 lemma plus_set_S_S [simp]: \<open>S + S = S\<close> for S :: \<open>'a set\<close> unfolding plus_set_def by simp
 
-instantiation set :: (sep_semigroup) ordered_semiring_0 begin
-instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
+instance set :: (sep_semigroup) ordered_semiring_0
+  by standard (auto simp add: zero_set_def plus_set_def times_set_def)
+
+instance set :: (sep_monoid) semiring_1
+  by standard (auto simp add: zero_set_def plus_set_def times_set_def)
+
+instance set :: (sep_ab_semigroup) ordered_comm_semiring
+  by (standard, simp add: zero_set_def plus_set_def times_set_def,
+      (insert mult.commute, blast)[1],
+      simp)
+
+instance set :: (sep_algebra) comm_semiring_1
+  by standard (auto simp add: zero_set_def plus_set_def times_set_def)
+
+
+
+paragraph \<open>Partial Additive Commutative Monoid\<close>
+
+instantiation set :: (type) comm_dom_of_add begin
+definition dom_of_add_set :: \<open>'a set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+  where \<open>dom_of_add_set A B \<longleftrightarrow> (A \<inter> B = {})\<close>
+
+instance by (standard, simp add: dom_of_add_set_def, blast)
 end
 
-instantiation set :: (sep_monoid) semiring_1 begin
-instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
+instantiation set :: (type) dom_of_minus begin
+definition dom_of_minus_set :: \<open>'a set \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+  where [simp]: \<open>dom_of_minus_set A B \<longleftrightarrow> B \<subseteq> A\<close>
+instance ..
 end
 
-instantiation set :: (sep_ab_semigroup) ordered_comm_semiring begin
-instance apply standard
-  apply (simp add: zero_set_def plus_set_def times_set_def)
-  using mult.commute apply blast
-  by simp
-end
+instance set :: (type) partial_cancel_ab_semigroup_add
+  by (standard; simp add: dom_of_add_set_def plus_set_def; blast)
 
-instantiation set :: (sep_algebra) comm_semiring_1 begin
-instance by standard (auto simp add: zero_set_def plus_set_def times_set_def)
-end
+instance set :: (type) partial_canonically_ordered_ab_semigroup_add
+  by (standard; simp add: dom_of_add_set_def; blast)
+
+instance set :: (type) positive_partial_add_magma_0
+  by (standard; simp add: dom_of_add_set_def zero_set_def additive_join_sub_def; blast)
+
+instance set :: (type) partial_add_ab_monoid ..
+
 
 subsection \<open>Partial Map\<close>
 
