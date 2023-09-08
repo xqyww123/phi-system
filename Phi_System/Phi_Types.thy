@@ -649,12 +649,6 @@ lemma (*The above rule is reversible*)
     by (insert prems(1)[THEN spec[where x=\<open>\<lambda>_. {y}\<close>], THEN spec[where x=\<open>\<lambda>_. {x}\<close>], simplified]
                prems(2-3), blast) .
 
-(*
-lemma
-  \<open> Semimodule_SDistr_Homo\<^sub>O\<^sub>Z B Ds Dx' zz
-\<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z  (\<lambda>s. (\<Zcomp>) (B s)) Ds Dx z \<close>
-*)
-
 
 
 (* subsection \<open>Embedding Universal Quantification\<close>
@@ -715,9 +709,26 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and Semimodule_NonDistr
        (*Semimodule_SDistr_Homo\<^sub>Z*)
 
-thm \<phi>Mul_Quant.unfold
+subsubsection \<open>Syntax\<close>
+
+nonterminal "dom_idx"
+
+syntax
+  "_one_dom" :: \<open>pttrns \<Rightarrow> 'a set \<Rightarrow> dom_idx\<close> ("_/\<in>_" [0,51] 50)
+  "_more_dom":: \<open>dom_idx \<Rightarrow> dom_idx \<Rightarrow> dom_idx\<close> ("_,/ _" [49, 50] 49)
+  "_\<phi>Mul_Quant" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_]/ _)" [49, 1000] 1000)
+  "_\<phi>Mul_Quant_mid" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"
+
+translations
+  "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" == "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I T)"
+  "CONST \<phi>Type x (_\<phi>Mul_Quant (_more_dom d (_one_dom i I)) T)" == "CONST \<phi>Type (\<lambda>i. x) (_\<phi>Mul_Quant d (CONST \<phi>Mul_Quant I T))"
+
 
 subsubsection \<open>Rules that cannot be derived\<close>
+
+text \<open>Instead of deriving the Scalar Distributivity automatically, we give them manually, as the scalar
+  distribution of the assertion-level \<open>\<big_ast>\<close> is not activated in the reasoning system by default
+  (it is too aggressive to enable it).\<close>
 
 lemma \<phi>Mul_Quant_SDistr_Homo\<^sub>Z[\<phi>reason 1000]:
   \<open> Semimodule_SDistr_Homo\<^sub>Z \<big_ast>\<^sup>\<phi> T (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) \<close>
@@ -744,19 +755,6 @@ definition \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('i \<Rightarrow> ('c:
   where \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T i)\<close> *)
 
 term Pair
-
-nonterminal "dom_idx"
-
-syntax
-  "_one_dom" :: \<open>pttrns \<Rightarrow> 'a set \<Rightarrow> dom_idx\<close> ("_/\<in>_" [0,51] 50)
-  "_more_dom":: \<open>dom_idx \<Rightarrow> dom_idx \<Rightarrow> dom_idx\<close> ("_,/ _" [49, 50] 49)
-  "_\<phi>Mul_Quant" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"  ("(2\<big_ast>[_]/ _)" [49, 1000] 1000)
-  "_\<phi>Mul_Quant_mid" :: "dom_idx \<Rightarrow> logic \<Rightarrow> logic"
-
-translations
-  "CONST \<phi>Type x (_\<phi>Mul_Quant (_one_dom i I) T)" == "CONST \<phi>Type (\<lambda>i. x) (CONST \<phi>Mul_Quant I T)"
-  "CONST \<phi>Type x (_\<phi>Mul_Quant (_more_dom d (_one_dom i I)) T)" == "CONST \<phi>Type (\<lambda>i. x) (_\<phi>Mul_Quant d (CONST \<phi>Mul_Quant I T))"
-
 
 
 

@@ -294,15 +294,6 @@ definition Semimodule_SDistr_Homo\<^sub>Z_rev :: \<open>('s \<Rightarrow> ('c::s
         of instantiations is multiplied!\<close>
 
 
-definition Semimodule_SDistr_Homo\<^sub>O\<^sub>Z :: \<open>('s \<Rightarrow> ('c::sep_magma,'a) \<phi>)
-                                    \<Rightarrow> 's::partial_add_magma set
-                                    \<Rightarrow> (('a \<times> 'a) \<Rightarrow> bool)
-                                    \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> 'a)
-                                    \<Rightarrow> bool\<close>
-  where \<open>Semimodule_SDistr_Homo\<^sub>O\<^sub>Z T Ds Dx z \<longleftrightarrow> (\<forall>s \<in> Ds. \<forall> t \<in> Ds. \<forall>x. s ##\<^sub>+ t \<and> Dx x \<longrightarrow> (x \<Ztypecolon> T t \<^emph> T s \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s x \<Ztypecolon> T (s + t) ))\<close>
-  \<comment> \<open>the subscript O stands for \<^emph>\<open>non-type-Operator\<close>\<close>
-
-
 definition Semimodule_SDistr_Homo\<^sub>U :: \<open>('s \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                         \<Rightarrow> ('c::sep_magma,'a\<^sub>T) \<phi>
                                         \<Rightarrow> ('s::partial_add_magma \<Rightarrow> bool)
