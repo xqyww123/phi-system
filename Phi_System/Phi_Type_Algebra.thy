@@ -3232,7 +3232,7 @@ declare [[
                       and \<open>Guess_Property ?PC ?V ?A _ _ None\<close> \<Rightarrow> \<open>Guess_Property ?PC ?V ?A _ _ None\<close> (120)
 ]]
 
-\<phi>reasoner_group \<phi>TA_guesser = (1000, [80, 3000]) for \<open>Guess_Property PC V A a c C\<close>
+\<phi>reasoner_group \<phi>TA_guesser = (100, [80, 3000]) for \<open>Guess_Property PC V A a c C\<close>
     \<open>User heuristics overriding or extending the guesser mechanism of \<phi>type derivers.\<close>
  and \<phi>TA_guesser_default = (30, [2, 79]) for \<open>Guess_Property PC V A a c C\<close> < \<phi>TA_guesser
     \<open>Default rules handling logical connectives\<close>
@@ -3764,7 +3764,7 @@ ML_file \<open>library/phi_type_algebra/function_congruence.ML\<close>
 
 subsubsection \<open>Configuration for guessing default Semimodule properties\<close>
 
-definition Guess_Scalar_Zero :: \<open> 's itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
+definition Guess_Scalar_Zero :: \<open> 's itself \<Rightarrow> 'c::one itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
                               \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                               \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                               \<Rightarrow> ('c,'a\<^sub>T) \<phi>
@@ -3807,9 +3807,9 @@ definition Guess_Scalar_Assoc :: \<open> bool \<comment> \<open>True for \<open>
                                  \<Rightarrow> bool\<close>
   where \<open>Guess_Scalar_Assoc _ _ _ _ _ Fs Ft Fc unfolded_Fc T Ds Dt Dx smul f ants conds \<equiv> True\<close>
 
-definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
+definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> ('c::sep_magma) itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
                                       \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                      \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                      \<Rightarrow> 'expr
                                       \<Rightarrow> ('c,'a\<^sub>T) \<phi>
                                       \<Rightarrow> ('s \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<times> 'a \<Rightarrow> bool)
@@ -3822,14 +3822,17 @@ definition Guess_Zip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c itself \
                                  antecedents conditions_of_antecedents
        \<equiv> True\<close>
 
-definition Guess_Unzip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c itself \<Rightarrow> 'a itself
-                                      \<Rightarrow> ('s \<Rightarrow> 'a \<Rightarrow> 'c BI)
+definition Guess_Unzip_of_Semimodule :: \<open>'s itself \<Rightarrow> 'c itself \<Rightarrow> 'a\<^sub>T itself \<Rightarrow> 'a itself
+                                      \<Rightarrow> ('s \<Rightarrow> ('c,'a\<^sub>T) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                      \<Rightarrow> 'expr
+                                      \<Rightarrow> ('c,'a\<^sub>T) \<phi>
                                       \<Rightarrow> ('s \<Rightarrow> bool)
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> bool) 
                                       \<Rightarrow> ('s \<Rightarrow> 's \<Rightarrow> 'a \<Rightarrow> 'a \<times> 'a)
                                       \<Rightarrow> bool \<Rightarrow> bool
                                       \<Rightarrow> bool\<close>
-  where \<open>Guess_Unzip_of_Semimodule type_scalar type_concrete type_abstract unfolded_typ_def
+  where \<open>Guess_Unzip_of_Semimodule type_scalar type_concrete type_element_abstract type_abstract
+                                   F unfolded_typ_def T
                                    domain_of_scalar domain_of_abstract unzip_opr
                                    antecedents conditions_of_antecedents
        \<equiv> True\<close>
@@ -3842,10 +3845,10 @@ declare [[ \<phi>reason_default_pattern
       \<open>Guess_Scalar_Zero ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _\<close>   (100)
   and \<open>Guess_Scalar_One\<^sub>E ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _\<close> \<Rightarrow>
       \<open>Guess_Scalar_One\<^sub>E ?S ?C ?A\<^sub>T ?A _ ?def ?T _ _ _ _ _\<close>   (100)
-  and \<open>Guess_Zip_of_Semimodule ?S ?C ?A ?assertion _ _ _ _ _\<close> \<Rightarrow>
-      \<open>Guess_Zip_of_Semimodule ?S ?C ?A ?assertion _ _ _ _ _\<close>   (100)
-  and \<open>Guess_Unzip_of_Semimodule ?S ?C ?A ?assertion _ _ _ _ _\<close> \<Rightarrow>
-      \<open>Guess_Unzip_of_Semimodule ?S ?C ?A ?assertion _ _ _ _ _\<close>   (100)
+  and \<open>Guess_Zip_of_Semimodule ?S ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Guess_Zip_of_Semimodule ?S ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close>   (100)
+  and \<open>Guess_Unzip_of_Semimodule ?S ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Guess_Unzip_of_Semimodule ?S ?C ?A\<^sub>T ?A _ ?def _ _ _ _ _ _\<close>   (100)
   and \<open>Guess_Scalar_Assoc ?mode ?S ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close> \<Rightarrow>
       \<open>Guess_Scalar_Assoc ?mode ?S ?C ?A\<^sub>T ?A\<^sub>F _ _ _ ?def ?T _ _ _ _ _ _ _\<close>   (100)
 ]]
@@ -3858,7 +3861,7 @@ text \<open>Guessing the zip operation of a semimodule is far beyond what can be
 paragraph \<open>Guess_Scalar_Zero\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_fallback]:
-  \<open>Guess_Scalar_Zero TYPE('s::zero) TYPE('c) TYPE('a\<^sub>T) TYPE('a)
+  \<open>Guess_Scalar_Zero TYPE('s::zero) TYPE('c::one) TYPE('a\<^sub>T) TYPE('a)
                      F unfolded_F T 0 True True \<close>
   unfolding Guess_Scalar_Zero_def ..
 
@@ -3926,37 +3929,49 @@ lemma [\<phi>reason %\<phi>TA_guesser_default for
 paragraph \<open>Guess_(Un)Zip_of_Semimodule\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Zip_of_Semimodule TYPE(rat) TYPE('c) TYPE('a) Any_assertion
+  \<open>Guess_Zip_of_Semimodule TYPE(rat) TYPE('c::sep_magma) TYPE('a) TYPE('a)
+                           F any T
                            (\<lambda>x. 0 \<le> x) (\<lambda>s t (x,y). x = y) (\<lambda>_ _ (x,y). x)
                            True True \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Unzip_of_Semimodule TYPE(rat) TYPE('c) TYPE('a) Any_assertion
+  \<open>Guess_Unzip_of_Semimodule TYPE(rat) TYPE('c::sep_magma) TYPE('a) TYPE('a)
+                             F any T
                              (\<lambda>x. 0 \<le> x) (\<lambda>s t x. True) (\<lambda>_ _ x. (x,x))
                              True True \<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
-lemma
-  \<open>Guess_Zip_of_Semimodule TYPE('i set) TYPE('c) TYPE() \<close>
-
-  term \<open>\<oplus>\<^sub>f\<close>
-typ \<open>'a set\<close>
-term fun_upd
-
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_interval) TYPE('c) TYPE('a list) Any_assertion (\<lambda>_. True)
+  \<open>Guess_Zip_of_Semimodule TYPE(nat lcro_interval) TYPE('c::sep_magma) TYPE('a list) TYPE('a list)
+                           F any T (\<lambda>_. True)
                            (\<lambda>s t (x,y). LCRO_Interval.width_of s = length x \<and> LCRO_Interval.width_of t = length y)
                            (\<lambda>_ _ (x,y). y * x)
                            True True\<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
 lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open>Guess_Unzip_of_Semimodule TYPE(nat lcro_interval) TYPE('c) TYPE('a list) Any_assertion (\<lambda>_. True)
+  \<open>Guess_Unzip_of_Semimodule TYPE(nat lcro_interval) TYPE('c::sep_magma) TYPE('a list) TYPE('a list)
+                             F any T (\<lambda>_. True)
                              (\<lambda>s t x. LCRO_Interval.width_of s + LCRO_Interval.width_of t = length x)
                              (\<lambda>s t x. (take (LCRO_Interval.width_of s) x, drop (LCRO_Interval.width_of s) x))
                              True True\<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Zip_of_Semimodule TYPE('i set) TYPE('c::sep_algebra) TYPE('a) TYPE('i \<Rightarrow> 'a)
+                           F (\<lambda>s T x. \<big_ast> (A s T x) s) T
+                           (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ D\<^sub>g (f,g). f \<oplus>\<^sub>f[D\<^sub>g] g) True True \<close>
+  unfolding Guess_Zip_of_Semimodule_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open>Guess_Unzip_of_Semimodule TYPE('i set) TYPE('c::sep_algebra) TYPE('a) TYPE('i \<Rightarrow> 'a)
+                             F (\<lambda>s T x. \<big_ast> (A s T x) s) T
+                             (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>_ _ f. (f,f)) True True \<close>
+  unfolding Guess_Unzip_of_Semimodule_def ..
+
+
+paragraph \<open>ML Library\<close>
 
 ML_file \<open>library/phi_type_algebra/guess_semimodule.ML\<close>
 

@@ -9,30 +9,6 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun guess_property is_zip (phi00 : phi_type) ctxt =
-  let val (s_ty0, _, x_ty0, model_ty0, phi0) =
-            parse_semimodule_phityp ctxt phi00 (SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>share_nun_semimodule\<close>))
-      val ((_, FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
-      val (F_term0 $ _ $ T_term0) = FT_term0
-      val (Ds, Dx, z, ants, inst) =
-              (if is_zip then Guess_Zip_of_Semimodule else Guess_Unzip_of_Semimodule)
-                ctxt phi0 (s_ty0, x_ty0, model_ty0,
-                Abs ("s", s_ty0, Abs ("x", x_ty0,
-                    \<^Const>\<open>\<phi>Type x_ty0 model_ty0\<close> $ Bound 0 $ (F_term0 $ Bound 1 $ T_term0))))
-      val inst' = Phi_Help.uncertify_tyvars inst
-      val phi = instantiate_phi (inst, Vars.empty) phi0
-      val [FT_term, F_term, T_term] = [FT_term0, F_term0, T_term0]
-            |> map (Term_Subst.instantiate (inst', Vars.empty))
-      val [s_ty, x_ty, model_ty] = map (Term_Subst.instantiateT inst') [s_ty0, x_ty0, model_ty0]
-      val Head = if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ty model_ty\<close>
-                           else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ty model_ty\<close>
-    (*val xxx = Thm.cterm_of ctxt (\<^Const>\<open>Trueprop\<close> $ (
-                          Head $ F_term $ T_term $ Ds $ Dx $ z))
-              |> @{print}*)
-   in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (Head $ F_term $ T_term $ Ds $ Dx $ z ),
-                  NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
-  end
-
 fun gen_MDz is_zip (_, name) hint0 ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
               fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
@@ -72,7 +48,7 @@ fun gen_MDz is_zip (_, name) hint0 ctxt0 (phi : phi_type) thy =
                     end)))
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
-                                      guess_property is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
+                                      Guess_Zip_of_Semimodule is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
                                       [(SOME (if is_zip then [0,2,~1,~1,~1] else [0,2,~1,~1], ind_conv), reasoning)],
                                       K NONE, simp)
                                     phi hint0 ctxt0

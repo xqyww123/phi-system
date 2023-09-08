@@ -1760,7 +1760,10 @@ next
     by (induct arbitrary: v rule: finite_induct[OF \<open>finite I\<close>]; clarsimp; blast)
 qed
 
-
+(*
+lemma sep_quant_scalar_distr:
+  \<open>(\<big_ast>i\<in>I. A i) * (\<big_ast>j\<in>J. B j)\<close>
+*)
 
 subsubsection \<open>Basic Rules\<close>
 

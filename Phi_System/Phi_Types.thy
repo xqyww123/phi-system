@@ -118,30 +118,32 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Guessing Antecedents\<close>
 
-lemma [\<phi>reason default %\<phi>TA_guesser_default]:
+lemma [\<phi>reason default %\<phi>TA_guesser]:
   \<open> Guess_Property PC False (x \<Ztypecolon> T) a c C
 \<Longrightarrow> Guess_Property PC False (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> c) C\<close>
   unfolding Guess_Property_def ..
 
-lemma [\<phi>reason default %\<phi>TA_guesser_default]:
+lemma [\<phi>reason default %\<phi>TA_guesser]:
   \<open> Guess_Property PC True (x \<Ztypecolon> T) a c C
 \<Longrightarrow> Guess_Property PC True (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) ((\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<and>\<^sub>\<r> a) c C\<close>
   unfolding Guess_Property_def ..
 
-lemma [\<phi>reason default %\<phi>TA_guesser_default]:
+lemma [\<phi>reason default %\<phi>TA_guesser]:
   \<open> Guess_Property PC undefined (x \<Ztypecolon> T) a c C
 \<Longrightarrow> Guess_Property PC undefined (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a c C\<close>
   unfolding Guess_Property_def ..
 
-lemma [\<phi>reason default %\<phi>TA_guesser_default]:
-  \<open> Guess_Zip_of_Semimodule TS TC TA (\<lambda>s x. f s x \<Ztypecolon> T s x) Ds Dx zi ants conds
-\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA (\<lambda>s x. f s x \<Ztypecolon> T s x \<phi>\<s>\<u>\<b>\<j> P s x)
+lemma [\<phi>reason default %\<phi>TA_guesser]:
+  \<open> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x) U Ds Dx zi ants conds
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x \<phi>\<s>\<u>\<b>\<j> P s x) U
                             Ds (\<lambda>s t (x,y). P s x \<and> P t y \<longrightarrow> Dx s t (x,y)) zi ants conds \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
-lemma [\<phi>reason default %\<phi>TA_guesser_default]:
-  \<open> Guess_Unzip_of_Semimodule TS TC TA (\<lambda>s x. f s x \<Ztypecolon> T s x) Ds Dx zi ants conds
-\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA (\<lambda>s x. f s x \<Ztypecolon> T s x \<phi>\<s>\<u>\<b>\<j> P s x)
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason default %\<phi>TA_guesser]:
+  \<open> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x) U Ds Dx zi ants conds
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. f s x \<Ztypecolon> T' s T x \<phi>\<s>\<u>\<b>\<j> P s x) U
                               Ds (\<lambda>s t xy. P (s + t) xy \<longrightarrow> Dx s t xy) zi ants conds \<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
@@ -695,7 +697,7 @@ declare [[\<phi>trace_reasoning = 0]]
       
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
-  deriving (*Basic
+  deriving Basic
        and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. \<forall>i \<in> I. P (x i)) \<close>
        (*and Abstract_Domain\<^sub>L (*TODO*)*)
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
@@ -709,8 +711,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i)))\<close>
        and Semimodule_Identity
        and Semimodule_Zero
-       and Semimodule_Scalar_Assoc*)
-       Semimodule_SDistr_Homo\<^sub>Z
+       and Semimodule_Scalar_Assoc
+       (*Semimodule_SDistr_Homo\<^sub>Z*)
 
 
 thm zero_set_def
@@ -1021,18 +1023,18 @@ lemma Semimodule_SDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
 
 subsubsection \<open>Guessing Antecedents\<close>
 
-lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> ?T) _ _ _ _ _ \<close>]:
+lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Zip_of_Semimodule _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) Ds
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) U Ds
                             (\<lambda>s t (x,y). (D\<^sub>T x \<longrightarrow> D\<^sub>T y \<longrightarrow> eq x y \<and> Dx y \<and> D\<^sub>C y \<or> eq y x \<and> Dx x \<and> D\<^sub>C x))
                             (\<lambda>_ _. fst)
                             (Functionality T Dx \<and>\<^sub>\<r> Object_Equiv T eq \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
                             True \<close>
   unfolding Guess_Zip_of_Semimodule_def ..
 
-lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _ (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> ?T) _ _ _ _ _ \<close>]:
+lemma [\<phi>reason %\<phi>TA_guesser for \<open>Guess_Unzip_of_Semimodule _ _ _ _ _ (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[?\<psi>] s \<Zcomp> T) _ _ _ _ _ _ \<close>]:
   \<open> module_S_distr \<psi> Ds
-\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA (\<lambda>s x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) Ds
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F (\<lambda>s T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[\<psi>] s \<Zcomp> T) U Ds
                             (\<lambda>s t x. D\<^sub>T x \<longrightarrow> Dx x \<and> D\<^sub>C x)
                             (\<lambda>_ _ x. (x,x))
                             (Functionality T Dx \<and>\<^sub>\<r> Abstract_Domain T D\<^sub>T \<and>\<^sub>\<r> Carrier_Set T D\<^sub>C)
@@ -1290,17 +1292,18 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-    
+declare [[\<phi>trace_reasoning = 2]]
+      
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Separation_Monoid
+  deriving Semimodule_SDistr_Homo\<^sub>U
+(*Separation_Monoid
        and Functionality
        and Trivial_\<Sigma>
        and SE_Trim_Empty
        and Semimodule_no0
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
-       and Abstraction_to_Raw
+       and Abstraction_to_Raw*)
 
 thm \<phi>Share.\<phi>Prod
 thm \<phi>Share.\<phi>None
