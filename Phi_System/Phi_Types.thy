@@ -508,7 +508,23 @@ lemma \<S>_Homo\<^sub>E [\<phi>reason_template name \<S>\<^sub>E []]:
   unfolding Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
   by clarsimp
 
-text \<open>Does the reverse transformation exists?. The commutativity between \<open>F\<close> and \<open>\<S>\<close> gonna be a problem.\<close>
+text \<open>Does the reverse transformation exists?. The commutativity between \<open>F\<close> and \<open>\<S>\<close> gonna be a problem.\<close>lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
+
+lemma
+  \<open> Transformation_Functor Fa Fb T (\<S> T) D R mapper
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
+\<Longrightarrow> s \<Ztypecolon> \<S> (Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> Fb (\<S> T) \<s>\<u>\<b>\<j> s'. mapper (\<lambda>a b. b = {a}) s s' \<close>
+  unfolding Action_Tag_def Functional_Transformation_Functor_def Premise_def
+  subgoal premises prems
+    by (insert prems(1)[THEN spec[where x=s], THEN spec[where x=\<open>\<lambda>a. {a}\<close>], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+               prems(2) ;
+        clarsimp simp add: transformation_weaken) .
+
+(*the reverse map cannot be derived using TF.*)
+
+lemma
+  \<open> (\<And>a \<in> fst x. a \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U ...)
+\<Longrightarrow> x \<Ztypecolon> \<S> T \<^emph>[Cw] \<S> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[Cr] \<S> R \<close>
 
 lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
   \<open> Functional_Transformation_Functor Fa Fb T (\<S> T) D R pm fm
