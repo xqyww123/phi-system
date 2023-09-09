@@ -554,17 +554,27 @@ begin
 sublocale homo_sep_disj by standard simp
 end
 
-lemma homo_sep_disj_comp:
+lemma homo_sep_disj_comp[simp, locale_intro]:
   \<open> homo_sep_disj f
 \<Longrightarrow> homo_sep_disj g
 \<Longrightarrow> homo_sep_disj (f o g) \<close>
   unfolding homo_sep_disj_def
   by simp
 
-lemma closed_homo_sep_disj_comp:
+lemma homo_sep_disj_id[simp, locale_intro]:
+  \<open> homo_sep_disj id \<close>
+  unfolding homo_sep_disj_def
+  by simp
+
+lemma closed_homo_sep_disj_comp[simp, locale_intro]:
   \<open> closed_homo_sep_disj f
 \<Longrightarrow> closed_homo_sep_disj g
 \<Longrightarrow> closed_homo_sep_disj (f o g)\<close>
+  unfolding closed_homo_sep_disj_def
+  by simp
+
+lemma closed_homo_sep_disj_id[simp, locale_intro]:
+  \<open> closed_homo_sep_disj id \<close>
   unfolding closed_homo_sep_disj_def
   by simp
 
@@ -572,7 +582,7 @@ locale homo_sep_mult =
   fixes \<psi> :: " 'a::sep_magma \<Rightarrow> 'b::sep_magma "
   assumes homo_mult: "x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y"
 
-lemma homo_sep_mult_comp:
+lemma homo_sep_mult_comp[simp, locale_intro]:
   \<open> homo_sep_disj f
 \<Longrightarrow> homo_sep_mult f
 \<Longrightarrow> homo_sep_mult g
@@ -580,10 +590,14 @@ lemma homo_sep_mult_comp:
   unfolding homo_sep_mult_def homo_sep_disj_def
   by clarsimp
 
+lemma homo_sep_mult_id[simp, locale_intro]:
+  \<open>homo_sep_mult id\<close>
+  unfolding homo_sep_mult_def
+  by simp
+
 locale homo_join_sub =
-  fixes \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
-    and D :: \<open>'a set\<close>
-  assumes homo_join_sub: \<open>x \<in> D \<and> y \<in> D \<Longrightarrow> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
+  fixes \<psi> :: \<open>'a::sep_carrier \<Rightarrow> 'b::sep_magma\<close>
+  assumes homo_join_sub: \<open>\<lbrakk> mul_carrier x ; mul_carrier y \<rbrakk> \<Longrightarrow> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
 
 locale homo_sep = homo_sep_mult \<psi> + homo_sep_disj \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
@@ -628,13 +642,32 @@ text \<open>
   \<close>
 
 
-lemma homo_sep_comp:
+lemma homo_sep_comp[simp, locale_intro]:
   \<open>homo_sep f \<Longrightarrow> homo_sep g \<Longrightarrow> homo_sep (f o g)\<close>
   unfolding homo_sep_mult_def homo_sep_disj_def homo_sep_def
   by simp
 
+lemma homo_sep_id:
+  \<open>homo_sep id\<close>
+  unfolding homo_sep_def
+
 locale closed_homo_sep = homo_sep + closed_homo_sep_disj
 
+locale simple_sep_homo = homo_sep \<psi> + homo_one \<psi>
+   for \<psi> :: " 'a::sep_carrier_1 \<Rightarrow> 'b::sep_magma_1 "
+ + assumes kernel_is_1: \<open>mul_carrier x \<Longrightarrow> \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
+
+lemma simple_sep_homo_comp[simp, locale_intro]:
+  \<open> (\<forall>a. mul_carrier a \<longrightarrow> mul_carrier (g a))
+\<Longrightarrow> simple_sep_homo f
+\<Longrightarrow> simple_sep_homo g
+\<Longrightarrow> simple_sep_homo (f o g)\<close>
+  unfolding simple_sep_homo_def simple_sep_homo_axioms_def
+  by simp
+
+lemma simple_sep_homo_id:
+  \<open>simple_sep_homo id\<close>
+  unfolding simple_sep_homo_def
 
 subsubsection \<open>Orthogonal Homomorphism\<close>
 
@@ -648,28 +681,30 @@ interference with other sorts, so they are orthogonal.
 \<close>
 
 locale sep_orthogonal = homo_sep \<psi>
-  for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
-  and D :: \<open>'a set\<close> \<comment> \<open>carrier set of the source algebra,
-                        Previously we implicitly extend the carrier set to be the universe of the type.
-                        It can be done because for any element \<open>d\<close> not belonging to the carrier set,
-                        only if \<open>d\<close> has no defined operation with any element including itself,
-                        the introduction of \<open>d\<close> doesn't affect anything.
-                        However here, if \<open>a = \<psi> d\<close> accidentally belongs to the target algebra, \<open>d\<close> matters,
-                        so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
+  for \<psi> :: \<open>'a::sep_carrier \<Rightarrow> 'b::sep_magma\<close>
+   \<comment> \<open>carrier set of the source algebra,
+      Previously we implicitly extend the carrier set to be the universe of the type.
+      It can be done because for any element \<open>d\<close> not belonging to the carrier set,
+      only if \<open>d\<close> has no defined operation with any element including itself,
+      the introduction of \<open>d\<close> doesn't affect anything.
+      However here, if \<open>a = \<psi> d\<close> accidentally belongs to the target algebra, \<open>d\<close> matters,
+      so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
       (*TODO: as now we have the mul_carrier, do we still need such D instead of using mul_carrier?*)
       (*then let's try now*)
-+ assumes sep_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
++ assumes sep_orthogonal:
+    \<open> \<lbrakk> mul_carrier b ; mul_carrier c ; a ## \<psi> b \<rbrakk> \<Longrightarrow>
+        a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
 begin
 
 
 lemma sep_orthogonal'[no_atp]:
-  \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+  \<open> \<lbrakk> mul_carrier b ; mul_carrier c ; a ## \<psi> b \<rbrakk> \<Longrightarrow>
+      \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
   by (metis sep_orthogonal)
 
 sublocale homo_join_sub \<psi>
-  apply standard
-  unfolding join_sub_def
-  by (metis homo_mult sep_disj_homo_semi sep_orthogonal)
+  by (standard, unfold join_sub_def, metis UNIV_I sep_disj_homo_semi sep_orthogonal)
+
 
 text \<open>The weak homomorphism of \<open>\<preceq>\<^sub>S\<^sub>L\<close>, \<open>x \<preceq>\<^sub>S\<^sub>L z \<longrightarrow> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> z\<close> is trivially true but the reversed
 so-called closed homo \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> z \<longrightarrow> x \<preceq>\<^sub>S\<^sub>L z\<close> is not seen even in closed separation homo.
@@ -681,46 +716,47 @@ of join_sub, but not reversely.\<close>
 
 end
 
-locale sep_orthogonal_1 = sep_orthogonal \<psi> D
-  for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close> and D
-+ assumes one_in_D: \<open>1 \<in> D\<close>
+locale sep_orthogonal_1 = sep_orthogonal \<psi>
+  for \<psi> :: \<open>'a::sep_carrier_1 \<Rightarrow> 'b::sep_magma_1\<close>
 begin
 
 sublocale homo_one \<psi>
-  by (standard, metis mult_1_class.mult_1_left mult_1_class.mult_1_right one_in_D sep_orthogonal sep_magma_1_right)
+  by (standard, metis mult_1_class.mult_1_left mult_1_class.mult_1_right sep_carrier_1 sep_orthogonal sep_magma_1_right)
 
 end
 
 lemma sep_orthogonal_comp:
-  \<open> g ` Dg \<subseteq> Df
-\<Longrightarrow> sep_orthogonal f Df \<Longrightarrow> sep_orthogonal g Dg \<Longrightarrow> sep_orthogonal (f o g) Dg\<close>
+  \<open> (\<forall>a. mul_carrier a \<longrightarrow> mul_carrier (g a))
+\<Longrightarrow> sep_orthogonal f \<Longrightarrow> sep_orthogonal g \<Longrightarrow> sep_orthogonal (f o g)\<close>
   unfolding sep_orthogonal_def sep_orthogonal_axioms_def
-  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
-      smt (verit, ccfv_threshold) homo_sep.axioms(2) homo_sep_disj.sep_disj_homo_semi)
+  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def;
+      metis empty_iff homo_sep_def homo_sep_disj_def)
 
 lemma sep_orthogonal_1_comp:
-  \<open> g ` Dg \<subseteq> Df
-\<Longrightarrow> sep_orthogonal_1 f Df \<Longrightarrow> sep_orthogonal_1 g Dg \<Longrightarrow> sep_orthogonal_1 (f o g) Dg\<close>
+  \<open> (\<forall>a. mul_carrier a \<longrightarrow> mul_carrier (g a))
+\<Longrightarrow> sep_orthogonal_1 f \<Longrightarrow> sep_orthogonal_1 g \<Longrightarrow> sep_orthogonal_1 (f o g)\<close>
   unfolding sep_orthogonal_1_def
-  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
-      metis image_subsetI sep_orthogonal_comp)
+  using sep_orthogonal_comp .
 
+
+(*
 definition \<open>kernel_is_1 \<psi> D \<longleftrightarrow> (\<forall>x \<in> D. \<psi> x = 1 \<longleftrightarrow> x = 1) \<and> 1 \<in> D\<close>
 
 lemma kernel_is_1_comp[simp, locale_intro]:
   \<open> g ` Dg \<subseteq> Df \<Longrightarrow> kernel_is_1 f Df \<Longrightarrow> kernel_is_1 g Dg \<Longrightarrow> kernel_is_1 (f o g) Dg\<close>
   unfolding kernel_is_1_def by (simp add: image_subset_iff)
+*)
 
 lemma kernel_is_1_id[simp]: \<open>1 \<in> D \<Longrightarrow> kernel_is_1 id D\<close> unfolding kernel_is_1_def by simp
 
 
-locale sep_orthogonal_monoid = sep_orthogonal_1 \<psi> D
-  for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close> and D
+locale sep_orthogonal_monoid = sep_orthogonal_1 \<psi>
+  for \<psi> :: \<open>'a::{sep_monoid, sep_carrier_1} \<Rightarrow> 'b::sep_monoid\<close>
 begin
 
 lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi> D\<close>
   unfolding kernel_is_1_def
-  by (metis homo_join_sub homo_one join_sub.bot.extremum join_sub.bot.extremum_uniqueI one_in_D)
+  by (metis empty_iff homo_one mult_1_class.mult_1_right sep_carrier_1 sep_magma_1_left sep_orthogonal)
 
 end
 
