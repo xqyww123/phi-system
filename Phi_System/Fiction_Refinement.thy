@@ -285,7 +285,7 @@ lemma getter_refinement:
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: basic_fiction_\<I> set_mult_expn Id_on_iff
           Subjection_expn zero_set_def set_eq_iff prj.homo_mult times_fun)
-  by (smt (verit, del_insts) fun_sep_disj_imply_v fun_upd_triv mult_1_class.mult_1_right option.exhaust option.inject sep_disj_commuteI sep_disj_get_name sep_disj_multD2 sep_disj_option_nonsepable(2) sep_mult_commute)
+  by (smt (verit, del_insts) fun_sep_disj_imply_v fun_upd_triv mult_1_class.mult_1_right option.exhaust option.inject sep_disj_commuteI sep_disj_get_name sep_disj_multD2 sep_disj_option_discrete(2) sep_mult_commute)
   
 lemma getter_valid:
   \<open>Valid_Proc (\<phi>R_get_res_entry' k k2)\<close>
@@ -316,7 +316,7 @@ lemma setter_refinement:
     have t5[simp]: \<open>r ## 1(k := 1(k2 := u))\<close>
       by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv discrete_semigroup_sepdisj_fun prems(5))
     have t6[simp]: \<open>(r * a) k k2 = None\<close>
-      by (metis sep_disj_multI1 sep_disj_option_nonsepable(1) t1 t2 times_fun)
+      by (metis sep_disj_multI1 sep_disj_option_discrete(1) t1 t2 times_fun)
     then have [simp]:
         \<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k (r * (a * 1(k := 1(k2 \<mapsto> any))))
             = (r * a) * 1(k := 1(k2 := u))\<close>

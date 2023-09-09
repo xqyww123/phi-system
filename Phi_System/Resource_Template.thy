@@ -428,7 +428,7 @@ end
 section \<open>Non-separable Monolithic Resource\<close>
   \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::discrete_semigroup option\<close>\<close>
 
-locale nonsepable_mono_resource =
+locale discrete_mono_resource =
   resource Res
 for Res :: "'T nosep option resource_entry"
 begin
@@ -449,7 +449,7 @@ subsubsection \<open>Interp Agreement\<close>
 (*TODO!*)
 (*
 locale agreement_fiction_for_nosepable_mono_resource =
-   R: nonsepable_mono_resource Res
+   R: discrete_mono_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.fiction_agree\<close>
 for Res :: "'T nosep option resource_entry"
 and Fic :: "'T nosep agree option fiction_entry"
@@ -699,7 +699,7 @@ lemma getter_refinement:
   apply (cases ret; clarsimp split: option.split simp add: set_mult_expn Id_on_iff
                               Subjection_expn_set prj.homo_mult times_fun set_eq_iff \<r>_valid_split'
                               inj.sep_orthogonal[simplified] in_invariant)
-  by (smt (verit, ccfv_threshold) domI fun_upd_same image_iff mult_1_class.mult_1_left one_option_def option.sel sep_disj_fun_nonsepable(2) times_fun)
+  by (smt (verit, ccfv_threshold) domI fun_upd_same image_iff mult_1_class.mult_1_left one_option_def option.sel sep_disj_fun_discrete(2) times_fun)
  
 
 lemma getter_valid:
@@ -737,7 +737,7 @@ lemma setter_refinement:
       by (clarsimp simp add: in_invariant Ball_def times_fun)
     have q3: \<open>map_fun_at k (F \<circ> the) (get u * (r * 1(k \<mapsto> v))) = get u * (r * 1(k := F v))\<close>
       apply (clarsimp simp add: fun_eq_iff map_fun_at_def times_fun)
-      by (metis (mono_tags, lifting) dom_1 dom_eq_empty_conv fun_upd_same mult_1_class.mult_1_left option.sel sep_disj_fun sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep x1 x2)
+      by (metis (mono_tags, lifting) dom_1 dom_eq_empty_conv fun_upd_same mult_1_class.mult_1_left option.sel sep_disj_fun sep_disj_option_discrete(1) times_fupdt_1_apply_sep x1 x2)
     have q4: \<open>1(k := F v) \<in>\<^sub>S\<^sub>H domain\<close>
       apply (clarsimp simp add: in_invariant)
       using a2 prems(1) prems(5) by fastforce
@@ -747,7 +747,7 @@ lemma setter_refinement:
     have x5: \<open>w ## r * 1(k \<mapsto> v) \<Longrightarrow>
                   map_fun_at k (F \<circ> the) (w * (r * 1(k \<mapsto> v))) = w * (r * (1(k := F v)))\<close> for w
           unfolding map_fun_at_def apply (clarsimp simp add: fun_eq_iff times_fun)
-          by (metis (mono_tags, opaque_lifting) map_upd_Some_unfold option.sel sep_disj_fun_def sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep times_option(3) x1)
+          by (metis (mono_tags, opaque_lifting) map_upd_Some_unfold option.sel sep_disj_fun_def sep_disj_option_discrete(1) times_fupdt_1_apply_sep times_option(3) x1)
     show ?thesis
       apply (insert prems, clarsimp simp add: x3 times_fun_upd x5, simp add: mk_homo_mult)
       subgoal premises prems for w
@@ -941,7 +941,7 @@ lemma getter_refinement:
   unfolding Fictional_Forward_Simulation_def getter_transition
   apply (cases ret; clarsimp split: option.split simp add: basic_fiction_\<I> set_mult_expn Id_on_iff
           Subjection_expn zero_set_def set_eq_iff prj.homo_mult times_fun)
-  by (smt (verit, del_insts) fun_sep_disj_imply_v fun_upd_triv mult_1_class.mult_1_right option.exhaust option.inject sep_disj_commuteI sep_disj_get_name sep_disj_multD2 sep_disj_option_nonsepable(2) sep_mult_commute)
+  by (smt (verit, del_insts) fun_sep_disj_imply_v fun_upd_triv mult_1_class.mult_1_right option.exhaust option.inject sep_disj_commuteI sep_disj_get_name sep_disj_multD2 sep_disj_option_discrete(2) sep_mult_commute)
 
 lemma getter_valid:
   \<open>Valid_Proc (\<phi>R_get_res_entry' k k2)\<close>
@@ -973,7 +973,7 @@ lemma setter_refinement:
     have t5[simp]: \<open>r ## 1(k := 1(k2 := u))\<close>
       by (metis fun_sep_disj_1_fupdt(1) fun_upd_triv discrete_semigroup_sepdisj_fun prems(5))
     have t6[simp]: \<open>(r * a) k k2 = None\<close>
-      by (metis sep_disj_multI1 sep_disj_option_nonsepable(1) t1 t2 times_fun)
+      by (metis sep_disj_multI1 sep_disj_option_discrete(1) t1 t2 times_fun)
     then have [simp]:
         \<open>map_fun_at k (map_fun_at k2 (\<lambda>_. u)) (r * (a * 1(k := 1(k2 \<mapsto> any))))
             = (r * a) * 1(k := 1(k2 := u))\<close>

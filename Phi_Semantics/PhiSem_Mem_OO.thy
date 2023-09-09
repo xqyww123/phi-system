@@ -336,7 +336,7 @@ lemma op_obj_dispose:
       using t3 apply blast
       using FIC.OO_share.partial_implies[where x=\<open>1(ref := fields)\<close> and n=1, simplified,
             OF \<open>r \<in> FIC.SPACE\<close>, OF t4, OF \<open>\<s>\<t>\<a>\<t>\<e> res \<i>\<s> _\<close>]
-            nonsepable_partial_map_subsumption_L2
+            discrete_partial_map_subsumption_L2
       by (metis domIff map_le_def)
     show ?thesis by (simp add: t1 t2 prems Return_def det_lift_def)
   qed

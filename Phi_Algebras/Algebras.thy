@@ -45,12 +45,6 @@ locale homo_add =
   assumes homo_add: \<open>\<phi> (x + y) = \<phi> x + \<phi> y\<close>
 
 
-lemma homo_one_comp[simp]:
-  \<open>homo_one f \<Longrightarrow> homo_one g \<Longrightarrow> homo_one (f o g)\<close>
-  unfolding homo_one_def by simp
-
-
-
 subsubsection \<open>Group-like\<close>
 
 class mult_1 = times + one +
@@ -309,28 +303,8 @@ qed
 subclass total_sep_monoid ..
 end
 
-class discrete_sep_semigroup = sep_disj + times +
-  assumes discrete_sep_disj[simp]: "x ## y \<longleftrightarrow> x = y"
-    and discrete_mult[simp]: "x * y = (if x = y then x else undefined)"
-begin
-subclass sep_magma .
-subclass sep_ab_semigroup proof
-  fix x y z :: 'a
-  show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by simp
-  show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close> unfolding join_sub_def by force
-  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close> by simp
-  show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close> by simp
-  show \<open>x ## y \<Longrightarrow> y ## x\<close> by simp
-  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close> by simp
-  show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close> by simp
-  show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by simp
-  (*show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
-    using local.join_sub_def by force*)
-qed
-end
-
 class discrete_semigroup = sep_disj + times +
-  assumes nonsepable_disj[simp]: "\<not> x ## y"
+  assumes discrete_disj[simp]: "\<not> x ## y"
 begin
 subclass sep_magma .
 subclass sep_ab_semigroup by (standard; simp add: local.join_sub_def)
@@ -339,27 +313,27 @@ subclass strict_positive_sep_magma by (standard; simp)
 end
 
 class discrete_monoid = sep_disj + mult_1 +
-  assumes nonsepable_disj_1[simp]: \<open>x ## y \<longleftrightarrow> x = 1 \<or> y = 1\<close>
+  assumes discrete_disj_1[simp]: \<open>x ## y \<longleftrightarrow> x = 1 \<or> y = 1\<close>
 begin
 subclass sep_magma .
 subclass sep_algebra proof
   fix x y z :: 'a
   show \<open>x ## y \<Longrightarrow> x * y = y * x\<close> by fastforce
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x ## y\<close>
-    by (metis local.mult_1_right local.nonsepable_disj_1)
+    by (metis local.mult_1_right local.discrete_disj_1)
   show \<open>x ## y * z \<Longrightarrow> y ## z \<Longrightarrow> x * y ## z\<close>
-    by (metis local.mult_1_left local.nonsepable_disj_1)
+    by (metis local.mult_1_left local.discrete_disj_1)
   show \<open>x \<preceq>\<^sub>S\<^sub>L y \<Longrightarrow> y \<preceq>\<^sub>S\<^sub>L x \<Longrightarrow> x = y\<close>
     unfolding join_sub_def apply clarsimp
     by (metis local.mult_1_left)
   show \<open>x ## 1\<close> by simp
   show \<open>1 ## x\<close> by simp
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> y ## z\<close>
-    by (metis local.mult_1_left local.nonsepable_disj_1)
+    by (metis local.mult_1_left local.discrete_disj_1)
   show \<open>x * y ## z \<Longrightarrow> x ## y \<Longrightarrow> x ## y * z\<close>
-    by (metis local.mult_1_right local.nonsepable_disj_1)
+    by (metis local.mult_1_right local.discrete_disj_1)
   show \<open>x ## y \<Longrightarrow> y ## x\<close>
-    using local.nonsepable_disj_1 by blast
+    using local.discrete_disj_1 by blast
   show \<open>x ## y \<Longrightarrow> x * y ## z \<Longrightarrow> x * y * z = x * (y * z)\<close> by force
 qed
 end
@@ -536,13 +510,6 @@ locale homo_mul_carrier =
   fixes \<psi> :: \<open>'a::mul_carrier \<Rightarrow> 'b::mul_carrier\<close>
   assumes homo_mul_carrier: \<open>mul_carrier x \<Longrightarrow> mul_carrier (\<psi> x)\<close>
 
-lemma homo_mul_carrier_comp:
-  \<open> homo_mul_carrier g
-\<Longrightarrow> homo_mul_carrier f
-\<Longrightarrow> homo_mul_carrier (f o g)\<close>
-  unfolding homo_mul_carrier_def
-  by clarsimp
-
 locale homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
   assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> (* TODO: improve this to be a \<longleftrightarrow> ! *)
@@ -554,31 +521,9 @@ begin
 sublocale homo_sep_disj by standard simp
 end
 
-lemma homo_sep_disj_comp:
-  \<open> homo_sep_disj f
-\<Longrightarrow> homo_sep_disj g
-\<Longrightarrow> homo_sep_disj (f o g) \<close>
-  unfolding homo_sep_disj_def
-  by simp
-
-lemma closed_homo_sep_disj_comp:
-  \<open> closed_homo_sep_disj f
-\<Longrightarrow> closed_homo_sep_disj g
-\<Longrightarrow> closed_homo_sep_disj (f o g)\<close>
-  unfolding closed_homo_sep_disj_def
-  by simp
-
 locale homo_sep_mult =
   fixes \<psi> :: " 'a::sep_magma \<Rightarrow> 'b::sep_magma "
   assumes homo_mult: "x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y"
-
-lemma homo_sep_mult_comp:
-  \<open> homo_sep_disj f
-\<Longrightarrow> homo_sep_mult f
-\<Longrightarrow> homo_sep_mult g
-\<Longrightarrow> homo_sep_mult (g o f)\<close>
-  unfolding homo_sep_mult_def homo_sep_disj_def
-  by clarsimp
 
 locale homo_join_sub =
   fixes \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
@@ -626,12 +571,6 @@ text \<open>
 
   The reasoning procedure is given by \<open>\<phi>Sep_Disj\<close> later.
   \<close>
-
-
-lemma homo_sep_comp:
-  \<open>homo_sep f \<Longrightarrow> homo_sep g \<Longrightarrow> homo_sep (f o g)\<close>
-  unfolding homo_sep_mult_def homo_sep_disj_def homo_sep_def
-  by simp
 
 locale closed_homo_sep = homo_sep + closed_homo_sep_disj
 
@@ -691,19 +630,6 @@ sublocale homo_one \<psi>
 
 end
 
-lemma sep_orthogonal_comp:
-  \<open> g ` Dg \<subseteq> Df
-\<Longrightarrow> sep_orthogonal f Df \<Longrightarrow> sep_orthogonal g Dg \<Longrightarrow> sep_orthogonal (f o g) Dg\<close>
-  unfolding sep_orthogonal_def sep_orthogonal_axioms_def
-  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
-      smt (verit, ccfv_threshold) homo_sep.axioms(2) homo_sep_disj.sep_disj_homo_semi)
-
-lemma sep_orthogonal_1_comp:
-  \<open> g ` Dg \<subseteq> Df
-\<Longrightarrow> sep_orthogonal_1 f Df \<Longrightarrow> sep_orthogonal_1 g Dg \<Longrightarrow> sep_orthogonal_1 (f o g) Dg\<close>
-  unfolding sep_orthogonal_1_def
-  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
-      metis image_subsetI sep_orthogonal_comp)
 
 definition \<open>kernel_is_1 \<psi> D \<longleftrightarrow> (\<forall>x \<in> D. \<psi> x = 1 \<longleftrightarrow> x = 1) \<and> 1 \<in> D\<close>
 
@@ -723,10 +649,6 @@ lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi> D\<close>
   by (metis homo_join_sub homo_one join_sub.bot.extremum join_sub.bot.extremum_uniqueI one_in_D)
 
 end
-
-lemma sep_orthogonal_monoid_comp[locale_intro]:
-  \<open> g ` Dg \<subseteq> Df \<Longrightarrow> sep_orthogonal_monoid f Df \<Longrightarrow> sep_orthogonal_monoid g Dg \<Longrightarrow> sep_orthogonal_monoid (f o g) Dg\<close>
-  unfolding sep_orthogonal_monoid_def using sep_orthogonal_1_comp .
 
 locale cancl_sep_orthogonal_monoid = sep_orthogonal_monoid \<psi> D
   for \<psi> :: \<open>'a::{sep_cancel, sep_monoid} \<Rightarrow> 'b::sep_monoid\<close> and D
@@ -770,27 +692,6 @@ begin
 sublocale share_orthogonal_homo using share_orthogonal_homo'[simplified] .
 end *)
 
-lemma share_orthogonal_homo_composition[locale_intro]:
-  assumes dom_trans: \<open>g ` Dg \<subseteq> Df\<close>
-      and f: \<open>share_orthogonal_homo f Df\<close>
-      and g: \<open>sep_orthogonal_monoid g Dg\<close>
-    shows \<open>share_orthogonal_homo (f o g) Dg\<close>
-proof -
-  interpret f: share_orthogonal_homo f Df using f .
-  interpret g: sep_orthogonal_monoid g Dg using g .
-  have f': \<open>sep_orthogonal_monoid f Df\<close> by (simp add: f.sep_orthogonal_monoid_axioms)
-  have g': \<open>sep_orthogonal_monoid g Dg\<close> by (simp add: g.sep_orthogonal_monoid_axioms)
-  have t[simp]: \<open>x \<in> Dg \<Longrightarrow> g x \<in> Df\<close> for x using dom_trans by blast 
-
-  show ?thesis
-    unfolding share_orthogonal_homo_def share_orthogonal_homo_axioms_def
-    apply (auto simp add: f.share_orthogonal)
-    apply (meson dom_trans f' g' sep_orthogonal_monoid_comp)
-    using g.sep_orthogonal apply auto[1]
-    using g.homo_mult apply auto[1]
-    using f.\<psi>_self_disj t by blast
-
-qed
 
 locale cancl_share_orthogonal_homo = share_orthogonal_homo \<psi> D
   for \<psi> :: \<open>'a::{sep_cancel, sep_algebra} \<Rightarrow> 'b::share_semimodule\<close> and D
@@ -800,6 +701,12 @@ sublocale cancl_sep_orthogonal_monoid ..
 
 end
 
+
+subsubsection \<open>From Discrete Algebra\<close>
+
+lemma
+  \<open>homo_sep_disj \<psi>\<close>
+  for \<psi> :: \<open>'a::discrete_semigroup\<close>
 
 
 subsection \<open>Partial Additive Structures\<close>
@@ -1194,42 +1101,139 @@ section \<open>Instances of Algebras\<close>
 (*TODO: some structures like partial map contain many helper lemmas that
 are not settled down properly.*)
 
-subsection \<open>Identity\<close>
+subsection \<open>Lambda Identity\<close>
 
-lemma homo_mul_carrier_id:
+lemma homo_one_id[simp, locale_intro]:
+  \<open> homo_one (\<lambda>x. x) \<close>
+  unfolding homo_one_def
+  by simp
+
+lemma homo_mul_carrier_id[simp, locale_intro]:
   \<open>homo_mul_carrier (\<lambda>x. x)\<close>
   unfolding homo_mul_carrier_def
   by blast
 
-lemma closed_homo_sep_disj_id:
-  \<open>closed_homo_sep_disj (\<lambda>x. x)\<close>
-  unfolding closed_homo_sep_disj_def
-  by simp
-
-lemma homo_sep_disj_id:
+lemma homo_sep_disj_id[simp, locale_intro]:
   \<open>homo_sep_disj (\<lambda>x. x)\<close>
   unfolding homo_sep_disj_def
   by simp
 
-lemma homo_sep_mult_id:
-  \<open>homo_sep_mult (\<lambda>x. x)\<close>
+lemma closed_homo_sep_disj_id[simp, locale_intro]:
+  \<open> closed_homo_sep_disj (\<lambda>x. x) \<close>
+  unfolding closed_homo_sep_disj_def
+  by simp
+
+lemma homo_sep_mult_id[simp, locale_intro]:
+  \<open> homo_sep_mult (\<lambda>x. x) \<close>
   unfolding homo_sep_mult_def
   by simp
 
-lemma homo_one_id:
-  \<open>homo_one (\<lambda>x. x)\<close>
+lemma homo_sep_id[simp, locale_intro]:
+  \<open>homo_sep (\<lambda>x. x)\<close>
+  unfolding homo_sep_def
+  by simp
+
+lemma closed_homo_sep_id[simp, locale_intro]:
+  \<open> closed_homo_sep (\<lambda>x. x) \<close>
+  unfolding closed_homo_sep_def
+  by simp
+
+(*
+lemma
+  \<open> sep_orthogonal (\<lambda>x. x) D \<close>
+  unfolding sep_orthogonal_def sep_orthogonal_axioms_def
+  by simp *)
+
+
+subsection \<open>Functional Composition\<close>
+
+lemma homo_one_comp[simp, locale_intro]:
+  \<open> homo_one f
+\<Longrightarrow> homo_one g
+\<Longrightarrow> homo_one (f o g) \<close>
   unfolding homo_one_def
   by simp
 
-lemma homo_sep_id:
-  \<open>homo_sep (\<lambda>x. x)\<close>
-  unfolding homo_sep_def
-  by (simp add: homo_sep_mult_id homo_sep_disj_id)
+lemma homo_mul_carrier_comp[simp, locale_intro]:
+  \<open> homo_mul_carrier g
+\<Longrightarrow> homo_mul_carrier f
+\<Longrightarrow> homo_mul_carrier (f o g)\<close>
+  unfolding homo_mul_carrier_def
+  by clarsimp
 
-lemma closed_homo_sep:
-  \<open>closed_homo_sep (\<lambda>x. x)\<close>
+lemma homo_sep_disj_comp[simp, locale_intro]:
+  \<open> homo_sep_disj f
+\<Longrightarrow> homo_sep_disj g
+\<Longrightarrow> homo_sep_disj (f o g) \<close>
+  unfolding homo_sep_disj_def
+  by simp
+
+lemma closed_homo_sep_disj_comp[simp, locale_intro]:
+  \<open> closed_homo_sep_disj f
+\<Longrightarrow> closed_homo_sep_disj g
+\<Longrightarrow> closed_homo_sep_disj (f o g)\<close>
+  unfolding closed_homo_sep_disj_def
+  by simp
+
+lemma homo_sep_mult_comp[simp, locale_intro]:
+  \<open> homo_sep_disj f
+\<Longrightarrow> homo_sep_mult f
+\<Longrightarrow> homo_sep_mult g
+\<Longrightarrow> homo_sep_mult (g o f)\<close>
+  unfolding homo_sep_mult_def homo_sep_disj_def
+  by clarsimp
+
+lemma homo_sep_comp[simp, locale_intro]:
+  \<open>homo_sep f \<Longrightarrow> homo_sep g \<Longrightarrow> homo_sep (f o g)\<close>
+  unfolding homo_sep_mult_def homo_sep_disj_def homo_sep_def
+  by simp
+
+lemma closed_homo_sep_comp[simp, locale_intro]:
+  \<open> closed_homo_sep f
+\<Longrightarrow> closed_homo_sep g
+\<Longrightarrow> closed_homo_sep (f o g)\<close>
   unfolding closed_homo_sep_def
-  by (simp add: homo_sep_id closed_homo_sep_disj_id)
+  by simp
+
+lemma sep_orthogonal_comp:
+  \<open> g ` Dg \<subseteq> Df
+\<Longrightarrow> sep_orthogonal f Df \<Longrightarrow> sep_orthogonal g Dg \<Longrightarrow> sep_orthogonal (f o g) Dg\<close>
+  unfolding sep_orthogonal_def sep_orthogonal_axioms_def
+  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
+      smt (verit, ccfv_threshold) homo_sep.axioms(2) homo_sep_disj.sep_disj_homo_semi)
+
+lemma sep_orthogonal_1_comp:
+  \<open> g ` Dg \<subseteq> Df
+\<Longrightarrow> sep_orthogonal_1 f Df \<Longrightarrow> sep_orthogonal_1 g Dg \<Longrightarrow> sep_orthogonal_1 (f o g) Dg\<close>
+  unfolding sep_orthogonal_1_def
+  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
+      metis image_subsetI sep_orthogonal_comp)
+
+lemma sep_orthogonal_monoid_comp[locale_intro]:
+  \<open> g ` Dg \<subseteq> Df \<Longrightarrow> sep_orthogonal_monoid f Df \<Longrightarrow> sep_orthogonal_monoid g Dg \<Longrightarrow> sep_orthogonal_monoid (f o g) Dg\<close>
+  unfolding sep_orthogonal_monoid_def using sep_orthogonal_1_comp .
+
+lemma share_orthogonal_homo_composition[locale_intro]:
+  assumes dom_trans: \<open>g ` Dg \<subseteq> Df\<close>
+      and f: \<open>share_orthogonal_homo f Df\<close>
+      and g: \<open>sep_orthogonal_monoid g Dg\<close>
+    shows \<open>share_orthogonal_homo (f o g) Dg\<close>
+proof -
+  interpret f: share_orthogonal_homo f Df using f .
+  interpret g: sep_orthogonal_monoid g Dg using g .
+  have f': \<open>sep_orthogonal_monoid f Df\<close> by (simp add: f.sep_orthogonal_monoid_axioms)
+  have g': \<open>sep_orthogonal_monoid g Dg\<close> by (simp add: g.sep_orthogonal_monoid_axioms)
+  have t[simp]: \<open>x \<in> Dg \<Longrightarrow> g x \<in> Df\<close> for x using dom_trans by blast 
+
+  show ?thesis
+    unfolding share_orthogonal_homo_def share_orthogonal_homo_axioms_def
+    apply (auto simp add: f.share_orthogonal)
+    apply (meson dom_trans f' g' sep_orthogonal_monoid_comp)
+    using g.sep_orthogonal apply auto[1]
+    using g.homo_mult apply auto[1]
+    using f.\<psi>_self_disj t by blast
+
+qed
 
 
 subsection \<open>Option\<close>
@@ -1281,7 +1285,7 @@ lemma sep_disj_option[simp]:
 instance ..
 end
 
-lemma sep_disj_option_nonsepable[simp]:
+lemma sep_disj_option_discrete[simp]:
   \<open>x ## Some y \<longleftrightarrow> x = None\<close>
   \<open>Some y ## x \<longleftrightarrow> x = None\<close>
   for y :: \<open>'a :: discrete_semigroup\<close>
@@ -1441,11 +1445,30 @@ instance apply (standard)
   apply (case_tac a; simp) .
 end
 
-subsubsection \<open>Other Properties\<close>
+subsubsection \<open>Homomorphism\<close>
 
-lemma map_option_homo_one[simp]:
+lemma homo_one_map_option[simp, locale_intro]:
   \<open>homo_one (map_option f)\<close>
   unfolding homo_one_def by simp
+
+lemma homo_mul_carrier_map_option[simp, locale_intro]:
+  \<open> homo_mul_carrier f
+\<Longrightarrow> homo_mul_carrier (map_option f)\<close>
+  unfolding homo_mul_carrier_def
+  by (clarsimp simp add: split_option_all)
+
+lemma homo_sep_disj_map_option:
+  \<open> homo_sep_disj f
+\<Longrightarrow> homo_sep_disj (map_option f) \<close>
+  unfolding homo_sep_disj_def
+  by (clarsimp simp add: split_option_all)
+
+lemma
+  \<open> homo_sep_disj  \<close>
+
+lemma
+  \<open> closed_homo_sep_disj  \<close>
+
 
 
 
@@ -1752,48 +1775,6 @@ lemma fun_updt_0_0[simp]:
   \<open>0(x := 0) = 0\<close>
   unfolding fun_eq_iff by simp
 
-paragraph \<open>Homomorphisms\<close>
-
-lemma homo_add_funcomp[locale_intro]:
-  assumes hom_f: \<open>homo_add f\<close>
-  shows \<open>homo_add ((o) f)\<close>
-proof -
-  interpret f: homo_add f using hom_f .
-  show ?thesis by (standard; simp add: fun_eq_iff plus_fun f.homo_add)
-qed
-
-lemma homo_zero_funcomp[locale_intro]:
-  assumes hom_f: \<open>homo_zero f\<close>
-  shows \<open>homo_zero ((o) f)\<close>
-proof -
-  interpret f: homo_zero f using hom_f .
-  show ?thesis by (standard; simp add: fun_eq_iff)
-qed
-
-lemma homo_mult_funcomp[locale_intro]:
-  assumes hom_f: \<open>homo_mult f\<close>
-  shows \<open>homo_mult ((o) f)\<close>
-proof -
-  interpret f: homo_mult f using hom_f .
-  show ?thesis by (standard; simp add: fun_eq_iff times_fun f.homo_mult)
-qed
-
-lemma homo_one_funcomp[locale_intro]:
-  assumes hom_f: \<open>homo_one f\<close>
-  shows \<open>homo_one ((o) f)\<close>
-proof -
-  interpret f: homo_one f using hom_f .
-  show ?thesis by (standard; simp add: fun_eq_iff)
-qed
-
-lemma (in homo_zero) fun_updt_single_point[simp]:
-  \<open>\<phi> o 0(i := x) = 0(i := \<phi> x)\<close>
-  unfolding fun_eq_iff by simp
-
-lemma fun_updt_single_point[simp]:
-  \<open>homo_one \<phi> \<Longrightarrow> \<phi> o 1(i := x) = 1(i := \<phi> x)\<close>
-  unfolding fun_eq_iff homo_one_def by simp
-
 
 paragraph \<open>Partial Multiplicative Algebras\<close>
 
@@ -1818,11 +1799,11 @@ instance "fun" :: (type,comm_sep_disj) comm_sep_disj
 lemma sep_disj_fun[simp]: \<open>(f ## g) \<Longrightarrow> f x ## g x\<close>
   unfolding sep_disj_fun_def by blast
 
-lemma sep_disj_fun_nonsepable:
+lemma sep_disj_fun_discrete:
   \<open>f x = Some v \<Longrightarrow> f ## g \<Longrightarrow> g x = None\<close>
   \<open>f x = Some v \<Longrightarrow> g ## f \<Longrightarrow> g x = None\<close>
   for v :: \<open>'a :: discrete_semigroup\<close>
-  by (metis sep_disj_fun sep_disj_option_nonsepable)+
+  by (metis sep_disj_fun sep_disj_option_discrete)+
 
 
 instance "fun" :: (type,mult_1) mult_1
@@ -2034,6 +2015,87 @@ qed
 lemma share_fun_updt[simp]:
   \<open>share n (f(k := v)) = (share n f)(k := share n v)\<close>
   unfolding share_fun_def fun_eq_iff by simp
+
+
+subsubsection \<open>Homomorphisms\<close>
+
+lemma homo_add_funcomp[locale_intro]:
+  assumes hom_f: \<open>homo_add f\<close>
+  shows \<open>homo_add ((o) f)\<close>
+proof -
+  interpret f: homo_add f using hom_f .
+  show ?thesis by (standard; simp add: fun_eq_iff plus_fun f.homo_add)
+qed
+
+lemma homo_zero_funcomp[locale_intro]:
+  assumes hom_f: \<open>homo_zero f\<close>
+  shows \<open>homo_zero ((o) f)\<close>
+proof -
+  interpret f: homo_zero f using hom_f .
+  show ?thesis by (standard; simp add: fun_eq_iff)
+qed
+
+lemma homo_mult_funcomp[locale_intro]:
+  assumes hom_f: \<open>homo_mult f\<close>
+  shows \<open>homo_mult ((o) f)\<close>
+proof -
+  interpret f: homo_mult f using hom_f .
+  show ?thesis by (standard; simp add: fun_eq_iff times_fun f.homo_mult)
+qed
+
+lemma homo_one_funcomp[simp, locale_intro]:
+  assumes hom_f: \<open>homo_one f\<close>
+  shows \<open>homo_one ((o) f)\<close>
+proof -
+  interpret f: homo_one f using hom_f .
+  show ?thesis by (standard; simp add: fun_eq_iff)
+qed
+
+lemma homo_mul_funcomp[simp, locale_intro]:
+  \<open> homo_mul_carrier f
+\<Longrightarrow> homo_mul_carrier ((o) f) \<close>
+  unfolding homo_mul_carrier_def
+  by clarsimp
+
+lemma homo_sep_disj_funcomp[simp, locale_intro]:
+  \<open> homo_sep_disj f
+\<Longrightarrow> homo_sep_disj ((o) f) \<close>
+  unfolding homo_sep_disj_def
+  by (clarsimp simp add: sep_disj_fun_def)
+
+lemma closed_homo_sep_disj_funcomp[simp, locale_intro]:
+  \<open> closed_homo_sep_disj f
+\<Longrightarrow> closed_homo_sep_disj ((o) f) \<close>
+  unfolding closed_homo_sep_disj_def
+  by (clarsimp simp add: sep_disj_fun_def)
+
+lemma homo_sep_mult_funcomp[simp, locale_intro]:
+  \<open> homo_sep_mult f
+\<Longrightarrow> homo_sep_mult ((o) f) \<close>
+  unfolding homo_sep_mult_def
+  by (clarsimp simp add: fun_eq_iff times_fun_def)
+
+lemma homo_sep_funcomp[simp, locale_intro]:
+  \<open> homo_sep f
+\<Longrightarrow> homo_sep ((o) f) \<close>
+  unfolding homo_sep_def
+  by (clarsimp simp add: fun_eq_iff times_fun_def)
+
+lemma closed_homo_sep_funcomp[simp, locale_intro]:
+  \<open> closed_homo_sep f
+\<Longrightarrow> closed_homo_sep ((o) f) \<close>
+  unfolding closed_homo_sep_def
+  by (clarsimp simp add: fun_eq_iff times_fun_def)
+
+lemma (in homo_zero) fun_updt_single_point[simp]:
+  \<open>\<phi> o 0(i := x) = 0(i := \<phi> x)\<close>
+  unfolding fun_eq_iff by simp
+
+lemma fun_updt_single_point[simp]:
+  \<open>homo_one \<phi> \<Longrightarrow> \<phi> o 1(i := x) = 1(i := \<phi> x)\<close>
+  unfolding fun_eq_iff homo_one_def by simp
+
+
 
 
 subsection \<open>Finite Map\<close>
@@ -2308,7 +2370,7 @@ lemma sep_disj_partial_map_disjoint:
   "f ## g \<longleftrightarrow> dom f \<inter> dom g = {}"
   for f :: "'a \<rightharpoonup> ('b :: discrete_semigroup)"
   unfolding sep_disj_fun_def sep_disj_option_def disjoint_iff
-  by (smt (verit, ccfv_SIG) domD domIff nonsepable_disj option.simps(4) option.simps(5))
+  by (smt (verit, ccfv_SIG) domD domIff discrete_disj option.simps(4) option.simps(5))
 
 
 lemma sep_disj_partial_map_some_none:
@@ -2333,7 +2395,7 @@ lemma discrete_semigroup_sepdisj_fun:
   \<open>a ## 1(k \<mapsto> x) \<Longrightarrow> a ## 1(k := any)\<close>
   for x :: \<open>'b::discrete_semigroup\<close>
   unfolding sep_disj_fun_def
-  by (metis fun_upd_other fun_upd_same sep_magma_1_right sep_disj_option_nonsepable(1))
+  by (metis fun_upd_other fun_upd_same sep_magma_1_right sep_disj_option_discrete(1))
 
 
 lemma fun_sep_disj_fupdt[simp]:
@@ -2564,22 +2626,22 @@ qed
 
 subsubsection \<open>Subsumption\<close>
 
-lemma nonsepable_partial_map_subsumption:
+lemma discrete_partial_map_subsumption:
   \<open>f \<preceq>\<^sub>S\<^sub>L g \<Longrightarrow> k \<in> dom1 f \<Longrightarrow> g k = f k\<close>
   for f :: \<open>'k \<Rightarrow> 'v::discrete_monoid\<close>
   unfolding join_sub_def
   apply (clarsimp simp add: times_fun)
   by (metis disjoint_dom1_eq_1(1) mult_1_class.mult_1_left sep_disj_commute sep_disj_dom1_disj_disjoint)
 
-lemma nonsepable_1_fupdt_subsumption:
+lemma discrete_1_fupdt_subsumption:
   \<open> 1(k := v) \<preceq>\<^sub>S\<^sub>L objs
 \<Longrightarrow> v \<noteq> 1
 \<Longrightarrow> objs k = v\<close>
   for v :: \<open>'v::discrete_monoid\<close>
-  using nonsepable_partial_map_subsumption[where f=\<open>1(k := v)\<close>]
+  using discrete_partial_map_subsumption[where f=\<open>1(k := v)\<close>]
   by (clarsimp simp add: times_fun)
 
-lemma nonsepable_partial_map_subsumption_L2:
+lemma discrete_partial_map_subsumption_L2:
   \<open> 1(k := v) \<preceq>\<^sub>S\<^sub>L objs
 \<Longrightarrow> v \<subseteq>\<^sub>m objs k\<close>
   for v :: \<open>'b \<Rightarrow> 'c::discrete_semigroup option\<close>
@@ -2706,7 +2768,7 @@ subsubsection \<open>Convert a function to sharing or back\<close>
 abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
-
+(* TODO: FIX ME!
 lemma share_orthogonal_homo_to_share[locale_witness]:
   \<open>share_orthogonal_homo (to_share::'a::{sep_carrier, discrete_semigroup} option \<Rightarrow> 'a share option) UNIV\<close>
 proof
@@ -2729,7 +2791,7 @@ proof
     by (metis join_strict_positivity less_numeral_extra(1) sep_disj_multD2 sep_disj_share)
   show \<open>1 \<in> UNIV\<close> by simp
 qed
-
+*)
 
 lemma to_share_kernel_is_1[locale_witness]:
   \<open> 1 \<in> D
@@ -2829,6 +2891,8 @@ lemma to_share_ringop_id[simp]:
 
 
 subsection \<open>Non-sepable Semigroup\<close>
+
+(*TODO: rename this to discrete injector or other*)
 
 datatype 'a nosep = nosep (dest: 'a)
 hide_const (open) dest

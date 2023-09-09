@@ -261,7 +261,7 @@ lemma val_map_eq_index_value_eq:
       using Map_of_Val_dom Map_of_Val_pull index_value_welltyp prems(1) prems(3) by auto
     have t2: \<open>dom (pull_map idx (Map_of_Val v)) =
               dom (pull_map idx u) \<union> dom (Map_of_Val u_idx)\<close>
-      by (metis dom1_dom dom1_mult dom_map_option_comp map_option_homo_one prems(4) prems(5) pull_map_funcomp pull_map_homo_mult pull_map_sep_disj pull_push_map)
+      by (metis dom1_dom dom1_mult dom_map_option_comp homo_one_map_option prems(4) prems(5) pull_map_funcomp pull_map_homo_mult pull_map_sep_disj pull_push_map)
     have t3: \<open>dom (pull_map idx u) \<inter> dom (Map_of_Val u_idx) = {}\<close>
       by (metis dom1_dom dom_map_option_comp prems(5) pull_map_sep_disj pull_push_map sep_disj_dom1_disj_disjoint)
     have t4: \<open>dom (Map_of_Val u_idx) = Dom_of_TY (index_type idx TY)\<close>
@@ -271,7 +271,7 @@ lemma val_map_eq_index_value_eq:
     then have \<open>pull_map idx (map_option nosep \<circ> Map_of_Val v) = (map_option nosep \<circ> Map_of_Val u_idx)\<close>
       by (simp add: prems(4) pull_map_homo_mult)
     then have \<open>pull_map idx (Map_of_Val v) = Map_of_Val u_idx\<close>
-      by (smt (verit) fun.inj_map_strong map_option_homo_one nosep.inject option.inj_map_strong pull_map_funcomp)
+      by (smt (verit) fun.inj_map_strong homo_one_map_option nosep.inject option.inj_map_strong pull_map_funcomp)
     then show ?thesis
       by (metis Map_of_Val_inj Map_of_Val_pull index_value_welltyp prems(1) prems(2) prems(3))
   qed .
@@ -286,7 +286,7 @@ lemma val_map_mod_index_value:
     r * idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u) = map_option nosep \<circ> Map_of_Val x \<Longrightarrow>
     r * idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v) = map_option nosep \<circ> Map_of_Val (index_mod_value idx (\<lambda>_. v) x)\<close>
   by (simp add: Map_of_Val_mod map_option_funcomp_map_add,
-      smt (verit) Map_of_Val_dom dom_map_option_comp map_add_subsumed_dom map_le_implies_dom_le map_option_homo_one pull_push_map push_map_dom_eq push_map_homo push_pull_map sep_disj_partial_map_disjoint times_fun_map_add_right)
+      smt (verit) Map_of_Val_dom dom_map_option_comp map_add_subsumed_dom map_le_implies_dom_le homo_one_map_option pull_push_map push_map_dom_eq push_map_homo push_pull_map sep_disj_partial_map_disjoint times_fun_map_add_right)
 
 lemma val_map_mod_index_value_projection:
   \<open> valid_index TY idx \<Longrightarrow>
@@ -353,7 +353,7 @@ lemma fiction_Map_of_Val_ins_refinement:
         \<subseteq> ({(a, a ++ (idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)))} \<s>\<u>\<b>\<j> a. dom a = Dom_of_TY TY)\<close>
       apply (clarsimp simp add: set_eq_iff ExSet_image Subjection_image;
              auto simp add: ExSet_expn Subjection_expn split_nosep_ex inj_image_mem_iff)
-      apply (metis Map_of_Val_mod map_option_funcomp_map_add map_option_homo_one prems(1) prems(2) push_map_homo)
+      apply (metis Map_of_Val_mod map_option_funcomp_map_add homo_one_map_option prems(1) prems(2) push_map_homo)
       using Map_of_Val_dom apply blast
       using Map_of_Val_dom by blast
     note t2 = this[THEN t1, THEN refinement_sub_fun]

@@ -508,7 +508,13 @@ lemma \<S>_Homo\<^sub>E [\<phi>reason_template name \<S>\<^sub>E []]:
   unfolding Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
   by clarsimp
 
-text \<open>Does the reverse transformation exists?. The commutativity between \<open>F\<close> and \<open>\<S>\<close> gonna be a problem.\<close>lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
+text \<open>Does the reverse transformation exists?. The commutativity between \<open>F\<close> and \<open>\<S>\<close> gonna be a problem.\<close>
+
+
+
+(* TODO: meta analysis, and commutativity of \<open>\<S>\<close>
+
+lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
 
 lemma
   \<open> Transformation_Functor Fa Fb T (\<S> T) D R mapper
@@ -536,6 +542,7 @@ lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
     by (insert prems(1)[THEN spec[where x=s], THEN spec[where x=\<open>\<lambda>a b. b = {a}\<close>], simplified]
                prems(2),
         clarsimp) .
+*)
 
 lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
   \<open> Functional_Transformation_Functor Fa Fb T (\<S> T) D R pm fm
@@ -558,6 +565,7 @@ lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
                prems(2),
         clarsimp) .
 *)
+
 
 text \<open>The above rules are interesting but essentially useless as it is replaced by the following rule,
   which eliminates any \<open>\<S>\<close> in a ready sequent of CoP.

@@ -642,7 +642,7 @@ end
 subsection \<open>Nosep Monolithic Resource\<close>
   \<comment> \<open>The resource non-sepable and having type shape \<^typ>\<open>'a::discrete_semigroup option\<close>\<close>
 
-locale nonsepable_mono_resource =
+locale discrete_mono_resource =
   resource Res
 for Res :: "'T nosep option resource_entry"
 begin
@@ -661,7 +661,7 @@ subsubsection \<open>Interp Agreement\<close>
  *)
 
 locale agreement_fiction_for_nosepable_mono_resource =
-   R: nonsepable_mono_resource Res
+   R: discrete_mono_resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.fiction_agree\<close>
 for Res :: "'T nosep option resource_entry"
 and Fic :: "'T nosep agree option fiction_entry"
@@ -877,7 +877,7 @@ lemma raw_unit_assertion_implies[simp]:
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
   apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo
       prj.homo_mult sep_disj_fun_def times_fun)
-  by (metis (mono_tags, lifting) sep_disj_option_nonsepable(1) sep_mult_commute times_option(2))
+  by (metis (mono_tags, lifting) sep_disj_option_discrete(1) sep_mult_commute times_option(2))
 
 
 end
@@ -922,8 +922,8 @@ lemma partial_implies:
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (1(k \<mapsto> Share n v)))
 \<Longrightarrow> R.get res k = Some v\<close>
   using partial_implies_raw[where x=\<open>1(k \<mapsto> v)\<close> and n=n, simplified]
-    nonsepable_partial_map_subsumption
-  by (smt (verit, ccfv_threshold) fun_split_1 fun_upd_same join_sub_def one_option_def sep_disj_fun_def sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep)
+    discrete_partial_map_subsumption
+  by (smt (verit, ccfv_threshold) fun_split_1 fun_upd_same join_sub_def one_option_def sep_disj_fun_def sep_disj_option_discrete(1) times_fupdt_1_apply_sep)
 
 lemma partial_implies'[simp]:
   assumes FS: \<open>r \<in> FIC.SPACE\<close>
@@ -956,13 +956,13 @@ lemma VS_divide_ownership:
 *)
 end
 
-locale share_fiction_for_partial_mapping_resource_nonsepable =
+locale share_fiction_for_partial_mapping_resource_discrete =
   share_fiction_for_partial_mapping_resource Res Fic
 for Res :: "('key \<Rightarrow> 'val nosep option) resource_entry"
 and Fic :: "('key \<Rightarrow> 'val nosep share option) fiction_entry"
 begin
 
-lemma \<phi>nonsepable_normalize:
+lemma \<phi>discrete_normalize:
   \<open>(x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some (Nosep Itself)))))
  = (nosep x \<Ztypecolon> \<phi> (share.\<phi> (\<phi>MapAt addr (\<phi>Some Itself))))\<close>
   unfolding set_eq_iff by (simp add: \<phi>expns)
@@ -1001,7 +1001,7 @@ lemma "__updt_rule__":
           prj.homo_mult times_fun_upd)
   subgoal premises prems for x aa proof -
     have [simp]: \<open>aa k k2 = None\<close>
-      by (metis fun_upd_same prems(8) sep_disj_fun_def sep_disj_option_nonsepable(1))
+      by (metis fun_upd_same prems(8) sep_disj_fun_def sep_disj_option_discrete(1))
     then have [simp]:
         \<open>map_fun_at (map_fun_at (\<lambda>_. u) k2) k (aa * 1(k := 1(k2 \<mapsto> any)))
             = aa * 1(k := 1(k2 := u))\<close>
@@ -1043,7 +1043,7 @@ lemma "__dispose_rule__":
       have "aa k ## any"
         by (metis fun_upd_same prems(9) sep_disj_fun)
       then have "\<forall>ka. 1 = aa k ka \<or> 1 = any ka"
-        by (metis one_option_def option.exhaust sep_disj_fun_nonsepable(2))
+        by (metis one_option_def option.exhaust sep_disj_fun_discrete(2))
       then show ?thesis
         by (metis domIff f1 mult_1_class.mult_1_right one_option_def prems(2) times_fun)
     qed
@@ -1124,7 +1124,7 @@ lemma share_fiction_partially_implies:
       by (metis sep_disj_share share.collapse share.inject times_share)
 
     then show ?thesis apply (simp add: t2 times_fun)
-      by (metis mult_1_class.mult_1_left one_option_def prems(9) sep_disj_fun sep_disj_option_nonsepable(1) t2)
+      by (metis mult_1_class.mult_1_left one_option_def prems(9) sep_disj_fun sep_disj_option_discrete(1) t2)
   qed .
 
 lemma
@@ -1142,7 +1142,7 @@ lemma raw_unit_assertion_implies[simp]:
   unfolding \<phi>Res_Sat_def \<phi>Res_Spec_def
   apply (clarsimp simp add: times_set_def \<r>_valid_split' inject_wand_homo
       prj.homo_mult sep_disj_fun_def times_fun)
-  by (metis (full_types) fun_upd_same sep_disj_option_nonsepable(1) times_option(3))
+  by (metis (full_types) fun_upd_same sep_disj_option_discrete(1) times_option(3))
 
 lemma raw_unit_assertion_implies':
   \<open> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> R * { mk (1(k := f))}
@@ -1153,7 +1153,7 @@ lemma raw_unit_assertion_implies':
     have t1[simp]: \<open>inject a ## inject (1(k := f))\<close>
       using prems(6) by fastforce
     show ?thesis apply (clarsimp simp add: prj.homo_mult[OF t1] sep_disj_fun_def times_fun map_le_def)
-      by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv mult_1_class.mult_1_left one_option_def prems(6) sep_disj_fun_nonsepable(2))
+      by (metis (mono_tags, lifting) fun_sep_disj_1_fupdt(1) fun_upd_triv mult_1_class.mult_1_left one_option_def prems(6) sep_disj_fun_discrete(2))
   qed .
 
 lemma raw_unit_assertion_implies''[simp]:
@@ -1189,8 +1189,8 @@ lemma partial_implies':
 \<Longrightarrow> \<s>\<t>\<a>\<t>\<e> res \<i>\<s> \<I> INTERP (r * mk (1(k := 1(k2 \<mapsto> Share n v))))
 \<Longrightarrow> R.get res k k2 = Some v\<close>
   using partial_implies_raw[where x=\<open>1(k := 1(k2 \<mapsto> v))\<close> and n=n, simplified]
-    nonsepable_partial_map_subsumption
-  by (smt (verit, del_insts) fun_upd_same join_sub_def sep_disj_fun_def sep_disj_option_nonsepable(1) times_fupdt_1_apply_sep times_option(3))
+    discrete_partial_map_subsumption
+  by (smt (verit, del_insts) fun_upd_same join_sub_def sep_disj_fun_def sep_disj_option_discrete(1) times_fupdt_1_apply_sep times_option(3))
 
 lemma partial_implies'':
   assumes FS: \<open>r \<in> FIC.SPACE\<close>
@@ -1374,13 +1374,13 @@ lemma \<phi>R_get_res[intro!]:
 
 end
 
-paragraph \<open>nonsepable_mono_resource\<close>
+paragraph \<open>discrete_mono_resource\<close>
 
-definition (in nonsepable_mono_resource) \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
+definition (in discrete_mono_resource) \<phi>R_get_res_entry :: \<open>('T \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc\<close>
   where \<open>\<phi>R_get_res_entry F = \<phi>R_get_res (\<lambda>v. case v of Some v' \<Rightarrow> F (nosep.dest v')
                                                       | _ \<Rightarrow> (\<lambda>_. {Invalid}))\<close>
 
-lemma (in nonsepable_mono_resource) \<phi>R_get_res_entry:
+lemma (in discrete_mono_resource) \<phi>R_get_res_entry:
   \<open> get res = Some (nosep v)
 \<Longrightarrow> F v res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E
 \<Longrightarrow> \<phi>R_get_res_entry F res \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> Y \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
