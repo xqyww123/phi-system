@@ -132,6 +132,8 @@ text \<open>A domainoid extraction \<open>\<delta>\<close> is a closed homomorph
     \<open>Rules giving domainoid extraction \<open>\<delta>\<close> on the given concrete algbera \<open>'c\<close>\<close>
  and domainoid_fallback = (1, [1,1]) for \<open>domainoid TYPE('c::sep_magma) \<delta>\<close>
     \<open>The identity homomorphism is always a domainoid extraction from one algebra to itself\<close>
+ and domainoid_cut = (1000, [1000,1030]) for \<open>domainoid TYPE('c::sep_magma) \<delta>\<close> in domainoids
+    \<open>Cutting rules\<close>
 
 declare [[\<phi>reason_default_pattern \<open>domainoid ?TY _\<close> \<Rightarrow> \<open>domainoid ?TY _\<close> (100) ]]
 
@@ -438,22 +440,25 @@ lemma [\<phi>reason %domainoid_fallback]:
   unfolding domainoid_def
   by simp
 
+lemma [\<phi>reason %domainoid_cut]:
+  \<open> domainoid TYPE('c::discrete_semigroup) (\<lambda>_. nosep ()) \<close>
+  unfolding domainoid_def
+  by simp
+
 lemma [\<phi>reason %domainoids]:
   \<open> domainoid TYPE('c) d
 \<Longrightarrow> domainoid TYPE('k \<Rightarrow> 'c::sep_magma) ((o) d) \<close>
   unfolding domainoid_def
   by simp
 
-lemma
+lemma [\<phi>reason %domainoids]:
   \<open> domainoid TYPE('c) d
 \<Longrightarrow> domainoid TYPE('c::sep_magma option) (map_option d) \<close>
-  unfolding domainoid_def 
+  unfolding domainoid_def
+  by simp
 
-lemma [\<phi>reason %domainoids]:
-  \<open> domainoid TYPE('c::discrete_semigroup option) (map_option (\<lambda>_.  nosep ())) \<close>
-  unfolding domainoid_def closed_homo_sep_def closed_homo_sep_disj_def homo_sep_def
-            homo_sep_disj_def homo_sep_mult_def
-  by (clarsimp simp add: split_option_all)
+text \<open>\<open>'c share\<close> has no meaningful domainoid as that structure inevitably involves equality checking
+  of inner data (luckily we don't need that domainoid).\<close>
 
 
 end

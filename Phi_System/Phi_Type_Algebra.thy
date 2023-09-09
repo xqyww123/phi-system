@@ -1,6 +1,7 @@
 theory Phi_Type_Algebra
   imports IDE_CP_Reasoning2
           Phi_Algb_Pre
+          Phi_Domainoid
           Phi_Algebras.LCRO_Interval (*temporarily we add this for testing but will be moved later*)
   keywords "\<phi>type_def" "\<phi>property_deriver" "let_\<phi>type" :: thy_defn
        and "deriving" :: quasi_command

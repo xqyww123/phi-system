@@ -351,7 +351,7 @@ lemmas [\<phi>reason %algb_cut] =
     homo_sep_mult_id
     homo_one_id
     homo_sep_id
-    closed_homo_sep
+    closed_homo_sep_id
     homo_mul_carrier_id
 
 subsubsection \<open>Functional Pointwise\<close>

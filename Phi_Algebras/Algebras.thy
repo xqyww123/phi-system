@@ -9,6 +9,9 @@ setup \<open>
 #> Attrib.setup \<^binding>\<open>locale_witness\<close> (Scan.succeed Locale.witness_add) ""
 \<close> (*TODO: move this*)
 
+(*TODO: do not add \<open>locale_intro\<close> everywhere, the performance of locale_intro_tactic is bad.
+  They do not use an indexing structure. The Locale package of Isabelle is not that good. *)
+
 section \<open>Algebra Structures\<close>
 
 subsection \<open>Preliminary Structures\<close>
@@ -16,13 +19,17 @@ subsection \<open>Preliminary Structures\<close>
 subsubsection \<open>Homomorphism-like\<close>
 
 locale homo_one =
-  fixes \<phi> :: " 'a::one \<Rightarrow> 'b::one "
-  assumes homo_one[iff]: "\<phi> 1 = 1"
+  fixes \<psi> :: " 'a::one \<Rightarrow> 'b::one "
+  assumes homo_one[iff]: "\<psi> 1 = 1"
 begin
 
 declare homo_one_axioms[simp]
 
 end
+
+(*TODO: replace kernel_is_1*)
+locale simple_homo_mul = homo_one +
+  assumes kernel_is_1[iff]: \<open>\<psi> x = 1 \<longleftrightarrow> x = 1\<close>
 
 locale homo_zero =
   fixes \<phi> :: \<open> 'a::zero \<Rightarrow> 'b::zero \<close>
@@ -541,7 +548,7 @@ text \<open>
   It provides more flexibility where the target algebra \<open>\<BB>\<close>
   can define more behaviors between the projected elements of the source algebra \<open>\<A>\<close>.
   As an instance showing the value of the flexibility, we consider
-  the insertion into a permission algebra from a discrete unital algebra (where the separation
+  the embedding into a permission algebra from a discrete unital algebra (where the separation
   between any two elements are undefined unless one of the element is the identity)
   \<open>\<psi> 1 = 1    \<psi> x = Perm(1,x)    where fraction p in Perm(p,x) is the permission, and 1 is the total permission\<close>
   it requires this flexibility if we allow super-permission in our formalization.
@@ -555,6 +562,11 @@ text \<open>
   semimodule property of the permission algebra.
   The super-permission frees us from checking the overflow of the permission addition and makes
   the expressiveness more flexible.
+
+  (Unclosed separation homomorphism does not represent any problem in this case,
+   because the domain domain of the embedding is usually structures of memory objects,
+   of which the domainoid is usually determined, and therefore of which the separation disjunction can be
+   decided.)
 
   By contrast, if the homomorphism is not assumed to be closed, i.e., from \<open>\<psi> x ## \<psi> y\<close> we cannot have \<open>x ## y\<close>,
   we can only have one side transformation \<open>\<psi> (x * y) \<longrightarrow> \<psi> x * \<psi> y\<close> but not the other side
@@ -702,11 +714,51 @@ sublocale cancl_sep_orthogonal_monoid ..
 end
 
 
-subsubsection \<open>From Discrete Algebra\<close>
+subsubsection \<open>With Discrete Algebra\<close>
 
-lemma
+lemma homo_sep_disj_discrete[simp]:
   \<open>homo_sep_disj \<psi>\<close>
-  for \<psi> :: \<open>'a::discrete_semigroup\<close>
+  for \<psi> :: \<open>'a::discrete_semigroup \<Rightarrow> 'b::sep_disj\<close>
+  unfolding homo_sep_disj_def
+  by simp
+
+lemma homo_sep_disj_discrete_1[simp]:
+  \<open> homo_one \<psi>
+\<Longrightarrow> homo_sep_disj \<psi>\<close>
+  for \<psi> :: \<open>'a::discrete_monoid \<Rightarrow> 'b::sep_magma_1\<close>
+  unfolding homo_sep_disj_def homo_one_def
+  by simp
+
+lemma closed_homo_sep_disj_discrete[simp]:
+  \<open>closed_homo_sep_disj \<psi>\<close>
+  for \<psi> :: \<open>'a::discrete_semigroup \<Rightarrow> 'b::discrete_semigroup\<close>
+  unfolding closed_homo_sep_disj_def
+  by simp
+
+lemma closed_homo_sep_disj_discrete_1[simp]:
+  \<open> simple_homo_mul \<psi>
+\<Longrightarrow> closed_homo_sep_disj \<psi>\<close>
+  for \<psi> :: \<open>'a::discrete_monoid \<Rightarrow> 'b::discrete_monoid\<close>
+  unfolding closed_homo_sep_disj_def simple_homo_mul_def simple_homo_mul_axioms_def
+  by simp
+
+lemma homo_sep_mult_discrete[simp]:
+  \<open>homo_sep_mult \<psi>\<close>
+  for \<psi> :: \<open>'a::discrete_semigroup \<Rightarrow> 'b::sep_magma\<close>
+  unfolding homo_sep_mult_def
+  by simp
+
+lemma homo_sep_discrete[simp]:
+  \<open>homo_sep \<psi>\<close>
+  for \<psi> :: \<open>'a::discrete_semigroup \<Rightarrow> 'b::sep_magma\<close>
+  unfolding homo_sep_def
+  by simp
+
+lemma closed_homo_sep_discrete[simp]:
+  \<open>closed_homo_sep \<psi>\<close>
+  for \<psi> :: \<open>'a::discrete_semigroup \<Rightarrow> 'b::discrete_semigroup\<close>
+  unfolding closed_homo_sep_def
+  by simp
 
 
 subsection \<open>Partial Additive Structures\<close>
@@ -1108,6 +1160,11 @@ lemma homo_one_id[simp, locale_intro]:
   unfolding homo_one_def
   by simp
 
+lemma simple_homo_mul_id[simp, locale_intro]:
+  \<open> simple_homo_mul (\<lambda>x. x) \<close>
+  unfolding simple_homo_mul_def simple_homo_mul_axioms_def
+  by simp
+
 lemma homo_mul_carrier_id[simp, locale_intro]:
   \<open>homo_mul_carrier (\<lambda>x. x)\<close>
   unfolding homo_mul_carrier_def
@@ -1147,11 +1204,20 @@ lemma
 
 subsection \<open>Functional Composition\<close>
 
+text \<open>Most of homomorphic properties have both identity rule and composition rule, forming them a sub-category.\<close>
+
 lemma homo_one_comp[simp, locale_intro]:
   \<open> homo_one f
 \<Longrightarrow> homo_one g
 \<Longrightarrow> homo_one (f o g) \<close>
   unfolding homo_one_def
+  by simp
+
+lemma simple_homo_mul_comp[simp, locale_intro]:
+  \<open> simple_homo_mul f
+\<Longrightarrow> simple_homo_mul g
+\<Longrightarrow> simple_homo_mul (f o g) \<close>
+  unfolding simple_homo_mul_def simple_homo_mul_axioms_def
   by simp
 
 lemma homo_mul_carrier_comp[simp, locale_intro]:
@@ -1451,25 +1517,46 @@ lemma homo_one_map_option[simp, locale_intro]:
   \<open>homo_one (map_option f)\<close>
   unfolding homo_one_def by simp
 
+lemma simple_homo_mul_map_option[simp, locale_intro]:
+  \<open>simple_homo_mul (map_option f)\<close>
+  unfolding simple_homo_mul_def simple_homo_mul_axioms_def
+  by simp
+
 lemma homo_mul_carrier_map_option[simp, locale_intro]:
   \<open> homo_mul_carrier f
 \<Longrightarrow> homo_mul_carrier (map_option f)\<close>
   unfolding homo_mul_carrier_def
   by (clarsimp simp add: split_option_all)
 
-lemma homo_sep_disj_map_option:
+lemma homo_sep_disj_map_option[simp, locale_intro]:
   \<open> homo_sep_disj f
 \<Longrightarrow> homo_sep_disj (map_option f) \<close>
   unfolding homo_sep_disj_def
   by (clarsimp simp add: split_option_all)
 
-lemma
-  \<open> homo_sep_disj  \<close>
+lemma split_option_all_map_option[simp, locale_intro]:
+  \<open> closed_homo_sep_disj f
+\<Longrightarrow> closed_homo_sep_disj (map_option f) \<close>
+  unfolding closed_homo_sep_disj_def
+  by (clarsimp simp add: split_option_all)
 
-lemma
-  \<open> closed_homo_sep_disj  \<close>
+lemma homo_sep_mult_map_option[simp, locale_intro]:
+  \<open> homo_sep_mult f
+\<Longrightarrow> homo_sep_mult (map_option f)  \<close>
+  unfolding homo_sep_mult_def
+  by (clarsimp simp add: split_option_all)
 
+lemma homo_sep_map_option[simp, locale_intro]:
+  \<open> homo_sep f
+\<Longrightarrow> homo_sep (map_option f)  \<close>
+  unfolding homo_sep_def
+  by (clarsimp simp add: split_option_all)
 
+lemma closed_homo_sep_map_option[simp, locale_intro]:
+  \<open> closed_homo_sep f
+\<Longrightarrow> closed_homo_sep (map_option f) \<close>
+  unfolding closed_homo_sep_def
+  by (clarsimp simp add: split_option_all)
 
 
 subsection \<open>Product\<close>
@@ -2050,6 +2137,12 @@ proof -
   interpret f: homo_one f using hom_f .
   show ?thesis by (standard; simp add: fun_eq_iff)
 qed
+
+lemma simple_homo_mul_funcomp[simp, locale_intro]:
+  \<open> simple_homo_mul f
+\<Longrightarrow> simple_homo_mul ((o) f) \<close>
+  unfolding simple_homo_mul_def simple_homo_mul_axioms_def
+  by (clarsimp simp add: fun_eq_iff)
 
 lemma homo_mul_funcomp[simp, locale_intro]:
   \<open> homo_mul_carrier f
@@ -2663,6 +2756,8 @@ next fix x assume \<open>\<And>n x'. PROP P (Share n x')\<close>
   from \<open>PROP P (Share (share.perm x) (share.val x))\<close> show \<open>PROP P x\<close> by simp
 qed
 
+subsubsection \<open>Instantiating Algebraic Properties\<close>
+
 instantiation share :: (type) sep_magma begin
 
 definition times_share :: "'a share \<Rightarrow> 'a share \<Rightarrow> 'a share" where
@@ -2761,6 +2856,65 @@ qed
 
 instance share :: (type) sep_cancel
   by (standard; case_tac a; case_tac b; case_tac c; simp)
+
+
+subsubsection \<open>Homomorphism of \<open>map_share\<close>\<close>
+
+lemma homo_sep_disj_map_share[simp]:
+  \<open> homo_sep_disj (map_share f)\<close>
+  unfolding homo_sep_disj_def
+  by (clarsimp simp add: share_forall)
+
+lemma closed_homo_sep_disj_map_share[simp]:
+  \<open> inj f
+\<Longrightarrow> closed_homo_sep_disj (map_share f) \<close>
+  unfolding closed_homo_sep_disj_def inj_def
+  by (clarsimp simp add: share_forall; blast)
+
+lemma homo_sep_mult_map_share[simp]:
+  \<open> homo_sep_mult (map_share f) \<close>
+  unfolding homo_sep_mult_def
+  by (clarsimp simp add: share_forall)
+
+lemma homo_sep_map_share[simp]:
+  \<open> homo_sep (map_share f) \<close>
+  unfolding homo_sep_def
+  by clarsimp
+
+lemma closed_homo_sep_map_share[simp]:
+  \<open> inj f
+\<Longrightarrow> closed_homo_sep (map_share f) \<close>
+  unfolding closed_homo_sep_def
+  by (clarsimp simp add: share_forall)
+
+subsubsection \<open>\<open>Share\<close> as an Embedding Homomorphism\<close>
+
+lemma homo_mul_carrier_Share_discrete[simp]:
+  \<open> 0 < n \<Longrightarrow> homo_mul_carrier (Share n) \<close>
+  unfolding homo_mul_carrier_def
+  by clarsimp
+
+lemma homo_sep_disj_Share_discrete[simp]:
+  \<open> 0 < n \<Longrightarrow> homo_sep_disj (Share n :: 'a::discrete_semigroup \<Rightarrow> 'a share) \<close>
+  unfolding homo_sep_disj_def
+  by clarsimp
+
+lemma
+  \<open> 0 < n \<Longrightarrow> closed_homo_sep_disj (Share n) \<close>
+  unfolding closed_homo_sep_disj_def
+  apply clarsimp (*TODO: maybe we shall introduce an 'agreement' class?*)
+  oops
+
+lemma homo_sep_mult_Share_discrete[simp]:
+  \<open> 0 < n \<Longrightarrow> homo_sep_mult (Share n :: 'a::discrete_semigroup \<Rightarrow> 'a share) \<close>
+  unfolding homo_sep_mult_def
+  by clarsimp
+
+lemma homo_sep_Share_discrete[simp]:
+  \<open> 0 < n \<Longrightarrow> homo_sep (Share n :: 'a::discrete_semigroup \<Rightarrow> 'a share) \<close>
+  unfolding homo_sep_def
+  by clarsimp
+
 
 
 subsubsection \<open>Convert a function to sharing or back\<close>
