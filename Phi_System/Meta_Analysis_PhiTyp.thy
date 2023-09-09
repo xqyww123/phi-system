@@ -2,7 +2,11 @@ theory Meta_Analysis_PhiTyp
   imports Phi_Type_Algebra
 begin
 
-section \<open>Completeness of Transformation\<close>
+section \<open>Analysis of Transformation\<close>
+
+definition 
+
+subsection \<open>Completeness\<close>
 
 text \<open>Given a \<phi>-type \<open>T\<close>, its objects form a poset where \<open>x \<R> y \<triangleq> x \<Ztypecolon> T \<longrightarrow> y \<Ztypecolon> T\<close> and \<open>\<R>\<close> is the order.
 In order to reason a transformation \<open>x \<Ztypecolon> T \<longrightarrow> y \<Ztypecolon> U\<close>, we first infer a family of transformation partial maps \<open>{f\<^sub>i}\<^sub>i\<^sub>\<in>\<^sub>\<I>\<close>

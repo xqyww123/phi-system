@@ -1538,84 +1538,13 @@ thm \<phi>Share.simp_cong
 
 
 
-(* subsection \<open>Down Lifting\<close> (*depreciated*)
-
-definition DownLift :: "('a, 'b) \<phi> \<Rightarrow> ('c \<Rightarrow> 'b) \<Rightarrow> ('a,'c) \<phi>" (infixl "<down-lift>" 80)
-  where "DownLift N g x = (g x \<Ztypecolon> N)"
-
-lemma DownLift_expn[simp]: " p \<in> (x \<Ztypecolon> N <down-lift> g) \<longleftrightarrow> p \<in> (g x \<Ztypecolon> N) "
-  unfolding DownLift_def \<phi>Type_def by simp
-
-lemma [elim!,\<phi>inhabitance_rule]:
-  "Inhabited (x \<Ztypecolon> N <down-lift> g) \<Longrightarrow> (Inhabited (g x \<Ztypecolon> N) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-(* lemma [\<phi>cast_overload E]: " x \<Ztypecolon> N <down-lift> g \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g x \<Ztypecolon> N" unfolding Transformation_def by simp *)
-lemma [\<phi>reason]: "\<p>\<r>\<e>\<m>\<i>\<s>\<e> g x = x' \<Longrightarrow> x \<Ztypecolon> N <down-lift> g \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> N" unfolding Transformation_def by (simp add: \<phi>expns)
-
-(* lemma [\<phi>reason]: "\<p>\<r>\<e>\<m>\<i>\<s>\<e> (g y = x) \<Longrightarrow> x \<Ztypecolon> M \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> M <down-lift> g"
-  unfolding Intro_def Transformation_def by (simp add: \<phi>expns) blast
-lemma [\<phi>reason, \<phi>overload D]: "\<^bold>d\<^bold>e\<^bold>s\<^bold>t y \<Ztypecolon> M <down-lift> g \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> g y \<Ztypecolon> M"
-  unfolding Dest_def Transformation_def by (simp add: \<phi>expns) *)
-
-lemma [\<phi>reason]: " x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y1 \<Ztypecolon> M \<w>\<i>\<t>\<h> P \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y1 = g y  \<Longrightarrow> x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> M <down-lift> g"
-  unfolding Transformation_def by (simp add: \<phi>expns)
-lemma "\<down>lift_\<phi>app": "\<p>\<a>\<r>\<a>\<m> g \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g y = x \<Longrightarrow> x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> N <down-lift> g"
-  unfolding Transformation_def by (simp add: \<phi>expns)
-
-
-
-subsection \<open>Up Lifting\<close> (*depreciated*)
-
-definition UpLift :: "('a, 'c) \<phi> \<Rightarrow> ('c \<Rightarrow> 'b) \<Rightarrow> ('a,'b) \<phi>" (infixl "<up-lift>" 80)
-  where "UpLift N f x = {p. (\<exists>y. f y = x \<and> p \<in> (y \<Ztypecolon> N))}"
-
-lemma UpLift_expn[simp]:
-  " p \<in> (x \<Ztypecolon> N <up-lift> f) \<longleftrightarrow> (\<exists>y. (f y = x) \<and> p \<in> (y \<Ztypecolon> N))"
-  unfolding UpLift_def \<phi>Type_def by auto
-
-lemma UpLift_inhabited[elim,\<phi>inhabitance_rule]:
-  "Inhabited (x \<Ztypecolon> N <up-lift> f) \<Longrightarrow> (\<And>y. f y = x \<Longrightarrow> Inhabited (y \<Ztypecolon> N) \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns) blast
-
-lemma "\<up>lift_\<phi>app":
-  "\<p>\<a>\<r>\<a>\<m> g \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> y \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = g x \<Longrightarrow> x \<Ztypecolon> M \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> M <up-lift> g"
-  unfolding Transformation_def by (simp add: \<phi>expns) blast
-(* lemma [\<phi>overload D]: "x \<Ztypecolon> M <up-lift> g \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists> \<Ztypecolon> M) "
-  unfolding Transformation_def by (simp add: \<phi>expns) blast *)
-
-(* lemma [\<phi>reason]: "\<p>\<r>\<e>\<m>\<i>\<s>\<e> y = g x \<Longrightarrow> \<i>\<n>\<^bold>t\<^bold>r\<^bold>o x \<Ztypecolon> M \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> M <up-lift> g"
-  unfolding Intro_def Transformation_def by (simp add: \<phi>expns) blast *)
-
-lemma [\<phi>reason 130]:
-  "x \<Ztypecolon> M \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> M' \<w>\<i>\<t>\<h> P \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y = g x' \<Longrightarrow> x \<Ztypecolon> M \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> M' <up-lift> g"
-  unfolding Transformation_def by (simp add: \<phi>expns) blast
-
-lemma [\<phi>reason 20]:
-  "(\<And> x. y = g x \<Longrightarrow> x \<Ztypecolon> M \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> N \<w>\<i>\<t>\<h> P x)
-\<Longrightarrow> y \<Ztypecolon> M <up-lift> g \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> N \<w>\<i>\<t>\<h> (\<exists>x. y = g x \<and> P x)"
-  unfolding Transformation_def by (simp add: \<phi>expns) blast
-
-lemma [\<phi>reason 150]:
-  "(\<And> x. y = g x \<Longrightarrow> x \<Ztypecolon> M \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' x \<Ztypecolon> M' x \<w>\<i>\<t>\<h> P x)
-    \<Longrightarrow> y \<Ztypecolon> M <up-lift> g \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>*x. y' x \<Ztypecolon> M' x) \<w>\<i>\<t>\<h> (\<exists>x. y = g x \<and> P x)"
-  unfolding Transformation_def by (simp add: \<phi>expns) blast
-
-(* lemma "\<^bold>d\<^bold>e\<^bold>s\<^bold>t y \<Ztypecolon> M <up-lift> g \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. (x \<Ztypecolon> M) \<and>\<^sup>s g x = y)"
-  unfolding Dest_def Transformation_def by (simp add: \<phi>expns) blast *)
-
-lemma "x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> N <up-lift> f" unfolding Transformation_def by (simp add: \<phi>expns) blast
-lemma "x \<Ztypecolon> N \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> N <up-lift> f" unfolding Transformation_def by (simp add: \<phi>expns) blast
-
-(* lemma "\<phi>Equal (N <up-lift> f) can_eq eq \<longleftrightarrow> \<phi>Equal N (inv_imagep can_eq f) (inv_imagep eq f)"
-  unfolding \<phi>Equal_def by (auto 0 6) *)
-*)
-
 section \<open>Semantics Related\<close>
 
 subsection \<open>Value\<close>
 
 subsubsection \<open>Syntax to fetch the latest n-th Val\<close>
+
+(*where I moved it? the function seems still useful*)
 
 (*
 setup \<open>let open Ast Phi_Syntax
@@ -1704,6 +1633,7 @@ lemma [\<phi>inhabitance_rule 1000]:
 
 
 
+(* not need any more
 subsection \<open>Morphism of Separation Homomorphism\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
@@ -1732,7 +1662,7 @@ lemma \<phi>Composition_Separation_Homo\<^sub>I'[\<phi>reason 1200]:
 lemma \<phi>sep_homo_Prod:
   \<open> (\<phi>sep_homo \<psi> \<Zcomp> (T \<^emph> U)) = (\<phi>sep_homo \<psi> \<Zcomp> T) \<^emph> (\<phi>sep_homo \<psi> \<Zcomp> U)\<close>
   apply (rule \<phi>Type_eqI; clarsimp simp add:; rule; clarsimp)
-  using homo_sep.axioms(1) homo_sep.axioms(2) homo_sep_disj_def homo_sep_mult_def apply blast
+  using homo_sep.axioms(1) homo_sep.axioms(2) homo_sep_disj_def homo_sep_mult_def apply blas
 
 
   
@@ -1763,12 +1693,13 @@ thm \<phi>sep_homo.unfold
 term \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<phi>sep_homo \<psi> T) eq \<close>
 term \<open>Object_Equiv (\<phi>sep_homo T \<circle>) (\<lambda>_ _. True)\<close>
 
-
+*)
 
 section \<open>Permission \& Share\<close>
 
 subsection \<open>Share \& Option\<close>
 
+(* replaced by domainoid
 subsubsection \<open>Definition of Properties\<close>
 
 definition \<phi>Sep_Disj :: \<open>('a::sep_magma,'b1) \<phi> \<Rightarrow> ('a,'b2) \<phi> \<Rightarrow> bool\<close>
@@ -1778,11 +1709,12 @@ definition \<phi>Sep_Disj_Inj :: \<open>'a::share_nun_semimodule set \<Rightarro
   where \<open>\<phi>Sep_Disj_Inj S \<longleftrightarrow> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<and> u ## v \<longrightarrow> u = v) \<and> (\<forall>u. u \<Turnstile> S \<longrightarrow> u ## u)\<close>
 
 subsubsection \<open>The \<phi>-Type of Separation Homomorphism\<close>
+*)
 
 
+thm share_orthogonal_homo_to_share
 
-
-
+(* not need
 subsubsection \<open>Insertion Functor\<close>
 
 declare share_orthogonal_homo_pointwise[\<phi>reason 1200]
@@ -1897,7 +1829,19 @@ lemma \<phi>insertion_Prod_imply:
 
 
 thm share_orthogonal_homo.axioms(1)
+*)
 
+
+subsection \<open>To-Share\<close>
+
+declare [[\<phi>trace_reasoning = 3]]
+
+\<phi>type_def To_Share
+  where \<open>To_Share T \<equiv> (to_share \<Zcomp>\<^sub>f T)\<close>
+  deriving (*Basic
+       and Functional_Transformation_Functor
+       and Identity_Element
+       and*) Separation_Homo\<^sub>E
 
 
 subsubsection \<open>\<phi>-Some\<close>

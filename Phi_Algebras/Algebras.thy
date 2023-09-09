@@ -657,6 +657,7 @@ locale sep_orthogonal = homo_sep \<psi>
                         However here, if \<open>a = \<psi> d\<close> accidentally belongs to the target algebra, \<open>d\<close> matters,
                         so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
       (*TODO: as now we have the mul_carrier, do we still need such D instead of using mul_carrier?*)
+      (*then let's try now*)
 + assumes sep_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
 begin
 
@@ -2705,7 +2706,7 @@ subsubsection \<open>Convert a function to sharing or back\<close>
 abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
-(* TODO!
+
 lemma share_orthogonal_homo_to_share[locale_witness]:
   \<open>share_orthogonal_homo (to_share::'a::{sep_carrier, discrete_semigroup} option \<Rightarrow> 'a share option) UNIV\<close>
 proof
@@ -2728,7 +2729,7 @@ proof
     by (metis join_strict_positivity less_numeral_extra(1) sep_disj_multD2 sep_disj_share)
   show \<open>1 \<in> UNIV\<close> by simp
 qed
-*)
+
 
 lemma to_share_kernel_is_1[locale_witness]:
   \<open> 1 \<in> D
