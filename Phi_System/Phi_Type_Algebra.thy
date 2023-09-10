@@ -1639,7 +1639,7 @@ lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
   \<open> Semimodule_Zero F T zero
 \<Longrightarrow> NO_SIMP (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
-  unfolding Semimodule_Zero_def Identity_Element\<^sub>E_def NO_SIMP_def
+  unfolding Semimodule_Zero_def NO_SIMP_def
   using mk_elim_transformation by blast
 
 lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
@@ -1648,7 +1648,7 @@ lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero' T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
-  unfolding Semimodule_Zero_def Identity_Element\<^sub>E_def NO_SIMP_def Simplify_def Action_Tag_def
+  unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
   using mk_elim_transformation by blast
 
 lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
@@ -1656,7 +1656,7 @@ lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
-  unfolding Semimodule_Zero_def Identity_Element\<^sub>E_def NO_SIMP_def
+  unfolding Semimodule_Zero_def NO_SIMP_def
   using transformation_bi_frame
   by fastforce
 
@@ -1667,7 +1667,7 @@ lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
 \<Longrightarrow> NO_SIMP (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (R * (x \<Ztypecolon> F zero' T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
   for R :: \<open>'c::sep_magma_1 set\<close>
-  unfolding Semimodule_Zero_def Identity_Element\<^sub>E_def NO_SIMP_def Simplify_def Action_Tag_def
+  unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
   using transformation_bi_frame
   by fastforce
 
@@ -1675,7 +1675,7 @@ lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
   \<open> Semimodule_Zero F T zero
 \<Longrightarrow> NO_SIMP (((), snd x) \<Ztypecolon> F zero T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
-  unfolding Semimodule_Zero_def Identity_Element\<^sub>E_def NO_SIMP_def
+  unfolding Semimodule_Zero_def NO_SIMP_def
   by (cases x; cases C; clarsimp)
 
 lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
@@ -1684,7 +1684,7 @@ lemma [\<phi>reason_template %ToA_derived_red requires Semimodule_Zero]:
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (((), snd x) \<Ztypecolon> F zero T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y)
 \<Longrightarrow> NO_SIMP (x \<Ztypecolon> F zero' T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) \<close>
-  unfolding Semimodule_Zero_def Identity_Element\<^sub>E_def NO_SIMP_def Simplify_def Action_Tag_def
+  unfolding Semimodule_Zero_def NO_SIMP_def Simplify_def Action_Tag_def
   by (cases x; cases C; clarsimp)
 
 lemma [\<phi>reason_template %ToA_derived_red requires Closed_Semimodule_Zero]:

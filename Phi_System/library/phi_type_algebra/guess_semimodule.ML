@@ -144,17 +144,17 @@ val Guess_Scalar_One_E = Guess_Scalar_framework (5, NONE,
 
 fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (7, NONE,
       fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, _, idx, F_term, eta_F_term, T_term, ctxt) =>
-        let val (ct, c) = (TVar (("c\<^sub>t", idx), \<^sort>\<open>type\<close>), TVar (("c'", idx), \<^sort>\<open>type\<close>))
+        let val ct = TVar (("c\<^sub>t", idx), \<^sort>\<open>type\<close>)
             val (ss, st) = (TVar (("s\<^sub>s", idx), \<^sort>\<open>type\<close>), TVar (("s\<^sub>t", idx), \<^sort>\<open>type\<close>))
             val (at, as_t) = (TVar (("a\<^sub>t", idx), \<^sort>\<open>type\<close>), TVar (("a\<^sub>s\<^sub>_\<^sub>t", idx), \<^sort>\<open>type\<close>))
             val (Fs, Ft) = (Var (("F\<^sub>s", idx), ss --> mk_phi_type_ty(ct, at) --> mk_phi_type_ty(model_ty, as_t)),
-                            Var (("F\<^sub>t", idx), st --> mk_phi_type_ty(c, x_ele_ty) --> mk_phi_type_ty(ct, at)))
+                            Var (("F\<^sub>t", idx), st --> mk_phi_type_ty(T_model_ty, x_ele_ty) --> mk_phi_type_ty(ct, at)))
             
             val as_t = TVar (("a\<^sub>s\<^sub>_\<^sub>t", idx), \<^sort>\<open>type\<close>)
-         in (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_Assoc s_ty c model_ty x_ele_ty x_ty ss at ct as_t st\<close>
+         in (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_Assoc s_ty T_model_ty model_ty x_ele_ty x_ty ss at ct as_t st\<close>
                 $ (if is_intro then \<^Const>\<open>True\<close> else \<^Const>\<open>False\<close>)
                 $ \<^Const>\<open>Pure.type s_ty\<close>
-                $ \<^Const>\<open>Pure.type c\<close>
+                $ \<^Const>\<open>Pure.type T_model_ty\<close>
                 $ \<^Const>\<open>Pure.type model_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ele_ty\<close>
                 $ \<^Const>\<open>Pure.type x_ty\<close>
@@ -183,7 +183,7 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (7, NONE,
 
 
 fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework (5, SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma\<close>),
-      fn (s_ty, x_ele_ty, x_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, ctxt) =>
+      fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, ctxt) =>
           (\<^Const>\<open>Trueprop\<close> $ (
               (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty model_ty x_ele_ty x_ty module_ty\<close>
                          else \<^Const>\<open>Guess_Unzip_of_Semimodule s_ty model_ty x_ele_ty x_ty module_ty\<close>)

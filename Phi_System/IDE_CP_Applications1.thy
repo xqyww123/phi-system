@@ -1071,7 +1071,7 @@ paragraph \<open>Special Forms\<close>
 
 lemma [\<phi>reason %to_trans_cut]:
   \<open> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b::one) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. y = 1 @action to (Itself :: ('b, 'b) \<phi>) \<close>
-  unfolding Action_Tag_def Transformation_def Identity_Element\<^sub>E_def
+  unfolding Action_Tag_def Transformation_def
   by simp
 
 lemma [\<phi>reason %to_trans_cut]:

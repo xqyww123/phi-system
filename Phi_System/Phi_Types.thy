@@ -918,13 +918,13 @@ thm Tr2
 
 
 
-subsubsection \<open>Addition of Algebraic Data Type\<close>
+subsubsection \<open>Sum Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
 (*TODO: finish me!*)
 
-\<phi>type_def \<phi>ADT_Add :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
+\<phi>type_def \<phi>Sum :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
   deriving \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
        and \<open>Abstract_Domain T P
@@ -945,10 +945,10 @@ declare [[\<phi>trace_reasoning = 0]]
 
 subsubsection \<open>Rewrites\<close>
 
-lemma \<phi>ADT_Add_red[simp]:
+lemma \<phi>Sum_red[simp]:
   \<open>(Inl a \<Ztypecolon> T +\<^sub>\<phi> U) = (a \<Ztypecolon> T)\<close>
   \<open>(Inr b \<Ztypecolon> T +\<^sub>\<phi> U) = (b \<Ztypecolon> U)\<close>
-  unfolding \<phi>ADT_Add.unfold
+  unfolding \<phi>Sum.unfold
   by simp_all
 
 subsubsection \<open>Rule\<close>
@@ -965,6 +965,8 @@ lemma
 
 
 subsection \<open>Embedding Additive Disjunction\<close>
+
+text \<open>Depreciated! Use \<open>\<phi>Sum\<close> instead!\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
     
