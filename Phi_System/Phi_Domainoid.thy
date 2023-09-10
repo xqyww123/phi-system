@@ -192,8 +192,8 @@ subsection \<open>Homomorphism of Domainoid\<close>
 (* A --\<psi>'--> B'
    \<down> \<phi>       \<down> \<phi>'
    B --\<psi> --> C *)
-definition fun_commute :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('b \<Rightarrow> 'c) \<Rightarrow> ('b' \<Rightarrow> 'c) \<Rightarrow> ('a \<Rightarrow> 'b') \<Rightarrow> bool\<close>
-  where \<open>fun_commute \<phi> \<psi> \<phi>' \<psi>' \<longleftrightarrow> (\<psi> o \<phi> = \<phi>' o \<psi>') \<close>
+definition fun_commute :: \<open>('b \<Rightarrow> 'c) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> 'b') \<Rightarrow> ('b' \<Rightarrow> 'c) \<Rightarrow> bool\<close>
+  where \<open>fun_commute \<psi> \<phi> \<psi>' \<phi>' \<longleftrightarrow> (\<psi> o \<phi> = \<phi>' o \<psi>') \<close>
 
 (*TODO: move!*)
 
@@ -227,7 +227,27 @@ declare [[\<phi>trace_reasoning = 1]]
 
 (*Do we need to consider relation in commutativity?*)
 
-term \<open>x \<Ztypecolon> F\<^sub>a (F\<^sub>b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F\<^sub>b (F\<^sub>a T)\<close>
+definition Tyops_Commute :: \<open> (('c\<^sub>b,'a\<^sub>b) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                           \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>a,'a\<^sub>a) \<phi>)
+                           \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>b,'a\<^sub>b) \<phi>)
+                           \<Rightarrow> (('c\<^sub>a,'a\<^sub>a) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                           \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                           \<Rightarrow> ('a \<Rightarrow> bool)
+                           \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
+                           \<Rightarrow> bool\<close>
+  where \<open>Tyops_Commute F\<^sub>a F'\<^sub>a F\<^sub>b F'\<^sub>b T D r \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F\<^sub>a (F\<^sub>b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F'\<^sub>b (F'\<^sub>a T) \<s>\<u>\<b>\<j> y. r x y))\<close>
+
+definition Functional_Tyops_Commute :: \<open> (('c\<^sub>b,'a\<^sub>b) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>a,'a\<^sub>a) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>b,'a\<^sub>b) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>a,'a\<^sub>a) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                      \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                                      \<Rightarrow> ('a \<Rightarrow> bool)
+                                      \<Rightarrow> ('a \<Rightarrow> 'b)
+                                      \<Rightarrow> bool\<close>
+  where \<open>Functional_Tyops_Commute F\<^sub>a F'\<^sub>a F\<^sub>b F'\<^sub>b T D f \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F\<^sub>a (F\<^sub>b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F'\<^sub>b (F'\<^sub>a T)))\<close>
 
 
 text \<open>
@@ -385,7 +405,7 @@ lemma [\<phi>reason default 10]:
 \<Longrightarrow> domainoid TYPE('c\<^sub>\<psi>::sep_magma) \<delta>\<^sub>\<psi>
 \<Longrightarrow> (\<And>x. \<Psi>[\<delta>] (x \<Ztypecolon> T) \<le> \<DD>\<^sub>T x)
 \<Longrightarrow> (\<And>y. \<Psi>[\<delta>] (y \<Ztypecolon> U) \<le> \<DD>\<^sub>U y)
-\<Longrightarrow> fun_commute \<psi> \<delta>\<^sub>\<psi> \<psi>\<^sub>D \<delta> \<and> has_\<psi>\<^sub>D = True \<or>\<^sub>c\<^sub>u\<^sub>t has_\<psi>\<^sub>D = False
+\<Longrightarrow> fun_commute \<delta>\<^sub>\<psi> \<psi> \<delta> \<psi>\<^sub>D \<and> has_\<psi>\<^sub>D = True \<or>\<^sub>c\<^sub>u\<^sub>t has_\<psi>\<^sub>D = False
 \<Longrightarrow> Separation_Disj\<^sub>\<phi> \<psi> ({(y,x). \<forall>d\<^sub>x d\<^sub>y. d\<^sub>x \<Turnstile> \<DD>\<^sub>T x \<and> d\<^sub>y \<Turnstile> \<DD>\<^sub>U y \<and> (has_\<psi>\<^sub>D \<longrightarrow> \<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y) \<longrightarrow> d\<^sub>x ## d\<^sub>y}) T U
                           \<comment> \<open>\<open>\<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y\<close> reflects the condition \<open>\<psi> u ## \<psi> v\<close> in \<open>Separation_Disj\<close>\<close> \<close>
   unfolding Separation_Disj\<^sub>\<phi>_def Separation_Disj_def Orelse_shortcut_def BI_sub_iff

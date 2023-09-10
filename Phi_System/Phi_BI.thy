@@ -378,6 +378,30 @@ on a higher abstraction simplify representations and give more chances for autom
 and in addition, can be combined in program logics more natively.
 \<close>
 
+text \<open>The name of transformation is good in sense of corresponding to categorical natural transformation.
+  If we consider the state transition of a program as a category \<open>\<C>\<close>, two \<phi>-types \<open>T\<close> and \<open>U\<close> form
+  functors over \<open>\<C>\<close>, and the transformation between \<open>T\<close> and \<open>U\<close> is the natural transformation between
+  the two functors. \<close>
+
+text \<open>TODO: move me
+Our method simplifies program verification by lifting it onto an abstract domain.
+However, it is hard to universally define what are abstract and what are not.
+The abstract map \<open>f\<close> in a transformation \<open>x \<Ztypecolon> T \<longrightarrow> f(x) \<Ztypecolon> U\<close> can have very various expression.
+
+The criterion about what expression of \<open>f\<close> is considered abstract can be given by user.
+The abstract maps (\<open>f\<close>) occurring in their annotations or given properties are assumed abstract.
+In addition, if the abstract objects \<open>x\<close> are defined algebraically using Bounded Natural Functor,
+the implied operators including mapper, relator, predicator, etc. are also considered abstract.
+The range is unfixed and may extended if reasonable.
+
+When we say we lift the verification onto an abstract domain, precisely we mean the proof obligation
+extracted by our reasoning is a boolean assertion consisting of only the abstract operators as above
+plus boolean connectives and other basic primitives like projections of product type.
+It basically means the reasoning is made by composition of the rules giving abstraction, and the
+extracted proof obligation is a composition of the abstract operators given in the rules.
+\<close>
+
+
 subsubsection \<open>Rules\<close>
 
 lemma \<phi>Type_eqI_Tr:

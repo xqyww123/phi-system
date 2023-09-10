@@ -1139,9 +1139,15 @@ text \<open>Though \<open>\<phi>Fun'\<close> comprises an associative semimodule
 lemmas \<phi>Fun'_scalar_assoc = scalar_assoc_template[OF \<phi>Fun'_Scalar_Assoc\<^sub>I \<phi>Fun'_Scalar_Assoc\<^sub>E, simplified]
 
 lemma (*TODO!*)
-  \<open> fun_commute \<phi> \<psi> \<phi>' \<psi>'
+  \<open> fun_commute \<psi> \<phi> \<psi>' \<phi>'
 \<Longrightarrow> (\<psi> \<Zcomp>\<^sub>f \<phi> \<Zcomp>\<^sub>f T) = (\<phi>' \<Zcomp>\<^sub>f \<psi>' \<Zcomp>\<^sub>f T)\<close>
   unfolding fun_commute_def
+  by (simp add: \<phi>Fun'_scalar_assoc)
+
+lemma \<phi>Fun'_FTC:
+  \<open> fun_commute \<psi> \<phi> \<psi>' \<phi>'
+\<Longrightarrow> Functional_Tyops_Commute (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>') (\<phi>Fun' \<phi>) (\<phi>Fun' \<phi>') T (\<lambda>_. True) (\<lambda>x. x)\<close>
+  unfolding Functional_Tyops_Commute_def fun_commute_def
   by (simp add: \<phi>Fun'_scalar_assoc)
 
 lemma
