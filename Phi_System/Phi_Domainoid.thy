@@ -111,7 +111,7 @@ text \<open>A domainoid extraction \<open>\<delta>\<close> is a closed homomorph
 
   With abbreviation \<open>domainoid d \<triangleq> closed_homo_sep \<delta>\<close> we emphasize \<open>\<delta>\<close> is a domainoid.
 
-  Modality \<open>\<DD>[d] S \<triangleq> (\<delta> u \<Ztypecolon> Itself \<s>\<u>\<b>\<j> u. u \<Turnstile> S \<and> domainoid \<delta>)\<close> maps an assertion \<open>S\<close> to the domainoids
+  Modality \<open>\<Psi>[d] S \<triangleq> (\<delta> u \<Ztypecolon> Itself \<s>\<u>\<b>\<j> u. u \<Turnstile> S \<and> domainoid \<delta>)\<close> maps an assertion \<open>S\<close> to the domainoids
   of its resources, if we still use separation logic to specify the domainoids (on the algebra of the domainoids).
   The modality is homomorphic over all logical connectives except additive conjunctions (including universal quantification).
   Though domainoid is designed to solve satisfaction of multiplicative conjunction, it still can do nothing
@@ -120,8 +120,8 @@ text \<open>A domainoid extraction \<open>\<delta>\<close> is a closed homomorph
   For mapping the domainoid functor onto the abstract domain of a \<phi>-type \<open>x \<Ztypecolon> T\<close>,
   there are lower and upper homomorphisms giving stronger and lower approximations respectively
   for domainoid \<open>d\<close>,
-  \<open>Domainoid_Homo\<^sub>L d T d' \<longleftrightarrow> (\<forall>x. d' x \<longrightarrow> \<DD>[d] (x \<Ztypecolon> T) )\<close>
-  \<open>Domainoid_Homo\<^sub>U d T d' \<longleftrightarrow> (\<forall>x. \<DD>[d] (x \<Ztypecolon> T) \<longrightarrow> d' x )\<close>
+  \<open>Domainoid_Homo\<^sub>L d T d' \<longleftrightarrow> (\<forall>x. d' x \<longrightarrow> \<Psi>[d] (x \<Ztypecolon> T) )\<close>
+  \<open>Domainoid_Homo\<^sub>U d T d' \<longleftrightarrow> (\<forall>x. \<Psi>[d] (x \<Ztypecolon> T) \<longrightarrow> d' x )\<close>
   We use approximations in case of the precise expression is too complicated.
 
   The lower homomorphism is used for deducing the satisfaction of multiplicative conjunction.
@@ -140,69 +140,83 @@ declare [[\<phi>reason_default_pattern \<open>domainoid ?TY _\<close> \<Rightarr
 
 subsection \<open>BI Modality\<close>
 
-definition domainoid_BI_modality :: \<open>('c,'d) domainoid \<Rightarrow> 'c::sep_magma BI \<Rightarrow> 'd::sep_magma set\<close> ("\<DD>[_]" [10] 1000)
-  where \<open>(\<DD>[d] S) = {d u |u. u \<Turnstile> S \<and> domainoid TYPE('c) d}\<close>
+definition Morphism_Modality :: \<open>('c \<Rightarrow> 'd) \<Rightarrow> 'c BI \<Rightarrow> 'd BI\<close> ("\<Psi>[_]" [10] 1000)
+  where \<open>(\<Psi>[\<psi>] S) = {\<psi> u |u. u \<Turnstile> S}\<close>
+
+lemma Morphism_Modality_expn[\<phi>expns, simp]:
+  \<open>p \<Turnstile> \<Psi>[\<psi>] S \<longleftrightarrow> (\<exists>u. p = \<psi> u \<and> u \<Turnstile> S)\<close>
+  unfolding Morphism_Modality_def Satisfaction_def
+  by clarsimp
+
+text \<open>For a domain extraction \<open>\<delta>\<close>, \<open>\<Psi>[\<delta>] S\<close> is used to extract the domain of concrete objects
+  specified by the given BI assertion \<open>S\<close>\<close>
+
+(*
+definition domainoid_BI_modality :: \<open>('c,'d) domainoid \<Rightarrow> 'c::sep_magma BI \<Rightarrow> 'd::sep_magma set\<close> ("\<Psi>[_]" [10] 1000)
+  where \<open>(\<Psi>[d] S) = (\<Psi>[d] S \<s>\<u>\<b>\<j> domainoid TYPE('c) d)\<close>
   \<comment> \<open> The domain of concrete objects specified by the given BI assertion \<open>S\<close> \<close>
 
 lemma domainoid_BI_modality_expn[\<phi>expns, simp]:
-  \<open>p \<Turnstile> \<DD>[d] S \<longleftrightarrow> (\<exists>u. p = d u \<and> u \<Turnstile> S \<and> domainoid TYPE('c::sep_magma) d)\<close>
-  unfolding domainoid_BI_modality_def Satisfaction_def
-  by clarsimp
+  \<open>p \<Turnstile> \<Psi>[d] S \<longleftrightarrow> (\<exists>u. p = d u \<and> u \<Turnstile> S \<and> domainoid TYPE('c::sep_magma) d)\<close>
+  unfolding domainoid_BI_modality_def
+  by (clarsimp, blast)
+*)
 
+(*
 lemma domainoid_BI_modality_expn'[\<phi>expns, simp]:
-  \<open>p \<in> \<DD>[d] S \<longleftrightarrow> (\<exists>u. p = d u \<and> u \<Turnstile> S \<and> domainoid TYPE('c::sep_magma) d)\<close>
+  \<open>p \<in> \<Psi>[d] S \<longleftrightarrow> (\<exists>u. p = d u \<and> u \<Turnstile> S \<and> domainoid TYPE('c::sep_magma) d)\<close>
   unfolding domainoid_BI_modality_def Satisfaction_def
-  by clarsimp
+  by clarsimp*)
 
 
 subsubsection \<open>Evaluation on Specific BI Connectives\<close>
 
-lemma \<DD>_1:
-  \<open> domainoid TYPE('c::sep_magma_1) d
-\<Longrightarrow> homo_one d
-\<Longrightarrow> \<DD>[d] 1 = 1 \<close>
+lemma \<Psi>_1:
+  \<open> homo_one \<psi>
+\<Longrightarrow> \<Psi>[\<psi>] 1 = 1 \<close>
   unfolding BI_eq_iff homo_one_def
   by simp
 
-lemma \<DD>_0:
-  \<open> \<DD>[d] 0 = 0 \<close>
+lemma \<Psi>_0:
+  \<open> \<Psi>[\<psi>] 0 = 0 \<close>
   unfolding BI_eq_iff
   by clarsimp
 
-lemma \<DD>_Multiplicative_Conj:
-  \<open>\<DD>[d] (A * B) = \<DD>[d] A * \<DD>[d] B\<close>
+lemma \<Psi>_Multiplicative_Conj:
+  \<open> closed_homo_sep \<psi>
+\<Longrightarrow> \<Psi>[\<psi>] (A * B) = \<Psi>[\<psi>] A * \<Psi>[\<psi>] B\<close>
   unfolding BI_eq_iff
-  by (clarsimp simp add: domainoid_def closed_homo_sep_def closed_homo_sep_disj_def homo_sep_def
+  by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def homo_sep_def
                          homo_sep_mult_def; rule; clarsimp; metis)
 
-lemma \<DD>_Mul_Quant:
-  \<open> domainoid TYPE('c::sep_algebra) d
-\<Longrightarrow> homo_one d
-\<Longrightarrow> \<DD>[d] (\<big_ast>i\<in>S. A i) = (\<big_ast>i\<in>S. \<DD>[d] (A i)) \<close>
+lemma \<Psi>_Mul_Quant:
+  \<open> closed_homo_sep \<psi>
+\<Longrightarrow> homo_one \<psi>
+\<Longrightarrow> \<Psi>[\<psi>] (\<big_ast>i\<in>S. A i) = (\<big_ast>i\<in>S. \<Psi>[\<psi>] (A i)) \<close>
 proof -
-  assume \<open>domainoid TYPE('c::sep_algebra) d\<close> and \<open>homo_one d\<close>
+  assume \<open>closed_homo_sep \<psi>\<close> and \<open>homo_one \<psi>\<close>
   { assume \<open>finite S\<close>
-    have \<open>\<DD>[d] (\<Prod>i\<in>S. A i) = (\<Prod>i\<in>S. \<DD>[d] (A i))\<close>
+    have \<open>\<Psi>[\<psi>] (\<Prod>i\<in>S. A i) = (\<Prod>i\<in>S. \<Psi>[\<psi>] (A i))\<close>
       by (induct rule: finite_induct[OF \<open>finite S\<close>];
-          simp add: \<DD>_1 \<open>domainoid TYPE('c::sep_algebra) d\<close> \<open>homo_one d\<close> \<DD>_Multiplicative_Conj)
+          simp add: \<Psi>_1 \<open>closed_homo_sep \<psi>\<close> \<open>homo_one \<psi>\<close> \<Psi>_Multiplicative_Conj)
   }
-  then show \<open>\<DD>[d] (\<big_ast>i\<in>S. A i) = (\<big_ast>i\<in>S. \<DD>[d] (A i))\<close>
+  then show \<open>\<Psi>[\<psi>] (\<big_ast>i\<in>S. A i) = (\<big_ast>i\<in>S. \<Psi>[\<psi>] (A i))\<close>
     unfolding Mul_Quant_def
-    by (smt (verit, best) Subjection_Flase Subjection_True \<DD>_0)
+    by (smt (verit, best) Subjection_Flase Subjection_True \<Psi>_0)
 qed
 
-lemma \<DD>_Additive_Disj:
-  \<open>\<DD>[d] (A + B) = \<DD>[d] A + \<DD>[d] B\<close>
+lemma \<Psi>_Additive_Disj:
+  \<open>\<Psi>[d] (A + B) = \<Psi>[d] A + \<Psi>[d] B\<close>
   unfolding BI_eq_iff
   by (clarsimp; metis)
 
-lemma \<DD>_ExSet:
-  \<open>\<DD>[d] (ExSet S) = (\<exists>*c. \<DD>[d] (S c))\<close>
+lemma \<Psi>_ExSet:
+  \<open>\<Psi>[d] (ExSet S) = (\<exists>*c. \<Psi>[d] (S c))\<close>
   unfolding BI_eq_iff
   by (clarsimp; metis)
 
-lemma \<DD>_Subjection:
-  \<open>\<DD>[d] (S \<s>\<u>\<b>\<j> P) = (\<DD>[d] S \<s>\<u>\<b>\<j> P)\<close>
+lemma \<Psi>_Subjection:
+  \<open>\<Psi>[d] (S \<s>\<u>\<b>\<j> P) = (\<Psi>[d] S \<s>\<u>\<b>\<j> P)\<close>
   unfolding BI_eq_iff
   by (clarsimp; metis)
 
@@ -213,21 +227,30 @@ subsection \<open>Homomorphism of Domainoid\<close>
 (* A --domainoid--> D(A)
    \<down> \<psi>               \<down> D(\<psi>)
    B --domainoid--> D(B) *)
-definition homo_domainoid :: \<open> ('a::sep_magma,'da::sep_magma) domainoid
+
+(* A --\<phi> --> C
+   \<down> \<psi>       \<down> \<psi>'
+   B --\<phi>'--> D *)
+term commutes
+definition commutative_square :: \<open> ('a::sep_magma,'da::sep_magma) domainoid
                             \<Rightarrow> ('b::sep_magma,'ba::sep_magma) domainoid
                             \<Rightarrow> ('a \<Rightarrow> 'b)
                             \<Rightarrow> ('da \<Rightarrow> 'ba)
                             \<Rightarrow> bool\<close>
-  where \<open>homo_domainoid D\<^sub>A D\<^sub>B \<psi> \<psi>\<^sub>D \<longleftrightarrow>
-            domainoid TYPE('a) D\<^sub>A \<and> domainoid TYPE('b) D\<^sub>B \<and> homo_sep \<psi> \<and> (D\<^sub>B o \<psi> = \<psi>\<^sub>D o D\<^sub>A)\<close>
+  where \<open>commutative_square D\<^sub>A D\<^sub>B \<psi> \<psi>\<^sub>D \<longleftrightarrow>
+            (D\<^sub>B o \<psi> = \<psi>\<^sub>D o D\<^sub>A)\<close>
 
-definition Domainoid_Homo\<^sub>U :: \<open>('c::sep_magma,'d::sep_magma) domainoid \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'd set) \<Rightarrow> bool\<close>
-  where \<open>Domainoid_Homo\<^sub>U dm T dm' \<longleftrightarrow> domainoid TYPE('c) dm \<and> (\<forall>x u. u \<Turnstile> \<DD>[dm] (x \<Ztypecolon> T) \<longrightarrow> u \<in> dm' x )\<close>
+(* C----T----> A
+   \<down>\<psi>    \<subseteq>   | \<psi>'
+   D <-------
+*)
+definition Abstract_Morphism\<^sub>U :: \<open>('c::sep_magma,'d::sep_magma) domainoid \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'd set) \<Rightarrow> bool\<close>
+  where \<open>Abstract_Morphism\<^sub>U \<psi> T \<psi>' \<longleftrightarrow> (\<forall>x u. u \<Turnstile> \<Psi>[dm] (x \<Ztypecolon> T) \<longrightarrow> u \<in> dm' x )\<close>
   \<comment> \<open>\<phi>-Type Homomorphism, \<open>dm'\<close> is an upper approximation of the \<open>dm\<close> in the abstract domain,
       which gives for each abstract object the domain of the concrete objects refining it.\<close>
 
 definition Domainoid_Homo\<^sub>L :: \<open>('c::sep_magma,'d::sep_magma) domainoid \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'd set) \<Rightarrow> bool\<close>
-  where \<open>Domainoid_Homo\<^sub>L dm T dm' \<longleftrightarrow> domainoid TYPE('c) dm \<and> (\<forall>x u'. u' \<in> dm' x \<longrightarrow> u' \<Turnstile> \<DD>[dm] (x \<Ztypecolon> T) )\<close>
+  where \<open>Domainoid_Homo\<^sub>L dm T dm' \<longleftrightarrow> domainoid TYPE('c) dm \<and> (\<forall>x u'. u' \<in> dm' x \<longrightarrow> u' \<Turnstile> \<Psi>[dm] (x \<Ztypecolon> T) )\<close>
   \<comment> \<open>The lower approximation\<close>
 
 
@@ -236,117 +259,118 @@ subsection \<open>Approximately Evaluating Domainoid of BI Assertions\<close>
 declare [[\<phi>trace_reasoning = 1]]
 
 declare [[
-  \<phi>reason_default_pattern \<open>\<DD>[?d] ?S \<le> ?S'\<close> \<Rightarrow> \<open>\<DD>[?d] ?S \<le> ?S'\<close> \<open>\<DD>[?d] ?S \<le> ?var_S'\<close> (200)
-                      and \<open>?S \<le> \<DD>[?d] ?S'\<close> \<Rightarrow> \<open>?S \<le> \<DD>[?d] ?S'\<close> \<open>?var_S \<le> \<DD>[?d] ?S'\<close> (200)
+  \<phi>reason_default_pattern \<open>\<Psi>[?d] ?S \<le> ?S'\<close> \<Rightarrow> \<open>\<Psi>[?d] ?S \<le> ?S'\<close> \<open>\<Psi>[?d] ?S \<le> ?var_S'\<close> (200)
+                      and \<open>?S \<le> \<Psi>[?d] ?S'\<close> \<Rightarrow> \<open>?S \<le> \<Psi>[?d] ?S'\<close> \<open>?var_S \<le> \<Psi>[?d] ?S'\<close> (200)
 ]]
 
-\<phi>reasoner_group \<DD>_approximate = (100, [10,3000]) for (\<open>D \<le> \<DD>[d] A\<close>, \<open>\<DD>[d] A \<le> D\<close>)
+\<phi>reasoner_group \<Psi>_approximate = (100, [10,3000]) for (\<open>D \<le> \<Psi>[d] A\<close>, \<open>\<Psi>[d] A \<le> D\<close>)
     \<open>Reasoning rules approximately evaluating the domainoid of a given BI assertion\<close>
-  and \<DD>_approx_cut = (1000, [1000,1030]) for (\<open>D \<le> \<DD>[d] A\<close>, \<open>\<DD>[d] A \<le> D\<close>) in \<DD>_approximate
+  and \<Psi>_approx_cut = (1000, [1000,1030]) for (\<open>D \<le> \<Psi>[d] A\<close>, \<open>\<Psi>[d] A \<le> D\<close>) in \<Psi>_approximate
     \<open>Cutting rules\<close>
 
 subsubsection \<open>\<phi>-Type\<close>
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
+lemma [\<phi>reason %\<Psi>_approx_cut]:
   \<open> Domainoid_Homo\<^sub>L d T dm\<^sub>T
-\<Longrightarrow> dm\<^sub>T x \<le> \<DD>[d] (x \<Ztypecolon> T)\<close>
+\<Longrightarrow> dm\<^sub>T x \<le> \<Psi>[d] (x \<Ztypecolon> T)\<close>
   unfolding Domainoid_Homo\<^sub>L_def set_eq_iff
   by clarsimp
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
+lemma [\<phi>reason %\<Psi>_approx_cut]:
   \<open> Domainoid_Homo\<^sub>U d T dm\<^sub>T
-\<Longrightarrow> \<DD>[d] (x \<Ztypecolon> T) \<le> dm\<^sub>T x\<close>
+\<Longrightarrow> \<Psi>[d] (x \<Ztypecolon> T) \<le> dm\<^sub>T x\<close>
   unfolding Domainoid_Homo\<^sub>U_def set_eq_iff
   by clarsimp
 
 subsubsection \<open>BI Connectives\<close>
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
+lemma [\<phi>reason %\<Psi>_approx_cut]:
   \<open> domainoid TYPE('c::sep_magma_1) d
 \<Longrightarrow> homo_one d
-\<Longrightarrow> \<DD>[d] 1 \<le> 1 \<close>
-  unfolding \<DD>_1 by simp
+\<Longrightarrow> \<Psi>[d] 1 \<le> 1 \<close>
+  unfolding \<Psi>_1 by simp
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
+lemma [\<phi>reason %\<Psi>_approx_cut]:
   \<open> domainoid TYPE('c::sep_magma_1) d
 \<Longrightarrow> homo_one d
-\<Longrightarrow> 1 \<le> \<DD>[d] 1 \<close>
-  unfolding \<DD>_1 by simp
+\<Longrightarrow> 1 \<le> \<Psi>[d] 1 \<close>
+  unfolding \<Psi>_1 by simp
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> 0 \<le> \<DD>[d] 0 \<close>
-  unfolding \<DD>_0 by simp
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> 0 \<le> \<Psi>[d] 0 \<close>
+  unfolding \<Psi>_0 by simp
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> \<DD>[d] 0 \<le> 0 \<close>
-  unfolding \<DD>_0 by simp
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> \<Psi>[d] 0 \<le> 0 \<close>
+  unfolding \<Psi>_0 by simp
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> A' \<le> \<DD>[d] A
-\<Longrightarrow> B' \<le> \<DD>[d] B
-\<Longrightarrow> A' * B' \<le> \<DD>[d] (A * B)\<close>
-  unfolding \<DD>_Multiplicative_Conj
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> closed_homo_sep \<psi>
+\<Longrightarrow> A' \<le> \<Psi>[\<psi>] A
+\<Longrightarrow> B' \<le> \<Psi>[\<psi>] B
+\<Longrightarrow> A' * B' \<le> \<Psi>[\<psi>] (A * B)\<close>
+  unfolding \<Psi>_Multiplicative_Conj
   by (meson order.trans times_set_subset(1) times_set_subset(2))
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> \<DD>[d] A \<le> A'
-\<Longrightarrow> \<DD>[d] B \<le> B'
-\<Longrightarrow> \<DD>[d] (A * B) \<le> A' * B'\<close>
-  unfolding \<DD>_Multiplicative_Conj
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> \<Psi>[d] A \<le> A'
+\<Longrightarrow> \<Psi>[d] B \<le> B'
+\<Longrightarrow> \<Psi>[d] (A * B) \<le> A' * B'\<close>
+  unfolding \<Psi>_Multiplicative_Conj
   by (meson order.trans times_set_subset(1) times_set_subset(2))
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
+lemma [\<phi>reason %\<Psi>_approx_cut]:
   \<open> domainoid TYPE('c::sep_algebra) d
 \<Longrightarrow> homo_one d
-\<Longrightarrow> (\<And>i\<in>S. \<DD>[d] (A i) \<le> A' i)
-\<Longrightarrow> \<DD>[d] (\<big_ast>i\<in>S. A i) \<le> (\<big_ast>i\<in>S. A' i) \<close>
-  unfolding \<DD>_Mul_Quant
+\<Longrightarrow> (\<And>i\<in>S. \<Psi>[d] (A i) \<le> A' i)
+\<Longrightarrow> \<Psi>[d] (\<big_ast>i\<in>S. A i) \<le> (\<big_ast>i\<in>S. A' i) \<close>
+  unfolding \<Psi>_Mul_Quant
   by (simp add: Mul_Quant_ord)
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
+lemma [\<phi>reason %\<Psi>_approx_cut]:
   \<open> domainoid TYPE('c::sep_algebra) d
 \<Longrightarrow> homo_one d
-\<Longrightarrow> (\<And>i\<in>S. A' i \<le> \<DD>[d] (A i))
-\<Longrightarrow> (\<big_ast>i\<in>S. A' i) \<le> \<DD>[d] (\<big_ast>i\<in>S. A i) \<close>
-  unfolding \<DD>_Mul_Quant
+\<Longrightarrow> (\<And>i\<in>S. A' i \<le> \<Psi>[d] (A i))
+\<Longrightarrow> (\<big_ast>i\<in>S. A' i) \<le> \<Psi>[d] (\<big_ast>i\<in>S. A i) \<close>
+  unfolding \<Psi>_Mul_Quant
   by (simp add: Mul_Quant_ord)
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> A' \<le> \<DD>[d] A
-\<Longrightarrow> B' \<le> \<DD>[d] B
-\<Longrightarrow> A' + B' \<le> \<DD>[d] (A + B) \<close>
-  unfolding \<DD>_Additive_Disj
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> A' \<le> \<Psi>[d] A
+\<Longrightarrow> B' \<le> \<Psi>[d] B
+\<Longrightarrow> A' + B' \<le> \<Psi>[d] (A + B) \<close>
+  unfolding \<Psi>_Additive_Disj
   by (clarsimp; fastforce)
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> \<DD>[d] A \<le> A'
-\<Longrightarrow> \<DD>[d] B \<le> B'
-\<Longrightarrow> \<DD>[d] (A + B) \<le> A' + B' \<close>
-  unfolding \<DD>_Additive_Disj
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> \<Psi>[d] A \<le> A'
+\<Longrightarrow> \<Psi>[d] B \<le> B'
+\<Longrightarrow> \<Psi>[d] (A + B) \<le> A' + B' \<close>
+  unfolding \<Psi>_Additive_Disj
   by (clarsimp; fastforce)
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> (\<And>c. \<DD>[d] (S c) \<le> S' c)
-\<Longrightarrow> \<DD>[d] (ExSet S) \<le> ExSet S'\<close>
-  unfolding \<DD>_ExSet
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> (\<And>c. \<Psi>[d] (S c) \<le> S' c)
+\<Longrightarrow> \<Psi>[d] (ExSet S) \<le> ExSet S'\<close>
+  unfolding \<Psi>_ExSet
   by (simp add: ExSet_ord)
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> (\<And>c. S' c \<le> \<DD>[d] (S c))
-\<Longrightarrow> ExSet S' \<le> \<DD>[d] (ExSet S)\<close>
-  unfolding \<DD>_ExSet
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> (\<And>c. S' c \<le> \<Psi>[d] (S c))
+\<Longrightarrow> ExSet S' \<le> \<Psi>[d] (ExSet S)\<close>
+  unfolding \<Psi>_ExSet
   by (simp add: ExSet_ord)
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> ((\<DD>[d] S) \<s>\<u>\<b>\<j> P) \<le> S'
-\<Longrightarrow> \<DD>[d] (S \<s>\<u>\<b>\<j> P) \<le> S'\<close>
-  unfolding \<DD>_Subjection
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> ((\<Psi>[d] S) \<s>\<u>\<b>\<j> P) \<le> S'
+\<Longrightarrow> \<Psi>[d] (S \<s>\<u>\<b>\<j> P) \<le> S'\<close>
+  unfolding \<Psi>_Subjection
   by (clarsimp simp add: Subjection_ord)
 
-lemma [\<phi>reason %\<DD>_approx_cut]:
-  \<open> S' \<le> ((\<DD>[d] S) \<s>\<u>\<b>\<j> P)
-\<Longrightarrow> S' \<le> \<DD>[d] (S \<s>\<u>\<b>\<j> P)\<close>
-  unfolding \<DD>_Subjection
+lemma [\<phi>reason %\<Psi>_approx_cut]:
+  \<open> S' \<le> ((\<Psi>[d] S) \<s>\<u>\<b>\<j> P)
+\<Longrightarrow> S' \<le> \<Psi>[d] (S \<s>\<u>\<b>\<j> P)\<close>
+  unfolding \<Psi>_Subjection
   by (clarsimp simp add: Subjection_ord)
 
 
@@ -359,8 +383,8 @@ lemma [\<phi>reason 1000]:
   \<open> Pa \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
 \<Longrightarrow> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> B
 \<Longrightarrow> domainoid TYPE('c::sep_magma) d
-\<Longrightarrow> A' \<le> \<DD>[d] A \<comment>\<open>expand \<open>\<DD>[d] A, \<DD>[d] B\<close> to a simpler (but should still strong) upper approximation\<close>
-\<Longrightarrow> B' \<le> \<DD>[d] B
+\<Longrightarrow> A' \<le> \<Psi>[d] A \<comment>\<open>expand \<open>\<Psi>[d] A, \<Psi>[d] B\<close> to a simpler (but should still strong) upper approximation\<close>
+\<Longrightarrow> B' \<le> \<Psi>[d] B
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Pa \<and> Pb \<longrightarrow> (\<exists>a b. a \<in> A' \<and> b \<in> B' \<and> a ## b))
 \<Longrightarrow> Pa \<and> Pb \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A * B\<close>
   unfolding Inhabited_def subset_iff Premise_def Action_Tag_def
@@ -368,7 +392,7 @@ lemma [\<phi>reason 1000]:
 
 lemma \<comment> \<open>The above rule is reversible for any domainoid extraction \<open>d\<close>\<close>
   \<open> domainoid TYPE('c::sep_magma) d
-\<Longrightarrow> Inhabited (A * B) \<longleftrightarrow> (\<exists>a b. a \<in> \<DD>[d] A \<and> b \<in> \<DD>[d] B \<and> a ## b)\<close>
+\<Longrightarrow> Inhabited (A * B) \<longleftrightarrow> (\<exists>a b. a \<in> \<Psi>[d] A \<and> b \<in> \<Psi>[d] B \<and> a ## b)\<close>
   unfolding Inhabited_def
   by (clarsimp simp add: domainoid_def closed_homo_sep_def closed_homo_sep_disj_def; blast)
 
@@ -383,7 +407,7 @@ lemma [\<phi>reason default 10]:
                           \<comment> \<open>\<open>\<psi>\<^sub>D d\<^sub>x ## \<psi>\<^sub>D d\<^sub>y\<close> reflects the condition \<open>\<psi> u ## \<psi> v\<close> in \<open>Separation_Disj\<close>\<close> \<close>
   for \<psi> :: \<open>'c::sep_magma \<Rightarrow> 'cc::sep_magma\<close>
   unfolding Separation_Disj\<^sub>\<phi>_def Separation_Disj_def Domainoid_Homo\<^sub>U_def Orelse_shortcut_def
-  by (clarsimp simp add: domainoid_def Premise_def homo_domainoid_def[unfolded fun_eq_iff, simplified]
+  by (clarsimp simp add: omainoid_def Premise_def homo_domainoid_def[unfolded fun_eq_iff, simplified]
                          closed_homo_sep_def closed_homo_sep_disj_def; metis)
 
 lemma [\<phi>reason 1000]:

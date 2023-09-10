@@ -661,6 +661,15 @@ lemma [\<phi>reason 1000]:
 let_\<phi>type \<phi>Composition deriving SE_Trim_Empty
 
 
+(*   C ----> T ---> U
+     \<down>\<delta>  \<subseteq>   |      |
+    D(c) \<leftarrow>--d\<^sub>x 
+ *)
+lemma
+  \<open> Domainoid_Homo\<^sub>L \<delta> U d
+\<Longrightarrow> Domainoid_Homo\<^sub>L \<delta> (T \<Zcomp> U) d \<close>
+
+
 (*
 lemma [\<phi>reason 1200]:
   \<open> y \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P
@@ -1036,9 +1045,15 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
   by (clarsimp simp add: Ball_def; metis)
 
 
-subsection \<open>Vertical Composition of Scalar Multiplication\<close>
+lemma
+  \<open> 
+\<Longrightarrow> Domainoid_Homo\<^sub>U \<delta> (\<psi> \<Zcomp> T) dm' \<close>
 
-thm if_cong
+
+
+
+
+subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
        
