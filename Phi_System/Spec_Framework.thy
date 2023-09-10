@@ -300,6 +300,13 @@ declare [[\<phi>reason_default_pattern
   and \<open>Carrier_Set ?T _\<close> \<Rightarrow> \<open>Carrier_Set ?T _\<close> (100)
 ]]
 
+\<phi>reasoner_group carrier_set = (100, [10,3000]) for \<open>Within_Carrier_Set A\<close>
+    \<open>Rules reasoning if the given assertion \<open>A\<close> with all its concrete objects falls in the carrier set of the separation algebra\<close>
+ and carrier_set_cut = (1000, [1000, 1030]) for \<open>Within_Carrier_Set A\<close> in carrier_set
+    \<open>Cutting rules\<close>
+ and carrier_set_red = (2500, [2500, 2530]) for \<open>Within_Carrier_Set A\<close> in carrier_set and > carrier_set_cut
+    \<open>Literal Reduction\<close>
+
 subsubsection \<open>General Rules\<close>
 
 lemma prem_extract_Carrier_Set:
@@ -316,7 +323,7 @@ lemma [\<phi>reason default 1]:
   unfolding Carrier_Set_def Premise_def
   by blast
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> Within_Carrier_Set A
 \<Longrightarrow> Within_Carrier_Set B
 \<Longrightarrow> Within_Carrier_Set (A * B)\<close>
@@ -330,14 +337,14 @@ lemma
   \<open>Within_Carrier_Set (A * B) \<Longrightarrow> Within_Carrier_Set A \<and> Within_Carrier_Set B\<close>
   oops
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> Carrier_Set T P
 \<Longrightarrow> Carrier_Set U Q
 \<Longrightarrow> Carrier_Set (T \<^emph> U) (pred_prod P Q)\<close>
   unfolding Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp simp add: mul_carrier_closed)
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> Within_Carrier_Set A
 \<Longrightarrow> Within_Carrier_Set B
 \<Longrightarrow> Within_Carrier_Set (A + B)\<close>
@@ -349,7 +356,7 @@ lemma \<comment> \<open>The above rule is reversible\<close>
   unfolding Within_Carrier_Set_def
   by clarsimp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> (\<And>x. Within_Carrier_Set (A x))
 \<Longrightarrow> Within_Carrier_Set (ExSet A) \<close>
   unfolding Within_Carrier_Set_def
@@ -360,7 +367,7 @@ lemma \<comment> \<open>The above rule is reversible\<close>
   unfolding Within_Carrier_Set_def
   by clarsimp blast
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> Within_Carrier_Set A
 \<Longrightarrow> Within_Carrier_Set B
 \<Longrightarrow> Within_Carrier_Set (A \<and>\<^sub>B\<^sub>I B)\<close>
@@ -374,21 +381,44 @@ text \<open>The above rule is also not reversible. Essentially the rules for con
 lemma \<open> Within_Carrier_Set (A \<and>\<^sub>B\<^sub>I B) \<Longrightarrow> Within_Carrier_Set A \<and> Within_Carrier_Set B \<close>
   oops
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Within_Carrier_Set A)
 \<Longrightarrow> Within_Carrier_Set (A \<s>\<u>\<b>\<j> P)\<close>
   unfolding Within_Carrier_Set_def
   by clarsimp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> Within_Carrier_Set 0 \<close>
   unfolding Within_Carrier_Set_def
   by simp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> Within_Carrier_Set (1 :: 'a::sep_carrier_1 set) \<close>
   unfolding Within_Carrier_Set_def
   by simp
+
+paragraph \<open>Case Split\<close>
+
+subparagraph \<open>Reduction\<close>
+
+lemma [\<phi>reason %carrier_set_red]:
+  \<open> Within_Carrier_Set (P a)
+\<Longrightarrow> Within_Carrier_Set (case_sum P Q (Inl a)) \<close>
+  by simp
+
+lemma [\<phi>reason %carrier_set_red]:
+  \<open> Within_Carrier_Set (Q b)
+\<Longrightarrow> Within_Carrier_Set (case_sum P Q (Inr b)) \<close>
+  by simp
+
+subparagraph \<open>Case Split\<close>
+
+lemma [\<phi>reason %carrier_set_cut]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> Within_Carrier_Set (P a))
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> Within_Carrier_Set (Q b))
+\<Longrightarrow> Within_Carrier_Set (case_sum P Q x) \<close>
+  unfolding Premise_def
+  by (cases x; clarsimp)
 
 text \<open>Also not reversible in non-trivial cases.\<close>
 

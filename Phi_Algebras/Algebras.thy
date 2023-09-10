@@ -3038,7 +3038,7 @@ lemma to_share_funcomp_sep_disj_I:
     apply (insert prems[THEN spec[where x=x]])
     by (cases \<open>a x\<close>; cases \<open>b x\<close>; simp) .
 
-lemma to_share_ringop_id[simp]:
+lemma pointwise_to_share_bij[simp]:
   \<open>to_share \<circ> x = to_share \<circ> y \<longleftrightarrow> x = y\<close>
   unfolding fun_eq_iff
   by (simp, metis strip_share_Share)

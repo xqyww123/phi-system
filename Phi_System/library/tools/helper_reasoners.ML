@@ -21,7 +21,7 @@ include PHI_REASONERS
   quick rule is the quick-cut used when the Y contains no schematic variables.
   *)
 val reasoner_ToA_conditioned_subgoals :
-          thm (*with R*) * thm (*with R to be instantiated to a constant*) *
+          thm (*rule having no Remainder*) * thm (*with conditioned Remainder*) * thm (*necessarily with remainder*) *
         ( string (*head of the conditional branch, e.g., If*) *
           int (*arity of the head, e.g., 3*) *
           thm list (*rewrites degenerating the branch*) * 
@@ -37,7 +37,7 @@ end
 structure Phi_Reasoners : PHI_REASONERS = struct
 open Phi_Reasoners
 
-fun reasoner_ToA_conditioned_subgoals (ruleR, ruleR', (head_const, arity, degenerates, rewrs),
+fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, degenerates, rewrs),
                                        mk_insts, ctxt_gen) =
   let datatype has_remainder = No_Rem | Has_Rem | True_Rem
       fun has_var tm = maxidx_of_term tm >= 0
@@ -60,13 +60,6 @@ fun reasoner_ToA_conditioned_subgoals (ruleR, ruleR', (head_const, arity, degene
              |> pair ((N,ty))
             end
 
-      fun mk_rule base rule =
-        let val Cs = map_filter (try (mk_inst base 0 o #2 o dest_Tr)) (Thm.prems_of rule)
-         in Thm.instantiate (TVars.empty, Vars.make Cs) rule
-         |> Simplifier.rewrite_rule ctxt_gen (@{thm' REMAINS_simp(2)} :: degenerates)
-         |> Thm.trim_context
-        end
-
       fun mk_quick_rule rule =
         let val Y = #1 (dest_Tr (Thm.concl_of rule))
             val Ys = map_filter (try (mk_inst Y 0 o #1 o dest_Tr)) (Thm.prems_of rule)
@@ -76,7 +69,6 @@ fun reasoner_ToA_conditioned_subgoals (ruleR, ruleR', (head_const, arity, degene
          |> Thm.trim_context
         end
 
-      val (rule, ruleRT) = (mk_rule \<^Const>\<open>False\<close> ruleR', mk_rule \<^Const>\<open>True\<close> ruleR')
       val (quick_rule, quick_ruleR, quick_ruleRT) =
           (mk_quick_rule rule, mk_quick_rule ruleR, mk_quick_rule ruleRT)
 

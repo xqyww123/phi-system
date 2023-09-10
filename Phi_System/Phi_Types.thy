@@ -148,7 +148,7 @@ lemma [\<phi>reason default %\<phi>TA_guesser]:
   unfolding Guess_Unzip_of_Semimodule_def ..
 
 
-subsection \<open>Dependent Sum Type\<close>
+subsection \<open>Dependent Sum Type \& Abstraction of Set\<close>
 
 text \<open>Transformation functor requires inner elements to be transformed into some fixed \<phi>-type
   independently with the element. It seems to be a limitation. For example, we want to transform
@@ -415,6 +415,26 @@ lemma \<Sigma>_fundef_cong[fundef_cong]:
 
 subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
+
+
+lemma [\<phi>reason_template name \<Sigma>\<^sub>I[]]:
+  \<open> Functional_Transformation_Functor F F' (T (fst x)) (\<Sigma> T) D R pm fm
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D (snd x) \<longrightarrow> (fst x, a) \<in> R (snd x))
+\<Longrightarrow> x \<Ztypecolon> \<Sigma> c. F (T c) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>a. (fst x, a)) (\<lambda>_. True) (snd x) \<Ztypecolon> F' (\<Sigma> T)\<close>
+  unfolding Functional_Transformation_Functor_def Premise_def
+  apply clarsimp
+  subgoal premises prems
+    by (insert prems(1)[THEN spec[where x=\<open>snd x\<close>], THEN spec[where x=\<open>\<lambda>a. (fst x, a)\<close>],
+                        THEN spec[where x=\<open>\<lambda>_. True\<close>], simplified]
+               prems(2-),
+        clarsimp simp add: transformation_weaken) .
+
+
+
+
+
+
+
 definition \<open>Trivial_\<Sigma> Fa Fb D s m \<longleftrightarrow> (\<forall>T x. D (s x) x \<longrightarrow> (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))))\<close>
   \<comment> \<open>There is only trivial homomorphism where all the first projection of the element are equal\<close>
 
@@ -661,9 +681,15 @@ lemma [\<phi>reason 1000]:
 let_\<phi>type \<phi>Composition deriving SE_Trim_Empty
 
 
+
+lemma \<Psi>_comp:
+  \<open> \<Psi>[\<psi>] (x \<Ztypecolon> T) = (x \<Ztypecolon> \<phi>Fun \<psi> \<Zcomp> T) \<close>
+  unfolding BI_eq_iff
+  by clarsimp
+
 (*   C ----> T ---> U
-     \<down>\<delta>  \<subseteq>   |      |
-    D(c) \<leftarrow>--d\<^sub>x 
+     \<down>\<delta>  \<subseteq>   | \<delta>\<^sub>T   | \<delta>\<^sub>U
+    D(c) \<leftarrow>-- \<leftarrow>----
  *)
 lemma
   \<open> Domainoid_Homo\<^sub>L \<delta> U d
@@ -891,22 +917,51 @@ thm Tr2
 *)
 
 
-(* TODO!
+
 subsubsection \<open>Addition of Algebraic Data Type\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-           
+declare [[\<phi>trace_reasoning = 0]]
+
+(*TODO: finish me!*)
+
 \<phi>type_def \<phi>ADT_Add :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
-  deriving Implication
-       and \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
+  deriving \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
+       and \<open>Abstract_Domain T P
+        \<Longrightarrow> Abstract_Domain U Q
+        \<Longrightarrow> Abstract_Domain (T +\<^sub>\<phi> U) (pred_sum P Q) \<close>
+       and \<open>Carrier_Set T P
+        \<Longrightarrow> Carrier_Set U Q
+        \<Longrightarrow> Carrier_Set (T +\<^sub>\<phi> U) (pred_sum P Q)\<close>
+       and \<open>Identity_Element\<^sub>I (x \<Ztypecolon> T) P
+        \<Longrightarrow> Identity_Element\<^sub>I (Inl x \<Ztypecolon> T +\<^sub>\<phi> U) P\<close>
+       and \<open>Identity_Element\<^sub>I (y \<Ztypecolon> U) Q
+        \<Longrightarrow> Identity_Element\<^sub>I (Inr y \<Ztypecolon> T +\<^sub>\<phi> U) Q\<close>
+       and \<open>Identity_Element\<^sub>E (x \<Ztypecolon> T)
+        \<Longrightarrow> Identity_Element\<^sub>E (Inl x \<Ztypecolon> T +\<^sub>\<phi> U)\<close>
+       and \<open>Identity_Element\<^sub>E (y \<Ztypecolon> U)
+        \<Longrightarrow> Identity_Element\<^sub>E (Inr y \<Ztypecolon> T +\<^sub>\<phi> U)\<close>
+       and Transformation_Functor
 
-term \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
+subsubsection \<open>Rewrites\<close>
 
-thm old.sum.simps
+lemma \<phi>ADT_Add_red[simp]:
+  \<open>(Inl a \<Ztypecolon> T +\<^sub>\<phi> U) = (a \<Ztypecolon> T)\<close>
+  \<open>(Inr b \<Ztypecolon> T +\<^sub>\<phi> U) = (b \<Ztypecolon> U)\<close>
+  unfolding \<phi>ADT_Add.unfold
+  by simp_all
 
-term \<open>(fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U)\<close>
-*)
+subsubsection \<open>Rule\<close>
+
+lemma
+  \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
+\<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (case x of Inl u \<Rightarrow> (\<forall>a \<in> D\<^sub>T u. Inl a \<in> R\<^sub>T u)
+                    | Inr v \<Rightarrow> (\<forall>b \<in> D\<^sub>U v. Inr b \<in> R\<^sub>U v))
+\<Longrightarrow> x \<Ztypecolon> F\<^sub>T T +\<^sub>\<phi> F\<^sub>U U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum (fm\<^sub>T Inl (\<lambda>_. True)) (fm\<^sub>U Inr (\<lambda>_. True)) x \<Ztypecolon> F (T +\<^sub>\<phi> U)
+                         \<w>\<i>\<t>\<h> pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True)) x\<close>
+  unfolding Functional_Transformation_Functor_def Premise_def
+  by (cases x; clarsimp)
 
 
 subsection \<open>Embedding Additive Disjunction\<close>
@@ -948,6 +1003,7 @@ lemma [embed_into_\<phi>type]:
   by clarsimp
  
 let_\<phi>type \<phi>Union deriving \<open>Object_Equiv (\<circle> \<or>\<^sub>\<phi> \<circle>) (\<lambda>_ _. True)\<close>
+
 
 
 subsection \<open>Embedding Additive Conjunction\<close>
@@ -1006,6 +1062,26 @@ lemma [\<phi>reason 1000]:
   by clarsimp
 
 
+(* Commutativity of \<open>\<and>\<^sub>\<phi>\<close> cannot be derived simply from transformation functor. *)
+
+lemma
+  \<open> Functional_Transformation_Functor F\<^sub>A F A (A \<and>\<^sub>\<phi> B) D\<^sub>A R\<^sub>A pm\<^sub>A fm\<^sub>A
+\<Longrightarrow> x \<Ztypecolon> F\<^sub>A A \<and>\<^sub>\<phi> F\<^sub>B B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<dots>\<close>
+
+lemma
+  \<open> Functional_Transformation_Functor F F\<^sub>A (A \<and>\<^sub>\<phi> B) A D\<^sub>A R\<^sub>A pm\<^sub>A fm\<^sub>A
+\<Longrightarrow> Functional_Transformation_Functor F F\<^sub>B (A \<and>\<^sub>\<phi> B) B D\<^sub>B R\<^sub>B pm\<^sub>B fm\<^sub>B
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D\<^sub>A x. fst a \<in> R\<^sub>A x) \<and> (\<forall>a \<in> D\<^sub>B x. snd a \<in> R\<^sub>B x)
+\<Longrightarrow> x \<Ztypecolon> F (A \<and>\<^sub>\<phi> B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fm\<^sub>A fst (\<lambda>_. True) x, fm\<^sub>B snd (\<lambda>_. True) x) \<Ztypecolon> F\<^sub>A A \<and>\<^sub>\<phi> F\<^sub>B B \<close>
+  unfolding Functional_Transformation_Functor_def Premise_def
+  subgoal premises prems
+    by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=fst], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+               prems(2)[THEN spec[where x=x], THEN spec[where x=snd], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+               prems(3-),
+        clarsimp simp add: Transformation_def) .
+
+
+
 subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
@@ -1013,7 +1089,7 @@ text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close
 declare [[\<phi>trace_reasoning = 0]]
 
 
-\<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixl "\<Zcomp>\<^sub>f" 30)
+\<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   opening extract_premises_in_Carrier_Set
   deriving Basic
@@ -1043,6 +1119,57 @@ lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
             homo_sep_def closed_homo_sep_disj_def Ant_Seq_def
             homo_sep_mult_def homo_sep_disj_def Orelse_shortcut_def TRACE_FAIL_def
   by (clarsimp simp add: Ball_def; metis)
+
+lemma \<phi>Fun'_Scalar_Assoc\<^sub>I:
+  \<open> Semimodule_Scalar_Assoc\<^sub>I \<phi>Fun' \<phi>Fun' \<phi>Fun' T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (o) (\<lambda>_ _ x. x) \<close>
+  unfolding Semimodule_Scalar_Assoc\<^sub>I_def Transformation_def
+  by clarsimp blast
+
+lemma \<phi>Fun'_Scalar_Assoc\<^sub>E:
+  \<open> Semimodule_Scalar_Assoc\<^sub>E \<phi>Fun' \<phi>Fun' \<phi>Fun' T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (o) (\<lambda>_ _ x. x) \<close>
+  unfolding Semimodule_Scalar_Assoc\<^sub>E_def Transformation_def
+  by clarsimp blast
+
+text \<open>Though \<open>\<phi>Fun'\<close> comprises an associative semimodule, we don not activate it in the reasoning
+  system because its associative reduction is not expected in usual reasoning.
+  Instead, we manually instantiate useful properties.\<close>
+
+lemmas \<phi>Fun'_scalar_assoc = scalar_assoc_template[OF \<phi>Fun'_Scalar_Assoc\<^sub>I \<phi>Fun'_Scalar_Assoc\<^sub>E, simplified]
+
+lemma (*TODO!*)
+  \<open> fun_commute \<phi> \<psi> \<phi>' \<psi>'
+\<Longrightarrow> (\<psi> \<Zcomp>\<^sub>f \<phi> \<Zcomp>\<^sub>f T) = (\<phi>' \<Zcomp>\<^sub>f \<psi>' \<Zcomp>\<^sub>f T)\<close>
+  unfolding fun_commute_def
+  by (simp add: \<phi>Fun'_scalar_assoc)
+
+lemma
+  \<open> inj \<psi>
+\<Longrightarrow> x \<Ztypecolon> (\<psi> \<Zcomp>\<^sub>f T) \<and>\<^sub>\<phi> (\<psi> \<Zcomp>\<^sub>f U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<psi> \<Zcomp>\<^sub>f (T \<and>\<^sub>\<phi> U) \<close>
+  unfolding Transformation_def inj_def
+  by clarsimp blast
+
+
+lemma \<comment> \<open>The above rule is reversible (for universally quantified x, T, U)\<close>
+  \<open>(\<And>T U x. x \<Ztypecolon> (\<psi> \<Zcomp>\<^sub>f T) \<and>\<^sub>\<phi> (\<psi> \<Zcomp>\<^sub>f U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<psi> \<Zcomp>\<^sub>f (T \<and>\<^sub>\<phi> U)) \<Longrightarrow> inj \<psi>\<close>
+  unfolding Transformation_def inj_def
+  apply clarsimp
+  subgoal premises prems for x y
+    by (insert prems(1)[of _ \<open>\<lambda>_. {x}\<close> _ \<open>\<lambda>_. {y}\<close>]
+                  prems(2-),
+        clarsimp simp add: \<phi>Type_def Satisfaction_def) .
+
+lemma
+  \<open> x \<Ztypecolon> \<psi> \<Zcomp>\<^sub>f (T +\<^sub>\<phi> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<psi> \<Zcomp>\<^sub>f T) +\<^sub>\<phi> (\<psi> \<Zcomp>\<^sub>f U) \<close>
+  unfolding Transformation_def
+  by (cases x; clarsimp)
+
+
+lemma
+  \<open> fun_commute \<psi> \<phi>' \<psi>' \<phi>
+\<Longrightarrow> (\<And>x. \<Psi>[\<psi>'] (x \<Ztypecolon> T) = (f x \<Ztypecolon> U))
+\<Longrightarrow> \<Psi>[\<psi>] (x \<Ztypecolon> \<phi> \<Zcomp>\<^sub>f T) = (f x \<Ztypecolon> \<phi>' \<Zcomp>\<^sub>f U) \<close>
+  unfolding \<phi>Fun'_def \<Psi>_comp
+  apply (clarsimp simp add: fun_commute_def[unfolded fun_eq_iff, simplified])
 
 
 lemma
