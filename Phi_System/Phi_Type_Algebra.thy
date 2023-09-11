@@ -317,6 +317,103 @@ definition Semimodule_SDistr_Homo\<^sub>U_rev :: \<open>('s \<Rightarrow> ('c::s
   \<comment>\<open>Also not a template parameter, see \<open>Semimodule_SDistr_Homo\<^sub>Z_rev\<close>\<close>
 
 
+subsubsection \<open>Commutativity between \<phi>-Type Operators\<close>
+
+text \<open>\<open>Separation_Homo\<close> is a special case of the commutativity to \<open>\<^emph>\<close>.\<close>
+
+text \<open>The Commutative Properties are not template parameters because, the main problem is
+  the commutativity is between two \<phi>-types, and it is hard to decide which one is the host of the property,
+  recalling the template instantiation is instantiating properties of one certain host \<phi>-type
+  (I am thinking now if it is a deficiency... why not to just use pattern matching...
+   It seems feasible, the triggers of each template are not a list of property names but a
+   conjunction-connected cterm corresponding to each template parameter, and for each choosen instantiation,
+   we instantiate the cterm correspondingly.)\<close>
+
+paragraph \<open>Unary-to-Unary\<close>
+
+definition Tyops_Commute :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                           \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
+                           \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                           \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                           \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                           \<Rightarrow> ('a \<Rightarrow> bool)
+                           \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
+                           \<Rightarrow> bool\<close>
+  where \<open>Tyops_Commute F F' G G' T D r \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y))\<close>
+
+definition Functional_Tyops_Commute :: \<open> (('c\<^sub>b,'a\<^sub>b) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>a,'a\<^sub>a) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>b,'a\<^sub>b) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>a,'a\<^sub>a) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                      \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                                      \<Rightarrow> ('a \<Rightarrow> bool)
+                                      \<Rightarrow> ('a \<Rightarrow> 'b)
+                                      \<Rightarrow> ('a \<Rightarrow> bool)
+                                      \<Rightarrow> bool\<close>
+  where \<open>Functional_Tyops_Commute F\<^sub>a F'\<^sub>a F\<^sub>b F'\<^sub>b T D f P \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F\<^sub>a (F\<^sub>b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F'\<^sub>b (F'\<^sub>a T) \<w>\<i>\<t>\<h> P x))\<close>
+
+
+paragraph \<open>Unary-to-Binary\<close>
+
+definition Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                             \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi>)
+                             \<Rightarrow> (('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi>)
+                             \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                             \<Rightarrow> (('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                             \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                             \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
+                             \<Rightarrow> ('a \<Rightarrow> bool)
+                             \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
+                             \<Rightarrow> bool\<close>
+  where \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y))\<close>
+
+definition Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                      \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                                      \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
+                                      \<Rightarrow> ('a \<Rightarrow> bool)
+                                      \<Rightarrow> ('a \<Rightarrow> 'b)
+                                      \<Rightarrow> ('a \<Rightarrow> bool)
+                                      \<Rightarrow> bool\<close>
+  where \<open>Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D f P \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<w>\<i>\<t>\<h> P x))\<close>
+
+paragraph \<open>Binary-to-Unary\<close>
+
+definition Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                              \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi>)
+                              \<Rightarrow> (('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi>)
+                              \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                              \<Rightarrow> (('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                              \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                              \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
+                              \<Rightarrow> ('b \<Rightarrow> bool)
+                              \<Rightarrow> ('b \<Rightarrow> 'a \<Rightarrow> bool)
+                              \<Rightarrow> bool\<close>
+  where \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y))\<close>
+
+definition Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                                      \<Rightarrow> (('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                      \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                                      \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
+                                      \<Rightarrow> ('b \<Rightarrow> bool)
+                                      \<Rightarrow> ('b \<Rightarrow> 'a)
+                                      \<Rightarrow> ('b \<Rightarrow> bool)
+                                      \<Rightarrow> bool\<close>
+  where \<open>Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D f P \<longleftrightarrow>
+            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F (G T U) \<w>\<i>\<t>\<h> P x))\<close>
+
+
 subsubsection \<open>Configurations\<close>
 (*
 declare [[
@@ -399,6 +496,12 @@ declare [[
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_SDistr_Homo\<^sub>Z_rev _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Semimodule_SDistr_Homo\<^sub>U_rev _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Functional_Tyops_Commute _ _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _ _\<close>,
 
   \<phi>reason_default_pattern
       \<open>Transformation_Functor ?Fa ?Fb _ _ _ _ _\<close> \<Rightarrow>
@@ -419,6 +522,16 @@ declare [[
   and \<open>Semimodule_SDistr_Homo\<^sub>U ?F ?T _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>U ?F ?T _ _ _\<close> (100)
   and \<open>Semimodule_SDistr_Homo\<^sub>Z_rev ?F ?T _ _ _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>Z_rev ?F ?T _ _ _ _ _\<close> (100)
   and \<open>Semimodule_SDistr_Homo\<^sub>U_rev ?F ?T _ _ _ _ _\<close> \<Rightarrow> \<open>Semimodule_SDistr_Homo\<^sub>U_rev ?F ?T _ _ _ _ _\<close> (100)
+  and \<open>Tyops_Commute ?F _ ?G _ ?T _ _\<close> \<Rightarrow> \<open>Tyops_Commute ?F _ ?G _ ?T _ _\<close> (100)
+  and \<open>Functional_Tyops_Commute ?F _ ?G _ ?T _ _ _\<close> \<Rightarrow> \<open>Functional_Tyops_Commute ?F _ ?G _ ?T _ _ _\<close> (100)
+  and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?F _ _ ?G _ ?T ?U _ _\<close> \<Rightarrow>
+      \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?F _ _ ?G _ ?T ?U _ _\<close>   (100)
+  and \<open>Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?F _ _ ?G _ ?T ?U _ _ _\<close> \<Rightarrow>
+      \<open>Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?F _ _ ?G _ ?T ?U _ _ _\<close>   (100)
+  and \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ?F _ _ ?G _ ?T ?U _ _\<close> \<Rightarrow>
+      \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ?F _ _ ?G _ ?T ?U _ _\<close>   (100)
+  and \<open>Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ?F _ _ ?G _ ?T ?U _ _ _\<close> \<Rightarrow>
+      \<open>Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ?F _ _ ?G _ ?T ?U _ _ _\<close>   (100)
 ]]
 
 
@@ -736,7 +849,6 @@ lemma apply_Transformation_Functor:
 
 
 
-
 subsection \<open>Definition and Deriving Tools\<close>
 
 text \<open>The @{command \<phi>type_def} command always generate 4 sorts of rules.
@@ -1038,6 +1150,22 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
       (fn (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _) => T)
 #> add_property_kind \<^const_name>\<open>Identity_Element\<^sub>E\<close>
       (fn (Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T)) => T)
+
+(*
+#> add_property_kind \<^const_name>\<open>Tyops_Commute\<close>
+      (fn (Const(\<^const_name>\<open>Tyops_Commute\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
+#> add_property_kind \<^const_name>\<open>Functional_Tyops_Commute\<close>
+      (fn (Const(\<^const_name>\<open>Functional_Tyops_Commute\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
+#> add_property_kind \<^const_name>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<close>
+      (fn (Const(\<^const_name>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
+#> add_property_kind \<^const_name>\<open>Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<close>
+      (fn (Const(\<^const_name>\<open>Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
+#> add_property_kind \<^const_name>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<close>
+      (fn (Const(\<^const_name>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
+#> add_property_kind \<^const_name>\<open>Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<close>
+      (fn (Const(\<^const_name>\<open>Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
+*)
+
 (*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
 \<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
   it can have special overridings for singular points like that many type operators \<open>F\<close> have a
@@ -3369,6 +3497,29 @@ lemma SE_Semimodule_SDistr_a_bd_Tr_R[\<phi>reason_template 32]:
 (*The dual of the above rules is \<A>SEa*)
 *)
 
+
+subsubsection \<open>Commutativity between \<phi>-Type Operators\<close>
+
+paragraph \<open>Fallback Lattice\<close>
+
+lemma [\<phi>reason %\<phi>TA_fallback_lattice]:
+  \<open> Functional_Tyops_Commute F F' G G' T D f P
+\<Longrightarrow> Tyops_Commute F F' G G' T D (\<lambda>x y. y = f x \<and> P x) \<close>
+  unfolding Functional_Tyops_Commute_def Tyops_Commute_def
+  by simp
+
+(*TODO Tyops_Commute\<^sub>1\<^sub>_\<^sub>2*)
+
+paragraph \<open>To-Transformation Interpreter\<close>
+
+lemma [\<phi>reason %to_trans_derived]:
+  \<open> Tyops_Commute F F' G G' T D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> F G) \<close>
+  unfolding Tyops_Commute_def Premise_def Action_Tag_def
+  by blast
+
+
 subsection \<open>Property Derivers\<close>
 
 subsubsection \<open>Extension of BNF-FP\<close>
@@ -3906,6 +4057,85 @@ ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr_IH \<phi>TA_TF_rewr_C \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
 *)
 
+subsubsection \<open>Separation Homo\<close>
+
+lemma \<phi>TA_SH\<^sub>I_rule:
+  \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+            (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
+                \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U))) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Separation_Homo\<^sub>I Fa Fb Fc T U D w \<close>
+  unfolding Separation_Homo\<^sub>I_def \<phi>Prod_expn' Action_Tag_def
+  by simp
+
+lemma \<phi>TA_SH\<^sub>E_rule:
+  \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+             (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> Ft T \<^emph>\<^sub>\<A> Fu U) @action \<phi>TA_ind_target \<A>simp)
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U uz \<close>
+  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def \<phi>Auto_Prod_def
+  by simp
+
+lemma \<phi>TA_SH\<^sub>I_rewr_IH:
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> Q x y) @action \<phi>TA_ind_target undefined)
+\<equiv> (\<And>x y. Ant \<Longrightarrow> P x y @action \<phi>TA_pure_facts \<Longrightarrow> Q x y @action \<phi>TA_conditioned_ToA_template)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all
+  by (rule; blast)
+
+text \<open>This conditioned template is necessary because, see,
+  \<^prop>\<open>(\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U)))\<close>
+  \<^term>\<open>z\<close> does not decide \<open>x\<close> and \<open>y\<close> during the reasoning phase and until the phase of proof obligation solving.
+  When there are multiple choices of such induction hypotheses, for sure, we can attempt every choice
+  exhaustively, but it multiplies the search branches and can harm the performance dramatically.
+\<close>
+
+lemma \<phi>TA_SH\<^sub>I_rewr_C:
+  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
+\<equiv> (Ant \<Longrightarrow> P)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all
+  by (rule; blast)
+
+lemma \<phi>TA_SH\<^sub>E_rewr_IH:
+  \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> U) @action \<phi>TA_ind_target A)
+\<equiv> (Ant \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all
+  by simp
+
+lemma \<phi>TA_SH\<^sub>E_rewr_C:
+  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
+\<equiv> (Ant \<Longrightarrow> P @action A)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all
+  by (rule; blast)
+
+ML_file \<open>library/phi_type_algebra/separation_homo.ML\<close>
+
+hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_rewr_IH \<phi>TA_SH\<^sub>I_rewr_C
+          \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C
+
+\<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.separation_homo_I
+\<close>
+
+\<phi>property_deriver Separation_Homo\<^sub>E 121 for (\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>) = \<open>
+  Phi_Type_Algebra_Derivers.separation_homo_E
+\<close>
+
+\<phi>property_deriver Separation_Homo 122 requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E
+
+\<phi>property_deriver Separation_Monoid 130
+  requires Separation_Homo
+       and Functional_Transformation_Functor
+       and Identity_Element
+       and Basic
+
+  (*TODO: I'm thinking why I gave it this name... yes, there is identity element, but then.. what?
+          for what reason it can be called monoidal?*)
+
+
 
 subsubsection \<open>Congruence in Function Definition\<close>
 
@@ -4335,84 +4565,6 @@ declare Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, \<p
         Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
 
 
-subsubsection \<open>Separation Homo\<close>
-
-lemma \<phi>TA_SH\<^sub>I_rule:
-  \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-            (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
-                \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U))) @action \<phi>TA_ind_target undefined)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
-\<Longrightarrow> Separation_Homo\<^sub>I Fa Fb Fc T U D w \<close>
-  unfolding Separation_Homo\<^sub>I_def \<phi>Prod_expn' Action_Tag_def
-  by simp
-
-lemma \<phi>TA_SH\<^sub>E_rule:
-  \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-             (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> Ft T \<^emph>\<^sub>\<A> Fu U) @action \<phi>TA_ind_target \<A>simp)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
-\<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U uz \<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def \<phi>Auto_Prod_def
-  by simp
-
-lemma \<phi>TA_SH\<^sub>I_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> Q x y) @action \<phi>TA_ind_target undefined)
-\<equiv> (\<And>x y. Ant \<Longrightarrow> P x y @action \<phi>TA_pure_facts \<Longrightarrow> Q x y @action \<phi>TA_conditioned_ToA_template)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)
-
-text \<open>This conditioned template is necessary because, see,
-  \<^prop>\<open>(\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U)))\<close>
-  \<^term>\<open>z\<close> does not decide \<open>x\<close> and \<open>y\<close> during the reasoning phase and until the phase of proof obligation solving.
-  When there are multiple choices of such induction hypotheses, for sure, we can attempt every choice
-  exhaustively, but it multiplies the search branches and can harm the performance dramatically.
-\<close>
-
-lemma \<phi>TA_SH\<^sub>I_rewr_C:
-  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
-\<equiv> (Ant \<Longrightarrow> P)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)
-
-lemma \<phi>TA_SH\<^sub>E_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> U) @action \<phi>TA_ind_target A)
-\<equiv> (Ant \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
-  by simp
-
-lemma \<phi>TA_SH\<^sub>E_rewr_C:
-  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
-\<equiv> (Ant \<Longrightarrow> P @action A)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)
-
-ML_file \<open>library/phi_type_algebra/separation_homo.ML\<close>
-
-hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_rewr_IH \<phi>TA_SH\<^sub>I_rewr_C
-          \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C
-
-\<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.separation_homo_I
-\<close>
-
-\<phi>property_deriver Separation_Homo\<^sub>E 121 for (\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>) = \<open>
-  Phi_Type_Algebra_Derivers.separation_homo_E
-\<close>
-
-\<phi>property_deriver Separation_Homo 122 requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E
-
-\<phi>property_deriver Separation_Monoid 130
-  requires Separation_Homo
-       and Functional_Transformation_Functor
-       and Identity_Element
-       and Basic
-
-  (*TODO: I'm thinking why I gave it this name... yes, there is identity element, but then.. what?
-          for what reason it can be called monoidal?*)
-
 
 subsubsection \<open>Construct Abstraction from Concrete Representation (by Itself)\<close>
 
@@ -4548,6 +4700,97 @@ ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
 lemmas [\<phi>reason_template default 40 pass: \<open>(Phi_Type_Algebra_Derivers.SE_Trim_Empty__generation_pass, K I)\<close>] =
           derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH
           derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
+
+subsubsection \<open>Meta Deriver for \<phi>-Type Operator Commutativity\<close>
+
+paragraph \<open>Guess Property\<close>
+
+definition Guess_Tyops_Commute\<^sub>I :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                  \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                                  \<Rightarrow> ('a \<Rightarrow> bool)
+                                  \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
+                                  \<Rightarrow> bool \<Rightarrow> bool
+                                  \<Rightarrow> bool\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_F T D r ants conds \<equiv> True\<close>
+
+definition Guess_Tyops_Commute\<^sub>E :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                                  \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                                  \<Rightarrow> ('a \<Rightarrow> bool)
+                                  \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
+                                  \<Rightarrow> bool \<Rightarrow> bool
+                                  \<Rightarrow> bool\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>E F F' G G' unfolded_G T D r ants conds \<equiv> True\<close>
+
+\<phi>reasoner_group guess_tyop_commute = (100, [40, 3000]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_F T D r ants conds\<close>,
+                                                            \<open>Guess_Tyops_Commute\<^sub>E F F' G G' unfolded_FG T D r ants conds\<close>)
+    \<open>Rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
+ and guess_tyop_commute_default = (15, [10, 39]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_F T D r ants conds\<close>,
+                                                      \<open>Guess_Tyops_Commute\<^sub>E F F' G G' unfolded_FG T D r ants conds\<close>) < guess_tyop_commute
+    \<open>Predefined default rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
+
+declare [[\<phi>reason_default_pattern \<open>Guess_Tyops_Commute\<^sub>I ?F ?F' ?G ?G' ?unfolded _ _ _ _ _\<close> \<Rightarrow>
+                                  \<open>Guess_Tyops_Commute\<^sub>I ?F ?F' ?G ?G' ?unfolded _ _ _ _ _\<close>    (100)
+                              and \<open>Guess_Tyops_Commute\<^sub>E ?F ?F' ?G ?G' ?unfolded _ _ _ _ _\<close> \<Rightarrow>
+                                  \<open>Guess_Tyops_Commute\<^sub>E ?F ?F' ?G ?G' ?unfolded _ _ _ _ _\<close>    (100)]]
+
+subparagraph \<open>Default Rules\<close>
+
+lemma [\<phi>reason %guess_tyop_commute_default]:
+  \<open>Guess_Tyops_Commute\<^sub>I F F G G any T (\<lambda>_. True) (\<lambda>x y. y = x) True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute_default]:
+  \<open>Guess_Tyops_Commute\<^sub>E F F G G any T (\<lambda>_. True) (\<lambda>x y. y = x) True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+ML_file \<open>library/phi_type_algebra/guess_tyops_commute.ML\<close>
+
+paragraph \<open>Deriver\<close>
+
+(*F is fixed mine, G is the target
+  Given \<open>F\<close>, generate derivers deriving \<open>Tyops_Commute F F' G G' T D r\<close>
+  and \<open>Tyops_Commute G G' F F' T D r\<close> for given G
+*)
+
+lemma \<phi>TA_TyComm\<^sub>E_gen:
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
+\<Longrightarrow> (\<And>x. Ant @action \<phi>TA_ANT \<Longrightarrow>
+          \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<Longrightarrow>
+          x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y)
+                                \<comment>\<open>^ target of inductive expansion\<close>
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Tyops_Commute F F' G G' T D r\<close>
+  unfolding Action_Tag_def Tyops_Commute_def Premise_def
+  by blast
+
+lemma \<phi>TA_TyComm\<^sub>I_gen:
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
+\<Longrightarrow> (\<And>x. Ant @action \<phi>TA_ANT \<Longrightarrow>
+          \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<Longrightarrow>
+          x \<Ztypecolon> G (F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G' T) \<s>\<u>\<b>\<j> y. r x y)
+          \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant
+\<Longrightarrow> Tyops_Commute G G' F F' T D r\<close>
+  unfolding Action_Tag_def Tyops_Commute_def Premise_def
+  by blast
+
+
+
+
 
 
 

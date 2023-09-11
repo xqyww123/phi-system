@@ -386,7 +386,10 @@ text \<open>The name of transformation is good in sense of corresponding to cate
 text \<open>TODO: move me
 Our method simplifies program verification by lifting it onto an abstract domain.
 However, it is hard to universally define what are abstract and what are not.
-The abstract map \<open>f\<close> in a transformation \<open>x \<Ztypecolon> T \<longrightarrow> f(x) \<Ztypecolon> U\<close> can have very various expression.
+In a transformation \<open>x \<Ztypecolon> T \<longrightarrow> f(x) \<Ztypecolon> U\<close>, the abstract map \<open>f\<close> can have various expressions and
+may fall back to concrete level such as \<open>f(x) = @y(x \<Ztypecolon> T \<longrightarrow> y \<Ztypecolon> U)\<close> (\<open>@\<close> is Hilbert choice operator)
+which is always a trivial solution of \<open>f\<close>.
+
 
 The criterion about what expression of \<open>f\<close> is considered abstract can be given by user.
 The abstract maps (\<open>f\<close>) occurring in their annotations or given properties are assumed abstract.

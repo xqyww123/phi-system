@@ -18,13 +18,6 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun simplify_guessing_reasoning ctxt = Simplifier.simplify (Simplifier.clear_simpset ctxt addsimps
-      @{thms' Premise_norm[where mode=\<open>default\<close>]
-              Premise_norm[where mode=\<open>MODE_SIMP\<close>]
-              Ant_Seq_reduct
-              HOL.imp_conjR[folded Ant_Seq_def]
-              HOL.all_conj_distrib[folded Ant_Seq_def]})
-
 fun parse_semimodule_phityp' ty =
   let val (reversed_argtys', x_ty0, model_ty0) = dest_parameterized_phi_ty ty
       fun err_parse () = raise Automation_Fail (fn () => let open Pretty in
@@ -60,6 +53,22 @@ fun parse_semimodule_phityp ctxt phi0 lift_sorts =
    in (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, phi) (*TODO: extend me! return x_ele_ty!*)
   end
 
+fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result) =
+  Guess_Framework (unfold_place, fn (phi, ctxt) =>
+    let val (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi sorts
+        val module_ty = s_ty --> mk_phi_type_ty (model_ty, x_ele_ty) --> mk_phi_type_ty (model_ty, x_ty)
+        val idx = phi_maxidx_of phi ~1 + 1
+        val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+        val (F_term $ _ $ T_term) = FT_term
+  
+        val eta_F_term = Abs ("s", s_ty, Abs ("T", Term.fastype_of T_term, Abs ("x", x_ty,
+                            \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ (Term.incr_boundvars 3 F_term $ Bound 2 $ Bound 1))))
+        val (goal_term, parse_result) =
+                mk_goal_term_and_parse_result (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, ctxt)
+     in (goal_term, parse_result, phi, ctxt)
+    end)
+
+(*
 fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result)
                            (phi : phi_type) ctxt =
   let val (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi sorts
@@ -93,6 +102,7 @@ fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result)
         end
     | NONE => guess_fail ctxt phi (K [])
   end
+*)
 
 fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (3, SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>one\<close>),
       fn (s_ty, x_ele_ty, x_ty, model_ty, T_model_ty, module_ty, idx, F_term, eta_F_term, T_term, _) =>

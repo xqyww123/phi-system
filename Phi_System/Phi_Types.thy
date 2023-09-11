@@ -953,15 +953,16 @@ lemma \<phi>Sum_red[simp]:
 
 subsubsection \<open>Rule\<close>
 
-lemma
+lemma \<phi>Sum_comm\<^sub>I:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (case x of Inl u \<Rightarrow> (\<forall>a \<in> D\<^sub>T u. Inl a \<in> R\<^sub>T u)
-                    | Inr v \<Rightarrow> (\<forall>b \<in> D\<^sub>U v. Inr b \<in> R\<^sub>U v))
-\<Longrightarrow> x \<Ztypecolon> F\<^sub>T T +\<^sub>\<phi> F\<^sub>U U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> case_sum (fm\<^sub>T Inl (\<lambda>_. True)) (fm\<^sub>U Inr (\<lambda>_. True)) x \<Ztypecolon> F (T +\<^sub>\<phi> U)
-                         \<w>\<i>\<t>\<h> pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True)) x\<close>
-  unfolding Functional_Transformation_Functor_def Premise_def
-  by (cases x; clarsimp)
+\<Longrightarrow> Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U \<phi>Sum \<phi>Sum T U
+                               (\<lambda>x. case x of Inl u \<Rightarrow> (\<forall>a \<in> D\<^sub>T u. Inl a \<in> R\<^sub>T u)
+                                            | Inr v \<Rightarrow> (\<forall>b \<in> D\<^sub>U v. Inr b \<in> R\<^sub>U v))
+                               (case_sum (fm\<^sub>T Inl (\<lambda>_. True)) (fm\<^sub>U Inr (\<lambda>_. True)))
+                               (pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True))) \<close>
+  unfolding Functional_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
+  by (clarify; case_tac x; clarsimp)
 
 
 subsection \<open>Embedding Additive Disjunction\<close>
@@ -1066,20 +1067,19 @@ lemma [\<phi>reason 1000]:
 
 (* Commutativity of \<open>\<and>\<^sub>\<phi>\<close> cannot be derived simply from transformation functor. *)
 
-lemma
-  \<open> Functional_Transformation_Functor F\<^sub>A F A (A \<and>\<^sub>\<phi> B) D\<^sub>A R\<^sub>A pm\<^sub>A fm\<^sub>A
-\<Longrightarrow> x \<Ztypecolon> F\<^sub>A A \<and>\<^sub>\<phi> F\<^sub>B B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> \<dots>\<close>
-
-lemma
-  \<open> Functional_Transformation_Functor F F\<^sub>A (A \<and>\<^sub>\<phi> B) A D\<^sub>A R\<^sub>A pm\<^sub>A fm\<^sub>A
-\<Longrightarrow> Functional_Transformation_Functor F F\<^sub>B (A \<and>\<^sub>\<phi> B) B D\<^sub>B R\<^sub>B pm\<^sub>B fm\<^sub>B
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D\<^sub>A x. fst a \<in> R\<^sub>A x) \<and> (\<forall>a \<in> D\<^sub>B x. snd a \<in> R\<^sub>B x)
-\<Longrightarrow> x \<Ztypecolon> F (A \<and>\<^sub>\<phi> B) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (fm\<^sub>A fst (\<lambda>_. True) x, fm\<^sub>B snd (\<lambda>_. True) x) \<Ztypecolon> F\<^sub>A A \<and>\<^sub>\<phi> F\<^sub>B B \<close>
-  unfolding Functional_Transformation_Functor_def Premise_def
-  subgoal premises prems
+lemma \<phi>Inter_comm\<^sub>E:
+  \<open> Functional_Transformation_Functor F F\<^sub>T (T \<and>\<^sub>\<phi> U) T D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
+\<Longrightarrow> Functional_Transformation_Functor F F\<^sub>U (T \<and>\<^sub>\<phi> U) U D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
+\<Longrightarrow> Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F\<^sub>T F\<^sub>U \<phi>Inter \<phi>Inter T U
+                               (\<lambda>x. (\<forall>a \<in> D\<^sub>T x. fst a \<in> R\<^sub>T x) \<and> (\<forall>a \<in> D\<^sub>U x. snd a \<in> R\<^sub>U x))
+                               (\<lambda>x. (fm\<^sub>T fst (\<lambda>_. True) x, fm\<^sub>U snd (\<lambda>_. True) x))
+                               (\<lambda>x. pm\<^sub>T fst (\<lambda>_. True) x \<and> pm\<^sub>U snd (\<lambda>_. True) x) \<close>
+  unfolding Functional_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Functional_Transformation_Functor_def Premise_def
+  apply clarify
+  subgoal premises prems for x
     by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=fst], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
                prems(2)[THEN spec[where x=x], THEN spec[where x=snd], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
-               prems(3-),
+               prems(3-);
         clarsimp simp add: Transformation_def) .
 
 
@@ -1144,9 +1144,9 @@ lemma (*TODO!*)
   unfolding fun_commute_def
   by (simp add: \<phi>Fun'_scalar_assoc)
 
-lemma \<phi>Fun'_FTC:
+lemma \<phi>Fun'_comm:
   \<open> fun_commute \<psi> \<phi> \<psi>' \<phi>'
-\<Longrightarrow> Functional_Tyops_Commute (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>') (\<phi>Fun' \<phi>) (\<phi>Fun' \<phi>') T (\<lambda>_. True) (\<lambda>x. x)\<close>
+\<Longrightarrow> Functional_Tyops_Commute (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>') (\<phi>Fun' \<phi>) (\<phi>Fun' \<phi>') T (\<lambda>_. True) (\<lambda>x. x) (\<lambda>_. True)\<close>
   unfolding Functional_Tyops_Commute_def fun_commute_def
   by (simp add: \<phi>Fun'_scalar_assoc)
 

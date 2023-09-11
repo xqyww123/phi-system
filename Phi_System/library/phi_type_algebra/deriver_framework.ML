@@ -33,7 +33,7 @@ val parse_hint : (term -> term) (*extract the phi-type part from the hint. can b
 (** Component: guess_property **)
 
 type guess_property =
-        Phi_Type_Algebra.phi_type ->
+        phi_type ->
         Proof.context ->
         ( term list (*antecedents*)
         * term (*conclusion*)
@@ -92,6 +92,27 @@ val make_forall_quantified_property_for_parameters_of_a_phi_type :
         (typ (*x_ty*) * typ (*model_ty*) * term (*x*) * term (*T*) -> term (*the property*))
      -> term -> term list
 
+(* Guessing via \<phi>-LPR, a framework *)
+
+type unfolding_idx = int (*the reversed index of the parameter for unfolded \<phi>-type definition expression*)
+type reasoning_goal = term (*the proposition of the reasoning goal*)
+type parse_result = (*parses the result of the reasoning*)
+       term -> term (*conclusion of the guessed property*) *
+               induct_inst_params *
+               term (*conditions augmenting the antecedents*) *
+               term (*(conjuncted) antecedents*)
+
+val Guess_Framework :
+      unfolding_idx * (phi_type * Proof.context -> reasoning_goal * parse_result * phi_type * Proof.context) -> guess_property
+
+val Guess_Framework' :
+      unfolding_idx *
+      (sort (*abstract objects*) * sort (*concrete object*)) option (*optional sort constraints that will be lifted to*) *
+      (typ list (*reversed_argtys*) * typ (*abstract object*) * typ (*concrete object*) *
+       term (*F_term*) * term (*x_term*) * int (*max index of the phi type*) * phi_type * Proof.context
+       -> reasoning_goal * parse_result)
+      -> guess_property
+
 (** Load Simpset **)
 
 (*The simplification that unfolds the recursive \<phi>-types and derives induction-hypothetic ToAs,
@@ -106,6 +127,7 @@ val load_ss : bool (*set*) * bool (*pred*) * bool (*rel*) * bool (*map*) * bool 
 val load_simpset : term list -> Proof.context -> Proof.context
   (*Given any object expressions, it parses the object operators used inside,
     and load the related simplification settings*)
+
 
 
 (** A framework for deriving properties **)
@@ -298,6 +320,8 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 type phi_type = Phi_Type_Algebra.phi_type
 
+(** Library **)
+
 fun guess_fail ctxt phi msg =
   let open Pretty in raise Automation_Fail (fn () =>
     [block (text "Fail to guess the form of the property for \<phi>-type" @
@@ -310,6 +334,16 @@ type guess_property =
         Phi_Type_Algebra.phi_type ->
         Proof.context ->
         (term list * term * term option list * Phi_Type_Algebra.phi_type * Proof.context ) Seq.seq
+
+fun lift_types_sort thy typ_sorts =
+  Phi_Help.lift_types_sort thy typ_sorts
+  handle Phi_Help.LIFT_FAIL (ty, sort) => raise Automation_Fail (let open Pretty in fn () =>
+    [paragraph (text "Fail to constrain type " @
+                [brk 1, Syntax.pretty_typ_global thy ty, brk 1] @
+                text "by sort" @
+                [brk 1, Syntax.pretty_sort_global thy sort])]
+    end)
+
 
 (** Simplification Rules unfolding the constrains and conditions **)
 
@@ -838,6 +872,75 @@ fun load_const C ctxt =
 
 val add_consts' = fold_aterms (fn Const c => insert (op = o apply2 fst) c | _ => I);
 fun load_simpset tms ctxt = fold load_const (fold add_consts' tms []) ctxt
+
+
+(** A framework of guessing properties via \<phi>-LPR **)
+
+fun simplify_guessing_reasoning ctxt = Simplifier.simplify (Simplifier.clear_simpset ctxt addsimps
+      @{thms' Premise_norm[where mode=\<open>default\<close>]
+              Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+              Ant_Seq_reduct
+              HOL.imp_conjR[folded Ant_Seq_def]
+              HOL.all_conj_distrib[folded Ant_Seq_def]})
+
+type unfolding_idx = int (*the reversed index of the parameter for unfolded \<phi>-type definition expression*)
+type reasoning_goal = term (*the proposition of the reasoning goal*)
+type parse_result = (*parses the result of the reasoning*)
+       term -> term (*conclusion of the guessed property*) *
+               induct_inst_params *
+               term (*conditions augmenting the antecedents*) *
+               term (*(conjuncted) antecedents*)
+
+fun Guess_Framework (unfold_place, mk_goal_term_and_parse_result) (phi : phi_type) ctxt =
+  let val (goal_term, parse_result, phi, ctxt) =
+              mk_goal_term_and_parse_result (phi, ctxt)
+      val reason = Conv.gconv_rule (HOLogic.Trueprop_conv (funpow unfold_place Conv.fun_conv (Conv.arg1_conv (
+                      Conv.abs_conv (Conv.abs_conv (Conv.abs_conv (fn (_, ctxt) =>
+                      fn ctm => Conv.rewrs_conv (map (fn th => th RS' (ctxt, @{thm' HOL.eq_reflection}))
+                                           (#equations phi)) ctm) o snd) o snd) ctxt
+                      )))) 1
+                #> Phi_Reasoner.reason NONE NONE ctxt
+   in case Phi_Help.reason_tracing_tyinst ctxt reason goal_term
+        |> Option.map (apsnd (simplify_guessing_reasoning ctxt))
+   of SOME (inst, ret) =>
+        let val (prop, params, conds, ants) = parse_result (Thm.prop_of ret)
+            val ants = constrain_antecedents conds ants
+            val (inst'2, ctxt) = Variable.import_inst true (prop :: ants) ctxt
+            val (prop :: ants) = map (Term_Subst.instantiate inst'2) (prop :: ants)
+            val params = map (Option.map (Term_Subst.instantiate inst'2)) params
+         in Seq.single (ants, prop, params,
+                        phi |> instantiate_phi (inst, Vars.empty)
+                            |> instantiate_phi (Phi_Help.certify_vars (Context.Proof ctxt) inst'2),
+                        ctxt)
+        end
+    | NONE => guess_fail ctxt phi (K [])
+  end
+
+fun Guess_Framework' (unfold_place, lift_sorts, mk_goal_term_and_parse_result) =
+  Guess_Framework (unfold_place,
+    fn (phi0, ctxt) =>
+      let val (reversed_argtys0, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+          val (reversed_argtys, x_ty, model_ty, phi) =
+            case lift_sorts
+              of SOME (sort_x, sort_model) =>
+                  let val inst = lift_types_sort (Proof_Context.theory_of ctxt)
+                                                 [(x_ty0, sort_x), (model_ty0, sort_model)]
+                      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
+                      val (x_ty :: model_ty :: reversed_argtys) =
+                            map (Term_Subst.instantiateT inst) (x_ty0 :: model_ty0 :: reversed_argtys0)
+                      val phi = instantiate_phi (inst', Vars.empty) phi0
+                   in (reversed_argtys, x_ty, model_ty, phi)
+                  end
+               | NONE => (reversed_argtys0, x_ty0, model_ty0, phi0)
+    
+          val idx = phi_maxidx_of phi ~1 + 1
+          val ((x_term, F_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+    
+          val (goal_term, parse_result) =
+                  mk_goal_term_and_parse_result (reversed_argtys, x_ty, model_ty, F_term, x_term, idx, phi, ctxt)
+    
+       in (goal_term, parse_result, phi, ctxt)
+      end)
 
 
 
@@ -1609,17 +1712,6 @@ fun chk_abstract_object_quantified get_x ctxt hint =
     | SOME (Bound _) => hint
     | NONE => hint
   end
-
-
-fun lift_types_sort thy typ_sorts =
-  Phi_Help.lift_types_sort thy typ_sorts
-  handle Phi_Help.LIFT_FAIL (ty, sort) => raise Automation_Fail (let open Pretty in fn () =>
-    [paragraph (text "Fail to constrain type " @
-                [brk 1, Syntax.pretty_typ_global thy ty, brk 1] @
-                text "by sort" @
-                [brk 1, Syntax.pretty_sort_global thy sort])]
-    end)
-
 
 (* (** Misc **)
 

@@ -227,28 +227,6 @@ declare [[\<phi>trace_reasoning = 1]]
 
 (*Do we need to consider relation in commutativity?*)
 
-definition Tyops_Commute :: \<open> (('c\<^sub>b,'a\<^sub>b) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                           \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>a,'a\<^sub>a) \<phi>)
-                           \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>b,'a\<^sub>b) \<phi>)
-                           \<Rightarrow> (('c\<^sub>a,'a\<^sub>a) \<phi> \<Rightarrow> ('c,'b) \<phi>)
-                           \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
-                           \<Rightarrow> ('a \<Rightarrow> bool)
-                           \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
-                           \<Rightarrow> bool\<close>
-  where \<open>Tyops_Commute F\<^sub>a F'\<^sub>a F\<^sub>b F'\<^sub>b T D r \<longleftrightarrow>
-            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F\<^sub>a (F\<^sub>b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F'\<^sub>b (F'\<^sub>a T) \<s>\<u>\<b>\<j> y. r x y))\<close>
-
-definition Functional_Tyops_Commute :: \<open> (('c\<^sub>b,'a\<^sub>b) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>a,'a\<^sub>a) \<phi>)
-                                      \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>b,'a\<^sub>b) \<phi>)
-                                      \<Rightarrow> (('c\<^sub>a,'a\<^sub>a) \<phi> \<Rightarrow> ('c,'b) \<phi>)
-                                      \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
-                                      \<Rightarrow> ('a \<Rightarrow> bool)
-                                      \<Rightarrow> ('a \<Rightarrow> 'b)
-                                      \<Rightarrow> bool\<close>
-  where \<open>Functional_Tyops_Commute F\<^sub>a F'\<^sub>a F\<^sub>b F'\<^sub>b T D f \<longleftrightarrow>
-            (\<forall>x. D x \<longrightarrow> (x \<Ztypecolon> F\<^sub>a (F\<^sub>b T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F'\<^sub>b (F'\<^sub>a T)))\<close>
-
 
 text \<open>
 Logic connectives:
