@@ -24,7 +24,7 @@ type parse_hint = Phi_Type_Algebra.deriving_ctxt -> Phi_Type_Algebra.phi_type ->
 (* Common choices of the unification *)
 
 val malformed_hint : Phi_Type_Algebra.deriving_ctxt -> term -> (unit -> Pretty.T list) -> 'a
-val parse_parameters_of_phi_type : term -> term option list
+val parse_inst_params_from_phi_term : term -> induct_inst_params
 (*default parsing*)
 val parse_hint : (term -> term) (*extract the phi-type part from the hint. can be either the type assertion,
                                   the type itself, or the type operator*)
@@ -97,7 +97,7 @@ val make_forall_quantified_property_for_parameters_of_a_phi_type :
 type unfolding_idx = int (*the reversed index of the parameter for unfolded \<phi>-type definition expression*)
 type reasoning_goal = term (*the proposition of the reasoning goal*)
 type parse_result = (*parses the result of the reasoning*)
-       term -> term (*conclusion of the guessed property*) *
+        thm -> term (*conclusion of the guessed property*) *
                induct_inst_params *
                term (*conditions augmenting the antecedents*) *
                term (*(conjuncted) antecedents*)
@@ -106,11 +106,15 @@ val Guess_Framework :
       unfolding_idx * (phi_type * Proof.context -> reasoning_goal * parse_result * phi_type * Proof.context) -> guess_property
 
 val Guess_Framework' :
-      unfolding_idx *
-      (sort (*abstract objects*) * sort (*concrete object*)) option (*optional sort constraints that will be lifted to*) *
-      (typ list (*reversed_argtys*) * typ (*abstract object*) * typ (*concrete object*) *
-       term (*F_term*) * term (*x_term*) * int (*max index of the phi type*) * phi_type * Proof.context
-       -> reasoning_goal * parse_result)
+        unfolding_idx
+      * term (*template of the reasoning goal, containing schematic variables*)
+      * (phi_type * Proof.context
+           -> (string * term) list (*instantiations of the template of the reasoning goal*)
+              * phi_type * Proof.context)
+      * thm (*a rule parsing the result of the reasoning, of form
+            \<open>Result_of_Reasoning \<Longrightarrow> TERM Conclusion_of_Property &&& TERM (T x) &&& TERM conditions_of_antecedents &&& TERM antecedents\<close>
+            The \<open>T x\<close> is used to parse the instantiation parameteres of induction rule (by parse_inst_params_from_phi_term,
+              where dummy variable can be used as place holders for parameteres that have no instantiation)*)
       -> guess_property
 
 (** Load Simpset **)
@@ -229,9 +233,9 @@ val default_reasoning_configure : Phi_Reasoners.extraction list -> reasoning_con
   by Phi_Reasoners.extraction.
 
   It also recognizes premises tagged by \<phi>TA_pure_facts and \<phi>TA_conditioned_ToA_template.
-  \<phi>TA_conditioned_ToA_template rules are conditioned by pure propositions.
-  collects pure facts tagged \<phi>TA_pure_facts, to derive the condition of the \<phi>TA_conditioned_ToA_template rules,
-  and therefore to instantiate possible ToA rules from \<phi>TA_conditioned_ToA_template rules.
+  \<phi>TA_conditioned_ToA_template rules are conditioned by pure propositions which are solved and
+  instantiated (to potentially multiple versions, if containing any schematic variables) by
+  collecting pure facts tagged by \<phi>TA_pure_facts.
 *)
 
 (** Solver **)
@@ -292,6 +296,7 @@ exception Automation_Fail of (unit -> Pretty.T list)
 val guess_fail : Proof.context -> phi_type -> (unit -> Pretty.T list) -> 'a
 
 structure Expansion : SIMPSET (*The standard simpset for deriving*)
+(*convention: do not add transformation_refl any time! *)
 
 (*
 val accept : (hint option -> Phi_Type_Algebra.derive) -> hint list -> Phi_Type_Algebra.derive
@@ -344,6 +349,13 @@ fun lift_types_sort thy typ_sorts =
                 [brk 1, Syntax.pretty_sort_global thy sort])]
     end)
 
+fun parse_inst_params_from_phi_term phity =
+  case Term.strip_comb (Phi_Help.beta_eta_contract_term phity)
+    of (Abs _, _) => raise TERM ("parse_inst_params_from_phi_term", [phity])
+     | (_, args) => map (fn Bound _ => NONE
+                          | Var _ => NONE
+                          | X => if Term.is_dummy_pattern X then NONE else SOME X)
+                        (rev args)
 
 (** Simplification Rules unfolding the constrains and conditions **)
 
@@ -886,7 +898,7 @@ fun simplify_guessing_reasoning ctxt = Simplifier.simplify (Simplifier.clear_sim
 type unfolding_idx = int (*the reversed index of the parameter for unfolded \<phi>-type definition expression*)
 type reasoning_goal = term (*the proposition of the reasoning goal*)
 type parse_result = (*parses the result of the reasoning*)
-       term -> term (*conclusion of the guessed property*) *
+        thm -> term (*conclusion of the guessed property*) *
                induct_inst_params *
                term (*conditions augmenting the antecedents*) *
                term (*(conjuncted) antecedents*)
@@ -903,7 +915,7 @@ fun Guess_Framework (unfold_place, mk_goal_term_and_parse_result) (phi : phi_typ
    in case Phi_Help.reason_tracing_tyinst ctxt reason goal_term
         |> Option.map (apsnd (simplify_guessing_reasoning ctxt))
    of SOME (inst, ret) =>
-        let val (prop, params, conds, ants) = parse_result (Thm.prop_of ret)
+        let val (prop, params, conds, ants) = parse_result ret
             val ants = constrain_antecedents conds ants
             val (inst'2, ctxt) = Variable.import_inst true (prop :: ants) ctxt
             val (prop :: ants) = map (Term_Subst.instantiate inst'2) (prop :: ants)
@@ -916,29 +928,26 @@ fun Guess_Framework (unfold_place, mk_goal_term_and_parse_result) (phi : phi_typ
     | NONE => guess_fail ctxt phi (K [])
   end
 
-fun Guess_Framework' (unfold_place, lift_sorts, mk_goal_term_and_parse_result) =
+fun Guess_Framework' (unfold_place, goal_template, insts_of, parsing_rule) =
   Guess_Framework (unfold_place,
-    fn (phi0, ctxt) =>
-      let val (reversed_argtys0, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
-          val (reversed_argtys, x_ty, model_ty, phi) =
-            case lift_sorts
-              of SOME (sort_x, sort_model) =>
-                  let val inst = lift_types_sort (Proof_Context.theory_of ctxt)
-                                                 [(x_ty0, sort_x), (model_ty0, sort_model)]
-                      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
-                      val (x_ty :: model_ty :: reversed_argtys) =
-                            map (Term_Subst.instantiateT inst) (x_ty0 :: model_ty0 :: reversed_argtys0)
-                      val phi = instantiate_phi (inst', Vars.empty) phi0
-                   in (reversed_argtys, x_ty, model_ty, phi)
-                  end
-               | NONE => (reversed_argtys0, x_ty0, model_ty0, phi0)
-    
-          val idx = phi_maxidx_of phi ~1 + 1
-          val ((x_term, F_term), ctxt) = fix_phi_term_params (#term phi) ctxt
-    
-          val (goal_term, parse_result) =
-                  mk_goal_term_and_parse_result (reversed_argtys, x_ty, model_ty, F_term, x_term, idx, phi, ctxt)
-    
+    fn (phi, ctxt) =>
+      let val (insts, phi, ctxt) = insts_of (phi, ctxt)
+
+          val thy = Proof_Context.theory_of ctxt
+          val params = Term.add_vars goal_template []
+          val subst = fold (fn (redex,residue) =>
+                let val param = the (find_first (fn ((N,_), _) => N = redex) params)
+                 in Pattern.first_order_match thy (Var param, residue)
+                end) insts (Vartab.empty, Vartab.empty)
+          val goal_term = Envir.subst_term subst goal_template
+
+          fun parse_result result =
+                case Thm.prop_of (result RS' (ctxt, parsing_rule))
+                  |> Logic.dest_conjunction_list
+                  |> map (Logic.dest_term)
+                  of [prop, Tx_term, conds, ants] =>
+                      (prop, parse_inst_params_from_phi_term Tx_term, conds, ants)
+
        in (goal_term, parse_result, phi, ctxt)
       end)
 
@@ -1244,13 +1253,6 @@ fun malformed_hint ctxt hint msg =
 
 type hint = term
 type parse_hint = Proof.context -> phi_type -> hint -> typ (*of the phi-typ const*) * induct_inst_params * hint
-
-fun parse_parameters_of_phi_type phity =
-  case Term.strip_comb (Phi_Help.beta_eta_contract_term phity)
-    of (Abs _, _) => raise TERM ("parse_parameters_of_phi_type", [phity])
-     | (_, args) => map (fn Bound _ => NONE
-                          | X => if Term.is_dummy_pattern X then NONE else SOME X)
-                        (rev args)
 
 fun parse_hint extract_phityp ctxt phi hint =
   let val phity = (case extract_phityp (extract_hhf hint)

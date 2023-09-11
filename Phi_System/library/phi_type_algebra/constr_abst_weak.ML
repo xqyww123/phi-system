@@ -46,7 +46,7 @@ fun guess_property (phi:phi_type) ctxt =
       val prop = mk_prop (Var(("x",idx), x_ty), Var(("c",idx), model_ty))
                          (([], x_ty, model_ty), T_term)
    in Seq.single (ants, HOLogic.Trueprop $ prop,
-                  NONE :: parse_parameters_of_phi_type T_term, phi, ctxt)
+                  NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
 fun gen_constr_from_raw (_,name) hint0 ctxt0 (phi0 : phi_type) thy =

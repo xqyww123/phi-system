@@ -79,7 +79,7 @@ fun Guess_Scalar_Assoc is_intro (phi : phi_type) ctxt =
                                               else \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>E ss' at' c' as_t' st' a' sc' ast'\<close>
                        val prop = HOLogic.Trueprop $ (head $ Fs $ Ft $ Fc $ T $ Ds $ Dt $ Dx $ smul $ f)
                     in Seq.single (ants, prop,
-                                   NONE :: parse_parameters_of_phi_type (Fc $ Term.dummy $ T),
+                                   NONE :: parse_inst_params_from_phi_term (Fc $ Term.dummy $ T),
                                    instantiate_phi (inst, Vars.empty) phi,
                                    ctxt)
                    end
@@ -99,7 +99,7 @@ fun guess_property is_intro (phi0 : phi_type) ctxt =
    in Seq.single ([], \<^Const>\<open>Trueprop\<close> $ (xxxx (*(if is_intro then \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>I s_ty x_ty model_ty\<close>
                                                       else \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>E s_ty x_ty model_ty\<close>)*)
                                             $ F_term $ T_term $ Ds (* $ Dx *)),
-                  NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
+                  NONE :: parse_inst_params_from_phi_term FT_term, phi, ctxt)
   end
 *)
 

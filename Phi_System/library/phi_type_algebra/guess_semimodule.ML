@@ -65,7 +65,7 @@ fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result) 
                             \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ (Term.incr_boundvars 3 F_term $ Bound 2 $ Bound 1))))
         val (goal_term, parse_result) =
                 mk_goal_term_and_parse_result (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, ctxt)
-     in (goal_term, parse_result, phi, ctxt)
+     in (goal_term, parse_result o Thm.prop_of, phi, ctxt)
     end)
 
 (*
@@ -123,7 +123,7 @@ fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (3, SOME (\<^sort>\<ope
                       (if is_closed then \<^Const>\<open>Closed_Semimodule_Zero s_ty x_ele_ty model_ty x_ty\<close>
                                     else \<^Const>\<open>Semimodule_Zero s_ty x_ele_ty model_ty x_ty\<close>)
                         $ F $ T $ zero),
-                   NONE :: parse_parameters_of_phi_type (F $ Term.dummy $ T),
+                   NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
                    conds, ants)
               end)
       )
@@ -147,7 +147,7 @@ val Guess_Scalar_One_E = Guess_Scalar_framework (5, NONE,
                         (Logic.dest_type ty_s, Logic.dest_type ty_model, Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
                in (HOLogic.Trueprop $ (\<^Const>\<open>Semimodule_Identity\<^sub>E s_ty x_ele_ty model_ty x_ty\<close>
                         $ F $ T $ one $ Dx $ f),
-                   NONE :: parse_parameters_of_phi_type (F $ Term.dummy $ T),
+                   NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
                    conds, ants)
               end)
        )
@@ -186,7 +186,7 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (7, NONE,
                                             else \<^Const>\<open>Semimodule_Scalar_Assoc\<^sub>E ss' at' ct' as_t' cst' st' a' c' sc' ast'\<close>
                      val xx = Thm.cterm_of ctxt (HOLogic.Trueprop $ (head $ Fs $ Ft $ Fc $ T $ Ds $ Dt $ Dx $ smul $ f))
                   in (HOLogic.Trueprop $ (head $ Fs $ Ft $ Fc $ T $ Ds $ Dt $ Dx $ smul $ f),
-                      NONE :: parse_parameters_of_phi_type (Fc $ Term.dummy $ T),
+                      NONE :: parse_inst_params_from_phi_term (Fc $ Term.dummy $ T),
                       conds, ants)
                  end)
         end)
@@ -221,7 +221,7 @@ fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework (5, SOME (\<^sort>\<
                       (if is_zip then \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>Z s_ty x_ele_ty model_ty x_ty\<close>
                                  else \<^Const>\<open>Semimodule_SDistr_Homo\<^sub>U s_ty x_ele_ty model_ty x_ty\<close>)
                         $ F $ T $ Ds $ Dx $ f),
-                   NONE :: parse_parameters_of_phi_type (F $ Term.dummy $ T),
+                   NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
                    conds, ants)
               end)
 )
@@ -266,7 +266,7 @@ fun Guess_Scalar_One_E (phi : phi_type) ctxt =
                 val head = \<^Const>\<open>Semimodule_Identity\<^sub>E s_ty x_ele_ty model_ty x_ty\<close>
                 val prop = HOLogic.Trueprop $ (head $ F $ T $ one $ Dx $ f)
              in Seq.single (ants, prop,
-                            NONE :: parse_parameters_of_phi_type (F $ Term.dummy $ T),
+                            NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
                             instantiate_phi (inst, Vars.empty) phi,
                             ctxt)
             end

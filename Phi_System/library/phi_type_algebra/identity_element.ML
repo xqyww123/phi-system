@@ -96,7 +96,7 @@ fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
    in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (
         (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty\<close> $ xT $ Var(("P", 0), HOLogic.boolT)
                     else \<^Const>\<open>Identity_Element\<^sub>E model_ty\<close> $ xT)),
-        SOME unit :: parse_parameters_of_phi_type T_term,
+        SOME unit :: parse_inst_params_from_phi_term T_term,
         phi, ctxt)
   end
 

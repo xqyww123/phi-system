@@ -46,7 +46,7 @@ fun guess_property_abst_dom head_const (phi:phi_type) ctxt =
    |> Seq.map (fn (pred, ctxt) =>
         (ants, HOLogic.Trueprop $ (head x_ty model_ty $ T_term $
                   (Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (Pvar $ Bound 0) $ (pred $ Bound 0)))),
-         NONE :: parse_parameters_of_phi_type T_term, phi, ctxt))
+         NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt))
   end
 
 (*fun guess_property_inhab_atom upper (phi:phi_type) ctxt =
@@ -56,7 +56,7 @@ fun guess_property_abst_dom head_const (phi:phi_type) ctxt =
       fun head x m = if upper then \<^Const>\<open>Abstract_Domain x m\<close>
                               else \<^Const>\<open>Abstract_Domain\<^sub>L x m\<close>
       val Prop = HOLogic.Trueprop $ (head x_ty model_ty $ T_term $ Var(("P",idx), x_ty --> HOLogic.boolT))
-   in Seq.single ([], Prop, NONE :: parse_parameters_of_phi_type T_term, phi, ctxt)
+   in Seq.single ([], Prop, NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 *)
 

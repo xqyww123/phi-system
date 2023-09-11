@@ -134,6 +134,16 @@ attribute_setup ML_attribute = \<open>
 
 subsection \<open>Helper Objects\<close>
 
+subsubsection \<open>Embedding Function into Relation\<close>
+
+definition embedded_func :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  where \<open>embedded_func f P = (\<lambda>x y. y = f x \<and> P x)\<close>
+
+lemma embedded_func_red[iff]:
+  \<open> embedded_func f P x y \<longleftrightarrow> y = f x \<and> P x \<close>
+  unfolding embedded_func_def
+  by simp
+
 subsubsection \<open>Big Number\<close>
 
 text \<open>A tag to suppress unnecessary expanding of big numbers like \<open>2^256\<close>

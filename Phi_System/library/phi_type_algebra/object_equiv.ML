@@ -101,7 +101,7 @@ fun guess_property_obj_eq (phi:phi_type) ctxt =
    in eq_terms
    |> Seq.map (fn (eq_term, ctxt') =>
         (ants, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close> $ T_term $ eq_term),
-         NONE :: parse_parameters_of_phi_type T_term, phi, ctxt'))
+         NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt'))
   end
 
 (*The reachability relation of many type operators at singular point \<open>F \<circle>\<close> can become \<open>\<lambda>_. True\<close>*)
@@ -133,7 +133,7 @@ fun guess_obj_eq_singular_None (phi0:phi_type) ctxt =
       val property = \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close>
                                             $ FT_term
                                             $ Abs ("x", x_ty, Abs ("y", x_ty, \<^Const>\<open>True\<close>)))
-   in SOME ([], property, NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
+   in SOME ([], property, NONE :: parse_inst_params_from_phi_term FT_term, phi, ctxt)
   end handle Automation_Fail _ => NONE)
   end
 

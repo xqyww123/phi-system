@@ -152,7 +152,7 @@ fun guess_property_SgTH phi0 ctxt =
                     end
                    | _ => error "BUG")
 
-   in ([], HOLogic.Trueprop $ SSP, NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
+   in ([], HOLogic.Trueprop $ SSP, NONE :: parse_inst_params_from_phi_term FT_term, phi, ctxt)
   end)
   end
 

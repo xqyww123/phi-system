@@ -53,7 +53,7 @@ fun guess_property (phi:phi_type) ctxt =
                           Var(("f",idx), model_ty --> x_ty))
                          (([], x_ty, model_ty), T_term)
    in Seq.single (ants, HOLogic.Trueprop $ prop,
-                  NONE :: parse_parameters_of_phi_type T_term, phi, ctxt)
+                  NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
 fun reasoning phi ctxt =

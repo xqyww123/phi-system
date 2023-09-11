@@ -46,7 +46,7 @@ fun guess_property (phi:phi_type) ctxt =
       val idx = phi_maxidx_of phi ~1 + 1
       val prop = mk_prop (Var(("r",idx), x_ty --> model_ty --> HOLogic.boolT)) (([], x_ty, model_ty), T_term)
    in Seq.single (ants, HOLogic.Trueprop $ prop,
-                  NONE :: parse_parameters_of_phi_type T_term, phi, ctxt')
+                  NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt')
   end
 
 fun reasoning phi ctxt =
@@ -205,7 +205,7 @@ fun gen_trans_to_raw_abst (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
                              | NONE => raise Match
                 val hint' = Envir.norm_term env hint
                 val T = Envir.norm_term env T'
-             in (Term.fastype_of (Term.head_of T), NONE :: parse_parameters_of_phi_type T, hint')
+             in (Term.fastype_of (Term.head_of T), NONE :: parse_inst_params_from_phi_term T, hint')
             end
       fun extract_oprs_from_hint (\<^Const>\<open>Transformation _\<close> $ _
                                   $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _, (\<^Const>\<open>Subjection _\<close> $ _ $ r)))

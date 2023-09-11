@@ -106,7 +106,7 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
                        $ Fa $ Fb $ F_term $ T $ U $ zip)
                    | _ => error "Internal bug")
 
-   in Seq.single ([], HOLogic.Trueprop $ SH, NONE :: parse_parameters_of_phi_type FT_term, phi, ctxt)
+   in Seq.single ([], HOLogic.Trueprop $ SH, NONE :: parse_inst_params_from_phi_term FT_term, phi, ctxt)
   end)
   end
 

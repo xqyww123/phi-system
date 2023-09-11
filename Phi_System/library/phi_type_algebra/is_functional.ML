@@ -48,7 +48,7 @@ fun guess_property__abst_domain (prop_head, x_sort, model_sort) (phi0 : phi_type
    |> Seq.map (fn (pred, ctxt) =>
         (ants, HOLogic.Trueprop $ (prop_head (x_ty, model_ty) $ T_term $
                   (Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (pred $ Bound 0) $ (Pvar $ Bound 0)))),
-         NONE :: parse_parameters_of_phi_type T_term, phi, ctxt))
+         NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt))
   end
 
 val guess_property = guess_property__abst_domain (fn (x,m) => \<^Const>\<open>Functionality x m\<close>, \<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)

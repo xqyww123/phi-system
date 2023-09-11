@@ -67,7 +67,7 @@ fun guess_property_TF phi0 ctxt =
         ) target_ty ctxt'2 x_ty element_ty
    |> Seq.map (fn (rel_mapper, ctxt'3) =>
         (ants, \<^Const>\<open>Trueprop\<close> $ (TF_head $ D_term $ Rng $ rel_mapper),
-         NONE :: parse_parameters_of_phi_type (F_term $ Bound 42 (*whatever*)), phi, ctxt'3)))
+         NONE :: parse_inst_params_from_phi_term (F_term $ Bound 42 (*whatever*)), phi, ctxt'3)))
   end)
   end
 
@@ -195,7 +195,7 @@ fun guess_property_FTF phi0 ctxt0 =
           (ants, \<^Const>\<open>Trueprop\<close> $ (FTF_head $ Abs ("f", element_ty --> target_ty element_ty, pm)
                                              $ Abs ("f", element_ty --> target_ty element_ty,
                                                   Abs ("P", element_ty --> HOLogic.boolT, fm $ Bound 1))),
-           NONE :: parse_parameters_of_phi_type (F_term $ Bound 42), phi,
+           NONE :: parse_inst_params_from_phi_term (F_term $ Bound 42), phi,
            load_simpset [fm,pm] ctxt'3)))
   end)
   end

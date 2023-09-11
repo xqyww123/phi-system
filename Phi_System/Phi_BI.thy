@@ -1226,10 +1226,14 @@ lemma ExSet_simps[simp, \<phi>programming_base_simps]:
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> x = y \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
   \<open>(\<exists>* x. F x \<s>\<u>\<b>\<j> y = x \<and> P x) = (F y \<s>\<u>\<b>\<j> P y)\<close>
   \<open>(ExSet X \<s>\<u>\<b>\<j> PP) = (ExSet (\<lambda>c. X c \<s>\<u>\<b>\<j> PP))\<close>
+  \<open>(F y \<s>\<u>\<b>\<j> y. embedded_func f P x y) = (F (f x) \<s>\<u>\<b>\<j> P x)\<close>
 (*  \<open>(\<exists>* x. x = t \<and> P x) = P t\<close>
 "\<And>P. (\<exists>x. x = t \<and> P x) = P t"
     "\<And>P. (\<exists>x. t = x \<and> P x) = P t"*)
-  unfolding BI_eq_iff by simp_all
+  unfolding BI_eq_iff embedded_func_def
+  by simp_all
+
+(*TODO: give a similar simproc like \<open>\<^simproc>\<open>defined_Ex\<close>\<close> *)
 
 lemma Ex_transformation_expn:
   \<open>((\<exists>*x. A x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longleftrightarrow> (\<forall>x. A x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P)\<close>
