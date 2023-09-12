@@ -60,6 +60,7 @@ ML_file \<open>library/tools/ml_thms.ML\<close>
 ML_file \<open>library/pattern.ML\<close>
 ML_file_debug \<open>library/reasoner_decl.ML\<close>
 ML_file \<open>library/priority_group.ML\<close>
+ML_file_debug \<open>library/helpers0.ML\<close>
 
 subsubsection \<open>Guard of Reasoning Rule\<close>
 
@@ -285,7 +286,8 @@ lemma Except_Pattern_I:
   \<open>PROP P \<Longrightarrow> PROP Except_Pattern P pat\<close>
   unfolding Except_Pattern_def .
 
-ML_file \<open>library/syntax/embedded_pattern.ML\<close>
+
+ML_file_debug \<open>library/syntax/embedded_pattern.ML\<close>
 
 
 subsubsection \<open>Meta Ball\<close>

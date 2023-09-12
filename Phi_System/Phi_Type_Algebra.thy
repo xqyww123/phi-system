@@ -1429,7 +1429,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name \<A>s
      
 *)
 
-lemma [\<phi>reason_template default %ToA_derived_one_to_one_functor name functional_transformation]:
+lemma FTF_template[no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor name functional_transformation]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor Fa Fb T U D R pred_mapper func_mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x) 
@@ -1891,7 +1891,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> T \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> NO_SIMP (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T \<w>\<i>\<t>\<h> P) \<close>
-  unfolding Semimodule_Identity\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def
+  unfolding Semimodule_Identity\<^sub>E_def NO_SIMP_def \<r>Guard_def Premise_def Except_Pattern_def
   by simp
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
@@ -1948,23 +1948,24 @@ text \<open>When the source is in a semimodule operator \<open>F\<close> but the
   of other semimdoule rules. The proof obligation \<open>D y\<close> can be strong? but is acceptable I think
   as long as being applied with the lowest priority.\<close>
 
-lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
+lemma intro_Semimodule_template[no_atp, \<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> Semimodule_Identity\<^sub>E F U one D f
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F F''
-\<Longrightarrow> NO_SIMP (\<g>\<u>\<a>\<r>\<d> NO_MATCH (F'' s'' U'') U)
-\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F' s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F one U \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F' s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (id one) U \<w>\<i>\<t>\<h> P) \<comment> \<open>protector \<open>id\<close> prevents the generated \<open>F one U\<close> reducing immediately\<close>
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D y
-\<Longrightarrow> x \<Ztypecolon> F' s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
-  unfolding Semimodule_Identity\<^sub>E_def NO_SIMP_def Premise_def
+\<Longrightarrow> x \<Ztypecolon> F' s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
+    <except-pattern> XX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> yy \<Ztypecolon> F'' s'' U'' \<w>\<i>\<t>\<h> PP \<close>
+  unfolding Semimodule_Identity\<^sub>E_def NO_SIMP_def Premise_def Except_Pattern_def
   by clarsimp
+
 
 lemma [\<phi>reason_template default %derived_SE_inj_to_module]:
   \<open> Semimodule_Identity\<^sub>E F U one D f
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Scalar_Mul F F''
 \<Longrightarrow> NO_SIMP (\<g>\<u>\<a>\<r>\<d> NO_MATCH (F'' s'' U'') U)
-\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F' s T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F one U \<^emph>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> NO_SIMP (x \<Ztypecolon> F' s T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (id one) U \<^emph>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D (fst y)
 \<Longrightarrow> x \<Ztypecolon> F' s T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> apfst f y \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Semimodule_Identity\<^sub>E_def NO_SIMP_def Premise_def
@@ -4787,14 +4788,13 @@ lemma \<phi>TA_TyComm\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> G (F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G' T) \<s>\<u>\<b>\<j> y. r x y)
-                @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> G (F T) \<Rightarrow> \<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)))
+          (x \<Ztypecolon> G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G' T) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Tyops_Commute G G' F F' T D r\<close>
-  unfolding Action_Tag_def Tyops_Commute_def Premise_def
+  unfolding Action_Tag_def Tyops_Commute_def Premise_def Bubbling_def
   by blast
 
 lemma \<phi>TA_TyComm\<^sub>E_gen:
@@ -4822,13 +4822,13 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target (to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G (F'\<^sub>T, F'\<^sub>U))))
+          (x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>
-  unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def
+  unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Bubbling_def
   by blast
 
 lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
@@ -4851,14 +4851,13 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> G (F T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G'\<^sub>T T) (G'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y)
-          @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> G (F T U) \<Rightarrow> \<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)))
+          (x \<Ztypecolon> G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G'\<^sub>T T) (G'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 G G'\<^sub>T G'\<^sub>U F F' T U D r\<close>
-  unfolding Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def
+  unfolding Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Bubbling_def
   by clarsimp
 
 lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:

@@ -72,12 +72,12 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                          | chk 0 X = chk_unfolded' ctxt phi X
                          | chk _ _ = ()
                     in if is_intro
-                    then exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} chk ctxt sequent
+                    then exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
                     else exhaustive_PLPR_reasoner NONE chk ctxt sequent
                    end) ctxt
 
       val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,
-                                     [(SOME ([0], ind_conv), reasoning is_intro)],
+                                     [(SOME (if is_intro then [0] else [0,~1], ind_conv), reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
@@ -135,7 +135,7 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
       val deriving = (deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, fst name)
                           (meta_gen_Tyops_Commute' (true , fst rule, fst parse_hint, fst guess_property)),
                       deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, snd name)
-                          (meta_gen_Tyops_Commute' (true , snd rule, snd parse_hint, snd guess_property)))
+                          (meta_gen_Tyops_Commute' (false , snd rule, snd parse_hint, snd guess_property)))
 
       val deriver = apply2 (fn der => {priority = 150, dependences = [], derive= der}) deriving
 

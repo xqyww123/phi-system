@@ -784,7 +784,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
-
+   
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
   deriving Basic
@@ -1570,7 +1570,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 declare [[\<phi>trace_reasoning = 3]]
   
-let_\<phi>type \<phi>Share deriving \<phi>MapAt.C omm\<^sub>I
+let_\<phi>type \<phi>MapAt deriving \<phi>MapAt.Comm\<^sub>E
 
 
 thm \<phi>Share.unfold_sdistr (*TODO: reduce identical antecedents*)

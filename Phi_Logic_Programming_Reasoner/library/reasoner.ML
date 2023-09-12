@@ -936,20 +936,21 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
             run_passes pos (map (Thm.transfer'' ctxt0) rules0, (mode0, priority0), pats0, guard0, ctxt0)
     val rules = rules01
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
-             |> map ( Phi_Help.beta_eta_contract
-                   #> Drule.zero_var_indexes
-                   #> Thm.trim_context )
     val _ = if null rules then error ("No rule is given!") else ()
 
     fun complete_prio ((e_pat, e_except, inargs), rule) = ((map (rpair NONE) e_pat, e_except, inargs), rule)
-    val embedding_rules = map (complete_prio o PLPR_Syntax.elim_embedded_patterns) rules
+    val embedding_rules = map (complete_prio o PLPR_Syntax.elim_embedded_patterns ctxt) rules
 
     val _ = if exists (fn ((_,_,inargs), _) => not (null inargs)) embedding_rules
             then error "Embedded IN-arguments are not supported yet."
             else ()
 
-    fun mk_reasoner (rules, patterns, blacklist) =
-      let val pats = if null patterns
+    fun mk_reasoner (rules0, patterns, blacklist) =
+      let val rules = rules0
+                    |> map ( Phi_Help.beta_eta_contract
+                          #> Drule.zero_var_indexes
+                          #> Thm.trim_context )
+          val pats = if null patterns
                      then case rules
                             of [rule] =>
                               let val concl = Thm.concl_of rule

@@ -693,11 +693,11 @@ fn (_, (ctxt,sequent)) => Seq.make (fn () =>
 
 
 
-lemma [\<phi>reason no explorative backtrack ! %\<phi>simp_system_fallback+1]:
+lemma [\<phi>reason default ! %\<phi>simp_system_fallback+1]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp' False\<close>
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason no explorative backtrack ! %\<phi>simp_system_fallback for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp' False\<close>]:
+lemma [\<phi>reason default ! %\<phi>simp_system_fallback for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>simp' False\<close>]:
   \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>simp' False\<close>
   unfolding Action_Tag_def by simp
 

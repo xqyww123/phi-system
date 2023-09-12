@@ -7,7 +7,7 @@ val elim_With_Pattern : thm -> term * thm
 val elim_Except_Pattern : thm -> term * thm
 
 val strip_embedded_patterns : term -> (term list * term (*except*) list * indexname list) * term
-val elim_embedded_patterns : thm -> (term list * term (*except*) list * indexname list) * thm
+val elim_embedded_patterns : Context.generic -> thm -> (term list * term (*except*) list * indexname list) * thm
 
 end
 
@@ -43,13 +43,16 @@ fun elim_Except_Pattern thm =
    in (pat, @{thm' Except_Pattern_I} RS thm)
   end
 
-fun elim_embedded_patterns thm =
+fun elim_embedded_patterns ctxt thm =
   let val (ret, _) = strip_embedded_patterns (Thm.concl_of thm)
       fun elim thm =
         case Thm.concl_of thm
-          of Const(\<^const_name>\<open>With_Pattern\<close>, _) $ _ $ _ => elim (@{thm' With_Pattern_I} RS thm)
-           | Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ _ $ _ => elim (@{thm' Except_Pattern_I} RS thm)
-           | Const(\<^const_name>\<open>With_IN_Arg\<close>, _) $ _ $ _ => elim (@{thm' With_IN_Arg_I} RS thm)
+          of Const(\<^const_name>\<open>With_Pattern\<close>, _) $ _ $ _ =>
+                elim (Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (Conv.rewr_conv @{thm' With_Pattern_def})) thm)
+           | Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ _ $ _ =>
+                elim (Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (Conv.rewr_conv @{thm' Except_Pattern_def})) thm)
+           | Const(\<^const_name>\<open>With_IN_Arg\<close>, _) $ _ $ _ =>
+                elim (Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (Conv.rewr_conv @{thm' With_IN_Arg_def})) thm)
            | _ => thm
    in (ret, elim thm)
   end
