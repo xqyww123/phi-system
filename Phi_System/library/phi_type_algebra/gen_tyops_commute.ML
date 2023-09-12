@@ -13,24 +13,31 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 (*is_intro: True for applying the inductive destruction on the source, False for on the target*)
 fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                             (_, name) hint0 ctxt0 (phi0 : phi_type) thy =
-  let val Const (const, _) = head_of (HOLogic.dest_Trueprop (Thm.prop_of rule))
+  let val Const (const, _) = head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
       fun extract_oprs_from_hint (C $ D $ r) =
            (case head_of C
               of Const(const', _) => if const = const' then [D,r] else []
                | _ => [])
         | extract_oprs_from_hint _ = []
 
-      val ind_conv_I = default_ind_conv (
+      fun gen_ind_conv ctxt _ =
+            Conv.rewr_conv @{lemma \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
+                                   \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
+                                by (unfold atomize_imp Action_Tag_def)} then_conv
+            Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
+            Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]}))
+                              Conv.all_conv
+      val ind_conv = default_ind_conv (gen_ind_conv, gen_ind_conv)
+      (*val ind_conv = default_ind_conv (
             fn ctxt => fn _ =>
-                Phi_Conv.meta_alls_conv (fn ctxt => Conv.implies_concl_conv (
+                Conv.rewr_conv @{lemma \<open>A \<longrightarrow> B \<longrightarrow> C \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C)\<close> by blast} then_conv
+                Phi_Reasoners.asm_rewrite true (
+                    Expansion.equip ctxt addsimps (@{thm' \<phi>TA_ind_target_strip} :: #equations phi0)),
+            fn ctxt => fn _ =>
+                Phi_Conv.meta_alls_conv (fn ctxt => fn ctm => Conv.implies_concl_conv (
                   Phi_Reasoners.asm_rewrite true (
                       Expansion.equip ctxt addsimps (@{thm' \<phi>TA_ind_target_strip} :: #equations phi0))
-                )) ctxt,
-            fn ctxt => fn _ =>
-                Phi_Conv.meta_alls_conv (fn ctxt => Conv.implies_concl_conv (
-                  Phi_Reasoners.asm_rewrite true (
-                      Expansion.equip ctxt addsimps (@{thm' \<phi>TA_ind_target_strip} :: #equations phi0))
-                )) ctxt
+                ) ctm) ctxt
             )
       val ind_conv_E = default_ind_conv (
             fn ctxt => fn _ =>
@@ -43,8 +50,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                   Phi_Reasoners.asm_rewrite true (
                       Expansion.equip ctxt addsimps (@{thm' Action_Tag_def} :: #equations phi0))
                 )) ctxt
-            )
-      val ind_conv = if is_intro then ind_conv_I else ind_conv_E
+            )*)
 
       fun simp (_, ctxt) =
         if is_some hint0 then I
@@ -66,8 +72,8 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                          | chk 0 X = chk_unfolded' ctxt phi X
                          | chk _ _ = ()
                     in if is_intro
-                    then exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
-                    else exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} chk ctxt sequent
+                    then exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} chk ctxt sequent
+                    else exhaustive_PLPR_reasoner NONE chk ctxt sequent
                    end) ctxt
 
       val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,

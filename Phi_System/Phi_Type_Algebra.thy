@@ -1410,7 +1410,7 @@ lemma [\<phi>reason_template default 50 requires Separation_Homo\<^sub>E]:
 lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name \<A>simp_sep_homo]:
   \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
-  unfolding Separation_Homo\<^sub>E_def Action_Tag_def \<phi>Auto_Prod_def
+  unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def
   by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
 
 
@@ -4024,12 +4024,12 @@ lemma \<phi>TA_SH\<^sub>I_rule:
 
 lemma \<phi>TA_SH\<^sub>E_rule:
   \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-             (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> Ft T \<^emph>\<^sub>\<A> Fu U) @action \<phi>TA_ind_target \<A>simp)
+             (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> Ft T \<^emph> Fu U) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
 \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U uz \<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def \<phi>Auto_Prod_def
+  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def
   by simp
 
 lemma \<phi>TA_SH\<^sub>I_rewr_IH:
@@ -4670,13 +4670,13 @@ definition Guess_Tyops_Commute\<^sub>I :: \<open> (('c\<^sub>F,'a\<^sub>F) \<phi
                                   \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
                                   \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
                                   \<Rightarrow> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'b) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                   \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                   \<Rightarrow> ('a \<Rightarrow> bool)
                                   \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
                                   \<Rightarrow> bool \<Rightarrow> bool
                                   \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>I G G' F F' unfolded_G' T D r ants conds \<equiv> True\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>I G G' F F' unfolded_G T D r ants conds \<equiv> True\<close>
 
 definition Guess_Tyops_Commute\<^sub>E :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                   \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
@@ -4761,12 +4761,16 @@ declare [[\<phi>reason_default_pattern \<open>Guess_Tyops_Commute\<^sub>I ?F _ ?
 
 subparagraph \<open>Default Rules\<close>
 
-lemma [\<phi>reason %guess_tyop_commute_default]:
-  \<open>Guess_Tyops_Commute\<^sub>I F F G G any T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+lemma [\<phi>reason %guess_tyop_commute_default[bottom] for \<open>Guess_Tyops_Commute\<^sub>I _ _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I F F' G G' any T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
   unfolding Guess_Tyops_Commute\<^sub>I_def ..
 
-lemma [\<phi>reason %guess_tyop_commute_default]:
-  \<open>Guess_Tyops_Commute\<^sub>E F F G G any T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+lemma [\<phi>reason %guess_tyop_commute_default[bottom] for \<open>Guess_Tyops_Commute\<^sub>E _ _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' any T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
   unfolding Guess_Tyops_Commute\<^sub>E_def ..
 
 ML_file \<open>library/phi_type_algebra/guess_tyops_commute.ML\<close>
@@ -4781,9 +4785,10 @@ paragraph \<open>Deriver\<close>
 lemma \<phi>TA_TyComm\<^sub>I_gen:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x. Ant @action \<phi>TA_ANT \<Longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow>
-          x \<Ztypecolon> G (F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G' T) \<s>\<u>\<b>\<j> y. r x y @action \<phi>TA_ind_target (to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)))
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
+          (x \<Ztypecolon> G (F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G' T) \<s>\<u>\<b>\<j> y. r x y)
+                @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> G (F T) \<Rightarrow> \<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)))
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4795,9 +4800,9 @@ lemma \<phi>TA_TyComm\<^sub>I_gen:
 lemma \<phi>TA_TyComm\<^sub>E_gen:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x y. Ant @action \<phi>TA_ANT \<Longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<Longrightarrow>
-          x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> P x @action \<phi>TA_ind_target udnefined)
+\<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
+          (x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> P x) @action \<phi>TA_ind_target NToA)
                                 \<comment>\<open>^ target of inductive expansion. We only support a function \<open>embedded_func f P\<close>
               instead of a relation. It is a limitation. The main difficulty is here if it is a relation,
               we lose the location \<open>y \<Ztypecolon> G' _\<close> to apply induction. \<open>y\<close> is fixed here, but if we consider
@@ -4815,9 +4820,9 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>I_gen:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>T
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>U
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x. Ant @action \<phi>TA_ANT \<Longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow>
-          x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y @action \<phi>TA_ind_target (to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G (F'\<^sub>T, F'\<^sub>U))))
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
+          (x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target (to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G (F'\<^sub>T, F'\<^sub>U))))
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4830,9 +4835,9 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>T
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>U
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x y. Ant @action \<phi>TA_ANT \<Longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<Longrightarrow>
-          x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<w>\<i>\<t>\<h> P x @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
+          (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target NToA)
                                 \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4844,9 +4849,10 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
 lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
   \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x. Ant @action \<phi>TA_ANT \<Longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<Longrightarrow>
-          x \<Ztypecolon> G (F T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G'\<^sub>T T) (G'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y @action \<phi>TA_ind_target (to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G (F'\<^sub>T, F'\<^sub>U))))
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
+          (x \<Ztypecolon> G (F T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G'\<^sub>T T) (G'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y)
+          @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> G (F T U) \<Rightarrow> \<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)))
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4858,9 +4864,9 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
 lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
   \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x y. Ant @action \<phi>TA_ANT \<Longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<Longrightarrow>
-          x \<Ztypecolon> F' (G'\<^sub>T T) (G'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G (F T U) \<w>\<i>\<t>\<h> P x @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
+          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
+          (x \<Ztypecolon> F' (G'\<^sub>T T) (G'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G (F T U) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target NToA)
                                         \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4885,7 +4891,7 @@ setup \<open>Context.theory_map (Phi_Type_Algebra_Derivers.Expansion.map (fn ctx
   @{thms' HOL.simp_thms ex_simps[symmetric] mem_Collect_eq imp_ex
           prod.case prod.sel fst_apfst snd_apfst fst_apsnd snd_apsnd apfst_id apsnd_id apfst_conv apsnd_conv prod.inject
           ExSet_simps
-          \<phi>Prod_expn' \<phi>Prod_expn'' \<phi>Prod_expn'[folded \<phi>Auto_Prod_def] \<phi>Prod_expn''[folded \<phi>Auto_Prod_def]
+          \<phi>Prod_expn' \<phi>Prod_expn''
           FSet.ball_simps(5-7) Set.ball_simps(5-7,9)
           list_all2_Cons1 list_all2_Nil
           map_ident}))\<close>

@@ -111,8 +111,8 @@ val Guess_Framework' :
       * (phi_type * Proof.context
            -> (string * term) list (*instantiations of the template of the reasoning goal*)
               * phi_type * Proof.context)
-      * thm (*a rule parsing the result of the reasoning, of form
-            \<open>Result_of_Reasoning \<Longrightarrow> TERM Conclusion_of_Property &&& TERM (T x) &&& TERM conditions_of_antecedents &&& TERM antecedents\<close>
+      * term (*a rule parsing the result of the reasoning, of form
+            \<open>(Result_of_Reasoning, Conclusion_of_Property, T x, conditions_of_antecedents, antecedents)\<close>
             The \<open>T x\<close> is used to parse the instantiation parameteres of induction rule (by parse_inst_params_from_phi_term,
               where dummy variable can be used as place holders for parameteres that have no instantiation)*)
       -> guess_property
@@ -903,15 +903,27 @@ type parse_result = (*parses the result of the reasoning*)
                term (*conditions augmenting the antecedents*) *
                term (*(conjuncted) antecedents*)
 
+fun prepend_Trueprop term =
+      case Term.fastype_of term
+        of \<^Type>\<open>prop\<close> => term
+         | \<^Type>\<open>bool\<close> => HOLogic.Trueprop $ term
+         | _ => raise TERM ("Not a proposition", [term])
+
 fun Guess_Framework (unfold_place, mk_goal_term_and_parse_result) (phi : phi_type) ctxt =
   let val (goal_term, parse_result, phi, ctxt) =
               mk_goal_term_and_parse_result (phi, ctxt)
-      val reason = Conv.gconv_rule (HOLogic.Trueprop_conv (funpow unfold_place Conv.fun_conv (Conv.arg1_conv (
-                      Conv.abs_conv (Conv.abs_conv (Conv.abs_conv (fn (_, ctxt) =>
-                      fn ctm => Conv.rewrs_conv (map (fn th => th RS' (ctxt, @{thm' HOL.eq_reflection}))
-                                           (#equations phi)) ctm) o snd) o snd) ctxt
-                      )))) 1
-                #> Phi_Reasoner.reason NONE NONE ctxt
+      val goal_term = prepend_Trueprop goal_term
+      fun repeat_abs_conv cv ctxt ctm =
+            case Thm.term_of ctm
+              of Abs _ => Conv.abs_conv (repeat_abs_conv cv o snd) ctxt ctm
+               | _ => cv ctxt ctm
+      fun reason thm = thm
+            |> Conv.gconv_rule (HOLogic.Trueprop_conv (funpow unfold_place Conv.fun_conv (Conv.arg1_conv (
+                  repeat_abs_conv (fn ctxt =>
+                      Conv.try_conv (Conv.rewrs_conv (map (fn th => th RS' (ctxt, @{thm' HOL.eq_reflection}))
+                                                     (#equations phi)))) ctxt
+                  )))) 1
+            |> Phi_Reasoner.reason NONE NONE ctxt
    in case Phi_Help.reason_tracing_tyinst ctxt reason goal_term
         |> Option.map (apsnd (simplify_guessing_reasoning ctxt))
    of SOME (inst, ret) =>
@@ -932,9 +944,9 @@ fun Guess_Framework' (unfold_place, goal_template, insts_of, parsing_rule) =
   Guess_Framework (unfold_place,
     fn (phi, ctxt) =>
       let val (insts, phi, ctxt) = insts_of (phi, ctxt)
-          val idx = fold (Term.maxidx_term o snd) insts ~1 + 1
+          val idx = fold (Term.maxidx_term o snd) insts ~1 + 1 |> @{print}
           val goal_template = Logic.incr_indexes ([],[],idx) goal_template
-          val idx = maxidx_of_term goal_template + 1
+          val idx = Term.maxidx_term goal_template idx + 1 |> @{print}
           val params = Term.add_vars goal_template []
           val eqs = map (fn (redex,residue) =>
                           (Var (the (find_first (fn ((N,_), _) => N = redex) params)), residue)
@@ -950,12 +962,13 @@ fun Guess_Framework' (unfold_place, goal_template, insts_of, parsing_rule) =
           val goal_term = Envir.norm_term env goal_template
           val phi = instantiate_phi inst phi
 
+          val thy = Proof_Context.theory_of ctxt
+          val (redex :: residues) = HOLogic.strip_tuple parsing_rule
           fun parse_result result =
-                case Thm.prop_of (result RS' (ctxt, parsing_rule))
-                  |> Logic.dest_conjunction_list
-                  |> map (Logic.dest_term)
-                  of [prop, Tx_term, conds, ants] =>
-                      (prop, parse_inst_params_from_phi_term Tx_term, conds, ants)
+            case Pattern_Translation.rewrites thy (prepend_Trueprop redex, residues) (Thm.prop_of result)
+              of SOME [prop, Tx_term, conds, ants] =>
+                    (prepend_Trueprop prop, parse_inst_params_from_phi_term Tx_term, conds, ants)
+               | _ => error "Bad parsing_rule"
 
        in (goal_term, parse_result, phi, ctxt)
       end)
@@ -1632,7 +1645,9 @@ fun chk_unfolded ctxt (phi : phi_type) term =
         | chk (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = chk X
         | chk (Abs(_,_,X)) = chk X
         | chk (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) = is_atom x andalso chk T
-        | chk (Const(\<^const_name>\<open>\<phi>Auto_Prod\<close>, _) $ A $ B) = chk A andalso chk B
+        | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A $ B $ C) = chk A andalso chk B andalso chk C
+        | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A $ B) = chk A andalso chk B
+        | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A) = chk A
         | chk (Const(N',_)) = N = N'
         | chk (Free(N',_)) = N = N'
         | chk (X $ _) = chk X
