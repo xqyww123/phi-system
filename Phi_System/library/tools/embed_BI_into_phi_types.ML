@@ -54,7 +54,7 @@ fun chk2 ctxt thm =
 
 fun chk_rewr' ctxt thm =
       (chk_rewr ctxt thm
-       handle THM _ => chk_rewr ctxt (Phi_Type_Algebra.conv_def_to_equaltion ctxt thm))
+       handle THM _ => chk_rewr ctxt (Phi_Type_Algebra.conv_def_to_equation ctxt thm))
         |> chk2 ctxt
 
 structure Embed_into_Phi_Type = Simpset (

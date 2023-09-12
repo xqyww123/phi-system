@@ -1,6 +1,6 @@
 signature PHI_TYPE_ALGEBRA = sig
 
-val conv_def_to_equaltion : Proof.context -> thm -> thm
+val conv_def_to_equation : Proof.context -> thm -> thm
 exception Automation_Fail of unit -> Pretty.T list
 
 end
@@ -9,10 +9,11 @@ structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
 
 exception Automation_Fail of unit -> Pretty.T list
 
-fun conv_def_to_equaltion ctxt def =
+(*converts a given definition in various forms into \<open>(x \<Ztypecolon> T) = \<dots>\<close>*)
+fun conv_def_to_equation ctxt def =
   case Thm.concl_of def
     of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _ =>
-        conv_def_to_equaltion ctxt
+        conv_def_to_equation ctxt
           (Conv.fconv_rule (Phi_Conv.hhf_concl_conv Object_Logic.atomize ctxt) def)
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
          Const(\<^const_name>\<open>HOL.eq\<close>, \<^Type>\<open>fun Ty _\<close>) $ LHS $ RHS) =>

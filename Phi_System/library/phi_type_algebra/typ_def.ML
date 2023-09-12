@@ -24,6 +24,7 @@ datatype def = DIRECT_DEF of (term (*lhs of the def*) * (string (*def_name*) * t
 
 type phi_type = {
   term: term (*of most general type and schematic variables. always be a constant or a fixed free*),
+  param_names: string list (*the default name of the parameters. note the abstract object is not considered as a parameter*),
   cterm: thm (*TERM <the_cterm>*),
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
@@ -202,6 +203,7 @@ datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*))
 
 type phi_type = {
   term: term (*of most general type*),
+  param_names: string list,
   cterm: thm,
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
@@ -217,6 +219,7 @@ type phi_type = {
 fun map_phi_type (mtm,mth) (phi : phi_type) =
   {
     term = mtm (#term phi),
+    param_names = #param_names phi,
     cterm = singleton mth (#cterm phi),
     pos = #pos phi,
     proof_id = #proof_id phi,
@@ -232,6 +235,7 @@ fun map_phi_type (mtm,mth) (phi : phi_type) =
 fun set_ind ind (phi : phi_type) =
   {
     term = #term phi,
+    param_names = #param_names phi,
     cterm = #cterm phi,
     pos = #pos phi,
     proof_id = #proof_id phi,
@@ -825,6 +829,12 @@ structure Defining_Phi_Type = Hooks(
 
 val refine_typeq = @{lemma \<open>(\<And>x. (x \<Ztypecolon> T) = (x \<Ztypecolon> U)) \<Longrightarrow> T = U\<close> by (rule \<phi>Type_eqI, simp)}
 
+fun LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _) = LHS
+  | LHS_of (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ LHS $ _) = LHS
+  | LHS_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = LHS_of X
+  | LHS_of (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = LHS_of X
+  | LHS_of X = raise TERM ("Not an equation", [X])
+
 (*ctxt: the context used to derive properties*)
 fun add_type (def, pos, dervs, bundles) thy =
   let val ctxt = Context.proof_of thy
@@ -846,18 +856,9 @@ fun add_type (def, pos, dervs, bundles) thy =
 
       fun filter_relevant_eqs name =
             filter (fn eq =>
-              case Thm.concl_of eq
-                of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                      Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _)
-                    => (case Term.head_of LHS
-                          of Const(N',_) => N' = name
-                           | Free(N',_) => N' = name
-                           | _ => false)
-                 | Const(\<^const_name>\<open>Pure.eq\<close>, _) $ LHS $ _ =>
-                       (case Term.head_of LHS
-                          of Const(N',_) => N' = name
-                           | Free(N',_) => N' = name
-                           | _ => false)
+              case Term.head_of (LHS_of (Thm.concl_of eq))
+                of Const(N',_) => N' = name
+                 | Free (N',_) => N' = name
                  | _ => false)
       val eqs = (case def of DIRECT_DEF (_, (_, eq)) => [eq]
                     | WFREC_DEF (name, info) =>
@@ -866,11 +867,21 @@ fun add_type (def, pos, dervs, bundles) thy =
                             | NONE => (warning "Termination of the definition is not proven. \
                                                \Use partial simplification and induction rules.";
                                        filter_relevant_eqs name (#psimps info))))
-              |> map (conv_def_to_equaltion ctxt
+              |> map (conv_def_to_equation ctxt
                    #> normalize)
       val tagged_eqs = map (Conv.fconv_rule (add_premise_tag ctxt)) eqs
 
       val typeqs = map_filter (fn eq => SOME (eq RS refine_typeq) handle THM _ => NONE) eqs
+
+      val param_names = map (fn eq =>
+                          case LHS_of (Thm.concl_of eq)
+                            of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T =>
+                                  map (fn Var ((N,_),_) => SOME N | Free (N,_) => SOME N | _ => NONE)
+                                      (snd (strip_comb T))
+                             | _ => error "BUG") eqs
+                     |> foldl1 (uncurry (map2 (curry merge_options)))
+                     |> map (fn SOME N => N | NONE => "A")
+                     |> @{print}
 
       val tagged_eqs_in_type = map (try (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
               HOLogic.Trueprop_conv (Conv.arg_conv (fn ctm =>
@@ -983,6 +994,7 @@ fun add_type (def, pos, dervs, bundles) thy =
                  | _ => raise TERM ("Must be a constant", [the_term])
       val phi_type = {
             term = the_term,
+            param_names = param_names,
             cterm = Drule.mk_term (Thm.cterm_of ctxt the_term),
             pos = pos,
             proof_id = proof_id,

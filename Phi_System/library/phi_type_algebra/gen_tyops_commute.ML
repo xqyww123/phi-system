@@ -1,6 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
+val meta_Tyops_Commute : quiet -> Phi_Type_Algebra.derive
+
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
@@ -8,9 +10,9 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 
 
-(*dest_source: True for applying the inductive destruction on the source, False for on the target*)
-fun meta_gen_Tyops_Commute (dest_source, rule, parse_hint) F_term
-                           (_, name) hint0 ctxt0 (phi0 : phi_type) thy =
+(*is_intro: True for applying the inductive destruction on the source, False for on the target*)
+fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
+                            (_, name) hint0 ctxt0 (phi0 : phi_type) thy =
   let val Const (const, _) = head_of (HOLogic.dest_Trueprop (Thm.prop_of rule))
       fun extract_oprs_from_hint (C $ D $ r) =
            (case head_of C
@@ -42,7 +44,117 @@ fun meta_gen_Tyops_Commute (dest_source, rule, parse_hint) F_term
                       Expansion.equip ctxt addsimps (@{thm' Action_Tag_def} :: #equations phi0))
                 )) ctxt
             )
-   in ()
+      val ind_conv = if is_intro then ind_conv_I else ind_conv_E
+
+      fun simp (_, ctxt) =
+        if is_some hint0 then I
+        else Conv.fconv_rule (
+               Phi_Conv.hhf_concl_conv (fn ctxt =>
+                 let val sctxt = ctxt addsimps @{thms special_Ex_def}
+                  in HOLogic.Trueprop_conv (Conv.combination_conv
+                        (Conv.arg_conv (Simplifier.rewrite sctxt))
+                        (Simplifier.rewrite sctxt))
+                 end
+             ) ctxt)
+
+      fun reasoning is_intro phi ctxt =
+            default_reasoning true
+                (default_reasoning_configure [])
+                (K (K NONE))
+                (fn ctxt => fn sequent =>
+                   let fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) = (chk_unfolded' ctxt phi X1; chk_unfolded' ctxt phi X2)
+                         | chk 0 X = chk_unfolded' ctxt phi X
+                         | chk _ _ = ()
+                    in if is_intro
+                    then exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
+                    else exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} chk ctxt sequent
+                   end) ctxt
+
+      val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,
+                                     [(SOME ([0], ind_conv), reasoning is_intro)],
+                                     K NONE, simp)
+                                    phi0 hint0 ctxt0
+   in case Seq.pull rules
+   of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
+    | SOME (rule', _) => thy
+        |> note_properties_s phi0 [(name, [rule'])]
+        |> Phi_Help.generic_theory_mapping (fn m =>
+             Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE
+                                   [Morphism.thm m rule'])
+        |> pair [rule']
+  end
+
+fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
+  let val (rev_argtys, x_ty, c_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      fun calc_arity arity (argty :: rev_argtys) =
+           (case try dest_parameterized_phi_ty argty
+              of SOME ([], _, _) =>
+                  if arity = 2
+                  then ( warning "In deriving commutativity of \<phi>-type operators, we only support type \
+                                 \operators of arity upto 2 right now." ;
+                         (2, argty :: rev_argtys) )
+                  else calc_arity (arity + 1) rev_argtys
+               | NONE => (arity, argty :: rev_argtys))
+        | calc_arity arity [] = (arity, [])
+      val (arity, fixed_param_tys) = calc_arity 0 rev_argtys
+      val idx = phi_maxidx_of phi ~1
+      val F_term = fold_index (fn (i,(ty, N)) => fn X => X $ Var((N, i+idx), ty))
+                              (rev fixed_param_tys ~~ List.take (#param_names phi, length fixed_param_tys))
+                              (#term phi)
+      val F_cterm = Thm.cterm_of ctxt F_term
+
+      val guess_property = gen_Guess_Tyops_Commute (F_term, arity)
+
+      val parse_hint = case arity
+            of 1 => (fn Const(\<^const_name>\<open>Tyops_Commute\<close>, _) $ G $ _ $ _ $ _ $ _ $ _ $ _ => G,
+                     fn Const(\<^const_name>\<open>Tyops_Commute\<close>, _) $ _ $ _ $ G $ _ $ _ $ _ $ _ => G)
+             | 2 => (fn Const(\<^const_name>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<close>, _) $ G $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ => G,
+                     fn Const(\<^const_name>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<close>, _) $ G $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _ => G)
+             | _ => error "Unsupported arity"
+
+      val rule = case arity
+            of 1 => (@{thm' \<phi>TA_TyComm\<^sub>I_gen}, @{thm' \<phi>TA_TyComm\<^sub>E_gen})
+             | 2 => (@{thm' \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen}, @{thm' \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen})
+             | _ => error "Unsupported arity"
+      val rule = apply2 (Drule.infer_instantiate ctxt [(("F",0),F_cterm)]) rule
+
+      fun gen_rule th = case Phi_Reasoner.reason NONE NONE ctxt th
+                          of SOME ret => ret
+                           | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR fails"])
+      val rule = apply2 gen_rule rule
+
+      val name = Term.term_name (#term phi) ^ "_Comm"
+      val name = (name ^ "\<^sub>I", name ^ "\<^sub>E")
+
+      val deriving = (deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, fst name)
+                          (meta_gen_Tyops_Commute' (true , fst rule, fst parse_hint, fst guess_property)),
+                      deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, snd name)
+                          (meta_gen_Tyops_Commute' (true , snd rule, snd parse_hint, snd guess_property)))
+
+      val deriver = apply2 (fn der => {priority = 150, dependences = [], derive= der}) deriving
+
+      val binding = Binding.qualify true (Term.term_name (#term phi)) (Binding.make ("Comm", #pos phi))
+      val binding = (Binding.suffix_name "\<^sub>I" binding, Binding.suffix_name "\<^sub>E" binding)
+
+   in (binding, deriver)
+  end
+
+fun meta_Tyops_Commute quiet ctxt (phi : phi_type) thy =
+  let val (bindings, deriver) = meta_gen_Tyops_Commute ctxt phi
+      fun report (name, thy) = (
+        if quiet then () else 
+          Phi_Reasoner.info_pretty_generic thy 0 (fn () => let open Pretty in
+            block (text "Deriver for \<phi>-Type Operator Commutativity :" @
+                   [brk 1, Name_Space.pretty ctxt (Name_Space.space_of_table (deriver_name_space thy)) name])
+          end) ;
+        thy)
+   in thy
+   |> Context.mapping_result (define_deriver_global  (fst bindings) (fst deriver))
+                             (define_deriver (fst bindings) (fst deriver))
+   |> report
+   |> Context.mapping_result (define_deriver_global  (snd bindings) (snd deriver))
+                             (define_deriver (snd bindings) (snd deriver))
+   |> report
   end
 
 end

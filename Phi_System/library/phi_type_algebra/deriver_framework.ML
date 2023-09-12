@@ -932,14 +932,23 @@ fun Guess_Framework' (unfold_place, goal_template, insts_of, parsing_rule) =
   Guess_Framework (unfold_place,
     fn (phi, ctxt) =>
       let val (insts, phi, ctxt) = insts_of (phi, ctxt)
-
-          val thy = Proof_Context.theory_of ctxt
+          val idx = fold (Term.maxidx_term o snd) insts ~1 + 1
+          val goal_template = Logic.incr_indexes ([],[],idx) goal_template
+          val idx = maxidx_of_term goal_template + 1
           val params = Term.add_vars goal_template []
-          val subst = fold (fn (redex,residue) =>
-                let val param = the (find_first (fn ((N,_), _) => N = redex) params)
-                 in Pattern.first_order_match thy (Var param, residue)
-                end) insts (Vartab.empty, Vartab.empty)
-          val goal_term = Envir.subst_term subst goal_template
+          val eqs = map (fn (redex,residue) =>
+                          (Var (the (find_first (fn ((N,_), _) => N = redex) params)), residue)
+                            |> apply2 Logic.mk_term (*Unify.smash_unifiers requires that the terms to be unified already have the same type*)
+                     ) insts
+          val env = case Seq.pull (Unify.smash_unifiers (Context.Proof ctxt) eqs (Envir.empty idx))
+                      of SOME (env, _) => env
+                       | NONE => error "No unifier to the goal template"
+          val Envir.Envir {tyenv, tenv, ...} = env
+          val inst = Phi_Help.norm_env (tyenv, tenv)
+                  |> Phi_Help.certify_vars (Context.Proof ctxt)
+
+          val goal_term = Envir.norm_term env goal_template
+          val phi = instantiate_phi inst phi
 
           fun parse_result result =
                 case Thm.prop_of (result RS' (ctxt, parsing_rule))
