@@ -474,7 +474,7 @@ paragraph \<open>Deriver\<close>
 
 lemma \<phi>TA_SgH_rule:
   \<open> (\<And>T y x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s x = y \<Longrightarrow> (Ant @action \<phi>TA_ANT) \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D y x \<longrightarrow>
-        (x \<Ztypecolon> Fa (\<Sigma>\<^sub>\<A> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, m x) \<Ztypecolon> \<Sigma>\<^sub>\<A> c. Fb (T c)) @action \<phi>TA_ind_target \<A>simp)
+        (x \<Ztypecolon> Fa (\<Sigma>\<^sub>\<A> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, m x) \<Ztypecolon> \<Sigma> c. Fb (T c)) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant
@@ -1468,15 +1468,16 @@ declare [[\<phi>trace_reasoning = 1]]
        and Trivial_\<Sigma>
        and SE_Trim_Empty
 
+thm List.functional_transformation
 
-declare [[\<phi>trace_reasoning = 0]]
-     
+declare [[\<phi>trace_reasoning = 3]]
+       
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
-  deriving Separation_Monoid
+  deriving (*Separation_Monoid
        and SE_Trim_Empty
-       and Trivial_\<Sigma>
+       and*) Trivial_\<Sigma>
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
