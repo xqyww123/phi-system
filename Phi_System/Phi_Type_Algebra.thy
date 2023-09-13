@@ -988,6 +988,8 @@ ML \<open> (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>li
 
 \<close>
 
+
+
 ML \<open>BNF_Def.rel_eq_of_bnf (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
 ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>

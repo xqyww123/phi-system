@@ -70,8 +70,8 @@ val simps_of_set_safe : eBNF -> thm list
 val simps_of_rel : eBNF -> thm list
 val simps_of_rel_safe : eBNF -> thm list
 
-val global_simps_of_rel : eBNF -> thm list
-val global_simps_of_rel_safe : eBNF -> thm list
+val global_simps_of_rel : Context.generic -> eBNF -> thm list
+val global_simps_of_rel_safe : Context.generic -> eBNF -> thm list
 
 val simps_of_pred : eBNF -> thm list
 val simps_of_pred_safe : eBNF -> thm list
@@ -459,9 +459,47 @@ fun simps_of_rel (BNF bnf) = #rel_distincts (#fp_bnf_sugar (g_fp bnf))
   | simps_of_rel (qBNF bnf) = #rel_simps bnf
 fun simps_of_rel_safe bnf = simps_of_rel bnf handle Automation_Fail _ => []
 
-fun global_simps_of_rel (BNF bnf) = [BNF_Def.rel_eq_of_bnf (g_bnf bnf)]
-  | global_simps_of_rel (qBNF bnf)= [#rel_eq bnf]
-fun global_simps_of_rel_safe bnf = global_simps_of_rel bnf handle Automation_Fail _ => []
+(*lemma
+  \<open>(=) = (\<lambda>x y. y = x)\<close>
+  by blast*)
+
+(*converts arguments and leaves the head untouched*)
+fun args_conv cv ctm =
+  case Thm.term_of ctm of _ $ _ => Conv.combination_conv (args_conv cv) cv ctm
+                        | _ => cv ctm
+
+(*
+fun myrewr_conv rule ct =
+  let
+    val rule1 = Thm.incr_indexes (Thm.maxidx_of_cterm ct + 1) rule;
+    val lhs = Thm.lhs_of rule1;
+    val rule2 = Thm.rename_boundvars (Thm.term_of lhs) (Thm.term_of ct) rule1;
+    val rule3 =
+      Thm.instantiate (Thm.match (lhs, ct)) rule2
+        handle Pattern.MATCH => raise CTERM ("rewr_conv", [lhs, ct]);
+    val rule4 =
+      if Thm.lhs_of rule3 aconvc ct then rule3
+      else
+        let val ceq = Thm.dest_fun2 (Thm.cprop_of rule3)
+        in rule3 COMP Thm.trivial (Thm.mk_binop ceq ct (Thm.rhs_of rule3)) end;
+  in Thm.transitive rule4 (Thm.beta_conversion true (Thm.rhs_of rule4)) end;
+*)
+
+val flip_eq = Phi_Conv.LHS_conv (args_conv (fn ctm =>
+      case Thm.term_of ctm
+        of Const(\<^const_name>\<open>HOL.eq\<close>, _) =>
+              Conv.rewr_conv @{lemma' \<open>(=) \<equiv> (\<lambda>x y. y = x)\<close> by (unfold atomize_eq, blast)} ctm
+         | _ => Conv.all_conv ctm))
+fun flip_eq' th = Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of th) flip_eq) th
+
+
+fun global_simps_of_rel ctxt (BNF bnf) =
+        [ BNF_Def.rel_eq_of_bnf (g_bnf bnf),
+          flip_eq' (Thm.transfer'' ctxt (BNF_Def.rel_eq_of_bnf (g_bnf bnf))) ]
+  | global_simps_of_rel ctxt (qBNF bnf) =
+        [ #rel_eq bnf, flip_eq' (Thm.transfer'' ctxt (#rel_eq bnf)) ]
+
+fun global_simps_of_rel_safe ctxt bnf = global_simps_of_rel ctxt bnf handle Automation_Fail _ => []
 
 fun simps_of_pred (BNF (_,bnf,fp,_,_)) =
         the_default [] (Option.map (#pred_injects o #fp_bnf_sugar) fp)

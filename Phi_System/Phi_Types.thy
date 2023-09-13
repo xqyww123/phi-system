@@ -1473,13 +1473,17 @@ declare [[\<phi>trace_reasoning = 0]]
 thm List.functional_transformation
 
 declare [[\<phi>trace_reasoning = 0]]
-        
+ 
+ML \<open>Phi_Cache_DB.invalidate_cache \<^theory> ; Phi_Cache_DB.clean_hash_cache ()\<close>
+
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
   deriving Separation_Monoid
        (*and SE_Trim_Empty*)
        and Trivial_\<Sigma>
+
+thm list.cases
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>

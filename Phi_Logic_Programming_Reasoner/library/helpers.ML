@@ -5,6 +5,9 @@ val may_Trueprop_conv : conv -> conv
 val protect_conv : conv
 val unprotect_conv : conv
 
+val LHS_conv : conv -> conv
+val RHS_conv : conv -> conv
+
 val inverse_eta_conv : conv
 val quant_conv : string -> (cterm * Proof.context -> conv) -> Proof.context -> conv
 val meta_case_prod_conv : ((cterm * cterm) * Proof.context -> conv) -> conv -> Proof.context -> conv
@@ -61,7 +64,21 @@ fun may_Trueprop_conv C ctm =
 val protect_conv = rewr_conv @{thm Pure.prop_def[symmetric]}
 val unprotect_conv = rewr_conv @{thm Pure.prop_def}
 
+fun LHS_conv cv ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _ =>
+          Conv.arg1_conv cv ctm
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _) =>
+          Conv.arg_conv (Conv.arg1_conv cv) ctm
+     | _ => raise CTERM ("Not an equation", [ctm])
 
+fun RHS_conv cv ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _ =>
+          Conv.arg_conv cv ctm
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _) =>
+          Conv.arg_conv (Conv.arg_conv cv) ctm
+     | _ => raise CTERM ("Not an equation", [ctm])
 
 val inverse_eta = Thm.eta_conversion \<^schematic_cterm>\<open>\<lambda>x. (?f::'a::{} \<Rightarrow> 'b::{}) x\<close>
                |> Thm.symmetric

@@ -560,7 +560,7 @@ fun load_ss (set,pred,rel,map,zip) bnf ctxt =
                        @ get_type_specific_simp (Context.Proof ctxt) (eBNF_Info.Tname_of bnf)
                        @ additional)
    |> add_global_simps ( (if pred then eBNF_Info.global_simps_of_pred_safe bnf else [])
-                       @ (if rel then eBNF_Info.global_simps_of_rel_safe bnf else [])
+                       @ (if rel then eBNF_Info.global_simps_of_rel_safe (Context.Proof ctxt) bnf else [])
                        @ (if map then eBNF_Info.global_simps_of_map_safe bnf else []))
   end
 
@@ -601,7 +601,7 @@ val guess_self_rel =
   let fun mk_term (ctxt, D, L, bnf) =
         let val ctxt' = ctxt addsimps ( eBNF_Info.simps_of_rel_safe bnf
                                       @ eBNF_Info.simps_of_ctr_safe bnf)
-                     |> add_global_simps (eBNF_Info.global_simps_of_rel bnf)
+                     |> add_global_simps (eBNF_Info.global_simps_of_rel (Context.Proof ctxt) bnf)
          in Seq.single (eBNF_Info.mk_rel_of_bnf D L L bnf, ctxt')
         end
       val is_live = K true
