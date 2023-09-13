@@ -7,19 +7,16 @@ signature PHI_TYPE_TEMPLATE_PROPERTIES = sig
 
 (*** Algebraic Properties ***)
 
-type property_name = string
+type property_pattern = term (*pattern of the property*)
 
-val is_a_kind_of_property : theory -> property_name -> bool
-val assert_property_kind : theory -> property_name -> unit
-val add_property_kind : property_name
+val is_a_kind_of_property : theory -> property_pattern -> bool
+val assert_property_kind : theory -> property_pattern -> unit
+val add_property_kind : property_pattern
                      -> (term -> term) (*extract the type operator for which the given property specifies*)
                      -> theory -> theory
 
-val lookup_property_exact : Context.generic -> term (*pattern of the \<phi>-type or type operator*)
-                         -> property_name -> (term * Position.T * thm) list
-val lookup_property_match : Context.generic -> term (*same as the above*)
-                         -> property_name -> (term * Position.T * thm) list
-val lookup_property_unify : Context.generic -> term (*same as the above*) -> property_name -> (term * Position.T * thm) list
+val lookup_property_match : Context.generic -> property_pattern -> (term * Position.T * thm) list
+val lookup_property_unify : Context.generic -> property_pattern -> (term * Position.T * thm) list
 val add_property : term * Position.T * thm -> Context.generic -> Context.generic
 (*val list_functors : Context.generic -> term list*)
 
@@ -37,7 +34,7 @@ datatype instantiation_action =
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
           | Attributes of Token.src list
 
-type dependencies = property_name option list (*corresponding to the premises of the template rule
+type dependencies = property_pattern option list (*corresponding to the premises of the template rule
           one to one respectively, and being NONE if the premise in the corresponded position is
           not a property for instantiating*)
 
@@ -89,38 +86,43 @@ structure Phi_Type_Template_Properties : PHI_TYPE_TEMPLATE_PROPERTIES = struct
 
 exception Automation_Fail = Phi_Type_Algebra.Automation_Fail
 
-type property_name = string
+type property_pattern = term
 
 (*** Algebraic Property & Automation ***)
 
 (** Property Kind **)
 
 structure Property_Kinds = Theory_Data (
-  type T = (term -> term (*extract the type operator from the property spec*)) Symtab.table
+  type T = Symtab.set
   val empty = Symtab.empty
   val merge = Symtab.merge (K true)
 )
 
-fun is_a_kind_of_property thy k = Symtab.defined (Property_Kinds.get thy) k
+fun is_a_kind_of_property thy =
+  let val kinds = Property_Kinds.get thy
+      fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
+        | chk X = (case Term.head_of X
+                     of Const(N, _) => Symtab.defined kinds N
+                      | _ => false)
+   in chk
+  end
 
-fun err_not_a_property_kind k =
-      error (k ^ " is not a known \<phi>-type property. Please use ML function \
-                 \\<open>Phi_Type_Algebra.add_property_kind\<close> to register it.")
+fun err_not_a_property_kind thy k = let open Pretty in
+      error (string_of (
+        block ([Syntax.pretty_term_global thy k, brk 1] @
+               text "is not a known \<phi>-type property. Please use ML function \
+                    \\<open>Phi_Type_Algebra.add_property_kind\<close> to register it.")))
+    end
 
 fun assert_property_kind thy k =
-      if is_a_kind_of_property thy k then () else err_not_a_property_kind k
-
-fun extract_type_operator_from_property thy k = Symtab.lookup (Property_Kinds.get thy) k
-fun extract_type_operator_from_property1 thy k =
-      case extract_type_operator_from_property thy k of SOME ret => ret
-         | NONE => err_not_a_property_kind k
+      if is_a_kind_of_property thy k then () else err_not_a_property_kind thy k
 
 (** Property DB **)
 
 type free_template_action = term (*\<phi>-type (operator)*) * Position.T * thm (*property*) option list
                          -> Context.generic -> Context.generic
 
-type dependencies = property_name option list
+type dependencies = property_pattern option list
 
 type rule_generation_pass = (thm -> thm list) * Position.T * Proof.context -> thm -> thm list
 
@@ -139,10 +141,10 @@ datatype template_action =
 type template = dependencies * Position.T * template_action
 type template_argument = term (*\<phi>-type (operator)*) * Position.T * thm (*property*)
 
-fun property_eq ((t1,_,th1),(t2,_,th2)) = (t1 aconv t2) andalso Thm.eq_thm_prop (th1,th2)
+fun property_eq ((_,th1),(_,th2)) = Thm.eq_thm_prop (th1,th2)
 
 structure Properties = Generic_Data (
-  type T = (term (*\<phi>type*) * Position.T * thm) Net.net 
+  type T = (Position.T * thm) Net.net 
   val empty = Net.empty
   val merge = Net.merge property_eq
 )
@@ -169,8 +171,7 @@ fun pretty_template ctxt ((deps, pos, action) : template) =
                 [block ([para "ML automation", brk 1] @ here pos)]) @
         [para "depending on:"] @
         map (fn NONE => item [str "_"]
-              | SOME dep => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt
-                                                (Const(dep, Term.dummyT))]) deps
+              | SOME dep => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt dep]) deps
      )
   end
 
@@ -195,34 +196,27 @@ fun close_phitype_operator phityp =
     | L => fold_index (fn (j,Ty) => fn Tm => Tm $ Var(("x",i+j), Ty)) L phityp
   end
 
-fun net_encode_property_key (phityp, property_name) =
-  Const("P", dummyT) $ close_phitype_operator phityp $ Const(property_name, dummyT)
-
 (*fun net_encode_phityp phityp = Const("F", dummyT) $ phityp*)
 
 fun get_property_name thm =
   if Thm.is_dummy thm then ""
   else fst (Term.dest_Const (Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of thm))))
 
-fun lookup_property_exact ctxt phityp0 property_name =
-  let val thy = Context.theory_of ctxt
-      val phityp = Phi_Help.beta_eta_contract_term (close_phitype_operator phityp0)
-   in Net.match_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
-      |> filter (fn (tm, _, _) => Pattern.equiv thy (tm, phityp))
-  end
+fun lookup_property_match ctxt pattern =
+  Net.match_term (Properties.get ctxt) pattern
+   |> filter (fn (_, th) => Pattern.matches (Context.theory_of ctxt) (pattern, Thm.concl_of th))
 
-fun lookup_property_match ctxt phityp0 property_name =
-  let val phityp = Phi_Help.beta_eta_contract_term (close_phitype_operator phityp0)
-   in Net.match_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
-   |> filter (fn (tm, _, _) => Pattern.matches (Context.theory_of ctxt) (tm, phityp))
-  end
-
-fun lookup_property_unify ctxt phityp0 property_name =
-  let val phityp = Phi_Help.beta_eta_contract_term (close_phitype_operator phityp0)
-   in Net.unify_term (Properties.get ctxt) (net_encode_property_key (phityp, property_name))
-   |> filter (fn (tm, _, _) => case Seq.pull (Unify.hounifiers (ctxt, Envir.init, [(tm, phityp)]))
-                                 of SOME _ => true
-                                  | NONE => false)
+fun lookup_property_unify ctxt pattern =
+  let val pidx = Term.maxidx_of_term pattern + 1
+   in Net.unify_term (Properties.get ctxt) pattern
+   |> filter (fn (_, th) =>
+        let val concl = Thm.concl_of th
+                     |> Logic.incr_indexes ([], [], pidx)
+            val cidx = Thm.maxidx_of th + pidx
+         in case Seq.pull (Unify.hounifiers (ctxt, Envir.empty cidx, [(pattern, concl)]))
+         of SOME _ => true
+          | NONE => false
+        end)
   end
 
 (* Invoke template instantiation *)
@@ -237,11 +231,11 @@ structure Template_Inst_SS = Simpset (
         |> Simplifier.add_cong @{thm' if_cong}
 )
 
-fun check_dependencies deps action (the_functor0,pos,property) ctxt =
+fun check_dependencies deps action (pos,property) ctxt =
   let exception Dep
-      val the_functor = Phi_Help.beta_eta_contract_term the_functor0
-      val prop_name = get_property_name property
-   in(if Thm.is_dummy property orelse member (op =) deps (SOME prop_name)
+      val thy = Context.theory_of ctxt
+      val prop_concl = Thm.concl_of property
+   in(if Thm.is_dummy property orelse exists (fn dep => Pattern.matches thy (dep, prop_concl)) deps
       then let fun cross_map _ [] = []
                  | cross_map f [h] = map single (f h)
                  | cross_map f (h::L) = let val L' = cross_map f L
