@@ -53,16 +53,17 @@ fun parse_semimodule_phityp ctxt phi0 lift_sorts =
    in (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, phi) (*TODO: extend me! return x_ele_ty!*)
   end
 
-fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result) =
-  Guess_Framework (unfold_place, fn (phi, ctxt) =>
+fun Guess_Scalar_framework (sorts, mk_goal_term_and_parse_result) =
+  Guess_Framework (fn (phi, ctxt) =>
     let val (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi sorts
         val module_ty = s_ty --> mk_phi_type_ty (model_ty, x_ele_ty) --> mk_phi_type_ty (model_ty, x_ty)
         val idx = phi_maxidx_of phi ~1 + 1
         val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
         val (F_term $ _ $ T_term) = FT_term
   
-        val eta_F_term = Abs ("s", s_ty, Abs ("T", Term.fastype_of T_term, Abs ("x", x_ty,
-                            \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ (Term.incr_boundvars 3 F_term $ Bound 2 $ Bound 1))))
+        val eta_F_term = Var (("unfolded_F", 0), Term.fastype_of F_term)
+(*Abs ("s", s_ty, Abs ("T", Term.fastype_of T_term, Abs ("x", x_ty,
+                            \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ Bound 0 $ (Term.incr_boundvars 3 F_term $ Bound 2 $ Bound 1))))*)
         val (goal_term, parse_result) =
                 mk_goal_term_and_parse_result (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, ctxt)
      in (goal_term, parse_result o Thm.prop_of, phi, ctxt)
@@ -104,7 +105,7 @@ fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result)
   end
 *)
 
-fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (3, SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>one\<close>),
+fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>one\<close>),
       fn (s_ty, x_ele_ty, x_ty, model_ty, T_model_ty, module_ty, idx, F_term, eta_F_term, T_term, _) =>
           (HOLogic.Trueprop $ (\<^Const>\<open>Guess_Scalar_Zero s_ty model_ty x_ele_ty x_ty\<close>
               $ \<^Const>\<open>Pure.type s_ty\<close>
@@ -128,7 +129,7 @@ fun Guess_Scalar_Zero is_closed = Guess_Scalar_framework (3, SOME (\<^sort>\<ope
               end)
       )
 
-val Guess_Scalar_One_E = Guess_Scalar_framework (5, NONE,
+val Guess_Scalar_One_E = Guess_Scalar_framework (NONE,
       fn (s_ty, x_ele_ty, x_ty, model_ty, T_model_ty, module_ty, idx, F_term, eta_F_term, T_term, _) =>
            (\<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Guess_Scalar_One\<^sub>E s_ty model_ty x_ele_ty x_ty\<close>
                 $ \<^Const>\<open>Pure.type s_ty\<close>
@@ -152,7 +153,7 @@ val Guess_Scalar_One_E = Guess_Scalar_framework (5, NONE,
               end)
        )
 
-fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (7, NONE,
+fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (NONE,
       fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, _, idx, F_term, eta_F_term, T_term, ctxt) =>
         let val ct = TVar (("c\<^sub>t", idx), \<^sort>\<open>type\<close>)
             val (ss, st) = (TVar (("s\<^sub>s", idx), \<^sort>\<open>type\<close>), TVar (("s\<^sub>t", idx), \<^sort>\<open>type\<close>))
@@ -192,7 +193,7 @@ fun Guess_Scalar_Assoc is_intro = Guess_Scalar_framework (7, NONE,
         end)
 
 
-fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework (5, SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma\<close>),
+fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework ( SOME (\<^sort>\<open>type\<close>, \<^sort>\<open>sep_magma\<close>),
       fn (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, module_ty, idx, F_term, eta_F_term, T_term, ctxt) =>
           (\<^Const>\<open>Trueprop\<close> $ (
               (if is_zip then \<^Const>\<open>Guess_Zip_of_Semimodule s_ty model_ty x_ele_ty x_ty module_ty\<close>

@@ -122,7 +122,8 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
             of 1 => (@{thm' \<phi>TA_TyComm\<^sub>I_gen}, @{thm' \<phi>TA_TyComm\<^sub>E_gen})
              | 2 => (@{thm' \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen}, @{thm' \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen})
              | _ => error "Unsupported arity"
-      val rule = apply2 (Drule.infer_instantiate ctxt [(("F",0),F_cterm)]) rule
+      val idx_F = Thm.maxidx_of_cterm F_cterm + 1
+      val rule = apply2 (Drule.infer_instantiate ctxt [(("F",idx_F),F_cterm)] o Thm.incr_indexes idx_F) rule
 
       fun gen_rule th = case Phi_Reasoner.reason NONE NONE ctxt th
                           of SOME ret => ret

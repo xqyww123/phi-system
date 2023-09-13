@@ -94,7 +94,6 @@ val make_forall_quantified_property_for_parameters_of_a_phi_type :
 
 (* Guessing via \<phi>-LPR, a framework *)
 
-type unfolding_idx = int (*the reversed index of the parameter for unfolded \<phi>-type definition expression*)
 type reasoning_goal = term (*the proposition of the reasoning goal*)
 type parse_result = (*parses the result of the reasoning*)
         thm -> term (*conclusion of the guessed property*) *
@@ -102,12 +101,10 @@ type parse_result = (*parses the result of the reasoning*)
                term (*conditions augmenting the antecedents*) *
                term (*(conjuncted) antecedents*)
 
-val Guess_Framework :
-      unfolding_idx * (phi_type * Proof.context -> reasoning_goal * parse_result * phi_type * Proof.context) -> guess_property
+val Guess_Framework : (phi_type * Proof.context -> reasoning_goal * parse_result * phi_type * Proof.context) -> guess_property
 
 val Guess_Framework' :
-        unfolding_idx
-      * term (*template of the reasoning goal, containing schematic variables*)
+        term (*template of the reasoning goal, containing schematic variables*)
       * (phi_type * Proof.context
            -> (string * term) list (*instantiations of the template of the reasoning goal*)
               * phi_type * Proof.context)
@@ -909,7 +906,7 @@ fun prepend_Trueprop term =
          | \<^Type>\<open>bool\<close> => HOLogic.Trueprop $ term
          | _ => raise TERM ("Not a proposition", [term])
 
-fun Guess_Framework (unfold_place, mk_goal_term_and_parse_result) (phi : phi_type) ctxt =
+fun Guess_Framework mk_goal_term_and_parse_result (phi : phi_type) ctxt =
   let val (goal_term, parse_result, phi, ctxt) =
               mk_goal_term_and_parse_result (phi, ctxt)
       val goal_term = prepend_Trueprop goal_term
@@ -917,13 +914,15 @@ fun Guess_Framework (unfold_place, mk_goal_term_and_parse_result) (phi : phi_typ
             case Thm.term_of ctm
               of Abs _ => Conv.abs_conv (repeat_abs_conv cv o snd) ctxt ctm
                | _ => cv ctxt ctm
-      fun reason thm = thm
+      val reason = Phi_Reasoner.reason NONE NONE ( Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
+                                                |> Expansion.map' (fn ctxt => ctxt addsimps (#equations phi)))
+      (*fun reason thm = thm
             |> Conv.gconv_rule (HOLogic.Trueprop_conv (funpow unfold_place Conv.fun_conv (Conv.arg1_conv (
                   repeat_abs_conv (fn ctxt =>
                       Conv.try_conv (Conv.rewrs_conv (map (fn th => th RS' (ctxt, @{thm' HOL.eq_reflection}))
                                                      (#equations phi)))) ctxt
                   )))) 1
-            |> Phi_Reasoner.reason NONE NONE ctxt
+            |> Phi_Reasoner.reason NONE NONE (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)*)
    in case Phi_Help.reason_tracing_tyinst ctxt reason goal_term
         |> Option.map (apsnd (simplify_guessing_reasoning ctxt))
    of SOME (inst, ret) =>
@@ -940,8 +939,8 @@ fun Guess_Framework (unfold_place, mk_goal_term_and_parse_result) (phi : phi_typ
     | NONE => guess_fail ctxt phi (K [])
   end
 
-fun Guess_Framework' (unfold_place, goal_template, insts_of, parsing_rule) =
-  Guess_Framework (unfold_place,
+fun Guess_Framework' (goal_template, insts_of, parsing_rule) =
+  Guess_Framework (
     fn (phi, ctxt) =>
       let val (insts, phi, ctxt) = insts_of (phi, ctxt)
           val idx = fold (Term.maxidx_term o snd) insts ~1 + 1 |> @{print}

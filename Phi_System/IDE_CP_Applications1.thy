@@ -593,8 +593,7 @@ text \<open>Potentially weakening transformations designed for simplifying state
   The checker only checks the type part.
 
   Note \<^prop>\<open>A @action \<A>simp\<close> requires the process at least make one meaningful simplification
-  step, while \<^prop>\<open>A @action \<A>simp' False\<close> allows no-change simplification.
-  Semantically, a meaningful step is the one that at least simplifies something.
+  step at least simplifies something, while \<^prop>\<open>A @action \<A>simp' False\<close> allows returning with no-change.
   User can indicate to the system that his reasoning rule \<^prop>\<open>A @action \<A>simp' flag\<close> is
   meaningful by set \<open>flag \<equiv> True\<close>, or \<open>False\<close> otherwise.
 \<close>

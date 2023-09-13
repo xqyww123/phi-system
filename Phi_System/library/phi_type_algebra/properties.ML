@@ -372,7 +372,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                         let (*datatype mode = Reason | Oblg | Normal*)
                             val prop'' = Option.map snd positioned_prop''
                             val (is_reasoning_goal, prop', thm'1) =
-                                  case Logic.nth_prem (i+1, Thm.prop_of thm)
+                                  case Logic.strip_assums_concl (Logic.nth_prem (i+1, Thm.prop_of thm))
                                     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
                                           Const(\<^const_name>\<open>Action_Tag\<close>, _)
                                               $ _
@@ -408,7 +408,8 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                             val thm'3 =
                                  if is_reasoning_goal
                                  then thm'2 |> Thm.permute_prems 0 i
-                                            |> Phi_Reasoner.reason NONE (SOME delt) ctxt'
+                                            |> Phi_Reasoner.reason NONE (SOME delt)
+                                                                   (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt')
                                             |> (fn SOME th => th
                                                  | NONE => raise Automation_Fail (fn () =>
                                                     let open Pretty

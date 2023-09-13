@@ -321,14 +321,6 @@ subsubsection \<open>Commutativity between \<phi>-Type Operators\<close>
 
 text \<open>\<open>Separation_Homo\<close> is a special case of the commutativity to \<open>\<^emph>\<close>.\<close>
 
-text \<open>The Commutative Properties are not template parameters because, the main problem is
-  the commutativity is between two \<phi>-types, and it is hard to decide which one is the host of the property,
-  recalling the template instantiation is instantiating properties of one certain host \<phi>-type
-  (I am thinking now if it is a deficiency... why not to just use pattern matching...
-   It seems feasible, the triggers of each template are not a list of property names but a
-   conjunction-connected cterm corresponding to each template parameter, and for each choosen instantiation,
-   we instantiate the cterm correspondingly.)\<close>
-
 text \<open>The properties are all given in relationform, while functional version can be obtained by
   and should be represented in \<^term>\<open>embedded_func\<close> which prevents over-simplification
   (e.g., when \<open>P = (\<lambda>x. True)\<close>)\<close>
@@ -540,9 +532,11 @@ subsubsection \<open>Derived Rules\<close>
  and to_trans_derived_Tr_functor = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
                                                   in to_trans_derived
     \<open>Derived To-Transformation rules for transformation functor\<close>
- and \<phi>simp_derived_Tr_functor = (55, [55,60]) for \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>simp\<close>
+ and \<phi>simp_derived_Tr_functor = (40, [40,45]) for \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>simp\<close>
                                                in \<phi>simp_derived
     \<open>Derived transformation-based simplification for transformation functor\<close>
+ and \<phi>simp_derived_bubbling = (60, [60,61]) for \<open>x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YY @action \<A>simp\<close>
+    \<open>Derived transformation-based simplification about bubbling\<close>
  and derived_SE_functor = (70, [70,70]) for \<open>x \<Ztypecolon> F(T) \<^emph>[Cw] F(W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U) \<^emph>[Cr] F(R)\<close> in ToA_derived
     \<open>Derived rules of Separation Extraction, of a high priority as this is what
      should be attempted in reasoning. No confliction with %ToA_derived_one_to_one_functor\<close>
@@ -1083,17 +1077,10 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Identity_Element\<^sub>I _ _\<close>,
-  \<^pattern_prop>\<open>Identity_Element\<^sub>E _\<close>
+  \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
 ]
-
-(*
-#> add_property_kind \<^const_name>\<open>Tyops_Commute\<close>
-      (fn (Const(\<^const_name>\<open>Tyops_Commute\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
-#> add_property_kind \<^const_name>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<close>
-      (fn (Const(\<^const_name>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
-#> add_property_kind \<^const_name>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<close>
-      (fn (Const(\<^const_name>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<close>, _) $ F $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => attach_var F)
-*)
 
 (*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
 \<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
@@ -3431,14 +3418,60 @@ subsubsection \<open>Commutativity between \<phi>-Type Operators\<close>
 
 (*TODO Tyops_Commute\<^sub>1\<^sub>_\<^sub>2*)
 
+paragraph \<open>Bubbling\<close>
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute F F' G G' T D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
+\<Longrightarrow> x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (F' T) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp \<close>
+  unfolding Tyops_Commute_def Premise_def Action_Tag_def Bubbling_def Simplify_def \<r>Guard_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
+\<Longrightarrow> x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (F'\<^sub>T T) (F'\<^sub>U U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp \<close>
+  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Action_Tag_def Bubbling_def Simplify_def \<r>Guard_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling+1]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
+\<Longrightarrow> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp \<close>
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Action_Tag_def Bubbling_def Simplify_def \<r>Guard_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
+\<Longrightarrow> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp
+    <except-pattern> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY @action \<A>simp \<close>
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Action_Tag_def Bubbling_def Except_Pattern_def Simplify_def \<r>Guard_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
+\<Longrightarrow> x \<Ztypecolon> G' (F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<s>\<u>\<b>\<j> y. r' y @action \<A>simp
+    <except-pattern> x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YYY @action \<A>simp \<close>
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Action_Tag_def Bubbling_def Except_Pattern_def Simplify_def \<r>Guard_def
+  by clarsimp
+
+
 paragraph \<open>To-Transformation Interpreter\<close>
 
-lemma [\<phi>reason %to_trans_derived]:
-  \<open> Tyops_Commute F F' G G' T D r
+lemma [\<phi>reason_template %to_trans_derived]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r x y @action to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> F G) \<close>
-  unfolding Tyops_Commute_def Premise_def Action_Tag_def
-  by blast
+\<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)
+\<Longrightarrow> x \<Ztypecolon> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F' T) \<s>\<u>\<b>\<j> y. r' y @action to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> F G) \<close>
+  unfolding Tyops_Commute_def Premise_def Action_Tag_def Except_Pattern_def Simplify_def \<r>Guard_def
+  by clarsimp
 
 
 subsection \<open>Property Derivers\<close>
@@ -3477,8 +3510,10 @@ declare [[
                       and \<open>Guess_Property ?PC ?V ?A _ _ None\<close> \<Rightarrow> \<open>Guess_Property ?PC ?V ?A _ _ None\<close> (120)
 ]]
 
-\<phi>reasoner_group \<phi>TA_guesser = (100, [80, 3000]) for \<open>Guess_Property PC V A a c C\<close>
+\<phi>reasoner_group \<phi>TA_guesser = (100, [80, 2999]) for \<open>Guess_Property PC V A a c C\<close>
     \<open>User heuristics overriding or extending the guesser mechanism of \<phi>type derivers.\<close>
+ and \<phi>TA_guesser_init = (3000, [3000, 3000]) for \<open>Guess_Property PC V A a c C\<close> > \<phi>TA_guesser
+    \<open>Initializing the Guessing\<close>
  and \<phi>TA_guesser_default = (30, [2, 79]) for \<open>Guess_Property PC V A a c C\<close> < \<phi>TA_guesser
     \<open>Default rules handling logical connectives\<close>
  and \<phi>TA_guesser_assigning_variant = (2200, [2200,2200]) for \<open>Guess_Property PC V A a c C\<close>
@@ -3612,6 +3647,12 @@ lemma \<phi>TA_reason_rule__\<A>_simp_NToA:
   by (simp add: Transformation_def)
 
 ML_file \<open>library/phi_type_algebra/deriver_framework.ML\<close>
+
+consts \<phi>deriver_expansion :: mode
+
+\<phi>reasoner_ML \<phi>deriver_expansion %cutting
+  (\<open>Premise \<phi>deriver_expansion _\<close> | \<open>Simplify \<phi>deriver_expansion ?X' ?X\<close> )
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Phi_Type_Algebra_Derivers.Expansion.get') o snd\<close>
 
 
 
@@ -4203,6 +4244,34 @@ text \<open>Guessing the zip operation of a semimodule is far beyond what can be
       Due to this, the guessing of the abstract operators of semimodules more relies on pre-registered
       records over the logical types.\<close>
 
+paragraph \<open>Initialization\<close>
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
+\<Longrightarrow> Guess_Scalar_Zero TS TC TA\<^sub>T TA F var_unfolded_F T z ants conds
+\<Longrightarrow> Guess_Scalar_Zero TS TC TA\<^sub>T TA F var_unfolded_F T z ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
+\<Longrightarrow> Guess_Scalar_One\<^sub>E TS TC TA\<^sub>T TA F var_unfolded_F T one Dx f ants conds
+\<Longrightarrow> Guess_Scalar_One\<^sub>E TS TC TA\<^sub>T TA F var_unfolded_F T one Dx f ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_Fc s T x) : (x \<Ztypecolon> Fc s T) )
+\<Longrightarrow> Guess_Scalar_Assoc flag TS TC TC' TA\<^sub>T TA Fs Ft Fc var_unfolded_Fc T Ds Dt Dx smul f ants conds
+\<Longrightarrow> Guess_Scalar_Assoc flag TS TC TC' TA\<^sub>T TA Fs Ft Fc var_unfolded_Fc T Ds Dt Dx smul f ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F var_unfolded_F T Ds Dx z ants conds
+\<Longrightarrow> Guess_Zip_of_Semimodule TS TC TA\<^sub>T TA F var_unfolded_F T Ds Dx z ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>s T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_F s T x) : (x \<Ztypecolon> F s T) )
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F var_unfolded_F T Ds Dx z ants conds
+\<Longrightarrow> Guess_Unzip_of_Semimodule TS TC TA\<^sub>T TA F var_unfolded_F T Ds Dx z ants conds\<close> .
+
+
 paragraph \<open>Guess_Scalar_Zero\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_fallback]:
@@ -4592,6 +4661,7 @@ lemma [\<phi>reason_template name F \<phi>None [assertion_simps, simp]]:
   unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def NO_SIMP_def Action_Tag_def
   by (rule \<phi>Type_eqI_Tr; clarsimp simp add: transformation_weaken)
 
+(* Temporarily disabled, and I am thinking if to depreciate this module as it seems useless now.
 
 lemma derive_\<A>SE_trim_I:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
@@ -4642,6 +4712,7 @@ ML_file \<open>library/phi_type_algebra/SE_Trim_Empty.ML\<close>
 lemmas [\<phi>reason_template default 40 pass: \<open>(Phi_Type_Algebra_Derivers.SE_Trim_Empty__generation_pass, K I)\<close>] =
           derive_\<A>SE_trim_I derive_\<A>SE_trim_I_TH
           derive_\<A>SE_trim_E derive_\<A>SE_trim_E_TH
+*)
 
 subsubsection \<open>Meta Deriver for \<phi>-Type Operator Commutativity\<close>
 

@@ -678,7 +678,7 @@ lemma [\<phi>reason 1000]:
   unfolding Object_Equiv_def Transformation_def
   by clarsimp blast
 
-let_\<phi>type \<phi>Composition deriving SE_Trim_Empty
+(*TODO: let_\<phi>type \<phi>Composition deriving SE_Trim_Empty*)
 
 
 
@@ -687,6 +687,7 @@ lemma \<Psi>_comp:
   unfolding BI_eq_iff
   by clarsimp
 
+(* TODO
 (*   C ----> T ---> U
      \<down>\<delta>  \<subseteq>   | \<delta>\<^sub>T   | \<delta>\<^sub>U
     D(c) \<leftarrow>-- \<leftarrow>----
@@ -694,7 +695,7 @@ lemma \<Psi>_comp:
 lemma
   \<open> Domainoid_Homo\<^sub>L \<delta> U d
 \<Longrightarrow> Domainoid_Homo\<^sub>L \<delta> (T \<Zcomp> U) d \<close>
-
+*)
 
 (*
 lemma [\<phi>reason 1200]:
@@ -780,7 +781,7 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
@@ -801,7 +802,6 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        and \<open>Functionality T P \<Longrightarrow> Functionality (\<big_ast>\<^sup>\<phi> I T) (\<lambda>x. (\<forall>i \<in> I. P (x i)))\<close>
        and Semimodule_NonDistr
        and Closed_Semimodule_Zero
-       and Semimodule_Identity
 
 
 subsubsection \<open>Syntax\<close>
@@ -1087,7 +1087,7 @@ lemma \<phi>Inter_comm\<^sub>E:
 subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
-
+  
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   opening extract_premises_in_Carrier_Set
@@ -1100,7 +1100,7 @@ text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Abstraction_to_Raw
-       and Commutativity_Deriver
+       (*and Commutativity_Deriver*)
 
 
 subsubsection \<open>Reasoning Rules\<close>
@@ -1143,12 +1143,16 @@ lemma (*TODO!*)
   unfolding fun_commute_def
   by (simp add: \<phi>Fun'_scalar_assoc)
 
-lemma \<phi>Fun'_comm:
+lemma \<phi>Fun'_comm[\<phi>reason %\<phi>type_algebra_properties]:
   \<open> fun_commute \<psi> \<phi> \<psi>' \<phi>'
 \<Longrightarrow> Tyops_Commute (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>') (\<phi>Fun' \<phi>) (\<phi>Fun' \<phi>') T
                   (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
   unfolding Tyops_Commute_def fun_commute_def
   by (simp add: \<phi>Fun'_scalar_assoc)
+
+lemma
+  \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) F (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) F (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) T D r (fun_commute \<psi> \<phi> \<psi>' \<phi>' \<and> ants) conds\<close>
 
 lemma
   \<open> inj \<psi>
@@ -1190,8 +1194,8 @@ lemma
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-       
+declare [[\<phi>trace_reasoning = 3]]
+        
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
@@ -1211,6 +1215,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
+       (*and \<phi>Fun'.Comm\<^sub>I*)
 
 thm apply_Separation_Homo\<^sub>E
         [unfolded \<phi>Prod_expn''[simplified]]
@@ -1503,7 +1508,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Trivial_\<Sigma>
        and Abstraction_to_Raw
-       and Commutativity_Deriver
+       (*and Commutativity_Deriver*)
  
 
 subsubsection \<open>By List of Keys\<close>
@@ -1569,7 +1574,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_no0
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        and Abstraction_to_Raw
-       and Commutativity_Deriver
+       (*and Commutativity_Deriver*)
 
 declare [[\<phi>trace_reasoning = 3]]
   

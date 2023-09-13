@@ -146,7 +146,7 @@ fun force_rule_pass rule ctxt =
             warning ("Fail to extract the pattern of the source type of the rule\n" ^
                      Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ "\n\
                      \The simplification will not be activated on the source type specified by the rule\n\
-                     \You may want to add the trigger manually by setup \<open>Phi_CoP_Simp.add_simp_pattern\<close> or \<open>Phi_CoP_Simp.add_simp_trigger\<close>") ;
+                     \You may want to add the trigger manually by ML \<open>setup \<open>Phi_CoP_Simp.add_simp_pattern\<close>\<close> or \<open>Phi_CoP_Simp.add_simp_trigger\<close>") ;
             (rule', ctxt)))
     | NONE => (rule', ctxt)
   end
