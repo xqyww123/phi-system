@@ -1,13 +1,13 @@
 local open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 in
 val _ = Theory.setup (Context.theory_map (
-  Phi_Type_Template_Properties.add_template false (99,
-      ([SOME \<^const_name>\<open>Transformation_Functor\<close>], \<^here>,
+  Phi_Type_Template_Properties.add_template false (
+      [SOME \<^pattern_prop>\<open>Transformation_Functor _ _ _ _ _ _ _\<close>], \<^here>,
        Phi_Type_Template_Properties.Free_Action (
-  fn (_, pos, [SOME prop]) => fn ctxt00 =>
+  fn (pos, (_, [SOME (_, prop)])) => fn ctxt00 =>
     let val (F, oprs) =
            case Thm.concl_of prop
-             of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ F $ F' $ _ $ _ $ D $ R $ M )
+             of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _ $ D $ R $ M )
                   => (Thm.cconcl_of prop |> Thm.dest_arg |> funpow 5 Thm.dest_fun |> Thm.dest_arg1,
                       [D,R,M])
               | _ => error "BUG DVk0ZhcwRxmx3ksmx7Ri2w"
@@ -19,7 +19,7 @@ val _ = Theory.setup (Context.theory_map (
         fun incr_term_idx_only d (Var ((N,i),T)) = Var ((N,i+d),T)
           | incr_term_idx_only d (A $ B) = incr_term_idx_only d A $ incr_term_idx_only d B
           | incr_term_idx_only d (Abs (N, Ty, X)) = Abs (N, Ty, incr_term_idx_only d X)
-          | incr_term_idx_only d X = X
+          | incr_term_idx_only _ X = X
         val idx = Thm.maxidx_of_cterm F + 1
         val F' = Thm.cterm_of ctxt0 (incr_term_idx_only idx (Thm.term_of F))
 
@@ -68,5 +68,5 @@ val _ = Theory.setup (Context.theory_map (
      in ctxt00
      |> Function_Context_Tree.add_function_cong rule
      |> local_note_properties' (Thm.term_of F) [(Binding.make ("fundef_cong", pos), [rule])]
-    end)))))
+    end))))
 end

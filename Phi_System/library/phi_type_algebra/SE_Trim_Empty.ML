@@ -29,8 +29,9 @@ fun simp ctxt th =
   Conv.fconv_rule (Phi_Conv.hhf_concl_conv Simplifier.rewrite ctxt) th
 
 fun gen_SE_Trim_Empty _ ctxt (phi : phi_type) thy =
-  let fun fetch_properties name = Phi_Type_Template_Properties.lookup_property_unify thy (#term phi) name
-                               |> map #3
+  let fun fetch_properties pattern =
+              Phi_Type_Template_Properties.lookup_property_unify thy pattern
+           |> map snd
       fun fetch_property name =
             case fetch_properties name
               of [] => raise Automation_Fail (fn () => [Pretty.str ("Property " ^ name ^ " is not given")])

@@ -9,15 +9,14 @@ signature PHI_TYPE_TEMPLATE_PROPERTIES = sig
 
 type property_pattern = term (*pattern of the property*)
 
-val is_a_kind_of_property : theory -> property_pattern -> bool
-val assert_property_kind : theory -> property_pattern -> unit
-val add_property_kind : property_pattern
-                     -> (term -> term) (*extract the type operator for which the given property specifies*)
-                     -> theory -> theory
+val check_property : theory -> property_pattern -> property_pattern option
+                     (*returns normalized form if it is a registered property*)
+val assert_property_kind : theory -> property_pattern -> property_pattern
+val add_property_kinds : term list -> theory -> theory
 
-val lookup_property_match : Context.generic -> property_pattern -> (term * Position.T * thm) list
-val lookup_property_unify : Context.generic -> property_pattern -> (term * Position.T * thm) list
-val add_property : term * Position.T * thm -> Context.generic -> Context.generic
+val lookup_property_match : Context.generic -> property_pattern -> (Position.T * thm) list
+val lookup_property_unify : Context.generic -> property_pattern -> (Position.T * thm) list
+val add_property : Position.T * thm -> Context.generic -> Context.generic
 (*val list_functors : Context.generic -> term list*)
 
 val adding_property : bool Config.T (*controlling if automatically for any new reasoning rules,
@@ -34,9 +33,12 @@ datatype instantiation_action =
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
           | Attributes of Token.src list
 
-type dependencies = property_pattern option list (*corresponding to the premises of the template rule
+type parameters = property_pattern option list (*corresponding to the premises of the template rule
           one to one respectively, and being NONE if the premise in the corresponded position is
           not a property for instantiating*)
+type instance_binding = indexname * binding
+                        (*^b a variable that will be instantiated to a \<phi>-type, and the binding will
+                          by qualified by the short-name of the heading constant of the \<phi>-type*)
 
 type rule_generation_pass = (thm -> thm list) (*default generation process*)
                           * Position.T (*where the template is instantiated*)
@@ -46,22 +48,25 @@ type rule_generation_pass = (thm -> thm list) (*default generation process*)
 val no_rule_generation_pass : rule_generation_pass
 
 type free_template_action =
-        term (*\<phi>-type (operator)*) * Position.T * thm (*properties*) option list -> Context.generic -> Context.generic
+        Position.T (*Position where the instantiation happens*) *
+        ( Envir.env (*unifier for the template parameters and instantiating properties*) *
+          (Position.T * thm (*property*)) option list )
+     -> Context.generic -> Context.generic
 
 datatype template_action =
             Instantiate_Rule of thm * (rule_generation_pass * Phi_Reasoner.rule_pass) option *
-                                instantiation_action * Binding.binding option
+                                instantiation_action * instance_binding option
           | Free_Action of free_template_action (*accept Automation_Fail*)
 
-type template = dependencies * Position.T * template_action
+type template = parameters * Position.T (*position of the template*) * template_action
 
 (** Basic Operations: Add, List, Invoke **)
 
 val add_template : bool (*if to invoke on the existing instantiations if any*)
-                -> priority * template -> Context.generic -> Context.generic
-val list_templates : Context.generic -> (priority * template) Ord_List.T Symtab.table
+                -> template -> Context.generic -> Context.generic
+val list_templates : Context.generic -> template list
 
-type template_argument = term (*\<phi>-type (operator)*) * Position.T * thm (*property*)
+type template_argument = Position.T (*position of the property*) * thm (*property*)
 val invoke_template : template -> template_argument -> Context.generic -> Context.generic
 val invoke_automations_on_property : template_argument -> Context.generic -> Context.generic
     (*invokes any template depending on the given property and of all dependencies satisfied*)
@@ -93,18 +98,25 @@ type property_pattern = term
 (** Property Kind **)
 
 structure Property_Kinds = Theory_Data (
-  type T = Symtab.set
-  val empty = Symtab.empty
-  val merge = Symtab.merge (K true)
+  type T = term Net.net (*proposition form, with Trueprop*)
+  val empty = Net.empty
+  val merge = Net.merge (op aconv)
 )
 
-fun is_a_kind_of_property thy =
+fun trim_modifiers (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = HOLogic.Trueprop $ trim_modifiers X
+  | trim_modifiers (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _))
+      = trim_modifiers X
+  | trim_modifiers (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = trim_modifiers X
+  | trim_modifiers X = X
+
+fun check_property thy =
   let val kinds = Property_Kinds.get thy
-      fun chk (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = chk X
-        | chk X = (case Term.head_of X
-                     of Const(N, _) => Symtab.defined kinds N
-                      | _ => false)
-   in chk
+   in fn X => let val X = trim_modifiers X
+               in if exists (fn pat => Pattern.matches thy (pat, X))
+                            (Net.match_term kinds X)
+                  then SOME X
+                  else NONE
+              end
   end
 
 fun err_not_a_property_kind thy k = let open Pretty in
@@ -114,15 +126,24 @@ fun err_not_a_property_kind thy k = let open Pretty in
                     \\<open>Phi_Type_Algebra.add_property_kind\<close> to register it.")))
     end
 
-fun assert_property_kind thy k =
-      if is_a_kind_of_property thy k then () else err_not_a_property_kind thy k
+fun assert_property_kind thy =
+  let val chk = check_property thy
+   in fn k => case chk k
+                of SOME x => x
+                 | NONE => err_not_a_property_kind thy k
+  end
 
 (** Property DB **)
 
-type free_template_action = term (*\<phi>-type (operator)*) * Position.T * thm (*property*) option list
+type free_template_action = Position.T (*Position where the instantiation happens*) *
+                            ( Envir.env (*unifier for the template parameters and instantiating properties*) *
+                              (Position.T * thm (*property*)) option list )
                          -> Context.generic -> Context.generic
 
-type dependencies = property_pattern option list
+type parameters = property_pattern option list
+type instance_binding = indexname * binding
+                        (*^b a variable that will be instantiated to a \<phi>-type, and the binding will
+                          by qualified by the short-name of the heading constant of the \<phi>-type*)
 
 type rule_generation_pass = (thm -> thm list) * Position.T * Proof.context -> thm -> thm list
 
@@ -135,43 +156,44 @@ datatype instantiation_action =
 
 datatype template_action =
             Instantiate_Rule of thm * (rule_generation_pass * Phi_Reasoner.rule_pass) option *
-                                instantiation_action * Binding.binding option
+                                instantiation_action * instance_binding option
           | Free_Action of free_template_action
 
-type template = dependencies * Position.T * template_action
-type template_argument = term (*\<phi>-type (operator)*) * Position.T * thm (*property*)
+type template = parameters * Position.T * template_action
+type template_argument = Position.T (*position of the property*) * thm (*property*)
 
 fun property_eq ((_,th1),(_,th2)) = Thm.eq_thm_prop (th1,th2)
 
 structure Properties = Generic_Data (
-  type T = (Position.T * thm) Net.net 
+  type T = (Position.T * thm) Net.net (*proposition form*)
   val empty = Net.empty
   val merge = Net.merge property_eq
 )
 
-fun prop_table_order k ((p1,_),(p2,_)) = if p1 = p2 then raise Symtab.DUP k else int_ord (p1,p2)
+fun template_eq ((s1,_,_),(s2,_,_)) = s1 = s2
 
-structure Property_Templates = Generic_Data (
-  type T = (priority * template) Ord_List.T Symtab.table
-  val empty = Symtab.empty
-  val merge = Symtab.join (fn k => uncurry (Ord_List.union (prop_table_order k)))
+structure Templates = Generic_Data (
+  type T = (serial * property_pattern * template) Net.net (*key: every parameter of a temlpate*)
+                     (*convention, the property_pattern only contains schematic variables of negative indexes*)
+  val empty = Net.empty
+  val merge = Net.merge template_eq
 )
 
-val list_templates = Property_Templates.get 
+val list_templates = Templates.get #> Net.content #> distinct template_eq #> map #3
 
-fun pretty_template ctxt ((deps, pos, action) : template) =
+fun pretty_template ctxt ((params, pos, action) : template) =
   let open Pretty
    in chunks (
         (case action of Instantiate_Rule (rule, _, _, b) =>
                 [block ([str "Template", brk 1] @
-                        the_default [] (Option.map (single o Binding.pretty) b) @
+                        the_default [] (Option.map (single o Binding.pretty o snd) b) @
                         here pos @
                         [brk 1, Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt rule]) ]
             | Free_Action _ =>
                 [block ([para "ML automation", brk 1] @ here pos)]) @
         [para "depending on:"] @
         map (fn NONE => item [str "_"]
-              | SOME dep => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt dep]) deps
+              | SOME param => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt param]) params
      )
   end
 
@@ -181,43 +203,57 @@ fun pretty_templates ctxt (table : (priority * template) Ord_List.T Symtab.table
    in chunks (map (item o single o pretty_template ctxt) templates)
   end
 
-fun trim_template ((deps, pos, act) : template) : template =
-  (deps, pos,
+(*
+fun check_termplate ((params, pos, act) : template) : template =
+  let val idx = fold (fn SOME param => Term.maxidx_term param | _ => I) params ~1
+   in if idx >= 0 then (map (Option.map (Logic.incr_indexes ([],[],1-idx))) params, pos, act)
+                  else (params, pos, act)
+  end
+*)
+
+fun trim_template ((params, pos, act) : template) : template =
+  (params, pos,
   case act of Instantiate_Rule (rule, pass, inst, b) =>
                 Instantiate_Rule (Thm.trim_context rule, pass,
                   (case inst of Reasonig_Rule _ => inst
                               | Attributes srcs => Attributes (map Token.trim_context_src srcs)), b)
             | Free_Action act => Free_Action act)
 
+(*
 fun close_phitype_operator phityp =
   let val i = maxidx_of_term phityp + 1
    in case Term.binder_types (Term.fastype_of phityp)
    of [] => phityp
     | L => fold_index (fn (j,Ty) => fn Tm => Tm $ Var(("x",i+j), Ty)) L phityp
-  end
+  end*)
 
 (*fun net_encode_phityp phityp = Const("F", dummyT) $ phityp*)
 
-fun get_property_name thm =
+(*fun get_property_name thm =
   if Thm.is_dummy thm then ""
-  else fst (Term.dest_Const (Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of thm))))
+  else fst (Term.dest_Const (Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of thm))))*)
 
 fun lookup_property_match ctxt pattern =
   Net.match_term (Properties.get ctxt) pattern
    |> filter (fn (_, th) => Pattern.matches (Context.theory_of ctxt) (pattern, Thm.concl_of th))
 
-fun lookup_property_unify ctxt pattern =
-  let val pidx = Term.maxidx_of_term pattern + 1
-   in Net.unify_term (Properties.get ctxt) pattern
-   |> filter (fn (_, th) =>
+fun lookup_property_unify' ctxt additions env pattern =
+  let val Envir.Envir {maxidx, tenv, tyenv} = env
+   in (additions @ Net.unify_term (Properties.get ctxt) pattern)
+   |> map_filter (fn (pos, th) =>
         let val concl = Thm.concl_of th
-                     |> Logic.incr_indexes ([], [], pidx)
-            val cidx = Thm.maxidx_of th + pidx
-         in case Seq.pull (Unify.hounifiers (ctxt, Envir.empty cidx, [(pattern, concl)]))
-         of SOME _ => true
-          | NONE => false
+                     |> maxidx >= 0 ? Logic.incr_indexes ([], [], maxidx+1)
+            val cidx = if maxidx >= 0 then Thm.maxidx_of th + maxidx + 1 else Thm.maxidx_of th
+            val env' = Envir.Envir {maxidx = cidx, tenv=tenv, tyenv=tyenv}
+         in case Seq.pull (Unify.hounifiers (ctxt, env', [(pattern, concl)]))
+         of SOME env => SOME (Seq.map fst (uncurry Seq.cons env), (pos, th))
+          | NONE => NONE
         end)
   end
+
+fun lookup_property_unify ctxt pattern =
+      lookup_property_unify' ctxt [] (Envir.empty (Term.maxidx_of_term pattern)) pattern
+        |> map snd
 
 (* Invoke template instantiation *)
 
@@ -231,28 +267,52 @@ structure Template_Inst_SS = Simpset (
         |> Simplifier.add_cong @{thm' if_cong}
 )
 
-fun check_dependencies deps action (pos,property) ctxt =
+fun instantiations_of_parameters get_property ctxt params =
+  let fun ext i param (env, props) =
+             get_property env param
+          |> map_filter (fn (envs, property) =>
+                    case Seq.chop 2 envs
+                      of ([env], _) => SOME (env, property :: props)
+                       | ([], _) => NONE
+                       | (env :: _ , _) => (
+                             Phi_Reasoner.warn_pretty ctxt 2 (fn () => let open Pretty in
+                                block (text "Multi-unififers in instantiating the" @ [brk 1,
+                                       str (string_of_int i ^ "th"), brk 1] @
+                                       text "parameter of a template. We only preserve the \
+                                            \first unifier for performance consideration.")
+                             end)
+                           ; SOME (env, property :: props)
+                         ))
+      fun cross _ ret [] = map (apsnd rev) ret
+        | cross i ret (param :: params) = cross (i+1) (maps (ext i param) ret) params
+      val init_idx = fold (fn SOME p => Term.maxidx_term p | NONE => I) params ~1
+   in case params
+   of [] => []
+    | (param :: params') =>
+        cross 0 (ext 1 param (Envir.empty init_idx, [])) params'
+  end
+
+fun existing_instantiations_of_parameters ctxt =
+      instantiations_of_parameters
+          (fn env => (fn SOME p => map (apsnd SOME) (lookup_property_unify' ctxt [] env p)
+                       | NONE => [(Seq.single env, NONE)])) ctxt
+
+fun check_dependencies params action (pos,property) ctxt =
   let exception Dep
-      val thy = Context.theory_of ctxt
+      val didx = fold (fn SOME p => Term.maxidx_term p | _ => I) params ~1
       val prop_concl = Thm.concl_of property
-   in(if Thm.is_dummy property orelse exists (fn dep => Pattern.matches thy (dep, prop_concl)) deps
-      then let fun cross_map _ [] = []
-                 | cross_map f [h] = map single (f h)
-                 | cross_map f (h::L) = let val L' = cross_map f L
-                                         in maps (fn L'' => map (fn x => x :: L'') (f h)) L'
-                                        end
-               val get_rules = cross_map (
-                    fn NONE => [NONE]
-                     | SOME dep =>
-                        if dep = "" then [SOME Drule.asm_rl]
-                        else if dep = prop_name then [SOME property]
-                        else case map (SOME o #3) (lookup_property_unify ctxt the_functor dep)
-                          of [] => raise Dep
-                           | L => L
-                    )
-               val ruless = get_rules deps
+                    |> didx >= 0 ? Logic.incr_indexes ([],[],didx+1)
+      val eidx = Thm.maxidx_of property + (if didx >= 0 then didx + 1 else 0)
+   in(if not (Thm.is_dummy property) andalso exists (
+            fn SOME param =>
+                is_some (Seq.pull (Unify.hounifiers (ctxt, Envir.empty eidx, [(param, prop_concl)])))
+             | NONE => false) params
+      then let fun get_property env (SOME p) = map (apsnd SOME) (lookup_property_unify' ctxt [(pos,property)] env p)
+                 | get_property env NONE = [(Seq.single env, NONE)]
+               val ruless = instantiations_of_parameters get_property ctxt params
+                         |> filter (exists (fn SOME (_, th) => pointer_eq (th, property) | _ => false) o snd)
             in fold (fn rules => fn ctxt =>
-                          action (the_functor,pos,rules) ctxt
+                          action (pos,rules) ctxt
                           handle Automation_Fail msg =>
                             let open Pretty
                                 val msg' = msg ()
@@ -270,6 +330,7 @@ fun short_name_of_tyop (Abs (_,_,X)) = short_name_of_tyop X
   | short_name_of_tyop (X $ _) = short_name_of_tyop X
   | short_name_of_tyop (Const (N, _)) = Long_Name.base_name N
   | short_name_of_tyop (Free (N, _)) = N
+  | short_name_of_tyop _ = raise Match
 
 fun normalize th = th
   |> Phi_Help.beta_eta_contract
@@ -300,15 +361,16 @@ fun default_simplify pattern ctxt rule =
 
 
 fun invoke_template_action template_pos (Instantiate_Rule (template, pass, action, bind))
-                           (tyop, pos, props) ctxt =
+                           (pos, (env, positioned_props)) ctxt =
      (let val ctxt' = Context.proof_of ctxt
                    |> Config.put Phi_Reasoner_solve_obligation_and_no_defer 1
           fun fold_pad _ 0 _ x = x
             | fold_pad f n [] x = fold_pad f (n-1) [] (f NONE x)
             | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
           val rule'1 = (0, Thm.transfer' ctxt' template)
-                    |> fold_pad (fn prop'' => fn (i, thm) =>
+                    |> fold_pad (fn positioned_prop'' => fn (i, thm) =>
                         let (*datatype mode = Reason | Oblg | Normal*)
+                            val prop'' = Option.map snd positioned_prop''
                             val (is_reasoning_goal, prop', thm'1) =
                                   case Logic.nth_prem (i+1, Thm.prop_of thm)
                                     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
@@ -359,7 +421,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                                              ) (i+1) thm'2*)
                                  else thm'2
                          in (if is_reasoning_goal then i else i + delt, thm'3)
-                        end) (Thm.nprems_of template) props
+                        end) (Thm.nprems_of template) positioned_props
                     |> snd
                     |> Phi_Help.beta_eta_contract
           val pattern = (case action
@@ -367,17 +429,43 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                             | Attributes _ => NONE)
           val rules' = case pass of SOME (ps, _) => ps (single o default_simplify pattern ctxt', pos, ctxt') rule'1
                                   | NONE => single (default_simplify pattern ctxt' rule'1)
+
+          val binding = Option.map (fn (v, b') =>
+                  let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
+                      fun varify_binding i b =
+                        let val b' = if i = 0 then b else Binding.suffix_name ("_" ^ string_of_int i) b
+                            val iname = Context.cases Sign.full_name Proof_Context.full_name ctxt b'
+                         in if Facts.defined facts iname
+                            then varify_binding (i+1) b
+                            else b
+                        end
+                      fun err () = error (let open Pretty in string_of (chunks [
+                                    block (text "The binding target" @
+                                           [brk 1, Syntax.pretty_term ctxt' (Var (v, dummyT)), brk 1] @
+                                           text "is not instantaited to any constant \<phi>-type,"),
+                                    block (text "in template" @
+                                           [brk 1, Thm.pretty_thm ctxt' template])
+                                 ]) end)
+                      val Envir.Envir {tenv, ...} = env
+                      val qualifier = case Vartab.lookup tenv v
+                                        of SOME (_, tm) => (short_name_of_tyop tm handle Match => err ())
+                                         | NONE => err ()
+                   in varify_binding 0 (Binding.qualify true qualifier b')
+                  end
+                ) bind
+
        in if null rules' then ctxt
        else (
        Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
          chunks ([paragraph (text "Instantiate reasoning template" @ [brk 1] @
+                             (case binding of SOME b => [Binding.pretty b, brk 1] | _ => []) @
                              here template_pos)] @
                  (case action of Reasonig_Rule _ => []
                      | Attributes _ => map (fn rule => item [Thm.pretty_thm ctxt' rule]) rules'))
          end) ;
       (case action
          of Reasonig_Rule ((mode, priority), (pats, blacklists)) =>
-            let val (rules', (mode', priority'), (pats', blacklists'), guard', ctxrt') =
+            let val (rules', (mode', priority'), (pats', blacklists'), guard', ctxt) =
                     case pass of SOME (_, ps) => ps template_pos (rules', (mode, priority), (pats, blacklists), NONE, ctxt)
                                | NONE => (rules', (mode, priority), (pats, blacklists), NONE, ctxt)
              in Phi_Reasoner.add_rules (map (fn rule =>
@@ -387,25 +475,16 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
               let fun app attr = uncurry (Thm.apply_attribute (Attrib.attribute ctxt' attr))
                in fold (curry (snd o fold app attrs)) rules' ctxt
               end)
-    |> (case bind of NONE => I
-           | SOME b' =>
-              let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
-                  fun varify_binding i b =
-                    let val b' = if i = 0 then b else Binding.suffix_name ("_" ^ string_of_int i) b
-                        val iname = Context.cases Sign.full_name Proof_Context.full_name ctxt b'
-                     in if Facts.defined facts iname
-                        then varify_binding (i+1) b
-                        else b
-                    end
-                  val b = varify_binding 0 (Binding.qualify true (short_name_of_tyop tyop) b')
-               in perhaps (try (Context.mapping (snd o Global_Theory.note_thms "" ((b, []), [(rules',[])]))
-                                                (snd o Proof_Context.note_thms "" ((b, []), [(rules',[])]))))
-              end handle Match => I) )
-      end
+   |> (case binding of NONE => I
+          | SOME b =>
+                perhaps (try (Context.mapping (snd o Global_Theory.note_thms "" ((b, []), [(rules',[])]))
+                                              (snd o Proof_Context.note_thms "" ((b, []), [(rules',[])]))))
+      )
+    ) end
       handle Automation_Fail prt => (
         Phi_Reasoner.warn_pretty ctxt 2 (Pretty.chunks o prt) ;
         ctxt))
-  | invoke_template_action _ (Free_Action action) triple ctxt = action triple ctxt
+  | invoke_template_action _ (Free_Action action) arg ctxt = action arg ctxt
       handle Automation_Fail prt => (
         Phi_Reasoner.warn_pretty ctxt 2 (Pretty.chunks o prt) ;
         ctxt)
@@ -413,58 +492,49 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
 fun invoke_template ((deps, pos, action) : template) =
       check_dependencies deps (invoke_template_action pos action)
 
-fun add_template invoke_on_existing_instantiations (priority, (template : template)) ctxt =
+fun add_template invoke_on_existing_instantiations (template : template) ctxt =
   let val _ = Phi_Reasoner.info_pretty_generic ctxt 1 (fn () => let open Pretty
-                  val consts = Context.cases Sign.consts_of Proof_Context.consts_of ctxt
                in chunks (str "Registered reasoning rule template depending on " ::
                     map (fn NONE => item [str "_"]
-                          | SOME pk =>
-                               pk |> Consts.the_const consts |> Const
-                                  |> Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt
-                                  |> single |> item) (#1 template))
+                          | SOME pp => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pp])
+                        (#1 template))
               end)
 
       fun invk_on_existing_instantiations ctxt =
-        let val properties = Properties.get ctxt
-            val existing_rules = map (Option.map (fn pk =>
-                    Net.unify_term properties (net_encode_property_key (Var(("uu",0),TVar(("uu",0),[])), pk))
-                  )) (#1 template)
-            fun cross_product (SOME aa) bb =
-                  maps (fn (ta,_,ra) =>
-                      map_filter (fn (tb,rb) =>
-                        case try (Pattern.unify ctxt (ta, Logic.incr_indexes ([],[],2 + Term.maxidx_of_term ta) tb)) Envir.init
-                          of SOME e => SOME (Envir.norm_term e ta, SOME ra :: rb)
-                           | NONE   => NONE
-                      ) bb
-                  ) aa
-              | cross_product NONE bb = map (apsnd (fn rb => NONE :: rb)) bb
-            fun mk_existing_ins _ [] = []
-              | mk_existing_ins prev (NONE::L) = mk_existing_ins (NONE::prev) L
-              | mk_existing_ins prev (SOME h :: L) =
-                    fold cross_product L (map (fn (tm,_,rule) => (tm, SOME rule :: prev)) h)
-            val existing_ins = mk_existing_ins [] existing_rules
-         in fold (fn (f,rules) => invoke_template_action (#2 template)
-                                                         (#3 template)
-                                                         (f, #2 template, rev rules)
+        let val existing_ins = existing_instantiations_of_parameters ctxt (#1 template)
+         in fold (fn (env,rules) => invoke_template_action (#2 template)
+                                                           (#3 template)
+                                                           (#2 template, (env, rules))
                  ) existing_ins ctxt
         end
-      val dependencies' = distinct (op =) (map_filter I (#1 template))
       val template' = trim_template template
+      val id = serial ()
+      val thy = Context.theory_of ctxt
+      fun negatize_param param =
+            let val idx = maxidx_of_term param
+             in if idx >= 0 then Logic.incr_indexes ([],[],~1-idx) param else param
+            end
+      val compact_deps = map_filter I (#1 template)
+      val compact_deps = filter (fn dep => forall (fn d =>
+              pointer_eq (d,dep) orelse not (Pattern.matches thy (d, dep))) compact_deps) compact_deps
+      |> @{print}
    in ctxt
-   |> Property_Templates.map (
-        fold (fn prop_kind =>
-          Symtab.map_default (prop_kind,[])
-              (Ord_List.insert (prop_table_order prop_kind) (priority, template'))
-        ) dependencies'
+   |> Templates.map (
+        fold (fn param => Net.insert_term template_eq (param, (id, negatize_param param, template'))
+        ) compact_deps
       )
    |> invoke_on_existing_instantiations ? invk_on_existing_instantiations
   end
 
-fun invoke_automations_on_property phityp ctxt =
-  let val prop_kind = get_property_name (#3 phityp)
-   in case Symtab.lookup (Property_Templates.get ctxt) prop_kind
-   of NONE => ctxt
-    | SOME L => fold (fn (_,template) => invoke_template template phityp) L ctxt
+fun invoke_automations_on_property (pos, property) ctxt =
+  let val idx = Thm.maxidx_of property
+      val prop_concl = Thm.concl_of property
+   in Net.unify_term (Templates.get ctxt) prop_concl
+   |> filter (fn (_,param,_) =>
+        is_some (Seq.pull (Unify.hounifiers (ctxt, Envir.empty idx, [(param, prop_concl)]))))
+   |> distinct template_eq
+   |> (fn templates =>
+        fold (fn (_,_,template) => invoke_template template (pos, property)) templates ctxt)
   end
 
 (*fun list_functors ctxt =
@@ -479,46 +549,40 @@ fun invoke_automations_on_property phityp ctxt =
 
 val adding_property = Attrib.setup_config_bool \<^binding>\<open>\<phi>adding_property\<close> (K true)
 
-fun add_property (phityp0,pos,property) ctxt =
+fun add_property (pos,property) ctxt =
   let val thy = Context.theory_of ctxt
-      val phityp' = phityp0
-                  |> Envir.beta_eta_contract
-                  |> close_phitype_operator
-                  |> Term.map_aterms ( (fn Var ((N,i),T) => Var ((N,~i-1),T) | T => T)
-                                    #> map_types (map_type_tvar (fn ((N,i),S) => TVar ((N,~i-1),S))))
-      val property_name = get_property_name property
-      val key = net_encode_property_key (phityp', property_name)
+      val prop_concl = Thm.concl_of property
       (*val key_phityp = net_encode_phityp phityp'*)
       exception SKIP
-      fun insert_term (k''', (k,pos,v)) net =
-        let val clashes = Net.unify_term net k'''
-                       |> filter (fn (k', _, _) => Pattern.matches thy (k',k) orelse Pattern.matches thy (k,k'))
-            val _ = if null clashes then ()
-                    else let open Pretty
-                        val ctxt' = Context.proof_of ctxt
-                     in warning (string_of (chunks (
-                          [block (text "The property" @ [brk 1, str property_name, brk 1] @
-                                  text "of \<phi>-type" @ [brk 1, Syntax.pretty_term ctxt' phityp0, brk 1] @
-                                  text "either covers or is covered by other existing rules."),
-                           block (text "Given property:" @ [brk 1,
-                                  Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt property]),
-                           block [str "Clashes", brk 1,
-                                  chunks (map (fn (_,pos,rule) => block (
-                                             here pos @ [Syntax.pretty_term ctxt' (Thm.prop_of rule)]
-                                           )) clashes)],
-                           para "We prohibit redundancy of \<phi>-type properties as the redundancy \
-                               \would be multiplied by template instantiation.\n\
-                               \No automation will be invoked on this.\n\
-                               \Instead, you should provide the most general rule and, if you want, \
-                               \specialized (branched) reasoning on its antecedents."]
-                         ))) ;
-                        raise SKIP
-                    end
-         in Net.insert_term property_eq (k''', (k,pos,v)) net
+      fun chk_clashes ctxt =
+        let val net = Properties.get ctxt
+            val clashes = Net.unify_term net prop_concl
+                       |> filter (fn (_, prop') => Pattern.matches thy (prop_concl, Thm.concl_of prop')
+                                            orelse Pattern.matches thy (Thm.concl_of prop', prop_concl))
+         in if null clashes then ctxt
+            else let open Pretty
+                 val ctxt' = Context.proof_of ctxt
+             in warning (string_of (chunks (
+                  [block (text "The given property either covers or is covered by other existing properties."),
+                   block (text "Given property:" @ [brk 1,
+                          Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt property]),
+                   block [str "Clashes", brk 1,
+                          chunks (map (fn (pos,rule) => block (
+                                     here pos @ [Syntax.pretty_term ctxt' (Thm.prop_of rule)]
+                                   )) clashes)],
+                   para "We prohibit redundancy of \<phi>-type properties as the redundancy \
+                       \would be multiplied by template instantiation.\n\
+                       \No automation will be invoked on this.\n\
+                       \Instead, you should provide the most general rule and, if you want, \
+                       \specialized (branched) reasoning on its antecedents."]
+                 ))) ;
+                raise SKIP
+            end
         end
    in ctxt
-    |> invoke_automations_on_property (phityp0, pos, property)
-    |> Properties.map (insert_term (key, (phityp', pos, Thm.trim_context property)))
+   |> chk_clashes
+   |> invoke_automations_on_property (pos, property)
+   |> Properties.map (Net.insert_term property_eq (prop_concl, (pos, Thm.trim_context property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
    handle SKIP => ctxt
  (* handle Net.INSERT => let open Pretty
@@ -531,66 +595,49 @@ fun add_property (phityp0,pos,property) ctxt =
       end *)
  end
 
-fun add_property' pos property ctxt =
-  let val thy = Context.theory_of ctxt
-      val prop_spec = HOLogic.dest_Trueprop (Thm.concl_of property)
-      val type_operator =
-            case Term.strip_comb prop_spec
-              of (Const(N, _), _)
-                   => extract_type_operator_from_property1 thy N prop_spec
-               | _ => error "The theorem is not a valid \<phi>-type property."
-   in add_property (type_operator,pos,property) ctxt
-  end
-
-fun add_property_kind k extract thy =
-  let val ty = case Sign.const_type thy k
-                 of SOME T => T
-                  | NONE => error (k ^ " is not a constant")
-      fun mk_term ret i (Type ("fun", [T, U])) =
-            mk_term (ret $ Var ((string_of_int i, 0),T)) (i+1) U
-        | mk_term ret _ _ = ret
-      val pat = HOLogic.Trueprop $ mk_term (Const(k,ty)) 0 ty
-      fun add_prop pos rules ctxt =
-        let val rules' =
-              filter (fn rule => case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
-                                   of Const (k', _) => k = k'
-                                    | _ => false) rules
-         in fold (add_property' pos) rules' ctxt
+fun add_property_kinds ks thy =
+  let fun add_prop k pos rules ctxt =
+        let val thy = Context.theory_of ctxt
+            val rules' = filter (fn rule => Pattern.matches thy (k, Thm.concl_of rule)) rules
+         in fold (curry add_property pos) rules' ctxt
         end
    in thy
-   |> Property_Kinds.map (Symtab.update_new (k, extract))
-   |> Context.theory_map (
-        Phi_Reasoner.add_pass ("\<phi>type-operator$" ^ k, pat,
-          fn pos => fn (rules, mode, pats, guard, ctxt) =>
-                       (rules, mode, pats, guard,
-                        if Config.get_generic ctxt adding_property
-                        then add_prop pos rules ctxt
-                        else ctxt)))
+   |> Property_Kinds.map (fold ((fn k =>
+        Net.insert_term (Pattern.equiv thy) (k, k)) o trim_modifiers) ks)
+   |> Context.theory_map (fold (fn k =>
+        let val k' = trim_modifiers k
+            val name = Term.term_name (Term.head_of k')
+         in Phi_Reasoner.add_pass ("\<phi>type-operator$" ^ name, k,
+              fn pos => fn (rules, mode, pats, guard, ctxt) =>
+                           (rules, mode, pats, guard,
+                            if Config.get_generic ctxt adding_property
+                            then add_prop k pos rules ctxt
+                            else ctxt))
+        end
+      ) ks)
   end
 
 
 fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 ctxt =
   let val thy = Context.theory_of ctxt
       val rule = normalize rule0
+      val is_prop = check_property thy
       fun get_prop_kinds (TM::L) =
            let val base = case get_prop_kinds L of [NONE] => [] | L => L
-               fun dest (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest X
-                 | dest (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) = dest X
-                 | dest (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = dest X
-                 | dest X = X
-            in case Term.head_of (dest (Logic.strip_assums_concl TM))
-            of Const (k, _) => if is_a_kind_of_property thy k then SOME k :: base else NONE :: base
-             | _ => NONE :: base
+            in is_prop TM :: base
            end
         | get_prop_kinds [] = []
       val prop_kinds = case raw_dependencies
-                         of SOME deps => (List.app (fn SOME dep => assert_property_kind thy dep
-                                                     | NONE => ()) deps ;
-                                          deps)
-                          | NONE => get_prop_kinds (Thm.prems_of rule)
+                         of SOME deps => List.map (Option.map (assert_property_kind thy)) deps
+                          | NONE => let val prems = map Phi_Help.strip_meta_hhf (Thm.prems_of rule)
+                                        val used = Term.add_frees (Thm.prop_of rule) [] |> map fst
+                                        val fixes = burrow (map Free o burrow_fst (Name.variant_list used o map (prefix "%"))) (map #1 prems)
+                                        val prems' = map2 (fn (_,_,x) => fn fixes => subst_bounds (rev fixes, x)) prems fixes
+                                     in get_prop_kinds prems'
+                                    end
       val template = (prop_kinds, template_pos, Instantiate_Rule (rule, pass, gen, b))
    in ctxt
-   |> add_template true (serial (), template)
+   |> add_template true template
   end
 
 (** Interfaces for Automation over Property **)
@@ -602,21 +649,39 @@ val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__se
 
 val _ = Theory.setup (
 
-  Attrib.setup \<^binding>\<open>\<phi>type_property\<close> (Scan.succeed (Thm.declaration_attribute (add_property' Position.none)))
+  Attrib.setup \<^binding>\<open>\<phi>type_property\<close> (Scan.succeed (Thm.declaration_attribute (curry add_property Position.none)))
     "Declare a \<phi>-type property that will be used to instantiate automation"
 
 #>Attrib.setup \<^binding>\<open>\<phi>reason_template\<close> (
     Phi_Reasoner.attr_syntax
-      (Scan.option (Scan.lift (Args.$$$ "name" |-- Parse.binding))
-       -- Scan.option (
-            Scan.lift (\<^keyword>\<open>requires\<close>) |--
-                (Parse.and_list' (Scan.repeat ( Scan.lift (Args.$$$ "_") >> K NONE
-                                             || Args.const {proper=true,strict=true} >> SOME)) >> flat))
+      (Scan.option (Scan.lift (Args.$$$ "name" |-- Parse.term -- Parse.binding))
+       -- Scan.lift (Scan.option (
+             \<^keyword>\<open>requires\<close> |--
+                (Parse.and_list (Scan.repeat (  Args.$$$ "_" >> K NONE
+                                             || Parse.term >> SOME)) >> flat)))
        -- Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
        -- Attrib.opt_attribs)
-      (fn (pos, mode, priority, (((bind, dependencies), pass_src),attribs), pats, guard) =>
+      (fn (pos, mode, priority, (((raw_binding, raw_dependencies), pass_src),attribs), pats, guard) =>
         Thm.declaration_attribute (fn thm => fn ctxt =>
-          let val _ = case guard of NONE => ()
+          let val ctxt' = Context.proof_of ctxt
+              val (_, ctxt_parse) = Variable.import true [thm] ctxt'
+              val read_props = Variable.export_terms ctxt_parse ctxt' o
+                               Syntax.read_props ctxt_parse
+              val read_terms = Variable.export_terms ctxt_parse ctxt' o
+                               Syntax.read_terms ctxt_parse
+              val dependencies = Option.map (burrow_options read_props) raw_dependencies
+              val binding = Option.map (fn (term, b) =>
+                    case singleton read_terms term
+                      of Var (v, _) => (v,b)
+                       | X => error (let open Pretty in string_of (
+                                block (text "The binding of the template instances must binds to a \
+                                            \variable in the template that will be instantaited to to \<phi>-type.\
+                                            \ However, the given binding target is not a variable," @
+                                       [brk 1, Syntax.pretty_term ctxt' X])
+                              ) end)
+                    ) raw_binding
+
+              val _ = case guard of NONE => ()
                          | _ => error "No guard is allowed here"
               val pass = Option.map (fn src =>
                     let val _ = Synchronized.change rule_template_pass__sender_locker (fn () => (
@@ -638,7 +703,7 @@ val _ = Theory.setup (
                                     \ be given once the attributes are given."
                            | ([], _, _) =>
                               Reasonig_Rule ((mode, priority), pats)
-           in setup_rule_generation (pos,(dependencies,pass),(bind,gen)) thm ctxt
+           in setup_rule_generation (pos,(dependencies,pass),(binding,gen)) thm ctxt
           end)
       ))
   "declare a \<phi>reasoning rule template which will be instantiated automatically when the depended \

@@ -90,7 +90,7 @@ text \<open>Here we construct two inner transformations from \<open>a \<Ztypecol
            type is valid globally (this is a necessary condition).  \<close>
 
 
-lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template name \<phi>subj [assertion_simps]]:
+lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template name Fa \<phi>subj [assertion_simps]]:
   \<open> Transformation_Functor Fa Fa (T \<phi>\<s>\<u>\<b>\<j> P) T D R mapper
 \<Longrightarrow> Transformation_Functor Fa Fa T (T \<phi>\<s>\<u>\<b>\<j> P) D R mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a. a \<in> D x \<and> P \<longrightarrow> a \<in> R x) \<and> (\<forall>y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P)
@@ -158,7 +158,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
     
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
@@ -417,7 +417,7 @@ subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
 
 
-lemma [\<phi>reason_template name \<Sigma>\<^sub>I[]]:
+lemma [\<phi>reason_template name F \<Sigma>\<^sub>I[]]:
   \<open> Functional_Transformation_Functor F F' (T (fst x)) (\<Sigma> T) D R pm fm
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D (snd x) \<longrightarrow> (fst x, a) \<in> R (snd x))
 \<Longrightarrow> x \<Ztypecolon> \<Sigma> c. F (T c) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>a. (fst x, a)) (\<lambda>_. True) (snd x) \<Ztypecolon> F' (\<Sigma> T)\<close>
@@ -520,7 +520,7 @@ subsubsection \<open>\<S>-Homomorphism\<close>
 
 text \<open>The homomorphism of \<open>\<S>\<close> type is entailed in the transformation functor directly.\<close>
 
-lemma \<S>_Homo\<^sub>E [\<phi>reason_template name \<S>\<^sub>E []]:
+lemma \<S>_Homo\<^sub>E [\<phi>reason_template name Fa \<S>\<^sub>E []]:
   \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : Collect (mapper (\<lambda>S x. x \<in> S) s)) @action \<A>_template_reason
@@ -564,7 +564,7 @@ lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
         clarsimp) .
 *)
 
-lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
+lemma \<S>_Homo\<^sub>I [\<phi>reason_template name Fa \<S>\<^sub>I []]:
   \<open> Functional_Transformation_Functor Fa Fb T (\<S> T) D R pm fm
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
 \<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>x. {x}) (\<lambda>_. True) s \<Ztypecolon> Fb (\<S> T)\<close>
@@ -780,11 +780,11 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 text \<open>The type parameter \<open>T\<close> is not paramterized by the quantified variable. It is not a restriction
   as we have \<open>\<Sigma>\<close>. Instead, only when \<open>T\<close> is not parameterized, \<open>\<big_ast>\<^sup>\<phi> I T\<close> forms a semimodule.\<close>
-   
+
 \<phi>type_def \<phi>Mul_Quant :: \<open>'i set \<Rightarrow> ('c::sep_algebra, 'x) \<phi> \<Rightarrow> ('c::sep_algebra, 'i \<Rightarrow> 'x) \<phi>\<close> ("\<big_ast>\<^sup>\<phi>")
   where [embed_into_\<phi>type]: \<open>\<big_ast>\<^sup>\<phi> I T = (\<lambda>x. \<big_ast>i\<in>I. x i \<Ztypecolon> T)\<close>
   deriving Basic
@@ -1171,7 +1171,7 @@ lemma
   unfolding Transformation_def
   by (cases x; clarsimp)
 
-
+(*
 lemma
   \<open> fun_commute \<psi> \<phi>' \<psi>' \<phi>
 \<Longrightarrow> (\<And>x. \<Psi>[\<psi>'] (x \<Ztypecolon> T) = (f x \<Ztypecolon> U))
@@ -1183,7 +1183,7 @@ lemma
 lemma
   \<open> 
 \<Longrightarrow> Domainoid_Homo\<^sub>U \<delta> (\<psi> \<Zcomp> T) dm' \<close>
-
+*)
 
 
 
@@ -1238,7 +1238,7 @@ lemma Semimodule_Scalar_Assoc\<^sub>E_by_function[\<phi>reason 1000]:
   by clarsimp metis
 
 declare [[\<phi>trace_reasoning = 1]]
- 
+
 lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
 \<Longrightarrow> Functionality T Dx
@@ -1468,17 +1468,17 @@ declare [[\<phi>trace_reasoning = 0]]
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
   deriving Separation_Monoid
        and Trivial_\<Sigma>
-       and SE_Trim_Empty
+       (*and SE_Trim_Empty*)
 
 thm List.functional_transformation
 
 declare [[\<phi>trace_reasoning = 0]]
-       
+        
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
   deriving Separation_Monoid
-       and SE_Trim_Empty
+       (*and SE_Trim_Empty*)
        and Trivial_\<Sigma>
 
 (* BOSS:
@@ -1565,7 +1565,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Separation_Monoid
        and Functionality
        and Trivial_\<Sigma>
-       and SE_Trim_Empty
+       (*and SE_Trim_Empty*)
        and Semimodule_no0
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        and Abstraction_to_Raw
