@@ -197,6 +197,14 @@ definition fun_commute :: \<open>('b \<Rightarrow> 'c) \<Rightarrow> ('a \<Right
 
 declare [[\<phi>reason_default_pattern \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> \<Rightarrow> \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> (100) ]]
 
+lemma [\<phi>reason %cutting for \<open>fun_commute ?var_\<phi> ?var_\<psi> _ _\<close>
+                        except \<open>fun_commute _ _ ?var_\<phi> ?var_\<psi>\<close>]:
+  \<open> fun_commute \<phi>' \<psi>' \<phi> \<psi>
+\<Longrightarrow> fun_commute \<psi> \<phi> \<psi>' \<phi>'\<close>
+  unfolding fun_commute_def
+  by (rule; simp)
+
+
 (*TODO: move!*)
 
 (* C----T----> A

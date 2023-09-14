@@ -20,14 +20,25 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                | _ => [])
         | extract_oprs_from_hint _ = []
 
-      fun gen_ind_conv ctxt _ =
-            Conv.rewr_conv @{lemma \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
-                                   \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
-                                by (unfold atomize_imp Action_Tag_def)} then_conv
+      val ind_rewr = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
+                             \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
+                          by (unfold atomize_imp Action_Tag_def)}
+      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action \<phi>TA_ind_target \<A>)
+                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> (x \<Ztypecolon> F T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action NToA)\<close>
+                                by (unfold atomize_imp Action_Tag_def Bubbling_def)}
+      fun gen_ind_conv is_ind_rewr_E_CL ctxt _ =
+            Conv.rewr_conv (if is_ind_rewr_E_CL then ind_rewr_E_CL else ind_rewr) then_conv
             Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
             Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]}))
-                              Conv.all_conv
-      val ind_conv = default_ind_conv (gen_ind_conv, gen_ind_conv)
+              (if is_ind_rewr_E_CL
+               then Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
+                        Phi_Syntax.transformation_conv Conv.all_conv
+                                                       (@{print} o Simplifier.rewrite (Tag_Has_Bubbling.equip ctxt))
+                                                       Conv.all_conv))
+               else Conv.all_conv)
+      val ind_conv =
+            if is_intro then default_ind_conv (gen_ind_conv false, gen_ind_conv false)
+                        else default_ind_conv (gen_ind_conv false, gen_ind_conv true)
       (*val ind_conv = default_ind_conv (
             fn ctxt => fn _ =>
                 Conv.rewr_conv @{lemma \<open>A \<longrightarrow> B \<longrightarrow> C \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C)\<close> by blast} then_conv

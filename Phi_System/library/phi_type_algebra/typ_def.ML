@@ -941,7 +941,7 @@ fun add_type (def, pos, dervs, bundles) thy =
             map (fn eq => (eq RS' (ctxt, rule))
                        |> f
                        |> normalize) eq
-      fun gen_from_tagged_eq f rule = map_filter (Option.mapPartial (
+      fun gen_from_tagged_eq_in_type f rule = map_filter (Option.mapPartial (
                 fn eq => (eq RS' (ctxt, rule))
                             |> f
                             |> normalize
@@ -965,7 +965,7 @@ fun add_type (def, pos, dervs, bundles) thy =
             handle THM _ => [] (*in case of not a separation magma*)
       val elim_ToA = gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
       val elim_reasoning = gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
-      val elim'SE_ToA = gen_from_tagged_eq I @{thm' \<phi>elim'SEi_transformation}
+      val elim'SE_ToA = gen_from_tagged_eq_in_type I @{thm' \<phi>elim'SEi_transformation}
                      |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1)
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
                            (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
@@ -973,13 +973,19 @@ fun add_type (def, pos, dervs, bundles) thy =
                                       Phi_Expansions.enhance (Simplifier.clear_simpset ctxt)))
                                 ) ctxt)) tagged_eqs
 
-      val open_abstraction = gen_from_tagged_eq
+      val open_abstraction = gen_from_tagged_eq_in_type
                 (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                       Phi_Syntax.transformation_conv Conv.all_conv
                           (fn ctm => Simplifier.rewrite (Gen_Open_Abstraction_SS.equip ctxt) ctm)
                           Conv.all_conv))) ctxt))
                 @{thm' \<phi>open_abstraction}
+
+      val open_abstraction_ToA = gen_from_eqs @{thm' \<phi>open_abstraction_ToA} I tagged_eqs
+                               @ (gen_from_eqs @{thm' \<phi>open_abstraction_ToA_R} I tagged_eqs
+                                  handle THM _ => [])
+                               @ (gen_from_tagged_eq_in_type I @{thm' \<phi>open_abstraction_ToA_W}
+                                    |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
 
       val make_abstraction = gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
                            @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
@@ -1020,6 +1026,7 @@ fun add_type (def, pos, dervs, bundles) thy =
                       ([Morphism.thm m rule], pos, mode, priority, [], [], NONE)) rules)
          in add_rules Phi_Reasoner.TO_BE_OVERRIDE 30 (Morphism.fact m open_abstraction)
          #> add_rules Phi_Reasoner.TO_BE_OVERRIDE 80 (Morphism.fact m make_abstraction)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %ToA_open_\<phi>type_derived} (Morphism.fact m open_abstraction_ToA)
          #> Phi_Expansions.add_simps expns
          #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)

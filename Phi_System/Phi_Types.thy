@@ -1179,6 +1179,11 @@ lemma [\<phi>reason %guess_tyop_commute]:
   \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
                          D (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute g f g' f') True\<close>
   unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
+                         D (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute f g f' g') True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
   
 
 lemma
@@ -1222,7 +1227,10 @@ lemma
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+
+
+thm "_tagging_has_bubbling_"
+
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
@@ -1243,8 +1251,12 @@ declare [[\<phi>trace_reasoning = 0]]
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<open>(\<And>s. fun_commute (f s) g (f' s) g')
-          \<Longrightarrow> Tyops_Commute (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s) ((\<Zcomp>\<^sub>f) g) ((\<Zcomp>\<^sub>f) g') T D (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
+         \<Longrightarrow> Tyops_Commute (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s) ((\<Zcomp>\<^sub>f) g) ((\<Zcomp>\<^sub>f) g') T D (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
+       and \<open>(\<And>s. fun_commute (f' s) g' (f s) g)
+         \<Longrightarrow> Tyops_Commute ((\<Zcomp>\<^sub>f) g) ((\<Zcomp>\<^sub>f) g') (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s) T D (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
 
+term \<open>(\<And>s. fun_commute g' (f' s) g (f s))
+         \<Longrightarrow> Tyops_Commute ((\<Zcomp>\<^sub>f) g) ((\<Zcomp>\<^sub>f) g') (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s) T D (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
 
 subsubsection \<open>Reasoning Rules\<close>
 
@@ -1589,7 +1601,7 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
@@ -1601,6 +1613,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        and Abstraction_to_Raw
        (*and Commutativity_Deriver*)
+
+thm \<phi>Share.m
 
 declare [[\<phi>trace_reasoning = 3]]
   

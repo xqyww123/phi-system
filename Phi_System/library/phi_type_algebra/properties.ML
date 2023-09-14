@@ -667,7 +667,7 @@ val _ = Theory.setup (
           let val ctxt' = Context.proof_of ctxt
               val (_, ctxt_parse) = Variable.import true [thm] ctxt'
               val read_props = Variable.export_terms ctxt_parse ctxt' o
-                               Syntax.read_props ctxt_parse
+                               Syntax.read_props (Proof_Context.set_mode Proof_Context.mode_pattern ctxt_parse)
               val read_terms = Variable.export_terms ctxt_parse ctxt' o
                                Syntax.read_terms ctxt_parse
               val dependencies = Option.map (burrow_options read_props) raw_dependencies

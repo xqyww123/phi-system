@@ -24,7 +24,8 @@ datatype priority_base = Base | Top | Bottom
 datatype priority_syntax = Literal of int | Relative of ((xstring * Position.T) * priority_base) * offset
 val parser : priority_syntax parser
 val parser_with_default : priority -> priority_syntax parser
-val check_priority : bool -> Context.generic -> priority_syntax -> priority
+val check_priority : bool (*if to verify the offset is within the range of the based group*)
+                  -> Context.generic -> priority_syntax -> priority
 
 end
 
@@ -65,7 +66,9 @@ local open Parse
 val offset = (\<^keyword>\<open>+\<close> |-- int) || (Args.$$$ "-" |-- int >> (op ~)) || Scan.succeed 0
 val priority_base = Scan.optional (\<^keyword>\<open>[\<close> |-- (Args.$$$ "top" >> K Top ||
                                                    Args.$$$ "bottom" >> K Bottom) --| \<^keyword>\<open>]\<close>) Base
-in val parser = ((\<^keyword>\<open>%\<close> |-- name_position -- priority_base) -- offset >> Relative)
+in val parser' = ((name_position -- priority_base) -- offset >> Relative)
+             || (int >> Literal)
+   val parser = ((\<^keyword>\<open>%\<close> |-- name_position -- priority_base) -- offset >> Relative)
              || (int >> Literal)
    fun parser_with_default default = parser || Scan.succeed (Literal default)
 end
@@ -199,5 +202,13 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>print_\<phi>reasoner_grou
      of [] => writeln "No reasoner group is found."
       | _ => Pretty.writeln (Pretty.chunks groups)
     end)))
+
+val _ = Theory.setup (
+  ML_Antiquotation.value \<^binding>\<open>priority\<close>
+    (Scan.peek (fn ctxt => parser >> (fn raw_priority =>
+        check_priority true ctxt raw_priority
+          |> ML_Syntax.print_int
+          |> ML_Syntax.atomic )))
+)
 
 end
