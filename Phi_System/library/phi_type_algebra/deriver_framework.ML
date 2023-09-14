@@ -931,6 +931,11 @@ fun Guess_Framework mk_goal_term_and_parse_result (phi : phi_type) ctxt =
             val (inst'2, ctxt) = Variable.import_inst true (prop :: ants) ctxt
             val (prop :: ants) = map (Term_Subst.instantiate inst'2) (prop :: ants)
             val params = map (Option.map (Term_Subst.instantiate inst'2)) params
+            val _ = Phi_Reasoner.info_pretty ctxt 2 (fn () => let open Pretty in chunks [
+                      para "Guess the property:",
+                      block [str "Antecedents: ", chunks (map (Syntax.pretty_term ctxt) ants)],
+                      block [str "Property: ", Syntax.pretty_term ctxt prop]
+                    ] end)
          in Seq.single (ants, prop, params,
                         phi |> instantiate_phi (inst, Vars.empty)
                             |> instantiate_phi (Phi_Help.certify_vars (Context.Proof ctxt) inst'2),

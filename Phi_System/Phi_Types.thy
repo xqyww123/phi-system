@@ -1197,7 +1197,7 @@ lemma
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
-         
+        
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
   deriving (*Basic

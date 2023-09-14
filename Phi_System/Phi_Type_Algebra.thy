@@ -1180,21 +1180,21 @@ definition Type_Variant_of_the_Same_Scalar_Mul
         :: \<open> ('s \<Rightarrow> 'a \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('s2 \<Rightarrow> 'a2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
   where \<open> Type_Variant_of_the_Same_Scalar_Mul Fa Fb \<longleftrightarrow> True \<close>
 
-definition Parameter_Variant_of_the_Same_Type :: \<open> ('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> bool \<close>
+definition Parameter_Variant_of_the_Same_Type :: \<open> 'a \<Rightarrow> 'b \<Rightarrow> bool \<close>
   where \<open> Parameter_Variant_of_the_Same_Type Fa Fb \<longleftrightarrow> True \<close>
   \<comment> \<open>Every parameter together with any types is differentiated\<close>
-
+(*
 definition Parameter_Variant_of_the_Same_Type1 :: \<open> ('p \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('p2 \<Rightarrow> ('c,'d) \<phi>) \<Rightarrow> bool \<close>
   where \<open> Parameter_Variant_of_the_Same_Type1 Fa Fb \<longleftrightarrow> True \<close>
   \<comment> \<open>Every parameter together with any types is differentiated\<close>
-
+*)
 declare [[
   \<phi>reason_default_pattern
       \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close> (100)
   and \<open>Type_Variant_of_the_Same_Type_Operator2 ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Type_Operator2 ?Fa _\<close> (100)
   and \<open>Type_Variant_of_the_Same_Scalar_Mul ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Scalar_Mul ?Fa _\<close> (100)
   and \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> (100)
-  and \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> (100)
+  (*and \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> (100)*)
   
   (* \<phi>premise_attribute? [\<phi>reason add] for \<open>Type_Variant_of_the_Same_Type_Operator _ _\<close> *)
   (* \<phi>premise_attribute? [\<phi>reason add] for \<open>Parameter_Variant_of_the_Same_Type _ _\<close> *)
@@ -1224,10 +1224,46 @@ setup \<open>
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator2 _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Scalar_Mul _ _\<close>,
-    \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type _ _\<close>,
-    \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type1 _ _\<close>
+    \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type _ _\<close>
+  (*\<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type1 _ _\<close>*)
   ]
 \<close>
+
+\<phi>reasoner_ML Parameter_Variant_of_the_Same_Type 1000 (\<open>Parameter_Variant_of_the_Same_Type _ _\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+    case Thm.major_prem_of sequent
+      of _ (*Trueprop*) $ (_ (*Parameter_Variant_of_the_Same_Type*) $ LHS $ Var (v,_)) =>
+          let val thy = Proof_Context.theory_of ctxt
+              exception Not_A_Phi_Type
+              fun parse lv bvs (X $ Bound i) =
+                    if i < lv then parse lv (SOME i :: bvs) X else parse lv (NONE :: bvs) X
+                | parse lv bvs (X $ Y) = parse lv (NONE :: bvs) X
+                | parse lv bvs (Abs(_,_,X)) = parse (lv+1) (map (Option.map (fn i=>i+1)) bvs) X
+                | parse lv bvs (Const(N, _)) =
+                    let val idx = Thm.maxidx_of sequent + 1
+                        val ty = Logic.incr_tvar idx (Sign.the_const_type thy N )
+                        val args = List.take (Term.binder_types ty, length bvs)
+                        val const = Const(N, ty)
+                        val (F0,bvs) = fold_index (
+                              fn (_, (SOME b, ty)) => (fn (X,bvs) => (X $ Bound b, (b,ty)::bvs))
+                               | (i, (NONE, ty)) => (fn (X,bvs) => (X $ Var (("x",idx+i),ty), bvs))
+                            ) (bvs ~~ args) (const, [])
+                        val F = fold_index (fn (i,_) => fn X =>
+                                  case AList.lookup (op =) bvs i
+                                    of SOME ty => Abs ("_", ty, X)
+                                     | NONE => raise Not_A_Phi_Type
+                                ) bvs F0
+                             |> Thm.cterm_of ctxt
+                     in Drule.infer_instantiate ctxt [(v, F)] sequent
+                     |> (fn th => @{lemma' \<open>Parameter_Variant_of_the_Same_Type A B\<close>
+                                        by (simp add: Parameter_Variant_of_the_Same_Type_def)} RS th)
+                     |> (fn th => SOME ((ctxt,th), Seq.empty))
+                    end
+           in parse 0 [] LHS
+          end
+       | _ => NONE  
+) \<close>
+
 
 
 (*
@@ -4839,43 +4875,43 @@ declare [[
 subparagraph \<open>Initialization\<close>
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> Parameter_Variant_of_the_Same_Type1 G G'
-\<Longrightarrow> Parameter_Variant_of_the_Same_Type1 F F'
+  \<open> Parameter_Variant_of_the_Same_Type G G'
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T x) : (x \<Ztypecolon> G' T) )
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' var_unfolded_G var_unfolded_G' T D r ants conds
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' var_unfolded_G var_unfolded_G' T D r ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G' U))
-\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F' U))
+  \<open> Parameter_Variant_of_the_Same_Type G G'
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T x) : (x \<Ztypecolon> G' T) )
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' var_unfolded_G var_unfolded_G' T D r ants conds
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' var_unfolded_G var_unfolded_G' T D r ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F'\<^sub>T U))
-\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F'\<^sub>U U))
-\<Longrightarrow> (\<And>T1 T2 U1 U2. Parameter_Variant_of_the_Same_Type (G T1 T2) (G' U1 U2))
+  \<open> Parameter_Variant_of_the_Same_Type F F'\<^sub>T
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'\<^sub>U
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type G G'
 \<Longrightarrow> (\<And>T U x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T U x) : (x \<Ztypecolon> G T U) )
 \<Longrightarrow> (\<And>T U x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T U x) : (x \<Ztypecolon> G' T U) )
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I F F'\<^sub>T F'\<^sub>U G G' var_unfolded_G var_unfolded_G' T U D r ants conds
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I F F'\<^sub>T F'\<^sub>U G G' var_unfolded_G var_unfolded_G' T U D r ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F'\<^sub>T U))
-\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F'\<^sub>U U))
-\<Longrightarrow> (\<And>T1 T2 U1 U2. Parameter_Variant_of_the_Same_Type (G T1 T2) (G' U1 U2))
+  \<open> Parameter_Variant_of_the_Same_Type F F'\<^sub>T
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'\<^sub>U
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type G G'
 \<Longrightarrow> (\<And>T U x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T U x) : (x \<Ztypecolon> G T U) )
 \<Longrightarrow> (\<And>T U x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T U x) : (x \<Ztypecolon> G' T U) )
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E F F'\<^sub>T F'\<^sub>U G G' var_unfolded_G var_unfolded_G' T U D r ants conds
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E F F'\<^sub>T F'\<^sub>U G G' var_unfolded_G var_unfolded_G' T U D r ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> (\<And>T1 T2 U1 U2. Parameter_Variant_of_the_Same_Type (F T1 T2) (F' U1 U2))
-\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G'\<^sub>T U))
-\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G'\<^sub>U U))
+  \<open> Parameter_Variant_of_the_Same_Type F F'
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type G G'\<^sub>T
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type G G'\<^sub>U
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>T T x) : (x \<Ztypecolon> G'\<^sub>T T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>U T x) : (x \<Ztypecolon> G'\<^sub>U T) )
@@ -4883,9 +4919,9 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> (\<And>T1 T2 U1 U2. Parameter_Variant_of_the_Same_Type (F T1 T2) (F' U1 U2))
-\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G'\<^sub>T U))
-\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G'\<^sub>U U))
+  \<open> Parameter_Variant_of_the_Same_Type F F'
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type G G'\<^sub>T
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type G G'\<^sub>U
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>T T x) : (x \<Ztypecolon> G'\<^sub>T T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>U T x) : (x \<Ztypecolon> G'\<^sub>U T) )
@@ -4917,7 +4953,7 @@ paragraph \<open>Deriver\<close>
 *)
 
 lemma \<phi>TA_TyComm\<^sub>I_gen:
-  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+  \<open> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
@@ -4931,7 +4967,7 @@ lemma \<phi>TA_TyComm\<^sub>I_gen:
   by blast
 
 lemma \<phi>TA_TyComm\<^sub>E_gen:
-  \<open> Type_Variant_of_the_Same_Type_Operator F F'
+  \<open> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
@@ -4950,8 +4986,8 @@ lemma \<phi>TA_TyComm\<^sub>E_gen:
   
 
 lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>I_gen:
-  \<open> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>T
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>U
+  \<open> Parameter_Variant_of_the_Same_Type F F'\<^sub>T
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'\<^sub>U
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
@@ -4965,8 +5001,8 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>I_gen:
   by blast
 
 lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
-  \<open> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>T
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>U
+  \<open> Parameter_Variant_of_the_Same_Type F F'\<^sub>T
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'\<^sub>U
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
@@ -4980,7 +5016,7 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
   by clarsimp
 
 lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
-  \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
+  \<open> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
@@ -4994,7 +5030,7 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
   by clarsimp
 
 lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
-  \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
+  \<open> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>

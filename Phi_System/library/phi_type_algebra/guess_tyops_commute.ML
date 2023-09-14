@@ -35,7 +35,7 @@ fun gen_Guess_Tyops_Commute_framework (template_of_reasoning_goal, parsing_rule,
 
 val gen_Guess_Tyops_Commute_I_1 = gen_Guess_Tyops_Commute_framework
       (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds\<close>,
-       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G' ?unfolded_G' ?T ?D ?r ?ants ?conds,
+       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds,
                 Tyops_Commute ?G ?G' ?F ?F' ?T ?D ?r,
                 ?G' _ _,
                 ?conds,

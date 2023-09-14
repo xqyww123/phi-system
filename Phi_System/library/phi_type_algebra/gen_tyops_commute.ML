@@ -128,7 +128,7 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
       fun gen_rule th = case Phi_Reasoner.reason NONE NONE ctxt th
                           of SOME ret => ret
                            | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR fails"])
-      val rule = apply2 gen_rule rule
+      val rule = apply2 gen_rule rule |> @{print}
 
       val name = Term.term_name (#term phi) ^ "_Comm"
       val name = (name ^ "\<^sub>I", name ^ "\<^sub>E")
