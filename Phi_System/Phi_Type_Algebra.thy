@@ -894,6 +894,10 @@ lemma \<phi>elim_reasoning_transformation:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   by simp
 
+lemma apfst_id'[simp]:
+  \<open>apfst (\<lambda>x. x) = (\<lambda>x. x)\<close>
+  by (simp add: fun_eq_iff)
+
 lemma \<phi>elim'SEi_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U x))
 \<Longrightarrow> apfst y x \<Ztypecolon> U (fst x) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
@@ -3719,7 +3723,7 @@ lemma \<phi>TA_Inh_rule:
   \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Abstract_Domain T P\<close>
   unfolding Action_Tag_def Abstract_Domain_def
   by simp
@@ -3728,7 +3732,7 @@ lemma \<phi>TA_SuC_rule:
   \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) @action \<phi>TA_ind_target \<A>ESC)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Abstract_Domain\<^sub>L T P\<close>
   unfolding Action_Tag_def Abstract_Domain\<^sub>L_def
   by simp
@@ -3759,7 +3763,7 @@ lemma \<phi>TA_Inh\<^sub>M\<^sub>C_rule:
   \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> Inhabited\<^sub>M\<^sub>C (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Abstract_Domain\<^sub>M\<^sub>C T P\<close>
   unfolding Action_Tag_def Abstract_Domain\<^sub>M\<^sub>C_def
   by simp
@@ -3768,7 +3772,7 @@ lemma \<phi>TA_SuC\<^sub>M\<^sub>C_rule:
   \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> P x \<longrightarrow> Inhabited\<^sub>M\<^sub>C (x \<Ztypecolon> T) @action \<phi>TA_ind_target \<A>ESC)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Abstract_Domain\<^sub>M\<^sub>C\<^sub>L T P\<close>
   unfolding Action_Tag_def Abstract_Domain\<^sub>M\<^sub>C\<^sub>L_def
   by simp
@@ -3808,7 +3812,7 @@ lemma \<phi>TA_1L_rule:
   \<open> (Ant @action \<phi>TA_ANT \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
   unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
   using transformation_weaken by blast
@@ -3817,7 +3821,7 @@ lemma \<phi>TA_1L_rule:
   \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
   unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
   using transformation_weaken by blast*)
@@ -3826,7 +3830,7 @@ lemma \<phi>TA_1R_rule:
   \<open> (Ant @action \<phi>TA_ANT \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)\<close>
   unfolding Action_Tag_def .
 
@@ -3870,7 +3874,7 @@ lemma Object_Equiv_rule:
             (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Object_Equiv T eq \<close>
   unfolding Object_Equiv_def Premise_def Action_Tag_def
   by blast
@@ -3909,7 +3913,7 @@ lemma \<phi>TA_OE\<^sub>O_rule:
             (base \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Object_Equiv T (\<lambda>_ _. True)\<close>
   unfolding Object_Equiv_def Action_Tag_def Transformation_def Premise_def
   by blast
@@ -3952,7 +3956,7 @@ lemma \<phi>TA_IsFunc_rule:
           Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Functionality T P \<close>
   unfolding Action_Tag_def Functionality_def Is_Functional_def Premise_def
   by clarsimp
@@ -3986,7 +3990,7 @@ lemma \<phi>TA_CarS_rule:
           Within_Carrier_Set (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Carrier_Set T P \<close>
   unfolding Carrier_Set_def Action_Tag_def Premise_def
   by clarsimp
@@ -4016,7 +4020,7 @@ lemma \<phi>TA_TF_rule:
               (x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Transformation_Functor F1 F2 T U D R mapper\<close>
   unfolding Transformation_Functor_def Action_Tag_def Ball_def Premise_def
   by simp
@@ -4044,7 +4048,7 @@ lemma \<phi>TA_FTF_rule:
 \<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P x y. mapper (\<lambda>a b. b = f a \<and> P a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R pm fm\<close>
   unfolding Premise_def fun_eq_iff Action_Tag_def
   using infer_FTF_from_FT .
@@ -4077,25 +4081,27 @@ text \<open>Note, as an instance of Commutativity of Type Operators, the names o
   and \<open>elimination rule\<close> are just reversed. It is intentional, because I really think those names
   are more natural and we don't really have to force the consistency of the names between the two levels.\<close>
 
+term MAKE
+
 lemma \<phi>TA_SH\<^sub>I_rule:
   \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
             (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
                 \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U))) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Separation_Homo\<^sub>I Fa Fb Fc T U D w \<close>
   unfolding Separation_Homo\<^sub>I_def \<phi>Prod_expn' Action_Tag_def
   by simp
 
 lemma \<phi>TA_SH\<^sub>E_rule:
   \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-             (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> Ft T \<^emph> Fu U) @action \<phi>TA_ind_target \<A>simp)
+             (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U)) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U uz \<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def
+  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def
   by simp
 
 lemma \<phi>TA_SH\<^sub>I_rewr_IH:
@@ -4441,7 +4447,7 @@ lemma \<phi>TA_M0_rule:
       \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> F zero T) True @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_Zero F T zero \<close>
   unfolding Semimodule_Zero_def Action_Tag_def Premise_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
   by (clarsimp simp add: BI_eq_iff Transformation_def; blast)
@@ -4453,7 +4459,7 @@ lemma \<phi>TA_M0c_rule:
 \<Longrightarrow> Semimodule_Zero F T zero
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Closed_Semimodule_Zero F T zero \<close>
   unfolding Semimodule_Zero_def Action_Tag_def Premise_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
             Closed_Semimodule_Zero_def
@@ -4495,7 +4501,7 @@ lemma \<phi>TA_MI\<^sub>E_rule:
       \<longrightarrow> (f x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> F one T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_Identity\<^sub>E F T one D f \<close>
   unfolding Semimodule_Identity\<^sub>E_def Action_Tag_def Premise_def
   by (clarsimp; rule assertion_eq_intro; blast)
@@ -4523,7 +4529,7 @@ lemma \<phi>TA_MS\<^sub>I_rule:
          \<longrightarrow> (x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fc r T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>I_def Action_Tag_def Premise_def
   by clarsimp
@@ -4534,7 +4540,7 @@ lemma \<phi>TA_MS\<^sub>E_rule:
          \<longrightarrow> (y \<Ztypecolon> Fc r T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T)) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f \<close>
   unfolding Semimodule_Scalar_Assoc\<^sub>E_def Action_Tag_def Premise_def
   by clarsimp
@@ -4577,7 +4583,7 @@ lemma \<phi>TA_MD\<^sub>Z_rule:
          \<longrightarrow> (x \<Ztypecolon> F t T \<^emph> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> F r T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx zi \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>Z_def Action_Tag_def Premise_def Transformation_def
   by clarsimp blast
@@ -4589,7 +4595,7 @@ lemma \<phi>TA_MD\<^sub>U_rule:
          \<longrightarrow> (x \<Ztypecolon> F r T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> F t T \<^emph> F s T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U F T Ds Dx uz \<close>
   unfolding Semimodule_SDistr_Homo\<^sub>U_def Action_Tag_def Premise_def Transformation_def
   by clarsimp
@@ -4627,7 +4633,7 @@ lemma \<phi>TA_TrCstr_rule:
   \<open> (Ant @action \<phi>TA_ANT) \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A) @action \<phi>TA_ind_target undefined
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
   unfolding Action_Tag_def
   by simp
@@ -4641,7 +4647,7 @@ lemma \<phi>TA_TrCstr_rule:
          (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE_from_RAW T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> \<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<longrightarrow> MAKE_from_RAW c ()(c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f c \<Ztypecolon> MAKE_from_RAW T) \<close>
   \<comment> \<open>If one concrete representation is related to multiple abstract objects, just choose any one
       that is most representative.\<close>
@@ -4666,7 +4672,7 @@ lemma \<phi>TA_TrRA_rule:
          (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target (to (Itself::('b,'b) \<phi>)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to (Itself::('b,'b) \<phi>)) \<close>
   unfolding Action_Tag_def
   by simp
@@ -4957,13 +4963,13 @@ lemma \<phi>TA_TyComm\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G' T) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
+          (x \<Ztypecolon> G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (MAKE (G' T)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute G G' F F' T D r\<close>
-  unfolding Action_Tag_def Tyops_Commute_def Premise_def Bubbling_def
+  unfolding Action_Tag_def Tyops_Commute_def Premise_def Bubbling_def MAKE_def
   by blast
 
 lemma \<phi>TA_TyComm\<^sub>E_gen:
@@ -4979,7 +4985,7 @@ lemma \<phi>TA_TyComm\<^sub>E_gen:
               limitation right now.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute F F' G G' T D (embedded_func f P)\<close>
   unfolding Action_Tag_def Tyops_Commute_def Premise_def embedded_func_def
   by clarsimp
@@ -4995,7 +5001,7 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>I_gen:
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>
   unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Bubbling_def
   by blast
@@ -5010,7 +5016,7 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
                                 \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D (embedded_func f P)\<close>
   unfolding Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def embedded_func_def
   by clarsimp
@@ -5024,7 +5030,7 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 G G'\<^sub>T G'\<^sub>U F F' T U D r\<close>
   unfolding Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Bubbling_def
   by clarsimp
@@ -5038,7 +5044,7 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
                                         \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 G G'\<^sub>T G'\<^sub>U F F' T U D (embedded_func f P)\<close>
   unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def embedded_func_def
   by clarsimp

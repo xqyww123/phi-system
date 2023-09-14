@@ -3907,7 +3907,7 @@ val SE_entry_point_b = SE_entry_point (
       @{thm' enter_SEbi}, @{thm' enter_SEbi[THEN ToA_by_Equiv_Class]})
 \<close>
  
-\<phi>reasoner_ML \<A>SE_Entry %ToA_splitting_source (\<open>(_::?'a::sep_semigroup BI) * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
+\<phi>reasoner_ML \<A>SE_Entry default %ToA_splitting_source (\<open>(_::?'a::sep_semigroup BI) * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
   Seq.make (fn () =>
     if Sign.of_sort (Proof_Context.theory_of ctxt)
                     (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)
@@ -3922,7 +3922,7 @@ lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<
   unfolding Orelse_shortcut_def Transformation_def REMAINS_def Premise_def
   by clarsimp blast
 
-\<phi>reasoner_ML \<A>SEb_Entry %ToA_splitting_source (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
+\<phi>reasoner_ML \<A>SEb_Entry default %ToA_splitting_source (\<open>_ * (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt, sequent)) =>
   Seq.make (fn () =>
     if Sign.of_sort (Proof_Context.theory_of ctxt)
                     (Phi_Syntax.dest_transformation_typ (Thm.major_prem_of sequent), \<^sort>\<open>sep_magma\<close>)

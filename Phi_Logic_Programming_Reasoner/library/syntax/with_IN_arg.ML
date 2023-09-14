@@ -1,4 +1,4 @@
-signature PLPR_SYNTAX = sig
+(*signature PLPR_SYNTAX = sig
 include PLPR_SYNTAX
 
 val dest_with_IN_arg : term -> indexname list * term
@@ -47,4 +47,4 @@ fun minimal_pattern_implied_by_IN_arg inargs term =
    in ()
   end*)
 
-end
+end*)

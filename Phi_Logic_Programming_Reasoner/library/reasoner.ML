@@ -874,7 +874,8 @@ structure Default_Pattern = Pattern_Translation (
                                 \\<open>\<phi>reason for \<open>pattern\<close>\<close>"
 )
 
-val the_default_pattern_of' = Default_Pattern.translate
+fun the_default_pattern_of' ctxt pattern =
+  Default_Pattern.translate ctxt (snd (PLPR_Syntax.strip_embedded_patterns pattern))
 
 fun process_error_rule ctxt (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>ERROR\<close>, _) $ text))
       = (Exn.error (Text_Encoding.decode_text_str (Context.proof_of ctxt) text) ; false)
@@ -939,7 +940,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
     val _ = if null rules then error ("No rule is given!") else ()
 
     fun complete_prio ((e_pat, e_except, inargs), rule) = ((map (rpair NONE) e_pat, e_except, inargs), rule)
-    val embedding_rules = map (complete_prio o PLPR_Syntax.elim_embedded_patterns ctxt) rules
+    val embedding_rules = map (complete_prio o PLPR_Syntax.elim_embedded_patterns) rules
 
     val _ = if exists (fn ((_,_,inargs), _) => not (null inargs)) embedding_rules
             then error "Embedded IN-arguments are not supported yet."

@@ -130,6 +130,8 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
                            | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR fails"])
       val rule = apply2 gen_rule rule |> @{print}
 
+      val pattern = apply2 Thm.concl_of rule
+
       val name = Term.term_name (#term phi) ^ "_Comm"
       val name = (name ^ "\<^sub>I", name ^ "\<^sub>E")
 
@@ -143,25 +145,25 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
       val binding = Binding.qualify true (Term.term_name (#term phi)) (Binding.make ("Comm", #pos phi))
       val binding = (Binding.suffix_name "\<^sub>I" binding, Binding.suffix_name "\<^sub>E" binding)
 
-   in (binding, deriver)
+   in (binding, deriver, pattern)
   end
 
 fun meta_Tyops_Commute quiet ctxt (phi : phi_type) thy =
-  let val (bindings, deriver) = meta_gen_Tyops_Commute ctxt phi
-      fun report (name, thy) = (
+  let val (bindings, deriver, pattern) = meta_gen_Tyops_Commute ctxt phi
+      fun bind pat (name, thy) = (
         if quiet then () else 
           Phi_Reasoner.info_pretty_generic thy 0 (fn () => let open Pretty in
             block (text "Deriver for \<phi>-Type Operator Commutativity :" @
                    [brk 1, Name_Space.pretty ctxt (Name_Space.space_of_table (deriver_name_space thy)) name])
           end) ;
-        thy)
+        Phi_Type_Algebra.bind_derivers_on_patterns [(pat, name)] thy)
    in thy
-   |> Context.mapping_result (define_deriver_global  (fst bindings) (fst deriver))
+   |> Context.mapping_result (define_deriver_global (fst bindings) (fst deriver))
                              (define_deriver (fst bindings) (fst deriver))
-   |> report
-   |> Context.mapping_result (define_deriver_global  (snd bindings) (snd deriver))
+   |> bind (fst pattern)
+   |> Context.mapping_result (define_deriver_global (snd bindings) (snd deriver))
                              (define_deriver (snd bindings) (snd deriver))
-   |> report
+   |> bind (snd pattern)
   end
 
 end

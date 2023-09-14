@@ -1298,7 +1298,7 @@ lemma \<comment>\<open>fallback\<close>
 
 subsubsection \<open>Make Abstraction\<close>
 
-definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> where \<open>MAKE X \<equiv> X\<close>
+definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> where [assertion_simps_source]: \<open>MAKE X \<equiv> X\<close>
 
 \<phi>reasoner_group ToA_make_\<phi>type = (100, [%ToA_splitting_source+2, %ToA_splitting_target-1])
                                   for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
@@ -1310,17 +1310,33 @@ definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> wh
                              in ToA and > ToA_splitting_source and < ToA_make_\<phi>type
       \<open>Reports failures when the annotated \<phi>-type fails to be constructed.\<close>
 
+paragraph \<open>Reductions in Source\<close>
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> MAKE T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding MAKE_def
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> x \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> MAKE T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding MAKE_def
+  by simp
+
+paragraph \<open>Fallbacks\<close>
+
 text \<open>Applies one step of constructing\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma [\<phi>reason ! %ToA_make_\<phi>type_fail]: \<comment> \<open>Exactly higher than the entry point of Structural Extract\<close>
+lemma [\<phi>reason default ! %ToA_make_\<phi>type_fail]: \<comment> \<open>Exactly higher than the entry point of Structural Extract\<close>
   \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> Y) 
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<w>\<i>\<t>\<h> P\<close>
   unfolding FAIL_def
   by blast
 
-lemma [\<phi>reason ! %ToA_make_\<phi>type_fail]:
+lemma [\<phi>reason default ! %ToA_make_\<phi>type_fail]:
   \<open> FAIL TEXT(\<open>Don't know how to make the abstraction\<close> Y) 
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   unfolding FAIL_def

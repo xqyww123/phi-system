@@ -1202,6 +1202,14 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 
       val ant = map (Phi_Conv.atomize_term ctxt) ants
              |> PLPR_Syntax.mk_ant_sequence
+      val ant_var =
+            case get_first (fn Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                               Const(\<^const_name>\<open>Action_Tag\<close>, _) $ Var (ant, \<^Type>\<open>bool\<close>) $ Const(\<^const_name>\<open>\<phi>TA_ANT\<close>, _)) =>
+                                    SOME ant
+                             | _ => NONE)
+                           (Thm.prems_of rule)
+              of SOME v => v
+               | NONE => error "Bad Rule, msut contain a boolean antecedent part tagged by \<open>\<phi>TA_ANT\<close>"
       val inst_rule = (Pattern.match (Proof_Context.theory_of ctxt) (Thm.concl_of rule, property)
                                      (Vartab.empty, Vartab.empty)
                        handle Pattern.MATCH =>
@@ -1210,7 +1218,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                                    item [str "property: ", Syntax.pretty_term ctxt property],
                                    item [str "rule: ", Syntax.pretty_term ctxt (Thm.concl_of rule)]]
                             end))
-                   |> apsnd (Vartab.update_new (("Ant",0), (\<^typ>\<open>bool\<close>, ant)))
+                   |> apsnd (Vartab.update_new (ant_var, (\<^typ>\<open>bool\<close>, ant)))
                    |> Phi_Help.subst_env
                    |> Phi_Help.certify_vars (Context.Proof ctxt)
       val rule' = Thm.instantiate inst_rule rule
@@ -1257,6 +1265,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
       val rule'4 =(case solver (phi, ctxt, rule'3)
                      of SOME ret => ret
                       | NONE => oblg_solver (#proof_id phi ^ "/" ^ name) ctxt rule'3)
+                |> Simplifier.rewrite_rule ctxt @{thms' Action_Tag_def[where A=\<phi>TA_ANT]}
                 |> simp (phi, Simps.enhance ctxt)
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
                 |> singleton (Proof_Context.export ctxt ctxt0)

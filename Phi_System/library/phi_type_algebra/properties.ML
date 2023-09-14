@@ -348,12 +348,12 @@ fun default_simplify pattern ctxt rule =
                 |> Simplification_Protect.protect ctxt's
                 |> Phi_Reasoners.asm_lr_simplify true ctxt's
                 |> Simplification_Protect.unprotect ctxt's
-                |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
                 |> singleton (Variable.export ctxt'1 ctxt)
                 |> Phi_Help.unique_flexflex ctxt
    in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess' (~1, the_default [] pattern) ctxt rule'3
          of SOME th => simplify ctxt th
           | NONE => rule'3)
+   |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
    |> PLPR_Syntax.merge_guards ctxt
    |> normalize
   end

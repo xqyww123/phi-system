@@ -966,6 +966,7 @@ fun add_type (def, pos, dervs, bundles) thy =
       val elim_ToA = gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
       val elim_reasoning = gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
       val elim'SE_ToA = gen_from_tagged_eq I @{thm' \<phi>elim'SEi_transformation}
+                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1)
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
                            (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                                   Conv.arg_conv (Simplifier.rewrite (

@@ -7,7 +7,7 @@ val elim_With_Pattern : thm -> term * thm
 val elim_Except_Pattern : thm -> term * thm
 
 val strip_embedded_patterns : term -> (term list * term (*except*) list * indexname list) * term
-val elim_embedded_patterns : Context.generic -> thm -> (term list * term (*except*) list * indexname list) * thm
+val elim_embedded_patterns : thm -> (term list * term (*except*) list * indexname list) * thm
 
 end
 
@@ -21,14 +21,15 @@ fun dest_Except_Pattern (Const(\<^const_name>\<open>Except_Pattern\<close>, _) $
   | dest_Except_Pattern X = raise TERM ("PLPR_Syntax.dest_With_Pattern",[X])
 
 fun strip_embedded_patterns tm =
-  let fun strip (pat,ex,inargs) (Const(\<^const_name>\<open>With_Pattern\<close>, _) $ X $ P)
+  let fun strip (pat,ex,inargs) (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X)
+            = strip (pat,ex,inargs) X
+        | strip (pat,ex,inargs) (Const(\<^const_name>\<open>With_Pattern\<close>, _) $ X $ P)
             = strip (P :: pat, ex, inargs) X
         | strip (pat,ex,inargs) (Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ X $ P)
             = strip (pat, P :: ex, inargs) X
-        | strip (pat,ex,inargs) (tm as Const(\<^const_name>\<open>With_IN_Arg\<close>, _) $ _ $ _)
-            = let val (args', X') = dest_with_IN_arg tm
-               in strip (pat, ex, args' @ inargs) X'
-              end
+        | strip (pat,ex,inargs) (Const(\<^const_name>\<open>With_IN_Arg\<close>, _) $ X $ arg)
+            = (case arg of Var (v,_) => strip (pat, ex, v::inargs) X
+                  | tm => raise TERM ("An IN-argument must be a schematic variable", [tm]))
         | strip ret X = (ret, X)
    in strip ([],[],[]) tm
   end
@@ -43,19 +44,15 @@ fun elim_Except_Pattern thm =
    in (pat, @{thm' Except_Pattern_I} RS thm)
   end
 
-fun elim_embedded_patterns ctxt thm =
+fun elim_embedded_patterns thm =
   let val (ret, _) = strip_embedded_patterns (Thm.concl_of thm)
-      fun elim thm =
-        case Thm.concl_of thm
-          of Const(\<^const_name>\<open>With_Pattern\<close>, _) $ _ $ _ =>
-                elim (Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (Conv.rewr_conv @{thm' With_Pattern_def})) thm)
-           | Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ _ $ _ =>
-                elim (Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (Conv.rewr_conv @{thm' Except_Pattern_def})) thm)
-           | Const(\<^const_name>\<open>With_IN_Arg\<close>, _) $ _ $ _ =>
-                elim (Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (Conv.rewr_conv @{thm' With_IN_Arg_def})) thm)
-           | _ => thm
-   in (ret, elim thm)
+      fun elim ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => Conv.rewr_conv @{thm' NO_SIMP'_def} ctm
+           | Const(\<^const_name>\<open>With_Pattern\<close>, _) $ _ $ _ => Conv.rewr_conv @{thm' With_Pattern_def} ctm
+           | Const(\<^const_name>\<open>Except_Pattern\<close>, _) $ _ $ _ => Conv.rewr_conv @{thm' Except_Pattern_def} ctm
+           | _ => Conv.all_conv ctm
+   in (ret, Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) elim) thm)
   end
-
 
 end

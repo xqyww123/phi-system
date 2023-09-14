@@ -69,7 +69,6 @@ subsection \<open>Embedding Subjection into Type\<close>
 
 translations "TY_of_\<phi> (T \<phi>\<s>\<u>\<b>\<j> P)" \<rightharpoonup> "TY_of_\<phi> T"
 
-
 subsubsection \<open>Rules\<close>
 
 paragraph \<open>Simplification Rules\<close>
@@ -80,6 +79,32 @@ lemma \<phi>\<s>\<u>\<b>\<j>_\<phi>\<s>\<u>\<b>\<j>[embed_into_\<phi>type, simp]
   \<open>(T \<phi>\<s>\<u>\<b>\<j> P \<phi>\<s>\<u>\<b>\<j> Q) = (T \<phi>\<s>\<u>\<b>\<j> P \<and> Q)\<close>
   by (rule \<phi>Type_eqI; clarsimp)
 
+
+subsubsection \<open>Transformation Setup\<close>
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> x \<Ztypecolon> (T \<phi>\<s>\<u>\<b>\<j> P) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q \<close>
+  unfolding Transformation_def
+  by clarsimp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> x \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q)
+\<Longrightarrow> x \<Ztypecolon> (T \<phi>\<s>\<u>\<b>\<j> P) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Q \<close>
+  unfolding Transformation_def
+  by (cases x; cases C; clarsimp; blast)
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q \<close>
+  unfolding Transformation_def
+  by clarsimp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (T \<^emph>[C] U) \<s>\<u>\<b>\<j> P \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (T \<phi>\<s>\<u>\<b>\<j> P) \<^emph>[C] U \<w>\<i>\<t>\<h> Q \<close>
+  unfolding Transformation_def
+  by clarsimp
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -477,7 +502,7 @@ lemma \<phi>TA_SgH_rule:
         (x \<Ztypecolon> Fa (\<Sigma>\<^sub>\<A> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, m x) \<Ztypecolon> \<Sigma> c. Fb (T c)) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant
+\<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Trivial_\<Sigma> Fa Fb D s m\<close>
   unfolding Trivial_\<Sigma>_def Premise_def Action_Tag_def \<phi>Auto_\<Sigma>_def
   by simp
@@ -1152,7 +1177,7 @@ lemma \<phi>Fun'_comm[\<phi>reason %\<phi>type_algebra_properties]:
 
 lemma [\<phi>reason %guess_tyop_commute]:
   \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         D (\<lambda>x y. y = x) (fun_commute g f g' f') True\<close>
+                         D (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute g f g' f') True\<close>
   unfolding Guess_Tyops_Commute\<^sub>I_def ..
   
 
@@ -1196,11 +1221,11 @@ lemma
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-        
+declare [[\<phi>trace_reasoning = 0]]
+ 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
-  deriving (*Basic
+  deriving Basic
        and \<open> homo_one (f s) \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> P = True
          \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) P \<close>
        and \<open> homo_one (f s) \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T)
@@ -1217,10 +1242,9 @@ declare [[\<phi>trace_reasoning = 3]]
        and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
-       and*) \<phi>Fun'.Comm\<^sub>I
+       and \<open>(\<And>s. fun_commute (f s) g (f' s) g')
+          \<Longrightarrow> Tyops_Commute (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s) ((\<Zcomp>\<^sub>f) g) ((\<Zcomp>\<^sub>f) g') T D (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
 
-thm apply_Separation_Homo\<^sub>E
-        [unfolded \<phi>Prod_expn''[simplified]]
 
 subsubsection \<open>Reasoning Rules\<close>
 
@@ -1468,7 +1492,7 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
                              
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
@@ -1564,8 +1588,6 @@ lemma [\<phi>reason 1013]:
 
 
 subsection \<open>Permission Sharing\<close>
-
-declare [[\<phi>trace_reasoning = 0]]
        
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>

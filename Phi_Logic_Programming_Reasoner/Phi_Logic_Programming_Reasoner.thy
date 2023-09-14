@@ -244,6 +244,20 @@ lemma Premise_norm:
   unfolding Premise_def
   by simp_all
 
+subsubsection \<open>NO_SIMP\<close>
+
+definition NO_SIMP where \<open>NO_SIMP X \<equiv> X\<close>
+  \<comment> \<open>to prevent simplification on the inner terms\<close>
+
+definition NO_SIMP' where \<open>NO_SIMP' (X::prop) \<equiv> X\<close>
+
+lemma NO_SIMP_cong[cong]: \<open>NO_SIMP X \<equiv> NO_SIMP X\<close> .
+lemma NO_SIMP'_cong[cong]: \<open>NO_SIMP' X \<equiv> NO_SIMP' X\<close> .
+
+lemma NO_SIMP_I: \<open>P \<Longrightarrow> NO_SIMP P\<close> unfolding NO_SIMP_def .
+lemma NO_SIMP'_I: \<open>PROP P \<Longrightarrow> PROP NO_SIMP' P\<close> unfolding NO_SIMP'_def .
+
+
 subsubsection \<open>Annotation Distinguishing IN-Argument \& OUT-Argument\<close>
 
 text \<open>Schematic variables in the conclusion of a reasoning rule falls into two sorts, \<^emph>\<open>IN-Argument\<close>
@@ -287,7 +301,7 @@ lemma Except_Pattern_I:
   unfolding Except_Pattern_def .
 
 
-ML_file_debug \<open>library/syntax/embedded_pattern.ML\<close>
+ML_file \<open>library/syntax/embedded_pattern.ML\<close>
 
 
 subsubsection \<open>Meta Ball\<close>
@@ -353,19 +367,6 @@ lemma meta_case_prod_simp[iff]:
   \<open>meta_case_prod f (x,y) \<equiv> f x y\<close>
   unfolding meta_case_prod_def by simp
 
-
-subsubsection \<open>NO_SIMP\<close>
-
-definition NO_SIMP where \<open>NO_SIMP X \<equiv> X\<close>
-  \<comment> \<open>to prevent simplification on the inner terms\<close>
-
-definition NO_SIMP' where \<open>NO_SIMP' (X::prop) \<equiv> X\<close>
-
-lemma NO_SIMP_cong[cong]: \<open>NO_SIMP X \<equiv> NO_SIMP X\<close> .
-lemma NO_SIMP'_cong[cong]: \<open>NO_SIMP' X \<equiv> NO_SIMP' X\<close> .
-
-lemma NO_SIMP_I: \<open>P \<Longrightarrow> NO_SIMP P\<close> unfolding NO_SIMP_def .
-lemma NO_SIMP'_I: \<open>PROP P \<Longrightarrow> PROP NO_SIMP' P\<close> unfolding NO_SIMP'_def .
 
 
 subsubsection \<open>ML Libraries - II\<close>
