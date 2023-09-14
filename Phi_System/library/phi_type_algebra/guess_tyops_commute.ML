@@ -15,8 +15,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 fun gen_Guess_Tyops_Commute_framework (template_of_reasoning_goal, parsing_rule, F_arity, G_arity)
                                       F_term =
   Guess_Framework'
-    ( length (snd (strip_comb (HOLogic.dest_Trueprop template_of_reasoning_goal))) - F_arity - G_arity - 4,
-      template_of_reasoning_goal,
+    ( template_of_reasoning_goal,
       fn (phi, ctxt) =>
         let val idx = phi_maxidx_of phi ~1 + 1
             val F_term' = Logic.incr_indexes ([], [], idx) F_term
@@ -29,15 +28,14 @@ fun gen_Guess_Tyops_Commute_framework (template_of_reasoning_goal, parsing_rule,
                           end)
             val G_term = case GU_term of G_term $ _ => G_term
                                        | _ => fail ()
-            val eta_G = Abs ("U", U_ty, Abs ("x", x_ty, \<^Const>\<open>\<phi>Type x_ty c_ty\<close> $ Bound 0 $ (G_term $ Bound 1)))
-         in ([("F", F_term'), ("G", G_term), ("unfolded_G", eta_G)], phi, ctxt)
+         in ([("F", F_term'), ("G", G_term)], phi, ctxt)
         end,
       parsing_rule
     )
 
 val gen_Guess_Tyops_Commute_I_1 = gen_Guess_Tyops_Commute_framework
-      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G ?T ?D ?r ?ants ?conds\<close>,
-       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G' ?T ?D ?r ?ants ?conds,
+      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds\<close>,
+       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G' ?unfolded_G' ?T ?D ?r ?ants ?conds,
                 Tyops_Commute ?G ?G' ?F ?F' ?T ?D ?r,
                 ?G' _ _,
                 ?conds,
@@ -45,8 +43,8 @@ val gen_Guess_Tyops_Commute_I_1 = gen_Guess_Tyops_Commute_framework
        1, 1)
 
 val gen_Guess_Tyops_Commute_E_1 = gen_Guess_Tyops_Commute_framework
-      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>E ?F ?F' ?G ?G' ?unfolded_G ?T ?D ?r ?ants ?conds\<close>,
-       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>E ?F ?F' ?G ?G' ?unfolded_G ?T ?D ?r ?ants ?conds,
+      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>E ?F ?F' ?G ?G' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds\<close>,
+       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>E ?F ?F' ?G ?G' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds,
                 Tyops_Commute ?F ?F' ?G ?G' ?T ?D ?r,
                 ?G _ _,
                 ?conds,
@@ -54,8 +52,8 @@ val gen_Guess_Tyops_Commute_E_1 = gen_Guess_Tyops_Commute_framework
        1, 1)
 
 val gen_Guess_Tyops_Commute_I_2_1 = gen_Guess_Tyops_Commute_framework
-      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I ?G' ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?T ?U ?D ?r ?ants ?conds\<close>,
-       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?T ?U ?D ?r ?ants ?conds,
+      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I ?G' ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?unfolded_G'\<^sub>T ?unfolded_G'\<^sub>U ?T ?U ?D ?r ?ants ?conds\<close>,
+       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?unfolded_G'\<^sub>T ?unfolded_G'\<^sub>U ?T ?U ?D ?r ?ants ?conds,
                 Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?T ?U ?D ?r,
                 ?G' _ _,
                 ?conds,
@@ -63,8 +61,8 @@ val gen_Guess_Tyops_Commute_I_2_1 = gen_Guess_Tyops_Commute_framework
        1, 1)
 
 val gen_Guess_Tyops_Commute_E_2_1 = gen_Guess_Tyops_Commute_framework
-      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?T ?U ?D ?r ?ants ?conds\<close>,
-       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?T ?U ?D ?r ?ants ?conds,
+      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?unfolded_G\<^sub>T ?unfolded_G\<^sub>U ?T ?U ?D ?r ?ants ?conds\<close>,
+       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?unfolded_G\<^sub>T ?unfolded_G\<^sub>U ?T ?U ?D ?r ?ants ?conds,
                 Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?T ?U ?D ?r,
                 ?G _ _,
                 ?conds,

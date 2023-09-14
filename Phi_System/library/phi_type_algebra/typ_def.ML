@@ -785,6 +785,10 @@ fun is_non_parameterized_phityp typ =
 val separate_type_operator_and_its_non_parameterized_parameter_safe =
   gen_separate_type_operator_and_its_non_parameter (is_non_parameterized_phityp o Term.fastype_of)
 
+fun separate_binary_tyopr_and_its_non_parameterized_parameter_safe tm = tm
+  |> gen_separate_type_operator_and_its_non_parameter (is_non_parameterized_phityp o Term.fastype_of)
+  |> maps (fn (T, FU))
+
 fun separate_tyop_semimodule_and_its_non_parameterized tm = tm
   |> gen_separate_type_operator_and_its_non_parameter (is_non_parameterized_phityp o Term.fastype_of)
   |> maps (fn (T, Fc) =>

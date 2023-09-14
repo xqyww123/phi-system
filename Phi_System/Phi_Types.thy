@@ -56,7 +56,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
-
+ 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -1087,7 +1087,7 @@ lemma \<phi>Inter_comm\<^sub>E:
 subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
-  
+   
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   opening extract_premises_in_Carrier_Set
@@ -1100,7 +1100,7 @@ text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Abstraction_to_Raw
-       (*and Commutativity_Deriver*)
+       and Commutativity_Deriver
 
 
 subsubsection \<open>Reasoning Rules\<close>
@@ -1150,9 +1150,11 @@ lemma \<phi>Fun'_comm[\<phi>reason %\<phi>type_algebra_properties]:
   unfolding Tyops_Commute_def fun_commute_def
   by (simp add: \<phi>Fun'_scalar_assoc)
 
-lemma
-  \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) F (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) F (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) T D r (fun_commute \<psi> \<phi> \<psi>' \<phi>' \<and> ants) conds\<close>
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
+                         D (\<lambda>x y. y = x) (fun_commute g f g' f') True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+  
 
 lemma
   \<open> inj \<psi>
@@ -1195,10 +1197,10 @@ lemma
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
-        
+         
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
-  deriving Basic
+  deriving (*Basic
        and \<open> homo_one (f s) \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> P = True
          \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) P \<close>
        and \<open> homo_one (f s) \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T)
@@ -1215,7 +1217,7 @@ declare [[\<phi>trace_reasoning = 3]]
        and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
-       (*and \<phi>Fun'.Comm\<^sub>I*)
+       and*) \<phi>Fun'.Comm\<^sub>I
 
 thm apply_Separation_Homo\<^sub>E
         [unfolded \<phi>Prod_expn''[simplified]]

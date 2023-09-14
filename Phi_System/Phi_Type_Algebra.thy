@@ -1180,15 +1180,21 @@ definition Type_Variant_of_the_Same_Scalar_Mul
         :: \<open> ('s \<Rightarrow> 'a \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('s2 \<Rightarrow> 'a2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
   where \<open> Type_Variant_of_the_Same_Scalar_Mul Fa Fb \<longleftrightarrow> True \<close>
 
-(*definition Parameter_Variant_of_the_Same_Type :: \<open> ('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> bool \<close>
-  where \<open> Parameter_Variant_of_the_Same_Type Fa Fb \<longleftrightarrow> True \<close> *)
+definition Parameter_Variant_of_the_Same_Type :: \<open> ('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> bool \<close>
+  where \<open> Parameter_Variant_of_the_Same_Type Fa Fb \<longleftrightarrow> True \<close>
+  \<comment> \<open>Every parameter together with any types is differentiated\<close>
+
+definition Parameter_Variant_of_the_Same_Type1 :: \<open> ('p \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('p2 \<Rightarrow> ('c,'d) \<phi>) \<Rightarrow> bool \<close>
+  where \<open> Parameter_Variant_of_the_Same_Type1 Fa Fb \<longleftrightarrow> True \<close>
+  \<comment> \<open>Every parameter together with any types is differentiated\<close>
 
 declare [[
   \<phi>reason_default_pattern
       \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Type_Operator ?Fa _\<close> (100)
   and \<open>Type_Variant_of_the_Same_Type_Operator2 ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Type_Operator2 ?Fa _\<close> (100)
   and \<open>Type_Variant_of_the_Same_Scalar_Mul ?Fa _\<close> \<Rightarrow> \<open>Type_Variant_of_the_Same_Scalar_Mul ?Fa _\<close> (100)
-  (*and \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> (100) *)
+  and \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type ?Fa _\<close> (100)
+  and \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> \<Rightarrow> \<open>Parameter_Variant_of_the_Same_Type1 ?Fa _\<close> (100)
   
   (* \<phi>premise_attribute? [\<phi>reason add] for \<open>Type_Variant_of_the_Same_Type_Operator _ _\<close> *)
   (* \<phi>premise_attribute? [\<phi>reason add] for \<open>Parameter_Variant_of_the_Same_Type _ _\<close> *)
@@ -1217,7 +1223,9 @@ setup \<open>
    Phi_Type_Template_Properties.add_property_kinds [
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator _ _\<close>,
     \<^pattern_prop>\<open>Type_Variant_of_the_Same_Type_Operator2 _ _\<close>,
-    \<^pattern_prop>\<open>Type_Variant_of_the_Same_Scalar_Mul _ _\<close>
+    \<^pattern_prop>\<open>Type_Variant_of_the_Same_Scalar_Mul _ _\<close>,
+    \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type _ _\<close>,
+    \<^pattern_prop>\<open>Parameter_Variant_of_the_Same_Type1 _ _\<close>
   ]
 \<close>
 
@@ -4723,30 +4731,33 @@ definition Guess_Tyops_Commute\<^sub>I :: \<open> (('c\<^sub>F,'a\<^sub>F) \<phi
                                   \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
                                   \<Rightarrow> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                   \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
                                   \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                   \<Rightarrow> ('a \<Rightarrow> bool)
                                   \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
                                   \<Rightarrow> bool \<Rightarrow> bool
                                   \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>I G G' F F' unfolded_G T D r ants conds \<equiv> True\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>I G G' F F' unfolded_G unfolded_G' T D r ants conds \<equiv> True\<close>
 
 definition Guess_Tyops_Commute\<^sub>E :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                   \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
                                   \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
                                   \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                   \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                                  \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                   \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                   \<Rightarrow> ('a \<Rightarrow> bool)
                                   \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
                                   \<Rightarrow> bool \<Rightarrow> bool
                                   \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>E F F' G G' unfolded_G T D r ants conds \<equiv> True\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>E F F' G G' unfolded_G unfolded_G' T D r ants conds \<equiv> True\<close>
 
 definition Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi>)
                                     \<Rightarrow> (('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi>)
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
                                     \<Rightarrow> (('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                    \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
                                     \<Rightarrow> (('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                     \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                     \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
@@ -4754,13 +4765,14 @@ definition Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I :: \<open> (('c\<
                                     \<Rightarrow> ('b \<Rightarrow> 'a \<Rightarrow> bool)
                                     \<Rightarrow> bool \<Rightarrow> bool
                                     \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I F F'\<^sub>T F'\<^sub>U G G' unfolded_G' T U D r ants conds \<equiv> True\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I F F'\<^sub>T F'\<^sub>U G G' unfolded_G unfolded_G' T U D r ants conds \<equiv> True\<close>
 
 definition Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E :: \<open>(('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                    \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi>)
                                    \<Rightarrow> (('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi>)
                                    \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
                                    \<Rightarrow> (('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                   \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
                                    \<Rightarrow> (('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>U,'a\<^sub>F\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                    \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                    \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
@@ -4768,7 +4780,7 @@ definition Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E :: \<open>(('c\<^
                                    \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
                                    \<Rightarrow> bool \<Rightarrow> bool
                                    \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E F F'\<^sub>T F'\<^sub>U G G' unfolded_G' T U D r ants conds \<equiv> True\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E F F'\<^sub>T F'\<^sub>U G G' unfolded_G unfolded_G' T U D r ants conds \<equiv> True\<close>
 
 definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I :: \<open> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi>)
@@ -4776,13 +4788,15 @@ definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I :: \<open> (('c\<
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
                                     \<Rightarrow> (('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>U,'a\<^sub>G\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                     \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                    \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
+                                    \<Rightarrow> (('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>U,'a\<^sub>G\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                     \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                     \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
                                     \<Rightarrow> ('b \<Rightarrow> bool)
                                     \<Rightarrow> ('b \<Rightarrow> 'a \<Rightarrow> bool)
                                     \<Rightarrow> bool \<Rightarrow> bool
                                     \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G T U D r ants conds \<equiv> True\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G'\<^sub>T unfolded_G'\<^sub>U unfolded_G T U D r ants conds \<equiv> True\<close>
 
 definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E :: \<open> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi>)
@@ -4790,39 +4804,107 @@ definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E :: \<open> (('c\<
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
                                     \<Rightarrow> (('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>U,'a\<^sub>G\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                     \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                    \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi>)
+                                    \<Rightarrow> (('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>U,'a\<^sub>G\<^sub>U) \<phi>)
                                     \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                     \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
                                     \<Rightarrow> ('b \<Rightarrow> bool)
                                     \<Rightarrow> ('b \<Rightarrow> 'a \<Rightarrow> bool)
                                     \<Rightarrow> bool \<Rightarrow> bool
                                     \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' unfolded_G T U D r ants conds \<equiv> True\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds \<equiv> True\<close>
 
 
-\<phi>reasoner_group guess_tyop_commute = (100, [40, 3000]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_F T D r ants conds\<close>,
-                                                            \<open>Guess_Tyops_Commute\<^sub>E F F' G G' unfolded_FG T D r ants conds\<close>)
+\<phi>reasoner_group guess_tyop_commute = (100, [40, 3000]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
     \<open>Rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
- and guess_tyop_commute_default = (15, [10, 39]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_F T D r ants conds\<close>,
-                                                      \<open>Guess_Tyops_Commute\<^sub>E F F' G G' unfolded_FG T D r ants conds\<close>) < guess_tyop_commute
+ and guess_tyop_commute_default = (15, [10, 39]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+                                                   < guess_tyop_commute
     \<open>Predefined default rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
 
-declare [[\<phi>reason_default_pattern \<open>Guess_Tyops_Commute\<^sub>I ?F _ ?G _ ?unfolded _ _ _ _ _\<close> \<Rightarrow>
-                                  \<open>Guess_Tyops_Commute\<^sub>I ?F _ ?G _ ?unfolded _ _ _ _ _\<close>    (100)
-                              and \<open>Guess_Tyops_Commute\<^sub>E ?F _ ?G _ ?unfolded _ _ _ _ _\<close> \<Rightarrow>
-                                  \<open>Guess_Tyops_Commute\<^sub>E ?F _ ?G _ ?unfolded _ _ _ _ _\<close>    (100)]]
+declare [[
+  \<phi>reason_default_pattern \<open>Guess_Tyops_Commute\<^sub>I ?F _ ?G _ ?unfolded_G _ _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Tyops_Commute\<^sub>I ?F _ ?G _ ?unfolded_G _ _ _ _ _ _\<close>    (100)
+                      and \<open>Guess_Tyops_Commute\<^sub>E ?F _ ?G _ ?unfolded_G _ _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Tyops_Commute\<^sub>E ?F _ ?G _ ?unfolded_G _ _ _ _ _ _\<close>    (100)
+                      and \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close>    (100)
+                      and \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close>    (100)
+                      and \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I ?G _ _ ?F _ ?unfolded_G _ _ _ _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I ?G _ _ ?F _ ?unfolded_G _ _ _ _ _ _ _ _\<close>    (100)
+                      and \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E ?G _ _ ?F _ ?unfolded_G _ _ _ _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E ?G _ _ ?F _ ?unfolded_G _ _ _ _ _ _ _ _\<close>    (100)
+]]
+
+subparagraph \<open>Initialization\<close>
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> Parameter_Variant_of_the_Same_Type1 G G'
+\<Longrightarrow> Parameter_Variant_of_the_Same_Type1 F F'
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T x) : (x \<Ztypecolon> G' T) )
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' var_unfolded_G var_unfolded_G' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' var_unfolded_G var_unfolded_G' T D r ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G' U))
+\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F' U))
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T x) : (x \<Ztypecolon> G' T) )
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' var_unfolded_G var_unfolded_G' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' var_unfolded_G var_unfolded_G' T D r ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F'\<^sub>T U))
+\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F'\<^sub>U U))
+\<Longrightarrow> (\<And>T1 T2 U1 U2. Parameter_Variant_of_the_Same_Type (G T1 T2) (G' U1 U2))
+\<Longrightarrow> (\<And>T U x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T U x) : (x \<Ztypecolon> G T U) )
+\<Longrightarrow> (\<And>T U x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T U x) : (x \<Ztypecolon> G' T U) )
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I F F'\<^sub>T F'\<^sub>U G G' var_unfolded_G var_unfolded_G' T U D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I F F'\<^sub>T F'\<^sub>U G G' var_unfolded_G var_unfolded_G' T U D r ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F'\<^sub>T U))
+\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (F T) (F'\<^sub>U U))
+\<Longrightarrow> (\<And>T1 T2 U1 U2. Parameter_Variant_of_the_Same_Type (G T1 T2) (G' U1 U2))
+\<Longrightarrow> (\<And>T U x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T U x) : (x \<Ztypecolon> G T U) )
+\<Longrightarrow> (\<And>T U x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T U x) : (x \<Ztypecolon> G' T U) )
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E F F'\<^sub>T F'\<^sub>U G G' var_unfolded_G var_unfolded_G' T U D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E F F'\<^sub>T F'\<^sub>U G G' var_unfolded_G var_unfolded_G' T U D r ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>T1 T2 U1 U2. Parameter_Variant_of_the_Same_Type (F T1 T2) (F' U1 U2))
+\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G'\<^sub>T U))
+\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G'\<^sub>U U))
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>T T x) : (x \<Ztypecolon> G'\<^sub>T T) )
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>U T x) : (x \<Ztypecolon> G'\<^sub>U T) )
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init]:
+  \<open> (\<And>T1 T2 U1 U2. Parameter_Variant_of_the_Same_Type (F T1 T2) (F' U1 U2))
+\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G'\<^sub>T U))
+\<Longrightarrow> (\<And>T U. Parameter_Variant_of_the_Same_Type (G T) (G'\<^sub>U U))
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>T T x) : (x \<Ztypecolon> G'\<^sub>T T) )
+\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>U T x) : (x \<Ztypecolon> G'\<^sub>U T) )
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' var_unfolded_G var_unfolded_G'\<^sub>T var_unfolded_G'\<^sub>U T U D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' var_unfolded_G var_unfolded_G'\<^sub>T var_unfolded_G'\<^sub>U T U D r ants conds\<close> .
+
 
 subparagraph \<open>Default Rules\<close>
 
-lemma [\<phi>reason %guess_tyop_commute_default[bottom] for \<open>Guess_Tyops_Commute\<^sub>I _ _ _ _ _ _ _ _ _ _\<close>]:
+lemma [\<phi>reason %guess_tyop_commute_default[bottom] for \<open>Guess_Tyops_Commute\<^sub>I _ _ _ _ _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I F F' G G' any T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I F F' G G' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
   unfolding Guess_Tyops_Commute\<^sub>I_def ..
 
-lemma [\<phi>reason %guess_tyop_commute_default[bottom] for \<open>Guess_Tyops_Commute\<^sub>E _ _ _ _ _ _ _ _ _ _\<close>]:
+lemma [\<phi>reason %guess_tyop_commute_default[bottom] for \<open>Guess_Tyops_Commute\<^sub>E _ _ _ _ _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' any T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
   unfolding Guess_Tyops_Commute\<^sub>E_def ..
 
 ML_file \<open>library/phi_type_algebra/guess_tyops_commute.ML\<close>

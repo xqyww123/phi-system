@@ -44,6 +44,26 @@ val _ = Theory.setup (Context.theory_map (
               else []
           | mk_variant_of_scalar_mul _ = []
 
+        fun mk_parameter_variant Fa =
+          let val Fb = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm Fa + 1) Fa
+              val A = Thm.ctyp_of_cterm Fa
+              val B = Thm.ctyp_of_cterm Fb
+           in \<^instantiate>\<open>'a=\<open>Thm.dest_ctyp0 A\<close> and 'b=\<open>Thm.dest_ctyp0 (Thm.dest_ctyp1 A)\<close> and
+                          'c=\<open>Thm.dest_ctyp0 B\<close> and 'd=\<open>Thm.dest_ctyp0 (Thm.dest_ctyp1 B)\<close> and Fa and Fb
+                           in lemma \<open>Parameter_Variant_of_the_Same_Type Fa Fb\<close>
+                                 by (simp add: Parameter_Variant_of_the_Same_Type_def)\<close>
+          end
+
+        fun mk_parameter_variant1 ctm =
+          map (fn (_,F) =>
+                let val Fa = Thm.incr_indexes_cterm 1 (Thm.cterm_of ctxt' F)
+                    val Fb = Thm.incr_indexes_cterm (Thm.maxidx_of_cterm Fa + 1) Fa
+                 in Drule.infer_instantiate ctxt' [(("Fa",0),Fa), (("Fb",0),Fb)]
+                      @{lemma' \<open>Parameter_Variant_of_the_Same_Type1 Fa Fb\<close>
+                           by (simp add: Parameter_Variant_of_the_Same_Type1_def)}
+                end)
+              (separate_type_operator_and_its_non_parameterized_parameter_safe (Thm.term_of ctm))
+
       (*fun mk_parameter_variants tm =
           let val d = Thm.maxidx_of_cterm tm + 1
               val tm' = Thm.incr_indexes_cterm d tm
@@ -55,6 +75,8 @@ val _ = Theory.setup (Context.theory_map (
         val rules = mk_variant_of_type_operator  ctm (*@ mk_parameter_variants ctm*)
                   @ mk_variant_of_type_operator2 ctm
                   @ mk_variant_of_scalar_mul (Thm.term_of ctm)
+                  @ mk_parameter_variant1 ctm
+                  @ [mk_parameter_variant ctm]
      in thy
      |> Phi_Reasoner.add_rules (
           map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT, 1000, [], [], NONE)) rules)

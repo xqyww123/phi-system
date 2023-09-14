@@ -1,4 +1,9 @@
-- check Drule.infer_instantiate, it needs incr_indexes
+- All TO-Transformation may be replaced by *[C] form with 𝒮 
+
+
+
+
+-------------------------
 
 
 - Syntax: proc f {| X |--> Y |} to proc f {{ X |--> Y }}
