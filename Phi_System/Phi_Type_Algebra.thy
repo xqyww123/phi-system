@@ -4082,8 +4082,6 @@ text \<open>Note, as an instance of Commutativity of Type Operators, the names o
   and \<open>elimination rule\<close> are just reversed. It is intentional, because I really think those names
   are more natural and we don't really have to force the consistency of the names between the two levels.\<close>
 
-term MAKE
-
 lemma \<phi>TA_SH\<^sub>I_rule:
   \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
             (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
