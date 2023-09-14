@@ -839,7 +839,7 @@ ML \<open>fun mk_pattern_for_to_transformation ctxt term =
 
 declare [[
 
-  \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> _ \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> ?P @action to ?T\<close> \<Rightarrow>
+  \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> ?P @action to ?T\<close> \<Rightarrow>
     \<open>mk_pattern_for_to_transformation\<close> (100),
 
   \<phi>reason_default_pattern
@@ -1264,7 +1264,12 @@ subsection \<open>Open \& Make Abstraction\<close>
 
 subsubsection \<open>Open Abstraction\<close>
 
-consts OPEN :: \<open>('a,'b) \<phi>\<close>
+consts OPEN :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close> \<Rightarrow>
+                          \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close> (200)
+]]
 
 lemma open_abstraction_\<phi>app:
   \<open> Friendly_Help TEXT(\<open>Just tell me which \<phi>-type you want to open.\<close> \<newline>
@@ -1272,7 +1277,7 @@ lemma open_abstraction_\<phi>app:
       \<open>I will match\<close> T \<open>with the pattern.\<close> \<newline>
       \<open>You can also use an underscore to denote the target \<phi>-type in this pattern so you don't need to write a lambda abstraction, e.g. \<open>List (Box _)\<close>\<close>)
 \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> target
-\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to (target OPEN)
+\<Longrightarrow> \<^bold>d\<^bold>o x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>_transform_to (target (OPEN any))
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
   unfolding Do_def Action_Tag_def .
 
@@ -1290,9 +1295,9 @@ setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
                addsimps @{thms' HOL.simp_thms}))\<close>
 
 lemma \<comment>\<open>fallback\<close>
-  [\<phi>reason default %to_trans_fallback for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to OPEN\<close>]:
+  [\<phi>reason default %to_trans_fallback for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close>]:
   \<open> FAIL TEXT(\<open>Fail to destruct \<phi>-type\<close> T)
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to OPEN \<close>
+\<Longrightarrow> x \<Ztypecolon> Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to (OPEN T) \<close>
   unfolding FAIL_def
   by blast
 

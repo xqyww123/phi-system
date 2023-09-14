@@ -123,7 +123,7 @@ subsubsection \<open>General Annotation\<close>
 
 typedecl action
 
-definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [10,10] 9)
+definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [9,10] 9)
   where \<open>Action_Tag P A \<equiv> P\<close>
 
 lemma Action_Tag_I:

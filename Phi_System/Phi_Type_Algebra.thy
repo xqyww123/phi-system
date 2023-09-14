@@ -912,7 +912,7 @@ lemma \<phi>elim'SE_transformation:
 
 lemma \<phi>open_abstraction:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to OPEN \<close>
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U' \<s>\<u>\<b>\<j> y. y = y' @action to (OPEN T) \<close>
   unfolding Action_Tag_def Simplify_def
   by simp
 
@@ -1081,6 +1081,7 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Identity_Element\<^sub>I _ _\<close>,
+  \<^pattern_prop>\<open>Identity_Element\<^sub>E _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
