@@ -195,15 +195,17 @@ subsection \<open>Homomorphism of Domainoid\<close>
 definition fun_commute :: \<open>('b \<Rightarrow> 'c) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> 'b') \<Rightarrow> ('b' \<Rightarrow> 'c) \<Rightarrow> bool\<close>
   where \<open>fun_commute \<psi> \<phi> \<psi>' \<phi>' \<longleftrightarrow> (\<psi> o \<phi> = \<phi>' o \<psi>') \<close>
 
-declare [[\<phi>reason_default_pattern \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> \<Rightarrow> \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> (100) ]]
+declare [[\<phi>reason_default_pattern
+  \<open>fun_commute ?\<psi> ?\<phi> ?\<psi>' ?\<phi>'\<close> \<Rightarrow> \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> \<open>fun_commute _ _ ?\<psi>' ?\<phi>'\<close> (100) ]]
 
+(*
 lemma [\<phi>reason %cutting for \<open>fun_commute ?var_\<phi> ?var_\<psi> _ _\<close>
                         except \<open>fun_commute _ _ ?var_\<phi> ?var_\<psi>\<close>]:
   \<open> fun_commute \<phi>' \<psi>' \<phi> \<psi>
 \<Longrightarrow> fun_commute \<psi> \<phi> \<psi>' \<phi>'\<close>
   unfolding fun_commute_def
   by (rule; simp)
-
+*)
 
 (*TODO: move!*)
 

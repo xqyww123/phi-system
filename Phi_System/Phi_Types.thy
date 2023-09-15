@@ -1177,12 +1177,12 @@ lemma \<phi>Fun'_comm[\<phi>reason %\<phi>type_algebra_properties]:
 
 lemma [\<phi>reason %guess_tyop_commute]:
   \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         D (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute g f g' f') True\<close>
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute g f g' f') True\<close>
   unfolding Guess_Tyops_Commute\<^sub>I_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
   \<open> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         D (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute f g f' g') True\<close>
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute f g f' g') True\<close>
   unfolding Guess_Tyops_Commute\<^sub>E_def ..
   
 
@@ -1226,13 +1226,10 @@ lemma
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
-
-thm "_tagging_has_bubbling_"
+declare [[\<phi>trace_reasoning = 0 ]]
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
-  where \<open>\<phi>ScalarMul f s T = (f s \<Zcomp>\<^sub>f T)\<close>
+  where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
        and \<open> homo_one (f s) \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> P = True
          \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) P \<close>
@@ -1242,25 +1239,22 @@ thm "_tagging_has_bubbling_"
        and Functional_Transformation_Functor
        and Trivial_\<Sigma>
        and Abstraction_to_Raw
-       and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
-         \<Longrightarrow> closed_homo_sep_disj (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
-             Separation_Disj\<^sub>\<phi> (\<psi> s) Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
+       and \<open> homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
+         \<Longrightarrow> closed_homo_sep_disj (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
+             Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
              TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
        and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
-       and \<open>(\<And>s. fun_commute (f s) g (f' s) g')
-         \<Longrightarrow> Tyops_Commute (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s) ((\<Zcomp>\<^sub>f) g) ((\<Zcomp>\<^sub>f) g') T D (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
-       and \<open>(\<And>s. fun_commute (f' s) g' (f s) g)
-         \<Longrightarrow> Tyops_Commute ((\<Zcomp>\<^sub>f) g) ((\<Zcomp>\<^sub>f) g') (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s) T D (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
+       and \<phi>Fun'.Comm\<^sub>I
+       and \<phi>Fun'.Comm\<^sub>E
+       and Commutativity_Deriver
 
-term \<open>(\<And>s. fun_commute g' (f' s) g (f s))
-         \<Longrightarrow> Tyops_Commute ((\<Zcomp>\<^sub>f) g) ((\<Zcomp>\<^sub>f) g') (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s) T D (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
 
 subsubsection \<open>Reasoning Rules\<close>
 
-declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>trace_reasoning = 1]]
 
 lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
@@ -1280,7 +1274,7 @@ lemma Semimodule_Scalar_Assoc\<^sub>E_by_function[\<phi>reason 1000]:
   unfolding module_scalar_assoc_def Semimodule_Scalar_Assoc\<^sub>E_def scalar_mult_def Transformation_def
   by clarsimp metis
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 lemma Semimodule_SDistr_Homo\<^sub>Z_by_function[\<phi>reason 1000]:
   \<open> module_S_distr \<psi> Ds
@@ -1325,6 +1319,24 @@ lemma Semimodule_SDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
             Object_Equiv_def Functionality_def Abstract_Domain_def Action_Tag_def Inhabited_def
             scalar_mult_def Carrier_Set_def Within_Carrier_Set_def
   by (clarsimp, metis)
+
+
+subsubsection \<open>Commutativity\<close>
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         (fun_commute g (scalar_mult f s) g' (scalar_mult f' s')) True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         (fun_commute (scalar_mult f s) g (scalar_mult f' s') g') True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+let_\<phi>type \<phi>ScalarMul deriving \<phi>ScalarMul.Comm\<^sub>I
+
 
 subsubsection \<open>Guessing Antecedents\<close>
 

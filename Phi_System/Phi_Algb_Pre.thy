@@ -223,6 +223,10 @@ definition scalar_mult :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Righta
       will be activated. It also distinguishes the function part and the parameter part, so that
       resolves multi-unification.\<close>
 
+lemma scalar_mult_red[iff]:
+  \<open>scalar_mult f s x = f s x\<close>
+  unfolding scalar_mult_def ..
+
 lemma [\<phi>reason %cutting]:
   \<open> f = g
 \<Longrightarrow> u = v
@@ -513,42 +517,42 @@ declare module_scalar_assoc_share0   [\<phi>reason %algb_cut, assertion_simps]
 
 subsubsection \<open>Annotation of Scalar Multiplication\<close>
 
-lemma [\<phi>reason %algb_cut]:
+lemma [\<phi>reason default %algb_default[bottom]]:
   \<open> homo_mul_carrier (\<psi> s)
 \<Longrightarrow> homo_mul_carrier (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason %algb_cut]:
+lemma [\<phi>reason default %algb_default[bottom]]:
   \<open> homo_one (\<psi> s)
 \<Longrightarrow> homo_one (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason %algb_cut]:
+lemma [\<phi>reason default %algb_default[bottom]]:
   \<open> homo_sep_mult (\<psi> s)
 \<Longrightarrow> homo_sep_mult (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason %algb_cut]:
+lemma [\<phi>reason default %algb_default[bottom]]:
   \<open> homo_sep_disj (\<psi> s)
 \<Longrightarrow> homo_sep_disj (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason %algb_cut]:
+lemma [\<phi>reason default %algb_default[bottom]]:
   \<open> closed_homo_sep_disj (\<psi> s)
 \<Longrightarrow> closed_homo_sep_disj (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason %algb_cut]:
+lemma [\<phi>reason default %algb_default[bottom]]:
   \<open> homo_sep (\<psi> s)
 \<Longrightarrow> homo_sep (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason %algb_cut]:
+lemma [\<phi>reason default %algb_default[bottom]]:
   \<open> closed_homo_sep (\<psi> s)
 \<Longrightarrow> closed_homo_sep (scalar_mult \<psi> s) \<close>
   unfolding scalar_mult_def .
 
-lemma [\<phi>reason %algb_cut]:
+lemma [\<phi>reason default %algb_default[bottom]]:
   \<open> constant_1 (\<psi> s)
 \<Longrightarrow> constant_1 (scalar_mult \<psi> s)\<close>
   unfolding scalar_mult_def
