@@ -1233,7 +1233,8 @@ declare [[\<phi>trace_reasoning = 0 ]]
   deriving Basic
        and \<open> homo_one (f s) \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> P = True
          \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) P \<close>
-       and \<open> homo_one (f s) \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T)
+       and \<open> homo_one (f s)
+         \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)
          \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) \<close>
        and Functionality
        and Functional_Transformation_Functor
@@ -1247,8 +1248,7 @@ declare [[\<phi>trace_reasoning = 0 ]]
        and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
-       and \<phi>Fun'.Comm\<^sub>I
-       and \<phi>Fun'.Comm\<^sub>E
+       and \<phi>Fun'.Comm
        and Commutativity_Deriver
 
 
@@ -1558,8 +1558,10 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Trivial_\<Sigma>
        and Abstraction_to_Raw
-       (*and Commutativity_Deriver*)
- 
+       and Commutativity_Deriver
+       and \<phi>Fun'.Comm
+       and \<phi>ScalarMul.Comm
+
 
 subsubsection \<open>By List of Keys\<close>
 
@@ -1610,10 +1612,20 @@ lemma [\<phi>reason 1013]:
 
 
 
+lemma [\<phi>reason %cutting]:
+  \<open>fun_commute (scalar_mult (\<odivr>) n) (fun_upd 1 k :: 'b \<Rightarrow> 'a \<Rightarrow> 'b::share_one) (scalar_mult (\<odivr>) n) (fun_upd 1 k)\<close>
+  unfolding fun_commute_def
+  by (clarsimp simp add: fun_eq_iff share_fun_def)
+
+lemma [\<phi>reason %cutting]:
+  \<open>fun_commute (fun_upd 1 k :: 'b \<Rightarrow> 'a \<Rightarrow> 'b::share_one) (scalar_mult (\<odivr>) n) (fun_upd 1 k) (scalar_mult (\<odivr>) n)\<close>
+  unfolding fun_commute_def
+  by (clarsimp simp add: fun_eq_iff share_fun_def)
+
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
@@ -1624,6 +1636,7 @@ declare [[\<phi>trace_reasoning = 1]]
        and Semimodule_no0
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        and Abstraction_to_Raw
+       and \<phi>MapAt.Comm
        (*and Commutativity_Deriver*)
 
 thm \<phi>Share.m

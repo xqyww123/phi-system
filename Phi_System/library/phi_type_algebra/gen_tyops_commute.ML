@@ -156,30 +156,49 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
                       deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, snd name)
                           (meta_gen_Tyops_Commute' (false , snd rule, snd parse_hint, snd guess_property)))
 
-      val deriver = apply2 (fn der => {priority = 150, dependences = [], derive= der}) deriving
+      val deriver = apply2 (fn der => {priority = @{priority %derived_commutativity_deriver},
+                                       dependences = [],
+                                       derive= der}) deriving
 
       val binding = Binding.qualify true (Term.term_name (#term phi)) (Binding.make ("Comm", #pos phi))
-      val binding = (Binding.suffix_name "\<^sub>I" binding, Binding.suffix_name "\<^sub>E" binding)
 
    in (binding, deriver, pattern)
   end
 
 fun meta_Tyops_Commute quiet ctxt (phi : phi_type) thy =
-  let val (bindings, deriver, pattern) = meta_gen_Tyops_Commute ctxt phi
-      fun bind pat (name, thy) = (
-        if quiet then () else 
-          Phi_Reasoner.info_pretty_generic thy 0 (fn () => let open Pretty in
-            block (text "Deriver for \<phi>-Type Operator Commutativity :" @
-                   [brk 1, Name_Space.pretty ctxt (Name_Space.space_of_table (deriver_name_space thy)) name])
-          end) ;
-        Phi_Type_Algebra.bind_derivers_on_patterns [(pat, name)] thy)
+  let val (binding, deriver, pattern) = meta_gen_Tyops_Commute ctxt phi
+      val (binding_I, binding_E) = (Binding.suffix_name "\<^sub>I" binding, Binding.suffix_name "\<^sub>E" binding)
+
+      fun report (name, thy) = (
+            if quiet then () else 
+            Phi_Reasoner.info_pretty_generic thy 0 (fn () => let open Pretty in
+              block (text "Deriver for \<phi>-Type Operator Commutativity :" @
+                     [brk 1, Name_Space.pretty ctxt (Name_Space.space_of_table (deriver_name_space thy)) name])
+            end) ;
+            (name, thy)
+          )
+      fun bind pat (name, thy) = (name, Phi_Type_Algebra.bind_derivers_on_patterns [(pat, name)] thy)
+
+      val (intro_deriver, thy) = thy
+            |> Context.mapping_result (define_deriver_global binding_I (fst deriver))
+                                      (define_deriver binding_I (fst deriver))
+            |> report
+            |> bind (fst pattern)
+
+      val (elim_deriver, thy) = thy
+            |> Context.mapping_result (define_deriver_global binding_E (snd deriver))
+                                      (define_deriver binding_E (snd deriver))
+            |> report
+            |> bind (snd pattern)
+
+      val combined_deriver = {priority = @{priority %derived_commutativity_deriver+1},
+                              dependences = [(intro_deriver, false), (elim_deriver, false)],
+                              derive= K (K (K (K I)))}
    in thy
-   |> Context.mapping_result (define_deriver_global (fst bindings) (fst deriver))
-                             (define_deriver (fst bindings) (fst deriver))
-   |> bind (fst pattern)
-   |> Context.mapping_result (define_deriver_global (snd bindings) (snd deriver))
-                             (define_deriver (snd bindings) (snd deriver))
-   |> bind (snd pattern)
+   |> Context.mapping_result (define_deriver_global binding combined_deriver)
+                             (define_deriver binding combined_deriver)
+   |> report
+   |> snd
   end
 
 end

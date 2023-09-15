@@ -340,3 +340,4 @@ fun tha RSN' (ctxt, i, thb) =
 (*Resolution: P \<Longrightarrow> Q, Q \<Longrightarrow> R gives P \<Longrightarrow> R*)
 fun tha RS' (ctxt, thb) = tha RSN' (ctxt, 1,thb);
 
+fun apply3 f (a,b,c) = (f a, f b, f c)

@@ -5038,6 +5038,9 @@ lemma [\<phi>reason_template requires \<open>Tyops_Commute _ F' _ G' _ _ _\<clos
 
 paragraph \<open>Deriver\<close>
 
+\<phi>reasoner_group derived_commutativity_deriver = (150, [150, 151]) for \<open>_\<close>
+    \<open>The priority of derived deriver for commutativity between type operators\<close>
+
 (*F is fixed myself, G is the target
   Given \<open>F\<close>, generate derivers deriving \<open>Tyops_Commute F F' G G' T D r\<close>
   and \<open>Tyops_Commute G G' F F' T D r\<close> for given G

@@ -925,8 +925,11 @@ fun Guess_Framework mk_goal_term_and_parse_result (phi : phi_type) ctxt =
             |> Phi_Reasoner.reason NONE NONE (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)*)
    in case Phi_Help.reason_tracing_tyinst ctxt reason goal_term
         |> Option.map (apsnd (simplify_guessing_reasoning ctxt))
-   of SOME (inst, ret) =>
-        let val (prop, params, conds, ants) = parse_result ret
+   of SOME (inst0, ret0) =>
+        let val ty_refine = Phi_Help.refine_sorts_of_tms (Proof_Context.theory_of ctxt) [Thm.prop_of ret0]
+                         |> Phi_Help.certify_tyvars (Context.Proof ctxt)
+            val ret = Thm.instantiate (ty_refine Vars.empty) ret0
+            val (prop, params, conds, ants) = parse_result ret
             val ants = constrain_antecedents conds ants
             val (inst'2, ctxt) = Variable.import_inst true (prop :: ants) ctxt
             val (prop :: ants) = map (Term_Subst.instantiate inst'2) (prop :: ants)
@@ -937,7 +940,8 @@ fun Guess_Framework mk_goal_term_and_parse_result (phi : phi_type) ctxt =
                       block [str "Property: ", Syntax.pretty_term ctxt prop]
                     ] end)
          in Seq.single (ants, prop, params,
-                        phi |> instantiate_phi (inst, Vars.empty)
+                        phi |> instantiate_phi (inst0, Vars.empty)
+                            |> instantiate_phi (ty_refine, Vars.empty)
                             |> instantiate_phi (Phi_Help.certify_vars (Context.Proof ctxt) inst'2),
                         ctxt)
         end
