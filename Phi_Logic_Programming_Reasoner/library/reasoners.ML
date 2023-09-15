@@ -423,19 +423,37 @@ fun gen_extract_prems_rewr ctxt =
 
 fun extract_prems_rewr ctxt = snd (gen_extract_prems_rewr ctxt)
 
+fun strip_premise_tag ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _ =>
+        Conv.try_conv (Conv.rewrs_conv @{thms' Premise_def[where mode=default]
+                                               Premise_def[where mode=MODE_SIMP]}) ctm
+     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+        Conv.arg_conv (strip_premise_tag ctxt) ctm
+     | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
+        Conv.combination_conv (Conv.arg_conv (strip_premise_tag ctxt)) (strip_premise_tag ctxt) ctm
+     | Const(\<^const_name>\<open>HOL.All\<close>, _) $ _ =>
+        Phi_Conv.hol_all_conv (strip_premise_tag o snd) ctxt ctm
+     | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+        Conv.combination_conv (Conv.arg_conv (strip_premise_tag ctxt)) (strip_premise_tag ctxt) ctm
+     | Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _ =>
+        Conv.combination_conv (Conv.arg_conv (strip_premise_tag ctxt)) (strip_premise_tag ctxt) ctm
+     | _ => Conv.all_conv ctm
+
 fun extract_prem ctxt strip =
   let val ctxt' = Context.proof_of ctxt
       val (qchk, conv) = gen_extract_prems_rewr ctxt
    in fn thm =>
    if is_syntactic_premise (Thm.prop_of thm)
    then SOME (if strip
-              then (Raw_Simplifier.norm_hhf ctxt' thm) RS' (ctxt', @{thm' Premise_D})
+              then (Raw_Simplifier.norm_hhf ctxt' thm)
+                |> Conv.fconv_rule (strip_premise_tag ctxt')
               else thm)
    else if qchk (Thm.prop_of thm)
         then let val thm = Raw_Simplifier.norm_hhf ctxt' thm
               in (case conv ctxt' (Thm.cprop_of thm)
                     of SOME NONE => SOME (if strip
-                                          then thm RS' (ctxt', @{thm' Premise_D})
+                                          then Conv.fconv_rule (strip_premise_tag ctxt') thm
                                           else thm)
                      | SOME (SOME rule) => SOME (
                          (Thm.equal_elim rule thm RS' (ctxt', conjunct1))
@@ -451,7 +469,7 @@ fun extract_prems ctxt strip thm =
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
                 simp (Conv.fconv_rule (Conv.rewr_conv @{thm' atomize_all[symmetric]}) th)
            | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
-                simp (Thm.forall_elim_var (Thm.maxidx_of th) th)
+                simp (Thm.forall_elim_var (Thm.maxidx_of th+1) th)
            | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
                 maps simp (PLPR_Syntax.elim_ant_sequence_or_HOL_conj th)
            | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _) =>
@@ -527,8 +545,7 @@ fun obligation_collect ctxt filter =
                     of SOME NONE => (*A normal premises using the normal rule*)
                          (Conv.implies_conv
                             (Phi_Conv.atomize_conv ctxt then_conv
-                             Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
-                                                                      Premise_def[where mode=MODE_SIMP]})
+                             strip_premise_tag ctxt)
                             conv then_conv
                           Conv.rewr_conv contract_premise_imp) ctm
                      | SOME (SOME rule) => (*Not a direct premise but still has something can be extracted

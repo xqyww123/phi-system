@@ -18,8 +18,17 @@ open Phi_Type_Algebra
 
 fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
   | constrain_antecedents cond =
-      let fun constrain (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X)) = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, constrain X)
+      let fun is_premise_tag (Const(\<^const_name>\<open>default\<close>, _)) = true
+            | is_premise_tag (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+            | is_premise_tag _ = false
+          fun constrain (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X)) = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, constrain X)
             | constrain (\<^Const>\<open>HOL.All t\<close> $ X) = \<^Const>\<open>HOL.All t\<close> $ Abs ("_", t, constrain (Term.incr_boundvars 1 X $ Bound 0))
+            | constrain (X as (H as Const(\<^const_name>\<open>Premise\<close>, _) $ tag) $ P) =
+                (case cond of Const(\<^const_name>\<open>Premise\<close>, _) $ tag' $ C =>
+                                if is_premise_tag tag andalso is_premise_tag tag'
+                                then H $ (\<^Const>\<open>HOL.implies\<close> $ C $ P)
+                                else \<^Const>\<open>HOL.implies\<close> $ cond $ X
+                            | _ => \<^Const>\<open>HOL.implies\<close> $ cond $ X)
             | constrain X = \<^Const>\<open>HOL.implies\<close> $ cond $ X
        in map constrain o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
       end

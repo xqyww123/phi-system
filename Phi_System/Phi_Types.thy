@@ -172,6 +172,55 @@ lemma [\<phi>reason default %\<phi>TA_guesser]:
                               Ds (\<lambda>s t xy. P (s + t) xy \<longrightarrow> Dx s t xy) zi ants conds \<close>
   unfolding Guess_Unzip_of_Semimodule_def ..
 
+paragraph \<open>Commutativity between Tyoprs\<close>
+
+subparagraph \<open>\<open>Guess_Tyops_Commute\<^sub>I\<close>\<close>
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P) G_def' T
+                        (\<lambda>x. P \<longrightarrow> D x) r ants ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> conds) \<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P x) G_def' T
+                        (\<lambda>x. P x \<longrightarrow> D x) r ants conds \<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P' T x) T D r ants conds \<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+subparagraph \<open>\<open>Guess_Tyops_Commute\<^sub>E\<close>\<close>
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> Guess_Tyops_Commute\<^sub>E F F' G G' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P) G_def' T
+                        (\<lambda>x. P \<longrightarrow> D x) r ants ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> conds) \<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>E F F' G G' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P x) G_def' T D r ants conds \<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>E F F' G G' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P' T x) T D r ants conds \<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> Guess_Tyops_Commute\<^sub>E F F' G G' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
 
 subsection \<open>Dependent Sum Type \& Abstraction of Set\<close>
 
@@ -1175,16 +1224,34 @@ lemma \<phi>Fun'_comm[\<phi>reason %\<phi>type_algebra_properties]:
   unfolding Tyops_Commute_def fun_commute_def
   by (simp add: \<phi>Fun'_scalar_assoc)
 
+
+subsubsection \<open>Guessing Property\<close>
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute g f g' f'
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
 lemma [\<phi>reason %guess_tyop_commute]:
   \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
                          (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute g f g' f') True\<close>
   unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute f g f' g'
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
   \<open> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
                          (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute f g f' g') True\<close>
   unfolding Guess_Tyops_Commute\<^sub>E_def ..
   
+
+
+(*TODO: move!*)
 
 lemma
   \<open> inj \<psi>
@@ -1199,7 +1266,7 @@ lemma \<comment> \<open>The above rule is reversible (for universally quantified
   apply clarsimp
   subgoal premises prems for x y
     by (insert prems(1)[of _ \<open>\<lambda>_. {x}\<close> _ \<open>\<lambda>_. {y}\<close>]
-                  prems(2-),
+               prems(2-),
         clarsimp simp add: \<phi>Type_def Satisfaction_def) .
 
 lemma
@@ -1323,17 +1390,89 @@ lemma Semimodule_SDistr_Homo\<^sub>U_by_function[\<phi>reason 1000]:
 
 subsubsection \<open>Commutativity\<close>
 
+paragraph \<open>Guessing Property\<close>
+
+text \<open>TODO: deriving the guessing rules\<close>
+
+subparagraph \<open>\<open>\<phi>ScalarMul\<close> to \<open>\<phi>ScalarMul\<close>\<close>
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute (scalar_mult g t) (scalar_mult f s) (scalar_mult g' t') (scalar_mult f' s')
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] t \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] t' \<Zcomp> U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] t \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] t' \<Zcomp> U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         (fun_commute (scalar_mult g t) (scalar_mult f s) (scalar_mult g' t') (scalar_mult f' s')) True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute (scalar_mult f s) (scalar_mult g t) (scalar_mult f' s') (scalar_mult g' t')
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] t \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] t' \<Zcomp> U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] t \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] t' \<Zcomp> U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         (fun_commute (scalar_mult f s) (scalar_mult g t) (scalar_mult f' s') (scalar_mult g' t')) True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+subparagraph \<open>\<open>\<phi>ScalarMul\<close> to \<open>\<phi>Fun\<close>\<close>
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute g (scalar_mult f s) g' (scalar_mult f' s')
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
 lemma [\<phi>reason %guess_tyop_commute]:
   \<open> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
                          (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
                          (fun_commute g (scalar_mult f s) g' (scalar_mult f' s')) True\<close>
   unfolding Guess_Tyops_Commute\<^sub>I_def ..
 
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute (scalar_mult f s) g (scalar_mult f' s') g'
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
 lemma [\<phi>reason %guess_tyop_commute]:
   \<open> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
                          (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
                          (fun_commute (scalar_mult f s) g (scalar_mult f' s') g') True\<close>
   unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+subparagraph \<open>\<open>\<phi>Fun'\<close> to \<open>\<phi>ScalarMul\<close>\<close>
+
+lemma [\<phi>reason %guess_tyop_commute+10]:
+  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute (scalar_mult g s) f (scalar_mult g' s') f'
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] s \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] s' \<Zcomp> U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         True True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] s \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] s' \<Zcomp> U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         (fun_commute (scalar_mult g s) f (scalar_mult g' s') f') True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') G G' (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] s \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] s' \<Zcomp> U) T
+                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
+                         (fun_commute f (scalar_mult g s) f' (scalar_mult g' s')) True\<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+
+paragraph \<open>Deriving the Commutativity with Itself\<close>
 
 let_\<phi>type \<phi>ScalarMul deriving \<phi>ScalarMul.Comm\<^sub>I
 
@@ -1612,21 +1751,13 @@ lemma [\<phi>reason 1013]:
 
 
 
-lemma [\<phi>reason %cutting]:
-  \<open>fun_commute (scalar_mult (\<odivr>) n) (fun_upd 1 k :: 'b \<Rightarrow> 'a \<Rightarrow> 'b::share_one) (scalar_mult (\<odivr>) n) (fun_upd 1 k)\<close>
-  unfolding fun_commute_def
-  by (clarsimp simp add: fun_eq_iff share_fun_def)
-
-lemma [\<phi>reason %cutting]:
-  \<open>fun_commute (fun_upd 1 k :: 'b \<Rightarrow> 'a \<Rightarrow> 'b::share_one) (scalar_mult (\<odivr>) n) (fun_upd 1 k) (scalar_mult (\<odivr>) n)\<close>
-  unfolding fun_commute_def
-  by (clarsimp simp add: fun_eq_iff share_fun_def)
-
-
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 0 ]]
 
+text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
+
+  
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Separation_Monoid
@@ -1636,8 +1767,13 @@ declare [[\<phi>trace_reasoning = 0]]
        and Semimodule_no0
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        and Abstraction_to_Raw
+       and Commutativity_Deriver
        and \<phi>MapAt.Comm
-       (*and Commutativity_Deriver*)
+       and \<phi>Fun'.Comm
+       and \<phi>ScalarMul.Comm
+
+term \<open>fun_commute (scalar_mult (\<odivr>) s) f (scalar_mult (\<odivr>) s') f'
+  \<Longrightarrow> Tyops_Commute ((\<odiv>) s) ((\<odiv>) s') ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
 thm \<phi>Share.m
 

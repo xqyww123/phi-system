@@ -566,6 +566,51 @@ subsection \<open>Disjoint Union of Function\<close>
 abbreviation fun_disj_union :: \<open>('k \<Rightarrow> 'v) \<Rightarrow> 'k set \<Rightarrow> ('k \<Rightarrow> 'v) \<Rightarrow> 'k \<Rightarrow> 'v\<close> ("_ \<oplus>\<^sub>f[_] _" [65,10,66] 65)
   where \<open>fun_disj_union f K\<^sub>g g \<equiv> (\<lambda>k. if k \<in> K\<^sub>g then g k else f k)\<close>
 
+subsection \<open>Commutative Morphism\<close>
+
+(* A --\<psi>'--> B'
+   \<down> \<phi>       \<down> \<phi>'
+   B --\<psi> --> C *)
+definition fun_commute :: \<open>('b \<Rightarrow> 'c) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> 'b') \<Rightarrow> ('b' \<Rightarrow> 'c) \<Rightarrow> bool\<close>
+  where \<open>fun_commute \<psi> \<phi> \<psi>' \<phi>' \<longleftrightarrow> (\<psi> o \<phi> = \<phi>' o \<psi>') \<close>
+  \<comment> \<open>Given \<open>\<psi>\<close> and \<open>\<phi>\<close>, looks for what are their variant \<open>\<psi>'\<close> and \<open>\<phi>'\<close> (maybe varied in type or
+      parameters) giving the swapping of them.\<close>
+
+declare [[\<phi>reason_default_pattern
+  \<open>fun_commute ?\<psi> ?\<phi> ?\<psi>' ?\<phi>'\<close> \<Rightarrow> \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> \<open>fun_commute _ _ ?\<psi>' ?\<phi>'\<close> (100) ]]
+
+subsubsection \<open>Fallback\<close>
+
+lemma [\<phi>reason %algb_falling_lattice for \<open>fun_commute ?var_\<phi> ?var_\<psi> _ _\<close>
+                                     except \<open>fun_commute _ _ ?var_\<phi> ?var_\<psi>\<close>]:
+  \<open> fun_commute \<phi>' \<psi>' \<phi> \<psi>
+\<Longrightarrow> fun_commute \<psi> \<phi> \<psi>' \<phi>'\<close>
+  unfolding fun_commute_def
+  by (rule; simp)
+
+subsubsection \<open>Instances\<close>
+
+lemma [\<phi>reason %algb_cut]:
+  \<open>fun_commute f f f f\<close>
+  unfolding fun_commute_def ..
+
+lemma [\<phi>reason %algb_cut]:
+  \<open>fun_commute (scalar_mult (\<odivr>) n) (fun_upd 1 k :: 'b \<Rightarrow> 'a \<Rightarrow> 'b::share_one) (scalar_mult (\<odivr>) n) (fun_upd 1 k)\<close>
+  unfolding fun_commute_def
+  by (clarsimp simp add: fun_eq_iff share_fun_def)
+
+lemma [\<phi>reason %algb_cut]:
+  \<open>fun_commute (fun_upd 1 k :: 'b \<Rightarrow> 'a \<Rightarrow> 'b::share_one) (scalar_mult (\<odivr>) n) (fun_upd 1 k) (scalar_mult (\<odivr>) n)\<close>
+  unfolding fun_commute_def
+  by (clarsimp simp add: fun_eq_iff share_fun_def)
+
+
+
+(*
+
+*)
+
+
 
 
 

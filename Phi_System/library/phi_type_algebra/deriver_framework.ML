@@ -906,16 +906,16 @@ fun prepend_Trueprop term =
          | \<^Type>\<open>bool\<close> => HOLogic.Trueprop $ term
          | _ => raise TERM ("Not a proposition", [term])
 
-fun Guess_Framework mk_goal_term_and_parse_result (phi : phi_type) ctxt =
+fun Guess_Framework mk_goal_term_and_parse_result (phi0 : phi_type) ctxt =
   let val (goal_term, parse_result, phi, ctxt) =
-              mk_goal_term_and_parse_result (phi, ctxt)
+              mk_goal_term_and_parse_result (phi0, ctxt)
       val goal_term = prepend_Trueprop goal_term
-      fun repeat_abs_conv cv ctxt ctm =
+    (*fun repeat_abs_conv cv ctxt ctm =
             case Thm.term_of ctm
               of Abs _ => Conv.abs_conv (repeat_abs_conv cv o snd) ctxt ctm
-               | _ => cv ctxt ctm
+               | _ => cv ctxt ctm*)
       val reason = Phi_Reasoner.reason NONE NONE ( Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
-                                                |> Expansion.map' (fn ctxt => ctxt addsimps (#equations phi)))
+                                                |> Expansion.map' (fn ctxt => ctxt addsimps (#equations phi0)))
       (*fun reason thm = thm
             |> Conv.gconv_rule (HOLogic.Trueprop_conv (funpow unfold_place Conv.fun_conv (Conv.arg1_conv (
                   repeat_abs_conv (fn ctxt =>
@@ -928,7 +928,7 @@ fun Guess_Framework mk_goal_term_and_parse_result (phi : phi_type) ctxt =
    of SOME (inst0, ret0) =>
         let val ty_refine = Phi_Help.refine_sorts_of_tms (Proof_Context.theory_of ctxt) [Thm.prop_of ret0]
                          |> Phi_Help.certify_tyvars (Context.Proof ctxt)
-            val ret = Thm.instantiate (ty_refine Vars.empty) ret0
+            val ret = Thm.instantiate (ty_refine, Vars.empty) ret0
             val (prop, params, conds, ants) = parse_result ret
             val ants = constrain_antecedents conds ants
             val (inst'2, ctxt) = Variable.import_inst true (prop :: ants) ctxt
@@ -952,9 +952,9 @@ fun Guess_Framework' (goal_template, insts_of, parsing_rule) =
   Guess_Framework (
     fn (phi, ctxt) =>
       let val (insts, phi, ctxt) = insts_of (phi, ctxt)
-          val idx = fold (Term.maxidx_term o snd) insts ~1 + 1 |> @{print}
+          val idx = fold (Term.maxidx_term o snd) insts ~1 + 1
           val goal_template = Logic.incr_indexes ([],[],idx) goal_template
-          val idx = Term.maxidx_term goal_template idx + 1 |> @{print}
+          val idx = Term.maxidx_term goal_template idx + 1
           val params = Term.add_vars goal_template []
           val eqs = map (fn (redex,residue) =>
                           (Var (the (find_first (fn ((N,_), _) => N = redex) params)), residue)

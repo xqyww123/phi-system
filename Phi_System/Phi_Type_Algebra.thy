@@ -2422,7 +2422,7 @@ lemma force_unfold_apsnd:
   \<open>apsnd f x = (fst x, f (snd x))\<close>
   by (cases x; simp)
 
-
+ 
 lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we have usable test case*)
   \<open> \<g>\<u>\<a>\<r>\<d> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> smul a c = b)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D\<^sub>a a \<and> D\<^sub>c c
@@ -2439,7 +2439,7 @@ lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we hav
     \<w>\<i>\<t>\<h> pred_mapper f P (z x) \<close>
   unfolding \<r>Guard_def
   \<medium_left_bracket> premises [simp] and _ and FTF and SA and SH\<^sub>I and SH\<^sub>E and _ and Tr
-    apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I]
+   ;; apply_rule apply_Separation_Homo\<^sub>I_Cond[OF SH\<^sub>I]
     apply_rule apply_Functional_Transformation_Functor[where f=f and P=P, OF FTF]
     \<medium_left_bracket> Tr \<medium_right_bracket>
     apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E]
@@ -4877,10 +4877,16 @@ definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E :: \<open> (('c\<
   where \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds \<equiv> True\<close>
 
 
-\<phi>reasoner_group guess_tyop_commute = (100, [40, 3000]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+\<phi>reasoner_group guess_tyop_commute_all = (100,[10,3000]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
     \<open>Rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
- and guess_tyop_commute_default = (15, [10, 39]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
-                                                   < guess_tyop_commute
+ and guess_tyop_commute = (1000, [1000, 3000]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+                                             in guess_tyop_commute_all
+    \<open>User Rules\<close>
+ and guess_tyop_commute_fallback = (10, [10,10]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+                                                  in guess_tyop_commute_all < guess_tyop_commute
+    \<open>Fallback rules\<close>
+ and guess_tyop_commute_default = (15, [11, 39]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+                                                  in guess_tyop_commute_all and > guess_tyop_commute_fallback and < guess_tyop_commute
     \<open>Predefined default rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
 
 declare [[
@@ -4957,13 +4963,13 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 
 subparagraph \<open>Default Rules\<close>
 
-lemma [\<phi>reason %guess_tyop_commute_default[bottom] for \<open>Guess_Tyops_Commute\<^sub>I _ _ _ _ _ _ _ _ _ _ _\<close>]:
+lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>I _ _ _ _ _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>I F F' G G' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
   unfolding Guess_Tyops_Commute\<^sub>I_def ..
 
-lemma [\<phi>reason %guess_tyop_commute_default[bottom] for \<open>Guess_Tyops_Commute\<^sub>E _ _ _ _ _ _ _ _ _ _ _\<close>]:
+lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>E _ _ _ _ _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
@@ -5038,7 +5044,7 @@ lemma [\<phi>reason_template requires \<open>Tyops_Commute _ F' _ G' _ _ _\<clos
 
 paragraph \<open>Deriver\<close>
 
-\<phi>reasoner_group derived_commutativity_deriver = (150, [150, 151]) for \<open>_\<close>
+\<phi>reasoner_group derived_commutativity_deriver = (150, [150, 151 ]) for \<open>_\<close>
     \<open>The priority of derived deriver for commutativity between type operators\<close>
 
 (*F is fixed myself, G is the target

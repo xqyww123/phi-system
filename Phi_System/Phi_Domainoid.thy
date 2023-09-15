@@ -1,7 +1,7 @@
 chapter \<open>Domainoid\<close>
 
 theory Phi_Domainoid
-  imports Phi_BI
+  imports Phi_BI Phi_Algb_Pre
 begin
 
 section \<open>Motivation \& Introduction\<close>
@@ -189,23 +189,8 @@ subsection \<open>Homomorphism of Domainoid\<close>
    \<down> \<psi>               \<down> D(\<psi>)
    B --domainoid--> D(B) *)
 
-(* A --\<psi>'--> B'
-   \<down> \<phi>       \<down> \<phi>'
-   B --\<psi> --> C *)
-definition fun_commute :: \<open>('b \<Rightarrow> 'c) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> 'b') \<Rightarrow> ('b' \<Rightarrow> 'c) \<Rightarrow> bool\<close>
-  where \<open>fun_commute \<psi> \<phi> \<psi>' \<phi>' \<longleftrightarrow> (\<psi> o \<phi> = \<phi>' o \<psi>') \<close>
 
-declare [[\<phi>reason_default_pattern
-  \<open>fun_commute ?\<psi> ?\<phi> ?\<psi>' ?\<phi>'\<close> \<Rightarrow> \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> \<open>fun_commute _ _ ?\<psi>' ?\<phi>'\<close> (100) ]]
 
-(*
-lemma [\<phi>reason %cutting for \<open>fun_commute ?var_\<phi> ?var_\<psi> _ _\<close>
-                        except \<open>fun_commute _ _ ?var_\<phi> ?var_\<psi>\<close>]:
-  \<open> fun_commute \<phi>' \<psi>' \<phi> \<psi>
-\<Longrightarrow> fun_commute \<psi> \<phi> \<psi>' \<phi>'\<close>
-  unfolding fun_commute_def
-  by (rule; simp)
-*)
 
 (*TODO: move!*)
 
