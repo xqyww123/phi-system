@@ -1016,7 +1016,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Identity_Element\<^sub>E (y \<Ztypecolon> U)
         \<Longrightarrow> Identity_Element\<^sub>E (Inr y \<Ztypecolon> T +\<^sub>\<phi> U)\<close>
        and Transformation_Functor
-       and Commutativity_Deriver\<^sub>E
+       and Commutativity_Deriver\<^sub>I
 
 
 subsubsection \<open>Rewrites\<close>
@@ -1029,7 +1029,21 @@ lemma \<phi>Sum_red[simp]:
 
 subsubsection \<open>Rule\<close>
 
-lemma \<phi>Sum_Comm\<^sub>I:
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason_template %\<phi>type_algebra_prop_cut]:
+  \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
+\<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D : (\<lambda>x. case x of Inl u \<Rightarrow> (\<forall>a \<in> D\<^sub>T u. Inl a \<in> R\<^sub>T u)
+                              | Inr v \<Rightarrow> (\<forall>b \<in> D\<^sub>U v. Inr b \<in> R\<^sub>U v))) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r : (embedded_func (case_sum (fm\<^sub>T Inl (\<lambda>_. True)) (fm\<^sub>U Inr (\<lambda>_. True)))
+                                (pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True))))) @action \<A>_template_reason
+\<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U \<phi>Sum \<phi>Sum T U D r \<close>
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
+            Action_Tag_def Simplify_def
+  by (clarify; case_tac x; clarsimp)
+
+(*lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason %\<phi>type_algebra_prop_cut]:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U \<phi>Sum \<phi>Sum T U
@@ -1038,7 +1052,12 @@ lemma \<phi>Sum_Comm\<^sub>I:
                    (embedded_func (case_sum (fm\<^sub>T Inl (\<lambda>_. True)) (fm\<^sub>U Inr (\<lambda>_. True)))
                                   (pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True)))) \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
-  by (clarify; case_tac x; clarsimp)
+  by (clarify; case_tac x; clarsimp)*)
+
+lemma \<phi>Sum_Comm\<^sub>I [\<phi>reason %\<phi>type_algebra_prop_cut]:
+  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Transformation_def
+  by (clarsimp simp add: split_sum_all)
 
 
 subsection \<open>Embedding Additive Disjunction\<close>
@@ -1164,7 +1183,11 @@ subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [simp]:
+  \<open>(case x of Inl x \<Rightarrow> Inl x | Inr x \<Rightarrow> Inr x) = x\<close>
+  by (cases x; simp)
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
@@ -1178,8 +1201,10 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Abstraction_to_Raw
-       and Commutativity_Deriver
-       (*and WIP \<phi>Sum.Comm\<^sub>E*)
+       and Commutativity_Deriver 
+       and \<phi>Sum.Comm\<^sub>I
+
+thm \<phi>Fun'.\<phi>Sum.comm_rewr
 
 
 subsubsection \<open>Reasoning Rules\<close>

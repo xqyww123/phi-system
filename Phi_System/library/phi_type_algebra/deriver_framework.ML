@@ -1179,7 +1179,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
            | _ => guess_property phi0 ctxt0
                |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
                     let val (rev_params_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
-                        fun recover_assertion i [] [] = #term phi 
+                        fun recover_assertion _ [] [] = #term phi 
                           | recover_assertion i (param_ty :: Tys) (NONE :: params)
                               = recover_assertion (i+1) Tys params $ Var(("\<pp>", i), param_ty)
                                 (*parameters should contain no variable, though I am not very sure*)

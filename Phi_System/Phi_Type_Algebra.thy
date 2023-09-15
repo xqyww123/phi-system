@@ -92,6 +92,17 @@ Based on the abundant algebriac properties that \<phi>-type owns, we believe we 
   Furthermore, forming a type system of a language built upon a program logic, it may bring new choices
   for certified programming. We are studying this as our future work.\<close>
 
+text \<open>TODO: move me somewhere
+
+Besides the interpretation based on data refinement, our theory can also be interpreted using the usual
+language of predicate logic. Essentially, we developed an assertion language splitting assertions into
+structural predicates over objects on abstract domains. Particularly on BI, the structural predicates
+specifying the concrete representation (on memory-level) of abstract data structures, have rich algebraic
+properties that capture the algebraic model of the data structures and provide us a general automation.
+
+\<close>
+
+
 section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
 
 subsection \<open>Definitions\<close>
@@ -510,6 +521,8 @@ subsubsection \<open>General Groups of Properties\<close>
  and \<phi>type_algebra_properties = (100, [20, 3800]) for \<open>_\<close> in \<phi>type_algebra_all_properties
                                                           and > \<phi>TA_system_bottom
     \<open>User rules of \<phi>-type algebraic properties\<close>
+ and \<phi>type_algebra_prop_cut = (1000, [1000, 1030]) for \<open>_\<close> in \<phi>type_algebra_properties
+    \<open>Cutting rules\<close>
  and \<phi>TA_derived_properties = (50, [50,50]) for \<open>_\<close> in \<phi>type_algebra_properties
     \<open>Automatically derived properties.\<close>
  and \<phi>TA_varify_out = (3900, [3900,3900]) for \<open>_\<close> in \<phi>type_algebra_all_properties and > \<phi>type_algebra_properties
@@ -3504,6 +3517,15 @@ lemma [\<phi>reason_template name F.G.comm_rewr[]]:
   unfolding Tyops_Commute_def Premise_def Transformation_def BI_eq_iff
   by clarsimp metis
 
+lemma [\<phi>reason_template name F.G.comm_rewr[]]:
+  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D (embedded_func f P)
+\<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D' (embedded_func g Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> D x \<and> D' (f x)
+\<Longrightarrow> (x \<Ztypecolon> F (G T U)) = (f x \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U)) \<close>
+  unfolding BI_eq_iff Premise_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Transformation_def
+  by clarsimp metis
+
+
 paragraph \<open>Bubbling\<close>
 
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
@@ -4866,15 +4888,15 @@ definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I :: \<open> (('c\<
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
                                     \<Rightarrow> (('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>U,'a\<^sub>G\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
                                     \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                    \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
-                                    \<Rightarrow> (('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>U,'a\<^sub>G\<^sub>U) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                    \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi>)
+                                    \<Rightarrow> (('c\<^sub>U,'a\<^sub>U) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>U,'a\<^sub>G\<^sub>U) \<phi>)
                                     \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
                                     \<Rightarrow> ('c\<^sub>U,'a\<^sub>U) \<phi>
                                     \<Rightarrow> ('b \<Rightarrow> bool)
                                     \<Rightarrow> ('b \<Rightarrow> 'a \<Rightarrow> bool)
                                     \<Rightarrow> bool \<Rightarrow> bool
                                     \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G'\<^sub>T unfolded_G'\<^sub>U unfolded_G T U D r ants conds \<equiv> True\<close>
+  where \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds \<equiv> True\<close>
 
 definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E :: \<open> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G\<^sub>T,'a\<^sub>G\<^sub>T) \<phi>)
@@ -4963,8 +4985,8 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>T T x) : (x \<Ztypecolon> G'\<^sub>T T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G'\<^sub>U T x) : (x \<Ztypecolon> G'\<^sub>U T) )
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds\<close> .
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' var_unfolded_G var_unfolded_G'\<^sub>T var_unfolded_G'\<^sub>U T U D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' var_unfolded_G var_unfolded_G'\<^sub>T var_unfolded_G'\<^sub>U T U D r ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
   \<open> Parameter_Variant_of_the_Same_Type F F'
@@ -4995,20 +5017,17 @@ lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\
   \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>T
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>U
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D
-                          (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True \<close>
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U
+                           (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True \<close>
   unfolding Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E_def ..
 
 lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>T
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>U
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D
-                           (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True \<close>
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U
+                           (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True \<close>
   unfolding Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I_def ..
-
-
-
 
 
 paragraph \<open>ML\<close>
