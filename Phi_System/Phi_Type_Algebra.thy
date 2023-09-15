@@ -1377,7 +1377,7 @@ declaration \<open>fn m => fn ctxt =>
   end\<close>
 *)
 
-lemma [\<phi>reason_template name Fa simp_cong [\<phi>simp_cong]]:
+lemma [\<phi>reason_template name Fa.simp_cong [\<phi>simp_cong]]:
   \<open> Transformation_Functor Fa Fa T U (\<lambda>x. {x}) (\<lambda>x. \<top>) (\<lambda>x. x)
 \<Longrightarrow> Transformation_Functor Fa Fa U T (\<lambda>x. {x}) (\<lambda>x. \<top>) (\<lambda>x. x)
 \<Longrightarrow> PROP NO_SIMP' ((x \<Ztypecolon> T) \<equiv> (x' \<Ztypecolon> U))
@@ -1392,7 +1392,7 @@ lemma [\<phi>reason_template name Fa simp_cong [\<phi>simp_cong]]:
     using prems(3) prems(4) by blast
   .
 
-lemma transformation[\<phi>reason_template name Fa transformation []]:
+lemma transformation[\<phi>reason_template name Fa.transformation []]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1400,7 +1400,7 @@ lemma transformation[\<phi>reason_template name Fa transformation []]:
   unfolding meta_Ball_def Premise_def \<r>Guard_def Transformation_Functor_def
   by clarsimp
 
-lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa to_transformation]:
+lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa.to_transformation]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1408,7 +1408,7 @@ lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa to_tra
   unfolding Action_Tag_def \<r>Guard_def
   using transformation[unfolded \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
 
-lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa to_traverse]:
+lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa.to_traverse]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1416,7 +1416,7 @@ lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa to_tra
   unfolding Action_Tag_def \<r>Guard_def
   using transformation[unfolded \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
 
-lemma [\<phi>reason_template name Fa \<A>simp [\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
+lemma [\<phi>reason_template name Fa.\<A>simp [\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1444,7 +1444,7 @@ lemma [\<phi>reason_template default 50 requires Separation_Homo\<^sub>E]:
   by (rule transformation_trans[where P=True and Q=True and B=\<open>y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y\<close>, simplified], blast)
 *)
 
-lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb \<A>simp_sep_homo]:
+lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo]:
   \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
 \<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
   unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def
@@ -1466,7 +1466,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb \<
      
 *)
 
-lemma FTF_template[no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor name Fa functional_transformation]:
+lemma FTF_template[no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor name Fa.functional_transformation]:
   \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_Functor Fa Fb T U D R pred_mapper func_mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<longrightarrow> f a \<in> R x) 
@@ -1549,14 +1549,14 @@ lemma Separation_Homo_functor[\<phi>reason_template %Object_Sep_Homo_functor]:
       by (clarsimp simp add: Transformation_def; blast)
   qed .
 
-lemma [\<phi>reason_template name Fc \<phi>Prod []]:
+lemma [\<phi>reason_template name Fc.\<phi>Prod []]:
   \<open> Separation_Homo\<^sub>I Ft Fu Fc T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U (\<lambda>x. x)
 \<Longrightarrow> Fc (T \<^emph> U) = Ft T \<^emph> Fu U \<close>
   unfolding Separation_Homo\<^sub>I_def Separation_Homo\<^sub>E_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
 
-lemma [\<phi>reason_template name Fc \<phi>Prod_Cond []]:
+lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
   \<open> Separation_Homo\<^sub>I_Cond Ft Fu Fc C T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu Fc C T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Fc (T \<^emph>[C] U) = Ft T \<^emph>[C] Fu U \<close>
@@ -1577,7 +1577,7 @@ lemma apply_conditioned_Separation_Functor_unzip:
 
 
 
-lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft Separation_Homo\<^sub>I_Cond]:
+lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' R' pred' func' )
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if C\<^sub>W then D else {x. \<forall>a. a \<in> D' (fst x) \<longrightarrow> (a, undefined) \<in> R' (fst x)})) @action \<A>_template_reason
@@ -1594,7 +1594,7 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft Separa
       insert transformation_weaken; blast)
 
 
-lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft Separation_Homo\<^sub>E_Cond]:
+lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu F3 T U uz)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor F3 Ft (T \<^emph>[C\<^sub>R] U) T D' R' pred' func' )
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if C\<^sub>R then UNIV else {x. \<forall>(a,b) \<in> D' x. a \<in> R' x})) @action \<A>_template_reason
@@ -1735,12 +1735,12 @@ lemma [\<phi>adding_property = false,
   unfolding Closed_Semimodule_Zero_def Semimodule_Zero_def
   by simp
 
-lemma [\<phi>reason_template name F scalar_zero [assertion_simps, simp]]:
+lemma [\<phi>reason_template name F.scalar_zero [assertion_simps, simp]]:
   \<open> Closed_Semimodule_Zero F T zero
 \<Longrightarrow> (x \<Ztypecolon> F zero T) = 1 \<close>
   unfolding Closed_Semimodule_Zero_def by blast
 
-lemma [\<phi>reason_template name F scalar_zero' [assertion_simps, simp]]:
+lemma [\<phi>reason_template name F.scalar_zero' [assertion_simps, simp]]:
   \<open> Closed_Semimodule_Zero F T zero
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> zero' : zero) @action \<A>_template_reason
 \<Longrightarrow> NO_MATCH zero zero' @action \<A>_template_reason
@@ -1856,13 +1856,13 @@ paragraph \<open>Identity\<close>
 
 subparagraph \<open>Reduction given by Elimination Rules\<close>
 
-lemma [\<phi>reason_template name F scalar_one_ty [assertion_simps, simp]]:
+lemma [\<phi>reason_template name F.scalar_one_ty [assertion_simps, simp]]:
   \<open> Semimodule_Identity\<^sub>E F T one (\<lambda>_. True) (\<lambda>x. x)
 \<Longrightarrow> F one T = T \<close>
   unfolding Semimodule_Identity\<^sub>E_def
   by (rule \<phi>Type_eqI_Tr; clarsimp)
 
-lemma [\<phi>reason_template name F scalar_one [assertion_simps, simp]]:
+lemma [\<phi>reason_template name F.scalar_one [assertion_simps, simp]]:
   \<open> Semimodule_Identity\<^sub>E F T one D f
 \<Longrightarrow> D x
 \<Longrightarrow> (x \<Ztypecolon> F one T) = (f x \<Ztypecolon> T) \<close>
@@ -2013,7 +2013,7 @@ text \<open>No rule in form \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ 
 
 paragraph \<open>Extended Associative\<close>
 
-lemma scalar_assoc_template[\<phi>reason_template name Fc scalar_assoc [assertion_simps, simp]]:
+lemma scalar_assoc_template[\<phi>reason_template name Fc.scalar_assoc [assertion_simps, simp]]:
   \<open> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt (\<lambda>_ _ _. True) smul (\<lambda>_ _ x. x)
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt (\<lambda>_ _ _. True) smul (\<lambda>_ _ x. x)
 \<Longrightarrow> Ds s \<and> Dt t
@@ -2101,7 +2101,7 @@ lemma [\<phi>reason_template default %ToA_derived_red]:
 paragraph \<open>Left Distributivity\<close>
 
 
-lemma [\<phi>reason_template name F unfold_sdistr[]]:
+lemma [\<phi>reason_template name F.unfold_sdistr[]]:
   \<open> Semimodule_SDistr_Homo\<^sub>U F T Ds Du uz
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dz zi
 \<Longrightarrow> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Du t s x \<and> Dz t s (uz t s x) \<and>
@@ -3488,6 +3488,16 @@ subsubsection \<open>Commutativity between \<phi>-Type Operators\<close>
 
 (*TODO Tyops_Commute\<^sub>1\<^sub>_\<^sub>2*)
 
+paragraph \<open>Implies Rewrites\<close>
+
+lemma [\<phi>reason_template name F.G.comm_rewr[]]:
+  \<open> Tyops_Commute F F' G G' T D (embedded_func f P)
+\<Longrightarrow> Tyops_Commute G' G F' F T D' (embedded_func g Q)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (g (f x) = x) \<and> D x \<and> D' (f x)
+\<Longrightarrow> (x \<Ztypecolon> F (G T)) = (f x \<Ztypecolon> G' (F' T)) \<close>
+  unfolding Tyops_Commute_def Premise_def Transformation_def BI_eq_iff
+  by clarsimp metis
+
 paragraph \<open>Bubbling\<close>
 
 lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
@@ -4722,7 +4732,7 @@ text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules 
   If so, activate deriver \<open>SE_Trim_Empty\<close>.
 \<close>
 
-lemma [\<phi>reason_template name F \<phi>None [assertion_simps, simp]]:
+lemma [\<phi>reason_template name F.\<phi>None [assertion_simps, simp]]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> Identity_Element\<^sub>I (yy \<Ztypecolon> F \<circle>) Any @action \<A>_template_reason
 \<Longrightarrow> Identity_Element\<^sub>E (u \<Ztypecolon> F \<circle>) @action \<A>_template_reason

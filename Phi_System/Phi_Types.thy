@@ -115,7 +115,7 @@ text \<open>Here we construct two inner transformations from \<open>a \<Ztypecol
            type is valid globally (this is a necessary condition).  \<close>
 
 
-lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template name Fa \<phi>subj [assertion_simps]]:
+lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template name Fa.\<phi>subj [assertion_simps]]:
   \<open> Transformation_Functor Fa Fa (T \<phi>\<s>\<u>\<b>\<j> P) T D R mapper
 \<Longrightarrow> Transformation_Functor Fa Fa T (T \<phi>\<s>\<u>\<b>\<j> P) D R mapper
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a. a \<in> D x \<and> P \<longrightarrow> a \<in> R x) \<and> (\<forall>y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P)
@@ -491,7 +491,7 @@ subsubsection \<open>\<Sigma>-Homomorphism\<close>
 
 
 
-lemma [\<phi>reason_template name F \<Sigma>\<^sub>I[]]:
+lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[]]:
   \<open> Functional_Transformation_Functor F F' (T (fst x)) (\<Sigma> T) D R pm fm
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D (snd x) \<longrightarrow> (fst x, a) \<in> R (snd x))
 \<Longrightarrow> x \<Ztypecolon> \<Sigma> c. F (T c) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>a. (fst x, a)) (\<lambda>_. True) (snd x) \<Ztypecolon> F' (\<Sigma> T)\<close>
@@ -594,7 +594,7 @@ subsubsection \<open>\<S>-Homomorphism\<close>
 
 text \<open>The homomorphism of \<open>\<S>\<close> type is entailed in the transformation functor directly.\<close>
 
-lemma \<S>_Homo\<^sub>E [\<phi>reason_template name Fa \<S>\<^sub>E []]:
+lemma \<S>_Homo\<^sub>E [\<phi>reason_template name Fa.\<S>\<^sub>E []]:
   \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s)
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : Collect (mapper (\<lambda>S x. x \<in> S) s)) @action \<A>_template_reason
@@ -638,7 +638,7 @@ lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
         clarsimp) .
 *)
 
-lemma \<S>_Homo\<^sub>I [\<phi>reason_template name Fa \<S>\<^sub>I []]:
+lemma \<S>_Homo\<^sub>I [\<phi>reason_template name Fa.\<S>\<^sub>I []]:
   \<open> Functional_Transformation_Functor Fa Fb T (\<S> T) D R pm fm
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
 \<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>x. {x}) (\<lambda>_. True) s \<Ztypecolon> Fb (\<S> T)\<close>
@@ -1753,7 +1753,7 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0 ]]
+declare [[\<phi>trace_reasoning = 1 ]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
 
@@ -1768,14 +1768,12 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
        and Abstraction_to_Raw
        and Commutativity_Deriver
-       and \<phi>MapAt.Comm
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
+       and \<phi>MapAt.Comm
 
-term \<open>fun_commute (scalar_mult (\<odivr>) s) f (scalar_mult (\<odivr>) s') f'
-  \<Longrightarrow> Tyops_Commute ((\<odiv>) s) ((\<odiv>) s') ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-
-thm \<phi>Share.m
+thm \<phi>Fun'.\<phi>Fun'.comm_rewr
+thm \<phi>MapAt.\<phi>Share.comm_rewr
 
 declare [[\<phi>trace_reasoning = 3]]
   

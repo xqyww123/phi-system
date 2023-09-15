@@ -36,7 +36,7 @@ datatype instantiation_action =
 type parameters = property_pattern option list (*corresponding to the premises of the template rule
           one to one respectively, and being NONE if the premise in the corresponded position is
           not a property for instantiating*)
-type instance_binding = indexname * binding
+type instance_binding = indexname list * binding
                         (*^b a variable that will be instantiated to a \<phi>-type, and the binding will
                           by qualified by the short-name of the heading constant of the \<phi>-type*)
 
@@ -141,7 +141,7 @@ type free_template_action = Position.T (*Position where the instantiation happen
                          -> Context.generic -> Context.generic
 
 type parameters = property_pattern option list
-type instance_binding = indexname * binding
+type instance_binding = indexname list * binding
                         (*^b a variable that will be instantiated to a \<phi>-type, and the binding will
                           by qualified by the short-name of the heading constant of the \<phi>-type*)
 
@@ -431,7 +431,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
           val rules' = case pass of SOME (ps, _) => ps (single o default_simplify pattern ctxt', pos, ctxt') rule'1
                                   | NONE => single (default_simplify pattern ctxt' rule'1)
 
-          val binding = Option.map (fn (v, b') =>
+          val binding = Option.map (fn (vs, b') =>
                   let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
                       fun varify_binding i b =
                         let val b' = if i = 0 then b else Binding.suffix_name ("_" ^ string_of_int i) b
@@ -441,17 +441,18 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                             else b
                         end
                       fun err () = error (let open Pretty in string_of (chunks [
-                                    block (text "The binding target" @
-                                           [brk 1, Syntax.pretty_term ctxt' (Var (v, dummyT)), brk 1] @
+                                    block (text "The binding target" @ [brk 1] @
+                                           maps (fn v => [Syntax.pretty_term ctxt' (Var (v, dummyT)), brk 1, str "/", brk 1]) vs @
                                            text "is not instantaited to any constant \<phi>-type,"),
                                     block (text "in template" @
                                            [brk 1, Thm.pretty_thm ctxt' template])
                                  ]) end)
                       val Envir.Envir {tenv, ...} = env
-                      val qualifier = case Vartab.lookup tenv v
-                                        of SOME (_, tm) => (short_name_of_tyop tm handle Match => err ())
-                                         | NONE => err ()
-                   in varify_binding 0 (Binding.qualify true qualifier b')
+                      val qualify = fold_rev (fn v =>
+                            case Vartab.lookup tenv v
+                              of SOME (_, tm) => Binding.qualify true (short_name_of_tyop tm handle Match => err ())
+                               | NONE => err ()) vs
+                   in varify_binding 0 (qualify b')
                   end
                 ) bind
 
@@ -515,13 +516,28 @@ fun add_template invoke_on_existing_instantiations (template : template) ctxt =
             let val idx = maxidx_of_term param
              in if idx >= 0 then Logic.incr_indexes ([],[],~1-idx) param else param
             end
+
       val compact_deps = map_filter I (#1 template)
+      val ty_frees = fold (fold_types Term.declare_typ_names) compact_deps Name.context
+      val tm_frees = fold Term.declare_term_frees compact_deps Name.context
+      val ty_vars = fold Term.add_tvars compact_deps []
+      val tm_vars = fold Term.add_vars compact_deps []
+      val ty_fixes_names = Name.invent_names ty_frees "\<t>" (map snd ty_vars)
+      val tm_fixes_names = Name.invent_names tm_frees "\<x>" (map snd tm_vars)
+      val tm_fixes = Vartab.build (fold2 (fn (N,Ty) => fn fix => Vartab.update_new (N, (Ty, Free fix))) tm_vars tm_fixes_names)
+      val ty_fixes = Vartab.build (fold2 (fn (N,S) => fn fix => Vartab.update_new (N, (S, TFree fix))) ty_vars ty_fixes_names)
+      fun tm_fixes_of tm = Vartab.build (fold (fn (N,_) => Vartab.update_new (the (Vartab.lookup_key tm_fixes N))) (Term.add_vars tm []))
+      fun ty_fixes_of tm = Vartab.build (fold (fn (N,_) => Vartab.update_new (the (Vartab.lookup_key ty_fixes N))) (Term.add_tvars tm []))
       val compact_deps = filter (fn dep => forall (fn d =>
-              pointer_eq (d,dep) orelse not (Pattern.matches thy (d, dep))) compact_deps) compact_deps
+              pointer_eq (d,dep) orelse
+              not (can (Pattern.match thy (d, dep)) (ty_fixes_of dep, tm_fixes_of dep))
+            ) compact_deps
+          ) compact_deps
       |> @{print}
+
    in ctxt
    |> Templates.map (
-        fold (fn param => Net.insert_term template_eq (param, (id, negatize_param param, template'))
+        fold (fn param => Net.insert_term_safe template_eq (param, (id, negatize_param param, template'))
         ) compact_deps
       )
    |> invoke_on_existing_instantiations ? invk_on_existing_instantiations
@@ -655,7 +671,7 @@ val _ = Theory.setup (
 
 #>Attrib.setup \<^binding>\<open>\<phi>reason_template\<close> (
     Phi_Reasoner.attr_syntax
-      (Scan.option (Scan.lift (Args.$$$ "name" |-- Parse.term -- Parse.binding))
+      (Scan.option (Scan.lift (Args.$$$ "name" |-- Parse.position Parse.long_ident))
        -- Scan.lift (Scan.option (
              \<^keyword>\<open>requires\<close> |--
                 (Parse.and_list (Scan.repeat (  Args.$$$ "_" >> K NONE
@@ -671,15 +687,19 @@ val _ = Theory.setup (
               val read_terms = Variable.export_terms ctxt_parse ctxt' o
                                Syntax.read_terms ctxt_parse
               val dependencies = Option.map (burrow_options read_props) raw_dependencies
-              val binding = Option.map (fn (term, b) =>
-                    case singleton read_terms term
-                      of Var (v, _) => (v,b)
-                       | X => error (let open Pretty in string_of (
-                                block (text "The binding of the template instances must binds to a \
-                                            \variable in the template that will be instantaited to to \<phi>-type.\
-                                            \ However, the given binding target is not a variable," @
-                                       [brk 1, Syntax.pretty_term ctxt' X])
-                              ) end)
+              fun chk_binding_target (Var (v,_)) = v
+                | chk_binding_target X =
+                      error (let open Pretty in string_of (
+                            block (text "The binding of the template instances must binds to a \
+                                        \variable in the template that will be instantaited to to \<phi>-type.\
+                                        \ However, the given binding target is not a variable," @
+                                   [brk 1, Syntax.pretty_term ctxt' X])
+                          ) end)
+                    
+              val binding = Option.map (fn (long_name, pos) =>
+                      let val (qualifiers, name) = Phi_Help.split_last (Long_Name.explode long_name)
+                       in (map chk_binding_target (read_terms qualifiers), Binding.make (name, pos))
+                      end
                     ) raw_binding
 
               val _ = case guard of NONE => ()
