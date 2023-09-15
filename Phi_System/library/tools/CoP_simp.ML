@@ -38,23 +38,23 @@ structure Checkers = Generic_Data (
 fun is_simp_needed ctxt =
   let val chkers = Checkers.get ctxt
       val thy = Context.theory_of ctxt
-      fun apply_chk tm =
+      fun apply_chk bv_tys tm =
         Net.match_term chkers tm
-          |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy (pat,tm)
+          |> exists (fn Chk_Pattern pat => PLPR_Pattern.matches thy bv_tys (pat,tm)
                       | Chk_ML (_, f)   => f tm)
-      fun chk tm =
+      fun chk bv_tys tm =
         let val (h,args) = Term.strip_comb tm
          in (case h
-         of Const _ => apply_chk tm
-          | Free _  => apply_chk tm
-          | Abs (_, _, X) => if null args then chk X
+         of Const _ => apply_chk bv_tys tm
+          | Free _  => apply_chk bv_tys tm
+          | Abs (_, T, X) => if null args then chk (T::bv_tys) X
                              else raise REQUIRE_LAMBDA_NORMLAIZTION
           | _ => false)
-         orelse exists chk args
+         orelse exists (chk bv_tys) args
         end
         handle REQUIRE_LAMBDA_NORMLAIZTION =>
-          chk (Envir.beta_eta_contract tm)
-   in Phi_Syntax.exists_item_of_assertion chk
+          chk bv_tys (Envir.beta_eta_contract tm)
+   in Phi_Syntax.exists_item_of_assertion (chk [])
   end
 
 fun chk_pattern pat =

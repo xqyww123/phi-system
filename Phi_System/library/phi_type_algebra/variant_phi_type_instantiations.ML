@@ -35,8 +35,10 @@ val _ = Theory.setup (Context.theory_map (
             (separate_type_operator_and_its_parameter_safe (Thm.term_of ctm))
 
         fun mk_variant_of_type_operator2 ctm =
-          map_filter (mk_rule @{thm' Type_Variant_of_the_Same_Type_Operator2_I} o #3)
-            (separate_tyop_semimodule_and_its_non_parameterized (Thm.term_of ctm))
+          case Thm.term_of ctm
+            of F $ _ $ _ =>
+              the_list (mk_rule @{thm' Type_Variant_of_the_Same_Type_Operator2_I} F)
+             | _ => []
 
         fun mk_variant_of_scalar_mul (F $ _ $ T) =
               if can Term.fastype_of T andalso is_non_parameterized_phityp (Term.fastype_of T)

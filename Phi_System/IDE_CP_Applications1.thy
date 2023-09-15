@@ -732,7 +732,7 @@ lemma [cong]:
 
 subsubsection \<open>Bubbling\<close>
 
-definition Bubbling :: \<open>'a \<Rightarrow> 'a\<close> ("\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>") where \<open>Bubbling x = x\<close>
+definition Bubbling :: \<open>'a \<Rightarrow> 'a\<close> ("\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> _" [61] 60) where \<open>Bubbling x = x\<close>
 
 paragraph \<open>General Rules\<close>
 
@@ -754,7 +754,7 @@ lemma [\<phi>reason %\<phi>simp_fallback]:
 paragraph \<open>Bubbling \<phi>Sep\<close>
 
 abbreviation Bubbling_\<phi>Sep (infixr "\<^emph>\<^sub>\<A>" 70)
-    where "Bubbling_\<phi>Sep \<equiv> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> \<phi>Prod"
+    where "A \<^emph>\<^sub>\<A> B \<equiv> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> \<phi>Prod A B"
   \<comment> \<open>The separation operator that will expand by the system automatically\<close>
 
 lemma [\<phi>reason %\<phi>simp_cut]:

@@ -18,23 +18,6 @@ include PHI_HELP
   val repeat : ('a -> 'a) -> 'a -> 'a
   val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
-  val has_head : string (* const name *) -> term -> bool
-
-  val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
-                              * term list (*premises of the antecedent*)
-                              * term (*conclusion containing loose bound*)
-  val leading_antecedent : term -> (string * typ) list (*quantified variables*)
-                                 * term list (*premises of the antecedent*)
-                                 * term (*conclusion containing loose bound*)
-  val fix_leading_antecedent_meta_quantifiers : Proof.context -> term
-                            -> term list (*quant vars*) * term list (*premises*) * term (*conclusion*) * Proof.context
-                               (*where quantified variables are fixed*)
-  val strip_meta_hhf_c :
-        cterm -> Proof.context -> cterm list (*quant vars*) * cterm list (*premises*) * cterm * Proof.context
-  val varified_leading_antecedent_meta_quantifiers : Proof.context -> term
-                            -> term list (*premises*) * term (*conclusion*)
-                               (*where quantified variables are varified (schematic variables)*)
-
   val string_of_term_generic : Context.generic -> term -> string
 
   (*For tyenv/tenv given from Pattern.match*)
@@ -144,54 +127,6 @@ fun repeat f x = repeat f (f x) handle TERM _ => x | CTERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
 fun ntimes n f x = ntimes_i 0 n f x
 
-fun strip_meta_hhf term =
-  let
-    fun strip (V,P) (Const("Pure.imp", _) $ H $ B) = strip (V,H::P) B
-      | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) = strip ((a,T)::V,P) B
-      | strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ X) =
-          strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
-      | strip (V,P) X = (rev V, rev P, X)
-  in strip ([],[]) term end
-
-fun leading_antecedent (Const("Pure.imp", _) $ H $ _) = strip_meta_hhf H
-  | leading_antecedent X = raise TERM ("has no antecedent", [X])
-
-fun fix_leading_antecedent_meta_quantifiers ctxt0 sequent =
-  let
-    val (qvs, prems, ant01) = leading_antecedent sequent
-
-    (* fix universally quantified variables *)
-    val (qv_names, ctxt'01) = Variable.add_fixes (map fst qvs) ctxt0
-    val qvars = map2 (fn N => fn (_,T) => Free (N,T)) qv_names qvs
-    val ctxt = fold Variable.declare_term qvars ctxt'01
-    val leading_ant = subst_bounds (rev qvars, ant01)
-  in (qvars,prems,leading_ant,ctxt)
-  end
-
-fun strip_meta_hhf_c cterm ctxt =
-  let
-    fun strip (V,P) (Const("Pure.imp", _) $ H $ B) ctm ctxt
-          = strip (V, Thm.dest_arg1 ctm :: P) B (Thm.dest_arg ctm) ctxt
-      | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) ctm ctxt
-          = let val ([name'],ctxt') = Variable.variant_fixes [a] ctxt
-                val (v', B') = Thm.dest_abs_fresh name' (Thm.dest_arg ctm)
-             in strip (v'::V,P) B B' ctxt'
-            end
-      | strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ B) ctm ctxt
-          = let val ([name'],ctxt') = Variable.variant_fixes ["_"] ctxt
-                val v' = Thm.cterm_of ctxt (Free (name', ty))
-                val B' = Thm.apply (Thm.dest_arg ctm) v'
-             in strip (v' :: V, P) B B' ctxt'
-            end
-      | strip (V,P) X ctm ctxt = (rev V, rev P, ctm, ctxt)
-  in strip ([],[]) (Thm.term_of cterm) cterm ctxt end
-
-
-fun varified_leading_antecedent_meta_quantifiers ctxt sequent =
-  let val (_,prems,leading_ant,ctxt') = fix_leading_antecedent_meta_quantifiers ctxt sequent
-      val (leading_ant'::prems') = Variable.export_terms ctxt' ctxt (leading_ant::prems)
-   in (prems',leading_ant')
-  end
 
 fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global thy
   | string_of_term_generic (Context.Proof ctxt) = Syntax.string_of_term ctxt
@@ -267,11 +202,6 @@ in
 val safe_fastype_of = fastype_of_term [];
 end
 
-
-
-fun has_head c (Const (c', _)) = (c = c')
-  | has_head c (h $ _) = has_head c h
-  | has_head _ _ = false
 
 fun dest_monop_ty c (T as Type (c', [ty])) =
       if c = c' then ty else raise TYPE ("should be "^c, [T], [])

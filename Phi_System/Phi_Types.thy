@@ -259,7 +259,7 @@ text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation fun
 declare SubjectionTY_def[embed_into_\<phi>type del]
 
 declare [[\<phi>trace_reasoning = 0]]
-
+ 
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
@@ -1016,6 +1016,8 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Identity_Element\<^sub>E (y \<Ztypecolon> U)
         \<Longrightarrow> Identity_Element\<^sub>E (Inr y \<Ztypecolon> T +\<^sub>\<phi> U)\<close>
        and Transformation_Functor
+       and Commutativity_Deriver\<^sub>E
+
 
 subsubsection \<open>Rewrites\<close>
 
@@ -1027,7 +1029,7 @@ lemma \<phi>Sum_red[simp]:
 
 subsubsection \<open>Rule\<close>
 
-lemma \<phi>Sum_comm\<^sub>I:
+lemma \<phi>Sum_Comm\<^sub>I:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U \<phi>Sum \<phi>Sum T U
@@ -1161,7 +1163,9 @@ lemma \<phi>Inter_comm\<^sub>E:
 subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
-   
+
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   opening extract_premises_in_Carrier_Set
@@ -1175,6 +1179,7 @@ text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Abstraction_to_Raw
        and Commutativity_Deriver
+       (*and WIP \<phi>Sum.Comm\<^sub>E*)
 
 
 subsubsection \<open>Reasoning Rules\<close>
@@ -1776,9 +1781,6 @@ thm \<phi>Fun'.\<phi>Fun'.comm_rewr
 thm \<phi>MapAt.\<phi>Share.comm_rewr
 
 declare [[\<phi>trace_reasoning = 3]]
-  
-let_\<phi>type \<phi>MapAt deriving \<phi>MapAt.Comm\<^sub>E
-
 
 thm \<phi>Share.Identity_Element\<^sub>I
 thm \<phi>Share.unfold_sdistr (*TODO: reduce identical antecedents*)

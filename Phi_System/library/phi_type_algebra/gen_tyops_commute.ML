@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val meta_Tyops_Commute : quiet -> Phi_Type_Algebra.derive
+val meta_Tyops_Commute : int -> quiet -> Phi_Type_Algebra.derive
 
 end
 
@@ -27,7 +27,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val ind_rewr = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
                              \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
                           by (unfold atomize_imp Action_Tag_def)}
-      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action \<phi>TA_ind_target \<A>)
+      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> (F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action \<phi>TA_ind_target \<A>)
                                   \<equiv> (A \<Longrightarrow> B \<Longrightarrow> (x \<Ztypecolon> F T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action NToA)\<close>
                                 by (unfold atomize_imp Action_Tag_def Bubbling_def)}
       fun gen_ind_conv is_IH ctxt _ =
@@ -165,9 +165,17 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
    in (binding, deriver, pattern)
   end
 
-fun meta_Tyops_Commute quiet ctxt (phi : phi_type) thy =
+(*mode: 1 = only generates introduction deriver
+        2 = only generates elimination deriver
+        3 = generates both derivers*)
+fun meta_Tyops_Commute mode quiet ctxt (phi : phi_type) thy =
   let val (binding, deriver, pattern) = meta_gen_Tyops_Commute ctxt phi
       val (binding_I, binding_E) = (Binding.suffix_name "\<^sub>I" binding, Binding.suffix_name "\<^sub>E" binding)
+
+      val (gen_I, gen_E) = case mode of 1 => (true, false)
+                                      | 2 => (false, true)
+                                      | 3 => (true, true)
+                                      | _ => error "bad mode"
 
       fun report (name, thy) = (
             if quiet then () else 
@@ -179,26 +187,29 @@ fun meta_Tyops_Commute quiet ctxt (phi : phi_type) thy =
           )
       fun bind pat (name, thy) = (name, Phi_Type_Algebra.bind_derivers_on_patterns [(pat, name)] thy)
 
-      val (intro_deriver, thy) = thy
-            |> Context.mapping_result (define_deriver_global binding_I (fst deriver))
-                                      (define_deriver binding_I (fst deriver))
-            |> report
-            |> bind (fst pattern)
+      val (intro_deriver, thy) = ("", thy)
+            |> gen_I ? (snd
+                #> Context.mapping_result (define_deriver_global binding_I (fst deriver))
+                                          (define_deriver binding_I (fst deriver))
+                #> report
+                #> bind (fst pattern))
 
-      val (elim_deriver, thy) = thy
-            |> Context.mapping_result (define_deriver_global binding_E (snd deriver))
-                                      (define_deriver binding_E (snd deriver))
-            |> report
-            |> bind (snd pattern)
+      val (elim_deriver, thy) = ("", thy)
+            |> gen_E ? (snd
+                #> Context.mapping_result (define_deriver_global binding_E (snd deriver))
+                                          (define_deriver binding_E (snd deriver))
+                #> report
+                #> bind (snd pattern))
 
       val combined_deriver = {priority = @{priority %derived_commutativity_deriver+1},
                               dependences = [(intro_deriver, false), (elim_deriver, false)],
                               derive= K (K (K (K I)))}
    in thy
-   |> Context.mapping_result (define_deriver_global binding combined_deriver)
-                             (define_deriver binding combined_deriver)
-   |> report
-   |> snd
+   |> mode = 3 ? (
+          Context.mapping_result (define_deriver_global binding combined_deriver)
+                                 (define_deriver binding combined_deriver)
+       #> report
+       #> snd )
   end
 
 end

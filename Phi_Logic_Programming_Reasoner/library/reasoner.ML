@@ -90,7 +90,7 @@ signature NU_REASONER = sig
   (*val call_reasoners : reasoners -> Proof.context -> *)
   val get_reasoners : theory -> reasoners -> pattern -> reasoner list
   (*a faster version but a bit dirty*)
-  val get_reasoners' : theory -> reasoners
+  val get_reasoners' : theory -> reasoners -> PLPR_Pattern.bv_typs
                     -> pattern -> (priority * pattern * serial (*reasoner id*) * reasoner) list
   val pretty : Proof.context -> reasoner -> Pretty.T
   (*val call_reasoners : context_state -> (Position.T * context_state Seq.seq) list*)
@@ -258,7 +258,7 @@ fun name_of_intro_reasoner rules = Logic.mk_conjunction_list (map Thm.prop_of ru
 fun match_reasoner_name thy pattern name =
   let val name_concls = Logic.dest_conjunction_list name
                      |> map Logic.strip_assums_concl
-   in exists (fn X => Pattern_Translation.does_match_term thy (pattern, X)) name_concls
+   in exists (fn X => Pattern_Translation.does_match_term thy [] (pattern, X)) name_concls
   end
 fun match_reasoner thy pattern reasoner = match_reasoner_name thy pattern (#name reasoner)
 
@@ -516,12 +516,12 @@ fun apply_reasoning_rules _ [] = K Seq.empty
 fun apply_tactic _ bmode (Tac_ML tac) = (fn s => tac (bmode, s))
   | apply_tactic chk_guard _ (Tac_Rule rules) = apply_reasoning_rules chk_guard rules
 
-fun get_reasoners' thy tactics term =
+fun get_reasoners' thy tactics bv_tys term =
   iNet.match_term tactics term
     |> filter (fn (_,pat,_,reasoner) =>
-        Pattern_Translation.does_match_term thy (pat,term)
+        Pattern_Translation.does_match_term thy bv_tys (pat,term)
         andalso forall (fn pat =>
-          not (Pattern_Translation.does_match_term thy (pat,term)))
+          not (Pattern_Translation.does_match_term thy bv_tys (pat,term)))
         (#blacklist reasoner))
     |> sort (fn ((c1,_,_,r1),(c2,_,_,r2)) =>
           case int_ord (c1,c2) of EQUAL => mode_ord (#mode r1, #mode r2)
@@ -529,7 +529,7 @@ fun get_reasoners' thy tactics term =
     |> distinct_rev (fn (a,b) => #3 a = #3 b)
 
 fun get_reasoners thy tactics term =
-      get_reasoners' thy tactics term |> map (fn (_,_,_,r) => r)
+      get_reasoners' thy tactics [] term |> map (fn (_,_,_,r) => r)
 
 fun del_reasoners pattern filter ctxt =
   Reasoners.map (fn all_reasoners =>
@@ -623,7 +623,8 @@ fun gen_reason (handlers, trace, limit, tactics) =
                             then tracing ("\<phi>reasoning("^string_of_int score^"):"^
                                           Position.here pos ^"\n" ^ Thm.string_of_thm ctxt th)
                             else ()
-        
+                    val _ = if score = 5100 then () else ()
+
                     val Z = if Thm.nprems_of th <= N
                             then raise Success (ctxt, th)
                             else let val th' = if Term.could_beta_eta_contract (Thm.major_prem_of th)
@@ -633,7 +634,9 @@ fun gen_reason (handlers, trace, limit, tactics) =
                                            loop (Thm.nprems_of th - M, iter, NO_BACKTRACKING,
                                                  [[(score, pos, NORMAL_MODE, Seq.single (ctxt, th))]])
                                             handle Success s => SOME s
-                              in get_reasoners' (Proof_Context.theory_of ctxt) tactics (Thm.major_prem_of th')
+                                     val (bv_tys, concl) = Phi_Help.strip_meta_hhf_bvtys
+                                                              (fst (Logic.dest_implies (Thm.prop_of th')))
+                              in get_reasoners' (Proof_Context.theory_of ctxt) tactics bv_tys concl
                                     |> 3 <= trace ? (fn rs => (List.app (debug ctxt) rs; rs))
                                     |> map (fn (priority, _, _, r : reasoner) =>
                                           (priority + score, #pos r, #mode r,
@@ -844,7 +847,7 @@ val _ =
             val pattern = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern ctxt) raw_pattern
             val all_reasoners = Reasoners.get (Context.Proof ctxt)
             val reasoners = case power
-                              of 0 => get_reasoners' thy all_reasoners pattern
+                              of 0 => get_reasoners' thy all_reasoners [] pattern
                                | 1 => iNet.match_term all_reasoners pattern
                                         |> distinct (fn (a,b) => #3 a = #3 b)
                                         |> sort (fn ((c1,_,_,_),(c2,_,_,_)) => int_ord (c1,c2))

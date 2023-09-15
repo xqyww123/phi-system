@@ -8,16 +8,20 @@
 
 signature PLPR_PATTERN = sig
 
-val match: theory -> term * term -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
-val first_order_match: theory -> term * term
-    -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
+type bv_typs = typ list (*types of bound variables of the object.*)
 
-val matches: theory -> term * term -> bool
+val match: theory -> bv_typs -> term * term -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
+val first_order_match: theory -> bv_typs -> term *term
+                              -> Type.tyenv * Envir.tenv -> Type.tyenv * Envir.tenv
+
+val matches: theory -> bv_typs -> term * term -> bool
 
 end
 
-structure PLPR_Pattern = struct
+structure PLPR_Pattern : PLPR_PATTERN = struct
 open Pattern
+
+type bv_typs = typ list (*types of bound variables of the object.*)
 
 fun idx [] j     = raise Unif
   | idx(i::is) j = if (i:int) =j then length is else idx is j;
@@ -61,14 +65,14 @@ fun typ_match thy TU tyenv = Sign.typ_match thy TU tyenv
 (* First Order Match *)
 (*Improved from the system first_order_match, by allowing loose bounds in the object term,
     and regarding them as fixed free variables.*)
-fun first_order_match thy (t,u) env =
+fun first_order_match thy bv_tys (t,u) env =
   let
     val bs = Inttab.make_set (loose_bnos u)
-    fun mtch lev (instsp as (tyinsts,insts)) = fn
+    fun mtch bv_tys lev (instsp as (tyinsts,insts)) = fn
         (Var(ixn,T), t)  =>
           if forall (Inttab.defined bs) (loose_bnos t)
           then (case Envir.lookup1 insts (ixn, T) of
-                  NONE => (typ_match thy (T, fastype_of t) tyinsts,
+                  NONE => (typ_match thy (T, fastype_of1 (bv_tys, t)) tyinsts,
                            Vartab.update_new (ixn, (T, t)) insts)
                 | SOME u => if Envir.aeconv (t, u) then instsp else raise MATCH)
           else raise MATCH
@@ -78,15 +82,15 @@ fun first_order_match thy (t,u) env =
           if a=b then (typ_match thy (T,U) tyinsts, insts) else raise MATCH
       | (Bound i, Bound j)  =>  if  i=j  then  instsp  else raise MATCH
       | (Abs(_,T,t), Abs(_,U,u))  =>
-          mtch lev (typ_match thy (T,U) tyinsts, insts) (t,u)
-      | (f$t, g$u) => mtch lev (mtch lev instsp (f,g)) (t, u)
-      | (t, Abs(_,_,u))  => mtch (lev+1) instsp ((incr t)$(Bound 0), u)
+          mtch bv_tys lev (typ_match thy (T,U) tyinsts, insts) (t,u)
+      | (f$t, g$u) => mtch bv_tys lev (mtch bv_tys lev instsp (f,g)) (t, u)
+      | (t, Abs(_,T,u))  => mtch (T::bv_tys) (lev+1) instsp ((incr t)$(Bound 0), u)
       | _ => raise MATCH
-  in mtch 0 env (t,u) end;
+  in mtch bv_tys 0 env (t,u) end;
 
 (* Matching of higher-order patterns *)
 
-fun match thy (po as (pat,obj)) envir =
+fun match thy bv_typs (po as (pat,obj)) envir =
 let
   val bs = Inttab.make_set (loose_bnos obj)
   fun match_bind(itms,binders,ixn,T,is,t) =
@@ -143,12 +147,12 @@ let
     end;
 
   val pT = fastype_of pat
-  and oT = fastype_of obj
+  and oT = fastype_of1 (bv_typs, obj)
   val envir' = apfst (typ_match thy (pT, oT)) envir;
-in mtch [] po envir' handle Pattern => first_order_match thy po envir' end;
+in mtch [] po envir' handle Pattern => first_order_match thy bv_typs po envir' end;
 
-fun matches thy po =
-  (match thy po (Vartab.empty, Vartab.empty); true) handle MATCH => false;
+fun matches thy bv_typs po =
+  (match thy bv_typs po (Vartab.empty, Vartab.empty); true) handle MATCH => false;
 
 
 end

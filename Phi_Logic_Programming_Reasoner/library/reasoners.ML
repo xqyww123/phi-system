@@ -318,13 +318,13 @@ fun gen_extract_prems_rewr ctxt =
   let val net = Premise_Extraction.get ctxt
       val thy = Context.theory_of ctxt
 
-      fun match_extraction tm =
+      fun match_extraction bv_tys tm =
             Net.match_term net tm
-              |> filter (fn Extract_Rule rule => Pattern_Translation.does_match_term thy (pattern_of_rule rule, tm)
-                          | Extract_Fun (pat, _) => Pattern_Translation.does_match_term thy (pat, tm))
+              |> filter (fn Extract_Rule rule => Pattern_Translation.does_match_term thy bv_tys (pattern_of_rule rule, tm)
+                          | Extract_Fun (pat, _) => Pattern_Translation.does_match_term thy bv_tys (pat, tm))
 
       fun apply_extraction ctxt ctm =
-        match_extraction (Thm.term_of ctm)
+        match_extraction [] (Thm.term_of ctm)
          |> map_filter (fn Extract_Rule rule => SOME (Conv.rewr_conv rule ctm)
                          | Extract_Fun (_, f) => f ctxt ctm)
          |> (fn [] => NONE
@@ -336,19 +336,19 @@ fun gen_extract_prems_rewr ctxt =
                             by (simp add: atomize_eq, blast)}
                      ))) L))
 
-      fun qchk_obj (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
-            qchk_obj A orelse qchk_obj B
-        | qchk_obj (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
-            qchk_obj A orelse qchk_obj B
-        | qchk_obj (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, _, X)) = qchk_obj X
-        | qchk_obj (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = qchk_obj (Term.incr_boundvars 1 X $ Bound 0)
-        | qchk_obj tm = not (null (match_extraction tm))
+      fun qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
+            qchk_obj bv_tys A orelse qchk_obj bv_tys B
+        | qchk_obj bv_tys (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
+            qchk_obj bv_tys A orelse qchk_obj bv_tys B
+        | qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, T, X)) = qchk_obj (T::bv_tys) X
+        | qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = qchk_obj bv_tys (Term.incr_boundvars 1 X $ Bound 0)
+        | qchk_obj bv_tys tm = not (null (match_extraction bv_tys tm))
 
-      fun quick_check (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check X
-        | quick_check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, _, X)) = quick_check X
-        | quick_check (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = quick_check (Term.incr_boundvars 1 X $ Bound 0)
-        | quick_check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk_obj X
-        | quick_check _ = false
+      fun quick_check bv_tys (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check bv_tys X
+        | quick_check bv_tys (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, T, X)) = quick_check (T::bv_tys) X
+        | quick_check bv_tys (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = quick_check bv_tys (Term.incr_boundvars 1 X $ Bound 0)
+        | quick_check bv_tys (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = qchk_obj bv_tys X
+        | quick_check _ _ = false
 
       exception Not_Meet
       fun extract ctxt ctm =
@@ -415,7 +415,7 @@ fun gen_extract_prems_rewr ctxt =
    fn ctxt => fn ctm =>
    if is_syntactic_premise (Thm.term_of ctm)
    then SOME NONE
-   else if quick_check (Thm.term_of ctm)
+   else if quick_check [] (Thm.term_of ctm)
    then SOME (SOME (extract' ctxt ctm))
         handle Not_Meet => NONE
    else NONE)
@@ -449,7 +449,7 @@ fun extract_prem ctxt strip =
               then (Raw_Simplifier.norm_hhf ctxt' thm)
                 |> Conv.fconv_rule (strip_premise_tag ctxt')
               else thm)
-   else if qchk (Thm.prop_of thm)
+   else if qchk [] (Thm.prop_of thm)
         then let val thm = Raw_Simplifier.norm_hhf ctxt' thm
               in (case conv ctxt' (Thm.cprop_of thm)
                     of SOME NONE => SOME (if strip

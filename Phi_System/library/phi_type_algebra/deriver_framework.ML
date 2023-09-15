@@ -973,7 +973,7 @@ fun Guess_Framework' (goal_template, insts_of, parsing_rule) =
           val thy = Proof_Context.theory_of ctxt
           val (redex :: residues) = HOLogic.strip_tuple parsing_rule
           fun parse_result result =
-            case Pattern_Translation.rewrites thy (prepend_Trueprop redex, residues) (Thm.prop_of result)
+            case Pattern_Translation.rewrites thy [] (prepend_Trueprop redex, residues) (Thm.prop_of result)
               of SOME [prop, Tx_term, conds, ants] =>
                     (prepend_Trueprop prop, parse_inst_params_from_phi_term Tx_term, conds, ants)
                | _ => error "Bad parsing_rule"

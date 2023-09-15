@@ -1201,6 +1201,12 @@ definition Type_Variant_of_the_Same_Type_Operator
 definition Type_Variant_of_the_Same_Type_Operator2
         :: \<open> ('s \<Rightarrow> 'a \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('s2 \<Rightarrow> 'a2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
   where \<open> Type_Variant_of_the_Same_Type_Operator2 Fa Fb \<longleftrightarrow> True \<close>
+  \<comment> \<open>While \<open>Type_Variant_of_the_Same_Type_Operator\<close> considers the \<phi>-type as a type operator
+      over each of its parameters, e.g., \<open>\<lambda>A. F A B C\<close> \<open>\<lambda>B. F A B C\<close> \<open>\<lambda>C. F A B C\<close> for \<open>F A B C\<close>,
+      the \<open>Type_Variant_of_the_Same_Type_Operator2\<close> only considers the given \<phi>-type as a binary type
+      operator over its last two parameters, e.g., only \<open>\<lambda>B C. F A B C\<close>.
+     This is for performance. For other interpretations, user may provide the rule of
+      \<open>Type_Variant_of_the_Same_Type_Operator2\<close> manually.\<close>
 
 definition Type_Variant_of_the_Same_Scalar_Mul
         :: \<open> ('s \<Rightarrow> 'a \<Rightarrow> ('b,'c) \<phi>) \<Rightarrow> ('s2 \<Rightarrow> 'a2 \<Rightarrow> ('b2,'c2) \<phi>) \<Rightarrow> bool \<close>
@@ -1562,7 +1568,7 @@ lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
 \<Longrightarrow> Fc (T \<^emph>[C] U) = Ft T \<^emph>[C] Fu U \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>E_Cond_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
-
+ 
 lemma apply_conditioned_Separation_Functor_unzip:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U un)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Functional_Transformation_Functor Fc Ft (T \<^emph>[C] U) T D R pred_mapper func_mapper)
@@ -4985,6 +4991,28 @@ lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
   unfolding Guess_Tyops_Commute\<^sub>E_def ..
 
+lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>T
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>U
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D
+                          (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True \<close>
+  unfolding Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E_def ..
+
+lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>T
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>U
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D
+                           (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True \<close>
+  unfolding Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I_def ..
+
+
+
+
+
+paragraph \<open>ML\<close>
+
 ML_file \<open>library/phi_type_algebra/guess_tyops_commute.ML\<close>
 
 
@@ -4992,7 +5020,7 @@ paragraph \<open>ToA with Bubbling in Target\<close>
 
 consts bubbling_target :: action
 
-definition Has_Bubbling :: \<open>'a \<Rightarrow> 'a\<close> ("\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>") where [iff]: \<open>Has_Bubbling X \<equiv> X\<close>
+definition Has_Bubbling :: \<open>'a \<Rightarrow> 'a\<close> ("\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> _" [61] 60) where [iff]: \<open>Has_Bubbling X \<equiv> X\<close>
 
 subparagraph \<open>Bubbling_Target in Transformation\<close>
 
@@ -5007,15 +5035,8 @@ declare [[ \<phi>reason_default_pattern
 
 \<phi>reasoner_group bubbling_target = (100, [20, 2000]) for \<open>X @action bubbling_target\<close>
     \<open>Transformation rules moving targets tagged by \<open>bubbling_target\<close> to the top.\<close>
-  and derived_bubbling_target = (40, [40,40]) for \<open>X @action bubbling_target\<close> in bubbling_target
+  and derived_bubbling_target = (40, [40,42]) for \<open>X @action bubbling_target\<close> in bubbling_target
     \<open>Derived rules.\<close>
-
-lemma [\<phi>reason_template default %derived_bubbling_target]:
-  \<open> Tyops_Commute F F' G G' T D (embedded_func f P)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
-\<Longrightarrow> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> (F (G T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T) \<w>\<i>\<t>\<h> P x @action bubbling_target\<close>
-  unfolding Tyops_Commute_def Premise_def Bubbling_def Transformation_def Action_Tag_def
-  by clarsimp
 
 lemma [\<phi>reason_template default %derived_bubbling_target]:
   \<open> Functional_Transformation_Functor Fa Fb T U D R pm fm
@@ -5034,6 +5055,45 @@ lemma [\<phi>reason %ToA_normalizing]: \<comment> \<open>entry point to \<open>b
   unfolding Action_Tag_def Has_Bubbling_def Transformation_def Bubbling_def
   by clarsimp blast
 
+subparagraph \<open>Deriving Bubbling ToA\<close>
+
+lemma [\<phi>reason_template default %derived_bubbling_target]:
+  \<open> Tyops_Commute F F' G G' T D (embedded_func f P)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T) \<w>\<i>\<t>\<h> P x @action bubbling_target\<close>
+  unfolding Tyops_Commute_def Premise_def Bubbling_def Transformation_def Action_Tag_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %derived_bubbling_target+1]:
+  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D (embedded_func f P)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<w>\<i>\<t>\<h> P x @action bubbling_target\<close>
+  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Bubbling_def Action_Tag_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %derived_bubbling_target]:
+  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D (embedded_func f P)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (F'\<^sub>U U) \<w>\<i>\<t>\<h> P x @action bubbling_target\<close>
+  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Bubbling_def Action_Tag_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %derived_bubbling_target]:
+  \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D (embedded_func f P)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> G' (F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<w>\<i>\<t>\<h> P x @action bubbling_target\<close>
+  unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Bubbling_def Action_Tag_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %derived_bubbling_target]:
+  \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D (embedded_func f P)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
+\<Longrightarrow> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (F'\<^sub>T T) (F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f x \<Ztypecolon> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<w>\<i>\<t>\<h> P x @action bubbling_target\<close>
+  unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Bubbling_def Action_Tag_def
+  by clarsimp
+
+
+
 subparagraph \<open>Simpset adding \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>\<close>\<close>
 
 ML \<open> structure Tag_Has_Bubbling = Simpset (
@@ -5048,7 +5108,19 @@ ML \<open> structure Tag_Has_Bubbling = Simpset (
 \<close>
 
 lemma [\<phi>reason_template requires \<open>Tyops_Commute _ F' _ G' _ _ _\<close> ["_tagging_has_bubbling_"]]:
-  \<open> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T))\<close>
+  \<open> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)\<close>
+  unfolding Has_Bubbling_def .
+
+lemma [\<phi>reason_template requires \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ F'\<^sub>T _ _ G' _ _ _ _\<close> ["_tagging_has_bubbling_"]]:
+  \<open> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) U \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) U\<close>
+  unfolding Has_Bubbling_def .
+
+lemma [\<phi>reason_template requires \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ F'\<^sub>U _ G' _ _ _ _\<close> ["_tagging_has_bubbling_"]]:
+  \<open> G' T (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G' T (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)\<close>
+  unfolding Has_Bubbling_def .
+
+lemma [\<phi>reason_template requires \<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F _ _ G _ T U _ _\<close> ["_tagging_has_bubbling_"]]:
+  \<open> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U) \<equiv> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> G T U)\<close>
   unfolding Has_Bubbling_def .
 
 
@@ -5103,13 +5175,13 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (G T U) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
+          (x \<Ztypecolon> OPEN (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F (MAKE (G T U)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D r\<close>
-  unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Bubbling_def
+  unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Bubbling_def OPEN_def MAKE_def
   by blast
 
 lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
@@ -5118,13 +5190,13 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
-          (x \<Ztypecolon> F (G T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G' (F'\<^sub>T T) (F'\<^sub>U U) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target NToA)
-                                \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
+          (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN (G T U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target bubbling_target)
+                                                \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D (embedded_func f P)\<close>
-  unfolding Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def embedded_func_def
+  unfolding Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def embedded_func_def OPEN_def MAKE_def Bubbling_def
   by clarsimp
 
 lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
@@ -5132,13 +5204,13 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow>
-          (x \<Ztypecolon> G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (G'\<^sub>T T) (G'\<^sub>U U) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
+          (x \<Ztypecolon> OPEN (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F' (MAKE (G'\<^sub>T T)) (MAKE (G'\<^sub>U U)) \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target \<A>simp)
           \<comment>\<open>^ target of inductive expansion, needs \<open>to (\<c>\<o>\<m>\<m>\<u>\<t>\<e> G F)\<close>\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 G G'\<^sub>T G'\<^sub>U F F' T U D r\<close>
-  unfolding Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Bubbling_def
+  unfolding Action_Tag_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Bubbling_def OPEN_def MAKE_def
   by clarsimp
 
 lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
@@ -5146,20 +5218,26 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
 \<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
-          (x \<Ztypecolon> F' (G'\<^sub>T T) (G'\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> G (F T U) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target NToA)
-                                        \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
+          (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' (OPEN (G'\<^sub>T T)) (OPEN (G'\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U)) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target bubbling_target)
+                                                          \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 G G'\<^sub>T G'\<^sub>U F F' T U D (embedded_func f P)\<close>
-  unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def embedded_func_def
+  unfolding Action_Tag_def Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def embedded_func_def OPEN_def MAKE_def Bubbling_def
   by clarsimp
 
 
 ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
-                   
+
+\<phi>property_deriver Commutativity_Deriver\<^sub>I 110
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute 1 quiet) \<close>
+
+\<phi>property_deriver Commutativity_Deriver\<^sub>E 110
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute 2 quiet) \<close>
+
 \<phi>property_deriver Commutativity_Deriver 110
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute 3 quiet) \<close>
 
 
 

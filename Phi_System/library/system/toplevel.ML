@@ -235,7 +235,7 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
           fun gen_sequent (ctxt,sequent) =
             let (*val sequent = Phi_Help.beta_eta_contract_leading_antecedent sequent0*)
                 val insts =
-                      PLPR_Pattern.match (Proof_Context.theory_of ctxt'')
+                      PLPR_Pattern.match (Proof_Context.theory_of ctxt'') []
                                     (Phi_Help.leading_antecedent' sequent, Thm.prop_of th2)
                                     (Vartab.empty, Vartab.empty)
                       |> Phi_Help.subst_env

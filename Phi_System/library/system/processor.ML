@@ -157,11 +157,16 @@ fun get_attr ctxt name =
   wrap_attr
     (proc_of (Name_Space.check ctxt (Data.get ctxt) name |> snd))
 
-fun matches thy (Whole_Prop pat) X = Pattern.matches thy (pat,X)
+fun matches thy (Whole_Prop pat) X = PLPR_Pattern.matches thy [] (pat,X)
   | matches thy (Premise pat) (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ X $ _)
-      = PLPR_Pattern.matches thy (pat, Logic.strip_assums_concl X)
-  | matches thy (Premise pat) X = PLPR_Pattern.matches thy (pat,X)
-  | matches thy (Concl pat) X = PLPR_Pattern.matches thy (pat, Logic.strip_assums_concl X)
+      = let val (bv_tys, obj) = Phi_Help.strip_meta_hhf_bvtys X
+         in PLPR_Pattern.matches thy bv_tys (pat, obj)
+        end
+  | matches thy (Premise pat) X = false
+  | matches thy (Concl pat) X =
+        let val (bv_tys, obj) = Phi_Help.strip_meta_hhf_bvtys X
+         in PLPR_Pattern.matches thy bv_tys (pat, obj)
+        end
 
 exception Processed of (context_state * Token.T list)
 

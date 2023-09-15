@@ -1,10 +1,12 @@
 signature PATTERN_REWRITE_GLOBAL = sig
 
-val mk_pattern : term -> term
-val does_match_term : theory -> term * term -> bool
+type bv_typs = PLPR_Pattern.bv_typs
 
-val rewrites : theory -> term * term list -> term -> term list option
-val rewrite  : theory -> term * term -> term -> term option
+val mk_pattern : term -> term
+val does_match_term : theory -> bv_typs -> term * term -> bool
+
+val rewrites : theory -> bv_typs -> term * term list -> term -> term list option
+val rewrite  : theory -> bv_typs -> term * term -> term -> term option
 
 end
 
@@ -29,6 +31,8 @@ end
 
 structure Pattern_Translation : PATTERN_REWRITE_GLOBAL = struct
 
+type bv_typs = PLPR_Pattern.bv_typs
+
 fun mk_pattern raw =
   map_aterms (fn Var ((s,i),T) =>
                     if i < 0
@@ -38,24 +42,24 @@ fun mk_pattern raw =
 
 val chk_trick = Vartab.forall (fn ((_,i),(_,tm)) => i >= 0 orelse is_Var (Term.head_of (Envir.beta_eta_contract tm)))
 
-fun match_term thy pat_obj env =
-  let val (tys,tms) = PLPR_Pattern.match thy pat_obj env
+fun match_term thy bv_typs pat_obj env =
+  let val (tys,tms) = PLPR_Pattern.match thy bv_typs pat_obj env
    in if chk_trick tms then (tys,tms)
       else raise Pattern.MATCH
   end
 
-fun does_match_term thy pat_obj =
-      (match_term thy pat_obj (Vartab.empty, Vartab.empty) ; true)
+fun does_match_term thy bv_typs pat_obj =
+      (match_term thy bv_typs pat_obj (Vartab.empty, Vartab.empty) ; true)
       handle Pattern.MATCH => false
 
-fun rewrites thy (pat,rets) term =
-  let val s = PLPR_Pattern.match thy (pat, term) (Vartab.empty, Vartab.empty)
+fun rewrites thy bv_typs (pat,rets) term =
+  let val s = PLPR_Pattern.match thy bv_typs (pat, term) (Vartab.empty, Vartab.empty)
       in if chk_trick (snd s)
          then SOME (map (Envir.subst_term s) rets)
          else NONE
    end handle Pattern.MATCH => NONE
 
-fun rewrite thy (pat,ret) term = Option.map hd (rewrites thy (pat,[ret]) term)
+fun rewrite thy bv_typs (pat,ret) term = Option.map hd (rewrites thy bv_typs (pat,[ret]) term)
 
 end
 
@@ -123,7 +127,7 @@ fun print_rewrites ctxt =
 end
 
 fun calculate ctxt term (n, pat0, _, By_Pattern ret0) =
-      Option.map (pair n) (Pattern_Translation.rewrites (Context.theory_of ctxt) (pat0, ret0) term)
+      Option.map (pair n) (Pattern_Translation.rewrites (Context.theory_of ctxt) [] (pat0, ret0) term)
   | calculate ctxt term (n, _, _, By_ML rewr) =
       Option.map (pair n) (rewr ctxt term)
 
@@ -144,6 +148,7 @@ fun get_distinct_seq ctxt (n,ret) seq =
                                  else rewr_clash ctxt (n,ret) (n',ret)
      | NONE => ret
 
+(*the term cannot contain loose bounded variables*)
 fun gen_translate calc ctxt term =
   Net.match_term (Data.get ctxt) term
     |> sort (fn ((n1,_,_,_),(n2,_,_,_)) => int_ord (n2,n1))

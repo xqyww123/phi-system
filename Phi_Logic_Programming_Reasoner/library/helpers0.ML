@@ -50,6 +50,26 @@ val instantiate_higher_order_schematic_var_for_rule  :
         int (*N*) * indexname list (*IN-arguments to be fixed*) ->
         Proof.context -> thm -> thm
 
+
+
+val has_head : string (* const name *) -> term -> bool
+
+val strip_meta_hhf : term -> (string * typ) list (*quantified variables*)
+                            * term list (*premises of the antecedent*)
+                            * term (*conclusion containing loose bound*)
+val strip_meta_hhf_bvtys : term -> PLPR_Pattern.bv_typs * term
+val leading_antecedent : term -> (string * typ) list (*quantified variables*)
+                               * term list (*premises of the antecedent*)
+                               * term (*conclusion containing loose bound*)
+val fix_leading_antecedent_meta_quantifiers : Proof.context -> term
+                          -> term list (*quant vars*) * term list (*premises*) * term (*conclusion*) * Proof.context
+                             (*where quantified variables are fixed*)
+val strip_meta_hhf_c :
+      cterm -> Proof.context -> cterm list (*quant vars*) * cterm list (*premises*) * cterm * Proof.context
+val varified_leading_antecedent_meta_quantifiers : Proof.context -> term
+                          -> term list (*premises*) * term (*conclusion*)
+                             (*where quantified variables are varified (schematic variables)*)
+
 end
 
 structure Phi_Help : PHI_HELP = struct
@@ -326,6 +346,70 @@ fun instantiate_higher_order_schematic_var_for_rule' (N, fixes) ctxt rule =
 
 fun instantiate_higher_order_schematic_var_for_rule num_fixes ctxt thm =
   the_default thm (instantiate_higher_order_schematic_var_for_rule' num_fixes ctxt thm)
+
+
+
+fun has_head c (Const (c', _)) = (c = c')
+  | has_head c (h $ _) = has_head c h
+  | has_head _ _ = false
+
+fun strip_meta_hhf term =
+  let
+    fun strip (V,P) (Const("Pure.imp", _) $ H $ B) = strip (V,H::P) B
+      | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) = strip ((a,T)::V,P) B
+      | strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ X) =
+          strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
+      | strip (V,P) X = (rev V, rev P, X)
+  in strip ([],[]) term end
+
+fun strip_meta_hhf_bvtys term =
+  let
+    fun strip V (Const("Pure.imp", _) $ H $ B) = strip V B
+      | strip V (Const("Pure.all", _) $ Abs (_, T, B)) = strip (T::V) B
+      | strip V (Const("Pure.all", _) $ X) = strip V X
+      | strip V X = (V, X)
+  in strip [] term end
+
+fun leading_antecedent (Const("Pure.imp", _) $ H $ _) = strip_meta_hhf H
+  | leading_antecedent X = raise TERM ("has no antecedent", [X])
+
+fun fix_leading_antecedent_meta_quantifiers ctxt0 sequent =
+  let
+    val (qvs, prems, ant01) = leading_antecedent sequent
+
+    (* fix universally quantified variables *)
+    val (qv_names, ctxt'01) = Variable.add_fixes (map fst qvs) ctxt0
+    val qvars = map2 (fn N => fn (_,T) => Free (N,T)) qv_names qvs
+    val ctxt = fold Variable.declare_term qvars ctxt'01
+    val leading_ant = subst_bounds (rev qvars, ant01)
+  in (qvars,prems,leading_ant,ctxt)
+  end
+
+fun strip_meta_hhf_c cterm ctxt =
+  let
+    fun strip (V,P) (Const("Pure.imp", _) $ H $ B) ctm ctxt
+          = strip (V, Thm.dest_arg1 ctm :: P) B (Thm.dest_arg ctm) ctxt
+      | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) ctm ctxt
+          = let val ([name'],ctxt') = Variable.variant_fixes [a] ctxt
+                val (v', B') = Thm.dest_abs_fresh name' (Thm.dest_arg ctm)
+             in strip (v'::V,P) B B' ctxt'
+            end
+      | strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ B) ctm ctxt
+          = let val ([name'],ctxt') = Variable.variant_fixes ["_"] ctxt
+                val v' = Thm.cterm_of ctxt (Free (name', ty))
+                val B' = Thm.apply (Thm.dest_arg ctm) v'
+             in strip (v' :: V, P) B B' ctxt'
+            end
+      | strip (V,P) X ctm ctxt = (rev V, rev P, ctm, ctxt)
+  in strip ([],[]) (Thm.term_of cterm) cterm ctxt end
+
+fun varified_leading_antecedent_meta_quantifiers ctxt sequent =
+  let val (_,prems,leading_ant,ctxt') = fix_leading_antecedent_meta_quantifiers ctxt sequent
+      val (leading_ant'::prems') = Variable.export_terms ctxt' ctxt (leading_ant::prems)
+   in (prems',leading_ant')
+  end
+
+
 
 end
 
