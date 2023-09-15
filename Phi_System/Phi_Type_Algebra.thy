@@ -3489,7 +3489,7 @@ subsubsection \<open>Commutativity between \<phi>-Type Operators\<close>
 (*TODO Tyops_Commute\<^sub>1\<^sub>_\<^sub>2*)
 
 paragraph \<open>Implies Rewrites\<close>
-
+ 
 lemma [\<phi>reason_template name F.G.comm_rewr[]]:
   \<open> Tyops_Commute F F' G G' T D (embedded_func f P)
 \<Longrightarrow> Tyops_Commute G' G F' F T D' (embedded_func g Q)
