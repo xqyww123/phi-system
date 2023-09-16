@@ -50,10 +50,8 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, 
                => (Y, \<^Const>\<open>True\<close>, True_Rem)
            | Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ C $ _
                => (Y, C, Has_Rem)
-           | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Y $ (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ \<^Const>\<open>True\<close> $ _)
-               => (Y, \<^Const>\<open>True\<close>, True_Rem)
-           | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Y $ (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _)
-               => (Y, \<^Const>\<open>True\<close>, Has_Rem)
+           | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _)
+               => error "BAD CONFIGURATION"
            | Y => (Y, Term.dummy, No_Rem)
 
       fun mk_inst base abst (X $ _) = mk_inst base (abst+1) X
