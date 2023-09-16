@@ -503,13 +503,35 @@ lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[]]:
                prems(2-),
         clarsimp simp add: transformation_weaken) .
 
-
 lemma [\<phi>reason_template name F.\<Sigma>\<^sub>E[]]:
   \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. fst a = c \<and> snd a \<in> R c x )
 \<Longrightarrow> x \<Ztypecolon> F (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm c snd (\<lambda>_. True) x \<Ztypecolon> F' (T c) \<w>\<i>\<t>\<h> pm c snd (\<lambda>_. True) x \<close>
   unfolding Premise_def Functional_Transformation_Functor_def
   by clarsimp force
+
+lemma [\<phi>reason_template name F.\<Sigma>_rewr[]]:
+  \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
+\<Longrightarrow> Functional_Transformation_Functor F' F (T c) (\<Sigma> T) D' R' pm' fm'
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. c = fst a \<and> snd a \<in> R c x ) \<and>
+           (\<forall>a. a \<in> D' (fm c snd (\<lambda>_. True) x) \<longrightarrow> (c, a) \<in> R' (fm c snd (\<lambda>_. True) x))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fm' (\<lambda>a. (c, a)) (\<lambda>_. True) (fm c snd (\<lambda>_. True) x) = x
+\<Longrightarrow> (x \<Ztypecolon> F (\<Sigma> T)) = (fm c snd (\<lambda>_. True) x \<Ztypecolon> F' (T c))\<close>
+  unfolding Functional_Transformation_Functor_def Premise_def
+  apply (clarsimp simp del: split_paired_All; rule assertion_eq_intro)
+
+  subgoal premises prems
+    by (insert prems(1)[of c, THEN spec[where x=x], THEN spec[where x=snd], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+               prems(3-) ;
+        clarsimp simp add: transformation_weaken;
+        metis fst_conv snd_eqD transformation_weaken)
+
+  subgoal premises prems
+    by (insert prems(2)[THEN spec[where x=\<open>fm c snd (\<lambda>_. True) x\<close>], THEN spec[where x=\<open>\<lambda>a. (c, a)\<close>],
+                        THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+               prems(3-),
+        clarsimp simp add: transformation_weaken) .
+
 
 
 
@@ -1701,6 +1723,7 @@ declare [[\<phi>trace_reasoning = 1]]
        (*and SE_Trim_Empty*)
 
 thm List.\<Sigma>\<^sub>E
+thm List.\<Sigma>_rewr
 thm List.functional_transformation
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -1711,7 +1734,10 @@ thm List.functional_transformation
        (*and Trivial_\<Sigma>*)
 
 thm List3.\<Sigma>\<^sub>E
+thm List3.\<Sigma>_rewr
 thm list.cases
+
+    
 
 (* BOSS:
 \<phi>type_def List2 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -1738,7 +1764,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
 
-thm \<phi>MapAt.\<Sigma>\<^sub>E
+thm \<phi>MapAt.\<Sigma>_rewr
 
 subsubsection \<open>By List of Keys\<close>
 
@@ -1753,6 +1779,7 @@ declare [[\<phi>trace_reasoning = 1]]
        and Abstraction_to_Raw
 
 thm \<phi>MapAt_L.\<Sigma>\<^sub>E
+thm \<phi>MapAt_L.\<Sigma>_rewr
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
@@ -1811,6 +1838,7 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
        and \<phi>ScalarMul.Comm
        and \<phi>MapAt.Comm
 
+thm \<phi>Share.\<Sigma>_rewr
 thm \<phi>Fun'.\<phi>Fun'.comm_rewr
 thm \<phi>MapAt.\<phi>Share.comm_rewr
 
