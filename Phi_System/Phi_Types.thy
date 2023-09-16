@@ -504,10 +504,16 @@ lemma [\<phi>reason_template name F.\<Sigma>\<^sub>I[]]:
         clarsimp simp add: transformation_weaken) .
 
 
+lemma [\<phi>reason_template name F.\<Sigma>\<^sub>E[]]:
+  \<open> (\<And>c. Functional_Transformation_Functor F F' (\<Sigma> T) (T c) D (R c) (pm c) (fm c))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. fst a = c \<and> snd a \<in> R c x )
+\<Longrightarrow> x \<Ztypecolon> F (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm c snd (\<lambda>_. True) x \<Ztypecolon> F' (T c) \<w>\<i>\<t>\<h> pm c snd (\<lambda>_. True) x \<close>
+  unfolding Premise_def Functional_Transformation_Functor_def
+  by clarsimp force
 
 
 
-
+(*
 
 definition \<open>Trivial_\<Sigma> Fa Fb D s m \<longleftrightarrow> (\<forall>T x. D (s x) x \<longrightarrow> (x \<Ztypecolon> Fa (\<Sigma> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> m x \<Ztypecolon> Fb (T (s x))))\<close>
   \<comment> \<open>There is only trivial homomorphism where all the first projection of the element are equal\<close>
@@ -588,7 +594,7 @@ ML_file \<open>library/phi_type_algebra/sigma_single_point.ML\<close>
 hide_fact \<phi>TA_SgH_T_intro' \<phi>TA_SgH_T_intro \<phi>TA_SgH_rewr_C \<phi>TA_SgH_rewr_IH \<phi>TA_SgH_rule
 
 
-
+*)
 
 subsubsection \<open>\<S>-Homomorphism\<close>
 
@@ -1197,7 +1203,7 @@ lemma [simp]:
        and \<open> homo_one f \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
        and Functionality
        and Functional_Transformation_Functor
-       and Trivial_\<Sigma>
+       (*and Trivial_\<Sigma>*)
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Abstraction_to_Raw
@@ -1335,7 +1341,7 @@ declare [[\<phi>trace_reasoning = 0 ]]
          \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) \<close>
        and Functionality
        and Functional_Transformation_Functor
-       and Trivial_\<Sigma>
+       (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
        and \<open> homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> closed_homo_sep_disj (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
@@ -1578,7 +1584,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Basic
        and Functionality
        and Functional_Transformation_Functor
-       and Trivial_\<Sigma>
+       (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
 
 
@@ -1691,9 +1697,10 @@ declare [[\<phi>trace_reasoning = 1]]
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
   deriving Separation_Monoid
-       and Trivial_\<Sigma>
+       (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)
 
+thm List.\<Sigma>\<^sub>E
 thm List.functional_transformation
 
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
@@ -1701,8 +1708,9 @@ thm List.functional_transformation
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
   deriving Separation_Monoid
        (*and SE_Trim_Empty*)
-       and Trivial_\<Sigma>
+       (*and Trivial_\<Sigma>*)
 
+thm List3.\<Sigma>\<^sub>E
 thm list.cases
 
 (* BOSS:
@@ -1725,12 +1733,12 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Separation_Monoid
        and Functionality
-       and Trivial_\<Sigma>
        and Abstraction_to_Raw
        and Commutativity_Deriver
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
 
+thm \<phi>MapAt.\<Sigma>\<^sub>E
 
 subsubsection \<open>By List of Keys\<close>
 
@@ -1740,9 +1748,11 @@ declare [[\<phi>trace_reasoning = 1]]
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Separation_Monoid
        and Functionality
-       and Trivial_\<Sigma>
+       (*and Trivial_\<Sigma>*)
        and Semimodule_NonDistr_no0
        and Abstraction_to_Raw
+
+thm \<phi>MapAt_L.\<Sigma>\<^sub>E
 
 abbreviation \<phi>MapAt_L1 :: \<open>'key \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>#" 75)
   where \<open>\<phi>MapAt_L1 key \<equiv> \<phi>MapAt_L [key]\<close>
@@ -1792,7 +1802,6 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Separation_Monoid
        and Functionality
-       and Trivial_\<Sigma>
        (*and SE_Trim_Empty*)
        and Semimodule_no0
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
