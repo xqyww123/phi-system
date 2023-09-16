@@ -23,6 +23,7 @@ val adding_property : bool Config.T (*controlling if automatically for any new r
   register to the property DB and invoking the related automation*)
 
 structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
+structure Template_Inst_SS_Post_Merging : HOOKS
 
 (*** The Framework for Automation based on Algebraic Property ***)
 
@@ -32,6 +33,7 @@ datatype instantiation_action =
             Reasonig_Rule of (Phi_Reasoner.mode * priority) *
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
           | Attributes of Token.src list
+          | No_Action
 
 type parameters = property_pattern option list (*corresponding to the premises of the template rule
           one to one respectively, and being NONE if the premise in the corresponded position is
@@ -153,6 +155,7 @@ datatype instantiation_action =
             Reasonig_Rule of (Phi_Reasoner.mode * priority) *
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
           | Attributes of Token.src list
+          | No_Action
 
 datatype template_action =
             Instantiate_Rule of thm * (rule_generation_pass * Phi_Reasoner.rule_pass) option *
@@ -216,7 +219,8 @@ fun trim_template ((params, pos, act) : template) : template =
   case act of Instantiate_Rule (rule, pass, inst, b) =>
                 Instantiate_Rule (Thm.trim_context rule, pass,
                   (case inst of Reasonig_Rule _ => inst
-                              | Attributes srcs => Attributes (map Token.trim_context_src srcs)), b)
+                              | Attributes srcs => Attributes (map Token.trim_context_src srcs)
+                              | No_Action => No_Action), b)
             | Free_Action act => Free_Action act)
 
 (*
@@ -257,6 +261,11 @@ fun lookup_property_unify ctxt pattern =
 
 (* Invoke template instantiation *)
 
+structure Template_Inst_SS_Post_Merging = Hooks (
+  type arg = unit
+  type state = Proof.context
+)
+
 structure Template_Inst_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
@@ -265,6 +274,7 @@ structure Template_Inst_SS = Simpset (
   fun post_merging ctxt = ctxt
         |> Simplifier.del_cong @{thm' if_weak_cong}
         |> Simplifier.add_cong @{thm' if_cong}
+        |> Template_Inst_SS_Post_Merging.invoke (Context.Proof ctxt) ()
 )
 
 fun instantiations_of_parameters get_property ctxt params =
@@ -359,7 +369,6 @@ fun default_simplify pattern ctxt rule =
   end
 
 
-
 fun invoke_template_action template_pos (Instantiate_Rule (template, pass, action, bind))
                            (pos, (env, positioned_props)) ctxt =
      (let val ctxt' = Context.proof_of ctxt
@@ -427,7 +436,8 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                     |> Phi_Help.beta_eta_contract
           val pattern = (case action
                            of Reasonig_Rule (_, (pats, _)) => SOME (map fst pats)
-                            | Attributes _ => NONE)
+                            | Attributes _ => NONE
+                            | No_Action => NONE)
           val rules' = case pass of SOME (ps, _) => ps (single o default_simplify pattern ctxt', pos, ctxt') rule'1
                                   | NONE => single (default_simplify pattern ctxt' rule'1)
 
@@ -463,7 +473,8 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                              (case binding of SOME b => [Binding.pretty b, brk 1] | _ => []) @
                              here template_pos)] @
                  (case action of Reasonig_Rule _ => []
-                     | Attributes _ => map (fn rule => item [Thm.pretty_thm ctxt' rule]) rules'))
+                     | Attributes _ => map (fn rule => item [Thm.pretty_thm ctxt' rule]) rules'
+                     | No_Action => []))
          end) ;
       (case action
          of Reasonig_Rule ((mode, priority), (pats, blacklists)) =>
@@ -476,11 +487,18 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
           | Attributes attrs =>
               let fun app attr = uncurry (Thm.apply_attribute (Attrib.attribute ctxt' attr))
                in fold (curry (snd o fold app attrs)) rules' ctxt
-              end)
+              end
+          | No_Action => ctxt)
    |> (case binding of NONE => I
           | SOME b =>
                 perhaps (try (Context.mapping (snd o Global_Theory.note_thms "" ((b, []), [(rules',[])]))
                                               (snd o Proof_Context.note_thms "" ((b, []), [(rules',[])]))))
+                        (*It is not a Local_Theory.note here because the instantiation usually happens
+                          inside an attribute and when a locale is interpreted, the attribute will be replayed.*)
+                        (*I want to support lazy instantiation, but, to provide this, the Proof.context
+                          has to be involved in the closure and that would consume a lot of memory.
+                          Perhaps we could use the mechanism of dynamic fact, I am not sure which is better,
+                          some test is required.*)
       )
     ) end
       handle Automation_Fail prt => (
@@ -677,7 +695,7 @@ val _ = Theory.setup (
                 (Parse.and_list (Scan.repeat (  Args.$$$ "_" >> K NONE
                                              || Parse.term >> SOME)) >> flat)))
        -- Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
-       -- Attrib.opt_attribs)
+       -- Scan.option Attrib.attribs)
       (fn (pos, mode, priority, (((raw_binding, raw_dependencies), pass_src),attribs), pats, guard) =>
         Thm.declaration_attribute (fn thm => fn ctxt =>
           let val ctxt' = Context.proof_of ctxt
@@ -718,11 +736,14 @@ val _ = Theory.setup (
                     end
                   ) pass_src
               val gen = case (attribs, priority, pats)
-                          of (attrs as _ :: _, 100, ([], [])) => Attributes attrs
-                           | (_ :: _, _, _) =>
+                          of (SOME (attrs as _ :: _), 100, ([], [])) => Attributes attrs
+                                (*100 is the default priority of \<phi>-LPR. Here we use it to trickily mean
+                                  an explicit priority is not given*)
+                           | (SOME [], 100, ([], [])) => No_Action
+                           | (SOME _, _, _) =>
                               error "Prioirty and binding patterns are senseless and not allowed to\
                                     \ be given once the attributes are given."
-                           | ([], _, _) =>
+                           | (NONE, _, _) =>
                               Reasonig_Rule ((mode, priority), pats)
            in setup_rule_generation (pos,(dependencies,pass),(binding,gen)) thm ctxt
           end)

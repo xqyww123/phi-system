@@ -990,6 +990,10 @@ fun add_type (def, pos, dervs, bundles) thy =
       val make_abstraction = gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
                            @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
                               handle THM _ => [])
+      val make_abstraction_eq = gen_from_eqs @{thm' \<phi>make_abstraction'eq} I tagged_eqs
+                              @ (gen_from_eqs @{thm' \<phi>make_abstraction'R'eq} I tagged_eqs
+                                 handle THM _ => [])
+      val make_Identity_Element_E = gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
 
       val proof_id =
         case term of Const _ => fst name_ty
@@ -1025,7 +1029,9 @@ fun add_type (def, pos, dervs, bundles) thy =
                   Phi_Reasoner.add_rules (map (fn rule =>
                       ([Morphism.thm m rule], pos, mode, priority, [], [], NONE)) rules)
          in add_rules Phi_Reasoner.TO_BE_OVERRIDE 30 (Morphism.fact m open_abstraction)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE 80 (Morphism.fact m make_abstraction)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %ToA_make_\<phi>type_derived} (Morphism.fact m make_abstraction)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %ToA_make_\<phi>type_derived-10} (Morphism.fact m make_abstraction_eq)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %derived_identity_element} (Morphism.fact m make_Identity_Element_E)
          #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %ToA_open_\<phi>type_derived} (Morphism.fact m open_abstraction_ToA)
          #> Phi_Expansions.add_simps expns
          #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)

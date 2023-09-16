@@ -198,9 +198,9 @@ abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>ex
 \<phi>reasoner_ML \<phi>expn_Premise 10 (\<open><\<phi>expn> ?P\<close>) = \<open>
   Seq.ORELSE (
   Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
-                            ctxt addsimps (Useful_Thms.get ctxt))),
+                            ctxt addsimps (Useful_Thms.get ctxt)) false),
   Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
-        Phi_Expansions.enhance (ctxt addsimps (Useful_Thms.get ctxt))))) o snd
+        Phi_Expansions.enhance (ctxt addsimps (Useful_Thms.get ctxt))) false)) o snd
 \<close>
 
 
@@ -372,7 +372,7 @@ consts frame_var_rewrs :: mode
 
 \<phi>reasoner_ML Subty_Simplify 2000 (\<open>Simplify frame_var_rewrs ?x ?y\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_only (K Seq.empty) (fn ctxt =>
-          Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>)) o snd\<close>
+          Named_Theorems.get ctxt \<^named_theorems>\<open>frame_var_rewrs\<close>) false) o snd\<close>
 
 definition \<phi>IntroFrameVar :: "'a::sep_magma BI option \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool"
   where "\<phi>IntroFrameVar R S' S T' T \<longleftrightarrow> (case R of Some R' \<Rightarrow> S' = (R' * S) \<and> T' = R' * T
@@ -475,7 +475,7 @@ ML_file \<open>library/tools/embed_BI_into_phi_types.ML\<close>
 consts mode_embed_into_\<phi>type :: mode
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] _ : _\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt => Embed_into_Phi_Type.equip ctxt)) o snd\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt => Embed_into_Phi_Type.equip ctxt) true) o snd\<close>
  
 lemmas [embed_into_\<phi>type] =
     \<phi>None_itself_is_one[where any=\<open>()\<close>] \<phi>Prod_expn' \<phi>Any_def

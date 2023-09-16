@@ -41,7 +41,10 @@ fun chk_term (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = X
                         of \<^Type>\<open>bool\<close> => X
                          | _ => raise TERM ("Fail to atomize", [X])
 
-fun iso_atomize_conv ctxt ctm = chk (Raw_Simplifier.rewrite ctxt true (Atomize.get ctxt) ctm)
+fun iso_atomize_conv ctxt ctm =
+  case Thm.term_of ctm
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.all_conv ctm
+     | _ => chk (Raw_Simplifier.rewrite ctxt true (Atomize.get ctxt) ctm)
 fun iso_rulify_conv  ctxt = Raw_Simplifier.rewrite ctxt true (Rulify.get ctxt)
 val iso_atomize = Conv.fconv_rule o iso_atomize_conv
 val iso_rulify  = Conv.fconv_rule o iso_rulify_conv

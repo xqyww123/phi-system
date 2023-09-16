@@ -736,17 +736,17 @@ definition Bubbling :: \<open>'a \<Rightarrow> 'a\<close> ("\<b>\<u>\<b>\<b>\<l>
 
 paragraph \<open>General Rules\<close>
 
-lemma [\<phi>reason %\<phi>simp_fallback]:
+lemma [\<phi>reason default %\<phi>simp_fallback]:
   \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> F T \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
   unfolding Action_Tag_def Bubbling_def Transformation_def
   by simp
 
-lemma [\<phi>reason %\<phi>simp_fallback]:
+lemma [\<phi>reason default %\<phi>simp_fallback]:
   \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> F T U \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
   unfolding Action_Tag_def Bubbling_def Transformation_def
   by simp
 
-lemma [\<phi>reason %\<phi>simp_fallback]:
+lemma [\<phi>reason default %\<phi>simp_fallback]:
   \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> F T U W \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
   unfolding Action_Tag_def Bubbling_def Transformation_def
   by simp
@@ -1375,6 +1375,9 @@ definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> wh
                              for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
                              in ToA and > ToA_splitting_source and < ToA_make_\<phi>type
       \<open>Reports failures when the annotated \<phi>-type fails to be constructed.\<close>
+  and ToA_make_\<phi>type_derived = (80, [70, 80]) for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
+                                in ToA_make_\<phi>type
+      \<open>Derived rules\<close>
 
 ML_file \<open>library/syntax/make_and_open.ML\<close>
 

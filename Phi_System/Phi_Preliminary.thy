@@ -194,10 +194,6 @@ simproc_setup Funcomp_Lambda (\<open>f o g\<close>) = \<open>fn _ => fn ctxt => 
      | _ => NONE
 \<close>
 
-subsection \<open>Helper Methods\<close>
-
-ML_file \<open>library/tools/where_tac.ML\<close>
-
 subsection \<open>Helper Isar Commands\<close>
 
 declare [[ML_debugger=false, ML_exception_debugger=false]]

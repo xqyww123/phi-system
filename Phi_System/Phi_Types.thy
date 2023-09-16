@@ -56,7 +56,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
- 
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -436,17 +436,14 @@ NG! TODO!\<close>
 thm Set_Abstraction.intro_reasoning(1)  [\<phi>reason 60]
         Set_Abstraction.elim_reasoning(1)[\<phi>reason 1000]
 
-lemma [\<phi>reason 2800]:
-  \<open> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> fst x \<Longrightarrow> (a, snd x) \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE )
-\<Longrightarrow> x \<Ztypecolon> (\<S> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE \<close>
-  unfolding Action_Tag_def Premise_def Transformation_def
-  by (cases x; clarsimp; blast)
+(*TODO!!!*)
 
 lemma [\<phi>reason 2800]:
-  \<open> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> fst x \<Longrightarrow> (a, snd x) \<Ztypecolon> \<black_circle> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi )
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> (\<S> T) \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SEi \<close>
-  unfolding Action_Tag_def Premise_def Transformation_def
-  by (cases x; clarsimp; blast)
+  \<open> (\<And>a \<in> fst x. (a, snd x) \<Ztypecolon> T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P )
+\<Longrightarrow> x \<Ztypecolon> (\<S> T) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Action_Tag_def Premise_def Transformation_def meta_Ball_def
+  by (cases x; cases C; clarsimp; blast)
+
 
 subsubsection \<open>Pseudo properties of \<Sigma>\<close>
 
@@ -858,7 +855,7 @@ lemma \<phi>Type_univ_quant_expn[\<phi>expns]:
 *)
 
 
-subsection \<open>Embedding Additive Disjunction\<close>
+subsection \<open>Additive Disjunction\<close>
 
 subsubsection \<open>Preliminary Settings\<close>
 
@@ -881,7 +878,7 @@ lemma [\<phi>reason 1000]:
   by (cases x; simp)
 
 
-subsection \<open>Embedding of Multiplicative Finite Quantification\<close>
+subsection \<open>Finite Multiplicative Quantification\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
@@ -1020,7 +1017,7 @@ thm Tr2
 
 
 
-subsubsection \<open>Sum Type\<close>
+subsection \<open>Sum Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
@@ -1044,8 +1041,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Identity_Element\<^sub>E (y \<Ztypecolon> U)
         \<Longrightarrow> Identity_Element\<^sub>E (Inr y \<Ztypecolon> T +\<^sub>\<phi> U)\<close>
        and Transformation_Functor
-       and Commutativity_Deriver\<^sub>I
-
+       and Commutativity_Deriver\<^sub>E_rev
 
 subsubsection \<open>Rewrites\<close>
 
@@ -1055,21 +1051,86 @@ lemma \<phi>Sum_red[simp]:
   unfolding \<phi>Sum.unfold
   by simp_all
 
+(* TODO: if so, we can totally replace \<open>\<or>\<^sub>\<phi>\<close> by \<open>+\<^sub>\<phi>\<close>
+(*TODO: reduce \<open>(x \<Ztypecolon> T) + (y \<Ztypecolon> U) + (z \<Ztypecolon> Z) \<equiv> {Inl ({Inl x} + {Inr y})} + {Inr z} \<Ztypecolon> \<S> (\<S> (T +\<^sub>\<phi> U) +\<^sub>\<phi> Z)
+                                           \<equiv> {Inl (Inl x)} + {Inl (Inr y)} + {Inr z} \<Ztypecolon> \<S> T +\<^sub>\<phi> \<S> U +\<^sub>\<phi> \<S> Z\<close>*)
+lemma [embed_into_\<phi>type]:
+  \<open> ((x \<Ztypecolon> T) + (y \<Ztypecolon> U)) = ({Inl x} + {Inr y} \<Ztypecolon> \<S> (T +\<^sub>\<phi> U)) \<close>
+  unfolding BI_eq_iff
+  by (clarsimp simp add: split_sum_ex)
+
+term \<open>{Inl ({Inl x} + {Inr y})} + {Inr z} \<Ztypecolon> \<S> (\<S> (T +\<^sub>\<phi> U) +\<^sub>\<phi> Z)\<close>
+
+*)
+
+subsubsection \<open>Transformations\<close>
+
+\<phi>reasoner_group ToA_splitting_\<phi>Sum = (%ToA_splitting-20, [%ToA_splitting-20, %ToA_splitting-20])
+                                      for (\<open>x \<Ztypecolon> T +\<^sub>\<phi> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close>, \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T +\<^sub>\<phi> U\<close>)
+                                       in ToA_splitting and < ToA_splitting_If
+  \<open>ToA splitting \<open>\<phi>Sum\<close>\<close>
+
+declare \<phi>Sum.intro_reasoning(1)[\<phi>reason %ToA_splitting_\<phi>Sum]
+        \<phi>Sum.elim_reasoning (1)[\<phi>reason %ToA_splitting_\<phi>Sum]
+
+lemma [\<phi>reason %ToA_splitting_\<phi>Sum]:
+  \<open> (case fst x of Inl a \<Rightarrow> (a, snd x) \<Ztypecolon> T \<^emph>[C] W | Inr b \<Rightarrow> (b, snd x) \<Ztypecolon> U \<^emph>[C] W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> (T +\<^sub>\<phi> U) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by (cases x; case_tac a; cases C; simp add: \<phi>Prod_expn')
+
+lemma [\<phi>reason %ToA_splitting_\<phi>Sum]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (case fst y of Inl a \<Rightarrow> (a, snd y) \<Ztypecolon> T \<^emph>[C] R | Inr b \<Rightarrow> (b, snd y) \<Ztypecolon> U \<^emph>[C] R) \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (T +\<^sub>\<phi> U) \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+  by (cases y; case_tac a; cases C; simp add: \<phi>Prod_expn')
+
+
 subsubsection \<open>Rule\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
-
-lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason_template %\<phi>type_algebra_prop_cut]:
+ 
+lemma \<phi>Sum_Comm\<^sub>I_temlpate [\<phi>reason_template name F.\<phi>Sum_Comm\<^sub>I[]]:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F U (T +\<^sub>\<phi> U) D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D : (\<lambda>x. case x of Inl u \<Rightarrow> (\<forall>a \<in> D\<^sub>T u. Inl a \<in> R\<^sub>T u)
                               | Inr v \<Rightarrow> (\<forall>b \<in> D\<^sub>U v. Inr b \<in> R\<^sub>U v))) @action \<A>_template_reason
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r : (embedded_func (case_sum (fm\<^sub>T Inl (\<lambda>_. True)) (fm\<^sub>U Inr (\<lambda>_. True)))
                                 (pred_sum (pm\<^sub>T Inl (\<lambda>_. True)) (pm\<^sub>U Inr (\<lambda>_. True))))) @action \<A>_template_reason
-\<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U \<phi>Sum \<phi>Sum T U D r \<close>
+\<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F\<^sub>T F\<^sub>U (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U D r \<close>
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
             Action_Tag_def Simplify_def
   by (clarify; case_tac x; clarsimp)
+
+(*
+setup \<open>Context.theory_map (Phi_Type_Template_Properties.Template_Inst_SS_Post_Merging.add 100
+  (fn _ => Config.put Simplifier.simp_trace true))\<close>
+
+declare [[simp_trace_depth_limit = 10]]*)
+
+lemma \<phi>Sum_Comm\<^sub>E_temlpate [\<phi>reason_template name F.\<phi>Sum_Comm\<^sub>E'[]]:
+  \<open> Functional_Transformation_Functor F F'\<^sub>T (T +\<^sub>\<phi> U) T D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
+\<Longrightarrow> Functional_Transformation_Functor F F'\<^sub>U (T +\<^sub>\<phi> U) U D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x a. a \<in> D\<^sub>T x \<and> isl a \<longrightarrow> projl a \<in> R\<^sub>T x) \<and>
+           (\<forall>x a. a \<in> D\<^sub>U x \<and> \<not> isl a \<longrightarrow> projr a \<in> R\<^sub>U x)
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] D : (\<lambda>x. (\<forall>a \<in> D\<^sub>T x. isl a) \<or> (\<forall>b \<in> D\<^sub>U x. \<not> isl b))) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] r : (embedded_func (\<lambda>x. if (\<forall>a \<in> D\<^sub>T x. isl a)
+                                    then Inl (fm\<^sub>T projl (\<lambda>_. True) x)
+                                    else Inr (fm\<^sub>U projr (\<lambda>_. True) x))
+                               (\<lambda>x. if (\<forall>a \<in> D\<^sub>T x. isl a)
+                                    then pm\<^sub>T projl (\<lambda>_. True) x
+                                    else pm\<^sub>U projr (\<lambda>_. True) x))) @action \<A>_template_reason
+\<Longrightarrow> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U D r \<close>
+  unfolding Functional_Transformation_Functor_def Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Premise_def Simplify_def Action_Tag_def
+  apply (clarify; case_tac \<open>Ball (D\<^sub>T x) isl\<close>; auto)
+  subgoal premises prems for x
+    by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=projl], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+               prems (3-),
+        clarsimp simp add: Transformation_def split_sum_all Ball_def)
+  subgoal premises prems for x
+    by (insert prems(2)[THEN spec[where x=x], THEN spec[where x=projr], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+               prems(3-),
+        clarsimp simp add: Transformation_def split_sum_all Ball_def) .
+
+
 
 (*lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason %\<phi>type_algebra_prop_cut]:
   \<open> Functional_Transformation_Functor F\<^sub>T F T (T +\<^sub>\<phi> U) D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
@@ -1082,13 +1143,13 @@ lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason_template %\<phi>type_algebra_prop_cut
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Functional_Transformation_Functor_def Premise_def
   by (clarify; case_tac x; clarsimp)*)
 
-lemma \<phi>Sum_Comm\<^sub>I [\<phi>reason %\<phi>type_algebra_prop_cut]:
+lemma \<phi>Sum_Comm\<^sub>E [\<phi>reason %\<phi>type_algebra_prop_cut]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
   unfolding Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def Transformation_def
   by (clarsimp simp add: split_sum_all)
 
 
-subsection \<open>Embedding Additive Disjunction\<close>
+subsection \<open>Additive Disjunction\<close>
 
 text \<open>Depreciated! Use \<open>\<phi>Sum\<close> instead!\<close>
 
@@ -1213,7 +1274,7 @@ text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma [simp]:
+lemma [simp]: (*TODO: move me*)
   \<open>(case x of Inl x \<Rightarrow> Inl x | Inr x \<Rightarrow> Inr x) = x\<close>
   by (cases x; simp)
 
@@ -1230,9 +1291,11 @@ lemma [simp]:
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Abstraction_to_Raw
        and Commutativity_Deriver 
-       and \<phi>Sum.Comm\<^sub>I
+       and \<phi>Sum.Comm\<^sub>E
 
-thm \<phi>Fun'.\<phi>Sum.comm_rewr
+thm \<phi>Fun'.\<phi>Sum_Comm\<^sub>E
+
+lemmas \<phi>Fun'_\<phi>Sum_comm_rewr = Comm_Tyops_Rewr\<^sub>2_temlpate[OF \<phi>Fun'.\<phi>Sum_Comm\<^sub>E \<phi>Fun'.\<phi>Sum_Comm\<^sub>I, simplified]
 
 
 subsubsection \<open>Reasoning Rules\<close>
@@ -1375,6 +1438,10 @@ declare [[\<phi>trace_reasoning = 0 ]]
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
        and Commutativity_Deriver
+       and \<phi>Sum.Comm\<^sub>E
+
+
+
 
 
 subsubsection \<open>Reasoning Rules\<close>
@@ -1608,6 +1675,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
+       and \<phi>Sum.Comm\<^sub>E
 
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
@@ -1622,6 +1690,8 @@ lemma \<comment> \<open>A example for how to represent list of multi-elements\<c
 
 subsubsection \<open>Empty List\<close>
 
+declare [[\<phi>trace_reasoning = 3]]
+ 
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
   deriving Basic
@@ -1713,14 +1783,37 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-                             
+declare [[\<phi>trace_reasoning = 3]]
+
+declare if_split_eq1[simp]
+
+schematic_goal
+  \<open>\<forall>a. Ball (set (xaa # l)) isl \<or> (\<forall>b\<in>set (xaa # l). \<not> isl b) \<longrightarrow>
+        (if isl xaa \<and> Ball (set l) isl then Inl (projl xaa # map projl l) else Inr (projr xaa # map projr l)) = Inl a \<longrightarrow>
+        ?x24 a # ?l24 a = a\<close>
+  apply simp
+apply auto
+
+
+ 
+          
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Separation_Monoid
+  deriving (*Separation_Monoid
+and*) \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
+ (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)
+
+
+
+
+
+thm List.\<phi>Sum_Comm\<^sub>E'
+
+term \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
+ (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
 
 thm List.\<Sigma>\<^sub>E
 thm List.\<Sigma>_rewr

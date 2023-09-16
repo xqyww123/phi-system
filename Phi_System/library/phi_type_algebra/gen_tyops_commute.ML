@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val meta_Tyops_Commute : int -> quiet -> Phi_Type_Algebra.derive
+val meta_Tyops_Commute : bool * int -> quiet -> Phi_Type_Algebra.derive
 
 end
 
@@ -30,12 +30,10 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> (F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action \<phi>TA_ind_target \<A>)
                                   \<equiv> (A \<Longrightarrow> B \<Longrightarrow> (x \<Ztypecolon> F T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action NToA)\<close>
                                 by (unfold atomize_imp Action_Tag_def Bubbling_def)}
-      fun gen_ind_conv is_IH ctxt _ =
+      fun gen_ind_conv is_IH ctxt _ = @{print} o
             Conv.rewr_conv (if not is_intro andalso not is_IH then ind_rewr_E_CL else ind_rewr) then_conv
-            Phi_Reasoners.asm_rewrite true (
-                Expansion.equip ctxt addsimps
-                  (if is_IH then @{thms' OPEN_def MAKE_def} else simps)
-                ) then_conv
+            (if is_IH then Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def})
+             else Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)) then_conv
             Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]}))
               (if not is_intro andalso not is_IH
                then Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
@@ -106,7 +104,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
         |> pair [rule']
   end
 
-fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
+fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
   let val (rev_argtys, x_ty, c_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun calc_arity arity (argty :: rev_argtys) =
            (case try dest_parameterized_phi_ty argty
@@ -149,7 +147,8 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
       val pattern = apply2 Thm.concl_of rule
 
       val name = Term.term_name (#term phi) ^ "_Comm"
-      val name = (name ^ "\<^sub>I", name ^ "\<^sub>E")
+      val name = if reversed then (name ^ "\<^sub>E", name ^ "\<^sub>I")
+                             else (name ^ "\<^sub>I", name ^ "\<^sub>E")
 
       val deriving = (deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, fst name)
                           (meta_gen_Tyops_Commute' (true , fst rule, fst parse_hint, fst guess_property)),
@@ -168,9 +167,11 @@ fun meta_gen_Tyops_Commute ctxt (phi : phi_type) =
 (*mode: 1 = only generates introduction deriver
         2 = only generates elimination deriver
         3 = generates both derivers*)
-fun meta_Tyops_Commute mode quiet ctxt (phi : phi_type) thy =
-  let val (binding, deriver, pattern) = meta_gen_Tyops_Commute ctxt phi
-      val (binding_I, binding_E) = (Binding.suffix_name "\<^sub>I" binding, Binding.suffix_name "\<^sub>E" binding)
+fun meta_Tyops_Commute (reversed,mode) quiet ctxt (phi : phi_type) thy =
+  let val (binding, deriver, pattern) = meta_gen_Tyops_Commute reversed ctxt phi
+      val (binding_I, binding_E) = if reversed
+            then (Binding.suffix_name "\<^sub>E" binding, Binding.suffix_name "\<^sub>I" binding)
+            else (Binding.suffix_name "\<^sub>I" binding, Binding.suffix_name "\<^sub>E" binding)
 
       val (gen_I, gen_E) = case mode of 1 => (true, false)
                                       | 2 => (false, true)

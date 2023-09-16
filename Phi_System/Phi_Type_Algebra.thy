@@ -960,7 +960,31 @@ lemma \<phi>make_abstraction'R:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Action_Tag_def MAKE_def by simp
+  unfolding Action_Tag_def MAKE_def
+  by simp
+
+lemma \<phi>make_abstraction'eq:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ex (eq x)) \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x x')
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
+  by clarsimp
+
+lemma \<phi>make_abstraction'R'eq:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ex (eq x)) \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x x')
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
+  by (cases C; clarsimp; blast)
+
+lemma \<phi>make_Identity_Element\<^sub>E:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> Identity_Element\<^sub>E U
+\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> MAKE T) \<close>
+  unfolding MAKE_def
+  by simp
 
 lemma \<phi>gen_expansion:
   \<open> (x \<Ztypecolon> T) = U
@@ -979,17 +1003,8 @@ ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 consts \<phi>instantiation :: mode
 
 \<phi>reasoner_ML \<open>Simplify \<phi>instantiation\<close> 1000 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] _ : _\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (Phi_Type_Template_Properties.Template_Inst_SS.enhance)) o snd\<close>
-
-
-
-
-
-
-
-
-
-
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
+        (Phi_Type_Template_Properties.Template_Inst_SS.enhance) true) o snd\<close>
 
 
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
@@ -3509,7 +3524,7 @@ subsubsection \<open>Commutativity between \<phi>-Type Operators\<close>
 
 paragraph \<open>Implies Rewrites\<close>
  
-lemma [\<phi>reason_template name F.G.comm_rewr[]]:
+lemma Comm_Tyops_Rewr_temlpate[\<phi>reason_template name F.G.comm_rewr[]]:
   \<open> Tyops_Commute F F' G G' T D (embedded_func f P)
 \<Longrightarrow> Tyops_Commute G' G F' F T D' (embedded_func g Q)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (g (f x) = x) \<and> D x \<and> D' (f x)
@@ -3517,7 +3532,7 @@ lemma [\<phi>reason_template name F.G.comm_rewr[]]:
   unfolding Tyops_Commute_def Premise_def Transformation_def BI_eq_iff
   by clarsimp metis
 
-lemma [\<phi>reason_template name F.G.comm_rewr[]]:
+lemma Comm_Tyops_Rewr\<^sub>2_temlpate[\<phi>reason_template name F.G.comm_rewr[]]:
   \<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 F F'\<^sub>T F'\<^sub>U G G' T U D (embedded_func f P)
 \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 F F'\<^sub>T F'\<^sub>U G G' T U D' (embedded_func g Q)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> D x \<and> D' (f x)
@@ -3760,7 +3775,8 @@ consts \<phi>deriver_expansion :: mode
 
 \<phi>reasoner_ML \<phi>deriver_expansion %cutting
   (\<open>Premise \<phi>deriver_expansion _\<close> | \<open>Simplify \<phi>deriver_expansion ?X' ?X\<close> )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Phi_Type_Algebra_Derivers.Expansion.get') o snd\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty)
+        Phi_Type_Algebra_Derivers.Expansion.get' true) o snd\<close>
 
 
 
@@ -5250,14 +5266,22 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
 ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 
 \<phi>property_deriver Commutativity_Deriver\<^sub>I 110
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute 1 quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 1) quiet) \<close>
 
 \<phi>property_deriver Commutativity_Deriver\<^sub>E 110
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute 2 quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 2) quiet) \<close>
 
 \<phi>property_deriver Commutativity_Deriver 110
-    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute 3 quiet) \<close>
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 3) quiet) \<close>
 
+\<phi>property_deriver Commutativity_Deriver\<^sub>I_rev 110
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 2) quiet) \<close>
+
+\<phi>property_deriver Commutativity_Deriver\<^sub>E_rev 110
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 1) quiet) \<close>
+
+\<phi>property_deriver Commutativity_Deriver_rev 110
+    = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 3) quiet) \<close>
 
 
 subsection \<open>Deriving Configures for Specific Abstract Algebras\<close>

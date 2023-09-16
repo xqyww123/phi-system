@@ -40,7 +40,7 @@ open Phi_Reasoners
 fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, degenerates, rewrs),
                                        mk_insts, ctxt_gen) =
   let datatype has_remainder = No_Rem | Has_Rem | True_Rem
-      fun has_var tm = maxidx_of_term tm >= 0
+      fun has_no_var tm = maxidx_of_term tm = ~1
       fun strip (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = strip X
         | strip (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ X) = strip X
         | strip X = X
@@ -50,6 +50,10 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, 
                => (Y, \<^Const>\<open>True\<close>, True_Rem)
            | Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ C $ _
                => (Y, C, Has_Rem)
+           | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Y $ (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ \<^Const>\<open>True\<close> $ _)
+               => (Y, \<^Const>\<open>True\<close>, True_Rem)
+           | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ Y $ (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _)
+               => (Y, \<^Const>\<open>True\<close>, Has_Rem)
            | Y => (Y, Term.dummy, No_Rem)
 
       fun mk_inst base abst (X $ _) = mk_inst base (abst+1) X
@@ -74,7 +78,7 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, 
 
    in fn (ctxt,sequent) => Seq.make (fn () =>
   let val (Y, _, has_rem) = dest_Tr (Thm.major_prem_of sequent)
-      val no_var = has_var Y
+      val no_var = has_no_var Y
       val rule' = if no_var
                   then case has_rem of No_Rem => quick_rule | Has_Rem => quick_ruleR | True_Rem => quick_ruleRT
                   else case has_rem of No_Rem => rule | Has_Rem => ruleR | True_Rem => ruleRT
@@ -95,22 +99,22 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, 
                  |> Phi_Help.dest_binop_c \<^const_name>\<open>Pure.eq\<close>
       val vars = Term.add_vars (Thm.term_of Y) []
       val inst = mk_insts ctxt'N (vars,Y,RHS)
-      val rewrs' = degenerates @ rewrs
-      val move_to_top = Conv.bottom_conv (fn _ => fn ctm =>
-            case Term.strip_comb (Thm.term_of ctm)
-              of (Const (N, _), args) =>
-                    if N = head_const andalso length args = arity
-                    then (Phi_Help.beta_eta_conversion then_conv
-                         (fn ctm =>
-                            case get_first (fn rule => try (Conv.rewr_conv rule) ctm) rewrs'
-                              of SOME ret => ret
-                              | NONE => Conv.all_conv ctm)) ctm
-                    else Conv.all_conv ctm
-               | _ => Conv.all_conv ctm) ctxt'N
+      fun is_target_const (Const (N, _)) = N = head_const
+        | is_target_const _ = false
+      fun move_to_top ctxt = Conv.bottom_conv (fn _ => fn ctm =>
+            case Thm.term_of ctm
+              of A $ B =>
+                if is_target_const (Term.head_of A) orelse is_target_const (Term.head_of B)
+                then Conv.try_conv (Conv.rewrs_conv rewrs) ctm
+                else Conv.all_conv ctm
+               | _ => Conv.all_conv ctm) ctxt then_conv
+            Conv.try_conv (Conv.rewrs_conv degenerates)
+      (*val move_to_top = Conv.bottom_rewrs_conv rewrs'*)
       val sequent'' = Thm.instantiate (TVars.empty, inst) sequent'
-               |> Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn _ =>
-                      Conv.arg_conv move_to_top then_conv
-                      Conv.arg1_conv move_to_top) ctxt) 1
+               |> Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                      Phi_Help.beta_eta_conversion then_conv
+                      Conv.arg_conv (move_to_top ctxt) then_conv
+                      Conv.arg1_conv (move_to_top ctxt)) ctxt) 1
                |> (fn th => @{thm' Pure.reflexive} RS th
                             handle THM _ => error "BUG: fail to solve the equation")
    in SOME ((ctxt, sequent''), Seq.empty)

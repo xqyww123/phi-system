@@ -61,6 +61,7 @@ ML_file \<open>library/pattern.ML\<close>
 ML_file_debug \<open>library/reasoner_decl.ML\<close>
 ML_file \<open>library/priority_group.ML\<close>
 ML_file_debug \<open>library/helpers0.ML\<close>
+ML_file \<open>library/tools/where_tac.ML\<close>
 
 subsubsection \<open>Guard of Reasoning Rule\<close>
 
@@ -384,6 +385,8 @@ text \<open>The system \<open>Object_Logic.atomize\<close> and \<open>Object_Log
   equal \<open>R\<close>. The section gives a way addressing this issue.\<close>
 
 ML_file \<open>library/iso_atomize.ML\<close>
+
+paragraph \<open>Predefined Embedding\<close>
 
 definition \<open>pure_imp_embed \<equiv> (\<longrightarrow>)\<close>
 definition pure_all_embed :: \<open>('a \<Rightarrow> bool) \<Rightarrow> bool\<close> (binder \<open>\<forall>\<^sub>e\<^sub>m\<^sub>b\<^sub>e\<^sub>d \<close> 10)
@@ -816,6 +819,33 @@ lemma Conv_Action_Tag_I:
 
 ML_file \<open>library/action_tag.ML\<close>
 
+(*TODO: change terminology of \<open>Reasoning Goal\<close> to \<open>Reasoning App\<close>, which is more figurative*)
+subsubsection \<open>Reasoning Apps\<close>
+
+definition \<r>Atomize :: \<open>prop \<Rightarrow> bool \<Rightarrow> prop\<close>
+  where \<open>\<r>Atomize P P' \<equiv> (PROP P \<equiv> Trueprop P')\<close>
+
+definition \<r>Iso_Atomize :: \<open>prop \<Rightarrow> bool \<Rightarrow> prop\<close>
+  where \<open>\<r>Iso_Atomize P P' \<equiv> (PROP P \<equiv> Trueprop P')\<close>
+
+\<phi>reasoner_ML \<r>Atomize %cutting (\<open>PROP \<r>Atomize _ _\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+    let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                Conv.arg1_conv (Phi_Conv.atomize_conv ctxt)
+            ) ctxt) 1 sequent
+     in SOME ((ctxt, @{lemma' \<open>PROP \<r>Atomize (Trueprop A) A\<close> by (unfold \<r>Atomize_def)} RS sequent), Seq.empty)
+    end
+) \<close>
+
+\<phi>reasoner_ML \<r>Iso_Atomize %cutting (\<open>PROP \<r>Atomize _ _\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+    let val sequent' = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                Conv.arg1_conv (Phi_Conv.iso_atomize_conv ctxt)
+            ) ctxt) 1 sequent
+     in SOME ((ctxt, @{lemma' \<open>PROP \<r>Atomize (Trueprop A) A\<close> by (unfold \<r>Atomize_def)} RS sequent), Seq.empty)
+    end
+) \<close>
+
 
 subsubsection \<open>Reduce trivial higher-order variable who applies to constant\<close>
 
@@ -835,7 +865,7 @@ lemma Reduce_HO_trivial_variable_I:
 
 subsubsection \<open>Meta-Ball (continued)\<close>
 
-\<phi>reasoner_group meta_ball = (%cutting, [%cutting,%cutting+49]) for \<open>(\<And>_ \<in> _. _)\<close>
+\<phi>reasoner_group meta_ball = (%cutting, [%cutting,%cutting+50]) for \<open>(\<And>_ \<in> _. _)\<close>
                             \<open>Cutting rules for meta bounded quantification (meta_Ball)\<close>
                 meta_ball_fallback = (%general, [%general, %general]) for \<open>(\<And>_ \<in> _. _)\<close> in general
                             \<open>Slow but universal reasoning for meta bounded quantification (meta_Ball)\<close>
@@ -861,6 +891,15 @@ lemma [\<phi>reason %meta_ball]:
 
 declare meta_Ball_pair[THEN equal_elim_rule2, \<phi>reason %meta_ball+10]
         Ball_pair[unfolded atomize_eq, THEN iffD2, \<phi>reason %meta_ball+10]
+
+lemma [\<phi>reason %meta_ball]:
+  \<open> (\<And>x. PROP \<r>Atomize (P x) (Any x))
+\<Longrightarrow> (\<And>x \<in> A. PROP P x)
+\<Longrightarrow> (\<And>x \<in> B. PROP P x)
+\<Longrightarrow> (\<And>x \<in> A \<union> B. PROP P x) \<close>
+  unfolding meta_Ball_def Premise_def \<r>Atomize_def
+  by (simp add: norm_hhf_eq; blast)
+
 
 
 (*ML_file_debug \<open>library/tools/case_prod_conv.ML\<close> *)
@@ -1503,7 +1542,7 @@ lemma End_Simplification : \<open>Simplify mode A A\<close> unfolding Simplify_d
 lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> Simplify mode A B\<close>
   unfolding Simplify_def Premise_def atomize_eq .
 
-ML_file \<open>library/simplifier.ML\<close>
+ML_file_debug \<open>library/simplifier.ML\<close>
 
 hide_fact End_Simplification' End_Simplification
 
@@ -1514,7 +1553,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I) o snd\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I false) o snd\<close>
 
 
 (* subsection \<open>Exhaustive Divergence\<close>

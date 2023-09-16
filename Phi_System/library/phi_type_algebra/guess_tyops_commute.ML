@@ -19,7 +19,12 @@ fun gen_Guess_Tyops_Commute_framework (template_of_reasoning_goal, parsing_rule,
       fn (phi, ctxt) =>
         let val idx = phi_maxidx_of phi ~1 + 1
             val F_term' = Logic.incr_indexes ([], [], idx) F_term
-            val (U_ty :: _, x_ty, c_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+            val (U_ty, x_ty, c_ty) = case dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+                                       of (U_ty :: _, x_ty, c_ty) => (U_ty, x_ty, c_ty)
+                                        | _ => raise Automation_Fail (fn () => let open Pretty in
+                                                  [block ([Syntax.pretty_term ctxt (#term phi), brk 1] @
+                                                          text "is not a type operator")]
+                                               end)
             val ((_, GU_term), ctxt) = fix_phi_term_params (#term phi) ctxt
             fun fail () = guess_fail ctxt phi (fn () => let open Pretty in
                             [block (text "Fail to parse the given \<phi>-type" @
