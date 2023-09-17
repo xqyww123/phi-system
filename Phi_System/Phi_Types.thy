@@ -1032,16 +1032,20 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Carrier_Set T P
         \<Longrightarrow> Carrier_Set U Q
         \<Longrightarrow> Carrier_Set (T +\<^sub>\<phi> U) (pred_sum P Q)\<close>
-       and \<open>Identity_Element\<^sub>I (x \<Ztypecolon> T) P
-        \<Longrightarrow> Identity_Element\<^sub>I (Inl x \<Ztypecolon> T +\<^sub>\<phi> U) P\<close>
-       and \<open>Identity_Element\<^sub>I (y \<Ztypecolon> U) Q
-        \<Longrightarrow> Identity_Element\<^sub>I (Inr y \<Ztypecolon> T +\<^sub>\<phi> U) Q\<close>
-       and \<open>Identity_Element\<^sub>E (x \<Ztypecolon> T)
-        \<Longrightarrow> Identity_Element\<^sub>E (Inl x \<Ztypecolon> T +\<^sub>\<phi> U)\<close>
-       and \<open>Identity_Element\<^sub>E (y \<Ztypecolon> U)
-        \<Longrightarrow> Identity_Element\<^sub>E (Inr y \<Ztypecolon> T +\<^sub>\<phi> U)\<close>
+       and \<open>Identity_Element\<^sub>I (x\<^sub>T \<Ztypecolon> T) P \<and>\<^sub>\<r> Tgive = True \<or>\<^sub>c\<^sub>u\<^sub>t Tgive = False
+        \<Longrightarrow> Identity_Element\<^sub>I (x\<^sub>U \<Ztypecolon> U) Q \<and>\<^sub>\<r> Ugive = True \<or>\<^sub>c\<^sub>u\<^sub>t Ugive = False
+        \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Tgive \<or> Ugive
+        \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Tgive \<and> y = Inl x\<^sub>T) \<or> (Ugive \<and> y = Inr x\<^sub>U)
+        \<Longrightarrow> Identity_Element\<^sub>I (y \<Ztypecolon> T +\<^sub>\<phi> U) (Tgive \<and> P \<or> Ugive \<and> Q)\<close>
+        \<comment> \<open>Client of \<open>+\<^sub>\<phi>\<close> is able to choose the desired identity element from either branches as it wants.\<close>
+       and \<open>Identity_Element\<^sub>E (x\<^sub>T \<Ztypecolon> T) \<and>\<^sub>\<r> Tgive = True \<or>\<^sub>c\<^sub>u\<^sub>t Tgive = False
+        \<Longrightarrow> Identity_Element\<^sub>E (x\<^sub>U \<Ztypecolon> U) \<and>\<^sub>\<r> Ugive = True \<or>\<^sub>c\<^sub>u\<^sub>t Ugive = False
+        \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Tgive \<or> Ugive
+        \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Tgive \<and> y = Inl x\<^sub>T) \<or> (Ugive \<and> y = Inr x\<^sub>U)
+        \<Longrightarrow> Identity_Element\<^sub>E (y \<Ztypecolon> T +\<^sub>\<phi> U)\<close>
        and Transformation_Functor
        and Commutativity_Deriver\<^sub>E_rev
+
 
 subsubsection \<open>Rewrites\<close>
 
@@ -1785,33 +1789,23 @@ subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
 
-declare if_split_eq1[simp]
-
    
                 
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Identity_Element
-(*Separation_Monoid
-and*) and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
- (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
+  deriving Separation_Monoid
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)
 
+(*TODO: FIX ME!
 
-lemma
-  \<open>l \<noteq> [] \<Longrightarrow>
-     \<exists>y uu.
-        (\<not> isl xa \<and> (\<forall>b\<in>set l. \<not> isl b) \<longrightarrow>
-         (case xa of Inl x \<Rightarrow> uu x | Inr ba \<Rightarrow> \<lambda>b. ba) (projr xa # map projr l) = projr xa \<and>
-         (case xa of Inl x \<Rightarrow> y x | Inr ba \<Rightarrow> \<lambda>b. []) (projr xa # map projr l) = map projr l \<longrightarrow>
-         \<not> (case xa of Inl uu_ \<Rightarrow> False | Inr ba \<Rightarrow> True)) \<and>
-        (\<not> isl xa \<and> (\<forall>b\<in>set l. \<not> isl b) \<longrightarrow>
-         (case xa of Inl x \<Rightarrow> uu x | Inr ba \<Rightarrow> \<lambda>b. ba) (projr xa # map projr l) = projr xa \<and>
-         (case xa of Inl x \<Rightarrow> y x | Inr ba \<Rightarrow> \<lambda>b. []) (projr xa # map projr l) = map projr l)\<close>
-apply (cases xa; simp)
-
+  declare if_split_eq1[simp]
+  deriving \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
+ (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
+  (*For some reason, the deriving fails here due to loosing certain conditions during the reasoning I believe,
+    but I cannot figure it out now. I will lieave this and go back when I have time.*)
+*)
 
 thm List.\<phi>Sum_Comm\<^sub>E'
 
