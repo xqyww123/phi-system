@@ -965,16 +965,16 @@ lemma \<phi>make_abstraction'R:
 
 lemma \<phi>make_abstraction'eq:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ex (eq x)) \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x x')
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] eq x x')
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq x x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
   by clarsimp
 
 lemma \<phi>make_abstraction'R'eq:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ex (eq x)) \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x x')
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] eq x x')
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq x x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
   by (cases C; clarsimp; blast)
@@ -2811,7 +2811,7 @@ paragraph \<open>Commutative, Non-Unital Associative, No Additive Zero\<close>
 text \<open>Non-unital algebra implies no additive zero.\<close>
 
 ML_file \<open>library/phi_type_algebra/semimodule_rule_pass.ML\<close>
-                                            
+
 (* [--d--][-----a-----]
    [-----b-----][--c--]
    Give a, expect b; Need d, remain c.

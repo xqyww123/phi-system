@@ -1074,9 +1074,9 @@ declare \<phi>Sum.intro_reasoning(1)[\<phi>reason %ToA_splitting_\<phi>Sum]
         \<phi>Sum.elim_reasoning (1)[\<phi>reason %ToA_splitting_\<phi>Sum]
 
 lemma [\<phi>reason %ToA_splitting_\<phi>Sum]:
-  \<open> (case fst x of Inl a \<Rightarrow> (a, snd x) \<Ztypecolon> T \<^emph>[C] W | Inr b \<Rightarrow> (b, snd x) \<Ztypecolon> U \<^emph>[C] W) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> (T +\<^sub>\<phi> U) \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  by (cases x; case_tac a; cases C; simp add: \<phi>Prod_expn')
+  \<open> (case fst x of Inl a \<Rightarrow> (a, snd x) \<Ztypecolon> T \<^emph>[C\<^sub>a a] W\<^sub>a a | Inr b \<Rightarrow> (b, snd x) \<Ztypecolon> U \<^emph>[C\<^sub>b b] W\<^sub>b b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> (T +\<^sub>\<phi> U) \<^emph>[case_sum C\<^sub>a C\<^sub>b (fst x)] case_sum W\<^sub>a W\<^sub>b (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by (cases x; case_tac a; auto simp add: \<phi>Prod_expn' Cond_\<phi>Prod_expn)
 
 lemma [\<phi>reason %ToA_splitting_\<phi>Sum]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (case fst y of Inl a \<Rightarrow> (a, snd y) \<Ztypecolon> T \<^emph>[C] R | Inr b \<Rightarrow> (b, snd y) \<Ztypecolon> U \<^emph>[C] R) \<w>\<i>\<t>\<h> P
@@ -1787,27 +1787,30 @@ declare [[\<phi>trace_reasoning = 3]]
 
 declare if_split_eq1[simp]
 
-schematic_goal
-  \<open>\<forall>a. Ball (set (xaa # l)) isl \<or> (\<forall>b\<in>set (xaa # l). \<not> isl b) \<longrightarrow>
-        (if isl xaa \<and> Ball (set l) isl then Inl (projl xaa # map projl l) else Inr (projr xaa # map projr l)) = Inl a \<longrightarrow>
-        ?x24 a # ?l24 a = a\<close>
-  apply simp
-apply auto
-
-
- 
-          
+   
+                
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving (*Separation_Monoid
-and*) \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
+  deriving Identity_Element
+(*Separation_Monoid
+and*) and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
  (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)
 
 
-
+lemma
+  \<open>l \<noteq> [] \<Longrightarrow>
+     \<exists>y uu.
+        (\<not> isl xa \<and> (\<forall>b\<in>set l. \<not> isl b) \<longrightarrow>
+         (case xa of Inl x \<Rightarrow> uu x | Inr ba \<Rightarrow> \<lambda>b. ba) (projr xa # map projr l) = projr xa \<and>
+         (case xa of Inl x \<Rightarrow> y x | Inr ba \<Rightarrow> \<lambda>b. []) (projr xa # map projr l) = map projr l \<longrightarrow>
+         \<not> (case xa of Inl uu_ \<Rightarrow> False | Inr ba \<Rightarrow> True)) \<and>
+        (\<not> isl xa \<and> (\<forall>b\<in>set l. \<not> isl b) \<longrightarrow>
+         (case xa of Inl x \<Rightarrow> uu x | Inr ba \<Rightarrow> \<lambda>b. ba) (projr xa # map projr l) = projr xa \<and>
+         (case xa of Inl x \<Rightarrow> y x | Inr ba \<Rightarrow> \<lambda>b. []) (projr xa # map projr l) = map projr l)\<close>
+apply (cases xa; simp)
 
 
 thm List.\<phi>Sum_Comm\<^sub>E'

@@ -21,14 +21,14 @@ include PHI_REASONERS
   quick rule is the quick-cut used when the Y contains no schematic variables.
   *)
 val reasoner_ToA_conditioned_subgoals :
-          thm (*rule having no Remainder*) * thm (*with conditioned Remainder*) * thm (*necessarily with remainder*) *
-        ( string (*head of the conditional branch, e.g., If*) *
-          int (*arity of the head, e.g., 3*) *
+          thm (*rule having no Remainder*) * thm (*with conditioned Remainder*) (** thm (*necessarily with remainder*)*) *
+        ( bool (*if to split the source or to split the target*) *
           thm list (*rewrites degenerating the branch*) * 
-          thm list (*rewrite rules to move the conditional branch to the top*)) *
+          (thm (*fun and arg*) * thm (*func*) * thm (*arg*)) (*rewrite rules to move the conditional branch to the top*)) *
         (Proof.context
             -> (indexname * typ) list (*vars in Y*) * cterm (*LHS, the Y*) * cterm (*RHS, the If C Y\<^sub>a Y\<^sub>B*)
-            -> cterm Vars.table (*instantiations*)) *
+            -> (cterm Vars.table (*instantiations*) *
+                (term -> bool) (*check if the given term is the branch*))) *
         Proof.context (*context for preparation time*)
      -> Proof.context * thm -> (Proof.context * thm) Seq.seq
 
@@ -37,17 +37,18 @@ end
 structure Phi_Reasoners : PHI_REASONERS = struct
 open Phi_Reasoners
 
-fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, degenerates, rewrs),
+fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, degenerates, rewrs),
                                        mk_insts, ctxt_gen) =
-  let datatype has_remainder = No_Rem | Has_Rem | True_Rem
+  let datatype has_remainder = No_Rem | Has_Rem (*| True_Rem*)
       fun has_no_var tm = maxidx_of_term tm = ~1
       fun strip (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = strip X
         | strip (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ X) = strip X
         | strip X = X
       fun dest_Tr tm =
-        case #2 (Phi_Syntax.dest_transformation (strip (Logic.strip_assums_concl tm)))
+        case (if split_source then #2 else #1)
+             (Phi_Syntax.dest_transformation (strip (Logic.strip_assums_concl tm)))
           of Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ \<^Const>\<open>True\<close> $ _
-               => (Y, \<^Const>\<open>True\<close>, True_Rem)
+               => error "True_Rem" (*(Y, \<^Const>\<open>True\<close>, True_Rem)*)
            | Const(\<^const_name>\<open>REMAINS\<close>, _) $ Y $ C $ _
                => (Y, C, Has_Rem)
            | Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>Cond_\<phi>Prod\<close>, _) $ _ $ _ $ _)
@@ -71,15 +72,15 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, 
          |> Thm.trim_context
         end
 
-      val (quick_rule, quick_ruleR, quick_ruleRT) =
-          (mk_quick_rule rule, mk_quick_rule ruleR, mk_quick_rule ruleRT)
+      val (quick_rule, quick_ruleR(*, quick_ruleRT*)) =
+          (mk_quick_rule rule, mk_quick_rule ruleR(*, mk_quick_rule ruleRT*))
 
    in fn (ctxt,sequent) => Seq.make (fn () =>
   let val (Y, _, has_rem) = dest_Tr (Thm.major_prem_of sequent)
       val no_var = has_no_var Y
       val rule' = if no_var
-                  then case has_rem of No_Rem => quick_rule | Has_Rem => quick_ruleR | True_Rem => quick_ruleRT
-                  else case has_rem of No_Rem => rule | Has_Rem => ruleR | True_Rem => ruleRT
+                  then case has_rem of No_Rem => quick_rule | Has_Rem => quick_ruleR (*| True_Rem => quick_ruleRT*)
+                  else case has_rem of No_Rem => rule | Has_Rem => ruleR (*| True_Rem => ruleRT*)
       val sequent' = rule' RS' (ctxt, sequent)
    in if no_var
    then SOME ((ctxt, sequent'), Seq.empty)
@@ -96,15 +97,19 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, ruleRT, (head_const, arity, 
       val (Y,RHS) = (*Thm.generalize_cterm (Names.empty, qvar_names) (idx+1)*) equation0
                  |> Phi_Help.dest_binop_c \<^const_name>\<open>Pure.eq\<close>
       val vars = Term.add_vars (Thm.term_of Y) []
-      val inst = mk_insts ctxt'N (vars,Y,RHS)
-      fun is_target_const (Const (N, _)) = N = head_const
-        | is_target_const _ = false
+      val (inst, is_the_branch) = mk_insts ctxt'N (vars,Y,RHS)
+    (*fun is_target_const (Const (N, _)) = N = head_const
+        | is_target_const _ = false*)
       fun move_to_top ctxt = Conv.bottom_conv (fn _ => fn ctm =>
             case Thm.term_of ctm
               of A $ B =>
-                if is_target_const (Term.head_of A) orelse is_target_const (Term.head_of B)
-                then Conv.try_conv (Conv.rewrs_conv rewrs) ctm
-                else Conv.all_conv ctm
+                if is_the_branch A
+                then if is_the_branch B
+                     then Conv.try_conv (Conv.rewr_conv (#1 rewrs)) ctm
+                     else Conv.try_conv (Conv.rewr_conv (#2 rewrs)) ctm
+                else if is_the_branch B
+                     then Conv.try_conv (Conv.rewr_conv (#3 rewrs)) ctm
+                     else Conv.all_conv ctm
                | _ => Conv.all_conv ctm) ctxt then_conv
             Conv.try_conv (Conv.rewrs_conv degenerates)
       (*val move_to_top = Conv.bottom_rewrs_conv rewrs'*)

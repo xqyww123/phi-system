@@ -737,17 +737,7 @@ definition Bubbling :: \<open>'a \<Rightarrow> 'a\<close> ("\<b>\<u>\<b>\<b>\<l>
 paragraph \<open>General Rules\<close>
 
 lemma [\<phi>reason default %\<phi>simp_fallback]:
-  \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> F T \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
-  unfolding Action_Tag_def Bubbling_def Transformation_def
-  by simp
-
-lemma [\<phi>reason default %\<phi>simp_fallback]:
-  \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> F T U \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
-  unfolding Action_Tag_def Bubbling_def Transformation_def
-  by simp
-
-lemma [\<phi>reason default %\<phi>simp_fallback]:
-  \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> F T U W \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
+  \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @action \<A>simp \<close>
   unfolding Action_Tag_def Bubbling_def Transformation_def
   by simp
 

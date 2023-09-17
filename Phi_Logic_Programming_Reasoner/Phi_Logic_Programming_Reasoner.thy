@@ -145,9 +145,11 @@ type_synonym mode = action
 text \<open>We provide a serial of predefined modes, which may be commonly useful.\<close>
 
 consts default :: mode
-consts MODE_SIMP :: mode \<comment> \<open>relating to simplification\<close>
-consts MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
-consts MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close>
+       MODE_SIMP :: mode \<comment> \<open>relating to simplification\<close>
+       MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
+       MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close>
+       MODE_SAT :: mode
+
 
 
 subsubsection \<open>Annotations for Proof Obligations\<close>
@@ -165,68 +167,29 @@ abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27]
 
 
 text \<open>
-  \<^prop>\<open>Premise mode P\<close> represents an ordinary proposition has to be proved during the reasoning.
-  There are different modes expressing different roles in the reasoning.
+  \<^prop>\<open>Premise mode P\<close> wraps a boolean assertion for different roles in reasoning.
 
-  \<^descr> \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is a \<^emph>\<open>guard\<close> of a rule, which constrains that the rule is appliable only
-  when \<^prop>\<open>P\<close> can be solved \<^emph>\<open>automatically\<close> during the reasoning.
-  If \<^prop>\<open>P\<close> fails to be solved, even if it is actually valid, the rule will not be applied.
-  Therefore, \<^prop>\<open>P\<close> has to be as simple as possible. The tactic used to solve \<^prop>\<open>P\<close> is
-  @{method clarsimp}.
-  A more powerful tactic like @{method auto} is not adoptable because the tactic must be safe and
-  non-blocking commonly.
-  A blocking search branch blocks the whole reasoning, which is not acceptable.
+  \<^descr> \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is \<^emph>\<open>guard\<close> of a rule constraining whether the rule can be applied.
+    The assertion \<open>P\<close> is attempted with a weak but safe solver (usually @{method clarsimp}) in order
+    to prevent infinite loop on unprovable propositions which is clearly unexpected.
+    Therefore, any rule protected by it is appliable only when the condition \<open>P\<close> is provable
+    using the safe solver.
 
-  \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> is not for proof obligations that are intended to be solved by users.
-  It is more like 'controller or switch' of the rules, i.e. \<^emph>\<open>guard\<close>.
+  \<^descr> \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> reports a proof obligation, and the reasoning system moves \<open>P\<close> into the nearest
+    \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q\<close> which collects all reported obligations. The reasoning system never checks
+    the validity of \<open>P\<close> but simply report it by moving, and \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<and> Q\<close> typically presented
+    after \<open>\<r>Success\<close> should never occur during the reasoning process because they are goals left to
+    users. There is no way suspending the reasoning and asking users' intervention because there
+    can be a lot of searching branches which do not always succeed in the end, so we just collect
+    the proof obligations and store it somewhere in the final result of the reasoning.
 
-  \<^descr> \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> represents a proof obligation.
-  Proof obligations in reasoning rules should be represented by it.
-
-  \<^descr> \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> by contrast
-  represents proof obligations \<open>Q\<close> that are ready to be solved by user (or by automatic tools).
+  \<^descr> \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P\<close> seats between \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close> and \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>. As \<open>P\<close> may contain
+    some schematic variable and the safe solver @{method clarsimp} powerless on instantiating the variables,
+    \<^prop>\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P\<close> first checks if there is at least one possible instantiation of the variables
+    making the assertion \<open>P\<close> provable by the safe solver, and if so reports a proof obligation in the
+    same way as \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>.
 \<close>
-text \<open>
-  The difference between \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> and \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> is subtle:
-  In a reasoning process, many reasoning rules may be applied, which may generate many
-  \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close>.
-  The engine tries to solve \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> automatically but if it fails the search branch
-  would be stuck. Because the search has not been finished, it is bad to ask users' intervention
-  to solve the goal because the search branch may high-likely fail later.
-  It is \<^emph>\<open>not ready\<close> for user to solve \<open>P\<close> here, and suggestively \<open>P\<close> should be deferred to
-  an ideal moment for user solving obligations.
-  This is `ideal moment' is \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>. If any \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> exists in the antecedents
-  of the sequent, the engine contracts \<open>P\<close> into the latest \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>, e.g., from
-  \[ \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> A1 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q' \<Longrightarrow> \<cdots> \<close> \]
-  it deduces
-  \[ \<open>A1 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q \<and> P \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q' \<Longrightarrow> \<cdots> \<close> \]
-  In short, \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> collects obligations generated during a reasoning process,
-  and enables user to solve them at an idea moment.
 
-  A typical reasoning request (the initial reasoning state namely the argument of the reasoning
-  process) is of the following form,
- \[ \<open>Problem \<Longrightarrow> \<r>Success \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> Conclusion\<close> \]
-  The \<open>True\<close> represents empty collection or none obligation.
-  If the reasoning succeeds, it returns sequent in form
- \[ \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<and> P1 \<and> P2 \<and> \<cdots> \<Longrightarrow> Conclusion\<close> \]
-  where \<open>P1, P2, \<cdots>\<close> are obligations generated by reasoning \<open>Problem\<close>.
-  And then, user may solve the obligations manually or by automatic tools.
-
-  For antecedent \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close>,
-  if there is another \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q'\<close> in the remaining antecedents,
-  the reasoner also defer \<open>Q\<close> to \<open>Q'\<close>, just like \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> is a \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> Q\<close>.
-
-  If no \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q'\<close> exists in the remaining antecedents,
-  the reasoner of \<^prop>\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P\<close> and \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> raises
-  an error aborting the whole reasoning, because the reasoning request is not configured correctly.
-
-  Semantically, \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> represents a proof obligation \<open>Q\<close> intended to be addressed by
-  user. It can be deferred but the reasoner never attempts to solve \<^prop>\<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> Q\<close> practically.
-
-  Nonetheless, we still provide tool for reasoning obligations automatically, albeit they have
-  to be called separately with the reasoning engine. See \<^verbatim>\<open>auto_obligation_solver\<close> and
-  \<^verbatim>\<open>safer_obligation_solver\<close> in \<^file>\<open>library/reasoners.ML\<close>.
-\<close>
 
 paragraph \<open>Basic Rules\<close>
 
@@ -235,7 +198,7 @@ lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by s
 lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
 lemma Premise_const_True[simp]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close>
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] True\<close>
   unfolding Premise_def by simp+
 
 lemma Premise_norm:
@@ -1275,12 +1238,11 @@ paragraph \<open>Setup\<close>
 
 ML_file_debug "library/reasoners.ML"
 
-ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
-          Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)\<close>
-
-\<phi>reasoner_ML Normal_Premise %general (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (fn ctxt =>
-        case Config.get ctxt Phi_Reasoner_solve_obligation_and_no_defer
+ML \<open>
+val Phi_Reasoner_solve_obligation_and_no_defer =
+          Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)
+fun defer_premise ctxt =
+      case Config.get ctxt Phi_Reasoner_solve_obligation_and_no_defer
           of 0 => Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt
            | 1 => (fn th => if Phi_Reasoners.has_obligations_tag th
                             then Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt th
@@ -1288,10 +1250,26 @@ ML \<open>val Phi_Reasoner_solve_obligation_and_no_defer =
            | 2 => Phi_Reasoners.safer_obligation_solver ctxt
            | 3 => Phi_Reasoners.auto_obligation_solver ctxt
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
-    ) o snd\<close>
+\<close>
+
+\<phi>reasoner_ML Normal_Premise %general (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
+  = \<open>Phi_Reasoners.wrap defer_premise o snd\<close>
 
 \<phi>reasoner_ML Simp_Premise %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver o snd\<close>
+
+\<phi>reasoner_ML \<open>Premise MODE_SAT\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] ?P\<close>)
+  = \<open>Phi_Reasoners.wrap (fn ctxt => fn sequent => Seq.make (fn () =>
+      let val goal = Thm.dest_arg1 (Thm.cprop_of sequent)
+          val test = Thm.implies_intr goal (Thm.transfer' ctxt @{thm' TrueI})
+                  |> Phi_Reasoners.safer_obligation_solver ctxt
+                  |> Seq.pull
+                  |> is_some
+       in if test
+       then Seq.pull (defer_premise ctxt sequent)
+       else NONE
+      end)
+    ) o snd\<close>
 
 lemma [\<phi>premise_extraction]:
   \<open>A = B \<equiv> (A = B) \<and> True\<close>

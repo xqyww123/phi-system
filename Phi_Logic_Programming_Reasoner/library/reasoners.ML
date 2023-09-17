@@ -514,6 +514,7 @@ fun gen_simplify simp use_origin ctxt =
                      else extract
       val sctxt = Simplifier.set_mksimps (fn ctxt =>
                       maps (Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
+                    o @{print}
                     o extract') ctxt
    in simp sctxt
   end

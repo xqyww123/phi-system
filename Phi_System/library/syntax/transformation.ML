@@ -44,7 +44,7 @@ fun is_transformation_intro_rule rule =
   let val (prems, concl) = Logic.strip_horn (Thm.prop_of rule)
    in case dest_transformation concl
    of (Var v, _, _) =>
-        exists (fn prem => case try dest_transformation prem
+        exists (fn prem => case try dest_transformation (Logic.strip_assums_concl prem)
                              of SOME (Var v', _, _) => v' = v
                               | _ => false) prems
     | _ => false
