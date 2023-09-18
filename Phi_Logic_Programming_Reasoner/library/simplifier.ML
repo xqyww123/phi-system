@@ -31,7 +31,7 @@ fun simplification fallback F to_fix ctxt sequent = Seq.make (fn () =>
                     sequent', ctxt')
              else ((Names.empty, Names.empty), sequent, ctxt)
    in sequent'
-   |> Conv.gconv_rule (Phi_Reasoners.asm_full_rewrite true (F ctxt')) 1
+   |> Conv.gconv_rule (Phi_Reasoners.asm_lr_rewrite true (F ctxt')) 1
    |> to_fix ? (fn th => Thm.generalize names (Thm.maxidx_of th + 1) th)
    |> (fn th => case Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
                   of SOME ret => SOME (ret, Seq.empty)

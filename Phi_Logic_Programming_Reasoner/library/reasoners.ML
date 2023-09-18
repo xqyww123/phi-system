@@ -517,9 +517,7 @@ fun gen_simplify simp use_origin ctxt =
                      else (fn th => case extract th of [] => [th] | L => L)
       val sctxt = Simplifier.set_mksimps (fn ctxt =>
                       maps (Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
-                    o @{print}
-                    o extract'
-                    o @{print}) ctxt
+                    o extract') ctxt
    in simp sctxt
   end
 

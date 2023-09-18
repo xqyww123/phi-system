@@ -132,6 +132,9 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
                    val X' = case snd var
                               of \<^Type>\<open>fun D _\<close> => Abs ("x", D, X'1)
                                | _ => X'1
+                   val X' = if exists_subterm (fn Var v => v = var | _ => false) X'
+                            then \<^Const>\<open>True\<close> (*the case of recursive, unsupported*)
+                            else X'
                 in SOME (Thm.instantiate (TVars.empty, Vars.make [(var, Thm.cterm_of ctxt X')]) sequent
                       |> oblg_solver (#proof_id phi ^ "/" ^ name) ctxt)
                end

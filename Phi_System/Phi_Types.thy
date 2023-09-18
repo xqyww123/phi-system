@@ -275,6 +275,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Open_Abstraction_to_Raw
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
 
+
 text \<open>Read it as 'the abstract object is certain element in the set'
 
 Together with the \<^const>\<open>SubjectionTY\<close>, \<^const>\<open>\<phi>Dependent_Sum\<close> and \<^const>\<open>Set_Abstraction\<close> embed
@@ -1793,19 +1794,37 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
 
-(*setup \<open>Config.put_global Phi_Reasoner_solve_obligation_and_no_defer 3\<close>*)
+   
+      
+\<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
+  where \<open>([] \<Ztypecolon> List\<^sub>S n T) = (Void \<s>\<u>\<b>\<j> n = 0)\<close>
+      | \<open>(x # l \<Ztypecolon> List\<^sub>S n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
+ deriving (*\<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l)\<close>
+      and*) Object_Equiv\<^sub>O
+
+term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l)\<close>
+
+
+setup \<open>Config.put_global Phi_Reasoner_solve_obligation_and_no_defer 3\<close>
+
+
+
+
+
+
+
+
 
 
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Separation_Monoid
-        (*Identity_Element
+  deriving Identity_Element
        
        and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
-                            (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>*)
+                            (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
 (*Separation_Monoid*)
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)

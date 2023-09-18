@@ -1121,8 +1121,11 @@ fun oblg_solver proof_id ctxt sequent =
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
    let val ctxt'' = Expansion.equip ctxt
                  |> Simplifier.del_cong @{thm HOL.conj_cong}
-       val sequent'1 = Phi_Reasoners.asm_lr_simp_tac true ctxt'' 1 sequent
-                    |> Seq.hd
+       val sequent'1 = Timeout.apply (Time.fromSeconds 3) Seq.hd
+                         (Phi_Reasoners.asm_lr_simp_tac true ctxt'' 1 sequent)
+                       handle Timeout.TIMEOUT _ =>
+                          (warning "Simplification timeouts!" ;
+                           sequent)
                     (*|> @{print}*)
     in Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Expansion.simp_rules ctxt, sequent'1)
           |> (fn th => case Thm.major_prem_of th
