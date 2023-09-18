@@ -1231,8 +1231,19 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
       val rule' = Thm.instantiate inst_rule rule
       
       fun apply_induction NONE rule' = rule'
-        | apply_induction (SOME (quants, ind_conv)) rule' =
-            let val free_tabel = Symtab.build (fold_index (fn (i, SOME (Free (N,_))) => Symtab.update_new (N,i)
+        | apply_induction (SOME (quants, ind_conv)) rule'0 =
+            let val frees = map_filter (fn SOME (Free free) => SOME (Thm.cterm_of ctxt (Free free)) | _ => NONE) phi_typ_parameters
+                val idx = Thm.maxidx_of rule' + 1
+                val inst = Vars.build (fold (fn v as ((N,i),T) =>
+                                                let val T' = rev_map Thm.typ_of_cterm [] frees ---> T
+                                                    val var = Thm.var ((N,i+idx), Thm.ctyp_of ctxt T')
+                                                           |> fold_rev (fn v => fn f => Thm.apply f v) frees
+                                                 in Vars.add (v, var)
+                                                end)
+                                            (Term.add_vars (Thm.prop_of rule'0) []))
+                val rule' = Thm.instantiate (TVars.empty, inst) rule'0
+            
+                val free_tabel = Symtab.build (fold_index (fn (i, SOME (Free (N,_))) => Symtab.update_new (N,i)
                                                             | (_, SOME (Bound _)) => I
                                                             | (_, NONE) => I
                                                             | _ => I)
@@ -1306,7 +1317,7 @@ fun parse_hint extract_phityp ctxt phi hint =
            |> Phi_Help.beta_eta_contract_term
            |> Term.strip_comb
            |> apsnd (rev #> map (fn tm => if tm = Term.dummy then NONE else SOME tm))
-      val _ = if is_phi_term phi phiconst then ()
+      val _ = if is_phi_head phi phiconst then ()
               else malformed_hint ctxt hint (fn () => let open Pretty in
                   [block (text "It specifies a irrelavent \<phi>-type" @
                           [brk 1, Syntax.pretty_term ctxt phiconst, brk 1] @

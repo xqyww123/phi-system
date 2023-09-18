@@ -321,8 +321,9 @@ fun instantiate_higher_order_schematic_var' num ctxt thm =
          in (collect_var escape ant, ins@ins0)
         end
       val (_, ins) = fold (fn prem => mk_ins (get_concl prem))
-                          (if num = ~1 then Thm.prems_of thm
-                           else List.take (Thm.prems_of thm, num))
+                          (case num of ~1 => Thm.prems_of thm
+                                     | ~2 => Thm.prems_of thm @ [Thm.concl_of thm]
+                                     | _  => List.take (Thm.prems_of thm, num))
                           ([],[])
   in if null ins then NONE
   else SOME (Thm.instantiate (TVars.empty, Vars.make ins) thm)

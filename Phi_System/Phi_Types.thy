@@ -26,17 +26,18 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
- 
+declare [[\<phi>t race_reasoning = 3]]
+       
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
-  deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
+  deriving Functionality
+(*\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
        and Basic
        and Functionality
        and Abstraction_to_Raw
-
+*)
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -56,7 +57,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
-
+ 
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -232,12 +233,9 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-    
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
-  deriving Basic
-    and    \<open>(\<And>A. Object_Equiv (T A) (eq A))
+  deriving \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
     and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
     and    \<open>Identity_Element\<^sub>I (u \<Ztypecolon> T c) P
@@ -1797,12 +1795,13 @@ subsubsection \<open>By Key\<close>
 declare [[\<phi>trace_reasoning = 3]]
 
    
-      
+              
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List\<^sub>S n T) = (Void \<s>\<u>\<b>\<j> n = 0)\<close>
       | \<open>(x # l \<Ztypecolon> List\<^sub>S n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
- deriving (*\<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l)\<close>
-      and*) Object_Equiv\<^sub>O
+      deriving Identity_Element\<^sub>I
+(*(*\<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l)\<close>
+      and*) Object_Equiv\<^sub>O*)
 
 term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l)\<close>
 

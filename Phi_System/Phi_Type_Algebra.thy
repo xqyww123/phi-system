@@ -3710,6 +3710,8 @@ consts \<phi>TA_ind_target :: \<open>action \<Rightarrow> action\<close>
                                     see comments in \<^file>\<open>library/phi_type_algebra/deriver_framework.ML\<close>
                                     ML function \<open>default_reasoning_configure\<close>\<close>
 
+lemmas intro_\<phi>TA_ANT = Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]
+
 lemma mk_ToA_rule:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<w>\<i>\<t>\<h> Q
@@ -3979,26 +3981,26 @@ lemma Object_Equiv_rule_move_set_eq_end:
 
 paragraph \<open>Object Equivalence at Singular Point\<close>
 
-consts \<A>base_case :: \<open>(unit,unit) \<phi>\<close>
+text \<open>Strategy: transforming both sides to (one of) the base case of induction\<close>
+
+definition \<open>\<A>simp_to_base X \<equiv> X\<close>
 
 lemma \<phi>TA_OE\<^sub>O_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-            (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> base \<Ztypecolon> T) @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> \<A>base_case)))
+  \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = base) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-            (base \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (base \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Object_Equiv T (\<lambda>_ _. True)\<close>
-  unfolding Object_Equiv_def Action_Tag_def Transformation_def Premise_def
+  unfolding Object_Equiv_def Action_Tag_def Transformation_def Premise_def \<A>simp_to_base_def MAKE_def
   by blast
 
-lemma \<phi>TA_OE\<^sub>O_rewr_IH1:
-  \<open> Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> \<A>base_case)))
- \<equiv> (Ant \<Longrightarrow> P @action to \<A>base_case)\<close>
+(*lemma \<phi>TA_OE\<^sub>O_rewr_IH1:
+  \<open> Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target \<A>)
+ \<equiv> (Ant \<Longrightarrow> P @action \<A>)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
-
+*)
 
 lemma \<phi>TA_OE\<^sub>O_rewr_IH2:
   \<open>Trueprop (Ant \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_ind_target \<A>)
@@ -4010,9 +4012,13 @@ lemma \<phi>TA_OE\<^sub>O_rewr:
   \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target \<A>) \<equiv> (Ant \<Longrightarrow> P @action \<A>)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
 
+lemma [\<phi>reason %\<phi>simp_fallback]:
+  \<open> x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
+  unfolding Action_Tag_def \<A>simp_to_base_def
+  by simp
 
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
-(*
+(*                  
 hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_rule_move_all
           Object_Equiv_rule_move_all2 Object_Equiv_rule_move_set_eq
           Object_Equiv_rule_move_set_eq_end *)

@@ -134,7 +134,7 @@ val override_ind_rule : string * thm -> Context.generic -> Context.generic
 
 (** Tools **)
 
-val is_phi_term : phi_type -> term -> bool (*ignores type*)
+val is_phi_head : phi_type -> term -> bool (*ignores type*)
 val is_Type_Opr : typ -> bool
 val is_non_parameterized_phityp : typ -> bool
 val assert_Type_Opr : typ -> unit
@@ -728,7 +728,7 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
 
 (** Tools **)
 
-fun is_phi_term phi term =
+fun is_phi_head phi term =
   case (#term phi, term)
     of (Const(N, _), Const(N', _)) => N = N'
      | (Free(N, _), Free(N',_)) => N = N'

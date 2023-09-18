@@ -158,6 +158,14 @@ fun OE_reasoning phi ctxt rule =
           ctxt' rule
   end
 
+fun wrap_equation_by_base_tag ctxt phi thm =
+  let fun conv ctxt ctm =
+        if is_phi_head phi (Term.head_of (Thm.term_of ctm))
+        then Conv.rewr_conv @{thm' \<A>simp_to_base_def[symmetric]} ctm
+        else Conv.sub_conv conv ctxt ctm
+   in Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (conv ctxt)) thm
+  end
+
 fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
   let val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
       val rule = if #is_recursive phi0
@@ -180,6 +188,7 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
+(*TODO: remove
       fun simp_conv ex_quantified_single_var ctxt phi = 
         let val sctxt = Expansion.equip ctxt addsimps (#equations phi)
          in Phi_Conv.may_action_tag_conv (Phi_Syntax.transformation_conv
@@ -189,20 +198,30 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
                                                then_conv Phi_Conv.type_form_to_ex_quantified_single_var sctxt
                  else Simplifier.rewrite sctxt)
                 Conv.all_conv)
+        end*)
+
+      fun simp_conv step1 ctxt = 
+        let val eqs = if step1 then map (wrap_equation_by_base_tag ctxt phi0) (#equations phi0)
+                               else map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
+            val sctxt = Expansion.equip ctxt addsimps (eqs @ @{thms' ExSet_simps})
+         in Simplifier.asm_rewrite sctxt
         end
+      val tag_conv = Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}))
+                                       Conv.all_conv
 
       fun ind_conv step1 = default_ind_conv (
-                       fn ctxt => fn phi =>
-                         (Phi_Conv.may_action_tag_conv (Phi_Conv.hol_imp_conv Conv.all_conv (simp_conv step1 ctxt phi)) then_conv
-                            Conv.rewr_conv (if step1 then @{thm \<phi>TA_OE\<^sub>O_rewr_IH1} else @{thm \<phi>TA_OE\<^sub>O_rewr_IH2})),
-                       fn ctxt => fn phi =>
-                         (Phi_Conv.may_action_tag_conv (Phi_Conv.hol_imp_conv Conv.all_conv (simp_conv step1 ctxt phi)) then_conv
-                            Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr}))
+             fn _ => fn _ => fn ctm =>
+              (Conv.rewr_conv (if step1 then @{thm \<phi>TA_OE\<^sub>O_rewr} else @{thm \<phi>TA_OE\<^sub>O_rewr_IH2}) then_conv
+               tag_conv) ctm,
+             fn ctxt => fn _ => fn ctm =>
+              (Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr} then_conv
+               simp_conv step1 ctxt then_conv
+               tag_conv) ctm)
 
       fun OEO_reasoning1 phi ctxt = default_reasoning false
             (default_reasoning_configure [])
             (K (K NONE))
-            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_NToA} (K (chk_unfolded' ctxt phi)))
+            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} (K (chk_unfolded' ctxt phi)))
             ctxt
 
       fun OEO_reasoning2 phi ctxt = default_reasoning false

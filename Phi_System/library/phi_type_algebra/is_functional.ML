@@ -53,8 +53,10 @@ fun guess_property__abst_domain (prop_head, x_sort, model_sort) (phi0 : phi_type
 
 val guess_property = guess_property__abst_domain (fn (x,m) => \<^Const>\<open>Functionality x m\<close>, \<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)
 
-fun solver__abst_domain name (phi,ctxt,sequent) =
-  let fun err () = raise Automation_Fail (fn () =>
+fun solver__abst_domain name (phi,ctxt,sequent'0) =
+  let val sequent = Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt sequent'0
+                 |> Phi_Help.beta_eta_contract
+      fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
                                      \the expression of the implied pure fact from it."])
       val var = case Thm.concl_of sequent
