@@ -47,16 +47,16 @@ fun guess_property__abst_domain (prop_head, x_sort, model_sort) (phi0 : phi_type
    in guess_predicate ctxt preds x_ty
    |> Seq.map (fn (pred, ctxt) =>
         (ants, HOLogic.Trueprop $ (prop_head (x_ty, model_ty) $ T_term $
-                  (Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (pred $ Bound 0) $ (Pvar $ Bound 0)))),
+                  (Abs ("x", x_ty, if #is_recursive phi0
+                                   then (pred $ Bound 0)
+                                   else \<^Const>\<open>HOL.conj\<close> $ (pred $ Bound 0) $ (Pvar $ Bound 0)))),
          NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt))
   end
 
 val guess_property = guess_property__abst_domain (fn (x,m) => \<^Const>\<open>Functionality x m\<close>, \<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)
 
-fun solver__abst_domain name (phi,ctxt,sequent'0) =
-  let val sequent = Phi_Help.instantiate_higher_order_schematic_var ~2 ctxt sequent'0
-                 |> Phi_Help.beta_eta_contract
-      fun err () = raise Automation_Fail (fn () =>
+fun solver__abst_domain name (phi,ctxt,sequent) =
+  let fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
                                      \the expression of the implied pure fact from it."])
       val var = case Thm.concl_of sequent
@@ -145,7 +145,7 @@ fun gen_is_functional (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
       val ctxt = ctxt0 (*Context.proof_map (Phi_Reasoners.add_premise_extraction_rules
                     @{thms' Is_Functional_premise_extraction Functionality_premise_extraction}) ctxt0*)
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},
-                                      [(SOME ([0], ind_conv), reasoning)], solver, simp)
+                                      [(SOME [0], ind_conv, reasoning)], solver, simp)
                                     phi0 hint0 ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy

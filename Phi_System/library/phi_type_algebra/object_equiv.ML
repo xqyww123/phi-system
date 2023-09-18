@@ -168,8 +168,9 @@ fun wrap_equation_by_base_tag ctxt phi thm =
 
 fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
   let val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
-      val rule = if #is_recursive phi0
-                 then let val base = Thm.prems_of (#ind phi0)
+      val rule = case #ind phi0
+                   of SOME ind =>
+                      let val base = Thm.prems_of ind
                                   |> get_first (fn tm =>
                                        case Logic.strip_assums_concl tm
                                          of _ (*Trueprop*) $ (_ $ X) =>
@@ -182,7 +183,7 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
                                   |> Thm.incr_indexes_cterm (Thm.maxidx_of rule0 + 1)
                        in Drule.infer_instantiate ctxt0 [(("base",0),base)] rule0
                       end
-                 else rule0
+                    | _ => rule0
 
       val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T $ _ => T)
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
@@ -232,8 +233,8 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_obj_eq_singular_None, rule,
-                                      [(SOME ([0], ind_conv true ), OEO_reasoning1),
-                                       (SOME ([0], ind_conv false), OEO_reasoning2)],
+                                      [(SOME [0], ind_conv true , OEO_reasoning1),
+                                       (SOME [0], ind_conv false, OEO_reasoning2)],
                                       K NONE, K I)
                                      phi0 hint ctxt0
    in Seq.pull rules
@@ -276,8 +277,8 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
-                                      [(NONE, K (pure_PLPR_reasoning 1)),
-                                       (SOME ([0], ind_conv), OE_reasoning)],
+                                      [(NONE, K (K I), K (pure_PLPR_reasoning 1)),
+                                       (SOME [0], ind_conv, OE_reasoning)],
                                       infer, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules

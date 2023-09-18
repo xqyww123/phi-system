@@ -94,7 +94,10 @@ fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
       val (ants, ctxt) = mk_Ants rev_arg_tys [] T_term ctxt
       val xT = \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ unit $ T_term
    in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (
-        (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty\<close> $ xT $ Var(("P", 0), HOLogic.boolT)
+        (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty\<close> $ xT
+                            $ (if #is_recursive phi
+                               then \<^Const>\<open>True\<close>
+                               else Var(("P", 0), HOLogic.boolT))
                     else \<^Const>\<open>Identity_Element\<^sub>E model_ty\<close> $ xT)),
         SOME unit :: parse_inst_params_from_phi_term T_term,
         phi, ctxt)
@@ -171,7 +174,7 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property_id_ele is_left, rule,
-                                     [(SOME ([], ind_conv), reasoning)],
+                                     [(NONE, ind_conv, reasoning)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

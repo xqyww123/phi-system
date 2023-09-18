@@ -135,7 +135,8 @@ val load_simpset : term list -> Proof.context -> Proof.context
 
 type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
 type reasoning = Proof.context -> thm -> thm
-type subgoal_configure = (int list (*quant_interps*) * ind_conv) option (*If not given, no induction will be applied*)
+type subgoal_configure = int list (*quant_interps*) option (*If not given, no induction will be applied*)
+                       * ind_conv
                        * (Phi_Type_Algebra.phi_type -> reasoning)
 type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
 
@@ -1230,9 +1231,19 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                    |> Phi_Help.certify_vars (Context.Proof ctxt)
       val rule' = Thm.instantiate inst_rule rule
       
-      fun apply_induction NONE rule' = rule'
-        | apply_induction (SOME (quants, ind_conv)) rule'0 =
-            let val frees = map_filter (fn SOME (Free free) => SOME (Thm.cterm_of ctxt (Free free)) | _ => NONE) phi_typ_parameters
+
+      fun apply_conv ctxt ind_conv rule' =
+        let val ((_, [rule't]), ctxt't) = Variable.import true [rule'] ctxt
+         in rule't
+         |> ind_conv ctxt phi
+         |> singleton (Variable.export ctxt't ctxt) 
+        end
+      fun apply_induction NONE conv rule' = apply_conv ctxt conv rule'
+        | apply_induction (SOME quants) ind_conv rule' =
+            if is_some (#ind phi) then
+            let val _ = if null (Term.add_vars (fst (Logic.dest_implies (Thm.prop_of rule'))) []) then ()
+                        else warning "Induction contains schematic variables"
+                (*val frees = map_filter (fn SOME (Free free) => SOME (Thm.cterm_of ctxt (Free free)) | _ => NONE) phi_typ_parameters
                 val idx = Thm.maxidx_of rule' + 1
                 val inst = Vars.build (fold (fn v as ((N,i),T) =>
                                                 let val T' = rev_map Thm.typ_of_cterm [] frees ---> T
@@ -1241,7 +1252,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                                                  in Vars.add (v, var)
                                                 end)
                                             (Term.add_vars (Thm.prop_of rule'0) []))
-                val rule' = Thm.instantiate (TVars.empty, inst) rule'0
+                val rule' = Thm.instantiate (TVars.empty, inst) rule'0*)
             
                 val free_tabel = Symtab.build (fold_index (fn (i, SOME (Free (N,_))) => Symtab.update_new (N,i)
                                                             | (_, SOME (Bound _)) => I
@@ -1275,9 +1286,10 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
              |> Goal.conclude
              |> singleton (Variable.export ctxt't ctxt) 
             end
+            else apply_conv ctxt ind_conv rule'
 
-      val rule'3 = fold (fn (ind_config,reasoning) => fn rule' =>
-              reasoning phi ctxt (apply_induction ind_config rule')
+      val rule'3 = fold (fn (ind_config,conv,reasoning) => fn rule' =>
+              reasoning phi ctxt (apply_induction ind_config conv rule')
             ) subgoal_reasonings rule'
 
       val rule'4 =(case solver (phi, ctxt, rule'3)
@@ -1490,7 +1502,8 @@ fun varify_all_vars (focus : Subgoal.focus) tm =
   end
 
 type reasoning = Proof.context -> thm -> thm
-type subgoal_configure = (int list (*quant_interps*) * ind_conv) option (*If not given, no induction will be applied*)
+type subgoal_configure = int list (*quant_interps*) option (*If not given, no induction will be applied*)
+                       * ind_conv
                        * (Phi_Type_Algebra.phi_type -> reasoning)
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoner = Proof.context -> thm -> thm

@@ -216,7 +216,7 @@ fun gen_SgTH (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property_SgTH, @{thm' \<phi>TA_SgH_rule},
-                                     [(SOME ([0,~1,~1], ind_conv), SgTH_reasoning)],
+                                     [(SOME [0,~1,~1], ind_conv, SgTH_reasoning)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

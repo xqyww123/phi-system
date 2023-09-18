@@ -33,7 +33,7 @@ type phi_type = {
                               Here the type equations are given between types, \<open>T = U\<close>.
                               However, depending on definitions, not all \<phi>-types have such equations.*)
   cases: thm option,
-  ind: thm,
+  ind: thm option,
     (*inductively destructive transformation, of form
      has_R: ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (?R.0 * x : T a b c \<longrightarrow> ?Y.0 and ?Q.0)  (*only available for sep-magma*)
      full:  ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (x : T a b c \<longrightarrow> ?Y.0 a b c x and ?Q.0 a b c x)
@@ -209,7 +209,7 @@ type phi_type = {
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
   type_equations: thm list,
-  ind: thm,
+  ind: thm option,
   cases: thm option,
   intro_reasoning: thm list (*introduction transformations*),
   is_recursive: bool,
@@ -225,7 +225,7 @@ fun map_phi_type (mtm,mth) (phi : phi_type) =
     proof_id = #proof_id phi,
     equations = mth (#equations phi),
     type_equations = mth (#type_equations phi),
-    ind = singleton mth (#ind phi),
+    ind = Option.map (singleton mth) (#ind phi),
     cases = Option.map (singleton mth) (#cases phi),
     intro_reasoning = mth (#intro_reasoning phi),
     is_recursive = #is_recursive phi,
@@ -241,7 +241,7 @@ fun set_ind ind (phi : phi_type) =
     proof_id = #proof_id phi,
     equations = #equations phi,
     type_equations = #type_equations phi,
-    ind = ind,
+    ind = SOME ind,
     cases = #cases phi,
     intro_reasoning = #intro_reasoning phi,
     is_recursive = #is_recursive phi,
@@ -251,7 +251,7 @@ fun set_ind ind (phi : phi_type) =
 fun fold_phi_type (fold_tm, fold_thm) (phi : phi_type) x = x
   |> fold_tm (#term phi)
   |> fold fold_thm (#equations phi)
-  |> fold_thm (#ind phi)
+  |> (case #ind phi of SOME i => fold_thm i | _ => I)
   |> fold fold_thm (#intro_reasoning phi)
 
 fun morphism_phi_type m = map_phi_type (Morphism.term m, Morphism.fact m)
@@ -329,14 +329,14 @@ fun mk_ind_dest_ToA_internal ctxt (phi : phi_type) prop0 = (*not tested*)
       val prop = prop0
               |> (fn X => Abs("",x_ty,X))
               |> fold (fn T => fn X => Abs("",T,X)) rev_arg_tys
-      val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of (#ind phi)))
+      val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of (the (#ind phi))))
                         of Var v => v
                          | _ => error "Bad induction rule")
-   in Thm.instantiate (TVars.empty, Vars.make [(prop_var, Thm.cterm_of ctxt prop)]) (#ind phi)
+   in Thm.instantiate (TVars.empty, Vars.make [(prop_var, Thm.cterm_of ctxt prop)]) (the (#ind phi))
         |> Phi_Help.beta_eta_contract
   end
 
-fun mk_ind_dest_ToA ctxt phi gen_prop = (*not tested*)
+fun mk_ind_dest_ToA ctxt phi gen_prop =
   let val typ = Term.fastype_of (#term phi)
       fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
         | parse_typ args \<^Type>\<open>fun a r\<close> = parse_typ (a::args) r
@@ -350,7 +350,7 @@ fun mk_ind_dest_ToA ctxt phi gen_prop = (*not tested*)
               |> (fn X => Abs("",x_ty,X))
               |> fold (fn T => fn X => Abs("",T,X)) rev_arg_tys
       val idx = Term.maxidx_of_term prop + 1
-      val ind = Thm.incr_indexes idx (#ind phi)
+      val ind = Thm.incr_indexes idx (the (#ind phi))
       val prop_var = (case Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of ind))
                         of Var v => v
                          | _ => error "Bad induction rule")
@@ -905,28 +905,13 @@ fun add_type (def, pos, dervs, bundles) thy =
 
 
       val ind =(case def
-                  of DIRECT_DEF _ =>
-                        let val eq = hd eqs
-                            val LHS = Thm.dest_arg (Thm.cconcl_of eq) |> Thm.dest_arg1
-                            val x = Thm.dest_arg1 LHS
-                            fun mk_P ctm =
-                              case Thm.term_of ctm
-                                of _ $ _ => Thm.apply (mk_P (Thm.dest_fun ctm)) (Thm.dest_arg ctm)
-                                 | _ => let val P_ty = (binder_types (Thm.typ_of_cterm ctm) ---> \<^typ>\<open>bool\<close>)
-                                                    |> Thm.ctyp_of ctxt
-                                            val i = Thm.maxidx_of_cterm ctm + 1
-                                         in Thm.var (("P",i), P_ty)
-                                        end
-                            val T_x = Thm.apply \<^cterm>\<open>Trueprop\<close> (Thm.apply (mk_P (Thm.dest_arg LHS)) x)
-                         in Thm.trivial T_x
-                         |> Drule.zero_var_indexes
-                        end
+                  of DIRECT_DEF _ => NONE
                    | WFREC_DEF (_, info) =>
                         case #inducts info
-                          of SOME rules => List.nth (rules, idx)
-                           | _ => List.nth (#pinducts info, idx))
-               |> Conv.fconv_rule (add_premise_tag ctxt)
-               |> Phi_Help.beta_eta_contract
+                          of SOME rules => SOME (List.nth (rules, idx))
+                           | _ => SOME (List.nth (#pinducts info, idx)))
+               |> Option.map ( Conv.fconv_rule (add_premise_tag ctxt)
+                            #> Phi_Help.beta_eta_contract )
 
       val cases =
             case def
@@ -1011,7 +996,7 @@ fun add_type (def, pos, dervs, bundles) thy =
             proof_id = proof_id,
             equations = map chk_zero_index_thm eqs,
             type_equations = typeqs,
-            ind = chk_zero_index_thm ind,
+            ind = Option.map chk_zero_index_thm ind,
             cases = cases,
             intro_reasoning = map chk_zero_index_thm intro_reasoning,
             is_recursive = is_recursive,

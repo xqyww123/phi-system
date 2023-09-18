@@ -91,7 +91,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                    end) ctxt
 
       val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,
-                                     [(SOME (if is_intro then [0] else [0,~1], ind_conv), reasoning is_intro)],
+                                     [(SOME (if is_intro then [0] else [0,~1]), ind_conv, reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

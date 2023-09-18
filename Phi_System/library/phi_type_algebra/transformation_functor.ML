@@ -122,7 +122,7 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
                ) ctxt)
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_TF, @{thm' \<phi>TA_TF_rule},
-                                      [(SOME ([0,~1], ind_conv), TF_reasoning)],
+                                      [(SOME [0,~1], ind_conv, TF_reasoning)],
                                       K NONE, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules
@@ -219,7 +219,7 @@ fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
              ) ctxt) thm
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_FTF, @{thm' \<phi>TA_FTF_rule},
-                                      [(NONE, reasoning)], K NONE, simp)
+                                      [(NONE, K (K I), reasoning)], K NONE, simp)
                                     phi0 hint0 ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

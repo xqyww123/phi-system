@@ -3985,6 +3985,10 @@ text \<open>Strategy: transforming both sides to (one of) the base case of induc
 
 definition \<open>\<A>simp_to_base X \<equiv> X\<close>
 
+
+lemma
+  \<open> (\<And>y x. Ant \<longrightarrow> (y \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T)) \<close>
+
 lemma \<phi>TA_OE\<^sub>O_rule:
   \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = base) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success

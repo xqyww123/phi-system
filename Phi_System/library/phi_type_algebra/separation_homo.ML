@@ -176,7 +176,7 @@ fun gen_SH is_intro (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
                                      (if is_intro then @{thm' \<phi>TA_SH\<^sub>I_rule} else @{thm' \<phi>TA_SH\<^sub>E_rule}),
-                                     [(SOME ([0], ind_conv), SH_reasoning is_intro)],
+                                     [(SOME [0], ind_conv, SH_reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

@@ -26,18 +26,16 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>t race_reasoning = 3]]
-       
+declare [[\<phi>trace_reasoning = 3]]
+        
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
-  deriving Functionality
-(*\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
-       and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
+  deriving \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun f)\<close>
+       and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> f x = 1 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun f) True\<close>
        and Basic
        and Functionality
        and Abstraction_to_Raw
-*)
 
 subsubsection \<open>Algebraic Properties\<close>
 
@@ -1283,7 +1281,7 @@ subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 lemma [simp]: (*TODO: move me*)
   \<open>(case x of Inl x \<Rightarrow> Inl x | Inr x \<Rightarrow> Inr x) = x\<close>
@@ -1425,7 +1423,7 @@ lemma
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 0 ]]
+declare [[\<phi>trace_reasoning = 3 ]]
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
@@ -1450,8 +1448,6 @@ declare [[\<phi>trace_reasoning = 0 ]]
        and \<phi>Fun'.Comm
        and Commutativity_Deriver
        and \<phi>Sum.Comm\<^sub>E
-
-
 
 
 
@@ -1792,14 +1788,28 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 
+
+\<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
+  where \<open>([] \<Ztypecolon> List T) = Void\<close>
+      | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
+  deriving Separation_Monoid
+
+
+declare [[\<phi>trace_reasoning = 3]]
    
               
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List\<^sub>S n T) = (Void \<s>\<u>\<b>\<j> n = 0)\<close>
       | \<open>(x # l \<Ztypecolon> List\<^sub>S n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
-      deriving Identity_Element\<^sub>I
+      deriving (*\<open>Identity_Element\<^sub>I ([] \<Ztypecolon> List\<^sub>S n T) (n = 0)\<close>
+       and*) Identity_Element\<^sub>E
+          and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (List\<^sub>S n T) (list_all2 eq)\<close>
+          
+term \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (List\<^sub>S n T) (list_all2 eq)\<close>
+
+
 (*(*\<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l)\<close>
       and*) Object_Equiv\<^sub>O*)
 
@@ -1817,13 +1827,10 @@ setup \<open>Config.put_global Phi_Reasoner_solve_obligation_and_no_defer 3\<clo
 
 
 
-\<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
-  where \<open>([] \<Ztypecolon> List T) = Void\<close>
-      | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Identity_Element
+
        
-       and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
-                            (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
+       (*and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
+                            (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>*)
 (*Separation_Monoid*)
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)

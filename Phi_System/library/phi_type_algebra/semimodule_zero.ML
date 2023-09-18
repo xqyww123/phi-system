@@ -26,7 +26,7 @@ fun gen_M0 closed (der_id, name) hint0 ctxt0 (phi : phi_type) thy =
                     end)))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, Guess_Scalar_Zero closed,
                                       (if closed then @{thm' \<phi>TA_M0c_rule} else @{thm' \<phi>TA_M0_rule}),
-                                      [(SOME ([0], ind_conv), reasoning)], K NONE, simp)
+                                      [(SOME [0], ind_conv, reasoning)], K NONE, simp)
                                     phi hint0 ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

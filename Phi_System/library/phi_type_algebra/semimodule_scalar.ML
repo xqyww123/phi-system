@@ -124,7 +124,7 @@ fun gen_MS is_intro (_, name) hint0 ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_Assoc is_intro,
                                       (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rule} else @{thm' \<phi>TA_MS\<^sub>E_rule}),
-                                      [(SOME ([0,2,~1,~1,~1], ind_conv), reasoning)],
+                                      [(SOME [0,2,~1,~1,~1], ind_conv, reasoning)],
                                       K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules
