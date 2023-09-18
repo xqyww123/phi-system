@@ -711,11 +711,14 @@ val defer_obligation_tac = defer_antecedent o contract_obligations
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
 val auto_obligation_solver = oblg_template (fn ctxt => fn th =>
-      head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
+      let val th'1 = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
+          val th' = @{thm' Premise_I} RS th'1
+       in th'
+       |> head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
           pre THEN HEADGOAL (Method.insert_tac ctxt aux)
               THEN Clasimp.auto_tac ctxt) Agressive_Solver)
-                (@{thm' Premise_I} RS th)
-       |> Seq.pull)
+       |> Seq.pull
+      end)
 
 val auto_obligation_solver' = context_tactic_to_state_transition auto_obligation_solver
 

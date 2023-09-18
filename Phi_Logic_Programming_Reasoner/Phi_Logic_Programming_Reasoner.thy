@@ -1282,6 +1282,18 @@ lemma [\<phi>premise_extraction]:
   unfolding Premise_def
   by simp_all
 
+consts prove_obligations_in_time :: \<open>bool \<comment> \<open>if to using aggressive solver\<close> \<Rightarrow> action\<close>
+
+\<phi>reasoner_ML prove_obligations_in_time %cutting (\<open>_ @action prove_obligations_in_time _\<close>) = \<open>
+  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+    let val using_aggressive_prover =
+              case PLPR_Sytax.dest_action_of' (K true) (Thm.major_prem_of sequent)
+                of (_, Const _ $ Const(\<^const_name>\<open>True\<close>, _)) => true
+                 | _ => false
+     in 
+    end)
+\<close>
+
 (* TODO: re-enable!
 hide_fact contract_drop_waste contract_obligations contract_premise_all
           contract_add_additional_prems
@@ -1329,21 +1341,22 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
               then warning "PLPR Envir Var: The value to be assigned has schematic variables \
                            \which will not be retained!"
               else ()
-   in SOME ((PLPR_Env.push (PLPR_Env.name_of N) V ctxt,
+   in SOME ((Context.proof_map (PLPR_Env.push (PLPR_Env.name_of N) V) ctxt,
             @{thm Push_Envir_Var_I} RS sequent),
       Seq.empty) end
 )\<close>
 
 \<phi>reasoner_ML Pop_Envir_Var %cutting (\<open>Pop_Envir_Var _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N) = Thm.major_prem_of sequent
-   in SOME ((PLPR_Env.pop (PLPR_Env.name_of N) ctxt, @{thm Pop_Envir_Var_I} RS sequent),
+   in SOME (( Context.proof_map (PLPR_Env.pop (PLPR_Env.name_of N)) ctxt,
+              @{thm Pop_Envir_Var_I} RS sequent),
       Seq.empty) end
 )\<close>
 
 \<phi>reasoner_ML Get_Envir_Var %cutting (\<open>Get_Envir_Var _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N $ _) = Thm.major_prem_of sequent
       val idx = Thm.maxidx_of sequent + 1
-   in case PLPR_Env.get (PLPR_Env.name_of N) ctxt
+   in case PLPR_Env.get (PLPR_Env.name_of N) (Context.Proof ctxt)
         of NONE => Phi_Reasoner.error
                       ("No enviromental variable " ^ PLPR_Env.name_of N ^ " is set")
          | SOME V' =>
@@ -1361,7 +1374,7 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
 \<phi>reasoner_ML Get_Envir_Var' %cutting (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
   let val _ $ (_ $ N $ D $ _) = Thm.major_prem_of sequent
       val idx = Thm.maxidx_of sequent + 1
-      val V = Thm.cterm_of ctxt (case PLPR_Env.get (PLPR_Env.name_of N) ctxt
+      val V = Thm.cterm_of ctxt (case PLPR_Env.get (PLPR_Env.name_of N) (Context.Proof ctxt)
                                    of SOME V => V | NONE => D)
                 |> Thm.incr_indexes_cterm idx
    in SOME ((ctxt, ( @{thm Get_Envir_Var'_I}
@@ -1372,7 +1385,6 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
       Seq.empty)
   end
 )\<close>
-
 
 
 

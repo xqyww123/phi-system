@@ -1780,7 +1780,10 @@ lemma [\<phi>inhabitance_rule 1000]:
   apply blast .
   
 
-
+schematic_goal \<open>\<forall>b. Ball (set (xaa # l)) isl \<or> (\<forall>b\<in>set (xaa # l). \<not> isl b) \<longrightarrow>
+        (if isl xaa \<and> Ball (set l) isl then Inl (projl xaa # map projl l) else Inr (projr xaa # map projr l)) = Inr b \<longrightarrow>
+        projr xaa # map projr l = b \<longrightarrow> (case xaa of Inl x \<Rightarrow> ?w201 x | Inr ba \<Rightarrow> \<lambda>b. fst ([], ba)) b = map projr l\<close>
+  apply (cases xaa; auto)
 
 
 subsection \<open>Point on a Mapping\<close>
@@ -1789,12 +1792,20 @@ subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
 
-   
+setup  \<open>Config.put_global Phi_Reasoner_solve_obligation_and_no_defer 3\<close>
+
+ 
+  
+   declare if_split_eq1[simp]
                 
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Separation_Monoid
+  deriving Identity_Element
+       
+       and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
+                            (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
+(*Separation_Monoid*)
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)
 

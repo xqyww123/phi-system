@@ -36,14 +36,14 @@ fun is_action_of name = is_action_of' (fn tm => case Term.head_of tm of Const (N
                                         | _ => false)
 
 fun dest_action_of' P (tm as (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ A))
-      = if P A then (A, X) else raise TERM ("PLPR_Syntax.dest_action_of", [tm])
+      = if P A then (X, A) else raise TERM ("PLPR_Syntax.dest_action_of", [tm])
   | dest_action_of' P (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_action_of' P X
   | dest_action_of' P (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = dest_action_of' P X
   | dest_action_of' _ tm = raise TERM ("PLPR_Syntax.dest_action_of", [tm])
 
 fun dest_action_of name =
       dest_action_of' (fn tm => case Term.head_of tm of Const (N',_) => name = N'
-                        | _ => false) #> snd
+                        | _ => false) #> fst
 
 fun find_tagged_premise' P =
   let fun find [] = NONE
