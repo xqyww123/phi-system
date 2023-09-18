@@ -1,4 +1,5 @@
-- 82395 74711
+- case-split in SE is broken! type varaibles in the two split branches are conglutinated!
+  see lemma (*TODO-0918*)
 - All TO-Transformation may be replaced by *[C] form with 𝒮 
 
 
