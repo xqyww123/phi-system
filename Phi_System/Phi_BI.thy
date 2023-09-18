@@ -3676,40 +3676,6 @@ NToA procedure addresses the transformation between any-to-many \<phi>-type item
 
 subsubsection \<open>Basic Transformation Rules\<close>
 
-paragraph \<open>Fallback\<close>
-
-(*
-lemma [\<phi>reason default %ToA_SE_fallback]:
-  \<open> Identity_Element\<^sub>E (one \<Ztypecolon> U)
-\<Longrightarrow> Attempt_Fallback (x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (one, fst x) \<Ztypecolon> U \<^emph>[True] T) \<close>
-  for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
-  unfolding Identity_Element\<^sub>E_def Attempt_Fallback_def
-  by (cases x; simp add: \<phi>Prod_expn';
-      metis mult_1_class.mult_1_right transformation_left_frame)
-*)
-(*
-lemma [\<phi>reason default %ToA_SE_fallback]: \<comment> \<open>Structural_Extract_fail\<close>
-  \<open> Attempt_Fallback (x \<Ztypecolon> X \<^emph>[True] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> prod.swap x \<Ztypecolon> Y \<^emph>[True] X) \<close>
-  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
-  unfolding Action_Tag_def Attempt_Fallback_def Cond_\<phi>Prod_def \<phi>Prod_def \<phi>Type_def Transformation_def
-  by (cases x; simp add: mult.commute)
-
-lemma [\<phi>reason default %ToA_SE_fallback+1]: \<comment> \<open>Structural_Extract_fail\<close>
-  \<open> Attempt_Fallback ((x,y) \<Ztypecolon> X \<^emph>[True] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, x) \<Ztypecolon> Y \<^emph>[True] X) \<close>
-  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
-  unfolding Action_Tag_def Attempt_Fallback_def Cond_\<phi>Prod_def \<phi>Prod_def \<phi>Type_def Transformation_def
-  by (simp add: mult.commute)
-*)
-(* TODO!
-lemma [\<phi>reason default 2]:
-  \<open> Attempt_Fallback (x \<Ztypecolon> X \<^emph>[True] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, fst x) \<Ztypecolon> Y \<^emph>[True] X \<w>\<i>\<t>\<h>
-          Auto_Transform_Hint (y' \<Ztypecolon> Y' \<^emph> X') (x' \<Ztypecolon> X' \<^emph> Y') \<and> True) \<close>
-  for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close> and X' :: \<open>('a'::sep_ab_semigroup,'b') \<phi>\<close>
-  unfolding Auto_Transform_Hint_def HOL.simp_thms(22) Attempt_Fallback_def
-  unfolding \<phi>None_itself_is_one Action_Tag_def
-  by (cases x; simp add: mult.commute \<phi>Prod_expn')
-*)
-
 paragraph \<open>Plainize\<close>
 
 lemma [\<phi>reason %ToA_normalizing]:
@@ -4138,6 +4104,53 @@ hide_fact enter_SEb enter_SEb_TH*)
 
 
 subsection \<open>Supplementary Transformations\<close>
+
+subsubsection \<open>Evaluations\<close>
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (y,x) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> prod.swap (x,y) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (f x, y) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> apfst f (x,y) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (x, f y) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> apsnd f (x,y) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> fst (x,y) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> y \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> snd (x,y) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (x, z) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (fst (x,y), z) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (y, z) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (snd (x,y), z) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (x, y) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (x, fst (y, z)) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
+lemma [\<phi>reason %ToA_red]:
+  \<open> (x, z) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (x, snd (y, z)) \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by simp
 
 subsubsection \<open>Let\<close>
 
