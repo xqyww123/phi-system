@@ -5,8 +5,15 @@ val push : string -> term -> Context.generic -> Context.generic
 val pop  : string -> Context.generic -> Context.generic
 val get  : string -> Context.generic -> term option
 
-type effect = term -> Context.generic -> Context.generic
+
+type assign_effect = term -> Context.generic -> term * Context.generic
+                     (*invoked when pushing an environment variable*)
+type clean_effect  = term -> Context.generic -> Context.generic
+                     (*invoked when popping an environment variable*)
+type effect = assign_effect * clean_effect
+
 val set_effect : string -> effect option -> Context.generic -> Context.generic
+
 
 val boolean_flag : string -> bool -> Context.generic -> bool
 
@@ -14,7 +21,11 @@ end
 
 structure PLPR_Env : PLPR_ENVIR_VAR = struct
 
-type effect = term -> Context.generic -> Context.generic
+type assign_effect = term -> Context.generic -> term * Context.generic
+                     (*invoked when pushing an environment variable*)
+type clean_effect  = term -> Context.generic -> Context.generic
+                     (*invoked when popping an environment variable*)
+type effect = assign_effect * clean_effect
 
 structure Data = Generic_Data (
   type T = (term list * effect option) Symtab.table
@@ -28,21 +39,18 @@ fun name_of (Const (N,_)) = N
   | name_of X = raise TERM ("envir_var_name has to be a constant", [X])
 
 fun push N V ctxt =
-  let val effect = Unsynchronized.ref NONE
-   in ctxt
-   |> Data.map (Symtab.map_default (N, ([], NONE))
-               (fn (L, e) => (effect := e; (V::L, e))))
-   |> is_some (!effect) ? the (!effect) V
+  let val (L, effect) = the_default ([], NONE) (Symtab.lookup (Data.get ctxt) N)
+      val (V', ctxt') = case effect of SOME (e, _) => e V ctxt | _ => (V, ctxt)
+   in Data.map (Symtab.update (N, (V'::L, effect))) ctxt'
   end
 
 fun pop N ctxt =
-  let val effect = Unsynchronized.ref NONE
-   in ctxt
-   |> Data.map (Symtab.map_entry N
-               (fn (L, e) => (case tl L of v :: _ => effect := Option.map (fn f => f v) e
-                                         | _ => () ;
-                              (tl L, e))))
-   |> is_some (!effect) ? the (!effect)
+  let fun err () = error ("Fail to pop-out environment variable " ^ N ^ " which hasn't been assigned!" )
+      val (V, L, effect) = case (Symtab.lookup (Data.get ctxt) N)
+                             of SOME (V::L, e) => (V, L, e)
+                              | _ => err ()
+      val ctxt' = case effect of SOME (_, e) => e V ctxt | _ => ctxt
+   in Data.map (Symtab.update (N, (L, effect))) ctxt'
   end
 
 fun set_effect N e = Data.map (Symtab.map_default (N, ([], NONE)) (fn (L, _) => (L, e)))

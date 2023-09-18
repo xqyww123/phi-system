@@ -55,15 +55,16 @@ signature PHI_REASONERS = sig
                         -> Proof.context -> cterm -> thm option option
   val is_syntactic_premise : term -> bool
 
-  (* Simplifications that uses the extracted premises.
+  (*(* Simplifications that uses the extracted premises.
      The boolean: use_origin. if not use_origin, drops the original premises
-     and only remains the extracted premises.*)
+     and only remains the extracted premises.*)*)
   val asm_simplify : bool -> Proof.context -> thm -> thm
   val asm_lr_simplify : bool -> Proof.context -> thm -> thm
   val asm_simp_tac : bool -> Proof.context -> int -> tactic
   val asm_lr_simp_tac : bool -> Proof.context -> int -> tactic
   val asm_rewrite : bool -> Proof.context -> conv
   val asm_lr_rewrite : bool -> Proof.context -> conv
+  val asm_full_rewrite : bool -> Proof.context -> conv
 
   (*structure Is_Premise_of_Obligation : HANDLERS
       (*Tell me what antecedents are considered premise of a proof obligation to be reported,
@@ -179,7 +180,8 @@ fun oblg_template f ctxt th00 = Seq.make (fn () =>
                 SOME (@{thm Premise_True} RS th, Seq.empty)
          | (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B) =>
               if is_Var (Term.head_of A) orelse is_Var (Term.head_of B)
-              then SOME (@{thm Premise_refl} RS th, Seq.empty)
+              then (SOME (@{thm Premise_refl} RS th, Seq.empty)
+                    handle THM _ => f ctxt th)
               else f ctxt th
          | _ => f ctxt th
   end)
@@ -510,12 +512,14 @@ fun is_premise_of_obligation ctxt =
 (* if not use_origin, drops the original premises and only remains the extracted premises. *)
 fun gen_simplify simp use_origin ctxt =
   let val extract = extract_prems (Context.Proof ctxt) true
-      val extract' = if use_origin then (fn th => th :: extract th)
-                     else extract
+      val extract' = if use_origin
+                     then (fn th => th :: extract th)
+                     else (fn th => case extract th of [] => [th] | L => L)
       val sctxt = Simplifier.set_mksimps (fn ctxt =>
                       maps (Simpdata.mksimps Simpdata.mksimps_pairs ctxt)
                     o @{print}
-                    o extract') ctxt
+                    o extract'
+                    o @{print}) ctxt
    in simp sctxt
   end
 
@@ -525,6 +529,7 @@ val asm_simp_tac = gen_simplify Simplifier.asm_simp_tac
 val asm_lr_simp_tac = gen_simplify Simplifier.asm_lr_simp_tac
 val asm_rewrite = gen_simplify Simplifier.asm_rewrite
 val asm_lr_rewrite = gen_simplify Simplifier.asm_lr_rewrite
+val asm_full_rewrite = gen_simplify Simplifier.asm_full_rewrite
 
 (** Obligation Extraction **)
 

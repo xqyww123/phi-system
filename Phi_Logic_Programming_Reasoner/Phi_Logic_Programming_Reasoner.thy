@@ -1072,6 +1072,78 @@ lemma \<r>Success_I: \<open>\<r>Success\<close> unfolding \<r>Success_def ..
   raise Phi_Reasoner.Success (ctxt, @{thm \<r>Success_I} RS sequent))\<close>
 
 
+subsection \<open>Environment Variables\<close>
+
+definition Push_Envir_Var :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
+  where \<open>Push_Envir_Var Name Val \<longleftrightarrow> True\<close>
+definition Pop_Envir_Var  :: \<open>'name \<Rightarrow> bool\<close> where \<open>Pop_Envir_Var Name \<longleftrightarrow> True\<close>
+definition Get_Envir_Var  :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
+  where \<open>Get_Envir_Var Name Return \<longleftrightarrow> True\<close>
+definition Get_Envir_Var' :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> 'a \<Rightarrow> bool\<close>
+  where \<open>Get_Envir_Var' Name Default Return \<longleftrightarrow> True\<close>
+
+subsubsection \<open>Implementation\<close>
+
+ML_file \<open>library/envir_var.ML\<close>
+
+lemma Push_Envir_Var_I: \<open>Push_Envir_Var N V\<close> unfolding Push_Envir_Var_def ..
+lemma Pop_Envir_Var_I:  \<open>Pop_Envir_Var N\<close>    unfolding Pop_Envir_Var_def  ..
+lemma Get_Envir_Var_I : \<open>Get_Envir_Var  N V\<close>   for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var_def  ..
+lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var'_def ..
+
+\<phi>reasoner_ML Push_Envir_Var %cutting (\<open>Push_Envir_Var _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ V) = Thm.major_prem_of sequent
+      val _ = if maxidx_of_term V <> ~1
+              then warning "PLPR Envir Var: The value to be assigned has schematic variables \
+                           \which will not be retained!"
+              else ()
+   in SOME ((Context.proof_map (PLPR_Env.push (PLPR_Env.name_of N) V) ctxt,
+            @{thm Push_Envir_Var_I} RS sequent),
+      Seq.empty) end
+)\<close>
+
+\<phi>reasoner_ML Pop_Envir_Var %cutting (\<open>Pop_Envir_Var _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
+  let val _ $ (_ $ N) = Thm.major_prem_of sequent
+   in SOME (( Context.proof_map (PLPR_Env.pop (PLPR_Env.name_of N)) ctxt,
+              @{thm Pop_Envir_Var_I} RS sequent),
+      Seq.empty) end
+)\<close>
+
+\<phi>reasoner_ML Get_Envir_Var %cutting (\<open>Get_Envir_Var _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ _) = Thm.major_prem_of sequent
+      val idx = Thm.maxidx_of sequent + 1
+   in case PLPR_Env.get (PLPR_Env.name_of N) (Context.Proof ctxt)
+        of NONE => Phi_Reasoner.error
+                      ("No enviromental variable " ^ PLPR_Env.name_of N ^ " is set")
+         | SOME V' =>
+            let val V = Thm.incr_indexes_cterm idx (Thm.cterm_of ctxt V')
+             in SOME ((ctxt, ( @{thm Get_Envir_Var_I}
+                        |> Thm.incr_indexes idx
+                        |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
+                                             Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
+                         ) RS sequent),
+                    Seq.empty)
+            end
+  end
+)\<close>
+
+\<phi>reasoner_ML Get_Envir_Var' %cutting (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
+  let val _ $ (_ $ N $ D $ _) = Thm.major_prem_of sequent
+      val idx = Thm.maxidx_of sequent + 1
+      val V = Thm.cterm_of ctxt (case PLPR_Env.get (PLPR_Env.name_of N) (Context.Proof ctxt)
+                                   of SOME V => V | NONE => D)
+                |> Thm.incr_indexes_cterm idx
+   in SOME ((ctxt, ( @{thm Get_Envir_Var'_I}
+                  |> Thm.incr_indexes idx
+                  |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
+                                       Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
+                   ) RS sequent),
+      Seq.empty)
+  end
+)\<close>
+
+
+
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>
 
 lemma Premise_True[\<phi>reason 5000]: "Premise mode True" unfolding Premise_def ..
@@ -1282,17 +1354,18 @@ lemma [\<phi>premise_extraction]:
   unfolding Premise_def
   by simp_all
 
-consts prove_obligations_in_time :: \<open>bool \<comment> \<open>if to using aggressive solver\<close> \<Rightarrow> action\<close>
+consts prove_obligations_in_time :: mode
 
-\<phi>reasoner_ML prove_obligations_in_time %cutting (\<open>_ @action prove_obligations_in_time _\<close>) = \<open>
-  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-    let val using_aggressive_prover =
-              case PLPR_Sytax.dest_action_of' (K true) (Thm.major_prem_of sequent)
-                of (_, Const _ $ Const(\<^const_name>\<open>True\<close>, _)) => true
-                 | _ => false
-     in 
-    end)
-\<close>
+setup \<open>Context.theory_map (PLPR_Env.set_effect \<^const_name>\<open>prove_obligations_in_time\<close> (SOME (
+  fn V => fn ctxt =>
+    (Bound (Config.get_generic ctxt Phi_Reasoner_solve_obligation_and_no_defer),
+     Config.put_generic Phi_Reasoner_solve_obligation_and_no_defer
+          (case V of Const(\<^const_name>\<open>True\<close>, _) => 2
+                   | Const(\<^const_name>\<open>False\<close>, _) => 0
+                   | _ => HOLogic.dest_numeral V)
+          ctxt),
+  fn V => Config.put_generic Phi_Reasoner_solve_obligation_and_no_defer
+              (case V of Bound i => i | _ => error "BUG"))))\<close>
 
 (* TODO: re-enable!
 hide_fact contract_drop_waste contract_obligations contract_premise_all
@@ -1314,78 +1387,6 @@ lemma merge_oblg_divergence:
 ML_file_debug \<open>library/exhaustive.ML\<close>
 
 hide_fact merge_oblg_divergence
-
-
-subsection \<open>Environment Variables\<close>
-
-definition Push_Envir_Var :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
-  where \<open>Push_Envir_Var Name Val \<longleftrightarrow> True\<close>
-definition Pop_Envir_Var  :: \<open>'name \<Rightarrow> bool\<close> where \<open>Pop_Envir_Var Name \<longleftrightarrow> True\<close>
-definition Get_Envir_Var  :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> bool\<close>
-  where \<open>Get_Envir_Var Name Return \<longleftrightarrow> True\<close>
-definition Get_Envir_Var' :: \<open>'name \<Rightarrow> 'a::{} \<Rightarrow> 'a \<Rightarrow> bool\<close>
-  where \<open>Get_Envir_Var' Name Default Return \<longleftrightarrow> True\<close>
-
-subsubsection \<open>Implementation\<close>
-
-ML_file \<open>library/envir_var.ML\<close>
-
-lemma Push_Envir_Var_I: \<open>Push_Envir_Var N V\<close> unfolding Push_Envir_Var_def ..
-lemma Pop_Envir_Var_I:  \<open>Pop_Envir_Var N\<close>    unfolding Pop_Envir_Var_def  ..
-lemma Get_Envir_Var_I : \<open>Get_Envir_Var  N V\<close>   for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var_def  ..
-lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::{}\<close> unfolding Get_Envir_Var'_def ..
-
-\<phi>reasoner_ML Push_Envir_Var %cutting (\<open>Push_Envir_Var _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
-  let val _ $ (_ $ N $ V) = Thm.major_prem_of sequent
-      val _ = if maxidx_of_term V <> ~1
-              then warning "PLPR Envir Var: The value to be assigned has schematic variables \
-                           \which will not be retained!"
-              else ()
-   in SOME ((Context.proof_map (PLPR_Env.push (PLPR_Env.name_of N) V) ctxt,
-            @{thm Push_Envir_Var_I} RS sequent),
-      Seq.empty) end
-)\<close>
-
-\<phi>reasoner_ML Pop_Envir_Var %cutting (\<open>Pop_Envir_Var _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
-  let val _ $ (_ $ N) = Thm.major_prem_of sequent
-   in SOME (( Context.proof_map (PLPR_Env.pop (PLPR_Env.name_of N)) ctxt,
-              @{thm Pop_Envir_Var_I} RS sequent),
-      Seq.empty) end
-)\<close>
-
-\<phi>reasoner_ML Get_Envir_Var %cutting (\<open>Get_Envir_Var _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
-  let val _ $ (_ $ N $ _) = Thm.major_prem_of sequent
-      val idx = Thm.maxidx_of sequent + 1
-   in case PLPR_Env.get (PLPR_Env.name_of N) (Context.Proof ctxt)
-        of NONE => Phi_Reasoner.error
-                      ("No enviromental variable " ^ PLPR_Env.name_of N ^ " is set")
-         | SOME V' =>
-            let val V = Thm.incr_indexes_cterm idx (Thm.cterm_of ctxt V')
-             in SOME ((ctxt, ( @{thm Get_Envir_Var_I}
-                        |> Thm.incr_indexes idx
-                        |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
-                                             Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
-                         ) RS sequent),
-                    Seq.empty)
-            end
-  end
-)\<close>
-
-\<phi>reasoner_ML Get_Envir_Var' %cutting (\<open>Get_Envir_Var' _ _ _\<close>) = \<open>fn (_,(ctxt,sequent)) => Seq.make (fn () =>
-  let val _ $ (_ $ N $ D $ _) = Thm.major_prem_of sequent
-      val idx = Thm.maxidx_of sequent + 1
-      val V = Thm.cterm_of ctxt (case PLPR_Env.get (PLPR_Env.name_of N) (Context.Proof ctxt)
-                                   of SOME V => V | NONE => D)
-                |> Thm.incr_indexes_cterm idx
-   in SOME ((ctxt, ( @{thm Get_Envir_Var'_I}
-                  |> Thm.incr_indexes idx
-                  |> Thm.instantiate (TVars.make [((("'v",idx),[]), Thm.ctyp_of_cterm V)],
-                                       Vars.make [((("V", idx),Thm.typ_of_cterm V), V)])
-                   ) RS sequent),
-      Seq.empty)
-  end
-)\<close>
-
 
 
 subsection \<open>Reasoning Frame\<close>
@@ -1688,12 +1689,26 @@ lemma RDB_False[\<phi>reason %\<r>if+10]:
   \<open> Q \<Longrightarrow> if False then P else Q\<close>
   by simp
 
-lemma [\<phi>reason %\<r>if]:
+lemma [\<phi>reason %\<r>if+2]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C
+\<Longrightarrow> P
+\<Longrightarrow> if C then P else Q \<close>
+  unfolding \<r>Guard_def Premise_def
+  by simp
+
+lemma [\<phi>reason %\<r>if+1]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C
+\<Longrightarrow> Q
+\<Longrightarrow> if C then P else Q \<close>
+  unfolding \<r>Guard_def Premise_def
+  by simp
+
+lemma [\<phi>reason %\<r>if+1]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> C' : C
-\<Longrightarrow> Is_Literal C'
-\<Longrightarrow> if C' then P else Q
-\<Longrightarrow> if C  then P else Q \<close>
-  unfolding Simplify_def
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C' \<Longrightarrow> P)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C' \<Longrightarrow> Q)
+\<Longrightarrow> if C then P else Q \<close>
+  unfolding \<r>Guard_def Premise_def Simplify_def
   by simp
 
 

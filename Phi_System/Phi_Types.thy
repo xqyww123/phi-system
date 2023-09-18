@@ -1069,7 +1069,7 @@ term \<open>{Inl ({Inl x} + {Inr y})} + {Inr z} \<Ztypecolon> \<S> (\<S> (T +\<^
 
 subsubsection \<open>Transformations\<close>
 
-\<phi>reasoner_group ToA_splitting_\<phi>Sum = (%ToA_splitting-20, [%ToA_splitting-20, %ToA_splitting-20])
+\<phi>reasoner_group ToA_splitting_\<phi>Sum = (%ToA_splitting-20, [%ToA_splitting-20, %ToA_splitting-19])
                                       for (\<open>x \<Ztypecolon> T +\<^sub>\<phi> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close>, \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T +\<^sub>\<phi> U\<close>)
                                        in ToA_splitting and < ToA_splitting_If
   \<open>ToA splitting \<open>\<phi>Sum\<close>\<close>
@@ -1077,9 +1077,17 @@ subsubsection \<open>Transformations\<close>
 declare \<phi>Sum.intro_reasoning(1)[\<phi>reason %ToA_splitting_\<phi>Sum]
         \<phi>Sum.elim_reasoning (1)[\<phi>reason %ToA_splitting_\<phi>Sum]
 
+lemma [\<phi>reason %ToA_splitting_\<phi>Sum+1 for \<open>(_, _) \<Ztypecolon> (_ +\<^sub>\<phi> _) \<^emph>[_] _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> (case x of Inl a \<Rightarrow> (a, w\<^sub>a a) \<Ztypecolon> T \<^emph>[C\<^sub>a a] W\<^sub>a a | Inr b \<Rightarrow> (b, w\<^sub>b b) \<Ztypecolon> U \<^emph>[C\<^sub>b b] W\<^sub>b b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> (x, case_sum w\<^sub>a w\<^sub>b x) \<Ztypecolon> (T +\<^sub>\<phi> U) \<^emph>[case_sum C\<^sub>a C\<^sub>b x] case_sum W\<^sub>a W\<^sub>b x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  by (cases x; auto simp add: \<phi>Prod_expn' Cond_\<phi>Prod_expn)
+
 lemma [\<phi>reason %ToA_splitting_\<phi>Sum]:
-  \<open> (case fst x of Inl a \<Rightarrow> (a, snd x) \<Ztypecolon> T \<^emph>[C\<^sub>a a] W\<^sub>a a | Inr b \<Rightarrow> (b, snd x) \<Ztypecolon> U \<^emph>[C\<^sub>b b] W\<^sub>b b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> snd x = case_sum w\<^sub>a w\<^sub>b (fst x) \<Longrightarrow>
+      (case fst x of Inl a \<Rightarrow> (a, w\<^sub>a a) \<Ztypecolon> T \<^emph>[C\<^sub>a a] W\<^sub>a a | Inr b \<Rightarrow> (b, w\<^sub>b b) \<Ztypecolon> U \<^emph>[C\<^sub>b b] W\<^sub>b b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> snd x = case_sum w\<^sub>a w\<^sub>b (fst x)
 \<Longrightarrow> x \<Ztypecolon> (T +\<^sub>\<phi> U) \<^emph>[case_sum C\<^sub>a C\<^sub>b (fst x)] case_sum W\<^sub>a W\<^sub>b (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding Premise_def
   by (cases x; case_tac a; auto simp add: \<phi>Prod_expn' Cond_\<phi>Prod_expn)
 
 lemma [\<phi>reason %ToA_splitting_\<phi>Sum]:
@@ -1792,19 +1800,13 @@ subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
 
-setup  \<open>Config.put_global Phi_Reasoner_solve_obligation_and_no_defer 3\<close>
-
- 
-  
-   declare if_split_eq1[simp]
-                
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Identity_Element
+  deriving Separation_Monoid
        
-       and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
-                            (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
+       (*and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
+                            (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>*)
 (*Separation_Monoid*)
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)

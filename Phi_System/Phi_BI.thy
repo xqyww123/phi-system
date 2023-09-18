@@ -2098,7 +2098,7 @@ lemma [\<phi>reason %abstract_from_raw_cut]:
 
 subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 
-definition \<phi>Any :: \<open>('c, unit) \<phi>\<close> ("\<top>\<^sub>\<phi>") where \<open>\<top>\<^sub>\<phi> = (\<lambda>_. UNIV)\<close>
+definition \<phi>Any :: \<open>('c, 'x) \<phi>\<close> ("\<top>\<^sub>\<phi>") where \<open>\<top>\<^sub>\<phi> = (\<lambda>_. UNIV)\<close>
 
 setup \<open>Sign.mandatory_path "\<phi>Any"\<close>
 
@@ -3245,7 +3245,7 @@ lemma (*The above rule is not local complete*)
   by clarsimp
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> Identity_Element\<^sub>I A Q)
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Identity_Element\<^sub>I A Q)
 \<Longrightarrow> Identity_Element\<^sub>I (A \<s>\<u>\<b>\<j> P) (P \<and> Q)\<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def
   by (simp; blast)
@@ -3420,11 +3420,30 @@ lemma [\<phi>reason default %ToA_falling_latice]:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P\<close>
   unfolding Premise_def by blast
 
-lemma [\<phi>reason default %ToA_falling_latice+2]:
+lemma [\<phi>reason default %ToA_falling_latice+3]:
   \<open> \<g>\<u>\<a>\<r>\<d> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
 \<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, undefined) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P\<close>
   unfolding \<r>Guard_def
   by simp
+
+lemma [\<phi>reason default %ToA_falling_latice+2]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Push_Envir_Var prove_obligations_in_time True \<and>\<^sub>\<r>
+         Identity_Element\<^sub>I (fst x \<Ztypecolon> T) P \<and>\<^sub>\<r>
+         Pop_Envir_Var prove_obligations_in_time
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[True] U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (snd x, undefined) \<Ztypecolon> U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P\<close>
+  for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
+  unfolding \<r>Guard_def Ant_Seq_def Identity_Element\<^sub>I_def Transformation_def
+  by (clarsimp; fastforce)
+
+lemma [\<phi>reason default %ToA_falling_latice+1]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Push_Envir_Var prove_obligations_in_time True \<and>\<^sub>\<r>
+         Identity_Element\<^sub>E (one \<Ztypecolon> U) \<and>\<^sub>\<r>
+         Pop_Envir_Var prove_obligations_in_time \<and>\<^sub>\<r>
+         (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] y = (one, fst x))
+\<Longrightarrow> x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph>[True] T\<close>
+  for T :: \<open>('c::sep_magma_1, 'x) \<phi>\<close>
+  unfolding \<r>Guard_def Ant_Seq_def Identity_Element\<^sub>E_def Transformation_def Premise_def
+  by (clarsimp; force)
 
 (*
 declare [[\<phi>reason default %ToA_falling_latice + 1
@@ -3620,6 +3639,7 @@ subsubsection \<open>Basic Transformation Rules\<close>
 
 paragraph \<open>Fallback\<close>
 
+(*
 lemma [\<phi>reason default %ToA_SE_fallback]:
   \<open> Identity_Element\<^sub>E (one \<Ztypecolon> U)
 \<Longrightarrow> Attempt_Fallback (x \<Ztypecolon> T \<^emph>[False] \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (one, fst x) \<Ztypecolon> U \<^emph>[True] T) \<close>
@@ -3627,14 +3647,15 @@ lemma [\<phi>reason default %ToA_SE_fallback]:
   unfolding Identity_Element\<^sub>E_def Attempt_Fallback_def
   by (cases x; simp add: \<phi>Prod_expn';
       metis mult_1_class.mult_1_right transformation_left_frame)
+*)
 
-lemma [\<phi>reason default %ToA_SE_fallback+1]: \<comment> \<open>Structural_Extract_fail\<close>
+lemma [\<phi>reason default %ToA_SE_fallback]: \<comment> \<open>Structural_Extract_fail\<close>
   \<open> Attempt_Fallback (x \<Ztypecolon> X \<^emph>[True] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> prod.swap x \<Ztypecolon> Y \<^emph>[True] X) \<close>
   for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
   unfolding Action_Tag_def Attempt_Fallback_def Cond_\<phi>Prod_def \<phi>Prod_def \<phi>Type_def Transformation_def
   by (cases x; simp add: mult.commute)
 
-lemma [\<phi>reason default %ToA_SE_fallback+2]: \<comment> \<open>Structural_Extract_fail\<close>
+lemma [\<phi>reason default %ToA_SE_fallback+1]: \<comment> \<open>Structural_Extract_fail\<close>
   \<open> Attempt_Fallback ((x,y) \<Ztypecolon> X \<^emph>[True] Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, x) \<Ztypecolon> Y \<^emph>[True] X) \<close>
   for X :: \<open>('a::sep_ab_semigroup,'b) \<phi>\<close>
   unfolding Action_Tag_def Attempt_Fallback_def Cond_\<phi>Prod_def \<phi>Prod_def \<phi>Type_def Transformation_def
@@ -3679,7 +3700,6 @@ lemma [\<phi>reason %ToA_splitting_target except \<open>(_ :: ?'a::sep_magma_1 B
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P1 \<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P2)
 \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y * X \<w>\<i>\<t>\<h> P1 \<and> P2"
   unfolding Action_Tag_def REMAINS_def Transformation_def split_paired_All Action_Tag_def Premise_def
-            Identity_Element\<^sub>E_def Ant_Seq_def
   by (cases C\<^sub>R; clarsimp; force)
 
 lemma [\<phi>reason %ToA_splitting_target]:
@@ -3876,7 +3896,7 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
          = Thm.major_prem_of sequent
       val sequent = @{thm' Action_Tag_I} RS sequent
 
-      val ctxt = PLPR_Env.push \<^const_name>\<open>ToA_flag_deep\<close> deep ctxt0
+      val ctxt = Context.proof_map (PLPR_Env.push \<^const_name>\<open>ToA_flag_deep\<close> deep) ctxt0
       val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
             let val src_ctxt = Assertion_SS_Source.enhance (Assertion_SS.equip ctxt)
                 val target_ctxt = Assertion_SS_Target.enhance (Assertion_SS.equip ctxt)
