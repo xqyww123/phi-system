@@ -102,6 +102,31 @@ properties that capture the algebraic model of the data structures and provide u
 
 \<close>
 
+text \<open>TODO: move me somewhere
+
+We provide 3 levels of automation,
+\<^item> We have identified several key properties of \<phi>-types from which a mechanized reasoning on Separation Logic
+  can be instantiated, covering sequential composition, branch, and loop.
+  All issues of the automated reasoning about \<phi>-types reduce to providing the properties.
+\<^item> We provide derivers to prove the properties from the definition of \<phi>-types automatically with annotated
+  parameters of the properties. Induction is applied automatically for inductively
+  defined recursive \<phi>-type (no co-inductive case is explored yet; we are also interested in impredicative
+  variant of our logic).
+\<^item> When no annotation is given, the derivers are able to guess the parameters of the properties
+  by inferring through reasoning for non-recursive \<phi>-type and composing operators of Bounded
+  Natural Functor for recursive \<phi>-type.
+\<close>
+
+text \<open>TODO: move me somewhere  << Classification of \<phi>-TA properties >>
+
+Properties in the algebra of \<phi>-Type can be classified into two sorts,
+\<^item> properties about objects, including Functionality, Carrier_Set, Abstract_Domain, Identity_Element
+\<^item> properties about morphisms i.e. transformations, which essentially consists of two,
+    \<^item> Transformation Functor
+    \<^item> Commutativity between \<phi>-Type Operators
+
+\<close>
+
 
 section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
 

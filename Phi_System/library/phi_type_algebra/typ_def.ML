@@ -728,11 +728,11 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
 
 (** Tools **)
 
-fun is_phi_head phi term =
-  case (#term phi, term)
-    of (Const(N, _), Const(N', _)) => N = N'
-     | (Free(N, _), Free(N',_)) => N = N'
-     | _ => false
+fun is_the_same_const_or_free (Const(N, _), Const(N', _)) = N = N'
+  | is_the_same_const_or_free (Free(N, _), Free(N', _)) = N = N'
+  | is_the_same_const_or_free _ = false
+
+fun is_phi_head phi term = is_the_same_const_or_free (#term phi, term)
 
 fun is_Type_Opr ty =
   case dest_parameterized_phi_ty ty
@@ -903,6 +903,43 @@ fun add_type (def, pos, dervs, bundles) thy =
                                       | _ => false) RHS
                | _ => error "Internal bug #fc2042c3-0c46-4ae5-a66e-9697639068a0") eqs
 
+      val may_mutating_params = exists (fn eq =>
+            case Thm.concl_of eq
+              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ RHS)
+                  => let val (head, params) = case LHS
+                                                of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => Term.strip_comb T
+                                                 | _ => Term.strip_comb LHS
+                         val arity = length params
+                         fun chk (X as _ $ _) =
+                              let val (head', params') = Term.strip_comb X
+                                  val common_arity = Int.min (arity, length params')
+                               in if is_the_same_const_or_free (head, head')
+                                  then List.take (params, common_arity) <> List.take (params', common_arity)
+                                       orelse exists chk params'
+                                  else exists chk params'
+                              end
+                           | chk (Abs(_,_,X)) = chk X
+                           | chk _ = false
+                      in chk RHS
+                     end
+               | _ => error "Internal bug #fc2042c3-0c46-4ae5-a66e-9697639068a0"
+            ) eqs
+      val _ = if may_mutating_params
+              then warning "It seems you are defining a recursive \<phi>-type of mutating parameters : \
+                           \the parameters varify throughout the recursion. The current version of \
+                           \\<phi>type derivers supports it poorly. When the parameters vary, computations\
+                           \ on the parameters are introduced inevitbily, bringing various syntactic \
+                           \expressions of the parameters. However, parameter is a \
+                           \part of \<phi>-type where syntactic form is significant in guiding the reasoning,\
+                           \ so no simplification will be applied to evaluate the computation and to\
+                           \ relate two different syntactical forms of an identical \<phi>-type, may causing\
+                           \ the deriver fails to apply the correct rule as it fails to recognize syntacitc\
+                           \ variants of the \<phi>-type. \
+                           \ Instead, we suggest to split the mutating-parameterized definition into\
+                           \ two where the first one is recursive with all the parameters in the object\
+                           \ side and the second is non-recursive and moves the parameters from the object\
+                           \ side to the right place."
+              else ()
 
       val ind =(case def
                   of DIRECT_DEF _ => NONE
