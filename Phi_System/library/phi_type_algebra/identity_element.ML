@@ -111,10 +111,14 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []
 
-      val ind_conv = default_ind_conv (K (K Conv.all_conv),
-                       fn ctxt => fn _ =>
-                            HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Action_Tag_def}) then_conv
-                            Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)))
+      val ind_conv = default_ind_conv (
+              fn ctxt => fn _ =>
+                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
+              fn ctxt => fn _ =>
+                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+                  Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
       val varify_subgoal =
             if is_left
             then K (fn Trueprop $ (Identity_Element $ S $ P) =>
@@ -144,7 +148,7 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
                    | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
               else (fn ctxt => exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' ctxt phi)) ctxt)
          in default_reasoning true (default_reasoning_configure prem_extractions)
-                                    varify_subgoal reasoner
+                                    varify_subgoal reasoner phi
         end
 
       fun set_the_infer_tail ctxt th =
@@ -171,10 +175,13 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
                         else Conv.arg_conv (Simplifier.rewrite sctxt))
                   end) ctxt))
 
+      fun chk_needs_induction (rule, SOME (Free _) :: _) = SOME []
+        | chk_needs_induction _ = NONE
+
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property_id_ele is_left, rule,
-                                     [(NONE, ind_conv, reasoning)],
+                                     [(chk_needs_induction, ind_conv, reasoning)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

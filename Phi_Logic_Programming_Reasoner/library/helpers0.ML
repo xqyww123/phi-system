@@ -6,11 +6,13 @@ val warn_when_visible : Context.generic -> string -> unit
 
 val leading_antecedent' : thm -> term
 
+
 val pos_parser : string -> Position.T parser
 val beta_eta_conversion : conv
 val beta_eta_contract : thm -> thm
 val beta_eta_contract_cterm : cterm -> cterm
 val beta_eta_contract_term : term -> term
+val beta_eta_contract_leading_antecedent : thm -> thm
 
 val lambda_normalization_ctac : ('a * thm -> 'b) -> ('a * thm -> 'b)
 val lambda_normalization_conv : conv -> conv
@@ -24,11 +26,45 @@ val conj_intros: Proof.context -> thm list -> thm
 (*val conj_elim  : thm -> thm * thm
 val conj_elims : thm -> thm list*)
 
-val instantiate_higher_order_schematic_var' : int (*N*) -> Proof.context -> thm -> thm option (*returns none if no change*)
-val instantiate_higher_order_schematic_var : int (*N*) -> Proof.context -> thm -> thm
+
+(*For tyenv/tenv given from Pattern.match*)
+val subst_tyenv : Type.tyenv -> typ TVars.table
+val subst_tenv  : Type.tyenv -> Envir.tenv -> term Vars.table
+val subst_env : Type.tyenv * Envir.tenv -> typ TVars.table * term Vars.table
+
+(*For tyenv/tenv given from Pattern.unify*)
+val norm_tyenv : Type.tyenv -> typ TVars.table
+val norm_tenv  : Type.tyenv -> Envir.tenv -> term Vars.table
+val norm_env : Type.tyenv * Envir.tenv -> typ TVars.table * term Vars.table
+
+val certify_tyvars : Context.generic -> typ TVars.table -> ctyp TVars.table
+val certify_tmvars : Context.generic -> term Vars.table -> cterm Vars.table
+val certify_vars : Context.generic -> typ TVars.table * term Vars.table -> ctyp TVars.table * cterm Vars.table
+val uncertify_tyvars : ctyp TVars.table -> typ TVars.table
+val uncertify_tmvars : cterm Vars.table -> term Vars.table
+val uncertify_vars   : ctyp TVars.table * cterm Vars.table -> typ TVars.table * term Vars.table
+
+(*val tvars_table_to_tyenv : ctyp TVars.table -> Type.tyenv
+  val vars_table_to_tenv : cterm Vars.table -> Envir.tenv*)
+
+
+val instantiate_higher_order_var : indexname list (*escape*) -> term list -> term Vars.table
+(*Instantiate higher-order schematic variable whose all occurrences are applied to an argument
+  containing no loose bound variable.*)
+
+val instantiate_higher_order_var_in_antecedents' : int (*N*) -> Proof.context -> thm -> thm option (*returns none if no change*)
+val instantiate_higher_order_var_in_antecedents : int (*N*) -> Proof.context -> thm -> thm
 (*For the leading N antecedents only, if there is any higher-order schematic variable
-which is applied to an argument other than a bound variable as usual (including another schematic variable),
+which is applied to an argument containing no loose bound variable,
 instantiate the schematic variable to the constant function on that parameter, \<open>\<lambda>_. ?var\<close>.
+
+Different with instantiate_higher_order_var, the instantiation works successively for each leading
+antecedent in order. `instantiate_higher_order_var` requires *all occurrences* of a HO
+variable *in the whole proposition* have an argument containing no loose bound,
+whereas `instantiate_higher_order_var_in_antecedents'` only checks the occurrences *in the leading
+antecedent* one-by-one in order. Once a such HO variable is seen in the leading antecedent, it is instantiated,
+no matter how it is applied in the subsequent antecedents nor the conclusion. This is identical to the
+way of how \<phi>-LPR works, in the order of evaluating the antecedents.
 
 N = ~1 means all antecedents
 
@@ -114,6 +150,12 @@ fun beta_eta_conversion ctm =
   if Term.could_beta_eta_contract (Thm.term_of ctm)
   then Drule.beta_eta_conversion ctm
   else Conv.all_conv ctm
+
+fun beta_eta_contract_leading_antecedent th =
+  if Term.could_beta_eta_contract (leading_antecedent' th)
+  then Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion
+                                         Conv.all_conv (Thm.cprop_of th)) th
+  else th
 
 fun lambda_normalization_ctac S s =
   let fun fallback exn =
@@ -248,89 +290,124 @@ fun conj_intros _ [] = @{thm' TrueI}
   | conj_intros ctxt L = foldr1 (uncurry (HOLogic.conj_intr ctxt)) L
 
 
-fun instantiate_higher_order_schematic_var' num ctxt thm =
+(* Substitution \& Instantiation *)
+
+fun subst_tyenv tyenv
+  = TVars.build (Vartab.fold (fn (N,(S,T)) => TVars.add ((N,S), T)) tyenv)
+
+fun norm_tyenv tyenv
+  = TVars.build (Vartab.fold (fn (N,(S,T)) => TVars.add ((N,S), Envir.norm_type tyenv T)) tyenv)
+
+fun subst_tenv tyenv tenv =
+  Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
+      Vars.add ((N, Envir.subst_type tyenv TY),
+                Envir.subst_term_types tyenv (Envir.eta_contract TM))) tenv)
+
+fun norm_tenv tyenv tenv =
+  Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
+      Vars.add ((N, Envir.norm_type tyenv TY),
+                    Envir.norm_term (Envir.Envir {maxidx = ~1, tenv=tenv,tyenv=tyenv}) TM
+                                |> Envir.eta_contract)) tenv)
+
+fun subst_env (TY,TM) = (subst_tyenv TY, subst_tenv TY TM)
+fun norm_env (TY,TM) = (norm_tyenv TY, norm_tenv TY TM)
+
+fun certify_tyvars ctxt = TVars.map (K (Context.cases Thm.global_ctyp_of Thm.ctyp_of ctxt))
+fun certify_tmvars ctxt = Vars.map (K (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt))
+fun certify_vars ctxt (ty, tm) = (certify_tyvars ctxt ty, certify_tmvars ctxt tm)
+val uncertify_tyvars = TVars.map (K Thm.typ_of)
+val uncertify_tmvars = Vars.map (K Thm.term_of)
+fun uncertify_vars (ty, tm) = (uncertify_tyvars ty, uncertify_tmvars tm)
+
+
+(* Instantiation of Higher Order Variables *)
+
+fun mk_HO_ins terms (escape,ins0) =
+  let
+    fun count ret (X $ _) = count (ret + 1) X
+      | count ret (Var v) = if member (op =) escape (fst v)
+                            then (ret, NONE)
+                            else (ret, SOME v)
+      | count ret _ = (ret, NONE)
+    val eq = ((op =) o apply2 fst)
+    fun eq' ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 = b2)
+    fun eqle ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 <= b2)
+    fun sift (X as _ $ _) set =
+         (case count 0 X
+            of (N, SOME v) =>
+                let fun visit (set,i) (X $ A) =
+                          if Term.loose_bvar (A, 0)
+                          then visit (sift A (insert eq' (v,N-i) set), i+1) X
+                          else visit (sift A set, i+1) X
+                      | visit (set,_) _ = set
+                 in visit (insert eqle (v, ~1 - N) set,1) X end
+             | _ =>
+                let fun visit set (A $ B) = visit (sift B set) A
+                      | visit set X = sift X set
+                 in visit set X end)
+      | sift (Abs(_,_,X)) set = sift X set
+      | sift (Var v) set =
+            if member (op =) escape (fst v)
+            then set
+            else insert eqle (v, ~1) set
+      | sift _ set = set
+    val set = fold sift terms []
+    (*for elements in this set, if the second projection is negative 'n',
+      '~1-n' is the number of arguments applied to an occurrence of the variable;
+      else if is non-negative 'n', i.e., if (v,n) occurs in the set,
+      the nth argument of the variable contains bound variable and therefore cannot be trimmed.
+
+      calc_arity calculates the minimally number of occurred arguments applied to the variable*)
+    fun calc_arity ret ((v,n)::L) =
+          if n >= 0 orelse AList.defined eq ret v
+          then calc_arity ret L
+          else calc_arity ((v, fold (fn (v',m) => fn n' =>
+                  if fst v' = fst v andalso m < 0 andalso ~1-m < n' then ~1-m else n') L (~1-n)) :: ret) L
+      | calc_arity ret [] = ret
+   val arity = calc_arity [] set
+   fun forall_num n P = n < 0 orelse (P n andalso forall_num (n-1) P)
+   val ins = map_filter (fn (v,n) =>
+          if forall_num (n-1) (fn i => member eq' set (v,i))
+          then NONE
+          else let (*make the residue of the variable trimming upto the minimally number of
+                     occurred arguments, leaving those argument containing loose bound untouched.*)
+                   fun mk_term targs bs 0 T =
+                          fold (fn b => fn X => X $ b) bs
+                            (Var (fst v, fold (fn a => fn T => \<^Type>\<open>fun a T\<close>) targs T))
+                     | mk_term targs bs i \<^Type>\<open>fun a T\<close> =
+                          if member (op =) set (v,n-i)
+                          then Abs ("", a, mk_term (a::targs) (Bound (i-1) :: bs) (i-1) T)
+                          else Abs ("", a, mk_term targs bs (i-1) T)
+                     | mk_term _ _ _ _ = error "Internal bug #bb923326-bb1c-4ba6-9039-84963749ee92"
+                   val term' = mk_term [] [] n (snd v)
+                in SOME (v, term')
+               end
+       ) arity
+    fun collect_var (Var (v,_)) ret = insert (op =) v ret
+      | collect_var (A $ B) ret = collect_var B (collect_var A ret)
+      | collect_var (Abs(_,_,X)) ret = collect_var X ret
+      | collect_var _ ret = ret
+   in (fold collect_var terms escape, ins@ins0)
+  end
+
+fun instantiate_higher_order_var escape terms = Vars.make (snd (mk_HO_ins terms (escape, [])))
+
+fun instantiate_higher_order_var_in_antecedents' num ctxt thm =
   let fun get_concl (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs(_,_,X)) = get_concl X
         | get_concl (Const(\<^const_name>\<open>Pure.all\<close>, _) $ X) = get_concl (Term.incr_boundvars 1 X $ Bound 0)
         | get_concl (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = get_concl X
         | get_concl X = X
-      fun mk_ins ant (escape,ins0) =
-        let
-          fun count ret (X $ _) = count (ret + 1) X
-            | count ret (Var v) = if member (op =) escape (fst v)
-                                  then (ret, NONE)
-                                  else (ret, SOME v)
-            | count ret _ = (ret, NONE)
-          val eq = ((op =) o apply2 fst)
-          fun eq' ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 = b2)
-          fun eqle ((a1,b1),(a2,b2)) = (fst a1 = fst a2 andalso b1 <= b2)
-          fun sift set (X as _ $ _) =
-               (case count 0 X
-                  of (N, SOME v) =>
-                      let fun visit (set,i) (X $ A) =
-                                if Term.loose_bvar (A, 0)
-                                then visit (sift (insert eq' (v,N-i) set) A, i+1) X
-                                else visit (sift set A, i+1) X
-                            | visit (set,_) _ = set
-                       in visit (insert eqle (v, ~1 - N) set,1) X end
-                   | _ =>
-                      let fun visit set (A $ B) = visit (sift set B) A
-                            | visit set X = sift set X
-                       in visit set X end)
-            | sift set (Abs(_,_,X)) = sift set X
-            | sift set (Var v) =
-                  if member (op =) escape (fst v)
-                  then set
-                  else insert eqle (v, ~1) set
-            | sift set _ = set
-          val set = sift [] ant
-          (*for elements in this set, if the second projection is negative 'n',
-            '~1-n' is the number of arguments applied to an occurrence of the variable;
-            else if is non-negative 'n', i.e., if (v,n) occurs in the set,
-            the nth argument of the variable contains bound variable and therefore cannot be trimmed.
-    
-            calc_arity calculates the minimally number of occurred arguments applied to the variable*)
-          fun calc_arity ret ((v,n)::L) =
-                if n >= 0 orelse AList.defined eq ret v
-                then calc_arity ret L
-                else calc_arity ((v, fold (fn (v',m) => fn n' =>
-                        if fst v' = fst v andalso m < 0 andalso ~1-m < n' then ~1-m else n') L (~1-n)) :: ret) L
-            | calc_arity ret [] = ret
-         val arity = calc_arity [] set
-         fun forall_num n P = n < 0 orelse (P n andalso forall_num (n-1) P)
-         val ins = map_filter (fn (v,n) =>
-                if forall_num (n-1) (fn i => member eq' set (v,i))
-                then NONE
-                else let (*make the residue of the variable trimming upto the minimally number of
-                           occurred arguments, leaving those argument containing loose bound untouched.*)
-                         fun mk_term targs bs 0 T =
-                                fold (fn b => fn X => X $ b) bs
-                                  (Var (fst v, fold (fn a => fn T => \<^Type>\<open>fun a T\<close>) targs T))
-                           | mk_term targs bs i \<^Type>\<open>fun a T\<close> =
-                                if member (op =) set (v,n-i)
-                                then Abs ("", a, mk_term (a::targs) (Bound (i-1) :: bs) (i-1) T)
-                                else Abs ("", a, mk_term targs bs (i-1) T)
-                           | mk_term _ _ _ _ = error "Internal bug #bb923326-bb1c-4ba6-9039-84963749ee92"
-                         val term' = mk_term [] [] n (snd v)
-                      in SOME (v, Thm.cterm_of ctxt term')
-                     end
-             ) arity
-          fun collect_var ret (Var (v,_)) = insert (op =) v ret
-            | collect_var ret (A $ B) = collect_var (collect_var ret A) B
-            | collect_var ret (Abs(_,_,X)) = collect_var ret X
-            | collect_var ret _ = ret
-         in (collect_var escape ant, ins@ins0)
-        end
-      val (_, ins) = fold (fn prem => mk_ins (get_concl prem))
+      val (_, ins) = fold (fn prem => mk_HO_ins [get_concl prem])
                           (case num of ~1 => Thm.prems_of thm
                                      | ~2 => Thm.prems_of thm @ [Thm.concl_of thm]
                                      | _  => List.take (Thm.prems_of thm, num))
                           ([],[])
   in if null ins then NONE
-  else SOME (Thm.instantiate (TVars.empty, Vars.make ins) thm)
+  else SOME (Thm.instantiate (TVars.empty, certify_tmvars (Context.Proof ctxt) (Vars.make ins)) thm)
  end
 
-fun instantiate_higher_order_schematic_var num ctxt thm =
-  the_default thm (instantiate_higher_order_schematic_var' num ctxt thm)
+fun instantiate_higher_order_var_in_antecedents num ctxt thm =
+  the_default thm (instantiate_higher_order_var_in_antecedents' num ctxt thm)
 
 fun instantiate_higher_order_schematic_var_for_rule' (N, fixes) ctxt rule =
   let val vars0 = Term.add_vars (Thm.concl_of rule) []
@@ -341,7 +418,7 @@ fun instantiate_higher_order_schematic_var_for_rule' (N, fixes) ctxt rule =
       val (names, ctxt') = Variable.variant_fixes (map fst fixes) ctxt
       val frees = map (Thm.cterm_of ctxt' o Free) (names ~~ typs)
       val rule' = Thm.instantiate (TVars.empty, Vars.make ((fixes ~~ typs) ~~ frees)) rule
-   in instantiate_higher_order_schematic_var' N ctxt rule'
+   in instantiate_higher_order_var_in_antecedents' N ctxt rule'
    |> Option.map (singleton (Variable.export ctxt' ctxt))
   end
 

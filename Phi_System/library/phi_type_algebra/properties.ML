@@ -540,10 +540,10 @@ fun add_template invoke_on_existing_instantiations (template : template) ctxt =
       val tm_frees = fold Term.declare_term_frees compact_deps Name.context
       val ty_vars = fold Term.add_tvars compact_deps []
       val tm_vars = fold Term.add_vars compact_deps []
-      val ty_fixes_names = Name.invent_names ty_frees "\<t>" (map snd ty_vars)
-      val tm_fixes_names = Name.invent_names tm_frees "\<x>" (map snd tm_vars)
-      val tm_fixes = Vartab.build (fold2 (fn (N,Ty) => fn fix => Vartab.update_new (N, (Ty, Free fix))) tm_vars tm_fixes_names)
-      val ty_fixes = Vartab.build (fold2 (fn (N,S) => fn fix => Vartab.update_new (N, (S, TFree fix))) ty_vars ty_fixes_names)
+      val (ty_fixes_names, _) = fold_map Name.variant (map (fst o fst) ty_vars) ty_frees
+      val (tm_fixes_names, _) = fold_map Name.variant (map (fst o fst) tm_vars) tm_frees
+      val tm_fixes = Vartab.build (fold2 (fn (N,Ty) => fn fix => Vartab.update_new (N, (Ty, Free (fix, Ty)))) tm_vars tm_fixes_names)
+      val ty_fixes = Vartab.build (fold2 (fn (N,S) => fn fix => Vartab.update_new (N, (S, TFree (fix, S)))) ty_vars ty_fixes_names)
       fun tm_fixes_of tm = Vartab.build (fold (fn (N,_) => Vartab.update_new (the (Vartab.lookup_key tm_fixes N))) (Term.add_vars tm []))
       fun ty_fixes_of tm = Vartab.build (fold (fn (N,_) => Vartab.update_new (the (Vartab.lookup_key ty_fixes N))) (Term.add_tvars tm []))
       val compact_deps = filter (fn dep => forall (fn d =>
@@ -668,7 +668,10 @@ fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 c
                                         val used = Term.add_frees (Thm.prop_of rule) [] |> map fst
                                         val fixes = burrow (map Free o burrow_fst (Name.variant_list used o map (prefix "%"))) (map #1 prems)
                                         val prems' = map2 (fn (_,_,x) => fn fixes => subst_bounds (rev fixes, x)) prems fixes
-                                     in get_prop_kinds prems'
+                                        val inst = Phi_Help.instantiate_higher_order_var [] prems'
+                                        val prems'1 = map ( Term_Subst.instantiate (TVars.empty, inst)
+                                                         #> Phi_Help.beta_eta_contract_term ) prems'
+                                     in get_prop_kinds prems'1
                                     end
       val template = (prop_kinds, template_pos, Instantiate_Rule (rule, pass, gen, b))
    in ctxt

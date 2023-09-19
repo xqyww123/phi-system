@@ -14,7 +14,7 @@ fun gen_MI (_, name) hint0 ctxt0 (phi : phi_type) thy =
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
         default_reasoning false (default_reasoning_configure []) (K (K NONE))
-                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) ctxt
+                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) phi ctxt
       val simp = K I
       val ind_conv = default_ind_conv (
              fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MI_rewr},
@@ -29,8 +29,8 @@ fun gen_MI (_, name) hint0 ctxt0 (phi : phi_type) thy =
                     end))))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_One_E, @{thm' \<phi>TA_MI\<^sub>E_rule},
-                                      [(SOME [0], ind_conv, reasoning),
-                                       (SOME [0], ind_conv, reasoning)], K NONE, simp)
+                                      [(K (SOME [0]), ind_conv, reasoning),
+                                       (K (SOME [0]), ind_conv, reasoning)], K NONE, simp)
                                     phi hint0 ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

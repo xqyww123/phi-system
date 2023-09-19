@@ -121,7 +121,7 @@ fun SH_reasoning is_intro phi ctxt =
           in if is_intro
           then exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} chk ctxt sequent
           else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
-         end) ctxt
+         end) phi ctxt
 
 fun gen_SH is_intro (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
   let (*val phi0pr = make_phi_for_pair generic phi0*)
@@ -176,7 +176,7 @@ fun gen_SH is_intro (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
                                      (if is_intro then @{thm' \<phi>TA_SH\<^sub>I_rule} else @{thm' \<phi>TA_SH\<^sub>E_rule}),
-                                     [(SOME [0], ind_conv, SH_reasoning is_intro)],
+                                     [(K (SOME [0]), ind_conv, SH_reasoning is_intro)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

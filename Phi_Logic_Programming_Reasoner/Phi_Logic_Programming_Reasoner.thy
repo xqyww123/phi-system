@@ -821,7 +821,7 @@ lemma Reduce_HO_trivial_variable_I:
 
 \<phi>reasoner_ML Reduce_HO_trivial_variable %cutting (\<open>PROP Reduce_HO_trivial_variable _\<close>) = \<open>
   fn (_, (ctxt, sequent)) => Seq.make (fn () =>
-    SOME ((ctxt, Phi_Help.instantiate_higher_order_schematic_var 1 ctxt
+    SOME ((ctxt, Phi_Help.instantiate_higher_order_var_in_antecedents 1 ctxt
                       (@{thm' Reduce_HO_trivial_variable_I} RS sequent)), Seq.empty))
 \<close>
 

@@ -111,7 +111,7 @@ fun gen_MS is_intro (_, name) hint0 ctxt0 (phi0 : phi_type) thy =
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
         default_reasoning false (default_reasoning_configure []) (K (K NONE))
-                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) ctxt
+                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) phi ctxt
       val simp = K I
       val ind_conv = default_ind_conv (
              fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MS_rewr},
@@ -124,7 +124,7 @@ fun gen_MS is_intro (_, name) hint0 ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_Assoc is_intro,
                                       (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rule} else @{thm' \<phi>TA_MS\<^sub>E_rule}),
-                                      [(SOME [0,2,~1,~1,~1], ind_conv, reasoning)],
+                                      [(K (SOME [0,2,~1,~1,~1]), ind_conv, reasoning)],
                                       K NONE, simp)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

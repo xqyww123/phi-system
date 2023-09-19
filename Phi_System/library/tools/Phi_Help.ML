@@ -20,28 +20,6 @@ include PHI_HELP
 
   val string_of_term_generic : Context.generic -> term -> string
 
-  (*For tyenv/tenv given from Pattern.match*)
-  val subst_tyenv : Type.tyenv -> typ TVars.table
-  val subst_tenv  : Type.tyenv -> Envir.tenv -> term Vars.table
-  val subst_env : Type.tyenv * Envir.tenv -> typ TVars.table * term Vars.table
-
-  (*For tyenv/tenv given from Pattern.unify*)
-  val norm_tyenv : Type.tyenv -> typ TVars.table
-  val norm_tenv  : Type.tyenv -> Envir.tenv -> term Vars.table
-  val norm_env : Type.tyenv * Envir.tenv -> typ TVars.table * term Vars.table
-
-  val certify_tyvars : Context.generic -> typ TVars.table -> ctyp TVars.table
-  val certify_tmvars : Context.generic -> term Vars.table -> cterm Vars.table
-  val certify_vars : Context.generic -> typ TVars.table * term Vars.table -> ctyp TVars.table * cterm Vars.table
-  val uncertify_tyvars : ctyp TVars.table -> typ TVars.table
-  val uncertify_tmvars : cterm Vars.table -> term Vars.table
-  val uncertify_vars   : ctyp TVars.table * cterm Vars.table -> typ TVars.table * term Vars.table
-
-  (*val tvars_table_to_tyenv : ctyp TVars.table -> Type.tyenv
-    val vars_table_to_tenv : cterm Vars.table -> Envir.tenv*)
-
-  val beta_eta_contract_leading_antecedent : thm -> thm
-
   val safe_fastype_of : term -> typ (*improved Term.fastype_of which considers dummyT*)
 
   val dest_monop_ty: string (* const name *) -> typ -> typ
@@ -132,32 +110,6 @@ fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global t
   | string_of_term_generic (Context.Proof ctxt) = Syntax.string_of_term ctxt
 
 
-fun subst_tyenv tyenv
-  = TVars.build (Vartab.fold (fn (N,(S,T)) => TVars.add ((N,S), T)) tyenv)
-
-fun norm_tyenv tyenv
-  = TVars.build (Vartab.fold (fn (N,(S,T)) => TVars.add ((N,S), Envir.norm_type tyenv T)) tyenv)
-
-fun subst_tenv tyenv tenv =
-  Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
-      Vars.add ((N, Envir.subst_type tyenv TY),
-                Envir.subst_term_types tyenv (Envir.eta_contract TM))) tenv)
-
-fun norm_tenv tyenv tenv =
-  Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
-      Vars.add ((N, Envir.norm_type tyenv TY),
-                    Envir.norm_term (Envir.Envir {maxidx = ~1, tenv=tenv,tyenv=tyenv}) TM
-                                |> Envir.eta_contract)) tenv)
-
-fun subst_env (TY,TM) = (subst_tyenv TY, subst_tenv TY TM)
-fun norm_env (TY,TM) = (norm_tyenv TY, norm_tenv TY TM)
-
-fun certify_tyvars ctxt = TVars.map (K (Context.cases Thm.global_ctyp_of Thm.ctyp_of ctxt))
-fun certify_tmvars ctxt = Vars.map (K (Context.cases Thm.global_cterm_of Thm.cterm_of ctxt))
-fun certify_vars ctxt (ty, tm) = (certify_tyvars ctxt ty, certify_tmvars ctxt tm)
-val uncertify_tyvars = TVars.map (K Thm.typ_of)
-val uncertify_tmvars = Vars.map (K Thm.term_of)
-fun uncertify_vars (ty, tm) = (uncertify_tyvars ty, uncertify_tmvars tm)
 
 
 (*
@@ -167,16 +119,6 @@ fun tvars_table_to_tyenv tab =
 fun vars_table_to_tenv tab =
   Vartab.build (Vars.fold (fn ((N,S),T) => Vartab.insert (op =) (N,(S, Thm.term_of T))) tab)*)
 
-fun beta_eta_contract th =
-  if Term.could_beta_eta_contract (Thm.prop_of th)
-  then Thm.equal_elim (Drule.beta_eta_conversion (Thm.cprop_of th)) th
-  else th
-
-fun beta_eta_contract_leading_antecedent th =
-  if Term.could_beta_eta_contract (leading_antecedent' th)
-  then Thm.equal_elim (Conv.implies_conv Drule.beta_eta_conversion
-                                         Conv.all_conv (Thm.cprop_of th)) th
-  else th
 
 
 

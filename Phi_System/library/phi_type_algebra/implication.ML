@@ -184,6 +184,7 @@ fun gen_inhab (upper, carrier) (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy 
                 (exhaustive_PLPR_reasoner_by_rule
                     (if upper then @{thm' \<phi>TA_Inh_step} else @{thm' \<phi>TA_Suc_step})
                     (K (chk_unfolded' ctxt phi)))
+                phi
                 ctxt
 
       val solver = if mode_infer then abstract_domain_solver upper name else K NONE
@@ -196,7 +197,7 @@ fun gen_inhab (upper, carrier) (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy 
                 )) ctxt) rule
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property,
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
-                                      [(SOME [0], ind_conv, Inh_reasoning)],
+                                      [(K (SOME [0]), ind_conv, Inh_reasoning)],
                                       solver, simp)
                                      phi0 hint0 ctxt0
    in case Seq.pull rules

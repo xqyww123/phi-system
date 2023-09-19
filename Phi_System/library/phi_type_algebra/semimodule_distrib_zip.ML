@@ -24,7 +24,7 @@ fun gen_MDz is_zip (_, name) hint0 ctxt0 (phi : phi_type) thy =
 
       fun reasoning phi ctxt =
         default_reasoning false (default_reasoning_configure []) (K (K NONE))
-                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) ctxt
+                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) phi ctxt
       val mode_infer = not (is_some hint0)
 
       fun simp (_, ctxt) thm =
@@ -49,7 +49,7 @@ fun gen_MDz is_zip (_, name) hint0 ctxt0 (phi : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Zip_of_Semimodule is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
-                                      [(SOME (if is_zip then [0,2,~1,~1,~1] else [0,2,~1,~1]), ind_conv, reasoning)],
+                                      [(K (SOME (if is_zip then [0,2,~1,~1,~1] else [0,2,~1,~1])), ind_conv, reasoning)],
                                       K NONE, simp)
                                     phi hint0 ctxt0
    in case Seq.pull rules

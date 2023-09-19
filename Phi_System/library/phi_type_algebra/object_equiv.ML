@@ -155,7 +155,7 @@ fun OE_reasoning phi ctxt rule =
           (default_reasoning_configure prem_extractions)
           (K (K NONE))
           (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} (K (chk_unfolded' ctxt' phi)))
-          ctxt' rule
+          phi ctxt' rule
   end
 
 fun wrap_equation_by_base_tag ctxt phi thm =
@@ -207,8 +207,7 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
             val sctxt = Expansion.equip ctxt addsimps (eqs @ @{thms' ExSet_simps})
          in Simplifier.asm_rewrite sctxt
         end
-      val tag_conv = Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}))
-                                       Conv.all_conv
+      val tag_conv = Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv
 
       fun ind_conv step1 = default_ind_conv (
              fn _ => fn _ => fn ctm =>
@@ -223,18 +222,18 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
             (default_reasoning_configure [])
             (K (K NONE))
             (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} (K (chk_unfolded' ctxt phi)))
-            ctxt
+            phi ctxt
 
       fun OEO_reasoning2 phi ctxt = default_reasoning false
             (default_reasoning_configure [])
             (K (K NONE))
             (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__NToA} (K (chk_unfolded' ctxt phi)))
-            ctxt
+            phi ctxt
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_obj_eq_singular_None, rule,
-                                      [(SOME [0], ind_conv true , OEO_reasoning1),
-                                       (SOME [0], ind_conv false, OEO_reasoning2)],
+                                      [(K (SOME [0]), ind_conv true , OEO_reasoning1),
+                                       (K (SOME [0]), ind_conv false, OEO_reasoning2)],
                                       K NONE, K I)
                                      phi0 hint ctxt0
    in Seq.pull rules
@@ -277,8 +276,8 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
-                                      [(NONE, K (K I), K (pure_PLPR_reasoning 1)),
-                                       (SOME [0], ind_conv, OE_reasoning)],
+                                      [(K NONE, K (K I), K (pure_PLPR_reasoning 1)),
+                                       (K (SOME [0]), ind_conv, OE_reasoning)],
                                       infer, simp)
                                      phi0 hint0 ctxt0
    in Seq.pull rules

@@ -80,7 +80,7 @@ fun gen_constr_from_raw (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
               varify_all_vars
               (exhaustive_PLPR_reasoner_by_rule @{thm' transformation_weaken[where P'=True, simplified]}
                                                 (K (chk_unfolded' ctxt phi)))
-              ctxt
+              phi ctxt
 
       fun solver (phi, ctxt, sequent) =
         if mode_infer then
@@ -101,7 +101,7 @@ fun gen_constr_from_raw (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                    else Config.put Phi_Reasoners.existential_obligation 2 ctxt0 *)
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_TrCstr_rule},
-                                      [(SOME [0,~1], ind_conv, reasoning)],
+                                      [(K (SOME [0,~1]), ind_conv, reasoning)],
                                       solver, K I)
                                     phi0 hint0 ctxt0
    in case Seq.pull rules

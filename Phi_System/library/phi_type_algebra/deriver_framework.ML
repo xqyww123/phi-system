@@ -135,7 +135,8 @@ val load_simpset : term list -> Proof.context -> Proof.context
 
 type ind_conv = (Proof.context -> Phi_Type_Algebra.phi_type -> thm -> thm)
 type reasoning = Proof.context -> thm -> thm
-type subgoal_configure = int list (*quant_interps*) option (*If not given, no induction will be applied*)
+type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
+                            int list (*quant_interps*) option) (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type_Algebra.phi_type -> reasoning)
 type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
@@ -205,7 +206,7 @@ type reasoner = Proof.context -> thm -> thm
 val default_reasoning :
         bool (*to split the goals when they contain HOL.disj in antecedents, no matter if the conclusion
                contains schematic variables. it is false by default*) ->
-        reasoning_configure -> varifier -> reasoner -> reasoning
+        reasoning_configure -> varifier -> reasoner -> phi_type -> reasoning
 (*It is a general framework using \<phi>-LPR and Isar subgoal tool.
   Because it uses Isar subgoal, it fixes all schematic variables. Users may expect the reasoning
   to infer some schematic variables. If so, `varifier` is used.
@@ -1289,7 +1290,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
             else apply_conv ctxt ind_conv rule'
 
       val rule'3 = fold (fn (ind_config,conv,reasoning) => fn rule' =>
-              reasoning phi ctxt (apply_induction ind_config conv rule')
+              reasoning phi ctxt (apply_induction (ind_config (rule', phi_typ_parameters)) conv rule')
             ) subgoal_reasonings rule'
 
       val rule'4 =(case solver (phi, ctxt, rule'3)
@@ -1502,7 +1503,8 @@ fun varify_all_vars (focus : Subgoal.focus) tm =
   end
 
 type reasoning = Proof.context -> thm -> thm
-type subgoal_configure = int list (*quant_interps*) option (*If not given, no induction will be applied*)
+type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
+                            int list (*quant_interps*) option) (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type_Algebra.phi_type -> reasoning)
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
@@ -1535,7 +1537,7 @@ fun default_reasoning_configure extractions
    in (prem_ants, rewrs, ToAs @ ants, ctxt)
   end
 
-fun default_reasoning always_diverge_disj configure varify reasoner =
+fun default_reasoning always_diverge_disj configure varify reasoner (phi:phi_type) =
 let fun has_disj_ants ctxt th =
       let val no_schematic_in_concl = Thm.maxidx_of_cterm (Thm.cconcl_of th) = ~1
           fun check ctm =
@@ -1592,9 +1594,51 @@ let fun has_disj_ants ctxt th =
        else NONE
       end
 
+    (*\<open>Rule (T params)\<close> \<Longrightarrow> (guard condition params = vars \<Longrightarrow> Rule (T vars) )
+      so that the rule can be matched even when the parameter varies.
+     *)
+    fun varify_phi_type_parameter ctxt rule =
+      let val patterns = Phi_Reasoner.the_default_pattern_of (Context.Proof ctxt) (Thm.concl_of rule)
+          fun filter_param bvs (X as _ $ _) ret =
+               (case Term.strip_comb X
+                  of (head, args) =>
+                      if is_phi_head phi head
+                      then fold (fn X =>
+                              if is_Var (Term.head_of X) then I
+                              else let val X' = fold (fn T => fn B => Abs("",T,B)) bvs X
+                                    in insert (op aconv) X'
+                                   end) args ret
+                      else fold (filter_param bvs) args ret)
+            | filter_param bvs (Abs (_, T, X)) ret = filter_param (T::bvs) X ret
+            | filter_param _ _ ret = ret
+          val frees = fold (filter_param []) patterns []
+       in if null frees then rule else
+      let val names = Name.invent (Variable.names_of ctxt) "\<v>" (length frees)
+          val (fixes, ctxt't) = Variable.variant_fixes names ctxt
+          val eq0_term = HOLogic.Trueprop $ (\<^Const>\<open>\<r>Guard\<close> $
+                          PLPR_Syntax.mk_ant_sequence (map2 (fn N' => fn tm =>
+                              \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_SIMP\<close> $
+                                let val T = Term.fastype_of tm
+                                 in (\<^Const>\<open>HOL.eq T\<close> $ tm $ Free (N',T))
+                                end) fixes frees))
+                       |> Thm.cterm_of ctxt't
+          val ([eq0], ctxt') = Assumption.add_assms Assumption.presume_export [eq0_term] ctxt't
+          val eqs = map (Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Premise_def}) then_conv
+                                          Conv.rewr_conv @{thm' atomize_eq[symmetric]}))
+                        (PLPR_Syntax.elim_ant_sequence
+                            (Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' \<r>Guard_def})) eq0))
+          val rule' = Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of rule)
+                                                       (Conv.top_rewrs_conv eqs ctxt')) rule
+                   |> Assumption.export false ctxt' ctxt't
+                   |> singleton (Variable.export ctxt't ctxt)
+       in rule'
+      end end
+
+
 fun reasoning ctxt0 sequent0 =
   case Thm.major_prem_of sequent0
-    of _ (*Trueprop*) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
+    of _ (*Trueprop*) $ Const(\<^const_name>\<open>True\<close>, _) => @{thm' TrueI} RS sequent0
+     | _ (*Trueprop*) $ Const(\<^const_name>\<open>\<r>Success\<close>, _) => @{thm' \<r>Success_I} RS sequent0
      | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
               reasoning ctxt0 (@{thm' allI} RS sequent0)
      | _ =>
@@ -1619,7 +1663,13 @@ fun reasoning ctxt0 sequent0 =
         case get_index (fn P => find_first (fn A => P aconv (Thm.prop_of A)) out_ants) (Thm.prems_of th)
           of SOME (i, A) => Seq.hd (Thm.biresolution NONE true [(false, A)] (i+1) th)
                               |> elim_out_ants
-           | NONE => th
+           | NONE => (
+              case find_index (fn Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                                      Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ Const(\<^const_name>\<open>\<phi>TA_ANT\<close>, _)) => true
+                                | _ => false) (Thm.prems_of th)
+                of ~1 => th
+                 | i  => Conv.gconv_rule (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def})) (i+1) th
+             )
       val local_prems'1 = map elim_out_ants local_prems'
 
       fun pass_out_ant ant = (ant RS' (ctxt, @{thm' Action_Tag_D}))
@@ -1642,7 +1692,8 @@ fun reasoning ctxt0 sequent0 =
       val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (focus, lsequent) (local_prems, ctxt)
       val reasoner_ants = reasoner_ants'
             |> map ( Simplifier.rewrite_rule ctxt rewrs
-                  #> Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess (~1, []) ctxt )
+                  #> Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess (~1, []) ctxt
+                  #> #may_mutating_params phi ? varify_phi_type_parameter ctxt)
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_rules (

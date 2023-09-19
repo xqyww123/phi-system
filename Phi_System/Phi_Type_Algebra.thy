@@ -2504,7 +2504,7 @@ lemma SE_general_Semimodule_Scalar_left_b: (*need test, to be tested once we hav
     apply_rule apply_Separation_Homo\<^sub>E_Cond[OF SH\<^sub>E]
     apply_rule apply_Semimodule_SAssoc\<^sub>I[OF SA, THEN transformation_right_frame_conditioned_ty]
   \<medium_right_bracket> .
-
+    
 declare SE_general_Semimodule_Scalar_left_b[(*THEN SE_clean_waste,*) \<phi>reason_template default %derived_SE_scalar_assoc]
 
 (*
@@ -3735,7 +3735,7 @@ consts \<phi>TA_ind_target :: \<open>action \<Rightarrow> action\<close>
                                     see comments in \<^file>\<open>library/phi_type_algebra/deriver_framework.ML\<close>
                                     ML function \<open>default_reasoning_configure\<close>\<close>
 
-lemmas intro_\<phi>TA_ANT = Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]
+lemmas intro_\<phi>TA_ANT = Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric, THEN Meson.TruepropI]
 
 lemma mk_ToA_rule:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
@@ -3912,7 +3912,7 @@ ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 subsubsection \<open>Identity Element Intro \& Elim\<close>
 
 lemma \<phi>TA_1L_rule:
-  \<open> (Ant @action \<phi>TA_ANT \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
+  \<open> (Ant \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -3930,12 +3930,12 @@ lemma \<phi>TA_1L_rule:
   using transformation_weaken by blast*)
 
 lemma \<phi>TA_1R_rule:
-  \<open> (Ant @action \<phi>TA_ANT \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+  \<open> (Ant \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)\<close>
-  unfolding Action_Tag_def .
+  unfolding Action_Tag_def by blast
 
 lemma \<phi>TA_Ident_I_rule_step:
   \<open> Identity_Element\<^sub>I X Q
@@ -3968,6 +3968,7 @@ paragraph \<open>Guessing Antecedents\<close>
 
 declare Is_Contravariant[where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
         Is_Covariant[where PC=\<open>Identity_Element\<^sub>E\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
+
 
 subsubsection \<open>Object Equivalence\<close>
 
@@ -4005,10 +4006,25 @@ lemma Object_Equiv_rule_move_set_eq_end:
 
 
 paragraph \<open>Object Equivalence at Singular Point\<close>
+  
+lemma [ ]:
+  \<open> (\<And>x. Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x))
+\<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (Ex P) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T))
+\<Longrightarrow> Object_Equiv T (\<lambda>_ _. True)\<close>
+  unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
+            Premise_def Transformation_def
+  by clarsimp blast
+
+
+
+
 
 text \<open>Strategy: transforming both sides to (one of) the base case of induction\<close>
 
 definition \<open>\<A>simp_to_base X \<equiv> X\<close>
+
+
+
 
 
 lemma

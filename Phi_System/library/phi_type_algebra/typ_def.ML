@@ -40,6 +40,7 @@ type phi_type = {
      dom_only: ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (x : T a b c \<longrightarrow> ?Y.0 and ?Q.0) *)
   intro_reasoning: thm list (*introduction transformations*),
   is_recursive: bool,
+  may_mutating_params: bool, (*true for mutating-parameterized recursive \<phi>-type but false not guarantees it is not*)
   is_impredicative: bool (*to be supported*)
 } (*rules and terms inside must be zero-indexed*)
 
@@ -213,6 +214,7 @@ type phi_type = {
   cases: thm option,
   intro_reasoning: thm list (*introduction transformations*),
   is_recursive: bool,
+  may_mutating_params: bool, (*true for mutating-parameterized recursive \<phi>-type but false not guarantees it is not*)
   is_impredicative: bool (*to be supported*)
 }
 
@@ -229,6 +231,7 @@ fun map_phi_type (mtm,mth) (phi : phi_type) =
     cases = Option.map (singleton mth) (#cases phi),
     intro_reasoning = mth (#intro_reasoning phi),
     is_recursive = #is_recursive phi,
+    may_mutating_params = #may_mutating_params phi,
     is_impredicative = #is_impredicative phi
   } : phi_type
 
@@ -245,6 +248,7 @@ fun set_ind ind (phi : phi_type) =
     cases = #cases phi,
     intro_reasoning = #intro_reasoning phi,
     is_recursive = #is_recursive phi,
+    may_mutating_params = #may_mutating_params phi,
     is_impredicative = #is_impredicative phi
   } : phi_type
 
@@ -925,20 +929,21 @@ fun add_type (def, pos, dervs, bundles) thy =
                | _ => error "Internal bug #fc2042c3-0c46-4ae5-a66e-9697639068a0"
             ) eqs
       val _ = if may_mutating_params
-              then warning "It seems you are defining a recursive \<phi>-type of mutating parameters : \
-                           \the parameters varify throughout the recursion. The current version of \
-                           \\<phi>type derivers supports it poorly. When the parameters vary, computations\
-                           \ on the parameters are introduced inevitbily, bringing various syntactic \
-                           \expressions of the parameters. However, parameter is a \
-                           \part of \<phi>-type where syntactic form is significant in guiding the reasoning,\
-                           \ so no simplification will be applied to evaluate the computation and to\
-                           \ relate two different syntactical forms of an identical \<phi>-type, may causing\
-                           \ the deriver fails to apply the correct rule as it fails to recognize syntacitc\
-                           \ variants of the \<phi>-type. \
-                           \ Instead, we suggest to split the mutating-parameterized definition into\
-                           \ two where the first one is recursive with all the parameters in the object\
-                           \ side and the second is non-recursive and moves the parameters from the object\
-                           \ side to the right place."
+              then warning (Pretty.string_of (Pretty.para
+                     "You are defining a recursive \<phi>-type of mutating parameters : \
+                     \the parameters varify throughout the recursion. The current version of \
+                     \\<phi>type derivers supports it poorly. When the parameters vary, computations\
+                     \ on the parameters are introduced inevitably, bringing various syntactic \
+                     \expressions of the parameters. However, parameter is a \
+                     \part of \<phi>-type where syntactic form is significant in guiding the reasoning,\
+                     \ so no simplification will be applied to evaluate the computation and to\
+                     \ relate two different syntactical forms of an identical \<phi>-type, may causing\
+                     \ the deriver fails to apply the correct rule as it fails to recognize syntacitc\
+                     \ variants of the \<phi>-type. \
+                     \ Instead, we suggest to split the mutating-parameterized definition into\
+                     \ two where the first one is recursive with all the parameters in the object\
+                     \ side and the second is non-recursive and moves the parameters from the object\
+                     \ side to the right place."))
               else ()
 
       val ind =(case def
@@ -1037,6 +1042,7 @@ fun add_type (def, pos, dervs, bundles) thy =
             cases = cases,
             intro_reasoning = map chk_zero_index_thm intro_reasoning,
             is_recursive = is_recursive,
+            may_mutating_params = may_mutating_params,
             is_impredicative = false
           } : phi_type
    in thy

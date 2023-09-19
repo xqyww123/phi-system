@@ -162,6 +162,7 @@ text \<open>Fail terminates the whole reasoning.\<close>
 
 definition ERROR :: \<open>text \<Rightarrow> bool\<close> where \<open>ERROR x \<longleftrightarrow> False\<close>
 
+(*TODO: depreciate these*)
 definition ERROR' :: \<open>text \<Rightarrow> prop\<close> where \<open>ERROR' x \<equiv> (\<And>P. PROP P)\<close>
 
 

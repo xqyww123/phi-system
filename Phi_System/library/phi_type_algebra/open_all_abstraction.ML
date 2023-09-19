@@ -58,7 +58,7 @@ fun reasoning phi ctxt =
          (default_reasoning_configure [])
          (K (K NONE))
          (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded' ctxt phi)))
-         ctxt
+         phi ctxt
   end
 
 fun instantiate_the_var var ctxt sequent =
@@ -253,7 +253,7 @@ fun gen_trans_to_raw_abst (_,name) hint00 ctxt0 (phi0 : phi_type) thy =
                    else Config.put Phi_Reasoners.existential_obligation 2 ctxt0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_TrRA_rule},
-                                      [(SOME [0], ind_conv, reasoning)],
+                                      [(K (SOME [0]), ind_conv, reasoning)],
                                       solver, simp)
                                     phi0 hint0 ctxt0'
    in case Seq.pull rules
