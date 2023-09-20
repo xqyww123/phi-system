@@ -22,16 +22,23 @@ include PHI_TYPE_ALGEBRA
 datatype def = DIRECT_DEF of (term (*lhs of the def*) * (string (*def_name*) * thm (*def*)))
              | WFREC_DEF  of string (*const name*) * Function.info
 
+type parameter_info = {
+  name: string option (*not always given*),
+  mutating: bool option (*if the parameter mutates throughout the (recursive) definition.
+                          we are not always able to check if a parameter mutates from definition*)
+}
+
 type phi_type = {
   term: term (*of most general type and schematic variables. always be a constant or a fixed free*),
-  param_names: string list (*the default name of the parameters. note the abstract object is not considered as a parameter*),
+  params: parameter_info list (*the default name of the parameters. note the abstract object is not considered as a parameter*),
   cterm: thm (*TERM <the_cterm>*),
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
-  type_equations: thm list, (*the equations are given between BI assertions, \<open>x : T = y : U\<close>.
-                              Here the type equations are given between types, \<open>T = U\<close>.
-                              However, depending on definitions, not all \<phi>-types have such equations.*)
+  type_equations: thm option list,
+                  (*the equations are given between BI assertions, \<open>x : T = y : U\<close>.
+                    Here the type equations are given between types, \<open>T = U\<close>.
+                    However, depending on definitions, not all \<phi>-types have such equations.*)
   cases: thm option,
   ind: thm option,
     (*inductively destructive transformation, of form
@@ -40,7 +47,6 @@ type phi_type = {
      dom_only: ... \<Longrightarrow> ?P.0 a b c x \<longrightarrow> (x : T a b c \<longrightarrow> ?Y.0 and ?Q.0) *)
   intro_reasoning: thm list (*introduction transformations*),
   is_recursive: bool,
-  may_mutating_params: bool, (*true for mutating-parameterized recursive \<phi>-type but false not guarantees it is not*)
   is_impredicative: bool (*to be supported*)
 } (*rules and terms inside must be zero-indexed*)
 
@@ -202,43 +208,47 @@ val expansionN = "expansion"
 datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
              | WFREC_DEF  of string * Function.info
 
+type parameter_info = {
+  name: string option,
+  mutating: bool option (*if the parameter mutates throughout the (recursive) definition.
+                          we are not always able to check if a parameter mutates from definition*)
+}
+
 type phi_type = {
   term: term (*of most general type*),
-  param_names: string list,
+  params: parameter_info list, (*the abstract object is not considered a parameter*)
   cterm: thm,
   pos : Position.T,
   proof_id: Phi_Cache_DB.proof_id,
   equations: thm list (*unfolding the term*),
-  type_equations: thm list,
+  type_equations: thm option list,
   ind: thm option,
   cases: thm option,
   intro_reasoning: thm list (*introduction transformations*),
   is_recursive: bool,
-  may_mutating_params: bool, (*true for mutating-parameterized recursive \<phi>-type but false not guarantees it is not*)
   is_impredicative: bool (*to be supported*)
 }
 
 fun map_phi_type (mtm,mth) (phi : phi_type) =
   {
     term = mtm (#term phi),
-    param_names = #param_names phi,
+    params = #params phi,
     cterm = singleton mth (#cterm phi),
     pos = #pos phi,
     proof_id = #proof_id phi,
     equations = mth (#equations phi),
-    type_equations = mth (#type_equations phi),
+    type_equations = burrow_options mth (#type_equations phi),
     ind = Option.map (singleton mth) (#ind phi),
     cases = Option.map (singleton mth) (#cases phi),
     intro_reasoning = mth (#intro_reasoning phi),
     is_recursive = #is_recursive phi,
-    may_mutating_params = #may_mutating_params phi,
     is_impredicative = #is_impredicative phi
   } : phi_type
 
 fun set_ind ind (phi : phi_type) =
   {
     term = #term phi,
-    param_names = #param_names phi,
+    params = #params phi,
     cterm = #cterm phi,
     pos = #pos phi,
     proof_id = #proof_id phi,
@@ -248,7 +258,6 @@ fun set_ind ind (phi : phi_type) =
     cases = #cases phi,
     intro_reasoning = #intro_reasoning phi,
     is_recursive = #is_recursive phi,
-    may_mutating_params = #may_mutating_params phi,
     is_impredicative = #is_impredicative phi
   } : phi_type
 
@@ -875,7 +884,7 @@ fun add_type (def, pos, dervs, bundles) thy =
                    #> normalize)
       val tagged_eqs = map (Conv.fconv_rule (add_premise_tag ctxt)) eqs
 
-      val typeqs = map_filter (fn eq => SOME (eq RS refine_typeq) handle THM _ => NONE) eqs
+      val typeqs = map (fn eq => SOME (eq RS refine_typeq) handle THM _ => NONE) eqs
 
       val param_names = map (fn eq =>
                           case LHS_of (Thm.concl_of eq)
@@ -884,12 +893,10 @@ fun add_type (def, pos, dervs, bundles) thy =
                                       (snd (strip_comb T))
                              | _ => error "BUG") eqs
                      |> foldl1 (uncurry (map2 (curry merge_options)))
-                     |> map (fn SOME N => N | NONE => "A")
-                     |> @{print}
 
       val tagged_eqs_in_type = map (try (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
               HOLogic.Trueprop_conv (Conv.arg_conv (fn ctm =>
-                Phi_Conv.embed_BI_assertion ctxt ctm
+                Phi_Conv.embed_BI_assertion_into_phi_type ctxt ctm
                 handle CTERM (s, ctms) => (
                 warning (Pretty.string_of (Pretty.chunks (
                     Pretty.str s :: map (Syntax.pretty_term ctxt o Thm.term_of) ctms
@@ -907,28 +914,37 @@ fun add_type (def, pos, dervs, bundles) thy =
                                       | _ => false) RHS
                | _ => error "Internal bug #fc2042c3-0c46-4ae5-a66e-9697639068a0") eqs
 
-      val may_mutating_params = exists (fn eq =>
+      val mutating_params = map (fn _ => Unsynchronized.ref (SOME false)) param_names
+      val _ = List.app (fn eq =>
             case Thm.concl_of eq
               of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ RHS)
                   => let val (head, params) = case LHS
                                                 of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => Term.strip_comb T
-                                                 | _ => Term.strip_comb LHS
+                                                 | _ => error "BUG"
                          val arity = length params
                          fun chk (X as _ $ _) =
                               let val (head', params') = Term.strip_comb X
-                                  val common_arity = Int.min (arity, length params')
+                                  fun chk_eq (param :: params) (param' :: params') (ret :: rets) = (
+                                        if param = param' then () else ret := SOME true ;
+                                        chk_eq params params' rets
+                                      )
+                                    | chk_eq [] [] [] = ()
+                                    | chk_eq (_ :: params) [] (ret :: rets) = (
+                                        ret := NONE ;
+                                        chk_eq params [] rets
+                                      )
                                in if is_the_same_const_or_free (head, head')
-                                  then List.take (params, common_arity) <> List.take (params', common_arity)
-                                       orelse exists chk params'
-                                  else exists chk params'
+                                  then (chk_eq params params' mutating_params ; List.app chk params')
+                                  else (List.app chk params')
                               end
                            | chk (Abs(_,_,X)) = chk X
-                           | chk _ = false
+                           | chk _ = ()
                       in chk RHS
                      end
                | _ => error "Internal bug #fc2042c3-0c46-4ae5-a66e-9697639068a0"
             ) eqs
-      val _ = if may_mutating_params
+      val mutating_params = map (op !) mutating_params
+      val _ = if exists (fn SOME true => true | _ => false) mutating_params
               then warning (Pretty.string_of (Pretty.para
                      "You are defining a recursive \<phi>-type of mutating parameters : \
                      \the parameters varify throughout the recursion. The current version of \
@@ -945,6 +961,10 @@ fun add_type (def, pos, dervs, bundles) thy =
                      \ side and the second is non-recursive and moves the parameters from the object\
                      \ side to the right place."))
               else ()
+
+      val params = map2 (fn name => fn mut =>
+                     {name=name, mutating=mut}
+                   ) param_names mutating_params
 
       val ind =(case def
                   of DIRECT_DEF _ => NONE
@@ -1032,7 +1052,7 @@ fun add_type (def, pos, dervs, bundles) thy =
                  | _ => raise TERM ("Must be a constant", [the_term])
       val phi_type = {
             term = the_term,
-            param_names = param_names,
+            params = params,
             cterm = Drule.mk_term (Thm.cterm_of ctxt the_term),
             pos = pos,
             proof_id = proof_id,
@@ -1042,7 +1062,6 @@ fun add_type (def, pos, dervs, bundles) thy =
             cases = cases,
             intro_reasoning = map chk_zero_index_thm intro_reasoning,
             is_recursive = is_recursive,
-            may_mutating_params = may_mutating_params,
             is_impredicative = false
           } : phi_type
    in thy

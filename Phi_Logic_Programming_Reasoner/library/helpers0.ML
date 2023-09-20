@@ -6,6 +6,8 @@ val warn_when_visible : Context.generic -> string -> unit
 
 val leading_antecedent' : thm -> term
 
+val LHS_of : term -> term
+val RHS_of : term -> term
 
 val pos_parser : string -> Position.T parser
 val beta_eta_conversion : conv
@@ -116,6 +118,17 @@ fun warn_when_visible ctxt msg =
   else ()
 
 fun leading_antecedent' thm = fst (Logic.dest_implies (Thm.prop_of thm))
+
+fun RHS_of (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ X) = X
+  | RHS_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = RHS_of X
+  | RHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ X) = X
+  | RHS_of X = raise TERM ("LHS_of", [X])
+
+fun LHS_of (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ _) = X
+  | LHS_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = LHS_of X
+  | LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ _) = X
+  | LHS_of X = raise TERM ("LHS_of", [X])
+
 
 fun pos_parser name =
   let val msg = name ^ " cannot capture the position of your rule \
@@ -503,3 +516,5 @@ fun tha RSN' (ctxt, i, thb) =
 fun tha RS' (ctxt, thb) = tha RSN' (ctxt, 1,thb);
 
 fun apply3 f (a,b,c) = (f a, f b, f c)
+
+fun select P x = if P x then SOME x else NONE

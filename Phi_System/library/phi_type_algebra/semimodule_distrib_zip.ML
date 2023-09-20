@@ -43,7 +43,7 @@ fun gen_MDz is_zip (_, name) hint0 ctxt0 (phi : phi_type) thy =
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_MD_rewr} then_conv
                   Conv.arg_conv (Conv.arg_conv (
-                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ #type_equations phi)
+                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ map_filter I (#type_equations phi))
                      in Phi_Reasoners.asm_rewrite false sctxt
                     end)))
 

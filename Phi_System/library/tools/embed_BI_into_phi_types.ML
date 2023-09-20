@@ -1,8 +1,8 @@
 signature PHI_CONV = sig
 include PHI_CONV
 
-val embed_BI_assertion : Proof.context -> conv
-val embed_BI_assertion_safe : Proof.context -> conv
+val embed_BI_assertion_into_phi_type : Proof.context -> conv
+val embed_BI_assertion_into_phi_type_safe : Proof.context -> conv
 
 (*{f a b c | a b c. P a b c} : \<S> T \<equiv> f a b c : T subj a b c. P a b c*)
 val type_form_to_ex_quantified : Proof.context -> conv
@@ -85,15 +85,15 @@ val _ = Theory.setup (Context.theory_map (
 ))
 
 
-fun chk_embed_BI_assertion ctm =
+fun chk_embed_BI_assertion_into_phi_type ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => Conv.all_conv ctm
      | _ => raise CTERM ("Fail to embed the BI assertion into \<phi>-type form", [ctm])
 
-fun embed_BI_assertion_safe ctxt =
+fun embed_BI_assertion_into_phi_type_safe ctxt =
   Simplifier.rewrite (Embed_into_Phi_Type.equip ctxt)
 
-fun embed_BI_assertion ctxt = embed_BI_assertion_safe ctxt then_conv chk_embed_BI_assertion
+fun embed_BI_assertion_into_phi_type ctxt = embed_BI_assertion_into_phi_type_safe ctxt then_conv chk_embed_BI_assertion_into_phi_type
 
 
 (*type_form_to_ex_quantified*)

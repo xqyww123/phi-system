@@ -21,7 +21,7 @@ fun gen_M0 closed (der_id, name) hint0 ctxt0 (phi : phi_type) thy =
              fn ctxt => fn phi =>
                   Conv.rewr_conv @{thm \<phi>TA_M0_rewr} then_conv
                   Conv.arg_conv (Phi_Conv.may_action_tag_conv (
-                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ #type_equations phi)
+                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ map_filter I (#type_equations phi))
                      in Simplifier.rewrite sctxt
                     end)))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, Guess_Scalar_Zero closed,

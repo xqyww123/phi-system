@@ -21,9 +21,9 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
         | extract_oprs_from_hint _ = []
 
       val simps = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
-                @ map Phi_Syntax.wrap_equation_by_OPEN (#type_equations phi0)
+                @ map_filter (Option.map  Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
                 @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
-                @ map Phi_Syntax.wrap_equation_by_MAKE (#type_equations phi0)
+                @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
       val ind_rewr = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
                              \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
                           by (unfold atomize_imp Action_Tag_def)}

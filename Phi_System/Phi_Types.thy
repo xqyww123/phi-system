@@ -230,6 +230,8 @@ text \<open>Transformation functor requires inner elements to be transformed int
   the terms cannot be expressed yet now.
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
+
+declare [[\<phi>trace_reasoning = 3]]
  
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
@@ -239,11 +241,11 @@ text \<open>Transformation functor requires inner elements to be transformed int
     and    \<open>Identity_Element\<^sub>I (u \<Ztypecolon> T c) P
         \<Longrightarrow> Identity_Element\<^sub>I ((c, u) \<Ztypecolon> \<Sigma> T) P \<close>
     and    \<open>Identity_Element\<^sub>E (u \<Ztypecolon> T c)
-        \<Longrightarrow> Identity_Element\<^sub>E ((c, u) \<Ztypecolon> \<Sigma> T) \<close>
+        \<Longrightarrow> Identity_Element\<^sub>E ((c, u) \<Ztypecolon> \<Sigma> T) \<close>(*
     and Functionality
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
-    and Abstraction_to_Raw
+    and Abstraction_to_Raw*)
 
 notation \<phi>Dependent_Sum (binder "\<Sigma> " 22)
 
@@ -1796,7 +1798,7 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Separation_Monoid
+  deriving Object_Equiv\<^sub>O(*Separation_Monoid*)
 
 lemma
   \<open>eq xaa z \<and> list_all2 eq l zs \<longrightarrow> (\<forall>x. eq x x) \<longrightarrow> nb = length l + 1 \<longrightarrow> nb - 1 = length zs + 1 - 1\<close>

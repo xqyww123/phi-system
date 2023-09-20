@@ -168,7 +168,14 @@ fun wrap_equation_by_base_tag ctxt phi thm =
 
 fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
   let val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
-      val rule = case #ind phi0
+      val rule = case get_first (select (not o exists_subterm (is_phi_head phi0)) o Phi_Help.RHS_of o Thm.concl_of)
+                                (#equations phi0)
+                   of SOME X => Drule.infer_instantiate ctxt0
+                                    [(("Base",0), Thm.cterm_of ctxt0 (Logic.incr_indexes ([],[],1) X))] rule0
+                    | NONE => raise Automation_Fail (fn () =>
+                                      [Pretty.str "The induction rule has no base step?!"])
+(*
+case #equations phi0
                    of SOME ind =>
                       let val base = Thm.prems_of ind
                                   |> get_first (fn tm =>
@@ -183,7 +190,7 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
                                   |> Thm.incr_indexes_cterm (Thm.maxidx_of rule0 + 1)
                        in Drule.infer_instantiate ctxt0 [(("base",0),base)] rule0
                       end
-                    | _ => rule0
+                    | _ => rule0*)
 
       val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T $ _ => T)
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
@@ -195,7 +202,7 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
          in Phi_Conv.may_action_tag_conv (Phi_Syntax.transformation_conv
                 (Simplifier.rewrite sctxt)
                 (if ex_quantified_single_var
-                 then Simplifier.rewrite sctxt then_conv Phi_Conv.embed_BI_assertion sctxt
+                 then Simplifier.rewrite sctxt then_conv Phi_Conv.embed_BI_assertion_into_phi_type sctxt
                                                then_conv Phi_Conv.type_form_to_ex_quantified_single_var sctxt
                  else Simplifier.rewrite sctxt)
                 Conv.all_conv)
@@ -210,8 +217,13 @@ fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
       val tag_conv = Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv
 
       fun ind_conv step1 = default_ind_conv (
-             fn _ => fn _ => fn ctm =>
+             fn ctxt => fn _ => fn ctm =>
               (Conv.rewr_conv (if step1 then @{thm \<phi>TA_OE\<^sub>O_rewr} else @{thm \<phi>TA_OE\<^sub>O_rewr_IH2}) then_conv
+               (if step1 then Conv.implies_concl_conv (Phi_Conv.may_action_tag_conv (
+                                Phi_Syntax.transformation_conv Conv.all_conv
+                                    (Phi_Conv.embed_BI_assertion_into_phi_type ctxt)
+                                    Conv.all_conv))
+                         else Conv.all_conv) then_conv
                tag_conv) ctm,
              fn ctxt => fn _ => fn ctm =>
               (Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr} then_conv

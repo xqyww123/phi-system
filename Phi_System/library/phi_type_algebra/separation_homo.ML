@@ -133,9 +133,9 @@ fun gen_SH is_intro (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
         | extract_oprs_from_hint _ = []
 
       val simps_I = #equations phi0 @ map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
-                                    @ map Phi_Syntax.wrap_equation_by_OPEN (#type_equations phi0)
+                                    @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
       val simps_E = #equations phi0 @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
-                                    @ map Phi_Syntax.wrap_equation_by_MAKE (#type_equations phi0)
+                                    @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>I_rewr_IH}) then_conv

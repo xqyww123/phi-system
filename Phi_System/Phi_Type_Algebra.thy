@@ -4010,7 +4010,7 @@ paragraph \<open>Object Equivalence at Singular Point\<close>
 lemma [ ]:
   \<open> (\<And>x. Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x))
 \<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (Ex P) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T))
-\<Longrightarrow> Object_Equiv T (\<lambda>_ _. True)\<close>
+\<Longrightarrow> Object_Equiv T (\<lambda>_ _. True) \<close>
   unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
             Premise_def Transformation_def
   by clarsimp blast
@@ -4027,13 +4027,10 @@ definition \<open>\<A>simp_to_base X \<equiv> X\<close>
 
 
 
-lemma
-  \<open> (\<And>y x. Ant \<longrightarrow> (y \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T)) \<close>
-
 lemma \<phi>TA_OE\<^sub>O_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = base) @action \<phi>TA_ind_target \<A>simp)
+  \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Base) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (base \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (Base \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -4061,7 +4058,7 @@ lemma [\<phi>reason %\<phi>simp_fallback]:
   \<open> x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
   unfolding Action_Tag_def \<A>simp_to_base_def
   by simp
-
+                               
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 (*                  
 hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_rule_move_all

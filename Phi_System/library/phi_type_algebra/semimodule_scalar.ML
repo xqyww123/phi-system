@@ -118,7 +118,7 @@ fun gen_MS is_intro (_, name) hint0 ctxt0 (phi0 : phi_type) thy =
              fn ctxt => fn _ =>
                   Conv.rewr_conv @{thm \<phi>TA_MS_rewr} then_conv
                   Conv.arg_conv (fn ctm =>
-                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi0 @ #type_equations phi0)
+                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi0 @ map_filter I (#type_equations phi0))
                      in Phi_Reasoners.asm_rewrite false sctxt ctm
                     end))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
