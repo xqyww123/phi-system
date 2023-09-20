@@ -79,7 +79,7 @@ signature NU_REASONER = sig
   val add : reasoner -> Context.generic -> Context.generic
   val adds : reasoner list -> Context.generic -> Context.generic
   val add_lthy : reasoner -> local_theory -> local_theory
-  val del_reasoners: term (*pattern*)
+  val del_reasoners: term list (*pattern*)
                   -> (reasoner -> bool) (*filter, returning true to delete one*)
                   -> Context.generic -> Context.generic
   val del_reasoners_by_name: term (*pattern matching the name*)
@@ -531,16 +531,16 @@ fun get_reasoners' thy tactics bv_tys term =
 fun get_reasoners thy tactics term =
       get_reasoners' thy tactics [] term |> map (fn (_,_,_,r) => r)
 
-fun del_reasoners pattern filter ctxt =
+fun del_reasoners patterns filter ctxt =
   Reasoners.map (fn all_reasoners =>
-    let val to_remove = iNet.unify_term all_reasoners pattern
+    let val to_remove = maps (iNet.unify_term all_reasoners) patterns
                      |> List.filter (fn (_,_,_,r) => filter r)
      in fold (fn (c,p,id,R) => iNet.delete_term registry_eq (p, (c,p,id,R)))
              to_remove all_reasoners
     end) ctxt
 
 fun del_reasoners_by_name pattern ctxt =
-      del_reasoners pattern (match_reasoner (Context.theory_of ctxt) pattern) ctxt
+      del_reasoners [pattern] (match_reasoner (Context.theory_of ctxt) pattern) ctxt
 
 fun has_reasoner pattern filter ctxt =
   iNet.unify_term (Reasoners.get ctxt) pattern

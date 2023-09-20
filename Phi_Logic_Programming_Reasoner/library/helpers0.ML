@@ -131,7 +131,7 @@ fun LHS_of (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ _) = X
 
 
 fun pos_parser name =
-  let val msg = name ^ " cannot capture the position of your rule \
+  let val msg = name ^ " Fail to capture the position of your rule \
                   \when no argument is given to the attribute.\n\
                   \Please use \<open>" ^ name ^" add\<close> to address it.\n\
                   \The recorded position can be very helpful for debuging, albeit it \

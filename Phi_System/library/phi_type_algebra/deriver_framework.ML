@@ -1524,8 +1524,10 @@ fun default_reasoning_configure extractions
 
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
+      val extrs = Phi_Reasoners.implied_fact_extraction \<^pattern>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+               :: extractions
       val extract_prem = Phi_Reasoners.extract_prem (
-              Phi_Reasoners.add_premise_extractions extractions (Context.Proof ctxt)) false
+              Phi_Reasoners.add_premise_extractions extrs (Context.Proof ctxt)) false
       val prem_ants = map_filter extract_prem local_prems
 (*maps (fn th =>
             case extract_prems ctxt th
@@ -1693,7 +1695,7 @@ fun reasoning ctxt0 sequent0 =
       val reasoner_ants = reasoner_ants'
             |> map ( Simplifier.rewrite_rule ctxt rewrs
                   #> Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess (~1, []) ctxt
-                  #> #may_mutating_params phi ? varify_phi_type_parameter ctxt)
+                  #> may_mutating_params phi ? varify_phi_type_parameter ctxt)
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_rules (

@@ -168,10 +168,21 @@ fun wrap_equation_by_base_tag ctxt phi thm =
 
 fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
   let val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
-      val rule = case get_first (select (not o exists_subterm (is_phi_head phi0)) o Phi_Help.RHS_of o Thm.concl_of)
-                                (#equations phi0)
-                   of SOME X => Drule.infer_instantiate ctxt0
-                                    [(("Base",0), Thm.cterm_of ctxt0 (Logic.incr_indexes ([],[],1) X))] rule0
+
+      val inst_T = fold_index (fn (i, (info, T)) => fn (X, X') =>
+                      let val name = the_default "A" (#name info)
+                          val T' = Logic.incr_tvar 1 T
+                          val d = case #mutating info of SOME true => 1 | _ => 0
+                       in (X  $ Var ((name, 1+i+i), T'),
+                           X' $ Var ((name, 1+i+i+d), T'))
+                       end)
+                      (parameters_of phi0)
+                      (apply2 (Logic.incr_indexes ([],[],1)) (#term phi0, #term phi0))
+                 |> apply2 (Thm.cterm_of ctxt0)
+      val rule't1 = Drule.infer_instantiate ctxt0 [(("T",0), fst inst_T), (("T\<^sub>0",0), snd inst_T)] rule0
+      val rule = case find_first (not o exists_subterm (is_phi_head phi0) o Phi_Help.RHS_of o Thm.concl_of)
+                                 (#equations phi0)
+                   of SOME th => Drule.mk_term (Thm.dest_arg (Thm.cconcl_of th)) RS rule't1
                     | NONE => raise Automation_Fail (fn () =>
                                       [Pretty.str "The induction rule has no base step?!"])
 (*
@@ -218,13 +229,19 @@ case #equations phi0
 
       fun ind_conv step1 = default_ind_conv (
              fn ctxt => fn _ => fn ctm =>
-              (Conv.rewr_conv (if step1 then @{thm \<phi>TA_OE\<^sub>O_rewr} else @{thm \<phi>TA_OE\<^sub>O_rewr_IH2}) then_conv
-               (if step1 then Conv.implies_concl_conv (Phi_Conv.may_action_tag_conv (
+              (Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr} then_conv
+               (if step1 then Conv.try_conv (
+                              Conv.implies_concl_conv (Phi_Conv.may_action_tag_conv (
                                 Phi_Syntax.transformation_conv Conv.all_conv
-                                    (Phi_Conv.embed_BI_assertion_into_phi_type ctxt)
-                                    Conv.all_conv))
+                                    (Phi_Conv.embed_BI_assertion_into_phi_type ctxt then_conv
+                                     Phi_Conv.type_form_to_ex_quantified_single_var ctxt)
+                                    Conv.all_conv)))
                          else Conv.all_conv) then_conv
-               tag_conv) ctm,
+               tag_conv then_conv
+               (if step1 then Conv.all_conv
+                         else Conv.implies_concl_conv (
+                                  Conv.rewr_conv @{thm' \<phi>TA_OE\<^sub>O_rewr_IH2}))) ctm,
+
              fn ctxt => fn _ => fn ctm =>
               (Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr} then_conv
                simp_conv step1 ctxt then_conv

@@ -254,7 +254,7 @@ lemma prem_extract_local_inverse:
   unfolding local_inverse_def by simp
 
 bundle extract_premises_in_local_inverse =
-  prem_extract_local_inverse[\<phi>premise_extraction]
+  prem_extract_local_inverse[\<phi>premise_extraction add]
 
 subsection \<open>Configuration of Existing Procedures\<close>
 
@@ -282,7 +282,7 @@ paragraph \<open>Setup Reasoning Rules\<close>
 
 declare (in homo_one) homo_one_axioms[\<phi>reason %algb_cut]
 
-lemma extraction_homo_one[\<phi>premise_extraction]:
+lemma extraction_homo_one[\<phi>premise_extraction add]:
   \<open>homo_one \<psi> \<equiv> \<psi> 1 = 1 \<and> True\<close>
   unfolding homo_one_def
   by simp
@@ -334,7 +334,7 @@ subsection \<open>Constant Functions\<close>
 
 definition \<open>constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1)\<close>
 
-lemma [\<phi>premise_extraction]:
+lemma [\<phi>premise_extraction add]:
   \<open> constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1) \<and> True \<close>
   unfolding constant_1_def atomize_eq
   by simp

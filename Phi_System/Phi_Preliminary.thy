@@ -243,69 +243,7 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Some very Early Reasoning\<close>
 
-subsubsection \<open>Inhabitance Reasoning - Part I\<close>
 
-definition Generate_Implication_Reasoning :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
-  where \<open>Generate_Implication_Reasoning IN OUT_L OUT_R \<longleftrightarrow> (IN \<longrightarrow> OUT_L \<longrightarrow> OUT_R)\<close>
-
-consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts entailed from the given proposition\<close>
-       \<A>ESC :: action \<comment> \<open>Extract Sufficient Condition to entail the given proposition\<close>
-
-declare [[
-  \<phi>reason_default_pattern \<open>Generate_Implication_Reasoning ?I _ _\<close>
-                        \<Rightarrow> \<open>Generate_Implication_Reasoning ?I _ _\<close> (100)
-  and \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
-  and \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> \<Rightarrow> \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> (100)
-  and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
-]]
-
-\<phi>reasoner_group extract_pure = (%cutting, [%cutting, %cutting]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
-    \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
-  and extract_pure_fallback = (1, [1,1]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>) < extract_pure
-    \<open>Fallbacks of extracting pure facts, typically returning the unsimplified original term\<close>
-
-lemma Do_Generate_Implication_Reasoning:
-  \<open> IN
-\<Longrightarrow> Generate_Implication_Reasoning IN OUT_L OUT_R
-\<Longrightarrow> OUT_R \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> OUT_L \<longrightarrow> C\<close>
-  unfolding Generate_Implication_Reasoning_def Action_Tag_def
-  by blast
-
-lemma Do_Extract_Implied_Facts:
-  \<open> P
-\<Longrightarrow> P \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> C\<close>
-  unfolding Action_Tag_def
-  by blast
-
-(* ML_file \<open>library/tools/elimination_rule.ML\<close> *)
-
-lemma [\<phi>reason 1000]:
-  \<open> Generate_Implication_Reasoning P OL OR
-\<Longrightarrow> Generate_Implication_Reasoning (P @action A) OL OR\<close>
-  unfolding Generate_Implication_Reasoning_def Action_Tag_def .
-
-lemma [\<phi>reason %extract_pure]:
-  \<open> A \<longrightarrow> A' @action \<A>EIF
-\<Longrightarrow> B \<longrightarrow> B' @action \<A>EIF
-\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
-  unfolding Action_Tag_def by blast
-
-lemma [\<phi>reason %extract_pure]:
-  \<open> A \<longrightarrow> A' @action \<A>ESC
-\<Longrightarrow> B \<longrightarrow> B' @action \<A>ESC
-\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>ESC \<close>
-  unfolding Action_Tag_def by blast
-
-lemma Extact_implied_facts_Iden[\<phi>reason default %extract_pure_fallback]:
-  \<open> A \<longrightarrow> A @action \<A>EIF \<close>
-  unfolding Action_Tag_def by blast
-
-lemma Extact_sufficient_conditions_Iden[\<phi>reason default %extract_pure_fallback]:
-  \<open> A \<longrightarrow> A @action \<A>ESC \<close>
-  unfolding Action_Tag_def by blast
 
 (*
 

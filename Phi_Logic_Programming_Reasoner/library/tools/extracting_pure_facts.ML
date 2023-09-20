@@ -1,8 +1,9 @@
 signature PHI_REASONERS = sig
 include PHI_REASONERS
 
-val extract_implied_facts : Proof.context -> thm -> thm list
-val mode_generate_extraction_rule : bool Config.T
+val extract_implied_facts : Proof.context -> thm -> thm
+(*val implied_fact_extraction : Phi_Reasoners.pattern -> Phi_Reasoners.extraction*)
+val is_generating_extraction_rule : bool Config.T
 
 end
 
@@ -18,8 +19,8 @@ structure Inhabitance_SS = Simpset (
 structure Phi_Reasoners : PHI_REASONERS = struct
 open Phi_Reasoners
 
-val mode_generate_extraction_rule =
-      Attrib.setup_config_bool \<^binding>\<open>\<phi>mode_generate_extraction_rule\<close> (K false)
+val is_generating_extraction_rule =
+      Attrib.setup_config_bool \<^binding>\<open>\<phi>is_generating_extraction_rule\<close> (K false)
 
 (*structure Data = Generic_Data
 (
@@ -50,6 +51,12 @@ fun del_thm thm ctxt =
 (*sequent should be in shape \<open>(Inhabited X \<Longrightarrow> C) \<Longrightarrow> C\<close>.
   returns all facts implied in the inhabitance. *)
 
+val Do_Extract_Implied_Facts =
+      @{lemma' \<open> P
+             \<Longrightarrow> P \<longrightarrow> C @action \<A>EIF
+             \<Longrightarrow> C\<close>
+            by (unfold Action_Tag_def, blast)}
+
 fun extract_implied_facts ctxt statement =
   let val _ = case Thm.prop_of statement
                 of \<^Const>\<open>Trueprop\<close> $ _ => ()
@@ -58,19 +65,18 @@ fun extract_implied_facts ctxt statement =
               Pretty.str "Extracting implied pure facts from:",
               Syntax.pretty_term ctxt (Thm.prop_of statement)
           ])
-   in (statement RS @{thm Do_Extract_Implied_Facts})
+   in (statement RS' (ctxt, Do_Extract_Implied_Facts))
    |> Phi_Reasoner.reason1 (K "fail to extract implied fact. It is an internal error and some reasonig rules are miss-configured.")
                            NONE (SOME 1) ctxt
    |> Simplifier.simplify (Inhabitance_SS.enhance ctxt)
-   |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
   end
 
 fun is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
       \<^Const>\<open>Action_Tag\<close> $ (\<^Const>\<open>HOL.implies\<close> $ _ $ _) $ \<^Const>\<open>\<A>EIF\<close>))
     = true
-  | is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
+(*| is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
       \<^Const>\<open>HOL.implies\<close> $ (\<^Const>\<open>Inhabited _\<close> $ _) $ _))
-    = true
+    = true*)
   | is_extraction_rule _ = false
 
 fun generate_extraction_rule ctxt0 thm0 =
@@ -87,7 +93,7 @@ fun generate_extraction_rule ctxt0 thm0 =
               |> Thm.permute_prems 0 n
               |> Thm.permute_prems 2 (~n)
    in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE NONE
-                           (Config.put mode_generate_extraction_rule true ctxt)
+                           (Config.put is_generating_extraction_rule true ctxt)
                            state
    |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
         HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite (Inhabitance_SS.enhance ctxt)))) ctxt)
@@ -122,5 +128,20 @@ val _ = Theory.setup (
   Attrib.setup \<^binding>\<open>\<phi>inhabitance_rule\<close> (Attrib.add_del add del)
     
 ) *)
+
+(*fun implied_fact_extraction pattern =
+  let fun extr ctxt ctm =
+        let val sequent = \<^instantiate>\<open>P=ctm in
+                                  lemma \<open>\<And>C. P \<longrightarrow> C @action \<A>EIF \<Longrightarrow> P \<equiv> C \<and> P\<close>
+                                     by (unfold Action_Tag_def atomize_eq, blast)\<close>
+            val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
+                    Pretty.str "Extracting implied pure facts from:",
+                    Syntax.pretty_term ctxt (Thm.term_of ctm)
+                ])
+         in Phi_Reasoner.reason NONE NONE ctxt sequent
+        end
+   in Phi_Reasoners.Extract_Fun (pattern, extr)
+  end
+*)
 
 end

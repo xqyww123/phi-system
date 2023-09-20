@@ -400,7 +400,8 @@ fun gen_default_process' clean pos (ctxt,sequent) =
 
     fun setup_lemmata ctxt =
       let val facts = maps (fn thm =>
-                        Phi_Reasoners.extract_implied_facts ctxt (thm RS @{thm Inhabited_I})
+                          Phi_Reasoners.extract_implied_facts ctxt (thm RS @{thm Inhabited_I})
+                       |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
                       ) rules
        in ctxt |> Context.proof_map (
             fold (fold (fn th => Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close> th

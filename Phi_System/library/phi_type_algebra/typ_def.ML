@@ -52,6 +52,8 @@ type phi_type = {
 
 val map_phi_type : (term -> term) * (thm list -> thm list) -> phi_type -> phi_type
 val fold_phi_type : (term -> 'a -> 'a) * (thm -> 'a -> 'a) -> phi_type -> 'a -> 'a
+val may_mutating_params : phi_type -> bool
+val parameters_of : phi_type -> (parameter_info * typ) list
 
 val morphism_phi_type : morphism -> phi_type -> phi_type
 val instantiate_phi : (ctyp TVars.table * cterm Vars.table)
@@ -229,6 +231,9 @@ type phi_type = {
   is_impredicative: bool (*to be supported*)
 }
 
+fun may_mutating_params phi =
+  exists ((fn SOME true => true | _ => false) o #mutating) (#params phi)
+
 fun map_phi_type (mtm,mth) (phi : phi_type) =
   {
     term = mtm (#term phi),
@@ -393,6 +398,8 @@ fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>s
   | dest_parameterized_phi_ty' _ T = raise TYPE ("not a phi-type",[T],[])
 
 val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
+
+fun parameters_of phi = #params phi ~~ rev (#1 (dest_parameterized_phi_ty (Term.fastype_of (#term phi))))
 
 fun fix_phi_term_params phi_term ctxt =
   let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of phi_term)

@@ -1143,6 +1143,129 @@ lemma Get_Envir_Var'_I: \<open>Get_Envir_Var' N D V\<close> for V :: \<open>'v::
 )\<close>
 
 
+subsection \<open>Extracting Pure Facts Implied Inside a Rule\<close>
+
+text \<open>\<phi>-LPR reasoning rules are specially designed for execution of logic programming. They are
+  not in a direct form suitable for usual theorem proving. Here we provide mechanisms extracting
+  boolean facts implied inside a reasoning rule to give such direct forms.
+  One usage of thie feature is later in the \<phi>-deriver where inductive hypotheses (such as a transformation)
+  can imply boolean conditions necessary to the proof.
+  For example, \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> A transforms B with Q\<close> implies \<open>P \<longrightarrow> Inhabited A \<longrightarrow> Inhabited B \<and> Q\<close>
+\<close>
+
+consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts entailed from the given proposition\<close>
+       \<A>ESC :: action \<comment> \<open>Extract Sufficient Condition to entail the given proposition\<close>
+
+declare [[
+  \<phi>reason_default_pattern
+      \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
+  and \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> \<Rightarrow> \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> (100)
+  and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
+]]
+
+\<phi>reasoner_group extract_pure_all = (%cutting, [1, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+    \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
+  and extract_pure = (%cutting, [%cutting, %cutting]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+                                                       in extract_pure_all
+    \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
+  and extract_pure_fallback = (1, [1,1]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+                                          in extract_pure_all and < extract_pure
+    \<open>Fallbacks of extracting pure facts, typically returning the unsimplified original term\<close>
+  and derived_\<A>EIF_from_premis_extraction = (50, [50,50]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+                                                           in extract_pure_all
+    \<open>Rules derived from premise extraction\<close>
+
+
+
+(* ML_file \<open>library/tools/elimination_rule.ML\<close> *)
+
+subsubsection \<open>Generation of Extracting Rules\<close>
+
+definition Generate_Implication_Reasoning :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Generate_Implication_Reasoning IN OUT_L OUT_R \<longleftrightarrow> (IN \<longrightarrow> OUT_L \<longrightarrow> OUT_R)\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>Generate_Implication_Reasoning ?I _ _\<close>
+                        \<Rightarrow> \<open>Generate_Implication_Reasoning ?I _ _\<close> (100)
+]]
+
+lemma Do_Generate_Implication_Reasoning:
+  \<open> IN
+\<Longrightarrow> Generate_Implication_Reasoning IN OUT_L OUT_R
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> OUT_L \<longrightarrow> OUT_R\<close>
+  unfolding Generate_Implication_Reasoning_def Action_Tag_def
+  by blast
+
+lemma [\<phi>reason 1000]:
+  \<open> Generate_Implication_Reasoning P OL OR
+\<Longrightarrow> Generate_Implication_Reasoning (P @action A) OL OR\<close>
+  unfolding Generate_Implication_Reasoning_def Action_Tag_def .
+
+subsubsection \<open>ML Implementation\<close>
+
+ML_file \<open>library/tools/extracting_pure_facts.ML\<close>
+
+subsubsection \<open>Extraction Rules\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> A \<longrightarrow> A' @action \<A>EIF
+\<Longrightarrow> B \<longrightarrow> B' @action \<A>EIF
+\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
+  unfolding Action_Tag_def by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> A \<longrightarrow> A' @action \<A>ESC
+\<Longrightarrow> B \<longrightarrow> B' @action \<A>ESC
+\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>ESC \<close>
+  unfolding Action_Tag_def by blast
+
+lemma Extact_implied_facts_Iden[\<phi>reason default %extract_pure_fallback]:
+  \<open> A \<longrightarrow> A @action \<A>EIF \<close>
+  unfolding Action_Tag_def by blast
+
+lemma Extact_sufficient_conditions_Iden[\<phi>reason default %extract_pure_fallback]:
+  \<open> A \<longrightarrow> A @action \<A>ESC \<close>
+  unfolding Action_Tag_def by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (A' \<longrightarrow> A) @action \<A>ESC
+\<Longrightarrow> (B \<longrightarrow> B') @action \<A>EIF
+\<Longrightarrow> (A \<longrightarrow> B) \<longrightarrow> (A' \<longrightarrow> B') @action \<A>EIF \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (A \<longrightarrow> A') @action \<A>EIF
+\<Longrightarrow> (B' \<longrightarrow> B) @action \<A>ESC
+\<Longrightarrow> (A' \<longrightarrow> B') \<longrightarrow> (A \<longrightarrow> B) @action \<A>ESC \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x. A x \<longrightarrow> A' x @action \<A>EIF)
+\<Longrightarrow> (\<forall>x. A x) \<longrightarrow> (\<forall>x. A' x) @action \<A>EIF \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x. A' x \<longrightarrow> A x @action \<A>ESC)
+\<Longrightarrow> (\<forall>x. A' x) \<longrightarrow> (\<forall>x. A x) @action \<A>ESC \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x. A x \<longrightarrow> A' x @action \<A>EIF)
+\<Longrightarrow> (\<exists>x. A x) \<longrightarrow> (\<exists>x. A' x) @action \<A>EIF \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x. A' x \<longrightarrow> A x @action \<A>ESC)
+\<Longrightarrow> (\<exists>x. A' x) \<longrightarrow> (\<exists>x. A x) @action \<A>ESC \<close>
+  unfolding Action_Tag_def
+  by blast
+
 
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>
 
@@ -1343,16 +1466,17 @@ fun defer_premise ctxt =
       end)
     ) o snd\<close>
 
-lemma [\<phi>premise_extraction]:
+lemma [\<phi>premise_extraction add]:
   \<open>A = B \<equiv> (A = B) \<and> True\<close>
   unfolding atomize_eq by simp
 
-lemma [\<phi>premise_extraction]:
+lemma [\<phi>premise_extraction add]:
   \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<equiv> P \<and> True\<close>
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
   \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
   unfolding Premise_def
   by simp_all
+
 
 consts prove_obligations_in_time :: mode
 

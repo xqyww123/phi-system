@@ -130,7 +130,8 @@ Properties in the algebra of \<phi>-Type can be classified into two sorts,
 text \<open>
 Transformation of abstraction is ubiquitous. Refining an abstraction to either concrete representation
 or a middle-level representation (i.e. stepwise refinement) is a transformation of abstraction, and
-is carried as such in the theory. The significance of stepwise refinement in conventional verification
+is carried as such in the theory (transformation also includes reversed concretization moreover).
+The significance of stepwise refinement in conventional verification
 is well-known. We in addition consider certified programming over a program logic, where we program in
 a way of combining existing proofs of certified programs given in libraries to obtain a certified compositional
 program. The abstractions given in a proof library is limited in number whereas the abstractions demanded by
@@ -147,7 +148,7 @@ separated components by combining BI with refinement, but is much cumbersome tha
 uses predicates while theirs brings a heavy extension to the logic, though our method
 assigning the abstract program into a different space with the concrete program is not suitable for
 contextual refinement). 
-In addition, we extend composition to hierarchical structures of data structures by means of functors
+In addition, we extend the composition to hierarchical structures of data structures by means of functors
 of abstraction relations such as List(T) which generate abstractions of containers from the abstractions of elements.
 
 Composability is important because it simplifies transformation by breaking it down to small transformations
@@ -4056,11 +4057,9 @@ text \<open>Strategy: transforming both sides to (one of) the base case of induc
 definition \<open>\<A>simp_to_base X \<equiv> X\<close>
 
 
-
-
-
 lemma \<phi>TA_OE\<^sub>O_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Base) @action \<phi>TA_ind_target \<A>simp)
+  \<open> TERM ((x\<^sub>0 \<Ztypecolon> T\<^sub>0) = Base)
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Base) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> (\<And>x. Ant \<longrightarrow> (Base \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
@@ -4077,20 +4076,21 @@ lemma \<phi>TA_OE\<^sub>O_rule:
 *)
 
 lemma \<phi>TA_OE\<^sub>O_rewr_IH2:
-  \<open>Trueprop (Ant \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) @action \<phi>TA_ind_target \<A>)
-\<equiv> (\<And>A R C. Ant \<Longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) &&& (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R))\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all atomize_conj Transformation_def REMAINS_def
+  \<open>Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T @action \<A>)
+\<equiv> (\<And>A R C. (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) &&&
+            (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R))\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all atomize_conj Transformation_def REMAINS_def MAKE_def
   by (rule; simp; blast)
 
 lemma \<phi>TA_OE\<^sub>O_rewr:
   \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target \<A>) \<equiv> (Ant \<Longrightarrow> P @action \<A>)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
 
-lemma [\<phi>reason %\<phi>simp_fallback]:
+lemma [\<phi>reason default %\<phi>simp_fallback]:
   \<open> x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
   unfolding Action_Tag_def \<A>simp_to_base_def
   by simp
-                               
+
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 (*                  
 hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_rule_move_all
@@ -4136,8 +4136,8 @@ ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 subsubsection \<open>Carrier Set\<close>
 
 bundle extract_premises_in_Carrier_Set =
-  prem_extract_Carrier_Set[\<phi>premise_extraction]
-  prem_extract_homo_mul_carrier[\<phi>premise_extraction]
+  prem_extract_Carrier_Set[\<phi>premise_extraction add]
+  prem_extract_homo_mul_carrier[\<phi>premise_extraction add]
 
 
 lemma \<phi>TA_CarS_rule:

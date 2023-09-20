@@ -128,7 +128,14 @@ ML_file \<open>library/tools/simp_congruence.ML\<close>
 
 subsection \<open>Inhabitance\<close>
 
-definition Inhabited :: " 'a BI \<Rightarrow> bool " where  "Inhabited S = (\<exists>p. p \<Turnstile> S)"
+definition Inhabited :: " 'a BI \<Rightarrow> bool "
+  where [no_atp]: "Inhabited S = (\<exists>p. p \<Turnstile> S)"
+  \<comment> \<open>\<open>Inhabited S\<close> is always an atom in the view of ATPs.
+
+      The fallback of extracting implied pure facts returns the original \<open>Inhabited T\<close> unchanged,
+      \<open>P \<i>\<m>\<p>\<l>\<i>\<e>\<s> Inhabited P\<close> where \<open>Inhabited P\<close> should be regarded as an atom.
+      The [no_attp] attributes prevent ATPs unfolding \<open>Inhabited\<close>.\<close>
+
 
 abbreviation Inhabitance_Implication :: \<open>'a BI \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>" 10)
   where \<open>S \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> Inhabited S \<longrightarrow> P @action \<A>EIF\<close>
@@ -147,32 +154,30 @@ declare [[
   > extract_pure_fallback and < extract_pure
   \<open>Entry points towards \<open>Abstract_Domain\<close> and \<open>Abstract_Domain\<^sub>L\<close> \<close>
 
-ML_file \<open>library/tools/inhabited_rule.ML\<close>
-
 lemma Inhabited_I:
   \<open>x \<Turnstile> S \<Longrightarrow> Inhabited S\<close>
   unfolding Inhabited_def ..
 
-lemma Inhabited_fallback_True:
-  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> True \<close>
+lemma Inhabited_fallback:
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Inhabited X \<close>
   unfolding Action_Tag_def by blast
 
-lemma Suf_Inhabited_fallback_True:
-  \<open> False \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X \<close>
+lemma Suf_Inhabited_fallback:
+  \<open> Inhabited X \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> X \<close>
   unfolding Action_Tag_def by blast
 
 \<phi>reasoner_ML Inhabited_fallback default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close>) =
 \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
+  if Config.get ctxt Phi_Reasoners.is_generating_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
-  else SOME ((ctxt, @{thm Inhabited_fallback_True} RS sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Inhabited_fallback} RS sequent), Seq.empty)
 )\<close>
 
 \<phi>reasoner_ML Suf_Inhabited_fallback default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> _\<close>) =
 \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
+  if Config.get ctxt Phi_Reasoners.is_generating_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
-  else SOME ((ctxt, @{thm Suf_Inhabited_fallback_True} RS sequent), Seq.empty)
+  else SOME ((ctxt, @{thm Suf_Inhabited_fallback} RS sequent), Seq.empty)
 )\<close>
 
 lemma [\<phi>reason 1000]:
@@ -216,12 +221,12 @@ lemma [\<phi>reason default %extract_pure_phity]:
   by blast
 
 lemma [\<phi>reason default %abstract_domain_fallback]:
-  \<open> Abstract_Domain T (\<lambda>_. True) \<close>
+  \<open> Abstract_Domain T (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
   unfolding Abstract_Domain_def Action_Tag_def
   by simp
 
 lemma [\<phi>reason default %abstract_domain_fallback]:
-  \<open> Abstract_Domain\<^sub>L T (\<lambda>_. False) \<close>
+  \<open> Abstract_Domain\<^sub>L T (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
   by simp
 
@@ -270,14 +275,14 @@ lemma Suf\<^sub>M\<^sub>C_Inhabited_fallback_True:
 
 \<phi>reasoner_ML Inhabited_fallback\<^sub>M\<^sub>C default 2 (\<open>_ \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C _\<close>) =
 \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
+  if Config.get ctxt Phi_Reasoners.is_generating_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
   else SOME ((ctxt, @{thm Inhabited\<^sub>M\<^sub>C_fallback_True} RS sequent), Seq.empty)
 )\<close>
 
 \<phi>reasoner_ML Suf_Inhabited_fallback\<^sub>M\<^sub>C default 2 (\<open>_ \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>\<^sub>M\<^sub>C _\<close>) =
 \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  if Config.get ctxt Phi_Reasoners.mode_generate_extraction_rule
+  if Config.get ctxt Phi_Reasoners.is_generating_extraction_rule
   then SOME ((ctxt, Thm.permute_prems 0 ~1 sequent), Seq.empty)
   else SOME ((ctxt, @{thm Suf\<^sub>M\<^sub>C_Inhabited_fallback_True} RS sequent), Seq.empty)
 )\<close>
@@ -363,6 +368,10 @@ text \<open>The only meaningful implication \<open>\<longrightarrow>\<close> und
 
 definition Transformation :: " 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool \<Rightarrow> bool " ("(2_)/ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (2_)/ \<w>\<i>\<t>\<h> (2_)" [13,13,13] 12)
   where "(A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longleftrightarrow> (\<forall>v. v \<Turnstile> A \<longrightarrow> v \<Turnstile> B \<and> P)"
+  \<comment> \<open>Implementation notes: It is safe to unfold Transformation but unsafe to unfold Satisfaction.
+      Transformation is always based on Satisfaction but in future when we upgrade our logic onto
+      impredicativeness, the definition of Satisfaction will be changed.
+      Satisfaction is the bottom abstraction layer.\<close>
 
 abbreviation SimpleTransformation :: " 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool " ("(2_)/ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (2_)" [13,13] 12)
   where \<open>SimpleTransformation T U \<equiv> Transformation T U True\<close>
@@ -726,6 +735,19 @@ text \<open>There are two trivial solutions for such problem.
 
 text \<open>Rules are given in \<section>\<open>Reasoning/Basic Transformation Rules/Fallback\<close>\<close>
 
+
+subsubsection \<open>Extracting Pure Facts Implies Inside\<close>
+
+text \<open>This is used in \<phi>-derivers, particularly in induction when\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P\<^sub>A \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A
+\<Longrightarrow> B \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<^sub>B
+\<Longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longrightarrow> (P\<^sub>A \<longrightarrow> P\<^sub>B \<and> P) @action \<A>EIF \<close>
+  unfolding Action_Tag_def Inhabited_def Transformation_def
+  by clarsimp
+
+
 subsubsection \<open>Reasoning Configure\<close>
 
 ML_file \<open>library/tools/helper_reasoners.ML\<close>
@@ -734,13 +756,22 @@ paragraph \<open>Inhabitance Reasoning - Part II\<close>
 
 (*TODO: move me!!*)
 
+lemma [\<phi>reason 1000]:
+  \<open> Generate_Implication_Reasoning (Inhabited X \<longrightarrow> Y) (Inhabited X) Y \<close>
+  unfolding Generate_Implication_Reasoning_def
+  ..
+
 lemma [\<phi>reason 1100]:
-  \<open> Generate_Implication_Reasoning (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) (Inhabited X) (Inhabited Y) \<close>
-  unfolding Generate_Implication_Reasoning_def Transformation_def Inhabited_def by blast
+  \<open> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> Generate_Implication_Reasoning (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y) (Inhabited X) P \<close>
+  unfolding Generate_Implication_Reasoning_def Transformation_def Inhabited_def Action_Tag_def
+  by blast
 
 lemma [\<phi>reason 1000]:
-  \<open> Generate_Implication_Reasoning (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) (Inhabited X) (Inhabited Y \<and> P) \<close>
-  unfolding Generate_Implication_Reasoning_def Transformation_def Inhabited_def by blast
+  \<open> Y \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
+\<Longrightarrow> Generate_Implication_Reasoning (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) (Inhabited X) (Q \<and> P) \<close>
+  unfolding Generate_Implication_Reasoning_def Transformation_def Inhabited_def Action_Tag_def
+  by blast
 
 declare [[\<phi>trace_reasoning = 1]]
 
@@ -1015,37 +1046,37 @@ lemma [\<phi>reason %ToA_splitting+10]:
 
 paragraph \<open>In Target\<close>
 
-lemma NToA_disj_target_A:
+lemma ToA_disj_target_A:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A + B \<w>\<i>\<t>\<h> P\<close>
   unfolding plus_set_def
   by (metis implies_union(1) plus_set_def)
 
-lemma NToA_disj_target_B:
+lemma ToA_disj_target_B:
   \<open>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P
 \<Longrightarrow>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A + B \<w>\<i>\<t>\<h> P\<close>
   by (simp add: Transformation_def)
 
-declare [[\<phi>reason ! %ToA_branches NToA_disj_target_A NToA_disj_target_B for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<w>\<i>\<t>\<h> ?P\<close>]]
+declare [[\<phi>reason ! %ToA_branches ToA_disj_target_A ToA_disj_target_B for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<w>\<i>\<t>\<h> ?P\<close>]]
 
-hide_fact NToA_disj_target_A NToA_disj_target_B
+hide_fact ToA_disj_target_A ToA_disj_target_B
 
-lemma NToA_disj_target_A':
+lemma ToA_disj_target_A':
   \<open>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow>  X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A + B \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def REMAINS_def Transformation_def
   by (cases C; simp add: distrib_left; blast)
 
-lemma NToA_disj_target_B':
+lemma ToA_disj_target_B':
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A + B \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def REMAINS_def Transformation_def
   by (cases C; simp add: distrib_left; blast)
 
-declare [[\<phi>reason ! %ToA_branches NToA_disj_target_A' NToA_disj_target_B'
+declare [[\<phi>reason ! %ToA_branches ToA_disj_target_A' ToA_disj_target_B'
             for \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?A + ?B \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]]
 
-hide_fact NToA_disj_target_A' NToA_disj_target_B'
+hide_fact ToA_disj_target_A' ToA_disj_target_B'
 
 
 
@@ -2052,8 +2083,8 @@ lemma Itself_inhabited[\<phi>reason %cutting, simp, intro!]:
 
 lemma [\<phi>reason %cutting]:
   \<open> Abstract_Domain Itself (\<lambda>_. True) \<close>
-  unfolding Abstract_Domain_def
-  using Inhabited_fallback_True by blast
+  unfolding Abstract_Domain_def Action_Tag_def Inhabited_def
+  by clarsimp
 
 lemma [\<phi>reason %cutting]:
   \<open> Abstract_Domain\<^sub>M\<^sub>C Itself mul_carrier \<close>
@@ -2827,7 +2858,7 @@ lemma ToA_by_Equiv_Class'
 
 subsubsection \<open>Basic Rules\<close>
 
-lemma [\<phi>premise_extraction]:
+lemma [\<phi>premise_extraction add]:
   \<open>Object_Equiv T eq \<equiv> (\<forall>x. eq x x) \<and> Object_Equiv T eq\<close>
   unfolding Object_Equiv_def atomize_eq
   by blast
@@ -3895,6 +3926,16 @@ lemma "_NToA_init_":
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def
   by simp
 
+lemma "_NToA_init_having_Q_":
+  \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> Pop_Envir_Var ToA_flag_deep
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
+  unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def Inhabited_def Premise_def Transformation_def
+  by clarsimp blast
+
+ML \<open>val NToA_extracts_cond = Config.declare_bool ("NToA_extracts_cond", \<^here>) (K false)\<close>
+
 \<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
   let val _ (*Trueprop*) $ ( _ (*Action_Tag*) $ _ $ (Const(\<^const_name>\<open>NToA'\<close>, _) $ deep))
@@ -3911,7 +3952,8 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
             end) ctxt
           ) 1 sequent
 
-   in SOME ((ctxt, @{thm "_NToA_init_"} RS sequent), Seq.empty)
+      val rule = if Config.get ctxt NToA_extracts_cond then @{thm "_NToA_init_"} else @{thm "_NToA_init_having_Q_"}
+   in SOME ((ctxt, rule RS sequent), Seq.empty)
   end)
 \<close>
 

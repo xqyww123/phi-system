@@ -45,10 +45,14 @@ signature PHI_REASONERS = sig
 
   (* Premise Extraction from arbitrary antecedent *)
   type pattern = term
-  datatype extraction = Extract_Rule of thm | Extract_Fun of pattern * (Proof.context -> cterm -> thm option)
+  datatype extraction = Extract_Rule of thm (*of form \<open>P \<equiv> premise \<and> waste\<close>*)
+                      | Extract_Fun of pattern * (Proof.context -> cterm -> thm option)
+
   val add_premise_extractions : extraction list -> Context.generic -> Context.generic
+      (*users should also call derive_extracting_rules to add corresponded \<phi>-LPR rules extracting pure facts*)
   val add_premise_extraction_rules : thm list -> Context.generic -> Context.generic
   val del_premise_extractions : extraction list -> Context.generic -> Context.generic
+  val derive_extracting_rules : Position.T -> extraction -> Context.generic -> Context.generic
   val extract_prem  : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
   val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm list
   val extract_prems_rewr : Context.generic (*the context used to fetch the extractions*)
@@ -282,6 +286,42 @@ fun chk_extraction ctxt (Extract_Rule rule) =
       end
   | chk_extraction ctxt (Extract_Fun (pat, f)) = (chk_pattern ctxt pat, Extract_Fun (pat, f))
 
+val convert_prem_extr_to_AEIF = @{lemma' \<open>A \<equiv> B \<and> C \<Longrightarrow> A \<longrightarrow> B @action \<A>EIF\<close>
+                                     by (unfold Action_Tag_def, blast)}
+
+fun chk_trivial_rule (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ LHS $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ RHS $ _)) =
+      LHS aconv RHS
+  | chk_trivial_rule _ = error "BUG"
+
+fun derive_extracting_rules pos (Extract_Rule rule) ctxt =
+      if chk_trivial_rule (Thm.concl_of rule)
+      then ctxt
+      else Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE @{priority %derived_\<A>EIF_from_premis_extraction}
+                                 ([],[]) NONE
+                                 [rule RS (Thm.transfer'' ctxt convert_prem_extr_to_AEIF)] ctxt
+  | derive_extracting_rules pos (Extract_Fun (pat, f)) ctxt =
+      Phi_Reasoner.add {name = Free("Derived_Premise_Extraction", Term.dummyT) $ pat,
+                        pos = pos,
+                        mode = Phi_Reasoner.TO_BE_OVERRIDE,
+                        pattern = [(HOLogic.Trueprop $ (\<^Const>\<open>Action_Tag\<close>
+                                                          $ (\<^Const>\<open>HOL.implies\<close> $ pat $ Var(("P", maxidx_of_term pat), \<^Type>\<open>bool\<close>))
+                                                          $ \<^Const>\<open>\<A>EIF\<close>),
+                                    @{priority %derived_\<A>EIF_from_premis_extraction})],
+                        blacklist = [],
+                        tactic = Phi_Reasoner.Tac_ML (fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+                          let val ctm = Thm.dest_arg1 (Thm.cprop_of sequent) (*dest_implies*)
+                                     |> Thm.dest_arg (*dest_Trueprop*)
+                                     |> Thm.dest_arg1 (*dest Action_Tag \<A>EIF*)
+                                     |> Thm.dest_arg1 (*dest \<longrightarrow>*)
+                           in f ctxt ctm
+                           |> Option.map (fn ret => ((ctxt, convert_prem_extr_to_AEIF RS ret), Seq.empty))
+                          end))} ctxt
+
+fun del_derived_extracting_rules rule ctxt =
+  Phi_Reasoner.del_reasoners (Phi_Reasoner.the_default_pattern_of ctxt (Thm.concl_of rule))
+                             (fn r => case #tactic r of Phi_Reasoner.Tac_Rule [(_, rule')] => Thm.eq_thm (rule',rule)
+                                                      | _ => false) ctxt
+
 fun add_premise_extractions [] ctxt = ctxt
   | add_premise_extractions extrs ctxt =
       Premise_Extraction.map (fold (
@@ -295,9 +335,16 @@ fun del_premise_extractions extrs ctxt =
 
 val del_premise_extraction_rules = del_premise_extractions o map Extract_Rule
 
+fun add_del add del = Scan.lift (Args.add |-- Phi_Help.pos_parser "\<phi>premise_extraction" >> add
+                                || Args.del >> K del
+                                || Phi_Help.pos_parser "\<phi>premise_extraction" >> add);
 val premise_extraction =
-      Attrib.add_del (Thm.declaration_attribute (add_premise_extraction_rules o single))
-                     (Thm.declaration_attribute (del_premise_extraction_rules o single))
+      add_del (fn pos => Thm.declaration_attribute (fn rule =>
+                        add_premise_extraction_rules [rule]
+                     #> derive_extracting_rules pos (Extract_Rule rule)))
+              (Thm.declaration_attribute (fn rule =>
+                        del_premise_extraction_rules [rule]
+                     #> del_derived_extracting_rules rule))
 
 val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>premise_extraction\<close> premise_extraction
                       "Declare rewrite rules to extract premises augmenting the proof obligation")

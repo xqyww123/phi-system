@@ -26,8 +26,8 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-        
+declare [[\<phi>trace_reasoning = 0]]
+         
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
@@ -231,7 +231,7 @@ text \<open>Transformation functor requires inner elements to be transformed int
 
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
@@ -1427,7 +1427,7 @@ lemma
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 3 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
 
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
@@ -1701,7 +1701,7 @@ lemma \<comment> \<open>A example for how to represent list of multi-elements\<c
 
 subsubsection \<open>Empty List\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
@@ -1792,9 +1792,9 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
 
-
+   
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
@@ -1816,7 +1816,11 @@ declare [[\<phi>trace_reasoning = 0]]
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = 0 \<Longrightarrow> Identity_Element\<^sub>E ([] \<Ztypecolon> List\<^sub>S n T)\<close>
            and \<open>Identity_Element\<^sub>I (l \<Ztypecolon> List\<^sub>S n \<circle>) (n = length l)\<close>
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = length l \<Longrightarrow> Identity_Element\<^sub>E (l \<Ztypecolon> List\<^sub>S n \<circle>)\<close>
+           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
+           (*and Object_Equiv\<^sub>O*)
           (*and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (List\<^sub>S n T) (list_all2 eq)\<close>*)
+term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
+
 term \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = length l \<Longrightarrow> Identity_Element\<^sub>E (l \<Ztypecolon> List\<^sub>S n \<circle>)\<close>
 
 term \<open>Identity_Element\<^sub>I (l \<Ztypecolon> List\<^sub>S n \<circle>) (n = length l)\<close>
