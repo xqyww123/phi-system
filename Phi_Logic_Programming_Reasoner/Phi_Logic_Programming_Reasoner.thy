@@ -1220,13 +1220,14 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>ESC \<close>
   unfolding Action_Tag_def by blast
 
+(*
 lemma Extact_implied_facts_Iden[\<phi>reason default %extract_pure_fallback]:
   \<open> A \<longrightarrow> A @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast
 
 lemma Extact_sufficient_conditions_Iden[\<phi>reason default %extract_pure_fallback]:
   \<open> A \<longrightarrow> A @action \<A>ESC \<close>
-  unfolding Action_Tag_def by blast
+  unfolding Action_Tag_def by blast*)
 
 lemma [\<phi>reason %extract_pure]:
   \<open> (A' \<longrightarrow> A) @action \<A>ESC
@@ -1322,7 +1323,7 @@ structure Useful_Thms = Named_Thms (
   val name = \<^binding>\<open>useful\<close>
   val description = "theorems to be inserted in the automatic proving, \
         \having the same effect of using the @{command using} command."
-)\<close>
+) \<close>
 
 setup \<open>Useful_Thms.setup\<close>
 

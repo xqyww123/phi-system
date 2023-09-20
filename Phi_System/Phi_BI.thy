@@ -3039,6 +3039,37 @@ declare [[ \<phi>reason_default_pattern
  and identity_element_ToA = (50, [50,51]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
     \<open>Entry points from ToA to Identity_Element\<close>
 
+subsubsection \<open>Extracting Pure Facts\<close>
+
+lemma Identity_Element\<^sub>I_\<A>EIF:
+  \<open> Identity_Element\<^sub>I S P \<longrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P) @action \<A>EIF \<close>
+  unfolding Identity_Element\<^sub>I_def Action_Tag_def Transformation_def
+  by blast
+
+lemma Identity_Element\<^sub>I_\<A>ESC:
+  \<open> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P) \<longrightarrow> Identity_Element\<^sub>I S P @action \<A>ESC \<close>
+  unfolding Identity_Element\<^sub>I_def Action_Tag_def Transformation_def
+  by blast
+
+lemma Identity_Element\<^sub>E_\<A>EIF:
+  \<open> Identity_Element\<^sub>E S \<longrightarrow> (1 \<Turnstile> S) @action \<A>EIF \<close>
+  unfolding Identity_Element\<^sub>E_def Action_Tag_def Transformation_def
+  by blast
+
+lemma Identity_Element\<^sub>E_\<A>ESC:
+  \<open> (1 \<Turnstile> S) \<longrightarrow> Identity_Element\<^sub>E S @action \<A>ESC \<close>
+  unfolding Identity_Element\<^sub>E_def Action_Tag_def Transformation_def
+  by blast
+
+bundle extracting_Identity_Element\<^sub>I = Identity_Element\<^sub>I_\<A>EIF [\<phi>reason %extract_pure]
+                                      Identity_Element\<^sub>I_\<A>ESC [\<phi>reason %extract_pure]
+bundle extracting_Identity_Element\<^sub>E = Identity_Element\<^sub>E_\<A>EIF [\<phi>reason %extract_pure]
+                                      Identity_Element\<^sub>E_\<A>ESC [\<phi>reason %extract_pure]
+bundle extracting_Identity_Element begin
+  unbundle extracting_Identity_Element\<^sub>I extracting_Identity_Element\<^sub>E
+end
+
+
 subsubsection \<open>Fallback\<close>
 
 lemma [\<phi>reason default %identity_element_fallback]:

@@ -1,7 +1,7 @@
 signature PHI_REASONERS = sig
 include PHI_REASONERS
 
-val extract_implied_facts : Proof.context -> thm -> thm
+val extract_implied_facts : Proof.context -> thm -> thm option
 (*val implied_fact_extraction : Phi_Reasoners.pattern -> Phi_Reasoners.extraction*)
 val is_generating_extraction_rule : bool Config.T
 
@@ -57,19 +57,23 @@ val Do_Extract_Implied_Facts =
              \<Longrightarrow> C\<close>
             by (unfold Action_Tag_def, blast)}
 
-fun extract_implied_facts ctxt statement =
-  let val _ = case Thm.prop_of statement
+fun extract_implied_facts ctxt statement0 =
+  case try (Phi_Conv.atomize ctxt) statement0
+    of SOME statement't1 =>
+  let val ((_,[statement]), ctxt') = Variable.import false [statement't1] ctxt
+      val _ = case Thm.prop_of statement
                 of \<^Const>\<open>Trueprop\<close> $ _ => ()
                  | _ => error "extract_implied_facts: must be a statement in the object logic"
-      val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
+      val _ = Phi_Reasoner.info_pretty ctxt' 2 (fn _ => Pretty.chunks [
               Pretty.str "Extracting implied pure facts from:",
-              Syntax.pretty_term ctxt (Thm.prop_of statement)
+              Syntax.pretty_term ctxt' (Thm.prop_of statement)
           ])
-   in (statement RS' (ctxt, Do_Extract_Implied_Facts))
-   |> Phi_Reasoner.reason1 (K "fail to extract implied fact. It is an internal error and some reasonig rules are miss-configured.")
-                           NONE (SOME 1) ctxt
-   |> Simplifier.simplify (Inhabitance_SS.enhance ctxt)
+   in (statement RS' (ctxt', Do_Extract_Implied_Facts))
+   |> Phi_Reasoner.reason NONE (SOME 1) ctxt'
+   |> Option.map ( Simplifier.simplify (Inhabitance_SS.enhance ctxt')
+                #> singleton (Variable.export ctxt' ctxt) )
   end
+    | _ => NONE
 
 fun is_extraction_rule (\<^Const>\<open>Trueprop\<close> $ (
       \<^Const>\<open>Action_Tag\<close> $ (\<^Const>\<open>HOL.implies\<close> $ _ $ _) $ \<^Const>\<open>\<A>EIF\<close>))

@@ -26,8 +26,6 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-         
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
@@ -701,11 +699,10 @@ lemma [\<phi>reason 1000]:
 
  
 subsection \<open>Vertical Composition\<close>
-
+ 
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
-  deriving Functional_Transformation_Functor
-       and Carrier_Set
+  deriving Carrier_Set
 
 text \<open>
   We do not use deriver here.
@@ -741,6 +738,18 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> Functionality T P\<^sub>T
 \<Longrightarrow> Functionality (T \<Zcomp> U) (\<lambda>x. P\<^sub>U x \<and> (\<forall>m. m \<Turnstile> (x \<Ztypecolon> U) \<longrightarrow> P\<^sub>T m)) \<close>
   unfolding Functionality_def Premise_def
+  by clarsimp blast
+
+lemma [\<phi>reason 1000]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B'
+\<Longrightarrow> Transformation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B') T U (\<lambda>x. {x}) (\<lambda>_. UNIV) (\<lambda>r. r)\<close>
+  unfolding Transformation_Functor_def Transformation_def \<r>Guard_def Premise_def
+  by clarsimp blast
+
+lemma [\<phi>reason 1000]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> B = B'
+\<Longrightarrow> Functional_Transformation_Functor ((\<Zcomp>) B) ((\<Zcomp>) B') T U (\<lambda>x. {x}) (\<lambda>_. UNIV) (\<lambda>_ P. P) (\<lambda>f _. f)\<close>
+  unfolding Functional_Transformation_Functor_def Transformation_def \<r>Guard_def Premise_def
   by clarsimp blast
 
 lemma [\<phi>reason 1000]:
@@ -1026,6 +1035,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Sum :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
+  opening extracting_Identity_Element
   deriving \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain U Q

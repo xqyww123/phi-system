@@ -154,7 +154,7 @@ structure Tactic_Configures = Hooks (
   type state = thm list (*aux thms*) * tactic * Proof.context
 )
 
-fun apply ctxt tactic  mode =
+fun apply ctxt tactic mode =
   HEADGOAL (SOLVED' (K
     (#2 (Tactic_Configures.invoke_until_success (Context.Proof ctxt)
           (fn mode => fn (aux,tac,ctxt) =>
@@ -289,16 +289,10 @@ fun chk_extraction ctxt (Extract_Rule rule) =
 val convert_prem_extr_to_AEIF = @{lemma' \<open>A \<equiv> B \<and> C \<Longrightarrow> A \<longrightarrow> B @action \<A>EIF\<close>
                                      by (unfold Action_Tag_def, blast)}
 
-fun chk_trivial_rule (Const(\<^const_name>\<open>Pure.eq\<close>, _) $ LHS $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ RHS $ _)) =
-      LHS aconv RHS
-  | chk_trivial_rule _ = error "BUG"
-
 fun derive_extracting_rules pos (Extract_Rule rule) ctxt =
-      if chk_trivial_rule (Thm.concl_of rule)
-      then ctxt
-      else Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE @{priority %derived_\<A>EIF_from_premis_extraction}
-                                 ([],[]) NONE
-                                 [rule RS (Thm.transfer'' ctxt convert_prem_extr_to_AEIF)] ctxt
+      Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE @{priority %derived_\<A>EIF_from_premis_extraction}
+                            ([],[]) NONE
+                            [rule RS (Thm.transfer'' ctxt convert_prem_extr_to_AEIF)] ctxt
   | derive_extracting_rules pos (Extract_Fun (pat, f)) ctxt =
       Phi_Reasoner.add {name = Free("Derived_Premise_Extraction", Term.dummyT) $ pat,
                         pos = pos,
@@ -794,7 +788,8 @@ val safer_obligation_solver = oblg_template (fn ctxt => fn th =>
       let val th'1 = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
        in apply ctxt (fn (ctxt,pre,aux,_) =>
-             pre THEN HEADGOAL (fn s => fn x => Clasimp.clarsimp_tac (ctxt addsimps aux) s x)) Safe_Solver th'
+             pre THEN HEADGOAL (Method.insert_tac ctxt aux)
+                 THEN HEADGOAL (fn s => fn x => Clasimp.clarsimp_tac ctxt s x)) Safe_Solver th'
        |> Seq.pull
       end)
 

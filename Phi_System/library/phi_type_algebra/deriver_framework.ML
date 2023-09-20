@@ -1524,11 +1524,10 @@ fun default_reasoning_configure extractions
 
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
-      val extrs = Phi_Reasoners.implied_fact_extraction \<^pattern>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
-               :: extractions
-      val extract_prem = Phi_Reasoners.extract_prem (
-              Phi_Reasoners.add_premise_extractions extrs (Context.Proof ctxt)) false
-      val prem_ants = map_filter extract_prem local_prems
+      val prem_ants = map_filter (Phi_Reasoners.extract_implied_facts ctxt) (@{print} local_prems)
+                   |> map (Conv.fconv_rule (HOLogic.Trueprop_conv (
+                            Conv.rewr_conv @{thm' Premise_def[where mode=\<open>MODE_SIMP\<close>, symmetric]})))
+                   |> @{print}
 (*maps (fn th =>
             case extract_prems ctxt th
               of [] => if is_real_Premise (Thm.concl_of th) then [th] else []
