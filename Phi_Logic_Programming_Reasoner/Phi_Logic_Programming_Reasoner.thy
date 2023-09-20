@@ -1352,13 +1352,11 @@ lemma contract_drop_waste:
   \<open> PROP Pure.prop P \<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP P) \<close>
   unfolding Pure.prop_def by simp
 
-lemma contract_drop_waste_end:
-  \<open> PROP P \<Longrightarrow> PROP Pure.prop P \<close>
-  unfolding Pure.prop_def .
-
 lemma contract_obligations:
   "(Premise mode' P \<Longrightarrow> Premise mode Q \<Longrightarrow> PROP C) \<equiv> (Premise mode (P \<and> Q) \<Longrightarrow> PROP C)"
   unfolding Premise_def by rule simp+
+
+ML \<open>@{thm contract_obligations} |> Thm.forall_intr_vars\<close>
 
 lemma contract_premise_all:
   "(\<And>x. Premise mode (P x)) \<equiv> Trueprop ( Premise mode (\<forall>x. P x)) "

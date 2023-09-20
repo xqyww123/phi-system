@@ -38,7 +38,10 @@ signature PHI_REASONERS = sig
   val defer_antecedent : (Proof.context -> thm -> thm) (*contract*)
                                  -> Proof.context -> thm -> thm Seq.seq
   val defer_obligation_tac : contraction_mode -> Proof.context -> thm -> thm Seq.seq
+  val augment_conditions : thm list -> Proof.context -> thm -> thm
+        (*augmenting conditions to the leading proof obligations*)
   val has_obligations_tag : thm -> bool
+
 
   structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
       context before applying either the automatic solving*)
@@ -683,6 +686,22 @@ type contraction_mode = bool * bool * int
 fun chk_option ctxt (a,b,~1) = (a,b,Config.get ctxt existential_obligation)
   | chk_option _ option = option
 
+fun augment_conditions conds ctxt sequent =
+  let val _ = if can (PLPR_Syntax.dest_premise_tag o HOLogic.dest_Trueprop o Phi_Help.leading_antecedent') sequent
+              then () else raise THM ("must be leaded by a bare premise antecedent quantified by no \
+                                      \HHF conditions nor universal variables", 1, [sequent])
+      val conds = map (Phi_Conv.atomize ctxt o Thm.forall_intr_vars) conds
+   in sequent
+   |> fold (fn cond => fn th =>
+        Thm.implies_elim
+          \<^instantiate>\<open>cond = \<open>Thm.dest_arg (Thm.cconcl_of cond)\<close> and
+                      mode = \<open>Thm.dest_arg1 (Thm.dest_arg (Thm.dest_arg1 (Thm.cprop_of th)))\<close> and
+                      P = \<open>Thm.dest_arg (Thm.dest_arg (Thm.dest_arg1 (Thm.cprop_of th)))\<close>
+                        in lemma \<open>cond \<Longrightarrow> Premise mode (cond \<longrightarrow> P) \<Longrightarrow> Premise mode P\<close>
+                              by (unfold Premise_def, blast)\<close>
+          cond RS th) conds
+  end
+
 (*the leading antecedent must be beta-eta normalized*)
 fun collect_obligation_premises option ctxt thm = let open Conv
   val (collect_premises,conv_all,conv_schematic) = chk_option ctxt option
@@ -707,7 +726,7 @@ fun collect_obligation_premises option ctxt thm = let open Conv
       of Const(\<^const_name>\<open>Pure.prop\<close>, _) $ X => (
           case X of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
                       => drop_wastes (@{thm' contract_drop_waste} RS thm)
-                  | _ => @{thm' contract_drop_waste_end} RS thm)
+                  | _ => @{lemma' \<open> PROP P \<Longrightarrow> PROP Pure.prop P \<close> by (unfold Pure.prop_def)} RS thm)
        | _ => error "BUG nhtCAsmjS+Oj4YsI8qtXQw"
 
    in drop_wastes rule1

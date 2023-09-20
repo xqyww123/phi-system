@@ -1123,6 +1123,7 @@ fun oblg_solver proof_id ctxt sequent =
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
    let val ctxt'' = Expansion.equip ctxt
                  |> Simplifier.del_cong @{thm HOL.conj_cong}
+                 |> Phi_Envir.freeze_dynamic_lemmas
        val sequent'1 = Timeout.apply (Time.fromSeconds 3) Seq.hd
                          (Phi_Reasoners.asm_lr_simp_tac true ctxt'' 1 sequent)
                        handle Timeout.TIMEOUT _ =>
@@ -1525,8 +1526,8 @@ fun default_reasoning_configure extractions
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
       val prem_ants = map_filter (Phi_Reasoners.extract_implied_facts ctxt) (@{print} local_prems)
-                   |> map (Conv.fconv_rule (HOLogic.Trueprop_conv (
-                            Conv.rewr_conv @{thm' Premise_def[where mode=\<open>MODE_SIMP\<close>, symmetric]})))
+                 (*|> map (Conv.fconv_rule (HOLogic.Trueprop_conv (
+                            Conv.rewr_conv @{thm' Premise_def[where mode=\<open>MODE_SIMP\<close>, symmetric]})))*)
                    |> @{print}
 (*maps (fn th =>
             case extract_prems ctxt th
@@ -1698,16 +1699,18 @@ fun reasoning ctxt0 sequent0 =
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_rules (
-                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE, 200, [], [], NONE)) reasoner_ants)
+                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE, 200, [], [], NONE)) reasoner_ants))
+            |> Context.proof_map (fold Useful_Thms.add_thm prem_ants)
             (* #> Phi_Reasoner.add_rules (map (fn (pat,rule) =>
-                    ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs) *))
+                    ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs) *)
 
       val lsequent' = lsequent
                     |> Simplifier.rewrite_goals_rule ctxt rewrs
-                    |> ALLGOALS (Method.insert_tac ctxt'' prem_ants)
-                    |> Seq.hd
+                    (*|> ALLGOALS (Method.insert_tac ctxt'' prem_ants)
+                    |> Seq.hd*)
                     |> reasoner ctxt''
                     |> varify_subgoal_finale0
+                    |> Phi_Reasoners.augment_conditions (Useful_Thms.get ctxt'') ctxt''
 
       (*val lsequent'' = fold PLPR_Syntax.provide_premise_condition prem_ants lsequent'*)
 
