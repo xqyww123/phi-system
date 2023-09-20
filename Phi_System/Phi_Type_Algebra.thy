@@ -127,6 +127,38 @@ Properties in the algebra of \<phi>-Type can be classified into two sorts,
 
 \<close>
 
+text \<open>
+Transformation of abstraction is ubiquitous. Refining an abstraction to either concrete representation
+or a middle-level representation (i.e. stepwise refinement) is a transformation of abstraction, and
+is carried as such in the theory. The significance of stepwise refinement in conventional verification
+is well-known. We in addition consider certified programming over a program logic, where we program in
+a way of combining existing proofs of certified programs given in libraries to obtain a certified compositional
+program. The abstractions given in a proof library is limited in number whereas the abstractions demanded by
+clients can be various. The transformation (can be a kind of stepwise refinement) mitigates this gap,
+so improves the composability of such certified programming and the reusability of existing proofs
+in ordinary verification. 
+
+Comparing to conventional approaches of data refinement, our approach is synthetic...
+
+Besides, our method extends the composability of data refinement. Conventional data refinement
+supports horizontal composition between programs and vertical composition between abstraction layers.
+Some work in contextual refinement extends the composition to combining respective abstractions of
+separated components by combining BI with refinement, but is much cumbersome than ours (as our method
+uses predicates while theirs brings a heavy extension to the logic, though our method
+assigning the abstract program into a different space with the concrete program is not suitable for
+contextual refinement). 
+In addition, we extend composition to hierarchical structures of data structures by means of functors
+of abstraction relations such as List(T) which generate abstractions of containers from the abstractions of elements.
+
+Composability is important because it simplifies transformation by breaking it down to small transformations
+and reversely enables the deduction deriving a larger number of transformations from a small set of
+primitive transformations, by which the synthetic reasoning is possible and is simpler than the analytic
+method by means of reusing the proofs of the primitive transformations and composing them along with
+the hierarchical structures and the algebraic features (e.g. transformation functor given below) of
+the data structures.
+
+\<close>
+
 
 section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
 
