@@ -40,6 +40,7 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
            Context.the_proof (Expansion.map (fn ctxt => ctxt addsimps [unit_simp]) ctxt'))
       end
 
+(*
 (*strategy: lift the logic type of the abstract objects onto \<^sort>\<open>one\<close>. If fails, guess fails.
   We only support the \<phi>-type to a unital abstract algebra. We guess the identity abstract object
   if \<open>1\<close> (the identity of the algebra), because if it is not the identity, what else better it could be?
@@ -48,14 +49,18 @@ fun guess_id_ele (typ as TFree (_, S)) ctxt =
   the abstract domain of $A$ is also unital, the property of identity element of $A$ is declared
   as an antecedent of the guessed property.
 *)
-fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
+fun guess_property_sing is_left (phi0:phi_type) ctxt =
   let val thy = Proof_Context.theory_of ctxt
-      val (_,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val (rev_argtys0,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val is_type_opr = exists (can dest_parameterized_phi_ty) rev_argtys0
+
       val inst  = lift_types_sort (Proof_Context.theory_of ctxt)
-                                  [(x_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>one\<close>)]
+                                  (if is_type_opr
+                                   then [(x_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>one\<close>)]
+                                   else [(model_ty0, \<^sort>\<open>one\<close>)])
+
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi01 = instantiate_phi (inst',Vars.empty) phi0
-      val subst = Term_Subst.instantiate (inst, Vars.empty)
 
       val (_, x_ty01, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi01))
       val (inst01, unit, ctxt) = guess_id_ele x_ty01 ctxt
@@ -92,37 +97,95 @@ fun guess_property_id_ele is_left (phi0:phi_type) ctxt =
         | mk_Ants [] ants _ ctxt = (ants, ctxt)
         | mk_Ants _ _ _ _ = raise ListPair.UnequalLengths
       val (ants, ctxt) = mk_Ants rev_arg_tys [] T_term ctxt
-      val xT = \<^Const>\<open>\<phi>Type x_ty model_ty\<close> $ unit $ T_term
+      val unit_sing = \<^Const>\<open>insert x_ty\<close> $ unit $ \<^Const>\<open>bot \<^Type>\<open>set x_ty\<close>\<close>
    in Seq.single (ants, \<^Const>\<open>Trueprop\<close> $ (
-        (if is_left then \<^Const>\<open>Identity_Element\<^sub>I model_ty\<close> $ xT
+        (if is_left then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close> $ T_term $ unit_sing
                             $ (if #is_recursive phi
                                then \<^Const>\<open>True\<close>
                                else Var(("P", 0), HOLogic.boolT))
-                    else \<^Const>\<open>Identity_Element\<^sub>E model_ty\<close> $ xT)),
+                    else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close> $ T_term $ unit_sing)),
         SOME unit :: parse_inst_params_from_phi_term T_term,
         phi, ctxt)
   end
+*)
+
+fun guess_property is_intro (phi0:phi_type) ctxt =
+  let val (rev_argtys0,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val is_type_opr = exists (can dest_parameterized_phi_ty) rev_argtys0
+      
+      val inst  = lift_types_sort (Proof_Context.theory_of ctxt)
+                                  (if is_type_opr
+                                   then [(model_ty0, \<^sort>\<open>one\<close>)]
+                                   else [(x_ty0, \<^sort>\<open>one\<close>), (model_ty0, \<^sort>\<open>one\<close>)])
+      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
+      val phi't1 = instantiate_phi (inst',Vars.empty) phi0
+
+      val (phi, unit, ctxt) =
+            if is_type_opr then (phi't1, Term.dummy, ctxt)
+            else let val (_, x_ty2, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi't1))
+                     val (inst2, unit, ctxt) = guess_id_ele x_ty2 ctxt
+                  in (instantiate_phi (inst2, Vars.empty) phi't1, unit, ctxt)
+                 end
+
+      val (args, x_ty, model_ty) = parameters_and_typs_of phi
+      val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+      val (ants_Ds_Ps, ctxt) = fold_map (fn ((info,ty), A_term0) => fn ctxt =>
+            case try dest_parameterized_phi_ty ty
+              of SOME (rev_atys, x_ty, m_ty) =>
+                    let fun name s s' = the_default s (Option.map (suffix s') (#name info))
+                        val ([D,P], ctxt) = Variable.variant_fixes [name "D" "\<^sub>D", name "P" "\<^sub>P"] ctxt
+                        val D = Free(D, x_ty --> HOLogic.boolT)
+                        val P = Free(P, x_ty --> HOLogic.boolT)
+                        val A_term = fold_index (fn (i,_) => fn X => X $ Bound i) rev_atys A_term0
+                     in (((if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty m_ty\<close> $ A_term $ D $ P
+                                       else \<^Const>\<open>Identity_Elements\<^sub>E x_ty m_ty\<close> $ A_term $ D)
+                            |> fold_rev (fn T => fn X => \<^Const>\<open>All T\<close> $ Abs ("A", T, X)) rev_atys,
+                         (x_ty, D),
+                         (x_ty, P)),
+                         ctxt)
+                    end)
+            (args ~~ snd (Term.strip_comb T_term)) ctxt
+      val (ants, Ds, Ps) = (map #1 ants_Ds_Ps, map #2 ants_Ds_Ps, map #3 ants_Ds_Ps)
+
+      val seq = if is_type_opr
+            then guess_predicate ctxt Ds x_ty
+              |> Seq.maps (fn (D,ctxt) =>
+                  if is_intro then guess_predicate ctxt Ps x_ty |> Seq.map (fn (P,ctxt) => (D,P,ctxt))
+                              else Seq.single (D,D,ctxt))
+            else Seq.single (\<^Const>\<open>insert x_ty\<close> $ unit $ \<^Const>\<open>bot \<^Type>\<open>set x_ty\<close>\<close>,
+                             if #is_recursive phi then \<^Const>\<open>True\<close> else Var(("P", 0), HOLogic.boolT),
+                             ctxt)
+   in seq |> Seq.map (fn (D,P,ctxt) =>
+        (ants, HOLogic.Trueprop $   
+                  (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close> $ T_term $ D $ P
+                               else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close> $ T_term $ D ),
+         NONE :: parse_inst_params_from_phi_term T_term,
+         phi, ctxt))
+  end
+
 
 fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
   let val parse_hint = parse_hint (
-            fn Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ X $ _ => X
-             | Const(\<^const_name>\<open>Identity_Element\<^sub>E\<close>, _) $ X => X
+            fn Const(\<^const_name>\<open>Identity_Elements\<^sub>I\<close>, _) $ T $ _ $ _ => T
+             | Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ T $ _ => T
              | _ => raise TERM ("",[]))
-      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Element\<^sub>I\<close>, _) $ _ $ P) = [P]
+      fun extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Elements\<^sub>I\<close>, _) $ _ $ D $ P) = [D,P]
+        | extract_oprs_from_hint (Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ _ $ D) = [D]
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (
-              fn ctxt => fn _ =>
-                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+              fn _ => fn _ =>
+                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
               fn ctxt => fn _ =>
-                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
                   Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
+
       val varify_subgoal =
             if is_left
-            then K (fn Trueprop $ (Identity_Element $ S $ P) =>
-                        SOME ([P], fn [P'] => Trueprop $ (Identity_Element $ S $ P')))
+            then K (fn Trueprop $ (Identity_Elements $ P) =>
+                        SOME ([P], fn [P'] => Trueprop $ (Identity_Elements $ P')))
             else K (K NONE)
 
       fun reasoning phi =
@@ -169,7 +232,7 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
 
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
-                                     guess_property_id_ele is_left, rule,
+                                     guess_property is_left, rule,
                                      [(chk_needs_induction, ind_conv, reasoning)],
                                      K NONE, simp)
                                     phi0 hint0 ctxt0

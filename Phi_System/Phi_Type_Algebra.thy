@@ -1,3 +1,8 @@
+text \<open>title: 
+            Three Pigs: A Synthetic Approach to Data Refinement, an Algebra of Predicates,
+                    and a General Automation for Data Structures, on BI
+\<close>
+
 theory Phi_Type_Algebra
   imports IDE_CP_Reasoning2
           Phi_Algb_Pre
@@ -3793,12 +3798,16 @@ lemma \<phi>TA_ind_target_strip:
 
 (*TODO: rename Action_Tag \<longrightarrow> Reasoning_Tag, @action \<rightarrow> @tag*)
 
-lemma \<phi>TA_common_rewr_imp1: (*TODO: depreciate! replaced by \<phi>TA_ind_target_strip*)
+lemma \<phi>TA_common_rewr_imp1:
   \<open> Trueprop (Ant \<longrightarrow> X @action \<phi>TA_ind_target A) \<equiv> (Ant \<Longrightarrow> X @action A) \<close>
   unfolding Action_Tag_def atomize_imp .
 
-lemma \<phi>TA_common_rewr_imp1_noact: (*TODO: depreciate! replaced by \<open>unfold Action_Tag_def\<close>*)
+lemma \<phi>TA_common_rewr_imp1_noact:
   \<open> Trueprop (Ant \<longrightarrow> X @action \<phi>TA_ind_target A) \<equiv> (Ant \<Longrightarrow> X) \<close>
+  unfolding Action_Tag_def atomize_imp .
+
+lemma \<phi>TA_common_rewr_imp2_noact:
+  \<open> Trueprop (Ant \<longrightarrow> C \<longrightarrow> X @action \<phi>TA_ind_target A) \<equiv> (Ant \<Longrightarrow> C \<Longrightarrow> X) \<close>
   unfolding Action_Tag_def atomize_imp .
 
 lemma \<phi>TA_reason_rule__NToA:
@@ -3906,13 +3915,14 @@ ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 subsubsection \<open>Identity Element Intro \& Elim\<close>
 
 lemma \<phi>TA_1L_rule:
-  \<open> (Ant \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
+  \<open> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
-  unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
-  using transformation_weaken by blast
+\<Longrightarrow> Identity_Elements\<^sub>I T D P \<close>
+  unfolding Action_Tag_def Identity_Elements\<^sub>I_def
+  by blast
+
 
 (*lemma \<phi>TA_1L_rule':
   \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
@@ -3924,12 +3934,13 @@ lemma \<phi>TA_1L_rule:
   using transformation_weaken by blast*)
 
 lemma \<phi>TA_1R_rule:
-  \<open> (Ant \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+  \<open> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)\<close>
-  unfolding Action_Tag_def by blast
+\<Longrightarrow> Identity_Elements\<^sub>E T D\<close>
+  unfolding Action_Tag_def Identity_Elements\<^sub>E_def
+  by blast
 
 lemma \<phi>TA_Ident_I_rule_step:
   \<open> Identity_Element\<^sub>I X Q
@@ -3948,15 +3959,15 @@ ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
 hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
 
-\<phi>property_deriver Identity_Element\<^sub>I 101 for (\<open>Identity_Element\<^sub>I _ _\<close>)
+\<phi>property_deriver Identity_Elements\<^sub>I 101 for (\<open>Identity_Elements\<^sub>I _ _ _\<close>)
     requires Warn_if_contains_Sat
   = \<open>Phi_Type_Algebra_Derivers.identity_element_I\<close>
 
-\<phi>property_deriver Identity_Element\<^sub>E 102 for (\<open>Identity_Element\<^sub>E _\<close>)
+\<phi>property_deriver Identity_Elements\<^sub>E 102 for (\<open>Identity_Elements\<^sub>E _ _\<close>)
     requires Warn_if_contains_Sat
   = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
 
-\<phi>property_deriver Identity_Element 103 requires Identity_Element\<^sub>I and Identity_Element\<^sub>E
+\<phi>property_deriver Identity_Elements 103 requires Identity_Elements\<^sub>I and Identity_Elements\<^sub>E
 
 paragraph \<open>Guessing Antecedents\<close>
 
@@ -4282,7 +4293,7 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
 \<phi>property_deriver Separation_Monoid 130
   requires Separation_Homo
        and Functional_Transformation_Functor
-       and Identity_Element
+       and Identity_Elements
        and Basic
 
   (*TODO: I'm thinking why I gave it this name... yes, there is identity element, but then.. what?

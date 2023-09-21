@@ -54,6 +54,7 @@ val map_phi_type : (term -> term) * (thm list -> thm list) -> phi_type -> phi_ty
 val fold_phi_type : (term -> 'a -> 'a) * (thm -> 'a -> 'a) -> phi_type -> 'a -> 'a
 val may_mutating_params : phi_type -> bool
 val parameters_of : phi_type -> (parameter_info * typ) list
+val parameters_and_typs_of : phi_type -> (parameter_info * typ) list (*reversed!*) * typ (*abstract typ*) * typ (*concrete typ*)
 
 val morphism_phi_type : morphism -> phi_type -> phi_type
 val instantiate_phi : (ctyp TVars.table * cterm Vars.table)
@@ -171,6 +172,7 @@ val fix_phi_term_params : term -> Proof.context ->
         (term * term) * Proof.context (*only fix the terms but no types*)
 
 val raw_term_name_typ : term -> string * typ
+(*depreciated*)
 val dest_parameterized_phi_ty : typ -> typ list (*reserved!*) * typ (*x*) * typ (*concrete*)
 
 (* Auxiliaries *)
@@ -400,6 +402,10 @@ fun dest_parameterized_phi_ty' args \<^Type>\<open>fun x \<open>\<^Type>\<open>s
 val dest_parameterized_phi_ty = dest_parameterized_phi_ty' []
 
 fun parameters_of phi = #params phi ~~ rev (#1 (dest_parameterized_phi_ty (Term.fastype_of (#term phi))))
+fun parameters_and_typs_of phi =
+  let val (rev_atys, x_ty, m_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+   in (#params phi ~~ rev rev_atys, x_ty, m_ty)
+  end
 
 fun fix_phi_term_params phi_term ctxt =
   let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of phi_term)
