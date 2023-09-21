@@ -2943,6 +2943,26 @@ subsection \<open>Equivalence of Objects\<close>
 definition Object_Equiv :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool\<close>
   where \<open>Object_Equiv T eq \<longleftrightarrow> (\<forall>x. eq x x) \<and> (\<forall>x y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T))\<close>
 
+text \<open>\<phi>-Deriver usually derives the object reachability relation of \<phi>-type operators generally
+  for any variable type operand, but the reachability can be wider on specific type operands, such
+  as the reachability \<open>\<lambda>x y. True\<close> of \<open>List(\<circle>)\<close> versus the version \<open>\<lambda>x y. length x = length y\<close> instantiated
+  from the general rule \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (List T) (list_rel eq)\<close> by substituting
+  \<open>T\<close> for \<open>\<circle>\<close> and \<open>eq\<close> for \<open>(=)\<close>.
+
+  These special `singular` cases are hard to be handled by \<phi>-type algebra who provides a general automation,
+  thus demanding user rules for override. Even so, common singular cases can still be handled by ad-hoc
+  optimization in the algorithm.
+
+  Generally, when an instantiation of a type operand yields a trivial type relating empty concrete objects,
+  a singular case can occur. Therefore, when we infer the reachability of a given type, we can first
+  check if it is such a trivial type and if so we derive the wider relation by rule \<open>Identity_Element\<^sub>I T P
+  \<Longrightarrow> Identity_Element\<^sub>E T Q \<Longrightarrow> Object_Equiv T (P \<longrightarrow> Q)\<close>. In this way, the overall reasoning can still be
+  powerful even when such common singular cases are not considered.
+
+
+(paper)
+\<close>
+
 declare [[
   \<phi>reason_default_pattern \<open>Object_Equiv ?T _\<close> \<Rightarrow> \<open>Object_Equiv ?T _\<close> (100),
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Equiv _ _\<close>

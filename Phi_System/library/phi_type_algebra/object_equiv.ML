@@ -224,16 +224,16 @@ case #equations phi0
              fn ctxt => fn _ => fn ctm =>
               (Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr} then_conv
                (if step1 then Conv.try_conv (
-                              Conv.implies_concl_conv (Phi_Conv.may_action_tag_conv (
+                              Conv.implies_concl_conv (Conv.implies_concl_conv (Phi_Conv.may_action_tag_conv (
                                 Phi_Syntax.transformation_conv Conv.all_conv
                                     (Phi_Conv.embed_BI_assertion_into_phi_type ctxt then_conv
                                      Phi_Conv.type_form_to_ex_quantified_single_var ctxt)
-                                    Conv.all_conv)))
+                                    Conv.all_conv))))
                          else Conv.all_conv) then_conv
                tag_conv then_conv
                (if step1 then Conv.all_conv
-                         else Conv.implies_concl_conv (
-                                  Conv.rewr_conv @{thm' \<phi>TA_OE\<^sub>O_rewr_IH2}))) ctm,
+                         else Conv.implies_concl_conv (Conv.implies_concl_conv (
+                                  Conv.rewr_conv @{thm' \<phi>TA_OE\<^sub>O_rewr_IH2})))) ctm,
 
              fn ctxt => fn _ => fn ctm =>
               (Conv.rewr_conv @{thm \<phi>TA_OE\<^sub>O_rewr} then_conv
@@ -254,7 +254,8 @@ case #equations phi0
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_obj_eq_singular_None, rule,
-                                      [(K (SOME [0]), ind_conv true , OEO_reasoning1),
+                                      [(K NONE, K (K I), K (pure_PLPR_reasoning 1)),
+                                       (K (SOME [0]), ind_conv true , OEO_reasoning1),
                                        (K (SOME [0]), ind_conv false, OEO_reasoning2)],
                                       K NONE, K I)
                                      phi0 hint ctxt0
@@ -310,12 +311,14 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
   end
 
 fun chk_is_singular ctxt tm =
-  case Logic.strip_assums_concl tm
-    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ eq) =>
-        (case Envir.beta_eta_contract eq
-           of Abs (_, _, Abs (_, _, \<^Const>\<open>True\<close>)) => true
-            | _ => false)
+  let fun chk_None (Const(\<^const_name>\<open>\<phi>None\<close>, _)) = true
+        | chk_None (Abs (_, _, X)) = chk_None X
+        | chk_None _ = false
+   in case Logic.strip_assums_concl tm
+   of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ T $ eq) =>
+            exists chk_None (snd (Term.strip_comb (Envir.beta_eta_contract T)))
      | _ => malformed_hint ctxt tm (K [])
+  end
 
 fun gen_obj_equal'' name NONE ctxt_derv phi thy = gen_obj_equal' name NONE ctxt_derv phi thy
   | gen_obj_equal'' name (SOME H) ctxt_derv phi thy =

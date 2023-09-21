@@ -258,22 +258,22 @@ text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation fun
 
 declare SubjectionTY_def[embed_into_\<phi>type del]
 
-declare [[\<phi>trace_reasoning = 0]]
- 
+declare [[\<phi>trace_reasoning = 3]]
+  
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
-  deriving \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
+  deriving (*\<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
        and \<open> Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
-       and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
+       and*) \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
                   \<comment> \<open>An example for which it is a non-symmetric reachability relation\<close>
-       and Separation_Monoid
+       (*and Separation_Monoid
        and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction T U
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
        and Open_Abstraction_to_Raw
-       and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
+       and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>*)
 
 
 text \<open>Read it as 'the abstract object is certain element in the set'

@@ -3970,6 +3970,10 @@ lemma Object_Equiv_rule:
   \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
 \<Longrightarrow> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
             (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
+                \<comment> \<open>Induct over \<open>x \<Ztypecolon> T\<close>. When \<open>x\<close> is inductively split, the constraint of \<open>eq x y\<close>
+                    should also split \<open>y\<close>, so that \<open>y \<Ztypecolon> T\<close> can reduce.
+                    A deficiency is, when the relation \<open>eq\<close> is trivially true such as that when
+                     \<open>T = List \<circle>\<close>, \<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -4020,13 +4024,14 @@ definition \<open>\<A>simp_to_base X \<equiv> X\<close>
 
 lemma \<phi>TA_OE\<^sub>O_rule:
   \<open> TERM ((x\<^sub>0 \<Ztypecolon> T\<^sub>0) = Base)
-\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Base) @action \<phi>TA_ind_target \<A>simp)
+\<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<exists>y. eq x y) \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Base) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (Base \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_ind_target NToA)
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<exists>y. eq y x) \<longrightarrow> (Base \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Object_Equiv T (\<lambda>_ _. True)\<close>
+\<Longrightarrow> Object_Equiv T eq\<close>
   unfolding Object_Equiv_def Action_Tag_def Transformation_def Premise_def \<A>simp_to_base_def MAKE_def
   by blast
 
@@ -4044,7 +4049,7 @@ lemma \<phi>TA_OE\<^sub>O_rewr_IH2:
   by (rule; simp; blast)
 
 lemma \<phi>TA_OE\<^sub>O_rewr:
-  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target \<A>) \<equiv> (Ant \<Longrightarrow> P @action \<A>)\<close>
+  \<open>Trueprop (Ant \<longrightarrow> C \<longrightarrow> P @action \<phi>TA_ind_target \<A>) \<equiv> (Ant \<Longrightarrow> C \<Longrightarrow> P @action \<A>)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
 
 lemma [\<phi>reason default %\<phi>simp_fallback]:
