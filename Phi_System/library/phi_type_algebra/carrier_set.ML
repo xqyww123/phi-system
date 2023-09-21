@@ -21,7 +21,7 @@ fun gen_carrier_set (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                     Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0))
                 )))))
       fun reasoning phi ctxt =
-            default_reasoning true (default_reasoning_configure []) (K (K NONE))
+            default_reasoning true default_reasoning_configure (K (K NONE))
                               (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' ctxt phi))) phi ctxt
 
       val mode_infer = not (is_some hint0)

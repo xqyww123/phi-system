@@ -76,7 +76,7 @@ fun gen_constr_from_raw (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
 
       fun reasoning phi ctxt =
             default_reasoning false
-              (default_reasoning_configure [])
+              default_reasoning_configure
               varify_all_vars
               (exhaustive_PLPR_reasoner_by_rule @{thm' transformation_weaken[where P'=True, simplified]}
                                                 (K (chk_unfolded' ctxt phi)))

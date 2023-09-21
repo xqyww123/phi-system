@@ -227,7 +227,7 @@ val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> r
 
 (* Default Reasoning Configure *)
 
-val default_reasoning_configure : Phi_Reasoners.extraction list -> reasoning_configure
+val default_reasoning_configure : reasoning_configure
 (*classify local premises by syntactic tags. allows to extract additional local condition
   by Phi_Reasoners.extraction.
 
@@ -1513,8 +1513,7 @@ type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
 
-fun default_reasoning_configure extractions
-                                (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
+fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
   let val is_pure_fact = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_pure_facts\<close> o Thm.concl_of
       val is_ToA_template = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_conditioned_ToA_template\<close> o Thm.concl_of
       val pure_facts = filter is_pure_fact local_prems

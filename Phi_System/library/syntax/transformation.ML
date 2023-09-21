@@ -3,8 +3,8 @@ include PHI_SYNTAX
 
   val dest_BI_ty : typ -> typ (*typ of concrete algebra*)
 
-  val is_transformation_intro_rule : thm -> bool
-  val is_transformation_elim_rule : thm -> bool
+  val is_intro_transformation : thm -> bool
+  val is_elim_transformation : thm -> bool
   val pass_ensures_intro_transformation : Phi_Reasoner.rule_pass
   val pass_ensures_elim_transformation : Phi_Reasoner.rule_pass
 
@@ -22,10 +22,6 @@ open Phi_Syntax
 fun dest_BI_ty (\<^Type>\<open>set ty\<close>) = ty
   | dest_BI_ty ty = raise TYPE ("Not of a type of BI assertion", [ty], [])
 
-val dest_action_tag   = Phi_Help.dest_binop   \<^const_name>\<open>Action_Tag\<close> #> #1
-val dest_action_tag_c = Phi_Help.dest_binop_c \<^const_name>\<open>Action_Tag\<close> #> #1
-
-
 val dest_transformation   =
          PLPR_Syntax.dest_tags
       #> Phi_Help.dest_triop @{const_name "Transformation"}
@@ -40,7 +36,7 @@ fun dest_transformation_typ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X
   | dest_transformation_typ (Const(\<^const_name>\<open>Transformation\<close>, \<^Type>\<open>fun \<^Type>\<open>set a\<close> _\<close>) $ _ $ _ $ _) = a
   | dest_transformation_typ X = raise TERM ("dest_transformation_typ", [X])
 
-fun is_transformation_intro_rule rule =
+fun is_intro_transformation rule =
   let val (prems, concl) = Logic.strip_horn (Thm.prop_of rule)
    in case dest_transformation concl
    of (Var v, _, _) =>
@@ -50,7 +46,7 @@ fun is_transformation_intro_rule rule =
     | _ => false
   end
 
-fun is_transformation_elim_rule rule =
+fun is_elim_transformation rule =
   let val (prems, concl) = Logic.strip_horn (Thm.prop_of rule)
    in case dest_transformation concl
    of (_, Var v, _) =>
@@ -61,13 +57,13 @@ fun is_transformation_elim_rule rule =
   end
 
 fun pass_ensures_intro_transformation _ (rules, (mode, priority), (pattern, except), guard, ctxt) =
-  let fun chk rule = if is_transformation_intro_rule rule then rule
+  let fun chk rule = if is_intro_transformation rule then rule
                      else rule RS' (Context.proof_of ctxt, @{thm' mk_intro_transformation})
    in (map chk rules, (mode, priority), (pattern, except), guard, ctxt)
   end
 
 fun pass_ensures_elim_transformation _ (rules, (mode, priority), (pattern, except), guard, ctxt) =
-  let fun chk rule = if is_transformation_elim_rule rule then rule
+  let fun chk rule = if is_elim_transformation rule then rule
                      else rule RS' (Context.proof_of ctxt, @{thm' mk_elim_transformation})
    in (map chk rules, (mode, priority), (pattern, except), guard, ctxt)
   end

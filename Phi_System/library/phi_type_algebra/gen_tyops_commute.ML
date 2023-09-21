@@ -79,7 +79,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
 
       fun reasoning is_intro phi ctxt =
             default_reasoning true
-                (default_reasoning_configure [])
+                default_reasoning_configure
                 (K (K NONE))
                 (fn ctxt => fn sequent =>
                    let fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) = (chk_unfolded' ctxt phi X1; chk_unfolded' ctxt phi X2)

@@ -59,19 +59,17 @@ val Do_Extract_Implied_Facts =
 
 fun extract_implied_facts ctxt statement0 =
   case try (Phi_Conv.atomize ctxt) statement0
-    of SOME statement't1 =>
-  let val ((_,[statement]), ctxt') = Variable.import false [statement't1] ctxt
-      val _ = case Thm.prop_of statement
+    of SOME statement =>
+  let val _ = case Thm.prop_of statement
                 of \<^Const>\<open>Trueprop\<close> $ _ => ()
                  | _ => error "extract_implied_facts: must be a statement in the object logic"
-      val _ = Phi_Reasoner.info_pretty ctxt' 2 (fn _ => Pretty.chunks [
+      val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
               Pretty.str "Extracting implied pure facts from:",
-              Syntax.pretty_term ctxt' (Thm.prop_of statement)
+              Syntax.pretty_term ctxt (Thm.prop_of statement)
           ])
-   in (statement RS' (ctxt', Do_Extract_Implied_Facts))
-   |> Phi_Reasoner.reason NONE (SOME 1) ctxt'
-   |> Option.map ( Simplifier.simplify (Inhabitance_SS.enhance ctxt')
-                #> singleton (Variable.export ctxt' ctxt) )
+   in (statement RS' (ctxt, Do_Extract_Implied_Facts))
+   |> Phi_Reasoner.reason NONE (SOME 1) ctxt
+   |> Option.map ( Simplifier.simplify (Inhabitance_SS.enhance ctxt) )
   end
     | _ => NONE
 

@@ -729,6 +729,19 @@ lemma [cong]:
 \<Longrightarrow> \<phi>TBS_Simp_Protect X U r flag \<equiv> \<phi>TBS_Simp_Protect X' U' r' flag \<close>
   by simp
 
+subsubsection \<open>Extracting Pure\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<longrightarrow> A @action \<A>ESC
+\<Longrightarrow> P \<longrightarrow> (A @action \<A>simp' any) @action \<A>ESC \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> A \<longrightarrow> P @action \<A>EIF
+\<Longrightarrow> (A @action \<A>simp' any) \<longrightarrow> P @action \<A>EIF \<close>
+  unfolding Action_Tag_def
+  by blast
 
 subsubsection \<open>Bubbling\<close>
 

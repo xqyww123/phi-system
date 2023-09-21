@@ -208,6 +208,65 @@ declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rig
  and abstract_domain_fallback = (1, [1,1]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>) < abstract_domain
     \<open>Fallbacks reasoning rules for \<open>Abstract_Domain\<close>, \<open>Abstract_Domain\<^sub>L\<close> \<close>
 
+paragraph \<open>Extracting Pure Facts\<close>
+
+lemma Inhabitance_Implication_\<A>EIF [\<phi>reason %extract_pure_all]:
+  \<open>(A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) \<longrightarrow> (Inhabited A \<longrightarrow> P) @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma Inhabitance_Implication_\<A>EIF_Sat:
+  \<open>(A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) \<longrightarrow> ((\<exists>v. v \<Turnstile> A) \<longrightarrow> P) @action \<A>EIF\<close>
+  unfolding Action_Tag_def Inhabited_def
+  by blast
+
+lemma Inhabitance_Implication_\<A>ESC[\<phi>reason %extract_pure_all]:
+  \<open>(Inhabited A \<longrightarrow> P) \<longrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) @action \<A>ESC\<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma Inhabitance_Implication_\<A>ESC_Sat:
+  \<open>((\<exists>v. v \<Turnstile> A) \<longrightarrow> P) \<longrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) @action \<A>ESC\<close>
+  unfolding Action_Tag_def Inhabited_def
+  by blast
+
+lemma Sufficient_Inhabitance_\<A>EIF[\<phi>reason %extract_pure_all]:
+  \<open>(P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) \<longrightarrow> (P \<longrightarrow> Inhabited A) @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma Sufficient_Inhabitance_\<A>EIF_Sat:
+  \<open>(P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) \<longrightarrow> (P \<longrightarrow> (\<exists>v. v \<Turnstile> A)) @action \<A>EIF\<close>
+  unfolding Action_Tag_def Inhabited_def
+  by blast
+
+lemma Sufficient_Inhabitance_\<A>ESC[\<phi>reason %extract_pure_all]:
+  \<open>(P \<longrightarrow> Inhabited A) \<longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) @action \<A>ESC\<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma Sufficient_Inhabitance_\<A>ESC_Sat:
+  \<open>(P \<longrightarrow> (\<exists>v. v \<Turnstile> A)) \<longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) @action \<A>ESC\<close>
+  unfolding Action_Tag_def Inhabited_def
+  by blast
+
+bundle extracting_Inhabitance_Implication_sat =
+          Inhabitance_Implication_\<A>EIF [\<phi>reason del]
+          Inhabitance_Implication_\<A>EIF_Sat [\<phi>reason %extract_pure_all]
+          Inhabitance_Implication_\<A>ESC [\<phi>reason del]
+          Inhabitance_Implication_\<A>ESC_Sat [\<phi>reason %extract_pure_all]
+bundle extracting_Sufficient_Inhabitance_sat =
+          Sufficient_Inhabitance_\<A>EIF [\<phi>reason del]
+          Sufficient_Inhabitance_\<A>EIF_Sat [\<phi>reason %extract_pure_all]
+          Sufficient_Inhabitance_\<A>ESC [\<phi>reason del]
+          Sufficient_Inhabitance_\<A>ESC_Sat [\<phi>reason %extract_pure_all]
+bundle extracting_Inhabitance_sat begin
+  unbundle extracting_Inhabitance_Implication_sat extracting_Sufficient_Inhabitance_sat
+end
+
+
+paragraph \<open>Basic Rules\<close>
+
 lemma [\<phi>reason default %extract_pure_phity]:
   \<open> Abstract_Domain T D
 \<Longrightarrow> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> D x\<close>
@@ -220,6 +279,8 @@ lemma [\<phi>reason default %extract_pure_phity]:
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
   by blast
 
+paragraph \<open>Fallback\<close>
+
 lemma [\<phi>reason default %abstract_domain_fallback]:
   \<open> Abstract_Domain T (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
   unfolding Abstract_Domain_def Action_Tag_def
@@ -229,6 +290,8 @@ lemma [\<phi>reason default %abstract_domain_fallback]:
   \<open> Abstract_Domain\<^sub>L T (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
   by simp
+
+paragraph \<open>Configuration\<close>
 
 declare [[
   \<phi>reason_default_pattern_ML \<open>?x \<Ztypecolon> ?T \<i>\<m>\<p>\<l>\<i>\<e>\<s> _\<close> \<Rightarrow> \<open>
@@ -252,6 +315,7 @@ declare [[
           ]) end)\<close> (1000)
 ]]
 
+(*
 (*depreciate!*)
 subsubsection \<open>The Variant of Inhabitance for Separation Carrier\<close>
 
@@ -351,7 +415,7 @@ declare [[
             Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
           ]) end)\<close> (1000)
 ]]
-
+*)
 
 (*
 lemma Membership_E_Inhabitance:
@@ -747,6 +811,39 @@ lemma [\<phi>reason %extract_pure]:
   unfolding Action_Tag_def Inhabited_def Transformation_def
   by clarsimp
 
+ML \<open>
+fun extracting_elim_or_intro_ToA is_intro ctxt sequent =
+  let val target = fst (HOLogic.dest_imp (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<A>EIF\<close>
+                          (HOLogic.dest_Trueprop (Thm.major_prem_of sequent))))
+      fun get_concl (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ X) = get_concl X
+        | get_concl X = X
+      val concl = get_concl target
+      fun get_V (A, B) = if is_intro then A else B
+      val (A, B, Var p) = Phi_Syntax.dest_transformation (fst (HOLogic.dest_imp target))
+      val Var v = get_V (A, B)
+
+      fun parse_P (Var p) = p 
+        | parse_P (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Var p $ _) = p
+
+   in case try Phi_Syntax.dest_transformation concl
+   of SOME (A', B', P') => if get_V (A', B') = Var v andalso p = parse_P P'
+      then SOME ((ctxt, @{lemma' \<open> S \<longrightarrow> C @action \<A>EIF
+                              \<Longrightarrow> ((A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A) \<longrightarrow> S) \<longrightarrow> C @action \<A>EIF\<close>
+                             by simp}
+                          RS sequent), Seq.empty)
+      else NONE
+  end
+\<close>
+
+\<phi>reasoner_ML Transformation\<^sub>I_\<A>EIF' %extract_pure+10 (\<open>((?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> ?var_P) \<longrightarrow> _) \<longrightarrow> _ @action \<A>EIF\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () => extracting_elim_or_intro_ToA true ctxt sequent)
+\<close>
+
+\<phi>reasoner_ML Transformation\<^sub>E_\<A>EIF' %extract_pure+10 (\<open>((_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<w>\<i>\<t>\<h> ?var_P) \<longrightarrow> _) \<longrightarrow> _ @action \<A>EIF\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () => extracting_elim_or_intro_ToA false ctxt sequent)
+\<close>
+
+
 
 subsubsection \<open>Reasoning Configure\<close>
 
@@ -948,6 +1045,18 @@ lemma [\<phi>reason %ToA_red for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<
 
 
 subsection \<open>Unit\<close>
+
+subsubsection \<open>Properties\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>1 \<i>\<m>\<p>\<l>\<i>\<e>\<s> True\<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> True \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> 1 \<close>
+  unfolding Action_Tag_def Inhabited_def
+  by simp
 
 subsubsection \<open>Transformation Rules\<close>
 
@@ -2087,19 +2196,9 @@ lemma [\<phi>reason %cutting]:
   unfolding Abstract_Domain_def Action_Tag_def Inhabited_def
   by clarsimp
 
-lemma [\<phi>reason %cutting]:
-  \<open> Abstract_Domain\<^sub>M\<^sub>C Itself mul_carrier \<close>
-  unfolding Abstract_Domain\<^sub>M\<^sub>C_def Action_Tag_def Inhabited\<^sub>M\<^sub>C_def
-  by blast
-
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain\<^sub>L Itself (\<lambda>_. True) \<close>
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def Inhabited_def
-  by simp
-
-lemma [\<phi>reason 1000]:
-  \<open> Abstract_Domain\<^sub>M\<^sub>C\<^sub>L Itself mul_carrier \<close>
-  unfolding Abstract_Domain\<^sub>M\<^sub>C\<^sub>L_def Action_Tag_def Inhabited\<^sub>M\<^sub>C_def
   by simp
 
 lemma Itself_E:
@@ -2397,6 +2496,8 @@ lemma \<phi>None_expn[\<phi>expns, simp]:
 lemma \<phi>None_inhabited[elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>None) \<Longrightarrow> C \<Longrightarrow> C\<close> .
 
+subsubsection \<open>Rewrites\<close>
+
 lemma \<phi>None_itself_is_one[simp]:
   \<open>(any \<Ztypecolon> \<phi>None) = 1\<close>
   unfolding BI_eq_iff by simp
@@ -2406,6 +2507,19 @@ lemma \<phi>Prod_\<phi>None:
   \<open>((x,y') \<Ztypecolon> T \<^emph> \<circle>) = ((x \<Ztypecolon> T) :: 'b::sep_magma_1 BI)\<close>
   unfolding BI_eq_iff
   by (simp_all add: set_mult_expn)
+
+subsubsection \<open>Basic Properties\<close>
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open>Abstract_Domain \<circle> (\<lambda>x. True)\<close>
+  unfolding Abstract_Domain_def Action_Tag_def
+  by clarsimp
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open>Abstract_Domain\<^sub>L \<circle> (\<lambda>x. True)\<close>
+  unfolding Abstract_Domain\<^sub>L_def Action_Tag_def Inhabited_def
+  by clarsimp
+
 
 subsubsection \<open>Transformation Rules\<close>
 
@@ -2856,6 +2970,21 @@ lemma ToA_by_Equiv_Class'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def
   by (cases C; clarsimp; meson Transformation_def transformation_left_frame)
+
+subsubsection \<open>Extracting Pure Facts\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq x y \<Longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T) \<longrightarrow> P x y @action \<A>EIF)
+\<Longrightarrow> Object_Equiv T eq \<longrightarrow> (\<forall>x. eq x x) \<and> (\<forall>x y. eq x y \<longrightarrow> P x y) @action \<A>EIF\<close>
+  unfolding Action_Tag_def Object_Equiv_def Premise_def Transformation_def
+  by clarsimp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq x y \<Longrightarrow> P x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T) @action \<A>ESC)
+\<Longrightarrow> (\<forall>x. eq x x) \<and> (\<forall>x y. eq x y \<longrightarrow> P x y) \<longrightarrow> Object_Equiv T eq @action \<A>ESC\<close>
+  unfolding Action_Tag_def Object_Equiv_def Premise_def Transformation_def
+  by clarsimp
+
 
 subsubsection \<open>Basic Rules\<close>
 

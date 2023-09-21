@@ -3887,42 +3887,11 @@ lemma \<phi>TA_Suc_step:
   unfolding Action_Tag_def Premise_def
   by blast
 
-lemma \<phi>TA_Inh_extract_prem:
-  \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<equiv> ((\<exists>v. v \<Turnstile> (x \<Ztypecolon> T)) \<longrightarrow> P) \<and> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P)\<close>
-  unfolding Action_Tag_def Inhabited_def atomize_eq
-  by blast
-
-
-subsubsection \<open>Abstract Domain\<close>
-
-lemma \<phi>TA_Inh\<^sub>M\<^sub>C_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> Inhabited\<^sub>M\<^sub>C (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Abstract_Domain\<^sub>M\<^sub>C T P\<close>
-  unfolding Action_Tag_def Abstract_Domain\<^sub>M\<^sub>C_def
-  by simp
-
-lemma \<phi>TA_SuC\<^sub>M\<^sub>C_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> P x \<longrightarrow> Inhabited\<^sub>M\<^sub>C (x \<Ztypecolon> T) @action \<phi>TA_ind_target \<A>ESC)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Abstract_Domain\<^sub>M\<^sub>C\<^sub>L T P\<close>
-  unfolding Action_Tag_def Abstract_Domain\<^sub>M\<^sub>C\<^sub>L_def
-  by simp
-
-lemma \<phi>TA_Inh\<^sub>M\<^sub>C_extract_prem:
-  \<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C P \<equiv> ((\<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> mul_carrier v) \<longrightarrow> P) \<and> (x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s>\<^sub>M\<^sub>C P)\<close>
-  unfolding Action_Tag_def Inhabited\<^sub>M\<^sub>C_def atomize_eq
-  by blast
 
 
 ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
 (*hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step*)
-
 
 \<phi>property_deriver Abstract_Domain\<^sub>L 89 for ( \<open>Abstract_Domain\<^sub>L _ _\<close> ) = \<open>
   Phi_Type_Algebra_Derivers.abstract_domain_L
@@ -3930,14 +3899,6 @@ ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
 \<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> ) = \<open>
   Phi_Type_Algebra_Derivers.abstract_domain
-\<close>
-
-\<phi>property_deriver Abstract_Domain\<^sub>M\<^sub>C\<^sub>L 89 for ( \<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L _ _\<close> ) = \<open>
-  Phi_Type_Algebra_Derivers.abstract_domain_MCL
-\<close>
-
-\<phi>property_deriver Abstract_Domain\<^sub>M\<^sub>C 90 for ( \<open>Abstract_Domain\<^sub>M\<^sub>C _ _\<close> ) requires Abstract_Domain\<^sub>M\<^sub>C\<^sub>L ? = \<open>
-  Phi_Type_Algebra_Derivers.abstract_domain_MC
 \<close>
 
 
@@ -4077,8 +4038,8 @@ lemma \<phi>TA_OE\<^sub>O_rule:
 
 lemma \<phi>TA_OE\<^sub>O_rewr_IH2:
   \<open>Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T @action \<A>)
-\<equiv> (\<And>A R C. (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) &&&
-            (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R))\<close>
+\<equiv> (\<And>A R C P. (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> P) &&&
+              (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P))\<close>
   unfolding Action_Tag_def atomize_imp atomize_all atomize_conj Transformation_def REMAINS_def MAKE_def
   by (rule; simp; blast)
 

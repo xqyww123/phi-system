@@ -4,10 +4,6 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 val abstract_domain : quiet -> hint list -> Phi_Type_Algebra.derive
 val abstract_domain_L : quiet -> hint list -> Phi_Type_Algebra.derive
 
-(*MC = multiplicative carrier*)
-val abstract_domain_MC : quiet -> hint list -> Phi_Type_Algebra.derive
-val abstract_domain_MCL : quiet -> hint list -> Phi_Type_Algebra.derive
-
 (*val guess_property_abst_dom : string -> guess_property
 val abstract_domain_solver : bool -> string (*name of proof cache*) -> solver*)
 
@@ -141,20 +137,14 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
         | _ => error "Internal bug"
  end
 
-fun gen_inhab (upper, carrier) (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy =
-  let val guess_property = guess_property_abst_dom
-                              (if carrier
-                               then if upper then \<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<close>
-                                             else \<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L\<close>
-                               else if upper then \<^const_name>\<open>Abstract_Domain\<close>
-                                             else \<^const_name>\<open>Abstract_Domain\<^sub>L\<close>)
+fun gen_inhab upper (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy =
+  let val guess_property = guess_property_abst_dom (if upper then \<^const_name>\<open>Abstract_Domain\<close>
+                                                             else \<^const_name>\<open>Abstract_Domain\<^sub>L\<close>)
       val mode_infer = not (is_some hint0)
 
       val parse_hint = parse_hint (
               fn Const(\<^const_name>\<open>Abstract_Domain\<close>, _) $ T $ _ => T
-               | Const(\<^const_name>\<open>Abstract_Domain\<^sub>L\<close>, _) $ T $ _ => T
-               | Const(\<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<close>, _) $ T $ _ => T
-               | Const(\<^const_name>\<open>Abstract_Domain\<^sub>M\<^sub>C\<^sub>L\<close>, _) $ T $ _ => T)
+               | Const(\<^const_name>\<open>Abstract_Domain\<^sub>L\<close>, _) $ T $ _ => T)
 
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []
@@ -170,16 +160,9 @@ fun gen_inhab (upper, carrier) (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy 
             SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))
         | varify_subgoal _ X = error ""
 
-      val prem_extractions =
-        if def_contains_satisfaction phi0
-        then [Phi_Reasoners.Extract_Rule (if carrier
-                                          then @{thm' \<phi>TA_Inh\<^sub>M\<^sub>C_extract_prem}
-                                          else @{thm' \<phi>TA_Inh_extract_prem})]
-        else []
-
       fun Inh_reasoning phi ctxt =
             default_reasoning false
-                (default_reasoning_configure prem_extractions)
+                default_reasoning_configure
                 (if mode_infer then varify_subgoal else K (K NONE))
                 (exhaustive_PLPR_reasoner_by_rule
                     (if upper then @{thm' \<phi>TA_Inh_step} else @{thm' \<phi>TA_Suc_step})
@@ -211,13 +194,8 @@ fun gen_inhab (upper, carrier) (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy 
   end
 
 val abstract_domain =
-      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain") (gen_inhab (true, false))
+      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain") (gen_inhab true)
 val abstract_domain_L =
-      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain\<^sub>L") (gen_inhab (false, false))
-val abstract_domain_MC =
-      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain\<^sub>M\<^sub>C") (gen_inhab (true, true))
-val abstract_domain_MCL =
-      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain\<^sub>M\<^sub>C\<^sub>L") (gen_inhab (false, true))
-
+      deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Abstract_Domain\<^sub>L") (gen_inhab false)
 
 end

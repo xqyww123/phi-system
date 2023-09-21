@@ -13,7 +13,7 @@ fun gen_MI (_, name) hint0 ctxt0 (phi : phi_type) thy =
             fn (Const(\<^const_name>\<open>Semimodule_Identity\<^sub>E\<close>, _) $ F $ _ $ _ $ _ $ _ ) => F)
       val extract_oprs_from_hint = K []
       fun reasoning phi ctxt =
-        default_reasoning false (default_reasoning_configure []) (K (K NONE))
+        default_reasoning false default_reasoning_configure (K (K NONE))
                           (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi))) phi ctxt
       val simp = K I
       val ind_conv = default_ind_conv (

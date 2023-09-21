@@ -138,6 +138,7 @@ signature NU_REASONER = sig
                        * (pattern * priority option) list * pattern list
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
+  val del_rules : pattern list option -> thm list -> Context.generic -> Context.generic
 
   type pass_data = thm list (*rules*) * (mode * priority) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
   type rule_pass = Position.T -> pass_data -> pass_data
@@ -1017,13 +1018,26 @@ fun add_rules [] ctxt = ctxt
                     intro_reasoner ctxt pos mode priority (pattern,blacklist) guard rule) rules ctxt
             |-> adds o flat
 
+fun del_rules pattern rules ctxt =
+      del_reasoners (case pattern of SOME pats => pats
+                                   | NONE => maps (the_default_pattern_of ctxt o Thm.concl_of) rules)
+                    (fn r => case #tactic r
+                               of Tac_Rule rules' =>
+                                      exists (fn (_,th) => exists (fn th' => Thm.eq_thm (th,th')) rules) rules'
+                                | Tac_ML _ => false)
+                    ctxt
+
+
 (** Interfaces **)
+
+local open Args Scan Parse in
+fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
+val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
+val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
+end
 
 fun attr_syntax ext gen =
   let open Args Scan Parse
-    fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
-    val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
-    val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
     val pos_parser = Phi_Help.pos_parser "\<phi>reasoner"
     val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
          let val ctxt = Context.Proof (Context.proof_of ctxt0)
@@ -1105,9 +1119,14 @@ end
 
 val attr_add_rule = attr_rule_syntax I
 
+val attr_del_rule = Scan.lift Args.del |--
+      Scan.option (Scan.lift \<^keyword>\<open>for\<close> |-- Scan.repeat prop_pattern)
+   >> (fn patterns => (Thm.declaration_attribute (fn rule =>
+          del_rules patterns [rule]
+      )))
 
 val _ = Theory.setup (
-  Attrib.setup \<^binding>\<open>\<phi>reason\<close> attr_add_rule
+  Attrib.setup \<^binding>\<open>\<phi>reason\<close> (attr_del_rule || attr_add_rule)
     "Decalre or remove introduction rules in \<phi>-LPR."
 #> Method.setup \<^binding>\<open>\<phi>reason\<close>
 (let open Scan Parse in

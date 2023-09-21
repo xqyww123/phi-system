@@ -55,7 +55,7 @@ lemma [\<phi>reason add]:
 
 
 subsection \<open>Embedding Subjection into Type\<close>
- 
+   
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -1813,18 +1813,18 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Separation_Monoid
 
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
    
-                       
+                          
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List\<^sub>S n T) = (Void \<s>\<u>\<b>\<j> n = 0)\<close>
       | \<open>(x # l \<Ztypecolon> List\<^sub>S n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
-      deriving \<open>Identity_Element\<^sub>I ([] \<Ztypecolon> List\<^sub>S n T) (n = 0)\<close>
+      deriving (*\<open>Identity_Element\<^sub>I ([] \<Ztypecolon> List\<^sub>S n T) (n = 0)\<close>
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = 0 \<Longrightarrow> Identity_Element\<^sub>E ([] \<Ztypecolon> List\<^sub>S n T)\<close>
            and \<open>Identity_Element\<^sub>I (l \<Ztypecolon> List\<^sub>S n \<circle>) (n = length l)\<close>
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = length l \<Longrightarrow> Identity_Element\<^sub>E (l \<Ztypecolon> List\<^sub>S n \<circle>)\<close>
-           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
-           (*and Object_Equiv\<^sub>O*)
+           and*) \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
+           and Object_Equiv\<^sub>O
           (*and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (List\<^sub>S n T) (list_all2 eq)\<close>*)
 term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
 

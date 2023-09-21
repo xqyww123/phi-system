@@ -1165,7 +1165,7 @@ declare [[
 
 \<phi>reasoner_group extract_pure_all = (%cutting, [1, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
-  and extract_pure = (%cutting, [%cutting, %cutting]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+  and extract_pure = (%cutting, [%cutting, %cutting+30]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
                                                        in extract_pure_all
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
   and extract_pure_fallback = (1, [1,1]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
