@@ -910,6 +910,17 @@ lemma [cong]:
 \<Longrightarrow> \<phi>To_Transformation_Simp_Protect X U r A \<equiv> \<phi>To_Transformation_Simp_Protect X' U' r' A \<close>
   by simp
 
+subsubsection \<open>Extracting Pure\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> A \<longrightarrow> P @action \<A>EIF
+\<Longrightarrow> (A @action to T) \<longrightarrow> P @action \<A>EIF \<close>
+  unfolding Action_Tag_def .
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<longrightarrow> A @action \<A>ESC
+\<Longrightarrow> P \<longrightarrow> (A @action to T) @action \<A>ESC \<close>
+  unfolding Action_Tag_def .
 
 subsubsection \<open>Entry Point\<close>
 
@@ -1565,6 +1576,7 @@ consts action_simplify :: \<open>action\<close>
 lemma simplify_\<phi>app:
   \<open>PROP Call_Action (\<A>_transformation (\<A>_simple_MTF ))\<close> *)
 
+(* TODO: review!
 subsection \<open>Transformation\<close>
 
 (*TODO: review!*)
@@ -1580,7 +1592,7 @@ lemma [\<phi>reason 1]:
   unfolding Action_Tag_def FAIL_def
   by blast
 
-
+*)
 (*TODO: hide_fact ToA_trivial *)
 
 section \<open>Supplementary of Reasoning\<close>

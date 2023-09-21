@@ -69,7 +69,11 @@ fun extract_implied_facts ctxt statement0 =
           ])
    in (statement RS' (ctxt, Do_Extract_Implied_Facts))
    |> Phi_Reasoner.reason NONE (SOME 1) ctxt
-   |> Option.map ( Simplifier.simplify (Inhabitance_SS.enhance ctxt) )
+   |> Option.map (fn th =>
+        let val ((_, [th']), ctxt') = Variable.import false [th] ctxt
+         in Simplifier.full_simplify (Inhabitance_SS.enhance ctxt) th'
+         |> singleton (Variable.export ctxt' ctxt)
+        end)
   end
     | _ => NONE
 

@@ -1166,7 +1166,7 @@ declare [[
 \<phi>reasoner_group extract_pure_all = (%cutting, [1, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
   and extract_pure = (%cutting, [%cutting, %cutting+30]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
-                                                       in extract_pure_all
+                                                          in extract_pure_all
     \<open>Rules either extracting the lower bound or the upper bound of the pure facts implied inside\<close>
   and extract_pure_fallback = (1, [1,1]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
                                           in extract_pure_all and < extract_pure
@@ -1220,14 +1220,13 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>ESC \<close>
   unfolding Action_Tag_def by blast
 
-(*
 lemma Extact_implied_facts_Iden[\<phi>reason default %extract_pure_fallback]:
-  \<open> A \<longrightarrow> A @action \<A>EIF \<close>
+  \<open> A \<longrightarrow> True @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast
 
 lemma Extact_sufficient_conditions_Iden[\<phi>reason default %extract_pure_fallback]:
-  \<open> A \<longrightarrow> A @action \<A>ESC \<close>
-  unfolding Action_Tag_def by blast*)
+  \<open> False \<longrightarrow> A @action \<A>ESC \<close>
+  unfolding Action_Tag_def by blast
 
 lemma [\<phi>reason %extract_pure]:
   \<open> (A' \<longrightarrow> A) @action \<A>ESC
@@ -1465,18 +1464,6 @@ fun defer_premise ctxt =
       end)
     ) o snd\<close>
 
-lemma [\<phi>premise_extraction add]:
-  \<open>A = B \<equiv> (A = B) \<and> True\<close>
-  unfolding atomize_eq by simp
-
-lemma [\<phi>premise_extraction add]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<equiv> P \<and> True\<close>
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
-  \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
-  unfolding Premise_def
-  by simp_all
-
-
 consts prove_obligations_in_time :: mode
 
 setup \<open>Context.theory_map (PLPR_Env.set_effect \<^const_name>\<open>prove_obligations_in_time\<close> (SOME (
@@ -1494,6 +1481,32 @@ setup \<open>Context.theory_map (PLPR_Env.set_effect \<^const_name>\<open>prove_
 hide_fact contract_drop_waste contract_obligations contract_premise_all
           contract_add_additional_prems
 *)
+
+paragraph \<open>Extracting Pure\<close>
+
+lemma [\<phi>premise_extraction add]:
+  \<open>A = B \<equiv> (A = B) \<and> True\<close>
+  unfolding atomize_eq by simp
+
+declare [[\<phi>trace_reasoning = 3]]
+
+lemma [\<phi>premise_extraction add]:
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<equiv> P \<and> True\<close>
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P \<equiv> P \<and> True\<close>
+  \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
+  unfolding Premise_def
+  by simp_all
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P @action \<A>ESC \<close>
+  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
+  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P @action \<A>ESC \<close>
+  \<open> P \<longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
+  unfolding Action_Tag_def Premise_def
+  by blast+
+
+
 
 subsection \<open>Exhaustive Reasoning\<close>
 

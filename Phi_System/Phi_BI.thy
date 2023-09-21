@@ -73,9 +73,13 @@ subsection \<open>Satisfaction\<close>
 
 definition Satisfaction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> (infix "\<Turnstile>" 50) where \<open>(\<Turnstile>) = (\<in>)\<close>
 
+subsubsection \<open>Basic Rules\<close>
+
 lemma BI_eq_iff:
   \<open>S = S' \<longleftrightarrow> (\<forall>u. u \<Turnstile> S \<longleftrightarrow> u \<Turnstile> S')\<close>
   unfolding Satisfaction_def set_eq_iff ..
+
+subsubsection \<open>Basic Rewrites\<close>
 
 lemma sep_conj_expn[simp, \<phi>expns]:
   \<open>uv \<Turnstile> (S * T) \<longleftrightarrow> (\<exists>u v. uv = u * v \<and> u \<Turnstile> S \<and> v \<Turnstile> T \<and> u ## v)\<close>
@@ -106,6 +110,12 @@ lemma Top_expn[iff, \<phi>expns]:
   \<open>v \<Turnstile> top\<close>
   unfolding Satisfaction_def by simp
 
+subsubsection \<open>Reasoning Configuration\<close>
+
+\<phi>reasoner_group extract_pure_sat = (%extract_pure+40, [%extract_pure+40, %extract_pure+70])
+                                    for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
+                                     in extract_pure_all and > extract_pure
+  \<open>Rules extracting BI properties down to Satisfaction\<close>
 
 subsection \<open>\<phi>-Type\<close>
 
@@ -3171,30 +3181,40 @@ declare [[ \<phi>reason_default_pattern
 
 subsubsection \<open>Extracting Pure Facts\<close>
 
-lemma Identity_Element\<^sub>I_\<A>EIF:
+lemma [\<phi>reason %extract_pure]:
+  \<open> Identity_Element\<^sub>I S P \<longrightarrow> (Inhabited S \<longrightarrow> P) @action \<A>EIF \<close>
+  unfolding Identity_Element\<^sub>I_def Action_Tag_def Transformation_def Inhabited_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> Identity_Element\<^sub>E S \<longrightarrow> Inhabited S @action \<A>EIF \<close>
+  unfolding Identity_Element\<^sub>E_def Action_Tag_def Transformation_def Inhabited_def
+  by blast
+
+lemma Identity_Element\<^sub>I_\<A>EIF_sat:
   \<open> Identity_Element\<^sub>I S P \<longrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P) @action \<A>EIF \<close>
   unfolding Identity_Element\<^sub>I_def Action_Tag_def Transformation_def
   by blast
 
-lemma Identity_Element\<^sub>I_\<A>ESC:
+lemma Identity_Element\<^sub>I_\<A>ESC_sat:
   \<open> (\<forall>v. v \<Turnstile> S \<longrightarrow> v = 1 \<and> P) \<longrightarrow> Identity_Element\<^sub>I S P @action \<A>ESC \<close>
   unfolding Identity_Element\<^sub>I_def Action_Tag_def Transformation_def
   by blast
 
-lemma Identity_Element\<^sub>E_\<A>EIF:
+lemma Identity_Element\<^sub>E_\<A>EIF_sat:
   \<open> Identity_Element\<^sub>E S \<longrightarrow> (1 \<Turnstile> S) @action \<A>EIF \<close>
   unfolding Identity_Element\<^sub>E_def Action_Tag_def Transformation_def
   by blast
 
-lemma Identity_Element\<^sub>E_\<A>ESC:
+lemma Identity_Element\<^sub>E_\<A>ESC_sat:
   \<open> (1 \<Turnstile> S) \<longrightarrow> Identity_Element\<^sub>E S @action \<A>ESC \<close>
   unfolding Identity_Element\<^sub>E_def Action_Tag_def Transformation_def
   by blast
 
-bundle extracting_Identity_Element\<^sub>I = Identity_Element\<^sub>I_\<A>EIF [\<phi>reason %extract_pure]
-                                      Identity_Element\<^sub>I_\<A>ESC [\<phi>reason %extract_pure]
-bundle extracting_Identity_Element\<^sub>E = Identity_Element\<^sub>E_\<A>EIF [\<phi>reason %extract_pure]
-                                      Identity_Element\<^sub>E_\<A>ESC [\<phi>reason %extract_pure]
+bundle extracting_Identity_Element\<^sub>I = Identity_Element\<^sub>I_\<A>EIF_sat [\<phi>reason %extract_pure_sat]
+                                      Identity_Element\<^sub>I_\<A>ESC_sat [\<phi>reason %extract_pure_sat]
+bundle extracting_Identity_Element\<^sub>E = Identity_Element\<^sub>E_\<A>EIF_sat [\<phi>reason %extract_pure_sat]
+                                      Identity_Element\<^sub>E_\<A>ESC_sat [\<phi>reason %extract_pure_sat]
 bundle extracting_Identity_Element begin
   unbundle extracting_Identity_Element\<^sub>I extracting_Identity_Element\<^sub>E
 end
@@ -4113,7 +4133,7 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
             end) ctxt
           ) 1 sequent
 
-      val rule = if Config.get ctxt NToA_extracts_cond then @{thm "_NToA_init_"} else @{thm "_NToA_init_having_Q_"}
+      val rule = if Config.get ctxt NToA_extracts_cond then @{thm "_NToA_init_having_Q_"} else @{thm "_NToA_init_"}
    in SOME ((ctxt, rule RS sequent), Seq.empty)
   end)
 \<close>

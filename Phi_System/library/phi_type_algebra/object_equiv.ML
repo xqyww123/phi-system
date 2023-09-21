@@ -289,12 +289,10 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                    |> oblg_solver name ctxt
                    |> SOME
             else NONE
-      fun simp (_, ctxt) =
-        if is_some hint0 then I
-        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv 
-               (K (Conv.arg_conv (Conv.arg_conv (
-                  Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))))) ctxt)
-
+      val simp = if is_some hint0 then K I
+                 else default_simplifier (fn (_, lprems) => fn ctxt =>
+                          HOLogic.Trueprop_conv (Conv.arg_conv (
+                              Simplifier.rewrite (ctxt addsimps (@{thm' special_Ex_def} :: lprems)))))
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},

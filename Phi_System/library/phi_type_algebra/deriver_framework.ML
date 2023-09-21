@@ -140,6 +140,7 @@ type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
                        * ind_conv
                        * (Phi_Type_Algebra.phi_type -> reasoning)
 type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
+type simplifier = Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm
 
 (*Main Entry Point*)
 val deriving_framework :
@@ -150,7 +151,7 @@ val deriving_framework :
     * thm (*rule*)
     * subgoal_configure list
     * solver
-    * (Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm) (*final simplification*)
+    * simplifier (*final simplification*)
    -> Phi_Type_Algebra.phi_type -> term option -> Proof.context -> thm Seq.seq
 
 (* Besides the parameters explained above,
@@ -249,6 +250,13 @@ val default_reasoning_configure : reasoning_configure
 *)
 
 val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehammer solver*)
+
+(** Simplifier **)
+
+val default_simplifier : (Phi_Type_Algebra.phi_type * thm list (*contextual boolean facts, extracted from antecedents*)
+                            -> Proof.context -> conv)
+                      -> simplifier
+    (*extracts boolean facts from the antecedents of the rule to simplify the rule*)
 
 
 (** A framework of deriver **)
@@ -1525,6 +1533,7 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
       val prem_ants = map_filter (Phi_Reasoners.extract_implied_facts ctxt) (@{print} local_prems)
+                   |> maps (PLPR_Syntax.elim_ant_sequence_or_HOL_conj)
                  (*|> map (Conv.fconv_rule (HOLogic.Trueprop_conv (
                             Conv.rewr_conv @{thm' Premise_def[where mode=\<open>MODE_SIMP\<close>, symmetric]})))*)
                    |> @{print}
@@ -1794,6 +1803,21 @@ fun exhaustive_PLPR_reasoner num chk_unfolds ctxt sequent =
 fun exhaustive_PLPR_reasoner_by_rule rule chk_unfolds ctxt sequent =
   exhaustive_PLPR_reasoner (SOME (Thm.nprems_of rule)) chk_unfolds ctxt
                            (rule RS sequent)
+
+(* Simplifier *)
+
+type simplifier = Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm
+
+fun default_simplifier conv (phi, ctxt) rule =
+  let val ((_, [rule'1]), ctxt't1) = Variable.import false [rule] ctxt
+      val (lprems, ctxt') = Assumption.add_assms Assumption.presume_export (Thm.cprems_of rule) ctxt't1
+      val pures = map_filter (Phi_Reasoners.extract_implied_facts ctxt') lprems
+      val rule'2 = fold (fn lp => fn th => Thm.implies_elim th lp) lprems rule'1
+      val rule'3 = Conv.fconv_rule (conv (phi, pures) ctxt) rule'2
+   in rule'3
+   |> Assumption.export false ctxt' ctxt't1
+   |> singleton (Variable.export ctxt't1 ctxt)
+  end
 
 (** Other Tools **)
 
