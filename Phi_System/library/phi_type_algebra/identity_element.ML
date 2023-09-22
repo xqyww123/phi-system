@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val identity_element_I : quiet -> hint list -> Phi_Type_Algebra.derive
-val identity_element_E : quiet -> hint list -> Phi_Type_Algebra.derive
+val identity_element_I : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val identity_element_E : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
@@ -164,7 +164,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
   end
 
 
-fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
+fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
   let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Identity_Elements\<^sub>I\<close>, _) $ T $ _ $ _ => T
              | Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ T $ _ => T
@@ -217,7 +217,7 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
         else th
 
       fun simp (_, ctxt) th = set_the_infer_tail ctxt th
-        |> (if is_some hint0 then I
+        |> (if is_some instruction then I
             else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   let val sctxt = Expansion.enhance ctxt addsimps @{thms special_Ex_def}
                    in HOLogic.Trueprop_conv (
@@ -235,13 +235,15 @@ fun gen_id_ele is_left (_,name) hint0 ctxt0 (phi0 : phi_type) generic =
                                      guess_property is_left, rule,
                                      [(chk_needs_induction, ind_conv, reasoning)],
                                      K NONE, simp)
-                                    phi0 hint0 ctxt0
+                                    phi0 (Option.map fst instruction) ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 40 ([],[]) NONE
-                                              [Morphism.thm m rule'])
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE
+                                        (the_default @{reasoner_group %derived_identity_element}
+                                                     (Option.mapPartial snd instruction))
+                                        ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']
   end

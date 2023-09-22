@@ -39,8 +39,9 @@ fun gen_memoize_safe f (ctxt, sequent) =
            in SOME (Context.proof_map (
                       Phi_Reasoner.add {name = Free("Memoized", \<^typ>\<open>prop \<Rightarrow> prop\<close>) $ Thm.prop_of save,
                                         pos = \<^here>,
+                                        group = snd (@{reasoner_group %locally_memoized}),
                                         mode = Phi_Reasoner.NORMAL_LOCAL_CUT,
-                                        pattern = [(Thm.concl_of save, 100000)],
+                                        pattern = [(Thm.concl_of save, @{priority %locally_memoized})],
                                         blacklist = [],
                                         tactic = Phi_Reasoner.Tac_ML tac}
                       ) ctxt,

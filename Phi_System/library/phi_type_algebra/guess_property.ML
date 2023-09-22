@@ -1,5 +1,5 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
-
+include PHI_TYPE_ALGEBRA_DERIVERS
 (*lame!
 val guess_entire_property : Proof.context -> Phi_Type_Algebra.phi_type -> term -> term option*)
 

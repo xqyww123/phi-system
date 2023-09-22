@@ -815,31 +815,31 @@ consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
                     \<comment> \<open>\<open>\<c>\<o>\<m>\<m>\<u>\<t>\<e> F G\<close> hints to swap \<open>F (G T)\<close> to \<open>G (F T)\<close> by particularly applying
                         Commutative-Tyop rules (see \<open>Tyops_Commute\<close>). \<close>
 
-\<phi>reasoner_group to_trans = (100, [0,4000]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+\<phi>reasoner_group To_ToA = (100, [0,4000]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
     \<open>Rules of To-Transformation that transforms \<open>x \<Ztypecolon> T\<close> to \<open>y \<Ztypecolon> U\<close> for certain \<open>y\<close> constrained by a
      relation with \<open>x\<close>.\<close>
- and to_trans_fail = (0, [0,0]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                in to_trans and in fail
+ and To_ToA_fail = (0, [0,0]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                in To_ToA and in fail
     \<open>Failure report in To-Transformation\<close>
- and to_trans_system_fallback = (1, [1,1]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                           in to_trans > to_trans_fail
+ and To_ToA_system_fallback = (1, [1,1]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                           in To_ToA > To_ToA_fail
     \<open>System To-Transformation rules falling back to normal transformation.\<close>
- and to_trans_fallback = (10, [2,15]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                      in to_trans > to_trans_system_fallback
+ and To_ToA_fallback = (10, [2,15]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                      in To_ToA > To_ToA_system_fallback
     \<open>A general group allocating priority space for fallbacks of To-Transformation.\<close>
- and to_trans_derived = (50, [30,70]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                      in to_trans > to_trans_fallback and < default
+ and To_ToA_derived = (50, [30,70]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                      in To_ToA > To_ToA_fallback and < default
     \<open>Automatically derived To-Transformation rules\<close>
- and to_trans_cut     = (1000, [1000,1100]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                            in to_trans
+ and To_ToA_cut     = (1000, [1000,1100]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                            in To_ToA
     \<open>Cutting To-Transformation rules\<close>
- and to_trans_success = (4000, [4000,4000]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                            in to_trans > to_trans_cut
+ and To_ToA_success = (4000, [4000,4000]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                            in To_ToA > To_ToA_cut
     \<open>Immediate success\<close>
 
 (* abbreviation \<open>\<A>_transform_to T \<equiv> \<A>_leading_item (\<A>nap (to T)) \<close> *)
 
-ML \<open>fun mk_pattern_for_to_transformation ctxt term =
+ML \<open>fun mk_pattern_for_To_ToAformation ctxt term =
   let val idx = Term.maxidx_of_term term + 1
       fun chk_P (Const(\<^const_name>\<open>True\<close>, _)) = Var(("P",idx), HOLogic.boolT)
         | chk_P X = error ("To-Transformation should not contain a \<w>\<i>\<t>\<h> clause, but given\n" ^
@@ -862,7 +862,7 @@ ML \<open>fun mk_pattern_for_to_transformation ctxt term =
 declare [[
 
   \<phi>reason_default_pattern_ML \<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y \<Ztypecolon> ?U \<s>\<u>\<b>\<j> y. ?R y) \<w>\<i>\<t>\<h> ?P @action to ?T\<close> \<Rightarrow>
-    \<open>mk_pattern_for_to_transformation\<close> (100),
+    \<open>mk_pattern_for_To_ToAformation\<close> (100),
 
   \<phi>reason_default_pattern
     \<open>?X @action to ?A\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed To-Transformation: \<close> (?X @action to ?A) \<newline>
@@ -938,31 +938,31 @@ lemma ToA_trivial:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @action to any\<close>
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason no explorative backtrack %to_trans_fail for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
+lemma [\<phi>reason no explorative backtrack %To_ToA_fail for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
   \<open> TRACE_FAIL TEXT(\<open>Fail to transform\<close> X \<open>to\<close> T)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to T\<close>
   unfolding Action_Tag_def TRACE_FAIL_def by blast
 
-lemma [\<phi>reason default %to_trans_system_fallback]:
+lemma [\<phi>reason default %To_ToA_system_fallback]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action NToA
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. y = y' \<and> P @action to U\<close>
   unfolding Action_Tag_def by simp
 
-lemma [\<phi>reason %to_trans_success]:
+lemma [\<phi>reason %To_ToA_success]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @action to T\<close>
   unfolding Action_Tag_def by simp
 
 
 subsubsection \<open>Special Forms\<close>
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ua \<s>\<u>\<b>\<j> y. ra y @action to T)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ub \<s>\<u>\<b>\<j> y. rb y @action to T)
 \<Longrightarrow> If C A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> If C Ua Ub \<s>\<u>\<b>\<j> y. (if C then ra y else rb y) @action to T\<close>
   unfolding Action_Tag_def Premise_def
   by (cases C; simp)
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> x \<Ztypecolon> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ua \<s>\<u>\<b>\<j> y. ra y @action to T)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> x \<Ztypecolon> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Ub \<s>\<u>\<b>\<j> y. rb y @action to T)
 \<Longrightarrow> x \<Ztypecolon> If C A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> If C Ua Ub \<s>\<u>\<b>\<j> y. (if C then ra y else rb y) @action to T\<close>
@@ -970,7 +970,7 @@ lemma [\<phi>reason %to_trans_cut]:
   by (cases C; simp)
 
 
-lemma [\<phi>reason %to_trans_cut for \<open>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
+lemma [\<phi>reason %To_ToA_cut for \<open>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to _\<close>]:
   \<open> () \<Ztypecolon> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to T
 \<Longrightarrow> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to T \<close>
   by simp
@@ -980,7 +980,7 @@ subsubsection \<open>No Change\<close>
 
 consts \<A>NO_CHANGE :: \<open>('a,'b) \<phi>\<close> ("\<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e>")
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<s>\<u>\<b>\<j> x'. x' = x @action to \<n>\<o>-\<c>\<h>\<a>\<n>\<g>\<e> \<close>
   unfolding Action_Tag_def by simp
 
@@ -1013,7 +1013,7 @@ lemma \<A>_pattern_meet_that:
   unfolding Action_Tag_def .
 
 
-\<phi>reasoner_ML \<A>pattern %to_trans_cut
+\<phi>reasoner_ML \<A>pattern %To_ToA_cut
     ( \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _ \<o>\<r>\<e>\<l>\<s>\<e> _)\<close>
     | \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _)\<close>
@@ -1115,7 +1115,7 @@ If you want to make the \<open>A \<^emph> B \<^emph> C\<close> as a whole so tha
 write it as \<open>to (id (A \<^emph> B \<^emph> C))\<close> and a fallback will be encountered reducing the problem to
 normal transformation.\<close>
 
-lemma Prod_ToTransform[\<phi>reason %to_trans_cut]:
+lemma Prod_ToTransform[\<phi>reason %To_ToA_cut]:
   \<open> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<s>\<u>\<b>\<j> x'. ra x' @action to A
 \<Longrightarrow> snd x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<s>\<u>\<b>\<j> y'. rb y' @action to B
 \<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xy' \<Ztypecolon> (T' \<^emph> U') \<s>\<u>\<b>\<j> xy'. ra (fst xy') \<and> rb (snd xy') @action to (A \<^emph> B)\<close>
@@ -1129,7 +1129,7 @@ lemma Prod_ToTransform_rev:
   unfolding Action_Tag_def Transformation_def
   by (cases x; simp; blast)
 
-lemma [\<phi>reason %to_trans_cut+10]:
+lemma [\<phi>reason %To_ToA_cut+10]:
   \<open> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<s>\<u>\<b>\<j> x'. ra x' @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Target)
 \<Longrightarrow> snd x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U' \<s>\<u>\<b>\<j> y'. rb y' @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Target)
 \<Longrightarrow> x \<Ztypecolon> (T \<^emph> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> xy' \<Ztypecolon> (T' \<^emph> U') \<s>\<u>\<b>\<j> xy'. ra (fst xy') \<and> rb (snd xy') @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Target)\<close>
@@ -1155,12 +1155,12 @@ declare [[\<phi>reason_default_pattern
       \<comment> \<open>Here we varify the type of the \<open>Itself\<close> \<close>
 ]]
 
-lemma [\<phi>reason default %to_trans_fallback]:
+lemma [\<phi>reason default %To_ToA_fallback]:
   \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> (Itself :: ('v,'v) \<phi>) \<s>\<u>\<b>\<j> v. v \<Turnstile> (x \<Ztypecolon> T) @action to (Itself :: ('v,'v) \<phi>)\<close>
   unfolding Action_Tag_def Transformation_def
   by simp
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open> fst x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> x. ra x @action to (Itself :: ('c,'c) \<phi>)
 \<Longrightarrow> snd x \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> x. rb x @action to (Itself :: ('c,'c) \<phi>)
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (Itself :: ('c::sep_magma,'c) \<phi>) \<s>\<u>\<b>\<j> x.
@@ -1170,19 +1170,19 @@ lemma [\<phi>reason %to_trans_cut]:
 
 paragraph \<open>Special Forms\<close>
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open> 1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b::one) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. y = 1 @action to (Itself :: ('b, 'b) \<phi>) \<close>
   unfolding Action_Tag_def Transformation_def
   by simp
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> x \<Ztypecolon> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y :: 'a) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ra y @action to (Itself :: ('a,'a) \<phi>))
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> x \<Ztypecolon> B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. rb y @action to (Itself :: ('a,'a) \<phi>))
 \<Longrightarrow> x \<Ztypecolon> If C A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (if C then ra y else rb y) @action to (Itself :: ('a,'a) \<phi>)\<close>
   unfolding Action_Tag_def Transformation_def Premise_def
   by simp
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open>x \<Ztypecolon> \<top>\<^sub>\<phi> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v \<Ztypecolon> Itself \<s>\<u>\<b>\<j> v. True @action to Itself\<close>
   unfolding Action_Tag_def Transformation_def
   by simp
@@ -1190,7 +1190,7 @@ lemma [\<phi>reason %to_trans_cut]:
 
 subsubsection \<open>Then: Subsequent Execution\<close>
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to \<A>
 \<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> r y \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> W \<s>\<u>\<b>\<j> z. r' y z @action to \<B>)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> W \<s>\<u>\<b>\<j> z. (\<exists>y. r y \<and> r' y z) @action to (\<A> \<t>\<h>\<e>\<n> \<B>) \<close>
@@ -1317,7 +1317,7 @@ lemma open_abstraction_\<phi>app:
   unfolding Do_def Action_Tag_def .
 
 lemma \<comment>\<open>fallback\<close>
-  [\<phi>reason default %to_trans_fallback for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close>]:
+  [\<phi>reason default %To_ToA_fallback for \<open>_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (OPEN _)\<close>]:
   \<open> FAIL TEXT(\<open>Fail to destruct \<phi>-type\<close> T)
 \<Longrightarrow> x \<Ztypecolon> Any \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action to (OPEN T) \<close>
   unfolding FAIL_def
@@ -1335,6 +1335,9 @@ paragraph \<open>Transformation\<close>
   and ToA_open_\<phi>type_derived = (%ToA_open_\<phi>type-30, [%ToA_open_\<phi>type-30, %ToA_open_\<phi>type-30])
                                 for \<open>x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> in ToA_open_\<phi>type
       \<open>Derived ToA rules openning \<phi>-Type abstraction\<close>
+  and To_ToA_derived_OPEN = (%To_ToA_derived-10, [%To_ToA_derived-10, %To_ToA_derived-10])
+                                for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action to (OPEN T)\<close>
+      \<open>Derived To-Transformation openning \<phi>-Type abstraction\<close>
 
 
 subparagraph \<open>Fallback\<close>
@@ -1382,12 +1385,12 @@ definition MAKE :: \<open>('a,'b) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> wh
 
 \<phi>reasoner_group ToA_make_\<phi>type = (100, [%ToA_splitting_source+2, %ToA_splitting_target-1])
                                   for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
-                                  in ToA and > ToA_splitting_source and < ToA_splitting_target
+                                   in ToA and > ToA_splitting_source and < ToA_splitting_target
       \<open>Transformation rules that making the annotated \<phi>-type. The tag \<open>MAKE\<close> emphasizes the user's intention
        to apply the \<phi>-type construction rules which are normally not activated in the usual reasoning.\<close>
   and ToA_make_\<phi>type_fail = (%ToA_splitting_source+1, [%ToA_splitting_source+1, %ToA_splitting_source+1])
                              for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
-                             in ToA and > ToA_splitting_source and < ToA_make_\<phi>type
+                              in ToA and > ToA_splitting_source and < ToA_make_\<phi>type
       \<open>Reports failures when the annotated \<phi>-type fails to be constructed.\<close>
   and ToA_make_\<phi>type_derived = (80, [70, 80]) for (\<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U\<close>, \<open>x \<Ztypecolon> T \<^emph>[Cw] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE U \<^emph>[Cr] R\<close>)
                                 in ToA_make_\<phi>type
@@ -1548,7 +1551,7 @@ text \<open>Syntax:
 
 \<close>
 
-lemma [\<phi>reason %to_trans_cut]:
+lemma [\<phi>reason %To_ToA_cut]:
   \<open> x \<Ztypecolon> T \<^emph> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T \<^emph>\<^sub>\<A> U \<s>\<u>\<b>\<j> x'. x' = x @action to \<s>\<p>\<l>\<i>\<t> \<close>
   unfolding Action_Tag_def Transformation_def Bubbling_def
   by simp

@@ -139,12 +139,11 @@ ML_file \<open>library/tools/simp_congruence.ML\<close>
 subsection \<open>Inhabitance\<close>
 
 definition Inhabited :: " 'a BI \<Rightarrow> bool "
-  where [no_atp]: "Inhabited S = (\<exists>p. p \<Turnstile> S)"
-  \<comment> \<open>\<open>Inhabited S\<close> is always an atom in the view of ATPs.
+  where "Inhabited S = (\<exists>p. p \<Turnstile> S)"
+  \<comment> \<open>\<open>Inhabited S\<close> should be always an atom in the view of ATPs.
 
       The fallback of extracting implied pure facts returns the original \<open>Inhabited T\<close> unchanged,
-      \<open>P \<i>\<m>\<p>\<l>\<i>\<e>\<s> Inhabited P\<close> where \<open>Inhabited P\<close> should be regarded as an atom.
-      The [no_attp] attributes prevent ATPs unfolding \<open>Inhabited\<close>.\<close>
+      \<open>P \<i>\<m>\<p>\<l>\<i>\<e>\<s> Inhabited P\<close> where \<open>Inhabited P\<close> should be regarded as an atom.\<close>
 
 
 abbreviation Inhabitance_Implication :: \<open>'a BI \<Rightarrow> bool \<Rightarrow> bool\<close> (infix "\<i>\<m>\<p>\<l>\<i>\<e>\<s>" 10)
@@ -163,6 +162,8 @@ declare [[
 \<phi>reasoner_group extract_pure_phity = (10, [10,10]) for (\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>, \<open>P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T\<close>)
   > extract_pure_fallback and < extract_pure
   \<open>Entry points towards \<open>Abstract_Domain\<close> and \<open>Abstract_Domain\<^sub>L\<close> \<close>
+
+subsubsection \<open>Basic Rules\<close>
 
 lemma Inhabited_I:
   \<open>x \<Turnstile> S \<Longrightarrow> Inhabited S\<close>
@@ -213,10 +214,17 @@ definition Abstract_Domain\<^sub>L :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<
 declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rightarrow> \<open>Abstract_Domain ?T _\<close> (100)
                               and \<open>Abstract_Domain\<^sub>L ?T _\<close> \<Rightarrow> \<open>Abstract_Domain\<^sub>L ?T _\<close> (100) ]]
 
-\<phi>reasoner_group abstract_domain = (1000, [1000, 1000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
+\<phi>reasoner_group abstract_domain_all = (1000, [1, 2000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
+    \<open>All reasoning rules giving \<open>Abstract_Domain\<close> or \<open>Abstract_Domain\<^sub>L\<close>\<close>
+ and abstract_domain = (1000, [1000, 1000]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
+                                             in abstract_domain_all
     \<open>Normal reasoning rules for \<open>Abstract_Domain\<close>, \<open>Abstract_Domain\<^sub>L\<close>\<close>
  and abstract_domain_fallback = (1, [1,1]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>) < abstract_domain
+                                            in abstract_domain_all
     \<open>Fallbacks reasoning rules for \<open>Abstract_Domain\<close>, \<open>Abstract_Domain\<^sub>L\<close> \<close>
+ and derived_abstract_domain = (60, [50,70]) for (\<open>Abstract_Domain T d\<close>, \<open>Abstract_Domain\<^sub>L T d\<close>)
+                                              in abstract_domain_all and < abstract_domain
+    \<open>Automatically derived rules\<close>
 
 paragraph \<open>Extracting Pure Facts\<close>
 
@@ -2231,6 +2239,9 @@ subsubsection \<open>Construction from Raw Abstraction represented by Itself \<c
       \<open>Rules constructing abstraction from raw representations\<close>
   and abstract_from_raw_cut = (1000, [1000, 1030]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close> in abstract_from_raw
       \<open>Cutting rules constructing abstraction from raw representations\<close>
+  and derived_abstract_from_raw = (70, [60,80]) for \<open>v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T\<close>
+                                                 in abstract_from_raw and < abstract_from_raw_cut
+      \<open>Derived rules\<close>
 
 declare [[\<phi>reason_default_pattern
       \<open> _ \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _ \<close> \<Rightarrow> \<open> _ \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> ?T \<w>\<i>\<t>\<h> _ \<close> (1120)
@@ -3212,12 +3223,14 @@ subsubsection \<open>Extracting Pure Facts\<close>
 paragraph \<open>Identity_Element\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> Identity_Element\<^sub>I S P \<longrightarrow> (Inhabited S \<longrightarrow> P) @action \<A>EIF \<close>
+  \<open> Q \<longrightarrow> Inhabited S @action \<A>ESC
+\<Longrightarrow> Identity_Element\<^sub>I S P \<longrightarrow> (Q \<longrightarrow> P) @action \<A>EIF \<close>
   unfolding Identity_Element\<^sub>I_def Action_Tag_def Transformation_def Inhabited_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> Identity_Element\<^sub>E S \<longrightarrow> Inhabited S @action \<A>EIF \<close>
+  \<open> Inhabited S \<longrightarrow> P @action \<A>EIF
+\<Longrightarrow> Identity_Element\<^sub>E S \<longrightarrow> P @action \<A>EIF \<close>
   unfolding Identity_Element\<^sub>E_def Action_Tag_def Transformation_def Inhabited_def
   by blast
 
@@ -3241,29 +3254,30 @@ lemma Identity_Element\<^sub>E_\<A>ESC_sat:
   unfolding Identity_Element\<^sub>E_def Action_Tag_def Transformation_def
   by blast
 
-bundle extracting_Identity_Element\<^sub>I = Identity_Element\<^sub>I_\<A>EIF_sat [\<phi>reason %extract_pure_sat]
-                                      Identity_Element\<^sub>I_\<A>ESC_sat [\<phi>reason %extract_pure_sat]
-bundle extracting_Identity_Element\<^sub>E = Identity_Element\<^sub>E_\<A>EIF_sat [\<phi>reason %extract_pure_sat]
-                                      Identity_Element\<^sub>E_\<A>ESC_sat [\<phi>reason %extract_pure_sat]
-bundle extracting_Identity_Element begin
-  unbundle extracting_Identity_Element\<^sub>I extracting_Identity_Element\<^sub>E
+bundle Identity_Element\<^sub>I_sat = Identity_Element\<^sub>I_\<A>EIF_sat [\<phi>reason %extract_pure_sat]
+                               Identity_Element\<^sub>I_\<A>ESC_sat [\<phi>reason %extract_pure_sat]
+bundle Identity_Element\<^sub>E_sat = Identity_Element\<^sub>E_\<A>EIF_sat [\<phi>reason %extract_pure_sat]
+                               Identity_Element\<^sub>E_\<A>ESC_sat [\<phi>reason %extract_pure_sat]
+
+bundle Identity_Element_sat begin
+  unbundle Identity_Element\<^sub>I_sat Identity_Element\<^sub>E_sat
 end
+
 
 paragraph \<open>Identity_Elements\<close>
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<And>x. Q x \<longrightarrow> Inhabited (x \<Ztypecolon> T) @action \<A>ESC)
-\<Longrightarrow> Identity_Elements\<^sub>I T D P \<longrightarrow> (\<forall>x. D x \<longrightarrow> Q x \<longrightarrow> P x) @action \<A>EIF\<close>
-  unfolding Action_Tag_def Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def
-            Inhabited_def Transformation_def
-  by clarsimp blast
+  \<open> (\<And>x. Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) \<longrightarrow> Q x @action \<A>EIF)
+\<Longrightarrow> Identity_Elements\<^sub>I T D P \<longrightarrow> (\<forall>x. D x \<longrightarrow> Q x) @action \<A>EIF\<close>
+  unfolding Action_Tag_def Identity_Elements\<^sub>I_def
+  by clarsimp
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (\<And>x. Inhabited (x \<Ztypecolon> T) \<longrightarrow> Q x @action \<A>EIF)
+  \<open> (\<And>x. Identity_Element\<^sub>E (x \<Ztypecolon> T) \<longrightarrow> Q x @action \<A>EIF)
 \<Longrightarrow> Identity_Elements\<^sub>E T D \<longrightarrow> (\<forall>x. D x \<longrightarrow> Q x) @action \<A>EIF\<close>
-  unfolding Action_Tag_def Identity_Elements\<^sub>E_def Identity_Element\<^sub>E_def
-            Inhabited_def Transformation_def
-  by clarsimp blast
+  unfolding Action_Tag_def Identity_Elements\<^sub>E_def
+  by clarsimp
+
 
 
 subsubsection \<open>Fallback\<close>

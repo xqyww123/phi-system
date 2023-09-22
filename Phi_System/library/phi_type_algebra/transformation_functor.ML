@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val transformation_functor            : quiet -> hint list -> Phi_Type_Algebra.derive
-val functional_transformation_functor : quiet -> hint list -> Phi_Type_Algebra.derive
+val transformation_functor            : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val functional_transformation_functor : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
@@ -80,7 +80,7 @@ fun TF_reasoning phi ctxt = default_reasoning true
       (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded' ctxt phi)))
       phi ctxt
 
-fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
+fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
   let       (*|> def_contains_satisfaction phi0 ? Context.proof_map (
                     Phi_Reasoners.Is_Premise_of_Obligation.add 123
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
@@ -102,7 +102,7 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
                                conv_chk_unfolded phi ctxt)
                               Conv.all_conv)))))
       fun simp (_, ctxt) =
-        if is_some hint0 then I
+        if is_some instruction then I
         else Conv.fconv_rule (
                 Phi_Conv.hhf_concl_conv (fn ctxt =>
                   let val sctxt = ctxt addsimps @{thms special_Ex_def}
@@ -115,7 +115,7 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
                                       guess_property_TF, @{thm' \<phi>TA_TF_rule},
                                       [(K (SOME [0,~1]), ind_conv, TF_reasoning)],
                                       K NONE, simp)
-                                     phi0 hint0 ctxt0
+                                     phi0 (Option.map fst instruction) ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) =>
@@ -148,8 +148,10 @@ fun gen_TF (der_id, name) hint0 ctxt0 (phi0 : phi_type) generic =
            in generic
            |> note_properties_s phi0 [(name, [rule'])]
            |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
-                                              ([],[]) NONE [Morphism.thm m rule'])
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
+                                        (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
+                                                     (Option.mapPartial snd instruction))
+                                        ([],[]) NONE [Morphism.thm m rule'])
          (*|> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
                               (setup_locale Interpretation.sublocale)*)
            |> pair [rule']
@@ -191,7 +193,7 @@ fun guess_property_FTF phi0 ctxt0 =
   end)
   end
 
-fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
+fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
@@ -199,7 +201,7 @@ fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
 
       fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi)) ctxt
       fun simp (_, ctxt) thm =
-        if is_some hint0 then thm
+        if is_some instruction then thm
         else Conv.fconv_rule (
                 Phi_Conv.hhf_concl_conv (fn ctxt => 
                   let val sctxt = ctxt addsimps @{thms special_Ex_def}
@@ -211,7 +213,7 @@ fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_FTF, @{thm' \<phi>TA_FTF_rule},
                                       [(K NONE, K (K I), reasoning)], K NONE, simp)
-                                    phi0 hint0 ctxt0
+                                    phi0 (Option.map fst instruction) ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule, _) =>
@@ -240,8 +242,10 @@ fun gen_FTF (der_id,name) hint0 ctxt0 (phi0 : phi_type) thy =
            in thy
            |> note_properties_s phi0 [(name, [rule])]
            |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
-                                              ([],[]) NONE [Morphism.thm m rule])
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
+                                        (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
+                                                     (Option.mapPartial snd instruction))
+                                        ([],[]) NONE [Morphism.thm m rule])
            |> pair [rule]
           end)
   end

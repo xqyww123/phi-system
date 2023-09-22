@@ -1782,6 +1782,9 @@ lemma implies_prod_right_1:
   for L :: \<open>'a::sep_magma_1 BI\<close>
   unfolding Transformation_def split_paired_All by fastforce
 
+\<phi>reasoner_group local_values = (%cutting, [%cutting, %cutting]) for \<open>_\<close>
+  \<open>Facts demonstrating values of local variables\<close>
+
 ML_file \<open>library/system/generic_variable_access.ML\<close>
 
 lemma value_extraction_rule_no_remove:

@@ -40,6 +40,7 @@ signature NU_REASONER = sig
 
   type reasoner = {name: term,
                    pos: Position.T,
+                   group: Reasoner_Group.name option,
                    mode: mode,
                    pattern: (term * int) list,
                    blacklist: term list,
@@ -129,18 +130,19 @@ signature NU_REASONER = sig
 
   type guard = context_state -> bool
   val default_mode_of : priority -> cut_mode
-  val add_rule : Position.T -> mode -> priority
+  val add_rule : Position.T -> mode -> (priority * Reasoner_Group.name option)
                     -> (pattern * priority option) list * pattern list
                     -> guard option
                     -> thm list
                     -> Context.generic -> Context.generic
-  val add_rules: (thm list * Position.T * mode * priority
+  val add_rules: (thm list * Position.T * mode * (priority * Reasoner_Group.name option)
                        * (pattern * priority option) list * pattern list
                        * (context_state -> bool) option) list
                     -> Context.generic -> Context.generic
   val del_rules : pattern list option -> thm list -> Context.generic -> Context.generic
 
-  type pass_data = thm list (*rules*) * (mode * priority) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+  type pass_data = thm list (*rules*) * (mode * (priority * Reasoner_Group.name option)) *
+                   ((pattern * priority option) list * pattern list) * guard option * Context.generic
   type rule_pass = Position.T -> pass_data -> pass_data
   val get_passes : Context.generic -> term list -> (string * term * rule_pass) list
   val run_passes : Position.T -> pass_data -> pass_data
@@ -167,7 +169,7 @@ signature NU_REASONER = sig
 
   val attr_syntax :
       'ext context_parser (*extension*) ->
-      (Position.T * mode * priority * 'ext
+      (Position.T * mode * (priority * Reasoner_Group.name option) * 'ext
         * ((pattern * priority option) list * pattern list) * ML_guard option
        -> attribute)
      -> attribute context_parser
@@ -228,19 +230,20 @@ datatype tactic = Tac_ML of backtracking * context_state -> context_state Seq.se
 
 type reasoner = {name: term,
                  pos: Position.T,
+                 group: Reasoner_Group.name option,
                  mode: mode,
                  pattern: (term * int) list,
                  blacklist: term list,
                  tactic: tactic}
 
-fun normalize_reasoner f ({name,pos,mode,pattern,blacklist,tactic}:reasoner) =
-  ({name=name, pos=pos, mode=mode,
+fun normalize_reasoner f ({name,group,pos,mode,pattern,blacklist,tactic}:reasoner) =
+  ({name=name, pos=pos, mode=mode, group=group,
     pattern = map (fn (x,y) => (Pattern_Translation.mk_pattern (Envir.beta_eta_contract x), f y)) pattern,
     blacklist = map (Pattern_Translation.mk_pattern o Envir.beta_eta_contract) blacklist,
     tactic = tactic}:reasoner)
 
-fun transform_reasoner phi ({name,pos,mode,pattern,blacklist,tactic}:reasoner) =
-  ({name=name, pos=pos, mode=mode,
+fun transform_reasoner phi ({name,pos,mode,group,pattern,blacklist,tactic}:reasoner) =
+  ({name=name, pos=pos, mode=mode, group=group,
     pattern = map (apfst (Morphism.term phi)) pattern,
     blacklist = map (Morphism.term phi) blacklist,
     tactic = tactic}:reasoner)
@@ -755,7 +758,7 @@ fun check_mode prio (SOME cm, bm) = (cm, bm)
 fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
-    val priority = Reasoner_Group.check_priority true (Context.Proof ctxt) priority
+    val (priority, group) = Reasoner_Group.check_priority true (Context.Proof ctxt) priority
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
     val patterns = map2 (fn ((flag,_),c) => fn tm => (flag,(tm, the_default priority c)))
@@ -767,14 +770,14 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
     val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (_, (ctxt,thm)) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
-  in add_lthy {name=name', pos=Binding.pos_of name, mode = check_mode priority mode,
+  in add_lthy {name=name', pos=Binding.pos_of name, group=group, mode = check_mode priority mode,
                pattern=pos_pats, blacklist=neg_pats, tactic= Tac_ML method'''} lthy'
   end
 
 fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
-    val priority = Reasoner_Group.check_priority true (Context.Proof ctxt) priority
+    val (priority, group) = Reasoner_Group.check_priority true (Context.Proof ctxt) priority
     val name = Syntax.read_term ctxt name
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
@@ -789,7 +792,8 @@ fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
         (ML_Lex.read "Theory.local_setup (Phi_Reasoner.add_lthy {name=(" @
          ML_Lex.read (print_term name) @ ML_Lex.read ("), pos=(") @
          ML_Lex.read (print_position pos) @ ML_Lex.read "), mode=(" @
-         ML_Lex.read (print_mode_ML (check_mode priority mode)) @ ML_Lex.read "), pattern=(" @
+         ML_Lex.read (print_mode_ML (check_mode priority mode)) @ ML_Lex.read "), group=("@
+         ML_Lex.read (print_option Reasoner_Group.print_ML group) @ ML_Lex.read "), pattern=(" @
          ML_Lex.read (print_list (print_pair print_term print_int) pos_pats) @
          ML_Lex.read "), blacklist=(" @ ML_Lex.read (print_list print_term neg_pats) @
          ML_Lex.read "), tactic= Phi_Reasoner.Tac_ML ((let in " @
@@ -812,8 +816,8 @@ val mode_and_priority =
 
 val mode_and_priority' =
       Scan.peek (fn ctxt => mode_and_priority >> (fn (mode, priority) =>
-        let val priority = Reasoner_Group.check_priority true ctxt priority
-         in (check_mode priority mode, priority)
+        let val (priority, group) = Reasoner_Group.check_priority true ctxt priority
+         in (check_mode priority mode, (priority, group))
         end))
 
 val patterns = Parse.$$$ "(" |-- Parse.enum "|"
@@ -907,7 +911,8 @@ val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>re
 
 (** Reasoning Rule Pass **)
 
-type pass_data = thm list (*rules*) * (mode * priority) * ((pattern * priority option) list * pattern list) * guard option * Context.generic
+type pass_data = thm list (*rules*) * (mode * (priority * Reasoner_Group.name option)) *
+                 ((pattern * priority option) list * pattern list) * guard option * Context.generic
 type rule_pass = Position.T -> pass_data -> pass_data
 
 fun rule_pass_eq ((n1,_,_),(n2,_,_)) = (n1 = n2)
@@ -935,10 +940,10 @@ fun add_pass rule_pass =
 
 (** Main Function **)
 
-fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
+fun intro_reasoner ctxt0 pos mode0 priority0_group0 pats0 guard0 rules0 =
   let
-    val (rules01, (mode, priority), (patterns, blacklist), ML_guard, ctxt) =
-            run_passes pos (map (Thm.transfer'' ctxt0) rules0, (mode0, priority0), pats0, guard0, ctxt0)
+    val (rules01, (mode, (priority, group)), (patterns, blacklist), ML_guard, ctxt) =
+            run_passes pos (map (Thm.transfer'' ctxt0) rules0, (mode0, priority0_group0), pats0, guard0, ctxt0)
     val rules = rules01
              |> filter (fn th => not (Thm.is_free_dummy th orelse Thm.is_dummy th))
     val _ = if null rules then error ("No rule is given!") else ()
@@ -990,6 +995,7 @@ fun intro_reasoner ctxt0 pos mode0 priority0 pats0 guard0 rules0 =
       
        in {name = name_of_intro_reasoner rules,
            pos = pos,
+           group = group,
            mode = mode,
            pattern = pats,
            blacklist = blacklist,
@@ -1055,7 +1061,7 @@ fun attr_syntax ext gen =
     -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
       -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
     -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
-    >> (fn ((((pos, (mode,priority)), ext), (pattern, blacklist)), guard) =>
+    >> (fn ((((pos, (mode, priority)), ext), (pattern, blacklist)), guard) =>
           gen (pos, mode, priority, ext, (pattern, blacklist), guard))
   end
 
@@ -1133,7 +1139,7 @@ val _ = Theory.setup (
   Scan.lift (Scan.option Parse.nat) --|
   Method.sections [
     Parse.position Args.add >> (fn (_,pos) =>
-               Method.modifier (gen_attr_add_intro' I (pos,NORMAL_MODE,100,([],NONE),([],[]),NONE)) \<^here>)
+               Method.modifier (gen_attr_add_intro' I (pos,NORMAL_MODE,(100, NONE),([],NONE),([],[]),NONE)) \<^here>)
 ] >> (fn num_prems => fn ctxt => fn ths (*what to do?*) => reason_tac NONE num_prems ctxt)
 end)
 "Apply \<phi>-LPR as a proof method."

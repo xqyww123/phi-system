@@ -179,6 +179,19 @@ definition Functionality :: \<open>('c,'a) \<phi> \<Rightarrow> ('a \<Rightarrow
 declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightarrow> \<open>Is_Functional ?S\<close> (100)
                               and \<open>Functionality ?T _\<close> \<Rightarrow> \<open>Functionality ?T _\<close> (100)]]
 
+\<phi>reasoner_group \<phi>functionality_all = (%cutting, [1,3000]) for (\<open>Is_Functional S\<close>, \<open>Functionality T p\<close>)
+    \<open>All reasoning rules giving functionality of \<phi>-types, meaning if the assertion uniquely fixes
+     a concrete object for each abstract object.\<close>
+  and \<phi>functionality = (%cutting, [%cutting, %cutting+30]) for (\<open>Is_Functional S\<close>, \<open>Functionality T p\<close>)
+                                                            in \<phi>functionality_all
+    \<open>Default rules are cutting\<close>
+  and derived_\<phi>functionality = (50, [40,60]) for (\<open>Is_Functional S\<close>, \<open>Functionality T p\<close>)
+                                              in \<phi>functionality_all and < \<phi>functionality
+    \<open>Derived rules\<close>
+  and \<phi>functional_to_functionality = (10, [10,10]) for (\<open>Is_Functional S\<close>, \<open>Functionality T p\<close>)
+                                                    in \<phi>functionality_all and < derived_\<phi>functionality
+    \<open>Trunning \<open>Is_Functional (x : T)\<close> to \<open>Functionality T p\<close>\<close>
+
 lemma Is_Functional_premise_extraction:
   \<open>Is_Functional S \<equiv> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) \<and> True\<close>
   unfolding Is_Functional_def atomize_eq
@@ -212,65 +225,65 @@ lemma [\<phi>reason no explorative backtrack 0]:
   unfolding TRACE_FAIL_def
   by blast
 
-lemma [\<phi>reason default 10]:
+lemma [\<phi>reason default %\<phi>functional_to_functionality]:
   \<open> Functionality T p
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> p x
 \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)\<close>
   unfolding Premise_def Is_Functional_def Functionality_def
   by simp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open>Functionality Itself (\<lambda>_. True)\<close>
   unfolding Functionality_def
   by clarsimp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open>Functionality \<phi>None (\<lambda>_. True)\<close>
   unfolding Functionality_def
   by clarsimp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open> Is_Functional A
 \<Longrightarrow> Is_Functional B
 \<Longrightarrow> Is_Functional (A \<and>\<^sub>B\<^sub>I B) \<close>
   unfolding Is_Functional_def
   by simp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Is_Functional S)
 \<Longrightarrow> Is_Functional (S \<s>\<u>\<b>\<j> P) \<close>
   unfolding Is_Functional_def Premise_def
   by simp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open> Functionality T p\<^sub>T
 \<Longrightarrow> Functionality U p\<^sub>U
 \<Longrightarrow> Functionality (T \<^emph> U) (\<lambda>(x,y). p\<^sub>T x \<and> p\<^sub>U y)\<close>
   unfolding Functionality_def
   by clarsimp blast
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open> Is_Functional A
 \<Longrightarrow> Is_Functional B
 \<Longrightarrow> Is_Functional (A * B)\<close>
   unfolding Is_Functional_def set_eq_iff
   by (simp add: set_mult_expn, blast)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open> Is_Functional A
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Is_Functional B)
 \<Longrightarrow> Is_Functional (A \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] B)\<close>
   unfolding Is_Functional_def set_eq_iff REMAINS_def
   by (simp add: set_mult_expn, blast)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open> Functionality T p\<^sub>T
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Functionality U p\<^sub>U)
 \<Longrightarrow> Functionality (T \<^emph>[C] U) (\<lambda>(x,y). p\<^sub>T x \<and> (C \<longrightarrow> p\<^sub>U y))\<close>
   unfolding Functionality_def
   by clarsimp blast
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>functionality]:
   \<open> (\<And>i\<in>S. Is_Functional (A i))
 \<Longrightarrow> Is_Functional (\<big_ast>i\<in>S. A i) \<close>
   unfolding Is_Functional_def Mul_Quant_def atomize_Ball Ball_def
@@ -306,6 +319,12 @@ declare [[\<phi>reason_default_pattern
     \<open>Cutting rules\<close>
  and carrier_set_red = (2500, [2500, 2530]) for \<open>Within_Carrier_Set A\<close> in carrier_set and > carrier_set_cut
     \<open>Literal Reduction\<close>
+ and derived_carrier_set = (50, [40,60]) for (\<open>Within_Carrier_Set A\<close>, \<open>Carrier_Set T D\<close>)
+                                          in carrier_set and < carrier_set_cut
+    \<open>Derived rules\<close>
+ and carrier_set_to_within_carrier_set = (10, [10,10]) for (\<open>Within_Carrier_Set A\<close>, \<open>Carrier_Set T D\<close>)
+                                                        in carrier_set and < derived_carrier_set
+    \<open>Turning \<open>Within_Carrier_Set (x : T)\<close> to \<open>Carrier_Set T D\<close>\<close>
 
 subsubsection \<open>General Rules\<close>
 
@@ -316,7 +335,7 @@ lemma prem_extract_Carrier_Set:
 
 subsubsection \<open>Rules for Logical Connectives\<close>
 
-lemma [\<phi>reason default 1]:
+lemma [\<phi>reason default %carrier_set_to_within_carrier_set]:
   \<open> Carrier_Set T P
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x
 \<Longrightarrow> Within_Carrier_Set (x \<Ztypecolon> T) \<close>

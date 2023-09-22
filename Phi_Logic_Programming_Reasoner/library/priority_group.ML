@@ -25,7 +25,8 @@ datatype priority_syntax = Literal of int | Relative of ((xstring * Position.T) 
 val parser : priority_syntax parser
 val parser_with_default : priority -> priority_syntax parser
 val check_priority : bool (*if to verify the offset is within the range of the based group*)
-                  -> Context.generic -> priority_syntax -> priority
+                  -> Context.generic -> priority_syntax -> priority * name option
+val print_ML : name -> string
 
 end
 
@@ -73,7 +74,7 @@ in val parser' = ((name_position -- priority_base) -- offset >> Relative)
    fun parser_with_default default = parser || Scan.succeed (Literal default)
 end
 
-fun check_priority _ _ (Literal i) = i
+fun check_priority _ _ (Literal i) = (i, NONE)
   | check_priority chk_range ctxt (Relative ((name, base), offset)) =
       let val (name, group) = check ctxt name
           val ret = (case base of Base => #base group
@@ -87,7 +88,7 @@ fun check_priority _ _ (Literal i) = i
                                      text "is out of the convention of the group" @
                                      [Name_Space.pretty (Context.proof_of ctxt) names name]))
                               end)
-       in ret
+       in (ret, SOME name)
       end
 
 fun pretty ctxt = let val names = Name_Space.space_of_table (Entries.get ctxt)
@@ -156,8 +157,8 @@ val _ = Outer_Syntax.local_theory' \<^command_keyword>\<open>\<phi>reasoner_grou
          document_source)
    )) >> flat end >> (fn data => fn int =>
    fold (fn (binding, ((((raw_base, raw_range), raw_tasks), constrains), comment)) => fn lthy =>
-     let val base = check_priority false (Context.Proof lthy) raw_base
-         val range = apply2 (check_priority false (Context.Proof lthy)) raw_range
+     let val base = fst (check_priority false (Context.Proof lthy) raw_base)
+         val range = apply2 (fst o check_priority false (Context.Proof lthy)) raw_range
          val tasks = map (Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern lthy)) raw_tasks
          val _ = if int then (
                     Document_Output.check_comments lthy (Input.source_explode comment) ;
@@ -203,11 +204,18 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>print_\<phi>reasoner_grou
       | _ => Pretty.writeln (Pretty.chunks groups)
     end)))
 
+val print_ML = ML_Syntax.print_string
+
 val _ = Theory.setup (
   ML_Antiquotation.value \<^binding>\<open>priority\<close>
     (Scan.peek (fn ctxt => parser >> (fn raw_priority =>
         check_priority true ctxt raw_priority
-          |> ML_Syntax.print_int
+          |> ML_Syntax.print_int o fst
+          |> ML_Syntax.atomic )))
+#>ML_Antiquotation.value \<^binding>\<open>reasoner_group\<close>
+    (Scan.peek (fn ctxt => parser >> (fn raw_priority =>
+        check_priority true ctxt raw_priority
+          |> ML_Syntax.print_pair ML_Syntax.print_int (ML_Syntax.print_option print_ML)
           |> ML_Syntax.atomic )))
 )
 

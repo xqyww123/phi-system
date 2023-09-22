@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val abstract_domain : quiet -> hint list -> Phi_Type_Algebra.derive
-val abstract_domain_L : quiet -> hint list -> Phi_Type_Algebra.derive
+val abstract_domain : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val abstract_domain_L : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 (*val guess_property_abst_dom : string -> guess_property
 val abstract_domain_solver : bool -> string (*name of proof cache*) -> solver*)
@@ -137,10 +137,10 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
         | _ => error "Internal bug"
  end
 
-fun gen_inhab upper (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy =
+fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
   let val guess_property = guess_property_abst_dom (if upper then \<^const_name>\<open>Abstract_Domain\<close>
                                                              else \<^const_name>\<open>Abstract_Domain\<^sub>L\<close>)
-      val mode_infer = not (is_some hint0)
+      val mode_infer = not (is_some instruction0)
 
       val parse_hint = parse_hint (
               fn Const(\<^const_name>\<open>Abstract_Domain\<close>, _) $ T $ _ => T
@@ -172,7 +172,7 @@ fun gen_inhab upper (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy =
 
       val solver = if mode_infer then abstract_domain_solver upper name else K NONE
       fun simp (_, ctxt) rule =
-        if is_some hint0
+        if is_some instruction0
         then rule
         else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 HOLogic.Trueprop_conv (Conv.arg_conv (
@@ -182,13 +182,15 @@ fun gen_inhab upper (der_id, name) hint0 ctxt0 (phi0 : phi_type) thy =
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
                                       [(K (SOME [0]), ind_conv, Inh_reasoning)],
                                       solver, simp)
-                                     phi0 hint0 ctxt0
+                                     phi0 (Option.map fst instruction0) ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE 80 ([],[]) NONE
-                                              [Morphism.thm m rule'])
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE
+                                        (the_default @{reasoner_group %derived_abstract_domain}
+                                                     (Option.mapPartial snd instruction0))
+                                        ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']
   end

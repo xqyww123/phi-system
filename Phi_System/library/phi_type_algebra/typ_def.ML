@@ -73,8 +73,9 @@ type deriver_name = string
 type is_weak = bool
 type quiet = bool (*report nothing even when fail*)
 type deriving_ctxt = Proof.context (*the context used for deriving rules, which may be prepared
-        specially with user configurations*)
+                                     specially with user configurations*)
 type derive = deriving_ctxt -> phi_type -> generic_theory -> generic_theory
+type deriving_instruction = hint * (Phi_Reasoner.priority * Reasoner_Group.name option) option
 type deriver = {
   priority: priority,
   dependences: (deriver_name * is_weak) list,
@@ -83,7 +84,7 @@ type deriver = {
         Once users give an annotation, every implicit behavior is revoked, and this is the only
         way to revoke the implicit behavior.
         Users may declare a weak dependency by append a question mark after the dependency name.*)
-  derive: quiet -> hint list -> derive
+  derive: quiet -> deriving_instruction list -> derive
 }
 
 val get_deriver : Context.generic -> deriver_name -> deriver
@@ -99,9 +100,9 @@ exception Unknown_Hint of term
 val match_deriver1 : Context.generic -> hint -> deriver_name * deriver
 
 structure Derivings : TABLE
-type derivings = (hint list * deriver * is_weak) Derivings.table
-val add_deriver : hint list * (deriver_name * deriver) -> derivings -> derivings
-val add_derivers_from_hint : Context.generic -> hint -> derivings -> derivings
+type derivings = (deriving_instruction list * deriver * is_weak) Derivings.table
+val add_deriving : deriving_instruction list * (deriver_name * deriver) -> derivings -> derivings
+val add_deriving_from_hint : Context.generic -> deriving_instruction -> derivings -> derivings
 
 val add_deriver_dependences : bool -> Context.generic -> (deriver_name * is_weak) list -> derivings -> derivings
 val complete_deriver_dependences : Context.generic -> derivings -> derivings
@@ -181,7 +182,7 @@ val open_proof_ctxt : Bundle.name list -> Context.generic -> Proof.context
 
 (* Internal Technical stuffs *)
 
-val ML_sender : (quiet -> hint list -> derive) option Unsynchronized.ref
+val ML_sender : (quiet -> deriving_instruction list -> derive) option Unsynchronized.ref
 
 end
 
@@ -425,12 +426,13 @@ type priority = int
 type deriver_name = string
 type deriving_ctxt = Proof.context
 type derive = deriving_ctxt -> phi_type -> generic_theory -> generic_theory
+type deriving_instruction = hint * (Phi_Reasoner.priority * Reasoner_Group.name option) option
 type is_weak = bool
 type quiet = bool
 type deriver = {
   priority: priority,
   dependences: (deriver_name * is_weak) list,
-  derive: quiet -> hint list -> derive
+  derive: quiet -> deriving_instruction list -> derive
 }
 
 structure Derivers = Generic_Data (
@@ -440,7 +442,7 @@ structure Derivers = Generic_Data (
 )
 
 structure Derivings = Table (type key = priority * deriver_name; val ord = prod_ord int_ord string_ord)
-type derivings = (hint list * deriver * is_weak) Derivings.table
+type derivings = (deriving_instruction list * deriver * is_weak) Derivings.table
 
 type pattern = term
 structure Deriver_Bindings = Generic_Data (
@@ -495,12 +497,12 @@ fun match_deriver1 ctxt term =
     of SOME ret => ret
      | NONE => raise Unknown_Hint term
 
-fun add_deriver (hints,(derv_name, derv)) dervs =
+fun add_deriving (hints : deriving_instruction list, (derv_name, derv)) dervs =
   Derivings.map_default ((#priority derv, derv_name), ([],derv, false))
                         (fn (hints', der', _) => (hints @ hints', der', false)) dervs
 
-fun add_derivers_from_hint ctxt hint ders =
-  add_deriver ([hint], match_deriver1 ctxt (Logic.strip_imp_concl hint)) ders
+fun add_deriving_from_hint ctxt (hint,group) ders =
+  add_deriving ([(hint,group)], match_deriver1 ctxt (Logic.strip_imp_concl hint)) ders
 
 fun add_deriver_dependences _ _ [] dervs = dervs
   | add_deriver_dependences count_weak ctxt deps dervs =
@@ -637,13 +639,15 @@ fun register_derived_properties phi (name, ind) ths thy =
 
 (* Syntax *)
 
-datatype deriving_ast = Derv_By_Name of xstring * Position.T | Derv_By_Term of string
+datatype deriving_ast = Derv_By_Name of xstring * Position.T
+                      | Derv_By_Term of string * Reasoner_Group.priority_syntax option
 
 val deriving_name = Parse.position (
         Parse.group (fn () => "name") (Parse.short_ident || Parse.long_ident))
+val one_deriving = deriving_name >> Derv_By_Name
+                || (Parse.term -- Scan.option (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>) >> Derv_By_Term)
 val deriving_parser = Scan.repeat (
-        \<^keyword>\<open>deriving\<close> |-- Parse.and_list ( deriving_name >> Derv_By_Name
-                                             || Parse.term >> Derv_By_Term)
+        \<^keyword>\<open>deriving\<close> |-- Parse.and_list one_deriving
       ) >> flat
 
 (*
@@ -690,15 +694,16 @@ fun check_deriving_ast ctxt derv_ast =
       val thy = Context.theory_of ctxt
    in Derivings.empty
    |> fold_rev (
-        fn Derv_By_Name name => add_deriver ([], check_deriver ctxt name)
-         | Derv_By_Term term =>
+        fn Derv_By_Name name => add_deriving ([], check_deriver ctxt name)
+         | Derv_By_Term (term, raw_group) =>
             let val term' = Syntax.parse_prop ctxt_parse term
                          |> Syntax.check_prop ctxt_parse
                          |> Envir.beta_eta_contract
                          |> Phi_Help.refine_sorts_of_tm thy
                 val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
                 val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
-             in add_derivers_from_hint ctxt term'1
+                val group = Option.map (Reasoner_Group.check_priority true (Context.Proof ctxt'1)) raw_group
+             in add_deriving_from_hint ctxt (term'1, group)
             end
        ) derv_ast
    |> complete_deriver_dependences ctxt
@@ -712,7 +717,7 @@ fun check_deriving_ast ctxt derv_ast =
 (* Interface for Deriver *)
 
 val ML_sender_locker = Synchronized.var "\<phi>TA.ML_sender_locker" ()
-val ML_sender : (quiet -> hint list -> derive) option Unsynchronized.ref
+val ML_sender : (quiet -> deriving_instruction list -> derive) option Unsynchronized.ref
   = Unsynchronized.ref NONE
 
 val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |--
@@ -725,9 +730,9 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
    let 
        val derive =
             case ML' of SOME ML =>
-                let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := SOME ((" @
+                let val expr = ML_Lex.read "Phi_Type_Algebra.ML_sender := SOME (" @
                                ML_Lex.read_source ML @
-                               ML_Lex.read "): Phi_Type_Algebra.quiet -> Phi_Type_Algebra.hint list -> Phi_Type_Algebra.derive)"
+                               ML_Lex.read ")"
                  in Synchronized.change_result ML_sender_locker (fn () => let
                       val _ = ML_Context.expression (Input.pos_of ML) expr (Context.Theory thy)
                       val ret = the (!ML_sender)
@@ -1088,11 +1093,11 @@ fun add_type (def, pos, dervs, bundles) thy =
             fun add_rules mode priority rules =
                   Phi_Reasoner.add_rules (map (fn rule =>
                       ([Morphism.thm m rule], pos, mode, priority, [], [], NONE)) rules)
-         in add_rules Phi_Reasoner.TO_BE_OVERRIDE 30 (Morphism.fact m open_abstraction)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %ToA_make_\<phi>type_derived} (Morphism.fact m make_abstraction)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %ToA_make_\<phi>type_derived-10} (Morphism.fact m make_abstraction_eq)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %derived_identity_element} (Morphism.fact m make_Identity_Element_E)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{priority %ToA_open_\<phi>type_derived} (Morphism.fact m open_abstraction_ToA)
+         in add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %To_ToA_derived_OPEN} (Morphism.fact m open_abstraction)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived} (Morphism.fact m make_abstraction)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived-10} (Morphism.fact m make_abstraction_eq)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} (Morphism.fact m make_Identity_Element_E)
+         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived} (Morphism.fact m open_abstraction_ToA)
          #> Phi_Expansions.add_simps expns
          #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
@@ -1265,3 +1270,10 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>let_\<phi>type\<close> "d
 end
 
 end
+
+signature PHI_TYPE_ALGEBRA_DERIVERS = sig
+
+type deriving_instruction = Phi_Type_Algebra.deriving_instruction
+
+end
+

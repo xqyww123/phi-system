@@ -4,7 +4,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val Make_Abstraction_from_Raw : quiet -> hint list -> Phi_Type_Algebra.derive
+val Make_Abstraction_from_Raw : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
@@ -49,7 +49,7 @@ fun guess_property (phi:phi_type) ctxt =
                   NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
-fun gen_constr_from_raw (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
+fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _)
                  => T
@@ -72,7 +72,7 @@ fun gen_constr_from_raw (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                   Conv.all_conv
                 ))
 
-      val mode_infer = not (is_some hint0)
+      val mode_infer = not (is_some instruction)
 
       fun reasoning phi ctxt =
             default_reasoning false
@@ -103,12 +103,14 @@ fun gen_constr_from_raw (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                                       guess_property, @{thm' \<phi>TA_TrCstr_rule},
                                       [(K (SOME [0,~1]), ind_conv, reasoning)],
                                       solver, K I)
-                                    phi0 hint0 ctxt0
+                                     phi0 (Option.map fst instruction) ctxt0
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80
-                                              ([],[]) NONE [Morphism.thm m rule])
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
+                                        (the_default @{reasoner_group %derived_abstract_from_raw}
+                                                    (Option.mapPartial snd instruction))
+                                        ([],[]) NONE [Morphism.thm m rule])
         |> note_properties_s phi0 [(name, [rule])]
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

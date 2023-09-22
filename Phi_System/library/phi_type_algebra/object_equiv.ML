@@ -2,8 +2,8 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val conv_hol_imp_to_meta_if_has : conv -> conv
-val object_equiv : quiet -> hint list -> Phi_Type_Algebra.derive
-val object_equiv_singular : quiet -> hint list -> Phi_Type_Algebra.derive
+val object_equiv : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val object_equiv_singular : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
@@ -159,7 +159,7 @@ fun wrap_equation_by_base_tag ctxt phi thm =
    in Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (conv ctxt)) thm
   end
 
-fun gen_obj_equal_singular (_,name) hint ctxt0 (phi0 : phi_type) thy =
+fun gen_obj_equal_singular (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
 
       val inst_T = fold_index (fn (i, (info, T)) => fn (X, X') =>
@@ -258,18 +258,21 @@ case #equations phi0
                                        (K (SOME [0]), ind_conv true , OEO_reasoning1),
                                        (K (SOME [0]), ind_conv false, OEO_reasoning2)],
                                       K NONE, K I)
-                                     phi0 hint ctxt0
+                                     phi0 (Option.map fst instruction) ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 80 ([],[]) NONE [Morphism.thm m rule'])
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
+                                        (the_default @{reasoner_group %derived_object_equiv}
+                                                     (Option.mapPartial snd instruction))
+                                        ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule'])
   end
 
 
-fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
+fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
@@ -290,7 +293,7 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                    |> oblg_solver name ctxt
                    |> SOME
             else NONE
-      val simp = if is_some hint0 then K I
+      val simp = if is_some instruction then K I
                  else default_simplifier (fn (_, lprems) => fn ctxt =>
                           HOLogic.Trueprop_conv (Conv.arg_conv (
                               Simplifier.rewrite (ctxt addsimps (@{thm' special_Ex_def} :: lprems)))))
@@ -300,12 +303,15 @@ fun gen_obj_equal' (_,name) hint0 ctxt0 (phi0 : phi_type) thy =
                                       [(K NONE, K (K I), K (pure_PLPR_reasoning 1)),
                                        (K (SOME [0]), ind_conv, OE_reasoning)],
                                       infer, simp)
-                                     phi0 hint0 ctxt0
+                                     phi0 (Option.map fst instruction) ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE 40 ([],[]) NONE [Morphism.thm m rule'])
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
+                                        (the_default @{reasoner_group %derived_object_equiv}
+                                                     (Option.mapPartial snd instruction))
+                                        ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule'])
   end
@@ -321,10 +327,10 @@ fun chk_is_singular ctxt tm =
   end
 
 fun gen_obj_equal'' name NONE ctxt_derv phi thy = gen_obj_equal' name NONE ctxt_derv phi thy
-  | gen_obj_equal'' name (SOME H) ctxt_derv phi thy =
+  | gen_obj_equal'' name (SOME (H, group)) ctxt_derv phi thy =
       if chk_is_singular ctxt_derv H
-      then gen_obj_equal_singular name (SOME H) ctxt_derv phi thy
-      else gen_obj_equal' name (SOME H) ctxt_derv phi thy
+      then gen_obj_equal_singular name (SOME (H, group)) ctxt_derv phi thy
+      else gen_obj_equal' name (SOME (H, group)) ctxt_derv phi thy
 
 in
 

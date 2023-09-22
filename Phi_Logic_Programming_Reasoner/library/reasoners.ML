@@ -293,12 +293,13 @@ val convert_prem_extr_to_AEIF = @{lemma' \<open>A \<equiv> B \<and> C \<Longrigh
                                      by (unfold Action_Tag_def, blast)}
 
 fun derive_extracting_rules pos (Extract_Rule rule) ctxt =
-      Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE @{priority %derived_\<A>EIF_from_premis_extraction}
+      Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_\<A>EIF_from_premis_extraction}
                             ([],[]) NONE
                             [rule RS (Thm.transfer'' ctxt convert_prem_extr_to_AEIF)] ctxt
   | derive_extracting_rules pos (Extract_Fun (pat, f)) ctxt =
       Phi_Reasoner.add {name = Free("Derived_Premise_Extraction", Term.dummyT) $ pat,
                         pos = pos,
+                        group = snd (@{reasoner_group %derived_\<A>EIF_from_premis_extraction}),
                         mode = Phi_Reasoner.TO_BE_OVERRIDE,
                         pattern = [(HOLogic.Trueprop $ (\<^Const>\<open>Action_Tag\<close>
                                                           $ (\<^Const>\<open>HOL.implies\<close> $ pat $ Var(("P", maxidx_of_term pat), \<^Type>\<open>bool\<close>))

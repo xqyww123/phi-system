@@ -599,15 +599,18 @@ subsubsection \<open>Groups for Specific Properties\<close>
 
 subsubsection \<open>Derived Rules\<close>
 
-\<phi>reasoner_group deriving_IH = (200, [200,200]) for \<open>_\<close> > default
-    \<open>The priority of induction hypotheses used during deriving.\<close>
+\<phi>reasoner_group deriving_local_rules = (200, [200,200]) for \<open>_\<close> > default
+    \<open>Local reasoning rules such as those extracted from induction hypotheses used during deriving.\<close>
 
  and ToA_derived_one_to_one_functor = (70, [70,70]) for \<open>x \<Ztypecolon> F(T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U)\<close> in ToA_derived
     \<open>Derived transformation in form \<open>x \<Ztypecolon> F(T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f(x) \<Ztypecolon> F(U)\<close>, of a high priority as this is what
      should be attempted in reasoning.\<close>
- and to_trans_derived_Tr_functor = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
-                                                  in to_trans_derived
+ and To_ToA_derived_Tr_functor = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+                                                in To_ToA_derived
     \<open>Derived To-Transformation rules for transformation functor\<close>
+ and To_ToA_derived_to_raw = (60, [60,60]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to Itself\<close>
+                                            in To_ToA_derived
+    \<open>Derived To-Transformation openning down the raw concrete representation\<close>
  and \<phi>simp_derived_Tr_functor = (40, [40,45]) for \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>simp\<close>
                                                in \<phi>simp_derived
     \<open>Derived transformation-based simplification for transformation functor\<close>
@@ -617,7 +620,7 @@ subsubsection \<open>Derived Rules\<close>
     \<open>Derived rules of Separation Extraction, of a high priority as this is what
      should be attempted in reasoning. No confliction with %ToA_derived_one_to_one_functor\<close>
 
-\<phi>reasoner_group_assert identity_element_ToA < deriving_IH
+\<phi>reasoner_group_assert identity_element_ToA < deriving_local_rules
 
 paragraph \<open>Separation Extraction on Semimodule\<close>
 
@@ -1323,6 +1326,13 @@ declare [[
   (* \<phi>premise_attribute? [\<phi>reason add] for \<open>Parameter_Variant_of_the_Same_Type _ _\<close> *)
 ]]
 
+\<phi>reasoner_group variants_of_type_opr = (%cutting, [%cutting, %cutting])
+  for (\<open>Type_Variant_of_the_Same_Type_Operator F F'\<close>,
+       \<open>Type_Variant_of_the_Same_Type_Operator2 F F'\<close>,
+       \<open>Type_Variant_of_the_Same_Scalar_Mul F F'\<close>,
+       \<open>Parameter_Variant_of_the_Same_Type F F'\<close>)
+  \<open>variants_of_type_opr\<close>
+
 (*
 lemma Parameter_Variant_of_the_Same_Type_I [\<phi>reason 1]:
   \<open>Parameter_Variant_of_the_Same_Type Fa Fb\<close>
@@ -1497,7 +1507,7 @@ lemma transformation[\<phi>reason_template name Fa.transformation []]:
   unfolding meta_Ball_def Premise_def \<r>Guard_def Transformation_Functor_def
   by clarsimp
 
-lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa.to_transformation]:
+lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.To_ToAformation]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1505,7 +1515,7 @@ lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa.to_tra
   unfolding Action_Tag_def \<r>Guard_def
   using transformation[unfolded \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
 
-lemma [\<phi>reason_template default %to_trans_derived_Tr_functor name Fa.to_traverse]:
+lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.to_traverse]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -3651,7 +3661,7 @@ lemma [\<phi>reason_template default %\<phi>simp_derived_bubbling]:
 
 paragraph \<open>To-Transformation Interpreter\<close>
 
-lemma [\<phi>reason_template %to_trans_derived]:
+lemma [\<phi>reason_template %To_ToA_derived]:
   \<open> \<g>\<u>\<a>\<r>\<d> Tyops_Commute F F' G G' T D r
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> (\<And>y. (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> (r' y) : r x y) @action \<A>_template_reason)

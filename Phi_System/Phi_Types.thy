@@ -781,6 +781,8 @@ lemma [\<phi>reason %identity_element_cut]:
             Inhabited_def
   by clarsimp blast
 
+(*TODO: analysis of completeness*)
+
 lemma [\<phi>reason 1000]:
   \<open> Identity_Elements\<^sub>E B D\<^sub>B
 \<Longrightarrow> Identity_Elements\<^sub>E (B \<Zcomp> T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> D\<^sub>B v) \<close>
@@ -1048,7 +1050,6 @@ lemma [simp]:
 
 \<phi>type_def \<phi>Sum :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
-  opening extracting_Identity_Element
   deriving \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain U Q
@@ -1294,35 +1295,52 @@ subsection \<open>Vertical Composition of Function\<close>
 
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> whose automation rules are more general.\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-
 lemma [simp]: (*TODO: move me*)
   \<open>(case x of Inl x \<Rightarrow> Inl x | Inr x \<Rightarrow> Inr x) = x\<close>
   by (cases x; simp)
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>reasoner_group identity_elements_of_\<phi>Fun = (100, [100, 140]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
+                                                               in identity_element and > derived_identity_element
+  \<open>Rules of \<phi>Fun\<close>
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   opening extract_premises_in_Carrier_Set
-  deriving (*Basic
-       and*) \<open> homo_one f \<and>\<^sub>\<r> Identity_Elements\<^sub>I T D P
-         \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Fun' f T) D P \<close>
-     (*and \<open> homo_one f \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 f \<and> P = True \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
-       and \<open> homo_one f \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>*)
-     (*and Functionality
+          Identity_Element_sat
+  deriving Basic
+       and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f
+         \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>_. True) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+           (%identity_elements_of_\<phi>Fun+40)                                          
+       and \<open> \<g>\<u>\<a>\<r>\<d> homo_one f
+         \<Longrightarrow> Identity_Elements\<^sub>I T D P
+         \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) D P \<close>
+           (%identity_elements_of_\<phi>Fun+20)
+       and \<open> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> f v = 1) (\<lambda>x. Inhabited (x \<Ztypecolon> T))\<close>
+           (%identity_elements_of_\<phi>Fun)
+       and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f
+         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+           (%identity_elements_of_\<phi>Fun+40)
+       and \<open> \<g>\<u>\<a>\<r>\<d> homo_one f
+         \<Longrightarrow> Identity_Elements\<^sub>E T D
+         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) D \<close>
+           (%identity_elements_of_\<phi>Fun+20)
+       and \<open> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> f v = 1) \<close>
+           (%identity_elements_of_\<phi>Fun)
+       and Functionality
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Abstraction_to_Raw
        and Commutativity_Deriver 
-       and \<phi>Sum.Comm\<^sub>E*)
+       and \<phi>Sum.Comm\<^sub>E
 
-term \<open> constant_1 f \<and>\<^sub>\<r> Identity_Elements\<^sub>I T D P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 f \<and> (D,P) = (\<lambda>_. True, \<lambda>_. True)
-   \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Fun' f T) D P \<close>
+term \<open> \<g>\<u>\<a>\<r>\<d> homo_one f
+         \<Longrightarrow> Identity_Elements\<^sub>E T D
+         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) D \<close>
 
-thm \<phi>Fun'.\<phi>Sum_Comm\<^sub>E
 
 lemmas \<phi>Fun'_\<phi>Sum_comm_rewr = Comm_Tyops_Rewr\<^sub>2_temlpate[OF \<phi>Fun'.\<phi>Sum_Comm\<^sub>E \<phi>Fun'.\<phi>Sum_Comm\<^sub>I, simplified]
 
@@ -1448,11 +1466,11 @@ declare [[\<phi>trace_reasoning = 0 ]]
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
-       and \<open> homo_one (f s) \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> P = True
-         \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) P \<close>
-       and \<open> homo_one (f s)
-         \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)
-         \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) \<close>
+       and \<open> \<g>\<u>\<a>\<r>\<d> homo_one (f s) \<and> Identity_Elements\<^sub>I T D P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> (D,P) = (\<lambda>_.True, \<lambda>_. True)
+         \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D P \<close>
+       and \<open> \<g>\<u>\<a>\<r>\<d> homo_one (f s)
+         \<Longrightarrow> Identity_Elements\<^sub>E T D
+         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D \<close>
        and Functionality
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
@@ -1693,16 +1711,17 @@ subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 3]]
   
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
-  deriving Basic
+  deriving (*Basic
        and Functionality
-       and Functional_Transformation_Functor
+       and*) Identity_Elements\<^sub>I
+       (*and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
-       and \<phi>Sum.Comm\<^sub>E
+       and \<phi>Sum.Comm\<^sub>E*)
 
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>

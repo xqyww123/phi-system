@@ -30,7 +30,7 @@ structure Template_Inst_SS_Post_Merging : HOOKS
 (** Types **)
 
 datatype instantiation_action =
-            Reasonig_Rule of (Phi_Reasoner.mode * priority) *
+            Reasonig_Rule of (Phi_Reasoner.mode * (priority * Reasoner_Group.name option)) *
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
           | Attributes of Token.src list
           | No_Action
@@ -152,7 +152,7 @@ type rule_generation_pass = (thm -> thm list) * Position.T * Proof.context -> th
 fun no_rule_generation_pass (default, _, _) = default
 
 datatype instantiation_action =
-            Reasonig_Rule of (Phi_Reasoner.mode * priority) *
+            Reasonig_Rule of (Phi_Reasoner.mode * (priority * Reasoner_Group.name option)) *
                              ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
           | Attributes of Token.src list
           | No_Action
@@ -699,7 +699,7 @@ val _ = Theory.setup (
                                              || Parse.term >> SOME)) >> flat)))
        -- Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
        -- Scan.option Attrib.attribs)
-      (fn (pos, mode, priority, (((raw_binding, raw_dependencies), pass_src),attribs), pats, guard) =>
+      (fn (pos, mode, (priority, group), (((raw_binding, raw_dependencies), pass_src),attribs), pats, guard) =>
         Thm.declaration_attribute (fn thm => fn ctxt =>
           let val ctxt' = Context.proof_of ctxt
               val (_, ctxt_parse) = Variable.import true [thm] ctxt'
@@ -747,7 +747,7 @@ val _ = Theory.setup (
                               error "Prioirty and binding patterns are senseless and not allowed to\
                                     \ be given once the attributes are given."
                            | (NONE, _, _) =>
-                              Reasonig_Rule ((mode, priority), pats)
+                              Reasonig_Rule ((mode, (priority,group)), pats)
            in setup_rule_generation (pos,(dependencies,pass),(binding,gen)) thm ctxt
           end)
       ))

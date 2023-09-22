@@ -300,7 +300,8 @@ lemma [\<phi>reason %\<DD>_approx_cut]:
 \<Longrightarrow> (\<And>i\<in>I. \<Psi>[\<psi>] (A i) \<le> A' i)
 \<Longrightarrow> \<Psi>[\<psi>] (\<big_ast>i\<in>I. A i) \<le> (\<big_ast>i\<in>I. A' i) \<close>
   unfolding \<Psi>_Mul_Quant BI_sub_transformation
-  by (rule sep_quant_transformation[where P=\<open>\<lambda>_. True\<close>, simplified])
+  by (rule sep_quant_transformation[where P=\<open>\<lambda>_. True\<close>, unfolded \<r>Guard_def Premise_def, simplified],
+      simp)
 
 lemma [\<phi>reason %\<DD>_approx_cut]:
   \<open> closed_homo_sep \<psi>
@@ -308,7 +309,8 @@ lemma [\<phi>reason %\<DD>_approx_cut]:
 \<Longrightarrow> (\<And>i\<in>I. A' i \<le> \<Psi>[\<psi>] (A i))
 \<Longrightarrow> (\<big_ast>i\<in>I. A' i) \<le> \<Psi>[\<psi>] (\<big_ast>i\<in>I. A i) \<close>
   unfolding \<Psi>_Mul_Quant BI_sub_transformation
-  by (rule sep_quant_transformation[where P=\<open>\<lambda>_. True\<close>, simplified])
+  by (rule sep_quant_transformation[where P=\<open>\<lambda>_. True\<close>, unfolded \<r>Guard_def Premise_def, simplified],
+      simp)
 
 lemma [\<phi>reason %\<DD>_approx_cut]:
   \<open> A' \<le> \<Psi>[\<psi>] A
@@ -346,7 +348,7 @@ lemma [\<phi>reason %\<DD>_approx_cut]:
   \<open> S' \<le> ((\<Psi>[\<psi>] S) \<s>\<u>\<b>\<j> P)
 \<Longrightarrow> S' \<le> \<Psi>[\<psi>] (S \<s>\<u>\<b>\<j> P)\<close>
   unfolding \<Psi>_Subjection
-  by (clarsimp simp add: Subjection_ord)
+  by clarsimp
 
 
 

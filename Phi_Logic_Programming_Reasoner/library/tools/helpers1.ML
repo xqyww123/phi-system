@@ -9,7 +9,7 @@ end
 structure Phi_Reasoners : PHI_REASONERS = struct
 
 fun pass_checks_priority name prio = (fn pos => fn data =>
-  if prio < #2 (#2 data)
+  if prio < #1 (#2 (#2 data))
   then data
   else error (let open Pretty in string_of (
           block (text "The priority of a" @

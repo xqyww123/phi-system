@@ -1266,6 +1266,16 @@ lemma [\<phi>reason %extract_pure]:
   unfolding Action_Tag_def
   by blast
 
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<longrightarrow> Q @action \<A>EIF
+\<Longrightarrow> (\<g>\<u>\<a>\<r>\<d> P) \<longrightarrow> Q @action \<A>EIF \<close>
+  unfolding \<r>Guard_def .
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> Q \<longrightarrow> P @action \<A>ESC
+\<Longrightarrow> Q \<longrightarrow> (\<g>\<u>\<a>\<r>\<d> P) @action \<A>ESC \<close>
+  unfolding \<r>Guard_def .
+
 
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>
 
@@ -2072,6 +2082,9 @@ lemma Memoize_I: \<open>X \<Longrightarrow> Memoize X\<close> unfolding Memoize_
 lemma Memoize_D: \<open>Memoize X \<Longrightarrow> X\<close> unfolding Memoize_def .
 
 subsubsection \<open>Implementation\<close>
+
+\<phi>reasoner_group locally_memoized = (100000, [100000, 100000]) for \<open>_\<close>
+  \<open>Locally memoized reasoning segments\<close>
 
 ML_file \<open>library/memoization.ML\<close>
 

@@ -81,7 +81,8 @@ val _ = Theory.setup (Context.theory_map (
                   @ [mk_parameter_variant ctm]*)
      in thy
      |> Phi_Reasoner.add_rules (
-          map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT, 1000, [], [], NONE)) rules)
+          map (fn rule => ([rule], \<^here>, Phi_Reasoner.NORMAL_LOCAL_CUT,
+                           @{reasoner_group %variants_of_type_opr}, [], [], NONE)) rules)
     end)
 ))
 end

@@ -267,13 +267,13 @@ datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 type quiet = bool
 val deriver_framework : hint_mode * multiple_call * string (*name*)
                      -> (int (*the times that the deriver has been invoked*) * string (*name suffixed by the time*)
-                          -> hint option
+                          -> deriving_instruction option
                           -> Phi_Type_Algebra.deriving_ctxt
                           -> Phi_Type_Algebra.phi_type
                           -> generic_theory
                           -> thm list (*derived rule*) * generic_theory)
                      -> quiet
-                     -> hint list
+                     -> deriving_instruction list
                      -> Phi_Type_Algebra.derive
 (*This simple framework handles the issue of invoking a deriver by multiple times,
   and also checks if the proper number of hints are given.
@@ -1001,10 +1001,10 @@ datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 type quiet = bool
 
 fun deriver_framework (hint_mode, multiple_call, name) deriver
-                      quiet hints ctxt_derv phi thy =
+                      quiet deriving_instructions ctxt_derv phi thy =
   let val ind = length (lookup_derived_properties thy phi name)
       val _ = let open Pretty in
-          case (multiple_call, ind, hints)
+          case (multiple_call, ind, deriving_instructions)
             of (_, 0, _) => ()
              | (ONLY_ONCE, _, _) => raise Automation_Fail (fn () => [
                   paragraph (str "deriver " :: brk 1 :: str name :: brk 1 :: text "can only be invoked once")
@@ -1016,21 +1016,24 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
              | _ => ()
           end
       val _ = let open Pretty in
-          case (hint_mode, hints)
+          case (hint_mode, deriving_instructions)
             of (ACCEPT_NO_HINT, _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts no hint, but given") ::
-                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints
+                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                      deriving_instructions
                 )
              | (ACCEPT_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts at most one hint, but more hints are given") ::
-                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints
+                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                      deriving_instructions
                 )
              | (REQUIRE_ONE_HINT, []) => raise Automation_Fail (fn () => [
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but no hint is given")
                 ])
              | (REQUIRE_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but more hints are given") ::
-                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H]) hints
+                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                      deriving_instructions
                 )
              | (REQUIRE_HINTS, []) => raise Automation_Fail (fn () => [
                   paragraph (str name :: brk 1 :: text "requires some hint(s), but no hint is given")
@@ -1042,7 +1045,7 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
          in deriver (i+ind, iname) H ctxt_derv phi thy
          |-> register_derived_properties phi (name, i+ind)
         end
-   in (case hints
+   in (case deriving_instructions
    of [] => invoke (ind, NONE) thy
     |  L => fold_index invoke (map SOME L) thy)
   end
@@ -1707,7 +1710,8 @@ fun reasoning ctxt0 sequent0 =
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_rules (
-                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE, 200, [], [], NONE)) reasoner_ants))
+                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE,
+                                   @{reasoner_group %deriving_local_rules}, [], [], NONE)) reasoner_ants))
             |> Context.proof_map (fold Useful_Thms.add_thm prem_ants)
             (* #> Phi_Reasoner.add_rules (map (fn (pat,rule) =>
                     ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs) *)
@@ -1734,7 +1738,8 @@ in fn ctxt => fn th => th
     |> Conv.gconv_rule (Simplifier.full_rewrite (
           clear_simpset ctxt addsimps
             (@{thms' HOL.simp_thms(31)[folded atomize_eq]
-                   HOL.simp_thms(31)[folded atomize_eq Orelse_shortcut_def]}
+                     HOL.simp_thms(31)[folded atomize_eq Orelse_shortcut_def]
+                     \<r>Guard_def}
            @ @{lemma \<open>P \<or> FAIL text \<equiv> P\<close> \<open>P \<or>\<^sub>c\<^sub>u\<^sub>t FAIL text \<equiv> P\<close>
                      \<open>P \<or> TRACE_FAIL text \<equiv> P\<close> \<open>P \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL text \<equiv> P\<close>
                   by (unfold FAIL_def Orelse_shortcut_def TRACE_FAIL_def, simp_all)})
