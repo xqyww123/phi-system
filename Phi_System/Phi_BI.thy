@@ -3209,6 +3209,8 @@ declare [[ \<phi>reason_default_pattern
 
 subsubsection \<open>Extracting Pure Facts\<close>
 
+paragraph \<open>Identity_Element\<close>
+
 lemma [\<phi>reason %extract_pure]:
   \<open> Identity_Element\<^sub>I S P \<longrightarrow> (Inhabited S \<longrightarrow> P) @action \<A>EIF \<close>
   unfolding Identity_Element\<^sub>I_def Action_Tag_def Transformation_def Inhabited_def
@@ -3246,6 +3248,22 @@ bundle extracting_Identity_Element\<^sub>E = Identity_Element\<^sub>E_\<A>EIF_sa
 bundle extracting_Identity_Element begin
   unbundle extracting_Identity_Element\<^sub>I extracting_Identity_Element\<^sub>E
 end
+
+paragraph \<open>Identity_Elements\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x. Q x \<longrightarrow> Inhabited (x \<Ztypecolon> T) @action \<A>ESC)
+\<Longrightarrow> Identity_Elements\<^sub>I T D P \<longrightarrow> (\<forall>x. D x \<longrightarrow> Q x \<longrightarrow> P x) @action \<A>EIF\<close>
+  unfolding Action_Tag_def Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def
+            Inhabited_def Transformation_def
+  by clarsimp blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x. Inhabited (x \<Ztypecolon> T) \<longrightarrow> Q x @action \<A>EIF)
+\<Longrightarrow> Identity_Elements\<^sub>E T D \<longrightarrow> (\<forall>x. D x \<longrightarrow> Q x) @action \<A>EIF\<close>
+  unfolding Action_Tag_def Identity_Elements\<^sub>E_def Identity_Element\<^sub>E_def
+            Inhabited_def Transformation_def
+  by clarsimp blast
 
 
 subsubsection \<open>Fallback\<close>
@@ -3543,14 +3561,14 @@ lemma [\<phi>reason %identity_element_cut]:
   unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def
   by clarsimp
 
-lemma [\<phi>reason no explorative backtrack %identity_element_\<phi> except \<open>Identity_Element\<^sub>I (?var_x \<Ztypecolon> _) _\<close>]:
+lemma [\<phi>reason no explorative backtrack %identity_element_\<phi>]:
   \<open> Identity_Elements\<^sub>I T D P
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) \<close>
   unfolding Identity_Element\<^sub>I_def Identity_Elements\<^sub>I_def Object_Equiv_def Premise_def
   using transformation_trans by fastforce
 
-lemma [\<phi>reason no explorative backtrack %identity_element_\<phi> except \<open>Identity_Element\<^sub>E (?var_x \<Ztypecolon> _)\<close>]:
+lemma [\<phi>reason no explorative backtrack %identity_element_\<phi>]:
   \<open> Identity_Elements\<^sub>E T D
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x
 \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<close>

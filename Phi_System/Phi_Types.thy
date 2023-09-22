@@ -773,19 +773,19 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<Zcomp> U \<close>
   unfolding Action_Tag_def Transformation_def Premise_def
   by clarsimp blast
-   
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>I B D\<^sub>B P\<^sub>B
+\<Longrightarrow> Identity_Elements\<^sub>I (B \<Zcomp> T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> D\<^sub>B v) (\<lambda>x. (\<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> P\<^sub>B v) \<and> Inhabited (x \<Ztypecolon> T))\<close>
+  unfolding Identity_Element\<^sub>I_def Identity_Elements\<^sub>I_def Transformation_def Orelse_shortcut_def
+            Inhabited_def
+  by clarsimp blast
+
 lemma [\<phi>reason 1000]:
-  \<open> Identity_Element\<^sub>I (1 \<Ztypecolon> B) P \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) Q \<or>\<^sub>c\<^sub>u\<^sub>t (\<forall>x. Identity_Element\<^sub>I (x \<Ztypecolon> B) P) \<and> Q = True
-\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> B \<Zcomp> T) (P \<and> Q)\<close>
-  unfolding Identity_Element\<^sub>I_def Transformation_def Orelse_shortcut_def
-  by simp blast
-     
-lemma [\<phi>reason 1000]:
-  \<open> Identity_Element\<^sub>E (1 \<Ztypecolon> B)
-\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T)
-\<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> B \<Zcomp> T)\<close>
-  unfolding Identity_Element\<^sub>E_def Transformation_def
-  by simp blast
+  \<open> Identity_Elements\<^sub>E B D\<^sub>B
+\<Longrightarrow> Identity_Elements\<^sub>E (B \<Zcomp> T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> D\<^sub>B v) \<close>
+  unfolding Identity_Element\<^sub>E_def Identity_Elements\<^sub>E_def Transformation_def
+  by clarsimp blast
  
 lemma [\<phi>reason 1000]:
   \<open> Object_Equiv T eq
@@ -1300,20 +1300,27 @@ lemma [simp]: (*TODO: move me*)
   \<open>(case x of Inl x \<Rightarrow> Inl x | Inr x \<Rightarrow> Inr x) = x\<close>
   by (cases x; simp)
 
+declare [[\<phi>trace_reasoning = 3]]
+
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   opening extract_premises_in_Carrier_Set
-  deriving Basic
-       and \<open> homo_one f \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 f \<and> P = True \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
-       and \<open> homo_one f \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>
-       and Functionality
+  deriving (*Basic
+       and*) \<open> homo_one f \<and>\<^sub>\<r> Identity_Elements\<^sub>I T D P
+         \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Fun' f T) D P \<close>
+     (*and \<open> homo_one f \<and> Identity_Element\<^sub>I (x \<Ztypecolon> T) P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 f \<and> P = True \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> \<phi>Fun' f T) P \<close>
+       and \<open> homo_one f \<and> Identity_Element\<^sub>E (x \<Ztypecolon> T) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> \<phi>Fun' f T) \<close>*)
+     (*and Functionality
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close>
        and Abstraction_to_Raw
        and Commutativity_Deriver 
-       and \<phi>Sum.Comm\<^sub>E
+       and \<phi>Sum.Comm\<^sub>E*)
+
+term \<open> constant_1 f \<and>\<^sub>\<r> Identity_Elements\<^sub>I T D P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 f \<and> (D,P) = (\<lambda>_. True, \<lambda>_. True)
+   \<Longrightarrow> Identity_Elements\<^sub>I (\<phi>Fun' f T) D P \<close>
 
 thm \<phi>Fun'.\<phi>Sum_Comm\<^sub>E
 
