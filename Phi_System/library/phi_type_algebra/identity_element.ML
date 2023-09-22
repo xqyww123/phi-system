@@ -137,23 +137,27 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
                         val D = Free(D, x_ty --> HOLogic.boolT)
                         val P = Free(P, x_ty --> HOLogic.boolT)
                         val A_term = fold_index (fn (i,_) => fn X => X $ Bound i) rev_atys A_term0
-                     in (((if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty m_ty\<close> $ A_term $ D $ P
+                     in (SOME ((if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty m_ty\<close> $ A_term $ D $ P
                                        else \<^Const>\<open>Identity_Elements\<^sub>E x_ty m_ty\<close> $ A_term $ D)
-                            |> fold_rev (fn T => fn X => \<^Const>\<open>All T\<close> $ Abs ("A", T, X)) rev_atys,
-                         (x_ty, D),
-                         (x_ty, P)),
+                                  |> fold_rev (fn T => fn X => \<^Const>\<open>All T\<close> $ Abs ("A", T, X)) rev_atys,
+                               (x_ty, D),
+                               (x_ty, P)),
                          ctxt)
-                    end)
+                    end
+               | _ => (NONE, ctxt))
             (args ~~ snd (Term.strip_comb T_term)) ctxt
-      val (ants, Ds, Ps) = (map #1 ants_Ds_Ps, map #2 ants_Ds_Ps, map #3 ants_Ds_Ps)
+      val (ants, Ds, Ps) = (map_filter (Option.map #1) ants_Ds_Ps,
+                            map_filter (Option.map #2) ants_Ds_Ps,
+                            map_filter (Option.map #3) ants_Ds_Ps)
 
       val seq = if is_type_opr
             then guess_predicate ctxt Ds x_ty
               |> Seq.maps (fn (D,ctxt) =>
                   if is_intro then guess_predicate ctxt Ps x_ty |> Seq.map (fn (P,ctxt) => (D,P,ctxt))
                               else Seq.single (D,D,ctxt))
-            else Seq.single (\<^Const>\<open>insert x_ty\<close> $ unit $ \<^Const>\<open>bot \<^Type>\<open>set x_ty\<close>\<close>,
-                             if #is_recursive phi then \<^Const>\<open>True\<close> else Var(("P", 0), HOLogic.boolT),
+            else Seq.single (\<^Const>\<open>HOL.eq x_ty\<close> $ unit,
+                             if #is_recursive phi then Abs ("x", x_ty, \<^Const>\<open>True\<close>)
+                                                  else Var(("P", 0), x_ty --> HOLogic.boolT),
                              ctxt)
    in seq |> Seq.map (fn (D,P,ctxt) =>
         (ants, HOLogic.Trueprop $   
@@ -227,13 +231,10 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                         else Conv.arg_conv (Simplifier.rewrite sctxt))
                   end) ctxt))
 
-      fun chk_needs_induction (rule, SOME (Free _) :: _) = SOME []
-        | chk_needs_induction _ = NONE
-
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property is_left, rule,
-                                     [(chk_needs_induction, ind_conv, reasoning)],
+                                     [(K (SOME [0]), ind_conv, reasoning)],
                                      K NONE, simp)
                                     phi0 (Option.map fst instruction) ctxt0
    in case Seq.pull rules

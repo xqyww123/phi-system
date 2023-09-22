@@ -1312,7 +1312,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving Basic
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f
          \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>_. True) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
-           (%identity_elements_of_\<phi>Fun+40)                                          
+           (%identity_elements_of_\<phi>Fun+40)
        and \<open> \<g>\<u>\<a>\<r>\<d> homo_one f
          \<Longrightarrow> Identity_Elements\<^sub>I T D P
          \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) D P \<close>
@@ -1336,10 +1336,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Abstraction_to_Raw
        and Commutativity_Deriver 
        and \<phi>Sum.Comm\<^sub>E
-
-term \<open> \<g>\<u>\<a>\<r>\<d> homo_one f
-         \<Longrightarrow> Identity_Elements\<^sub>E T D
-         \<Longrightarrow> Identity_Elements\<^sub>E (f \<Zcomp>\<^sub>f T) D \<close>
 
 
 lemmas \<phi>Fun'_\<phi>Sum_comm_rewr = Comm_Tyops_Rewr\<^sub>2_temlpate[OF \<phi>Fun'.\<phi>Sum_Comm\<^sub>E \<phi>Fun'.\<phi>Sum_Comm\<^sub>I, simplified]
@@ -1466,11 +1462,25 @@ declare [[\<phi>trace_reasoning = 0 ]]
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
-       and \<open> \<g>\<u>\<a>\<r>\<d> homo_one (f s) \<and> Identity_Elements\<^sub>I T D P \<or>\<^sub>c\<^sub>u\<^sub>t constant_1 (f s) \<and> (D,P) = (\<lambda>_.True, \<lambda>_. True)
+       and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 (f s)
+         \<Longrightarrow> Identity_Elements\<^sub>I T D P
          \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D P \<close>
+           (%identity_elements_of_\<phi>Fun+40)
+       and \<open> \<g>\<u>\<a>\<r>\<d> homo_one (f s)
+         \<Longrightarrow> Identity_Elements\<^sub>I T D P
+         \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D P \<close>
+           (%identity_elements_of_\<phi>Fun+20)
+       and \<open> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> f s v = 1) (\<lambda>x. Inhabited (x \<Ztypecolon> T))\<close>
+           (%identity_elements_of_\<phi>Fun)
+       and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 (f s)
+         \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
+           (%identity_elements_of_\<phi>Fun+40)
        and \<open> \<g>\<u>\<a>\<r>\<d> homo_one (f s)
          \<Longrightarrow> Identity_Elements\<^sub>E T D
          \<Longrightarrow> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D \<close>
+           (%identity_elements_of_\<phi>Fun+20)
+       and \<open> Identity_Elements\<^sub>E (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) (\<lambda>x. \<exists>v. v \<Turnstile> (x \<Ztypecolon> T) \<and> f s v = 1) \<close>
+           (%identity_elements_of_\<phi>Fun)
        and Functionality
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
@@ -1711,17 +1721,16 @@ subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
   
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
-  deriving (*Basic
+  deriving Basic
        and Functionality
-       and*) Identity_Elements\<^sub>I
-       (*and Functional_Transformation_Functor
+       and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
-       and \<phi>Sum.Comm\<^sub>E*)
+       and \<phi>Sum.Comm\<^sub>E
 
 
 lemma \<comment> \<open>A example for how to represent list of multi-elements\<close>
@@ -1742,7 +1751,7 @@ declare [[\<phi>trace_reasoning = 0]]
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
   deriving Basic
        and Functionality
-       and Identity_Element
+       and Identity_Elements
        and Abstraction_to_Raw
 
 
@@ -1829,33 +1838,28 @@ subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
-   
+     
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
   deriving Separation_Monoid
 
 
-declare [[\<phi>trace_reasoning = 3]]
-   
-                          
 \<phi>type_def List\<^sub>S  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List\<^sub>S n T) = (Void \<s>\<u>\<b>\<j> n = 0)\<close>
       | \<open>(x # l \<Ztypecolon> List\<^sub>S n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
-      deriving \<open>Identity_Element\<^sub>I ([] \<Ztypecolon> List\<^sub>S n T) (n = 0)\<close>
+      deriving \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
+            \<Longrightarrow> Identity_Elements\<^sub>I (List\<^sub>S n T) (list_all T\<^sub>D) (\<lambda>x. list_all T\<^sub>P x \<and> n = length x)\<close> (*TODO: derive such n = length x*)
+           and \<open>Identity_Elements\<^sub>E T T\<^sub>D
+            \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S n T) (\<lambda>x. list_all T\<^sub>D x \<and> n = length x)\<close>
+ (*\<open>Identity_Element\<^sub>I ([] \<Ztypecolon> List\<^sub>S n T) (n = 0)\<close>
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = 0 \<Longrightarrow> Identity_Element\<^sub>E ([] \<Ztypecolon> List\<^sub>S n T)\<close>
            and \<open>Identity_Element\<^sub>I (l \<Ztypecolon> List\<^sub>S n \<circle>) (n = length l)\<close>
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = length l \<Longrightarrow> Identity_Element\<^sub>E (l \<Ztypecolon> List\<^sub>S n \<circle>)\<close>
-           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
+           and*)
+and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
            (*and Object_Equiv\<^sub>O*)
           (*and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (List\<^sub>S n T) (list_all2 eq)\<close>*)
-term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
-
-term \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = length l \<Longrightarrow> Identity_Element\<^sub>E (l \<Ztypecolon> List\<^sub>S n \<circle>)\<close>
-
-term \<open>Identity_Element\<^sub>I (l \<Ztypecolon> List\<^sub>S n \<circle>) (n = length l)\<close>
-
-term \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (List\<^sub>S n T) (list_all2 eq)\<close>
 
 
 (*(*\<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l)\<close>
@@ -1943,7 +1947,7 @@ thm \<phi>MapAt.\<Sigma>_rewr
 
 subsubsection \<open>By List of Keys\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
          
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
@@ -2002,7 +2006,9 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
    
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Separation_Monoid
+  deriving \<open> Identity_Elements\<^sub>E T D
+        \<Longrightarrow> Identity_Elements\<^sub>E ((\<odiv>) n T) (\<lambda>x. D x \<and> 0 < n)\<close>
+       and Separation_Monoid
        and Functionality
        (*and SE_Trim_Empty*)
        and Semimodule_no0
@@ -2012,6 +2018,7 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
        and \<phi>MapAt.Comm
+
 
 thm \<phi>Share.\<Sigma>_rewr
 thm \<phi>Fun'.\<phi>Fun'.comm_rewr
