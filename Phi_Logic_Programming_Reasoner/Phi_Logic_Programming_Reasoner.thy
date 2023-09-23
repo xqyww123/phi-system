@@ -1438,11 +1438,6 @@ simproc_setup move_sp_Ex_inside (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<
   simp_thms(36, 39-40)[folded special_Ex_def]*)
 
 
-ML \<open>val a = @{lemma \<open>\<forall>x. x \<or> True\<close> by blast}
-         |> Simplifier.rewrite_rule \<^context> @{thms atomize_all[symmetric]}
-         |> Thm.forall_elim_var 20\<close>
-
-
 paragraph \<open>Setup\<close>
 
 ML_file_debug "library/reasoners.ML"

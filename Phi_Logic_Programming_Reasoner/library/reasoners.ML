@@ -179,6 +179,7 @@ fun oblg_template can_inst f ctxt th00 = Seq.make (fn () =>
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
+
       val (ctxt', th) = if can_inst
                then (ctxt,
                  simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
@@ -200,11 +201,10 @@ fun oblg_template can_inst f ctxt th00 = Seq.make (fn () =>
          | (true, (_, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ Var _)) =>
                 SOME (@{lemma' \<open>Premise mode (\<not> False)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
          | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B)) =>
-              if is_Var (Term.head_of A) orelse is_Var (Term.head_of B)
-              then (SOME (@{thm' Premise_refl} RS th, Seq.empty)
-                    handle THM _ => f ctxt th)
-              else f ctxt th
-         | _ => f ctxt th)
+             (*solves the equation by unification once single resolution*)
+             (SOME (@{thm' Premise_refl} RS th, Seq.empty)
+              handle THM _ => f ctxt' th)
+         | _ => f ctxt' th)
    |> not can_inst ? Option.map (fn (th, seq') =>
         (singleton (Variable.export ctxt' ctxt) th,
          Seq.map (singleton (Variable.export ctxt' ctxt)) seq'))
