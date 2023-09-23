@@ -411,7 +411,7 @@ fun cons_definition name nameT parent_expr parent_comps new_comps thy =
               |> ConstructorData.put {declinfo=declinfo,distinctthm=tt',silent=silent};
         in context' end));
 
-    val attr = Attrib.internal type_attr;
+    val attr = Attrib.internal Position.none type_attr;
 
     val assume =
       ((Binding.name dist_thm_name, [attr]),
@@ -445,7 +445,7 @@ fun encode_type (TFree (s, _)) = s
 fun add_declaration name decl thy =
   thy
   |> Named_Target.init [] name
-  |> (fn lthy => Local_Theory.declaration {syntax = true, pervasive = false} (decl lthy) lthy)
+  |> (fn lthy => Local_Theory.declaration {syntax = true, pervasive = false, pos=Position.none} (decl lthy) lthy)
   |> Local_Theory.exit_global;
 
 fun parent_sort thy pname Sv =

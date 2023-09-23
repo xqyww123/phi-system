@@ -305,7 +305,7 @@ val empty_ctxt = Proof_Context.init_global Pure_Syn.bootstrap_thy
 
 fun generic_theory_mapping f =
   Context.mapping (Context.theory_map (f Morphism.identity))
-                  (Local_Theory.declaration {syntax=false,pervasive=false} f)
+                  (Local_Theory.declaration {syntax=false,pervasive=false, pos=Position.none} f)
 
 (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
   This version improves it, but it still requires that loose bounds do not occur in `v`*)

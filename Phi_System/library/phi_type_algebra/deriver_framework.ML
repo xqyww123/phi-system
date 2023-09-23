@@ -1642,7 +1642,7 @@ let fun has_disj_ants ctxt th =
                             (Conv.fconv_rule (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' \<r>Guard_def})) eq0))
           val rule' = Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of rule)
                                                        (Conv.top_rewrs_conv eqs ctxt')) rule
-                   |> Assumption.export false ctxt' ctxt't
+                   |> Assumption.export ctxt' ctxt't
                    |> singleton (Variable.export ctxt't ctxt)
        in rule'
       end end
@@ -1820,7 +1820,7 @@ fun default_simplifier conv (phi, ctxt) rule =
       val rule'2 = fold (fn lp => fn th => Thm.implies_elim th lp) lprems rule'1
       val rule'3 = Conv.fconv_rule (conv (phi, pures) ctxt) rule'2
    in rule'3
-   |> Assumption.export false ctxt' ctxt't1
+   |> Assumption.export ctxt' ctxt't1
    |> singleton (Variable.export ctxt't1 ctxt)
   end
 

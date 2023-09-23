@@ -122,7 +122,7 @@ val phi_system_ML_attribute_parser = (
 || Scan.peek (fn ctxt => Parse.token Parse.ML_source >>
     Token.evaluate Token.Attribute (fn tok => 
 let val src = Token.input_of tok
-in phi_system_read_ML_attribute ctxt src
+in Morphism.entity (phi_system_read_ML_attribute ctxt src)
 end )))
 \<close>
 

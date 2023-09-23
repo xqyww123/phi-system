@@ -427,7 +427,7 @@ fun adds reasoners ctxt = Reasoners.map (
         end) reasoners) ctxt
 
 fun add_lthy reasoner =
-  Local_Theory.declaration {syntax=false, pervasive=false} (fn phi =>
+  Local_Theory.declaration {syntax=false, pervasive=false, pos= #pos reasoner} (fn phi =>
     add (transform_reasoner phi reasoner)
   )
 
@@ -767,7 +767,7 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
     val neg_pats = patterns |> map_filter (fn (sgn, (pat,_)) => if sgn then NONE else SOME pat)
     val name' = Free(Binding.name_of name, dummyT)
 
-    val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] method lthy
+    val (method',lthy') = Method_Closure.method_cmd name [] [] [] [] "\<phi>-LPR" method lthy
     val method'' = Method_Closure.apply_method lthy' method' [] [] []
     val method'''= (fn (_, (ctxt,thm)) => method'' ctxt [] (ctxt,thm) |> Seq.filter_results)
   in add_lthy {name=name', pos=Binding.pos_of name, group=group, mode = check_mode priority mode,

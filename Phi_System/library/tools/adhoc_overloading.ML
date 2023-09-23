@@ -230,7 +230,7 @@ fun adhoc_overloading_cmd add raw_args lthy =
       |> map (apfst (const_name lthy))
       |> map (apsnd (map (read_term lthy)));
   in
-    Local_Theory.declaration {syntax = true, pervasive = false}
+    Local_Theory.declaration {syntax = true, pervasive = false, pos=Position.none}
       (adhoc_overloading_cmd' add args) lthy
   end;
 

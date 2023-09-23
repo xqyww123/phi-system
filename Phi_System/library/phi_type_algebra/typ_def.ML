@@ -1085,7 +1085,7 @@ fun add_type (def, pos, dervs, bundles) thy =
    in thy
    |> Context.mapping
         (Context.theory_map (Phi_Types.map (Symtab.update_new (fst name_ty, phi_trim_context phi_type))))
-        (Local_Theory.declaration {syntax=false, pervasive=false} (fn m =>
+        (Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn m =>
           Phi_Types.map (Symtab.update_new (fst (raw_term_name_typ (Morphism.term m term)),
                                             morphism_phi_type m (phi_trim_context phi_type)))))
    |> Phi_Help.generic_theory_mapping (fn m =>
@@ -1260,7 +1260,7 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
 in
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "define \<phi>-types"
           ((def_direct || def_by_fun) >> (fn f =>
-              Toplevel.theory' (fn int => Context.theory_map (f int)) Toplevel.no_presentation))
+              Toplevel.theory' (fn int => Context.theory_map (f int)) NONE))
 
 val _ = Outer_Syntax.command \<^command_keyword>\<open>let_\<phi>type\<close> "derive properties of existing \<phi>-types"
           ((Parse.position Parse.const -- bundle_parser -- deriving_parser)

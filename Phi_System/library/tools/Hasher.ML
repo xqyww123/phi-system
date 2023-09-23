@@ -35,7 +35,7 @@ fun term term = hash (term_str term [])
 
 fun goal (ctxt,stat) =
   hash (fold (term_str o Thm.term_of) (Assumption.all_assms_of ctxt)
-             (Context.theory_name (Proof_Context.theory_of ctxt) :: term_str (Thm.prop_of stat) []))
+             (Context.theory_name {long=false} (Proof_Context.theory_of ctxt) :: term_str (Thm.prop_of stat) []))
 
 (* TOO SLOW:
 fun typ (Type (N,TYs)) = fold (curry hashOne o typ) TYs (hashOne (wordP1, string N))

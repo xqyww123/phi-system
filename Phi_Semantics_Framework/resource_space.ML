@@ -383,7 +383,7 @@ fun namespace_definition name nameT parent_expr parent_comps new_comps thy =
               |> EntryData.put {distinctthm=tt',silent=silent};
         in context' end));
 
-    val attr = Attrib.internal type_attr;
+    val attr = Attrib.internal Position.none type_attr;
 
     val assume =
       ((Binding.name dist_thm_name, [attr]),

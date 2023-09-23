@@ -28,7 +28,7 @@ structure Data = Generic_Data (
 fun register_attribute attr = Data.map (Net.insert_term data_eq (#3 attr, attr))
 
 fun register_attribute_lthy (i,mandatory,pat,attr) =
-  Local_Theory.declaration {syntax=false, pervasive=false}
+  Local_Theory.declaration {syntax=false, pervasive=false, pos=Position.none}
     (fn m => register_attribute (i,mandatory, Morphism.term m pat, attr))
 
 fun attribute_of default term ctxt =

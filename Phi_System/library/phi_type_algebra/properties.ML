@@ -219,7 +219,7 @@ fun trim_template ((params, pos, act) : template) : template =
   case act of Instantiate_Rule (rule, pass, inst, b) =>
                 Instantiate_Rule (Thm.trim_context rule, pass,
                   (case inst of Reasonig_Rule _ => inst
-                              | Attributes srcs => Attributes (map Token.trim_context_src srcs)
+                              | Attributes srcs => Attributes (map (map Token.trim_context) srcs)
                               | No_Action => No_Action), b)
             | Free_Action act => Free_Action act)
 

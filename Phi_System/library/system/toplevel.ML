@@ -79,7 +79,8 @@ val v_proc_var = ("\<p>\<r>\<o>\<c>",0)
 
 (* Library *)
 
-fun print_results int = Proof_Display.print_results int (Position.thread_data ())
+fun print_results int = Proof_Display.print_results
+                            {interactive=int, pos=Position.thread_data (), proof_state=false}
 
 fun prep_decls prep_var raw_vars ctxt =
   let
@@ -586,7 +587,9 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
         |> Finishing_Construction_Hooks.invoke (Context.Proof lthy) ()
         |> Phi_Procedure.define def_const binding
         |> (fn (lthy, th) =>
-              (Proof_Display.print_results int (Binding.pos_of (fst binding)) lthy
+              (Proof_Display.print_results {interactive = int,
+                                            pos = Binding.pos_of (fst binding),
+                                            proof_state = false} lthy
                 (("\<phi>procedure", ""), [("", [th])]); lthy))
 
     val defines = map (prep_attrterm parse_prop) raw_defines
@@ -701,7 +704,7 @@ val is_props = Scan.repeat1 ($$$ "is" |-- prop);
 val ppats = Scan.optional ($$$ "(" |-- !!! (is_props --| $$$ ")")) [];
 
 val attrib = token liberal_name ::: !!! args;
-val attribs = (\<^keyword>\<open>[\<close> -- \<^keyword>\<open>]\<close>) >> K [Attrib.internal (K (K (NONE,NONE)))]
+val attribs = (\<^keyword>\<open>[\<close> -- \<^keyword>\<open>]\<close>) >> K [Attrib.internal Position.none (K (K (NONE,NONE)))]
            || ($$$ "[" |-- list attrib --| $$$ "]")
 val opt_attribs = Scan.optional attribs [];
 fun opt_thm_name s =

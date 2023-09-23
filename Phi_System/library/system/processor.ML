@@ -128,7 +128,7 @@ fun define binding precedence pat proc ctxt =
   in Data.put data' ctxt end;
 
 fun define_lthy binding precedence pat proc =
-  Local_Theory.declaration {syntax=false, pervasive=false} (fn m =>
+  Local_Theory.declaration {syntax=false, pervasive=false, pos=Binding.pos_of binding} (fn m =>
       define binding precedence (map (map_pattern (Morphism.term m)) pat) proc)
 
 fun define_global binding precedence pat proc thy =

@@ -4,7 +4,7 @@ session "Phi_Semantics" = "Phi_System" +
     "Phi_Semantics_Framework"
     "Phi_Logic_Programming_Reasoner"
     "Phi_System"
-    "Word_Lib"
+    (*"Word_Lib"*)
   theories
     PhiSem_Aggregate_Base
     PhiSem_Aggregate_Array
