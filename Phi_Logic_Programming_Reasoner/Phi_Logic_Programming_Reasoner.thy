@@ -145,7 +145,9 @@ type_synonym mode = action
 text \<open>We provide a serial of predefined modes, which may be commonly useful.\<close>
 
 consts default :: mode
-       MODE_SIMP :: mode \<comment> \<open>relating to simplification\<close>
+       MODE_GUARD :: mode \<comment> \<open>necessary condition for exploring a search branch, may instantiating the
+                              goal but never instantiating the contextual premises\<close>
+       NO_INST :: mode \<comment> \<open>prohibiting instantiation\<close>
        MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
        MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close>
        MODE_SAT :: mode
@@ -161,7 +163,7 @@ definition Premise :: "mode \<Rightarrow> bool \<Rightarrow> bool" ("\<c>\<o>\<n
 abbreviation Normal_Premise ("\<p>\<r>\<e>\<m>\<i>\<s>\<e> _" [27] 26)
   where "Normal_Premise \<equiv> Premise default"
 abbreviation Simp_Premise ("\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _" [27] 26)
-  where "Simp_Premise \<equiv> Premise MODE_SIMP"
+  where "Simp_Premise \<equiv> Premise MODE_GUARD"
 abbreviation Proof_Obligation ("\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> _" [27] 26)
   where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
 
@@ -198,7 +200,7 @@ lemma Premise_D: "Premise mode P \<Longrightarrow> P" unfolding Premise_def by s
 lemma Premise_E: "Premise mode P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C" unfolding Premise_def by simp
 
 lemma Premise_const_True[simp]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] True\<close>
+  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> True\<close> \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] True\<close> \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] True\<close>
   unfolding Premise_def by simp+
 
 lemma Premise_norm:
@@ -1290,11 +1292,15 @@ lemma [\<phi>reason %overriding]:
 On pattern \<open>Premise ?mode (?x = ?var_x)\<close>, the instantiation in this rule can be aggresive.
 Need some way to control it!
 *)
-lemma Premise_refl[\<phi>reason %overriding for \<open>Premise ?mode (?x = ?x)\<close>
+(*TODO: depreciate!*)
+
+lemma Premise_refl(*[\<phi>reason %overriding for \<open>Premise ?mode (?x = ?x)\<close>
                                            \<open>Premise ?mode (?x = ?var_x)\<close>
-                                           \<open>Premise ?mode (?var_x = ?x)\<close>]:
+                                           \<open>Premise ?mode (?var_x = ?x)\<close>]*):
   "Premise mode (x = x)"
   unfolding Premise_def ..
+
+
 
 lemma [\<phi>reason %normalizing]:
   \<open> Premise mode (L = R)
@@ -1449,8 +1455,8 @@ fun defer_premise ctxt =
           of 0 => Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt
            | 1 => (fn th => if Phi_Reasoners.has_obligations_tag th
                             then Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt th
-                            else Phi_Reasoners.safer_obligation_solver ctxt th)
-           | 2 => Phi_Reasoners.safer_obligation_solver ctxt
+                            else Phi_Reasoners.safer_obligation_solver {can_inst= true} ctxt th)
+           | 2 => Phi_Reasoners.safer_obligation_solver {can_inst= true} ctxt
            | 3 => Phi_Reasoners.auto_obligation_solver ctxt
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
 \<close>
@@ -1459,13 +1465,16 @@ fun defer_premise ctxt =
   = \<open>Phi_Reasoners.wrap defer_premise o snd\<close>
 
 \<phi>reasoner_ML Simp_Premise %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P\<close>)
-  = \<open>Phi_Reasoners.wrap Phi_Reasoners.safer_obligation_solver o snd\<close>
+  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safer_obligation_solver {can_inst=true}) o snd\<close>
+
+\<phi>reasoner_ML NO_INST %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] ?P\<close>)
+  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safer_obligation_solver {can_inst=false}) o snd\<close>
 
 \<phi>reasoner_ML \<open>Premise MODE_SAT\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (fn ctxt => fn sequent => Seq.make (fn () =>
       let val goal = Thm.dest_arg1 (Thm.cprop_of sequent)
           val test = Thm.implies_intr goal (Thm.transfer' ctxt @{thm' TrueI})
-                  |> Phi_Reasoners.safer_obligation_solver ctxt
+                  |> Phi_Reasoners.safer_obligation_solver {can_inst=true} ctxt
                   |> Seq.pull
                   |> is_some
        in if test
@@ -1504,6 +1513,7 @@ lemma [\<phi>premise_extraction add]:
   \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<equiv> P \<and> True\<close>
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
   \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P \<equiv> P \<and> True\<close>
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P \<equiv> P \<and> True\<close>
   \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
   unfolding Premise_def
   by simp_all
@@ -1512,6 +1522,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> P \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P @action \<A>ESC \<close>
   \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
   \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P @action \<A>ESC \<close>
+  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P @action \<A>ESC \<close>
   \<open> P \<longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
   unfolding Action_Tag_def Premise_def
   by blast+

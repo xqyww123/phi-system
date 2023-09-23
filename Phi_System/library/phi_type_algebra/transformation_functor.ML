@@ -35,7 +35,7 @@ fun mk_TF's_two_instantiations ctxt0 (FT_term0, phi0) =
       
 
       val ants = map2 (fn (N,T) => fn p' =>
-                      \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_SIMP\<close> $ (\<^Const>\<open>HOL.eq T\<close> $ Free(N,T) $ p')
+                      \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $ (\<^Const>\<open>HOL.eq T\<close> $ Free(N,T) $ p')
                  ) params params'
 
    in (ants, F_term, F'_term, T_term, U_term, inst_ty, phi, ctxt')

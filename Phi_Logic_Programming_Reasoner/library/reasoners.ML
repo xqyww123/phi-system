@@ -28,10 +28,11 @@ signature PHI_REASONERS = sig
                               -> Proof.context -> thm -> thm
   val auto_obligation_solver1 : Proof.context -> thm -> thm
 
-  val safer_obligation_solver : Proof.context -> thm -> thm Seq.seq
-  val safer_obligation_solver': (Proof.context -> thm -> thm) (*failure callback*)
-                              -> Proof.context -> thm -> thm
-  val safer_obligation_solver1: Proof.context -> thm -> thm
+  val safer_obligation_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
+  val safer_obligation_solver': {can_inst: bool}
+                             -> (Proof.context -> thm -> thm) (*failure callback*)
+                             -> Proof.context -> thm -> thm
+  val safer_obligation_solver1: {can_inst: bool} -> Proof.context -> thm -> thm
 
 
   (*defer the leading antecedent to the nearest obligation and call the contract*)
@@ -174,23 +175,39 @@ structure Very_Safe_Oblg_Simp_SS = Simpset(
   val post_merging = I
 )
 
-fun oblg_template f ctxt th00 = Seq.make (fn () =>
+fun oblg_template can_inst f ctxt th00 = Seq.make (fn () =>
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
-      val th = simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                  HOLogic.Trueprop_conv (Conv.arg_conv (
-                    Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
-               ) ctxt) 1 th01)
-   in case PLPR_Syntax.dest_premise_tag (major_prem_of th)
-        of (_, Const (\<^const_name>\<open>True\<close>, _)) =>
-                SOME (@{thm Premise_True} RS th, Seq.empty)
-         | (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B) =>
+      val (ctxt', th) = if can_inst
+               then (ctxt,
+                 simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                      HOLogic.Trueprop_conv (Conv.arg_conv (
+                        Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
+                   ) ctxt) 1 th01))
+               else let (*fixes variable in the proposition*)
+                        val target = snd (PLPR_Syntax.dest_premise_tag (
+                                            HOLogic.dest_Trueprop (Thm.major_prem_of th01)))
+                        val (inst, ctxt') = Variable.import_inst false [target] ctxt
+                        val instc = Phi_Help.certify_vars (Context.Proof ctxt') inst
+                     in (ctxt', Thm.instantiate instc th01)
+                    end
+   in(case (can_inst, PLPR_Syntax.dest_premise_tag (major_prem_of th))
+        of (_, (_, Const (\<^const_name>\<open>True\<close>, _))) =>
+                SOME (@{thm' Premise_True} RS th, Seq.empty)
+         | (true, (_, Var _)) =>
+                SOME (@{thm' Premise_True} RS th, Seq.empty)
+         | (true, (_, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ Var _)) =>
+                SOME (@{lemma' \<open>Premise mode (\<not> False)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
+         | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B)) =>
               if is_Var (Term.head_of A) orelse is_Var (Term.head_of B)
-              then (SOME (@{thm Premise_refl} RS th, Seq.empty)
+              then (SOME (@{thm' Premise_refl} RS th, Seq.empty)
                     handle THM _ => f ctxt th)
               else f ctxt th
-         | _ => f ctxt th
+         | _ => f ctxt th)
+   |> not can_inst ? Option.map (fn (th, seq') =>
+        (singleton (Variable.export ctxt' ctxt) th,
+         Seq.map (singleton (Variable.export ctxt' ctxt)) seq'))
   end)
 
 
@@ -349,7 +366,8 @@ val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>premise_extraction\<c
 
 fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = is_syntactic_premise M
   | is_syntactic_premise (Const(\<^const_name>\<open>default\<close>, _)) = true
-  | is_syntactic_premise (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+  | is_syntactic_premise (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
+  | is_syntactic_premise (Const(\<^const_name>\<open>NO_INST\<close>, _)) = true
   | is_syntactic_premise (Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)) = true
   | is_syntactic_premise (Abs (_,_,X)) = is_syntactic_premise X
   | is_syntactic_premise (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_syntactic_premise X
@@ -441,7 +459,7 @@ fun gen_extract_prems_rewr ctxt =
 
 
       fun simp_tag ctxt = Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
-                                                                   Premise_def[where mode=MODE_SIMP]}
+                                                                   Premise_def[where mode=MODE_GUARD]}
 
       fun extract' ctxt ctm =
         case Thm.term_of ctm
@@ -474,7 +492,7 @@ fun strip_premise_tag ctxt ctm =
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ _ =>
         Conv.try_conv (Conv.rewrs_conv @{thms' Premise_def[where mode=default]
-                                               Premise_def[where mode=MODE_SIMP]}) ctm
+                                               Premise_def[where mode=MODE_GUARD]}) ctm
      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
         Conv.arg_conv (strip_premise_tag ctxt) ctm
      | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
@@ -504,7 +522,7 @@ fun extract_prem ctxt strip =
                                           else thm)
                      | SOME (SOME rule) => SOME (
                          (Thm.equal_elim rule thm RS' (ctxt', conjunct1))
-                           |> not strip ? (fn th => th RS' (ctxt', @{thm' Premise_I[where mode=MODE_SIMP]})))
+                           |> not strip ? (fn th => th RS' (ctxt', @{thm' Premise_I[where mode=MODE_GUARD]})))
                      | NONE => NONE)
              end
    else NONE
@@ -537,7 +555,7 @@ fun is_premise_of_obligation ctxt =
   let val ivk = Is_Premise_of_Obligation.invoke ctxt
       fun default (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = default M
         | default (Const(\<^const_name>\<open>default\<close>, _)) = true
-        | default (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+        | default (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
         | default (Abs (_,_,X)) = default X
         | default (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = default X
         | default (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = default X
@@ -619,7 +637,7 @@ fun obligation_collect ctxt filter ctm =
               then (Conv.implies_conv
                       (Phi_Conv.atomize_conv ctxt then_conv
                        Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
-                                                                Premise_def[where mode=MODE_SIMP]})
+                                                                Premise_def[where mode=MODE_GUARD]})
                       (obligation_collect ctxt filter) then_conv
                     Conv.rewr_conv @{thm' contract_premise_imp}) ctm
               else (Conv.arg_conv (obligation_collect ctxt filter) then_conv
@@ -748,7 +766,7 @@ fun find_obligations_tag thm = tl (Thm.prems_of thm)
                      | _ => false)
 fun has_obligations_tag thm = find_obligations_tag thm <> ~1
 
-fun defer_antecedent contract = oblg_template (fn ctxt => fn thm =>
+fun defer_antecedent contract = oblg_template true (fn ctxt => fn thm =>
   let val idx = find_obligations_tag thm
   in if idx = ~1
      then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
@@ -774,7 +792,7 @@ val defer_obligation_tac = defer_antecedent o contract_obligations
 
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
-val auto_obligation_solver = oblg_template (fn ctxt => fn th =>
+val auto_obligation_solver = oblg_template true (fn ctxt => fn th =>
       let val th'1 = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
        in th'
@@ -804,7 +822,7 @@ fun auto_obligation_solver1 ctxt sequent =  (
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-val safer_obligation_solver = oblg_template (fn ctxt => fn th =>
+fun safer_obligation_solver {can_inst} = oblg_template can_inst (fn ctxt => fn th =>
       let val th'1 = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
        in apply ctxt (fn (ctxt,pre,aux,_) =>
@@ -813,10 +831,10 @@ val safer_obligation_solver = oblg_template (fn ctxt => fn th =>
        |> Seq.pull
       end)
 
-val safer_obligation_solver' = context_tactic_to_state_transition safer_obligation_solver
+val safer_obligation_solver' = context_tactic_to_state_transition o safer_obligation_solver
 
-fun safer_obligation_solver1 ctxt sequent =
-  safer_obligation_solver' (fn _ =>
+fun safer_obligation_solver1 can_inst ctxt sequent =
+  safer_obligation_solver' can_inst (fn _ =>
     error (Pretty.string_of (Pretty.chunks [
         Pretty.str "Fail to solve the proof obligation automatically:",
         Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)

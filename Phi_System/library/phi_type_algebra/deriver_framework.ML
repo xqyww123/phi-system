@@ -897,7 +897,7 @@ fun load_simpset tms ctxt = fold load_const (fold add_consts' tms []) ctxt
 
 fun simplify_guessing_reasoning ctxt = Simplifier.simplify (Simplifier.clear_simpset ctxt addsimps
       @{thms' Premise_norm[where mode=\<open>default\<close>]
-              Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+              Premise_norm[where mode=\<open>MODE_GUARD\<close>]
               Ant_Seq_reduct
               HOL.imp_conjR[folded Ant_Seq_def]
               HOL.all_conj_distrib[folded Ant_Seq_def]})
@@ -1531,14 +1531,14 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
                     |> map (fn th => th RS' (ctxt, @{thm' Action_Tag_D}))
       val ToAs = filter is_ToA_template local_prems
               |> maps (instantiate_ToA (Thm.transfer' ctxt (Phi_Help.conj_intros ctxt pure_facts), ctxt))
-      val pure_fact' = map (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=MODE_SIMP]})) pure_facts
+      val pure_fact' = map (fn th => th RS' (ctxt, @{thm' Premise_I[where mode=MODE_GUARD]})) pure_facts
 
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
       val prem_ants = map_filter (Phi_Reasoners.extract_implied_facts ctxt) (@{print} local_prems)
                    |> maps (PLPR_Syntax.elim_ant_sequence_or_HOL_conj)
                  (*|> map (Conv.fconv_rule (HOLogic.Trueprop_conv (
-                            Conv.rewr_conv @{thm' Premise_def[where mode=\<open>MODE_SIMP\<close>, symmetric]})))*)
+                            Conv.rewr_conv @{thm' Premise_def[where mode=\<open>MODE_GUARD\<close>, symmetric]})))*)
                    |> @{print}
 (*maps (fn th =>
             case extract_prems ctxt th
@@ -1630,7 +1630,7 @@ let fun has_disj_ants ctxt th =
           val (fixes, ctxt't) = Variable.variant_fixes names ctxt
           val eq0_term = HOLogic.Trueprop $ (\<^Const>\<open>\<r>Guard\<close> $
                           PLPR_Syntax.mk_ant_sequence (map2 (fn N' => fn tm =>
-                              \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_SIMP\<close> $
+                              \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $
                                 let val T = Term.fastype_of tm
                                  in (\<^Const>\<open>HOL.eq T\<close> $ tm $ Free (N',T))
                                 end) fixes frees))

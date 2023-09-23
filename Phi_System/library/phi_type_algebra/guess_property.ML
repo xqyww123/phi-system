@@ -19,7 +19,7 @@ open Phi_Type_Algebra
 fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
   | constrain_antecedents cond =
       let fun is_premise_tag (Const(\<^const_name>\<open>default\<close>, _)) = true
-            | is_premise_tag (Const(\<^const_name>\<open>MODE_SIMP\<close>, _)) = true
+            | is_premise_tag (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
             | is_premise_tag _ = false
           fun constrain (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X)) = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, constrain X)
             | constrain (\<^Const>\<open>HOL.All t\<close> $ X) = \<^Const>\<open>HOL.All t\<close> $ Abs ("_", t, constrain (Term.incr_boundvars 1 X $ Bound 0))
@@ -60,7 +60,7 @@ fun guess_entire_property ctxt0 (phi : phi_type) property_const =
         case Thm.prop_of ( Goal.conclude ret
                         |> Simplifier.simplify (ctxt addsimps
                               @{thms' Premise_norm[where mode=\<open>default\<close>]
-                                      Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+                                      Premise_norm[where mode=\<open>MODE_GUARD\<close>]
                                       Ant_Seq_reduct
                                       HOL.imp_conjR[folded Ant_Seq_def]
                                       HOL.all_conj_distrib[folded Ant_Seq_def]})
@@ -99,7 +99,7 @@ fun guess_antecedent ctxt0 phi const assertion existing_antecedents =
         let val (guessed, cond) = (*@{print}*) (
             case ret
               |> Simplifier.simplify (ctxt addsimps @{thms' Premise_norm[where mode=\<open>default\<close>]
-                                                            Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+                                                            Premise_norm[where mode=\<open>MODE_GUARD\<close>]
                                                             Ant_Seq_reduct
                                                             HOL.imp_conjR[folded Ant_Seq_def]
                                                             HOL.all_conj_distrib[folded Ant_Seq_def]})

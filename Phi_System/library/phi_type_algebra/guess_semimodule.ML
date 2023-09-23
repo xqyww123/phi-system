@@ -299,7 +299,7 @@ fun Guess_Unzip_of_Semimodule ctxt (phi : phi_type) (s_ty, x_ty, model_ty, typ_e
         (case Thm.prop_of ( ret
                          |> Simplifier.simplify (ctxt addsimps
                                 @{thms' Premise_norm[where mode=\<open>default\<close>]
-                                        Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+                                        Premise_norm[where mode=\<open>MODE_GUARD\<close>]
                                         Ant_Seq_reduct
                                         HOL.imp_conjR[folded Ant_Seq_def]
                                         HOL.all_conj_distrib[folded Ant_Seq_def]}) )
@@ -344,7 +344,7 @@ fun Guess_Zip_of_Semimodule ctxt (phi : phi_type) (s_ty, x_ty, model_ty, typ_exp
         (case Thm.prop_of ( ret
                          |> Simplifier.simplify (ctxt addsimps
                                 @{thms' Premise_norm[where mode=\<open>default\<close>]
-                                        Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+                                        Premise_norm[where mode=\<open>MODE_GUARD\<close>]
                                         Ant_Seq_reduct
                                         HOL.imp_conjR[folded Ant_Seq_def]
                                         HOL.all_conj_distrib[folded Ant_Seq_def]}) )

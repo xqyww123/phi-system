@@ -1,6 +1,6 @@
 signature PLPR_SIMPLIFIER = sig
 
-(* The simplification only uses premises tagged by \<open>Premise default\<close> or \<open>Premise MODE_SIMP\<close>,
+(* The simplification only uses premises tagged by \<open>Premise default\<close> or \<open>Premise MODE_GUARD\<close>,
    or any extracted premises by means of Phi_Reasoners.extract_prem *)
 
 (* The simplifiers are not always as powerful as expected especially when it contains schematic variables.

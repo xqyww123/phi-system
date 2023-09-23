@@ -65,7 +65,7 @@ fun Guess_Scalar_Assoc is_intro (phi : phi_type) ctxt =
         (case Thm.prop_of ( ret
                          |> Simplifier.simplify (ctxt addsimps
                                 @{thms' Premise_norm[where mode=\<open>default\<close>]
-                                        Premise_norm[where mode=\<open>MODE_SIMP\<close>]
+                                        Premise_norm[where mode=\<open>MODE_GUARD\<close>]
                                         Ant_Seq_reduct
                                         HOL.imp_conjR[folded Ant_Seq_def]
                                         HOL.all_conj_distrib[folded Ant_Seq_def]}) )
