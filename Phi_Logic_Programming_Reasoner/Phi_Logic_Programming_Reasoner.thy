@@ -1288,20 +1288,8 @@ lemma [\<phi>reason %overriding]:
 \<Longrightarrow> Premise mode (Premise any_mode P)"
   unfolding Premise_def .
 
-(*TODO:
-On pattern \<open>Premise ?mode (?x = ?var_x)\<close>, the instantiation in this rule can be aggresive.
-Need some way to control it!
-*)
-(*TODO: depreciate!*)
-
-lemma Premise_refl(*[\<phi>reason %overriding for \<open>Premise ?mode (?x = ?x)\<close>
-                                           \<open>Premise ?mode (?x = ?var_x)\<close>
-                                           \<open>Premise ?mode (?var_x = ?x)\<close>]*):
-  "Premise mode (x = x)"
-  unfolding Premise_def ..
-
-
-
+(*
+(*depreciate!*)
 lemma [\<phi>reason %normalizing]:
   \<open> Premise mode (L = R)
 \<Longrightarrow> Premise mode (L = id R)\<close>
@@ -1332,6 +1320,7 @@ lemma [\<phi>reason %normalizing]:
 \<Longrightarrow> Premise mode (L = (Ra, Rb))\<close>
   unfolding Premise_def
   by (cases L; simp)
+*)
 
 ML \<open>
 structure Useful_Thms = Named_Thms (

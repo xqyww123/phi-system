@@ -193,16 +193,34 @@ fun oblg_template can_inst f ctxt th00 = Seq.make (fn () =>
                         val instc = Phi_Help.certify_vars (Context.Proof ctxt') inst
                      in (ctxt', Thm.instantiate instc th01)
                     end
+
+      fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\<close> else \<^cterm>\<open>False\<close>) ret
+        | mk_boolean_inst (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) b ret
+            = mk_boolean_inst A b (mk_boolean_inst B b ret)
+        | mk_boolean_inst (Const(\<^const_name>\<open>HOL.Not\<close>, _) $ A) b ret
+            = mk_boolean_inst A (not b) ret
+        | mk_boolean_inst (Const(\<^const_name>\<open>id\<close>, _) $ X) b ret
+            = mk_boolean_inst X b ret
+        | mk_boolean_inst _ _ _ = raise Match
+                    
    in(case (can_inst, PLPR_Syntax.dest_premise_tag (major_prem_of th))
         of (_, (_, Const (\<^const_name>\<open>True\<close>, _))) =>
                 SOME (@{thm' Premise_True} RS th, Seq.empty)
          | (true, (_, Var _)) =>
                 SOME (@{thm' Premise_True} RS th, Seq.empty)
-         | (true, (_, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ Var _)) =>
-                SOME (@{lemma' \<open>Premise mode (\<not> False)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
+         | (true, (_, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ X)) =>
+             (let val th' = Thm.instantiate (TVars.empty,
+                                mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th
+               in f ctxt' th'
+              end handle Match => f ctxt' th)
+         | (true, (_, X as Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
+             (let val th' = Thm.instantiate (TVars.empty,
+                                mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th
+               in f ctxt' th'
+              end handle Match => f ctxt' th)
          | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B)) =>
              (*solves the equation by unification once single resolution*)
-             (SOME (@{thm' Premise_refl} RS th, Seq.empty)
+             (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
               handle THM _ => f ctxt' th)
          | _ => f ctxt' th)
    |> not can_inst ? Option.map (fn (th, seq') =>
