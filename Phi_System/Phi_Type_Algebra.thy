@@ -1195,8 +1195,8 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
   \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Identity_Element\<^sub>I _ _\<close>,
-  \<^pattern_prop>\<open>Identity_Element\<^sub>E _\<close>,
+  \<^pattern_prop>\<open>Identity_Elements\<^sub>I _ _ _\<close>,
+  \<^pattern_prop>\<open>Identity_Elements\<^sub>E _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
@@ -3981,8 +3981,9 @@ hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
 
 paragraph \<open>Guessing Antecedents\<close>
 
+(*TODO:
 declare Is_Contravariant[where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
-        Is_Covariant[where PC=\<open>Identity_Element\<^sub>E\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
+        Is_Covariant[where PC=\<open>Identity_Element\<^sub>E\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]*)
 
 
 subsubsection \<open>Object Equivalence\<close>
@@ -4024,6 +4025,7 @@ lemma Object_Equiv_rule_move_set_eq_end:
   by blast
 
 
+(*TODO: depreciated*)
 paragraph \<open>Object Equivalence at Singular Point\<close>
   
 lemma [ ]:
@@ -4845,11 +4847,12 @@ text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules 
 
 lemma [\<phi>reason_template name F.\<phi>None [assertion_simps, simp]]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
-\<Longrightarrow> Identity_Element\<^sub>I (yy \<Ztypecolon> F \<circle>) Any @action \<A>_template_reason
-\<Longrightarrow> Identity_Element\<^sub>E (u \<Ztypecolon> F \<circle>) @action \<A>_template_reason
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Identity_Elements\<^sub>I (F \<circle>) D\<^sub>I P\<^sub>I @action \<A>_template_reason
+\<Longrightarrow> Identity_Elements\<^sub>E (F \<circle>) D\<^sub>E @action \<A>_template_reason
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (D\<^sub>I () \<and> D\<^sub>E ())
 \<Longrightarrow> NO_SIMP (F \<circle> = \<circle>) \<close>
   unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def NO_SIMP_def Action_Tag_def
+            Identity_Elements\<^sub>I_def Identity_Elements\<^sub>E_def Premise_def
   by (rule \<phi>Type_eqI_Tr; clarsimp simp add: transformation_weaken)
 
 (* Temporarily disabled, and I am thinking if to depreciate this module as it seems useless now.
