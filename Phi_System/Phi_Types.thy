@@ -1403,7 +1403,7 @@ lemma [\<phi>reason %guess_tyop_commute]:
                         (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) (\<lambda>T x. x \<Ztypecolon> f \<Zcomp>\<^sub>f T) (\<lambda>T x. x \<Ztypecolon> f' \<Zcomp>\<^sub>f T) T
                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute g f g' f') True\<close>
   unfolding Guess_Tyops_Commute_def ..
-  
+
 
 
 (*TODO: move!*)
@@ -1563,96 +1563,27 @@ subsubsection \<open>Commutativity\<close>
 
 paragraph \<open>Guessing Property\<close>
 
-text \<open>TODO: deriving the guessing rules\<close>
+declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) (scalar_mult f s)) ((\<Zcomp>\<^sub>f) (scalar_mult f' s')) uG uG' T D R a c
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') uG uG' T D R a c \<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+  \<open> Guess_Tyops_Commute mode G G' F F' uG uG' (\<lambda>T x. x \<Ztypecolon> scalar_mult f s \<Zcomp>\<^sub>f T) uF' T D R a c
+\<Longrightarrow> Guess_Tyops_Commute mode G G' F F' uG uG' (\<lambda>T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) uF' T D R a c \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) (scalar_mult f s)) ((\<Zcomp>\<^sub>f) (scalar_mult f' s')) G G' uG uG' T D R a c
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' uG uG' T D R a c \<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
-
-
-
-subparagraph \<open>\<open>\<phi>ScalarMul\<close> to \<open>\<phi>ScalarMul\<close>\<close>
-
-lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute (scalar_mult g t) (scalar_mult f s) (scalar_mult g' t') (scalar_mult f' s')
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] t \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] t' \<Zcomp> U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+  \<open> Guess_Tyops_Commute mode G G' F F' uG uG' uF (\<lambda>T x. x \<Ztypecolon> scalar_mult f' s' \<Zcomp>\<^sub>f T) T D R a c
+\<Longrightarrow> Guess_Tyops_Commute mode G G' F F' uG uG' uF (\<lambda>T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f'] s' \<Zcomp> T) T D R a c \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] t \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] t' \<Zcomp> U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         (fun_commute (scalar_mult g t) (scalar_mult f s) (scalar_mult g' t') (scalar_mult f' s')) True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
-
-lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute (scalar_mult f s) (scalar_mult g t) (scalar_mult f' s') (scalar_mult g' t')
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] t \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] t' \<Zcomp> U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+  \<open> Guess_Tyops_Commute mode G G' F F' (\<lambda>T x. x \<Ztypecolon> scalar_mult f s \<Zcomp>\<^sub>f T) uG' uF uF' T D R a c
+\<Longrightarrow> Guess_Tyops_Commute mode G G' F F' (\<lambda>T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) uG' uF uF' T D R a c \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] t \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] t' \<Zcomp> U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         (fun_commute (scalar_mult f s) (scalar_mult g t) (scalar_mult f' s') (scalar_mult g' t')) True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
-
-subparagraph \<open>\<open>\<phi>ScalarMul\<close> to \<open>\<phi>Fun\<close>\<close>
-
-lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute g (scalar_mult f s) g' (scalar_mult f' s')
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         (fun_commute g (scalar_mult f s) g' (scalar_mult f' s')) True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
-
-lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute (scalar_mult f s) g (scalar_mult f' s') g'
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         (fun_commute (scalar_mult f s) g (scalar_mult f' s') g') True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
-
-subparagraph \<open>\<open>\<phi>Fun'\<close> to \<open>\<phi>ScalarMul\<close>\<close>
-
-lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute (scalar_mult g s) f (scalar_mult g' s') f'
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] s \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] s' \<Zcomp> U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] s \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] s' \<Zcomp> U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         (fun_commute (scalar_mult g s) f (scalar_mult g' s') f') True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') G G' (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g] s \<Zcomp> U) (\<lambda>U x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[g'] s' \<Zcomp> U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))
-                         (fun_commute f (scalar_mult g s) f' (scalar_mult g' s')) True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+  \<open> Guess_Tyops_Commute mode G G' F F' uG (\<lambda>T x. x \<Ztypecolon> scalar_mult f s \<Zcomp>\<^sub>f T) uF uF' T D R a c
+\<Longrightarrow> Guess_Tyops_Commute mode G G' F F' uG (\<lambda>T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) uF uF' T D R a c \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 
 paragraph \<open>Deriving the Commutativity with Itself\<close>

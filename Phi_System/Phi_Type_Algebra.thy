@@ -5042,8 +5042,8 @@ definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E :: \<open> (('c\<
     \<open>Predefined default rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>Guess_Tyops_Commute ?I ?F _ ?G _ ?unfolded_G _ ?uF _ _ _ _ _ _\<close> \<Rightarrow>
-                          \<open>Guess_Tyops_Commute ?I ?F _ ?G _ ?unfolded_G _ ?uF _ _ _ _ _ _\<close>    (100)
+  \<phi>reason_default_pattern \<open>Guess_Tyops_Commute ?I ?F _ ?G _ ?unfolded_G ?uG' ?uF ?uF' _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Tyops_Commute ?I ?F _ ?G _ ?unfolded_G ?uG' ?uF ?uF' _ _ _ _ _\<close>    (100)
                       and \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close> \<Rightarrow>
                           \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close>    (100)
                       and \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close> \<Rightarrow>
