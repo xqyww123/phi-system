@@ -3649,10 +3649,25 @@ lemma [\<phi>reason %object_equiv_cut]: \<comment> \<open>for non-unital algebra
 
 subsubsection \<open>Its Role in ToA\<close>
 
+lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::one BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
+                                              except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> Identity_Elements\<^sub>E U D\<^sub>E
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] (D\<^sub>E y')) \<and>\<^sub>\<r> Identity_Element\<^sub>I X P \<or>\<^sub>c\<^sub>u\<^sub>t
+    Identity_Elements\<^sub>I U D\<^sub>I P\<^sub>I \<and>\<^sub>\<r>
+    Object_Equiv U eq \<and>\<^sub>\<r>
+    (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq y y' \<or> D\<^sub>I y \<and> (P\<^sub>I y \<longrightarrow> D\<^sub>E y') \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P)) \<and>\<^sub>\<r>
+    (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y' \<or> D\<^sub>I y \<and> (P\<^sub>I y \<longrightarrow> D\<^sub>E y'))
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Transformation_def Premise_def Action_Tag_def Orelse_shortcut_def
+            Identity_Elements\<^sub>E_def Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def Identity_Elements\<^sub>I_def
+            Ant_Seq_def Premise_def
+  by clarsimp blast
+
 lemma ToA_by_Equiv_Class
       [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
-                                        except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> Object_Equiv U eq @action \<A>_singular_unit
+                                              except \<open>(_::?'c::one BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close>
+                                                     \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<w>\<i>\<t>\<h> _\<close> ]:
+  \<open> Object_Equiv U eq
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq y y' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P) \<comment> \<open>the target object is always constrained even when
                                                      it can be variable\<close>
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
@@ -3660,15 +3675,33 @@ lemma ToA_by_Equiv_Class
   unfolding Object_Equiv_def Transformation_def Premise_def Action_Tag_def
   by clarsimp
 
+
+lemma [\<phi>reason default %ToA_varify_target_object for \<open>(_::?'c::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
+                                              except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> Identity_Elements\<^sub>E U D\<^sub>E
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] (D\<^sub>E y')) \<and>\<^sub>\<r> (C,R,P) = (True,X,True) \<or>\<^sub>c\<^sub>u\<^sub>t
+    Identity_Elements\<^sub>I U D\<^sub>I P\<^sub>I \<and>\<^sub>\<r>
+    Object_Equiv U eq \<and>\<^sub>\<r>
+    (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq y y' \<or> D\<^sub>I y \<and> (P\<^sub>I y \<longrightarrow> D\<^sub>E y') \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)) \<and>\<^sub>\<r>
+    (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y' \<or> D\<^sub>I y \<and> (P\<^sub>I y \<longrightarrow> D\<^sub>E y'))
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  for X :: \<open>'c::sep_magma_1 BI\<close>
+  unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def Action_Tag_def
+            Identity_Elements\<^sub>E_def Identity_Elements\<^sub>I_def Identity_Element\<^sub>E_def Identity_Element\<^sub>I_def
+            Orelse_shortcut_def Ant_Seq_def
+  by (cases C; clarsimp; metis mult_1_class.mult_1_right sep_magma_1_left)
+
 lemma ToA_by_Equiv_Class'
       [\<phi>reason default %ToA_varify_target_object for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>
-                                        except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> Object_Equiv U eq @action \<A>_singular_unit
+                                              except \<open>(_::?'c::sep_magma_1 BI) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+                                                     \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var_y' \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> Object_Equiv U eq
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq y y' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> eq y y'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Transformation_def Premise_def REMAINS_def Action_Tag_def
   by (cases C; clarsimp; meson Transformation_def transformation_left_frame)
+
 
 subsubsection \<open>Extracting Pure Facts\<close>
 
