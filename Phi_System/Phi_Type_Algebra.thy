@@ -1195,8 +1195,8 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
   \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Identity_Elements\<^sub>I _ _ _\<close>,
-  \<^pattern_prop>\<open>Identity_Elements\<^sub>E _ _\<close>,
+  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>I _)\<close>,
+  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>E _)\<close>,
   \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
@@ -1211,6 +1211,18 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
 end
 \<close>
 
+declare [[
+  \<phi>reason_default_pattern \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> (100)
+                      and \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> (100)
+]]
+
+text \<open>Candidates of templates instantiation are not prioritized. When a property requires multiple
+  rules ordered by their priorities for overrides and optimizations, the property is not declared
+  as a parameter property in the template instantiation system but just a \<phi>-LPR reasoning goal tagged
+  by \<open>\<A>_template_reason\<close> in the template.
+  Instead, a trigger \<open>TERM (The_Property F)\<close> is used as the parameter property activating
+  the instantiation and (when the trigger is given) indicating when the prioritized rules are all given
+  so when can the instantiation start. \<close>
 
 
 subsection \<open>Programming Methods to Prove the Properties\<close>
@@ -3679,6 +3691,20 @@ ML_file \<open>library/phi_type_algebra/tools/extended_BNF_info.ML\<close>
 
 
 subsubsection \<open>Extending the Guessing of Property\<close>
+
+text \<open>When derivers provide gussers of specific strategies typically based on the logic types of the
+  abstract domain, boolean constraints implies inside can in addition augment the guessing.
+  The section aims to provide a general mechanism syntactically extracting the constraints.
+
+  The extraction works in two modes,
+  \<^item> covariant, where the boolean constraints are proof obligations have to be shown, and the \<phi>-type
+      typically locates at the right hand side of a transformation;
+  \<^item> contra-variant, where the constraints are conditions constraining the proof obligations, and the
+      \<phi>-type typically locates at the left hand side of a transformation.
+\<close>
+
+
+
   \<comment> \<open>A general mechanism to provide user heuristics which guesses the entire property
       of some specific forms of \<phi>-types\<close>
 
@@ -3690,6 +3716,15 @@ text \<open>When guessing the property, the system first tries to see if there i
   adding new antecedents or constraining the antecedents by conditions.\<close>
 
 type_synonym variant = bool \<comment>\<open>True for covariant, False for contravariant, undefined for invariant\<close>
+
+(*
+definition Guess_Property :: \<open>'property_const \<Rightarrow> variant \<Rightarrow> 'a BI \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>Guess_Property the_constant_of_the_property_predicate \<comment> \<open>gives which sort of properties we are guessing\<close>
+                        variantness_of_the_property
+                        unfolded_\<phi>type_definition
+                        guessed_antecedents         guessed_proof_obligation
+                        conditions_of_antecedents   conditions_of_obligation
+          \<equiv> True\<close>*)
 
 definition Guess_Property :: \<open>'property_const \<Rightarrow> variant \<Rightarrow> 'a BI \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool option \<Rightarrow> bool\<close>
   where \<open>Guess_Property the_constant_of_the_property_predicate
@@ -3977,7 +4012,10 @@ hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
     requires Warn_if_contains_Sat
   = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
 
-\<phi>property_deriver Identity_Elements 103 requires Identity_Elements\<^sub>I and Identity_Elements\<^sub>E
+\<phi>property_deriver Identity_Elements 103
+  requires Identity_Elements\<^sub>I and Identity_Elements\<^sub>E
+
+
 
 paragraph \<open>Guessing Antecedents\<close>
 
@@ -4912,31 +4950,21 @@ subsubsection \<open>Meta Deriver for \<phi>-Type Operator Commutativity\<close>
 
 paragraph \<open>Guess Property\<close>
 
-definition Guess_Tyops_Commute\<^sub>I :: \<open> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'b) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
-                                  \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
-                                  \<Rightarrow> ('a \<Rightarrow> bool)
-                                  \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
-                                  \<Rightarrow> bool \<Rightarrow> bool
-                                  \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>I G G' F F' unfolded_G unfolded_G' T D r ants conds \<equiv> True\<close>
-
-definition Guess_Tyops_Commute\<^sub>E :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'b) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
-                                  \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'b) \<phi>)
-                                  \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
-                                  \<Rightarrow> ('a \<Rightarrow> bool)
-                                  \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
-                                  \<Rightarrow> bool \<Rightarrow> bool
-                                  \<Rightarrow> bool\<close>
-  where \<open>Guess_Tyops_Commute\<^sub>E F F' G G' unfolded_G unfolded_G' T D r ants conds \<equiv> True\<close>
+definition Guess_Tyops_Commute :: \<open> bool \<comment> \<open>Intro for true, Elim for false\<close>
+                                \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                                \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
+                                \<Rightarrow> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                \<Rightarrow> (('c\<^sub>F,'a\<^sub>F) \<phi> \<Rightarrow> ('c,'a) \<phi>)
+                                \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>G,'a\<^sub>G) \<phi>)
+                                \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F,'a\<^sub>F) \<phi>)
+                                \<Rightarrow> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'b) \<phi>)
+                                \<Rightarrow> ('c\<^sub>T,'a\<^sub>T) \<phi>
+                                \<Rightarrow> ('a \<Rightarrow> bool)
+                                \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> bool)
+                                \<Rightarrow> bool \<Rightarrow> bool
+                                \<Rightarrow> bool\<close>
+  where \<open>Guess_Tyops_Commute is_intro G G' F F' unfolded_G unfolded_G' uF uF' T D r ants conds \<equiv> True\<close>
 
 definition Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I :: \<open> (('c\<^sub>G,'a\<^sub>G) \<phi> \<Rightarrow> ('c,'a) \<phi>)
                                     \<Rightarrow> (('c\<^sub>T,'a\<^sub>T) \<phi> \<Rightarrow> ('c\<^sub>F\<^sub>T,'a\<^sub>F\<^sub>T) \<phi>)
@@ -5001,23 +5029,21 @@ definition Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E :: \<open> (('c\<
   where \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E G G'\<^sub>T G'\<^sub>U F F' unfolded_G unfolded_G'\<^sub>T unfolded_G'\<^sub>U T U D r ants conds \<equiv> True\<close>
 
 
-\<phi>reasoner_group guess_tyop_commute_all = (100,[10,3000]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+\<phi>reasoner_group guess_tyop_commute_all = (100,[10,3000]) for (\<open>Guess_Tyops_Commute intro F F' G G' unfolded_G unfolded_G' uF uF' T D r ants conds\<close>)
     \<open>Rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
- and guess_tyop_commute = (1000, [1000, 3000]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+ and guess_tyop_commute = (1000, [1000, 3000]) for (\<open>Guess_Tyops_Commute intro F F' G G' unfolded_G unfolded_G' uF uF' T D r ants conds\<close>)
                                              in guess_tyop_commute_all
     \<open>User Rules\<close>
- and guess_tyop_commute_fallback = (10, [10,10]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+ and guess_tyop_commute_fallback = (10, [10,10]) for (\<open>Guess_Tyops_Commute intro F F' G G' unfolded_G unfolded_G' uF uF' T D r ants conds\<close>)
                                                   in guess_tyop_commute_all < guess_tyop_commute
     \<open>Fallback rules\<close>
- and guess_tyop_commute_default = (15, [11, 39]) for (\<open>Guess_Tyops_Commute\<^sub>I F F' G G' unfolded_G unfolded_G' T D r ants conds\<close>)
+ and guess_tyop_commute_default = (15, [11, 39]) for (\<open>Guess_Tyops_Commute intro F F' G G' unfolded_G unfolded_G' uF uF' T D r ants conds\<close>)
                                                   in guess_tyop_commute_all and > guess_tyop_commute_fallback and < guess_tyop_commute
     \<open>Predefined default rules guessing the form of the Commutativity between \<phi>-Type Operators\<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>Guess_Tyops_Commute\<^sub>I ?F _ ?G _ ?unfolded_G _ _ _ _ _ _\<close> \<Rightarrow>
-                          \<open>Guess_Tyops_Commute\<^sub>I ?F _ ?G _ ?unfolded_G _ _ _ _ _ _\<close>    (100)
-                      and \<open>Guess_Tyops_Commute\<^sub>E ?F _ ?G _ ?unfolded_G _ _ _ _ _ _\<close> \<Rightarrow>
-                          \<open>Guess_Tyops_Commute\<^sub>E ?F _ ?G _ ?unfolded_G _ _ _ _ _ _\<close>    (100)
+  \<phi>reason_default_pattern \<open>Guess_Tyops_Commute ?I ?F _ ?G _ ?unfolded_G _ ?uF _ _ _ _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Tyops_Commute ?I ?F _ ?G _ ?unfolded_G _ ?uF _ _ _ _ _ _\<close>    (100)
                       and \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close> \<Rightarrow>
                           \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>I ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close>    (100)
                       and \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2\<^sub>E ?F _ _ ?G _ ?unfolded_G _ _ _ _ _ _ _\<close> \<Rightarrow>
@@ -5035,16 +5061,16 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 \<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T x) : (x \<Ztypecolon> G' T) )
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' var_unfolded_G var_unfolded_G' T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' var_unfolded_G var_unfolded_G' T D r ants conds\<close> .
+\<Longrightarrow> Guess_Tyops_Commute True G G' F F' var_unfolded_G var_unfolded_G' uF uF' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute True G G' F F' var_unfolded_G var_unfolded_G' uF uF' T D r ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
   \<open> Parameter_Variant_of_the_Same_Type G G'
 \<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T x) : (x \<Ztypecolon> G' T) )
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' var_unfolded_G var_unfolded_G' T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' var_unfolded_G var_unfolded_G' T D r ants conds\<close> .
+\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' var_unfolded_G var_unfolded_G' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' var_unfolded_G var_unfolded_G' T D r ants conds\<close> .
 
 lemma [\<phi>reason %\<phi>TA_guesser_init]:
   \<open> Parameter_Variant_of_the_Same_Type F F'\<^sub>T
@@ -5087,17 +5113,17 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 
 subparagraph \<open>Default Rules\<close>
 
-lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>I _ _ _ _ _ _ _ _ _ _ _\<close>]:
+lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute True _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I F F' G G' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+\<Longrightarrow> Guess_Tyops_Commute True G G' F F' any any' uF uF' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+  unfolding Guess_Tyops_Commute_def ..
 
-lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>E _ _ _ _ _ _ _ _ _ _ _\<close>]:
+lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute False _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
 \<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>E _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
   \<open> Type_Variant_of_the_Same_Type_Operator2 F F'

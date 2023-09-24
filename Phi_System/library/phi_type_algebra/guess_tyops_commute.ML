@@ -39,8 +39,10 @@ fun gen_Guess_Tyops_Commute_framework (template_of_reasoning_goal, parsing_rule,
     )
 
 val gen_Guess_Tyops_Commute_I_1 = gen_Guess_Tyops_Commute_framework
-      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds\<close>,
-       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>I ?G ?G' ?F ?F' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds,
+      (\<^pattern_prop>\<open>Guess_Tyops_Commute True ?G ?G' ?F ?F'
+                                        ?unfolded_G ?unfolded_G' (\<lambda>T x. x \<Ztypecolon> ?F T) (\<lambda>T x. x \<Ztypecolon> ?F' T)
+                                        ?T ?D ?r ?ants ?conds\<close>,
+       \<^pattern>\<open>(Guess_Tyops_Commute True ?G ?G' ?F ?F' ?unfolded_G ?unfolded_G' ?uF ?uF' ?T ?D ?r ?ants ?conds,
                 Tyops_Commute ?G ?G' ?F ?F' ?T ?D ?r,
                 ?G' _ _,
                 ?conds,
@@ -48,8 +50,10 @@ val gen_Guess_Tyops_Commute_I_1 = gen_Guess_Tyops_Commute_framework
        1, 1)
 
 val gen_Guess_Tyops_Commute_E_1 = gen_Guess_Tyops_Commute_framework
-      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>E ?F ?F' ?G ?G' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds\<close>,
-       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>E ?F ?F' ?G ?G' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds,
+      (\<^pattern_prop>\<open>Guess_Tyops_Commute False ?F ?F' ?G ?G'
+                                        (\<lambda>T x. x \<Ztypecolon> ?F T) (\<lambda>T x. x \<Ztypecolon> ?F' T) ?unfolded_G ?unfolded_G'
+                                        ?T ?D ?r ?ants ?conds\<close>,
+       \<^pattern>\<open>(Guess_Tyops_Commute False ?F ?F' ?G ?G' ?uF ?uF' ?unfolded_G ?unfolded_G' ?T ?D ?r ?ants ?conds,
                 Tyops_Commute ?F ?F' ?G ?G' ?T ?D ?r,
                 ?G _ _,
                 ?conds,

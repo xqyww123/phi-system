@@ -179,49 +179,49 @@ paragraph \<open>Commutativity between Tyoprs\<close>
 subparagraph \<open>\<open>Guess_Tyops_Commute\<^sub>I\<close>\<close>
 
 lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P) G_def' T
+  \<open> Guess_Tyops_Commute True G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' uF uF' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute True G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P) G_def' uF uF' T
                         (\<lambda>x. P \<longrightarrow> D x) r ants ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> conds) \<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P x) G_def' T
+  \<open> Guess_Tyops_Commute True G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' uF uF' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute True G G' F F' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P x) G_def' uF uF' T
                         (\<lambda>x. P x \<longrightarrow> D x) r ants conds \<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P' T x) T D r ants conds \<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+  \<open> Guess_Tyops_Commute True G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) uF uF' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute True G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P' T x) uF uF' T D r ants conds \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+  \<open> Guess_Tyops_Commute True G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) uF uF' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute True G G' F F' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') uF uF' T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 subparagraph \<open>\<open>Guess_Tyops_Commute\<^sub>E\<close>\<close>
 
 lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> Guess_Tyops_Commute\<^sub>E F F' G G' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P) G_def' T
+  \<open> Guess_Tyops_Commute False F F' G G' uF uF' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P) G_def' T
                         (\<lambda>x. P \<longrightarrow> D x) r ants ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> conds) \<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>E F F' G G' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P x) G_def' T D r ants conds \<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+  \<open> Guess_Tyops_Commute False F F' G G' uF uF' (\<lambda>T x. g x \<Ztypecolon> G_def T) G_def' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' (\<lambda>T x. g x \<Ztypecolon> G_def T \<phi>\<s>\<u>\<b>\<j> P x) G_def' T D r ants conds \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>E F F' G G' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P' T x) T D r ants conds \<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+  \<open> Guess_Tyops_Commute False F F' G G' uF uF' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P' T x) T D r ants conds \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> Guess_Tyops_Commute\<^sub>E F F' G G' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E F F' G G' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+  \<open> Guess_Tyops_Commute False F F' G G' uF uF' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T) T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' G_def (\<lambda>T x. g' x \<Ztypecolon> G_def' T \<phi>\<s>\<u>\<b>\<j> P') T D r ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P') \<and>\<^sub>\<r> ants) conds \<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 
 subsection \<open>Dependent Sum Type \& Abstraction of Set\<close>
@@ -1393,25 +1393,16 @@ subsubsection \<open>Guessing Property\<close>
 
 lemma [\<phi>reason %guess_tyop_commute+10]:
   \<open> \<g>\<u>\<a>\<r>\<d> fun_commute g f g' f'
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+\<Longrightarrow> Guess_Tyops_Commute both G G' F F'
+                        (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) (\<lambda>T x. x \<Ztypecolon> f \<Zcomp>\<^sub>f T) (\<lambda>T x. x \<Ztypecolon> f' \<Zcomp>\<^sub>f T) T
+                        (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
+  unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute g f g' f') True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>I_def ..
-
-lemma [\<phi>reason %guess_tyop_commute+10]:
-  \<open> \<g>\<u>\<a>\<r>\<d> fun_commute f g f' g'
-\<Longrightarrow> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') G G' (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) T
-                         (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute f g f' g') True\<close>
-  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+  \<open> Guess_Tyops_Commute both G G' F F'
+                        (\<lambda>U x. x \<Ztypecolon> g \<Zcomp>\<^sub>f U) (\<lambda>U x. x \<Ztypecolon> g' \<Zcomp>\<^sub>f U) (\<lambda>T x. x \<Ztypecolon> f \<Zcomp>\<^sub>f T) (\<lambda>T x. x \<Ztypecolon> f' \<Zcomp>\<^sub>f T) T
+                        (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) (fun_commute g f g' f') True\<close>
+  unfolding Guess_Tyops_Commute_def ..
   
 
 
@@ -1573,6 +1564,18 @@ subsubsection \<open>Commutativity\<close>
 paragraph \<open>Guessing Property\<close>
 
 text \<open>TODO: deriving the guessing rules\<close>
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>I G G' ((\<Zcomp>\<^sub>f) (scalar_mult f s)) ((\<Zcomp>\<^sub>f) (scalar_mult f' s')) uG uG' T D R a c
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>I G G' (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') uG uG' T D R a c \<close>
+  unfolding Guess_Tyops_Commute\<^sub>I_def ..
+
+lemma [\<phi>reason %guess_tyop_commute]:
+  \<open> Guess_Tyops_Commute\<^sub>E ((\<Zcomp>\<^sub>f) (scalar_mult f s)) ((\<Zcomp>\<^sub>f) (scalar_mult f' s')) G G' uG uG' T D R a c
+\<Longrightarrow> Guess_Tyops_Commute\<^sub>E (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') G G' uG uG' T D R a c \<close>
+  unfolding Guess_Tyops_Commute\<^sub>E_def ..
+
+
 
 subparagraph \<open>\<open>\<phi>ScalarMul\<close> to \<open>\<phi>ScalarMul\<close>\<close>
 
