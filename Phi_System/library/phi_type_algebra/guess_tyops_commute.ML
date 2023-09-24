@@ -61,8 +61,10 @@ val gen_Guess_Tyops_Commute_E_1 = gen_Guess_Tyops_Commute_framework
        1, 1)
 
 val gen_Guess_Tyops_Commute_I_2_1 = gen_Guess_Tyops_Commute_framework
-      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?unfolded_G'\<^sub>T ?unfolded_G'\<^sub>U ?T ?U ?D ?r ?ants ?conds\<close>,
-       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1\<^sub>I ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?unfolded_G ?unfolded_G'\<^sub>T ?unfolded_G'\<^sub>U ?T ?U ?D ?r ?ants ?conds,
+      (\<^pattern_prop>\<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 False ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F'
+                                          ?uG ?uG'\<^sub>T ?uG'\<^sub>U (\<lambda>T U x. x \<Ztypecolon> ?F T U) (\<lambda>T U x. x \<Ztypecolon> ?F' T U)
+                                          ?T ?U ?D ?r ?ants ?conds\<close>,
+       \<^pattern>\<open>(Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 False ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?uG ?uG'\<^sub>T ?uG'\<^sub>U ?uF ?uF' ?T ?U ?D ?r ?ants ?conds,
                 Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ?G ?G'\<^sub>T ?G'\<^sub>U ?F ?F' ?T ?U ?D ?r,
                 ?G _ _,
                 ?conds,
