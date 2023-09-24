@@ -1563,28 +1563,10 @@ subsubsection \<open>Commutativity\<close>
 
 paragraph \<open>Guessing Property\<close>
 
-declare [[\<phi>trace_reasoning = 1]]
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute mode G G' F F' uG uG' (\<lambda>T x. x \<Ztypecolon> scalar_mult f s \<Zcomp>\<^sub>f T) uF' T D R a c
-\<Longrightarrow> Guess_Tyops_Commute mode G G' F F' uG uG' (\<lambda>T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) uF' T D R a c \<close>
-  unfolding Guess_Tyops_Commute_def ..
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute mode G G' F F' uG uG' uF (\<lambda>T x. x \<Ztypecolon> scalar_mult f' s' \<Zcomp>\<^sub>f T) T D R a c
-\<Longrightarrow> Guess_Tyops_Commute mode G G' F F' uG uG' uF (\<lambda>T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f'] s' \<Zcomp> T) T D R a c \<close>
-  unfolding Guess_Tyops_Commute_def ..
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute mode G G' F F' (\<lambda>T x. x \<Ztypecolon> scalar_mult f s \<Zcomp>\<^sub>f T) uG' uF uF' T D R a c
-\<Longrightarrow> Guess_Tyops_Commute mode G G' F F' (\<lambda>T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) uG' uF uF' T D R a c \<close>
-  unfolding Guess_Tyops_Commute_def ..
-
-lemma [\<phi>reason %guess_tyop_commute]:
-  \<open> Guess_Tyops_Commute mode G G' F F' uG (\<lambda>T x. x \<Ztypecolon> scalar_mult f s \<Zcomp>\<^sub>f T) uF uF' T D R a c
-\<Longrightarrow> Guess_Tyops_Commute mode G G' F F' uG (\<lambda>T x. x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) uF uF' T D R a c \<close>
-  unfolding Guess_Tyops_Commute_def ..
-
+declare Guess_Tyops_Commute_by_unfolding
+        [where A=\<open>\<lambda>T x. (x \<Ztypecolon> \<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T)\<close> for f s,
+         OF \<phi>ScalarMul.unfold,
+         \<phi>reason %guess_tyop_commute]
 
 paragraph \<open>Deriving the Commutativity with Itself\<close>
 
@@ -1876,6 +1858,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Commutativity_Deriver
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
+
 
 thm \<phi>MapAt.\<Sigma>_rewr
 
