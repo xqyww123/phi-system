@@ -71,8 +71,8 @@ fun guess_antecedent ctxt0 (const, is_covar) phi T_term0 =
               $ (if is_covar then \<^Const>\<open>True\<close> else \<^Const>\<open>False\<close>)
               $ T_term
               $ Var (("uT", 0), Term.fastype_of T_term)
-              $ Var (("a", 0), HOLogic.boolT) $ Var (("g", 0), HOLogic.boolT)
-              $ Var (("c", 0), HOLogic.boolT)
+              $ Var (("a", 0), HOLogic.boolT) $ Var (("g", 0), x_ty --> HOLogic.boolT)
+              $ Var (("c", 0), x_ty --> HOLogic.boolT)
             ))
             |> Thm.cterm_of ctxt
             |> Goal.init
@@ -90,7 +90,7 @@ fun guess_antecedent ctxt0 (const, is_covar) phi T_term0 =
             val (x_name, _) = Name.variant "\<x>" name
             val x = Free (x_name, x_ty)
             fun filter_lambda func =
-              Term.abstract_over (x, Phi_Help.list_mk_conj (filter' (Envir.beta_eta_contract (func $ x))))
+              Term.lambda x (Phi_Help.list_mk_conj (filter' (Envir.beta_eta_contract (func $ x))))
          in case ret
          |> Simplifier.simplify (ctxt addsimps @{thms' Premise_norm[where mode=\<open>default\<close>]
                                                        Premise_norm[where mode=\<open>MODE_GUARD\<close>]

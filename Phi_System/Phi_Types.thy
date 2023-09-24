@@ -26,8 +26,8 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-      
+declare [[\<phi>trace_reasoning = 3]]
+
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse

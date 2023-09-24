@@ -1281,6 +1281,9 @@ val constrain_antecedents : term (*condition*) -> term (*antecedents*) -> term l
         \<open>condition C\<close>, \<open>condition Ant\<close>, to \<open>condition (C \<longrightarrow> Ant)\<close>
         \<open>condition C\<close>, \<open>\<forall>x. condition Ant x\<close>, to \<open>\<forall>x. condition (C \<longrightarrow> Ant x)\<close>*)
 
+val forall_qualify : typ -> term -> term
+val exists_qualify : typ -> term -> term
+
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
@@ -1303,6 +1306,14 @@ fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_S
             | constrain X = \<^Const>\<open>HOL.implies\<close> $ cond $ X
        in map constrain o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
       end
+
+fun forall_qualify ty (X as Abs (_, _, B)) =
+      if Term.loose_bvar1 (B, 0) then \<^Const>\<open>HOL.All ty\<close> $ X else Term.incr_boundvars ~1 B
+  | forall_qualify ty X = \<^Const>\<open>HOL.All ty\<close> $ X
+
+fun exists_qualify ty (X as Abs (_, _, B)) =
+      if Term.loose_bvar1 (B, 0) then \<^Const>\<open>HOL.Ex ty\<close> $ X else Term.incr_boundvars ~1 B
+  | exists_qualify ty X = \<^Const>\<open>HOL.Ex ty\<close> $ X
 
 end
 
