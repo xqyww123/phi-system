@@ -3,35 +3,18 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 (*lame!
 val guess_entire_property : Proof.context -> Phi_Type_Algebra.phi_type -> term -> term option*)
 
-val constrain_antecedents : term (*condition*) -> term (*antecedents*) -> term list (*enhanced*)
-
-val guess_antecedent : Proof.context -> Phi_Type_Algebra.phi_type
-                    -> term (*constant of the property predicate*) -> term
-                    -> term list (*existing guessed antecedents*)
+val guess_antecedent : Proof.context
+                    -> term (*constant of the property predicate*)
+                     * bool (*True for covariant, False for contra-variant*)
+                    -> Phi_Type_Algebra.phi_type -> term (*the target \<phi>-type term*)
                     -> term list (*augmented antecedents*)
-
+                     * term (*augmented boolean antecedents*)
+                     * term (*conditions*)
 
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
-open Phi_Type_Algebra
-
-fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
-  | constrain_antecedents cond =
-      let fun is_premise_tag (Const(\<^const_name>\<open>default\<close>, _)) = true
-            | is_premise_tag (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
-            | is_premise_tag _ = false
-          fun constrain (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X)) = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, constrain X)
-            | constrain (\<^Const>\<open>HOL.All t\<close> $ X) = \<^Const>\<open>HOL.All t\<close> $ Abs ("_", t, constrain (Term.incr_boundvars 1 X $ Bound 0))
-            | constrain (X as (H as Const(\<^const_name>\<open>Premise\<close>, _) $ tag) $ P) =
-                (case cond of Const(\<^const_name>\<open>Premise\<close>, _) $ tag' $ C =>
-                                if is_premise_tag tag andalso is_premise_tag tag'
-                                then H $ (\<^Const>\<open>HOL.implies\<close> $ C $ P)
-                                else \<^Const>\<open>HOL.implies\<close> $ cond $ X
-                            | _ => \<^Const>\<open>HOL.implies\<close> $ cond $ X)
-            | constrain X = \<^Const>\<open>HOL.implies\<close> $ cond $ X
-       in map constrain o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
-      end
+open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun flt tm = not (Term.is_schematic tm) andalso
              not (Term.exists_Const (fn (\<^const_name>\<open>Satisfaction\<close>, _) => true | _ => false) tm)
@@ -79,43 +62,48 @@ fun guess_entire_property ctxt0 (phi : phi_type) property_const =
   end
 *)
 
-fun guess_antecedent ctxt0 phi const assertion existing_antecedents =
-  let val ([assertion], ctxt) = Variable.import_terms false [assertion] ctxt0
+fun guess_antecedent ctxt0 (const, is_covar) phi T_term0 =
+  let val ([T_term], ctxt) = Variable.import_terms false [T_term0] ctxt0
+      val (x_ty, c_ty) = Phi_Syntax.dest_phi_type_ty (Term.fastype_of T_term)
       val goal = ( HOLogic.Trueprop $ (
-            \<^Const>\<open>Guess_Property \<open>Term.fastype_of const\<close> \<open>Phi_Syntax.dest_BI_ty (Term.fastype_of assertion)\<close>\<close>
+            \<^Const>\<open>Guess_Property \<open>Term.fastype_of const\<close> x_ty c_ty\<close>
               $ const
-              $ Var (("variantness", 0), HOLogic.boolT)
-              $ assertion
-              $ Var (("g", 0), HOLogic.boolT)
+              $ (if is_covar then \<^Const>\<open>True\<close> else \<^Const>\<open>False\<close>)
+              $ T_term
+              $ Var (("uT", 0), Term.fastype_of T_term)
+              $ Var (("a", 0), HOLogic.boolT) $ Var (("g", 0), HOLogic.boolT)
               $ Var (("c", 0), HOLogic.boolT)
-              $ \<^Const>\<open>None HOLogic.boolT\<close>) )
+            ))
             |> Thm.cterm_of ctxt
             |> Goal.init
             |> Conv.gconv_rule (HOLogic.Trueprop_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg1_conv (
                   Simplifier.rewrite (ctxt0 addsimps #equations phi)))))) 1
-   in case Phi_Reasoner.reason NONE NONE ctxt goal
-   of NONE => existing_antecedents
+   in case goal
+        |> Phi_Reasoner.reason NONE NONE ( Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
+                                        |> Phi_Type_Algebra_Derivers.Expansion.map' (fn ctxt => ctxt addsimps (#equations phi)))
+   of NONE => raise Automation_Fail (fn () => let open Pretty in
+                      [para "Fail to guess the property. \<phi>-LPR process of \<open>Guess_Property\<close> fails."]
+                end)
     | SOME ret =>
-        let val (guessed, cond) = (*@{print}*) (
-            case ret
-              |> Simplifier.simplify (ctxt addsimps @{thms' Premise_norm[where mode=\<open>default\<close>]
-                                                            Premise_norm[where mode=\<open>MODE_GUARD\<close>]
-                                                            Ant_Seq_reduct
-                                                            HOL.imp_conjR[folded Ant_Seq_def]
-                                                            HOL.all_conj_distrib[folded Ant_Seq_def]})
-              |> singleton (Variable.export ctxt ctxt0)
-              |> Thm.prop_of
-              of _ (*Pure.protect*) $ (_ (*Trueprop*) $ (
-                  Const(\<^const_name>\<open>Guess_Property\<close>, _) $ _ $ _ $ _
-                    $ guessed $ cond $ _))
-                   => (guessed, cond)
-                   |> apply2 (filter flt o PLPR_Syntax.dest_ant_sequence_or_HOL_conj)
-               | _ => error "BUG" )
-
-            val cond' = PLPR_Syntax.mk_ant_sequence cond
-
-         in (maps PLPR_Syntax.dest_ant_sequence_or_HOL_conj existing_antecedents @ guessed)
-         |> not (null cond) ? maps (constrain_antecedents cond')
+        let val filter' = filter flt o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
+            val name = Term.declare_term_frees (Thm.prop_of ret) Name.context
+            val (x_name, _) = Name.variant "\<x>" name
+            val x = Free (x_name, x_ty)
+            fun filter_lambda func =
+              Term.abstract_over (x, Phi_Help.list_mk_conj (filter' (Envir.beta_eta_contract (func $ x))))
+         in case ret
+         |> Simplifier.simplify (ctxt addsimps @{thms' Premise_norm[where mode=\<open>default\<close>]
+                                                       Premise_norm[where mode=\<open>MODE_GUARD\<close>]
+                                                       Ant_Seq_reduct
+                                                       HOL.imp_conjR[folded Ant_Seq_def]
+                                                       HOL.all_conj_distrib[folded Ant_Seq_def]})
+         |> singleton (Variable.export ctxt ctxt0)
+         |> Thm.prop_of
+         of _ (*Pure.protect*) $ (_ (*Trueprop*) $ (
+             Const(\<^const_name>\<open>Guess_Property\<close>, _) $ _ $ _ $ _ $ _
+               $ ant $ oblg $ cond))
+              => (filter' ant, filter_lambda oblg, filter_lambda cond)
+          | _ => error "BUG"
         end
   end
 

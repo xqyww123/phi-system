@@ -1194,7 +1194,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                in Seq.single (Logic.strip_imp_prems H, Logic.strip_imp_concl H, parameters, phi, ctxt)
               end
            | _ => guess_property phi0 ctxt0
-               |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
+            (* |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
                     let val (rev_params_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
                         fun recover_assertion _ [] [] = #term phi 
                           | recover_assertion i (param_ty :: Tys) (NONE :: params)
@@ -1208,7 +1208,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                                            | _ => error "BUG"
                         val ants' = guess_antecedent (*(Expansion.equip*) ctxt phi property_const assertion ants
                      in (ants', property, parameters, phi, ctxt)
-                    end ))
+                    end ) *) )
    |> Seq.map (fn (ants01, property01, phi_typ_parameters01, phi01, ctxt01) => 
   let val (ants, property, phi_typ_parameters, phi, ctxt) =
         if is_phi_type_fixed phi01

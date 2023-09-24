@@ -146,18 +146,13 @@ lemma [\<phi>reason 1000]:
 subsubsection \<open>Guessing Antecedents\<close>
 
 lemma [\<phi>reason default %\<phi>TA_guesser]:
-  \<open> Guess_Property PC False (x \<Ztypecolon> T) a c C
-\<Longrightarrow> Guess_Property PC False (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> c) C\<close>
+  \<open> Guess_Property PC False T' (\<lambda>x. f x \<Ztypecolon> T x) a p c
+\<Longrightarrow> Guess_Property PC False T' (\<lambda>x. f x \<Ztypecolon> T x \<phi>\<s>\<u>\<b>\<j> P x) a p (\<lambda>x. P x \<and> c x)\<close>
   unfolding Guess_Property_def ..
 
 lemma [\<phi>reason default %\<phi>TA_guesser]:
-  \<open> Guess_Property PC True (x \<Ztypecolon> T) a c C
-\<Longrightarrow> Guess_Property PC True (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) ((\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<and>\<^sub>\<r> a) c C\<close>
-  unfolding Guess_Property_def ..
-
-lemma [\<phi>reason default %\<phi>TA_guesser]:
-  \<open> Guess_Property PC undefined (x \<Ztypecolon> T) a c C
-\<Longrightarrow> Guess_Property PC undefined (x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P) a c C\<close>
+  \<open> Guess_Property PC True T' (\<lambda>x. f x \<Ztypecolon> T x) a p c
+\<Longrightarrow> Guess_Property PC True T' (\<lambda>x. f x \<Ztypecolon> T x \<phi>\<s>\<u>\<b>\<j> P x) a (\<lambda>x. P x \<and> p x) c\<close>
   unfolding Guess_Property_def ..
 
 lemma [\<phi>reason default %\<phi>TA_guesser]:

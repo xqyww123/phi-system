@@ -1275,5 +1275,34 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 
 type deriving_instruction = Phi_Type_Algebra.deriving_instruction
 
+val constrain_antecedents : term (*condition*) -> term (*antecedents*) -> term list (*enhanced*)
+      (*provides conditions to the given antecedents, e.g,
+        cond, ant, to \<open>cond \<longrightarrow> ant\<close>,
+        \<open>condition C\<close>, \<open>condition Ant\<close>, to \<open>condition (C \<longrightarrow> Ant)\<close>
+        \<open>condition C\<close>, \<open>\<forall>x. condition Ant x\<close>, to \<open>\<forall>x. condition (C \<longrightarrow> Ant x)\<close>*)
+
+end
+
+structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
+
+type deriving_instruction = Phi_Type_Algebra.deriving_instruction
+
+fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
+  | constrain_antecedents cond =
+      let fun is_premise_tag (Const(\<^const_name>\<open>default\<close>, _)) = true
+            | is_premise_tag (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
+            | is_premise_tag _ = false
+          fun constrain (\<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, X)) = \<^Const>\<open>HOL.All t\<close> $ Abs (N, ty, constrain X)
+            | constrain (\<^Const>\<open>HOL.All t\<close> $ X) = \<^Const>\<open>HOL.All t\<close> $ Abs ("_", t, constrain (Term.incr_boundvars 1 X $ Bound 0))
+            | constrain (X as (H as Const(\<^const_name>\<open>Premise\<close>, _) $ tag) $ P) =
+                (case cond of Const(\<^const_name>\<open>Premise\<close>, _) $ tag' $ C =>
+                                if is_premise_tag tag andalso is_premise_tag tag'
+                                then H $ (\<^Const>\<open>HOL.implies\<close> $ C $ P)
+                                else \<^Const>\<open>HOL.implies\<close> $ cond $ X
+                            | _ => \<^Const>\<open>HOL.implies\<close> $ cond $ X)
+            | constrain X = \<^Const>\<open>HOL.implies\<close> $ cond $ X
+       in map constrain o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
+      end
+
 end
 

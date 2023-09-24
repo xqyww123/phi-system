@@ -3690,124 +3690,6 @@ ML_file \<open>library/phi_type_algebra/tools/BNF_fp_sugar_more.ML\<close>
 ML_file \<open>library/phi_type_algebra/tools/extended_BNF_info.ML\<close>
 
 
-subsubsection \<open>Extending the Guessing of Property\<close>
-
-text \<open>When derivers provide gussers of specific strategies typically based on the logic types of the
-  abstract domain, boolean constraints implies inside can in addition augment the guessing.
-  The section aims to provide a general mechanism syntactically extracting the constraints.
-
-  The extraction works in two modes,
-  \<^item> covariant, where the boolean constraints are proof obligations have to be shown, and the \<phi>-type
-      typically locates at the right hand side of a transformation;
-  \<^item> contra-variant, where the constraints are conditions constraining the proof obligations, and the
-      \<phi>-type typically locates at the left hand side of a transformation.
-\<close>
-
-
-
-  \<comment> \<open>A general mechanism to provide user heuristics which guesses the entire property
-      of some specific forms of \<phi>-types\<close>
-
-text \<open>When guessing the property, the system first tries to see if there is any user overridings
-  by \<open>Guess_Property\<close> reasoning which gives the desired property entirely, if not, it goes to the normal
-  guesser procedure implemented by each deriver, and after obtaining the guessed property,
-  the system runs the \<open>Guess_Property\<close> again with the \<open>guessed_conclusion\<close> setting to None to force
-  guessing the antecedents only, in this way to refine the already guessed antecedent either by
-  adding new antecedents or constraining the antecedents by conditions.\<close>
-
-type_synonym variant = bool \<comment>\<open>True for covariant, False for contravariant, undefined for invariant\<close>
-
-(*
-definition Guess_Property :: \<open>'property_const \<Rightarrow> variant \<Rightarrow> 'a BI \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
-  where \<open>Guess_Property the_constant_of_the_property_predicate \<comment> \<open>gives which sort of properties we are guessing\<close>
-                        variantness_of_the_property
-                        unfolded_\<phi>type_definition
-                        guessed_antecedents         guessed_proof_obligation
-                        conditions_of_antecedents   conditions_of_obligation
-          \<equiv> True\<close>*)
-
-definition Guess_Property :: \<open>'property_const \<Rightarrow> variant \<Rightarrow> 'a BI \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool option \<Rightarrow> bool\<close>
-  where \<open>Guess_Property the_constant_of_the_property_predicate
-                        variantness_of_the_property
-                        unfolded_\<phi>type_definition
-                        guessed_antecedents
-                        conditions_of_antecedents
-                        guessed_conclusion \<comment> \<open>None for the mode guessing antecedents only\<close>
-          \<equiv> True\<close>
-
-declare [[
-  \<phi>reason_default_pattern \<open>Guess_Property ?PC ?V ?A _ _ _\<close> \<Rightarrow> \<open>Guess_Property ?PC ?V ?A _ _ _\<close> (100)
-                      and \<open>Guess_Property ?PC ?V ?A _ _ (Some _)\<close> \<Rightarrow> \<open>Guess_Property ?PC ?V ?A _ _ (Some _)\<close> (120)
-                      and \<open>Guess_Property ?PC ?V ?A _ _ None\<close> \<Rightarrow> \<open>Guess_Property ?PC ?V ?A _ _ None\<close> (120)
-]]
-
-\<phi>reasoner_group \<phi>TA_guesser = (100, [80, 2999]) for \<open>Guess_Property PC V A a c C\<close>
-    \<open>User heuristics overriding or extending the guesser mechanism of \<phi>type derivers.\<close>
- and \<phi>TA_guesser_init = (3000, [3000, 3000]) for \<open>Guess_Property PC V A a c C\<close> > \<phi>TA_guesser
-    \<open>Initializing the Guessing\<close>
- and \<phi>TA_guesser_default = (30, [2, 79]) for \<open>Guess_Property PC V A a c C\<close> < \<phi>TA_guesser
-    \<open>Default rules handling logical connectives\<close>
- and \<phi>TA_guesser_assigning_variant = (2200, [2200,2200]) for \<open>Guess_Property PC V A a c C\<close>
-                                                          in \<phi>TA_guesser and > \<phi>TA_guesser_default
-    \<open>Fallbacks using common default rules\<close>
- and \<phi>TA_guesser_fallback = (1,[1,1]) for \<open>Guess_Property PC V A a c C\<close> < \<phi>TA_guesser_default
-    \<open>Fallbacks of Guess_Property\<close>
-
-ML_file \<open>library/phi_type_algebra/guess_property.ML\<close>
-
-
-paragraph \<open>Rules Setting Variantness\<close>
-
-lemma Is_Covariant:
-  \<open> Guess_Property PC True A a p C
-\<Longrightarrow> Guess_Property PC var_v A a p C \<close>
-  unfolding Guess_Property_def ..
-
-lemma Is_Contravariant:
-  \<open> Guess_Property PC False A a p C
-\<Longrightarrow> Guess_Property PC var_v A a p C \<close>
-  unfolding Guess_Property_def ..
-
-lemma Is_Invariant:
-  \<open> Guess_Property PC undefined A a p C
-\<Longrightarrow> Guess_Property PC var_v A a p C \<close>
-  unfolding Guess_Property_def ..
-
-paragraph \<open>Preset\<close>
-
-lemma [\<phi>reason default %\<phi>TA_guesser_fallback]:
-  \<open>Guess_Property PC V A True True None\<close>
-  unfolding Guess_Property_def ..
-
-lemma [\<phi>reason default %\<phi>TA_guesser_default]:
-  \<open> Guess_Property PC False A a p C
-\<Longrightarrow> Guess_Property PC False (A \<s>\<u>\<b>\<j> P) a ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P) \<and>\<^sub>\<r> p) C \<close>
-  \<open> (\<And>x. Guess_Property PC False (A' x) (a' x) (c' x) C)
-\<Longrightarrow> Guess_Property PC False (ExSet A') (All a') (Ex c') C\<close>
-  unfolding Guess_Property_def ..
-
-lemma [\<phi>reason default %\<phi>TA_guesser_default]:
-  \<open> Guess_Property PC True A a p C
-\<Longrightarrow> Guess_Property PC True (A \<s>\<u>\<b>\<j> P) ((\<p>\<r>\<e>\<m>\<i>\<s>\<e> P) \<and>\<^sub>\<r> a) p C \<close>
-  \<open> (\<And>x. Guess_Property PC True (A' x) (a' x) (c' x) C)
-\<Longrightarrow> Guess_Property PC True (ExSet A') (Ex a') (All c') C \<close>
-  unfolding Guess_Property_def ..
-
-lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open> Guess_Property PC undefined A a c C
-\<Longrightarrow> Guess_Property PC undefined (A \<s>\<u>\<b>\<j> P) a c C\<close>
-  \<open> (\<And>x. Guess_Property PC undefined (A' x) a c C)
-\<Longrightarrow> Guess_Property PC undefined (ExSet A') a c C\<close>
-  unfolding Guess_Property_def ..
-
-lemma [\<phi>reason %\<phi>TA_guesser_default]:
-  \<open> Guess_Property PC V A a1 c1 None
-\<Longrightarrow> Guess_Property PC V B a2 c2 None
-\<Longrightarrow> Guess_Property PC V (A * B) (a1 \<and>\<^sub>\<r> a2) (c1 \<and>\<^sub>\<r> c2) None\<close>
-  unfolding Guess_Property_def ..
-
-
-
 
 subsubsection \<open>Deriver Framework\<close>
 
@@ -3891,6 +3773,95 @@ consts \<phi>deriver_expansion :: mode
   (\<open>Premise \<phi>deriver_expansion _\<close> | \<open>Simplify \<phi>deriver_expansion ?X' ?X\<close> )
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty)
         Phi_Type_Algebra_Derivers.Expansion.get' true) o snd\<close>
+
+
+subsubsection \<open>Extending Property Guessers\<close>
+
+text \<open>When derivers provide gussers of specific strategies typically based on the logic types of the
+  abstract domain, boolean constraints implies inside can in addition augment the guessing.
+  The section aims to provide a general mechanism syntactically extracting the constraints.
+
+  The extraction works in two modes,
+  \<^item> covariant, where the boolean constraints are proof obligations have to be shown, and the \<phi>-type
+      typically locates at the right hand side of a transformation;
+  \<^item> contra-variant, where the constraints are conditions constraining the proof obligations, and the
+      \<phi>-type typically locates at the left hand side of a transformation.
+\<close>
+
+
+
+  \<comment> \<open>A general mechanism to provide user heuristics which guesses the entire property
+      of some specific forms of \<phi>-types\<close>
+
+text \<open>When guessing the property, the system first tries to see if there is any user overridings
+  by \<open>Guess_Property\<close> reasoning which gives the desired property entirely, if not, it goes to the normal
+  guesser procedure implemented by each deriver, and after obtaining the guessed property,
+  the system runs the \<open>Guess_Property\<close> again with the \<open>guessed_conclusion\<close> setting to None to force
+  guessing the antecedents only, in this way to refine the already guessed antecedent either by
+  adding new antecedents or constraining the antecedents by conditions.\<close>
+
+type_synonym variant = bool \<comment>\<open>True for covariant, False for contravariant, undefined for invariant\<close>
+
+definition Guess_Property :: \<open>'property_const \<Rightarrow> variant \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi> \<Rightarrow> bool \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> bool\<close>
+  where \<open>Guess_Property the_constant_of_the_property_predicate \<comment> \<open>gives which sort of properties we are guessing\<close>
+                        variantness_of_the_property
+                        original_\<phi>type unfolded_\<phi>type
+                        guessed_antecedents guessed_proof_obligation yielded_conditions
+          \<equiv> True\<close>
+(*
+definition Guess_Property :: \<open>'property_const \<Rightarrow> variant \<Rightarrow> 'a BI \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool option \<Rightarrow> bool\<close>
+  where \<open>Guess_Property the_constant_of_the_property_predicate
+                        variantness_of_the_property
+                        unfolded_\<phi>type_definition
+                        guessed_antecedents
+                        conditions_of_antecedents
+                        guessed_conclusion \<comment> \<open>None for the mode guessing antecedents only\<close>
+          \<equiv> True\<close>
+*)
+declare [[
+  \<phi>reason_default_pattern \<open>Guess_Property ?PC ?V ?T ?uT _ _ _\<close> \<Rightarrow>
+                          \<open>Guess_Property ?PC ?V ?T ?uT _ _ _\<close> (100)
+]]
+
+\<phi>reasoner_group \<phi>TA_guesser = (100, [80, 2999]) for \<open>Guess_Property PC V T uT a pa cond\<close>
+    \<open>User heuristics overriding or extending the guesser mechanism of \<phi>type derivers.\<close>
+ and \<phi>TA_guesser_init = (3000, [3000, 3000]) for \<open>Guess_Property PC V T uT a pa cond\<close> > \<phi>TA_guesser
+    \<open>Initializing the Guessing\<close>
+ and \<phi>TA_guesser_default = (30, [2, 79]) for \<open>Guess_Property PC V T uT a pa cond\<close> < \<phi>TA_guesser
+    \<open>Default rules handling logical connectives\<close>
+ and \<phi>TA_guesser_assigning_variant = (2200, [2200,2200]) for \<open>Guess_Property PC V T uT a pa cond\<close>
+                                                          in \<phi>TA_guesser and > \<phi>TA_guesser_default
+    \<open>Fallbacks using common default rules\<close>
+ and \<phi>TA_guesser_fallback = (1,[1,1]) for \<open>Guess_Property PC V T uT a pa cond\<close> < \<phi>TA_guesser_default
+    \<open>Fallbacks of Guess_Property\<close>
+
+ML_file \<open>library/phi_type_algebra/guess_property.ML\<close>
+
+paragraph \<open>Preset\<close>
+
+lemma [\<phi>reason default %\<phi>TA_guesser_fallback]:
+  \<open>Guess_Property PC V T T' True (\<lambda>_. True) (\<lambda>_. True)\<close>
+  unfolding Guess_Property_def ..
+
+lemma [\<phi>reason default %\<phi>TA_guesser_default]:
+  \<open> Guess_Property PC False T A a p c
+\<Longrightarrow> Guess_Property PC False T (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) a p (\<lambda>x. P x \<and> c x) \<close>
+  \<open> (\<And>c. Guess_Property PC False T (\<lambda>x. A' x c) (a' c) (p' c) (cond c))
+\<Longrightarrow> Guess_Property PC False T (\<lambda>x. ExSet (A' x)) (All a') (\<lambda>x. \<forall>c. p' c x) (\<lambda>x. \<exists>c. cond c x)\<close>
+  unfolding Guess_Property_def ..
+
+lemma [\<phi>reason default %\<phi>TA_guesser_default]:
+  \<open> Guess_Property PC True T A a p c
+\<Longrightarrow> Guess_Property PC True T (\<lambda>x. A x \<s>\<u>\<b>\<j> P x) a (\<lambda>x. P x \<and> p x) c \<close>
+  \<open> (\<And>c. Guess_Property PC True T (\<lambda>x. A' x c) (a' c) (c' c) (cond c))
+\<Longrightarrow> Guess_Property PC True T (\<lambda>x. ExSet (A' x)) (Ex a') (\<lambda>x. \<exists>c. c' c x) (\<lambda>x. \<forall>c. cond c x) \<close>
+  unfolding Guess_Property_def ..
+
+lemma [\<phi>reason %\<phi>TA_guesser_default]:
+  \<open> Guess_Property PC V T A a1 p1 c1
+\<Longrightarrow> Guess_Property PC V T B a2 p2 c2
+\<Longrightarrow> Guess_Property PC V T (\<lambda>x. A x * B x) (a1 \<and>\<^sub>\<r> a2) (\<lambda>x. p1 x \<and> p2 x) (\<lambda>x. c1 x \<and> c2 x)\<close>
+  unfolding Guess_Property_def ..
 
 
 
@@ -4191,7 +4162,7 @@ ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
 \<phi>property_deriver Basic 109
   requires Object_Equiv and Abstract_Domain and Carrier_Set ?
 
-declare Is_Contravariant[where PC=\<open>Carrier_Set\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
+(*declare Is_Contravariant[where PC=\<open>Carrier_Set\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]*)
 
 
 subsubsection \<open>Transformation Functor\<close>
@@ -4235,14 +4206,6 @@ lemma \<phi>TA_FTF_rule:
 \<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R pm fm\<close>
   unfolding Premise_def fun_eq_iff Action_Tag_def
   using infer_FTF_from_FT .
-
-lemma [\<phi>reason %\<phi>TA_guesser[top]]:
-  \<comment> \<open>Guess_Property in Functional_Transformation_Functor is prohibited\<close>
-  \<open> False
-\<Longrightarrow> Guess_Property Functional_Transformation_Functor V Any True True (Some C)\<close>
-  \<open>Guess_Property Functional_Transformation_Functor V Any True True None\<close>
-  unfolding Guess_Property_def
-  by simp_all
 
 ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
 
@@ -4803,9 +4766,10 @@ ML_file \<open>library/phi_type_algebra/semimodule_distrib_zip.ML\<close>
 \<phi>property_deriver Semimodule 134
   requires Semimodule_no0 and Semimodule_Zero
 
+(*
 declare Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
         Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>U\<close>, \<phi>reason default %\<phi>TA_guesser_assigning_variant]
-
+*)
 
 
 subsubsection \<open>Construct Abstraction from Concrete Representation (by Itself)\<close>
