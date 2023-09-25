@@ -53,7 +53,7 @@ fun guess_property_like_abst_domain (is_cov, prop_head, pass_ants, pass_pred, x_
       val idx = phi_maxidx_of phi ~1 + 1
 
       val (ants_delta, oblg_delta, cond_delta) =
-              guess_antecedent ctxt (prop_head (x_ty, model_ty), is_cov) phi T_term
+              guess_conditions ctxt (prop_head (x_ty, model_ty), is_cov) phi T_term
       (*fun pass_pred pred =
             if is_cov then Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (cond_delta $ Bound 0) $ (pred $ Bound 0))
                       else Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (oblg_delta $ Bound 0) $ (pred $ Bound 0))*)
@@ -101,7 +101,7 @@ fun guess_property_abst_dom upper (phi:phi_type) ctxt =
       val idx = phi_maxidx_of phi ~1 + 1
       
       val (ants_delta, oblg_delta, cond_delta) =
-              guess_antecedent ctxt (head x_ty model_ty, not upper) phi T_term
+              guess_conditions ctxt (head x_ty model_ty, not upper) phi T_term
       fun pass_pred pred =
             if upper then Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (cond_delta $ Bound 0) $ (pred $ Bound 0))
                      else Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (oblg_delta $ Bound 0) $ (pred $ Bound 0))

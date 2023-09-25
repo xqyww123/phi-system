@@ -3872,6 +3872,25 @@ lemma [\<phi>reason %\<phi>TA_guesser_default]:
   unfolding Guess_Property_def ..
 
 
+subsubsection \<open>Simplify Result\<close>
+
+definition Simplify_Result :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close> where \<open>Simplify_Result P Q \<equiv> (PROP P \<Longrightarrow> PROP Q)\<close>
+
+lemma DO_Simplify_Result:
+  \<open> PROP P
+\<Longrightarrow> PROP Simplify_Result P Q
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> PROP Q \<close>
+  unfolding Simplify_Result_def .
+
+paragraph \<open>Basic Rules\<close>
+
+term \<open>\<A>EIF\<close>
+
+lemma
+  \<open> PROP Simplify_Result (A \<Longrightarrow>) \<close>
+
+
 
 subsubsection \<open>Warn if the Def contains Sat\<close>
 

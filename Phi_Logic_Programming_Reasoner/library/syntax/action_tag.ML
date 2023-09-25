@@ -18,6 +18,7 @@ structure PLPR_Syntax : PLPR_SYNTAX = struct
 
 fun dest_tags (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_tags X
   | dest_tags (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = dest_tags X
+  | dest_tags (Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ X $ _) = dest_tags X
   | dest_tags (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = dest_tags X
   | dest_tags X = X
 
@@ -25,10 +26,12 @@ fun dest_tags_c X =
   case Thm.term_of X
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => dest_tags_c (Thm.dest_arg X)
      | Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ _ => dest_tags_c (Thm.dest_arg1 X)
+     | Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ _ $ _  => dest_tags_c (Thm.dest_arg1 X)
      | Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _ => dest_tags_c (Thm.dest_arg X)
      | _ => X
 
 fun is_action_of' P (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ A) = P A
+  | is_action_of' P (Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ _ $ A) = P A
   | is_action_of' P (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_action_of' P X
   | is_action_of' P (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = is_action_of' P X
   | is_action_of' _ _ = false
@@ -36,6 +39,8 @@ fun is_action_of name = is_action_of' (fn tm => case Term.head_of tm of Const (N
                                         | _ => false)
 
 fun dest_action_of' P (tm as (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ A))
+      = if P A then (X, A) else raise TERM ("PLPR_Syntax.dest_action_of", [tm])
+  | dest_action_of' P (tm as (Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ X $ A))
       = if P A then (X, A) else raise TERM ("PLPR_Syntax.dest_action_of", [tm])
   | dest_action_of' P (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = dest_action_of' P X
   | dest_action_of' P (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = dest_action_of' P X
@@ -48,6 +53,8 @@ fun dest_action_of name =
 fun find_tagged_premise' P =
   let fun find [] = NONE
         | find ((Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ A) :: R) =
+            if P A then SOME (A, X) else find R
+        | find ((Const(\<^const_name>\<open>Meta_Tag\<close>, _) $ X $ A) :: R) =
             if P A then SOME (A, X) else find R
         | find (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X :: R) = find (X :: R)
         | find (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X :: R) = find (X :: R)

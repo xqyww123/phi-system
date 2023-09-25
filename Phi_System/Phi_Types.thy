@@ -1938,7 +1938,6 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
        and \<phi>MapAt.Comm
-       and Abstract_Domain\<^sub>L
 
 
 thm \<phi>Share.\<Sigma>_rewr

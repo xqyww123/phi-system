@@ -127,6 +127,9 @@ typedecl action
 definition Action_Tag :: \<open>bool \<Rightarrow> action \<Rightarrow> bool\<close> ("_ @action _" [9,10] 9)
   where \<open>Action_Tag P A \<equiv> P\<close>
 
+definition Meta_Tag :: \<open>prop \<Rightarrow> action \<Rightarrow> prop\<close> ("_ @tag'' _" [9,10] 9)
+  where \<open>Meta_Tag P A \<equiv> P\<close>
+
 lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
   unfolding Action_Tag_def .
@@ -1163,6 +1166,11 @@ declare [[
       \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
   and \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> \<Rightarrow> \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> (100)
   and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
+  and \<open>_ @action \<A>ESC\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
+  and \<open>(PROP ?X \<Longrightarrow> PROP _) @tag' \<A>EIF\<close> \<Rightarrow> \<open>(PROP ?X \<Longrightarrow> PROP _) @tag' \<A>EIF\<close> (100)
+  and \<open>(PROP _ \<Longrightarrow> PROP ?X) @tag' \<A>ESC\<close> \<Rightarrow> \<open>(PROP _ \<Longrightarrow> PROP ?X) @tag' \<A>ESC\<close> (100)
+  and \<open>(PROP ?X) @tag' \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close> (PROP ?X))\<close> (2)
+  and \<open>(PROP _) @tag' \<A>ESC\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
 ]]
 
 \<phi>reasoner_group extract_pure_all = (%cutting, [1, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
@@ -1277,6 +1285,34 @@ lemma [\<phi>reason %extract_pure]:
   \<open> Q \<longrightarrow> P @action \<A>ESC
 \<Longrightarrow> Q \<longrightarrow> (\<g>\<u>\<a>\<r>\<d> P) @action \<A>ESC \<close>
   unfolding \<r>Guard_def .
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (PROP A' \<Longrightarrow> PROP A) @tag' \<A>ESC
+\<Longrightarrow> (PROP B \<Longrightarrow> PROP B') @tag' \<A>EIF
+\<Longrightarrow> ((PROP A \<Longrightarrow> PROP B) \<Longrightarrow> (PROP A' \<Longrightarrow> PROP B')) @tag' \<A>EIF \<close>
+  unfolding Meta_Tag_def
+  subgoal premises prems
+    by (rule prems(2), rule prems(3), rule prems(1), rule prems(4)) .
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (PROP A \<Longrightarrow> PROP A') @tag' \<A>EIF
+\<Longrightarrow> (PROP B' \<Longrightarrow> PROP B) @tag' \<A>ESC
+\<Longrightarrow> ((PROP A' \<Longrightarrow> PROP B') \<Longrightarrow> (PROP A \<Longrightarrow> PROP B)) @tag' \<A>ESC \<close>
+  unfolding Meta_Tag_def
+  subgoal premises prems
+    by (rule prems(2), rule prems(3), rule prems(1), rule prems(4)) .
+
+lemma [unfolded Pure.prop_def, \<phi>reason %extract_pure]:
+  \<open> (\<And>x. (PROP A x \<Longrightarrow> PROP A' x) @tag' \<A>EIF)
+\<Longrightarrow> ((\<And>x. PROP A x) \<Longrightarrow> PROP Pure.prop (\<And>x. PROP A' x)) @tag' \<A>EIF \<close>
+  unfolding Meta_Tag_def Pure.prop_def
+proof (simp add: norm_hhf_eq)
+  fix x
+  assume A: \<open>\<And>x. PROP A x\<close>
+     and A': \<open>\<And>x. PROP A x \<Longrightarrow> PROP A' x\<close>
+  show \<open>PROP A' x\<close>
+    by (rule A', rule A)
+qed
 
 
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>
