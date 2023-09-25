@@ -1284,6 +1284,9 @@ val constrain_antecedents : term (*condition*) -> term (*antecedents*) -> term l
 val forall_qualify : typ -> term -> term
 val exists_qualify : typ -> term -> term
 
+val simplified_forall_qualify : Proof.context -> typ -> term -> term
+val simplified_exists_qualify : Proof.context -> typ -> term -> term
+
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
@@ -1314,6 +1317,15 @@ fun forall_qualify ty (X as Abs (_, _, B)) =
 fun exists_qualify ty (X as Abs (_, _, B)) =
       if Term.loose_bvar1 (B, 0) then \<^Const>\<open>HOL.Ex ty\<close> $ X else Term.incr_boundvars ~1 B
   | exists_qualify ty X = \<^Const>\<open>HOL.Ex ty\<close> $ X
+
+fun simp_term ctxt tm =
+  Drule.mk_term (Thm.cterm_of ctxt tm)
+    |> Simplifier.simplify ctxt
+    |> Drule.dest_term
+    |> Thm.term_of
+
+fun simplified_forall_qualify ctxt ty X = simp_term ctxt (forall_qualify ty X)
+fun simplified_exists_qualify ctxt ty X = simp_term ctxt (exists_qualify ty X)
 
 end
 

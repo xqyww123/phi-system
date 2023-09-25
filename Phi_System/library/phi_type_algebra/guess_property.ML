@@ -3,7 +3,7 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 (*lame!
 val guess_entire_property : Proof.context -> Phi_Type_Algebra.phi_type -> term -> term option*)
 
-val guess_antecedent : Proof.context
+val guess_conditions : Proof.context
                     -> term (*constant of the property predicate*)
                      * bool (*True for covariant, False for contra-variant*)
                     -> Phi_Type_Algebra.phi_type -> term (*the target \<phi>-type term*)
@@ -62,8 +62,9 @@ fun guess_entire_property ctxt0 (phi : phi_type) property_const =
   end
 *)
 
-fun guess_antecedent ctxt0 (const, is_covar) phi T_term0 =
-  let val ([T_term], ctxt) = Variable.import_terms false [T_term0] ctxt0
+fun guess_conditions ctxt0 (const, is_covar) phi T_term0 =
+  let val (inst, ctxt) = Variable.import_inst false [T_term0] ctxt0
+      val T_term = Term_Subst.instantiate inst T_term0
       val (x_ty, c_ty) = Phi_Syntax.dest_phi_type_ty (Term.fastype_of T_term)
       val goal = ( HOLogic.Trueprop $ (
             \<^Const>\<open>Guess_Property \<open>Term.fastype_of const\<close> x_ty c_ty\<close>
@@ -77,7 +78,7 @@ fun guess_antecedent ctxt0 (const, is_covar) phi T_term0 =
             |> Thm.cterm_of ctxt
             |> Goal.init
             |> Conv.gconv_rule (HOLogic.Trueprop_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg1_conv (
-                  Simplifier.rewrite (ctxt0 addsimps #equations phi)))))) 1
+                  Simplifier.rewrite (ctxt addsimps #equations phi)))))) 1
    in case goal
         |> Phi_Reasoner.reason NONE NONE ( Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
                                         |> Phi_Type_Algebra_Derivers.Expansion.map' (fn ctxt => ctxt addsimps (#equations phi)))
@@ -97,7 +98,7 @@ fun guess_antecedent ctxt0 (const, is_covar) phi T_term0 =
                                                        Ant_Seq_reduct
                                                        HOL.imp_conjR[folded Ant_Seq_def]
                                                        HOL.all_conj_distrib[folded Ant_Seq_def]})
-         |> singleton (Variable.export ctxt ctxt0)
+         |> Thm.generalize (Variable.export_inst inst) (Thm.maxidx_of ret + 1)
          |> Thm.prop_of
          of _ (*Pure.protect*) $ (_ (*Trueprop*) $ (
              Const(\<^const_name>\<open>Guess_Property\<close>, _) $ _ $ _ $ _ $ _

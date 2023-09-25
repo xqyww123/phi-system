@@ -340,3 +340,25 @@ val Ex_conv = Phi_Conv.quant_conv \<^const_name>\<open>Ex\<close>
 
 end
 
+signature VARIABLE = sig
+include VARIABLE
+
+(*patched Variable.import and .export, as the original Variable.export only generalize fixed term variables
+  but ignores fixed type variables of such as constants.*)
+
+val export_inst  :  typ TVars.table *  term Vars.table -> Names.set * Names.set
+val export_inst' : ctyp TVars.table * cterm Vars.table -> Names.set * Names.set
+
+end
+
+structure Variable : VARIABLE = struct
+open Variable
+
+fun export_inst (tyvars, tmvars) =
+  (Names.build (TVars.fold (fn (_, TFree (N, _)) => Names.add_set N) tyvars),
+   Names.build (Vars.fold (fn (_, tm) => Names.add_set (Term.term_name tm)) tmvars))
+
+val export_inst' = export_inst o Phi_Help.uncertify_vars
+
+end
+

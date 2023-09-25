@@ -3837,11 +3837,19 @@ declare [[
 
 ML_file \<open>library/phi_type_algebra/guess_property.ML\<close>
 
-paragraph \<open>Preset\<close>
+paragraph \<open>System Rules\<close>
 
 lemma [\<phi>reason default %\<phi>TA_guesser_fallback]:
   \<open>Guess_Property PC V T T' True (\<lambda>_. True) (\<lambda>_. True)\<close>
   unfolding Guess_Property_def ..
+
+lemma [\<phi>reason default %\<phi>TA_guesser_init]:
+  \<open>(\<And>x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_T' x) : (x \<Ztypecolon> T) )
+\<Longrightarrow> Guess_Property PC V T var_T' a p c
+\<Longrightarrow> Guess_Property PC V T var_T' a p c \<close>
+  unfolding Guess_Property_def ..
+
+paragraph \<open>Preset\<close>
 
 lemma [\<phi>reason default %\<phi>TA_guesser_default]:
   \<open> Guess_Property PC False T A a p c
@@ -3922,7 +3930,8 @@ ML_file \<open>library/phi_type_algebra/implication.ML\<close>
   Phi_Type_Algebra_Derivers.abstract_domain_L
 \<close>
 
-\<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> ) = \<open>
+\<phi>property_deriver Abstract_Domain 90 for ( \<open>Abstract_Domain _ _\<close> )
+  requires Abstract_Domain\<^sub>L ? = \<open>
   Phi_Type_Algebra_Derivers.abstract_domain
 \<close>
 

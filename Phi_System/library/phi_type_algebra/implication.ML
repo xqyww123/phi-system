@@ -4,6 +4,13 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 val abstract_domain : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 val abstract_domain_L : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 
+val guess_property_like_abst_domain :
+      bool * (typ * typ -> term)
+      * (Proof.context * typ * term * term -> term list -> term list)
+      * (Proof.context * typ * term * term -> term -> term)
+      * sort * sort
+      -> guess_property
+
 (*val guess_property_abst_dom : string -> guess_property
 val abstract_domain_solver : bool -> string (*name of proof cache*) -> solver*)
 
@@ -12,8 +19,61 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-(*** Inhabitance ***)
+fun guess_property_like_abst_domain (is_cov, prop_head, pass_ants, pass_pred, x_sort, model_sort) (phi0 : phi_type) ctxt =
+  let val (rev_arg_tys0, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val tpairs = map_filter (   try dest_parameterized_phi_ty
+                               #> Option.map (fn (_, x, m) => [(x, x_sort), (m, model_sort)])
+                              ) rev_arg_tys0
+                |> flat
+      val inst = lift_types_sort (Proof_Context.theory_of ctxt)
+                                 ((x_ty0, x_sort) :: (model_ty0, model_sort) :: tpairs)
+      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
+      val phi = instantiate_phi (inst',Vars.empty) phi0
 
+      val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+      val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      fun collect_params ret [] _  = ret
+        | collect_params ret (arg_ty :: rev_arg_tys) (F' $ T') =
+            case try dest_parameterized_phi_ty arg_ty
+              of SOME dest => collect_params ((dest,T') :: ret) rev_arg_tys F'
+               | NONE => collect_params ret rev_arg_tys F'
+      val T_params = collect_params [] rev_arg_tys T_term
+      val x_ttys = map (#2 o #1) T_params
+      val preds = Name.invent_names (Variable.names_of ctxt) "P"
+                                     (map (fn T => T --> HOLogic.boolT) x_ttys)
+      val ctxt = Variable.add_fixes_direct (map fst preds) ctxt
+      val preds = x_ttys ~~ map Free preds
+      val ants = map2 (fn ((rev_args, x, m), T'h) => fn (_, pred) =>
+            let val arity = length rev_args
+                val T' = fold_index (fn (i,_) => fn X => X $ Bound (arity - 1 - i)) rev_args T'h
+             in prop_head (x,m) $ T' $ pred
+             |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs("A", ty, X)) rev_args
+            end
+          ) T_params preds
+      val idx = phi_maxidx_of phi ~1 + 1
+
+      val (ants_delta, oblg_delta, cond_delta) =
+              guess_antecedent ctxt (prop_head (x_ty, model_ty), is_cov) phi T_term
+      (*fun pass_pred pred =
+            if is_cov then Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (cond_delta $ Bound 0) $ (pred $ Bound 0))
+                      else Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (oblg_delta $ Bound 0) $ (pred $ Bound 0))*)
+
+      val add_Pvar = if #is_recursive phi then I
+                     else fn pred => 
+                      let val Pvar = Var(("P",idx), x_ty --> HOLogic.boolT)
+                       in Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (pred $ Bound 0) $ (Pvar $ Bound 0))
+                      end
+   in guess_predicate ctxt preds x_ty
+   |> Seq.map (fn (pred, ctxt) =>
+        (pass_ants (ctxt, x_ty, oblg_delta, cond_delta) (ants_delta @ ants),
+         HOLogic.Trueprop $ (prop_head (x_ty, model_ty) $ T_term
+            $ add_Pvar (pass_pred (ctxt, x_ty, oblg_delta, cond_delta) pred)),
+         NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt))
+  end
+
+
+(*** Inhabitance ***)
+(*
 fun guess_property_abst_dom upper (phi:phi_type) ctxt =
   let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
@@ -60,7 +120,7 @@ fun guess_property_abst_dom upper (phi:phi_type) ctxt =
          HOLogic.Trueprop $ (head x_ty model_ty $ T_term $ add_Pvar (pass_pred pred)),
          NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt))
   end
-
+*)
 (*fun guess_property_inhab_atom upper (phi:phi_type) ctxt =
   let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (_,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
@@ -79,7 +139,7 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
       val var = case Thm.concl_of sequent
                   of _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $ Var v) => v
                    | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
-                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound 0) $ _)) => v
+                          Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0))) => v
                    | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
                           Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Var v $ _)) => v
                    | _ => err ()
@@ -154,8 +214,19 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
  end
 
 fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
-  let val guess_property = guess_property_abst_dom upper
-      val mode_infer = not (is_some instruction0)
+  let val guess_property = guess_property_like_abst_domain (not upper,
+            if upper then fn (x,m) => \<^Const>\<open>Abstract_Domain x m\<close>
+                     else fn (x,m) => \<^Const>\<open>Abstract_Domain\<^sub>L x m\<close>,
+            if upper then K I else fn (ctxt, x_ty, oblg, _) => fn ants =>
+               (case oblg of Abs (_, _, \<^Const>\<open>True\<close>) => ants
+                   | _ => (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $ (simplified_forall_qualify ctxt x_ty oblg)) :: ants),
+            if upper then fn (_, x_ty, _, cond) => fn pred =>
+                              Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (cond $ Bound 0) $ (pred $ Bound 0))
+                     else fn (_, x_ty, oblg, _) => fn pred =>
+                              Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (oblg $ Bound 0) $ (pred $ Bound 0)),
+            \<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)
+
+      val mode_infer = not (is_some instruction0) andalso not (#is_recursive phi0)
 
       val parse_hint = parse_hint (
               fn Const(\<^const_name>\<open>Abstract_Domain\<close>, _) $ T $ _ => T

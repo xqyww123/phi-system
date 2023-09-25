@@ -22,17 +22,12 @@ structure PLPR_Simplifier : PLPR_SIMPLIFIER = struct
 type fix_variables = bool
 
 fun simplification fallback F to_fix ctxt sequent = Seq.make (fn () =>
-  let val (names, sequent', ctxt') = if to_fix
-             then case Variable.import true [sequent] ctxt
-                    of (((tyvars, tmvars),[sequent']), ctxt') =>
-                  ((Names.build (TVars.fold (fn (_, cty) => case Thm.typ_of cty
-                                                              of TFree (N, _) => Names.add_set N) tyvars),
-                    Names.build (Vars.fold (fn (_, ctm) => Names.add_set (Term.term_name (Thm.term_of ctm))) tmvars)),
-                    sequent', ctxt')
-             else ((Names.empty, Names.empty), sequent, ctxt)
+  let val ((inst, [sequent']), ctxt') = if to_fix
+             then Variable.import true [sequent] ctxt
+             else (((TVars.empty, Vars.empty), [sequent]), ctxt)
    in sequent'
    |> Conv.gconv_rule (Phi_Reasoners.asm_lr_rewrite true (F ctxt')) 1
-   |> to_fix ? (fn th => Thm.generalize names (Thm.maxidx_of th + 1) th)
+   |> to_fix ? (fn th => Thm.generalize (Variable.export_inst' inst) (Thm.maxidx_of th + 1) th)
    |> (fn th => case Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
                   of SOME ret => SOME (ret, Seq.empty)
                    | NONE => Seq.pull (fallback th))

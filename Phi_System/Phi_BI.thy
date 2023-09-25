@@ -229,7 +229,8 @@ declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rig
 paragraph \<open>Extracting Pure Facts\<close>
 
 lemma Inhabitance_Implication_\<A>EIF [\<phi>reason %extract_pure_all]:
-  \<open>(A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) \<longrightarrow> (Inhabited A \<longrightarrow> P) @action \<A>EIF\<close>
+  \<open> A' \<longrightarrow> Inhabited A @action \<A>ESC
+\<Longrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) \<longrightarrow> (A' \<longrightarrow> P) @action \<A>EIF\<close>
   unfolding Action_Tag_def
   by blast
 
@@ -239,7 +240,8 @@ lemma Inhabitance_Implication_\<A>EIF_Sat:
   by blast
 
 lemma Inhabitance_Implication_\<A>ESC[\<phi>reason %extract_pure_all]:
-  \<open>(Inhabited A \<longrightarrow> P) \<longrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) @action \<A>ESC\<close>
+  \<open> Inhabited A \<longrightarrow> A' @action \<A>EIF
+\<Longrightarrow> (A' \<longrightarrow> P) \<longrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) @action \<A>ESC\<close>
   unfolding Action_Tag_def
   by blast
 
@@ -249,7 +251,8 @@ lemma Inhabitance_Implication_\<A>ESC_Sat:
   by blast
 
 lemma Sufficient_Inhabitance_\<A>EIF[\<phi>reason %extract_pure_all]:
-  \<open>(P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) \<longrightarrow> (P \<longrightarrow> Inhabited A) @action \<A>EIF\<close>
+  \<open> Inhabited A \<longrightarrow> A' @action \<A>EIF
+\<Longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) \<longrightarrow> (P \<longrightarrow> A') @action \<A>EIF\<close>
   unfolding Action_Tag_def
   by blast
 
@@ -259,7 +262,8 @@ lemma Sufficient_Inhabitance_\<A>EIF_Sat:
   by blast
 
 lemma Sufficient_Inhabitance_\<A>ESC[\<phi>reason %extract_pure_all]:
-  \<open>(P \<longrightarrow> Inhabited A) \<longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) @action \<A>ESC\<close>
+  \<open> A' \<longrightarrow> Inhabited A @action \<A>EIF
+\<Longrightarrow> (P \<longrightarrow> A') \<longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) @action \<A>ESC\<close>
   unfolding Action_Tag_def
   by blast
 
@@ -269,18 +273,38 @@ lemma Sufficient_Inhabitance_\<A>ESC_Sat:
   by blast
 
 bundle extracting_Inhabitance_Implication_sat =
-          Inhabitance_Implication_\<A>EIF [\<phi>reason del]
-          Inhabitance_Implication_\<A>EIF_Sat [\<phi>reason %extract_pure_all]
-          Inhabitance_Implication_\<A>ESC [\<phi>reason del]
-          Inhabitance_Implication_\<A>ESC_Sat [\<phi>reason %extract_pure_all]
+          Inhabitance_Implication_\<A>EIF_Sat [\<phi>reason %extract_pure_sat]
+          Inhabitance_Implication_\<A>ESC_Sat [\<phi>reason %extract_pure_sat]
 bundle extracting_Sufficient_Inhabitance_sat =
-          Sufficient_Inhabitance_\<A>EIF [\<phi>reason del]
-          Sufficient_Inhabitance_\<A>EIF_Sat [\<phi>reason %extract_pure_all]
-          Sufficient_Inhabitance_\<A>ESC [\<phi>reason del]
-          Sufficient_Inhabitance_\<A>ESC_Sat [\<phi>reason %extract_pure_all]
+          Sufficient_Inhabitance_\<A>EIF_Sat [\<phi>reason %extract_pure_sat]
+          Sufficient_Inhabitance_\<A>ESC_Sat [\<phi>reason %extract_pure_sat]
 bundle extracting_Inhabitance_sat begin
   unbundle extracting_Inhabitance_Implication_sat extracting_Sufficient_Inhabitance_sat
 end
+
+lemma [\<phi>reason %extract_pure_all]:
+  \<open> (\<And>x. ((x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> D x) \<longrightarrow> P x @action \<A>EIF)
+\<Longrightarrow> Abstract_Domain T D \<longrightarrow> (All P) @action \<A>EIF \<close>
+  unfolding Abstract_Domain_def Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure_all]:
+  \<open> (\<And>x. P x \<longrightarrow> ((x \<Ztypecolon> T) \<i>\<m>\<p>\<l>\<i>\<e>\<s> D x) @action \<A>ESC)
+\<Longrightarrow> All P \<longrightarrow> Abstract_Domain T D @action \<A>ESC \<close>
+  unfolding Abstract_Domain_def Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure_all]:
+  \<open> (\<And>x. (D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> (x \<Ztypecolon> T)) \<longrightarrow> P x @action \<A>EIF)
+\<Longrightarrow> Abstract_Domain\<^sub>L T D \<longrightarrow> (All P) @action \<A>EIF \<close>
+  unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure_all]:
+  \<open> (\<And>x. P x \<longrightarrow> (D x \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> (x \<Ztypecolon> T)) @action \<A>ESC)
+\<Longrightarrow> All P \<longrightarrow> Abstract_Domain\<^sub>L T D @action \<A>ESC \<close>
+  unfolding Abstract_Domain\<^sub>L_def Action_Tag_def
+  by blast
 
 
 paragraph \<open>Basic Rules\<close>

@@ -8,7 +8,17 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-val guess_property = guess_property__abst_domain (fn (x,m) => \<^Const>\<open>Carrier_Set x m\<close>, \<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier\<close>)
+val guess_property = guess_property_like_abst_domain (false,
+        fn (x,m) => \<^Const>\<open>Carrier_Set x m\<close>,
+        fn (ctxt, x_ty, _, cond) => fn ants =>
+             (case cond of Abs (_, _, \<^Const>\<open>True\<close>) => ants
+                 | _ => maps (constrain_antecedents (
+                            \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $ (simplified_exists_qualify ctxt x_ty cond))) ants),
+        fn (ctxt, x_ty, oblg, cond) => fn pred =>
+              Abs ("x", x_ty, \<^Const>\<open>HOL.implies\<close>
+                        $ (cond $ Bound 0)
+                        $ (\<^Const>\<open>HOL.conj\<close> $ (oblg $ Bound 0) $ (pred $ Bound 0))),
+        \<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier\<close>)
 
 fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Carrier_Set\<close>, _) $ T $ _ => T )

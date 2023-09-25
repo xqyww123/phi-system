@@ -252,10 +252,16 @@ text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation fun
   there can be properties very akin to them, see the section \<open>Pseudo properties of \<Sigma>\<close> below.\<close>
 
 
+lemma [simp]:
+  \<open>\<exists>\<x> c. c \<in> \<x>\<close>
+  by auto
+
 declare SubjectionTY_def[embed_into_\<phi>type del]
 
+
+
 declare [[\<phi>trace_reasoning = 0]]
-  
+     
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> Identity_Elements\<^sub>E T D
@@ -274,6 +280,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Separation_Homo\<^sub>I \<S> \<S> \<S> T U UNIV (\<lambda>x. case x of (A, B) \<Rightarrow> A \<times> B)\<close>
        and Open_Abstraction_to_Raw
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
+       and Carrier_Set
 
 text \<open>Read it as 'the abstract object is certain element in the set'
 
@@ -1049,6 +1056,7 @@ lemma [simp]:
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain U Q
         \<Longrightarrow> Abstract_Domain (T +\<^sub>\<phi> U) (pred_sum P Q) \<close>
+       and Abstract_Domain\<^sub>L
        and \<open>Carrier_Set T P
         \<Longrightarrow> Carrier_Set U Q
         \<Longrightarrow> Carrier_Set (T +\<^sub>\<phi> U) (pred_sum P Q)\<close>
@@ -1915,7 +1923,7 @@ declare [[\<phi>trace_reasoning = 0 ]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
 
-   
+     
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving \<open> Identity_Elements\<^sub>E T D
@@ -1924,12 +1932,13 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
        and Functionality
        (*and SE_Trim_Empty*)
        and Semimodule_no0
-       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n \<Longrightarrow> Carrier_Set T P) \<Longrightarrow> Carrier_Set (n \<odiv> T) (\<lambda>x. 0 < n \<longrightarrow> P x)\<close>
+       and Carrier_Set
        and Abstraction_to_Raw
        and Commutativity_Deriver
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
        and \<phi>MapAt.Comm
+       and Abstract_Domain\<^sub>L
 
 
 thm \<phi>Share.\<Sigma>_rewr
