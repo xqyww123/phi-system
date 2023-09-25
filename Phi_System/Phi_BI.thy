@@ -57,7 +57,7 @@ Specifically, in this minimal specialized BI:
 \<close>
 
 theory Phi_BI
-  imports "Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner" Phi_Preliminary
+  imports "Phi_Logic_Programming_Reasoner.PLPR" Phi_Preliminary
   abbrevs "<:>" = "\<Ztypecolon>"
       and "<trans>" = "\<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>"
       and "<transforms>" = "\<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>"
@@ -4044,7 +4044,7 @@ text \<open>Schematic variables occurring in source are assigned with zeros, and
 ML \<open>
 (* (\<And>x. X x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> P) where ?Y is a variable.
    When X contains some quantified variables \<open>x\<close> that do not parameterize ?Y, the procedure
-   existentially quantifies X, and assign \<open>\<exists>x. X x\<close> to ?Y.
+   existentially qualifies X, and assign \<open>\<exists>x. X x\<close> to ?Y.
    cannot work on \<open>_ \<^emph>[_] _\<close> (*TODO, but the thing is there is no type embedding of existence,
                                      unless we use \<Sigma> and \<S>, but... mmmmm.... well, a lot of work.*)
  *)

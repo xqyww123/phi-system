@@ -34,7 +34,7 @@ fun solver__abst_domain name (phi,ctxt,sequent) =
       fun binop H (SOME sa, SOME sb) = SOME (H $ sa $ sb)
         | binop _ (some_or_none, NONE) = some_or_none
         | binop _ (NONE, some) = some
-      fun quantifies j vars =
+      fun qualifies j vars =
              fold_index (fn (k, (N, ty)) => fn X =>
                 if k = j then Abs (N, ty, X) $ Bound (length vars - 1 - k)
                 else HOLogic.all_const ty $ Abs(N, ty, X)
@@ -51,7 +51,7 @@ fun solver__abst_domain name (phi,ctxt,sequent) =
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
             = let fun meet v j = if var = v
                                  then fold (fn prem => fn X => \<^Const>\<open>HOL.implies\<close> $ prem $ X) prems X
-                                  |> quantifies j vars
+                                  |> qualifies j vars
                                   |> SOME
                                  else inst_Lw (vars, P::prems) X
                in case P

@@ -147,11 +147,15 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
       fun binop H (SOME sa, SOME sb) = SOME (H $ sa $ sb)
         | binop _ (some_or_none, NONE) = some_or_none
         | binop _ (NONE, some) = some
-      fun quantifies j vars =
+      fun qualifies j vars =
              fold_index (fn (k, (N, ty)) => fn X =>
                 if k = j then Abs (N, ty, X) $ Bound (length vars - 1 - k)
                 else HOLogic.all_const ty $ Abs(N, ty, X)
              ) vars
+
+      fun augment P prems =
+            if exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true | _ => false) P
+            then prems else P :: prems
 
       fun inst_Lw context (Const(\<^const_name>\<open>conj\<close>, _) $ X $ Y)
             = binop \<^Const>\<open>HOL.conj\<close> (inst_Lw context X, inst_Lw context Y)
@@ -164,14 +168,14 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
             = let fun meet v j = if var = v
                                  then fold (fn prem => fn X => \<^Const>\<open>HOL.implies\<close> $ prem $ X) prems X
-                                  |> quantifies j vars
+                                  |> qualifies j vars
                                   |> SOME
-                                 else inst_Lw (vars, P::prems) X
+                                 else inst_Lw (vars, augment P prems) X
                in case P
                of Var v $ Bound j => meet v j
                 | Var v => meet v ~1
                 | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound j) $ _ => meet v j
-                | _ => inst_Lw (vars, P::prems) X
+                | _ => inst_Lw (vars, augment P prems) X
               end
         | inst_Lw _ _ = NONE
 
@@ -187,11 +191,11 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
         | inst_Pr (vars,prems) (\<^Const>\<open>HOL.All ty\<close> $ X)
             = inst_Pr (vars,prems) (\<^Const>\<open>HOL.All ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | inst_Pr (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
-            = inst_Pr (vars, P::prems) X
+            = inst_Pr (vars, augment P prems) X
         | inst_Pr (vars,prems) (Var v $ Bound j)
-            = if v = var then SOME (quantifies j vars (Phi_Help.list_mk_conj prems)) else NONE
+            = if v = var then SOME (qualifies j vars (Phi_Help.list_mk_conj prems)) else NONE
         | inst_Pr (vars,prems) (Var v)
-            = if v = var then SOME (quantifies ~1 vars (Phi_Help.list_mk_conj prems)) else NONE
+            = if v = var then SOME (qualifies ~1 vars (Phi_Help.list_mk_conj prems)) else NONE
         | inst_Pr _ _ = NONE
 
       fun inst_Pr' context X = case inst_Pr context X of SOME ret => ret

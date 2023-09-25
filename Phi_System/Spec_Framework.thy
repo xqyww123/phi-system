@@ -326,6 +326,38 @@ declare [[\<phi>reason_default_pattern
                                                         in carrier_set and < derived_carrier_set
     \<open>Turning \<open>Within_Carrier_Set (x : T)\<close> to \<open>Carrier_Set T D\<close>\<close>
 
+subsubsection \<open>Extracting Pure Facts\<close>
+
+context begin
+
+private lemma EIF_Within_Carrier_Set:
+  \<open> Within_Carrier_Set A \<longrightarrow> (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v) @action \<A>EIF \<close>
+  unfolding Within_Carrier_Set_def Action_Tag_def
+  by blast
+
+private lemma ESC_Within_Carrier_Set:
+  \<open> (\<forall>v. v \<Turnstile> A \<longrightarrow> mul_carrier v) \<longrightarrow> Within_Carrier_Set A @action \<A>ESC \<close>
+  unfolding Within_Carrier_Set_def Action_Tag_def
+  by blast
+
+private lemma EIF_Carrier_Set:
+  \<open> Carrier_Set T D \<longrightarrow> (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) @action \<A>EIF \<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def Action_Tag_def
+  by blast
+
+private lemma ESC_Carrier_Set:
+  \<open> (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) \<longrightarrow> Carrier_Set T D @action \<A>ESC \<close>
+  unfolding Carrier_Set_def Within_Carrier_Set_def Action_Tag_def
+  by blast
+
+bundle extracting_Carrier_Set_sat =
+          EIF_Within_Carrier_Set [\<phi>reason %extract_pure_sat]
+          ESC_Within_Carrier_Set [\<phi>reason %extract_pure_sat]
+          EIF_Carrier_Set [\<phi>reason %extract_pure_sat]
+          ESC_Carrier_Set [\<phi>reason %extract_pure_sat]
+
+end
+
 subsubsection \<open>General Rules\<close>
 
 lemma prem_extract_Carrier_Set:

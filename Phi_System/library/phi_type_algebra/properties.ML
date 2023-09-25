@@ -640,8 +640,12 @@ fun add_property_kinds ks thy =
    |> Property_Kinds.map (fold ((fn k =>
         Net.insert_term (Pattern.equiv thy) (k, k)) o trim_modifiers) ks)
    |> Context.theory_map (fold (fn k =>
-        let val k' = trim_modifiers k
-            val name = Term.term_name (Term.head_of k')
+        let val k' = case trim_modifiers k
+                       of Const(\<^const_name>\<open>Pure.term\<close>, _) $ X => X
+                        | X => X
+            val name = case Term.head_of k'
+                         of Const(N,_) => N
+                          | _ => error "Bad Property: must be a predicate"
          in Phi_Reasoner.add_pass ("\<phi>type-operator$" ^ name, k,
               fn pos => fn (rules, mode, pats, guard, ctxt) =>
                            (rules, mode, pats, guard,

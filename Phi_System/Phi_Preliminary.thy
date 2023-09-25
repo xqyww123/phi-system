@@ -4,7 +4,7 @@ section \<open>Preliminary\<close>
 
 theory Phi_Preliminary
   imports Main "Phi_Algebras.Algebras"
-          Phi_Logic_Programming_Reasoner.Phi_Logic_Programming_Reasoner
+          Phi_Logic_Programming_Reasoner.PLPR
           Phi_Logic_Programming_Reasoner.PLPR_error_msg
   keywords "optional_translations" :: thy_decl
        and "\<phi>adhoc_overloading" "\<phi>no_adhoc_overloading" :: thy_decl

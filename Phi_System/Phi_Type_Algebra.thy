@@ -1195,8 +1195,6 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
   \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>I _)\<close>,
-  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>E _)\<close>,
   \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
@@ -1210,10 +1208,18 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
   instantiation automation.\<close>
 end
 \<close>
+  
+setup \<open>
+Phi_Type_Template_Properties.add_property_kinds [
+  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>I _)\<close>,
+  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>E _)\<close>
+]
+
+\<close>
 
 declare [[
-  \<phi>reason_default_pattern \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> (100)
-                      and \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> (100)
+  \<phi>reason_default_pattern \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>I ?FF)\<close> (100)
+                      and \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>E ?FF)\<close> (100)
 ]]
 
 text \<open>Candidates of templates instantiation are not prioritized. When a property requires multiple
@@ -3883,12 +3889,20 @@ lemma DO_Simplify_Result:
 \<Longrightarrow> PROP Q \<close>
   unfolding Simplify_Result_def .
 
+text \<open>Simplifies only naked conditions (in sens of not wrapped by \<open>\<And>\<close> or \<open>\<Longrightarrow>\<close>) but not arbitrary antecedents\<close>
+
 paragraph \<open>Basic Rules\<close>
 
-term \<open>\<A>EIF\<close>
+thm HOL.conj_cong
 
 lemma
-  \<open> PROP Simplify_Result (A \<Longrightarrow>) \<close>
+  \<open> PROP \<A>EIF' A A'
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A' \<Longrightarrow> PROP Simplify_Result (PROP B) (PROP B'))
+\<Longrightarrow> PROP Simplify_Result (PROP A \<Longrightarrow> PROP B) (PROP A \<Longrightarrow> PROP B') \<close>
+  unfolding Simplify_Result_def Premise_def \<A>EIF'_def
+  subgoal premises prems
+    by (rule prems(2), rule prems(1), rule prems(4), rule prems(3), rule prems(4)) .
+    
 
 
 
@@ -4011,9 +4025,17 @@ hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
     requires Warn_if_contains_Sat
   = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
 
-\<phi>property_deriver Identity_Elements 103
-  requires Identity_Elements\<^sub>I and Identity_Elements\<^sub>E
+\<phi>property_deriver Identity_Element_Properties\<^sub>I 103
+  = \<open>K (K (Phi_Type_Algebra_Derivers.id_ele_properties true))\<close>
 
+\<phi>property_deriver Identity_Element_Properties\<^sub>E 103
+  = \<open>K (K (Phi_Type_Algebra_Derivers.id_ele_properties false))\<close>
+
+\<phi>property_deriver Identity_Element_Properties 104
+  requires Identity_Element_Properties\<^sub>I and Identity_Element_Properties\<^sub>E
+
+\<phi>property_deriver Identity_Elements 105
+  requires Identity_Elements\<^sub>I and Identity_Elements\<^sub>E and Identity_Element_Properties
 
 
 paragraph \<open>Guessing Antecedents\<close>
@@ -4877,6 +4899,7 @@ text \<open>For a type operator \<open>F\<close>, SE_Trim_Empty generates rules 
 
 lemma [\<phi>reason_template name F.\<phi>None [assertion_simps, simp]]:
   \<open> Type_Variant_of_the_Same_Type_Operator F F'
+\<Longrightarrow> TERM (Identity_Elements\<^sub>I (F \<circle>))
 \<Longrightarrow> Identity_Elements\<^sub>I (F \<circle>) D\<^sub>I P\<^sub>I @action \<A>_template_reason
 \<Longrightarrow> Identity_Elements\<^sub>E (F \<circle>) D\<^sub>E @action \<A>_template_reason
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> (D\<^sub>I () \<and> D\<^sub>E ())

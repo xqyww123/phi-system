@@ -26,7 +26,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 
 subsection \<open>Func\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
@@ -58,7 +58,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+    
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -1043,6 +1043,7 @@ subsection \<open>Sum Type\<close>
 declare [[\<phi>trace_reasoning = 0]]
 
 
+(*TODO: move me*)
 lemma [simp]:
   \<open>pred_sum = case_sum\<close>
   using pred_sum_eq_case_sum by blast
@@ -1640,8 +1641,8 @@ subsection \<open>List Item \& Empty List\<close>
 
 subsubsection \<open>List Item\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-  
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
@@ -1919,11 +1920,11 @@ lemma [\<phi>reason 1013]:
 
 subsection \<open>Permission Sharing\<close>
 
-declare [[\<phi>trace_reasoning = 0 ]]
+declare [[\<phi>trace_reasoning = 1 ]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
 
-     
+        
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving \<open> Identity_Elements\<^sub>E T D
@@ -1943,8 +1944,6 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
 thm \<phi>Share.\<Sigma>_rewr
 thm \<phi>Fun'.\<phi>Fun'.comm_rewr
 thm \<phi>MapAt.\<phi>Share.comm_rewr
-
-declare [[\<phi>trace_reasoning = 3]]
 
 thm \<phi>Share.Identity_Element\<^sub>I
 thm \<phi>Share.unfold_sdistr (*TODO: reduce identical antecedents*)

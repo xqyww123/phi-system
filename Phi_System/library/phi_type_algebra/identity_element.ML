@@ -3,6 +3,7 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 
 val identity_element_I : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 val identity_element_E : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val id_ele_properties : bool -> Phi_Type_Algebra.derive
 
 end
 
@@ -110,7 +111,8 @@ fun guess_property_sing is_left (phi0:phi_type) ctxt =
 *)
 
 fun guess_property is_intro (phi0:phi_type) ctxt =
-  let val (rev_argtys0,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+  let val thy = Proof_Context.theory_of ctxt
+      val (rev_argtys0,x_ty0,model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val is_type_opr = exists (can dest_parameterized_phi_ty) rev_argtys0
       
       val inst  = lift_types_sort (Proof_Context.theory_of ctxt)
@@ -132,6 +134,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
       val (ants_Ds_Ps, ctxt) = fold_map (fn ((info,ty), A_term0) => fn ctxt =>
             case try dest_parameterized_phi_ty ty
               of SOME (rev_atys, x_ty, m_ty) =>
+                  if Sign.of_sort thy (m_ty, \<^sort>\<open>one\<close>) then
                     let fun name s s' = the_default s (Option.map (suffix s') (#name info))
                         val ([D,P], ctxt) = Variable.variant_fixes [name "D" "\<^sub>D", name "P" "\<^sub>P"] ctxt
                         val D = Free(D, x_ty --> HOLogic.boolT)
@@ -144,6 +147,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
                                (x_ty, P)),
                          ctxt)
                     end
+                  else (NONE, ctxt)
                | _ => (NONE, ctxt))
             (args ~~ snd (Term.strip_comb T_term)) ctxt
       val (ants, Ds, Ps) = (map_filter (Option.map #1) ants_Ds_Ps,
@@ -247,6 +251,31 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']
+  end
+
+fun id_ele_properties is_intro ctxt0 (phi0 : phi_type) thy =
+  let val (_,_,m_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
+      val inst = lift_types_sort (Proof_Context.theory_of ctxt0) [(m_ty0, \<^sort>\<open>one\<close>)]
+      val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt0) inst
+      val phi = instantiate_phi (inst', Vars.empty) phi0
+
+      val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt0
+      val (_,x_ty,m_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+      val trigger = (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty m_ty\<close>
+                                 else \<^Const>\<open>Identity_Elements\<^sub>E x_ty m_ty\<close>) $ T_term
+                 |> singleton (Variable.export_terms ctxt ctxt0)
+                 |> Thm.cterm_of ctxt
+                 |> Drule.mk_term
+
+      val _ = if not (null (Phi_Type_Template_Properties.lookup_property_match (Context.Proof ctxt0) (Thm.concl_of trigger)))
+              then raise Automation_Fail (fn () => let open Pretty in
+                      [para "The deriver of Identity_Element_Properties can only be invoked once\
+                            \ for each \<phi>-type."]
+                    end)
+              else ()
+   in thy
+   |> Phi_Help.generic_theory_mapping (fn m =>
+        Phi_Type_Template_Properties.add_property (#pos phi, Morphism.thm m trigger))
   end
 
 val identity_element_I = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Identity_Element\<^sub>I") (gen_id_ele true)

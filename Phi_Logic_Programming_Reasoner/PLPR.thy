@@ -1,4 +1,4 @@
-theory Phi_Logic_Programming_Reasoner
+theory PLPR
   imports PLPR_error_msg "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
   keywords "except" "@action" :: quasi_command
        and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
@@ -1161,16 +1161,17 @@ text \<open>\<phi>-LPR reasoning rules are specially designed for execution of l
 consts \<A>EIF :: action \<comment> \<open>Extract Implied Facts entailed from the given proposition\<close>
        \<A>ESC :: action \<comment> \<open>Extract Sufficient Condition to entail the given proposition\<close>
 
+definition \<A>EIF' :: \<open>prop \<Rightarrow> bool \<Rightarrow> prop\<close> where \<open>\<A>EIF' P Q \<equiv> (PROP P \<Longrightarrow> Q)\<close>
+definition \<A>ESC' :: \<open>bool \<Rightarrow> prop \<Rightarrow> prop\<close> where \<open>\<A>ESC' P Q \<equiv> (P \<Longrightarrow> PROP Q)\<close>
+
 declare [[
   \<phi>reason_default_pattern
       \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> \<Rightarrow> \<open>?X \<longrightarrow> _ @action \<A>EIF\<close> (100)
   and \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> \<Rightarrow> \<open>_ \<longrightarrow> ?X @action \<A>ESC\<close> (100)
   and \<open>_ @action \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
   and \<open>_ @action \<A>ESC\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
-  and \<open>(PROP ?X \<Longrightarrow> PROP _) @tag' \<A>EIF\<close> \<Rightarrow> \<open>(PROP ?X \<Longrightarrow> PROP _) @tag' \<A>EIF\<close> (100)
-  and \<open>(PROP _ \<Longrightarrow> PROP ?X) @tag' \<A>ESC\<close> \<Rightarrow> \<open>(PROP _ \<Longrightarrow> PROP ?X) @tag' \<A>ESC\<close> (100)
-  and \<open>(PROP ?X) @tag' \<A>EIF\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close> (PROP ?X))\<close> (2)
-  and \<open>(PROP _) @tag' \<A>ESC\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>bad form\<close>)\<close> (2)
+  and \<open>PROP \<A>EIF' ?X _\<close> \<Rightarrow> \<open>PROP \<A>EIF' ?X _\<close> (100)
+  and \<open>PROP \<A>ESC' _ ?X\<close> \<Rightarrow> \<open>PROP \<A>ESC' _ ?X\<close> (100)
 ]]
 
 \<phi>reasoner_group extract_pure_all = (%cutting, [1, 3000]) for (\<open>_ \<longrightarrow> _ @action \<A>EIF\<close>, \<open>_ \<longrightarrow> _ @action \<A>ESC\<close>)
@@ -1287,32 +1288,50 @@ lemma [\<phi>reason %extract_pure]:
   unfolding \<r>Guard_def .
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (PROP A' \<Longrightarrow> PROP A) @tag' \<A>ESC
-\<Longrightarrow> (PROP B \<Longrightarrow> PROP B') @tag' \<A>EIF
-\<Longrightarrow> ((PROP A \<Longrightarrow> PROP B) \<Longrightarrow> (PROP A' \<Longrightarrow> PROP B')) @tag' \<A>EIF \<close>
-  unfolding Meta_Tag_def
+  \<open> P \<longrightarrow> Q @action \<A>EIF
+\<Longrightarrow> PROP \<A>EIF' (Trueprop P) Q \<close>
+  unfolding Action_Tag_def \<A>EIF'_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<longrightarrow> Q @action \<A>ESC
+\<Longrightarrow> PROP \<A>ESC' P (Trueprop Q) \<close>
+  unfolding Action_Tag_def \<A>ESC'_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> PROP \<A>ESC' A' A
+\<Longrightarrow> PROP \<A>EIF' B  B'
+\<Longrightarrow> PROP \<A>EIF' (PROP A \<Longrightarrow> PROP B) (A' \<longrightarrow> B') \<close>
+  unfolding \<A>ESC'_def \<A>EIF'_def
+  subgoal premises prems
+    by (rule, rule prems(2), rule prems(3), rule prems(1)) .
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> PROP \<A>EIF' A  A'
+\<Longrightarrow> PROP \<A>ESC' B' B
+\<Longrightarrow> PROP \<A>ESC' (A' \<longrightarrow> B') (PROP A \<Longrightarrow> PROP B) \<close>
+  unfolding \<A>ESC'_def \<A>EIF'_def atomize_imp[symmetric]
   subgoal premises prems
     by (rule prems(2), rule prems(3), rule prems(1), rule prems(4)) .
 
 lemma [\<phi>reason %extract_pure]:
-  \<open> (PROP A \<Longrightarrow> PROP A') @tag' \<A>EIF
-\<Longrightarrow> (PROP B' \<Longrightarrow> PROP B) @tag' \<A>ESC
-\<Longrightarrow> ((PROP A' \<Longrightarrow> PROP B') \<Longrightarrow> (PROP A \<Longrightarrow> PROP B)) @tag' \<A>ESC \<close>
-  unfolding Meta_Tag_def
-  subgoal premises prems
-    by (rule prems(2), rule prems(3), rule prems(1), rule prems(4)) .
-
-lemma [unfolded Pure.prop_def, \<phi>reason %extract_pure]:
-  \<open> (\<And>x. (PROP A x \<Longrightarrow> PROP A' x) @tag' \<A>EIF)
-\<Longrightarrow> ((\<And>x. PROP A x) \<Longrightarrow> PROP Pure.prop (\<And>x. PROP A' x)) @tag' \<A>EIF \<close>
-  unfolding Meta_Tag_def Pure.prop_def
-proof (simp add: norm_hhf_eq)
+  \<open> (\<And>x. PROP \<A>EIF' (A x) (A' x))
+\<Longrightarrow> PROP \<A>EIF' (\<And>x. PROP A x) (\<forall>x. A' x) \<close>
+  unfolding \<A>EIF'_def \<A>ESC'_def
+proof
   fix x
   assume A: \<open>\<And>x. PROP A x\<close>
-     and A': \<open>\<And>x. PROP A x \<Longrightarrow> PROP A' x\<close>
-  show \<open>PROP A' x\<close>
+     and A': \<open>\<And>x. PROP A x \<Longrightarrow> A' x\<close>
+  show \<open>A' x\<close>
     by (rule A', rule A)
 qed
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<And>x. PROP \<A>ESC' (A x) (A' x))
+\<Longrightarrow> PROP \<A>ESC' (\<forall>x. A x) (\<And>x. PROP A' x) \<close>
+  unfolding \<A>EIF'_def \<A>ESC'_def atomize_all[symmetric]
+  by (simp add: norm_hhf_eq)
 
 
 subsection \<open>Proof Obligation (continued) \label{sec:proof-obligation}\<close>
@@ -1719,9 +1738,10 @@ subsubsection \<open>Default Simplifier\<close>
 abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [1000,10] 9)
   where "Default_Simplify \<equiv> Simplify default"
 
-
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I false) o snd\<close>
+
+(*consts MODE_YoYo :: mode*)
 
 
 (* subsection \<open>Exhaustive Divergence\<close>
