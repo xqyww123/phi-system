@@ -153,8 +153,10 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
                 else HOLogic.all_const ty $ Abs(N, ty, X)
              ) vars
 
-      fun augment P prems =
-            if exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true | _ => false) P
+      fun augment P prems = (*the inferred condition won't contain Inhabited and Satisfaction*)
+            if exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+                                | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
+                                | _ => false) P
             then prems else P :: prems
 
       fun inst_Lw context (Const(\<^const_name>\<open>conj\<close>, _) $ X $ Y)
@@ -266,7 +268,8 @@ fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
         then rule
         else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 HOLogic.Trueprop_conv (Conv.arg_conv (
-                  Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
+                  Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}
+                                        |> Simplifier.add_cong @{thm' HOL.conj_cong}))
                 )) ctxt) rule
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property,
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),

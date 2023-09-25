@@ -4144,11 +4144,11 @@ ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_rule_move_all
           Object_Equiv_rule_move_all2 Object_Equiv_rule_move_set_eq
           Object_Equiv_rule_move_set_eq_end *)
-
+(*
 \<phi>property_deriver Object_Equiv\<^sub>O 104
   = \<open>Phi_Type_Algebra_Derivers.object_equiv_singular\<close>
-
-\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>) requires Object_Equiv\<^sub>O?
+*)
+\<phi>property_deriver Object_Equiv 105 for (\<open>Object_Equiv _ _\<close>)
   = \<open>Phi_Type_Algebra_Derivers.object_equiv\<close>
 
 

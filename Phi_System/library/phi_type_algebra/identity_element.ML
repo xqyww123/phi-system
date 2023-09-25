@@ -163,10 +163,25 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
                              if #is_recursive phi then Abs ("x", x_ty, \<^Const>\<open>True\<close>)
                                                   else Var(("P", 0), x_ty --> HOLogic.boolT),
                              ctxt)
+
+      val prop_head = if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close>
+                                  else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close>
+      val (ants_delta, oblg_delta, cond_delta) =
+              guess_conditions ctxt (prop_head, not is_intro) phi T_term
+
+      fun pass_D D =
+        case oblg_delta of Abs (_,_,\<^Const>\<open>True\<close>) => D
+          | _ => Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (oblg_delta $ Bound 0) $ (D $ Bound 0))
+      fun pass_P (Var v) = Var v
+        | pass_P P =
+            case cond_delta of Abs (_,_,\<^Const>\<open>True\<close>) => P
+              | _ => Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (cond_delta $ Bound 0) $ (P $ Bound 0))
+
    in seq |> Seq.map (fn (D,P,ctxt) =>
-        (ants, HOLogic.Trueprop $   
-                  (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close> $ T_term $ D $ P
-                               else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close> $ T_term $ D ),
+        (ants_delta @ ants,
+         HOLogic.Trueprop $   
+              (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close> $ T_term $ pass_D D $ pass_P P
+                           else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close> $ T_term $ pass_D D ),
          NONE :: parse_inst_params_from_phi_term T_term,
          phi, ctxt))
   end

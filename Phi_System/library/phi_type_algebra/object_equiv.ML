@@ -3,7 +3,7 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 
 val conv_hol_imp_to_meta_if_has : conv -> conv
 val object_equiv : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
-val object_equiv_singular : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+(*val object_equiv_singular : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive*)
 
 end
 
@@ -104,6 +104,7 @@ fun guess_property_obj_eq (phi:phi_type) ctxt =
          NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt'))
   end
 
+(*
 (*The reachability relation of many type operators at singular point \<open>F \<circle>\<close> can become \<open>\<lambda>_. True\<close>*)
 fun guess_obj_eq_singular_None (phi0:phi_type) ctxt =
   let val thy = Proof_Context.theory_of ctxt
@@ -136,7 +137,7 @@ fun guess_obj_eq_singular_None (phi0:phi_type) ctxt =
    in SOME ([], property, NONE :: parse_inst_params_from_phi_term FT_term, phi, ctxt)
   end handle Automation_Fail _ => NONE)
   end
-
+*)
 
 fun OE_reasoning phi ctxt rule =
   let val ctxt' = Context.proof_map (Phi_Reasoner.add_pass (
@@ -159,6 +160,7 @@ fun wrap_equation_by_base_tag ctxt phi thm =
    in Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (conv ctxt)) thm
   end
 
+(*
 fun gen_obj_equal_singular (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
 
@@ -270,7 +272,7 @@ case #equations phi0
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule'])
   end
-
+*)
 
 fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
@@ -316,6 +318,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
             |> pair [rule'])
   end
 
+(*
 fun chk_is_singular ctxt tm =
   let fun chk_None (Const(\<^const_name>\<open>\<phi>None\<close>, _)) = true
         | chk_None (Abs (_, _, X)) = chk_None X
@@ -331,11 +334,11 @@ fun gen_obj_equal'' name NONE ctxt_derv phi thy = gen_obj_equal' name NONE ctxt_
       if chk_is_singular ctxt_derv H
       then gen_obj_equal_singular name (SOME (H, group)) ctxt_derv phi thy
       else gen_obj_equal' name (SOME (H, group)) ctxt_derv phi thy
-
+*)
 in
 
-val object_equiv_singular = deriver_framework (ACCEPT_NO_HINT, ONLY_ONCE, "Object_Equiv\<^sub>O") gen_obj_equal_singular
-val object_equiv = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Object_Equiv") gen_obj_equal''
+(*val object_equiv_singular = deriver_framework (ACCEPT_NO_HINT, ONLY_ONCE, "Object_Equiv\<^sub>O") gen_obj_equal_singular*)
+val object_equiv = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Object_Equiv") gen_obj_equal'
 
 end
 
