@@ -172,6 +172,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
       fun pass_D D =
         case oblg_delta of Abs (_,_,\<^Const>\<open>True\<close>) => D
           | _ => Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (oblg_delta $ Bound 0) $ (D $ Bound 0))
+
       fun pass_P (Var v) = Var v
         | pass_P P =
             case cond_delta of Abs (_,_,\<^Const>\<open>True\<close>) => P
@@ -217,7 +218,8 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
               then (fn ctxt => fn th =>
                 case Thm.major_prem_of th
                   of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
-                      let val rule = (case P of Var _ => @{thm' \<phi>TA_Ident_I_rule_step_infer}
+                      let val rule = (case P of \<^Const>\<open>HOL.conj\<close> $ _ $ (Var _ $ Bound 0) =>
+                                                  @{thm' \<phi>TA_Ident_I_rule_step_infer}
                                               | _     => @{thm' \<phi>TA_Ident_I_rule_step})
                        in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded' ctxt phi)) ctxt th
                       end

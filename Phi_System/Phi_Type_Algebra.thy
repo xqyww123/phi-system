@@ -3840,7 +3840,7 @@ declare [[
     \<open>Fallbacks using common default rules\<close>
  and \<phi>TA_guesser_fallback = (1,[1,1]) for \<open>Guess_Property PC V T uT a pa cond\<close> < \<phi>TA_guesser_default
     \<open>Fallbacks of Guess_Property\<close>
-
+                
 ML_file \<open>library/phi_type_algebra/guess_property.ML\<close>
 
 paragraph \<open>System Rules\<close>
@@ -3952,8 +3952,6 @@ lemma \<phi>TA_Suc_step:
 \<Longrightarrow> P \<longrightarrow> Inh @action \<A>ESC\<close>
   unfolding Action_Tag_def Premise_def
   by blast
-
-
 
 ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
@@ -4085,19 +4083,7 @@ lemma Object_Equiv_rule_move_set_eq_end:
 
 
 (*TODO: depreciated*)
-paragraph \<open>Object Equivalence at Singular Point\<close>
-  
-lemma [ ]:
-  \<open> (\<And>x. Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x))
-\<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (Ex P) \<Longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T))
-\<Longrightarrow> Object_Equiv T (\<lambda>_ _. True) \<close>
-  unfolding Object_Equiv_def Identity_Element\<^sub>I_def Identity_Element\<^sub>E_def
-            Premise_def Transformation_def
-  by clarsimp blast
-
-
-
-
+(*paragraph \<open>Object Equivalence at Singular Point\<close>
 
 text \<open>Strategy: transforming both sides to (one of) the base case of induction\<close>
 
@@ -4138,8 +4124,11 @@ lemma [\<phi>reason default %\<phi>simp_fallback]:
   \<open> x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
   unfolding Action_Tag_def \<A>simp_to_base_def
   by simp
+*)
 
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
+
+
 (*                  
 hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_rule_move_all
           Object_Equiv_rule_move_all2 Object_Equiv_rule_move_set_eq

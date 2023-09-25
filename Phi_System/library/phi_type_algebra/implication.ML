@@ -11,6 +11,16 @@ val guess_property_like_abst_domain :
       * sort * sort
       -> guess_property
 
+(*Infers a predicate or a boolean condition making the obligation true.
+  It supports upper and lower modes.
+
+  Upper mode: the unknown locates at the consequent part, and we infer a satisfiable instantiation
+              from the conditions of the oblgiation.
+  Lower mode: the unknown locates at the condition part of the obligation, and we infer an instantiation
+              as strong as possible (but does not weaken the entire obligation)
+*)
+val abstract_domain_solver : bool -> string -> solver
+
 (*val guess_property_abst_dom : string -> guess_property
 val abstract_domain_solver : bool -> string (*name of proof cache*) -> solver*)
 
@@ -132,6 +142,14 @@ fun guess_property_abst_dom upper (phi:phi_type) ctxt =
   end
 *)
 
+(*Infers a predicate or a boolean condition making the obligation true.
+  It supports upper and lower modes.
+
+  Upper mode: the unknown locates at the consequent part, and we infer a satisfiable instantiation
+              from the conditions of the oblgiation.
+  Lower mode: the unknown locates at the condition part of the obligation, and we infer an instantiation
+              as strong as possible (but does not weaken the entire obligation)
+*)
 fun abstract_domain_solver upper name (phi,ctxt,sequent) =
   let fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
@@ -263,14 +281,10 @@ fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
                 ctxt
 
       val solver = if mode_infer then abstract_domain_solver upper name else K NONE
-      fun simp (_, ctxt) rule =
-        if is_some instruction0
-        then rule
-        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                HOLogic.Trueprop_conv (Conv.arg_conv (
-                  Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}
-                                        |> Simplifier.add_cong @{thm' HOL.conj_cong}))
-                )) ctxt) rule
+      val simp = if is_some instruction0 then K I
+                 else default_simplifier' (fn rewr =>
+                   Phi_Conv.hhf_concl_conv (fn ctxt =>
+                      HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)) ))
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property,
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
                                       [(K (SOME [0]), ind_conv, Inh_reasoning)],

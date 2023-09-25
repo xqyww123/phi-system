@@ -346,19 +346,34 @@ include VARIABLE
 (*patched Variable.import and .export, as the original Variable.export only generalize fixed term variables
   but ignores fixed type variables of such as constants.*)
 
-val export_inst  :  typ TVars.table *  term Vars.table -> Names.set * Names.set
-val export_inst' : ctyp TVars.table * cterm Vars.table -> Names.set * Names.set
+val export_generalization  :  typ TVars.table *  term Vars.table -> Names.set * Names.set
+val export_generalization' : ctyp TVars.table * cterm Vars.table -> Names.set * Names.set
+
+val export_inst : Proof.context -> typ TVars.table *  term Vars.table -> thm list -> thm list
 
 end
 
 structure Variable : VARIABLE = struct
 open Variable
 
-fun export_inst (tyvars, tmvars) =
+fun export_generalization (tyvars, tmvars) =
   (Names.build (TVars.fold (fn (_, TFree (N, _)) => Names.add_set N) tyvars),
    Names.build (Vars.fold (fn (_, tm) => Names.add_set (Term.term_name tm)) tmvars))
 
-val export_inst' = export_inst o Phi_Help.uncertify_vars
+val export_generalization' = export_generalization o Phi_Help.uncertify_vars
+
+fun export_inst ctxt inst ths =
+  let val names = export_generalization inst
+      val ids = map (fn th => Thm.maxidx_of th + 1) ths
+      val ths' = map2 (Thm.generalize names) ids ths
+
+      fun mk_inst_back i =
+        (TVars.build (TVars.fold (fn (v, TFree (N,S)) => TVars.add (((N,i),S), Thm.ctyp_of ctxt (TVar v))) (fst inst)),
+         Vars.build (Vars.fold (fn (v, Free (N,T)) => Vars.add (((N,i),T), Thm.cterm_of ctxt (Var v))) (snd inst)))
+      fun inst_back i = Thm.instantiate (mk_inst_back i)
+
+   in map2 inst_back ids ths'
+  end
 
 end
 

@@ -35,7 +35,7 @@ fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                               (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' ctxt phi))) phi ctxt
 
       val mode_infer = not (is_some instruction)
-      val solver = if mode_infer then solver__abst_domain name else K NONE
+      val solver = if mode_infer then abstract_domain_solver false name else K NONE
 
       fun simp (_, ctxt) rule =
         if is_some instruction then rule

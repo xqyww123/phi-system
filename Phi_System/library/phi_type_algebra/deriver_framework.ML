@@ -257,7 +257,7 @@ val default_simplifier : (Phi_Type_Algebra.phi_type * thm list (*contextual bool
                             -> Proof.context -> conv)
                       -> simplifier
     (*extracts boolean facts from the antecedents of the rule to simplify the rule*)
-
+val default_simplifier' : ((Proof.context -> conv) -> Proof.context -> conv) -> simplifier
 
 (** A framework of deriver **)
 
@@ -1823,6 +1823,14 @@ fun default_simplifier conv (phi, ctxt) rule =
    |> Assumption.export ctxt' ctxt't1
    |> singleton (Variable.export ctxt't1 ctxt)
   end
+
+fun default_simplifier' gen_conv (phi, ctxt) rule =
+  default_simplifier (fn (_, lprems) => fn ctxt =>
+      gen_conv (fn ctxt =>
+          Simplifier.rewrite (ctxt addsimps (@{thm' special_Ex_def} :: lprems)
+              |> Simplifier.add_cong @{thm' HOL.disj_cong}
+              |> Simplifier.add_cong @{thm' HOL.conj_cong})) ctxt
+      ) (phi, ctxt) rule
 
 (** Other Tools **)
 

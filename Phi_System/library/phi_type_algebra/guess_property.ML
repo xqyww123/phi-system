@@ -89,16 +89,17 @@ fun guess_conditions ctxt0 (const, is_covar) phi T_term0 =
         let val filter' = filter flt o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
             val name = Term.declare_term_frees (Thm.prop_of ret) Name.context
             val (x_name, _) = Name.variant "\<x>" name
-            val x = Free (x_name, x_ty)
             fun filter_lambda func =
-              Term.lambda x (Phi_Help.list_mk_conj (filter' (Envir.beta_eta_contract (func $ x))))
+              let val x = Free (x_name, Term.domain_type (Term.fastype_of func))
+               in Term.lambda x (Phi_Help.list_mk_conj (filter' (Envir.beta_eta_contract (func $ x))))
+              end
          in case ret
          |> Simplifier.simplify (ctxt addsimps @{thms' Premise_norm[where mode=\<open>default\<close>]
                                                        Premise_norm[where mode=\<open>MODE_GUARD\<close>]
                                                        Ant_Seq_reduct
                                                        HOL.imp_conjR[folded Ant_Seq_def]
                                                        HOL.all_conj_distrib[folded Ant_Seq_def]})
-         |> Thm.generalize (Variable.export_inst inst) (Thm.maxidx_of ret + 1)
+         |> singleton (Variable.export_inst ctxt0 inst)
          |> Thm.prop_of
          of _ (*Pure.protect*) $ (_ (*Trueprop*) $ (
              Const(\<^const_name>\<open>Guess_Property\<close>, _) $ _ $ _ $ _ $ _

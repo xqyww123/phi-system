@@ -25,18 +25,35 @@ local
 fun need_infer sequent =
   case Thm.concl_of sequent
     of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var _) => true
+     | _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $
+            Abs (_, _, Abs (_, _,
+              Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var _ $ Bound 1 $ Bound 0) $ _))) => true
      | _ => false
 
 fun infer_equiv ctxt sequent =
   let val var = case Thm.concl_of sequent
                   of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var v) => v
+                   | _ (*Trueprop*) $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $
+                          Abs (_, _, Abs (_, _,
+                            Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound 1 $ Bound 0) $ _))) => v
                    | _ => error "BUG gZvGQ6CHTG+D2d27jtExHQ"
       val (tya, tyb) = case snd var of \<^Type>\<open>fun a \<^Type>\<open>fun b _\<close>\<close> => (a,b)
       val (_,oblg) = PLPR_Syntax.dest_premise_tag (Thm.major_prem_of sequent)
       
+      val exists_bad = exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+                                        | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
+                                        | _ => false)
+      fun refine_term default (\<^Const>\<open>HOL.implies\<close> $ A $ B) =
+            if exists_bad A then refine_term default B
+                            else \<^Const>\<open>HOL.implies\<close> $ A $ refine_term default B
+        | refine_term _ (\<^Const>\<open>HOL.disj\<close> $ A $ B) =
+            \<^Const>\<open>HOL.disj\<close> $ refine_term \<^Const>\<open>False\<close> A $ refine_term \<^Const>\<open>False\<close> B
+        | refine_term default X = if exists_bad X then default else X
+
       fun infer lev (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ (Var v' $ x $ y) $ Y) =
             if v' = var
             then Phi_Help.subst_free_with_loose_bounds [(x, Bound (lev+1)), (y, Bound lev)] Y
+              |> refine_term \<^Const>\<open>True\<close>
             else \<^Const>\<open>True\<close>
         | infer lev (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ X $ Y) =
             \<^Const>\<open>HOL.conj\<close> $ infer lev X $ infer lev Y
@@ -98,9 +115,21 @@ fun guess_property_obj_eq (phi:phi_type) ctxt =
             if #is_recursive phi
             then guess_self_rel ctxt param_eqs x_ty
             else Seq.single (Var(("eq", 1), x_ty --> x_ty --> HOLogic.boolT), ctxt)
+
+      val (_, _, cond_T) =
+              guess_conditions ctxt (\<^Const>\<open>Object_Equiv x_ty model_ty\<close>, false) phi T_term
+      val (ants_U, oblg_U, _) =
+              guess_conditions ctxt (\<^Const>\<open>Object_Equiv x_ty model_ty\<close>, true) phi T_term
+      fun pass_eq eq =
+        case oblg_U of Abs (_, _, \<^Const>\<open>True\<close>) => eq
+          | _ => Abs ("x", x_ty, Abs ("y", x_ty,
+                    \<^Const>\<open>HOL.conj\<close> $ (eq $ Bound 1 $ Bound 0)
+                                    $ (\<^Const>\<open>HOL.implies\<close> $ (cond_T $ Bound 1) $ (oblg_U $ Bound 0))))
+
    in eq_terms
    |> Seq.map (fn (eq_term, ctxt') =>
-        (ants, \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close> $ T_term $ eq_term),
+        (ants_U @ ants,
+         \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Object_Equiv x_ty model_ty\<close> $ T_term $ pass_eq eq_term),
          NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt'))
   end
 
@@ -152,6 +181,7 @@ fun OE_reasoning phi ctxt rule =
           phi ctxt' rule
   end
 
+(*
 fun wrap_equation_by_base_tag ctxt phi thm =
   let fun conv ctxt ctm =
         if is_phi_head phi (Term.head_of (Thm.term_of ctm))
@@ -160,7 +190,6 @@ fun wrap_equation_by_base_tag ctxt phi thm =
    in Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (conv ctxt)) thm
   end
 
-(*
 fun gen_obj_equal_singular (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val rule0 = @{thm' \<phi>TA_OE\<^sub>O_rule}
 
@@ -296,9 +325,8 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                    |> SOME
             else NONE
       val simp = if is_some instruction then K I
-                 else default_simplifier (fn (_, lprems) => fn ctxt =>
-                          HOLogic.Trueprop_conv (Conv.arg_conv (
-                              Simplifier.rewrite (ctxt addsimps (@{thm' special_Ex_def} :: lprems)))))
+                 else default_simplifier' (fn rewr => fn ctxt =>
+                          HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)))
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},

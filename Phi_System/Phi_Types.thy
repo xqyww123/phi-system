@@ -62,8 +62,8 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
-       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Functionality T Q) \<Longrightarrow> Functionality (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<longrightarrow> Q x)\<close>
-       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Carrier_Set T Q) \<Longrightarrow> Carrier_Set (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<longrightarrow> Q x)\<close>
+       and Functionality
+       and Carrier_Set
        and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Elements\<^sub>I T D P) \<Longrightarrow> Identity_Elements\<^sub>I (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. Q \<longrightarrow> D x) (\<lambda>x. Q \<and> P x)\<close>
        and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>
        and Separation_Monoid
@@ -261,7 +261,7 @@ declare SubjectionTY_def[embed_into_\<phi>type del]
 
 
 declare [[\<phi>trace_reasoning = 0]]
-     
+   
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving \<open> Identity_Elements\<^sub>E T D
@@ -1869,7 +1869,7 @@ thm \<phi>MapAt.\<Sigma>_rewr
 subsubsection \<open>By List of Keys\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-         
+              
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Separation_Monoid
@@ -1923,8 +1923,8 @@ subsection \<open>Permission Sharing\<close>
 declare [[\<phi>trace_reasoning = 0 ]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
-
-        
+ 
+  
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
   deriving Separation_Monoid

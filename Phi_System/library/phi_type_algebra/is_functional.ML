@@ -3,7 +3,7 @@ include PHI_TYPE_ALGEBRA_DERIVERS
 
 val is_functional : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 
-val solver__abst_domain : string -> solver
+(*val solver__abst_domain : string -> solver*)
 
 end
 
@@ -12,14 +12,18 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 
 val guess_property = guess_property_like_abst_domain (false,
-        fn (x,m) => \<^Const>\<open>Functionality x m\<close>, K I,
+        fn (x,m) => \<^Const>\<open>Functionality x m\<close>,
+        fn (ctxt, x_ty, _, cond) => fn ants =>
+             (case cond of Abs (_, _, \<^Const>\<open>True\<close>) => ants
+                 | _ => maps (constrain_antecedents (
+                            \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $ (simplified_exists_qualify ctxt x_ty cond))) ants),
         fn (_, x_ty, oblg, cond) => fn pred =>
               Abs ("x", x_ty, \<^Const>\<open>HOL.implies\<close>
                       $ (cond $ Bound 0)
                       $ (\<^Const>\<open>HOL.conj\<close> $ (oblg $ Bound 0) $ (pred $ Bound 0))),
         \<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)
 
-fun solver__abst_domain name (phi,ctxt,sequent) =
+(*fun solver__abst_domain name (phi,ctxt,sequent) =
   let fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
                                      \the expression of the implied pure fact from it."])
@@ -77,7 +81,7 @@ fun solver__abst_domain name (phi,ctxt,sequent) =
                end
         | _ => error "Internal bug"
  end
-
+*)
 
 fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Functionality\<close>, _) $ T $ _ => T )
@@ -96,7 +100,7 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                               phi ctxt
 
       val mode_infer = not (is_some instruction) andalso not (#is_recursive phi0)
-      val solver = if mode_infer then solver__abst_domain name else K NONE
+      val solver = if mode_infer then abstract_domain_solver false name else K NONE
 
       fun simp (_, ctxt) rule =
         if is_some instruction
