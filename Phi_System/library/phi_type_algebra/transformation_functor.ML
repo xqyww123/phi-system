@@ -43,7 +43,7 @@ fun mk_TF's_two_instantiations ctxt0 (FT_term0, phi0) =
   end
 
 fun guess_property_TF phi0 ctxt =
-  let val ((_,FT_term), ctxt) = fix_phi_term_params (#term phi0) ctxt
+  let val ((_,FT_term), ctxt) = fix_phi_term_params phi0 ctxt
    in mk_TF's_two_instantiations ctxt (FT_term, phi0)
    |> Seq.maps (fn (ants, F_term, F'_term, T_term, U_term, inst_ty, phi, ctxt') =>
   let val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
@@ -167,7 +167,7 @@ end
 (** Functional Transformation Functor **)
 
 fun guess_property_FTF phi0 ctxt0 =
-  let val ((_, FT_term), ctxt0) = fix_phi_term_params (#term phi0) ctxt0
+  let val ((_, FT_term), ctxt0) = fix_phi_term_params phi0 ctxt0
    in mk_TF's_two_instantiations ctxt0 (FT_term, phi0)
    |> Seq.maps (fn (ants, F_term, F'_term, T_term, U_term, inst_ty, phi, ctxt) => let
       val (_, x_ty, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))

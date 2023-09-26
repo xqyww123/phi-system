@@ -389,6 +389,18 @@ lemma
   oops
 
 lemma [\<phi>reason %carrier_set_cut]:
+  \<open> (\<And>i\<in>I. Within_Carrier_Set (A i))
+\<Longrightarrow> Within_Carrier_Set (\<big_ast>i\<in>I. A i) \<close>
+  for A :: \<open>'i \<Rightarrow> 'c :: {sep_algebra,sep_carrier_1} BI\<close>
+  unfolding Within_Carrier_Set_def Mul_Quant_def meta_Ball_def Premise_def
+proof clarsimp
+  fix v
+  assume \<open>finite I\<close>
+  show \<open>(\<And>x. x \<in> I \<Longrightarrow> \<forall>v. v \<Turnstile> A x \<longrightarrow> mul_carrier v) \<Longrightarrow> v \<Turnstile> prod A I \<Longrightarrow> mul_carrier v\<close>
+    by (induct arbitrary: v rule: finite_induct[OF \<open>finite I\<close>]; clarsimp; metis mul_carrier_closed)
+qed
+
+lemma [\<phi>reason %carrier_set_cut]:
   \<open> Carrier_Set T P
 \<Longrightarrow> Carrier_Set U Q
 \<Longrightarrow> Carrier_Set (T \<^emph> U) (pred_prod P Q)\<close>

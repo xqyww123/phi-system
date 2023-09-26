@@ -176,18 +176,20 @@ fun rulify_antecedents deep N ctxt thm =
             = SOME @{thm' Ant_Seq_I}
         | rule_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _))
             = SOME @{thm' HOL.conjI}
+        | rule_of (Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const (\<^const_name>\<open>HOL.True\<close>, _))
+            = SOME @{thm' TrueI}
         | rule_of _ = NONE
-      exception OUT
+      exception OUT_OF_IDX
       fun pass 0 _ thm = thm
         | pass N i thm =
            (case (rule_of (Logic.strip_assums_concl (Logic.nth_prem (i+1, Thm.prop_of thm)))
-                       handle TERM _ => raise OUT)
+                       handle TERM _ => raise OUT_OF_IDX)
               of SOME rule => ( num := !num + 1 ;
                                 pass (if N < 0 then N else N+1) i (rule RSN' (ctxt, i+1, thm)) )
                | NONE => thm
                       |> Conv.gconv_rule (conv ~1 ctxt) 1
                       |> pass (N-1) (i+1))
-            handle OUT =>
+            handle OUT_OF_IDX =>
               let val thm = Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (conv N ctxt)) thm
                in if i < Thm.nprems_of thm
                then pass N i thm

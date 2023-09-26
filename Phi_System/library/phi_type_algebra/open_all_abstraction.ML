@@ -11,7 +11,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 (*Guessing is not supported for recursive \<phi>-types*)
 
 fun guess_property (phi:phi_type) ctxt =
-  let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+  let val ((_, T_term), ctxt) = fix_phi_term_params phi ctxt
       val _ = if #is_recursive phi
               then raise Automation_Fail (fn () => [
                       Pretty.para "Fail to guess the rule for a recursive \<phi>-type\

@@ -130,7 +130,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
                  end
 
       val (args, x_ty, model_ty) = parameters_and_typs_of phi
-      val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+      val ((_, T_term), ctxt) = fix_phi_term_params phi ctxt
       val (ants_Ds_Ps, ctxt) = fold_map (fn ((info,ty), A_term0) => fn ctxt =>
             case try dest_parameterized_phi_ty ty
               of SOME (rev_atys, x_ty, m_ty) =>
@@ -292,7 +292,7 @@ fun id_ele_properties is_intro ctxt0 (phi0 : phi_type) thy =
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt0) inst
       val phi = instantiate_phi (inst', Vars.empty) phi0
 
-      val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt0
+      val ((_, T_term), ctxt) = fix_phi_term_params phi ctxt0
       val (_,x_ty,m_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       val trigger = (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty m_ty\<close>
                                  else \<^Const>\<open>Identity_Elements\<^sub>E x_ty m_ty\<close>) $ T_term

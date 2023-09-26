@@ -165,6 +165,37 @@ the data structures.
 
 \<close>
 
+text \<open>Guessing Strategy:
+
+\<^item> For non-recursive \<phi>-types and property parameters about booleans (conditions or predicates),
+  such as the domain of the identity-elements, we can leave the parameter to be a fixed variable and
+  send it to derivers (if the deriving process does not depends on a specific choice of the parameter).
+  The derivers would report proof obligations containing the variable, from which we can infer
+  an optimal instantiation (either the strongest or the weakest, depending on the property) that the
+  variable can be when it does not weaken or strengthen the entire proof obligation. If so, the result
+  is optimal when the deriving is complete (i.e., yielding the weakest proof obligation entailing the
+  property).
+
+  This strategy usually works well in our case studies, though the optimal instantiation is not always
+  inferrable syntactically so we use suboptimal one with heuristics, and another problem is
+  sometime (percentage?) the instantiation may contain too much trivial details and our simplifier
+  (provided from the underlying proof assistant) fails to reduce it into a (one of the) simplest form. In
+  these cases, manual annotations are given based on the guessed results.
+
+\<^item> If the abstract algebra is defined from Bounded Natural Functor (e.g., its logic type is defined
+  as an algebraic datatype in most of modern proof assistants), the operators such as mappers,
+  predicators, and relators can be hopefully good candidates of the property parameters. This heuristic
+  covers recursive \<phi>-types and works well for \<phi>-types modelling ordinary data structures.
+
+\<^item> The candidates guessed above can be in addition constrained or augmented by inference over the syntactic
+  expression of the \<phi>-type definitions, carried out by the ad-hoc reasoning rules specifying and provided by
+  the \<phi>-type operators occurring in the expression.
+  \<open>T \<s>\<u>\<b>\<j> P \<triangleq> \<lambda>x. (x \<Ztypecolon> T) \<and> P\<close> is an example giving a boolean constraint \<open>P\<close> that can constrain the
+  domain of \<open>identity-element\<close>.
+
+\<close>
+
+
 
 section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
 
@@ -207,6 +238,7 @@ text \<open>A transformation functor \<open>mapper\<close> is complete iff for a
 family \<open>{g\<^sub>i}\<close>, \<open>{mapper g\<^sub>i}\<close> is also complete (the notion of completeness can be extended to relations naturally
 by converting a relation as a function to a set).\<close>
 
+(*It seems we have the need to give bifunctor*)
 
 definition Functional_Transformation_Functor :: \<open>(('b,'a) \<phi> \<Rightarrow> ('d,'c) \<phi>)
                                                \<Rightarrow> (('b,'e) \<phi> \<Rightarrow> ('d,'f) \<phi>)
@@ -1146,7 +1178,8 @@ ML \<open>local val bnf = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>li
 val x = BNF_Def.deads_of_bnf bnf
 val z = BNF_Def.mk_sets_of_bnf [[]] [[\<^typ>\<open>nat\<close>]] bnf
 end\<close>
-ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>option\<close>\<close>
+ML \<open> the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>)
+  |> BNF_Def.rel_of_bnf\<close>
 
 
 fun fib :: \<open>int \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat\<close>
@@ -5619,7 +5652,9 @@ setup \<open> Context.theory_map(
   }) end)
 \<close>
 
-
+lemma rel_fun__const_True[simp]:
+  \<open>rel_fun (=) (\<lambda>x y. True) = (\<lambda>x y. True)\<close>
+  by (simp add: fun_eq_iff rel_fun_def)
 
 subsubsection \<open>Production\<close>
 

@@ -53,7 +53,7 @@ fun guess_property_like_abst_domain (is_cov, infer_from_BNF, var_based_infer,
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi = instantiate_phi (inst',Vars.empty) phi0
 
-      val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+      val ((_, T_term), ctxt) = fix_phi_term_params phi ctxt
       val (rev_arg_tys,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun collect_params ret [] _  = ret
         | collect_params ret (arg_ty :: rev_arg_tys) (F' $ T') =

@@ -169,8 +169,8 @@ val fix_phi_type : bool -> phi_type -> Proof.context ->
         (ctyp TVars.table * cterm Vars.table) * phi_type *
         Proof.context
 
-val fix_phi_term_params : term -> Proof.context ->
-        (term * term) * Proof.context (*only fix the terms but no types*)
+val fix_phi_term_params : phi_type -> Proof.context -> (term * term) * Proof.context
+        (*only fix the terms but no types*)
 
 val raw_term_name_typ : term -> string * typ
 (*depreciated*)
@@ -408,15 +408,13 @@ fun parameters_and_typs_of phi =
    in (#params phi ~~ rev rev_atys, x_ty, m_ty)
   end
 
-fun fix_phi_term_params phi_term ctxt =
-  let val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of phi_term)
-      val arg_tys = rev rev_arg_tys
-      val arg_names' = Name.invent (Variable.names_of ctxt) "A" (length arg_tys)
-      val [x_name'] = Name.invent (Variable.names_of ctxt) "x" 1
-      val (x_name::arg_names, ctxt') = Variable.add_fixes (x_name' :: arg_names') ctxt
-      val args = map2 (fn N => fn T => Free(N,T)) arg_names arg_tys
+fun fix_phi_term_params phi ctxt =
+  let val (params, x_ty, model_ty) = parameters_and_typs_of phi
+      val (x_name :: param_names, ctxt') =
+              Variable.variant_fixes ("x" :: map (the_default "A" o #name o fst) params) ctxt
+      val param_terms = map2 (fn N => fn (_,T) => Free(N,T)) param_names params
       val x_term = Free(x_name, x_ty)
-      val T_term = fold (fn a => fn X => X $ a) args phi_term
+      val T_term = fold (fn a => fn X => X $ a) param_terms (#term phi)
    in ((x_term, T_term), ctxt')
   end
 

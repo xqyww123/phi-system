@@ -87,6 +87,11 @@ val default_simplify : term list option (*pattern used in Phi_Reasoner.instantia
 
 val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
 
+(*** Developer Tools ***)
+
+(*Debugging use only*)
+val assert_derived_properties : theory -> (thm * term) list -> unit
+
 end
 
 structure Phi_Type_Template_Properties : PHI_TYPE_TEMPLATE_PROPERTIES = struct
@@ -776,5 +781,22 @@ end
 )
 
 
-end 
+(** Developer Tools **)
+
+fun assert_derived_properties thy th_prop_pairs =
+  List.app (fn (th, prop) =>
+    if Pattern.equiv thy (Thm.prop_of th, prop) then ()
+    else let open Pretty in
+      error (string_of (chunks [
+        para "The derived property",
+        Thm.pretty_thm_global thy th,
+        para "fails to meet the desired assertion",
+        Syntax.pretty_term_global thy prop
+      ]))
+    end
+  ) th_prop_pairs
+
+end
+
+val assert_derived_properties = Phi_Type_Template_Properties.assert_derived_properties
 

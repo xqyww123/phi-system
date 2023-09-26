@@ -58,7 +58,7 @@ fun Guess_Scalar_framework (sorts, mk_goal_term_and_parse_result) =
     let val (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi sorts
         val module_ty = s_ty --> mk_phi_type_ty (model_ty, x_ele_ty) --> mk_phi_type_ty (model_ty, x_ty)
         val idx = phi_maxidx_of phi ~1 + 1
-        val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+        val ((_, FT_term), ctxt) = fix_phi_term_params phi ctxt
         val (F_term $ _ $ T_term) = FT_term
   
         val eta_F_term = Var (("unfolded_F", 0), Term.fastype_of F_term)

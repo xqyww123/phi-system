@@ -85,7 +85,7 @@ fun infer_equiv ctxt sequent =
   of the parameters are also assumed as antecedents of the guessing property, and also used in
   above guessing the reachability relations of the target \<phi>-type.*)
 fun guess_property_obj_eq (phi:phi_type) ctxt =
-  let val ((_,T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+  let val ((_,T_term), ctxt) = fix_phi_term_params phi ctxt
       val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi)) 
       fun mk_Ants ctxt (Ty::rev_arg_tys) (eq::eq_names) ants param_eqs (T_term $ A) =
            (case try dest_parameterized_phi_ty Ty

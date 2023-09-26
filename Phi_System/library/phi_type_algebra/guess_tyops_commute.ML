@@ -25,7 +25,7 @@ fun gen_Guess_Tyops_Commute_framework (template_of_reasoning_goal, parsing_rule,
                                                   [block ([Syntax.pretty_term ctxt (#term phi), brk 1] @
                                                           text "is not a type operator")]
                                                end)
-            val ((_, GU_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+            val ((_, GU_term), ctxt) = fix_phi_term_params phi ctxt
             fun fail () = guess_fail ctxt phi (fn () => let open Pretty in
                             [block (text "Fail to parse the given \<phi>-type" @
                                     [brk 1, Syntax.pretty_term ctxt GU_term, brk 1] @

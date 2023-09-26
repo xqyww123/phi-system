@@ -12,7 +12,7 @@ structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun guess_property (phi:phi_type) ctxt =
-  let val ((x_Term, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
+  let val ((x_Term, T_term), ctxt) = fix_phi_term_params phi ctxt
       val (rev_arg_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
 
       fun collect_params ret [] _  = ret

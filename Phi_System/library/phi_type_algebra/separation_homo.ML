@@ -56,7 +56,7 @@ fun subst_ty redex_residue t =
                 | t' => t')
 
 fun guess_property_SH flag (phi0:phi_type) ctxt =
-  let val ((_,FT_term0), ctxt) = fix_phi_term_params (#term phi0) ctxt
+  let val ((_,FT_term0), ctxt) = fix_phi_term_params phi0 ctxt
    in Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term0)
   |> Seq.maps (fn (T_term0, F_term0) =>
   let val (instTy, _, phi'1) = instantiate_phi_to_pair_x ctxt (T_term0, phi0)
@@ -91,7 +91,7 @@ fun guess_property_SH flag (phi0:phi_type) ctxt =
 
       val Fa = Term.map_types (subst_ty [(element_ty, fst target)]) F_term
       val Fb = Term.map_types (subst_ty [(element_ty, snd target)]) F_term
-      val ([T_name, U_name], ctxt) = Variable.add_fixes ["T","U"] ctxt
+      val ([T_name, U_name], ctxt) = Variable.variant_fixes ["T","U"] ctxt
       val T = Free (T_name, subst_ty [(element_ty, fst target)] (Term.fastype_of T_term))
       val U = Free (U_name, subst_ty [(element_ty, snd target)] (Term.fastype_of T_term))
       val SH = (case (Term.fastype_of Fa, Term.fastype_of Fb)

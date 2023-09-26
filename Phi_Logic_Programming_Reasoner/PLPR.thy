@@ -1852,7 +1852,7 @@ lemma Orelse_shortcut_I2:
       val [I1,I2] = map (Thm.instantiate (TVars.empty, Vars.make [((("G",0),\<^typ>\<open>subgoal\<close>),G)]))
                         @{thms' Orelse_shortcut_I1 Orelse_shortcut_I2}
       fun tac sequent0 = Seq.make (fn () =>
-        let val sequent = I2 RS sequent0
+        let val sequent = snd (PLPR_Syntax.rulify_antecedents false 1 ctxt (I2 RS sequent0))
          in if Subgoal_Env.chk_goal goal
             then NONE
             else case Thm.major_prem_of sequent
@@ -1860,7 +1860,7 @@ lemma Orelse_shortcut_I2:
                       SOME ((ctxt, I1 RS sequent), tac sequent)
                | _ => SOME ((ctxt, sequent), Seq.empty)
         end)
-   in SOME ((ctxt, I1 RS sequent), tac sequent)
+   in SOME ((ctxt, snd (PLPR_Syntax.rulify_antecedents false 1 ctxt (I1 RS sequent))), tac sequent)
   end
 )\<close>
 
