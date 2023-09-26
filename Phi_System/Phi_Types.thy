@@ -58,14 +58,14 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-    
+       
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
        and Functionality
        and Carrier_Set
-       and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Elements\<^sub>I T D P) \<Longrightarrow> Identity_Elements\<^sub>I (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. Q \<longrightarrow> D x) (\<lambda>x. Q \<and> P x)\<close>
-       and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>
+     (*and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Elements\<^sub>I T D P) \<Longrightarrow> Identity_Elements\<^sub>I (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. Q \<longrightarrow> D x) (\<lambda>x. Q \<and> P x)\<close>*)
+     (*and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>*)
        and Separation_Monoid
        and Abstraction_to_Raw
 
@@ -230,17 +230,18 @@ text \<open>Transformation functor requires inner elements to be transformed int
   Such transformation can be expressed by \<^emph>\<open>Dependent Sum Type\<close> \<open>\<Sigma>\<close> and \<^emph>\<open>Set Abstraction\<close> \<open>LooseState\<close> \<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+ 
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
   deriving \<open>(\<And>A. Object_Equiv (T A) (eq A))
         \<Longrightarrow> Object_Equiv (\<Sigma> T) (\<lambda>x y. fst y = fst x \<and> eq (fst x) (snd x) (snd y))\<close>
-    and \<open>Object_Equiv (\<Sigma> (\<lambda>x. \<circle>)) (\<lambda>_ _. True) \<close>
-    and    \<open>(\<And>c. Identity_Elements\<^sub>I (T c) (D c) (P c))
+    and Identity_Elements
+    (*and    \<open>(\<And>c. Identity_Elements\<^sub>I (T c) (D c) (P c))
         \<Longrightarrow> Identity_Elements\<^sub>I (\<Sigma> T) (\<lambda>(c,u). D c u) (\<lambda>(c,u). P c u)\<close>
     and    \<open>(\<And>c. Identity_Elements\<^sub>E (T c) (D c))
-        \<Longrightarrow> Identity_Elements\<^sub>E (\<Sigma> T) (\<lambda>(c,u). D c u) \<close>
+        \<Longrightarrow> Identity_Elements\<^sub>E (\<Sigma> T) (\<lambda>(c,u). D c u) \<close>*) (*can be removed*)
     and Functionality
+    and Carrier_Set
     and   \<open>(\<And>a (x::?'b \<times> ?'a). a \<Ztypecolon> T (fst x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> Itself \<s>\<u>\<b>\<j> b. r a b @action to Itself)
         \<Longrightarrow> \<forall>(x::?'b \<times> ?'a). x \<Ztypecolon> \<Sigma> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. (\<exists>b. r (snd x) b \<and> y = b) @action to Itself \<close>
     and Abstraction_to_Raw
@@ -264,12 +265,14 @@ declare [[\<phi>trace_reasoning = 0]]
    
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
-  deriving \<open> Identity_Elements\<^sub>E T D
+  deriving Identity_Elements
+       (*and \<open> Identity_Elements\<^sub>E T D
          \<Longrightarrow> Identity_Elements\<^sub>E (\<S> T) (\<lambda>S. Bex S D) \<close>
        and \<open> Identity_Elements\<^sub>I T D P
-         \<Longrightarrow> Identity_Elements\<^sub>I (\<S> T) (\<lambda>S. Ball S D) (\<lambda>S. Bex S P)\<close>
-       and \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
-       and \<open> Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
+         \<Longrightarrow> Identity_Elements\<^sub>I (\<S> T) (\<lambda>S. Ball S D) (\<lambda>S. Bex S P)\<close>*)
+       and Abstract_Domain
+       (*and \<open> Abstract_Domain T P \<Longrightarrow> Abstract_Domain (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>
+       and \<open> Abstract_Domain\<^sub>L T P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> T) (\<lambda>s. \<exists>x\<in>s. P x) \<close>*)
        and \<open> Object_Equiv T eq \<Longrightarrow> Object_Equiv (\<S> T) (\<lambda>Sx Sy. \<forall>x \<in> Sx. \<exists>y \<in> Sy. eq x y) \<close>
        (*and \<open> Object_Equiv (\<S> \<circle>) (\<lambda>Sx Sy. Sx \<noteq> {} \<longrightarrow> Sy \<noteq> {}) \<close>
                   \<comment> \<open>An example for which it is a non-symmetric reachability relation\<close>*)
@@ -709,7 +712,7 @@ lemma [\<phi>reason 1000]:
 
  
 subsection \<open>Vertical Composition\<close>
- 
+
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
   deriving Carrier_Set
@@ -1051,19 +1054,29 @@ lemma [simp]:
 
 (*TODO: finish me!*)
 
+declare [[\<phi>trace_reasoning = 0]]
+ 
 \<phi>type_def \<phi>Sum :: \<open>('c,'x) \<phi> \<Rightarrow> ('c, 'y) \<phi> \<Rightarrow> ('c, 'x + 'y) \<phi>\<close> (infixl "+\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T +\<^sub>\<phi> U) = (\<lambda>xy. case xy of Inl x \<Rightarrow> x \<Ztypecolon> T | Inr y \<Rightarrow> y \<Ztypecolon> U)\<close>
   deriving \<open>Object_Equiv T eq\<^sub>T \<Longrightarrow> Object_Equiv U eq\<^sub>U \<Longrightarrow> Object_Equiv (T +\<^sub>\<phi> U) (rel_sum eq\<^sub>T eq\<^sub>U)\<close>
-       and \<open>Abstract_Domain T P
-        \<Longrightarrow> Abstract_Domain U Q
-        \<Longrightarrow> Abstract_Domain (T +\<^sub>\<phi> U) (pred_sum P Q) \<close>
-       and Abstract_Domain\<^sub>L
+       and Abstract_Domain
+       and \<open>Abstract_Domain\<^sub>L T T\<^sub>D
+        \<Longrightarrow> Abstract_Domain\<^sub>L U U\<^sub>D
+        \<Longrightarrow> Abstract_Domain\<^sub>L (T +\<^sub>\<phi> U) (case_sum T\<^sub>D U\<^sub>D)\<close> (*simplification fails to transform the result into the ideal form*)
        and \<open>Carrier_Set T P
         \<Longrightarrow> Carrier_Set U Q
-        \<Longrightarrow> Carrier_Set (T +\<^sub>\<phi> U) (pred_sum P Q)\<close>
+        \<Longrightarrow> Carrier_Set (T +\<^sub>\<phi> U) (pred_sum P Q)\<close> (*simplification fails*)
        and Identity_Elements
+       and \<open>Identity_Elements\<^sub>E T T\<^sub>D
+        \<Longrightarrow> Identity_Elements\<^sub>E U U\<^sub>D
+        \<Longrightarrow> Identity_Elements\<^sub>E (T +\<^sub>\<phi> U) (case_sum T\<^sub>D U\<^sub>D) \<close> (*The inference works, but the result is not in an ideal form,
+                                                            so we give the annotation manually*)
+       and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
+        \<Longrightarrow> Identity_Elements\<^sub>I U U\<^sub>D U\<^sub>P
+        \<Longrightarrow> Identity_Elements\<^sub>I (T +\<^sub>\<phi> U) (case_sum T\<^sub>D U\<^sub>D) (case_sum T\<^sub>P U\<^sub>P) \<close> (*The inference works*)
        and Transformation_Functor
        and Commutativity_Deriver\<^sub>E_rev
+
 
 
 subsubsection \<open>Rewrites\<close>
@@ -1185,25 +1198,17 @@ subsection \<open>Additive Disjunction\<close>
 text \<open>Depreciated! Use \<open>\<phi>Sum\<close> instead!\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-    
+        
 \<phi>type_def \<phi>Union :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<or>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<or>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) + (snd x \<Ztypecolon> U))\<close>
-  deriving \<open>  Abstract_Domain A Pa
-          \<Longrightarrow> Abstract_Domain B Pb
-          \<Longrightarrow> Abstract_Domain (A \<or>\<^sub>\<phi> B) (\<lambda>(a,b). Pa a \<or> Pb b) \<close>
-       and \<open>  Abstract_Domain\<^sub>L A Pa
-          \<Longrightarrow> Abstract_Domain\<^sub>L B Pb
-          \<Longrightarrow> Abstract_Domain\<^sub>L (A \<or>\<^sub>\<phi> B) (\<lambda>(a,b). Pa a \<or> Pb b) \<close>
-       and \<open>  Object_Equiv T eqa
-          \<Longrightarrow> Object_Equiv U eqb
-          \<Longrightarrow> Object_Equiv (T \<or>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
-       and \<open>Identity_Elements\<^sub>I T D\<^sub>T P\<^sub>T
-        \<Longrightarrow> Identity_Elements\<^sub>I U D\<^sub>U P\<^sub>U
-        \<Longrightarrow> Identity_Elements\<^sub>I (T \<or>\<^sub>\<phi> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y) (\<lambda>(x,y). P\<^sub>T x \<or> P\<^sub>U y) \<close>
+  deriving Abstract_Domain
+       and \<open>Object_Equiv T eqa
+        \<Longrightarrow> Object_Equiv U eqb
+        \<Longrightarrow> Object_Equiv (T \<or>\<^sub>\<phi> U) (\<lambda>(a1,b1) (a2,b2). eqa a1 a2 \<and> eqb b1 b2)\<close>
        and Identity_Elements
-       and \<open> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) \<and> y = undefined \<or>\<^sub>c\<^sub>u\<^sub>t
-             (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U) \<and> x = undefined
-          \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x,y) \<Ztypecolon> T \<or>\<^sub>\<phi> U \<close>
+       and \<open>(c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T) \<and> y = undefined \<or>\<^sub>c\<^sub>u\<^sub>t
+            (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U) \<and> x = undefined
+        \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (x,y) \<Ztypecolon> T \<or>\<^sub>\<phi> U \<close>
 
 
 (*       and \<open>\<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x = f c @action to T)
@@ -1228,6 +1233,8 @@ subsection \<open>Embedding Additive Conjunction\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
+declare False_def[symmetric, simp]
+  
 \<phi>type_def \<phi>Inter :: \<open>('c,'ax) \<phi> \<Rightarrow> ('c, 'bx) \<phi> \<Rightarrow> ('c, 'ax \<times> 'bx) \<phi>\<close> (infixl "\<and>\<^sub>\<phi>" 70)
   where [embed_into_\<phi>type]: \<open>(T \<and>\<^sub>\<phi> U) = (\<lambda>x. (fst x \<Ztypecolon> T) \<and>\<^sub>B\<^sub>I (snd x \<Ztypecolon> U))\<close>
   deriving Basic
@@ -1666,7 +1673,7 @@ lemma \<comment> \<open>A example for how to represent list of multi-elements\<c
 subsubsection \<open>Empty List\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+     
 \<phi>type_def Empty_List :: \<open>('v list, unit) \<phi>\<close>
   where \<open>Empty_List = (\<lambda>x. [] \<Ztypecolon> Itself)\<close>
   deriving Basic
@@ -1853,7 +1860,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+   
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Separation_Monoid
@@ -1869,7 +1876,7 @@ thm \<phi>MapAt.\<Sigma>_rewr
 subsubsection \<open>By List of Keys\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-              
+             
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
   deriving Separation_Monoid

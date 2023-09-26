@@ -918,6 +918,13 @@ subsection \<open>Top\<close>
 
 notation top ("\<top>")
 
+subsubsection \<open>Rewrites\<close>
+
+lemma Top_Inhabited[simp]:
+  \<open>Inhabited \<top> \<longleftrightarrow> True\<close>
+  unfolding Inhabited_def
+  by clarsimp
+
 subsubsection \<open>Transformation Rules\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
@@ -1013,7 +1020,12 @@ lemma zero_implies_any[simp]:
   \<open>0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X\<close>
   unfolding Transformation_def zero_set_def Satisfaction_def by simp
 
+subsubsection \<open>Rewrites\<close>
 
+lemma Bot_Inhabited[simp]:
+  \<open> Inhabited 0 \<longleftrightarrow> False \<close>
+  unfolding Inhabited_def
+  by clarsimp
 
 subsubsection \<open>Transformation Rules\<close>
 
@@ -1099,6 +1111,11 @@ lemma [\<phi>reason %extract_pure]:
   unfolding Action_Tag_def Inhabited_def
   by simp
 
+lemma Emp_Inhabited[simp]:
+  \<open> Inhabited 1 \<longleftrightarrow> True \<close>
+  unfolding Inhabited_def
+  by clarsimp
+
 subsubsection \<open>Transformation Rules\<close>
 
 lemma [\<phi>reason %ToA_success]:
@@ -1129,9 +1146,16 @@ subsection \<open>Additive Disjunction\<close>
 
 text \<open>Is the \<^term>\<open>(+) :: 'a BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI\<close> directly\<close>
 
+subsubsection \<open>Basic Rules\<close>
+
 lemma Disjunction_expn[iff, \<phi>expns]:
   \<open>p \<Turnstile> (A + B) \<longleftrightarrow> p \<Turnstile> A \<or> p \<Turnstile> B\<close>
   unfolding Satisfaction_def by simp
+
+lemma Add_Disj_Inhabited[simp]:
+  \<open> Inhabited (A + B) \<longleftrightarrow> Inhabited A \<or> Inhabited B \<close>
+  unfolding Inhabited_def
+  by clarsimp blast
 
 lemma [\<phi>reason %cutting]:
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> A
@@ -1248,6 +1272,11 @@ lemma [\<phi>reason %cutting]:
 \<Longrightarrow> Ex C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> ExSet S \<close>
   unfolding Inhabited_def Action_Tag_def
   by (simp; blast)
+
+lemma ExSet_Inhabited[simp]:
+  \<open> Inhabited (ExSet S) \<longleftrightarrow> (\<exists>x. Inhabited (S x)) \<close>
+  unfolding Inhabited_def
+  by clarsimp blast
 
 
 subsubsection \<open>Syntax\<close>
@@ -1402,7 +1431,7 @@ lemma ExSet_addisj:
   by simp+
 
 
-subsubsection \<open>Basic Rules\<close>
+subsubsection \<open>Transformation Rules\<close>
 
 lemma ExSet_transformation:
   \<open>(\<And>x. S x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' x \<w>\<i>\<t>\<h> P)
@@ -1429,7 +1458,7 @@ lemma ExSet_additive_disj:
 ML_file \<open>library/tools/simproc_ExSet_expand_quantifier.ML\<close>
 
 
-subsubsection \<open>Transformation Rules\<close>
+subsubsection \<open>ToA Reasoning\<close>
 
 lemma [\<phi>reason %ToA_fixes_quant]:
   "(\<And>x.  T x \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P x)
@@ -1510,6 +1539,7 @@ lemma
 
 text \<open>There is no sufficiency reasoning for additive conjunction, because the sufficient condition
   of \<open>A \<and>\<^sub>B\<^sub>I B\<close> cannot be reasoned separately (by considering \<open>A\<close> and \<open>B\<close> separately).\<close>
+
 
 subsubsection \<open>Simplification\<close>
 
@@ -1593,15 +1623,15 @@ lemma Subjection_inhabited_E[elim!]:
   by simp
 
 lemma [\<phi>reason %cutting]:
-  \<open> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> C
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> S \<i>\<m>\<p>\<l>\<i>\<e>\<s> C)
 \<Longrightarrow> S \<s>\<u>\<b>\<j> P \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<and> C \<close>
-  unfolding Inhabited_def Action_Tag_def
+  unfolding Inhabited_def Action_Tag_def Premise_def
   by simp
 
 lemma [\<phi>reason %cutting]:
-  \<open> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S)
 \<Longrightarrow> P \<and> C \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> S \<s>\<u>\<b>\<j> P \<close>
-  unfolding Inhabited_def Action_Tag_def
+  unfolding Inhabited_def Action_Tag_def Premise_def
   by simp 
 
 lemma Subjection_imp_I:

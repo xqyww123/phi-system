@@ -4007,9 +4007,25 @@ lemma \<phi>TA_Ident_I_rule_step:
 
 lemma \<phi>TA_Ident_I_rule_step_infer:
   \<open> Identity_Element\<^sub>I X Q
-\<Longrightarrow> Identity_Element\<^sub>I X (Any \<or> Q) \<close>
-  unfolding Identity_Element\<^sub>I_def Transformation_def
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Q \<longrightarrow> P)
+\<Longrightarrow> Identity_Element\<^sub>I X (P \<and> Q) \<close>
+  unfolding Identity_Element\<^sub>I_def Transformation_def Premise_def
   by simp
+
+lemma Identity_Elements\<^sub>I_deriver_cong:
+  \<open> D \<equiv> D'
+\<Longrightarrow> (\<And>x. D' x \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> P x \<equiv> P' x)
+\<Longrightarrow> Identity_Elements\<^sub>I T D P \<equiv> Identity_Elements\<^sub>I T D' P' \<close>
+  unfolding Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def Transformation_def Inhabited_def
+            atomize_eq
+  by clarsimp blast
+
+lemma Identity_Elements\<^sub>E_deriver_cong:
+  \<open> D \<equiv> D'
+\<Longrightarrow> Identity_Elements\<^sub>E T D \<equiv> Identity_Elements\<^sub>E T D' \<close>
+  by simp
+
+
 
 ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
@@ -4354,6 +4370,8 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
 
 
 subsubsection \<open>Congruence in Function Definition\<close>
+
+(*TODO: re-implement by template*)
 
 lemma function_congruence_template:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> x = y \<and> (\<forall>a \<in> D x. T a = U a) \<and> eqs \<Longrightarrow> Transformation_Functor F F' T U D R M)

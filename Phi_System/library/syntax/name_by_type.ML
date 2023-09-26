@@ -70,7 +70,7 @@ fun dest_namedT_only_names (Type (@{type_name named}, [_, names]))
 fun mk_named_tag X T = \<^Const>\<open>tag \<open>Phi_Help.safe_fastype_of X\<close> T\<close> $ X
 
 val _ = Theory.setup (Sign.parse_ast_translation (
-  [(\<^syntax_const>\<open>__named__\<close>, (fn _ => fn [term,name] =>
+  [(\<^syntax_const>\<open>__named__\<close>, (fn _ =>  fn [term,name] =>
       mk_name_tag_ast (term, strip_tupargs name)))]
 ))
 

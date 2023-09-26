@@ -185,7 +185,7 @@ ML_file \<open>library/syntax/helper_conv.ML\<close>
 
 subsection \<open>Helper Simplification\<close>
 
-simproc_setup Funcomp_Lambda (\<open>f o g\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
+simproc_setup Funcomp_Lambda (\<open>f o g\<close>) = \<open>fn _ =>  fn ctxt => fn ctm =>
   case Thm.term_of ctm
     of Const(\<^const_name>\<open>Fun.comp\<close>, _) $ Abs _ $ _ =>
         SOME (Conv.rewr_conv @{thm' comp_def[folded atomize_eq]} ctm)

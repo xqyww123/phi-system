@@ -11,12 +11,11 @@ structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 
-val guess_property = guess_property_like_abst_domain (false,
+val guess_property = guess_property_like_abst_domain (
+        false, false, true,
         fn (x,m) => \<^Const>\<open>Functionality x m\<close>,
         fn (ctxt, x_ty, _, cond) => fn ants =>
-             (case cond of Abs (_, _, \<^Const>\<open>True\<close>) => ants
-                 | _ => maps (constrain_antecedents (
-                            \<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $ (simplified_exists_qualify ctxt x_ty cond))) ants),
+             maps (constrain_antecedents_by_boolean (simplified_exists_qualify ctxt x_ty cond)) ants,
         fn (_, x_ty, oblg, cond) => fn pred =>
               Abs ("x", x_ty, \<^Const>\<open>HOL.implies\<close>
                       $ (cond $ Bound 0)
@@ -100,7 +99,12 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                               phi ctxt
 
       val mode_infer = not (is_some instruction) andalso not (#is_recursive phi0)
-      val solver = if mode_infer then abstract_domain_solver false name else K NONE
+      val solver =
+            if mode_infer
+            then predicate_infer false
+                    (fn _(*Trueprop*) $ (_ $ Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ (Var v $ Bound 0))) => v)
+                    (oblg_solver' name)
+            else K NONE
 
       fun simp (_, ctxt) rule =
         if is_some instruction

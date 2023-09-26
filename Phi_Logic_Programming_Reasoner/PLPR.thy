@@ -1467,7 +1467,7 @@ lemma sp_ex_ex_comm:
   unfolding atomize_eq
   by simp blast
 
-ML_file "library/tools/patch_for_Ex.ML"
+ML_file_debug "library/tools/patch_for_Ex.ML"
 
 
 simproc_setup move_sp_Ex_inside (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Rf. P f\<close>) = \<open>

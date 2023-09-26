@@ -137,9 +137,12 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
                   if Sign.of_sort thy (m_ty, \<^sort>\<open>one\<close>) then
                     let fun name s s' = the_default s (Option.map (suffix s') (#name info))
                         val ([D,P], ctxt) = Variable.variant_fixes [name "D" "\<^sub>D", name "P" "\<^sub>P"] ctxt
-                        val D = Free(D, x_ty --> HOLogic.boolT)
-                        val P = Free(P, x_ty --> HOLogic.boolT)
-                        val A_term = fold_index (fn (i,_) => fn X => X $ Bound i) rev_atys A_term0
+                        val atys = rev rev_atys
+                        val D = Free(D, atys ---> x_ty --> HOLogic.boolT)
+                             |> fold_index (fn (i,_) => fn X => X $ Bound i) atys
+                        val P = Free(P, atys ---> x_ty --> HOLogic.boolT)
+                             |> fold_index (fn (i,_) => fn X => X $ Bound i) atys
+                        val A_term = fold_index (fn (i,_) => fn X => X $ Bound i) atys A_term0
                      in (SOME ((if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty m_ty\<close> $ A_term $ D $ P
                                        else \<^Const>\<open>Identity_Elements\<^sub>E x_ty m_ty\<close> $ A_term $ D)
                                   |> fold_rev (fn T => fn X => \<^Const>\<open>All T\<close> $ Abs ("A", T, X)) rev_atys,
@@ -154,15 +157,13 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
                             map_filter (Option.map #2) ants_Ds_Ps,
                             map_filter (Option.map #3) ants_Ds_Ps)
 
-      val seq = if is_type_opr
+      val seq =
+            if is_type_opr andalso #is_recursive phi
             then guess_predicate ctxt Ds x_ty
               |> Seq.maps (fn (D,ctxt) =>
                   if is_intro then guess_predicate ctxt Ps x_ty |> Seq.map (fn (P,ctxt) => (D,P,ctxt))
                               else Seq.single (D,D,ctxt))
-            else Seq.single (\<^Const>\<open>HOL.eq x_ty\<close> $ unit,
-                             if #is_recursive phi then Abs ("x", x_ty, \<^Const>\<open>True\<close>)
-                                                  else Var(("P", 0), x_ty --> HOLogic.boolT),
-                             ctxt)
+            else Seq.single (Abs ("x", x_ty, \<^Const>\<open>True\<close>), Abs ("x", x_ty, \<^Const>\<open>True\<close>), ctxt)
 
       val prop_head = if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close>
                                   else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close>
@@ -178,15 +179,20 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
             case cond_delta of Abs (_,_,\<^Const>\<open>True\<close>) => P
               | _ => Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (cond_delta $ Bound 0) $ (P $ Bound 0))
 
+      val infer_P = if #is_recursive phi then I
+                    else fn P => Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (P $ Bound 0) $ (Var(("P", 0), x_ty --> HOLogic.boolT) $ Bound 0))
+      val infer_D = if #is_recursive phi then I
+                    else fn D => Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (D $ Bound 0) $ (Var(("D", 0), x_ty --> HOLogic.boolT) $ Bound 0))
+
    in seq |> Seq.map (fn (D,P,ctxt) =>
-        (ants_delta @ ants,
+        (maps (constrain_antecedents_by_boolean (simplified_exists_qualify ctxt x_ty cond_delta))
+              (ants_delta @ ants),
          HOLogic.Trueprop $   
-              (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close> $ T_term $ pass_D D $ pass_P P
-                           else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close> $ T_term $ pass_D D ),
+              (if is_intro then \<^Const>\<open>Identity_Elements\<^sub>I x_ty model_ty\<close> $ T_term $ infer_D (pass_D D) $ infer_P (pass_P P)
+                           else \<^Const>\<open>Identity_Elements\<^sub>E x_ty model_ty\<close> $ T_term $ infer_D (pass_D D) ),
          NONE :: parse_inst_params_from_phi_term T_term,
          phi, ctxt))
   end
-
 
 fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
   let val parse_hint = parse_hint (
@@ -206,29 +212,28 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                   Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
 
-      val varify_subgoal =
-            if is_left
-            then K (fn Trueprop $ (Identity_Elements $ P) =>
-                        SOME ([P], fn [P'] => Trueprop $ (Identity_Elements $ P')))
-            else K (K NONE)
+      val mode_infer = not (is_some instruction) andalso not (#is_recursive phi0)
+      val varify_subgoal = K (K NONE)
+          (*if mode_infer_P
+            then K (fn Trueprop $ (Identity_Element $ (\<^Const>\<open>HOL.conj\<close> $ LP $ VP)) =>
+                        SOME ([VP], fn [VP'] =>
+                            Trueprop $ (Identity_Element $ (\<^Const>\<open>HOL.conj\<close> $ LP $ VP')))
+                     | _ => NONE)
+            else K (K NONE)*)
 
       fun reasoning phi =
         let val reasoner =
               if is_left
               then (fn ctxt => fn th =>
-                case Thm.major_prem_of th
-                  of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
-                      let val rule = (case P of \<^Const>\<open>HOL.conj\<close> $ _ $ (Var _ $ Bound 0) =>
-                                                  @{thm' \<phi>TA_Ident_I_rule_step_infer}
-                                              | _     => @{thm' \<phi>TA_Ident_I_rule_step})
-                       in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded' ctxt phi)) ctxt th
-                      end
-                   | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w")
+                let val rule = (*if mode_infer_P then @{thm' \<phi>TA_Ident_I_rule_step_infer}
+                                               else*) @{thm' \<phi>TA_Ident_I_rule_step}
+                 in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded' ctxt phi)) ctxt th
+                end)
               else (fn ctxt => exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' ctxt phi)) ctxt)
          in default_reasoning true default_reasoning_configure varify_subgoal reasoner phi
         end
 
-      fun set_the_infer_tail ctxt th =
+    (*fun set_the_infer_tail ctxt th =
         if is_left then
           case Thm.concl_of th
             of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
@@ -239,10 +244,21 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                ) ctxt)
                          | _ => th)
              | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w"
-        else th
+        else th*)
 
-      fun simp (_, ctxt) th = set_the_infer_tail ctxt th
-        |> (if is_some instruction then I
+      fun parse_abs (Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ (Var v $ Bound 0))) = v
+        | parse_abs (Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ Var v)) = v
+      val id_ele_infer =
+            if mode_infer
+            then if is_left
+            then predicate_infer true  (fn _ $ (_ $ _ $ P) => parse_abs P) (
+                 predicate_infer false (fn _ $ (_ $ D $ _) => parse_abs D) (oblg_solver' name) )
+            else predicate_infer false (fn _ $ (_ $ D ) => parse_abs D) (oblg_solver' name)
+            else K NONE
+
+      val simp = simplifier_by_cong @{thms' Identity_Elements\<^sub>I_deriver_cong Identity_Elements\<^sub>E_deriver_cong}
+      (*fun simp (_, ctxt) = (*set_the_infer_tail ctxt th
+      |>*) (if is_some instruction then I
             else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   let val sctxt = Expansion.enhance ctxt addsimps @{thms special_Ex_def}
                    in HOLogic.Trueprop_conv (
@@ -250,13 +266,13 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                         then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite sctxt))
                                                    (Simplifier.rewrite sctxt)
                         else Conv.arg_conv (Simplifier.rewrite sctxt))
-                  end) ctxt))
+                  end) ctxt))*)
 
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                      guess_property is_left, rule,
                                      [(K (SOME [0]), ind_conv, reasoning)],
-                                     K NONE, simp)
+                                     id_ele_infer, simp)
                                     phi0 (Option.map fst instruction) ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

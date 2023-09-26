@@ -2469,7 +2469,7 @@ lemma sep_disj_partial_map_disjoint:
 lemma sep_disj_partial_map_some_none:
   \<open>f ## g \<Longrightarrow> g k = Some v \<Longrightarrow> f k = None\<close>
   for f :: "'a \<rightharpoonup> ('b :: discrete_semigroup)"
-  using disjoint_iff sep_disj_partial_map_disjoint by fastforce
+  using sep_disj_fun by fastforce
 
 lemma sep_disj_partial_map_not_1_1:
   \<open>f ## g \<Longrightarrow> g k \<noteq> 1 \<Longrightarrow> f k = 1\<close>

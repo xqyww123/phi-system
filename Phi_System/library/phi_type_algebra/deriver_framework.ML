@@ -250,6 +250,7 @@ val default_reasoning_configure : reasoning_configure
 *)
 
 val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehammer solver*)
+val oblg_solver': string -> solver
 
 (** Simplifier **)
 
@@ -258,6 +259,8 @@ val default_simplifier : (Phi_Type_Algebra.phi_type * thm list (*contextual bool
                       -> simplifier
     (*extracts boolean facts from the antecedents of the rule to simplify the rule*)
 val default_simplifier' : ((Proof.context -> conv) -> Proof.context -> conv) -> simplifier
+
+val simplifier_by_cong : thm list (*congruence rules*) -> simplifier
 
 (** A framework of deriver **)
 
@@ -1151,6 +1154,9 @@ fun oblg_solver proof_id ctxt sequent =
   end
      (*| _ => sequent*)
 
+fun oblg_solver' name (phi, ctxt, th) = SOME (oblg_solver (#proof_id phi ^ "/" ^ name) ctxt th)
+
+
 (* The Framework *)
 
 (*quants: an array telling how to interpret the quantified variables in the first antecedent of the rule.
@@ -1316,6 +1322,8 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
    in rule'4
    |> Thm.solve_constraints
    |> Phi_Help.unique_flexflex ctxt0
+   |> Phi_Help.beta_eta_contract
+   |> Drule.zero_var_indexes
   end)
   end
 
@@ -1831,6 +1839,9 @@ fun default_simplifier' gen_conv (phi, ctxt) rule =
               |> Simplifier.add_cong @{thm' HOL.disj_cong}
               |> Simplifier.add_cong @{thm' HOL.conj_cong})) ctxt
       ) (phi, ctxt) rule
+
+fun simplifier_by_cong congs =
+      default_simplifier' (fn rewr => fn ctxt => rewr (fold Simplifier.add_cong congs ctxt))
 
 (** Other Tools **)
 

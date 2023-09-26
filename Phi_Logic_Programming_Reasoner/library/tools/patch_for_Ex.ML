@@ -489,7 +489,7 @@ val move_sp_Ex_downto_Disj_recursive = gen_move_Ex_downto_Disj_recursive move_sp
 
 
 
-fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, mv_over_conj, rule_mv_imp, rm_trivial, swap_quant,
+fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, mv_over_conj, rule_mv_imp, ex_imp_to_all, rm_trivial, swap_quant,
                         swap_ex, swap_sp_ex) C ctxt =
   let fun open_ex C ctm =
         case Thm.term_of ctm
@@ -520,9 +520,13 @@ fun gen_move_Ex_inside (ex_name, mv_all, mv_disj, mv_over_conj, rule_mv_imp, rm_
                        | NONE => (Phi_Conv.quant_conv ex_name (K zip_conjs_recursively1) ctxt then_conv
                                   conv ctxt) ctm)
               else Conv.rewr_conv rm_trivial ctm
-           | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
-              (Conv.rewr_conv rule_mv_imp then_conv
-               Conv.arg_conv (conv ctxt)) ctm
+           | Const(\<^const_name>\<open>HOL.implies\<close>, _) $ A $ B =>
+              if Term.is_dependent A
+              then if Term.is_dependent B
+                then C ctxt ctm
+                else (Conv.rewr_conv ex_imp_to_all then_conv C ctxt) ctm
+              else (Conv.rewr_conv rule_mv_imp then_conv
+                    Conv.arg_conv (conv ctxt)) ctm
            | Const(\<^const_name>\<open>HOL.Ex\<close>, _) $ _ =>
               (Conv.rewr_conv swap_ex then_conv
                Phi_Conv.quant_conv \<^const_name>\<open>HOL.Ex\<close> (conv o snd) ctxt) ctm
@@ -546,6 +550,7 @@ val move_Ex_inside = gen_move_Ex_inside
       (\<^const_name>\<open>Ex\<close>, move_Ex_inside_All, move_Ex_downto_Disj_recursive,
        @{thm' HOL.ex_simps(2)[folded atomize_eq]},
        @{thm' HOL.ex_simps(6)[folded atomize_eq]},
+       @{thm' HOL.ex_simps(5)[folded atomize_eq]},
        @{thm' HOL.simp_thms(36)[folded atomize_eq]},
        @{thm' HOL.ex_comm[folded atomize_eq]},
        @{thm' HOL.ex_comm[folded atomize_eq]},
@@ -557,6 +562,7 @@ val move_sp_Ex_inside = gen_move_Ex_inside
        move_sp_Ex_downto_Disj_recursive,
        @{thm' HOL.ex_simps(2)[folded special_Ex_def atomize_eq]},
        @{thm' HOL.ex_simps(6)[folded special_Ex_def atomize_eq]},
+       @{thm' HOL.ex_simps(5)[folded special_Ex_def atomize_eq]},
        @{thm' HOL.simp_thms(36)[folded special_Ex_def atomize_eq]},
        @{thm' HOL.ex_comm[folded special_Ex_def atomize_eq]},
        @{thm' sp_ex_ex_comm},

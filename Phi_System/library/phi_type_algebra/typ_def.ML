@@ -1280,6 +1280,7 @@ val constrain_antecedents : term (*condition*) -> term (*antecedents*) -> term l
         cond, ant, to \<open>cond \<longrightarrow> ant\<close>,
         \<open>condition C\<close>, \<open>condition Ant\<close>, to \<open>condition (C \<longrightarrow> Ant)\<close>
         \<open>condition C\<close>, \<open>\<forall>x. condition Ant x\<close>, to \<open>\<forall>x. condition (C \<longrightarrow> Ant x)\<close>*)
+val constrain_antecedents_by_boolean : term -> term -> term list
 
 val forall_qualify : typ -> term -> term
 val exists_qualify : typ -> term -> term
@@ -1294,6 +1295,8 @@ structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 type deriving_instruction = Phi_Type_Algebra.deriving_instruction
 
 fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
+  | constrain_antecedents (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_GUARD\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _))
+      = PLPR_Syntax.dest_ant_sequence_or_HOL_conj
   | constrain_antecedents cond =
       let fun is_premise_tag (Const(\<^const_name>\<open>default\<close>, _)) = true
             | is_premise_tag (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
@@ -1309,6 +1312,9 @@ fun constrain_antecedents (Const(\<^const_name>\<open>True\<close>, _)) = PLPR_S
             | constrain X = \<^Const>\<open>HOL.implies\<close> $ cond $ X
        in map constrain o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
       end
+
+fun constrain_antecedents_by_boolean cond =
+      constrain_antecedents (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $ cond)
 
 fun forall_qualify ty (X as Abs (_, _, B)) =
       if Term.loose_bvar1 (B, 0) then \<^Const>\<open>HOL.All ty\<close> $ X else Term.incr_boundvars ~1 B

@@ -5,7 +5,8 @@ val abstract_domain : quiet -> deriving_instruction list -> Phi_Type_Algebra.der
 val abstract_domain_L : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 val guess_property_like_abst_domain :
-      bool * (typ * typ -> term)
+      bool * bool * bool
+      * (typ * typ -> term)
       * (Proof.context * typ * term * term -> term list -> term list)
       * (Proof.context * typ * term * term -> term -> term)
       * sort * sort
@@ -19,17 +20,29 @@ val guess_property_like_abst_domain :
   Lower mode: the unknown locates at the condition part of the obligation, and we infer an instantiation
               as strong as possible (but does not weaken the entire obligation)
 *)
-val abstract_domain_solver : bool -> string -> solver
+val predicate_infer : bool -> (term -> indexname * typ) -> solver -> solver
 
 (*val guess_property_abst_dom : string -> guess_property
-val abstract_domain_solver : bool -> string (*name of proof cache*) -> solver*)
+val predicate_infer : bool -> string (*name of proof cache*) -> solver*)
 
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun guess_property_like_abst_domain (is_cov, prop_head, pass_ants, pass_pred, x_sort, model_sort) (phi0 : phi_type) ctxt =
+(*var_based_infer: whether to insert a schematic variable so that one can later infer the predicate
+                   from the reported proof obligation which will contain the variable.
+                   Such variable-based inference only works on non-recursive \<phi>-types.
+
+  infer_from_BNF: whether to guess the predicate according to BNF (Bounded Natural Foundation) on
+                  non-recursive \<phi>-types. Sometimes, var_based_infer is powerful enough on non-recursive \<phi>-types
+                  to give the expected result but the guessing from BNF can be wrong and therefore
+                  cause troubles. In this case, \<open>infer_from_BNF\<close> can be disabled.
+
+                  The option only affects the cases of non-recursive \<phi>-types, because the guessing
+                  from BNF is the only method for recursive \<phi>-types*)
+fun guess_property_like_abst_domain (is_cov, infer_from_BNF, var_based_infer,
+                                     prop_head, pass_ants, pass_pred, x_sort, model_sort) (phi0 : phi_type) ctxt =
   let val (rev_arg_tys0, x_ty0, model_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val tpairs = map_filter (   try dest_parameterized_phi_ty
                                #> Option.map (fn (_, x, m) => [(x, x_sort), (m, model_sort)])
@@ -68,12 +81,14 @@ fun guess_property_like_abst_domain (is_cov, prop_head, pass_ants, pass_pred, x_
             if is_cov then Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (cond_delta $ Bound 0) $ (pred $ Bound 0))
                       else Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (oblg_delta $ Bound 0) $ (pred $ Bound 0))*)
 
-      val add_Pvar = if #is_recursive phi then I
+      val add_Pvar = if #is_recursive phi orelse not var_based_infer then I
                      else fn pred => 
                       let val Pvar = Var(("P",idx), x_ty --> HOLogic.boolT)
                        in Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (pred $ Bound 0) $ (Pvar $ Bound 0))
                       end
-   in guess_predicate ctxt preds x_ty
+   in (if not (#is_recursive phi) andalso not infer_from_BNF
+       then Seq.single (Abs ("x", x_ty, \<^Const>\<open>True\<close>), ctxt)
+       else guess_predicate ctxt preds x_ty)
    |> Seq.map (fn (pred, ctxt) =>
         (pass_ants (ctxt, x_ty, oblg_delta, cond_delta) (ants_delta @ ants),
          HOLogic.Trueprop $ (prop_head (x_ty, model_ty) $ T_term
@@ -150,17 +165,18 @@ fun guess_property_abst_dom upper (phi:phi_type) ctxt =
   Lower mode: the unknown locates at the condition part of the obligation, and we infer an instantiation
               as strong as possible (but does not weaken the entire obligation)
 *)
-fun abstract_domain_solver upper name (phi,ctxt,sequent) =
+fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
   let fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
                                      \the expression of the implied pure fact from it."])
-      val var = case Thm.concl_of sequent
-                  of _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $ Var v) => v
+      val var = parse_var (Thm.concl_of sequent)
+                handle Match => err ()
+                (*of _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $ Var v) => v
                    | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
                           Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0))) => v
                    | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
                           Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Var v $ _)) => v
-                   | _ => err ()
+                   | _ => err ()*)
 
       fun binop H (SOME sa, SOME sb) = SOME (H $ sa $ sb)
         | binop _ (some_or_none, NONE) = some_or_none
@@ -171,30 +187,44 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
                 else HOLogic.all_const ty $ Abs(N, ty, X)
              ) vars
 
-      fun augment P prems = (*the inferred condition won't contain Inhabited and Satisfaction*)
-            if exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
-                                | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
-                                | _ => false) P
-            then prems else P :: prems
+      val allows_Inhabited_and_Sat = (*the inferred condition contains Inhabited and Satisfaction
+                                       only when they are also contained in the definition of the \<phi>-type,
+                                       to prevent the result corrupted by noises*)
+            exists (exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+                                     | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
+                                     | _ => false) o Thm.prop_of) (#equations phi)
+              |> not
+      val exists_bad = exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => allows_Inhabited_and_Sat
+                                        | Const(\<^const_name>\<open>Satisfaction\<close>, _) => allows_Inhabited_and_Sat
+                                        | Var _ => true
+                                        | _ => false)
+      fun augment P prems =
+            if exists_bad P then prems else P :: prems
+      fun filter_bad (\<^Const>\<open>HOL.conj\<close> $ A $ B) = binop \<^Const>\<open>HOL.conj\<close> (filter_bad A, filter_bad B)
+        | filter_bad (\<^Const>\<open>HOL.disj\<close> $ A $ B) = binop \<^Const>\<open>HOL.disj\<close> (filter_bad A, filter_bad B)
+        | filter_bad X = if exists_bad X then NONE else SOME X
 
       fun inst_Lw context (Const(\<^const_name>\<open>conj\<close>, _) $ X $ Y)
             = binop \<^Const>\<open>HOL.conj\<close> (inst_Lw context X, inst_Lw context Y)
         | inst_Lw context (Const(\<^const_name>\<open>disj\<close>, _) $ X $ Y)
-            = binop \<^Const>\<open>HOL.disj\<close> (inst_Lw context X, inst_Lw context Y)
+            = binop \<^Const>\<open>HOL.conj\<close> (inst_Lw context X, inst_Lw context Y)
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>All\<close>, _) $ Abs (N,ty,X))
             = inst_Lw ((N,ty)::vars, map (Term.incr_boundvars 1) prems) X
         | inst_Lw (vars,prems) (\<^Const>\<open>All T\<close> $ X)
             = inst_Lw (vars,prems) (\<^Const>\<open>All T\<close> $ (Abs ("_", T, Term.incr_boundvars 1 X $ Bound 0)))
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
             = let fun meet v j = if var = v
-                                 then fold (fn prem => fn X => \<^Const>\<open>HOL.implies\<close> $ prem $ X) prems X
-                                  |> qualifies j vars
-                                  |> SOME
+                                 then filter_bad X
+                                  |> Option.map (
+                                        fold (fn prem => fn X =>
+                                              \<^Const>\<open>HOL.implies\<close> $ prem $ X
+                                           ) prems
+                                     #> qualifies j vars)
                                  else inst_Lw (vars, augment P prems) X
                in case P
                of Var v $ Bound j => meet v j
                 | Var v => meet v ~1
-                | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound j) $ _ => meet v j
+                | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound j) => meet v j
                 | _ => inst_Lw (vars, augment P prems) X
               end
         | inst_Lw _ _ = NONE
@@ -202,10 +232,20 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
       fun inst_Lw' context X = case inst_Lw context X of SOME ret => ret
                                   | NONE => \<^Const>\<open>True\<close>
 
+      val exists_bad'Pr = exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+                                           | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
+                                           | Var v => v <> var
+                                           | _ => false)
       fun inst_Pr context (Const(\<^const_name>\<open>conj\<close>, _) $ A $ B)
             = binop \<^Const>\<open>HOL.disj\<close> (inst_Pr context A, inst_Pr context B)
         | inst_Pr context (Const(\<^const_name>\<open>disj\<close>, _) $ A $ B)
-            = binop \<^Const>\<open>HOL.conj\<close> (inst_Pr context A, inst_Pr context B)
+            = if exists_bad'Pr A
+              then if exists_bad'Pr B
+              then binop \<^Const>\<open>HOL.disj\<close> (inst_Pr context A, inst_Pr context B)
+              else inst_Pr context B
+              else if exists_bad'Pr B
+              then inst_Pr context A
+              else binop \<^Const>\<open>HOL.disj\<close> (inst_Pr context A, inst_Pr context B)
         | inst_Pr (vars,prems) (Const(\<^const_name>\<open>All\<close>, _) $ Abs (N,ty,X))
             = inst_Pr ((N,ty)::vars, map (Term.incr_boundvars 1) prems) X
         | inst_Pr (vars,prems) (\<^Const>\<open>HOL.All ty\<close> $ X)
@@ -219,7 +259,7 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
         | inst_Pr _ _ = NONE
 
       fun inst_Pr' context X = case inst_Pr context X of SOME ret => ret
-                                  | NONE => \<^Const>\<open>False\<close>
+                                  | NONE => \<^Const>\<open>True\<close>
 
   in case Thm.prop_of sequent
        of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _)
@@ -231,19 +271,20 @@ fun abstract_domain_solver upper name (phi,ctxt,sequent) =
                    val X' = if exists_subterm (fn Var v => v = var | _ => false) X'
                             then \<^Const>\<open>True\<close> (*the case of recursive, unsupported*)
                             else X'
-                in SOME (Thm.instantiate (TVars.empty, Vars.make [(var, Thm.cterm_of ctxt X')]) sequent
-                      |> oblg_solver (#proof_id phi ^ "/" ^ name) ctxt)
+                   val sequent' = Thm.instantiate (TVars.empty, Vars.make [(var, Thm.cterm_of ctxt X')]) sequent
+                in solver (phi, ctxt, sequent')
                end
         | _ => error "Internal bug"
  end
 
 fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
-  let val guess_property = guess_property_like_abst_domain (not upper,
+  let val guess_property = guess_property_like_abst_domain (
+            not upper, false, true,
             if upper then fn (x,m) => \<^Const>\<open>Abstract_Domain x m\<close>
                      else fn (x,m) => \<^Const>\<open>Abstract_Domain\<^sub>L x m\<close>,
-            if upper then K I else fn (ctxt, x_ty, oblg, _) => fn ants =>
-               (case oblg of Abs (_, _, \<^Const>\<open>True\<close>) => ants
-                   | _ => (\<^Const>\<open>Premise\<close> $ \<^Const>\<open>MODE_GUARD\<close> $ (simplified_forall_qualify ctxt x_ty oblg)) :: ants),
+            fn (ctxt, x_ty, oblg, cond) =>
+                if upper then maps (constrain_antecedents_by_boolean (simplified_forall_qualify ctxt x_ty cond))
+                         else maps (constrain_antecedents_by_boolean (simplified_forall_qualify ctxt x_ty oblg)),
             if upper then fn (_, x_ty, _, cond) => fn pred =>
                               Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (cond $ Bound 0) $ (pred $ Bound 0))
                      else fn (_, x_ty, oblg, _) => fn pred =>
@@ -280,7 +321,12 @@ fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
                 phi
                 ctxt
 
-      val solver = if mode_infer then abstract_domain_solver upper name else K NONE
+      val solver =
+            if mode_infer
+            then predicate_infer upper
+                    (fn _ (*Trueprop*) $ (_ $ Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0))) => v)
+                    (oblg_solver' name)
+            else K NONE
       val simp = if is_some instruction0 then K I
                  else default_simplifier' (fn rewr =>
                    Phi_Conv.hhf_concl_conv (fn ctxt =>
