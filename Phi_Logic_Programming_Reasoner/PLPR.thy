@@ -1231,6 +1231,20 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>ESC \<close>
   unfolding Action_Tag_def by blast
 
+lemma [\<phi>reason %extract_pure]:
+  \<open> A \<longrightarrow> A' @action \<A>EIF
+\<Longrightarrow> B \<longrightarrow> B' @action \<A>EIF
+\<Longrightarrow> A \<and>\<^sub>\<r> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
+  unfolding Action_Tag_def Ant_Seq_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> A \<longrightarrow> A' @action \<A>ESC
+\<Longrightarrow> B \<longrightarrow> B' @action \<A>ESC
+\<Longrightarrow> A \<and> B \<longrightarrow> A' \<and>\<^sub>\<r> B' @action \<A>ESC \<close>
+  unfolding Action_Tag_def Ant_Seq_def
+  by blast
+
 lemma Extact_implied_facts_Iden[\<phi>reason default %extract_pure_fallback]:
   \<open> A \<longrightarrow> True @action \<A>EIF \<close>
   unfolding Action_Tag_def by blast

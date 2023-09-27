@@ -172,15 +172,16 @@ text \<open>Guessing Strategy:
   send it to derivers (if the deriving process does not depends on a specific choice of the parameter).
   The derivers would report proof obligations containing the variable, from which we can infer
   an optimal instantiation (either the strongest or the weakest, depending on the property) that the
-  variable can be when it does not weaken or strengthen the entire proof obligation. If so, the result
-  is optimal when the deriving is complete (i.e., yielding the weakest proof obligation entailing the
-  property).
+  variable can be when it does not strengthen the entire proof obligation (i.e., not makes the proof
+  problem harder). If so, the result is optimal when the deriving is complete (i.e., yielding the
+  weakest proof obligation entailing the property), because the instantiation embeds the most information
+  that it can have.
 
   This strategy usually works well in our case studies, though the optimal instantiation is not always
-  inferrable syntactically so we use suboptimal one with heuristics, and another problem is
+  inferrable syntactically so we use suboptimal one with heuristics (given where?), and another problem is
   sometime (percentage?) the instantiation may contain too much trivial details and our simplifier
   (provided from the underlying proof assistant) fails to reduce it into a (one of the) simplest form. In
-  these cases, manual annotations are given based on the guessed results.
+  these cases, manual annotations are given based on the guessed results, so the guessing is still helpful.
 
 \<^item> If the abstract algebra is defined from Bounded Natural Functor (e.g., its logic type is defined
   as an algebraic datatype in most of modern proof assistants), the operators such as mappers,
@@ -3955,7 +3956,7 @@ subsubsection \<open>Warn if the Def contains Sat\<close>
 subsubsection \<open>Abstract Domain\<close>
 
 lemma \<phi>TA_Inh_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
+  \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -3964,7 +3965,7 @@ lemma \<phi>TA_Inh_rule:
   by simp
 
 lemma \<phi>TA_SuC_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow> P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) @action \<phi>TA_ind_target \<A>ESC)
+  \<open> (\<And>x. Ant \<longrightarrow> P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) @action \<phi>TA_ind_target \<A>ESC)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -4003,7 +4004,9 @@ ML_file \<open>library/phi_type_algebra/implication.ML\<close>
 
 subsubsection \<open>Identity Element Intro \& Elim\<close>
 
-lemma \<phi>TA_1L_rule:
+context begin
+
+private lemma \<phi>TA_1L_rule:
   \<open> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4012,17 +4015,7 @@ lemma \<phi>TA_1L_rule:
   unfolding Action_Tag_def Identity_Elements\<^sub>I_def
   by blast
 
-
-(*lemma \<phi>TA_1L_rule':
-  \<open> (Ant \<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P @action \<phi>TA_ind_target undefined)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) P\<close>
-  unfolding Action_Tag_def Identity_Element\<^sub>I_def Premise_def
-  using transformation_weaken by blast*)
-
-lemma \<phi>TA_1R_rule:
+private lemma \<phi>TA_1R_rule:
   \<open> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4031,38 +4024,25 @@ lemma \<phi>TA_1R_rule:
   unfolding Action_Tag_def Identity_Elements\<^sub>E_def
   by blast
 
-lemma \<phi>TA_Ident_I_rule_step:
+private lemma \<phi>TA_Ident_I_rule_step:
   \<open> Identity_Element\<^sub>I X Q
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Q \<longrightarrow> P)
 \<Longrightarrow> Identity_Element\<^sub>I X P \<close>
   unfolding Identity_Element\<^sub>I_def Premise_def
   by (simp add: transformation_weaken)
 
-lemma \<phi>TA_Ident_I_rule_step_infer:
+private lemma \<phi>TA_Ident_I_rule_step_infer:
   \<open> Identity_Element\<^sub>I X Q
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Q \<longrightarrow> P)
 \<Longrightarrow> Identity_Element\<^sub>I X (P \<and> Q) \<close>
   unfolding Identity_Element\<^sub>I_def Transformation_def Premise_def
   by simp
 
-lemma Identity_Elements\<^sub>I_deriver_cong:
-  \<open> D \<equiv> D'
-\<Longrightarrow> (\<And>x. D' x \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> P x \<equiv> P' x)
-\<Longrightarrow> Identity_Elements\<^sub>I T D P \<equiv> Identity_Elements\<^sub>I T D' P' \<close>
-  unfolding Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def Transformation_def Inhabited_def
-            atomize_eq
-  by clarsimp blast
-
-lemma Identity_Elements\<^sub>E_deriver_cong:
-  \<open> D \<equiv> D'
-\<Longrightarrow> Identity_Elements\<^sub>E T D \<equiv> Identity_Elements\<^sub>E T D' \<close>
-  by simp
-
-
 
 ML_file \<open>library/phi_type_algebra/identity_element.ML\<close>
 
-hide_fact \<phi>TA_1L_rule \<phi>TA_1R_rule
+end
+
 
 \<phi>property_deriver Identity_Elements\<^sub>I 101 for (\<open>Identity_Elements\<^sub>I _ _ _\<close>)
     requires Warn_if_contains_Sat
@@ -4193,9 +4173,9 @@ hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_
 subsubsection \<open>Functionality\<close>
 
 lemma \<phi>TA_IsFunc_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-          \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>
-          Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+  \<open> (\<And>x. Ant \<longrightarrow>
+         \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>
+         Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT

@@ -300,12 +300,13 @@ fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ P) = [P]
         | extract_oprs_from_hint _ = []
 
-      val ind_conv = default_ind_conv (K (K (fn ctm => Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} ctm)),
+      val ind_conv = default_ind_conv (
+              K (K (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
+                    Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)),
               fn ctxt => fn _ =>
                  (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
-                  Conv.implies_concl_conv (HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
-                    (if upper then Conv.arg1_conv else Conv.arg_conv) (Conv.arg_conv (
-                      Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)))))))))
+                  Phi_Reasoners.asm_rewrite true (Simplifier.clear_simpset ctxt addsimps (#equations phi0)) then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
 
       fun varify_subgoal _ (Trueprop $ (Action_Tag $ (Imp $ S $ P) $ AEIF)) =
             SOME ([P], fn [P'] => Trueprop $ (Action_Tag $ (Imp $ S $ P') $ AEIF))

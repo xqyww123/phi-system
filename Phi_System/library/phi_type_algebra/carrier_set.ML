@@ -35,7 +35,7 @@ fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
             default_reasoning true default_reasoning_configure (K (K NONE))
                               (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' ctxt phi))) phi ctxt
 
-      val mode_infer = not (is_some instruction)
+      val mode_infer = not (is_some instruction) andalso not (#is_recursive phi0)
       val solver =
             if mode_infer
             then predicate_infer false

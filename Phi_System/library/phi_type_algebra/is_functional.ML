@@ -86,12 +86,14 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Functionality\<close>, _) $ T $ _ => T )
 
       val ind_conv = default_ind_conv (
-            fn _ => fn _ => Conv.all_conv,
+            fn _ => fn _ =>
+                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
+                Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
             fn ctxt => fn _ =>
-                Conv.rewr_conv @{thm' \<phi>TA_IsFunc_rewr} then_conv
-                Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (Conv.arg_conv (
-                    Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0))
-                )))))
+                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
+                Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
+                Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv
+          )
             
       fun reasoning phi ctxt =
             default_reasoning true default_reasoning_configure (K (K NONE))

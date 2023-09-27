@@ -192,6 +192,8 @@ declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightar
                                                     in \<phi>functionality_all and < derived_\<phi>functionality
     \<open>Trunning \<open>Is_Functional (x : T)\<close> to \<open>Functionality T p\<close>\<close>
 
+subsubsection \<open>Basic Rules\<close>
+
 lemma Is_Functional_premise_extraction:
   \<open>Is_Functional S \<equiv> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) \<and> True\<close>
   unfolding Is_Functional_def atomize_eq
@@ -241,6 +243,16 @@ lemma [\<phi>reason %\<phi>functionality]:
   \<open>Functionality \<phi>None (\<lambda>_. True)\<close>
   unfolding Functionality_def
   by clarsimp
+
+lemma [\<phi>reason %\<phi>functionality]:
+  \<open> Is_Functional 1 \<close>
+  unfolding Is_Functional_def
+  by simp
+
+lemma [\<phi>reason %\<phi>functionality]:
+  \<open> Is_Functional 0 \<close>
+  unfolding Is_Functional_def
+  by simp
 
 lemma [\<phi>reason %\<phi>functionality]:
   \<open> Is_Functional A

@@ -214,37 +214,16 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
 
       val mode_infer = not (is_some instruction) andalso not (#is_recursive phi0)
       val varify_subgoal = K (K NONE)
-          (*if mode_infer_P
-            then K (fn Trueprop $ (Identity_Element $ (\<^Const>\<open>HOL.conj\<close> $ LP $ VP)) =>
-                        SOME ([VP], fn [VP'] =>
-                            Trueprop $ (Identity_Element $ (\<^Const>\<open>HOL.conj\<close> $ LP $ VP')))
-                     | _ => NONE)
-            else K (K NONE)*)
 
       fun reasoning phi =
         let val reasoner =
               if is_left
               then (fn ctxt => fn th =>
-                let val rule = (*if mode_infer_P then @{thm' \<phi>TA_Ident_I_rule_step_infer}
-                                               else*) @{thm' \<phi>TA_Ident_I_rule_step}
-                 in exhaustive_PLPR_reasoner_by_rule rule (K (chk_unfolded' ctxt phi)) ctxt th
-                end)
+                      exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_Ident_I_rule_step}
+                          (K (chk_unfolded' ctxt phi)) ctxt th)
               else (fn ctxt => exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' ctxt phi)) ctxt)
          in default_reasoning true default_reasoning_configure varify_subgoal reasoner phi
         end
-
-    (*fun set_the_infer_tail ctxt th =
-        if is_left then
-          case Thm.concl_of th
-            of _ (*Trueprop*) $ (_ (*Identity_Element\<^sub>I*) $ _ $ P) =>
-                (case P of Const(\<^const_name>\<open>HOL.disj\<close>, _) $ Var v $ _ =>
-                              Thm.instantiate (TVars.empty, Vars.make [(v, \<^cterm>\<open>False\<close>)]) th
-                           |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                                      HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite ctxt))
-                               ) ctxt)
-                         | _ => th)
-             | _ => error "BUG nov8x6UqTBS3cQ6ZkP/L5w"
-        else th*)
 
       fun parse_abs (Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ (Var v $ Bound 0))) = v
         | parse_abs (Abs (_, _, \<^Const>\<open>HOL.conj\<close> $ _ $ Var v)) = v
@@ -256,17 +235,16 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
             else predicate_infer false (fn _ $ (_ $ D ) => parse_abs D) (oblg_solver' name)
             else K NONE
 
-      val simp = simplifier_by_cong @{thms' Identity_Elements\<^sub>I_deriver_cong Identity_Elements\<^sub>E_deriver_cong}
-      (*fun simp (_, ctxt) = (*set_the_infer_tail ctxt th
-      |>*) (if is_some instruction then I
-            else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                  let val sctxt = Expansion.enhance ctxt addsimps @{thms special_Ex_def}
-                   in HOLogic.Trueprop_conv (
-                        if is_left
-                        then Conv.combination_conv (Conv.arg_conv (Simplifier.rewrite sctxt))
-                                                   (Simplifier.rewrite sctxt)
-                        else Conv.arg_conv (Simplifier.rewrite sctxt))
-                  end) ctxt))*)
+      val simp = simplifier_by_cong [
+              @{lemma' \<open> D \<equiv> D'
+                    \<Longrightarrow> (\<And>x. D' x \<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> P x \<equiv> P' x)
+                    \<Longrightarrow> Identity_Elements\<^sub>I T D P \<equiv> Identity_Elements\<^sub>I T D' P' \<close>
+                      by (clarsimp simp add: Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def
+                                             Transformation_def Inhabited_def atomize_eq, blast)},
+              @{lemma' \<open> D \<equiv> D'
+                    \<Longrightarrow> Identity_Elements\<^sub>E T D \<equiv> Identity_Elements\<^sub>E T D' \<close>
+                      by simp}
+            ]
 
       val rule = if is_left then @{thm' \<phi>TA_1L_rule} else @{thm' \<phi>TA_1R_rule}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,

@@ -24,6 +24,7 @@ include PHI_HELP
         (*register that C is the expected stronger intersection of A and B. *)
 
   (*lifts the sorts of the types to their good refinements.*)
+  val refined_sort_of : theory -> sort -> sort
   val refine_sorts_of_typs : theory -> typ list -> typ TVars.table
   val refine_sorts_of_tms  : theory -> term list -> typ TVars.table
   val refine_sorts_of_typ : theory -> typ -> typ
@@ -65,12 +66,14 @@ fun get_refined_sort_of_lifting_S thy =
 fun get_refined_sort_of_lifting_T thy =
   let val tsig = Sign.tsig_of thy
       val reds = Sort_Expection_Red.get thy
-   in fn (A,B) =>
+   in fn (A,B) => (
+      (case A of Type _ => raise TYPE("get_refined_sort_of_lifting_T : must be a type variable", [A], []) | _ => ()) ;
       Symreltab.fold (fn ((A',B'),C') => fn B =>
         if Type.of_sort tsig (A,[A']) andalso Type.subsort tsig (B,[B']) then Type.inter_sort tsig (C', B)
         else if Type.of_sort tsig (A,[B']) andalso Type.subsort tsig (B,[A']) then Type.inter_sort tsig (C', B)
         else B
       ) reds B
+    )
   end
 
 exception LIFT_FAIL of typ * sort
@@ -91,8 +94,13 @@ fun raw_lift_type_sort thy (ty,sort) env00 =
    in fst (gen_lift_type_sort thy (ty,sort) (env00, idx))
   end
 
+(*
 fun lift_type_sort thy (ty,sort) =
-      raw_lift_type_sort thy (ty, get_refined_sort_of_lifting_T thy (ty, sort))
+  let val xx = raw_lift_type_sort thy (ty, sort)
+   in ()
+  end
+      (*raw_lift_type_sort thy (ty, get_refined_sort_of_lifting_T thy (ty, sort))*)
+*)
 
 fun raw_lift_types_sort thy ty_sorts =
   let val idx = Term.maxidx_of_typs (map fst ty_sorts)
@@ -102,10 +110,6 @@ fun raw_lift_types_sort thy ty_sorts =
         |> fst
         |> subst_tyenv
   end
-
-fun lift_types_sort thy ty_sorts =
-      raw_lift_types_sort thy (map (fn (ty,sort) =>
-          (ty, get_refined_sort_of_lifting_T thy (ty, sort))) ty_sorts)
 
 (** Refine types to their good refinements **)
 
@@ -120,31 +124,45 @@ fun refined_sort_of thy =
       ) reds S
   end
 
-fun refine_sorts_of_vars thy vars =
+fun refine_sorts_of_vars thy =
   let val rsort = refined_sort_of thy
       val tsig = Sign.tsig_of thy
-   in TVars.build (fold (fn (N,S) =>
+   in fn vars => TVars.build (fold (fn (N,S) =>
         let val S' = rsort S
          in if Type.eq_sort tsig (S,S') then I
             else TVars.add ((N,S), TVar(N, S'))
         end) vars)
   end
 
-fun refine_sorts_of_typs thy typs =
-  refine_sorts_of_vars thy (fold Term.add_tvarsT typs [])
+fun refine_sorts_of_typs thy =
+  fn typs => refine_sorts_of_vars thy (fold Term.add_tvarsT typs [])
 
-fun refine_sorts_of_tms thy tms =
-  refine_sorts_of_vars thy (fold Term.add_tvars tms [])
+fun refine_sorts_of_tms thy =
+  fn tms => refine_sorts_of_vars thy (fold Term.add_tvars tms [])
 
-fun refine_sorts_of_typ thy ty =
-  let val inst = refine_sorts_of_typs thy [ty]
-   in Term_Subst.instantiateT inst ty
+fun refine_sorts_of_typ thy =
+  let val inst = refine_sorts_of_typs thy
+   in fn ty => Term_Subst.instantiateT (inst [ty]) ty
   end
 
-fun refine_sorts_of_tm thy tm =
-  let val inst = refine_sorts_of_tms thy [tm]
-   in Term_Subst.instantiate (inst, Vars.empty) tm
+fun refine_sorts_of_tm thy =
+  let val inst = refine_sorts_of_tms thy
+   in fn tm => Term_Subst.instantiate (inst [tm], Vars.empty) tm
   end
+
+fun lift_type_sort thy =
+  let val refine = refine_sorts_of_typ thy
+      val rs = refined_sort_of thy
+   in fn ty_sort => raw_lift_type_sort thy ty_sort
+                 #> Vartab.map (K (fn (S,T) => (rs S, refine T)))
+  end
+
+fun lift_types_sort thy =
+  let val refine = refine_sorts_of_typ thy   
+   in fn ty_sorts => raw_lift_types_sort thy ty_sorts
+                  |> TVars.map (K refine)
+  end
+
 
 (** Preset Reductions **)
 
