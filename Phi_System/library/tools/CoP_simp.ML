@@ -111,7 +111,7 @@ fun select_trans_rule (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = se
             Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = @{thm' \<A>simp_trans'P}
   | select_trans_rule _ = @{thm' \<A>simp_trans}
 
-val enable_rule_pass = Config.declare_bool ("Phi_CoP_Simp.enable_rule_pass", \<^here>) (K false)
+val enable_rule_pass = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_rule_pass\<close> (K false)
 val extract_pattern_trigger = Config.declare_bool ("Phi_CoP_Simp.extract_pattern_trigger", \<^here>) (K true)
 
 fun force_rule_pass rule ctxt =

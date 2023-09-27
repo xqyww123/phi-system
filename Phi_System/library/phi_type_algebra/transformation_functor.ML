@@ -91,30 +91,15 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (
-              K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C})),
+              K (K (Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C} then_conv
+                    Conv.implies_concl_conv (Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))),
               fn ctxt => fn phi =>
-                 (fn ctm => Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C} ctm) then_conv
+                  Conv.rewr_conv @{thm \<phi>TA_TF_rewr_C} then_conv
                   Conv.implies_concl_conv (
-                      
-
-Conv.implies_concl_conv (
-                        HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
-                    Phi_Syntax.transformation_conv
-                    (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
-                     conv_chk_unfolded phi ctxt)
-                    (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
-                     conv_chk_unfolded phi ctxt)
-                    Conv.all_conv)))))
-      fun simp (_, ctxt) =
-        if is_some instruction then I
-        else Conv.fconv_rule (
-                Phi_Conv.hhf_concl_conv (fn ctxt =>
-                  let val sctxt = ctxt addsimps @{thms special_Ex_def}
-                   in HOLogic.Trueprop_conv (Conv.combination_conv
-                        (Conv.arg_conv (Simplifier.rewrite sctxt))
-                        (Simplifier.rewrite sctxt))
-                  end
-               ) ctxt)
+                      Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
+                      Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
+      val simp = if is_some instruction then K I
+                 else simplifier_by_cong @{thms' \<phi>TA_FT_deriver_cong}
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_TF, @{thm' \<phi>TA_TF_rule},
                                       [(K (SOME [0,~1]), ind_conv, TF_reasoning)],
@@ -204,7 +189,9 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
         | extract_oprs_from_hint _ = []
 
       fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi)) ctxt
-      fun simp (_, ctxt) thm =
+      val simp = if is_some instruction then K I
+                 else simplifier_by_cong @{thms' \<phi>TA_FTF_deriver_cong}
+    (*fun simp (_, ctxt) thm =
         if is_some instruction then thm
         else Conv.fconv_rule (
                 Phi_Conv.hhf_concl_conv (fn ctxt => 
@@ -213,7 +200,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
                         (Conv.arg_conv (Simplifier.rewrite sctxt))
                         (Simplifier.rewrite sctxt))
                   end
-             ) ctxt) thm
+             ) ctxt) thm*)
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_FTF, @{thm' \<phi>TA_FTF_rule},
                                       [(K NONE, K (K I), reasoning)], K NONE, simp)

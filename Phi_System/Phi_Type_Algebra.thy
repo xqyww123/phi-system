@@ -4168,24 +4168,38 @@ end
 
 subsubsection \<open>Transformation Functor\<close>
 
-definition \<open>\<A>\<D>\<V>_simp X \<equiv> X\<close>
+(*TODO: move*)
 
-lemma [\<phi>reason default %\<phi>simp_fallback]:
-  \<open> x \<Ztypecolon> \<A>\<D>\<V>_simp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
-  unfolding Action_Tag_def \<A>\<D>\<V>_simp_def
+definition \<open>\<A>\<D>\<V>_target X \<equiv> X\<close>
+
+lemma [\<phi>simp_rule_pass = false,
+       \<phi>reason default %\<phi>simp_fallback,
+       \<phi>simp_rule_pass]:
+  \<open> x \<Ztypecolon> \<A>\<D>\<V>_target T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp' Any \<close>
+  unfolding Action_Tag_def \<A>\<D>\<V>_target_def
   by simp
 
-lemma \<phi>TA_TF_rule:
+context begin
+
+private lemma \<phi>TA_TF_rule:
   \<open>(\<And>g x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x) \<Longrightarrow>
-              (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<longrightarrow> (a \<Ztypecolon> \<A>\<D>\<V>_simp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)) \<longrightarrow> \<comment> \<open>split D\<close>
-              (Ant @action \<phi>TA_ANT) \<longrightarrow>
-              (x \<Ztypecolon> F1 (\<A>\<D>\<V>_simp T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target \<A>simp)
+              (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<longrightarrow> (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to U)) \<longrightarrow> \<comment> \<open>split D\<close>
+              Ant \<longrightarrow>
+              (x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Transformation_Functor F1 F2 T U D R mapper\<close>
-  unfolding Transformation_Functor_def Action_Tag_def Ball_def Premise_def \<A>\<D>\<V>_simp_def
+  unfolding Transformation_Functor_def Action_Tag_def Ball_def Premise_def \<A>\<D>\<V>_target_def
   by simp
+
+private lemma \<phi>TA_FT_deriver_cong:
+  \<open> D \<equiv> D'
+\<Longrightarrow> (\<And>x. \<exists>a. a \<in> D' x \<Longrightarrow> R x \<equiv> R' x)
+\<Longrightarrow> (\<And>g x y. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> Inhabited (y \<Ztypecolon> F2 U) \<Longrightarrow> m g x y \<equiv> m' g x y)
+\<Longrightarrow> Transformation_Functor F1 F2 T U D R m \<equiv> Transformation_Functor F1 F2 T U D' R' m' \<close>
+  unfolding Transformation_Functor_def atomize_eq Transformation_def Inhabited_def
+  by clarsimp blast
 
 (*
 lemma \<phi>TA_TF_rewr_IH:
@@ -4194,19 +4208,15 @@ lemma \<phi>TA_TF_rewr_IH:
   unfolding Action_Tag_def atomize_imp atomize_all .
 *)
 
-lemma \<phi>TA_TF_rewr_C:
+private lemma \<phi>TA_TF_rewr_C:
   \<open>Trueprop ((\<forall>x. P x \<longrightarrow> A2 x) \<longrightarrow> Ant \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
 \<equiv> ((\<And>x. P x \<Longrightarrow> A2 x) \<Longrightarrow> Ant \<Longrightarrow> C @action \<A>)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all .
 
-lemma \<phi>TA_TF_pattern_IH:
-  \<open> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action A
-\<Longrightarrow> PROP Pure.term (\<And>a \<in> S. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Any a \<w>\<i>\<t>\<h> Any' a @action A)\<close> .
-
 
 subsubsection \<open>Functional Transformation Functor\<close>
 
-lemma \<phi>TA_FTF_rule:
+private lemma \<phi>TA_FTF_rule:
   \<open> (Ant \<Longrightarrow> Transformation_Functor F1 F2 T U D R mapper)
 \<Longrightarrow> (Ant \<Longrightarrow> Object_Equiv (F2 U) eq)
 \<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f P x y. mapper (\<lambda>a b. b = f a \<and> P a) x y \<longrightarrow> eq y (fm f P x) \<and> pm f P x))
@@ -4217,7 +4227,19 @@ lemma \<phi>TA_FTF_rule:
   unfolding Premise_def fun_eq_iff Action_Tag_def
   using infer_FTF_from_FT .
 
+private lemma \<phi>TA_FTF_deriver_cong:
+  \<open> D \<equiv> D'
+\<Longrightarrow> (\<And>x. \<exists>a. a \<in> D' x \<Longrightarrow> R x \<equiv> R' x)
+\<Longrightarrow> (\<And>f P x. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> fm f P x \<equiv> fm' f P x)
+\<Longrightarrow> (\<And>f P x. Inhabited (x \<Ztypecolon> F1 T) \<Longrightarrow> Inhabited (fm' f P x \<Ztypecolon> F2 U) \<Longrightarrow> pm f P x \<equiv> pm' f P x)
+\<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R pm fm \<equiv>
+    Functional_Transformation_Functor F1 F2 T U D' R' pm' fm' \<close>
+  unfolding Functional_Transformation_Functor_def atomize_eq Transformation_def Inhabited_def
+  by (clarsimp, smt (verit, best))
+
 ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>
+
+end
 
 \<phi>property_deriver Transformation_Functor 110 for (\<open>Transformation_Functor _ _ _ _ _ _ _\<close>)
   = \<open> Phi_Type_Algebra_Derivers.transformation_functor \<close>
