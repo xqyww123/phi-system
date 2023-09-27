@@ -308,13 +308,17 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
-      val ind_conv = default_ind_conv (K (K (Conv.rewr_conv @{thm \<phi>TA_OE_rewr_IH})),
-                       fn ctxt => fn _ => Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp1_noact} then_conv
-                            Conv.implies_concl_conv (HOLogic.Trueprop_conv (fn ctm =>
-                              Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) ctm)
-                              then_conv Phi_Conv.hol_alls_to_meta_alls (fn _ =>
-                                  conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
-                                ) ctxt))
+      val ind_conv =
+            default_ind_conv (
+               K (K (Conv.rewr_conv @{thm \<phi>TA_OE_rewr_IH})),
+               fn ctxt => fn _ =>
+                    Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp1_noact} then_conv
+                    Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
+                    Conv.implies_conv
+                      (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
+                      (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
+                          conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
+                        ) ctxt))
       fun infer (_, ctxt, rule) =
             if need_infer rule
             then rule

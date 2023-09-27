@@ -1893,7 +1893,7 @@ subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
-     
+      
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>

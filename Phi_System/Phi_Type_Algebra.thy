@@ -3955,7 +3955,9 @@ subsubsection \<open>Warn if the Def contains Sat\<close>
 
 subsubsection \<open>Abstract Domain\<close>
 
-lemma \<phi>TA_Inh_rule:
+context begin
+
+private lemma \<phi>TA_Inh_rule:
   \<open> (\<And>x. Ant \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<longrightarrow> P x @action \<phi>TA_ind_target \<A>EIF)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -3964,7 +3966,7 @@ lemma \<phi>TA_Inh_rule:
   unfolding Action_Tag_def Abstract_Domain_def
   by simp
 
-lemma \<phi>TA_SuC_rule:
+private lemma \<phi>TA_SuC_rule:
   \<open> (\<And>x. Ant \<longrightarrow> P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) @action \<phi>TA_ind_target \<A>ESC)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -3973,14 +3975,14 @@ lemma \<phi>TA_SuC_rule:
   unfolding Action_Tag_def Abstract_Domain\<^sub>L_def
   by simp
 
-lemma \<phi>TA_Inh_step:
+private lemma \<phi>TA_Inh_step:
   \<open> Inh \<longrightarrow> Any @action \<A>EIF
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any \<longrightarrow> P)
 \<Longrightarrow> Inh \<longrightarrow> P @action \<A>EIF\<close>
   unfolding Action_Tag_def Premise_def
   by blast
 
-lemma \<phi>TA_Suc_step:
+private lemma \<phi>TA_Suc_step:
   \<open> Any \<longrightarrow> Inh @action \<A>ESC
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (P \<longrightarrow> Any)
 \<Longrightarrow> P \<longrightarrow> Inh @action \<A>ESC\<close>
@@ -3988,6 +3990,8 @@ lemma \<phi>TA_Suc_step:
   by blast
 
 ML_file \<open>library/phi_type_algebra/implication.ML\<close>
+
+end
 
 (*hide_fact \<phi>TA_Inh_rule \<phi>TA_Inh_rewr \<phi>TA_Inh_step*)
 
@@ -4074,14 +4078,15 @@ declare Is_Contravariant[where PC=\<open>Identity_Element\<^sub>I\<close>, \<phi
 
 subsubsection \<open>Object Equivalence\<close>
 
-lemma Object_Equiv_rule:
+context begin
+
+private lemma Object_Equiv_rule:
   \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
-\<Longrightarrow> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-            (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
-                \<comment> \<open>Induct over \<open>x \<Ztypecolon> T\<close>. When \<open>x\<close> is inductively split, the constraint of \<open>eq x y\<close>
-                    should also split \<open>y\<close>, so that \<open>y \<Ztypecolon> T\<close> can reduce.
-                    A deficiency is, when the relation \<open>eq\<close> is trivially true such as that when
-                     \<open>T = List \<circle>\<close>, \<close>
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
+              \<comment> \<open>Induct over \<open>x \<Ztypecolon> T\<close>. When \<open>x\<close> is inductively split, the constraint of \<open>eq x y\<close>
+                  should also split \<open>y\<close>, so that \<open>y \<Ztypecolon> T\<close> can reduce.
+                  A deficiency is, when the relation \<open>eq\<close> is trivially true such as that when
+                   \<open>T = List \<circle>\<close>, \<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -4089,79 +4094,15 @@ lemma Object_Equiv_rule:
   unfolding Object_Equiv_def Premise_def Action_Tag_def
   by blast
 
-lemma \<phi>TA_OE_rewr_IH:
+private lemma \<phi>TA_OE_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> Q y) @action \<phi>TA_ind_target undefined)
-\<equiv> (\<And>y. Ant \<Longrightarrow> P y @action \<phi>TA_pure_facts \<Longrightarrow> Q y @action \<phi>TA_conditioned_ToA_template)\<close>
+\<equiv> (\<And>y. Ant @action \<phi>TA_ANT \<Longrightarrow> P y @action \<phi>TA_pure_facts \<Longrightarrow> Q y @action \<phi>TA_conditioned_ToA_template)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
-
-lemma Object_Equiv_rule_move_all:
-  \<open>(\<And>x. P x \<and> Q) \<Longrightarrow> (\<forall>x. P x) \<and> Q\<close>
-  by blast
-
-lemma Object_Equiv_rule_move_all2:
-  \<open>(P \<longrightarrow> (\<forall>x. Q x)) \<and> R \<Longrightarrow> (\<forall>x. P \<longrightarrow> Q x) \<and> R\<close>
-  by blast
-
-lemma Object_Equiv_rule_move_set_eq:
-  \<open>RR \<Longrightarrow> (R \<and> P \<and> R2 \<longrightarrow> P) \<and> RR\<close>
-  by blast
-
-lemma Object_Equiv_rule_move_set_eq_end:
-  \<open>(P \<and> R \<longrightarrow> P)\<close>
-  by blast
-
-
-(*TODO: depreciated*)
-(*paragraph \<open>Object Equivalence at Singular Point\<close>
-
-text \<open>Strategy: transforming both sides to (one of) the base case of induction\<close>
-
-definition \<open>\<A>simp_to_base X \<equiv> X\<close>
-
-
-lemma \<phi>TA_OE\<^sub>O_rule:
-  \<open> TERM ((x\<^sub>0 \<Ztypecolon> T\<^sub>0) = Base)
-\<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
-\<Longrightarrow> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<exists>y. eq x y) \<longrightarrow> (x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Base) @action \<phi>TA_ind_target \<A>simp)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<exists>y. eq y x) \<longrightarrow> (Base \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T) @action \<phi>TA_ind_target NToA)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Object_Equiv T eq\<close>
-  unfolding Object_Equiv_def Action_Tag_def Transformation_def Premise_def \<A>simp_to_base_def MAKE_def
-  by blast
-
-(*lemma \<phi>TA_OE\<^sub>O_rewr_IH1:
-  \<open> Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target \<A>)
- \<equiv> (Ant \<Longrightarrow> P @action \<A>)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
-*)
-
-lemma \<phi>TA_OE\<^sub>O_rewr_IH2:
-  \<open>Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T @action \<A>)
-\<equiv> (\<And>A R C P. (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> P) &&&
-              (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<Longrightarrow> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P))\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all atomize_conj Transformation_def REMAINS_def MAKE_def
-  by (rule; simp; blast)
-
-lemma \<phi>TA_OE\<^sub>O_rewr:
-  \<open>Trueprop (Ant \<longrightarrow> C \<longrightarrow> P @action \<phi>TA_ind_target \<A>) \<equiv> (Ant \<Longrightarrow> C \<Longrightarrow> P @action \<A>)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
-
-lemma [\<phi>reason default %\<phi>simp_fallback]:
-  \<open> x \<Ztypecolon> \<A>simp_to_base T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
-  unfolding Action_Tag_def \<A>simp_to_base_def
-  by simp
-*)
 
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 
+end
 
-(*                  
-hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_rule_move_all
-          Object_Equiv_rule_move_all2 Object_Equiv_rule_move_set_eq
-          Object_Equiv_rule_move_set_eq_end *)
 (*
 \<phi>property_deriver Object_Equiv\<^sub>O 104
   = \<open>Phi_Type_Algebra_Derivers.object_equiv_singular\<close>
@@ -4172,7 +4113,9 @@ hide_fact Object_Equiv_rule \<phi>TA_OE_rewr_IH \<phi>TA_OE_rewr_C Object_Equiv_
 
 subsubsection \<open>Functionality\<close>
 
-lemma \<phi>TA_IsFunc_rule:
+context begin
+
+private lemma \<phi>TA_IsFunc_rule:
   \<open> (\<And>x. Ant \<longrightarrow>
          \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<longrightarrow>
          Is_Functional (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
@@ -4183,17 +4126,9 @@ lemma \<phi>TA_IsFunc_rule:
   unfolding Action_Tag_def Functionality_def Is_Functional_def Premise_def
   by clarsimp
 
-lemma \<phi>TA_IsFunc_rewr:
-  \<open> Trueprop (Ant \<longrightarrow> cond \<longrightarrow> P @action Any)
- \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> P) \<close>
-  unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
-
-(*
-lemma \<phi>TA_IsFunc_rewr_ants:
-  \<open>Is_Functional S \<equiv> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v)\<close>
-  unfolding Premise_def Is_Functional_def by simp*)
-
 ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
+
+end
 
 \<phi>property_deriver Functionality 100 for (\<open>Functionality _ _\<close>)
     = \<open> Phi_Type_Algebra_Derivers.is_functional \<close>
@@ -4205,9 +4140,10 @@ bundle extract_premises_in_Carrier_Set =
   prem_extract_Carrier_Set[\<phi>premise_extraction add]
   prem_extract_homo_mul_carrier[\<phi>premise_extraction add]
 
+context begin
 
-lemma \<phi>TA_CarS_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+private lemma \<phi>TA_CarS_rule:
+  \<open> (\<And>x. Ant \<longrightarrow>
           \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x \<longrightarrow>
           Within_Carrier_Set (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
@@ -4217,12 +4153,9 @@ lemma \<phi>TA_CarS_rule:
   unfolding Carrier_Set_def Action_Tag_def Premise_def
   by clarsimp
 
-lemma \<phi>TA_CarS_rewr:
-  \<open> Trueprop (Ant \<longrightarrow> cond \<longrightarrow> P @action Any)
- \<equiv> (Ant \<Longrightarrow> cond \<Longrightarrow> P) \<close>
-  unfolding Action_Tag_def Is_Functional_def Premise_def atomize_imp .
-
 ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
+
+end
 
 \<phi>property_deriver Carrier_Set 100 for (\<open>Carrier_Set _ _\<close>)
     = \<open> Phi_Type_Algebra_Derivers.carrier_set \<close>
@@ -4235,26 +4168,35 @@ ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
 
 subsubsection \<open>Transformation Functor\<close>
 
+definition \<open>\<A>\<D>\<V>_simp X \<equiv> X\<close>
+
+lemma [\<phi>reason default %\<phi>simp_fallback]:
+  \<open> x \<Ztypecolon> \<A>\<D>\<V>_simp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
+  unfolding Action_Tag_def \<A>\<D>\<V>_simp_def
+  by simp
+
 lemma \<phi>TA_TF_rule:
   \<open>(\<And>g x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x) \<Longrightarrow>
+              (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<longrightarrow> (a \<Ztypecolon> \<A>\<D>\<V>_simp T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)) \<longrightarrow> \<comment> \<open>split D\<close>
               (Ant @action \<phi>TA_ANT) \<longrightarrow>
-              (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D x \<longrightarrow> (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b)) \<longrightarrow> \<comment> \<open>split D\<close>
-              (x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
+              (x \<Ztypecolon> F1 (\<A>\<D>\<V>_simp T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Transformation_Functor F1 F2 T U D R mapper\<close>
-  unfolding Transformation_Functor_def Action_Tag_def Ball_def Premise_def
+  unfolding Transformation_Functor_def Action_Tag_def Ball_def Premise_def \<A>\<D>\<V>_simp_def
   by simp
 
+(*
 lemma \<phi>TA_TF_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>x. P x \<longrightarrow> A2 x) \<longrightarrow> C @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
 \<equiv> (Ant \<Longrightarrow> (\<And>x. P x \<Longrightarrow> A2 x @action to U) \<Longrightarrow> C @action to U)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all .
+*)
 
 lemma \<phi>TA_TF_rewr_C:
-  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x. P x \<longrightarrow> A2 x) \<longrightarrow> C @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U)))
-\<equiv> (Ant \<Longrightarrow> (\<And>x. P x \<Longrightarrow> A2 x @action to U) \<Longrightarrow> C @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T \<Rightarrow> U))\<close>
+  \<open>Trueprop ((\<forall>x. P x \<longrightarrow> A2 x) \<longrightarrow> Ant \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
+\<equiv> ((\<And>x. P x \<Longrightarrow> A2 x) \<Longrightarrow> Ant \<Longrightarrow> C @action \<A>)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all .
 
 lemma \<phi>TA_TF_pattern_IH:
