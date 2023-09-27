@@ -177,14 +177,18 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
                    | _ (*Trueprop*) $ (_ (*Abstract_Domain*) $ _ $
                           Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ Var v $ _)) => v
                    | _ => err ()*)
+      val arity = length (Term.binder_types (snd var))
 
       fun binop H (SOME sa, SOME sb) = SOME (H $ sa $ sb)
         | binop _ (some_or_none, NONE) = some_or_none
         | binop _ (NONE, some) = some
-      fun qualifies j vars =
+      fun qualifies js vars =
              fold_index (fn (k, (N, ty)) => fn X =>
-                if k = j then Abs (N, ty, X) $ Bound (length vars - 1 - k)
-                else HOLogic.all_const ty $ Abs(N, ty, X)
+               let val ij = find_index (fn j => j = k) js
+                in if ij = ~1
+                   then HOLogic.all_const ty $ Abs(N, ty, X)
+                   else Abs (N, ty, X) $ Bound (length vars - 1 - k + length js - 1 - ij)
+               end
              ) vars
 
       val allows_Inhabited_and_Sat = (*the inferred condition contains Inhabited and Satisfaction
@@ -213,18 +217,21 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
         | inst_Lw (vars,prems) (\<^Const>\<open>All T\<close> $ X)
             = inst_Lw (vars,prems) (\<^Const>\<open>All T\<close> $ (Abs ("_", T, Term.incr_boundvars 1 X $ Bound 0)))
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
-            = let fun meet v j = if var = v
-                                 then filter_bad X
-                                  |> Option.map (
-                                        fold (fn prem => fn X =>
+            = let fun meet v js = if var = v
+                                  then filter_bad X
+                                    |> Option.map (
+                                          fold (fn prem => fn X =>
                                               \<^Const>\<open>HOL.implies\<close> $ prem $ X
-                                           ) prems
-                                     #> qualifies j vars)
-                                 else inst_Lw (vars, augment P prems) X
-               in case P
-               of Var v $ Bound j => meet v j
-                | Var v => meet v ~1
-                | Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound j) => meet v j
+                                             ) prems
+                                       #> qualifies js vars)
+                                  else inst_Lw (vars, augment P prems) X
+                  val (h, args) = case P
+                                    of Const (\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ X => Term.strip_comb X
+                                     | X => Term.strip_comb X
+               in case h
+               of Var v => if forall (fn Bound _ => true | _ => false) args andalso length args = arity
+                           then meet v (map (fn Bound i => i) args)
+                           else NONE
                 | _ => inst_Lw (vars, augment P prems) X
               end
         | inst_Lw _ _ = NONE
@@ -252,11 +259,17 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
             = inst_Pr (vars,prems) (\<^Const>\<open>HOL.All ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
         | inst_Pr (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
             = inst_Pr (vars, augment P prems) X
-        | inst_Pr (vars,prems) (Var v $ Bound j)
-            = if v = var then SOME (qualifies j vars (Phi_Help.list_mk_conj prems)) else NONE
-        | inst_Pr (vars,prems) (Var v)
-            = if v = var then SOME (qualifies ~1 vars (Phi_Help.list_mk_conj prems)) else NONE
-        | inst_Pr _ _ = NONE
+        | inst_Pr (vars,prems) X
+            = let val (h, args) = Term.strip_comb X
+               in case h
+               of Var v =>
+                  if v = var
+                  then if forall (fn Bound _ => true | _ => false) args andalso length args = arity
+                    then SOME (qualifies (map (fn Bound i => i) args) vars (Phi_Help.list_mk_conj prems))
+                    else NONE
+                  else NONE
+                | _ => NONE
+              end
 
       fun inst_Pr' context X = case inst_Pr context X of SOME ret => ret
                                   | NONE => \<^Const>\<open>True\<close>
@@ -264,10 +277,8 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
   in case Thm.prop_of sequent
        of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _)
             $ (Const(\<^const_name>\<open>Premise\<close>, _) $ _ $ X)) $ _
-            => let val X'1 = (if upper then inst_Pr' else inst_Lw') ([],[]) X
-                   val X' = case snd var
-                              of \<^Type>\<open>fun D _\<close> => Abs ("x", D, X'1)
-                               | _ => X'1
+            => let val X' = (if upper then inst_Pr' else inst_Lw') ([],[]) X
+                         |> fold_rev (fn T => fn X => Abs ("_", T, X)) (Term.binder_types (snd var))
                    val X' = if exists_subterm (fn Var v => v = var | _ => false) X'
                             then \<^Const>\<open>True\<close> (*the case of recursive, unsupported*)
                             else X'

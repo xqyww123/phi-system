@@ -1368,12 +1368,12 @@ fun default_ind_conv (conv_IH, conv_CL) ctxt (phi:phi_type) =
   Conv.fconv_rule (Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
     case Logic.strip_assums_concl (Thm.term_of ctm)
       of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _)) => (
-            Phi_Conv.hhf_conv (fn ctxt => fn ctm =>
+            Phi_Conv.hhf_conv (Phi_Conv.meta_alls_conv (fn ctxt => fn ctm =>
               case Thm.term_of ctm
                 of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
                     => conv_IH ctxt phi ctm
                  | _ => Conv.all_conv ctm
-            ) (fn ctxt => fn ctm =>
+            )) (fn ctxt => fn ctm =>
               case Thm.term_of ctm
                 of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Action_Tag\<close> $ _ $ (\<^Const>\<open>\<phi>TA_ind_target\<close> $ _))
                     => conv_CL ctxt phi ctm
@@ -1532,6 +1532,16 @@ type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
 type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
 
+fun pass_make_ToA ctxt ToA =
+  if can (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<phi>TA_ToA_elim\<close>) (Thm.concl_of ToA)
+  then let val ToA' = ToA RS' (ctxt, @{thm' Action_Tag_D})
+        in [ToA' RS' (ctxt, @{thm' mk_ToA_rule}), ToA' RS' (ctxt, @{thm' mk_ToA_rule'})]
+       end
+  else case try (Phi_Syntax.dest_transformation) (Thm.concl_of ToA)
+    of SOME (_, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>MAKE\<close>, _) $ _), _) =>
+        [ToA RS' (ctxt, @{thm' mk_ToA_rule}), ToA RS' (ctxt, @{thm' mk_ToA_rule'})]
+     | _ => [ToA]
+
 fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
   let val is_pure_fact = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_pure_facts\<close> o Thm.concl_of
       val is_ToA_template = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_conditioned_ToA_template\<close> o Thm.concl_of
@@ -1555,6 +1565,7 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
             ) local_prems*)
       val rewrs = map_filter (extract_rewr ctxt) local_prems
       val ants = filter_out (Phi_Reasoners.is_syntactic_premise o Thm.concl_of) local_prems
+              |> maps (pass_make_ToA ctxt)
    in (prem_ants, rewrs, ToAs @ ants, ctxt)
   end
 

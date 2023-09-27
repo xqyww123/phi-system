@@ -204,13 +204,13 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
         | extract_oprs_from_hint _ = []
 
       val ind_conv = default_ind_conv (
-              fn _ => fn _ =>
-                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
-                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
-              fn ctxt => fn _ =>
-                  Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
+              fn _ => fn _ => fn ctm =>
+                 (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm,
+              fn ctxt => fn _ => fn ctm =>
+                 (Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp2_noact} then_conv
                   Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
-                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)
 
       val mode_infer = not (is_some instruction) andalso not (#is_recursive phi0)
       val varify_subgoal = K (K NONE)

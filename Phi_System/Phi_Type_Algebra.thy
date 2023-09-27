@@ -1062,20 +1062,33 @@ lemma \<phi>make_abstraction'R:
   unfolding Action_Tag_def MAKE_def
   by simp
 
+ML \<open>val phiTA_search_MAKE = Attrib.setup_config_bool \<^binding>\<open>\<phi>TA_search_MAKE\<close> (K false)\<close>
+
+definition \<open>\<phi>TA_search_MAKE \<equiv> True\<close>
+
+\<phi>reasoner_ML \<phi>TA_search_MAKE %cutting (\<open>\<phi>TA_search_MAKE\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+      if Config.get ctxt phiTA_search_MAKE
+      then SOME ((ctxt, @{lemma' \<open>\<phi>TA_search_MAKE\<close> by (simp add: \<phi>TA_search_MAKE_def)} RS sequent), Seq.empty)
+      else NONE)
+\<close>
+
 lemma \<phi>make_abstraction'eq:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] eq x x')
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] eq x x') \<or>\<^sub>c\<^sub>u\<^sub>t \<phi>TA_search_MAKE \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x x'))
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq x x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
-  by clarsimp
+            Orelse_shortcut_def
+  by clarsimp blast
 
 lemma \<phi>make_abstraction'R'eq:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] eq x x')
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] eq x x') \<or>\<^sub>c\<^sub>u\<^sub>t \<phi>TA_search_MAKE \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x x'))
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq x x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
+            Orelse_shortcut_def
   by (cases C; clarsimp; blast)
 
 lemma \<phi>make_Identity_Element\<^sub>E:
@@ -3739,6 +3752,7 @@ consts \<phi>TA_ind_target :: \<open>action \<Rightarrow> action\<close>
        \<phi>TA_pure_facts :: action \<comment> \<open>About \<open>\<phi>TA_conditioned_ToA_template\<close> and \<open>\<phi>TA_pure_facts\<close>,
                                     see comments in \<^file>\<open>library/phi_type_algebra/deriver_framework.ML\<close>
                                     ML function \<open>default_reasoning_configure\<close>\<close>
+       \<phi>TA_ToA_elim :: action
 
 lemmas intro_\<phi>TA_ANT = Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric, THEN Meson.TruepropI]
 
@@ -4011,7 +4025,7 @@ subsubsection \<open>Identity Element Intro \& Elim\<close>
 context begin
 
 private lemma \<phi>TA_1L_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) @action \<phi>TA_ind_target undefined)
+  \<open> (\<And>x. Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow> Identity_Element\<^sub>I (x \<Ztypecolon> T) (P x) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -4020,7 +4034,7 @@ private lemma \<phi>TA_1L_rule:
   by blast
 
 private lemma \<phi>TA_1R_rule:
-  \<open> (\<And>x. Ant \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
+  \<open> (\<And>x. Ant \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<longrightarrow> Identity_Element\<^sub>E (x \<Ztypecolon> T) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -4082,7 +4096,7 @@ context begin
 
 private lemma Object_Equiv_rule:
   \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x. eq x x))
-\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T)) @action \<phi>TA_ind_target undefined)
+\<Longrightarrow> (\<And>x. Ant \<longrightarrow> (\<forall>y. eq x y \<longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE T)) @action \<phi>TA_ind_target undefined)
               \<comment> \<open>Induct over \<open>x \<Ztypecolon> T\<close>. When \<open>x\<close> is inductively split, the constraint of \<open>eq x y\<close>
                   should also split \<open>y\<close>, so that \<open>y \<Ztypecolon> T\<close> can reduce.
                   A deficiency is, when the relation \<open>eq\<close> is trivially true such as that when
@@ -4091,13 +4105,24 @@ private lemma Object_Equiv_rule:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Object_Equiv T eq \<close>
-  unfolding Object_Equiv_def Premise_def Action_Tag_def
+  unfolding Object_Equiv_def Premise_def Action_Tag_def MAKE_def OPEN_def
   by blast
 
 private lemma \<phi>TA_OE_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> Q y) @action \<phi>TA_ind_target undefined)
-\<equiv> (\<And>y. Ant @action \<phi>TA_ANT \<Longrightarrow> P y @action \<phi>TA_pure_facts \<Longrightarrow> Q y @action \<phi>TA_conditioned_ToA_template)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all by (rule; blast)
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>y. P y \<longrightarrow> (x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE T)) @action \<phi>TA_ind_target undefined)
+\<equiv> (\<And>y. Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P y \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T @action \<phi>TA_ToA_elim)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
+  by (rule; blast)
+
+private lemma \<phi>TA_OE_rewr:
+  \<open>Trueprop (\<forall>y. P y \<longrightarrow> Q y) \<equiv> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y \<Longrightarrow> Q y)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all Premise_def
+  by (rule; blast)
+
+private lemma \<phi>TA_OE_rewr':
+  \<open>Trueprop (\<forall>y. P y \<longrightarrow> Q y) \<equiv> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y \<Longrightarrow> Q y)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all Premise_def
+  by (rule; blast)
 
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 
@@ -4249,9 +4274,6 @@ end
   requires Transformation_Functor
     = \<open>Phi_Type_Algebra_Derivers.functional_transformation_functor\<close>
 
-(* TODO:
-hide_fact \<phi>TA_TF_rule \<phi>TA_TF_rewr_IH \<phi>TA_TF_rewr_C \<phi>TA_TF_pattern_IH \<phi>TA_FTF_rule
-*)
 
 subsubsection \<open>Separation Homo\<close>
 

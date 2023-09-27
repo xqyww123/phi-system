@@ -43,6 +43,7 @@ fun infer_equiv ctxt sequent =
       val exists_bad = exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
                                         | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
                                         | _ => false)
+
       fun refine_term default (\<^Const>\<open>HOL.implies\<close> $ A $ B) =
             if exists_bad A then refine_term default B
                             else \<^Const>\<open>HOL.implies\<close> $ A $ refine_term default B
@@ -308,18 +309,37 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
 
+      val tagged_eqs = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
+                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
+                     @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
+                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
       val ind_conv =
             default_ind_conv (
-               K (K (Conv.rewr_conv @{thm \<phi>TA_OE_rewr_IH})),
                fn ctxt => fn _ =>
-                    Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp1_noact} then_conv
-                    Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
-                    Conv.implies_conv
+                    Conv.rewr_conv @{thm' \<phi>TA_OE_rewr_IH} then_conv
+                    Phi_Conv.meta_all_conv (fn _ => Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctxt,
+               fn ctxt => fn _ =>
+                    Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+                    Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps tagged_eqs) then_conv
+                    Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
+                                      (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
+                                        conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]})
+                                      ) ctxt)
+                  (*Conv.implies_conv
                       (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
                       (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
                           conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
-                        ) ctxt))
-      fun infer (_, ctxt, rule) =
+                        ) ctxt)*))
+
+      val infer = if not (is_some instruction) andalso not (#is_recursive phi0)
+                  then predicate_infer false
+                          (fn _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var v) => v
+                            | _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $
+                                    Abs (_, _, Abs (_, _,
+                                        Const(\<^const_name>\<open>HOL.conj\<close>, _) $ (Var v $ Bound 1 $ Bound 0) $ _))) => v)
+                          (oblg_solver' name)
+                  else K NONE
+(*      fun infer (_, ctxt, rule) =
             if need_infer rule
             then rule
                    |> Phi_Help.beta_eta_contract
@@ -327,7 +347,8 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                    |> infer_equiv ctxt
                    |> oblg_solver name ctxt
                    |> SOME
-            else NONE
+            else NONE*)
+
       val simp = if is_some instruction then K I
                  else default_simplifier' (fn rewr => fn ctxt =>
                           HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)))
@@ -337,7 +358,8 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                       [(K NONE, K (K I), K (pure_PLPR_reasoning 1)),
                                        (K (SOME [0]), ind_conv, OE_reasoning)],
                                       infer, simp)
-                                     phi0 (Option.map fst instruction) ctxt0
+                                     phi0 (Option.map fst instruction)
+                                     (Config.put phiTA_search_MAKE true ctxt0)
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
