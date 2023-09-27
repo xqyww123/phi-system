@@ -188,11 +188,11 @@ text \<open>Guessing Strategy:
   covers recursive \<phi>-types and works well for \<phi>-types modelling ordinary data structures.
 
 \<^item> The candidates guessed above can be in addition constrained or augmented by inference over the syntactic
-  expression of the \<phi>-type definitions, carried out by the ad-hoc reasoning rules specifying and provided by
+  expression of the \<phi>-type definition, carried out by the ad-hoc reasoning rules specifying
   the \<phi>-type operators occurring in the expression.
   \<open>T \<s>\<u>\<b>\<j> P \<triangleq> \<lambda>x. (x \<Ztypecolon> T) \<and> P\<close> is an example giving a boolean constraint \<open>P\<close> that can constrain the
   domain of \<open>identity-element\<close>.
-
+  The rules of the syntactic inference are given manually mainly for \<phi>-type embedding of logic connectives.
 \<close>
 
 
