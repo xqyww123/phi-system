@@ -120,7 +120,7 @@ fun elim_leading_All ctxt rule =
            | _ => Conv.all_conv ctm
    in rule
    |> Conv.fconv_rule (conv ctxt)
-   |> Thm.forall_elim_vars (Thm.maxidx_of rule)
+   |> Thm.forall_elim_vars (Thm.maxidx_of rule+1)
   end
 
 fun atomize_antecedent deep =

@@ -3819,6 +3819,12 @@ lemma \<phi>TA_reason_rule__\<A>_simp_NToA:
   unfolding Action_Tag_def
   by (simp add: Transformation_def)
 
+lemma elim_TA_ANT:
+  \<open> ((PROP A \<Longrightarrow> PROP C) \<Longrightarrow> PROP A \<Longrightarrow> PROP B) \<equiv> (PROP A \<Longrightarrow> PROP C \<Longrightarrow> PROP B) \<close>
+  apply rule
+  subgoal premises prems by (rule prems(1), rule prems(3), rule prems(2))
+  subgoal premises prems by (rule prems(1), rule prems(3), rule prems(2), rule prems(3)) .
+
 ML_file \<open>library/phi_type_algebra/deriver_framework.ML\<close>
 
 consts \<phi>deriver_expansion :: mode
@@ -4282,14 +4288,14 @@ text \<open>Note, as an instance of Commutativity of Type Operators, the names o
   are more natural and we don't really have to force the consistency of the names between the two levels.\<close>
 
 lemma \<phi>TA_SH\<^sub>I_rule:
-  \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
+  \<open> (\<And>z. Ant \<longrightarrow>
             (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
-                \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U))) @action \<phi>TA_ind_target undefined)
+                \<longrightarrow> ((y \<Ztypecolon> OPEN (Fb U)) * (x \<Ztypecolon> OPEN (Fa T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (T \<^emph> U)))) @action \<phi>TA_ind_target undefined)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Separation_Homo\<^sub>I Fa Fb Fc T U D w \<close>
-  unfolding Separation_Homo\<^sub>I_def \<phi>Prod_expn' Action_Tag_def
+  unfolding Separation_Homo\<^sub>I_def \<phi>Prod_expn' Action_Tag_def MAKE_def OPEN_def
   by simp
 
 lemma \<phi>TA_SH\<^sub>E_rule:
@@ -4303,10 +4309,16 @@ lemma \<phi>TA_SH\<^sub>E_rule:
   by simp
 
 lemma \<phi>TA_SH\<^sub>I_rewr_IH:
+  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> ((y \<Ztypecolon> OPEN (Fb U)) * (x \<Ztypecolon> OPEN (Fa T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (T \<^emph> U)))) @action \<phi>TA_ind_target undefined)
+\<equiv> (\<And>x y. Ant @action \<phi>TA_ANT \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x y \<Longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U)))\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
+  by (rule; blast)
+
+(*lemma \<phi>TA_SH\<^sub>I_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> Q x y) @action \<phi>TA_ind_target undefined)
 \<equiv> (\<And>x y. Ant \<Longrightarrow> P x y @action \<phi>TA_pure_facts \<Longrightarrow> Q x y @action \<phi>TA_conditioned_ToA_template)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)
+  by (rule; blast)*)
 
 text \<open>This conditioned template is necessary because, see,
   \<^prop>\<open>(\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U)))\<close>
@@ -4324,11 +4336,12 @@ text \<open>This conditioned template is necessary because, see,
   fallback always varifies the abstract object in the target to a schematic variable.
 \<close>
 
+(*
 lemma \<phi>TA_SH\<^sub>I_rewr_C:
   \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
 \<equiv> (Ant \<Longrightarrow> P)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)
+  by (rule; blast)*)
 
 lemma \<phi>TA_SH\<^sub>E_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> U) @action \<phi>TA_ind_target A)
@@ -4344,8 +4357,9 @@ lemma \<phi>TA_SH\<^sub>E_rewr_C:
 
 ML_file \<open>library/phi_type_algebra/separation_homo.ML\<close>
 
+(*
 hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_rewr_IH \<phi>TA_SH\<^sub>I_rewr_C
-          \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C
+          \<phi>TA_SH\<^sub>E_rewr_IH \<phi>TA_SH\<^sub>E_rewr_C*)
 
 \<phi>property_deriver Separation_Homo\<^sub>I 120 for (\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>) = \<open>
   Phi_Type_Algebra_Derivers.separation_homo_I

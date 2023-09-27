@@ -134,6 +134,11 @@ lemma Action_Tag_I:
   \<open>P \<Longrightarrow> P @action A\<close>
   unfolding Action_Tag_def .
 
+lemma Action_Tag_E:
+  \<open> P @action A \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C \<close>
+  unfolding Action_Tag_def
+  by simp
+
 ML_file_debug \<open>library/syntax/action_tag.ML\<close>
 
 subsubsection \<open>General Mode\<close>

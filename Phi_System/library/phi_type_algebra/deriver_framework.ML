@@ -1570,14 +1570,68 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
   end
 
 fun default_reasoning always_diverge_disj configure varify reasoner (phi:phi_type) =
-let fun has_disj_ants ctxt th =
-      let val no_schematic_in_concl = Thm.maxidx_of_cterm (Thm.cconcl_of th) = ~1
-          fun check ctm =
+let fun elim_TA_ANT ctxt ctm =
+      case #2 (Phi_Help.strip_meta_hhf (Thm.term_of ctm))
+        |> get_index (try (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<phi>TA_ANT\<close>))
+        of SOME (0, _) => Conv.all_conv ctm
+         | SOME (_, ANT) =>
+      let fun exists_ANT tm = #2 (Phi_Help.strip_meta_hhf tm)
+                           |> exists (fn tm => case try (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<phi>TA_ANT\<close>) tm
+                                                 of SOME ant => ant aconv ANT
+                                                  | NONE => false)
+          fun move_ANT_to_top ctxt ctm =
             case Thm.term_of ctm
-              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => check (Thm.dest_arg ctm)
-               | Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _ => SOME @{thm' disjE}
-               | Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _ => SOME @{thm' disjE[folded Orelse_shortcut_def]}
-               | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
+              of Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
+                  (Phi_Conv.meta_all_conv (move_ANT_to_top o snd) ctxt then_conv
+                   Conv.rewr_conv @{thm' norm_hhf_eq[symmetric]}) ctm
+               | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ _ =>
+                   if A aconv ANT then Conv.all_conv ctm
+                   else Conv.rewr_conv @{thm' swap_prems_eq} ctm
+               | _ => raise CTERM ("elim_TA_ANT.move_ANT_to_top", [ctm])
+          fun conv ctxt ctm =
+            case Thm.term_of ctm
+              of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                    Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ Const(\<^const_name>\<open>\<phi>TA_ANT\<close>, _))) $ _
+                  => Conv.all_conv ctm
+               | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ B
+                  => if exists_ANT A
+                     then (Conv.implies_concl_conv (conv ctxt) then_conv
+                           (Conv.implies_conv (move_ANT_to_top ctxt) Conv.all_conv then_conv
+                            Conv.rewr_conv @{thm' elim_TA_ANT}
+                            else_conv
+                            Phi_Conv.hhf_conv (K (Conv.try_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>]})))
+                                              (K Conv.all_conv) ctxt then_conv
+                            Conv.rewr_conv @{thm' swap_prems_eq}
+                           )) ctm
+                     else (Conv.implies_concl_conv (conv ctxt) then_conv
+                           Conv.rewr_conv @{thm' swap_prems_eq}) ctm
+               | Const(\<^const_name>\<open>Pure.all\<close>, _) $ _ =>
+                  (Phi_Conv.meta_all_conv (conv o snd) ctxt then_conv
+                   Conv.rewr_conv @{thm' norm_hhf_eq[symmetric]}) ctm
+               | _ => raise CTERM ("elim_TA_ANT.conv", [ctm])
+       in conv ctxt ctm
+      end
+        | NONE => Conv.all_conv ctm
+    fun elim_TA_ANT' ctxt th =
+          Conv.fconv_rule (Phi_Conv.hhf_conv (Phi_Conv.meta_alls_conv elim_TA_ANT)
+                                             (K Conv.all_conv) ctxt) th
+
+    fun parse_erule ctxt th =
+      let val no_schematic_in_concl = maxidx_of_term (Thm.concl_of th) = ~1
+          fun check (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = check X
+            | check (Const(\<^const_name>\<open>HOL.disj\<close>, _) $ _ $ _) =
+                if always_diverge_disj orelse no_schematic_in_concl
+                then SOME @{thm' disjE}
+                else NONE
+            | check (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _) =
+                if always_diverge_disj orelse no_schematic_in_concl
+                then SOME @{thm' disjE[folded Orelse_shortcut_def]}
+                else NONE
+            | check (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) = SOME @{thm' conjE}
+            | check (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _) = SOME @{thm' conjE[folded Ant_Seq_def]}
+            | check (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ Const(\<^const_name>\<open>\<phi>TA_ANT\<close>, _)) =
+                  SOME @{thm' Action_Tag_E[where A=\<open>\<phi>TA_ANT\<close>]}
+            (* | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
                   let val (A,B) = (Thm.dest_arg1 ctm, Thm.dest_arg ctm)
                    in case check (Thm.dest_arg1 ctm)
                    of SOME tha =>
@@ -1619,11 +1673,9 @@ let fun has_disj_ants ctxt th =
                             \<^instantiate>\<open>X in lemma \<open>\<And>P A C B. (P \<Longrightarrow> (A \<Longrightarrow> C) \<Longrightarrow> (B \<Longrightarrow> C) \<Longrightarrow> C)
                                                 \<Longrightarrow> (P @action X \<Longrightarrow> (A @action X \<Longrightarrow> C) \<Longrightarrow> (B @action X \<Longrightarrow> C) \<Longrightarrow> C) \<close>
                                               by (unfold Action_Tag_def, blast)\<close>
-                        end)
-               | _ => NONE
-       in if always_diverge_disj orelse no_schematic_in_concl
-       then get_first check (#2 (Phi_Help.strip_meta_hhf_c (Thm.dest_arg1 (Thm.cprop_of th)) ctxt))
-       else NONE
+                        end) *)
+            | check _ = NONE
+       in get_first check (#2 (Phi_Help.leading_antecedent (Thm.prop_of th)))
       end
 
     (*\<open>Rule (T params)\<close> \<Longrightarrow> (guard condition params = vars \<Longrightarrow> Rule (T vars) )
@@ -1674,7 +1726,7 @@ fun reasoning ctxt0 sequent0 =
      | _ (*Trueprop*) $ (Const(\<^const_name>\<open>HOL.All\<close>, _) $ _) =>
               reasoning ctxt0 (@{thm' allI} RS sequent0)
      | _ =>
-  case has_disj_ants ctxt0 sequent0
+  case parse_erule ctxt0 sequent0
     of SOME erule =>
        Seq.hd (Thm.biresolution (SOME ctxt0) true [(true, erule)] 1 sequent0)
         |> reasoning ctxt0
@@ -1754,6 +1806,7 @@ fun reasoning ctxt0 sequent0 =
   end
 in fn ctxt => fn th => th
     |> Simplifier.norm_hhf ctxt
+    |> elim_TA_ANT' ctxt
     |> Conv.gconv_rule (Simplifier.full_rewrite (
           clear_simpset ctxt addsimps
             (@{thms' HOL.simp_thms(31)[folded atomize_eq]

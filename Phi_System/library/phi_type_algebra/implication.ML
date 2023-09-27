@@ -182,6 +182,11 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
       fun binop H (SOME sa, SOME sb) = SOME (H $ sa $ sb)
         | binop _ (some_or_none, NONE) = some_or_none
         | binop _ (NONE, some) = some
+      fun impop (SOME A, SOME B) = SOME (\<^Const>\<open>HOL.implies\<close> $ A $ B)
+        | impop (SOME A, NONE) = NONE
+        | impop (NONE, SOME B) = SOME B
+        | impop (NONE, NONE) = NONE
+
       fun qualifies js vars =
              fold_index (fn (k, (N, ty)) => fn X =>
                let val ij = find_index (fn j => j = k) js
@@ -206,6 +211,7 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
             if exists_bad P then prems else P :: prems
       fun filter_bad (\<^Const>\<open>HOL.conj\<close> $ A $ B) = binop \<^Const>\<open>HOL.conj\<close> (filter_bad A, filter_bad B)
         | filter_bad (\<^Const>\<open>HOL.disj\<close> $ A $ B) = binop \<^Const>\<open>HOL.disj\<close> (filter_bad A, filter_bad B)
+        | filter_bad (\<^Const>\<open>HOL.implies\<close> $ A $ B) = impop (filter_bad A, filter_bad B)
         | filter_bad X = if exists_bad X then NONE else SOME X
 
       fun inst_Lw context (Const(\<^const_name>\<open>conj\<close>, _) $ X $ Y)

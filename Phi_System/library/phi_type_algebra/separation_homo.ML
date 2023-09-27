@@ -132,24 +132,23 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
         | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
         | extract_oprs_from_hint _ = []
 
-      val simps_I = #equations phi0 @ map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
-                                    @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
-      val simps_E = #equations phi0 @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
-                                    @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
+      val simps = if is_intro
+                  then map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
+                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
+                     @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
+                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
+                  else #equations phi0
+                     @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
+                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
+
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>I_rewr_IH}) then_conv
-                Phi_Conv.meta_alls_conv (fn ctxt =>
-                Conv.implies_concl_conv (Conv.implies_conv (
-                  (fn ctm => Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps_I) ctm)
-                ) Conv.all_conv
-               )) ctxt,
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>I_rewr_IH}),
             fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>I_rewr_C}) then_conv
-                Conv.implies_concl_conv (HOLogic.Trueprop_conv (
-                  (fn ctm => Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps_I) ctm) ) then_conv
-                Phi_Conv.hol_alls_to_meta_alls (fn _ => fn ctm =>
-                  conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]}) ctm
+              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
+              Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps) then_conv
+              Conv.implies_concl_conv (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
+                  conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]})
                 ) ctxt)
             )
       val ind_conv_u = default_ind_conv (
@@ -159,7 +158,7 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_C}) then_conv
                 Conv.implies_concl_conv (
                   HOLogic.Trueprop_conv (
-                  Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps_E)
+                  Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)
                 ))
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u
