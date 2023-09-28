@@ -60,17 +60,16 @@ fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
            (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ fx $ _) $ _ ) = [fx]
         | extract_oprs_from_hint _ = []
 
+      val eqs = #equations phi0 @ map_filter I (#type_equations phi0)
       val ind_conv = default_ind_conv (
-            fn _ => fn _ => Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact},
-            fn ctxt => fn phi =>
+            fn _ => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
-                Conv.implies_concl_conv (Phi_Syntax.transformation_conv
-                  Conv.all_conv
-                  (let val sctxt = Expansion.equip ctxt addsimps (#equations phi)
-                    in Phi_Reasoners.asm_rewrite false sctxt
-                   end)
-                  Conv.all_conv
-                ))
+                Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
+            fn ctxt => fn _ =>
+                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1_noact} then_conv
+                Phi_Reasoners.asm_rewrite true (
+                      Expansion.equip ctxt addsimps eqs) then_conv
+                Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
 
       val mode_infer = not (is_some instruction)
 

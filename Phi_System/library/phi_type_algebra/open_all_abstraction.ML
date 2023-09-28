@@ -214,7 +214,8 @@ fun gen_trans_to_raw_abst (_,name) instruction0 ctxt0 (phi0 : phi_type) thy =
 
       val ind_conv = default_ind_conv (
             fn _ => fn _ =>
-                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1},
+                Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
+                Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
             fn ctxt => fn _ =>
                 Conv.rewr_conv @{thm' \<phi>TA_common_rewr_imp1} then_conv
                 Conv.implies_concl_conv (Phi_Conv.action_tag_conv (

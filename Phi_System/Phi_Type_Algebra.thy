@@ -4775,23 +4775,23 @@ context begin
 private lemma \<phi>TA_MS\<^sub>I_rule:
   \<open> (\<And>t s x r y. Ant
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> Dx s t x \<and> r = smul s t \<and> f s t x = y
-         \<longrightarrow> (x \<Ztypecolon> Fs s (Ft t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fc r T) @action \<phi>TA_ind_target NToA)
+         \<longrightarrow> (x \<Ztypecolon> OPEN (Fs s (OPEN (Ft t T))) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (Fc r T)) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>I Fs Ft Fc T Ds Dt Dx smul f \<close>
-  unfolding Semimodule_Scalar_Assoc\<^sub>I_def Action_Tag_def Premise_def
+  unfolding Semimodule_Scalar_Assoc\<^sub>I_def Action_Tag_def Premise_def MAKE_def OPEN_def
   by clarsimp
 
 private lemma \<phi>TA_MS\<^sub>E_rule:
   \<open> (\<And>t s x r y. Ant
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Dt t \<and> r = smul s t \<and> Dx s t x \<and> f s t x = y
-         \<longrightarrow> (y \<Ztypecolon> Fc r T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fs s (Ft t T)) @action \<phi>TA_ind_target NToA)
+         \<longrightarrow> (y \<Ztypecolon> OPEN (Fc r T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE (Fs s (MAKE (Ft t T)))) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_Scalar_Assoc\<^sub>E Fs Ft Fc T Ds Dt Dx smul f \<close>
-  unfolding Semimodule_Scalar_Assoc\<^sub>E_def Action_Tag_def Premise_def
+  unfolding Semimodule_Scalar_Assoc\<^sub>E_def Action_Tag_def Premise_def MAKE_def OPEN_def
   by clarsimp
 
 ML_file \<open>library/phi_type_algebra/semimodule_scalar.ML\<close>
@@ -4821,23 +4821,23 @@ context begin
 private lemma \<phi>TA_MD\<^sub>Z_rule:
   \<open> (\<And>s t x r z. Ant
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> r = s + t \<and> Dx t s x \<and> zi t s x = z
-         \<longrightarrow> (x \<Ztypecolon> F t T \<^emph> F s T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> F r T) @action \<phi>TA_ind_target NToA)
+         \<longrightarrow> (x \<Ztypecolon> OPEN (F t T) \<^emph> OPEN (F s T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (F r T)) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx zi \<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>Z_def Action_Tag_def Premise_def Transformation_def
+  unfolding Semimodule_SDistr_Homo\<^sub>Z_def Action_Tag_def Premise_def Transformation_def OPEN_def MAKE_def
   by clarsimp blast
 
 private lemma \<phi>TA_MD\<^sub>U_rule:
   \<open> (\<And>s t r x. Ant
          \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> r = s + t \<and> Dx t s x
-         \<longrightarrow> (x \<Ztypecolon> F r T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> F t T \<^emph> F s T) @action \<phi>TA_ind_target NToA)
+         \<longrightarrow> (x \<Ztypecolon> OPEN (F r T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> MAKE (F t T) \<^emph> MAKE (F s T)) @action \<phi>TA_ind_target NToA)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U F T Ds Dx uz \<close>
-  unfolding Semimodule_SDistr_Homo\<^sub>U_def Action_Tag_def Premise_def Transformation_def
+  unfolding Semimodule_SDistr_Homo\<^sub>U_def Action_Tag_def Premise_def Transformation_def OPEN_def MAKE_def
   by clarsimp
 
 private lemma \<phi>TA_MD\<^sub>U_cong:
@@ -4883,8 +4883,10 @@ declare Is_Invariant[where PC=\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, \<p
 
 subsubsection \<open>Construct Abstraction from Concrete Representation (by Itself)\<close>
 
+(*Designed only for primitives, so can be buggy for advanced and particularly recursive \<phi>-types*)
+
 lemma \<phi>TA_TrCstr_rule:
-  \<open> (Ant @action \<phi>TA_ANT) \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A) @action \<phi>TA_ind_target undefined
+  \<open> Ant \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A) @action \<phi>TA_ind_target undefined
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
@@ -4894,22 +4896,6 @@ lemma \<phi>TA_TrCstr_rule:
 
 ML_file \<open>library/phi_type_algebra/constr_abst_weak.ML\<close>
 
-(*
-lemma \<phi>TA_TrCstr_rule:
-  \<open> (\<And>c x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-         \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<and> x = f c \<longrightarrow>
-         (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE_from_RAW T) @action \<phi>TA_ind_target NToA)
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> \<forall>c. \<p>\<r>\<e>\<m>\<i>\<s>\<e> P c \<longrightarrow> MAKE_from_RAW c ()(c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f c \<Ztypecolon> MAKE_from_RAW T) \<close>
-  \<comment> \<open>If one concrete representation is related to multiple abstract objects, just choose any one
-      that is most representative.\<close>
-  unfolding Action_Tag_def
-  by simp
-
-ML_file \<open>library/phi_type_algebra/constr_abst.ML\<close>
-*)
 \<phi>property_deriver Make_Abstraction_from_Raw 130
   for ( \<open>\<forall>x. Premise _ _ \<longrightarrow> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T)\<close>
       | \<open>Premise _ _ \<longrightarrow> (?x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?T)\<close>
@@ -4919,11 +4905,13 @@ ML_file \<open>library/phi_type_algebra/constr_abst.ML\<close>
     = \<open> Phi_Type_Algebra_Derivers.Make_Abstraction_from_Raw \<close>
 
 
+
 subsubsection \<open>Destruct Abstraction down to Concrete Representation (by Itself)\<close>
 
+(*Designed only for primitives, so can be buggy for advanced and particularly recursive \<phi>-types*)
+
 lemma \<phi>TA_TrRA_rule:
-  \<open> (\<And>x. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-         (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target (to (Itself::('b,'b) \<phi>)))
+  \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target (to (Itself::('b,'b) \<phi>)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
