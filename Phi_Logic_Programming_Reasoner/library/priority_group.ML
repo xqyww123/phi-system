@@ -5,6 +5,7 @@ signature REASONER_GROUP = sig
 type name = string
 type offset = int
 type priority = int
+type group = priority * name option
 
 type T = {
   base: int,
@@ -35,6 +36,7 @@ structure Reasoner_Group : REASONER_GROUP = struct
 type name = string
 type offset = int
 type priority = int
+type group = priority * name option
 
 type T = {
   base: int,

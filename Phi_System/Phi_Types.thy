@@ -1549,7 +1549,7 @@ lemma
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 3 ]]
+declare [[\<phi>trace_reasoning = 0 ]]
  
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
@@ -1582,8 +1582,8 @@ declare [[\<phi>trace_reasoning = 3 ]]
              Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
              TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
-       (*and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
-         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>*)
+       and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
+         \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
        and Commutativity_Deriver
@@ -1925,17 +1925,17 @@ term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Ele
 
 \<phi>type_def List\<^sub>S'  :: \<open>nat \<Rightarrow> (fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List\<^sub>S' n T) = (Void \<s>\<u>\<b>\<j> n = 0)\<close>
-      | \<open>(x # l \<Ztypecolon> LiList\<^sub>S'st\<^sub>S n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S' (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
+      | \<open>(x # l \<Ztypecolon> List\<^sub>S' n T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List\<^sub>S' (n - 1) T \<s>\<u>\<b>\<j> n = length l + 1)\<close>
       deriving \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
-            \<Longrightarrow> Identity_Elements\<^sub>I (List\<^sub>S n T) (list_all T\<^sub>D) (\<lambda>x. list_all T\<^sub>P x \<and> n = length x)\<close> (*TODO: derive such n = length x*)
+            \<Longrightarrow> Identity_Elements\<^sub>I (List\<^sub>S' n T) (list_all T\<^sub>D) (\<lambda>x. list_all T\<^sub>P x \<and> n = length x)\<close> (*TODO: derive such n = length x*)
            and \<open>Identity_Elements\<^sub>E T T\<^sub>D
-            \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S n T) (\<lambda>x. list_all T\<^sub>D x \<and> n = length x)\<close>
+            \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S' n T) (\<lambda>x. list_all T\<^sub>D x \<and> n = length x)\<close>
  (*\<open>Identity_Element\<^sub>I ([] \<Ztypecolon> List\<^sub>S n T) (n = 0)\<close>
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = 0 \<Longrightarrow> Identity_Element\<^sub>E ([] \<Ztypecolon> List\<^sub>S n T)\<close>
            and \<open>Identity_Element\<^sub>I (l \<Ztypecolon> List\<^sub>S n \<circle>) (n = length l)\<close>
            and \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> n = length l \<Longrightarrow> Identity_Element\<^sub>E (l \<Ztypecolon> List\<^sub>S n \<circle>)\<close>
            and*)
-and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
+and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S' n T) (\<lambda>l. list_all P l \<and> n = length l) \<close>
            (*and Object_Equiv\<^sub>O*)
           (*and \<open>Object_Equiv T eq \<Longrightarrow> Object_Equiv (List\<^sub>S n T) (list_all2 eq)\<close>*)
 

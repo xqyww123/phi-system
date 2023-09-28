@@ -200,7 +200,8 @@ val default_ind_conv : (Proof.context -> Phi_Type_Algebra.phi_type -> conv) (*co
 (*`reasoning` specifies how to solve the reasoning goals in detail.*)
 
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
-type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
+type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
+                        -> thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 val varify_all_vars : varifier
 
 type reasoner = Proof.context -> thm -> thm
@@ -1447,7 +1448,7 @@ fun instantiate_ToA (pure_info,ctxt) ToA =
                                                   $ Var(("P", Term.maxidx_term X (Term.maxidx_term Y ~1) + 1), \<^Type>\<open>bool\<close>))) *)
                                         val ToA1 = th2 RS' (ctxt, @{thm' mk_ToA_rule})
                                         val ToA2 = th2 RS' (ctxt, @{thm' mk_ToA_rule'})
-                                     in [ToA1, ToA2]
+                                     in [(ToA1, NONE), (ToA2, NONE)]
                                     end)
           val _ = if null insts 
                   then report_potential_failure_reason (let open Pretty in [
@@ -1530,17 +1531,20 @@ type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
 type varifier = Subgoal.focus -> term -> (term list * (term list -> term)) option
 type reasoner = Proof.context -> thm -> thm
 type extract_pure_prems = Proof.context -> thm -> thm list
-type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context -> thm list * thm list * thm list * Proof.context
+type reasoning_configure = Subgoal.focus * thm -> thm list * Proof.context
+                        -> thm list * thm list * (thm * Reasoner_Group.group option) list * Proof.context
 
-fun pass_make_ToA ctxt ToA =
-  if can (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<phi>TA_ToA_elim\<close>) (Thm.concl_of ToA)
-  then let val ToA' = ToA RS' (ctxt, @{thm' Action_Tag_D})
-        in [ToA' RS' (ctxt, @{thm' mk_ToA_rule}), ToA' RS' (ctxt, @{thm' mk_ToA_rule'})]
-       end
-  else case try (Phi_Syntax.dest_transformation) (Thm.concl_of ToA)
-    of SOME (_, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>MAKE\<close>, _) $ _), _) =>
-        [ToA RS' (ctxt, @{thm' mk_ToA_rule}), ToA RS' (ctxt, @{thm' mk_ToA_rule'})]
-     | _ => [ToA]
+fun pass_make_ToA ctxt (ToA, gp) =
+  let fun mk ToA' gp = map (fn rule => (ToA' RS' (ctxt, rule), SOME gp))
+      fun mk' ToA' = mk ToA' @{reasoner_group %deriving_local_rules} @{thms' mk_ToA_rule mk_ToA_rule'}
+                   @ mk ToA' @{reasoner_group %deriving_local_rules-10}
+                             @{thms' mk_ToA_rule_varified mk_ToA_rule'_varified}
+   in if can (PLPR_Syntax.dest_action_of \<^const_name>\<open>\<phi>TA_ToA_elim\<close>) (Thm.concl_of ToA)
+   then mk' (ToA RS' (ctxt, @{thm' Action_Tag_D}))
+   else case try (Phi_Syntax.dest_transformation) (Thm.concl_of ToA)
+     of SOME (_, Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ (Const(\<^const_name>\<open>MAKE\<close>, _) $ _), _) => mk' ToA
+      | _ => [(ToA, gp)]
+  end
 
 fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctxt) =
   let val is_pure_fact = PLPR_Syntax.is_action_of \<^const_name>\<open>\<phi>TA_pure_facts\<close> o Thm.concl_of
@@ -1565,6 +1569,7 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
             ) local_prems*)
       val rewrs = map_filter (extract_rewr ctxt) local_prems
       val ants = filter_out (Phi_Reasoners.is_syntactic_premise o Thm.concl_of) local_prems
+              |> map (rpair NONE)
               |> maps (pass_make_ToA ctxt)
    in (prem_ants, rewrs, ToAs @ ants, ctxt)
   end
@@ -1775,14 +1780,16 @@ fun reasoning ctxt0 sequent0 =
 
       val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (focus, lsequent) (local_prems, ctxt)
       val reasoner_ants = reasoner_ants'
-            |> map ( Simplifier.rewrite_rule ctxt rewrs
-                  #> Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess (~1, []) ctxt
-                  #> may_mutating_params phi ? varify_phi_type_parameter ctxt)
+            |> map (apfst (Simplifier.rewrite_rule ctxt rewrs
+                        #> Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess (~1, []) ctxt
+                        #> may_mutating_params phi ? varify_phi_type_parameter ctxt))
 
       val ctxt'' = ctxt
             |> Context.proof_map (Phi_Reasoner.add_rules (
-                  map (fn rule => ([rule], Position.none, Phi_Reasoner.NORMAL_MODE,
-                                   @{reasoner_group %deriving_local_rules}, [], [], NONE)) reasoner_ants))
+                  map (fn (rule, group) =>
+                            ([rule], Position.none, Phi_Reasoner.TO_BE_OVERRIDE,
+                             the_default @{reasoner_group %deriving_local_rules} group,
+                             [], [], NONE)) reasoner_ants))
             |> Context.proof_map (fold Useful_Thms.add_thm prem_ants)
             (* #> Phi_Reasoner.add_rules (map (fn (pat,rule) =>
                     ([rule], Position.none, Phi_Reasoner.NORMAL, 200, [(pat,NONE)], [], NONE)) ToAs) *)
