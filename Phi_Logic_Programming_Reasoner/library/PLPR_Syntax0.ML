@@ -1,9 +1,11 @@
 signature PLPR_SYNTAX = sig
 include PLPR_SYNTAX
 
-val guardize : Proof.context -> int (*N*) -> thm -> thm
+val merge_conditions : thm -> thm
+
+val guardize : {merge_cond: bool} -> Proof.context -> int (*N*) -> thm -> thm
   (*tags leading N antecedents as reasoning guards*)
-val merge_guards : Proof.context -> thm -> thm
+val merge_guards : {merge_cond: bool} -> Proof.context -> thm -> thm
   (*if the rule contains multiple guards, move them into the beginning and consolidate them into one.
     When moving an antecedent not at the beginning, all the previous antecedents before it are
     also tagged as reasoning guards.*)
@@ -36,7 +38,37 @@ end
 structure PLPR_Syntax : PLPR_SYNTAX = struct
 open PLPR_Syntax
 
-fun guardize ctxt =
+fun cond_can_merge \<^const_name>\<open>MODE_GUARD\<close> = true
+  | cond_can_merge \<^const_name>\<open>default\<close> = true
+  | cond_can_merge _ = false
+
+val merge_conditions =
+  let fun need_merge (Const(\<^const_name>\<open>Pure.imp\<close>, _)
+                $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(m1, _) $ _))
+                $ (Const(\<^const_name>\<open>Pure.imp\<close>, _)
+                $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(m2, _) $ _))
+                $ _))
+            = cond_can_merge m1 andalso m1 = m2
+        | need_merge _ = false
+
+      fun qchk tm =
+        need_merge tm orelse (case tm of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X => qchk X
+                                       | _ => false)
+
+      fun merge ctm =
+        if need_merge (Thm.term_of ctm)
+        then Conv.rewr_conv @{thm' contract_obligations} ctm
+        else Conv.all_conv ctm
+
+      fun conv ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => (Conv.arg_conv conv then_conv merge) ctm
+           | _ => Conv.all_conv ctm
+
+   in fn th => if qchk (Thm.prop_of th) then Conv.fconv_rule conv th else th
+  end
+
+fun guardize {merge_cond} ctxt =
   let fun conv ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ P =>
@@ -44,23 +76,39 @@ fun guardize ctxt =
                      | _ => Conv.arg_conv (Conv.rewr_conv (
                               Thm.transfer' ctxt @{thm' \<r>Guard_def[symmetric]})) ctm)
            | _ => (Phi_Conv.atomize_conv ctxt then_conv conv) ctm
+
+      fun can_merge_cond (Const(\<^const_name>\<open>Pure.imp\<close>, _)
+                $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(m1, _) $ _)))
+                $ (Const(\<^const_name>\<open>Pure.imp\<close>, _)
+                $ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ (Const(\<^const_name>\<open>Premise\<close>, _) $ Const(m2, _) $ _)))
+                $ _))
+            = merge_cond andalso cond_can_merge m1 andalso m1 = m2
+        | can_merge_cond _ = false
+
       fun move_and_merge_ants N ctm =
         case N of 0 => Conv.all_conv ctm
                 | 1 => Conv.implies_conv conv Conv.all_conv ctm
                 | _ =>
          (Conv.implies_conv conv (move_and_merge_ants (N-1)) then_conv
-          Conv.rewr_conv @{lemma \<open>(\<g>\<u>\<a>\<r>\<d> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Q \<Longrightarrow> PROP R) \<equiv> (\<g>\<u>\<a>\<r>\<d> P \<and>\<^sub>\<r> Q \<Longrightarrow> PROP R)\<close>
-                              by (unfold \<r>Guard_def Ant_Seq_imp)}) ctm
+          (fn ctm => Conv.rewr_conv
+               (if can_merge_cond (Thm.term_of ctm)
+                then @{lemma \<open>(\<g>\<u>\<a>\<r>\<d> (Premise mode' P) \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> (Premise mode Q) \<Longrightarrow> PROP R) \<equiv> (\<g>\<u>\<a>\<r>\<d> (Premise mode (P \<and> Q)) \<Longrightarrow> PROP R)\<close>
+                          by (unfold \<r>Guard_def contract_obligations)}
+                else @{lemma \<open>(\<g>\<u>\<a>\<r>\<d> P \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Q \<Longrightarrow> PROP R) \<equiv> (\<g>\<u>\<a>\<r>\<d> P \<and>\<^sub>\<r> Q \<Longrightarrow> PROP R)\<close>
+                          by (unfold \<r>Guard_def Ant_Seq_imp)}
+               ) ctm)) ctm
+
   in fn N => Conv.fconv_rule (move_and_merge_ants N)
  end
 
-fun merge_guards ctxt rule =
+
+fun merge_guards {merge_cond} ctxt rule =
   let fun is_guard (Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _)) = true
         | is_guard _ = false
       
       val last_ind = find_index is_guard (rev (Thm.prems_of rule))
    in if last_ind = ~1 then rule
-      else guardize ctxt (Thm.nprems_of rule - last_ind) rule
+      else guardize {merge_cond=merge_cond} ctxt (Thm.nprems_of rule - last_ind) rule
   end
 
 (*fun reduce_constant_True ctm =

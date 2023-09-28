@@ -196,7 +196,7 @@ fun oblg_template can_inst f ctxt th00 = Seq.make (fn () =>
 
       fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\<close> else \<^cterm>\<open>False\<close>) ret
         | mk_boolean_inst (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) b ret
-            = mk_boolean_inst A b (mk_boolean_inst B b ret)
+            = mk_boolean_inst B b (mk_boolean_inst A b ret)
         | mk_boolean_inst (Const(\<^const_name>\<open>HOL.Not\<close>, _) $ A) b ret
             = mk_boolean_inst A (not b) ret
         | mk_boolean_inst (Const(\<^const_name>\<open>id\<close>, _) $ X) b ret
@@ -213,12 +213,18 @@ fun oblg_template can_inst f ctxt th00 = Seq.make (fn () =>
                                 mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th
                in f ctxt' th'
               end handle Match => f ctxt' th)
+         | (true, (_, Const(\<^const_name>\<open>HOL.conj\<close>, _)
+                        $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)
+                        $ _)) =>
+             (SOME (@{lemma' \<open>Premise mode P \<Longrightarrow> Premise mode (x = x \<and> P)\<close>
+                         by (simp add: Premise_def)} RS th, Seq.empty)
+              handle THM _ => f ctxt' th)
          | (true, (_, X as Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
              (let val th' = Thm.instantiate (TVars.empty,
                                 mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th
                in f ctxt' th'
               end handle Match => f ctxt' th)
-         | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ B)) =>
+         | (true, (_, Const(\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _)) =>
              (*solves the equation by unification once single resolution*)
              (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
               handle THM _ => f ctxt' th)
@@ -423,6 +429,7 @@ fun gen_extract_prems_rewr ctxt =
             qchk_obj bv_tys A orelse qchk_obj bv_tys B
         | qchk_obj bv_tys (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
             qchk_obj bv_tys A orelse qchk_obj bv_tys B
+        | qchk_obj bv_tys (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = qchk_obj bv_tys X
         | qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, T, X)) = qchk_obj (T::bv_tys) X
         | qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = qchk_obj bv_tys (Term.incr_boundvars 1 X $ Bound 0)
         | qchk_obj bv_tys tm = not (null (match_extraction bv_tys tm))
@@ -434,6 +441,8 @@ fun gen_extract_prems_rewr ctxt =
         | quick_check _ _ = false
 
       exception Not_Meet
+    (*fun wrap C ctm = case C ctm of SOME ret => ret | NONE => raise Not_Meet*)
+
       fun extract ctxt ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _ =>
@@ -473,6 +482,9 @@ fun gen_extract_prems_rewr ctxt =
                        in SOME (ruleB RS' (ctxt, merge))
                       end
                    | (NONE, NONE) => NONE)
+           | Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _ =>
+               extract ctxt (Thm.dest_arg ctm)
+                |> Option.map (fn ret => (Conv.rewr_conv @{thm' \<r>Guard_def} then_conv (K ret)) ctm)
            | _ => apply_extraction ctxt ctm
 
 
@@ -843,9 +855,13 @@ and will usually terminate (if no loop is encountered in the simplification)*)
 fun safer_obligation_solver {can_inst} = oblg_template can_inst (fn ctxt => fn th =>
       let val th'1 = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
+          fun clarsimp_tac ctxt =
+               (if can_inst then Simplifier.asm_full_simp_tac ctxt
+                            else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW
+                Classical.clarify_tac (addSss ctxt)
        in apply ctxt (fn (ctxt,pre,aux,_) =>
              pre THEN HEADGOAL (Method.insert_tac ctxt aux)
-                 THEN HEADGOAL (fn s => fn x => Clasimp.clarsimp_tac ctxt s x)) Safe_Solver th'
+                 THEN HEADGOAL (fn s => fn x => clarsimp_tac ctxt s x)) Safe_Solver th'
        |> Seq.pull
       end)
 

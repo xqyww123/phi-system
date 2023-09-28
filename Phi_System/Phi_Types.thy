@@ -70,16 +70,15 @@ lemma [\<phi>reason add]:
 
 subsection \<open>Embedding Subjection into Type\<close>
 
-declare [[\<phi>trace_reasoning = 3 ]]
-      
+declare [[\<phi>trace_reasoning = 0 ]]
+     
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
-  deriving Basic
+  deriving Monoidal_Sep_Functor
        and Functionality
        and Carrier_Set
      (*and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Elements\<^sub>I T D P) \<Longrightarrow> Identity_Elements\<^sub>I (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. Q \<longrightarrow> D x) (\<lambda>x. Q \<and> P x)\<close>*)
      (*and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>*)
-       and Monoidal_Sep_Functor
        and Abstraction_to_Raw
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -90,8 +89,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' SubjectionTY.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P \<Longrightarrow> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P) \<Longrightarrow> Identity_Elements\<^sub>I (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<longrightarrow> ?T\<^sub>D x) (\<lambda>x. ?P \<and> ?T\<^sub>P x) \<close>),
   (@{thm' SubjectionTY.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x. ?P \<and> ?T\<^sub>D x) \<close>),
   (@{thm' SubjectionTY.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?er \<Longrightarrow> Object_Equiv (?T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>x y. ?P \<longrightarrow> ?er x y) \<close>),
-  (@{thm' SubjectionTY.Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P = ?Pa \<Longrightarrow> Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?Pa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
-  (@{thm' SubjectionTY.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P = ?Pa \<Longrightarrow> Functional_Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?Pa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
+  (@{thm' SubjectionTY.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P = ?Pa \<Longrightarrow> Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?Pa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
+  (@{thm' SubjectionTY.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?P = ?Pa \<Longrightarrow> Functional_Transformation_Functor (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?Pa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
   (@{thm' SubjectionTY.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) ?Ta ?U UNIV (\<lambda>x. x)  \<close>),
   (@{thm' SubjectionTY.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) (\<lambda>T. T \<phi>\<s>\<u>\<b>\<j> ?P) ?Ta ?U (\<lambda>x. x) \<close>)
 ]\<close>
@@ -1200,13 +1199,7 @@ lemma \<phi>Sum_Comm\<^sub>I_temlpate [\<phi>reason_template name F.\<phi>Sum_Co
             Action_Tag_def Simplify_def
   by (clarify; case_tac x; clarsimp)
 
-(*
-setup \<open>Context.theory_map (Phi_Type_Template_Properties.Template_Inst_SS_Post_Merging.add 100
-  (fn _ => Config.put Simplifier.simp_trace true))\<close>
-
-declare [[simp_trace_depth_limit = 10]]*)
-
-lemma \<phi>Sum_Comm\<^sub>E_temlpate [\<phi>reason_template name F.\<phi>Sum_Comm\<^sub>E'[]]:
+lemma \<phi>Sum_Comm\<^sub>E_temlpate [\<phi>reason_template name F.\<phi>Sum_Comm\<^sub>E[]]:
   \<open> Functional_Transformation_Functor F F'\<^sub>T (T +\<^sub>\<phi> U) T D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T
 \<Longrightarrow> Functional_Transformation_Functor F F'\<^sub>U (T +\<^sub>\<phi> U) U D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x a. a \<in> D\<^sub>T x \<and> isl a \<longrightarrow> projl a \<in> R\<^sub>T x) \<and>
@@ -1426,17 +1419,17 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
                             still too hard for our guesser to infer \<open>homo_mul_carrier f\<close>\<close>
        and Abstraction_to_Raw
-       and Commutativity_Deriver 
-       and \<phi>Sum.Comm\<^sub>E
+       and Commutativity_Deriver
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Fun'.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?f \<Zcomp>\<^sub>f ?T) ?P \<close>),
   (@{thm' \<phi>Fun'.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (?f \<Zcomp>\<^sub>f ?T) ?P \<close>),
   (@{thm' \<phi>Fun'.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (?f \<Zcomp>\<^sub>f ?T) ?P \<close>),
   (@{thm' \<phi>Fun'.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?f \<Zcomp>\<^sub>f ?T) ?eq \<close>),
-  (@{thm' \<phi>Fun'.Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<Longrightarrow> Transformation_Functor ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?fa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
-  (@{thm' \<phi>Fun'.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<Longrightarrow> Functional_Transformation_Functor ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?fa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
-  (@{thm' \<phi>Fun'.\<phi>Sum_Comm\<^sub>E}, \<^pattern_prop>\<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?f) (+\<^sub>\<phi>) (+\<^sub>\<phi>) ?Ta ?U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
+  (@{thm' \<phi>Fun'.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<Longrightarrow> Transformation_Functor ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?fa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
+  (@{thm' \<phi>Fun'.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<Longrightarrow> Functional_Transformation_Functor ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?fa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
+  (@{thm' \<phi>Fun'.\<phi>Sum_Comm\<^sub>E}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<and> ?fa = ?faa \<Longrightarrow>
+        Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 ((\<Zcomp>\<^sub>f) ?f) ((\<Zcomp>\<^sub>f) ?fa) ((\<Zcomp>\<^sub>f) ?faa) (+\<^sub>\<phi>) (+\<^sub>\<phi>) ?T ?U (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>x. True))  \<close>)
 ]\<close>
 
 lemmas \<phi>Fun'_\<phi>Sum_comm_rewr = Comm_Tyops_Rewr\<^sub>2_temlpate[OF \<phi>Fun'.\<phi>Sum_Comm\<^sub>E \<phi>Fun'.\<phi>Sum_Comm\<^sub>I, simplified]
@@ -1587,25 +1580,28 @@ declare [[\<phi>trace_reasoning = 0 ]]
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
        and Commutativity_Deriver
-       and \<phi>Sum.Comm\<^sub>E
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>ScalarMul.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) ?P  \<close>),
   (@{thm' \<phi>ScalarMul.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) ?P  \<close>),
   (@{thm' \<phi>ScalarMul.Carrier_Set}, \<^pattern_prop>\<open> homo_mul_carrier (?f ?s) \<Longrightarrow> Carrier_Set ?U ?P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?U) ?P  \<close>),
   (@{thm' \<phi>ScalarMul.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) ?P \<close>),
-  (@{thm' \<phi>ScalarMul.Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?s = ?sa \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<Longrightarrow> Transformation_Functor (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?fa ?sa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
-  (@{thm' \<phi>ScalarMul.Functional_Transformation_Functor}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?s = ?sa \<Longrightarrow>
-        \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?f = ?fa \<Longrightarrow> Functional_Transformation_Functor (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?fa ?sa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
+  (@{thm' \<phi>ScalarMul.Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?s = ?sa \<and> ?f = ?fa \<Longrightarrow> Transformation_Functor (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?fa ?sa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
+  (@{thm' \<phi>ScalarMul.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?s = ?sa \<and> ?f = ?fa
+      \<Longrightarrow> Functional_Transformation_Functor (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?fa ?sa) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
   (@{thm' \<phi>ScalarMul.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) ?eq \<close>),
   (@{thm' \<phi>ScalarMul.\<phi>Fun'_Comm\<^sub>E}, \<^pattern_prop>\<open> fun_commute ?fa (scalar_mult ?f ?s) ?xc (scalar_mult ?xa ?xb) \<Longrightarrow>
     Tyops_Commute ((\<Zcomp>\<^sub>f) ?fa) ((\<Zcomp>\<^sub>f) ?xc) (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?xa ?xb) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>),
   (@{thm' \<phi>ScalarMul.\<phi>Fun'_Comm\<^sub>I}, \<^pattern_prop>\<open> fun_commute (scalar_mult ?f ?s) ?fa (scalar_mult ?xa ?xb) ?xc \<Longrightarrow>
     Tyops_Commute (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?xa ?xb) ((\<Zcomp>\<^sub>f) ?fa) ((\<Zcomp>\<^sub>f) ?xc) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))  \<close>),
-  (@{thm' \<phi>ScalarMul.\<phi>Sum_Comm\<^sub>E}, \<^pattern_prop>\<open> Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?f ?s) (+\<^sub>\<phi>) (+\<^sub>\<phi>) ?Ta ?U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
+  (@{thm' \<phi>ScalarMul.\<phi>Sum_Comm\<^sub>E}, \<^pattern_prop>\<open>
+      \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (?s = ?sa \<and> ?f = ?fa) \<and> ?sa = ?saa \<and> ?fa = ?faa \<Longrightarrow>
+      Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?fa ?sa) (\<phi>ScalarMul ?faa ?saa) (+\<^sub>\<phi>) (+\<^sub>\<phi>) ?T ?U (\<lambda>x. True)
+       (embedded_func (\<lambda>x. x) (\<lambda>x. True)) \<close>)
 ]\<close>
 
-
+thm \<phi>ScalarMul.Functional_Transformation_Functor
+thm \<phi>ScalarMul.\<phi>Sum_Comm\<^sub>E
 
 subsubsection \<open>Reasoning Rules\<close>
 
@@ -1763,7 +1759,6 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
-       and \<phi>Sum.Comm\<^sub>E
        and Carrier_Set
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -1974,7 +1969,7 @@ term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S 
     but I cannot figure it out now. I will lieave this and go back when I have time.*)
 *)
 
-thm List.\<phi>Sum_Comm\<^sub>E'
+thm List.\<phi>Sum_Comm\<^sub>E
 
 term \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
  (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>
@@ -2045,8 +2040,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (?k \<^bold>\<rightarrow> ?T) ?T\<^sub>D ?T\<^sub>P \<close>),
   (@{thm' \<phi>MapAt.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?k \<^bold>\<rightarrow> ?T) ?T\<^sub>D \<close>),
   (@{thm' \<phi>MapAt.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?k \<^bold>\<rightarrow> ?T) ?eq \<close>),
-  (@{thm' \<phi>MapAt.Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
-  (@{thm' \<phi>MapAt.Functional_Transformation_Functor}, \<^pattern_prop>\<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)\<close>),
+  (@{thm' \<phi>MapAt.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a) \<close>),
+  (@{thm' \<phi>MapAt.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)\<close>),
   (@{thm' \<phi>MapAt.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) (?Ta::?'b \<Rightarrow> ?'d::sep_magma_1 set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) ((\<^bold>\<rightarrow>) ?k) (?Ta::?'b \<Rightarrow> ?'d::sep_magma_1 set) ?U (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt.\<phi>Fun'_Comm\<^sub>E}, \<^pattern_prop>\<open> fun_commute ?f (fun_upd 1 ?k) ?xb (fun_upd 1 ?xa) \<Longrightarrow>
@@ -2086,8 +2081,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I ?T ?T\<^sub>D ?T\<^sub>P \<Longrightarrow> Identity_Elements\<^sub>I (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?T\<^sub>D ?T\<^sub>P \<close>),
   (@{thm' \<phi>MapAt_L.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E ?T ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?T\<^sub>D \<close>),
   (@{thm' \<phi>MapAt_L.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?k \<^bold>\<rightarrow>\<^sub>@ ?T) ?eq \<close>),
-  (@{thm' \<phi>MapAt_L.Transformation_Functor}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
-  (@{thm' \<phi>MapAt_L.Functional_Transformation_Functor}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
+  (@{thm' \<phi>MapAt_L.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
+  (@{thm' \<phi>MapAt_L.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
   (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity (\<^bold>\<rightarrow>\<^sub>@) ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
@@ -2170,8 +2165,8 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<Longrightarrow> Identity_Elements\<^sub>I (?T::?'a \<Rightarrow> ?'b::share_one set) ?T\<^sub>D ?T\<^sub>P) \<Longrightarrow> Identity_Elements\<^sub>I (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<longrightarrow> ?T\<^sub>D x) (\<lambda>x. 0 < ?n \<and> ?T\<^sub>P x) \<close>),
   (@{thm' \<phi>Share.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (?T::?'a \<Rightarrow> ?'b::share_one set) ?T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (?n \<odiv> ?T) (\<lambda>x. 0 < ?n \<and> ?T\<^sub>D x) \<close>),
   (@{thm' \<phi>Share.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (?n \<odiv> ?T) (\<lambda>x y. 0 < ?n \<longrightarrow> ?eq x y) \<close>),
-  (@{thm' \<phi>Share.Transformation_Functor}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
-  (@{thm' \<phi>Share.Functional_Transformation_Functor}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Functional_Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)  \<close>),
+  (@{thm' \<phi>Share.Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>a. a)  \<close>),
+  (@{thm' \<phi>Share.Functional_Transformation_Functor}, \<^pattern_prop>\<open>\<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Functional_Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)  \<close>),
   (@{thm' \<phi>Share.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>Share.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U (\<lambda>x. x) \<close>),
   (@{thm' \<phi>Share.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity (\<odiv>) ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
@@ -2210,6 +2205,8 @@ ML \<open>assert_derived_properties \<^theory> [
 thm \<phi>Share.\<Sigma>_rewr
 thm \<phi>Fun'.\<phi>Fun'.comm_rewr
 thm \<phi>MapAt.\<phi>Share.comm_rewr
+
+thm \<phi>Share.\<phi>Sum_Comm\<^sub>E
 
 thm \<phi>Share.Identity_Element\<^sub>I
 thm \<phi>Share.unfold_sdistr (*TODO: reduce identical antecedents*)

@@ -1319,6 +1319,8 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                 |> Simplifier.rewrite_rule ctxt @{thms' Action_Tag_def[where A=\<phi>TA_ANT]}
                 |> simp (phi, Simps.enhance ctxt)
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
+                |> PLPR_Syntax.merge_conditions
+                |> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
                 |> singleton (Proof_Context.export ctxt ctxt0)
 
    in rule'4
@@ -1637,6 +1639,7 @@ let fun elim_TA_ANT ctxt ctm =
             | check (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ _ $ _) = SOME @{thm' conjE[folded Ant_Seq_def]}
             | check (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ Const(\<^const_name>\<open>\<phi>TA_ANT\<close>, _)) =
                   SOME @{thm' Action_Tag_E[where A=\<open>\<phi>TA_ANT\<close>]}
+            | check (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) = SOME @{thm' \<r>Guard_E}
             (* | Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
                   let val (A,B) = (Thm.dest_arg1 ctm, Thm.dest_arg ctm)
                    in case check (Thm.dest_arg1 ctm)
@@ -1777,6 +1780,7 @@ fun reasoning ctxt0 sequent0 =
       val local_prems = (maps pass_out_ant out_ants @ local_prems'1)
                      |> maps pass_prem
                      |> map (snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
+                          #> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
                           #> PLPR_Syntax.elim_leading_All ctxt)
 
       val (prem_ants, rewrs, reasoner_ants', ctxt) = configure (focus, lsequent) (local_prems, ctxt)

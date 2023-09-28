@@ -369,7 +369,7 @@ fun default_simplify pattern ctxt rule =
          of SOME th => simplify ctxt th
           | NONE => rule'3)
    |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
-   |> PLPR_Syntax.merge_guards ctxt
+   |> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
    |> normalize
   end
 
@@ -395,7 +395,7 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                                      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) =>
                                         (case prop'' of SOME prop' =>
                                                 (false,
-                                                 SOME (PLPR_Syntax.guardize ctxt' (Thm.nprems_of prop') prop'),
+                                                 SOME (PLPR_Syntax.guardize {merge_cond=true} ctxt' (Thm.nprems_of prop') prop'),
                                                  @{thm' \<r>Guard_I} RSN (i+1, thm))
                                             | _ => (false, prop'', thm)
                                             )

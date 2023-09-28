@@ -78,6 +78,7 @@ definition \<r>Guard :: \<open>bool \<Rightarrow> bool\<close> ("\<g>\<u>\<a>\<r
 
 lemma \<r>Guard_I: \<open>P \<Longrightarrow> \<r>Guard P\<close> unfolding \<r>Guard_def .
 lemma \<r>Guard_D: \<open>\<r>Guard P \<Longrightarrow> P\<close> unfolding \<r>Guard_def .
+lemma \<r>Guard_E: \<open>\<r>Guard P \<Longrightarrow> (P \<Longrightarrow> C) \<Longrightarrow> C\<close> unfolding \<r>Guard_def .
 
 lemma \<r>Guard_reduct[simp]:
   \<open>\<r>Guard True \<equiv> True\<close>
@@ -217,6 +218,10 @@ lemma Premise_norm:
   \<open>(\<exists>x. Premise mode (R x)) \<equiv> Premise mode (\<exists>x. R x)\<close>
   unfolding Premise_def
   by simp_all
+
+lemma contract_obligations:
+  "(Premise mode' P \<Longrightarrow> Premise mode Q \<Longrightarrow> PROP C) \<equiv> (Premise mode (P \<and> Q) \<Longrightarrow> PROP C)"
+  unfolding Premise_def by rule simp+
 
 subsubsection \<open>NO_SIMP\<close>
 
@@ -395,6 +400,8 @@ declare atomize_Ball[iso_atomize_rules, symmetric, iso_rulify_rules]
 
 
 subsubsection \<open>ML Library - III\<close>
+
+thm contract_obligations
 
 ML_file_debug \<open>library/PLPR_Syntax0.ML\<close>
 
@@ -1430,10 +1437,6 @@ lemma contract_drop_waste:
   \<open> PROP Pure.prop P \<Longrightarrow> PROP Pure.prop (PROP Waste \<Longrightarrow> PROP P) \<close>
   unfolding Pure.prop_def by simp
 
-lemma contract_obligations:
-  "(Premise mode' P \<Longrightarrow> Premise mode Q \<Longrightarrow> PROP C) \<equiv> (Premise mode (P \<and> Q) \<Longrightarrow> PROP C)"
-  unfolding Premise_def by rule simp+
-
 ML \<open>@{thm contract_obligations} |> Thm.forall_intr_vars\<close>
 
 lemma contract_premise_all:
@@ -1518,6 +1521,13 @@ fun defer_premise ctxt =
            | 3 => Phi_Reasoners.auto_obligation_solver ctxt
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
 \<close>
+
+schematic_goal \<open>P ?x y = P x ?y\<close>
+  apply clarsimp
+  apply (tactic \<open>Simplifier.simp_tac \<^context> 1\<close>)
+  apply simp
+
+
 
 \<phi>reasoner_ML Normal_Premise %general (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap defer_premise o snd\<close>
