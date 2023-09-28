@@ -178,7 +178,8 @@ fun OE_reasoning phi ctxt rule =
    in default_reasoning true
           default_reasoning_configure
           (K (K NONE))
-          (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} (K (chk_unfolded' ctxt' phi)))
+          (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]}
+                                            (K (chk_unfolded' [\<^const_name>\<open>OPEN\<close>] ctxt' phi)))
           phi ctxt' rule
   end
 
@@ -313,6 +314,7 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                      @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
                      @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
                      @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
+      val _ = conv_chk_unfolded
       val ind_conv =
             default_ind_conv (
                fn ctxt => fn _ =>

@@ -77,7 +77,7 @@ local
 fun TF_reasoning phi ctxt = default_reasoning true
       default_reasoning_configure
       (K (K NONE))
-      (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded' ctxt phi)))
+      (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded' [] ctxt phi)))
       phi ctxt
 
 fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
@@ -188,7 +188,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
         | extract_oprs_from_hint _ = []
 
-      fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi)) ctxt
+      fun reasoning phi ctxt = exhaustive_PLPR_reasoner NONE (K (chk_unfolded' [] ctxt phi)) ctxt
       val simp = if is_some instruction then K I
                  else simplifier_by_cong @{thms' \<phi>TA_FTF_deriver_cong}
     (*fun simp (_, ctxt) thm =

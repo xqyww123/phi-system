@@ -317,10 +317,11 @@ val accept_one : string (*name for printing*) ->
     (*wraps and checks if the user gives at most one hint*)
 *)
 
-val chk_unfolded : Context.generic -> Phi_Type_Algebra.phi_type -> term -> unit
-val chk_unfolded': Proof.context -> Phi_Type_Algebra.phi_type -> term -> unit
-val conv_chk_unfolded : Phi_Type_Algebra.phi_type -> Proof.context -> conv
-      (*roughly check if a phi-type expression is expanded, and warn if not*)
+val chk_unfolded : string list (*bads*) -> Context.generic -> Phi_Type_Algebra.phi_type -> term -> unit
+val chk_unfolded': string list -> Proof.context -> Phi_Type_Algebra.phi_type -> term -> unit
+val conv_chk_unfolded : string list -> Phi_Type_Algebra.phi_type -> Proof.context -> conv
+      (*roughly check if a phi-type expression is expanded, and warn if not.
+        The bads are constants whose occurrence indicates the \<phi>-type is not expanded*)
 
 val chk_abstract_object_quantified : (term -> term option) (*get the abstract object*)
                                   -> Proof.context -> term -> term
@@ -1826,16 +1827,13 @@ in fn ctxt => fn th => th
     |> reasoning (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt)
 end
 
-fun chk_unfolded ctxt (phi : phi_type) term =
+fun chk_unfolded bads ctxt (phi : phi_type) term =
   let val (N,_) = raw_term_name_typ (#term phi)
       fun is_atom (Bound _) = true
         | is_atom (Free _) = true
         | is_atom (Var _) = true
         | is_atom _ = false
-      fun chk (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = chk X
-        | chk (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = chk X
-        | chk (Abs(_,_,X)) = chk X
-        | chk (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) = is_atom x andalso chk T
+      fun chk (Abs(_,_,X)) = chk X
         | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A $ B $ C) = chk A andalso chk B andalso chk C
         | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A $ B) = chk A andalso chk B
         | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A) = chk A
@@ -1843,7 +1841,12 @@ fun chk_unfolded ctxt (phi : phi_type) term =
         | chk (Free(N',_)) = N = N'
         | chk (X $ _) = chk X
         | chk _ = false
-   in if chk term
+   in if exists_subterm (
+           fn Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T =>
+                is_atom x andalso chk T orelse
+                not (null bads) andalso exists_Const (member (op =) bads o fst) T
+            | _ => false
+          ) term
       then report_potential_failure_reason (let open Pretty in [fn () => 
               chunks [str "The phi-type is not unfolded by simplification and inductive destruction.",
                       Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term]
@@ -1851,10 +1854,10 @@ fun chk_unfolded ctxt (phi : phi_type) term =
       else ()
   end
 
-fun chk_unfolded' ctxt = chk_unfolded (Context.Proof ctxt)
+fun chk_unfolded' bads ctxt = chk_unfolded bads (Context.Proof ctxt)
 
-fun conv_chk_unfolded (phi : phi_type) ctxt ctm =
-      (chk_unfolded' ctxt phi (Thm.term_of ctm); Conv.all_conv ctm)
+fun conv_chk_unfolded bads (phi : phi_type) ctxt ctm =
+      (chk_unfolded' bads ctxt phi (Thm.term_of ctm); Conv.all_conv ctm)
 
 fun pure_PLPR_reasoning num ctxt sequent =
   case Phi_Reasoner.reason NONE (SOME num) ctxt sequent

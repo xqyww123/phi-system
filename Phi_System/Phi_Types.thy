@@ -71,7 +71,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding Subjection into Type\<close>
 
 declare [[\<phi>trace_reasoning = 3 ]]
-     
+      
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Basic
@@ -79,7 +79,7 @@ declare [[\<phi>trace_reasoning = 3 ]]
        and Carrier_Set
      (*and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Elements\<^sub>I T D P) \<Longrightarrow> Identity_Elements\<^sub>I (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. Q \<longrightarrow> D x) (\<lambda>x. Q \<and> P x)\<close>*)
      (*and \<open>Identity_Elements\<^sub>E T D \<Longrightarrow> Identity_Elements\<^sub>E (T \<phi>\<s>\<u>\<b>\<j> P) (\<lambda>x. P \<and> D x) \<close>*)
-       and Separation_Monoid
+       and Monoidal_Sep_Functor
        and Abstraction_to_Raw
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -297,7 +297,7 @@ declare [[\<phi>trace_reasoning = 0]]
    
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
-  deriving Separation_Monoid \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
+  deriving Monoidal_Sep_Functor \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
        and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction T U
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
@@ -957,7 +957,7 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        (*and Abstract_Domain\<^sub>L (*TODO*)*)
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>I. P (x i)) (\<lambda>f _. (o) f)\<close>
-       and Separation_Monoid
+       and Monoidal_Sep_Functor
        and Functionality
        and Semimodule_NonDistr
        and Closed_Semimodule_Zero
@@ -1892,11 +1892,11 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-      
+
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Separation_Monoid
+  deriving Monoidal_Sep_Functor
        and Functionality
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -1961,7 +1961,7 @@ term \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (List\<^sub>S 
        
        (*and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
                             (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>*)
-(*Separation_Monoid*)
+(*Monoidal_Sep_Functor*)
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)
 
@@ -1986,7 +1986,7 @@ thm List.functional_transformation
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
-  deriving Separation_Monoid
+  deriving Monoidal_Sep_Functor
        and Functionality
        (*and SE_Trim_Empty*)
        (*and Trivial_\<Sigma>*)
@@ -2030,7 +2030,7 @@ declare [[\<phi>trace_reasoning = 0]]
    
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
-  deriving Separation_Monoid
+  deriving Monoidal_Sep_Functor
        and Functionality
        and Abstraction_to_Raw
        and Commutativity_Deriver
@@ -2069,7 +2069,7 @@ declare [[\<phi>trace_reasoning = 0]]
              
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
-  deriving Separation_Monoid
+  deriving Monoidal_Sep_Functor
        and Functionality
        (*and Trivial_\<Sigma>*)
        and Semimodule_NonDistr_no0
@@ -2152,7 +2152,7 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
   
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Separation_Monoid
+  deriving Monoidal_Sep_Functor
        and Functionality
        (*and SE_Trim_Empty*)
        and Semimodule_no0

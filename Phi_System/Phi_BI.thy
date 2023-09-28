@@ -228,7 +228,7 @@ declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rig
 
 paragraph \<open>Extracting Pure Facts\<close>
 
-lemma Inhabitance_Implication_\<A>EIF [\<phi>reason %extract_pure_all]:
+lemma Inhabitance_Implication_\<A>EIF [\<phi>reason %extract_pure]:
   \<open> A' \<longrightarrow> Inhabited A @action \<A>ESC
 \<Longrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) \<longrightarrow> (A' \<longrightarrow> P) @action \<A>EIF\<close>
   unfolding Action_Tag_def
@@ -239,7 +239,7 @@ lemma Inhabitance_Implication_\<A>EIF_Sat:
   unfolding Action_Tag_def Inhabited_def
   by blast
 
-lemma Inhabitance_Implication_\<A>ESC[\<phi>reason %extract_pure_all]:
+lemma Inhabitance_Implication_\<A>ESC[\<phi>reason %extract_pure]:
   \<open> Inhabited A \<longrightarrow> A' @action \<A>EIF
 \<Longrightarrow> (A' \<longrightarrow> P) \<longrightarrow> (A \<i>\<m>\<p>\<l>\<i>\<e>\<s> P) @action \<A>ESC\<close>
   unfolding Action_Tag_def
@@ -250,7 +250,7 @@ lemma Inhabitance_Implication_\<A>ESC_Sat:
   unfolding Action_Tag_def Inhabited_def
   by blast
 
-lemma Sufficient_Inhabitance_\<A>EIF[\<phi>reason %extract_pure_all]:
+lemma Sufficient_Inhabitance_\<A>EIF[\<phi>reason %extract_pure]:
   \<open> Inhabited A \<longrightarrow> A' @action \<A>EIF
 \<Longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) \<longrightarrow> (P \<longrightarrow> A') @action \<A>EIF\<close>
   unfolding Action_Tag_def
@@ -261,7 +261,7 @@ lemma Sufficient_Inhabitance_\<A>EIF_Sat:
   unfolding Action_Tag_def Inhabited_def
   by blast
 
-lemma Sufficient_Inhabitance_\<A>ESC[\<phi>reason %extract_pure_all]:
+lemma Sufficient_Inhabitance_\<A>ESC[\<phi>reason %extract_pure]:
   \<open> A' \<longrightarrow> Inhabited A @action \<A>EIF
 \<Longrightarrow> (P \<longrightarrow> A') \<longrightarrow> (P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> A) @action \<A>ESC\<close>
   unfolding Action_Tag_def

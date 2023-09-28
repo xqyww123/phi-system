@@ -79,7 +79,7 @@ fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
               default_reasoning_configure
               varify_all_vars
               (exhaustive_PLPR_reasoner_by_rule @{thm' transformation_weaken[where P'=True, simplified]}
-                                                (K (chk_unfolded' ctxt phi)))
+                                                (K (chk_unfolded' [] ctxt phi)))
               phi ctxt
 
       fun solver (phi, ctxt, sequent) =

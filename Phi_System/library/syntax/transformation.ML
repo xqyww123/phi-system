@@ -3,8 +3,8 @@ include PHI_SYNTAX
 
   val dest_BI_ty : typ -> typ (*typ of concrete algebra*)
 
-  val is_intro_transformation : thm -> bool
-  val is_elim_transformation : thm -> bool
+  val is_intro_transformation : term -> bool
+  val is_elim_transformation : term -> bool
   val pass_ensures_intro_transformation : Phi_Reasoner.rule_pass
   val pass_ensures_elim_transformation : Phi_Reasoner.rule_pass
 
@@ -37,7 +37,7 @@ fun dest_transformation_typ (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X
   | dest_transformation_typ X = raise TERM ("dest_transformation_typ", [X])
 
 fun is_intro_transformation rule =
-  let val (prems, concl) = Logic.strip_horn (Thm.prop_of rule)
+  let val (prems, concl) = Logic.strip_horn rule
    in case dest_transformation concl
    of (Var v, _, _) =>
         exists (fn prem => case try dest_transformation (Logic.strip_assums_concl prem)
@@ -47,7 +47,7 @@ fun is_intro_transformation rule =
   end
 
 fun is_elim_transformation rule =
-  let val (prems, concl) = Logic.strip_horn (Thm.prop_of rule)
+  let val (prems, concl) = Logic.strip_horn rule
    in case dest_transformation concl
    of (_, Var v, _) =>
         exists (fn prem => case dest_transformation prem
@@ -57,13 +57,13 @@ fun is_elim_transformation rule =
   end
 
 fun pass_ensures_intro_transformation _ (rules, (mode, priority), (pattern, except), guard, ctxt) =
-  let fun chk rule = if is_intro_transformation rule then rule
+  let fun chk rule = if is_intro_transformation (Thm.prop_of rule) then rule
                      else rule RS' (Context.proof_of ctxt, @{thm' mk_intro_transformation})
    in (map chk rules, (mode, priority), (pattern, except), guard, ctxt)
   end
 
 fun pass_ensures_elim_transformation _ (rules, (mode, priority), (pattern, except), guard, ctxt) =
-  let fun chk rule = if is_elim_transformation rule then rule
+  let fun chk rule = if is_elim_transformation (Thm.prop_of rule) then rule
                      else rule RS' (Context.proof_of ctxt, @{thm' mk_elim_transformation})
    in (map chk rules, (mode, priority), (pattern, except), guard, ctxt)
   end

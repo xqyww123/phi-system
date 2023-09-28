@@ -4306,7 +4306,9 @@ text \<open>Note, as an instance of Commutativity of Type Operators, the names o
   and \<open>elimination rule\<close> are just reversed. It is intentional, because I really think those names
   are more natural and we don't really have to force the consistency of the names between the two levels.\<close>
 
-lemma \<phi>TA_SH\<^sub>I_rule:
+context begin
+
+private lemma \<phi>TA_SH\<^sub>I_rule:
   \<open> (\<And>z. Ant \<longrightarrow>
             (\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z
                 \<longrightarrow> ((y \<Ztypecolon> OPEN (Fb U)) * (x \<Ztypecolon> OPEN (Fa T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE (Fc (T \<^emph> U)))) @action \<phi>TA_ind_target undefined)
@@ -4317,27 +4319,20 @@ lemma \<phi>TA_SH\<^sub>I_rule:
   unfolding Separation_Homo\<^sub>I_def \<phi>Prod_expn' Action_Tag_def MAKE_def OPEN_def
   by simp
 
-lemma \<phi>TA_SH\<^sub>E_rule:
-  \<open> (\<And>z. (Ant @action \<phi>TA_ANT) \<longrightarrow>
-             (z \<Ztypecolon> Fc (T \<^emph>\<^sub>\<A> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U)) @action \<phi>TA_ind_target \<A>simp)
+private lemma \<phi>TA_SH\<^sub>E_rule:
+  \<open> (\<And>z. Ant \<longrightarrow> (z \<Ztypecolon> OPEN (Fc (T \<^emph>\<^sub>\<A> U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz z \<Ztypecolon> MAKE (Ft T) \<^emph> MAKE (Fu U)) @action \<phi>TA_ind_target \<A>simp)
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> Ant @action \<phi>TA_ANT
 \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U uz \<close>
-  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def
+  unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn' Action_Tag_def Bubbling_def MAKE_def OPEN_def
   by simp
 
-lemma \<phi>TA_SH\<^sub>I_rewr_IH:
+private lemma \<phi>TA_SH\<^sub>I_rewr_IH:
   \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> ((y \<Ztypecolon> OPEN Tb) * (x \<Ztypecolon> OPEN Ta) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> MAKE Tc)) @action \<phi>TA_ind_target undefined)
 \<equiv> (\<And>x y. Ant @action \<phi>TA_ANT \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P x y \<Longrightarrow> ((y \<Ztypecolon> Tb) * (x \<Ztypecolon> Ta) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Tc) @action \<phi>TA_ToA_elim)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def OPEN_def MAKE_def
   by (rule; blast)
-
-(*lemma \<phi>TA_SH\<^sub>I_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (\<forall>x y. P x y \<longrightarrow> Q x y) @action \<phi>TA_ind_target undefined)
-\<equiv> (\<And>x y. Ant \<Longrightarrow> P x y @action \<phi>TA_pure_facts \<Longrightarrow> Q x y @action \<phi>TA_conditioned_ToA_template)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)*)
 
 text \<open>This conditioned template is necessary because, see,
   \<^prop>\<open>(\<forall>x y. (x,y) \<in> D \<and> w(x,y) = z \<longrightarrow> ((y \<Ztypecolon> Fb U) * (x \<Ztypecolon> Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z \<Ztypecolon> Fc (T \<^emph> U)))\<close>
@@ -4355,26 +4350,26 @@ text \<open>This conditioned template is necessary because, see,
   fallback always varifies the abstract object in the target to a schematic variable.
 \<close>
 
-(*
-lemma \<phi>TA_SH\<^sub>I_rewr_C:
-  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
-\<equiv> (Ant \<Longrightarrow> P)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)*)
-
-lemma \<phi>TA_SH\<^sub>E_rewr_IH:
-  \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> U) @action \<phi>TA_ind_target A)
-\<equiv> (Ant \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
+private lemma \<phi>TA_SH\<^sub>E_rewr_IH:
+  \<open>Trueprop (Ant \<longrightarrow> (z \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz \<Ztypecolon> MAKE U1 \<^emph> MAKE U2) @action \<phi>TA_ind_target A)
+\<equiv> (Ant @action \<phi>TA_ANT \<Longrightarrow> z \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> U1 \<^emph> U2 \<s>\<u>\<b>\<j> z'. z' = uz @action A)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all OPEN_def MAKE_def
   by simp
 
-lemma \<phi>TA_SH\<^sub>E_rewr_C:
-  \<open>Trueprop (Ant \<longrightarrow> P @action \<phi>TA_ind_target A)
-\<equiv> (Ant \<Longrightarrow> P @action A)\<close>
-  unfolding Action_Tag_def atomize_imp atomize_all
-  by (rule; blast)
+private lemma \<phi>TA_SH\<^sub>I_DV_cong:
+  \<open> D \<equiv> D'
+\<Longrightarrow> z \<equiv> z'
+\<Longrightarrow> Separation_Homo\<^sub>I Ft Fu Fc T U D z \<equiv> Separation_Homo\<^sub>I Ft Fu Fc T U D' z' \<close>
+  by simp
+
+private lemma \<phi>TA_SH\<^sub>E_DV_cong:
+  \<open> u \<equiv> u'
+\<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U u \<equiv> Separation_Homo\<^sub>E Ft Fu Fc T U u' \<close>
+  by simp
 
 ML_file \<open>library/phi_type_algebra/separation_homo.ML\<close>
+
+end
 
 (*
 hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_rewr_IH \<phi>TA_SH\<^sub>I_rewr_C
@@ -4390,14 +4385,18 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
 
 \<phi>property_deriver Separation_Homo 122 requires Separation_Homo\<^sub>I and Separation_Homo\<^sub>E
 
-\<phi>property_deriver Separation_Monoid 130
+\<phi>property_deriver Sep_Functor 130 
   requires Separation_Homo
        and Functional_Transformation_Functor
-       and Identity_Elements
        and Basic
+  \<comment> \<open>A separation functor is defined as a transformation functor which is also extendedly commutative
+     with separation operator \<open>\<^emph>\<close>. The extended commutativity means existing a pair of function \<open>z,u\<close> with
+     \<open>x \<Ztypecolon> F(T) \<^emph> F(U) \<longrightarrow> z x \<Ztypecolon> F(T \<^emph> U)\<close> and \<open>y \<Ztypecolon> F(T \<^emph> U) \<longrightarrow> u y \<Ztypecolon> F(T) \<^emph> F(U)\<close> for any \<open>x,y\<close>, and it degenerates
+     to the usual commutativity when \<open>z, u = \<lambda>x. x\<close>.\<close>
 
-  (*TODO: I'm thinking why I gave it this name... yes, there is identity element, but then.. what?
-          for what reason it can be called monoidal?*)
+\<phi>property_deriver Monoidal_Sep_Functor 131
+  requires Sep_Functor
+       and Identity_Elements
 
 
 

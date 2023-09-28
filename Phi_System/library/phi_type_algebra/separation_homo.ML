@@ -115,8 +115,10 @@ fun SH_reasoning is_intro phi ctxt =
       default_reasoning_configure
       (K (K NONE))
       (fn ctxt => fn sequent =>
-         let fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) = (chk_unfolded' ctxt phi X1; chk_unfolded' ctxt phi X2)
-               | chk 0 X = chk_unfolded' ctxt phi X
+         let val bads = [\<^const_name>\<open>MAKE\<close>, \<^const_name>\<open>OPEN\<close>]
+             fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) =
+                    (chk_unfolded' bads ctxt phi X1; chk_unfolded' bads ctxt phi X2)
+               | chk 0 X = chk_unfolded' bads ctxt phi X
                | chk _ _ = ()
           in if is_intro
           then exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]} chk ctxt sequent
@@ -132,14 +134,10 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
         | extract_oprs_from_hint (Const(\<^const_name>\<open>Separation_Homo\<^sub>E\<close>, _) $ _ $ _ $ _ $ _ $ _ $ u) = [u]
         | extract_oprs_from_hint _ = []
 
-      val simps = if is_intro
-                  then map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
-                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
-                     @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
-                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
-                  else #equations phi0
-                     @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
-                     @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
+      val simps = map Phi_Syntax.wrap_equation_by_OPEN (#equations phi0)
+                @ map_filter (Option.map Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
+                @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
+                @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
 
       val ind_conv_z = default_ind_conv (
             fn ctxt => fn _ =>
@@ -147,31 +145,23 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
             fn ctxt => fn _ =>
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1_noact}) then_conv
               Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps) then_conv
-              Conv.implies_concl_conv (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
+              Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
+                (Phi_Conv.hol_alls_to_meta_alls (fn _ =>
                   conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Premise_def[symmetric, where mode=MODE_GUARD]})
                 ) ctxt)
             )
       val ind_conv_u = default_ind_conv (
-            fn ctxt => fn _ =>
+            fn ctxt => fn _ => @{print} o
               Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_IH}),
-            fn ctxt => fn _ =>
-              Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_SH\<^sub>E_rewr_C}) then_conv
-                Conv.implies_concl_conv (
-                  HOLogic.Trueprop_conv (
-                  Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)
-                ))
+            fn ctxt => fn _ => @{print} o
+             (Conv.rewr_conv (Thm.transfer' ctxt @{thm' \<phi>TA_common_rewr_imp1}) then_conv
+              Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps) then_conv
+              Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
             )
       val ind_conv = if is_intro then ind_conv_z else ind_conv_u
-      fun simp (_, ctxt) =
-        if is_some instruction then I
-        else Conv.fconv_rule (
-               Phi_Conv.hhf_concl_conv (fn ctxt =>
-                 let val sctxt = ctxt addsimps @{thms special_Ex_def}
-                  in Conv.arg_conv (Conv.combination_conv
-                        (Conv.arg_conv (Simplifier.rewrite sctxt))
-                        (Simplifier.rewrite sctxt))
-                 end
-             ) ctxt)
+      val simp = if is_some instruction then K I
+                 else simplifier_by_cong (if is_intro then @{thms' \<phi>TA_SH\<^sub>I_DV_cong}
+                                                      else @{thms' \<phi>TA_SH\<^sub>E_DV_cong})
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint, guess_property_SH is_intro,
                                      (if is_intro then @{thm' \<phi>TA_SH\<^sub>I_rule} else @{thm' \<phi>TA_SH\<^sub>E_rule}),

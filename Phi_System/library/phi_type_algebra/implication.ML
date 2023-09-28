@@ -335,7 +335,7 @@ fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
                 (if mode_infer then varify_subgoal else K (K NONE))
                 (exhaustive_PLPR_reasoner_by_rule
                     (if upper then @{thm' \<phi>TA_Inh_step} else @{thm' \<phi>TA_Suc_step})
-                    (K (chk_unfolded' ctxt phi)))
+                    (K (chk_unfolded' [] ctxt phi)))
                 phi
                 ctxt
 
@@ -358,7 +358,7 @@ fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
             |> Phi_Help.generic_theory_mapping (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.NORMAL_MODE
+                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_abstract_domain}
                                                      (Option.mapPartial snd instruction0))
                                         ([],[]) NONE [Morphism.thm m rule'])

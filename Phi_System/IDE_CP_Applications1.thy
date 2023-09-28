@@ -1375,6 +1375,28 @@ setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
                addsimps @{thms' HOL.simp_thms}))\<close>
 
 
+paragraph \<open>Rules of Various Reasoning\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> x \<Ztypecolon> OPEN T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
+  unfolding OPEN_def .
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T
+\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> OPEN T \<close>
+  unfolding OPEN_def .
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain T D
+\<Longrightarrow> Abstract_Domain (OPEN T) D \<close>
+  unfolding OPEN_def .
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> Abstract_Domain\<^sub>L (OPEN T) D \<close>
+  unfolding OPEN_def .
+
 
 subsubsection \<open>Make Abstraction\<close>
 
@@ -1534,6 +1556,28 @@ structure PhiDef_SS = Simpset (
 
 declare prod.case[\<phi>defs]
 *)
+
+paragraph \<open>Rules of Various Reasoning\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> x \<Ztypecolon> MAKE T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
+  unfolding MAKE_def .
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T
+\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T \<close>
+  unfolding MAKE_def .
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain T D
+\<Longrightarrow> Abstract_Domain (MAKE T) D \<close>
+  unfolding MAKE_def .
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) D \<close>
+  unfolding MAKE_def .
 
 
 subsection \<open>Split\<close>

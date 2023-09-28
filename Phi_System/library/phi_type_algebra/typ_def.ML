@@ -1091,13 +1091,16 @@ fun add_type (def, pos, dervs, bundles) thy =
             fun add_rules mode priority rules =
                   Phi_Reasoner.add_rules (map (fn rule =>
                       ([Morphism.thm m rule], pos, mode, priority, [], [], NONE)) rules)
-         in add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %To_ToA_derived_OPEN} (Morphism.fact m open_abstraction)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived} (Morphism.fact m make_abstraction)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived-10} (Morphism.fact m make_abstraction_eq)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} (Morphism.fact m make_Identity_Element_E)
-         #> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived} (Morphism.fact m open_abstraction_ToA)
-         #> Phi_Expansions.add_simps expns
-         #> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
+         in fn ctxt => ctxt
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %To_ToA_derived_OPEN} (Morphism.fact m open_abstraction)
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived} (Morphism.fact m make_abstraction)
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived-10} (Morphism.fact m make_abstraction_eq)
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} (Morphism.fact m make_Identity_Element_E)
+         |> Config.put_generic phi_allow_source_object_to_be_not_variable true
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived} (Morphism.fact m open_abstraction_ToA)
+         |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
+         |> Phi_Expansions.add_simps expns
+         |> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
    |> note_properties_s phi_type (
         (* (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @ *)
