@@ -110,6 +110,7 @@ val complete_deriver_dependences : Context.generic -> derivings -> derivings
 val report_potential_failure_reason : (unit -> Pretty.T) list -> unit
 (*no need to call it manually. It is invoked by `add_type` *)
 val derive_properties : derivings * Bundle.name list -> phi_type -> generic_theory -> generic_theory
+val under_deriving_ctxt : bool Config.T
 
 (* Derived Properties *)
 
@@ -531,6 +532,7 @@ fun complete_deriver_dependences ctxt dervs =
 (* Deriving *)
 
 val reason_of_deriving_fails : (unit -> Pretty.T) list Thread_Data.var = Thread_Data.var ()
+val under_deriving_ctxt = Attrib.setup_config_bool \<^binding>\<open>under_\<phi>deriving\<close> (K false)
 
 fun err_derive prop_name msg hints = let open Pretty in
       error (string_of (chunks (
@@ -560,6 +562,7 @@ fun derive_properties (dervs, bundles) phityp thy = thy
       let val _ = Thread_Data.put reason_of_deriving_fails (SOME [])
           val ctxt_derv = Context.proof_of thy'goal
                        |> Bundle.includes bundles
+                       |> Config.put under_deriving_ctxt true
        in #derive derv is_weak hints ctxt_derv phityp thy'goal
           handle Automation_Fail msg => err_derive name (msg ()) hints
       end

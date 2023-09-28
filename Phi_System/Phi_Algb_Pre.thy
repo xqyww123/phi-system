@@ -227,6 +227,8 @@ lemma scalar_mult_red[iff]:
   \<open>scalar_mult f s x = f s x\<close>
   unfolding scalar_mult_def ..
 
+subsubsection \<open>Reasoning Rules\<close>
+
 lemma [\<phi>reason %cutting]:
   \<open> f = g
 \<Longrightarrow> u = v
@@ -239,6 +241,9 @@ lemma [\<phi>reason %cutting]:
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> scalar_mult f u = scalar_mult g v\<close>
   unfolding scalar_mult_def Premise_def by simp
 
+lemma inj_scalar_mult[simp]:
+  \<open>inj (scalar_mult f s) \<equiv> inj (f s)\<close>
+  unfolding scalar_mult_def .
 
 section \<open>Preliminary for \<open>\<phi>\<close>-Type Algebra\<close>
 

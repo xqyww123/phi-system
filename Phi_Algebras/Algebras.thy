@@ -454,6 +454,16 @@ begin
 subclass share_carrier by (standard; simp add: share_carrier_closed_1)
 end
 
+class share_inj = raw_share +
+  assumes share_inj[simp]: \<open>0 < n \<Longrightarrow> share n x = share n y \<longleftrightarrow> x = y\<close>
+begin
+
+lemma share_inj': \<open>0 < n \<Longrightarrow> inj (share n)\<close>
+  unfolding inj_def
+  by clarsimp
+
+end
+
 class share_sep_disj = share + comm_sep_disj + sep_carrier +
   assumes share_sep_disj_left[simp]: \<open>0 < n \<Longrightarrow> share n x ## y \<longleftrightarrow> x ## y\<close>
           \<comment> \<open>the share operation is independent with sep_disj. The multiplication defined between
@@ -1436,25 +1446,26 @@ qed
 instance option :: (discrete_semigroup) discrete_monoid
   by (standard; case_tac x; case_tac y; simp)
 
-
-instantiation option :: (share) share begin
-
+instantiation option :: (raw_share) raw_share begin
 definition \<open>share_option n = (if 0 < n then map_option (share n) else (\<lambda>_. None))\<close>
+instance ..
+end
 
 lemma share_option_simps[simp]:
   \<open>share n None = None\<close> \<open>share 0 x = None\<close> \<open>0 < n \<Longrightarrow> share n (Some x') = Some (share n x')\<close>
   unfolding share_option_def by simp_all
 
-instance by (standard; simp add: share_option_def; case_tac x; simp add: share_share_assoc0)
-end
+instance option :: (share) share 
+  by (standard; simp add: share_option_def; case_tac x; simp add: share_share_assoc0)
 
-instantiation option :: (sep_disj_distrib) sep_disj_distrib begin
-instance proof
+instance option :: (share_inj) share_inj
+  by (standard; case_tac x; case_tac y; simp)
+
+instance option :: (sep_disj_distrib) sep_disj_distrib proof
   fix a b c :: \<open>'a option\<close>
   show \<open>b ## c \<Longrightarrow> a ## b * c = (a ## b \<and> a ## c)\<close> by (cases a; cases b; cases c; simp)
   show \<open>a ## b \<Longrightarrow> a * b ## c = (a ## c \<and> b ## c)\<close> by (cases a; cases b; cases c; simp)
 qed
-end
 
 instantiation option :: (share) share_one_eq_one_iff begin
 instance by (standard; simp add: share_option_def; case_tac x; simp)
@@ -2066,13 +2077,19 @@ lemma [simp]: "NO_MATCH (a::'a) (1::'a::one) \<Longrightarrow> i \<noteq> k \<Lo
 
 subsubsection \<open>Share\<close>
 
-instantiation "fun" :: (type, share) share begin
+instantiation "fun" :: (type, raw_share) raw_share begin
 
 definition share_fun :: \<open>rat \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'b\<close>
   where \<open>share_fun n f = share n o f\<close>
 
-instance by (standard; simp add: share_fun_def fun_eq_iff share_share_assoc0)
+instance ..
 end
+
+instance "fun" :: (type, share) share
+  by (standard; simp add: share_fun_def fun_eq_iff share_share_assoc0)
+
+instance "fun" :: (type, share_inj) share_inj
+  by (standard; simp add: share_fun_def fun_eq_iff)
 
 instance "fun" :: (type,share_one) share_one
   by (standard; simp add: share_fun_def fun_eq_iff)
@@ -2827,6 +2844,7 @@ instantiation share :: (type) share begin
 
 definition share_share :: "rat \<Rightarrow> 'a share \<Rightarrow> 'a share"
   where \<open>share_share n x = (case x of Share m x' \<Rightarrow> Share (n*m) x')\<close>
+
 lemma share_share[simp]: \<open>share n (Share m x) = Share (n*m) x\<close>
   unfolding share_share_def by simp
 
@@ -2834,6 +2852,8 @@ instance by (standard; case_tac x; simp add: share_share_def mult.assoc mult_le_
 
 end
 
+instance share :: (type) share_inj
+  by (standard; case_tac x; case_tac y; simp)
 
 instance share :: (sep_carrier) share_nun_semimodule proof
   fix x y :: \<open>'a share\<close>

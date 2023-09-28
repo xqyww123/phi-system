@@ -1128,6 +1128,37 @@ consts \<phi>instantiation :: mode
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
         (Phi_Type_Template_Properties.Template_Inst_SS.enhance) true) o snd\<close>
 
+consts under_\<phi>deriving :: mode
+
+\<phi>reasoner_ML under_\<phi>deriving %cutting (\<open>True @action under_\<phi>deriving\<close>) = \<open>
+  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+      if Config.get ctxt Phi_Type_Algebra.under_deriving_ctxt
+      then SOME ((ctxt, @{lemma' \<open>True @action under_\<phi>deriving\<close>
+                             by (simp add: Action_Tag_def)} RS sequent), Seq.empty)
+      else NONE)  
+\<close>
+
+\<phi>reasoner_ML \<open>Premise under_\<phi>deriving\<close> %cutting (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] _\<close>) = \<open>
+  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
+      if Config.get ctxt Phi_Type_Algebra.under_deriving_ctxt
+      then SOME ((ctxt, @{lemma' \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P\<close>
+                             by (simp add: Premise_def)} RS sequent), Seq.empty)
+      else SOME ((ctxt, @{lemma' \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P\<close>
+                             by (simp add: Premise_def)} RS sequent), Seq.empty))
+\<close>
+
+lemma [\<phi>premise_extraction add]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P \<equiv> P \<and> True \<close>
+  unfolding atomize_eq Premise_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P @action \<A>ESC \<close>
+  unfolding Action_Tag_def Premise_def
+  by blast
+  
+
+
 
 (* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
 
@@ -5215,6 +5246,12 @@ end
 
 paragraph \<open>ToA with Bubbling in Target\<close>
 
+text \<open>where we do a 'reversed' ToA reasoning where we look for a source \<phi>-type moving
+  the annotated bubbling target in the given target \<phi>-type to the outermost.
+  This process is usedin the elimination side of generic Tyopr-Commutativity deriver
+    (fixing F, moving G out of F, \<open>F (G T) \<longrightarrow> G' (F' T)\<close>)
+\<close>
+
 consts bubbling_target :: action
 
 definition Has_Bubbling :: \<open>'a \<Rightarrow> 'a\<close> ("\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> _" [61] 60) where [iff]: \<open>Has_Bubbling X \<equiv> X\<close>
@@ -5240,12 +5277,14 @@ lemma [\<phi>reason_template default %derived_bubbling_target]:
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a @action bubbling_target)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D x. f a \<in> R x)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Fa (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) \<w>\<i>\<t>\<h> Q @action bubbling_target
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm f P x \<Ztypecolon> Fb (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> U) \<w>\<i>\<t>\<h> pm f P x \<and> Q @action bubbling_target\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm f P x \<Ztypecolon> Fb (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> U) \<w>\<i>\<t>\<h> pm f P x \<and> Q @action bubbling_target
+    <with-pattern> (XX \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> var \<Ztypecolon> Fb (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> UU) \<w>\<i>\<t>\<h> QQ)\<close>
   unfolding Functional_Transformation_Functor_def meta_Ball_def Premise_def Has_Bubbling_def
-            Transformation_def Action_Tag_def Bubbling_def
+            Transformation_def Action_Tag_def Bubbling_def With_Pattern_def
   by clarsimp metis
 
-lemma [\<phi>reason %ToA_normalizing]: \<comment> \<open>entry point to \<open>bubbling_target\<close> sub-reasoning\<close>
+lemma [\<phi>reason %ToA_normalizing for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<comment> \<open>entry point to \<open>bubbling_target\<close> sub-reasoning\<close>
   \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action bubbling_target
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Q
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> U \<w>\<i>\<t>\<h> P \<and> Q \<close>
@@ -5289,6 +5328,17 @@ lemma [\<phi>reason_template default %derived_bubbling_target]:
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Bubbling_def Action_Tag_def
   by clarsimp
 
+subsubsection \<open>Rules\<close>
+
+lemma [\<phi>reason %object_equiv_cut]:
+  \<open> Object_Equiv T eq
+\<Longrightarrow> Object_Equiv (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) eq\<close>
+  unfolding Has_Bubbling_def .
+
+lemma [\<phi>reason %object_equiv_cut]:
+  \<open> Object_Equiv T eq
+\<Longrightarrow> Object_Equiv (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) eq\<close>
+  unfolding Bubbling_def .
 
 
 subparagraph \<open>Simpset adding \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>\<close>\<close>
