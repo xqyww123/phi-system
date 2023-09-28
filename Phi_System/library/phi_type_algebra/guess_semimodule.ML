@@ -146,7 +146,7 @@ val Guess_Scalar_One_E = Guess_Scalar_framework (NONE,
                     $ F $ _ $ T $ one $ Dx $ f $ ants $ conds) =>
               let val (s_ty, model_ty, x_ele_ty, x_ty) =
                         (Logic.dest_type ty_s, Logic.dest_type ty_model, Logic.dest_type ty_x_ele, Logic.dest_type ty_x)
-               in (HOLogic.Trueprop $ (\<^Const>\<open>Semimodule_Identity\<^sub>E s_ty x_ele_ty model_ty x_ty\<close>
+               in (HOLogic.Trueprop $ (\<^Const>\<open>Semimodule_Identity s_ty x_ele_ty model_ty x_ty\<close>
                         $ F $ T $ one $ Dx $ f),
                    NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),
                    conds, ants)
@@ -264,7 +264,7 @@ fun Guess_Scalar_One_E (phi : phi_type) ctxt =
           of _ (*Trueprop*) $ (_ (*Guess_Scalar_One\<^sub>E*) $ _ $ _ $ _ $ _
                 $ F $ _ $ T $ one $ Dx $ f $ ants $ conds) =>
             let val ants = constrain_antecedents conds ants
-                val head = \<^Const>\<open>Semimodule_Identity\<^sub>E s_ty x_ele_ty model_ty x_ty\<close>
+                val head = \<^Const>\<open>Semimodule_Identity s_ty x_ele_ty model_ty x_ty\<close>
                 val prop = HOLogic.Trueprop $ (head $ F $ T $ one $ Dx $ f)
              in Seq.single (ants, prop,
                             NONE :: parse_inst_params_from_phi_term (F $ Term.dummy $ T),

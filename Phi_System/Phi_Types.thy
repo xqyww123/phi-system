@@ -976,7 +976,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Mul_Quant.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) (\<big_ast>\<^sup>\<phi> ?I) ?Ta ?U unzip_fun \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Zero}, \<^pattern_prop>\<open> Semimodule_Zero \<big_ast>\<^sup>\<phi> ?T 0 \<close>),
   (@{thm' \<phi>Mul_Quant.Closed_Semimodule_Zero}, \<^pattern_prop>\<open> Closed_Semimodule_Zero \<big_ast>\<^sup>\<phi> ?T 0 \<close>),
-  (@{thm' \<phi>Mul_Quant.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity\<^sub>E \<big_ast>\<^sup>\<phi> ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i)  \<close>),
+  (@{thm' \<phi>Mul_Quant.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity \<big_ast>\<^sup>\<phi> ?T {?i} (\<lambda>_. True) (\<lambda>f. f ?i)  \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod) \<close>),
   (@{thm' \<phi>Mul_Quant.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> \<big_ast>\<^sup>\<phi> ?T finite finite (\<lambda>_ _ _. True) (\<times>) (\<lambda>_ _. case_prod)  \<close>)
 ]\<close>
@@ -1613,8 +1613,8 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma Semimodule_Identity_by_function [\<phi>reason 1000]:
   \<open> module_scalar_identity \<psi>
-\<Longrightarrow> Semimodule_Identity\<^sub>E (\<phi>ScalarMul \<psi>) T 1 (\<lambda>_. True) (\<lambda>x. x) \<close>
-  unfolding Semimodule_Identity\<^sub>E_def module_scalar_identity_def scalar_mult_def BI_eq_iff
+\<Longrightarrow> Semimodule_Identity (\<phi>ScalarMul \<psi>) T 1 (\<lambda>_. True) (\<lambda>x. x) \<close>
+  unfolding Semimodule_Identity_def module_scalar_identity_def scalar_mult_def BI_eq_iff
   by clarsimp
 
 lemma Semimodule_Scalar_Assoc\<^sub>I_by_function[\<phi>reason 1000]:
@@ -2090,7 +2090,7 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt_L.Functional_Transformation_Functor}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?k = ?ka \<Longrightarrow> Functional_Transformation_Functor ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?ka) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f) \<close>),
   (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>MapAt_L.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'b \<Rightarrow> (?'a list \<Rightarrow> ?'d::sep_magma_1) set) ?U (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>MapAt_L.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity\<^sub>E (\<^bold>\<rightarrow>\<^sub>@) ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
+  (@{thm' \<phi>MapAt_L.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity (\<^bold>\<rightarrow>\<^sub>@) ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x)  \<close>),
   (@{thm' \<phi>MapAt_L.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) (\<^bold>\<rightarrow>\<^sub>@) ?T (\<lambda>_. True) (\<lambda>_. True) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>),
   (@{thm' \<phi>MapAt_L.\<phi>Fun'_Comm\<^sub>I}, \<^pattern_prop>\<open> fun_commute (scalar_mult (\<tribullet>\<^sub>m) ?k) ?f (scalar_mult (\<tribullet>\<^sub>m) ?xa) ?xb \<Longrightarrow>
@@ -2148,7 +2148,6 @@ subsection \<open>Permission Sharing\<close>
 declare [[\<phi>trace_reasoning = 0 ]]
 
 text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<phi>-types.\<close>
- 
   
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
@@ -2175,16 +2174,16 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Share.Functional_Transformation_Functor}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ?n = ?na \<Longrightarrow> Functional_Transformation_Functor ((\<odiv>) ?n) ((\<odiv>) ?na) ?T ?U (\<lambda>a. {a}) (\<lambda>_. UNIV) (\<lambda>f a. a) (\<lambda>f P. f)  \<close>),
   (@{thm' \<phi>Share.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U UNIV (\<lambda>x. x) \<close>),
   (@{thm' \<phi>Share.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?U (\<lambda>x. x) \<close>),
-  (@{thm' \<phi>Share.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity\<^sub>E (\<odiv>) ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
+  (@{thm' \<phi>Share.Semimodule_Identity}, \<^pattern_prop>\<open> Semimodule_Identity (\<odiv>) ?T 1 (\<lambda>_. True) (\<lambda>x. x)  \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>U}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
-    Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<odiv>) ?T ((<) 0) (\<lambda>s t xy. 0 < s + t \<longrightarrow> ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
+    Carrier_Set ?T ?D\<^sub>C \<Longrightarrow> Semimodule_SDistr_Homo\<^sub>U (\<odiv>) ?T ((<) 0) (\<lambda>s t xy. ?D\<^sub>T xy \<longrightarrow> ?Dx xy \<and> ?D\<^sub>C xy) (\<lambda>_ _ x. (x, x))  \<close>),
   (@{thm' \<phi>Share.Semimodule_SDistr_Homo\<^sub>Z}, \<^pattern_prop>\<open> Functionality (?T::?'a \<Rightarrow> ?'c::share_nun_semimodule set) ?Dx \<Longrightarrow>
     Object_Equiv ?T ?eq \<Longrightarrow>
     Abstract_Domain ?T ?D\<^sub>T \<Longrightarrow>
     Carrier_Set ?T ?D\<^sub>C \<Longrightarrow>
     Semimodule_SDistr_Homo\<^sub>Z (\<odiv>) ?T ((<) 0)
-     (\<lambda>s t (x, y). 0 < s \<and> 0 < t \<longrightarrow> ?D\<^sub>T x \<longrightarrow> ?D\<^sub>T y \<longrightarrow> ?eq x y \<and> ?Dx y \<and> ?D\<^sub>C y \<or> ?eq y x \<and> ?Dx x \<and> ?D\<^sub>C x) (\<lambda>_ _. fst)  \<close>),
+     (\<lambda>s t (x, y). ?D\<^sub>T x \<longrightarrow> ?D\<^sub>T y \<longrightarrow> ?eq x y \<and> ?Dx y \<and> ?D\<^sub>C y \<or> ?eq y x \<and> ?Dx x \<and> ?D\<^sub>C x) (\<lambda>_ _. fst)  \<close>),
   (@{thm' \<phi>Share.Semimodule_Scalar_Assoc\<^sub>E}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>E (\<odiv>) (\<odiv>) (\<odiv>) ?T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x) \<close>),
   (@{thm' \<phi>Share.Semimodule_Scalar_Assoc\<^sub>I}, \<^pattern_prop>\<open> Semimodule_Scalar_Assoc\<^sub>I (\<odiv>) (\<odiv>) (\<odiv>) ?T ((<) 0) ((<) 0) (\<lambda>_ _ _. True) (\<lambda>s t. t * s) (\<lambda>_ _ x. x)  \<close>),
   (@{thm' \<phi>Share.\<phi>Fun'_Comm\<^sub>E}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (0 < ?n \<longrightarrow> 0 < ?xa) \<Longrightarrow>

@@ -27,25 +27,20 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                           (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' [] ctxt phi))) phi ctxt
       val mode_infer = not (is_some instruction)
 
-      fun simp (_, ctxt) thm =
-        if mode_infer
-        then Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                let val sctxt = ctxt
-                    val simp = Simplifier.rewrite sctxt
-                 in HOLogic.Trueprop_conv (
-                    Conv.combination_conv (Conv.combination_conv (Conv.arg_conv simp) simp) simp)
-                end
-             ) ctxt) thm
-        else thm
+      val simp = if is_some instruction then K I
+                 else simplifier_by_cong (if is_zip then @{thms' \<phi>TA_MD\<^sub>Z_cong}
+                                                    else @{thms' \<phi>TA_MD\<^sub>U_cong})
 
       val ind_conv = default_ind_conv (
-             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MD_rewr},
+             fn _ => fn _ =>
+                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2_noact} then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
              fn ctxt => fn phi =>
-                  Conv.rewr_conv @{thm \<phi>TA_MD_rewr} then_conv
-                  Conv.arg_conv (Conv.arg_conv (
-                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi @ map_filter I (#type_equations phi))
-                     in Phi_Reasoners.asm_rewrite false sctxt
-                    end)))
+                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
+                  Phi_Reasoners.asm_rewrite true (
+                      Expansion.equip ctxt addsimps (#equations phi @ map_filter I (#type_equations phi))) then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
+                                    (conv_hol_imp_to_meta_if_has Conv.all_conv))
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Zip_of_Semimodule is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),

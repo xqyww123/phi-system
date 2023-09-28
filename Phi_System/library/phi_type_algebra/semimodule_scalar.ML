@@ -114,13 +114,16 @@ fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
                           (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' [] ctxt phi))) phi ctxt
       val simp = K I
       val ind_conv = default_ind_conv (
-             fn _ => fn _ => Conv.rewr_conv @{thm \<phi>TA_MS_rewr},
+             fn _ => fn _ =>
+                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2_noact} then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv,
              fn ctxt => fn _ =>
-                  Conv.rewr_conv @{thm \<phi>TA_MS_rewr} then_conv
-                  Conv.arg_conv (fn ctm =>
-                    let val sctxt = Expansion.equip ctxt addsimps (#equations phi0 @ map_filter I (#type_equations phi0))
-                     in Phi_Reasoners.asm_rewrite false sctxt ctm
-                    end))
+                  Conv.rewr_conv @{thm \<phi>TA_common_rewr_imp2'} then_conv
+                  Phi_Reasoners.asm_rewrite true (
+                      Expansion.equip ctxt addsimps (#equations phi0 @ map_filter I (#type_equations phi0))) then_conv
+                  Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT})
+                                    (conv_hol_imp_to_meta_if_has Conv.all_conv))
+
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       Guess_Scalar_Assoc is_intro,
                                       (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rule} else @{thm' \<phi>TA_MS\<^sub>E_rule}),
