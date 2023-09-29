@@ -1884,8 +1884,8 @@ lemma Orelse_shortcut_I2:
         let val sequent = snd (PLPR_Syntax.rulify_antecedents false 1 ctxt (I2 RS sequent0))
          in if Subgoal_Env.chk_goal goal
             then NONE
-            else case Thm.major_prem_of sequent
-              of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _) =>
+            else case try Thm.major_prem_of sequent
+              of SOME (_ (*Trueprop*) $ (Const(\<^const_name>\<open>Orelse_shortcut\<close>, _) $ _ $ _)) =>
                       SOME ((ctxt, I1 RS sequent), tac sequent)
                | _ => SOME ((ctxt, sequent), Seq.empty)
         end)

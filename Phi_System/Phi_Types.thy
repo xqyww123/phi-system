@@ -1554,7 +1554,7 @@ subsection \<open>Domainoid\<close>
 
 term \<open>domainoid\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>type_def Domainoid ("\<DD>[_]" [4] 1000)
     where \<open>\<DD>[\<delta>] T \<equiv> \<delta> \<Zcomp>\<^sub>f T \<phi>\<s>\<u>\<b>\<j> closed_homo_sep \<delta>\<close>
@@ -1616,6 +1616,16 @@ lemma [\<phi>reason %BI_approx_success]:
   unfolding BI_sub_transformation Transformation_def Premise_def Inhabited_def
   by clarsimp
 
+lemma [\<phi>reason %BI_approx_success]:
+  \<open> (x \<Ztypecolon> \<DD>[(\<lambda>d. d)] T) \<le> (x \<Ztypecolon> T) \<close>
+  unfolding BI_sub_transformation Transformation_def
+  by clarsimp
+
+lemma [\<phi>reason %BI_approx_success]:
+  \<open> (x \<Ztypecolon> T) \<le> (x \<Ztypecolon> \<DD>[(\<lambda>d. d)] T) \<close>
+  unfolding BI_sub_transformation Transformation_def
+  by clarsimp
+
 lemma [\<phi>reason_template %BI_approx_derived]:
   \<open> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>'] G G' T D (embedded_func f P)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x
@@ -1635,20 +1645,28 @@ lemma [\<phi>reason_template %BI_approx_derived]:
 
 paragraph \<open>Guess the Forms\<close>
 
-lemma
-  \<open> domainoid_mapper TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>'
-\<Longrightarrow> Guess_Tyops_Commute False \<DD>[\<delta>] \<DD>[\<delta>'] F F' uG uG' uF uG' T D r a c
-\<Longrightarrow> Guess_Tyops_Commute False \<DD>[\<delta>] \<DD>[\<delta>'] F F' uG uG' uF uG' T D r a c \<close>
+lemma [\<phi>reason %guess_tyop_commute for \<open>Guess_Tyops_Commute False \<DD>[_] ?var _ ?var_F' _ _ _ _ _ _ _ _ _\<close> ]:
+  \<open> Parameter_Variant_of_the_Same_Type F F'
+\<Longrightarrow> domainoid_mapper TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>'
+\<Longrightarrow> Guess_Tyops_Commute False \<DD>[\<delta>] \<DD>[\<delta>'] F F' uG uG' uF uF' T D r a c
+\<Longrightarrow> Guess_Tyops_Commute False \<DD>[\<delta>] \<DD>[\<delta>'] F F' uG uG' uF uF' T D r a c \<close>
+  unfolding Guess_Tyops_Commute_def ..
+
+lemma [\<phi>reason %guess_tyop_commute for \<open>Guess_Tyops_Commute True _ ?var_F' \<DD>[_] ?var _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> Parameter_Variant_of_the_Same_Type F F'
+\<Longrightarrow> domainoid_mapper TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>'
+\<Longrightarrow> Guess_Tyops_Commute True F F' \<DD>[\<delta>] \<DD>[\<delta>'] uG uG' uF uF' T D r a c
+\<Longrightarrow> Guess_Tyops_Commute True F F' \<DD>[\<delta>] \<DD>[\<delta>'] uG uG' uF uF' T D r a c \<close>
   unfolding Guess_Tyops_Commute_def ..
 
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 3 ]]
- 
+declare [[\<phi>trace_reasoning = 0 ]]
+  
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
-  deriving (*Basic
+  deriving Basic
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 (f s)
          \<Longrightarrow> Identity_Elements\<^sub>I T D P
          \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D P \<close>
@@ -1684,15 +1702,16 @@ declare [[\<phi>trace_reasoning = 3 ]]
        and Commutativity_Deriver
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] inj (f s)
          \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 (\<phi>ScalarMul f s) (\<phi>ScalarMul f s) (\<phi>ScalarMul f s) (\<and>\<^sub>\<phi>) (\<and>\<^sub>\<phi>) T U
-                              (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
+                             (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
 
-       and*) (*\<open> domainoid_mapper TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>'
+       and \<open> domainoid_mapper TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>'
         \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> closed_homo_sep \<delta> \<Longrightarrow> fun_commute (scalar_mult f s) \<delta> (scalar_mult f' s') \<delta>')
         \<Longrightarrow> Tyops_Commute (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') \<DD>[\<delta>] \<DD>[\<delta>'] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
-       and*) \<open> domainoid_mapper TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>'
+       and \<open> domainoid_mapper TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>'
         \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> closed_homo_sep \<delta> \<longrightarrow> fun_commute \<delta> (scalar_mult f s) \<delta>' (scalar_mult f' s')
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>'] (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>ScalarMul.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) ?P  \<close>),
@@ -1870,6 +1889,8 @@ lemma [simp]:
   unfolding inj_def
   by simp
 
+declare [[\<phi>trace_reasoning = 0]]
+
 \<phi>type_def List_Item :: \<open>('v, 'a) \<phi> \<Rightarrow> ('v list, 'a) \<phi>\<close>
   where \<open>List_Item T \<equiv> (\<lambda>v. [v]) \<Zcomp>\<^sub>f T\<close>
   deriving Basic
@@ -1879,6 +1900,8 @@ lemma [simp]:
        and Abstraction_to_Raw
        and Carrier_Set
        and \<phi>Inter.Comm\<^sub>I
+
+text \<open>The domainoid of \<open>List_Item\<close> is derived directly from \<open>%BI_approx_success\<close>\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List_Item.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (List_Item ?T) ?P \<close>),
@@ -2145,17 +2168,18 @@ ML \<open>assert_derived_properties \<^theory> [
 ]\<close>
 
 
-declare [[\<phi>trace_reasoning = 0]]
-
+declare [[\<phi>trace_reasoning = 3]]
+  
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
-  deriving Monoidal_Sep_Functor
+  deriving Domainoid.Comm\<^sub>I (*Monoidal_Sep_Functor
        and Functionality
        and Abstraction_to_Raw
        and Commutativity_Deriver
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
        and \<phi>Inter.Comm\<^sub>I
+       and Domainoid.Comm*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?k \<^bold>\<rightarrow> ?T) ?P \<close>),

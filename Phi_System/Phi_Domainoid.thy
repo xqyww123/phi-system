@@ -473,7 +473,9 @@ lemma [\<phi>reason 1000]:
   where \<open>Separation_Disj X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<longrightarrow> u ## v)\<close>*)
 
 
-section \<open>Concrete Instances of Domainoids\<close>
+section \<open>Reasoning Subgoals about Domainoid\<close>
+
+subsection \<open>Goals\<close>
 
 definition domainoid_mapper :: \<open>'c\<^sub>1 itself \<Rightarrow> 'c\<^sub>2 itself
                             \<Rightarrow> ('c\<^sub>1::sep_magma, 'd\<^sub>1::sep_magma) domainoid
@@ -481,7 +483,26 @@ definition domainoid_mapper :: \<open>'c\<^sub>1 itself \<Rightarrow> 'c\<^sub>2
                             \<Rightarrow> bool \<close>
   where \<open>domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<longleftrightarrow> (domainoid T\<^sub>1 \<delta>\<^sub>1 \<longrightarrow> domainoid T\<^sub>2 \<delta>\<^sub>2)\<close>
 
-declare [[\<phi>reason_default_pattern \<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2\<close> \<Rightarrow> \<open>domainoid_mapper ?T _ ?\<delta> _\<close> (100) ]]
+definition comm_domainoid_mapper :: \<open> 'c\<^sub>1 itself \<Rightarrow> 'c\<^sub>2 itself
+                                  \<Rightarrow> ('c\<^sub>1::sep_magma, 'd\<^sub>1::sep_magma) domainoid
+                                  \<Rightarrow> ('c\<^sub>2::sep_magma, 'd\<^sub>2::sep_magma) domainoid
+                                  \<Rightarrow> ('d\<^sub>1 \<Rightarrow> 'd\<^sub>2) \<Rightarrow> ('c\<^sub>1 \<Rightarrow> 'c\<^sub>2)
+                                  \<Rightarrow> bool\<close>
+  where \<open>comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longleftrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<and> fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2\<close>
+
+declare [[
+  \<phi>reason_default_pattern_ML \<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2\<close> \<Rightarrow>
+    \<open>fn ctxt => fn prop as Trueprop $ (dom_mapper $ T1 $ T2 $ d1 $ d2) =>
+     let fun chk (\<^Const>\<open>Pure.type \<open>TVar _\<close>\<close>, d) = is_Var d
+           | chk (T,d) = is_Var T andalso is_Var d
+         val idx = Term.maxidx_of_term prop + 1
+         val rewr = the_list oo Pattern_Translation.rewrite (Context.theory_of ctxt) [] o Logic.dest_conjunction
+         val ret = (if chk (T1,d1) then [] else rewr \<^pattern>\<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2 &&& domainoid_mapper ?T\<^sub>1 _ ?\<delta>\<^sub>1 _\<close> prop)
+                 @ (if chk (T2,d2) then [] else rewr \<^pattern>\<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2 &&& domainoid_mapper _ ?T\<^sub>2 _ ?\<delta>\<^sub>2\<close> prop)
+                 @ rewr \<^pattern>\<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2 &&& domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 _ _\<close> prop
+      in SOME ret
+     end\<close> (100)
+]]
 
 lemma domainoid_mapper_gen:
   \<open> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2
@@ -495,14 +516,36 @@ lemma [\<phi>premise_extraction add]:
   unfolding domainoid_mapper_def domainoid_def
   by simp
 
-lemma [\<phi>reason %domainoid_fallback]:
+lemma [\<phi>premise_extraction add]:
+  \<open> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<equiv> (closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> closed_homo_sep \<delta>\<^sub>2) \<and> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<close>
+  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_def
+  by simp
+
+subsection \<open>Fallback\<close>
+
+lemma [\<phi>reason default %domainoid_fallback]:
   \<open>domainoid TYPE('c::sep_magma) (\<lambda>x. x)\<close>
   unfolding domainoid_def
   by simp
 
+lemma [\<phi>reason default %domainoid_fallback for \<open>domainoid_mapper _ _ _ _\<close>]:
+  \<open> domainoid T\<^sub>2 \<delta>\<^sub>2
+\<Longrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<close>
+  unfolding domainoid_mapper_def
+  by blast
+
+
+subsection \<open>Instances\<close>
+
 lemma [\<phi>reason %domainoid_cut]:
   \<open> domainoid TYPE('c::discrete_semigroup) (\<lambda>_. nosep ()) \<close>
   unfolding domainoid_def
+  by simp
+
+lemma [\<phi>reason %domainoid_cut]:
+  \<open> domainoid TYPE('c list) (\<lambda>_. ()) \<close>
+  unfolding domainoid_def closed_homo_sep_def closed_homo_sep_disj_def homo_sep_def
+            homo_sep_disj_def homo_sep_mult_def
   by simp
 
 lemma [\<phi>reason %domainoids,

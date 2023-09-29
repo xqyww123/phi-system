@@ -602,6 +602,7 @@ definition fun_commute :: \<open>('b \<Rightarrow> 'c) \<Rightarrow> ('a \<Right
 declare [[\<phi>reason_default_pattern
   \<open>fun_commute ?\<psi> ?\<phi> ?\<psi>' ?\<phi>'\<close> \<Rightarrow> \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> \<open>fun_commute _ _ ?\<psi>' ?\<phi>'\<close> (100) ]]
 
+
 subsubsection \<open>Fallback\<close>
 
 lemma [\<phi>reason %algb_falling_lattice for \<open>fun_commute ?var_\<phi> ?var_\<psi> _ _\<close>

@@ -3023,7 +3023,7 @@ declare [[ \<phi>reason_default_pattern
   and \<open>Identity_Elements\<^sub>E ?T _\<close> \<Rightarrow> \<open>Identity_Elements\<^sub>E ?T _\<close> (100)
 ]]
 
-\<phi>reasoner_group identity_element = (1,[1,3000]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
+\<phi>reasoner_group identity_element = (100,[1,3000]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
     \<open>Reasoning rules deducing if the given assertion can transform to or be transformed from the
      assertion of identity element.\<close>
  and identity_element_fallback = (1,[1,1]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)

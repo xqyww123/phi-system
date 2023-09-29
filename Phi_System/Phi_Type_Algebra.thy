@@ -5092,18 +5092,26 @@ declare [[
 
 subparagraph \<open>Initialization\<close>
 
-lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> Parameter_Variant_of_the_Same_Type G G'
-\<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'
-\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
+lemma [\<phi>reason %guess_tyop_commute_default for \<open>Guess_Tyops_Commute _ _ ?var_F' _ _ _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> Parameter_Variant_of_the_Same_Type F var_F'
+\<Longrightarrow> Guess_Tyops_Commute Any F var_F' G G' uF uF' uG uG' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute Any F var_F' G G' uF uF' uG uG' T D r ants conds \<close> .
+
+lemma [\<phi>reason %guess_tyop_commute_default for \<open>Guess_Tyops_Commute _ _ _ _ ?var_G' _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> Parameter_Variant_of_the_Same_Type G var_G'
+\<Longrightarrow> Guess_Tyops_Commute Any F F' G var_G' uF uF' uG uG' T D r ants conds
+\<Longrightarrow> Guess_Tyops_Commute Any F F' G var_G' uF uF' uG uG' T D r ants conds\<close> .
+
+lemma [\<phi>reason %\<phi>TA_guesser_init except \<open>Guess_Tyops_Commute True _ _ _ ?var_F' _ _ _ _ _ _ _ _ _\<close>
+                                         \<open>Guess_Tyops_Commute True _ ?var_G' _ _ _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T x) : (x \<Ztypecolon> G' T) )
 \<Longrightarrow> Guess_Tyops_Commute True G G' F F' var_unfolded_G var_unfolded_G' uF uF' T D r ants conds
 \<Longrightarrow> Guess_Tyops_Commute True G G' F F' var_unfolded_G var_unfolded_G' uF uF' T D r ants conds\<close> .
 
-lemma [\<phi>reason %\<phi>TA_guesser_init]:
-  \<open> Parameter_Variant_of_the_Same_Type G G'
-\<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'
-\<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
+lemma [\<phi>reason %\<phi>TA_guesser_init except \<open>Guess_Tyops_Commute False _ _ _ ?var_G' _ _ _ _ _ _ _ _ _\<close>
+                                        \<open>Guess_Tyops_Commute False _ ?var_F' _ _ _ _ _ _ _ _ _ _ _\<close>]:
+  \<open> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G T x) : (x \<Ztypecolon> G T) )
 \<Longrightarrow> (\<And>T x. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>deriver_expansion] (var_unfolded_G' T x) : (x \<Ztypecolon> G' T) )
 \<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' var_unfolded_G var_unfolded_G' T D r ants conds
 \<Longrightarrow> Guess_Tyops_Commute False F F' G G' uF uF' var_unfolded_G var_unfolded_G' T D r ants conds\<close> .
@@ -5151,23 +5159,23 @@ lemma [\<phi>reason %\<phi>TA_guesser_init]:
 subparagraph \<open>Default Rules\<close>
 
 lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
-  \<open> Type_Variant_of_the_Same_Type_Operator F F'
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'
+  \<open> Type_Variant_of_the_Same_Type_Operator F F' \<or>\<^sub>c\<^sub>u\<^sub>t True
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G' \<or>\<^sub>c\<^sub>u\<^sub>t True
 \<Longrightarrow> Guess_Tyops_Commute both F F' G G' uF uF' any any' T (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True\<close>
   unfolding Guess_Tyops_Commute_def ..
 
 lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
-  \<open> Type_Variant_of_the_Same_Type_Operator2 F F'
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>T
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>U
+  \<open> Type_Variant_of_the_Same_Type_Operator2 F F' \<or>\<^sub>c\<^sub>u\<^sub>t True
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>T \<or>\<^sub>c\<^sub>u\<^sub>t True
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator G G'\<^sub>U \<or>\<^sub>c\<^sub>u\<^sub>t True
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 both G G'\<^sub>T G'\<^sub>U F F' uG uG'\<^sub>T uG'\<^sub>U uF uF' T U
                           (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True \<close>
   unfolding Guess_Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def ..
 
 lemma [\<phi>reason %guess_tyop_commute_fallback for \<open>Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\<close>]:
-  \<open> Type_Variant_of_the_Same_Type_Operator2 G G'
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>T
-\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>U
+  \<open> Type_Variant_of_the_Same_Type_Operator2 G G' \<or>\<^sub>c\<^sub>u\<^sub>t True
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>T \<or>\<^sub>c\<^sub>u\<^sub>t True
+\<Longrightarrow> Type_Variant_of_the_Same_Type_Operator F F'\<^sub>U \<or>\<^sub>c\<^sub>u\<^sub>t True
 \<Longrightarrow> Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 both F F'\<^sub>T F'\<^sub>U G G' uF uF'\<^sub>T uF'\<^sub>U uG uG' T U
                                (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) True True \<close>
   unfolding Guess_Tyops_Commute\<^sub>1\<^sub>_\<^sub>2_def ..
@@ -5306,6 +5314,26 @@ lemma [\<phi>reason %object_equiv_cut]:
 lemma [\<phi>reason %object_equiv_cut]:
   \<open> Object_Equiv T eq
 \<Longrightarrow> Object_Equiv (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) eq\<close>
+  unfolding Bubbling_def .
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>I T D P
+\<Longrightarrow> Identity_Elements\<^sub>I (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D P \<close>
+  unfolding Has_Bubbling_def .
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>I T D P
+\<Longrightarrow> Identity_Elements\<^sub>I (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D P \<close>
+  unfolding Bubbling_def .
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>E T D
+\<Longrightarrow> Identity_Elements\<^sub>E (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D \<close>
+  unfolding Has_Bubbling_def .
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>E T D
+\<Longrightarrow> Identity_Elements\<^sub>E (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D \<close>
   unfolding Bubbling_def .
 
 
