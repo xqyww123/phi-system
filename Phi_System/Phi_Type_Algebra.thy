@@ -1197,8 +1197,6 @@ thm list.collapse
 
 ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
-ML \<open>BNF_Def.bnf_of \<^context> \<^type_name>\<open>yyy\<close>\<close>
-
 ML \<open>local val bnf = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>) in
 val x = BNF_Def.deads_of_bnf bnf
 val z = BNF_Def.mk_sets_of_bnf [[]] [[\<^typ>\<open>nat\<close>]] bnf
@@ -5447,23 +5445,23 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
 
 ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 
-\<phi>property_deriver Commutativity_Deriver\<^sub>I 110
+\<phi>property_deriver Commutativity_Deriver\<^sub>I 200
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 1) quiet) \<close>
 
-\<phi>property_deriver Commutativity_Deriver\<^sub>E 110
+\<phi>property_deriver Commutativity_Deriver\<^sub>E 200
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 2) quiet) \<close>
 
-\<phi>property_deriver Commutativity_Deriver 110
+\<phi>property_deriver Commutativity_Deriver 200
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (false, 3) quiet) \<close>
 
-\<phi>property_deriver Commutativity_Deriver\<^sub>I_rev 110
+\<phi>property_deriver Commutativity_Deriver\<^sub>I_rev 200
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 2) quiet) \<close>
   \<comment> \<open>The name is reversed, i.e., I for E, E for I, but the deriving process is unchanged.\<close>
 
-\<phi>property_deriver Commutativity_Deriver\<^sub>E_rev 110
+\<phi>property_deriver Commutativity_Deriver\<^sub>E_rev 200
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 1) quiet) \<close>
 
-\<phi>property_deriver Commutativity_Deriver_rev 110
+\<phi>property_deriver Commutativity_Deriver_rev 200
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 3) quiet) \<close>
 
 
