@@ -8,6 +8,7 @@ signature NU_REASONER = sig
 
   type priority = int
   type pattern = term
+  type patterns_and_excepts = (pattern * priority option) list * pattern list
   type name = term
   type reasoners
   type ML_guard = context_state -> bool
@@ -192,6 +193,7 @@ structure Phi_Reasoner : NU_REASONER = struct
 (* Types *)
 type priority = int
 type pattern = term
+type patterns_and_excepts = (pattern * priority option) list * pattern list
 type name = term
 type ML_guard = context_state -> bool
 type action = cterm

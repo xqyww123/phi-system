@@ -1113,15 +1113,9 @@ lemma \<phi>gen_expansion:
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
-ML_file \<open>library/phi_type_algebra/properties.ML\<close>
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 
-
-consts \<phi>instantiation :: mode
-
-\<phi>reasoner_ML \<open>Simplify \<phi>instantiation\<close> 1000 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] _ : _\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
-        (Phi_Type_Template_Properties.Template_Inst_SS.enhance) true) o snd\<close>
+(*TODO: move*)
 
 consts under_\<phi>deriving :: mode
 
@@ -5486,13 +5480,6 @@ ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 
 \<phi>property_deriver Commutativity_Deriver_rev 200
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 3) quiet) \<close>
-
-
-subsubsection \<open>Domainoid\<close>
-
-lemma
-  \<open> Tyops_Commute  \<close>
-
 
 
 

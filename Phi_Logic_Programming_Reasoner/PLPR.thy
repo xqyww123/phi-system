@@ -1,6 +1,6 @@
 theory PLPR
   imports PLPR_error_msg "HOL-Eisbach.Eisbach" "HOL-Eisbach.Eisbach_Tools" "Phi_Document.Base"
-  keywords "except" "@action" :: quasi_command
+  keywords "except" "@action" "requires" :: quasi_command
        and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
        and "\<phi>reasoner_group" :: thy_defn
        and "\<phi>reasoner_group_assert" :: thy_decl
@@ -1616,6 +1616,47 @@ text \<open>Forms of antecedents are significant in \<phi>-LPR reasoning.
 ML_file \<open>library/tools/simplification_protect.ML\<close>
 
 
+subsection \<open>Simplification \& Rewrite\<close>
+
+text \<open>\<open>\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
+  \<open>mode\<close>. The \<open>?result\<close> should be an output variable for the result of the simplification.
+
+  We implement a \<open>default\<close> mode where the system simple-set is used to simplify
+  \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
+
+definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[_] _ :/ _" [10,1000,10] 9)
+  where "Simplify setting result origin \<longleftrightarrow> result = origin"
+
+(* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
+  where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close> *)
+
+lemma Simplify_cong[cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
+
+lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .
+lemma Simplify_I: \<open>A = B \<Longrightarrow> Simplify m A B\<close> unfolding Simplify_def .
+
+(* lemma Do_Simplification:
+  \<open>PROP Do_Simplificatin A B \<Longrightarrow> Simplify s A B\<close>
+  unfolding Do_Simplificatin_def Simplify_def atomize_eq . *)
+
+lemma End_Simplification : \<open>Simplify mode A A\<close> unfolding Simplify_def ..
+lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> Simplify mode A B\<close>
+  unfolding Simplify_def Premise_def atomize_eq .
+
+ML_file_debug \<open>library/simplifier.ML\<close>
+
+hide_fact End_Simplification' End_Simplification
+
+subsubsection \<open>Default Simplifier\<close>
+
+abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [1000,10] 9)
+  where "Default_Simplify \<equiv> Simplify default"
+
+\<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I false) o snd\<close>
+
+
+
 subsection \<open>Rule Generation\<close>
 
 consts \<A>_template_reason :: action \<comment> \<open>tagging the antecedent has to be solved during the time of
@@ -1625,7 +1666,13 @@ definition \<open>template_NO_SIMP_USE (X::bool) \<equiv> X\<close>
 
 
 ML_file_debug \<open>library/rule_generation.ML\<close>
+ML_file \<open>library/properties.ML\<close>
 
+consts \<phi>instantiation :: mode
+
+\<phi>reasoner_ML \<open>Simplify \<phi>instantiation\<close> 1000 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] _ : _\<close>)
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
+        (PLPR_Rule_Gen.Template_Inst_SS.enhance) true) o snd\<close>
 
 
 
@@ -1761,48 +1808,6 @@ ML_file \<open>library/Subgoal_Env.ML\<close>
 \<phi>reasoner_ML SUBGOAL %cutting (\<open>SUBGOAL ?ROOT ?NEWGOAL\<close>) = \<open>Subgoal_Env.subgoal o snd\<close>
 \<phi>reasoner_ML CHK_SUBGOAL %cutting (\<open>CHK_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.chk_subgoal o snd\<close>
 \<phi>reasoner_ML SOLVE_SUBGOAL %cutting (\<open>SOLVE_SUBGOAL ?GOAL\<close>) = \<open>Subgoal_Env.solve_subgoal o snd\<close>
-
-
-subsection \<open>Simplification \& Rewrite\<close>
-
-text \<open>\<open>\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode] ?result : term\<close>\<close> is generic antecedent for simplifying \<open>term\<close> in different
-  \<open>mode\<close>. The \<open>?result\<close> should be an output variable for the result of the simplification.
-
-  We implement a \<open>default\<close> mode where the system simple-set is used to simplify
-  \<open>term\<close>. Users may configure their mode and their reasoner using different simple-set.\<close>
-
-definition Simplify :: " mode \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[_] _ :/ _" [10,1000,10] 9)
-  where "Simplify setting result origin \<longleftrightarrow> result = origin"
-
-(* definition Do_Simplificatin :: \<open>'a \<Rightarrow> 'a \<Rightarrow> prop\<close>
-  where \<open>Do_Simplificatin result origin \<equiv> (result \<equiv> origin)\<close> *)
-
-lemma Simplify_cong[cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equiv> Simplify s x A' " by simp
-
-lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .
-lemma Simplify_I: \<open>A = B \<Longrightarrow> Simplify m A B\<close> unfolding Simplify_def .
-
-(* lemma Do_Simplification:
-  \<open>PROP Do_Simplificatin A B \<Longrightarrow> Simplify s A B\<close>
-  unfolding Do_Simplificatin_def Simplify_def atomize_eq . *)
-
-lemma End_Simplification : \<open>Simplify mode A A\<close> unfolding Simplify_def ..
-lemma End_Simplification': \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> A = B \<Longrightarrow> Simplify mode A B\<close>
-  unfolding Simplify_def Premise_def atomize_eq .
-
-ML_file_debug \<open>library/simplifier.ML\<close>
-
-hide_fact End_Simplification' End_Simplification
-
-subsubsection \<open>Default Simplifier\<close>
-
-abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [1000,10] 9)
-  where "Default_Simplify \<equiv> Simplify default"
-
-\<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I false) o snd\<close>
-
-(*consts MODE_YoYo :: mode*)
 
 
 (* subsection \<open>Exhaustive Divergence\<close>

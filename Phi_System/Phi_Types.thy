@@ -1403,7 +1403,7 @@ lemma [simp]: (*TODO: move me*)
   \<open>(case x of Inl x \<Rightarrow> Inl x | Inr x \<Rightarrow> Inr x) = x\<close>
   by (cases x; simp)
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 1]]
 
 \<phi>reasoner_group identity_elements_of_\<phi>Fun = (100, [100, 140]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
                                                                in identity_element and > derived_identity_element
@@ -2168,18 +2168,17 @@ ML \<open>assert_derived_properties \<^theory> [
 ]\<close>
 
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
   
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
-  deriving Domainoid.Comm\<^sub>I (*Monoidal_Sep_Functor
+  deriving Monoidal_Sep_Functor
        and Functionality
        and Abstraction_to_Raw
        and Commutativity_Deriver
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
        and \<phi>Inter.Comm\<^sub>I
-       and Domainoid.Comm*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>MapAt.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?k \<^bold>\<rightarrow> ?T) ?P \<close>),

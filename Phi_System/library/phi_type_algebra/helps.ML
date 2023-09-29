@@ -7,7 +7,7 @@ end
 
 structure Phi_Type_Algebra : PHI_TYPE_ALGEBRA = struct
 
-exception Automation_Fail of unit -> Pretty.T list
+exception Automation_Fail = PLPR_Rule_Gen.Generation_Fail
 
 (*converts a given definition in various forms into \<open>(x \<Ztypecolon> T) = \<dots>\<close>*)
 fun conv_def_to_equation ctxt def =

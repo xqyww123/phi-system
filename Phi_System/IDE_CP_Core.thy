@@ -6,7 +6,7 @@ theory IDE_CP_Core
     "proc" :: thy_goal_stmt
   and "as" "\<rightarrow>" "\<longmapsto>" "\<leftarrow>" "^" "^*" "\<Longleftarrow>" "\<Longleftarrow>'" "$" "subj"
     "var" "val" "invar" "\<Longrightarrow>" "@action" "\<exists>" "throws" "pure_fact"
-    "input" "certified" "requires" "apply_rule" :: quasi_command
+    "input" "certified" "apply_rule" :: quasi_command
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"

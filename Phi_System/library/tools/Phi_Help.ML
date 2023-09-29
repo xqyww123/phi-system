@@ -12,11 +12,6 @@ signature PHI_HELP = sig
 include PHI_HELP
 
 (**** Basic Operations ****)
-  val last : 'a list -> 'a
-  val front : 'a list -> 'a list
-  val split_last : 'a list -> 'a list * 'a
-  val repeat : ('a -> 'a) -> 'a -> 'a
-  val ntimes : int -> (int -> 'a -> 'a) -> 'a -> 'a
 
   val string_of_term_generic : Context.generic -> term -> string
 
@@ -92,18 +87,6 @@ end
 
 structure Phi_Help : PHI_HELP = struct
 open Phi_Help
-
-fun last [] = raise Fail "last"
-  | last [x] = x
-  | last (h::ls) = last ls
-fun front [] = raise Fail "front"
-  | front [x] = []
-  | front (h::ls) = h :: front ls
-fun split_last L = (front L, last L)
-
-fun repeat f x = repeat f (f x) handle TERM _ => x | CTERM _ => x | THM _ => x
-fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x
-fun ntimes n f x = ntimes_i 0 n f x
 
 
 fun string_of_term_generic (Context.Theory thy) = Syntax.string_of_term_global thy

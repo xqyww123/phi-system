@@ -1,10 +1,68 @@
+(* AUTHOR: Qiyuan Xu
+
+This file provides a framework of template instantiation of reasoning rules, where a template is
+a rule with antecedents as the template parameters and argument rules can be given from which
+we compose instances by resolution between the arguments and the parameters.
+Instance rules can be declared as a \<phi>-LPR reasoning rule or with any attributes as indicated by the
+template.
+
+The file provides an attribute \<open>\<phi>reason_generator\<close> declaring a template of a single parameter as its
+leading antecedent. Later, when the system of property database is built, property-based template
+as an instance of multi-parameter template will be provided (carried out by attribute \<open>\<phi>reason_template\<close>)
+which supports multi-properties as its parameters and instantiating the template once
+sufficient properties are registered to the database.
+*)
+
 signature PLPR_RULE_GEN = sig
+
+exception Generation_Fail of (unit -> Pretty.T list)
 
 structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
 structure Template_Inst_SS_Post_Merging : HOOKS
 
+datatype instantiation_action =
+            Reasonig_Rule of (Phi_Reasoner.mode * Reasoner_Group.group) * Phi_Reasoner.patterns_and_excepts
+          | Attributes of Token.src list
+          | No_Action
+
+type binding_template = indexname list * binding
+                       (*^ variables that will be instantiated to certain lambda terms, and the binding will
+                      by qualified by the short-names of the heading constants of the lambda terms, which
+                      comprises the final binding of the instance lemma.*)
+
+type rule_generation_pass = (thm -> thm list) * Position.T * Proof.context -> thm -> thm list
+
+type template = (Position.T * thm (*template*))
+              * (rule_generation_pass * Phi_Reasoner.rule_pass) option
+              * instantiation_action
+              * binding_template option
+
+val trim_action : instantiation_action -> instantiation_action
+val pattern_of : instantiation_action -> term list option
+
+val invoke_action : Position.T (*the position where the instantiation happens*) *
+                    Phi_Reasoner.rule_pass option (*only effective for actions of Reasonig_Rule*)
+                -> instantiation_action
+                -> thm list -> Context.generic -> Context.generic
+
 val pass_generated_rule : {simp: bool, masks: IN_Arg.mask list option (*can be None by default*)}
                        -> Proof.context -> thm -> thm
+
+type instantiation = Position.T (*where the instantiation happens*)
+                   * Envir.env  (*unifiers between parameters and arguments*)
+                   * (Position.T * thm) option list
+
+(* Main Entry *)
+val invoke_generation : template -> instantiation -> Context.generic -> Context.generic
+
+(* Syntax Parsers *)
+
+val parse_pass : Context.generic -> Input.source option -> (rule_generation_pass * Phi_Reasoner.rule_pass) option
+val parse_action : Phi_Reasoner.mode * Reasoner_Group.group * Phi_Reasoner.patterns_and_excepts * Token.src list option
+                -> instantiation_action
+
+(* Internal Interfaces *)
+val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
 
 end
 
@@ -14,6 +72,8 @@ structure Template_Inst_SS_Post_Merging = Hooks (
   type arg = unit
   type state = Proof.context
 )
+
+type TT = Phi_Reasoner.pattern
 
 structure Template_Inst_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
@@ -25,6 +85,56 @@ structure Template_Inst_SS = Simpset (
         |> Simplifier.add_cong @{thm' if_cong}
         |> Template_Inst_SS_Post_Merging.invoke (Context.Proof ctxt) ()
 )
+
+datatype instantiation_action =
+            Reasonig_Rule of (Phi_Reasoner.mode * Reasoner_Group.group) *
+                             ( (Phi_Reasoner.pattern * priority option) list * Phi_Reasoner.pattern list )
+          | Attributes of Token.src list
+          | No_Action
+
+type rule_generation_pass = (thm -> thm list) * Position.T * Proof.context -> thm -> thm list
+
+type binding_template = indexname list * binding
+                       (*^ variables that will be instantiated to certain lambda terms, and the binding will
+                      by qualified by the short-names of the heading constants of the lambda terms, which
+                      comprises the final binding of the instance lemma.*)
+
+type template = (Position.T * thm (*template*))
+              * (rule_generation_pass * Phi_Reasoner.rule_pass) option
+              * instantiation_action
+              * binding_template option
+
+type instantiation = Position.T (*where the instantiation happens*)
+                   * Envir.env  (*unifiers between parameters and arguments*)
+                   * (Position.T * thm) option list
+
+
+fun trim_action (X as Reasonig_Rule _) = X
+  | trim_action (Attributes srcs) = Attributes (map (map Token.trim_context) srcs)
+  | trim_action No_Action = No_Action
+
+fun pattern_of (Reasonig_Rule (_, (pats, _))) = SOME (map fst pats)
+  | pattern_of (Attributes _) = NONE
+  | pattern_of No_Action = NONE
+
+fun invoke_action (template_pos, pass) action rules' ctxt =
+  (case action
+     of (Reasonig_Rule ((mode, priority), (pats, blacklists))) =>
+        let val (rules', (mode', priority'), (pats', blacklists'), guard', ctxt) =
+                case pass of SOME ps => ps template_pos (rules', (mode, priority), (pats, blacklists), NONE, ctxt)
+                           | NONE => (rules', (mode, priority), (pats, blacklists), NONE, ctxt)
+         in Phi_Reasoner.add_rules (map (fn rule =>
+                      ([rule], template_pos, mode', priority', pats', blacklists', guard') ) rules') ctxt
+        end
+      | (Attributes attrs) =>
+        let fun app attr = uncurry (Thm.apply_attribute (
+                              Context.cases Attrib.attribute_global Attrib.attribute ctxt attr))
+         in fold (curry (snd o fold app attrs)) rules' ctxt
+        end
+      | No_Action => ctxt
+  )
+
+exception Generation_Fail of (unit -> Pretty.T list)
 
 fun normalize th = th
   |> Phi_Help.beta_eta_contract
@@ -52,6 +162,133 @@ fun pass_generated_rule {simp, masks} ctxt rule =
    |> normalize
   end
 
+fun short_name_of_leading_const (Abs (_,_,X)) = short_name_of_leading_const X
+  | short_name_of_leading_const (X $ _) = short_name_of_leading_const X
+  | short_name_of_leading_const (Const (N, _)) = Long_Name.base_name N
+  | short_name_of_leading_const (Free (N, _)) = N
+  | short_name_of_leading_const _ = raise Match
+
+fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, positioned_props) ctxt =
+     (let val ctxt' = Context.proof_of ctxt
+                   |> Config.put Phi_Reasoner_solve_obligation_and_no_defer 1
+          fun fold_pad _ 0 _ x = x
+            | fold_pad f n [] x = fold_pad f (n-1) [] (f NONE x)
+            | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
+          val rule'1 = (0, Thm.transfer' ctxt' template)
+                    |> fold_pad (fn positioned_prop'' => fn (i, thm) =>
+                        let (*datatype mode = Reason | Oblg | Normal*)
+                            val prop'' = Option.map snd positioned_prop''
+                            val (is_reasoning_goal, prop', thm'1) =
+                                  case Logic.strip_assums_concl (Logic.nth_prem (i+1, Thm.prop_of thm))
+                                    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                                          Const(\<^const_name>\<open>Action_Tag\<close>, _)
+                                              $ _
+                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) =>
+                                            (true, prop'', @{thm' Action_Tag_I} RSN (i+1, thm))
+                                     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) =>
+                                        (case prop'' of SOME prop' =>
+                                                (false,
+                                                 SOME (PLPR_Syntax.guardize {merge_cond=true} ctxt' (Thm.nprems_of prop') prop'),
+                                                 @{thm' \<r>Guard_I} RSN (i+1, thm))
+                                            | _ => (false, prop'', thm)
+                                            )
+                                   (*| Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
+                                          Const(\<^const_name>\<open>Premise\<close>, _)
+                                              $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)
+                                              $ P) =>
+                                        if exists_subterm (fn (Const(\<^const_name>\<open>\<A>_template_condition\<close>, _)) => true
+                                                            | _ => false) P
+                                        then Oblg
+                                        else Normal*)
+                                     | _ => (false, prop'', thm)
+                            val (delt,thm'2) = (case prop'
+                                                  of SOME prop => ((Thm.nprems_of prop, prop RSN' (ctxt', i+1, thm'1))
+                                                       handle THM _ => let open Pretty in
+                                                          raise Generation_Fail (fn () =>
+                                                            [block (text "Unification fails in instantiating the" @
+                                                                   [brk 1, str (string_of_int (i+1)), str "th", brk 1] @
+                                                                   text "antecedent of the template" @ [brk 1] @ here pos),
+                                                             item [str "template:", brk 1, Thm.pretty_thm ctxt' thm'1],
+                                                             item [str "property:", brk 1, Thm.pretty_thm ctxt' prop]])
+                                                        end)
+                                                   | NONE => (1, thm'1))
+                            val thm'3 =
+                                 if is_reasoning_goal
+                                 then thm'2 |> Thm.permute_prems 0 i
+                                            |> Phi_Reasoner.reason NONE (SOME delt)
+                                                                   (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt')
+                                            |> (fn SOME th => th
+                                                 | NONE => raise Generation_Fail (fn () =>
+                                                    let open Pretty
+                                                     in [para "Fail to reason a compulsory antecedent",
+                                                         Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))]
+                                                    end))
+                                            |> Thm.permute_prems 0 (~i)
+                                  (*| Oblg => Conv.gconv_rule (
+                                                Raw_Simplifier.rewrite ctxt' false @{thms' \<A>_template_condition_def}
+                                             ) (i+1) thm'2*)
+                                 else thm'2
+                         in (if is_reasoning_goal then i else i + delt, thm'3)
+                        end) (Thm.nprems_of template) positioned_props
+                    |> snd
+                    |> Phi_Help.beta_eta_contract
+          val pattern = pattern_of action
+          val rules' = case pass of SOME (ps, _) => ps (single o pass_generated_rule {simp=true, masks=pattern} ctxt', pos, ctxt') rule'1
+                                  | NONE => single (pass_generated_rule {simp=true, masks=pattern} ctxt' rule'1)
+
+          val binding = Option.map (fn (vs, b') =>
+                  let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
+                      fun varify_binding i b =
+                        let val b' = if i = 0 then b else Binding.suffix_name ("_" ^ string_of_int i) b
+                            val iname = Context.cases Sign.full_name Proof_Context.full_name ctxt b'
+                         in if Facts.defined facts iname
+                            then varify_binding (i+1) b
+                            else b
+                        end
+                      fun err () = error (let open Pretty in string_of (chunks [
+                                    block (text "The binding target" @ [brk 1] @
+                                           maps (fn v => [Syntax.pretty_term ctxt' (Var (v, dummyT)), brk 1, str "/", brk 1]) vs @
+                                           text "is not instantaited to any constant \<phi>-type,"),
+                                    block (text "in template" @
+                                           [brk 1, Thm.pretty_thm ctxt' template])
+                                 ]) end)
+                      val Envir.Envir {tenv, ...} = env
+                      val qualify = fold_rev (fn v =>
+                            case Vartab.lookup tenv v
+                              of SOME (_, tm) => Binding.qualify true (short_name_of_leading_const tm handle Match => err ())
+                               | NONE => err ()) vs
+                   in varify_binding 0 (qualify b')
+                  end
+                ) bind
+
+       in if null rules' then ctxt
+       else (
+       Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty in
+         chunks ([paragraph (text "Instantiate reasoning template" @ [brk 1] @
+                             (case binding of SOME b => [Binding.pretty b, brk 1] | _ => []) @
+                             here template_pos)] @
+                 (case action of Reasonig_Rule _ => []
+                     | Attributes _ => map (fn rule => item [Thm.pretty_thm ctxt' rule]) rules'
+                     | No_Action => []))
+         end) ;
+       invoke_action (template_pos, Option.map snd pass) action rules' ctxt
+   |> (case binding of NONE => I
+          | SOME b =>
+                perhaps (try (Context.mapping (snd o Global_Theory.note_thms "" ((b, []), [(rules',[])]))
+                                              (snd o Proof_Context.note_thms "" ((b, []), [(rules',[])]))))
+                        (*It is not a Local_Theory.note here because the instantiation usually happens
+                          inside an attribute and when a locale is interpreted, the attribute will be replayed.*)
+                        (*I want to support lazy instantiation, but, to provide this, the Proof.context
+                          has to be involved in the closure and that would consume a lot of memory.
+                          Perhaps we could use the mechanism of dynamic fact, I am not sure which is better,
+                          some test is required.*)
+      )
+    ) end
+      handle Generation_Fail prt => (
+        Phi_Reasoner.warn_pretty ctxt 2 (Pretty.chunks o prt) ;
+        ctxt))
+
+
 val _ = Theory.setup (
   let fun rule_attribute f (x, th) =
               if Thm.is_free_dummy th
@@ -64,5 +301,40 @@ val _ = Theory.setup (
     \if possible. \<open>NO_SIMP\<close> tag is recognized and supresses the simplification on the protected terms."
   end
 )
+
+val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
+      = Unsynchronized.ref NONE
+val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__sender_locker" ()
+
+
+(*
+val parser = Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
+          -- Scan.option Attrib.attribs*)
+fun parse_pass ctxt =
+  Option.map (fn src =>
+    let val _ = Synchronized.change rule_template_pass__sender_locker (fn () => (
+                  ML_Context.expression (Input.pos_of src)
+                    (ML_Lex.read "PLPR_Rule_Gen.rule_template_pass__sender := SOME (" @
+                     ML_Lex.read_source src @
+                     ML_Lex.read ")")
+                    ctxt;
+                  ()))
+        val pass = the (!rule_template_pass__sender)
+        val _ = rule_template_pass__sender := NONE
+     in pass
+    end)
+
+fun parse_action (mode, (priority, group), pats, attribs) =
+  case (attribs, priority, pats)
+    of (SOME (attrs as _ :: _), 100, ([], [])) => Attributes attrs
+          (*100 is the default priority of \<phi>-LPR. Here we use it to trickily mean
+            an explicit priority is not given*)
+     | (SOME [], 100, ([], [])) => No_Action
+     | (SOME _, _, _) =>
+        error "Prioirty and binding patterns are senseless and not allowed to\
+              \ be given once the attributes are given."
+     | (NONE, _, _) =>
+        Reasonig_Rule ((mode, (priority,group)), pats)
+
 
 end

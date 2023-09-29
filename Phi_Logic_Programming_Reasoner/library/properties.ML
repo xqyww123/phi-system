@@ -69,10 +69,6 @@ val invoke_automations_on_property : template_argument -> Context.generic -> Con
 val pretty_template : Context.generic -> template -> Pretty.T
 val pretty_templates : Context.generic -> (priority * template) Ord_List.T Symtab.table -> Pretty.T
 
-(*** Internal Interfaces ***)
-
-val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
-
 (*** Developer Tools ***)
 
 (*Debugging use only*)
@@ -82,7 +78,7 @@ end
 
 structure Phi_Type_Template_Properties : PHI_TYPE_TEMPLATE_PROPERTIES = struct
 
-exception Automation_Fail = Phi_Type_Algebra.Automation_Fail
+exception Automation_Fail = PLPR_Rule_Gen.Generation_Fail
 
 type property_pattern = term
 
@@ -308,124 +304,8 @@ fun normalize th = th
 
 fun invoke_template_action template_pos (Instantiate_Rule (template, pass, action, bind))
                            (pos, (env, positioned_props)) ctxt =
-     (let val ctxt' = Context.proof_of ctxt
-                   |> Config.put Phi_Reasoner_solve_obligation_and_no_defer 1
-          fun fold_pad _ 0 _ x = x
-            | fold_pad f n [] x = fold_pad f (n-1) [] (f NONE x)
-            | fold_pad f n (h::L) x = fold_pad f (n-1) L (f h x)
-          val rule'1 = (0, Thm.transfer' ctxt' template)
-                    |> fold_pad (fn positioned_prop'' => fn (i, thm) =>
-                        let (*datatype mode = Reason | Oblg | Normal*)
-                            val prop'' = Option.map snd positioned_prop''
-                            val (is_reasoning_goal, prop', thm'1) =
-                                  case Logic.strip_assums_concl (Logic.nth_prem (i+1, Thm.prop_of thm))
-                                    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                                          Const(\<^const_name>\<open>Action_Tag\<close>, _)
-                                              $ _
-                                              $ Const(\<^const_name>\<open>\<A>_template_reason\<close>, _)) =>
-                                            (true, prop'', @{thm' Action_Tag_I} RSN (i+1, thm))
-                                     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _) =>
-                                        (case prop'' of SOME prop' =>
-                                                (false,
-                                                 SOME (PLPR_Syntax.guardize {merge_cond=true} ctxt' (Thm.nprems_of prop') prop'),
-                                                 @{thm' \<r>Guard_I} RSN (i+1, thm))
-                                            | _ => (false, prop'', thm)
-                                            )
-                                   (*| Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-                                          Const(\<^const_name>\<open>Premise\<close>, _)
-                                              $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _)
-                                              $ P) =>
-                                        if exists_subterm (fn (Const(\<^const_name>\<open>\<A>_template_condition\<close>, _)) => true
-                                                            | _ => false) P
-                                        then Oblg
-                                        else Normal*)
-                                     | _ => (false, prop'', thm)
-                            val (delt,thm'2) = (case prop'
-                                                  of SOME prop => ((Thm.nprems_of prop, prop RSN' (ctxt', i+1, thm'1))
-                                                       handle THM _ => let open Pretty in
-                                                          raise Automation_Fail (fn () =>
-                                                            [block (text "Unification fails in instantiating the" @
-                                                                   [brk 1, str (string_of_int (i+1)), str "th", brk 1] @
-                                                                   text "antecedent of the template" @ [brk 1] @ here pos),
-                                                             item [str "template:", brk 1, Thm.pretty_thm ctxt' thm'1],
-                                                             item [str "property:", brk 1, Thm.pretty_thm ctxt' prop]])
-                                                        end)
-                                                   | NONE => (1, thm'1))
-                            val thm'3 =
-                                 if is_reasoning_goal
-                                 then thm'2 |> Thm.permute_prems 0 i
-                                            |> Phi_Reasoner.reason NONE (SOME delt)
-                                                                   (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt')
-                                            |> (fn SOME th => th
-                                                 | NONE => raise Automation_Fail (fn () =>
-                                                    let open Pretty
-                                                     in [para "Fail to reason a compulsory antecedent",
-                                                         Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))]
-                                                    end))
-                                            |> Thm.permute_prems 0 (~i)
-                                  (*| Oblg => Conv.gconv_rule (
-                                                Raw_Simplifier.rewrite ctxt' false @{thms' \<A>_template_condition_def}
-                                             ) (i+1) thm'2*)
-                                 else thm'2
-                         in (if is_reasoning_goal then i else i + delt, thm'3)
-                        end) (Thm.nprems_of template) positioned_props
-                    |> snd
-                    |> Phi_Help.beta_eta_contract
-          val pattern = PLPR_Rule_Gen.pattern_of action
-          val rules' = case pass of SOME (ps, _) => ps (single o PLPR_Rule_Gen.pass_generated_rule {simp=true, masks=pattern} ctxt', pos, ctxt') rule'1
-                                  | NONE => single (PLPR_Rule_Gen.pass_generated_rule {simp=true, masks=pattern} ctxt' rule'1)
-
-          val binding = Option.map (fn (vs, b') =>
-                  let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
-                      fun varify_binding i b =
-                        let val b' = if i = 0 then b else Binding.suffix_name ("_" ^ string_of_int i) b
-                            val iname = Context.cases Sign.full_name Proof_Context.full_name ctxt b'
-                         in if Facts.defined facts iname
-                            then varify_binding (i+1) b
-                            else b
-                        end
-                      fun err () = error (let open Pretty in string_of (chunks [
-                                    block (text "The binding target" @ [brk 1] @
-                                           maps (fn v => [Syntax.pretty_term ctxt' (Var (v, dummyT)), brk 1, str "/", brk 1]) vs @
-                                           text "is not instantaited to any constant \<phi>-type,"),
-                                    block (text "in template" @
-                                           [brk 1, Thm.pretty_thm ctxt' template])
-                                 ]) end)
-                      val Envir.Envir {tenv, ...} = env
-                      val qualify = fold_rev (fn v =>
-                            case Vartab.lookup tenv v
-                              of SOME (_, tm) => Binding.qualify true (short_name_of_tyop tm handle Match => err ())
-                               | NONE => err ()) vs
-                   in varify_binding 0 (qualify b')
-                  end
-                ) bind
-
-       in if null rules' then ctxt
-       else (
-       Phi_Reasoner.info_pretty ctxt' 1 (fn () => let open Pretty PLPR_Rule_Gen in
-         chunks ([paragraph (text "Instantiate reasoning template" @ [brk 1] @
-                             (case binding of SOME b => [Binding.pretty b, brk 1] | _ => []) @
-                             here template_pos)] @
-                 (case action of Reasonig_Rule _ => []
-                     | Attributes _ => map (fn rule => item [Thm.pretty_thm ctxt' rule]) rules'
-                     | No_Action => []))
-         end) ;
-       PLPR_Rule_Gen.invoke_action (template_pos, Option.map snd pass) action rules' ctxt
-   |> (case binding of NONE => I
-          | SOME b =>
-                perhaps (try (Context.mapping (snd o Global_Theory.note_thms "" ((b, []), [(rules',[])]))
-                                              (snd o Proof_Context.note_thms "" ((b, []), [(rules',[])]))))
-                        (*It is not a Local_Theory.note here because the instantiation usually happens
-                          inside an attribute and when a locale is interpreted, the attribute will be replayed.*)
-                        (*I want to support lazy instantiation, but, to provide this, the Proof.context
-                          has to be involved in the closure and that would consume a lot of memory.
-                          Perhaps we could use the mechanism of dynamic fact, I am not sure which is better,
-                          some test is required.*)
-      )
-    ) end
-      handle Automation_Fail prt => (
-        Phi_Reasoner.warn_pretty ctxt 2 (Pretty.chunks o prt) ;
-        ctxt))
+      PLPR_Rule_Gen.invoke_generation ((template_pos, template), pass, action, bind)
+                                      (pos, env, positioned_props) ctxt
   | invoke_template_action _ (Free_Action action) arg ctxt = action arg ctxt
       handle Automation_Fail prt => (
         Phi_Reasoner.warn_pretty ctxt 2 (Pretty.chunks o prt) ;
@@ -606,10 +486,6 @@ fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 c
 
 (** Interfaces for Automation over Property **)
 
-val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
-      = Unsynchronized.ref NONE
-val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__sender_locker" ()
-
 
 val _ = Theory.setup (
 
@@ -651,29 +527,8 @@ val _ = Theory.setup (
 
               val _ = case guard of NONE => ()
                          | _ => error "No guard is allowed here"
-              val pass = Option.map (fn src =>
-                    let val _ = Synchronized.change rule_template_pass__sender_locker (fn () => (
-                                  ML_Context.expression (Input.pos_of src)
-                                    (ML_Lex.read "Phi_Type_Template_Properties.rule_template_pass__sender := SOME (" @
-                                     ML_Lex.read_source src @
-                                     ML_Lex.read ")")
-                                    ctxt;
-                                  ()))
-                        val pass = the (!rule_template_pass__sender)
-                        val _ = rule_template_pass__sender := NONE
-                     in pass
-                    end
-                  ) pass_src
-              val gen = case (attribs, priority, pats)
-                          of (SOME (attrs as _ :: _), 100, ([], [])) => Attributes attrs
-                                (*100 is the default priority of \<phi>-LPR. Here we use it to trickily mean
-                                  an explicit priority is not given*)
-                           | (SOME [], 100, ([], [])) => No_Action
-                           | (SOME _, _, _) =>
-                              error "Prioirty and binding patterns are senseless and not allowed to\
-                                    \ be given once the attributes are given."
-                           | (NONE, _, _) =>
-                              Reasonig_Rule ((mode, (priority,group)), pats)
+              val pass = PLPR_Rule_Gen.parse_pass ctxt pass_src
+              val gen = PLPR_Rule_Gen.parse_action (mode, (priority, group), pats, attribs)
            in setup_rule_generation (pos,(dependencies,pass),(binding,gen)) thm ctxt
           end)
       ))
