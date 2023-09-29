@@ -22,9 +22,17 @@ fun pass_checks_priority name prio = (fn pos => fn data =>
 
 end
 
+structure IN_Arg = struct type mask = term end
+(*Masks are patterns that match the conclusion of the given rule, where the variables that are
+  immutably instantiated (i.e., instantiated to the variable itself) are used to represent IN-argument.
+  For example, given a rule of conclusion \<open>P ?x ?y ?z\<close>, a mask \<open>P _ ?y _\<close> indicates \<open>?y\<close> is the only
+  IN-argument.
+  The trick of this design is that, the default binding patterns of the rule in \<phi>-LPR reasoner, are
+  usually such masks.
+*)
+
 signature PHI_HELP = sig
 include PHI_HELP
-
 
 val guess_IN_arguments_of_a_rule : Context.generic -> term list (*pattern of the rule, can be nil,
                                                                   if so, use the default pattern registered in Phi_Reasoner*)
@@ -39,10 +47,10 @@ val guess_IN_arguments_of_a_rule : Context.generic -> term list (*pattern of the
 *)
 
 val instantiate_higher_order_schematic_var_for_rule_guess' :
-      int (*N*) * term list (*optional patterns, can be []*) ->
+      int (*N*) * IN_Arg.mask list ->
       Proof.context -> thm -> thm option (*returns none if no change*)
 val instantiate_higher_order_schematic_var_for_rule_guess :
-      int (*N*) * term list -> Proof.context -> thm -> thm
+      int (*N*) * IN_Arg.mask list -> Proof.context -> thm -> thm
 
 end
 

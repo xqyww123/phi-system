@@ -1113,11 +1113,6 @@ lemma \<phi>gen_expansion:
 \<Longrightarrow> p \<Turnstile> (x \<Ztypecolon> T) \<equiv> p \<Turnstile> U \<close>
   by simp
 
-consts \<A>_template_reason :: action \<comment> \<open>tagging the antecedent has to be solved during the time of
-                                       template instantiation.\<close>
-definition \<open>template_NO_SIMP_USE (X::bool) \<equiv> X\<close>
-  \<comment> \<open>prevent using the protected proposition in simplification during template instantiation.\<close>
-
 ML_file \<open>library/phi_type_algebra/properties.ML\<close>
 ML_file \<open>library/phi_type_algebra/typ_def.ML\<close>
 

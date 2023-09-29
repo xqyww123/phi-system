@@ -799,6 +799,7 @@ lemma Conv_Action_Tag_I:
 
 ML_file \<open>library/action_tag.ML\<close>
 
+
 (*TODO: change terminology of \<open>Reasoning Goal\<close> to \<open>Reasoning App\<close>, which is more figurative*)
 subsubsection \<open>Reasoning Apps\<close>
 
@@ -1522,13 +1523,6 @@ fun defer_premise ctxt =
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
 \<close>
 
-schematic_goal \<open>P ?x y = P x ?y\<close>
-  apply clarsimp
-  apply (tactic \<open>Simplifier.simp_tac \<^context> 1\<close>)
-  apply simp
-
-
-
 \<phi>reasoner_ML Normal_Premise %general (\<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   = \<open>Phi_Reasoners.wrap defer_premise o snd\<close>
 
@@ -1594,6 +1588,44 @@ lemma [\<phi>reason %extract_pure]:
   \<open> P \<longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P @action \<A>ESC \<close>
   unfolding Action_Tag_def Premise_def
   by blast+
+
+
+subsection \<open>Protection against Simplification\<close>
+
+text \<open>Forms of antecedents are significant in \<phi>-LPR reasoning.
+  For convenience of reasoning, not all tasks are given a specific predicate constant, especially
+  when some tasks can be considered as special cases of or sub-tasks of other tasks.
+
+  Simplification is useful when generating reasoning rules automatically.
+  However, simplification also easily destroys the implicitly assumed form of the tasks
+  which are not assigned with a specific predicate constants.
+
+  An example of specific predicate constant form:
+  \<open>Predicate_Constant param1 param2 param3\<close>
+  An example of free form not using a specific predicate constant:
+  \<open>A \<longrightarrow> B @action reduction_job\<close>
+  where this task assumes a form of \<open>_ \<longrightarrow> _ @action reduction_job\<close> implicitly and the form
+  will be destroyed by simplification when \<open>A \<equiv> True\<close>.
+
+  In order to protect those free form of the tasks, this subsection provides a mechanism which
+  rewrites the tasks to a form using a specific predicate constant before any simplification,
+  and rewrites them back after the simplification, so that their forms are not destroyed during
+  the simplification.
+\<close>
+
+ML_file \<open>library/tools/simplification_protect.ML\<close>
+
+
+subsection \<open>Rule Generation\<close>
+
+consts \<A>_template_reason :: action \<comment> \<open>tagging the antecedent has to be solved during the time of
+                                       template instantiation.\<close>
+definition \<open>template_NO_SIMP_USE (X::bool) \<equiv> X\<close>
+  \<comment> \<open>prevent using the protected proposition in the simplification during a template instantiation.\<close>
+
+
+ML_file_debug \<open>library/rule_generation.ML\<close>
+
 
 
 
@@ -2230,30 +2262,6 @@ subsection \<open>Error Message\<close>
   in Seq.empty
   end\<close>
 
-subsection \<open>Protection against Simplification\<close>
-
-text \<open>Forms of antecedents are significant in \<phi>-LPR reasoning.
-  For convenience of reasoning, not all tasks are given a specific predicate constant, especially
-  when some tasks can be considered as special cases of or sub-tasks of other tasks.
-
-  Simplification is useful when generating reasoning rules automatically.
-  However, simplification also easily destroys the implicitly assumed form of the tasks
-  which are not assigned with a specific predicate constants.
-
-  An example of specific predicate constant form:
-  \<open>Predicate_Constant param1 param2 param3\<close>
-  An example of free form not using a specific predicate constant:
-  \<open>A \<longrightarrow> B @action reduction_job\<close>
-  where this task assumes a form of \<open>_ \<longrightarrow> _ @action reduction_job\<close> implicitly and the form
-  will be destroyed by simplification when \<open>A \<equiv> True\<close>.
-
-  In order to protect those free form of the tasks, this subsection provides a mechanism which
-  rewrites the tasks to a form using a specific predicate constant before any simplification,
-  and rewrites them back after the simplification, so that their forms are not destroyed during
-  the simplification.
-\<close>
-
-ML_file \<open>library/tools/simplification_protect.ML\<close>
 
 (*
 subsection \<open>Obtain\<close> \<comment> \<open>A restricted version of generalized elimination for existential only\<close>

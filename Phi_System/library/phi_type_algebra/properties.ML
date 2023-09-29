@@ -22,9 +22,6 @@ val add_property : Position.T * thm -> Context.generic -> Context.generic
 val adding_property : bool Config.T (*controlling if automatically for any new reasoning rules,
   register to the property DB and invoking the related automation*)
 
-structure Template_Inst_SS : SIMPSET (*simpset for generating reasoning rules*)
-structure Template_Inst_SS_Post_Merging : HOOKS
-
 (*** The Framework for Automation based on Algebraic Property ***)
 
 (** Types **)
@@ -77,11 +74,6 @@ val invoke_automations_on_property : template_argument -> Context.generic -> Con
 
 val pretty_template : Context.generic -> template -> Pretty.T
 val pretty_templates : Context.generic -> (priority * template) Ord_List.T Symtab.table -> Pretty.T
-
-(* The default process simplifying a freshly instantiated rule *)
-val default_simplify : term list option (*pattern used in Phi_Reasoner.instantiate_higher_order_schematic_var_for_rule_guess
-                            can be None by default*)
-                    -> Proof.context -> thm -> thm
 
 (*** Internal Interfaces ***)
 
@@ -266,22 +258,6 @@ fun lookup_property_unify ctxt pattern =
 
 (* Invoke template instantiation *)
 
-structure Template_Inst_SS_Post_Merging = Hooks (
-  type arg = unit
-  type state = Proof.context
-)
-
-structure Template_Inst_SS = Simpset (
-  val initial_ss = Simpset_Configure.Empty_SS
-  val binding = SOME \<^binding>\<open>simp_for_\<phi>TA_rule_generation\<close>
-  val comment = "Rules simplifying the reasoning rules instantiated from templates."
-  val attribute = NONE
-  fun post_merging ctxt = ctxt
-        |> Simplifier.del_cong @{thm' if_weak_cong}
-        |> Simplifier.add_cong @{thm' if_cong}
-        |> Template_Inst_SS_Post_Merging.invoke (Context.Proof ctxt) ()
-)
-
 fun instantiations_of_parameters get_property ctxt params =
   let fun ext i param (env, props) =
              get_property env param
@@ -350,29 +326,6 @@ fun short_name_of_tyop (Abs (_,_,X)) = short_name_of_tyop X
 fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
-
-fun default_simplify pattern ctxt rule =
-  let val rule'1 = case Thm.concl_of rule
-                     of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
-                      | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
-                      | _ => rule RS' (ctxt, @{thm' NO_SIMP'_I})
-      val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt
-      val ctxt's = Template_Inst_SS.enhance ctxt'1
-                |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
-      val rule'3 = rule'2
-                |> Simplification_Protect.protect ctxt's
-                |> Phi_Reasoners.asm_lr_simplify true ctxt's
-                |> Simplification_Protect.unprotect ctxt's
-                |> singleton (Variable.export ctxt'1 ctxt)
-                |> Phi_Help.unique_flexflex ctxt
-   in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess' (~1, the_default [] pattern) ctxt rule'3
-         of SOME th => simplify ctxt th
-          | NONE => rule'3)
-   |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
-   |> PLPR_Syntax.merge_guards {merge_cond=true} ctxt
-   |> normalize
-  end
-
 
 fun invoke_template_action template_pos (Instantiate_Rule (template, pass, action, bind))
                            (pos, (env, positioned_props)) ctxt =
@@ -443,8 +396,8 @@ fun invoke_template_action template_pos (Instantiate_Rule (template, pass, actio
                            of Reasonig_Rule (_, (pats, _)) => SOME (map fst pats)
                             | Attributes _ => NONE
                             | No_Action => NONE)
-          val rules' = case pass of SOME (ps, _) => ps (single o default_simplify pattern ctxt', pos, ctxt') rule'1
-                                  | NONE => single (default_simplify pattern ctxt' rule'1)
+          val rules' = case pass of SOME (ps, _) => ps (single o PLPR_Rule_Gen.pass_generated_rule {simp=true, masks=pattern} ctxt', pos, ctxt') rule'1
+                                  | NONE => single (PLPR_Rule_Gen.pass_generated_rule {simp=true, masks=pattern} ctxt' rule'1)
 
           val binding = Option.map (fn (vs, b') =>
                   let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
@@ -767,17 +720,6 @@ val _ = Theory.setup (
   \It is able to parse the depended properties from the leading antecedents greedily for all possible, \
   \and may caputre more dependencies than the expected. If so, you can specify the exact dependency \
   \explicilty by [[\<phi>reason_template requires \<open>dependencies\<close>]]"
-
-#> let fun rule_attribute f (x, th) =
-            if Thm.is_free_dummy th
-            then (NONE, NONE)
-            else (SOME x, SOME (f x th))
- in Attrib.setup \<^binding>\<open>\<phi>simplify_reasoning_rule\<close> (
-    Scan.succeed (rule_attribute (default_simplify NONE o Context.proof_of)))
-  "Simplify a reasoning rule, using the same process as that in template instantiation.\n\
-  \The conclusion of the rule is remained untouched and any antecedents are simplified and reduced\
-  \if possible. \<open>NO_SIMP\<close> tag is recognized and supresses the simplification on the protected terms."
-end
 )
 
 
