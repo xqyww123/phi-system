@@ -60,6 +60,7 @@ val invoke_generation : template -> instantiation -> Context.generic -> Context.
 val parse_pass : Context.generic -> Input.source option -> (rule_generation_pass * Phi_Reasoner.rule_pass) option
 val parse_action : Phi_Reasoner.mode * Reasoner_Group.group * Phi_Reasoner.patterns_and_excepts * Token.src list option
                 -> instantiation_action
+val parse_binding_template : Context.generic -> thm -> (string * Position.T) option -> binding_template option
 
 (* Internal Interfaces *)
 val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
@@ -112,6 +113,8 @@ type instantiation = Position.T (*where the instantiation happens*)
 fun trim_action (X as Reasonig_Rule _) = X
   | trim_action (Attributes srcs) = Attributes (map (map Token.trim_context) srcs)
   | trim_action No_Action = No_Action
+
+fun trim_template ((pos,tem),pass,act,bind) = ((pos, Thm.trim_context tem), pass, trim_action act, bind)
 
 fun pattern_of (Reasonig_Rule (_, (pats, _))) = SOME (map fst pats)
   | pattern_of (Attributes _) = NONE
@@ -289,19 +292,6 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
         ctxt))
 
 
-val _ = Theory.setup (
-  let fun rule_attribute f (x, th) =
-              if Thm.is_free_dummy th
-              then (NONE, NONE)
-              else (SOME x, SOME (f x th))
-   in Attrib.setup \<^binding>\<open>\<phi>simplify_reasoning_rule\<close> (
-      Scan.succeed (rule_attribute (pass_generated_rule {simp=true, masks=NONE} o Context.proof_of)))
-    "Simplify a reasoning rule, using the same process as that in template instantiation.\n\
-    \The conclusion of the rule is remained untouched and any antecedents are simplified and reduced\
-    \if possible. \<open>NO_SIMP\<close> tag is recognized and supresses the simplification on the protected terms."
-  end
-)
-
 val rule_template_pass__sender : (rule_generation_pass * Phi_Reasoner.rule_pass) option Unsynchronized.ref
       = Unsynchronized.ref NONE
 val rule_template_pass__sender_locker = Synchronized.var "rule_template_pass__sender_locker" ()
@@ -335,6 +325,95 @@ fun parse_action (mode, (priority, group), pats, attribs) =
               \ be given once the attributes are given."
      | (NONE, _, _) =>
         Reasonig_Rule ((mode, (priority,group)), pats)
+
+fun parse_binding_template ctxt template raw_binding =
+  let val ctxt' = Context.proof_of ctxt
+      val (_, ctxt_parse) = Variable.import true [template] ctxt'
+
+      val read_terms = Variable.export_terms ctxt_parse ctxt' o Syntax.read_terms ctxt_parse
+
+      fun chk_binding_target (Var (v,_)) = v
+        | chk_binding_target X =
+              error (let open Pretty in string_of (
+                    block (text "The binding of the template instances must binds to a \
+                                \variable in the template that will be instantaited to to \<phi>-type.\
+                                \ However, the given binding target is not a variable," @
+                           [brk 1, Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt X])
+                  ) end)
+      val binding = Option.map (fn (long_name, pos) =>
+                      let val (qualifiers, name) = Phi_Help.split_last (Long_Name.explode long_name)
+                       in (map chk_binding_target (read_terms qualifiers), Binding.make (name, pos))
+                      end
+                    ) raw_binding
+   in binding
+  end
+
+
+fun setup_rule_generation_pass template' ctxt =
+  let val template = trim_template template'
+      val rule = #2 (#1 template)
+      val pass_id = Thm.prop_of rule
+
+      val (qvars, _, mprem) = Phi_Help.leading_antecedent (Thm.prop_of rule)
+      val idx = maxidx_of_term mprem + 1
+      val qfix = map_index (fn (i, (N, T)) => Var((N,i+idx),T)) qvars
+      val pattern = subst_bounds (rev qfix, mprem)
+      val pidx = idx + length qfix
+
+      fun pass ins_pos ((rules, mode, pats, guard, ctxt) : Phi_Reasoner.pass_data) =
+        let val args = map_filter (fn r =>
+                        let val concl = Logic.incr_indexes ([],[],pidx) (Thm.concl_of r)
+                            val cidx = maxidx_of_term concl
+                         in case Seq.chop 2 (Unify.hounifiers (ctxt, Envir.empty cidx, [(concl, pattern)]))
+                         of ([(env', _)], _) => SOME (env', (ins_pos, r))
+                          | ([_,_], _) => (Phi_Reasoner.warn_pretty ctxt 2 (fn () => let open Pretty in
+                                            chunks [para "Failed to instantiate a template due to multi-resolution",
+                                                    block [str "Template: ", Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt rule],
+                                                    block [str "Argument: ", Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt r]]
+                                           end) ; NONE)
+                          | _ => NONE
+                        end) rules
+            val ctxt' = fold (fn (env, r) => invoke_generation template (ins_pos, env, [SOME r])) args ctxt
+         in (rules, mode, pats, guard, ctxt')
+        end
+   in Phi_Reasoner.add_pass (pass_id, pattern, pass) ctxt
+  end
+
+
+val _ = Theory.setup (
+  let fun rule_attribute f (x, th) =
+              if Thm.is_free_dummy th
+              then (NONE, NONE)
+              else (SOME x, SOME (f x th))
+   in Attrib.setup \<^binding>\<open>\<phi>simplify_reasoning_rule\<close> (
+      Scan.succeed (rule_attribute (pass_generated_rule {simp=true, masks=NONE} o Context.proof_of)))
+    "Simplify a reasoning rule, using the same process as that in template instantiation.\n\
+    \The conclusion of the rule is remained untouched and any antecedents are simplified and reduced\
+    \if possible. \<open>NO_SIMP\<close> tag is recognized and supresses the simplification on the protected terms."
+
+   #> Attrib.setup \<^binding>\<open>\<phi>reason_generator\<close> (
+      Phi_Reasoner.attr_syntax
+        (Scan.option (Scan.lift (Args.$$$ "name" |-- Parse.position Parse.long_ident))
+         -- Scan.option (Scan.lift (Args.$$$ "pass" |-- \<^keyword>\<open>:\<close> |-- Parse.ML_source))
+         -- Scan.option Attrib.attribs)
+        (fn (pos, mode, (priority, group), ((raw_binding, pass_src), attribs), pats, guard) =>
+        Thm.declaration_attribute (fn thm => fn ctxt =>
+          let val binding = parse_binding_template ctxt thm raw_binding
+
+              val _ = case guard of NONE => ()
+                         | _ => error "No guard is allowed here"
+
+              val pass = parse_pass ctxt pass_src
+              val action = parse_action (mode, (priority, group), pats, attribs)
+
+              val template = ((pos, thm), pass, action, binding)
+           in setup_rule_generation_pass template ctxt
+          end))
+      ) "declaring a template of a single parameter as its leading antecedent. \
+        \The instantiation invokes any time a registered reasoning rule matching the first antecedent, \
+        \yielding a new reasoning rule (or as declared by the given attribute) "
+  end
+)
 
 
 end

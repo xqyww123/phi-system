@@ -448,7 +448,7 @@ fun add_property_kinds ks thy =
             val name = case Term.head_of k'
                          of Const(N,_) => N
                           | _ => error "Bad Property: must be a predicate"
-         in Phi_Reasoner.add_pass ("\<phi>type-operator$" ^ name, k,
+         in Phi_Reasoner.add_pass (Const("property$" ^ name, TFree("",[])), k,
               fn pos => fn (rules, mode, pats, guard, ctxt) =>
                            (rules, mode, pats, guard,
                             if Config.get_generic ctxt adding_property

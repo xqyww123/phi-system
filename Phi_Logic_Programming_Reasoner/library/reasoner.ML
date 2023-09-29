@@ -145,9 +145,10 @@ signature NU_REASONER = sig
   type pass_data = thm list (*rules*) * (mode * (priority * Reasoner_Group.name option)) *
                    ((pattern * priority option) list * pattern list) * guard option * Context.generic
   type rule_pass = Position.T -> pass_data -> pass_data
-  val get_passes : Context.generic -> term list -> (string * term * rule_pass) list
+  type pass_id = term (*identifier*)
+  val get_passes : Context.generic -> term list -> (pass_id * term * rule_pass) list
   val run_passes : Position.T -> pass_data -> pass_data
-  val add_pass : string (*identifier*) * pattern * rule_pass -> Context.generic -> Context.generic
+  val add_pass : pass_id * pattern * rule_pass -> Context.generic -> Context.generic
 
   (*
   val setup_cmd : (((string (*name term*) * Position.T) * (mode * priority (*default priority*)))
@@ -916,10 +917,11 @@ val _ = Theory.setup (Default_Pattern.setup_attribute \<^binding>\<open>\<phi>re
 type pass_data = thm list (*rules*) * (mode * (priority * Reasoner_Group.name option)) *
                  ((pattern * priority option) list * pattern list) * guard option * Context.generic
 type rule_pass = Position.T -> pass_data -> pass_data
+type pass_id = term (*identifier*)
 
 fun rule_pass_eq ((n1,_,_),(n2,_,_)) = (n1 = n2)
 structure Rule_Pass = Generic_Data (
-  type T = (string (*name*) * pattern * rule_pass) iNet.net
+  type T = (term (*name*) * pattern * rule_pass) iNet.net
   val empty = iNet.empty
   val merge = iNet.merge rule_pass_eq
 )
