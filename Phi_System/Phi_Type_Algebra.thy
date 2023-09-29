@@ -1160,36 +1160,6 @@ lemma [\<phi>reason %extract_pure]:
 
 
 
-(* ML_file \<open>library/tools/type_algebra_guess_mapper.ML\<close> *)
-
-datatype yyy = YLeaf nat | YNode nat yyy
-datatype ('a,'b) xxx = Leaf 'a | LeafB 'b 'a | Node nat \<open>('a,'b) xxx\<close>
-
-term xxx.rel_xxx
-thm xxx.set
-
-
-
-
-datatype 'a zzz = AA
-
-ML \<open>val x = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>xxx\<close>)
-val a = BNF_Def.lives_of_bnf x
-val s = BNF_Def.sets_of_bnf x
-val z = BNF_Def.mk_sets_of_bnf [[],[]] [[\<^typ>\<open>nat\<close>, \<^typ>\<open>int\<close>], [\<^typ>\<open>bool\<close>, \<^typ>\<open>int\<close>]] x
-val d = BNF_Def.set_transfer_of_bnf x\<close>
-
-ML \<open>(the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>xxx\<close>))
-|> #BT\<close>
-
-declare [[ML_print_depth = 1000]]
-
-ML \<open> (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
-
-\<close>
-
-
-
 ML \<open>BNF_Def.rel_eq_of_bnf (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))\<close>
 
 ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
@@ -5328,7 +5298,7 @@ lemma [\<phi>reason_template default %derived_bubbling_target]:
   unfolding Tyops_Commute\<^sub>2\<^sub>_\<^sub>1_def Premise_def Bubbling_def Action_Tag_def
   by clarsimp
 
-subsubsection \<open>Rules\<close>
+subparagraph \<open>Rules\<close>
 
 lemma [\<phi>reason %object_equiv_cut]:
   \<open> Object_Equiv T eq
@@ -5488,12 +5458,21 @@ ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 
 \<phi>property_deriver Commutativity_Deriver\<^sub>I_rev 110
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 2) quiet) \<close>
+  \<comment> \<open>The name is reversed, i.e., I for E, E for I, but the deriving process is unchanged.\<close>
 
 \<phi>property_deriver Commutativity_Deriver\<^sub>E_rev 110
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 1) quiet) \<close>
 
 \<phi>property_deriver Commutativity_Deriver_rev 110
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 3) quiet) \<close>
+
+
+subsubsection \<open>Domainoid\<close>
+
+lemma
+  \<open> Tyops_Commute  \<close>
+
+
 
 
 subsection \<open>Deriving Configures for Specific Abstract Algebras\<close>

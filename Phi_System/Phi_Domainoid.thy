@@ -134,13 +134,14 @@ text \<open>A domainoid extraction \<open>\<delta>\<close> is a closed homomorph
   The upper homomorphism is for enabling transformation of non-closed separation homomorphism.
 \<close>
 
-definition Domainoid_Modality ("\<DD>[_]" [10] 1000) where \<open>\<DD>[\<delta>] = \<Psi>[\<delta>]\<close>
+(*definition Domainoid_Modality ("\<DD>[_]" [10] 1000) where \<open>\<DD>[\<delta>] = \<Psi>[\<delta>]\<close>
   \<comment> \<open>\<open>\<Psi>[\<psi>] (x \<Ztypecolon> T) \<equiv> x \<Ztypecolon> \<phi>Fun \<psi> \<Zcomp> T\<close>, therefore \<open>\<phi>Fun \<psi> \<Zcomp> T\<close> is always an exact solution for
       evaluating \<open>\<Psi>[\<psi>] (x \<Ztypecolon> T)\<close>. However, in the case of domainoid extraction, this is not a
       final expression directly giving the domainoids of resources. We want a direct expression
       even if just an upper or lower approximation. Due to this, here
       we introduce a differentiated syntax to emphasize the intention of extracting domainoid,
       on which specific reasoning procedures can be given to reduce the expression further.\<close>
+*)
 
 
 subsection \<open>Approximately Evaluating Domainoid of BI Assertions\<close>

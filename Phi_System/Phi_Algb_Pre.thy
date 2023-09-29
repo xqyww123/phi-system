@@ -317,10 +317,28 @@ lemma [\<phi>reason no explorative backtrack %fail]:
   by blast
 
 paragraph \<open>Reasoning Hierarchy\<close>
-
+(*
 lemmas [\<phi>reason default %algb_falling_lattice] =
         closed_homo_sep.intro
         homo_sep.intro
+*)
+
+(*
+lemma [\<phi>reason default %algb_falling_lattice]:
+  \<open>closed_homo_sep \<psi> \<Longrightarrow> homo_sep \<psi>\<close>
+  using closed_homo_sep.axioms(1) by blast*)
+
+declare closed_homo_sep.axioms(1)[simp]
+
+lemma [\<phi>reason default %algb_falling_lattice]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> homo_sep \<psi>
+\<Longrightarrow> homo_sep \<psi> \<close>
+  unfolding \<r>Guard_def Premise_def .
+
+lemma [\<phi>reason default %algb_falling_lattice]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> closed_homo_sep \<psi>
+\<Longrightarrow> closed_homo_sep \<psi> \<close>
+  unfolding \<r>Guard_def Premise_def .
 
 lemma [\<phi>reason default %algb_falling_lattice]:
   \<open> closed_homo_sep_disj \<psi>
@@ -445,8 +463,8 @@ lemma [\<phi>reason %algb_fun_upd_1_comp]:
 subsubsection \<open>Push map\<close>
 
 declare homo_mul_carrier_push_map [\<phi>reason %algb_cut]
-        closed_homo_sep_disj_push_map [\<phi>reason %algb_cut]
-        homo_sep_mult_push_map [\<phi>reason %algb_cut]
+        closed_homo_sep_push_map [\<phi>reason %algb_cut]
+        homo_sep_push_map [\<phi>reason %algb_cut]
         homo_one_push_map [\<phi>reason %algb_cut]
         module_scalar_identity_push_map [\<phi>reason %algb_cut]
         module_scalar_assoc_push_map [\<phi>reason %algb_cut]
