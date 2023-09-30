@@ -185,6 +185,12 @@ val open_proof_ctxt : Bundle.name list -> Context.generic -> Proof.context
 
 val ML_sender : (quiet -> deriving_instruction list -> derive) option Unsynchronized.ref
 
+(** Controllers **)
+
+val search_CSTR_rules : bool Config.T
+  (*if to enable branched searching in the reasoning of MAKE and OPEN for different definition equantions
+    used to construct or destruct \<phi>-types*)
+
 end
 
 
@@ -852,6 +858,8 @@ fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
 
+val search_CSTR_rules = Config.declare_bool ("search_CSTR_rules", \<^here>) (K false)
+
 (** Main **)
 
 structure Defining_Phi_Type = Hooks(
@@ -1052,12 +1060,17 @@ fun add_type (def, pos, dervs, bundles) thy =
                                   handle THM _ => [])
                                @ (gen_from_tagged_eq_in_type I @{thm' \<phi>open_abstraction_ToA_W}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
+      val open_abstraction_ToA_br = gen_from_eqs @{thm' \<phi>open_abstraction_ToA_br} I tagged_eqs
+                               @ (gen_from_eqs @{thm' \<phi>open_abstraction_ToA_R_br} I tagged_eqs
+                                  handle THM _ => [])
+                               @ (gen_from_tagged_eq_in_type I @{thm' \<phi>open_abstraction_ToA_W_br}
+                                    |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
 
       val make_abstraction = gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
                            @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
                               handle THM _ => [])
-      val make_abstraction_eq = gen_from_eqs @{thm' \<phi>make_abstraction'eq} I tagged_eqs
-                              @ (gen_from_eqs @{thm' \<phi>make_abstraction'R'eq} I tagged_eqs
+      val make_abstraction_br = gen_from_eqs @{thm' \<phi>make_abstraction_branching} I tagged_eqs
+                              @ (gen_from_eqs @{thm' \<phi>make_abstraction'R_branching} I tagged_eqs
                                  handle THM _ => [])
       val make_Identity_Element_E = gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
 
@@ -1094,13 +1107,21 @@ fun add_type (def, pos, dervs, bundles) thy =
             fun add_rules mode priority rules =
                   Phi_Reasoner.add_rules (map (fn rule =>
                       ([Morphism.thm m rule], pos, mode, priority, [], [], NONE)) rules)
+            fun add_rules_G mode priority G rules =
+                  Phi_Reasoner.add_rules (map (fn rule =>
+                      ([Morphism.thm m rule], pos, mode, priority, [], [], SOME G)) rules)
          in fn ctxt => ctxt
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %To_ToA_derived_OPEN} (Morphism.fact m open_abstraction)
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived} (Morphism.fact m make_abstraction)
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived-10} (Morphism.fact m make_abstraction_eq)
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} (Morphism.fact m make_Identity_Element_E)
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction
+         |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived-10}
+                        (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
+                        make_abstraction_br
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} make_Identity_Element_E
          |> Config.put_generic phi_allow_source_object_to_be_not_variable true
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived} (Morphism.fact m open_abstraction_ToA)
+         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA
+         |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived-10}
+                        (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
+                        open_abstraction_ToA_br
          |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
          |> Phi_Expansions.add_simps expns
          |> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)

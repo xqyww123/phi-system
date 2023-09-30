@@ -13,11 +13,12 @@ signature PHI_REASONERS = sig
     conv_schematic: if replace feasible schematic variables by existential quantified variables.
       0: do not generate existence in obligations, leaving them schematic variables
       1: generate existence in obligations
-      2: generate existence in obligations and apply a special patch on them to enhance the automation
+      2: generate existence in obligations and apply_tac a special patch on them to enhance the automation
          of Isabelle for solving them (using introduction rules)
       ~1: take \<open>Config.get existential_obligation\<close>
   *)
-  val collect_obligation_premises : contraction_mode -> Proof.context -> thm -> thm
+  val collect_obligation_premises : contraction_mode -> Proof.context -> thm
+                                 -> int (*number of new conditions introduced*) * thm
 
   val wrap : (Proof.context -> thm -> thm Seq.seq) -> (context_state -> context_state Seq.seq)
   val wrap': (Proof.context -> thm -> thm option) -> (context_state -> context_state option)
@@ -158,7 +159,7 @@ structure Tactic_Configures = Hooks (
   type state = thm list (*aux thms*) * tactic * Proof.context
 )
 
-fun apply ctxt tactic mode =
+fun apply_tac ctxt tactic mode =
   HEADGOAL (SOLVED' (K
     (#2 (Tactic_Configures.invoke_until_success (Context.Proof ctxt)
           (fn mode => fn (aux,tac,ctxt) =>
@@ -632,7 +633,7 @@ val contract_premise_imp' =
             by (rule, (simp add: Premise_def conjunction_imp)+)}
 
 (*the term must be beta-eta normalized*)
-fun obligation_collect ctxt filter =
+fun obligation_collect counter ctxt filter =
   let fun conv ctm =
         case Thm.term_of ctm
           of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
@@ -640,15 +641,17 @@ fun obligation_collect ctxt filter =
            | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _
                =>(case filter ctxt (Thm.dest_arg1 ctm)
                     of SOME NONE => (*A normal premises using the normal rule*)
+                        (counter := !counter + 1;
                          (Conv.implies_conv
                             (Phi_Conv.atomize_conv ctxt then_conv
                              strip_premise_tag ctxt)
                             conv then_conv
-                          Conv.rewr_conv contract_premise_imp) ctm
+                          Conv.rewr_conv contract_premise_imp) ctm)
                      | SOME (SOME rule) => (*Not a direct premise but still has something can be extracted
-                                             so we apply the given rule to extract*)
+                                             so we apply_tac the given rule to extract*)
+                        (counter := !counter + 1;
                          (Conv.implies_conv (Conv.rewr_conv rule) conv then_conv
-                          Conv.rewr_conv contract_premise_imp') ctm
+                          Conv.rewr_conv contract_premise_imp') ctm)
                      | NONE => (*Just waste*)
                          (Conv.arg_conv conv then_conv
                           Conv.rewr_conv @{thm' conjunction_imp[symmetric]}) ctm)
@@ -755,8 +758,9 @@ fun augment_conditions conds ctxt sequent =
 fun collect_obligation_premises option ctxt thm = let open Conv
   val (collect_premises,conv_all,conv_schematic) = chk_option ctxt option
   val filter = extract_prems_rewr (Context.Proof ctxt)
+  val new_cond = Unsynchronized.ref 0
   val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt => 
-                (if collect_premises then obligation_collect ctxt filter
+                (if collect_premises then obligation_collect new_cond ctxt filter
                                      else Conv.all_conv) then_conv
                 rewr_conv @{thm Pure.prop_def[symmetric]}) ctxt
               ) 1 thm
@@ -781,13 +785,14 @@ fun collect_obligation_premises option ctxt thm = let open Conv
    in drop_wastes rule1
    |> conv_all ? gconv_rule (obligation_conv_all ctxt) 1
    |> conv_schematic > 0 ? obligation_intro_Ex_conv conv_schematic ctxt
+   |> pair (!new_cond)
   end
 
 (*Config.get ctxt existential_obligation*)
 
 (*the leading antecedent must be beta-eta normalized*)
 fun contract_obligations mode ctxt thm = thm
-    |> collect_obligation_premises mode ctxt
+    |> collect_obligation_premises mode ctxt |> snd
     |> Conv.fconv_rule (Conv.rewr_conv @{thm contract_obligations})
 
 fun find_obligations_tag thm = tl (Thm.prems_of thm)
@@ -823,10 +828,10 @@ val defer_obligation_tac = defer_antecedent o contract_obligations
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
 val auto_obligation_solver = oblg_template true (fn ctxt => fn th =>
-      let val th'1 = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
+      let val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
        in th'
-       |> head_only (apply ctxt (fn (ctxt,pre,aux,_) =>
+       |> head_only (apply_tac ctxt (fn (ctxt,pre,aux,_) =>
           pre THEN HEADGOAL (Method.insert_tac ctxt aux)
               THEN Clasimp.auto_tac ctxt) Agressive_Solver)
        |> Seq.pull
@@ -853,14 +858,15 @@ fun auto_obligation_solver1 ctxt sequent =  (
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
 fun safer_obligation_solver {can_inst} = oblg_template can_inst (fn ctxt => fn th =>
-      let val th'1 = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
+      let val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
           fun clarsimp_tac ctxt =
                (if can_inst then Simplifier.asm_full_simp_tac ctxt
                             else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW
                 Classical.clarify_tac (addSss ctxt)
-       in apply ctxt (fn (ctxt,pre,aux,_) =>
-             pre THEN HEADGOAL (Method.insert_tac ctxt aux)
+       in apply_tac ctxt (fn (ctxt,pre,aux,_) =>
+             pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
+                 THEN HEADGOAL (Method.insert_tac ctxt aux)
                  THEN HEADGOAL (fn s => fn x => clarsimp_tac ctxt s x)) Safe_Solver th'
        |> Seq.pull
       end)

@@ -1038,68 +1038,96 @@ lemma \<phi>open_abstraction:
   unfolding Action_Tag_def Simplify_def
   by simp
 
-lemma \<phi>open_abstraction_ToA:
-  \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def
-  by simp
 
-lemma \<phi>open_abstraction_ToA_R:
-  \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R * (x \<Ztypecolon> OPEN T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def
-  by simp
-
-lemma \<phi>open_abstraction_ToA_W:
-  \<open> (\<And>x. (x \<Ztypecolon> T) = (f x \<Ztypecolon> U'))
-\<Longrightarrow> apfst f x \<Ztypecolon> U' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> OPEN T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
-  unfolding OPEN_def
-  by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
+text \<open>No \<open>Object_Equiv\<close> is used but we use \<open>(=)\<close> directly because we are destructing or constructing
+  a \<phi>-type abstraction by its definition where the definition covers every cases covered by the
+  \<open>Object_Equiv\<close>, so there is no need to apply \<open>Object_Equiv\<close> any more.\<close>
 
 lemma \<phi>make_abstraction:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
-  unfolding Action_Tag_def MAKE_def by simp
-
-lemma \<phi>make_abstraction'R:
-  \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
-  unfolding Action_Tag_def MAKE_def
-  by simp
-
-ML \<open>val phiTA_search_MAKE = Attrib.setup_config_bool \<^binding>\<open>\<phi>TA_search_MAKE\<close> (K false)\<close>
-
-definition \<open>\<phi>TA_search_MAKE \<equiv> True\<close>
-
-\<phi>reasoner_ML \<phi>TA_search_MAKE %cutting (\<open>\<phi>TA_search_MAKE\<close>) = \<open>
-  fn (_, (ctxt, sequent)) => Seq.make (fn () =>
-      if Config.get ctxt phiTA_search_MAKE
-      then SOME ((ctxt, @{lemma' \<open>\<phi>TA_search_MAKE\<close> by (simp add: \<phi>TA_search_MAKE_def)} RS sequent), Seq.empty)
-      else NONE)
-\<close>
-
-lemma \<phi>make_abstraction'eq:
-  \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] eq x x') \<or>\<^sub>c\<^sub>u\<^sub>t \<phi>TA_search_MAKE \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x x'))
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq x x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<comment> \<open>\<open>\<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r>\<close>\<close>
+    (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x') \<or>\<^sub>c\<^sub>u\<^sub>t (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] x = x')
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def
-  by clarsimp blast
+  by clarsimp
 
-lemma \<phi>make_abstraction'R'eq:
+lemma \<phi>make_abstraction_branching:
   \<open> (x \<Ztypecolon> T) = U
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Object_Equiv T eq \<and>\<^sub>\<r> ((\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] eq x x') \<or>\<^sub>c\<^sub>u\<^sub>t \<phi>TA_search_MAKE \<and>\<^sub>\<r> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> eq x x'))
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> eq x x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
+            Orelse_shortcut_def
+  by clarsimp
+
+lemma \<phi>make_abstraction'R:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x') \<or>\<^sub>c\<^sub>u\<^sub>t (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] x = x')
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def
   by (cases C; clarsimp; blast)
+
+lemma \<phi>make_abstraction'R_branching:
+  \<open> (x \<Ztypecolon> T) = U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
+            Orelse_shortcut_def
+  by (cases C; clarsimp; blast)
+
+lemma \<phi>open_abstraction_ToA:
+  \<open> (x' \<Ztypecolon> T) = U
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x') \<or>\<^sub>c\<^sub>u\<^sub>t (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] x = x')
+\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def
+  by simp
+
+lemma \<phi>open_abstraction_ToA_br:
+  \<open> (x' \<Ztypecolon> T) = U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
+\<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def
+  by simp
+
+lemma \<phi>open_abstraction_ToA_R:
+  \<open> (x' \<Ztypecolon> T) = U
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x') \<or>\<^sub>c\<^sub>u\<^sub>t (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] x = x')
+\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (x \<Ztypecolon> OPEN T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def
+  by simp
+
+lemma \<phi>open_abstraction_ToA_R_br:
+  \<open> (x' \<Ztypecolon> T) = U
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
+\<Longrightarrow> R * U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> R * (x \<Ztypecolon> OPEN T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def
+  by simp
+
+lemma \<phi>open_abstraction_ToA_W:
+  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U')
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x') \<or>\<^sub>c\<^sub>u\<^sub>t (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] fst x = x')
+\<Longrightarrow> (y, snd x) \<Ztypecolon> U' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def
+  by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
+
+lemma \<phi>open_abstraction_ToA_W_br:
+  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U')
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst x = x'
+\<Longrightarrow> (y, snd x) \<Ztypecolon> U' \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> OPEN T \<^emph>[C] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
+  unfolding OPEN_def Premise_def Orelse_shortcut_def
+  by (cases x; cases C; clarsimp simp add: \<phi>Prod_expn')
+
 
 lemma \<phi>make_Identity_Element\<^sub>E:
   \<open> (x \<Ztypecolon> T) = U

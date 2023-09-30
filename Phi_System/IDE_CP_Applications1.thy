@@ -1331,7 +1331,7 @@ paragraph \<open>Transformation\<close>
   and ToA_open_\<phi>type_fail = (%ToA_splitting[bottom], [%ToA_splitting[bottom], %ToA_splitting[bottom]])
                              for \<open>x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> in ToA and < ToA_open_\<phi>type
       \<open>Reports failures when the annotated \<phi>-type fails to be constructed.\<close>
-  and ToA_open_\<phi>type_derived = (%ToA_open_\<phi>type-30, [%ToA_open_\<phi>type-30, %ToA_open_\<phi>type-30])
+  and ToA_open_\<phi>type_derived = (%ToA_open_\<phi>type-30, [%ToA_open_\<phi>type-40, %ToA_open_\<phi>type-20])
                                 for \<open>x \<Ztypecolon> OPEN T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> in ToA_open_\<phi>type
       \<open>Derived ToA rules openning \<phi>-Type abstraction\<close>
   and To_ToA_derived_OPEN = (%To_ToA_derived-10, [%To_ToA_derived-10, %To_ToA_derived-10])

@@ -1654,14 +1654,16 @@ lemma [\<phi>reason %guess_tyop_commute for \<open>Guess_Tyops_Commute True _ ?v
 \<Longrightarrow> Guess_Tyops_Commute True F F' \<DD>[\<delta>] \<DD>[\<delta>'] uG uG' uF uF' T D r a c \<close>
   unfolding Guess_Tyops_Commute_def ..
 
+declare [[ML_print_depth = 100]]
+
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 0 ]]
+declare [[\<phi>trace_reasoning = 3 ]]
   
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
-  deriving Basic
+  deriving (*Basic 
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 (f s)
          \<Longrightarrow> Identity_Elements\<^sub>I T D P
          \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D P \<close>
@@ -1685,12 +1687,12 @@ declare [[\<phi>trace_reasoning = 0 ]]
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
-       and \<open> homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
+       and*) \<open> homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> closed_homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
              Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
              TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
-       and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
+       (*and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
@@ -1704,7 +1706,7 @@ declare [[\<phi>trace_reasoning = 0 ]]
 
        and \<open> comm_domainoid_mapper_rev TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>' (scalar_mult f s) (scalar_mult f' s')
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>'] (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-
+*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>ScalarMul.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) ?P  \<close>),
@@ -2015,7 +2017,9 @@ lemma [\<phi>inhabitance_rule 1000]:
   unfolding Inhabited_def Action_Tag_def
   apply clarsimp
   apply blast .
-  
+
+
+declare [[ML_print_depth = 100]]
 
 
 subsection \<open>Point on a Mapping\<close>
@@ -2023,7 +2027,7 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
-
+  
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
