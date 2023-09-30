@@ -596,6 +596,10 @@ text \<open>
 
 locale closed_homo_sep = homo_sep + closed_homo_sep_disj
 
+locale homo_share =
+  fixes \<psi> :: " 'a::raw_share \<Rightarrow> 'b::raw_share "
+  assumes share_homo: \<open>\<psi> (n \<odivr> x) = n \<odivr> (\<psi> x)\<close>
+
 
 subsubsection \<open>Orthogonal Homomorphism\<close>
 
@@ -1205,6 +1209,11 @@ lemma closed_homo_sep_id[simp, locale_intro]:
   unfolding closed_homo_sep_def
   by simp
 
+lemma homo_share_id[simp, locale_intro]:
+  \<open> homo_share (\<lambda>x. x) \<close>
+  unfolding homo_share_def
+  by blast
+
 (*
 lemma
   \<open> sep_orthogonal (\<lambda>x. x) D \<close>
@@ -1270,6 +1279,13 @@ lemma closed_homo_sep_comp[simp, locale_intro]:
 \<Longrightarrow> closed_homo_sep (f o g)\<close>
   unfolding closed_homo_sep_def
   by simp
+
+lemma homo_share_comp[simp]:
+  \<open> homo_share f
+\<Longrightarrow> homo_share g
+\<Longrightarrow> homo_share (f o g) \<close>
+  unfolding homo_share_def
+  by clarsimp
 
 lemma sep_orthogonal_comp:
   \<open> g ` Dg \<subseteq> Df
@@ -1569,6 +1585,11 @@ lemma closed_homo_sep_map_option[simp, locale_intro]:
   unfolding closed_homo_sep_def
   by (clarsimp simp add: split_option_all)
 
+lemma homo_share_map_option[simp]:
+  \<open> homo_share \<psi>
+\<Longrightarrow> homo_share (map_option \<psi>) \<close>
+  unfolding homo_share_def
+  by (clarsimp simp add: split_option_all share_option_def)
 
 subsection \<open>Product\<close>
 
@@ -2205,7 +2226,11 @@ lemma fun_updt_single_point[simp]:
   \<open>homo_one \<phi> \<Longrightarrow> \<phi> o 1(i := x) = 1(i := \<phi> x)\<close>
   unfolding fun_eq_iff homo_one_def by simp
 
-
+lemma homo_share_funcomp[simp]:
+  \<open> homo_share \<psi>
+\<Longrightarrow> homo_share ((o) \<psi>)\<close>
+  unfolding homo_share_def
+  by (clarsimp simp add: fun_eq_iff share_fun_def)
 
 
 subsection \<open>Finite Map\<close>

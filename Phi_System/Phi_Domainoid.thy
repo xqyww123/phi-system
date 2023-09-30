@@ -488,14 +488,16 @@ definition comm_domainoid_mapper :: \<open> 'c\<^sub>1 itself \<Rightarrow> 'c\<
                                   \<Rightarrow> ('c\<^sub>2::sep_magma, 'd\<^sub>2::sep_magma) domainoid
                                   \<Rightarrow> ('d\<^sub>1 \<Rightarrow> 'd\<^sub>2) \<Rightarrow> ('c\<^sub>1 \<Rightarrow> 'c\<^sub>2)
                                   \<Rightarrow> bool\<close>
-  where \<open>comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longleftrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<and> fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2\<close>
+  where \<open>comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longleftrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<and>
+                                                   (closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2) \<close>
 
 definition comm_domainoid_mapper_rev :: \<open> 'c\<^sub>1 itself \<Rightarrow> 'c\<^sub>2 itself
                                   \<Rightarrow> ('c\<^sub>1::sep_magma, 'd\<^sub>1::sep_magma) domainoid
                                   \<Rightarrow> ('c\<^sub>2::sep_magma, 'd\<^sub>2::sep_magma) domainoid
                                   \<Rightarrow> ('c\<^sub>2 \<Rightarrow> 'c\<^sub>1) \<Rightarrow> ('d\<^sub>2 \<Rightarrow> 'd\<^sub>1)
                                   \<Rightarrow> bool\<close>
-  where \<open>comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longleftrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<and> fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2\<close>
+  where \<open>comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longleftrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<and>
+                                                       (closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2) \<close>
 
 declare [[
   \<phi>reason_default_pattern_ML \<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2\<close> \<Rightarrow>
@@ -556,6 +558,7 @@ lemma [\<phi>premise_extraction add]:
 
 lemma [\<phi>reason_generator %algb_derived]:
   \<open> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2
+\<Longrightarrow> closed_homo_sep \<delta>\<^sub>1
 \<Longrightarrow> fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2
     <with-pattern> fun_commute ff \<delta>\<delta> f\<^sub>2 \<delta>\<^sub>2 \<close>
   unfolding comm_domainoid_mapper_def With_Pattern_def
@@ -563,6 +566,7 @@ lemma [\<phi>reason_generator %algb_derived]:
 
 lemma [\<phi>reason_generator %algb_derived]:
   \<open> comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2
+\<Longrightarrow> closed_homo_sep \<delta>\<^sub>1
 \<Longrightarrow> fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2 \<close>
   unfolding comm_domainoid_mapper_rev_def
   by blast
@@ -639,9 +643,36 @@ lemma [\<phi>reason %domainoid_cut]:
             fun_commute_def fun_eq_iff homo_one_def
   by (clarsimp simp add: sep_disj_fun_def times_fun fun_eq_iff; meson)
 
-lemma
-  \<open> comm_domainoid_mapper TYPE('c) TYPE('k \<Rightarrow> 'c::sep_magma) d ((o) d) f\<^sub>1 f\<^sub>2 \<close>
+lemma [\<phi>reason %domainoid_cut]:
+  \<open> homo_one \<delta>
+\<Longrightarrow> comm_domainoid_mapper TYPE('k list \<Rightarrow> 'c::sep_magma_1) TYPE('k list \<Rightarrow> 'c)
+                          ((o) \<delta>) ((o) \<delta>) (scalar_mult (\<tribullet>\<^sub>m) k) (scalar_mult (\<tribullet>\<^sub>m) k) \<close>
+  unfolding comm_domainoid_mapper_def
+            domainoid_mapper_def domainoid_def fun_commute_def fun_eq_iff
+  by (simp; clarsimp simp add: homo_one_def push_map_def)
 
+lemma [\<phi>reason %domainoid_cut]:
+  \<open> homo_one \<delta>
+\<Longrightarrow> comm_domainoid_mapper_rev TYPE('k list \<Rightarrow> 'c::sep_magma_1) TYPE('k list \<Rightarrow> 'c)
+                              ((o) \<delta>) ((o) \<delta>) (scalar_mult (\<tribullet>\<^sub>m) k) (scalar_mult (\<tribullet>\<^sub>m) k) \<close>
+  unfolding comm_domainoid_mapper_rev_def
+            domainoid_mapper_def domainoid_def fun_commute_def fun_eq_iff
+  by (simp; clarsimp simp add: homo_one_def push_map_def)
 
+lemma [\<phi>reason %domainoid_cut]:
+  \<open> homo_share \<delta>
+\<Longrightarrow> comm_domainoid_mapper TYPE('c) TYPE('c) \<delta> \<delta> (scalar_mult (\<odivr>) n) (scalar_mult (\<odivr>) n) \<close>
+  for \<delta> :: \<open>'c::share_nun_semimodule \<Rightarrow> 'd::share_nun_semimodule\<close>
+  unfolding comm_domainoid_mapper_def
+            domainoid_mapper_def
+  by (simp, clarsimp simp add: fun_commute_def fun_eq_iff homo_share_def)
+
+lemma [\<phi>reason %domainoid_cut]:
+  \<open> homo_share \<delta>
+\<Longrightarrow> comm_domainoid_mapper_rev TYPE('c) TYPE('c) \<delta> \<delta> (scalar_mult (\<odivr>) n) (scalar_mult (\<odivr>) n) \<close>
+  for \<delta> :: \<open>'c::share_nun_semimodule \<Rightarrow> 'd::share_nun_semimodule\<close>
+  unfolding comm_domainoid_mapper_rev_def
+            domainoid_mapper_def
+  by (simp, clarsimp simp add: fun_commute_def fun_eq_iff homo_share_def)
 
 end

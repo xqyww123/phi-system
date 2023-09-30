@@ -2032,11 +2032,28 @@ lemma [\<phi>reason_template name F.scalar_one_ty [assertion_simps, simp]]:
   unfolding Semimodule_Identity_def
   by (rule \<phi>Type_eqI_Tr; clarsimp)
 
+lemma [\<phi>reason_template name F.scalar_one_ty' [assertion_simps, simp]]:
+  \<open> Semimodule_Identity F T one (\<lambda>_. True) (\<lambda>x. x)
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
+\<Longrightarrow> F one' T = T \<close>
+  unfolding Semimodule_Identity_def Simplify_def Action_Tag_def
+  by (rule \<phi>Type_eqI_Tr; clarsimp)
+
 lemma [\<phi>reason_template name F.scalar_one [assertion_simps, simp]]:
   \<open> Semimodule_Identity F T one D f
 \<Longrightarrow> D x
 \<Longrightarrow> (x \<Ztypecolon> F one T) = (f x \<Ztypecolon> T) \<close>
   unfolding Semimodule_Identity_def BI_eq_iff
+  by clarsimp
+
+lemma [\<phi>reason_template name F.scalar_one' [assertion_simps, simp]]:
+  \<open> Semimodule_Identity F T one D f
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> one' : one) @action \<A>_template_reason
+\<Longrightarrow> NO_MATCH one one' @action \<A>_template_reason
+\<Longrightarrow> D x
+\<Longrightarrow> (x \<Ztypecolon> F one' T) = (f x \<Ztypecolon> T) \<close>
+  unfolding Semimodule_Identity_def BI_eq_iff Simplify_def Action_Tag_def
   by clarsimp
 
 lemma [\<phi>reason_template default %ToA_derived_red]:
@@ -5255,6 +5272,14 @@ lemma [\<phi>reason %ToA_normalizing for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> U \<w>\<i>\<t>\<h> P \<and> Q \<close>
   unfolding Action_Tag_def Has_Bubbling_def Transformation_def Bubbling_def
   by clarsimp blast
+
+lemma [\<phi>reason %ToA_normalizing for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?var \<Ztypecolon> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<comment> \<open>entry point to \<open>bubbling_target\<close> sub-reasoning\<close>
+  \<open> x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action bubbling_target
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> Q
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<and> Q \<close>
+  unfolding Action_Tag_def Has_Bubbling_def Transformation_def Bubbling_def
+  by (cases C; clarsimp; blast)
 
 subparagraph \<open>Deriving Bubbling ToA\<close>
 
