@@ -1653,9 +1653,47 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) I false) o snd\<close>
+  = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
+                         (fn ctxt => ctxt addsimps Useful_Thms.get ctxt) false)
+    o snd\<close>
 
 
+subsubsection \<open>Augmenting Refined Local Conditions\<close>
+
+\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %cutting (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>) = \<open>
+  fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+    let val sequent'= Raw_Simplifier.norm_hhf ctxt sequent
+                   |> Conv.gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt =>
+                        Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv (Conv.arg_conv (
+                            Conv.rewr_conv @{thm' NO_SIMP_def[symmetric]})))) ctxt then_conv
+                        Phi_Reasoners.asm_rewrite false ctxt then_conv
+                        Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv (fn ctm => 
+                            case Thm.term_of ctm
+                              of Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
+                                      Conv.arg_conv (Conv.rewr_conv @{thm' NO_SIMP_def}) ctm
+                               | _ => Conv.rewr_conv @{thm' NO_SIMP_def} ctm
+                            ) then_conv Conv.rewr_conv @{thm' atomize_imp[symmetric]})) ctxt
+                      ) ctxt) 1
+     in SOME ((ctxt, sequent'), Seq.empty)
+    end)
+\<close>
+
+
+context begin
+
+private lemma aug_simp:
+  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P' : P
+\<Longrightarrow> (Premise mode P' \<Longrightarrow> Q)
+\<Longrightarrow> Premise mode P \<longrightarrow> Q \<close>
+  unfolding Simplify_def Premise_def
+  by blast
+
+thm NO_SIMP_def
+
+thm aug_simp[where mode=default]
+
+end
+  
 
 subsection \<open>Rule Generation\<close>
 

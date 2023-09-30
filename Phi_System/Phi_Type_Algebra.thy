@@ -974,6 +974,8 @@ lemma \<phi>inductive_destruction_rule_from_direct_definition':
   by simp
 *)
 
+subparagraph \<open>Intro and Elim reasoning rules\<close>
+
 lemma \<phi>intro_transformation:
   \<open> (x \<Ztypecolon> T) = U
 \<Longrightarrow> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<close>
@@ -1016,6 +1018,7 @@ lemma \<phi>elim_reasoning_transformation:
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   by simp
 
+(*TODO: move*)
 lemma apfst_id'[simp]:
   \<open>apfst (\<lambda>x. x) = (\<lambda>x. x)\<close>
   by (simp add: fun_eq_iff)
@@ -1031,6 +1034,8 @@ lemma \<phi>elim'SE_transformation:
   \<open> (\<And>x. (x \<Ztypecolon> T) = (y x \<Ztypecolon> U))
 \<Longrightarrow> (y (fst x), snd x) \<Ztypecolon> U \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>SE True
 \<Longrightarrow> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> Auto_Transform_Hint Y' (x' \<Ztypecolon> T') \<and> P @action \<A>SE True\<close>*)
+
+subparagraph \<open>OPEN and MAKE\<close>
 
 lemma \<phi>open_abstraction:
   \<open> (x \<Ztypecolon> T) = (y' \<Ztypecolon> U')
@@ -1076,6 +1081,28 @@ lemma \<phi>make_abstraction'R_branching:
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x = x'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> MAKE T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
+            Orelse_shortcut_def
+  by (cases C; clarsimp; blast)
+
+lemma \<phi>make_abstraction'Rt:
+  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] fst x = x'
+    \<comment> \<open>Interesting, here \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] fst x = x'\<close> is actually stronger than \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'\<close>
+        because the \<open>fst x\<close> can be a schematic variable so \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x'\<close> always returns even
+        when the instantiating of \<open>fst x\<close> makes the entire sequent inconsistent but \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>\<close> just
+        has no way to recognize this.\<close>
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, snd x) \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> MAKE T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
+            Orelse_shortcut_def MAKE_def
+  by (cases C; clarsimp; blast)
+
+lemma \<phi>make_abstraction'Rt_br:
+  \<open> (x' \<Ztypecolon> T) = (y \<Ztypecolon> U)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> fst x = x'
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> fst x = x' \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, snd x) \<Ztypecolon> U \<^emph>[C] R \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<^emph>[C] R \<w>\<i>\<t>\<h> P \<close>
   unfolding Object_Equiv_def Premise_def Transformation_def MAKE_def \<r>Guard_def Ant_Seq_def
             Orelse_shortcut_def
   by (cases C; clarsimp; blast)
@@ -5264,7 +5291,7 @@ text \<open>where we do a 'reversed' ToA reasoning where we look for a source \<
 
 consts bubbling_target :: action
 
-definition Has_Bubbling :: \<open>'a \<Rightarrow> 'a\<close> ("\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> _" [61] 60) where [iff]: \<open>Has_Bubbling X \<equiv> X\<close>
+definition Has_Bubbling :: \<open>('c,'a) \<phi> \<Rightarrow> ('c,'a) \<phi>\<close> ("\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> _" [61] 60) where [iff]: \<open>Has_Bubbling X \<equiv> X\<close>
 
 subparagraph \<open>Bubbling_Target in Transformation\<close>
 

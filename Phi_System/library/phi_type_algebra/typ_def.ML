@@ -1069,9 +1069,13 @@ fun add_type (def, pos, dervs, bundles) thy =
       val make_abstraction = gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
                            @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
                               handle THM _ => [])
+                           @ (gen_from_tagged_eq_in_type I @{thm' \<phi>make_abstraction'Rt}
+                                    |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
       val make_abstraction_br = gen_from_eqs @{thm' \<phi>make_abstraction_branching} I tagged_eqs
                               @ (gen_from_eqs @{thm' \<phi>make_abstraction'R_branching} I tagged_eqs
                                  handle THM _ => [])
+                              @ (gen_from_tagged_eq_in_type I @{thm' \<phi>make_abstraction'Rt_br}
+                                    |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
       val make_Identity_Element_E = gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
 
       val proof_id =

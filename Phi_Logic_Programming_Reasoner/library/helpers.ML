@@ -344,12 +344,15 @@ signature VARIABLE = sig
 include VARIABLE
 
 (*patched Variable.import and .export, as the original Variable.export only generalize fixed term variables
-  but ignores fixed type variables of such as constants.*)
+  but ignores fixed type variables of constants.*)
 
 val export_generalization  :  typ TVars.table *  term Vars.table -> Names.set * Names.set
 val export_generalization' : ctyp TVars.table * cterm Vars.table -> Names.set * Names.set
 
-val export_inst : Proof.context -> typ TVars.table *  term Vars.table -> thm list -> thm list
+val export_inst : typ TVars.table * term Vars.table -> thm list -> thm list
+val export_inst_to_original_idx : Proof.context -> typ TVars.table *  term Vars.table -> thm list -> thm list
+  (*The usual 'export' varifies the fixed variables to fresh indexes instead of their original indexes.
+    'export_inst_to_original_idx' improves this by fixing back to the original indexes, but slower.*)
 
 end
 
@@ -362,7 +365,13 @@ fun export_generalization (tyvars, tmvars) =
 
 val export_generalization' = export_generalization o Phi_Help.uncertify_vars
 
-fun export_inst ctxt inst ths =
+fun export_inst inst ths =
+  let val names = export_generalization inst
+      val ids = map (fn th => Thm.maxidx_of th + 1) ths
+   in map2 (Thm.generalize names) ids ths
+  end
+
+fun export_inst_to_original_idx ctxt inst ths =
   let val names = export_generalization inst
       val ids = map (fn th => Thm.maxidx_of th + 1) ths
       val ths' = map2 (Thm.generalize names) ids ths

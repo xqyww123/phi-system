@@ -176,24 +176,31 @@ structure Very_Safe_Oblg_Simp_SS = Simpset(
   val post_merging = I
 )
 
-fun oblg_template can_inst f ctxt th00 = Seq.make (fn () =>
+(*fix_level = 0 for no fix
+            | 1 for fixing the conditions of the leading antecedent only but leaves variables
+                    in the conclusion of the leading antecedent free
+            | 2 for fixing variables in the entire leading antecedent*)
+fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
 
-      val (ctxt', th) = if can_inst
-               then (ctxt,
-                 simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                      HOLogic.Trueprop_conv (Conv.arg_conv (
-                        Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
-                   ) ctxt) 1 th01))
-               else let (*fixes variable in the proposition*)
-                        val target = snd (PLPR_Syntax.dest_premise_tag (
-                                            HOLogic.dest_Trueprop (Thm.major_prem_of th01)))
-                        val (inst, ctxt') = Variable.import_inst false [target] ctxt
-                        val instc = Phi_Help.certify_vars (Context.Proof ctxt') inst
-                     in (ctxt', Thm.instantiate instc th01)
-                    end
+      val th = simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+                HOLogic.Trueprop_conv (Conv.arg_conv (
+                  Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
+             ) ctxt) 1 th01)
+
+      val fixing_targets = case fix_level
+                             of 1 => #2 (Phi_Help.leading_antecedent (Thm.prop_of th))
+                              | 2 => [Phi_Help.leading_antecedent' th]
+                              | _ => []
+
+      val (ctxt', th, instc) =
+            if null fixing_targets then (ctxt, th, (TVars.empty, Vars.empty))
+            else let val (inst, ctxt') = Variable.import_inst false fixing_targets ctxt
+                     val instc = Phi_Help.certify_vars (Context.Proof ctxt') inst
+                  in (ctxt', Thm.instantiate instc th01, instc)
+                 end
 
       fun mk_boolean_inst (Var v) b ret = Vars.add (v, if b then \<^cterm>\<open>True\<close> else \<^cterm>\<open>False\<close>) ret
         | mk_boolean_inst (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) b ret
@@ -230,9 +237,10 @@ fun oblg_template can_inst f ctxt th00 = Seq.make (fn () =>
              (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
               handle THM _ => f ctxt' th)
          | _ => f ctxt' th)
-   |> not can_inst ? Option.map (fn (th, seq') =>
-        (singleton (Variable.export ctxt' ctxt) th,
-         Seq.map (singleton (Variable.export ctxt' ctxt)) seq'))
+   |> not (null fixing_targets) ? Option.map (fn (th, seq') =>
+        let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
+         in (f th, Seq.map f seq')
+        end)
   end)
 
 
@@ -801,7 +809,7 @@ fun find_obligations_tag thm = tl (Thm.prems_of thm)
                      | _ => false)
 fun has_obligations_tag thm = find_obligations_tag thm <> ~1
 
-fun defer_antecedent contract = oblg_template true (fn ctxt => fn thm =>
+fun defer_antecedent contract = oblg_template {can_inst=true, fix_level=0} (fn ctxt => fn thm =>
   let val idx = find_obligations_tag thm
   in if idx = ~1
      then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
@@ -827,7 +835,7 @@ val defer_obligation_tac = defer_antecedent o contract_obligations
 
 (*Attack antecedents @{term "Premise mode P"} using the classical auto tactic.
 It is the default tactic in the system intended to solve simple proof obligations.*)
-val auto_obligation_solver = oblg_template true (fn ctxt => fn th =>
+val auto_obligation_solver = oblg_template {can_inst=true, fix_level=0} (fn ctxt => fn th =>
       let val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
        in th'
@@ -857,7 +865,11 @@ fun auto_obligation_solver1 ctxt sequent =  (
 
 (*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
 and will usually terminate (if no loop is encountered in the simplification)*)
-fun safer_obligation_solver {can_inst} = oblg_template can_inst (fn ctxt => fn th =>
+fun safer_obligation_solver {can_inst} = oblg_template {can_inst = can_inst,
+                                                        fix_level= if can_inst then 1 else 0
+                                                        (*it is zero because we will never use tactics
+                                                          that instantiate some variable ever.*) }
+  (fn ctxt => fn th =>
       let val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
           val th' = @{thm' Premise_I} RS th'1
           fun clarsimp_tac ctxt =
@@ -865,7 +877,7 @@ fun safer_obligation_solver {can_inst} = oblg_template can_inst (fn ctxt => fn t
                             else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW
                 Classical.clarify_tac (addSss ctxt)
        in apply_tac ctxt (fn (ctxt,pre,aux,_) =>
-             pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
+             pre THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))
                  THEN HEADGOAL (Method.insert_tac ctxt aux)
                  THEN HEADGOAL (fn s => fn x => clarsimp_tac ctxt s x)) Safe_Solver th'
        |> Seq.pull

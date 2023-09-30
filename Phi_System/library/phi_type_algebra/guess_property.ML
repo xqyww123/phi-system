@@ -99,7 +99,7 @@ fun guess_conditions ctxt0 (const, is_covar) phi T_term0 =
                                                        Ant_Seq_reduct
                                                        HOL.imp_conjR[folded Ant_Seq_def]
                                                        HOL.all_conj_distrib[folded Ant_Seq_def]})
-         |> singleton (Variable.export_inst ctxt0 inst)
+         |> singleton (Variable.export_inst_to_original_idx ctxt0 inst)
          |> Thm.prop_of
          of _ (*Pure.protect*) $ (_ (*Trueprop*) $ (
              Const(\<^const_name>\<open>Guess_Property\<close>, _) $ _ $ _ $ _ $ _
