@@ -275,11 +275,13 @@ declare [[\<phi>reason_default_pattern \<open>module_scalar_assoc ?\<psi> _\<clo
     \<open>Default rules for general structures\<close>
  and algb_funcomp = (40, [40,40]) for \<open>_\<close> in algb_default
     \<open>Default rules for function composition\<close>
- and algb_prop = (100, [61, 4000]) for \<open>_\<close> in algb_prop_all
-    \<open>Normalrules giving algberaic properties\<close>
+ and algb_derived = (70, [61,99]) for \<open>_\<close> in algb_prop_all and > algb_default
+    \<open>Derived rules\<close>
+ and algb_prop = (100, [100, 4000]) for \<open>_\<close> in algb_prop_all and > algb_derived
+    \<open>Normal rules giving algberaic properties\<close>
  and algb_cut = (1000, [1000,1030]) for \<open>_\<close> in algb_prop
     \<open>General group of cutting rules giving algberaic properties\<close>
-  
+
 
 subsubsection \<open>Separation Algebra\<close>
 

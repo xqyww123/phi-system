@@ -490,6 +490,13 @@ definition comm_domainoid_mapper :: \<open> 'c\<^sub>1 itself \<Rightarrow> 'c\<
                                   \<Rightarrow> bool\<close>
   where \<open>comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longleftrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<and> fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2\<close>
 
+definition comm_domainoid_mapper_rev :: \<open> 'c\<^sub>1 itself \<Rightarrow> 'c\<^sub>2 itself
+                                  \<Rightarrow> ('c\<^sub>1::sep_magma, 'd\<^sub>1::sep_magma) domainoid
+                                  \<Rightarrow> ('c\<^sub>2::sep_magma, 'd\<^sub>2::sep_magma) domainoid
+                                  \<Rightarrow> ('c\<^sub>2 \<Rightarrow> 'c\<^sub>1) \<Rightarrow> ('d\<^sub>2 \<Rightarrow> 'd\<^sub>1)
+                                  \<Rightarrow> bool\<close>
+  where \<open>comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<longleftrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<and> fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2\<close>
+
 declare [[
   \<phi>reason_default_pattern_ML \<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2\<close> \<Rightarrow>
     \<open>fn ctxt => fn prop as Trueprop $ (dom_mapper $ T1 $ T2 $ d1 $ d2) =>
@@ -501,8 +508,15 @@ declare [[
                  @ (if chk (T2,d2) then [] else rewr \<^pattern>\<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2 &&& domainoid_mapper _ ?T\<^sub>2 _ ?\<delta>\<^sub>2\<close> prop)
                  @ rewr \<^pattern>\<open>domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 ?\<delta>\<^sub>1 ?\<delta>\<^sub>2 &&& domainoid_mapper ?T\<^sub>1 ?T\<^sub>2 _ _\<close> prop
       in SOME ret
-     end\<close> (100)
+     end\<close> (100),
+
+  \<phi>reason_default_pattern \<open>comm_domainoid_mapper ?T\<^sub>1 _ ?\<delta>\<^sub>1 _ ?f\<^sub>1 _ \<close> \<Rightarrow>
+                          \<open>comm_domainoid_mapper ?T\<^sub>1 _ ?\<delta>\<^sub>1 _ ?f\<^sub>1 _ \<close>    (100)
+                      and \<open>comm_domainoid_mapper_rev _ ?T\<^sub>2 _ ?\<delta>\<^sub>2 _ ?f\<^sub>2 \<close> \<Rightarrow>
+                          \<open>comm_domainoid_mapper_rev _ ?T\<^sub>2 _ ?\<delta>\<^sub>2 _ ?f\<^sub>2 \<close>    (100)
 ]]
+
+subsection \<open>Basic Rules\<close>
 
 lemma domainoid_mapper_gen:
   \<open> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2
@@ -510,6 +524,20 @@ lemma domainoid_mapper_gen:
 \<Longrightarrow> domainoid T\<^sub>2 \<delta>\<^sub>2 \<close>
   unfolding domainoid_mapper_def
   by blast
+
+lemma comm_domainoid_mapper_gen:
+  \<open> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2
+\<Longrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<close>
+  unfolding comm_domainoid_mapper_def
+  by blast
+
+lemma comm_domainoid_mapper_rev_gen:
+  \<open> comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2
+\<Longrightarrow> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<close>
+  unfolding comm_domainoid_mapper_rev_def
+  by blast
+
+subsection \<open>Reasoning Configuration\<close>
 
 lemma [\<phi>premise_extraction add]:
   \<open> domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 \<equiv> (closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> closed_homo_sep \<delta>\<^sub>2) \<and> True \<close>
@@ -520,6 +548,24 @@ lemma [\<phi>premise_extraction add]:
   \<open> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<equiv> (closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> closed_homo_sep \<delta>\<^sub>2) \<and> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<close>
   unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_def
   by simp
+
+lemma [\<phi>premise_extraction add]:
+  \<open> comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<equiv> (closed_homo_sep \<delta>\<^sub>1 \<longrightarrow> closed_homo_sep \<delta>\<^sub>2) \<and> comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2 \<close>
+  unfolding domainoid_mapper_def domainoid_def comm_domainoid_mapper_rev_def
+  by simp
+
+lemma [\<phi>reason_generator %algb_derived]:
+  \<open> comm_domainoid_mapper T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2
+\<Longrightarrow> fun_commute f\<^sub>1 \<delta>\<^sub>1 f\<^sub>2 \<delta>\<^sub>2
+    <with-pattern> fun_commute ff \<delta>\<delta> f\<^sub>2 \<delta>\<^sub>2 \<close>
+  unfolding comm_domainoid_mapper_def With_Pattern_def
+  by blast
+
+lemma [\<phi>reason_generator %algb_derived]:
+  \<open> comm_domainoid_mapper_rev T\<^sub>1 T\<^sub>2 \<delta>\<^sub>1 \<delta>\<^sub>2 f\<^sub>1 f\<^sub>2
+\<Longrightarrow> fun_commute \<delta>\<^sub>1 f\<^sub>1 \<delta>\<^sub>2 f\<^sub>2 \<close>
+  unfolding comm_domainoid_mapper_rev_def
+  by blast
 
 subsection \<open>Fallback\<close>
 
@@ -576,6 +622,26 @@ lemma [\<phi>reason %domainoids]:
 
 text \<open>\<open>'c share\<close> has no meaningful domainoid as that structure inevitably involves equality checking
   of inner data (luckily we don't need that domainoid).\<close>
+
+
+lemma [\<phi>reason %domainoid_cut]:
+  \<open> homo_one \<delta>
+\<Longrightarrow> comm_domainoid_mapper TYPE('c) TYPE('k \<Rightarrow> 'c::sep_magma_1) \<delta> ((o) \<delta>) (fun_upd 1 k) (fun_upd 1 k) \<close>
+  unfolding comm_domainoid_mapper_def fun_commute_def domainoid_mapper_def domainoid_def
+  by (simp; simp add: fun_eq_iff)
+
+lemma [\<phi>reason %domainoid_cut]:
+  \<open> homo_one \<delta>
+\<Longrightarrow> comm_domainoid_mapper_rev TYPE('k \<Rightarrow> 'c::sep_magma_1) TYPE('c) ((o) \<delta>) \<delta> (fun_upd 1 k) (fun_upd 1 k) \<close>
+  unfolding comm_domainoid_mapper_rev_def
+            closed_homo_sep_disj_def closed_homo_sep_def homo_sep_def
+            homo_sep_mult_def homo_sep_disj_def domainoid_mapper_def domainoid_def
+            fun_commute_def fun_eq_iff homo_one_def
+  by (clarsimp simp add: sep_disj_fun_def times_fun fun_eq_iff; meson)
+
+lemma
+  \<open> comm_domainoid_mapper TYPE('c) TYPE('k \<Rightarrow> 'c::sep_magma) d ((o) d) f\<^sub>1 f\<^sub>2 \<close>
+
 
 
 end

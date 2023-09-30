@@ -52,6 +52,10 @@ type instantiation = Position.T (*where the instantiation happens*)
                    * Envir.env  (*unifiers between parameters and arguments*)
                    * (Position.T * thm) option list
 
+(* Controller *)
+
+val enable_reason_generator : bool Config.T
+
 (* Main Entry *)
 val invoke_generation : template -> instantiation -> Context.generic -> Context.generic
 
@@ -115,6 +119,8 @@ fun trim_action (X as Reasonig_Rule _) = X
   | trim_action No_Action = No_Action
 
 fun trim_template ((pos,tem),pass,act,bind) = ((pos, Thm.trim_context tem), pass, trim_action act, bind)
+
+val enable_reason_generator = Attrib.setup_config_bool \<^binding>\<open>\<phi>reason_enable_generator\<close> (K true)
 
 fun pattern_of (Reasonig_Rule (_, (pats, _))) = SOME (map fst pats)
   | pattern_of (Attributes _) = NONE
@@ -360,8 +366,10 @@ fun setup_rule_generation_pass template' ctxt =
       val pattern = subst_bounds (rev qfix, mprem)
       val pidx = idx + length qfix
 
-      fun pass ins_pos ((rules, mode, pats, guard, ctxt) : Phi_Reasoner.pass_data) =
-        let val args = map_filter (fn r =>
+      fun pass ins_pos (data as (rules, mode, pats, guard, ctxt) : Phi_Reasoner.pass_data) =
+        if Config.get_generic ctxt enable_reason_generator
+        then let
+            val args = map_filter (fn r =>
                         let val concl = Logic.incr_indexes ([],[],pidx) (Thm.concl_of r)
                             val cidx = maxidx_of_term concl
                          in case Seq.chop 2 (Unify.hounifiers (ctxt, Envir.empty cidx, [(concl, pattern)]))
@@ -376,6 +384,12 @@ fun setup_rule_generation_pass template' ctxt =
             val ctxt' = fold (fn (env, r) => invoke_generation template (ins_pos, env, [SOME r])) args ctxt
          in (rules, mode, pats, guard, ctxt')
         end
+        else data
+
+      val _ = Phi_Reasoner.info_pretty_generic ctxt 1 (fn () => let open Pretty in
+                chunks [para "Registered \<phi>-LPR generator binding on pattern",
+                        item [Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pattern]]
+              end)
    in Phi_Reasoner.add_pass (pass_id, pattern, pass) ctxt
   end
 

@@ -1664,7 +1664,6 @@ consts \<A>_template_reason :: action \<comment> \<open>tagging the antecedent h
 definition \<open>template_NO_SIMP_USE (X::bool) \<equiv> X\<close>
   \<comment> \<open>prevent using the protected proposition in the simplification during a template instantiation.\<close>
 
-
 ML_file_debug \<open>library/rule_generation.ML\<close>
 ML_file \<open>library/properties.ML\<close>
 
