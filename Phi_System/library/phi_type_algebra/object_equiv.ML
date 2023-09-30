@@ -171,7 +171,7 @@ fun guess_obj_eq_singular_None (phi0:phi_type) ctxt =
 
 fun OE_reasoning phi ctxt rule =
   let val ctxt' = Context.proof_map (Phi_Reasoner.add_pass (
-            "\<phi>TA.OE", \<^pattern_prop>\<open>Object_Equiv _ _\<close>,
+            Const("\<phi>TA.OE",TFree("",[])), \<^pattern_prop>\<open>Object_Equiv _ _\<close>,
             fn _ => fn (rules, (_, priority), pats, guard, ctxt) =>
                        (rules, (Phi_Reasoner.NORMAL_LOCAL_CUT, priority), pats, guard, ctxt))) ctxt
 

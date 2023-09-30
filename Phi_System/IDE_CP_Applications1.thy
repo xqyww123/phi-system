@@ -1467,10 +1467,10 @@ lemma \<comment>\<open>fallback\<close>
 
 setup \<open>
   Context.theory_map (
-      Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _\<close>,
+      Phi_Reasoner.add_pass (\<^term>\<open>MAKE\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<w>\<i>\<t>\<h> _\<close>,
         fn pos => Phi_Reasoners.pass_checks_priority "MAKE" 59 pos #>
                   Phi_Syntax.pass_ensures_intro_transformation pos)
-   #> Phi_Reasoner.add_pass (\<^const_name>\<open>MAKE\<close> ^ "'R", \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>,
+   #> Phi_Reasoner.add_pass (\<^term>\<open>MAKE R\<close>, \<^pattern_prop>\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> MAKE _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>,
         fn pos => Phi_Reasoners.pass_checks_priority "MAKE" 59 pos #>
                   Phi_Syntax.pass_ensures_intro_transformation pos))
 \<close>

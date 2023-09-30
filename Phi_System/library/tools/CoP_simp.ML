@@ -153,7 +153,7 @@ fun force_rule_pass rule ctxt =
 
 
 val _ = Theory.setup (Context.theory_map (
-  Phi_Reasoner.add_pass ("Phi_CoP_Simp", \<^pattern_prop>\<open>_ @action \<A>simp' _\<close>,
+  Phi_Reasoner.add_pass (Const("Phi_CoP_Simp", TFree("",[])), \<^pattern_prop>\<open>_ @action \<A>simp' _\<close>,
     fn pos => fn (rules, mode, pats, guard, ctxt) =>
         if Config.get_generic ctxt enable_rule_pass
         then let val (rules', ctxt') = fold_map force_rule_pass rules ctxt
