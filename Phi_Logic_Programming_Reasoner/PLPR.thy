@@ -1504,6 +1504,10 @@ simproc_setup move_sp_Ex_inside (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<
   ex_simps[folded special_Ex_def]
   simp_thms(36, 39-40)[folded special_Ex_def]*)
 
+paragraph \<open>Annotations of Case-Split\<close>
+
+definition \<open>case_split x \<equiv> x\<close>
+
 
 paragraph \<open>Setup\<close>
 
@@ -1531,6 +1535,8 @@ fun defer_premise ctxt =
 
 \<phi>reasoner_ML NO_INST %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safer_obligation_solver {can_inst=false}) o snd\<close>
+
+declare [[ML_debugger]]
 
 \<phi>reasoner_ML \<open>Premise MODE_SAT\<close> %general (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (fn ctxt => fn sequent => Seq.make (fn () =>
@@ -1660,19 +1666,20 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 subsubsection \<open>Augmenting Refined Local Conditions\<close>
 
-\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %cutting (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>) = \<open>
+\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %cutting+10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>) = \<open>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
     let val sequent'= Raw_Simplifier.norm_hhf ctxt sequent
                    |> Conv.gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt =>
                         Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv (Conv.arg_conv (
                             Conv.rewr_conv @{thm' NO_SIMP_def[symmetric]})))) ctxt then_conv
                         Phi_Reasoners.asm_rewrite false ctxt then_conv
-                        Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv (fn ctm => 
+                        Phi_Conv.hhf_concl_conv (K (fn ctm => 
                             case Thm.term_of ctm
-                              of Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _ =>
-                                      Conv.arg_conv (Conv.rewr_conv @{thm' NO_SIMP_def}) ctm
-                               | _ => Conv.rewr_conv @{thm' NO_SIMP_def} ctm
-                            ) then_conv Conv.rewr_conv @{thm' atomize_imp[symmetric]})) ctxt
+                              of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
+                                      (HOLogic.Trueprop_conv (Conv.arg_conv (Conv.rewr_conv @{thm' NO_SIMP_def})) then_conv
+                                       Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctm
+                               | _ => (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' NO_SIMP_def})) ctm
+                            )) ctxt
                       ) ctxt) 1
      in SOME ((ctxt, sequent'), Seq.empty)
     end)

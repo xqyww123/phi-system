@@ -276,6 +276,27 @@ fun context_tactic_to_state_transition tac fail ctxt sequent =
     of SOME (th', _) => SOME (ctxt, th')
      | NONE => NONE *)
 
+
+(*** Case Split ***)
+
+fun case_split_by_annotations term =
+  let fun parse_split (\<^Const_>\<open>case_split T\<close> $ X) splits =
+           (case (T,X)
+              of (\<^Type>\<open>prod _ _\<close>, Const(\<^const_name>\<open>Pair\<close>, _) $ _ $ _) => splits
+               | (\<^Type>\<open>prod _ _\<close>, x) => insert (op aconv) x splits
+               | (\<^Type>\<open>bool\<close>, Const(\<^const_name>\<open>True\<close>, _)) => splits
+               | (\<^Type>\<open>bool\<close>, Const(\<^const_name>\<open>False\<close>, _)) => splits
+               | (\<^Type>\<open>bool\<close>, x) => insert (op aconv) x splits
+               | (\<^Type>\<open>sum _ _\<close>, Const(\<^const_name>\<open>Inl\<close>, _) $ _) => splits
+               | (\<^Type>\<open>sum _ _\<close>, Const(\<^const_name>\<open>Inr\<close>, _) $ _) => splits
+               | (\<^Type>\<open>sum _ _\<close>, x) => insert (op aconv) x splits
+               | _ => insert (op aconv) X splits)
+       | parse_split (A $ B) splits = parse_split B (parse_split A splits)
+       | parse_split (Abs (_, _, X)) splits = parse_split X splits
+   in ()
+  end
+
+
 (*** Obligation Extraction ***)
 
 (** Premise Extraction **)

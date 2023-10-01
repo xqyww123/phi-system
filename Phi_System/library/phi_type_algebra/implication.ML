@@ -211,7 +211,10 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
             if exists_bad P then prems else P :: prems
       fun filter_bad (\<^Const>\<open>HOL.conj\<close> $ A $ B) = binop \<^Const>\<open>HOL.conj\<close> (filter_bad A, filter_bad B)
         | filter_bad (\<^Const>\<open>HOL.disj\<close> $ A $ B) = binop \<^Const>\<open>HOL.disj\<close> (filter_bad A, filter_bad B)
-        | filter_bad (\<^Const>\<open>HOL.implies\<close> $ A $ B) = impop (filter_bad A, filter_bad B)
+        | filter_bad (\<^Const>\<open>HOL.implies\<close> $ A $ B) = impop (if exists_bad A then NONE else SOME A, filter_bad B)
+        | filter_bad (\<^Const>\<open>HOL.All T\<close> $ Abs (N,T',X)) =
+            (case filter_bad X of SOME X' => SOME (\<^Const>\<open>HOL.All T\<close> $ Abs (N,T',X'))
+                                | NONE => NONE)
         | filter_bad X = if exists_bad X then NONE else SOME X
 
       fun inst_Lw context (Const(\<^const_name>\<open>conj\<close>, _) $ X $ Y)

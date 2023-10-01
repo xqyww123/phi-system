@@ -27,7 +27,7 @@ syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+ 
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
@@ -290,10 +290,12 @@ text \<open>Though \<^term>\<open>\<Sigma> T\<close> is not a transformation fun
   as the element \<phi>-type \<open>T\<close> is parameterized,
   there can be properties very akin to them, see the section \<open>Pseudo properties of \<Sigma>\<close> below.\<close>
 
+declare [[ML_print_depth=100]]
+
 declare SubjectionTY_def[embed_into_\<phi>type del] \<comment> \<open>replaced by \<open>Set_Abstraction\<close>\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
-   
+declare [[\<phi>trace_reasoning = 3]]
+ 
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
   deriving Monoidal_Sep_Functor \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
@@ -304,6 +306,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Open_Abstraction_to_Raw
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
        and Carrier_Set
+
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' Set_Abstraction.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> ?T) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?P xa) \<close>),
@@ -2019,9 +2022,15 @@ lemma [\<phi>inhabitance_rule 1000]:
 declare [[ML_print_depth = 100]]
 
 lemma
-  \<open>(closed_homo_sep \<delta> \<longrightarrow> fst ((if C\<^sub>R then \<lambda>x. x else (\<lambda>x. (fst x, undefined))) f) = xaa # l) \<Longrightarrow>
+  \<open>closed_homo_sep \<delta> \<and> Inhabited (xaa \<Ztypecolon> Ta) \<and> closed_homo_sep \<delta> \<longrightarrow>
+    (closed_homo_sep \<delta> \<longrightarrow> fst ((if C\<^sub>R then \<lambda>x. x else (\<lambda>x. (fst x, undefined))) f) = xaa # l) \<longrightarrow>
     (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ry xa. fst f = xa # y)\<close>
-  apply simp
+  apply (rule, rule)
+  apply (cases )
+  apply (simp add:  if_split)
+  thm if_split
+  apply (simp add: if_distribR if_distrib cong: if_cong)
+  thm if_cong
 
 
 subsection \<open>Point on a Mapping\<close>
@@ -2029,7 +2038,7 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 3]]
- 
+   
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>

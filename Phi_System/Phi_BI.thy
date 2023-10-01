@@ -4398,13 +4398,11 @@ lemma "_NToA_init_":
 
 lemma "_NToA_init_having_Q_":
   \<open> X \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q
-\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
 \<Longrightarrow> Pop_Envir_Var ToA_flag_deep
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P\<close>
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def Inhabited_def Premise_def Transformation_def
   by clarsimp blast
-
-ML \<open>val NToA_extracts_cond = Config.declare_bool ("NToA_extracts_cond", \<^here>) (K false)\<close>
 
 \<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
@@ -4422,7 +4420,7 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
             end) ctxt
           ) 1 sequent
 
-      val rule = if Config.get ctxt NToA_extracts_cond then @{thm "_NToA_init_having_Q_"} else @{thm "_NToA_init_"}
+      val rule = case deep of \<^Const>\<open>True\<close> => @{thm "_NToA_init_having_Q_"} | _ => @{thm "_NToA_init_"}
    in SOME ((ctxt, rule RS sequent), Seq.empty)
   end)
 \<close>
