@@ -30,6 +30,7 @@ signature PHI_REASONERS = sig
   val auto_obligation_solver1 : Proof.context -> thm -> thm
 
   val safer_obligation_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
+      (*The annotation of \<open>case_split\<close> is supported*)
   val safer_obligation_solver': {can_inst: bool}
                              -> (Proof.context -> thm -> thm) (*failure callback*)
                              -> Proof.context -> thm -> thm
@@ -293,9 +294,16 @@ fun case_split_by_annotations term =
                | _ => insert (op aconv) X splits)
        | parse_split (A $ B) splits = parse_split B (parse_split A splits)
        | parse_split (Abs (_, _, X)) splits = parse_split X splits
-   in ()
+       | parse_split _ splits = splits
+   in case parse_split term []
+   of [] => K (K all_tac)
+    | L => fn ctxt => foldl1 (op THEN_ALL_NEW)
+                             (map (fn tm => Induct.cases_tac ctxt true [[SOME tm]] NONE []) L)
   end
 
+fun case_split_by_annotations_first_subgoal ctxt goal th =
+      case_split_by_annotations (Phi_Help.leading_antecedent' th) ctxt goal th
+  
 
 (*** Obligation Extraction ***)
 
@@ -899,8 +907,11 @@ fun safer_obligation_solver {can_inst} = oblg_template {can_inst = can_inst,
                 Classical.clarify_tac (addSss ctxt)
        in apply_tac ctxt (fn (ctxt,pre,aux,_) =>
              pre THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))
-                 THEN HEADGOAL (Method.insert_tac ctxt aux)
-                 THEN HEADGOAL (fn s => fn x => clarsimp_tac ctxt s x)) Safe_Solver th'
+                 THEN HEADGOAL (
+                              case_split_by_annotations_first_subgoal ctxt 
+                 THEN_ALL_NEW Method.insert_tac ctxt aux
+                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac ctxt s x))
+               ) Safe_Solver th'
        |> Seq.pull
       end)
 

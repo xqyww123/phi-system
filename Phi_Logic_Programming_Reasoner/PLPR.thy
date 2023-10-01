@@ -938,6 +938,9 @@ declare conjunctionI [\<phi>reason %cutting]
         impI [\<phi>reason %cutting]
         HOL.refl [\<phi>reason %cutting for \<open>_ = _\<close>]
 
+\<phi>reasoner_group \<phi>LPR_imp = (%cutting, [%cutting, %cutting+100]) for \<open>_ \<longrightarrow> _\<close>
+  \<open>Rules handling implifications, may involving different optimizations for specific cases\<close>
+
 text \<open>Antecedent \<open>x = y\<close> has a meaning of assignment, and is done by unification\<close>
 
 (*
@@ -1507,7 +1510,8 @@ simproc_setup move_sp_Ex_inside (\<open>\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<
 paragraph \<open>Annotations of Case-Split\<close>
 
 definition \<open>case_split x \<equiv> x\<close>
-
+  \<comment> \<open>Annotating the wrapped term \<open>x\<close> should be case-split.
+      The annotation is supported in safe_obligation_solver, i.e., \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close>\<close>
 
 paragraph \<open>Setup\<close>
 
@@ -1666,7 +1670,7 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
 
 subsubsection \<open>Augmenting Refined Local Conditions\<close>
 
-\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %cutting+10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>) = \<open>
+\<phi>reasoner_ML \<open>Premise mode P \<longrightarrow> Q\<close> %\<phi>LPR_imp+10 (\<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> _ \<longrightarrow> _\<close> | \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> _ \<longrightarrow> _\<close>) = \<open>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
     let val sequent'= Raw_Simplifier.norm_hhf ctxt sequent
                    |> Conv.gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt =>

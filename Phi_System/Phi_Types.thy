@@ -2021,16 +2021,6 @@ lemma [\<phi>inhabitance_rule 1000]:
 
 declare [[ML_print_depth = 100]]
 
-lemma
-  \<open>closed_homo_sep \<delta> \<and> Inhabited (xaa \<Ztypecolon> Ta) \<and> closed_homo_sep \<delta> \<longrightarrow>
-    (closed_homo_sep \<delta> \<longrightarrow> fst ((if C\<^sub>R then \<lambda>x. x else (\<lambda>x. (fst x, undefined))) f) = xaa # l) \<longrightarrow>
-    (\<exists>\<^sup>\<phi>\<^sup>-\<^sup>L\<^sup>P\<^sup>Ry xa. fst f = xa # y)\<close>
-  apply (rule, rule)
-  apply (cases )
-  apply (simp add:  if_split)
-  thm if_split
-  apply (simp add: if_distribR if_distrib cong: if_cong)
-  thm if_cong
 
 
 subsection \<open>Point on a Mapping\<close>
