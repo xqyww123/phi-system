@@ -90,8 +90,8 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                 (fn ctxt => fn sequent =>
                    let val bads = [\<^const_name>\<open>OPEN\<close>, \<^const_name>\<open>MAKE\<close>]
                        fun chk 0 (Const(\<^const_name>\<open>times\<close>, _) $ X1 $ X2) =
-                              (chk_unfolded' bads ctxt phi X1; chk_unfolded' bads ctxt phi X2)
-                         | chk 0 X = chk_unfolded' bads ctxt phi X
+                              (chk_unfolded bads ctxt phi X1; chk_unfolded bads ctxt phi X2)
+                         | chk 0 X = chk_unfolded bads ctxt phi X
                          | chk _ _ = ()
                     in if is_intro
                     then exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent

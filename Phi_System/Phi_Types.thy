@@ -2282,6 +2282,7 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
        and \<phi>Fun'.Comm
        and \<phi>ScalarMul.Comm
        and \<phi>MapAt.Comm
+       and \<phi>MapAt_L.Comm
      (*and \<phi>Inter.Comm\<^sub>I*)
        and \<open>homo_share \<delta>
         \<Longrightarrow> Tyops_Commute ((\<odiv>) n) ((\<odiv>) n) \<DD>[\<delta>] \<DD>[\<delta>] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
@@ -2327,15 +2328,23 @@ ML \<open>assert_derived_properties \<^theory> [
     Tyops_Commute (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?xb ?xc) ((\<odiv>) ?n) ((\<odiv>) ?xa) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))  \<close>),
   (@{thm' \<phi>Share.\<phi>ScalarMul_Comm\<^sub>I}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (0 < ?n \<longrightarrow> 0 < ?xa) \<Longrightarrow>
     \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<longrightarrow> fun_commute (scalar_mult (\<odivr>) ?n) (scalar_mult ?f ?s) (scalar_mult (\<odivr>) ?xa) (scalar_mult ?xb ?xc) \<Longrightarrow>
-    Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?xa) (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?xb ?xc) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
+    Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?xa) (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?xb ?xc) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>),
+  (@{thm' \<phi>Share.\<phi>MapAt_L_Comm\<^sub>E}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (0 < ?n \<longrightarrow> 0 < ?n)
+        \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<odiv>) ?n) ((\<odiv>) ?n) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))   \<close>),
+  (@{thm' \<phi>Share.\<phi>MapAt_L_Comm\<^sub>I}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (0 < ?n \<longrightarrow> 0 < ?n)
+        \<Longrightarrow> Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
 ]\<close>
 
-(*TODO: debug tool asserting the derived properties*)
+
+declare \<phi>MapAt.\<phi>Share.comm_rewr[symmetric, assertion_simps]
+declare \<phi>MapAt_L.\<phi>Share.comm_rewr[symmetric, assertion_simps]
+
+thm \<phi>MapAt_L.\<phi>Share.comm_rewr
 
 thm \<phi>Share.\<phi>Inter_Comm\<^sub>E
 thm \<phi>Share.\<Sigma>_rewr
 thm \<phi>Fun'.\<phi>Fun'.comm_rewr
-thm \<phi>MapAt.\<phi>Share.comm_rewr
+
 
 thm \<phi>Share.\<phi>Sum_Comm\<^sub>E
 
@@ -2379,18 +2388,6 @@ text \<open>Many read-only applicable rules require only non-zero permissions.
 subsubsection \<open>Simplification Rules\<close>
 
 (*TODO:
-lemma \<phi>Share_\<phi>MapAt[assertion_simps]:
-  \<open>n \<odiv> k \<^bold>\<rightarrow> T = k \<^bold>\<rightarrow> n \<odiv> T\<close>
-  for T :: \<open>('a::share_one,'b) \<phi>\<close>
-  by (rule \<phi>Type_eqI; clarsimp; rule; clarsimp;
-      metis share_fun_updt share_right_one
-
-lemma \<phi>Share_\<phi>MapAt_Lassertion_simps[]:
-  \<open>n \<odiv> k \<^bold>\<rightarrow>\<^sub>@ T = k \<^bold>\<rightarrow>\<^sub>@ n \<odiv> T\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::share_one,'b) \<phi>\<close>
-  apply (rule \<phi>Type_eqI; clarsimp; rule)
-  apply (clarsimp simp add: share_push_map) apply blast
-  apply (clarsimp simp add: share_push_map[symmetric]) by blast
 
 lemma \<phi>Share_\<phi>Prod[assertion_simps]:
   \<open>n \<odiv> (T \<^emph> U) = (n \<odiv> T) \<^emph> (n \<odiv> U)\<close>

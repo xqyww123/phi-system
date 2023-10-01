@@ -107,9 +107,8 @@ val add_deriving_from_hint : Context.generic -> deriving_instruction -> deriving
 val add_deriver_dependences : bool -> Context.generic -> (deriver_name * is_weak) list -> derivings -> derivings
 val complete_deriver_dependences : Context.generic -> derivings -> derivings
 
-val report_potential_failure_reason : (unit -> Pretty.T) list -> unit
-(*no need to call it manually. It is invoked by `add_type` *)
 val derive_properties : derivings * Bundle.name list -> phi_type -> generic_theory -> generic_theory
+    (*no need to call it manually. It is invoked by `add_type` *)
 val under_deriving_ctxt : bool Config.T
 
 (* Derived Properties *)
@@ -537,10 +536,9 @@ fun complete_deriver_dependences ctxt dervs =
 
 (* Deriving *)
 
-val reason_of_deriving_fails : (unit -> Pretty.T) list Thread_Data.var = Thread_Data.var ()
 val under_deriving_ctxt = Attrib.setup_config_bool \<^binding>\<open>under_\<phi>deriving\<close> (K false)
 
-fun err_derive prop_name msg hints = let open Pretty in
+fun err_derive ctxt prop_name msg hints = let open Pretty in
       error (string_of (chunks (
         block [str "Fail to derive the property ", str prop_name] ::
         msg @
@@ -548,29 +546,22 @@ fun err_derive prop_name msg hints = let open Pretty in
          then [para "The guessed property may be wrong, and you may provide the \
                     \desired property form by \<open>deriving \<open>the property you want\<close>\<close>."]
          else []) @
-        (case Thread_Data.get reason_of_deriving_fails
-           of SOME (reasons as _ :: _) =>
-                para "There are some potential reasons for the failure" ::
-                map (fn g => item [g ()]) reasons
-            | _ => [])
+        (case Phi_Reasoners.failure_reasons_of ctxt
+           of [] => []
+            | L => para "There are some potential reasons for the failure" :: L)
       )))
       end
-
-fun report_potential_failure_reason G =
-  case Thread_Data.get reason_of_deriving_fails
-    of SOME L => Thread_Data.put reason_of_deriving_fails (SOME (G @ L))
-     | NONE => ()
 
 fun derive_properties (dervs, bundles) phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
   |> Derivings.fold (fn ((_,name),(hints,derv,is_weak)) => fn thy'goal =>
-      let val _ = Thread_Data.put reason_of_deriving_fails (SOME [])
-          val ctxt_derv = Context.proof_of thy'goal
+      let val ctxt_derv = Context.proof_of thy'goal
                        |> Bundle.includes bundles
                        |> Config.put under_deriving_ctxt true
+                       |> Phi_Reasoners.report_failure_reason []
        in #derive derv is_weak hints ctxt_derv phityp thy'goal
-          handle Automation_Fail msg => err_derive name (msg ()) hints
+          handle Automation_Fail msg => err_derive ctxt_derv name (msg ()) hints
       end
      ) dervs
   |> Context_Position.restore_visible_generic thy

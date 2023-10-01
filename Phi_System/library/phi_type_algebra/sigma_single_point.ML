@@ -179,7 +179,7 @@ fun SgTH_reasoning phi ctxt =
       reasoning_configure
       (K (K NONE))
       (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA}
-         (K (chk_unfolded' ctxt phi)))
+         (K (chk_unfolded ctxt phi)))
       ctxt
 
 fun gen_SgTH (_,name) hint0 ctxt0 (phi0 : phi_type) thy =

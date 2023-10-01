@@ -57,7 +57,7 @@ fun reasoning phi ctxt =
    in default_reasoning false
          default_reasoning_configure
          (K (K NONE))
-         (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded' [] ctxt phi)))
+         (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded [] ctxt phi)))
          phi ctxt
   end
 

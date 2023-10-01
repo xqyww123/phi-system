@@ -179,7 +179,7 @@ fun OE_reasoning phi ctxt rule =
           default_reasoning_configure
           (K (K NONE))
           (exhaustive_PLPR_reasoner_by_rule @{thm' Action_Tag_D[where A=NToA]}
-                                            (K (chk_unfolded' [\<^const_name>\<open>OPEN\<close>] ctxt' phi)))
+                                            (K (chk_unfolded [\<^const_name>\<open>OPEN\<close>] ctxt' phi)))
           phi ctxt' rule
   end
 
@@ -276,13 +276,13 @@ case #equations phi0
       fun OEO_reasoning1 phi ctxt = default_reasoning false
             default_reasoning_configure
             (K (K NONE))
-            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} (K (chk_unfolded' ctxt phi)))
+            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} (K (chk_unfolded ctxt phi)))
             phi ctxt
 
       fun OEO_reasoning2 phi ctxt = default_reasoning false
             default_reasoning_configure
             (K (K NONE))
-            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__NToA} (K (chk_unfolded' ctxt phi)))
+            (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__NToA} (K (chk_unfolded ctxt phi)))
             phi ctxt
 
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,

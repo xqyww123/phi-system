@@ -2285,6 +2285,8 @@ ML_file \<open>library/memoization.ML\<close>
 
 subsection \<open>Error Message\<close>
 
+ML_file \<open>library/tools/failure_reason.ML\<close>
+
 \<phi>reasoner_ML TRACING %cutting (\<open>TRACING ?x\<close>) = \<open>fn (_, (ctxt,sequent)) =>
   if Context_Position.is_really_visible ctxt
   then let
@@ -2323,8 +2325,8 @@ subsection \<open>Error Message\<close>
                         of \<^const>\<open>Trueprop\<close> $ (\<^const>\<open>TRACE_FAIL\<close> $ X) => X
                          | \<^const>\<open>TRACE_FAIL\<close> $ X => X
            val str = Text_Encoding.decode_text_str ctxt text
-           val _ = Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () =>
-                        Text_Encoding.decode_text_pretty ctxt text)
+           val _ = Phi_Reasoners.report_failure_reason' ctxt [fn () =>
+                        Text_Encoding.decode_text_pretty ctxt text]
         in Seq.empty
        end
   else Seq.empty\<close>

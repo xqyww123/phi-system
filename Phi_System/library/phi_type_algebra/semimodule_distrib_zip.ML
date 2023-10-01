@@ -24,7 +24,7 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
 
       fun reasoning phi ctxt =
         default_reasoning false default_reasoning_configure (K (K NONE))
-                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' [] ctxt phi))) phi ctxt
+                          (exhaustive_PLPR_reasoner NONE (K (chk_unfolded [] ctxt phi))) phi ctxt
       val mode_infer = not (is_some instruction)
 
       val simp = if is_some instruction then K I

@@ -317,9 +317,8 @@ val accept_one : string (*name for printing*) ->
     (*wraps and checks if the user gives at most one hint*)
 *)
 
-val chk_unfolded : string list (*bads*) -> Context.generic -> Phi_Type_Algebra.phi_type -> term -> unit
-val chk_unfolded': string list -> Proof.context -> Phi_Type_Algebra.phi_type -> term -> unit
-val conv_chk_unfolded : string list -> Phi_Type_Algebra.phi_type -> Proof.context -> conv
+val chk_unfolded : string list (*bads*) -> Phi_Type_Algebra.deriving_ctxt -> Phi_Type_Algebra.phi_type -> term -> unit
+val conv_chk_unfolded : string list -> Phi_Type_Algebra.phi_type -> Phi_Type_Algebra.deriving_ctxt -> conv
       (*roughly check if a phi-type expression is expanded, and warn if not.
         The bads are constants whose occurrence indicates the \<phi>-type is not expanded*)
 
@@ -1454,7 +1453,7 @@ fun instantiate_ToA (pure_info,ctxt) ToA =
                                      in [(ToA1, NONE), (ToA2, NONE)]
                                     end)
           val _ = if null insts 
-                  then report_potential_failure_reason (let open Pretty in [
+                  then Phi_Reasoners.report_failure_reason1 ctxt (let open Pretty in [
                           fn () => chunks [para "I fail to derive any instantiation of the induction-hypothetic reasoning rule",
                                            indent 2 (Thm.pretty_thm ctxt ToA),
                                            para "because I fail to derive its premise",
@@ -1851,17 +1850,15 @@ fun chk_unfolded bads ctxt (phi : phi_type) term =
                 not (null bads) andalso exists_Const (member (op =) bads o fst) T
             | _ => false
           ) term
-      then report_potential_failure_reason (let open Pretty in [fn () => 
+      then Phi_Reasoners.report_failure_reason1 ctxt (let open Pretty in [fn () => 
               chunks [str "The phi-type is not unfolded by simplification and inductive destruction.",
-                      Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt term]
+                      Syntax.pretty_term ctxt term]
             ] end)
       else ()
   end
 
-fun chk_unfolded' bads ctxt = chk_unfolded bads (Context.Proof ctxt)
-
 fun conv_chk_unfolded bads (phi : phi_type) ctxt ctm =
-      (chk_unfolded' bads ctxt phi (Thm.term_of ctm); Conv.all_conv ctm)
+      (chk_unfolded bads ctxt phi (Thm.term_of ctm); Conv.all_conv ctm)
 
 fun pure_PLPR_reasoning num ctxt sequent =
   case Phi_Reasoner.reason NONE (SOME num) ctxt sequent

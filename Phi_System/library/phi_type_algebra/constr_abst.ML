@@ -64,7 +64,7 @@ fun reasoning phi ctxt =
    in default_reasoning false
          (default_reasoning_configure [])
          (K (K NONE))
-         (exhaustive_PLPR_reasoner NONE (K (chk_unfolded' ctxt phi)))
+         (exhaustive_PLPR_reasoner NONE (K (chk_unfolded ctxt phi)))
          ctxt
   end
 

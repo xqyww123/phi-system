@@ -669,7 +669,23 @@ lemma [\<phi>reason %algb_cut]:
   unfolding fun_commute_def
   by (clarsimp simp add: fun_eq_iff share_fun_def)
 
+lemma [\<phi>reason %algb_cut]:
+  \<open> fun_commute (scalar_mult (\<tribullet>\<^sub>m) k :: ('a list \<Rightarrow> 'b) \<Rightarrow> 'a list \<Rightarrow> 'b::share_one)
+                (scalar_mult (\<odivr>) n) (scalar_mult (\<tribullet>\<^sub>m) k) (scalar_mult (\<odivr>) n) \<close>
+  unfolding fun_commute_def fun_eq_iff
+  by (clarsimp simp add: push_map_def share_fun_def)
 
+lemma [\<phi>reason %algb_cut]:
+  \<open> fun_commute (scalar_mult (\<odivr>) n :: ('a list \<Rightarrow> 'b) \<Rightarrow> 'a list \<Rightarrow> 'b::share_one)
+                (scalar_mult (\<tribullet>\<^sub>m) k) (scalar_mult (\<odivr>) n) (scalar_mult (\<tribullet>\<^sub>m) k) \<close>
+  unfolding fun_commute_def fun_eq_iff
+  by (clarsimp simp add: push_map_def share_fun_def)
+
+lemma [\<phi>reason default %algb_falling_lattice for \<open>fun_commute _ _ _ _\<close>]:
+  \<open> TRACE_FAIL TEXT(\<open>The commutativity for\<close> (fun_commute \<psi> \<phi> \<psi>' \<phi>') \<open>is not given\<close>)
+\<Longrightarrow> fun_commute \<psi> \<phi> \<psi>' \<phi>' \<close>
+  unfolding TRACE_FAIL_def
+  by blast
 
 (*
 

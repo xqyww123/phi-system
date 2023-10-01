@@ -220,8 +220,8 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
               if is_left
               then (fn ctxt => fn th =>
                       exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_Ident_I_rule_step}
-                          (K (chk_unfolded' [] ctxt phi)) ctxt th)
-              else (fn ctxt => exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' [] ctxt phi)) ctxt)
+                          (K (chk_unfolded [] ctxt phi)) ctxt th)
+              else (fn ctxt => exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded [] ctxt phi)) ctxt)
          in default_reasoning true default_reasoning_configure varify_subgoal reasoner phi
         end
 

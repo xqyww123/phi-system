@@ -97,7 +97,7 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
             
       fun reasoning phi ctxt =
             default_reasoning true default_reasoning_configure (K (K NONE))
-                              (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded' [] ctxt phi)))
+                              (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded [] ctxt phi)))
                               phi ctxt
 
       val mode_infer = not (is_some instruction) andalso not (#is_recursive phi0)
