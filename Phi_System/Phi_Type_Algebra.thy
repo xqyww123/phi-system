@@ -1805,10 +1805,11 @@ lemma apply_conditioned_Separation_Functor_unzip:
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>I_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>W \<Longrightarrow> Separation_Homo\<^sub>I Ft Fu F3 T U D z)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W \<Longrightarrow> Functional_Transformation_Functor Ft F3 T (T \<^emph>[C\<^sub>W] U) D' R' pred' func' )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if C\<^sub>W then D else {x. \<forall>a. a \<in> D' (fst x) \<longrightarrow> (a, undefined) \<in> R' (fst x)})) @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (if C\<^sub>W then z else func' (\<lambda>x. (x, undefined)) (\<lambda>_. True) o fst)) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>W then D else {x. \<forall>a. a \<in> D' (fst x) \<longrightarrow> (a, undefined) \<in> R' (fst x)})) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] ZZ : (if case_split C\<^sub>W then z else func' (\<lambda>x. (x, undefined)) (\<lambda>_. True) o fst)) @action \<A>_template_reason
 \<Longrightarrow> Separation_Homo\<^sub>I_Cond Ft Fu F3 C\<^sub>W T U DD ZZ \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>I_def Premise_def Action_Tag_def Simplify_def
+            case_split_def 
   by (cases C\<^sub>W; clarsimp;
       insert apply_Functional_Transformation_Functor
                 [unfolded Argument_def Premise_def,
@@ -1822,8 +1823,8 @@ lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separa
 lemma [\<phi>reason_template default %\<phi>TA_derived_properties name Ft.Separation_Homo\<^sub>E_Cond]:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu F3 T U uz)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>R \<Longrightarrow> Functional_Transformation_Functor F3 Ft (T \<^emph>[C\<^sub>R] U) T D' R' pred' func' )
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if C\<^sub>R then UNIV else {x. \<forall>(a,b) \<in> D' x. a \<in> R' x})) @action \<A>_template_reason
-\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if C\<^sub>R then uz else (\<lambda>x. (func' fst (\<lambda>_. True) x, undefined)))) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] DD : (if case_split C\<^sub>R then UNIV else {x. \<forall>(a,b) \<in> D' x. a \<in> R' x})) @action \<A>_template_reason
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] UZ : (if case_split C\<^sub>R then uz else (\<lambda>x. (func' fst (\<lambda>_. True) x, undefined)))) @action \<A>_template_reason
 \<Longrightarrow> Separation_Homo\<^sub>E_Cond Ft Fu F3 C\<^sub>R T U DD UZ \<close>
   unfolding Separation_Homo\<^sub>E_Cond_def Separation_Homo\<^sub>E_def Premise_def Action_Tag_def Simplify_def
   by (cases C\<^sub>R; clarsimp;
@@ -5465,9 +5466,9 @@ lemma \<phi>TA_TyComm\<^sub>I_gen:
 lemma \<phi>TA_TyComm\<^sub>E_gen:
   \<open> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
-          (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN (G T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target bubbling_target)
+\<Longrightarrow> (\<And>y. Ant \<longrightarrow>
+          (\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
+               (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN (G T)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' T)) \<w>\<i>\<t>\<h> P x)) @action \<phi>TA_ind_target bubbling_target)
                                 \<comment>\<open>^ target of inductive expansion. We only support a function \<open>embedded_func f P\<close>
               instead of a relation. It is a limitation. The main difficulty is here if it is a relation,
               we lose the location \<open>y \<Ztypecolon> G' _\<close> to apply induction. \<open>y\<close> is fixed here, but if we consider
@@ -5500,9 +5501,9 @@ lemma \<phi>TA_TyComm\<^sub>1\<^sub>_\<^sub>2\<^sub>E_gen:
   \<open> Parameter_Variant_of_the_Same_Type F F'\<^sub>T
 \<Longrightarrow> Parameter_Variant_of_the_Same_Type F F'\<^sub>U
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
-          (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN (G T U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target bubbling_target)
+\<Longrightarrow> (\<And>y. Ant \<longrightarrow>
+         (\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
+          (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F (OPEN (G T U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G' (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>T T) (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F'\<^sub>U U)) \<w>\<i>\<t>\<h> P x)) @action \<phi>TA_ind_target bubbling_target)
                                                 \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -5528,9 +5529,9 @@ lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>I_gen:
 lemma \<phi>TA_TyComm\<^sub>2\<^sub>_\<^sub>1\<^sub>E_gen:
   \<open> Parameter_Variant_of_the_Same_Type F F'
 \<Longrightarrow> \<r>Success \<comment>\<open>Success of generating deriving rule\<close>
-\<Longrightarrow> (\<And>x y. Ant \<longrightarrow>
-          \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
-          (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' (OPEN (G'\<^sub>T T)) (OPEN (G'\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U)) \<w>\<i>\<t>\<h> P x) @action \<phi>TA_ind_target bubbling_target)
+\<Longrightarrow> (\<And>y. Ant \<longrightarrow>
+         (\<forall>x. \<p>\<r>\<e>\<m>\<i>\<s>\<e> D x \<and> f x = y \<longrightarrow>
+          (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F' (OPEN (G'\<^sub>T T)) (OPEN (G'\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> MAKE (G (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> F T U)) \<w>\<i>\<t>\<h> P x)) @action \<phi>TA_ind_target bubbling_target)
                                                           \<comment>\<open>^ target of inductive expansion. The same limitation as above.\<close>
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True

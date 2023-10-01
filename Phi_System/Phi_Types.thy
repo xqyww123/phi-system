@@ -1406,7 +1406,7 @@ lemma [simp]: (*TODO: move me*)
   \<open>(case x of Inl x \<Rightarrow> Inl x | Inr x \<Rightarrow> Inr x) = x\<close>
   by (cases x; simp)
 
-declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>reasoner_group identity_elements_of_\<phi>Fun = (100, [100, 140]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
                                                                in identity_element and > derived_identity_element
@@ -1566,6 +1566,15 @@ declare [[\<phi>trace_reasoning = 0]]
       we introduce a differentiated syntax to emphasize the intention of extracting domainoid,
       on which specific reasoning procedures can be given to reduce the expression further.\<close>
  deriving Sep_Functor
+      and \<open> constant_1 \<delta> \<and>\<^sub>\<r> (D,P) = (\<lambda>_. True, \<lambda>_. True) \<or>\<^sub>c\<^sub>u\<^sub>t
+            homo_one \<delta> \<and>\<^sub>\<r> Identity_Elements\<^sub>I T D P
+        \<Longrightarrow> Identity_Elements\<^sub>I (\<DD>[\<delta>] T) D P \<close>
+
+      and \<open> closed_homo_sep \<delta>
+        \<Longrightarrow> constant_1 \<delta> \<and>\<^sub>\<r> Abstract_Domain\<^sub>L T D \<or>\<^sub>c\<^sub>u\<^sub>t
+            homo_one \<delta> \<and>\<^sub>\<r> Identity_Elements\<^sub>E T D
+        \<Longrightarrow> Identity_Elements\<^sub>E (\<DD>[\<delta>] T) D \<close>
+
       and Commutativity_Deriver
       and \<open> comm_domainoid_mapper_rev TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>' f f'
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>'] ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
@@ -2027,18 +2036,18 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-   
+declare [[\<phi>trace_reasoning = 0]]
+    
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving (*Monoidal_Sep_Functor
-       and Functionality
-       and*) \<open>Tyops_Commute List List \<DD>[\<delta>] \<DD>[\<delta>] Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-term \<open>Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] List List Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
-
-term \<open> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 List List List (\<and>\<^sub>\<phi>) (\<and>\<^sub>\<phi>) T U
-                       (\<lambda>(x,y). length x= length y) (embedded_func zip' (\<lambda>_. True))\<close>
+  deriving Monoidal_Sep_Functor
+       and Functionality 
+       and \<open> homo_one \<delta>
+          \<Longrightarrow> closed_homo_sep \<delta>
+          \<Longrightarrow> Tyops_Commute List List \<DD>[\<delta>] \<DD>[\<delta>] Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+        and \<open>homo_one \<delta>
+          \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>] List List Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' List.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (List ?T) (list_all ?P) \<close>),

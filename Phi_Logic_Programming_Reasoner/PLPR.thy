@@ -1513,6 +1513,25 @@ definition \<open>case_split x \<equiv> x\<close>
   \<comment> \<open>Annotating the wrapped term \<open>x\<close> should be case-split.
       The annotation is supported in safe_obligation_solver, i.e., \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P\<close>\<close>
 
+subparagraph \<open>Reductions\<close>
+
+lemma case_split_red_bool[simp]:
+  \<open>case_split True  \<equiv> True \<close>
+  \<open>case_split False \<equiv> False\<close>
+  unfolding case_split_def
+  by simp
+
+lemma case_split_red_prod[simp]:
+  \<open>case_split (x,y) \<equiv> (x,y)\<close>
+  unfolding case_split_def
+  by simp
+
+lemma case_split_red_sum[simp]:
+  \<open>case_split (Inl x) \<equiv> Inl x\<close>
+  \<open>case_split (Inr y) \<equiv> Inr y\<close>
+  unfolding case_split_def
+  by simp
+
 paragraph \<open>Setup\<close>
 
 ML_file_debug "library/reasoners.ML"
@@ -2021,6 +2040,11 @@ lemma [\<phi>reason %\<r>if+1]:
 \<Longrightarrow> if C then P else Q \<close>
   unfolding \<r>Guard_def Premise_def Simplify_def
   by simp
+
+lemma [\<phi>reason %\<r>if+10]:
+  \<open> if C then P else Q
+\<Longrightarrow> if case_split C then P else Q \<close>
+  unfolding case_split_def .
 
 
 subsubsection \<open>Try\<close>

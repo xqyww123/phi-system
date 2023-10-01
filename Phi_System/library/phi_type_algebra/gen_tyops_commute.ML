@@ -24,23 +24,29 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
                 @ map_filter (Option.map  Phi_Syntax.wrap_equation_by_OPEN) (#type_equations phi0)
                 @ map Phi_Syntax.wrap_equation_by_MAKE (#equations phi0)
                 @ map_filter (Option.map Phi_Syntax.wrap_equation_by_MAKE) (#type_equations phi0)
-      val ind_rewr = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
+      val ind_rewr_I = @{lemma' \<open> Trueprop (A \<longrightarrow> B \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
                              \<equiv> (A \<Longrightarrow> B \<Longrightarrow> C @action \<A>)\<close>
                           by (unfold atomize_imp Action_Tag_def)}
-      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> B \<longrightarrow> (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> (F T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action \<phi>TA_ind_target \<A>)
-                                  \<equiv> (A \<Longrightarrow> B \<Longrightarrow> (x \<Ztypecolon> F T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) @action NToA)\<close>
-                                by (unfold atomize_imp Action_Tag_def Bubbling_def)}
-      fun gen_ind_conv is_IH ctxt _ = @{print} o
-            Conv.rewr_conv (if not is_intro andalso not is_IH then ind_rewr_E_CL else ind_rewr) then_conv
+      val ind_rewr_E_IH = @{lemma' \<open> Trueprop (A \<longrightarrow> (\<forall>x. B x \<longrightarrow> C x) @action \<phi>TA_ind_target \<A>)
+                                  \<equiv> (\<And>x. A \<Longrightarrow> B x \<Longrightarrow> C x @action \<A>)\<close>
+                          by (simp add: atomize_imp Action_Tag_def atomize_all)}
+      val ind_rewr_E_CL = @{lemma' \<open>Trueprop (A \<longrightarrow> (\<forall>x. B x \<longrightarrow> (x \<Ztypecolon> \<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> FT \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P x)) @action \<phi>TA_ind_target \<A>)
+                                  \<equiv> (\<And>x. A \<Longrightarrow> B x \<Longrightarrow> (x \<Ztypecolon> FT \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P x) @action NToA)\<close>
+                                by (simp add: atomize_imp Action_Tag_def Bubbling_def atomize_all)}
+      fun gen_ind_conv is_IH ctxt _ ctm = (@{print} o
+            Conv.rewr_conv (if is_intro then ind_rewr_I
+                                        else if is_IH then ind_rewr_E_IH
+                                                      else ind_rewr_E_CL) then_conv
             (if is_IH then Simplifier.rewrite (Simplifier.clear_simpset ctxt addsimps @{thms' OPEN_def MAKE_def})
-             else Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)) then_conv
+                      else Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps simps)) then_conv
+            (if is_intro then I else (Phi_Conv.meta_all_conv o (fn C => C o snd))) (fn ctxt =>
             Conv.implies_conv (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Action_Tag_def[where A=\<open>\<phi>TA_ANT\<close>, symmetric]}))
               (if not is_intro andalso not is_IH
                then Conv.implies_concl_conv (Phi_Conv.action_tag_conv (
                        Phi_Syntax.transformation_conv Conv.all_conv
                                                       (Simplifier.rewrite (Tag_Has_Bubbling.equip ctxt))
                                                       Conv.all_conv))
-               else Conv.all_conv)
+               else Conv.all_conv)) ctxt) ctm
       val ind_conv = default_ind_conv (gen_ind_conv true, gen_ind_conv false)
       (*val ind_conv = default_ind_conv (
             fn ctxt => fn _ =>

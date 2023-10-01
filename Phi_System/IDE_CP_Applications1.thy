@@ -1414,6 +1414,16 @@ lemma [\<phi>reason %abstract_domain]:
 \<Longrightarrow> Abstract_Domain\<^sub>L (OPEN T) D \<close>
   unfolding OPEN_def .
 
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>I T D P
+\<Longrightarrow> Identity_Elements\<^sub>I (OPEN T) D P \<close>
+  unfolding OPEN_def .
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>E T D
+\<Longrightarrow> Identity_Elements\<^sub>E (OPEN T) D \<close>
+  unfolding OPEN_def .
+  
 
 subsubsection \<open>Make Abstraction\<close>
 
@@ -1491,6 +1501,38 @@ setup \<open>
         fn pos => Phi_Reasoners.pass_checks_priority "MAKE" 59 pos #>
                   Phi_Syntax.pass_ensures_intro_transformation pos))
 \<close>
+
+paragraph \<open>Rules of Various Reasoning\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> x \<Ztypecolon> MAKE T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
+  unfolding MAKE_def .
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T
+\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T \<close>
+  unfolding MAKE_def .
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain T D
+\<Longrightarrow> Abstract_Domain (MAKE T) D \<close>
+  unfolding MAKE_def .
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain\<^sub>L T D
+\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) D \<close>
+  unfolding MAKE_def .
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>I T D P
+\<Longrightarrow> Identity_Elements\<^sub>I (MAKE T) D P \<close>
+  unfolding MAKE_def .
+
+lemma [\<phi>reason %identity_element_cut]:
+  \<open> Identity_Elements\<^sub>E T D
+\<Longrightarrow> Identity_Elements\<^sub>E (MAKE T) D \<close>
+  unfolding MAKE_def .
 
 (*
 subsection \<open>Construct \& Destruct \<open>\<phi>\<close>-Type by Definition\<close>
@@ -1574,27 +1616,6 @@ structure PhiDef_SS = Simpset (
 declare prod.case[\<phi>defs]
 *)
 
-paragraph \<open>Rules of Various Reasoning\<close>
-
-lemma [\<phi>reason %extract_pure]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
-\<Longrightarrow> x \<Ztypecolon> MAKE T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
-  unfolding MAKE_def .
-
-lemma [\<phi>reason %extract_pure]:
-  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T
-\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> MAKE T \<close>
-  unfolding MAKE_def .
-
-lemma [\<phi>reason %abstract_domain]:
-  \<open> Abstract_Domain T D
-\<Longrightarrow> Abstract_Domain (MAKE T) D \<close>
-  unfolding MAKE_def .
-
-lemma [\<phi>reason %abstract_domain]:
-  \<open> Abstract_Domain\<^sub>L T D
-\<Longrightarrow> Abstract_Domain\<^sub>L (MAKE T) D \<close>
-  unfolding MAKE_def .
 
 
 subsection \<open>Split\<close>

@@ -282,7 +282,6 @@ declare [[\<phi>reason_default_pattern \<open>module_scalar_assoc ?\<psi> _\<clo
  and algb_cut = (1000, [1000,1030]) for \<open>_\<close> in algb_prop
     \<open>General group of cutting rules giving algberaic properties\<close>
 
-
 subsubsection \<open>Separation Algebra\<close>
 
 paragraph \<open>Setup Reasoning Rules\<close>
@@ -292,6 +291,12 @@ declare (in homo_one) homo_one_axioms[\<phi>reason %algb_cut]
 lemma extraction_homo_one[\<phi>premise_extraction add]:
   \<open>homo_one \<psi> \<equiv> \<psi> 1 = 1 \<and> True\<close>
   unfolding homo_one_def
+  by simp
+
+lemma [\<phi>reason default %algb_falling_lattice]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<psi> 1 = 1)
+\<Longrightarrow> homo_one \<psi>\<close>
+  unfolding homo_one_def Premise_def
   by simp
 
 declare (in homo_sep_mult) homo_sep_mult_axioms [\<phi>reason %algb_cut]
@@ -317,6 +322,40 @@ lemma [\<phi>reason no explorative backtrack %fail]:
 \<Longrightarrow> homo_mul_carrier \<psi> \<close>
   unfolding TRACE_FAIL_def
   by blast
+
+subparagraph \<open>Sep Homo\<close>
+
+lemma [\<phi>reason no explorative backtrack %fail]:
+  \<open> TRACE_FAIL TEXT(\<open>Fail to show the separation homomorphism of\<close> \<psi>)
+\<Longrightarrow> homo_sep \<psi> \<close>
+  unfolding TRACE_FAIL_def
+  by blast
+
+lemma [\<phi>reason no explorative backtrack %fail]:
+  \<open> TRACE_FAIL TEXT(\<open>Fail to show the closed separation homomorphism of\<close> \<psi>)
+\<Longrightarrow> closed_homo_sep \<psi> \<close>
+  unfolding TRACE_FAIL_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>closed_homo_sep \<psi> \<longrightarrow> closed_homo_sep \<psi> @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>closed_homo_sep \<psi> \<longrightarrow> closed_homo_sep \<psi> @action \<A>ESC\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>homo_sep \<psi> \<longrightarrow> homo_sep \<psi> @action \<A>EIF\<close>
+  unfolding Action_Tag_def
+  by simp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open>homo_sep \<psi> \<longrightarrow> homo_sep \<psi> @action \<A>ESC\<close>
+  unfolding Action_Tag_def
+  by simp
 
 paragraph \<open>Reasoning Hierarchy\<close>
 (*
