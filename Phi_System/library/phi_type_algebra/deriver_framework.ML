@@ -1559,7 +1559,7 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
 
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
-      val prem_ants = map_filter (Phi_Reasoners.extract_implied_facts ctxt) (@{print} local_prems)
+      val prem_ants = map_filter (Phi_Reasoners.extract_implied_fact ctxt) (@{print} local_prems)
                    |> maps (PLPR_Syntax.elim_ant_sequence_or_HOL_conj)
                  (*|> map (Conv.fconv_rule (HOLogic.Trueprop_conv (
                             Conv.rewr_conv @{thm' Premise_def[where mode=\<open>MODE_GUARD\<close>, symmetric]})))*)
@@ -1899,7 +1899,7 @@ type simplifier = Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm
 fun default_simplifier conv (phi, ctxt) rule =
   let val ((_, [rule'1]), ctxt't1) = Variable.import false [rule] ctxt
       val (lprems, ctxt') = Assumption.add_assms Assumption.presume_export (Thm.cprems_of rule) ctxt't1
-      val pures = map_filter (Phi_Reasoners.extract_implied_facts ctxt') lprems
+      val pures = map_filter (Phi_Reasoners.extract_implied_fact ctxt') lprems
       val rule'2 = fold (fn lp => fn th => Thm.implies_elim th lp) lprems rule'1
       val rule'3 = Conv.fconv_rule (conv (phi, pures) ctxt) rule'2
    in rule'3

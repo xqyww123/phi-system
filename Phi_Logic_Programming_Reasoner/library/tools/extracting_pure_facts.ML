@@ -1,7 +1,7 @@
 signature PHI_REASONERS = sig
 include PHI_REASONERS
 
-val extract_implied_facts : Proof.context -> thm -> thm option
+val extract_implied_fact : Proof.context -> thm -> thm option
 (*val implied_fact_extraction : Phi_Reasoners.pattern -> Phi_Reasoners.extraction*)
 val is_generating_extraction_rule : bool Config.T
 
@@ -57,12 +57,12 @@ val Do_Extract_Implied_Facts =
              \<Longrightarrow> C\<close>
             by (unfold Action_Tag_def, blast)}
 
-fun extract_implied_facts ctxt statement0 =
+fun extract_implied_fact ctxt statement0 =
   case try (Phi_Conv.atomize ctxt) statement0
     of SOME statement =>
   let val _ = case Thm.prop_of statement
                 of \<^Const>\<open>Trueprop\<close> $ _ => ()
-                 | _ => error "extract_implied_facts: must be a statement in the object logic"
+                 | _ => error "extract_implied_fact: must be a statement in the object logic"
       val _ = Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.chunks [
               Pretty.str "Extracting implied pure facts from:",
               Syntax.pretty_term ctxt (Thm.prop_of statement)

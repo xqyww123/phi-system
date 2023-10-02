@@ -110,7 +110,7 @@ lemma Ant_Seq_I:
   \<open>P \<Longrightarrow> Q \<Longrightarrow> P \<and>\<^sub>\<r> Q\<close>
   unfolding Ant_Seq_def ..
 
-lemma Ant_Seq_assoc:
+lemma Ant_Seq_assoc[simp]:
   \<open> (A \<and>\<^sub>\<r> B) \<and>\<^sub>\<r> C \<equiv> A \<and>\<^sub>\<r> B \<and>\<^sub>\<r> C \<close>
   unfolding Ant_Seq_def
   by simp
@@ -1693,13 +1693,18 @@ subsubsection \<open>Augmenting Refined Local Conditions\<close>
   fn (_, (ctxt,sequent)) => Seq.make (fn () =>
     let val sequent'= Raw_Simplifier.norm_hhf ctxt sequent
                    |> Conv.gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt =>
-                        Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv (Conv.arg_conv (
-                            Conv.rewr_conv @{thm' NO_SIMP_def[symmetric]})))) ctxt then_conv
+                        Phi_Conv.hhf_concl_conv (K (HOLogic.Trueprop_conv (
+                            Phi_Conv.hol_imp_conv (Conv.arg_conv PLPR_Simplifier.conjs_to_aseq)
+                                                  (Conv.rewr_conv @{thm' NO_SIMP_def[symmetric]})
+                        ))) ctxt then_conv
                         Phi_Reasoners.asm_rewrite false ctxt then_conv
                         Phi_Conv.hhf_concl_conv (K (fn ctm => 
                             case Thm.term_of ctm
                               of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ _ $ _) =>
-                                      (HOLogic.Trueprop_conv (Conv.arg_conv (Conv.rewr_conv @{thm' NO_SIMP_def})) then_conv
+                                      (HOLogic.Trueprop_conv ( 
+                                          Phi_Conv.hol_imp_conv (Conv.arg_conv PLPR_Simplifier.aseq_to_conjs)
+                                                                (Conv.rewr_conv @{thm' NO_SIMP_def})
+                                       ) then_conv
                                        Conv.rewr_conv @{thm' atomize_imp[symmetric]}) ctm
                                | _ => (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' NO_SIMP_def})) ctm
                             )) ctxt
