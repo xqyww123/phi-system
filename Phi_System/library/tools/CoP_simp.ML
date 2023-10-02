@@ -15,7 +15,7 @@ val force_invoke : Proof.context * Phi_Working_Mode.working_mode -> thm -> thm (
 
 (* Pass of Reasoning Rules *)
 
-val enable_rule_pass : bool Config.T
+(*val enable_rule_pass : bool Config.T*)
 
 end
 
@@ -100,9 +100,7 @@ fun invoke_when_needed (ctxt, mode) sequent =
 
 (* Simplifier *)
 
-fun select_trans_rule (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = select_trans_rule X
-  | select_trans_rule (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = select_trans_rule X
-  | select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = select_trans_rule Y
+fun select_trans_rule (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ Y $ _) = select_trans_rule Y
   | select_trans_rule (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = select_trans_rule X
   | select_trans_rule (Abs (_, _, X)) = select_trans_rule X
   | select_trans_rule (Const(\<^const_name>\<open>Subjection\<close>, _) $ _ $ X) = select_trans_rule X
@@ -111,7 +109,12 @@ fun select_trans_rule (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = se
             Const(\<^const_name>\<open>HOL.eq\<close>, _) $ Bound 0 $ _) $ _) = @{thm' \<A>simp_trans'P}
   | select_trans_rule _ = @{thm' \<A>simp_trans}
 
-val enable_rule_pass = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_rule_pass\<close> (K false)
+fun select_trans_rule' (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = select_trans_rule' X
+  | select_trans_rule' (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X
+        $ (Const(\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) $ _ )) = SOME (select_trans_rule X)
+  | select_trans_rule' _ = NONE
+
+(*val enable_rule_pass = Attrib.setup_config_bool \<^binding>\<open>\<phi>simp_rule_pass\<close> (K false)*)
 val extract_pattern_trigger = Config.declare_bool ("Phi_CoP_Simp.extract_pattern_trigger", \<^here>) (K true)
 
 fun force_rule_pass rule ctxt =
@@ -121,12 +124,23 @@ fun force_rule_pass rule ctxt =
       val has_substantial_changes =
             case Thm.concl_of rule
               of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ (_ (*\<A>simp*) $ X)) =>
-                    (case X of Const(\<^const_name>\<open>True\<close>, _) => \<^cterm>\<open>False\<close>
-                             | _ => \<^cterm>\<open>True\<close>)
+                    (case X of Const(\<^const_name>\<open>True\<close>, _)  => true
+                             | Const(\<^const_name>\<open>False\<close>, _) => false
+                             | X => raise TERM ("Must be a literal boolean", [X]))
                | _ => bad_rule ""
-      val trans_rule = select_trans_rule (Thm.concl_of rule)
-                    |> Thm.instantiate (TVars.empty, Vars.make [((("M",0),\<^typ>\<open>bool\<close>),has_substantial_changes)])
-      val rule' = rule RS (Thm.transfer (Context.theory_of ctxt) trans_rule)
+
+      val trans_rule = select_trans_rule' (Thm.concl_of rule)
+                    |> Option.map (Thm.instantiate (TVars.empty, Vars.make [((("M",0),\<^typ>\<open>bool\<close>),
+                          if has_substantial_changes then \<^cterm>\<open>False\<close> else \<^cterm>\<open>True\<close>)]))
+
+      val rule' = case trans_rule
+                    of SOME R => rule RS (Thm.transfer (Context.theory_of ctxt) R)
+                     | NONE => rule
+
+      val _ = if Term.exists_Const (fn (\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) => true
+                                     | _ => false) (Thm.prop_of rule')
+              then error "\<A>_transitive_simp should be used only in the conclusion of a rule"
+              else ()
 
       fun get_pat (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = get_pat X
         | get_pat (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = get_pat X
@@ -145,7 +159,7 @@ fun force_rule_pass rule ctxt =
         | NONE => (
             warning ("Fail to extract the pattern of the source type of the rule\n" ^
                      Context.cases Thm.string_of_thm_global Thm.string_of_thm ctxt rule ^ "\n\
-                     \The simplification will not be activated on the source type specified by the rule\n\
+                     \The simplification will not be activated on the source \<phi>-type specified by the rule\n\
                      \You may want to add the trigger manually by ML \<open>setup \<open>Phi_CoP_Simp.add_simp_pattern\<close>\<close> or \<open>Phi_CoP_Simp.add_simp_trigger\<close>") ;
             (rule', ctxt)))
     | NONE => (rule', ctxt)
@@ -155,11 +169,18 @@ fun force_rule_pass rule ctxt =
 val _ = Theory.setup (Context.theory_map (
   Phi_Reasoner.add_pass (Const("Phi_CoP_Simp", TFree("",[])), \<^pattern_prop>\<open>_ @action \<A>simp' _\<close>,
     fn pos => fn (rules, mode, pats, guard, ctxt) =>
-        if Config.get_generic ctxt enable_rule_pass
-        then let val (rules', ctxt') = fold_map force_rule_pass rules ctxt
+        (*if Config.get_generic ctxt enable_rule_pass
+        then*) let val (rules', ctxt') = fold_map force_rule_pass rules ctxt
               in (rules', mode, pats, guard, ctxt')
              end
-        else (rules, mode, pats, guard, ctxt))
+        (*else (rules, mode, pats, guard, ctxt)*) )
+#>Phi_Reasoner.add_pass (Const("Phi_CoP_Simp", TFree("",[])), \<^pattern_prop>\<open>_ @action \<A>_transitive_simp' _\<close>,
+    fn pos => fn (rules, mode, pats, guard, ctxt) =>
+        (*if Config.get_generic ctxt enable_rule_pass
+        then*) let val (rules', ctxt') = fold_map force_rule_pass rules ctxt
+              in (rules', mode, pats, guard, ctxt')
+             end
+        (*else (rules, mode, pats, guard, ctxt)*) )
 ) #> Attrib.setup \<^binding>\<open>\<phi>transformation_based_simp\<close> (
   Phi_Reasoner.attr_syntax
     (Scan.lift (Scan.optional (Args.$$$ "no" |-- Args.$$$ "trigger" >> K false) true))

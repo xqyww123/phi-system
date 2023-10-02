@@ -1645,7 +1645,7 @@ lemma [\<phi>reason_template name Fa.\<A>simp [\<phi>transformation_based_simp d
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action \<A>simp)
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
-\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>simp \<close>
+\<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y @action \<A>_transitive_simp \<close>
   unfolding Action_Tag_def Premise_def \<r>Guard_def
   using transformation[unfolded Premise_def \<r>Guard_def, where Fa=Fa and Fb=Fb and D=D and R=R and mapper=mapper] .
 
@@ -4302,9 +4302,7 @@ subsubsection \<open>Transformation Functor\<close>
 
 definition \<open>\<A>\<D>\<V>_target X \<equiv> X\<close>
 
-lemma [\<phi>simp_rule_pass = false,
-       \<phi>reason default %\<phi>simp_fallback,
-       \<phi>simp_rule_pass]:
+lemma [\<phi>reason default %\<phi>simp_fallback]:
   \<open> x \<Ztypecolon> \<A>\<D>\<V>_target T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp' Any \<close>
   unfolding Action_Tag_def \<A>\<D>\<V>_target_def
   by simp
