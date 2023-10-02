@@ -4434,6 +4434,8 @@ lemma "_NToA_init_having_Q_":
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def Inhabited_def Premise_def Transformation_def
   by clarsimp blast
 
+ML \<open>val augment_ToA_by_implication = Attrib.setup_config_bool \<^binding>\<open>augment_ToA_by_implication\<close> (K true)\<close>
+
 \<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
   let val _ (*Trueprop*) $ ( _ (*Action_Tag*) $ _ $ (Const(\<^const_name>\<open>NToA'\<close>, _) $ deep))
@@ -4450,7 +4452,9 @@ fn (_, (ctxt0,sequent)) => Seq.make (fn () =>
             end) ctxt
           ) 1 sequent
 
-      val rule = case deep of \<^Const>\<open>True\<close> => @{thm "_NToA_init_having_Q_"} | _ => @{thm "_NToA_init_"}
+      val rule = case (deep, Config.get ctxt0 augment_ToA_by_implication)
+                   of (\<^Const>\<open>True\<close>, true) => @{thm "_NToA_init_having_Q_"}
+                    | _ => @{thm "_NToA_init_"}
    in SOME ((ctxt, rule RS sequent), Seq.empty)
   end)
 \<close>
