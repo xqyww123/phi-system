@@ -571,7 +571,7 @@ lemma assert_\<phi>app:
 subsection \<open>Simplification\<close>
 
 consts \<A>simp' :: \<open> bool \<Rightarrow> action \<close> (*bool: if the simplification must change something.
-                                  it is used prevent infinite loop of unchanging simplifications*)
+                                  it is used to prevent infinite loop of unchanging simplifications*)
 abbreviation \<open>\<A>simp \<equiv> \<A>simp' True\<close>
 
 text \<open>Potentially weakening transformations designed for simplifying state sequents of the CoP.
