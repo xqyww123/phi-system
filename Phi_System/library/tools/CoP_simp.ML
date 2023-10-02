@@ -126,21 +126,23 @@ fun force_rule_pass rule ctxt =
               of _ (*Trueprop*) $ (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ _ $ (_ (*\<A>simp*) $ X)) =>
                     (case X of Const(\<^const_name>\<open>True\<close>, _)  => true
                              | Const(\<^const_name>\<open>False\<close>, _) => false
-                             | X => raise TERM ("Must be a literal boolean", [X]))
+                             | X => raise TERM ("Must be a literal boolean. True for making some \
+                                                \substantial simplification and False for not.", [X]))
                | _ => bad_rule ""
 
       val trans_rule = select_trans_rule' (Thm.concl_of rule)
                     |> Option.map (Thm.instantiate (TVars.empty, Vars.make [((("M",0),\<^typ>\<open>bool\<close>),
                           if has_substantial_changes then \<^cterm>\<open>False\<close> else \<^cterm>\<open>True\<close>)]))
 
-      val rule' = case trans_rule
+      val rule'= (case trans_rule
                     of SOME R => rule RS (Thm.transfer (Context.theory_of ctxt) R)
-                     | NONE => rule
-
-      val _ = if Term.exists_Const (fn (\<^const_name>\<open>\<A>_transitive_simp'\<close>, _) => true
-                                     | _ => false) (Thm.prop_of rule')
-              then error "\<A>_transitive_simp should be used only in the conclusion of a rule"
-              else ()
+                     | NONE => if has_substantial_changes
+                               then rule RS (Thm.transfer (Context.theory_of ctxt)
+                                             @{lemma' \<open>P @action \<A>simp' True \<Longrightarrow> P @action \<A>simp' Any\<close>
+                                                  by (simp add: Action_Tag_def)})
+                               else rule )
+              |> Phi_Help.beta_eta_contract
+              |> Drule.zero_var_indexes
 
       fun get_pat (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = get_pat X
         | get_pat (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = get_pat X

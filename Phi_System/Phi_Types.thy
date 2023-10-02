@@ -165,7 +165,7 @@ text \<open>The above rule is interesting but essentially useless as it is repla
   The To-Transformation already enters into the elements by transformation functor.\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P @action \<A>simp\<close>
+  \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P @action \<A>_transitive_simp\<close>
   unfolding Transformation_Functor_def Transformation_def Action_Tag_def
   by simp
 
@@ -298,7 +298,7 @@ declare [[\<phi>trace_reasoning = 3]]
  
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
-  deriving Monoidal_Sep_Functor \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
+  deriving Separation_Homo\<^sub>E (*Monoidal_Sep_Functor \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
        and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction T U
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
@@ -306,7 +306,7 @@ declare [[\<phi>trace_reasoning = 3]]
        and Open_Abstraction_to_Raw
        and \<open>c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> {x} \<Ztypecolon> \<S> T \<close>
        and Carrier_Set
-
+*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' Set_Abstraction.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<S> ?T) (\<lambda>x. \<exists>xa. xa \<in> x \<and> ?P xa) \<close>),
@@ -742,7 +742,7 @@ The above rules are still useful in giving the commutativity between \<open>F\<c
 \<close>
 
 lemma [\<phi>reason 1000]:
-  \<open>s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s @action \<A>simp\<close>
+  \<open>s \<Ztypecolon> \<S> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s @action \<A>_transitive_simp\<close>
   unfolding Action_Tag_def Transformation_def
   by simp
 
@@ -1413,13 +1413,13 @@ declare [[\<phi>trace_reasoning = 0]]
                                                                in identity_element and > derived_identity_element
   \<open>Rules of \<phi>Fun\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   opening extract_premises_in_Carrier_Set
           Identity_Element_sat
-  deriving (*Basic
+  deriving Basic
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f
          \<Longrightarrow> Identity_Elements\<^sub>I (f \<Zcomp>\<^sub>f T) (\<lambda>_. True) (\<lambda>x. Inhabited (x \<Ztypecolon> T)) \<close>
            (%identity_elements_of_\<phi>Fun+40)
@@ -1441,13 +1441,13 @@ declare [[\<phi>trace_reasoning = 3]]
        and Functionality
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
-       and*) \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
-       (*and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
+       and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
+       and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
                             still too hard for our guesser to infer \<open>homo_mul_carrier f\<close>\<close>
        and Abstraction_to_Raw
        and Commutativity_Deriver
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] inj f
-         \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f) (\<and>\<^sub>\<phi>) (\<and>\<^sub>\<phi>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>*)
+         \<Longrightarrow> Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f) (\<and>\<^sub>\<phi>) (\<and>\<^sub>\<phi>) T U (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Fun'.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (?f \<Zcomp>\<^sub>f ?T) ?P \<close>),
@@ -1586,10 +1586,7 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Tyops_Commute ((\<Zcomp>\<^sub>f) f) ((\<Zcomp>\<^sub>f) f') \<DD>[\<delta>] \<DD>[\<delta>'] T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
 
 
-subsubsection \<open>Approximating Domainoid\<close>
-
-declare [[\<phi>reason_default_pattern \<open>_ \<le> (_ \<Ztypecolon> \<DD>[?d] ?T)\<close> \<Rightarrow> \<open>?var \<le> (_ \<Ztypecolon> \<DD>[?d] ?T)\<close> (300)
-                              and \<open>(_ \<Ztypecolon> \<DD>[?d] ?T) \<le> _\<close> \<Rightarrow> \<open>(_ \<Ztypecolon> \<DD>[?d] ?T) \<le> ?var\<close> (300) ]]
+subsubsection \<open>Basic Rules\<close>
 
 lemma WS_domainoid:
   \<open> closed_homo_sep \<delta>
@@ -1597,7 +1594,11 @@ lemma WS_domainoid:
   unfolding Domainoid.unfold BI_eq_iff domainoid_tag_def
   by clarsimp
 
-declare [[\<phi>trace_reasoning = 1]]
+
+subsubsection \<open>Approximating Domainoid\<close>
+
+declare [[\<phi>reason_default_pattern \<open>_ \<le> (_ \<Ztypecolon> \<DD>[?d] ?T)\<close> \<Rightarrow> \<open>?var \<le> (_ \<Ztypecolon> \<DD>[?d] ?T)\<close> (300)
+                              and \<open>(_ \<Ztypecolon> \<DD>[?d] ?T) \<le> _\<close> \<Rightarrow> \<open>(_ \<Ztypecolon> \<DD>[?d] ?T) \<le> ?var\<close> (300) ]]
 
 lemma [\<phi>reason %BI_approx_cut]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> closed_homo_sep \<delta>
@@ -1671,14 +1672,30 @@ lemma [\<phi>reason %guess_tyop_commute for \<open>Guess_Tyops_Commute True _ ?v
 
 declare [[ML_print_depth = 100]]
 
+subsubsection \<open>Application \label{phi-types/Domainoid/App}\<close>
+
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain\<^sub>L T D\<^sub>T
+\<Longrightarrow> Abstract_Domain\<^sub>L U D\<^sub>U
+\<Longrightarrow> domainoid TYPE('c::sep_magma) \<delta>
+\<Longrightarrow> (\<And>x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited (x \<Ztypecolon> T)) \<Longrightarrow> (f x \<Ztypecolon> T') \<le> (x \<Ztypecolon> \<DD>[\<delta>] T))
+          \<comment>\<open>expand \<open>\<Psi>[d] A, \<Psi>[d] B\<close> to a simpler (but should still strong) upper approximation\<close>
+\<Longrightarrow> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (closed_homo_sep \<delta> \<and> Inhabited (y \<Ztypecolon> U)) \<Longrightarrow> (g y \<Ztypecolon> U') \<le> (y \<Ztypecolon> \<DD>[\<delta>] U))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x y. D\<^sub>T x \<and> D\<^sub>U y \<longrightarrow> (\<exists>a b. a \<Turnstile> (f x \<Ztypecolon> T') \<and> b \<Turnstile> (g y \<Ztypecolon> U') \<and> b ## a))
+\<Longrightarrow> Abstract_Domain\<^sub>L (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y)\<close>
+  unfolding Inhabited_def BI_sub_iff Premise_def Action_Tag_def domainoid_def domainoid_tag_def
+            Abstract_Domain\<^sub>L_def
+  by (clarsimp simp add: closed_homo_sep_def closed_homo_sep_disj_def; metis)
+
+
 
 subsection \<open>Vertical Composition of Scalar Multiplication\<close>
 
-declare [[\<phi>trace_reasoning = 0 ]]
-  
+declare [[\<phi>trace_reasoning = 3 ]]
+   
 \<phi>type_def \<phi>ScalarMul :: \<open>('s \<Rightarrow> 'a \<Rightarrow> 'c) \<Rightarrow> 's \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> ("\<s>\<c>\<a>\<l>\<a>\<r>[_] _ \<Zcomp> _" [31,31,30] 30)
   where \<open>\<phi>ScalarMul f s T = (scalar_mult f s \<Zcomp>\<^sub>f T)\<close>
-  deriving Basic 
+  deriving (* Basic 
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 (f s)
          \<Longrightarrow> Identity_Elements\<^sub>I T D P
          \<Longrightarrow> Identity_Elements\<^sub>I (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> T) D P \<close>
@@ -1707,9 +1724,9 @@ declare [[\<phi>trace_reasoning = 0 ]]
              Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
              TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
-       and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
+       and*) \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
-       and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
+     (*and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
        and Commutativity_Deriver
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] inj (f s)
@@ -1721,6 +1738,7 @@ declare [[\<phi>trace_reasoning = 0 ]]
 
        and \<open> comm_domainoid_mapper_rev TYPE('c\<^sub>1::sep_magma) TYPE('c\<^sub>2::sep_magma) \<delta> \<delta>' (scalar_mult f s) (scalar_mult f' s')
         \<Longrightarrow> Tyops_Commute \<DD>[\<delta>] \<DD>[\<delta>'] (\<phi>ScalarMul f s) (\<phi>ScalarMul f' s') T (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
+*)
 
 ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>ScalarMul.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<s>\<c>\<a>\<l>\<a>\<r>[?f] ?s \<Zcomp> ?T) ?P  \<close>),
@@ -2039,13 +2057,13 @@ subsection \<open>Point on a Mapping\<close>
 
 subsubsection \<open>By Key\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
     
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving Identity_Elements (*Monoidal_Sep_Functor
-       and Functionality *)
+  deriving (*Identity_Elements*) Monoidal_Sep_Functor
+       and Functionality
        and \<open> homo_one \<delta>
           \<Longrightarrow> closed_homo_sep \<delta>
           \<Longrightarrow> Tyops_Commute List List \<DD>[\<delta>] \<DD>[\<delta>] Ta (\<lambda>_. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>
@@ -2333,9 +2351,9 @@ ML \<open>assert_derived_properties \<^theory> [
     \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < ?n \<longrightarrow> fun_commute (scalar_mult (\<odivr>) ?n) (scalar_mult ?f ?s) (scalar_mult (\<odivr>) ?xa) (scalar_mult ?xb ?xc) \<Longrightarrow>
     Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?xa) (\<phi>ScalarMul ?f ?s) (\<phi>ScalarMul ?xb ?xc) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>),
   (@{thm' \<phi>Share.\<phi>MapAt_L_Comm\<^sub>E}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (0 < ?n \<longrightarrow> 0 < ?n)
-        \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<odiv>) ?n) ((\<odiv>) ?n) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))   \<close>),
+        \<Longrightarrow> Tyops_Commute ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<odiv>) ?n) ((\<odiv>) ?n) (?Ta::?'a \<Rightarrow> (?'b list \<Rightarrow> ?'c::share_one) set) (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True))   \<close>),
   (@{thm' \<phi>Share.\<phi>MapAt_L_Comm\<^sub>I}, \<^pattern_prop>\<open>  \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (0 < ?n \<longrightarrow> 0 < ?n)
-        \<Longrightarrow> Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ?Ta (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
+        \<Longrightarrow> Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'a \<Rightarrow> (?'b list \<Rightarrow> ?'c::share_one) set) (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
 ]\<close>
 
 

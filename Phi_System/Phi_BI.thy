@@ -2488,20 +2488,9 @@ lemma [\<phi>reason %abstract_domain]:
 
 text \<open>However, the lower bound is non-trivial, in which case we have to show the separation combination
   is compatible between the two \<phi>-types. The compatibility is encoded by predicate \<open>Separation_Disj\<close>
-  and \<open>Separation_Disj\<^sub>\<phi>\<close> which are solved by means of the domainoid introduced later.\<close>
-
-definition Separation_Disj :: \<open>('a::sep_magma \<Rightarrow> 'b::sep_magma) \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<Rightarrow> bool\<close>
-  where \<open>Separation_Disj \<psi> X Y \<longleftrightarrow> (\<forall>u v. u \<Turnstile> X \<and> v \<Turnstile> Y \<and> \<psi> u ## \<psi> v \<longrightarrow> u ## v)\<close>
-
-definition Separation_Disj\<^sub>\<phi> :: \<open>('ca::sep_magma \<Rightarrow> 'cb::sep_magma) \<Rightarrow> ('ax \<Rightarrow> 'ay \<Rightarrow> bool) \<Rightarrow> ('ca, 'ax) \<phi> \<Rightarrow> ('ca, 'ay) \<phi> \<Rightarrow> bool\<close>
-  where \<open>Separation_Disj\<^sub>\<phi> \<psi> D T U \<longleftrightarrow> (\<forall>x y. D x y \<longrightarrow> Separation_Disj \<psi> (x \<Ztypecolon> T) (y \<Ztypecolon> U))\<close>
-
-lemma [\<phi>reason %abstract_domain]:
-  \<open> Abstract_Domain\<^sub>L T D\<^sub>T
-\<Longrightarrow> Abstract_Domain\<^sub>L U D\<^sub>U
-\<Longrightarrow> Abstract_Domain\<^sub>L (T \<^emph> U) (\<lambda>(x,y). D\<^sub>T x \<and> D\<^sub>U y) \<close>
-  unfolding Abstract_Domain\<^sub>L_def Action_Tag_def Inhabited_def
-  
+  and \<open>Separation_Disj\<^sub>\<phi>\<close> which are solved by means of the domainoid introduced later.
+  So the rules are given until \cref{phi-types/Domainoid/App}.
+\<close>
 
 
 subsubsection \<open>Transformation Rules\<close>

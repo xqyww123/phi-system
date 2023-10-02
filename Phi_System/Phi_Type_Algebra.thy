@@ -4303,7 +4303,7 @@ subsubsection \<open>Transformation Functor\<close>
 definition \<open>\<A>\<D>\<V>_target X \<equiv> X\<close>
 
 lemma [\<phi>reason default %\<phi>simp_fallback]:
-  \<open> x \<Ztypecolon> \<A>\<D>\<V>_target T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp' Any \<close>
+  \<open> x \<Ztypecolon> \<A>\<D>\<V>_target T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x @action \<A>simp \<close>
   unfolding Action_Tag_def \<A>\<D>\<V>_target_def
   by simp
 

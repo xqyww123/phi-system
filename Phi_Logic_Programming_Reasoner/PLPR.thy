@@ -935,11 +935,12 @@ declare conjunctionI [\<phi>reason %cutting]
         conjI [\<phi>reason %cutting]
         allI [\<phi>reason %cutting]
         exI  [\<phi>reason %cutting]
-        impI [\<phi>reason %cutting]
         HOL.refl [\<phi>reason %cutting for \<open>_ = _\<close>]
 
 \<phi>reasoner_group \<phi>LPR_imp = (%cutting, [%cutting, %cutting+100]) for \<open>_ \<longrightarrow> _\<close>
   \<open>Rules handling implifications, may involving different optimizations for specific cases\<close>
+
+declare impI [\<phi>reason %\<phi>LPR_imp]
 
 text \<open>Antecedent \<open>x = y\<close> has a meaning of assignment, and is done by unification\<close>
 
@@ -1713,22 +1714,18 @@ subsubsection \<open>Augmenting Refined Local Conditions\<close>
     end)
 \<close>
 
-
-context begin
-
-private lemma aug_simp:
-  \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> P' : P
-\<Longrightarrow> (Premise mode P' \<Longrightarrow> Q)
-\<Longrightarrow> Premise mode P \<longrightarrow> Q \<close>
-  unfolding Simplify_def Premise_def
+lemma [\<phi>reason %\<phi>LPR_imp+10]:
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (P x))
+\<Longrightarrow> \<forall>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y = x \<longrightarrow> P y \<close>
+  unfolding Premise_def Reduce_HO_trivial_variable_def
   by blast
 
-thm NO_SIMP_def
+lemma [\<phi>reason %\<phi>LPR_imp+10]:
+  \<open> PROP Reduce_HO_trivial_variable (Trueprop (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<longrightarrow> P x))
+\<Longrightarrow> \<forall>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> y = x \<and> Q \<longrightarrow> P y \<close>
+  unfolding Premise_def Reduce_HO_trivial_variable_def
+  by blast
 
-thm aug_simp[where mode=default]
-
-end
-  
 
 subsection \<open>Rule Generation\<close>
 
