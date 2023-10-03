@@ -27,9 +27,26 @@ declare homo_one_axioms[simp]
 
 end
 
-(*TODO: replace kernel_is_1*)
-locale simple_homo_mul = homo_one +
-  assumes kernel_is_1[iff]: \<open>\<psi> x = 1 \<longleftrightarrow> x = 1\<close>
+locale simple_homo_mul =
+  fixes \<psi> :: \<open> 'a::one \<Rightarrow> 'b::one \<close>
+    and D :: \<open> 'a set \<close> \<comment> \<open>The domain is still required. For example, consider the homomorphism
+                            from mult-element algebra to single element algebra,
+                            the homomorphism cannot be simple unless the domain of the homomorphism
+                            is limited to {1}.\<close>
+  assumes kernel_is_1[iff]: \<open>x \<in> D \<Longrightarrow> \<psi> x = 1 \<longleftrightarrow> x = 1\<close>
+      and simple_homo_mul_dom[simp]: \<open>1 \<in> D\<close>
+begin
+
+sublocale homo_one by (standard; simp)
+
+end
+
+lemma simple_homo_mul_sub_dom:
+  \<open> D' \<subseteq> D \<and> 1 \<in> D'
+\<Longrightarrow> simple_homo_mul \<psi> D
+\<Longrightarrow> simple_homo_mul \<psi> D' \<close>
+  unfolding simple_homo_mul_def
+  by clarsimp blast
 
 locale homo_zero =
   fixes \<phi> :: \<open> 'a::zero \<Rightarrow> 'b::zero \<close>
@@ -529,7 +546,7 @@ locale homo_mul_carrier =
 
 locale homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
-  assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close> (* TODO: improve this to be a \<longleftrightarrow> ! *)
+  assumes sep_disj_homo_semi[simp]: \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
 
 locale closed_homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
@@ -663,21 +680,14 @@ sublocale homo_one \<psi>
 end
 
 
-definition \<open>kernel_is_1 \<psi> D \<longleftrightarrow> (\<forall>x \<in> D. \<psi> x = 1 \<longleftrightarrow> x = 1) \<and> 1 \<in> D\<close>
-
-lemma kernel_is_1_comp[simp, locale_intro]:
-  \<open> g ` Dg \<subseteq> Df \<Longrightarrow> kernel_is_1 f Df \<Longrightarrow> kernel_is_1 g Dg \<Longrightarrow> kernel_is_1 (f o g) Dg\<close>
-  unfolding kernel_is_1_def by (simp add: image_subset_iff)
-
-lemma kernel_is_1_id[simp]: \<open>1 \<in> D \<Longrightarrow> kernel_is_1 id D\<close> unfolding kernel_is_1_def by simp
-
 
 locale sep_orthogonal_monoid = sep_orthogonal_1 \<psi> D
   for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close> and D
 begin
 
-lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi> D\<close>
-  unfolding kernel_is_1_def
+lemma simple_homo_mul[simp]:
+  \<open>simple_homo_mul \<psi> D\<close>
+  unfolding simple_homo_mul_def
   by (metis homo_join_sub homo_one join_sub.bot.extremum join_sub.bot.extremum_uniqueI one_in_D)
 
 end
@@ -685,17 +695,11 @@ end
 locale cancl_sep_orthogonal_monoid = sep_orthogonal_monoid \<psi> D
   for \<psi> :: \<open>'a::{sep_cancel, sep_monoid} \<Rightarrow> 'b::sep_monoid\<close> and D
 
-(*
-locale sep_orthogonal_1 = sep_orthogonal \<psi>
-  for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close>
-begin
-end *)
-
 locale share_orthogonal_homo = sep_orthogonal_monoid \<psi> D
   for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_semimodule\<close> and D
 + assumes share_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
                            a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
-    and   \<psi>_self_disj: \<open>x \<in> D \<Longrightarrow> mul_carrier (\<psi> x) \<close>
+    and   \<psi>_mul_carrier: \<open>x \<in> D \<Longrightarrow> mul_carrier (\<psi> x) \<close>
 begin
 
 lemma share_orthogonal'[no_atp]:
@@ -708,11 +712,11 @@ lemma
   unfolding join_sub_def
   apply (rule; clarsimp simp add: homo_mult)
    apply (metis share_orthogonal)
-  by (meson \<psi>_self_disj homo_sep_disj.sep_disj_homo_semi homo_sep_disj_axioms join_sub_def join_sub_ext_left less_eq_rat_def share_sep_disj_right share_sub)
+  by (meson \<psi>_mul_carrier homo_sep_disj.sep_disj_homo_semi homo_sep_disj_axioms join_sub_def join_sub_ext_left less_eq_rat_def share_sep_disj_right share_sub)
   
 
 (* lemma \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> x\<close>
-  by (simp add: \<psi>_self_disj share_sub) *)
+  by (simp add: \<psi>_mul_carrier share_sub) *)
 
 end
 
@@ -756,10 +760,10 @@ lemma closed_homo_sep_disj_discrete[simp]:
   by simp
 
 lemma closed_homo_sep_disj_discrete_1[simp]:
-  \<open> simple_homo_mul \<psi>
+  \<open> simple_homo_mul \<psi> UNIV
 \<Longrightarrow> closed_homo_sep_disj \<psi>\<close>
   for \<psi> :: \<open>'a::discrete_monoid \<Rightarrow> 'b::discrete_monoid\<close>
-  unfolding closed_homo_sep_disj_def simple_homo_mul_def simple_homo_mul_axioms_def
+  unfolding closed_homo_sep_disj_def simple_homo_mul_def
   by simp
 
 lemma homo_sep_mult_discrete[simp]:
@@ -1175,14 +1179,14 @@ are not settled down properly.*)
 
 subsection \<open>Lambda Identity\<close>
 
+lemma simple_homo_mul_id[simp]:
+  \<open>1 \<in> D \<Longrightarrow> simple_homo_mul (\<lambda>x. x) D\<close>
+  unfolding simple_homo_mul_def
+  by simp
+
 lemma homo_one_id[simp, locale_intro]:
   \<open> homo_one (\<lambda>x. x) \<close>
   unfolding homo_one_def
-  by simp
-
-lemma simple_homo_mul_id[simp, locale_intro]:
-  \<open> simple_homo_mul (\<lambda>x. x) \<close>
-  unfolding simple_homo_mul_def simple_homo_mul_axioms_def
   by simp
 
 lemma homo_mul_carrier_id[simp, locale_intro]:
@@ -1231,18 +1235,19 @@ subsection \<open>Functional Composition\<close>
 
 text \<open>Most of homomorphic properties have both identity rule and composition rule, forming them a sub-category.\<close>
 
+lemma simple_homo_mul_comp[simp]:
+  \<open> g ` Dg \<subseteq> Df
+\<Longrightarrow> simple_homo_mul f Df
+\<Longrightarrow> simple_homo_mul g Dg
+\<Longrightarrow> simple_homo_mul (f o g) Dg\<close>
+  unfolding simple_homo_mul_def
+  by (simp add: image_subset_iff)
+
 lemma homo_one_comp[simp, locale_intro]:
   \<open> homo_one f
 \<Longrightarrow> homo_one g
 \<Longrightarrow> homo_one (f o g) \<close>
   unfolding homo_one_def
-  by simp
-
-lemma simple_homo_mul_comp[simp, locale_intro]:
-  \<open> simple_homo_mul f
-\<Longrightarrow> simple_homo_mul g
-\<Longrightarrow> simple_homo_mul (f o g) \<close>
-  unfolding simple_homo_mul_def simple_homo_mul_axioms_def
   by simp
 
 lemma homo_mul_carrier_comp[simp, locale_intro]:
@@ -1329,7 +1334,7 @@ proof -
     apply (meson dom_trans f' g' sep_orthogonal_monoid_comp)
     using g.sep_orthogonal apply auto[1]
     using g.homo_mult apply auto[1]
-    using f.\<psi>_self_disj t by blast
+    using f.\<psi>_mul_carrier t by blast
 
 qed
 
@@ -1551,8 +1556,8 @@ lemma homo_one_map_option[simp, locale_intro]:
   unfolding homo_one_def by simp
 
 lemma simple_homo_mul_map_option[simp, locale_intro]:
-  \<open>simple_homo_mul (map_option f)\<close>
-  unfolding simple_homo_mul_def simple_homo_mul_axioms_def
+  \<open>simple_homo_mul (map_option f) UNIV\<close>
+  unfolding simple_homo_mul_def
   by simp
 
 lemma homo_mul_carrier_map_option[simp, locale_intro]:
@@ -2021,11 +2026,6 @@ subsubsection \<open>Properties\<close>
 
 definition \<open>pointwise_set D = {f. \<forall> k. f k \<in> D}\<close>
 
-lemma kernel_is_1_pointwise[simp, locale_intro]:
-  \<open>kernel_is_1 f D \<Longrightarrow> kernel_is_1 ((o) f) (pointwise_set D)\<close>
-  unfolding kernel_is_1_def pointwise_set_def
-  by (clarsimp simp add: Ball_def fun_eq_iff)
-
 
 subsubsection \<open>Multiplication with Function Update\<close>
 
@@ -2182,11 +2182,11 @@ proof -
   show ?thesis by (standard; simp add: fun_eq_iff)
 qed
 
-lemma simple_homo_mul_funcomp[simp, locale_intro]:
-  \<open> simple_homo_mul f
-\<Longrightarrow> simple_homo_mul ((o) f) \<close>
-  unfolding simple_homo_mul_def simple_homo_mul_axioms_def
-  by (clarsimp simp add: fun_eq_iff)
+lemma simple_homo_mul_funcomp[simp]:
+  \<open> simple_homo_mul f D
+\<Longrightarrow> simple_homo_mul ((o) f) (pointwise_set D)\<close>
+  unfolding simple_homo_mul_def pointwise_set_def
+  by (clarsimp simp add: Ball_def fun_eq_iff)
 
 lemma homo_mul_funcomp[simp, locale_intro]:
   \<open> homo_mul_carrier f
@@ -2701,7 +2701,7 @@ proof (rule share_orthogonal_homo.intro, rule sep_orthogonal_monoid_pointwise,
   fix n :: rat
 
   show \<open>x \<in> D' \<Longrightarrow> mul_carrier (\<psi> \<circ> x)\<close>
-    by (simp add: D' sep_disj_fun_def xx.\<psi>_self_disj pointwise_set_def)
+    by (simp add: D' sep_disj_fun_def xx.\<psi>_mul_carrier pointwise_set_def)
   
   show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<psi> \<circ> b) \<Longrightarrow>
        0 < n \<and> n \<le> 1 \<Longrightarrow> (a' * n \<odivr> (\<psi> \<circ> b) = (\<psi> \<circ> c))
@@ -2750,7 +2750,7 @@ proof
     fix x y a b c :: \<open>'b\<close> and a2 :: 'c and n :: rat
 
     show \<open> x \<in> D \<Longrightarrow> mul_carrier (\<psi> x) \<close>
-      using xx.\<psi>_self_disj[of \<open>\<lambda>_. x\<close>, simplified pointwise_set_def, simplified]
+      using xx.\<psi>_mul_carrier[of \<open>\<lambda>_. x\<close>, simplified pointwise_set_def, simplified]
       by (auto simp add: sep_disj_fun_def)
 
     show \<open> b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
@@ -2973,36 +2973,38 @@ subsubsection \<open>Convert a function to sharing or back\<close>
 abbreviation \<open>to_share \<equiv> map_option (Share 1)\<close>
 abbreviation \<open>strip_share \<equiv> map_option share.val\<close>
 
-(* TODO: FIX ME!
 lemma share_orthogonal_homo_to_share[locale_witness]:
-  \<open>share_orthogonal_homo (to_share::'a::{sep_carrier, discrete_semigroup} option \<Rightarrow> 'a share option) UNIV\<close>
+  \<open>share_orthogonal_homo (to_share::'a::{sep_carrier, discrete_semigroup} option \<Rightarrow> 'a share option) (Collect mul_carrier)\<close>
 proof
   fix x y z a b c :: \<open>'a option\<close>
+  fix xx yy aa bb cc :: \<open>'a\<close>
   fix a' a2 :: \<open>'a share option\<close>
   fix n :: rat
-  show \<open>a ## b \<longrightarrow> to_share a ## to_share b\<close> by (cases a; cases b; simp)
-  show \<open>x ## y \<Longrightarrow> to_share (x * y) = to_share x * to_share y\<close> by (cases x; cases y; simp)
-  show \<open>a' ## to_share b \<Longrightarrow>
-       (a' * to_share b = to_share c) = (\<exists>a. a' = to_share a \<and> a * b = c \<and> a ## b \<and> a \<in> UNIV)\<close>
+  show \<open>aa ## bb \<longrightarrow> Share 1 aa ## Share 1 bb\<close> by simp
+  show \<open>xx ## yy \<Longrightarrow> Share 1 (xx * yy) = Share 1 xx * Share 1 yy\<close> by simp
+  show \<open>b \<in> Collect mul_carrier \<and> c \<in> Collect mul_carrier \<Longrightarrow>
+        a' ## to_share b \<Longrightarrow>
+       (a' * to_share b = to_share c) = (\<exists>a. a' = to_share a \<and> a * b = c \<and> a ## b \<and> a \<in> Collect mul_carrier)\<close>
     apply (cases a'; cases b; cases c; simp add: split_option_ex)
     subgoal for a'' by (cases a''; simp) .
+  show \<open>(1::'a option) \<in> Collect mul_carrier\<close> by simp
   (* show \<open>inj to_share\<close>
     by (rule, simp, metis option.inj_map_strong share.inject) *)
-  show \<open>mul_carrier (to_share x)\<close> apply (cases x; simp)
-  show \<open>a2 ## to_share b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow> (a2 * n \<odivr> to_share b = to_share c) = (\<exists>a'. a2 = to_share a' * (1 - n) \<odivr> to_share b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> UNIV)\<close>
+  show \<open>x \<in> Collect mul_carrier \<Longrightarrow> mul_carrier (to_share x)\<close> by (cases x; simp)
+  show \<open>b \<in> Collect mul_carrier \<and> c \<in> Collect mul_carrier \<Longrightarrow>
+        a2 ## to_share b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
+        (a2 * n \<odivr> to_share b = to_share c) = (\<exists>a'. a2 = to_share a' * (1 - n) \<odivr> to_share b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> Collect mul_carrier)\<close>
     apply (cases a2; cases b; cases c; simp add: share_option_def)
     apply (cases \<open>n < 1\<close>; simp)
     apply (smt (verit, ccfv_SIG) diff_add_cancel diff_gt_0_iff_gt sep_cancel sep_disj_commuteI sep_disj_multD2 sep_disj_multI2 sep_disj_share sep_mult_commute times_share)
     by (metis join_strict_positivity less_numeral_extra(1) sep_disj_multD2 sep_disj_share)
-  show \<open>1 \<in> UNIV\<close> by simp
 qed
-*)
+
 
 lemma to_share_kernel_is_1[locale_witness]:
   \<open> 1 \<in> D
-\<Longrightarrow> kernel_is_1 to_share D\<close>
-  by (simp add: kernel_is_1_def)
-
+\<Longrightarrow> simple_homo_mul to_share D\<close>
+  by (simp add: simple_homo_mul_def)
 
 lemma strip_share_Share[simp]:
   \<open>strip_share (map_option (Share n) x) = x\<close>

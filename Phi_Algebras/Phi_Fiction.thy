@@ -426,15 +426,15 @@ definition [simp]: \<open>\<F>_functional \<psi> D x = {y. x = \<psi> y \<and> y
   by (rule Interp_inverse, simp add: Interpretation_def one_set_def set_eq_iff inj_at_1) *)
 
 lemma \<F>_functional_homo_one[simp, locale_intro]:
-  \<open> kernel_is_1 \<psi> D
+  \<open> simple_homo_mul \<psi> D
 \<Longrightarrow> homo_one (\<F>_functional \<psi> D)\<close>
-  unfolding homo_one_def \<F>_functional_def kernel_is_1_def
+  unfolding homo_one_def \<F>_functional_def simple_homo_mul_def
   by (clarsimp simp add: set_eq_iff Ball_def; blast)
 
 (*TODO: move this or remove this*)
 lemma map_option_inj_at_1[simp]:
-  \<open>kernel_is_1 (map_option f) UNIV\<close>
-  unfolding one_option_def kernel_is_1_def
+  \<open>simple_homo_mul (map_option f) UNIV\<close>
+  unfolding one_option_def simple_homo_mul_def
   by (simp add: split_option_all)
 
 lemma (in sep_orthogonal_monoid) \<F>_functional_projection:
@@ -443,11 +443,6 @@ lemma (in sep_orthogonal_monoid) \<F>_functional_projection:
   unfolding refinement_projection_def
   apply (simp)
   by (clarsimp simp add: subset_iff set_mult_expn eq_commute[where a=\<open>\<psi> _\<close>] sep_orthogonal; blast)
-
-(*TODO: move this or remove this*)
-lemma kernel_is_1_pointwise[simp,intro!]:
-  \<open>kernel_is_1 \<psi> D \<Longrightarrow> kernel_is_1 ((\<circ>) \<psi>) (pointwise_set D)\<close>
-  unfolding kernel_is_1_def pointwise_set_def by (simp add: fun_eq_iff)
 
 lemma \<F>_functional_pointwise:
   \<open>\<F>_functional ((\<circ>) \<psi>) (pointwise_set D) = \<F>_pointwise (\<lambda>_. \<F>_functional \<psi> D)\<close>

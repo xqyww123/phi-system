@@ -570,7 +570,7 @@ lemma partial_implies_raw:
     have t1: \<open>1 / n \<le> 1 \<and> 0 < 1 / n\<close>
       using prems(13) by force
     have t2: \<open>share (1/n) (share n (\<psi> x)) \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
-      by (simp add: order_less_imp_le prems(2) share.\<psi>_self_disj share_sub t1)
+      by (simp add: order_less_imp_le prems(2) share.\<psi>_mul_carrier share_sub t1)
     then have t3: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
       using share_share_assoc0
       by (metis prems(2) share_left_one t0 t1)
