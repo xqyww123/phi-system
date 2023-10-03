@@ -38,7 +38,7 @@ definition \<I>\<^sub>r\<^sub>e\<^sub>l :: \<open>('a::one,'b::one) interp \<Rig
 
 subsubsection \<open>Fictional Refinement\<close>
 
-definition Fictional_Forward_Simulation :: \<open>'c rel \<Rightarrow> 'a rel \<Rightarrow> ('a::sep_magma,'c::sep_magma) interp \<Rightarrow> 'a set \<Rightarrow> bool\<close>
+definition Fictional_Forward_Simulation :: \<open>'c rel \<Rightarrow> 'a rel \<Rightarrow> ('a::sep_carrier,'c::sep_magma) interp \<Rightarrow> 'a set \<Rightarrow> bool\<close>
       ("_/ \<r>\<e>\<f>\<i>\<n>\<e>\<s> _/ \<w>.\<r>.\<t> _/ \<i>\<n> _" [11,11,11] 10)
   where \<open>(F \<r>\<e>\<f>\<i>\<n>\<e>\<s> G \<w>.\<r>.\<t> T \<i>\<n> D)
     \<longleftrightarrow> (\<forall>x r R. F `` (R * T (r * x) \<s>\<u>\<b>\<j> r ## x \<and> x \<in> D) \<subseteq> { y'. \<exists>y. y' \<in> R * T (r * y) \<and> r ## y \<and> (x,y) \<in> G})\<close>

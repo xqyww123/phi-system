@@ -525,7 +525,16 @@ subsection \<open>Homomorphisms\<close>
 
 locale homo_mul_carrier =
   fixes \<psi> :: \<open>'a::mul_carrier \<Rightarrow> 'b::mul_carrier\<close>
-  assumes homo_mul_carrier: \<open>mul_carrier x \<Longrightarrow> mul_carrier (\<psi> x)\<close>
+  assumes homo_mul_carrier[simp]: \<open>mul_carrier x \<Longrightarrow> mul_carrier (\<psi> x)\<close>
+begin
+
+lemma homo_mul_carrier_prop[simp]:
+  \<open>homo_mul_carrier \<psi>\<close>
+  by (simp add: homo_mul_carrier_axioms)
+
+thm homo_mul_carrier_axioms
+
+end
 
 locale homo_sep_disj =
   fixes \<psi> :: \<open>'a::sep_disj \<Rightarrow> 'b::sep_disj\<close>
@@ -543,9 +552,8 @@ locale homo_sep_mult =
   assumes homo_mult: "x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y"
 
 locale homo_join_sub =
-  fixes \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
-    and D :: \<open>'a set\<close>
-  assumes homo_join_sub: \<open>x \<in> D \<and> y \<in> D \<Longrightarrow> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
+  fixes \<psi> :: \<open>'a::sep_carrier \<Rightarrow> 'b::sep_magma\<close>
+  assumes homo_join_sub: \<open>mul_carrier x \<and> mul_carrier y \<Longrightarrow> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
 
 locale homo_sep = homo_sep_mult \<psi> + homo_sep_disj \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
@@ -613,28 +621,26 @@ interference with other sorts, so they are orthogonal.
 \<close>
 
 locale sep_orthogonal = homo_sep \<psi>
-  for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
-  and D :: \<open>'a set\<close> \<comment> \<open>carrier set of the source algebra,
-                        Previously we implicitly extend the carrier set to be the universe of the type.
-                        It can be done because for any element \<open>d\<close> not belonging to the carrier set,
-                        only if \<open>d\<close> has no defined operation with any element including itself,
-                        the introduction of \<open>d\<close> doesn't affect anything.
-                        However here, if \<open>a = \<psi> d\<close> accidentally belongs to the target algebra, \<open>d\<close> matters,
-                        so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
-      (*TODO: as now we have the mul_carrier, do we still need such D instead of using mul_carrier?*)
-      (*then let's try now*)
-+ assumes sep_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+  for \<psi> :: \<open>'a::sep_carrier \<Rightarrow> 'b::sep_magma\<close>
+   \<comment> \<open>The carrier set of the source algebra has to be explicitly given.
+      Previously we implicitly extend the carrier set to be the universe of the type.
+      It can be done because for any element \<open>d\<close> not belonging to the carrier set,
+      only if \<open>d\<close> has no defined operation with any element including itself,
+      the introduction of \<open>d\<close> doesn't affect anything.
+      However here, if \<open>a = \<psi> d\<close> accidentally belongs to the target algebra, \<open>d\<close> matters,
+      so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
++ assumes sep_orthogonal: \<open>mul_carrier b \<and> mul_carrier c \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> mul_carrier a')\<close>
 begin
 
 
 lemma sep_orthogonal'[no_atp]:
-  \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+  \<open> mul_carrier b \<and> mul_carrier c
+\<Longrightarrow> a ## \<psi> b
+\<Longrightarrow> \<psi> c = a * \<psi> b \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> mul_carrier a')\<close>
   by (metis sep_orthogonal)
 
 sublocale homo_join_sub \<psi>
-  apply standard
-  unfolding join_sub_def
-  by (metis homo_mult sep_disj_homo_semi sep_orthogonal)
+  by (standard, unfold join_sub_def, metis homo_mult sep_disj_homo_semi sep_orthogonal)
 
 text \<open>The weak homomorphism of \<open>\<preceq>\<^sub>S\<^sub>L\<close>, \<open>x \<preceq>\<^sub>S\<^sub>L z \<longrightarrow> \<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> z\<close> is trivially true but the reversed
 so-called closed homo \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L \<psi> z \<longrightarrow> x \<preceq>\<^sub>S\<^sub>L z\<close> is not seen even in closed separation homo.
@@ -646,15 +652,16 @@ of join_sub, but not reversely.\<close>
 
 end
 
-locale sep_orthogonal_1 = sep_orthogonal \<psi> D
-  for \<psi> :: \<open>'a::sep_magma_1 \<Rightarrow> 'b::sep_magma_1\<close> and D
-+ assumes one_in_D: \<open>1 \<in> D\<close>
+
+locale sep_orthogonal_1 = sep_orthogonal \<psi>
+  for \<psi> :: \<open>'a::{sep_carrier_1, sep_magma_1} \<Rightarrow> 'b::sep_magma_1\<close>
 begin
 
 sublocale homo_one \<psi>
-  by (standard, metis mult_1_class.mult_1_left mult_1_class.mult_1_right one_in_D sep_orthogonal sep_magma_1_right)
+  by (standard, metis mult_1_class.mult_1_left mult_1_class.mult_1_right sep_carrier_1 sep_magma_1_right sep_orthogonal)
 
 end
+
 
 
 definition \<open>kernel_is_1 \<psi> D \<longleftrightarrow> (\<forall>x \<in> D. \<psi> x = 1 \<longleftrightarrow> x = 1) \<and> 1 \<in> D\<close>
@@ -666,18 +673,18 @@ lemma kernel_is_1_comp[simp, locale_intro]:
 lemma kernel_is_1_id[simp]: \<open>1 \<in> D \<Longrightarrow> kernel_is_1 id D\<close> unfolding kernel_is_1_def by simp
 
 
-locale sep_orthogonal_monoid = sep_orthogonal_1 \<psi> D
-  for \<psi> :: \<open>'a::sep_monoid \<Rightarrow> 'b::sep_monoid\<close> and D
+locale sep_orthogonal_monoid = sep_orthogonal_1 \<psi>
+  for \<psi> :: \<open>'a::{sep_carrier_1, sep_monoid} \<Rightarrow> 'b::sep_monoid\<close>
 begin
 
-lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi> D\<close>
+lemma kernel_is_1[simp]: \<open>kernel_is_1 \<psi> (Collect mul_carrier)\<close>
   unfolding kernel_is_1_def
-  by (metis homo_join_sub homo_one join_sub.bot.extremum join_sub.bot.extremum_uniqueI one_in_D)
+  by (clarsimp, metis mult_1_class.mult_1_left sep_carrier_1 sep_magma_1_right sep_no_inverse sep_orthogonal)
 
 end
 
-locale cancl_sep_orthogonal_monoid = sep_orthogonal_monoid \<psi> D
-  for \<psi> :: \<open>'a::{sep_cancel, sep_monoid} \<Rightarrow> 'b::sep_monoid\<close> and D
+locale cancl_sep_orthogonal_monoid = sep_orthogonal_monoid \<psi>
+  for \<psi> :: \<open>'a::{sep_cancel, sep_carrier_1, sep_monoid} \<Rightarrow> 'b::sep_monoid\<close>
 
 (*
 locale sep_orthogonal_1 = sep_orthogonal \<psi>
@@ -685,24 +692,22 @@ locale sep_orthogonal_1 = sep_orthogonal \<psi>
 begin
 end *)
 
-locale share_orthogonal_homo = sep_orthogonal_monoid \<psi> D
-  for \<psi> :: \<open>'a::sep_algebra \<Rightarrow> 'b::share_semimodule\<close> and D
-+ assumes share_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
-                           a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
-    and   \<psi>_self_disj: \<open>x \<in> D \<Longrightarrow> mul_carrier (\<psi> x) \<close>
+locale share_orthogonal_homo = sep_orthogonal_monoid \<psi> + homo_mul_carrier \<psi>
+  for \<psi> :: \<open>'a::{sep_carrier_1, sep_algebra} \<Rightarrow> 'b::share_semimodule\<close>
++ assumes share_orthogonal: \<open>mul_carrier b \<and> mul_carrier c \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
+                           a * share n (\<psi> b) = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> mul_carrier a')\<close>
 begin
 
 lemma share_orthogonal'[no_atp]:
-  \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
-      \<psi> c = a * share n (\<psi> b) \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+  \<open>mul_carrier b \<and> mul_carrier c \<Longrightarrow> a ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
+      \<psi> c = a * share n (\<psi> b) \<longleftrightarrow> (\<exists>a'. a = \<psi> a' * share (1-n) (\<psi> b) \<and> a' * b = c \<and> a' ## b \<and> mul_carrier a')\<close>
   by (metis share_orthogonal)
 
-lemma
-  join_sub_share_join_sub_whole: \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> x \<in> D \<and> y \<in> D \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
+lemma join_sub_share_join_sub_whole:
+  \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> mul_carrier x \<and> mul_carrier y \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> y \<longleftrightarrow> x \<preceq>\<^sub>S\<^sub>L y\<close>
   unfolding join_sub_def
-  apply (rule; clarsimp simp add: homo_mult)
-   apply (metis share_orthogonal)
-  by (meson \<psi>_self_disj homo_sep_disj.sep_disj_homo_semi homo_sep_disj_axioms join_sub_def join_sub_ext_left less_eq_rat_def share_sep_disj_right share_sub)
+  by ((rule; clarsimp simp add: homo_mult), metis share_orthogonal,
+      metis homo_mul_carrier join_sub_def join_sub_ext_left linorder_le_cases order_le_less_trans order_less_irrefl sep_disj_homo_semi share_sep_disj_right share_sub)
   
 
 (* lemma \<open>0 < n \<and> n \<le> 1 \<Longrightarrow> share n (\<psi> x) \<preceq>\<^sub>S\<^sub>L \<psi> x\<close>
@@ -719,8 +724,8 @@ sublocale share_orthogonal_homo using share_orthogonal_homo'[simplified] .
 end *)
 
 
-locale cancl_share_orthogonal_homo = share_orthogonal_homo \<psi> D
-  for \<psi> :: \<open>'a::{sep_cancel, sep_algebra} \<Rightarrow> 'b::share_semimodule\<close> and D
+locale cancl_share_orthogonal_homo = share_orthogonal_homo \<psi>
+  for \<psi> :: \<open>'a::{sep_carrier_1, sep_cancel, sep_algebra} \<Rightarrow> 'b::share_semimodule\<close>
 begin
 
 sublocale cancl_sep_orthogonal_monoid ..
@@ -1288,42 +1293,44 @@ lemma homo_share_comp[simp]:
   by clarsimp
 
 lemma sep_orthogonal_comp:
-  \<open> g ` Dg \<subseteq> Df
-\<Longrightarrow> sep_orthogonal f Df \<Longrightarrow> sep_orthogonal g Dg \<Longrightarrow> sep_orthogonal (f o g) Dg\<close>
+  \<open> homo_mul_carrier g
+\<Longrightarrow> sep_orthogonal f
+\<Longrightarrow> sep_orthogonal g
+\<Longrightarrow> sep_orthogonal (f o g) \<close>
   unfolding sep_orthogonal_def sep_orthogonal_axioms_def
-  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
-      smt (verit, ccfv_threshold) homo_sep.axioms(2) homo_sep_disj.sep_disj_homo_semi)
+  by (clarsimp simp add: subset_iff image_iff Bex_def,
+      smt (verit, del_insts) homo_mul_carrier.homo_mul_carrier homo_sep_def homo_sep_disj_def)
 
 lemma sep_orthogonal_1_comp:
-  \<open> g ` Dg \<subseteq> Df
-\<Longrightarrow> sep_orthogonal_1 f Df \<Longrightarrow> sep_orthogonal_1 g Dg \<Longrightarrow> sep_orthogonal_1 (f o g) Dg\<close>
+  \<open> homo_mul_carrier g
+\<Longrightarrow> sep_orthogonal_1 f \<Longrightarrow> sep_orthogonal_1 g \<Longrightarrow> sep_orthogonal_1 (f o g)\<close>
   unfolding sep_orthogonal_1_def
-  by (clarsimp simp add: homo_sep_comp subset_iff image_iff Bex_def,
-      metis image_subsetI sep_orthogonal_comp)
+  by (simp add: sep_orthogonal_comp)
 
-lemma sep_orthogonal_monoid_comp[locale_intro]:
-  \<open> g ` Dg \<subseteq> Df \<Longrightarrow> sep_orthogonal_monoid f Df \<Longrightarrow> sep_orthogonal_monoid g Dg \<Longrightarrow> sep_orthogonal_monoid (f o g) Dg\<close>
-  unfolding sep_orthogonal_monoid_def using sep_orthogonal_1_comp .
+lemma sep_orthogonal_monoid_comp [locale_intro]:
+  \<open> homo_mul_carrier g
+\<Longrightarrow> sep_orthogonal_monoid f \<Longrightarrow> sep_orthogonal_monoid g \<Longrightarrow> sep_orthogonal_monoid (f o g) \<close>
+  unfolding sep_orthogonal_monoid_def
+  using sep_orthogonal_1_comp .
 
 lemma share_orthogonal_homo_composition[locale_intro]:
-  assumes dom_trans: \<open>g ` Dg \<subseteq> Df\<close>
-      and f: \<open>share_orthogonal_homo f Df\<close>
-      and g: \<open>sep_orthogonal_monoid g Dg\<close>
-    shows \<open>share_orthogonal_homo (f o g) Dg\<close>
+  assumes dom_trans: \<open>homo_mul_carrier g \<close>
+      and f: \<open>share_orthogonal_homo f \<close>
+      and g: \<open>sep_orthogonal_monoid g \<close>
+    shows \<open>share_orthogonal_homo (f o g) \<close>
 proof -
-  interpret f: share_orthogonal_homo f Df using f .
-  interpret g: sep_orthogonal_monoid g Dg using g .
-  have f': \<open>sep_orthogonal_monoid f Df\<close> by (simp add: f.sep_orthogonal_monoid_axioms)
-  have g': \<open>sep_orthogonal_monoid g Dg\<close> by (simp add: g.sep_orthogonal_monoid_axioms)
-  have t[simp]: \<open>x \<in> Dg \<Longrightarrow> g x \<in> Df\<close> for x using dom_trans by blast 
+  interpret f: share_orthogonal_homo f using f .
+  interpret g: sep_orthogonal_monoid g using g .
+  interpret t: homo_mul_carrier g using dom_trans .
+  have f': \<open>sep_orthogonal_monoid f \<close> by (simp add: f.sep_orthogonal_monoid_axioms)
+  have g': \<open>sep_orthogonal_monoid g \<close> by (simp add: g.sep_orthogonal_monoid_axioms)
 
   show ?thesis
     unfolding share_orthogonal_homo_def share_orthogonal_homo_axioms_def
-    apply (auto simp add: f.share_orthogonal)
-    apply (meson dom_trans f' g' sep_orthogonal_monoid_comp)
-    using g.sep_orthogonal apply auto[1]
-    using g.homo_mult apply auto[1]
-    using f.\<psi>_self_disj t by blast
+    by (auto simp add: f.share_orthogonal,
+        meson dom_trans f' g' sep_orthogonal_monoid_comp,
+        (insert g.sep_orthogonal, (auto)[1]),
+        (insert g.homo_mult, (auto)[1]))
 
 qed
 
@@ -2663,55 +2670,51 @@ lemma pointwise_set_UNIV:
   unfolding pointwise_set_def by simp
 
 lemma sep_orthogonal_monoid_pointwise[locale_intro]:
-  assumes D':   \<open>D' = pointwise_set D\<close>
-      and prem: \<open>sep_orthogonal_monoid \<psi> D\<close>
-  shows \<open>sep_orthogonal_monoid ((\<circ>) \<psi>) D'\<close>
+  assumes prem: \<open>sep_orthogonal_monoid \<psi>\<close>
+  shows \<open>sep_orthogonal_monoid ((\<circ>) \<psi>)\<close>
   unfolding comp_def
 proof
-  interpret xx: sep_orthogonal_monoid \<psi> D using prem .
-  fix x y a b c :: \<open>'a \<Rightarrow> 'b\<close>
-  fix a' :: \<open>'a \<Rightarrow> 'c\<close>
+  interpret xx: sep_orthogonal_monoid \<psi> using prem .
+  fix x y a b c :: \<open>'c \<Rightarrow> 'a\<close>
+  fix a' :: \<open>'c \<Rightarrow> 'b\<close>
   show \<open>x ## y \<Longrightarrow> (\<lambda>xa. \<psi> ((x * y) xa)) = (\<lambda>xa. \<psi> (x xa)) * (\<lambda>x. \<psi> (y x))\<close>
     by (simp add: fun_eq_iff times_fun sep_disj_fun_def xx.homo_mult)
   show \<open>a ## b \<longrightarrow> (\<lambda>x. \<psi> (a x)) ## (\<lambda>x. \<psi> (b x))\<close>
-    by (simp add: fun_eq_iff times_fun sep_disj_fun_def D' pointwise_set_def)
-  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
-     (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b \<and> a \<in> D')\<close>
-    by (auto simp add: D' fun_eq_iff times_fun sep_disj_fun_def xx.sep_orthogonal pointwise_set_def; metis)
-  show \<open>1 \<in> D'\<close>
-    by (simp add: D' pointwise_set_def xx.one_in_D)
+    by (simp add: fun_eq_iff times_fun sep_disj_fun_def)
+  show \<open>mul_carrier b \<and> mul_carrier c \<Longrightarrow> a' ## (\<lambda>x. \<psi> (b x)) \<Longrightarrow>
+     (a' * (\<lambda>x. \<psi> (b x)) = (\<lambda>x. \<psi> (c x))) = (\<exists>a. a' = (\<lambda>x. \<psi> (a x)) \<and> a * b = c \<and> a ## b \<and> mul_carrier a)\<close>
+    by (auto simp add: fun_eq_iff times_fun sep_disj_fun_def xx.sep_orthogonal pointwise_set_def; metis)
 qed
 
 lemma share_orthogonal_homo_pointwise[locale_intro]:
-  assumes D':   \<open>D' = pointwise_set D\<close>
-      and prem: \<open>share_orthogonal_homo \<psi> D\<close>
-    shows \<open>share_orthogonal_homo ((\<circ>) \<psi>) D'\<close>
+  assumes prem: \<open>share_orthogonal_homo \<psi> \<close>
+    shows \<open>share_orthogonal_homo ((\<circ>) \<psi>) \<close>
 proof (rule share_orthogonal_homo.intro, rule sep_orthogonal_monoid_pointwise,
-       rule D', rule share_orthogonal_homo.axioms(1)[OF prem], standard)
-  interpret xx: share_orthogonal_homo \<psi> D using prem .
+       rule share_orthogonal_homo.axioms(1)[OF prem], standard)
+  interpret xx: share_orthogonal_homo \<psi> using prem .
 
-  fix x y z a b c :: \<open>'a \<Rightarrow> 'b\<close>
-  fix a' :: \<open>'a \<Rightarrow> 'c\<close>
+  fix x :: \<open>'a\<close>
+  fix b c :: \<open>'c \<Rightarrow> 'a\<close>
+  fix a' :: \<open>'c \<Rightarrow> 'b\<close>
   fix n :: rat
 
-  show \<open>x \<in> D' \<Longrightarrow> mul_carrier (\<psi> \<circ> x)\<close>
-    by (simp add: D' sep_disj_fun_def xx.\<psi>_self_disj pointwise_set_def)
+  show \<open>mul_carrier x \<Longrightarrow> mul_carrier (\<psi> x)\<close> by simp
   
-  show \<open>b \<in> D' \<and> c \<in> D' \<Longrightarrow> a' ## (\<psi> \<circ> b) \<Longrightarrow>
+  show \<open>mul_carrier b \<and> mul_carrier c \<Longrightarrow> a' ## (\<psi> \<circ> b) \<Longrightarrow>
        0 < n \<and> n \<le> 1 \<Longrightarrow> (a' * n \<odivr> (\<psi> \<circ> b) = (\<psi> \<circ> c))
-                        = (\<exists>a''. a' = (\<psi> \<circ> a'') * (1 - n) \<odivr> (\<psi> \<circ> b) \<and> a'' * b = c \<and> a'' ## b \<and> a'' \<in> D')\<close>
+                        = (\<exists>a''. a' = (\<psi> \<circ> a'') * (1 - n) \<odivr> (\<psi> \<circ> b) \<and> a'' * b = c \<and> a'' ## b \<and> mul_carrier a'')\<close>
     by (auto simp add: join_sub_def fun_eq_iff times_fun sep_disj_fun_def xx.share_orthogonal
-            share_fun_def pointwise_set_def D'; metis)
+                       share_fun_def pointwise_set_def; metis)
 qed
 
 lemma sep_orthogonal_monoid_pointwise_eq:
-  \<open>sep_orthogonal_monoid ((\<circ>) \<psi>) (pointwise_set D) \<longleftrightarrow> sep_orthogonal_monoid \<psi> D\<close>
-  for \<psi> :: \<open>'b::sep_monoid \<Rightarrow> 'c::sep_monoid\<close>
+  \<open>sep_orthogonal_monoid ((\<circ>) \<psi>) \<longleftrightarrow> sep_orthogonal_monoid \<psi> \<close>
+  for \<psi> :: \<open>'b::{sep_carrier_1, sep_monoid} \<Rightarrow> 'c::sep_monoid\<close>
 proof
-  assume prem: \<open>sep_orthogonal_monoid ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c) (pointwise_set D)\<close>
-  show \<open>sep_orthogonal_monoid \<psi> D\<close>
+  assume prem: \<open>sep_orthogonal_monoid ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close>
+  show \<open>sep_orthogonal_monoid \<psi>\<close>
   proof
-    interpret xx: sep_orthogonal_monoid \<open>(\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c\<close> \<open>(pointwise_set D)\<close> using prem .
+    interpret xx: sep_orthogonal_monoid \<open>(\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c\<close> using prem .
     fix x y a b c :: \<open>'b\<close> and a2 :: 'c
     show \<open>x ## y \<Longrightarrow> \<psi> (x * y) = \<psi> x * \<psi> y\<close>
       using xx.homo_mult[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
@@ -2719,41 +2722,38 @@ proof
     show \<open>a ## b \<longrightarrow> \<psi> a ## \<psi> b\<close>
       using xx.sep_disj_homo_semi[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff, simplified]
       by meson
-    show \<open>1 \<in> D\<close>
-      using xx.one_in_D by (auto simp add: pointwise_set_def)
-    show \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow>
-            (a2 * \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+    show \<open>mul_carrier b \<and> mul_carrier c \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow>
+            (a2 * \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> mul_carrier a')\<close>
       using xx.sep_orthogonal[unfolded sep_disj_fun_def times_fun one_fun_def fun_eq_iff,
           where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>, simplified pointwise_set_def, simplified]
       by auto
   qed
 next
-  show \<open>sep_orthogonal_monoid \<psi> D \<Longrightarrow> sep_orthogonal_monoid ((\<circ>) \<psi>) (pointwise_set D)\<close>
+  show \<open>sep_orthogonal_monoid \<psi> \<Longrightarrow> sep_orthogonal_monoid ((\<circ>) \<psi>) \<close>
     using sep_orthogonal_monoid_pointwise by blast 
 qed
 
 lemma share_orthogonal_homo_pointwise_eq:
-  \<open>share_orthogonal_homo ((\<circ>) \<psi>) (pointwise_set D) \<longleftrightarrow> share_orthogonal_homo \<psi> D\<close>
-  for \<psi> :: \<open>'b::sep_algebra \<Rightarrow> 'c::share_semimodule\<close>
+  \<open>share_orthogonal_homo ((\<circ>) \<psi>) \<longleftrightarrow> share_orthogonal_homo \<psi> \<close>
+  for \<psi> :: \<open>'b::{sep_algebra, sep_carrier_1} \<Rightarrow> 'c::share_semimodule\<close>
 proof
-  assume prem: \<open>share_orthogonal_homo ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c) (pointwise_set D)\<close>
-  show \<open>share_orthogonal_homo \<psi> D\<close>
+  assume prem: \<open>share_orthogonal_homo ((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c) \<close>
+  show \<open>share_orthogonal_homo \<psi> \<close>
   proof (rule share_orthogonal_homo.intro[OF share_orthogonal_homo.axioms(1)[OF prem, unfolded sep_orthogonal_monoid_pointwise_eq]],
          standard)
-    interpret xx: share_orthogonal_homo \<open>((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close> \<open>(pointwise_set D)\<close> using prem .
+    interpret xx: share_orthogonal_homo \<open>((\<circ>) \<psi> :: ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> 'c)\<close> using prem .
     fix x y a b c :: \<open>'b\<close> and a2 :: 'c and n :: rat
 
-    show \<open> x \<in> D \<Longrightarrow> mul_carrier (\<psi> x) \<close>
-      using xx.\<psi>_self_disj[of \<open>\<lambda>_. x\<close>, simplified pointwise_set_def, simplified]
-      by (auto simp add: sep_disj_fun_def)
+    show \<open> mul_carrier x \<Longrightarrow> mul_carrier (\<psi> x) \<close>
+      using xx.homo_mul_carrier by fastforce
 
-    show \<open> b \<in> D \<and> c \<in> D \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
-            (a2 * n \<odivr> \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' * (1 - n) \<odivr> \<psi> b \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
+    show \<open> mul_carrier b \<and> mul_carrier c \<Longrightarrow> a2 ## \<psi> b \<Longrightarrow> 0 < n \<and> n \<le> 1 \<Longrightarrow>
+            (a2 * n \<odivr> \<psi> b = \<psi> c) = (\<exists>a'. a2 = \<psi> a' * (1 - n) \<odivr> \<psi> b \<and> a' * b = c \<and> a' ## b \<and> mul_carrier a')\<close>
       by (insert xx.share_orthogonal[where a=\<open>\<lambda>_. a2\<close> and b=\<open>\<lambda>_. b\<close> and c=\<open>\<lambda>_. c\<close>];
           clarsimp simp add: sep_disj_fun_def share_fun_def fun_eq_iff times_fun pointwise_set_def; rule; auto)
   qed
 next
-  show \<open>share_orthogonal_homo \<psi> D \<Longrightarrow> share_orthogonal_homo ((\<circ>) \<psi>) (pointwise_set D)\<close>
+  show \<open>share_orthogonal_homo \<psi> \<Longrightarrow> share_orthogonal_homo ((\<circ>) \<psi>) \<close>
     using share_orthogonal_homo_pointwise by blast 
 qed
 
