@@ -529,6 +529,12 @@ lemma \<phi>Type_eqI_Tr:
   unfolding \<phi>Type_def Transformation_def Satisfaction_def
   by auto
 
+lemma \<phi>Type_eqI_BI:
+  \<open> (\<And>x. (x \<Ztypecolon> T) = (x \<Ztypecolon> U))
+\<Longrightarrow> T = U \<close>
+  unfolding \<phi>Type_def fun_eq_iff
+  by blast
+
 lemma transformation_refl[simp]:
   "A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A" unfolding Transformation_def by fast
 

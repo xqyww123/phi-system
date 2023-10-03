@@ -1774,12 +1774,21 @@ lemma Separation_Homo_functor[\<phi>reason_template %Object_Sep_Homo_functor]:
       by (clarsimp simp add: Transformation_def; blast)
   qed .
 
-lemma [\<phi>reason_template name Fc.\<phi>Prod []]:
+lemma [\<phi>reason_template name Fc.\<phi>Prod_ty []]:
   \<open> Separation_Homo\<^sub>I Ft Fu Fc T U UNIV (\<lambda>x. x)
 \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U (\<lambda>x. x)
 \<Longrightarrow> Fc (T \<^emph> U) = Ft T \<^emph> Fu U \<close>
   unfolding Separation_Homo\<^sub>I_def Separation_Homo\<^sub>E_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
+
+lemma Separation_Comm_rewr_template[\<phi>reason_template name F\<^sub>T\<^sub>U.\<phi>Prod[]]:
+  \<open> Separation_Homo\<^sub>I F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U D\<^sub>z f
+\<Longrightarrow> Separation_Homo\<^sub>E F\<^sub>T F\<^sub>U F\<^sub>T\<^sub>U T U g
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> g (f x) = x \<and> x \<in> D\<^sub>z
+\<Longrightarrow> (x \<Ztypecolon> F\<^sub>T T \<^emph> F\<^sub>U U) = (f x \<Ztypecolon> F\<^sub>T\<^sub>U (T \<^emph> U))\<close>
+  unfolding Separation_Homo\<^sub>E_def Separation_Homo\<^sub>I_def Premise_def Transformation_def
+            BI_eq_iff
+  by (clarsimp; metis prod.collapse)
 
 lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
   \<open> Separation_Homo\<^sub>I_Cond Ft Fu Fc C T U UNIV (\<lambda>x. x)
@@ -3729,10 +3738,10 @@ lemma SE_Semimodule_SDistr_a_bd_Tr_R[\<phi>reason_template 32]:
 
 subsubsection \<open>Commutativity between \<phi>-Type Operators\<close>
 
+paragraph \<open>Deriving Rewrites\<close>
+
 (*TODO Tyops_Commute\<^sub>1\<^sub>_\<^sub>2*)
 
-paragraph \<open>Implies Rewrites\<close>
- 
 lemma Comm_Tyops_Rewr_temlpate[\<phi>reason_template name F.G.comm_rewr[]]:
   \<open> Tyops_Commute F F' G G' T D (embedded_func f P)
 \<Longrightarrow> Tyops_Commute G' G F' F T D' (embedded_func g Q)

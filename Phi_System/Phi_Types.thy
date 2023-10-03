@@ -142,27 +142,39 @@ text \<open>Here we construct two inner transformations from \<open>a \<Ztypecol
         2. the container is always non-empty so that an independent assertion \<open>P\<close> bound at the element
            type is valid globally (this is a necessary condition).  \<close>
 
-
 lemma \<phi>\<s>\<u>\<b>\<j>_Homo[\<phi>reason_template name Fa.\<phi>subj [assertion_simps]]:
-  \<open> Transformation_Functor Fa Fa (T \<phi>\<s>\<u>\<b>\<j> P) T D R mapper
-\<Longrightarrow> Transformation_Functor Fa Fa T (T \<phi>\<s>\<u>\<b>\<j> P) D R mapper
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a. a \<in> D x \<and> P \<longrightarrow> a \<in> R x) \<and> (\<forall>y. mapper (\<lambda>a b. a = b \<and> P) x y \<longrightarrow> x = y \<and> P)
+  \<open> Functional_Transformation_Functor Fa Fa (T \<phi>\<s>\<u>\<b>\<j> P) T D R pm fm
+\<Longrightarrow> Functional_Transformation_Functor Fa Fa T (T \<phi>\<s>\<u>\<b>\<j> P) D R pm fm
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a. a \<in> D x \<longrightarrow> a \<in> R x) \<and> (fm (\<lambda>x. x) (\<lambda>_. P) x = x \<and> pm (\<lambda>x. x) (\<lambda>_. P) x = P)
 \<Longrightarrow> (x \<Ztypecolon> Fa (T \<phi>\<s>\<u>\<b>\<j> P)) = (x \<Ztypecolon> Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  unfolding Transformation_Functor_def Transformation_def atomize_eq Premise_def BI_eq_iff
+  unfolding Functional_Transformation_Functor_def Transformation_def atomize_eq Premise_def BI_eq_iff
   apply (clarsimp; rule)
   subgoal premises prems for p
-    by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>a b. a = b \<and> P\<close>], simplified]
-               prems(3-5),
+    by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>x. x\<close>], THEN spec[where x=\<open>\<lambda>_. P\<close>]]
+               prems(3-),
+        clarsimp)
+  subgoal premises prems for p
+    by (insert prems(2)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>x. x\<close>], THEN spec[where x=\<open>\<lambda>_. P\<close>]]
+               prems(3-),
+        clarsimp) .
+
+
+lemma \<phi>\<s>\<u>\<b>\<j>_Homo_ty[\<phi>reason_template name Fa.\<phi>subj_ty [assertion_simps]]:
+  \<open> Functional_Transformation_Functor Fa Fa (T \<phi>\<s>\<u>\<b>\<j> P) T D R pm fm
+\<Longrightarrow> Functional_Transformation_Functor Fa Fa T (T \<phi>\<s>\<u>\<b>\<j> P) D R pm fm
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a x. a \<in> D x \<longrightarrow> a \<in> R x) \<and> (\<forall>x. fm (\<lambda>x. x) (\<lambda>_. P) x = x \<and> pm (\<lambda>x. x) (\<lambda>_. P) x = P)
+\<Longrightarrow> Fa (T \<phi>\<s>\<u>\<b>\<j> P) = (Fa T \<phi>\<s>\<u>\<b>\<j> P)\<close>
+  unfolding Functional_Transformation_Functor_def atomize_eq Premise_def BI_eq_iff
+  apply (rule \<phi>Type_eqI_Tr; clarsimp simp add: Transformation_def)
+  subgoal premises prems for x v
+    by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>x. x\<close>], THEN spec[where x=\<open>\<lambda>_. P\<close>]]
+               prems(3-),
         clarsimp,
         blast)
-  subgoal premises prems for p
-    by (insert prems(2)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>a b. a = b\<close>], simplified]
-               prems(3-5),
-        clarsimp,
-        blast) .
-
-text \<open>The above rule is interesting but essentially useless as it is replaced by the following rule.
-  The To-Transformation already enters into the elements by transformation functor.\<close>
+  subgoal premises prems for x v
+    by (insert prems(2)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>x. x\<close>], THEN spec[where x=\<open>\<lambda>_. P\<close>]]
+               prems(3-),
+        clarsimp) .
 
 lemma [\<phi>reason 1000]:
   \<open>x \<Ztypecolon> T \<phi>\<s>\<u>\<b>\<j> P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y = x \<and> P @action \<A>_transitive_simp\<close>
@@ -673,9 +685,49 @@ lemma \<S>_Homo\<^sub>E [\<phi>reason_template name Fa.\<S>\<^sub>E []]:
   unfolding Transformation_Functor_def Transformation_def Premise_def Action_Tag_def Simplify_def
   by clarsimp
 
-text \<open>Does the reverse transformation exists?. The commutativity between \<open>F\<close> and \<open>\<S>\<close> gonna be a problem.\<close>
+text \<open>Does the reverse transformation exist?. The commutativity between \<open>F\<close> and \<open>\<S>\<close> gonna be a problem.\<close>
 
+lemma \<S>_Homo\<^sub>I [\<phi>reason_template name Fa.\<S>\<^sub>I []]:
+  \<open> Functional_Transformation_Functor Fa Fb T (\<S> T) D R pm fm
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>x a. x \<in> s \<and> a \<in> D x \<longrightarrow> f a \<in> R x \<and> a \<in> f a) \<and>
+           (\<forall>x \<in> s. fm f (\<lambda>_. True) x = s')
+\<Longrightarrow> s \<Ztypecolon> \<S> (Fa T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s' \<Ztypecolon> Fb (\<S> T) \<close>
+  unfolding Functional_Transformation_Functor_def Transformation_def Premise_def
+  apply clarsimp
+  subgoal premises prems for v x
+    by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=f], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+               prems(2-),
+        clarsimp,
+        blast) .
 
+lemma \<S>_Homo_rewr [\<phi>reason_template name Fa.\<S>_rewr []]:
+  \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
+\<Longrightarrow> Functional_Transformation_Functor Fb Fa T (\<S> T) D' R' pm fm
+\<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : Collect (mapper (\<lambda>S x. x \<in> S) s)) @action \<A>_template_reason
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s) \<and>
+           (\<forall>x a. x \<in> s' \<and> a \<in> D' x \<longrightarrow> f a \<in> R' x \<and> a \<in> f a) \<and>
+           (\<forall>x \<in> s'. fm f (\<lambda>_. True) x = s)
+\<Longrightarrow> (s \<Ztypecolon> Fa (\<S> T)) = (s' \<Ztypecolon> \<S> (Fb T)) \<close>
+  unfolding Action_Tag_def Simplify_def Premise_def
+  by (rule assertion_eq_intro,
+     (rule \<S>_Homo\<^sub>E[unfolded Premise_def Simplify_def Action_Tag_def, where Fa=Fa and Fb=Fb],
+       assumption, simp, simp),
+     (clarify, rule \<S>_Homo\<^sub>I[unfolded Premise_def, where Fa=Fb and Fb=Fa],
+       assumption, simp))
+
+lemma \<S>_Homo_rewr_ty [\<phi>reason_template name Fa.\<S>_rewr_ty []]:
+  \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
+\<Longrightarrow> Functional_Transformation_Functor Fb Fa T (\<S> T) D' R' pm fm
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>s. Collect (mapper (\<lambda>S x. x \<in> S) s) = s) @action \<A>_template_reason
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>s a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s) \<and>
+           (\<forall>s x a. x \<in> s \<and> a \<in> D' x \<longrightarrow> f s a \<in> R' x \<and> a \<in> f s a) \<and>
+           (\<forall>s x. x \<in> s \<longrightarrow> fm (f s) (\<lambda>_. True) x = s)
+\<Longrightarrow> Fa (\<S> T) = \<S> (Fb T) \<close>
+  unfolding Action_Tag_def Simplify_def Premise_def
+  apply (rule \<phi>Type_eqI_BI, clarify)
+  subgoal for s
+    by (rule \<S>_Homo_rewr[unfolded Premise_def Simplify_def Action_Tag_def, where s'=s and s=s and Fa=Fa and Fb=Fb and f=\<open>f s\<close>],
+        assumption, assumption, simp, meson) .
 
 (* TODO: meta analysis, and commutativity of \<open>\<S>\<close>
 
@@ -708,16 +760,6 @@ lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
                prems(2),
         clarsimp) .
 *)
-
-lemma \<S>_Homo\<^sub>I [\<phi>reason_template name Fa.\<S>\<^sub>I []]:
-  \<open> Functional_Transformation_Functor Fa Fb T (\<S> T) D R pm fm
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D s \<longrightarrow> {a} \<in> R s)
-\<Longrightarrow> s \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>x. {x}) (\<lambda>_. True) s \<Ztypecolon> Fb (\<S> T)\<close>
-  unfolding Action_Tag_def Functional_Transformation_Functor_def Premise_def
-  subgoal premises prems
-    by (insert prems(1)[THEN spec[where x=s], THEN spec[where x=\<open>\<lambda>a. {a}\<close>], THEN spec[where x=\<open>\<lambda>_. True\<close>]]
-               prems(2) ;
-        clarsimp simp add: transformation_weaken) .
 
 (*
 lemma \<S>_Homo\<^sub>I [\<phi>reason_template name \<S>\<^sub>I []]:
@@ -2353,10 +2395,13 @@ ML \<open>assert_derived_properties \<^theory> [
         \<Longrightarrow> Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'a \<Rightarrow> (?'b list \<Rightarrow> ?'c::share_one) set) (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
 ]\<close>
 
+lemmas \<phi>Share_\<S>_rewr [assertion_simps, simp] =
+  \<phi>Share.\<S>_rewr[where f=\<open>\<lambda>_. s\<close> and s=s and n=n and na=n for s n, simplified]
 
-declare \<phi>MapAt.\<phi>Share.comm_rewr[symmetric, assertion_simps]
-declare \<phi>MapAt_L.\<phi>Share.comm_rewr[symmetric, assertion_simps]
+lemmas \<phi>Share_\<S>_rewr_ty [assertion_simps, simp] =
+  \<phi>Share.\<S>_rewr_ty[where f=\<open>\<lambda>s _. s\<close> and n=n and na=n for n, simplified]
 
+thm \<phi>Share.\<S>_rewr_ty
 thm \<phi>MapAt_L.\<phi>Share.comm_rewr
 
 thm \<phi>Share.\<phi>Inter_Comm\<^sub>E
@@ -2369,11 +2414,15 @@ thm \<phi>Share.\<phi>Sum_Comm\<^sub>E
 thm \<phi>Share.Identity_Element\<^sub>I
 thm \<phi>Share.unfold_sdistr (*TODO: reduce identical antecedents*)
 thm \<phi>Share.\<phi>Prod
+thm \<phi>Share.\<phi>Prod_ty
 thm \<phi>Share.\<phi>None
 thm \<phi>Share.scalar_assoc
 thm \<phi>Share.scalar_one
 thm \<phi>Share.Semimodule_Scalar_Assoc\<^sub>E
-
+thm \<phi>Share.\<S>\<^sub>E
+thm \<phi>Share.\<S>\<^sub>I
+thm \<phi>Share.\<phi>subj_ty
+thm \<phi>Share.simp_cong
 
 subparagraph \<open>Auxiliary Tag\<close>
 
@@ -2405,26 +2454,12 @@ text \<open>Many read-only applicable rules require only non-zero permissions.
 
 subsubsection \<open>Simplification Rules\<close>
 
-(*TODO:
+declare \<phi>MapAt.\<phi>Share.comm_rewr[symmetric, assertion_simps]
+        \<phi>MapAt_L.\<phi>Share.comm_rewr[symmetric, assertion_simps]
+        \<phi>Share.\<phi>Prod[symmetric, assertion_simps]
 
-lemma \<phi>Share_\<phi>Prod[assertion_simps]:
-  \<open>n \<odiv> (T \<^emph> U) = (n \<odiv> T) \<^emph> (n \<odiv> U)\<close>
-  for T :: \<open>('a::share_nun_semimodule, 'b) \<phi>\<close>
-  apply (rule \<phi>Type_eqI; clarsimp; rule; clarsimp)
-  apply (metis share_sep_disj_left share_sep_disj_right share_sep_right_distrib_0)
-  using share_sep_right_distrib_0 by blast
-*)
-
-thm \<phi>Share.\<phi>None
-
-
-(*
-lemma [\<phi>reason 1500 for \<open>?x \<Ztypecolon> ?n \<odiv> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action (?Act::?'b::simplification action)\<close>]:
-  \<open>x \<Ztypecolon> n \<odiv> \<circle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> (\<circle> :: ('a::share_one,unit) \<phi>) @action Act\<close>
-  for Act :: \<open>'b::simplification action\<close>
-  unfolding Transformation_def Action_Tag_def
-  by (simp add: \<phi>expns) *)
-
+thm \<phi>Share.\<S>\<^sub>I
+thm \<phi>Share.\<S>\<^sub>E
 
 paragraph \<open>Implication \& Action Rules\<close>
 
@@ -2466,20 +2501,6 @@ lemma [\<phi>reason 1000]:
   for T :: \<open>('a::share_nun_semimodule,'b) \<phi>\<close>
   unfolding \<phi>Share_\<phi>Prod .
 *)
-
-
-paragraph \<open>Simplifications\<close>
-
-(* TODO:
-lemma [simp]:
-  \<open>(n \<odiv> ExTyp T) = (\<exists>\<phi> c. n \<odiv> T c)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-*)
-
-thm \<phi>Share.\<S>\<^sub>E
-thm \<phi>Share.\<S>\<^sub>I
-thm \<phi>Share.\<phi>subj
-thm \<phi>Share.simp_cong
 
 
 
