@@ -615,14 +615,20 @@ interference with other sorts, so they are orthogonal.
 locale sep_orthogonal = homo_sep \<psi>
   for \<psi> :: \<open>'a::sep_magma \<Rightarrow> 'b::sep_magma\<close>
   and D :: \<open>'a set\<close> \<comment> \<open>carrier set of the source algebra,
-                        Previously we implicitly extend the carrier set to be the universe of the type.
-                        It can be done because for any element \<open>d\<close> not belonging to the carrier set,
-                        only if \<open>d\<close> has no defined operation with any element including itself,
-                        the introduction of \<open>d\<close> doesn't affect anything.
-                        However here, if \<open>a = \<psi> d\<close> accidentally belongs to the target algebra, \<open>d\<close> matters,
-                        so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
-      (*TODO: as now we have the mul_carrier, do we still need such D instead of using mul_carrier?*)
-      (*then let's try now*)
+            Previously we implicitly extend the carrier set to be the universe of the type.
+            It can be done because for any element \<open>d\<close> not belonging to the carrier set,
+            only if \<open>d\<close> has no defined operation with any element including itself,
+            the introduction of \<open>d\<close> doesn't affect anything.
+            However here, if \<open>a = \<psi> d\<close> accidentally belongs to the target algebra, \<open>d\<close> matters,
+            so we must give the carrier set explicitly to exclude such \<open>d\<close>.\<close>
+        \<comment> \<open>It is a bad idea to reuse \<open>mul_carrier\<close> to replace \<open>D\<close> here. \<open>sep_orthogonal\<close> is mainly
+            used in fictional SL where the actual domain can be various and even for example dependent
+            on the key of the map (e.g., later in the memory model of C, the domain of each block
+            depends on the type of the block which is acquired from the key of the map modelling
+            the memory). \<open>mul_carrier\<close> is fixed to its logic type can never be so flexible.
+            \<open>mul_carrier\<close> is designed for simplifying the specification of separation semimodules.
+            Properties of separation semimodules are bound to the type, by means of type classes,
+            so it is okay to again use a type class to bind the carrier set to the types.\<close>
 + assumes sep_orthogonal: \<open>b \<in> D \<and> c \<in> D \<Longrightarrow> a ## \<psi> b \<Longrightarrow> a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c \<and> a' ## b \<and> a' \<in> D)\<close>
 begin
 
