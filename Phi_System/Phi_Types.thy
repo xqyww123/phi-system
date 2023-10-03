@@ -74,7 +74,7 @@ declare [[\<phi>trace_reasoning = 0 ]]
  
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
-  deriving Monoidal_Sep_Functor
+  deriving Sep_Functor_1
        and Functionality
        and Carrier_Set
      (*and \<open>(\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Q \<Longrightarrow> Identity_Elements\<^sub>I T D P) \<Longrightarrow> Identity_Elements\<^sub>I (T \<phi>\<s>\<u>\<b>\<j> Q) (\<lambda>x. Q \<longrightarrow> D x) (\<lambda>x. Q \<and> P x)\<close>*)
@@ -310,7 +310,7 @@ declare [[\<phi>trace_reasoning = 0]]
   
 \<phi>type_def Set_Abstraction :: \<open>('a,'b) \<phi> \<Rightarrow> ('a, 'b set) \<phi>\<close> ("\<S>")
   where [embed_into_\<phi>type]: \<open>s \<Ztypecolon> \<S> T \<equiv> (x \<Ztypecolon> T \<s>\<u>\<b>\<j> x. x \<in> s)\<close>
-  deriving Monoidal_Sep_Functor \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
+  deriving Sep_Functor_1 \<comment> \<open>Its Object_Equiv is an example for non-symmetric reachability relation\<close>
        and \<open>Transformation_Functor \<S> \<S> T U (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>g Sx Sy. Sy = {y. \<exists>x\<in>Sx. g x y})\<close>
        and \<open>Functional_Transformation_Functor Set_Abstraction Set_Abstraction T U
                       (\<lambda>x. x) (\<lambda>_. UNIV) (\<lambda>_ _ _. True) (\<lambda>f P X. { f x |x. x \<in> X \<and> P x })\<close>
@@ -1001,7 +1001,7 @@ text \<open>The type parameter \<open>T\<close> is not paramterized by the quant
        (*and Abstract_Domain\<^sub>L (*TODO*)*)
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>g x y. \<forall>i\<in>I. g (x i) (y i))\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> I = J \<Longrightarrow> Functional_Transformation_Functor (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) T U (\<lambda>x. x ` I) (\<lambda>_. UNIV) (\<lambda>_ P x. \<forall>i\<in>I. P (x i)) (\<lambda>f _. (o) f)\<close>
-       and Monoidal_Sep_Functor
+       and Sep_Functor_1
        and Functionality
        and Semimodule_NonDistr
        and Closed_Semimodule_Zero
@@ -1482,7 +1482,7 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functionality
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
-       and \<open>homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>) \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
+       and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
        and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
                             still too hard for our guesser to infer \<open>homo_mul_carrier f\<close>\<close>
        and Abstraction_to_Raw
@@ -1511,10 +1511,9 @@ text \<open>The following rule is more general than \<open>\<phi>Fun f \<Zcomp> 
 declare [[\<phi>trace_reasoning = 2]]
 
 lemma \<phi>Fun'_Separation_Homo\<^sub>I[\<phi>reason 1000]:
-  \<open> homo_sep \<psi> \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
+  \<open> homo_sep \<psi>
 \<Longrightarrow> closed_homo_sep \<psi> \<and>\<^sub>\<r> Dx = UNIV \<or>\<^sub>c\<^sub>u\<^sub>t
-    Separation_Disj\<^sub>\<phi> \<psi> Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
-    TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> \<psi>)
+    Separation_Disj\<^sub>\<phi> \<psi> Dx U T
 \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U Dx (\<lambda>x. x) \<close>
   unfolding Separation_Homo\<^sub>I_def Transformation_def Object_Sep_Homo\<^sub>I_def
             Separation_Disj\<^sub>\<phi>_def Separation_Disj_def closed_homo_sep_def
@@ -1760,12 +1759,11 @@ declare [[\<phi>trace_reasoning = 0 ]]
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and Abstraction_to_Raw
-       and \<open> homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
+       and \<open> homo_sep (scalar_mult \<psi> s)
          \<Longrightarrow> closed_homo_sep (scalar_mult \<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t
-             Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T \<or>\<^sub>c\<^sub>u\<^sub>t
-             TRACE_FAIL TEXT(\<open>Fail to derive the separation homomorphism of\<close> (\<psi> s))
+             Separation_Disj\<^sub>\<phi> (scalar_mult \<psi> s) Dx U T
          \<Longrightarrow> Separation_Homo\<^sub>I (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U Dx (\<lambda>x. x)\<close>
-       and \<open> homo_sep (\<psi> s) \<or>\<^sub>c\<^sub>u\<^sub>t TRACE_FAIL TEXT(\<open>Fail to derive \<close>)
+       and \<open> homo_sep (\<psi> s)
          \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) (\<phi>ScalarMul \<psi> s) T U (\<lambda>x. x) \<close>
        and \<open> homo_mul_carrier (f s) \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (\<s>\<c>\<a>\<l>\<a>\<r>[f] s \<Zcomp> U) P \<close>
        and \<phi>Fun'.Comm
@@ -2103,7 +2101,7 @@ declare [[\<phi>trace_reasoning = 0]]
 \<phi>type_def List  :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List T) = (x \<Ztypecolon> T\<heavy_comma> l \<Ztypecolon> List T)\<close>
-  deriving (*Identity_Elements*) Monoidal_Sep_Functor
+  deriving (*Identity_Elements*) Sep_Functor_1
        and Functionality
        and \<open> homo_one \<delta>
           \<Longrightarrow> closed_homo_sep \<delta>
@@ -2160,7 +2158,7 @@ term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Ele
 
        (*and \<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 List List List (+\<^sub>\<phi>) (+\<^sub>\<phi>) T U (\<lambda>x. Ball (set x) isl \<or> (\<forall>b\<in>set x. \<not> isl b))
                             (embedded_func (\<lambda>x. if Ball (set x) isl then Inl (map projl x) else Inr (map projr x)) (list_all (\<lambda>_. True)))\<close>*)
-(*Monoidal_Sep_Functor*)
+(*Sep_Functor_1*)
        (*and Trivial_\<Sigma>*)
        (*and SE_Trim_Empty*)
 
@@ -2185,7 +2183,7 @@ thm List.functional_transformation
 \<phi>type_def List3 :: \<open>(fiction,'a) \<phi> \<Rightarrow> (fiction, 'a list list) \<phi>\<close>
   where \<open>([] \<Ztypecolon> List3 T) = Void\<close>
       | \<open>(x # l \<Ztypecolon> List3 T) = (x \<Ztypecolon> List T\<heavy_comma> l \<Ztypecolon> List3 T)\<close>
-  deriving Monoidal_Sep_Functor
+  deriving Sep_Functor_1
        and Functionality
        (*and SE_Trim_Empty*)
 
@@ -2228,7 +2226,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
-  deriving Monoidal_Sep_Functor
+  deriving Sep_Functor_1
        and Functionality
        and Abstraction_to_Raw
        and Commutativity_Deriver
@@ -2274,7 +2272,7 @@ declare [[\<phi>trace_reasoning = 0]]
              
 \<phi>type_def \<phi>MapAt_L :: \<open>'key list \<Rightarrow> ('key list \<Rightarrow> 'v::one, 'x) \<phi> \<Rightarrow> ('key list \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>\<^sub>@" 75)
   where \<open>\<phi>MapAt_L k T = (\<s>\<c>\<a>\<l>\<a>\<r>[push_map] k \<Zcomp> T)\<close>
-  deriving Monoidal_Sep_Functor
+  deriving Sep_Functor_1
        and Functionality
        and Semimodule_NonDistr_no0
        and Abstraction_to_Raw
@@ -2332,7 +2330,7 @@ text \<open>TODO: Perhaps we need a class for all homomorphic-morphism-based \<p
 
 \<phi>type_def \<phi>Share :: \<open>rat \<Rightarrow> ('c::share,'a) \<phi> \<Rightarrow> ('c, 'a) \<phi>\<close> (infixr "\<odiv>" 75)
   where \<open>\<phi>Share n T = (\<s>\<c>\<a>\<l>\<a>\<r>[share] n \<Zcomp> T \<phi>\<s>\<u>\<b>\<j> 0 < n)\<close>
-  deriving Monoidal_Sep_Functor
+  deriving Sep_Functor_1
        and Functionality
        (*and SE_Trim_Empty*)
        and Semimodule_no0
@@ -2509,7 +2507,7 @@ section \<open>Semantics Related\<close>
 
 subsection \<open>Value\<close>
 
-subsubsection \<open>Syntax to fetch the latest n-th Val\<close>
+subsubsection \<open>Syntax to fetch the latest n-th Val\<close> (*but definitely this title should be moved somewhere*)
 
 (*where I moved it? the function seems still useful*)
 
@@ -2551,7 +2549,7 @@ end\<close> *)
 subsection \<open>Semantic Type Annotation\<close>
 
 paragraph \<open>Annotation for Single One\<close>
-(* TODO!
+(* TODO: move somewhere, it is semantics-related
 definition Of_Type :: \<open>(VAL,'a) \<phi> \<Rightarrow> TY \<Rightarrow> (VAL,'a) \<phi>\<close> (infix "<of-type>" 23)
   where \<open>(T <of-type> TY) = (\<lambda>x. (x \<Ztypecolon> T) \<inter> Well_Type TY)\<close>
 
@@ -2665,18 +2663,6 @@ term \<open>Object_Equiv (\<phi>sep_homo T \<circle>) (\<lambda>_ _. True)\<clos
 section \<open>Permission \& Share\<close>
 
 subsection \<open>Share \& Option\<close>
-
-(* replaced by domainoid
-subsubsection \<open>Definition of Properties\<close>
-
-definition \<phi>Sep_Disj :: \<open>('a::sep_magma,'b1) \<phi> \<Rightarrow> ('a,'b2) \<phi> \<Rightarrow> bool\<close>
-  where \<open>\<phi>Sep_Disj T U \<longleftrightarrow> (\<forall>x y u v. u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (y \<Ztypecolon> U) \<longrightarrow> (\<exists>u' v'. u' \<Turnstile> (x \<Ztypecolon> T) \<and> v' \<Turnstile> (y \<Ztypecolon> U) \<and> u' ## v'))\<close>
-
-definition \<phi>Sep_Disj_Inj :: \<open>'a::share_nun_semimodule set \<Rightarrow> bool\<close>
-  where \<open>\<phi>Sep_Disj_Inj S \<longleftrightarrow> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<and> u ## v \<longrightarrow> u = v) \<and> (\<forall>u. u \<Turnstile> S \<longrightarrow> u ## u)\<close>
-
-subsubsection \<open>The \<phi>-Type of Separation Homomorphism\<close>
-*)
 
 
 thm share_orthogonal_homo_to_share
@@ -2801,15 +2787,20 @@ thm share_orthogonal_homo.axioms(1)
 
 subsection \<open>To-Share\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
 
-\<phi>type_def To_Share
+\<phi>type_def To_Share \<comment> \<open>Injection from partial map to permissioned partial map\<close>
   where \<open>To_Share T \<equiv> (to_share \<Zcomp>\<^sub>f T)\<close>
-  deriving (*Basic
-       and Functional_Transformation_Functor
-       and Identity_Element
-       and*) Separation_Homo\<^sub>E
+  deriving Sep_Functor_1
+       and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U (\<lambda>x. x) \<close>
+       and \<open>Separation_Disj\<^sub>\<phi> to_share Dx U T
+        \<Longrightarrow> Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U Dx (\<lambda>x. x) \<close>
 
+term \<open>Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share Ta U {(x, y). True} (\<lambda>x. x) \<close>
+term \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share Ta U (\<lambda>x. x) \<close>
+
+term \<open>To_Share :: ('c option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>\<close>
+term \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share Ta U (\<lambda>x. x) \<close>
 
 subsubsection \<open>\<phi>-Some\<close>
 

@@ -501,6 +501,12 @@ lemma [\<phi>reason %algb_fun_upd_1_comp]:
   by simp
 
 
+subsubsection \<open>With Discrete Algebra\<close>
+
+declare homo_sep_discrete [\<phi>reason %algb_cut+30]
+        closed_homo_sep_discrete [\<phi>reason %algb_cut+30]
+
+
 subsubsection \<open>Push map\<close>
 
 declare homo_mul_carrier_push_map [\<phi>reason %algb_cut]
@@ -577,6 +583,30 @@ declare module_scalar_assoc_share0   [\<phi>reason %algb_cut, assertion_simps]
         module_scalar_identity_share [\<phi>reason %algb_cut, assertion_simps]
         module_S_distr_share         [\<phi>reason %algb_cut+10]
         module_S_distr_share_0       [\<phi>reason %algb_cut]
+
+subsubsection \<open>Map Option\<close>
+
+declare homo_one_map_option [\<phi>reason %algb_cut]
+        homo_mul_carrier_map_option [\<phi>reason %algb_cut]
+        closed_homo_sep_map_option [\<phi>reason %algb_cut]
+        homo_sep_map_option [\<phi>reason %algb_cut]
+        homo_share_map_option [\<phi>reason %algb_cut]
+
+subsubsection \<open>Share\<close>
+
+lemma [\<phi>reason %algb_cut]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> 0 < n
+\<Longrightarrow> homo_mul_carrier (Share n) \<close>
+  unfolding homo_mul_carrier_def Premise_def
+  by clarsimp
+
+thm homo_sep_disj_discrete
+
+text \<open>\<open>homo_sep_disj (Share n :: 'a::discrete_semigroup \<Rightarrow> 'a share)\<close> and
+      \<open>homo_sep_mult (Share n :: 'a::discrete_semigroup \<Rightarrow> 'a share)\<close> are covered by \<open>homo_sep_disj_discrete\<close>\<close>
+
+thm homo_sep_disj_discrete
+
 
 
 subsubsection \<open>Annotation of Scalar Multiplication\<close>

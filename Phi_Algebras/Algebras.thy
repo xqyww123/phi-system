@@ -60,9 +60,11 @@ locale homo_mult =
   \<open>homo_mult \<phi> \<longleftrightarrow> (\<phi> 1 = 1) \<and> (\<forall> x y. \<phi> (x * y) = \<phi> x * \<phi> y)\<close>
   unfolding homo_mult_def homo_mult_axioms_def homo_one_def .. *)
 
-locale mult_strip_011 =
+(*
+locale mult_strip_011 = \<comment> \<open>it is an orthogonal property\<close>
   fixes \<psi> :: " 'a::times \<Rightarrow> 'b::times "
   assumes mult_strip_011: \<open>a * \<psi> b = \<psi> c \<longleftrightarrow> (\<exists>a'. a = \<psi> a' \<and> a' * b = c)\<close>
+*)
 
 locale homo_add =
   fixes \<phi> :: \<open> 'a::plus \<Rightarrow> 'b::plus \<close>
@@ -609,7 +611,7 @@ text \<open>
   From this domain of specification, we can check the separatablity by checking the domains are disjoint.
 
   The reasoning procedure is given by \<open>\<phi>Sep_Disj\<close> later.
-  \<close>
+\<close>
 
 locale closed_homo_sep = homo_sep + closed_homo_sep_disj
 
@@ -1551,40 +1553,40 @@ end
 
 subsubsection \<open>Homomorphism\<close>
 
-lemma homo_one_map_option[simp, locale_intro]:
+lemma homo_one_map_option[simp]:
   \<open>homo_one (map_option f)\<close>
   unfolding homo_one_def by simp
 
-lemma simple_homo_mul_map_option[simp, locale_intro]:
+lemma simple_homo_mul_map_option[simp]:
   \<open>simple_homo_mul (map_option f) UNIV\<close>
   unfolding simple_homo_mul_def
   by simp
 
-lemma homo_mul_carrier_map_option[simp, locale_intro]:
+lemma homo_mul_carrier_map_option[simp]:
   \<open> homo_mul_carrier f
 \<Longrightarrow> homo_mul_carrier (map_option f)\<close>
   unfolding homo_mul_carrier_def
   by (clarsimp simp add: split_option_all)
 
-lemma homo_sep_disj_map_option[simp, locale_intro]:
+lemma homo_sep_disj_map_option[simp]:
   \<open> homo_sep_disj f
 \<Longrightarrow> homo_sep_disj (map_option f) \<close>
   unfolding homo_sep_disj_def
   by (clarsimp simp add: split_option_all)
 
-lemma split_option_all_map_option[simp, locale_intro]:
+lemma closed_homo_sep_disj_map_option[simp]:
   \<open> closed_homo_sep_disj f
 \<Longrightarrow> closed_homo_sep_disj (map_option f) \<close>
   unfolding closed_homo_sep_disj_def
   by (clarsimp simp add: split_option_all)
 
-lemma homo_sep_mult_map_option[simp, locale_intro]:
+lemma homo_sep_mult_map_option[simp]:
   \<open> homo_sep_mult f
 \<Longrightarrow> homo_sep_mult (map_option f)  \<close>
   unfolding homo_sep_mult_def
   by (clarsimp simp add: split_option_all)
 
-lemma homo_sep_map_option[simp, locale_intro]:
+lemma homo_sep_map_option[simp]:
   \<open> homo_sep f
 \<Longrightarrow> homo_sep (map_option f)  \<close>
   unfolding homo_sep_def
@@ -2980,8 +2982,8 @@ proof
   fix xx yy aa bb cc :: \<open>'a\<close>
   fix a' a2 :: \<open>'a share option\<close>
   fix n :: rat
-  show \<open>aa ## bb \<longrightarrow> Share 1 aa ## Share 1 bb\<close> by simp
-  show \<open>xx ## yy \<Longrightarrow> Share 1 (xx * yy) = Share 1 xx * Share 1 yy\<close> by simp
+  show \<open>x ## y \<Longrightarrow> to_share (x * y) = to_share x * to_share y\<close> by (cases x; cases y; simp)
+  show \<open>a ## b \<longrightarrow> to_share a ## to_share b\<close> by simp
   show \<open>b \<in> Collect mul_carrier \<and> c \<in> Collect mul_carrier \<Longrightarrow>
         a' ## to_share b \<Longrightarrow>
        (a' * to_share b = to_share c) = (\<exists>a. a' = to_share a \<and> a * b = c \<and> a ## b \<and> a \<in> Collect mul_carrier)\<close>

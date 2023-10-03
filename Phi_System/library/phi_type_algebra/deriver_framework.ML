@@ -948,11 +948,6 @@ fun Guess_Framework mk_goal_term_and_parse_result (phi0 : phi_type) ctxt =
             val (inst'2, ctxt) = Variable.import_inst true (prop :: ants) ctxt
             val (prop :: ants) = map (Term_Subst.instantiate inst'2) (prop :: ants)
             val params = map (Option.map (Term_Subst.instantiate inst'2)) params
-            val _ = Phi_Reasoner.info_pretty ctxt 2 (fn () => let open Pretty in chunks [
-                      para "Guess the property:",
-                      block [str "Antecedents: ", chunks (map (Syntax.pretty_term ctxt) ants)],
-                      block [str "Property: ", Syntax.pretty_term ctxt prop]
-                    ] end)
          in Seq.single (ants, prop, params,
                         phi |> instantiate_phi (inst0, Vars.empty)
                             |> instantiate_phi (ty_refine, Vars.empty)
@@ -1201,6 +1196,14 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                in Seq.single (Logic.strip_imp_prems H, Logic.strip_imp_concl H, parameters, phi, ctxt)
               end
            | _ => guess_property phi0 ctxt0
+               |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
+                    let val _ = Phi_Reasoner.info_pretty ctxt 2 (fn () => let open Pretty in chunks [
+                                    para "Guess the property",
+                                    block [str "Antecedents: ", chunks (map (Syntax.pretty_term ctxt) ants)],
+                                    block [str "Property: ", Syntax.pretty_term ctxt property]
+                              ] end)
+                     in (ants, property, parameters, phi, ctxt)
+                    end)
             (* |> Seq.map (fn (ants, property, parameters, phi, ctxt) =>
                     let val (rev_params_tys, x_ty, model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
                         fun recover_assertion _ [] [] = #term phi 

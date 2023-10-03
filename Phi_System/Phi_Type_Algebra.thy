@@ -4481,7 +4481,7 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
      \<open>x \<Ztypecolon> F(T) \<^emph> F(U) \<longrightarrow> z x \<Ztypecolon> F(T \<^emph> U)\<close> and \<open>y \<Ztypecolon> F(T \<^emph> U) \<longrightarrow> u y \<Ztypecolon> F(T) \<^emph> F(U)\<close> for any \<open>x,y\<close>, and it degenerates
      to the usual commutativity when \<open>z, u = \<lambda>x. x\<close>.\<close>
 
-\<phi>property_deriver Monoidal_Sep_Functor 131
+\<phi>property_deriver Sep_Functor_1 131
   requires Sep_Functor
        and Identity_Elements
 
