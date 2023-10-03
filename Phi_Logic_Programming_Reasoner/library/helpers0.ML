@@ -370,8 +370,15 @@ fun mk_HO_ins terms (escape,ins0) =
     fun sift (X as _ $ _) set =
          (case count 0 X
             of (N, SOME v) =>
-                let fun visit (set,i) (X $ A) =
-                          if Term.loose_bvar (A, 0)
+                let fun subst (redex,residue) tm =
+                          if redex aconv tm then residue
+                          else (case tm of A $ B => subst (redex,residue) A $ subst (redex,residue) B
+                                         | Abs (N,Ty,X) => Abs (N, Ty, subst (Term.incr_boundvars 1 redex, Term.incr_boundvars 1 residue) X)
+                                         | X => X)
+                    fun chk_dup A (X $ A') = chk_dup (subst (A', Term.dummy) A) X
+                      | chk_dup A _ = Term.is_open A
+                    fun visit (set,i) (X $ A) =
+                          if Term.is_open A andalso chk_dup A X
                           then visit (sift A (insert eq' (v,N-i) set), i+1) X
                           else visit (sift A set, i+1) X
                       | visit (set,_) _ = set
@@ -407,7 +414,7 @@ fun mk_HO_ins terms (escape,ins0) =
           else let (*make the residue of the variable trimming upto the minimally number of
                      occurred arguments, leaving those argument containing loose bound untouched.*)
                    fun mk_term targs bs 0 T =
-                          fold (fn b => fn X => X $ b) bs
+                          fold_rev (fn b => fn X => X $ b) bs
                             (Var (fst v, fold (fn a => fn T => \<^Type>\<open>fun a T\<close>) targs T))
                      | mk_term targs bs i \<^Type>\<open>fun a T\<close> =
                           if member (op =) set (v,n-i)

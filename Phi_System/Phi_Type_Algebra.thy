@@ -5390,19 +5390,9 @@ lemma [\<phi>reason %identity_element_cut]:
   unfolding Has_Bubbling_def .
 
 lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>I T D P
-\<Longrightarrow> Identity_Elements\<^sub>I (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D P \<close>
-  unfolding Bubbling_def .
-
-lemma [\<phi>reason %identity_element_cut]:
   \<open> Identity_Elements\<^sub>E T D
 \<Longrightarrow> Identity_Elements\<^sub>E (\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D \<close>
   unfolding Has_Bubbling_def .
-
-lemma [\<phi>reason %identity_element_cut]:
-  \<open> Identity_Elements\<^sub>E T D
-\<Longrightarrow> Identity_Elements\<^sub>E (\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g> T) D \<close>
-  unfolding Bubbling_def .
 
 
 subparagraph \<open>Simpset adding \<open>\<h>\<a>\<s>-\<b>\<u>\<b>\<b>\<l>\<i>\<n>\<g>\<close>\<close>
