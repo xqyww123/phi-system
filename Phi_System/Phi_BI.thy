@@ -198,6 +198,24 @@ lemma [\<phi>reason 1000]:
   unfolding Action_Tag_def Premise_def
   by blast
 
+paragraph \<open>Sum Type\<close>
+
+lemma [\<phi>reason 1020]:
+  \<open> A a \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> case_sum A B (Inl a) \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>
+  by simp
+
+lemma [\<phi>reason 1020]:
+  \<open> B b \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
+\<Longrightarrow> case_sum A B (Inr b) \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> (\<And>a. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inl a \<Longrightarrow> A a \<i>\<m>\<p>\<l>\<i>\<e>\<s> P a)
+\<Longrightarrow> (\<And>b. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> x = Inr b \<Longrightarrow> B b \<i>\<m>\<p>\<l>\<i>\<e>\<s> Q b)
+\<Longrightarrow> case_sum A B x \<i>\<m>\<p>\<l>\<i>\<e>\<s> case_sum P Q x \<close>
+  by (cases x; simp)
+
 subsubsection \<open>Inhabitance of \<phi>-Type\<close>
 
 lemma typing_inhabited: "p \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> Inhabited (x \<Ztypecolon> T)"

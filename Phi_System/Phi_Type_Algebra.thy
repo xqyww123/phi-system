@@ -5618,6 +5618,9 @@ lemma pred_sum_eq_case_sum[\<phi>constraint_expansion]:
   \<open>pred_sum P Q x \<longleftrightarrow> case_sum P Q x\<close>
   by (cases x; simp)
 
+lemma collapse_case_sum[simp]:
+  \<open>(case x of Inl x \<Rightarrow> Inl x | Inr x \<Rightarrow> Inr x) = x\<close>
+  by (cases x; simp)
 
 
 subsubsection \<open>Set\<close>
