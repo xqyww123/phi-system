@@ -2605,18 +2605,6 @@ lemma \<phi>Prod_\<phi>None:
   unfolding BI_eq_iff
   by (simp_all add: set_mult_expn)
 
-subsubsection \<open>Basic Properties\<close>
-
-lemma [\<phi>reason %abstract_domain]:
-  \<open>Abstract_Domain \<circle> (\<lambda>x. True)\<close>
-  unfolding Abstract_Domain_def Action_Tag_def
-  by clarsimp
-
-lemma [\<phi>reason %abstract_domain]:
-  \<open>Abstract_Domain\<^sub>L \<circle> (\<lambda>x. True)\<close>
-  unfolding Abstract_Domain\<^sub>L_def Action_Tag_def Inhabited_def
-  by clarsimp
-
 
 subsubsection \<open>Transformation Rules\<close>
 
@@ -2677,7 +2665,7 @@ lemma [\<phi>reason 1000]:
   by (cases x; clarsimp)
 *)
 
-subsection \<open>Insertion into Unital Algebra\<close>
+subsection \<open>Injection into Unital Algebra\<close>
 
 definition \<phi>Some :: \<open>('v, 'x) \<phi> \<Rightarrow> ('v option, 'x) \<phi>\<close> ("\<black_circle> _" [91] 90)
   where \<open>\<black_circle> T = (\<lambda>x. { Some v |v. v \<in> (x \<Ztypecolon> T) })\<close>
@@ -2697,20 +2685,6 @@ lemma \<phi>Some_eq_term_strip:
   \<open> (x \<Ztypecolon> \<black_circle> T) = (y \<Ztypecolon> \<black_circle> U) \<equiv> (x \<Ztypecolon> T) = (y \<Ztypecolon> U) \<close>
   unfolding atomize_eq BI_eq_iff
   by clarsimp blast
-
-subsubsection \<open>Basic Rules\<close>
-
-lemma [\<phi>reason %abstract_domain]:
-  \<open> Abstract_Domain T P
-\<Longrightarrow> Abstract_Domain (\<black_circle> T) P \<close>
-  unfolding Abstract_Domain_def Inhabited_def
-  by clarsimp
-
-lemma [\<phi>reason %abstract_domain]:
-  \<open> Abstract_Domain\<^sub>L T P
-\<Longrightarrow> Abstract_Domain\<^sub>L (\<black_circle> T) P \<close>
-  unfolding Abstract_Domain\<^sub>L_def Inhabited_def
-  by clarsimp
 
 
 subsubsection \<open>Transformation Rules\<close>
@@ -3188,16 +3162,6 @@ lemma Identity_Element\<^sub>E_empty[\<phi>reason %identity_element_cut]:
 lemma Identity_Element\<^sub>I_empty[\<phi>reason %identity_element_cut]:
   \<open>Identity_Element\<^sub>I (any \<Ztypecolon> \<circle>) True\<close>
   unfolding Identity_Element\<^sub>I_def by simp
-
-lemma [\<phi>reason %identity_element_cut]:
-  \<open>Identity_Elements\<^sub>E \<circle> (\<lambda>_. True)\<close>
-  unfolding Identity_Elements\<^sub>E_def Identity_Element\<^sub>E_def
-  by simp
-
-lemma [\<phi>reason %identity_element_cut]:
-  \<open>Identity_Elements\<^sub>I \<circle> (\<lambda>_. True) (\<lambda>_. True)\<close>
-  unfolding Identity_Elements\<^sub>I_def Identity_Element\<^sub>I_def
-  by simp
 
 lemma [\<phi>reason %identity_element_cut for \<open>Identity_Element\<^sub>I {_} _\<close> ]:
   \<open>Identity_Element\<^sub>I {1} True\<close>
@@ -3857,11 +3821,7 @@ lemma [\<phi>reason %object_equiv_cut]:
   unfolding Object_Equiv_def Transformation_def
   by simp
 
-lemma [\<phi>reason %object_equiv_cut]:
-  \<open> Object_Equiv T eq
-\<Longrightarrow> Object_Equiv (\<black_circle> T) eq \<close>
-  unfolding Object_Equiv_def Transformation_def
-  by simp blast
+
 
 lemma [\<phi>reason %object_equiv_cut]:
   \<open> (\<And>a. Object_Equiv (\<lambda>x. S x a) (R a))

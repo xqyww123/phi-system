@@ -240,11 +240,6 @@ lemma [\<phi>reason %\<phi>functionality]:
   by clarsimp
 
 lemma [\<phi>reason %\<phi>functionality]:
-  \<open>Functionality \<phi>None (\<lambda>_. True)\<close>
-  unfolding Functionality_def
-  by clarsimp
-
-lemma [\<phi>reason %\<phi>functionality]:
   \<open> Is_Functional 1 \<close>
   unfolding Is_Functional_def
   by simp
@@ -506,12 +501,6 @@ lemma [\<phi>reason 1000]:
 
 lemma [\<phi>reason 1000]:
   \<open>Carrier_Set (\<circle> :: ('c::sep_carrier_1, unit) \<phi>) (\<lambda>_. True)\<close>
-  unfolding Carrier_Set_def Within_Carrier_Set_def
-  by clarsimp
-
-lemma [\<phi>reason 1000]:
-  \<open> Carrier_Set T S
-\<Longrightarrow> Carrier_Set (\<black_circle> T) S\<close>
   unfolding Carrier_Set_def Within_Carrier_Set_def
   by clarsimp
 

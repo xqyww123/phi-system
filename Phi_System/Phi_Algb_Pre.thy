@@ -409,7 +409,7 @@ lemma [\<phi>reason default %algb_falling_lattice]:
   unfolding constant_1_def Premise_def
   by simp
 
-subsection \<open>Preset Properties for Specific Elements\<close>
+subsection \<open>Instances of the Algebraic Properties\<close>
 
 subsubsection \<open>Identity Function\<close>
 
@@ -591,6 +591,24 @@ declare homo_one_map_option [\<phi>reason %algb_cut]
         closed_homo_sep_map_option [\<phi>reason %algb_cut]
         homo_sep_map_option [\<phi>reason %algb_cut]
         homo_share_map_option [\<phi>reason %algb_cut]
+
+subsubsection \<open>Some\<close>
+
+lemma homo_mul_carrier_Some[simp, \<phi>reason %algb_cut]:
+  \<open> homo_mul_carrier Some \<close>
+  unfolding homo_mul_carrier_def
+  by simp
+
+lemma homo_sep_Some[simp, \<phi>reason %algb_cut]:
+  \<open> homo_sep Some \<close>
+  unfolding homo_sep_def homo_sep_mult_def homo_sep_disj_def
+  by simp
+
+lemma closed_homo_sep_Some[simp, \<phi>reason %algb_cut]:
+  \<open> closed_homo_sep Some \<close>
+  unfolding closed_homo_sep_def closed_homo_sep_disj_def
+  by simp
+
 
 subsubsection \<open>Share\<close>
 

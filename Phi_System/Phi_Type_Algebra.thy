@@ -1345,10 +1345,7 @@ term \<open>\<black_circle> X\<close>
 
 ML \<open>\<^term>\<open>\<phi>Some\<close>\<close>
 
-(*
-ML \<open>Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^term>\<open>\<phi>Some\<close>, @{thm' \<phi>Some_def}),
-                               \<^here>)\<close>
-*)
+
 
 
 section \<open>Applications of the Algebraic Properties in Reasoning\<close>

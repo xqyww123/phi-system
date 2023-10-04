@@ -22,6 +22,32 @@ This is a planning feature has not been implemented\<close>
 
 syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_\<phi>")
 
+subsection \<open>Embedding of Empty\<close>
+
+lemma \<phi>None_def': \<open> (x \<Ztypecolon> \<circle>) = (1 \<Ztypecolon> Itself) \<close>
+  by (simp add: BI_eq_iff)
+
+declare [[\<phi>trace_reasoning = 1]]
+
+setup \<open>Context.theory_map (
+  Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>None\<close>, Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
+                             \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+   #> snd )\<close>
+
+let_\<phi>type \<phi>None
+  deriving Basic
+       and Functionality
+       and Identity_Elements
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>None.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L \<circle> (\<lambda>x. True) \<close>),
+  (@{thm' \<phi>None.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain \<circle> (\<lambda>x. True) \<close>),
+  (@{thm' \<phi>None.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (\<circle> :: ('c::sep_carrier_1, unit) \<phi>) (\<lambda>x. True) \<close>),
+  (@{thm' \<phi>None.Functionality}, \<^pattern_prop>\<open> Functionality \<circle> (\<lambda>x. True) \<close>),
+  (@{thm' \<phi>None.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I \<circle> (\<lambda>x. True) (\<lambda>a. True)\<close>),
+  (@{thm' \<phi>None.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E \<circle> (\<lambda>x. True)\<close>),
+  (@{thm' \<phi>None.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv \<circle> (\<lambda>_ _. True) \<close>)
+]\<close>
 
 
 subsection \<open>Func\<close>
@@ -1595,6 +1621,42 @@ lemma
 \<Longrightarrow> Domainoid_Homo\<^sub>U \<delta> (\<psi> \<Zcomp> T) dm' \<close>
 *)
 
+subsection \<open>Injection into Unital Algebra\<close>
+
+lemma \<phi>Some_def': \<open> \<black_circle> T = (Some \<Zcomp>\<^sub>f T) \<close>
+  by (rule \<phi>Type_eqI_BI; simp add: BI_eq_iff)
+
+declare [[\<phi>trace_reasoning = 0]]
+
+setup \<open>Context.theory_map (
+  Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>Some\<close>, Thm.transfer \<^theory> @{thm' \<phi>Some_def'}),
+                             \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+   #> snd )\<close>
+  \<comment> \<open>Apply derivers over bootstrap \<phi>-types\<close>
+
+let_\<phi>type \<phi>Some
+  deriving Sep_Functor
+       and Carrier_Set
+       and Functionality
+       and \<open>Identity_Elements\<^sub>I (\<black_circle> T) (\<lambda>_. False) (\<lambda>_. False)\<close>
+       and \<open>Identity_Elements\<^sub>E (\<black_circle> T) (\<lambda>_. False)\<close>
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>Some.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (\<black_circle> ?T) ?P  \<close>),
+  (@{thm' \<phi>Some.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (\<black_circle> ?T) ?P  \<close>),
+  (@{thm' \<phi>Some.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set (\<black_circle> ?T) ?P  \<close>),
+  (@{thm' \<phi>Some.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (\<black_circle> ?T) ?P   \<close>),
+  (@{thm' \<phi>Some.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I (\<black_circle> ?T) (\<lambda>_. False) (\<lambda>_. False)  \<close>),
+  (@{thm' \<phi>Some.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (\<black_circle> ?T) (\<lambda>_. False) \<close>),
+  (@{thm' \<phi>Some.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor \<phi>Some \<phi>Some ?T ?U (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>g. g) \<close>),
+  (@{thm' \<phi>Some.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor \<phi>Some \<phi>Some ?T ?U (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>f P. P) (\<lambda>f P. f) \<close>),
+  (@{thm' \<phi>Some.Separation_Homo\<^sub>I}, \<^pattern_prop>\<open> Separation_Homo\<^sub>I \<phi>Some \<phi>Some \<phi>Some ?Ta ?U UNIV (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>Some.Separation_Homo\<^sub>E}, \<^pattern_prop>\<open> Separation_Homo\<^sub>E \<phi>Some \<phi>Some \<phi>Some ?Ta ?U (\<lambda>x. x) \<close>),
+  (@{thm' \<phi>Some.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (\<black_circle> ?T) ?eq  \<close>)
+]\<close>
+
+declare \<phi>Some.expansion[\<phi>expns del] \<comment> \<open>removing duplicates\<close>
+
 
 subsection \<open>Domainoid\<close>
 
@@ -2811,6 +2873,18 @@ abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
 
 
 paragraph \<open>Implication \& Action Rules\<close>
+
+
+
+
+thm \<phi>Some.intro
+
+ML \<open>Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^term>\<open>\<phi>Some\<close>, @{thm' \<phi>Some_def'}),
+                               \<^here>, Phi_Type_Algebra.Derivings.empty, [])\<close>
+
+
+
+
 
 lemma \<phi>Some_cast[\<phi>reason 2000]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
