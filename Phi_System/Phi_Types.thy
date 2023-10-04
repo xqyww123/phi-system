@@ -2795,35 +2795,19 @@ declare [[\<phi>trace_reasoning = 0]]
        and \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U (\<lambda>x. x) \<close>
        and \<open>Separation_Disj\<^sub>\<phi> to_share Dx U T
         \<Longrightarrow> Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share T U Dx (\<lambda>x. x) \<close>
-
-term \<open>Separation_Homo\<^sub>I (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share Ta U {(x, y). True} (\<lambda>x. x) \<close>
-term \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share Ta U (\<lambda>x. x) \<close>
-
-term \<open>To_Share :: ('c option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>\<close>
-term \<open>Separation_Homo\<^sub>E (To_Share :: ('c::discrete_semigroup option,'a) \<phi> \<Rightarrow> ('c share option,'a) \<phi>) To_Share To_Share Ta U (\<lambda>x. x) \<close>
-
-subsubsection \<open>\<phi>-Some\<close>
+       and Functionality
+       and Carrier_Set
 
 
+subsubsection \<open>Syntax\<close>
 
 abbreviation \<phi>Share_Some ("\<fish_eye> _" [91] 90)
-  where \<open>\<phi>Share_Some T \<equiv> \<phi>insertion to_share UNIV (\<phi>Some T)\<close>
+  where \<open>\<phi>Share_Some T \<equiv> To_Share (\<phi>Some T)\<close>
 
 abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
-  where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> \<phi>insertion to_share UNIV (\<phi>Some T)\<close>
+  where \<open>\<phi>Share_Some_L T \<equiv> [] \<^bold>\<rightarrow> To_Share (\<phi>Some T)\<close>
 
 \<phi>adhoc_overloading \<phi>coercion \<phi>Some \<phi>Share_Some \<phi>Share_Some_L
-
-
-
-lemma \<phi>Some_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi>Some T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
-\<Longrightarrow> Inhabited (x \<Ztypecolon> \<phi>Some T) \<longrightarrow> C \<close>
-  unfolding Inhabited_def by (simp add: \<phi>Some_expn)
 
 
 paragraph \<open>Implication \& Action Rules\<close>
@@ -2833,36 +2817,11 @@ lemma \<phi>Some_cast[\<phi>reason 2000]:
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P\<close>
   unfolding Transformation_def by (clarsimp simp add: \<phi>expns)
 
-lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act\<close>
-  unfolding Action_Tag_def using \<phi>Some_cast .
-
-lemma [\<phi>reason 1070]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Z \<close>
-  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
-
-lemma [\<phi>reason 1100]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to (\<black_circle> Z) \<close>
-  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns)
-
 (* TODO:: fix me!!!
 lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> Itself \<w>\<i>\<t>\<h> P @action to Itself
 \<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Some x' \<Ztypecolon> Itself \<w>\<i>\<t>\<h> P @action to Itself \<close>
   unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns) *)
-
-lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Z) \<close>
-  unfolding Action_Tag_def using \<phi>Some_cast .
-
-lemma [\<phi>reason 1100]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> \<black_circle> Z) \<close>
-  unfolding Action_Tag_def using \<phi>Some_cast .
 
 
 lemma [simp]:

@@ -2700,17 +2700,18 @@ lemma \<phi>Some_eq_term_strip:
 
 subsubsection \<open>Basic Rules\<close>
 
-lemma [\<phi>reason %extract_pure]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P \<close>
-  unfolding Action_Tag_def Inhabited_def
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain T P
+\<Longrightarrow> Abstract_Domain (\<black_circle> T) P \<close>
+  unfolding Abstract_Domain_def Inhabited_def
   by clarsimp
 
-lemma [\<phi>reason %extract_pure]:
-  \<open> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> T
-\<Longrightarrow> P \<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s> x \<Ztypecolon> \<black_circle> T \<close>
-  unfolding Action_Tag_def Inhabited_def
+lemma [\<phi>reason %abstract_domain]:
+  \<open> Abstract_Domain\<^sub>L T P
+\<Longrightarrow> Abstract_Domain\<^sub>L (\<black_circle> T) P \<close>
+  unfolding Abstract_Domain\<^sub>L_def Inhabited_def
   by clarsimp
+
 
 subsubsection \<open>Transformation Rules\<close>
 
