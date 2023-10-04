@@ -67,7 +67,7 @@ include PHI_HELP
 
   val empty_ctxt : Proof.context
 
-  val generic_theory_mapping : (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
+  val generic_theory_mapping : Position.T -> (morphism -> Context.generic -> Context.generic) -> generic_theory -> generic_theory
 
   (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
   The stuffs here improve it, but they still require that loose bounds do not occur in the redex*)
@@ -286,9 +286,9 @@ fun debug_RS ctxt tha thb =
 
 val empty_ctxt = Proof_Context.init_global Pure_Syn.bootstrap_thy
 
-fun generic_theory_mapping f =
+fun generic_theory_mapping pos f =
   Context.mapping (Context.theory_map (f Morphism.identity))
-                  (Local_Theory.declaration {syntax=false,pervasive=false, pos=Position.none} f)
+                  (Local_Theory.declaration {syntax=false,pervasive=false, pos=pos} f)
 
 (*The system `Term.abstract_over` doesn't support abstraction over a body containing loose bounds.
   This version improves it, but it still requires that loose bounds do not occur in `v`*)

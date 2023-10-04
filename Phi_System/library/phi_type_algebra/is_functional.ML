@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val is_functional : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val is_functional : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 (*val solver__abst_domain : string -> solver*)
 
@@ -82,7 +82,7 @@ val guess_property = guess_property_like_abst_domain (
  end
 *)
 
-fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_is_functional (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Functionality\<close>, _) $ T $ _ => T )
 
       val ind_conv = default_ind_conv (
@@ -120,14 +120,14 @@ fun gen_is_functional (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                     @{thms' Is_Functional_premise_extraction Functionality_premise_extraction}) ctxt0*)
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_IsFunc_rule},
                                       [(K (SOME [0]), ind_conv, reasoning)], solver, simp)
-                                    phi0 (Option.map fst instruction) ctxt
+                                    phi0 (Option.map #1 instruction) ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> note_properties_s phi0 [(name, [rule])]
-        |> Phi_Help.generic_theory_mapping (fn m =>
+        |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_\<phi>functionality}
-                                                     (Option.mapPartial snd instruction))
+                                                     (Option.mapPartial #2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule])
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val open_all_abstraction : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val open_all_abstraction : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
@@ -170,17 +170,20 @@ fun chk_quantifier_place (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ 
       = \<^Const>\<open>Trueprop\<close> $ (H2 $ Abs (N, Ty, H $ X $ A))
   | chk_quantifier_place X = X
 
-fun gen_trans_to_raw_abst (_,name) instruction0 ctxt0 (phi0 : phi_type) thy =
-  let val instruction = Option.map (apfst (chk_quantifier_place
-            #> chk_abstract_object_quantified (
-            let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
-                  | target (\<^Const>\<open>Transformation _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ X $ T) $ _ $ _) =
-                        if Term.exists_subterm (fn x => x = X) T
-                        then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
-                        else SOME X
-             in target
-            end
-            ) ctxt0)) instruction0
+fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy =
+  let val instruction = Option.map (fn (a,b,_) =>
+           (chk_quantifier_place a
+              |> chk_abstract_object_quantified (
+                let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
+                      | target (\<^Const>\<open>Transformation _\<close> $ (\<^Const>\<open>\<phi>Type _ _\<close> $ X $ T) $ _ $ _) =
+                            if Term.exists_subterm (fn x => x = X) T
+                            then error "Fail to infer the implication when the \<phi>-type depends on its abstract object."
+                            else SOME X
+                 in target
+                end
+                ) ctxt0,
+            b)
+          ) instruction0
 
       fun parse_hint ctxt _ hint =
             let fun extract (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract X
@@ -256,13 +259,13 @@ fun gen_trans_to_raw_abst (_,name) instruction0 ctxt0 (phi0 : phi_type) thy =
                                       guess_property, @{thm' \<phi>TA_TrRA_rule},
                                       [(K (SOME [0]), ind_conv, reasoning)],
                                       solver, simp)
-                                    phi0 (Option.map fst instruction) ctxt0'
+                                    phi0 (Option.map #1 instruction) ctxt0'
    in case Seq.pull rules
    of SOME (rule, _) => thy
-        |> Phi_Help.generic_theory_mapping (fn m =>
+        |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %To_ToA_derived_to_raw}
-                                                     (Option.mapPartial snd instruction))
+                                                     (Option.mapPartial #2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule])
         |> note_properties_s phi0 [(name, [rule])]
         |> pair [rule]

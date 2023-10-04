@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val carrier_set : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val carrier_set : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
@@ -21,7 +21,7 @@ val guess_property = guess_property_like_abst_domain (
                         $ (\<^Const>\<open>HOL.conj\<close> $ (oblg $ Bound 0) $ (pred $ Bound 0))),
         \<^sort>\<open>type\<close>, \<^sort>\<open>sep_carrier\<close>)
 
-fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_carrier_set (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn Const(\<^const_name>\<open>Carrier_Set\<close>, _) $ T $ _ => T )
 
       val ind_conv = default_ind_conv (
@@ -55,14 +55,14 @@ fun gen_carrier_set (_,name) instruction ctxt0 (phi0 : phi_type) thy =
       val ctxt = ctxt0
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_CarS_rule},
                                       [(K (SOME [0]), ind_conv, reasoning)], solver, simp)
-                                    phi0 (Option.map fst instruction) ctxt
+                                    phi0 (Option.map #1 instruction) ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> note_properties_s phi0 [(name, [rule])]
-        |> Phi_Help.generic_theory_mapping (fn m =>
+        |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_carrier_set}
-                                                     (Option.mapPartial snd instruction))
+                                                     (Option.mapPartial #2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule])
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

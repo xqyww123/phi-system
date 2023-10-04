@@ -270,13 +270,15 @@ datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 
 type quiet = bool
 val deriver_framework : hint_mode * multiple_call * string (*name*)
-                     -> (int (*the times that the deriver has been invoked*) * string (*name suffixed by the time*)
+                     -> (   int (*the times that the deriver has been invoked*)
+                          * string (*name suffixed by the time*)
+                          * Position.T
                           -> deriving_instruction option
                           -> Phi_Type_Algebra.deriving_ctxt
                           -> Phi_Type_Algebra.phi_type
                           -> generic_theory
                           -> thm list (*derived rule*) * generic_theory)
-                     -> quiet
+                     -> quiet * Position.T
                      -> deriving_instruction list
                      -> Phi_Type_Algebra.derive
 (*This simple framework handles the issue of invoking a deriver by multiple times,
@@ -293,12 +295,12 @@ val deriver_framework : hint_mode * multiple_call * string (*name*)
 *)
 
 val deriver_framework_no_hints : multiple_call * string (*name*)
-                     -> (string (*name*)
+                     -> (string (*name*) * Position.T
                           -> Phi_Type_Algebra.deriving_ctxt
                           -> Phi_Type_Algebra.phi_type
                           -> generic_theory
                           -> thm list (*derived rule*) * generic_theory)
-                     -> quiet
+                     -> quiet * Position.T
                      -> Phi_Type_Algebra.derive
 
 (** Misc Tools **)
@@ -1000,7 +1002,7 @@ datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 type quiet = bool
 
 fun deriver_framework (hint_mode, multiple_call, name) deriver
-                      quiet deriving_instructions ctxt_derv phi thy =
+                      (quiet, pos) deriving_instructions ctxt_derv phi thy =
   let val ind = length (lookup_derived_properties thy phi name)
       val _ = let open Pretty in
           case (multiple_call, ind, deriving_instructions)
@@ -1018,12 +1020,12 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
           case (hint_mode, deriving_instructions)
             of (ACCEPT_NO_HINT, _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts no hint, but given") ::
-                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       deriving_instructions
                 )
              | (ACCEPT_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts at most one hint, but more hints are given") ::
-                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       deriving_instructions
                 )
              | (REQUIRE_ONE_HINT, []) => raise Automation_Fail (fn () => [
@@ -1031,7 +1033,7 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
                 ])
              | (REQUIRE_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but more hints are given") ::
-                  map (fn (H,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                  map (fn (H,_,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       deriving_instructions
                 )
              | (REQUIRE_HINTS, []) => raise Automation_Fail (fn () => [
@@ -1041,8 +1043,9 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
           end
       fun invoke (i,H) thy =
         let val iname = suffix_name_by_index (i+ind) name
-         in deriver (i+ind, iname) H ctxt_derv phi thy
-         |-> register_derived_properties phi (name, i+ind)
+            val pos' = the_default pos (Option.map #3 H)
+         in deriver (i+ind, iname, pos') H ctxt_derv phi thy
+         |-> register_derived_properties phi (name, i+ind, pos')
         end
    in (case deriving_instructions
    of [] => invoke (ind, NONE) thy
@@ -1051,7 +1054,7 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
   handle (ex as Automation_Fail _) => if quiet then thy else Exn.reraise ex
 
 fun deriver_framework_no_hints (mcall, name) deriver quiet =
-  deriver_framework (ACCEPT_NO_HINT, mcall, name) (fn (_,name) => fn _ => deriver name) quiet []
+  deriver_framework (ACCEPT_NO_HINT, mcall, name) (fn (_,name,pos) => fn _ => deriver (name,pos)) quiet []
 
 (*
 fun accept gen [] phityp thy = gen NONE phityp thy

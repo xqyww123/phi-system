@@ -207,7 +207,9 @@ text \<open> Strategy of deriving:
 \<close>
 
 
-section \<open>The Algebra of \<open>\<phi>\<close>-Refinement\<close>
+chapter \<open>The Algebra of \<open>\<phi>\<close>-Type\<close>
+
+section \<open>Algebraic Properties of \<phi>-Types\<close>
 
 subsection \<open>Definitions\<close>
 
@@ -599,22 +601,7 @@ declare [[
 
 
 
-subsection \<open>Convention\<close>
-
-text \<open>
-Priority:
-\<^item> 30: Destruction \<open>to OPEN\<close>
-\<^item> 40: Transformations, To-Transformations
-\<^item> 40: \<^const>\<open>Identity_Element\<^sub>I\<close>, \<^const>\<open>Identity_Element\<^sub>E\<close>
-      \<^const>\<open>Object_Equiv\<close>
-\<^item> 45: Simplification for \<open>\<^emph>\<^sub>\<A>\<close>
-\<^item> 80: Construction \<open>to T\<close> where \<open>T\<close> is the type just defined
-\<^item> 80: Implication \<^prop>\<open>x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> P\<close>,
-      \<^prop>\<open>Is_Functional (x \<Ztypecolon> T)\<close>
-      Open_All_Abstraction \<^prop>\<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r y @action to Itself\<close>
-\<^item> 1000: Type_Variant_of_the_Same_Type_Operator
-\<^item> 1100: \<^const>\<open>Transformation_Functor\<close>
-\<close>
+subsection \<open>Conventions\<close>
 
 subsubsection \<open>General Groups of Properties\<close>
 
@@ -687,8 +674,9 @@ paragraph \<open>Separation Extraction on Semimodule\<close>
                                               in ToA_derived and < derived_SE_scalar_assoc
     \<open>Derived rules lifting the target part into the module operator \<open>F\<close>\<close>
 
-subsubsection \<open>Guess Algebraic Operators\<close>
 (*
+subsubsection \<open>Guess Algebraic Operators\<close>
+
 \<phi>reasoner_group guess_algebraic_oprs = (100, [0, 3000]) for \<open>_\<close>
     \<open>A general group consisting of reasoning rules derivign or guessing operators for algbebraic properties\<close>
  and guess_algebraic_oprs_default = (1000, [1000, 1030]) for \<open>_\<close> in guess_algebraic_oprs
@@ -917,9 +905,148 @@ lemma apply_Transformation_Functor:
   by blas
 *)
 
+subsection \<open>Programming Methods to Prove the Properties\<close>
 
 
-subsection \<open>Definition and Deriving Tools\<close>
+subsubsection \<open>Transformation Functor\<close>
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (\<And>x g.
+            \<forall>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b
+        \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
+        \<Longrightarrow> x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) MM DD RR FF
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Transformation_Functor F1 F2 T U D R mapper)) MM DD RR FF\<close>
+  unfolding \<phi>Programming_Method_def Transformation_Functor_def Premise_def
+  by clarsimp
+
+
+subsubsection \<open>Separation Homo\<close>
+
+(* TODO
+lemma
+  \<open> PROP \<phi>Programming_Method (\<And>T U x g.
+            \<forall>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b
+        \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
+        \<Longrightarrow> x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) MM DD RR FF
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Separation_Homo\<^sub>I Ft Fu Fc D R mapper)) MM DD RR FF \<close> *)
+
+
+subsubsection \<open>Semimodule Functor\<close>
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (\<And>s t x y.
+              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx t s (x,y)
+          \<Longrightarrow> (y \<Ztypecolon> F s T) * (x \<Ztypecolon> F t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s (x,y) \<Ztypecolon> F (s + t) T
+        ) MM DD RR FF
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z)) MM DD RR FF\<close>
+  unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>Z_def Premise_def norm_hhf_eq
+  by (clarsimp simp add: \<phi>Prod_expn')
+
+(* all be deduced from \<open>Semimodule_SDistr_Homo\<^sub>Z\<close> and no need to go to programming
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (\<And>s t x y.
+              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds t \<and> Ds s \<and> t ##\<^sub>+ s \<and> Dx t s (x,y)
+          \<Longrightarrow> (y \<Ztypecolon> F s T) * (x \<Ztypecolon> F t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s (x,y) \<Ztypecolon> F (t + s) T
+        ) MM DD RR FF
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds Dx z)) MM DD RR FF\<close>
+  unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>Z_rev_def Premise_def norm_hhf_eq
+  by (clarsimp simp add: \<phi>Prod_expn')
+*)
+
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (\<And>s t x.
+              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx t s x
+          \<Longrightarrow> x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> F t T \<^emph> F s T
+        ) MM DD RR FF
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_SDistr_Homo\<^sub>U F T Ds Dx uz)) MM DD RR FF\<close>
+  unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>U_def Premise_def norm_hhf_eq
+  by (clarsimp simp add: \<phi>Prod_expn')
+
+(* all be deduced from \<open>Semimodule_SDistr_Homo\<^sub>Z\<close> and no need to go to programming
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (\<And>s t x.
+              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
+          \<Longrightarrow> x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F s T \<^emph> F t T
+        ) MM DD RR FF
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_SDistr_Homo\<^sub>U_rev F T Ds Dx uz)) MM DD RR FF\<close>
+  unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>U_rev_def Premise_def norm_hhf_eq
+  by (clarsimp simp add: \<phi>Prod_expn')
+*)
+
+
+
+subsection \<open>Configuring Property Data Base\<close>
+
+(* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
+          \<phi>inductive_destruction_rule_from_direct_definition'
+          \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
+
+lemmas [simp_for_\<phi>TA_rule_generation] =
+  conj_imp_eq_imp_imp Premise_I sing_times_sing sing_if
+
+setup \<open>
+let fun attach_var F =
+      let val i = maxidx_of_term F + 1
+       in case fastype_of F of \<^Type>\<open>fun T _\<close> => F $ Var(("uu",i),T)
+                             | _ => error "Impossible #8da16473-84ef-4bd8-9a96-331bcff88011"
+      end
+    open Phi_Type_Template_Properties
+in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\<close>
+  "set the pattern rewrite to parse the functor part and the argument part from a term\
+  \ matching the patter"
+#>*)add_property_kinds [
+  \<^pattern_prop>\<open>Transformation_Functor _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Closed_Semimodule_Zero _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_Zero _ _ _\<close>,
+  (*\<^pattern_prop>\<open>Semimodule_Identity\<^sub>I _ _ _ _ _\<close>,*)
+  \<^pattern_prop>\<open>Semimodule_Identity _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
+]
+
+(*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
+\<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
+  it can have special overridings for singular points like that many type operators \<open>F\<close> have a
+  wider reachability relation at \<open>F \<circle>\<close>. The overloadings multiply the resulted instantiations
+  and they requires priority precedence which is not in the capability of the template
+  instantiation automation.\<close>
+end
+\<close>
+  
+setup \<open>
+Phi_Type_Template_Properties.add_property_kinds [
+  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>I _)\<close>,
+  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>E _)\<close>
+]
+
+\<close>
+
+declare [[
+  \<phi>reason_default_pattern \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>I ?FF)\<close> (100)
+                      and \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>E ?FF)\<close> (100)
+]]
+
+text \<open>Candidates of templates instantiation are not prioritized. When a property requires multiple
+  rules ordered by their priorities for overrides and optimizations, the property is not declared
+  as a parameter property in the template instantiation system but just a \<phi>-LPR reasoning goal tagged
+  by \<open>\<A>_template_reason\<close> in the template.
+  Instead, a trigger \<open>TERM (The_Property F)\<close> is used as the parameter property activating
+  the instantiation and (when the trigger is given) indicating when the prioritized rules are all given
+  so when can the instantiation start. \<close>
+
+
+
+section \<open>Definition and Deriving Tools for \<phi>-Types\<close>
 
 text \<open>The @{command \<phi>type_def} command always generate 4 sorts of rules.
   For instance, for definition \<open>x \<Ztypecolon> T \<equiv> U\<close>,
@@ -956,7 +1083,7 @@ If a definition like those recursive definitions is characterized by multiple eq
 The above rules are generated for each equation correspondingly.
 \<close>
 
-subsubsection \<open>Implementation\<close>
+subsection \<open>Implementation\<close>
 
 paragraph \<open>Templates Generating Rules\<close>
 
@@ -1202,205 +1329,29 @@ lemma [\<phi>reason %extract_pure]:
   by blast
   
 
+subsection \<open>Instances for Predefined Basic \<phi>-Types\<close>
 
+text \<open>The section manually gives property instances of predefined basic \<phi>-types and any later \<phi>-types
+      are defined using \<phi>-type definition tools and their property instances are derived by derivers.
 
-ML \<open>BNF_Def.rel_eq_of_bnf (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))\<close>
-
-ML \<open>#fp_bnf_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
-
-ML \<open>local val bnf = (the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>))
-in 
-val xx = BNF_Def.rel_map_of_bnf bnf
-end\<close>
-
-thm list.rel_eq
-
-ML \<open>(the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
-
-ML \<open>
-val ths = #fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))
-|> #ctr_sugar
-|> #disc_thmss
-|> flat
-val ((_,ths2),_) = Variable.import true ths \<^context>
-val xxx = ths2
-|> map (Phi_Reasoners.asm_simplify true (Simplifier.clear_simpset \<^context> addsimps @{thms HOL.simp_thms ex_simps[symmetric]}))
-|> filter (fn th => (case Thm.concl_of th of \<^Const>\<open>Trueprop\<close> $ \<^Const>\<open>True\<close> => false | _ => true))
-|> distinct (Thm.equiv_thm \<^theory>)
+  Though the property instances of the basic \<phi>-types are given manually here, it does not mean they
+  are primitive and cannot be derived automatically. It is just engineeringly, the types are bootstraps
+  given very early in the initiation process of the system, so have no chance to enjoy the automation of
+  deriver tools and because some properties of them are given manually early, the remaining properties
+  also cannot be configured using the deriver tool otherwise clashes happen.
 \<close>
 
-ML \<open>    
-    val equal_binding = \<^binding>\<open>=\<close>;
+term \<open>\<black_circle> X\<close>
 
-fun is_disc_binding_valid b =
-      not (Binding.is_empty b orelse Binding.eq_name (b, equal_binding));
-\<close>
+ML \<open>\<^term>\<open>\<phi>Some\<close>\<close>
 
-thm list.collapse
-
-
-ML \<open>#fp_ctr_sugar (the (BNF_FP_Def_Sugar.fp_sugar_of \<^context> \<^type_name>\<open>list\<close>))\<close>
-
-ML \<open>local val bnf = the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>) in
-val x = BNF_Def.deads_of_bnf bnf
-val z = BNF_Def.mk_sets_of_bnf [[]] [[\<^typ>\<open>nat\<close>]] bnf
-end\<close>
-ML \<open> the (BNF_Def.bnf_of \<^context> \<^type_name>\<open>list\<close>)
-  |> BNF_Def.rel_of_bnf\<close>
-
-
-fun fib :: \<open>int \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat\<close>
-  where \<open>fib a 0 c = 1+c\<close> | \<open>fib a (Suc 0) c = 1+c\<close> | \<open>fib a (Suc (Suc n)) c = fib a (Suc n) c + fib (a+1) n c\<close>
-
-ML \<open>Function_Common.retrieve_function_data \<^context> \<^term>\<open>fib\<close>\<close>
-
-thm fib.elims
-
-
-
-
-
-
-paragraph \<open>Configurations\<close>
-
-(* hide_fact \<phi>inductive_destruction_rule_from_direct_definition
-          \<phi>inductive_destruction_rule_from_direct_definition'
-          \<phi>Type_conv_eq_1 \<phi>Type_conv_eq_2 \<phi>intro_transformation *)
-
-lemmas [simp_for_\<phi>TA_rule_generation] =
-  conj_imp_eq_imp_imp Premise_I sing_times_sing sing_if
-
-setup \<open>
-let fun attach_var F =
-      let val i = maxidx_of_term F + 1
-       in case fastype_of F of \<^Type>\<open>fun T _\<close> => F $ Var(("uu",i),T)
-                             | _ => error "Impossible #8da16473-84ef-4bd8-9a96-331bcff88011"
-      end
-    open Phi_Type_Template_Properties
-in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>functor_of\<close>
-  "set the pattern rewrite to parse the functor part and the argument part from a term\
-  \ matching the patter"
-#>*)add_property_kinds [
-  \<^pattern_prop>\<open>Transformation_Functor _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Separation_Homo\<^sub>E_Cond _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Closed_Semimodule_Zero _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_Zero _ _ _\<close>,
-  (*\<^pattern_prop>\<open>Semimodule_Identity\<^sub>I _ _ _ _ _\<close>,*)
-  \<^pattern_prop>\<open>Semimodule_Identity _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>I _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_Scalar_Assoc\<^sub>E _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>Z _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Semimodule_SDistr_Homo\<^sub>U _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Tyops_Commute _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Tyops_Commute\<^sub>1\<^sub>_\<^sub>2 _ _ _ _ _ _ _ _ _\<close>,
-  \<^pattern_prop>\<open>Tyops_Commute\<^sub>2\<^sub>_\<^sub>1 _ _ _ _ _ _ _ _ _\<close>
-]
-
-(*#> Phi_Type_Algebra.add_property_kind \<^const_name>\<open>Object_Equiv\<close> (fn (_ $ T $ _) => T)*)
-\<comment> \<open>We do not add Object_Equiv into the property-based template instantiation here because
-  it can have special overridings for singular points like that many type operators \<open>F\<close> have a
-  wider reachability relation at \<open>F \<circle>\<close>. The overloadings multiply the resulted instantiations
-  and they requires priority precedence which is not in the capability of the template
-  instantiation automation.\<close>
-end
-\<close>
-  
-setup \<open>
-Phi_Type_Template_Properties.add_property_kinds [
-  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>I _)\<close>,
-  \<^pattern_prop>\<open>TERM (Identity_Elements\<^sub>E _)\<close>
-]
-
-\<close>
-
-declare [[
-  \<phi>reason_default_pattern \<open>TERM (Identity_Elements\<^sub>I ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>I ?FF)\<close> (100)
-                      and \<open>TERM (Identity_Elements\<^sub>E ?F)\<close> \<Rightarrow> \<open>TERM (Identity_Elements\<^sub>E ?FF)\<close> (100)
-]]
-
-text \<open>Candidates of templates instantiation are not prioritized. When a property requires multiple
-  rules ordered by their priorities for overrides and optimizations, the property is not declared
-  as a parameter property in the template instantiation system but just a \<phi>-LPR reasoning goal tagged
-  by \<open>\<A>_template_reason\<close> in the template.
-  Instead, a trigger \<open>TERM (The_Property F)\<close> is used as the parameter property activating
-  the instantiation and (when the trigger is given) indicating when the prioritized rules are all given
-  so when can the instantiation start. \<close>
-
-
-subsection \<open>Programming Methods to Prove the Properties\<close>
-
-
-subsubsection \<open>Transformation Functor\<close>
-
-lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> PROP \<phi>Programming_Method (\<And>x g.
-            \<forall>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b
-        \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
-        \<Longrightarrow> x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) MM DD RR FF
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Transformation_Functor F1 F2 T U D R mapper)) MM DD RR FF\<close>
-  unfolding \<phi>Programming_Method_def Transformation_Functor_def Premise_def
-  by clarsimp
-
-
-subsubsection \<open>Separation Homo\<close>
-
-(* TODO
-lemma
-  \<open> PROP \<phi>Programming_Method (\<And>T U x g.
-            \<forall>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b
-        \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
-        \<Longrightarrow> x \<Ztypecolon> F1 T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U \<s>\<u>\<b>\<j> y. mapper g x y) MM DD RR FF
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Separation_Homo\<^sub>I Ft Fu Fc D R mapper)) MM DD RR FF \<close> *)
-
-
-subsubsection \<open>Semimodule Functor\<close>
-
-lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> PROP \<phi>Programming_Method (\<And>s t x y.
-              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx t s (x,y)
-          \<Longrightarrow> (y \<Ztypecolon> F s T) * (x \<Ztypecolon> F t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s (x,y) \<Ztypecolon> F (s + t) T
-        ) MM DD RR FF
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_SDistr_Homo\<^sub>Z F T Ds Dx z)) MM DD RR FF\<close>
-  unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>Z_def Premise_def norm_hhf_eq
-  by (clarsimp simp add: \<phi>Prod_expn')
-
-(* all be deduced from \<open>Semimodule_SDistr_Homo\<^sub>Z\<close> and no need to go to programming
-lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> PROP \<phi>Programming_Method (\<And>s t x y.
-              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds t \<and> Ds s \<and> t ##\<^sub>+ s \<and> Dx t s (x,y)
-          \<Longrightarrow> (y \<Ztypecolon> F s T) * (x \<Ztypecolon> F t T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z t s (x,y) \<Ztypecolon> F (t + s) T
-        ) MM DD RR FF
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_SDistr_Homo\<^sub>Z_rev F T Ds Dx z)) MM DD RR FF\<close>
-  unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>Z_rev_def Premise_def norm_hhf_eq
-  by (clarsimp simp add: \<phi>Prod_expn')
-*)
-
-lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> PROP \<phi>Programming_Method (\<And>s t x.
-              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx t s x
-          \<Longrightarrow> x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz t s x \<Ztypecolon> F t T \<^emph> F s T
-        ) MM DD RR FF
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_SDistr_Homo\<^sub>U F T Ds Dx uz)) MM DD RR FF\<close>
-  unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>U_def Premise_def norm_hhf_eq
-  by (clarsimp simp add: \<phi>Prod_expn')
-
-(* all be deduced from \<open>Semimodule_SDistr_Homo\<^sub>Z\<close> and no need to go to programming
-lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> PROP \<phi>Programming_Method (\<And>s t x.
-              \<p>\<r>\<e>\<m>\<i>\<s>\<e> Ds s \<and> Ds t \<and> s ##\<^sub>+ t \<and> Dx s t x
-          \<Longrightarrow> x \<Ztypecolon> F (s + t) T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> uz s t x \<Ztypecolon> F s T \<^emph> F t T
-        ) MM DD RR FF
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Semimodule_SDistr_Homo\<^sub>U_rev F T Ds Dx uz)) MM DD RR FF\<close>
-  unfolding \<phi>Programming_Method_def Semimodule_SDistr_Homo\<^sub>U_rev_def Premise_def norm_hhf_eq
-  by (clarsimp simp add: \<phi>Prod_expn')
+(*
+ML \<open>Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^term>\<open>\<phi>Some\<close>, @{thm' \<phi>Some_def}),
+                               \<^here>)\<close>
 *)
 
 
-subsection \<open>Reasonings and Their Applications\<close>
+section \<open>Applications of the Algebraic Properties in Reasoning\<close>
 
 subsubsection \<open>Vary Type Operator among Instantiations\<close>
 
@@ -3815,7 +3766,7 @@ lemma [\<phi>reason_template %To_ToA_derived]:
   by clarsimp
 
 
-subsection \<open>Property Derivers\<close>
+section \<open>Property Derivers\<close>
 
 subsubsection \<open>Extension of BNF-FP\<close>
 
@@ -4070,7 +4021,7 @@ lemma
 
 subsubsection \<open>Warn if the Def contains Sat\<close>
 
-\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn quiet => fn [] => fn _ => fn phi => fn thy => (
+\<phi>property_deriver Warn_if_contains_Sat 10 = \<open>fn (quiet, _) => fn [] => fn _ => fn phi => fn thy => (
   if Phi_Type_Algebra.is_Type_Opr (Term.fastype_of (#term phi)) andalso
      Phi_Type_Algebra.def_contains_satisfaction phi andalso
      not quiet
@@ -4185,10 +4136,10 @@ end
   = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
 
 \<phi>property_deriver Identity_Element_Properties\<^sub>I 103
-  = \<open>K (K (Phi_Type_Algebra_Derivers.id_ele_properties true))\<close>
+  = \<open>fn (_, pos) => (K (Phi_Type_Algebra_Derivers.id_ele_properties pos true))\<close>
 
 \<phi>property_deriver Identity_Element_Properties\<^sub>E 103
-  = \<open>K (K (Phi_Type_Algebra_Derivers.id_ele_properties false))\<close>
+  = \<open>fn (_, pos) =>  (K (Phi_Type_Algebra_Derivers.id_ele_properties pos false))\<close>
 
 \<phi>property_deriver Identity_Element_Properties 104
   requires Identity_Element_Properties\<^sub>I and Identity_Element_Properties\<^sub>E
@@ -5561,7 +5512,7 @@ ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 
 
 
-subsection \<open>Deriving Configures for Specific Abstract Algebras\<close>
+section \<open>Deriving Configures for Specific Abstract Algebras\<close>
 
 subsubsection \<open>Common\<close>
 

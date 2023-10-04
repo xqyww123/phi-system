@@ -2,7 +2,7 @@ signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
 val conv_hol_imp_to_meta_if_has : conv -> conv
-val object_equiv : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val object_equiv : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
 (*val object_equiv_singular : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive*)
 
 end
@@ -305,7 +305,7 @@ case #equations phi0
   end
 *)
 
-fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_obj_equal' (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
@@ -360,15 +360,15 @@ fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                                       [(K NONE, K (K I), K (pure_PLPR_reasoning 1)),
                                        (K (SOME [0]), ind_conv, OE_reasoning)],
                                       infer, simp)
-                                     phi0 (Option.map fst instruction)
+                                     phi0 (Option.map #1 instruction)
                                      (Config.put search_CSTR_rules true ctxt0)
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
-            |> Phi_Help.generic_theory_mapping (fn m =>
+            |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_object_equiv}
-                                                     (Option.mapPartial snd instruction))
+                                                     (Option.mapPartial #2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule'])

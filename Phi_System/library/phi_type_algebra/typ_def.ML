@@ -19,7 +19,7 @@ include PHI_TYPE_ALGEBRA
 
 (** \<phi>-Type Definition \& Infos **)
 
-datatype def = DIRECT_DEF of (term (*lhs of the def*) * (string (*def_name*) * thm (*def*)))
+datatype def = DIRECT_DEF of term (*lhs of the def*) * thm (*def*)
              | WFREC_DEF  of string (*const name*) * Function.info
 
 type parameter_info = {
@@ -75,7 +75,9 @@ type quiet = bool (*report nothing even when fail*)
 type deriving_ctxt = Proof.context (*the context used for deriving rules, which may be prepared
                                      specially with user configurations*)
 type derive = deriving_ctxt -> phi_type -> generic_theory -> generic_theory
-type deriving_instruction = hint * (Phi_Reasoner.priority * Reasoner_Group.name option) option
+type deriving_instruction = hint
+                          * (Phi_Reasoner.priority * Reasoner_Group.name option) option
+                          * Position.T
 type deriver = {
   priority: priority,
   dependences: (deriver_name * is_weak) list,
@@ -84,7 +86,7 @@ type deriver = {
         Once users give an annotation, every implicit behavior is revoked, and this is the only
         way to revoke the implicit behavior.
         Users may declare a weak dependency by append a question mark after the dependency name.*)
-  derive: quiet -> deriving_instruction list -> derive
+  derive: quiet * Position.T (*where does the deriving happen*) -> deriving_instruction list -> derive
 }
 
 val get_deriver : Context.generic -> deriver_name -> deriver
@@ -100,11 +102,11 @@ exception Unknown_Hint of term
 val match_deriver1 : Context.generic -> hint -> deriver_name * deriver
 
 structure Derivings : TABLE
-type derivings = (deriving_instruction list * deriver * is_weak) Derivings.table
-val add_deriving : deriving_instruction list * (deriver_name * deriver) -> derivings -> derivings
+type derivings = (deriving_instruction list * deriver * is_weak * Position.T) Derivings.table
+val add_deriving : deriving_instruction list * (deriver_name * deriver) * Position.T -> derivings -> derivings
 val add_deriving_from_hint : Context.generic -> deriving_instruction -> derivings -> derivings
 
-val add_deriver_dependences : bool -> Context.generic -> (deriver_name * is_weak) list -> derivings -> derivings
+val add_deriver_dependences : Position.T -> bool -> Context.generic -> (deriver_name * is_weak) list -> derivings -> derivings
 val complete_deriver_dependences : Context.generic -> derivings -> derivings
 
 val derive_properties : derivings * Bundle.name list -> phi_type -> generic_theory -> generic_theory
@@ -116,7 +118,7 @@ val under_deriving_ctxt : bool Config.T
 val lookup_derived_properties : Context.generic -> phi_type -> string (*name*) -> thm list list
       (*the name is not necessarily the name of the deriver as a deriver can derive multiple
         properties. It is the name that is sent by the deriver when it calls `register_derived_properties`.*)
-val register_derived_properties : phi_type -> string * int -> thm list -> generic_theory -> generic_theory
+val register_derived_properties : phi_type -> string * int * Position.T -> thm list -> generic_theory -> generic_theory
       (*It will also bind in Isabelle the properties to names <phi_type_name.property_names\<^sub>i>
         for the i-th property each.*)
 val note_properties' : term -> (binding * thm list) list -> generic_theory -> generic_theory
@@ -182,7 +184,7 @@ val open_proof_ctxt : Bundle.name list -> Context.generic -> Proof.context
 
 (* Internal Technical stuffs *)
 
-val ML_sender : (quiet -> deriving_instruction list -> derive) option Unsynchronized.ref
+val ML_sender : (quiet * Position.T -> deriving_instruction list -> derive) option Unsynchronized.ref
 
 (** Controllers **)
 
@@ -216,7 +218,7 @@ val unfoldN = "unfold"
 val expansionN = "expansion"
 (* val open_abstractionN = "open_abstraction" *)
 
-datatype def = DIRECT_DEF of (term (*lhs*) * (string (*def_name*) * thm (*def*)))
+datatype def = DIRECT_DEF of term (*lhs*) * thm (*def*)
              | WFREC_DEF  of string * Function.info
 
 type parameter_info = {
@@ -430,13 +432,15 @@ type priority = int
 type deriver_name = string
 type deriving_ctxt = Proof.context
 type derive = deriving_ctxt -> phi_type -> generic_theory -> generic_theory
-type deriving_instruction = hint * (Phi_Reasoner.priority * Reasoner_Group.name option) option
+type deriving_instruction = hint
+                          * (Phi_Reasoner.priority * Reasoner_Group.name option) option
+                          * Position.T
 type is_weak = bool
 type quiet = bool
 type deriver = {
   priority: priority,
   dependences: (deriver_name * is_weak) list,
-  derive: quiet -> deriving_instruction list -> derive
+  derive: quiet * Position.T -> deriving_instruction list -> derive
 }
 
 structure Derivers = Generic_Data (
@@ -446,7 +450,7 @@ structure Derivers = Generic_Data (
 )
 
 structure Derivings = Table (type key = priority * deriver_name; val ord = prod_ord int_ord string_ord)
-type derivings = (deriving_instruction list * deriver * is_weak) Derivings.table
+type derivings = (deriving_instruction list * deriver * is_weak * Position.T) Derivings.table
 
 type pattern = term
 structure Deriver_Bindings = Generic_Data (
@@ -501,15 +505,15 @@ fun match_deriver1 ctxt term =
     of SOME ret => ret
      | NONE => raise Unknown_Hint term
 
-fun add_deriving (hints : deriving_instruction list, (derv_name, derv)) dervs =
-  Derivings.map_default ((#priority derv, derv_name), ([],derv, false))
-                        (fn (hints', der', _) => (hints @ hints', der', false)) dervs
+fun add_deriving (hints : deriving_instruction list, (derv_name, derv), pos) dervs =
+  Derivings.map_default ((#priority derv, derv_name), ([], derv, false, pos))
+                        (fn (hints', der', _, pos) => (hints @ hints', der', false, pos)) dervs
 
-fun add_deriving_from_hint ctxt (hint,group) ders =
-  add_deriving ([(hint,group)], match_deriver1 ctxt (Logic.strip_imp_concl hint)) ders
+fun add_deriving_from_hint ctxt (hint,group,pos) ders =
+  add_deriving ([(hint,group,pos)], match_deriver1 ctxt (Logic.strip_imp_concl hint), pos) ders
 
-fun add_deriver_dependences _ _ [] dervs = dervs
-  | add_deriver_dependences count_weak ctxt deps dervs =
+fun add_deriver_dependences _ _ _ [] dervs = dervs
+  | add_deriver_dependences pos count_weak ctxt deps dervs =
       let val derivers = deriver_name_space ctxt
           fun add [] dervs = dervs
             | add ((dep,is_weak)::remain_deps) dervs =
@@ -518,12 +522,12 @@ fun add_deriver_dependences _ _ [] dervs = dervs
                 else let val derv = Name_Space.get derivers dep
                          val key = (#priority derv, dep)
                       in(case Derivings.lookup dervs key
-                      of SOME (hints, deriver, is_weak') =>
+                      of SOME (hints, deriver, is_weak', pos) =>
                             if is_weak' = (is_weak' andalso is_weak)
                             then dervs
-                            else Derivings.update (key, (hints, deriver, is_weak' andalso is_weak)) dervs
+                            else Derivings.update (key, (hints, deriver, is_weak' andalso is_weak, pos)) dervs
                                     |> add (#dependences derv)
-                       | NONE => Derivings.update_new (key, ([], derv, is_weak)) dervs
+                       | NONE => Derivings.update_new (key, ([], derv, is_weak, pos)) dervs
                                     |> add (#dependences derv)
                        ) |> add remain_deps
                      end
@@ -531,8 +535,8 @@ fun add_deriver_dependences _ _ [] dervs = dervs
       end
 
 fun complete_deriver_dependences ctxt dervs =
-  Derivings.fold (fn (_,(hints,derv,_)) =>
-      add_deriver_dependences (null hints) ctxt (#dependences derv)) dervs dervs
+  Derivings.fold (fn (_,(hints,derv,_,pos)) =>
+      add_deriver_dependences pos (null hints) ctxt (#dependences derv)) dervs dervs
 
 (* Deriving *)
 
@@ -555,12 +559,12 @@ fun err_derive ctxt prop_name msg hints = let open Pretty in
 fun derive_properties (dervs, bundles) phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
-  |> Derivings.fold (fn ((_,name),(hints,derv,is_weak)) => fn thy'goal =>
+  |> Derivings.fold (fn ((_,name),(hints,derv,is_weak,pos)) => fn thy'goal =>
       let val ctxt_derv = Context.proof_of thy'goal
                        |> Bundle.includes bundles
                        |> Config.put under_deriving_ctxt true
                        |> Phi_Reasoners.report_failure_reason []
-       in #derive derv is_weak hints ctxt_derv phityp thy'goal
+       in #derive derv (is_weak, pos) hints ctxt_derv phityp thy'goal
           handle Automation_Fail msg => err_derive ctxt_derv name (msg ()) hints
       end
      ) dervs
@@ -621,7 +625,7 @@ fun local_note_properties_s (phi : phi_type) notes =
 fun suffix_name_by_index ind name =
       if ind = 0 then name else suffix ("\<^sub>" ^ string_of_int ind) name
 
-fun register_derived_properties phi (name, ind) ths thy =
+fun register_derived_properties phi (name, ind, pos) ths thy =
   let val ind' = length (lookup_derived_properties thy phi name)
       val _ = if ind' = ind then () else error "Bad Index"
       val _ = Phi_Reasoner.info_pretty_generic thy 0 (fn () =>
@@ -629,7 +633,7 @@ fun register_derived_properties phi (name, ind) ths thy =
                in block [str (suffix_name_by_index ind name), brk 1,
                          chunks (map (fn th => item [Context.cases Thm.pretty_thm_global Thm.pretty_thm thy th]) ths)]
               end)
-   in Phi_Help.generic_theory_mapping (fn m =>
+   in Phi_Help.generic_theory_mapping pos (fn m =>
         let val key = fst (raw_term_name_typ (Morphism.term m (#term phi)))
          in Derived_Properties.map (Symreltab.map_default ((key, name), []) (fn L => ths :: L))
         end) thy
@@ -638,12 +642,12 @@ fun register_derived_properties phi (name, ind) ths thy =
 (* Syntax *)
 
 datatype deriving_ast = Derv_By_Name of xstring * Position.T
-                      | Derv_By_Term of string * Reasoner_Group.priority_syntax option
+                      | Derv_By_Term of (string * Position.T) * Reasoner_Group.priority_syntax option
 
 val deriving_name = Parse.position (
         Parse.group (fn () => "name") (Parse.short_ident || Parse.long_ident))
 val one_deriving = deriving_name >> Derv_By_Name
-                || (Parse.term -- Scan.option (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>) >> Derv_By_Term)
+                || (Parse.position Parse.term -- Scan.option (\<^keyword>\<open>(\<close> |-- Reasoner_Group.parser --| \<^keyword>\<open>)\<close>) >> Derv_By_Term)
 val deriving_parser = Scan.repeat (
         \<^keyword>\<open>deriving\<close> |-- Parse.and_list one_deriving
       ) >> flat
@@ -692,8 +696,8 @@ fun check_deriving_ast ctxt derv_ast =
       val thy = Context.theory_of ctxt
    in Derivings.empty
    |> fold_rev (
-        fn Derv_By_Name name => add_deriving ([], check_deriver ctxt name)
-         | Derv_By_Term (term, raw_group) =>
+        fn Derv_By_Name name => add_deriving ([], check_deriver ctxt name, snd name)
+         | Derv_By_Term ((term, pos), raw_group) =>
             let val term' = Syntax.parse_prop ctxt_parse term
                          |> Syntax.check_prop ctxt_parse
                          |> Envir.beta_eta_contract
@@ -701,7 +705,7 @@ fun check_deriving_ast ctxt derv_ast =
                 val ctxt'1 = fold Variable.add_fixes_implicit [term'] (Variable.set_body false ctxt_parse)
                 val term'1 = singleton (Variable.export_terms ctxt'1 ctxt_parse) term'
                 val group = Option.map (Reasoner_Group.check_priority true (Context.Proof ctxt'1)) raw_group
-             in add_deriving_from_hint ctxt (term'1, group)
+             in add_deriving_from_hint ctxt (term'1, group, pos)
             end
        ) derv_ast
    |> complete_deriver_dependences ctxt
@@ -715,7 +719,7 @@ fun check_deriving_ast ctxt derv_ast =
 (* Interface for Deriver *)
 
 val ML_sender_locker = Synchronized.var "\<phi>TA.ML_sender_locker" ()
-val ML_sender : (quiet -> deriving_instruction list -> derive) option Unsynchronized.ref
+val ML_sender : (quiet * Position.T -> deriving_instruction list -> derive) option Unsynchronized.ref
   = Unsynchronized.ref NONE
 
 val dependences_parse = Scan.optional (\<^keyword>\<open>requires\<close> |--
@@ -891,7 +895,7 @@ fun add_type (def, pos, dervs, bundles) thy =
                 of Const(N',_) => N' = name
                  | Free (N',_) => N' = name
                  | _ => false)
-      val eqs = (case def of DIRECT_DEF (_, (_, eq)) => [eq]
+      val eqs = (case def of DIRECT_DEF (_, eq) => [eq]
                     | WFREC_DEF (name, info) =>
                         (case #simps info
                            of SOME eqs => filter_relevant_eqs name eqs
@@ -1097,7 +1101,7 @@ fun add_type (def, pos, dervs, bundles) thy =
         (Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn m =>
           Phi_Types.map (Symtab.update_new (fst (raw_term_name_typ (Morphism.term m term)),
                                             morphism_phi_type m (phi_trim_context phi_type)))))
-   |> Phi_Help.generic_theory_mapping (fn m =>
+   |> Phi_Help.generic_theory_mapping pos (fn m =>
         let val expns = Morphism.fact m expansions
             fun add_rules mode priority rules =
                   Phi_Reasoner.add_rules (map (fn rule =>
@@ -1274,8 +1278,8 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
                     (Morphism.term m tm, (name, Morphism.thm m def)))
                 (my_definition decl params prems spec int))
           (my_definition decl params prems spec int)
-           #> (fn (def, generic) =>
-                add_type_i (DIRECT_DEF def, pos, raw_dervs, raw_bundles) generic |> snd)
+           #> (fn ((def_term, (_, def_eq)), generic) =>
+                add_type_i (DIRECT_DEF (def_term, def_eq), pos, raw_dervs, raw_bundles) generic |> snd)
         ))
 in
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "define \<phi>-types"

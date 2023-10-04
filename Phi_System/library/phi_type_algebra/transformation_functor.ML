@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val transformation_functor            : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
-val functional_transformation_functor : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val transformation_functor            : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val functional_transformation_functor : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
@@ -80,7 +80,7 @@ fun TF_reasoning phi ctxt = default_reasoning true
       (exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__\<A>_simp_NToA} (K (chk_unfolded [] ctxt phi)))
       phi ctxt
 
-fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
+fun gen_TF (der_id, name, pos) instruction ctxt0 (phi0 : phi_type) generic =
   let       (*|> def_contains_satisfaction phi0 ? Context.proof_map (
                     Phi_Reasoners.Is_Premise_of_Obligation.add 123
                       (fn \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>Transformation_Functor\<close>, _) $ _ $ _ $ _ $ _) => SOME true
@@ -104,7 +104,7 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                                       guess_property_TF, @{thm' \<phi>TA_TF_rule},
                                       [(K (SOME [0,~1]), ind_conv, TF_reasoning)],
                                       K NONE, simp)
-                                     phi0 (Option.map fst instruction) ctxt0
+                                     phi0 (Option.map #1 instruction) ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) =>
@@ -136,10 +136,10 @@ fun gen_TF (der_id, name) instruction ctxt0 (phi0 : phi_type) generic =
                 end*)
            in generic
            |> note_properties_s phi0 [(name, [rule'])]
-           |> Phi_Help.generic_theory_mapping (fn m =>
+           |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
-                                                     (Option.mapPartial snd instruction))
+                                                     (Option.mapPartial #2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule'])
          (*|> Context.mapping (Named_Target.theory_map (setup_locale Interpretation.global_interpretation))
                               (setup_locale Interpretation.sublocale)*)
@@ -182,7 +182,7 @@ fun guess_property_FTF phi0 ctxt0 =
   end)
   end
 
-fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_FTF (der_id,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ => F1)
       fun extract_oprs_from_hint (Const(\<^const_name>\<open>Functional_Transformation_Functor\<close>, _) $ _ $ _ $ _ $ D $ R $ M $ p $ f) = [D,R,M,p,f]
@@ -204,7 +204,7 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_FTF, @{thm' \<phi>TA_FTF_rule},
                                       [(K NONE, K (K I), reasoning)], K NONE, simp)
-                                    phi0 (Option.map fst instruction) ctxt0
+                                    phi0 (Option.map #1 instruction) ctxt0
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule, _) =>
@@ -232,10 +232,10 @@ fun gen_FTF (der_id,name) instruction ctxt0 (phi0 : phi_type) thy =
                 end*)
            in thy
            |> note_properties_s phi0 [(name, [rule])]
-           |> Phi_Help.generic_theory_mapping (fn m =>
+           |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %ToA_derived_one_to_one_functor}
-                                                     (Option.mapPartial snd instruction))
+                                                     (Option.mapPartial #2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule])
            |> pair [rule]
           end)

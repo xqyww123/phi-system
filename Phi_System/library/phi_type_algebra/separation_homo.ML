@@ -5,8 +5,8 @@ val subst_ty : (typ * typ) list -> typ -> typ
 val instantiate_phi_to_pair_x : Proof.context -> term * Phi_Type_Algebra.phi_type ->
         typ TVars.table * ctyp TVars.table * Phi_Type_Algebra.phi_type
 
-val separation_homo_I : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
-val separation_homo_E : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val separation_homo_I : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val separation_homo_E : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
@@ -125,7 +125,7 @@ fun SH_reasoning is_intro phi ctxt =
           else exhaustive_PLPR_reasoner_by_rule @{thm' \<phi>TA_reason_rule__simp_NToA} chk ctxt sequent
          end) phi ctxt
 
-fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
+fun gen_SH is_intro (_,name,pos) instruction ctxt0 (phi0 : phi_type) generic =
   let (*val phi0pr = make_phi_for_pair generic phi0*)
       val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Separation_Homo\<^sub>I\<close>, _) $ _ $ _ $ F $ _ $ _ $ _ $ _ => F
@@ -167,15 +167,15 @@ fun gen_SH is_intro (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                      (if is_intro then @{thm' \<phi>TA_SH\<^sub>I_rule} else @{thm' \<phi>TA_SH\<^sub>E_rule}),
                                      [(K (SOME [0]), ind_conv, SH_reasoning is_intro)],
                                      K NONE, simp)
-                                    phi0 (Option.map fst instruction) ctxt0
+                                    phi0 (Option.map #1 instruction) ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
              |> note_properties_s phi0 [(name, [rule'])]
-             |> Phi_Help.generic_theory_mapping (fn m =>
+             |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %\<phi>TA_derived_properties}
-                                                     (Option.mapPartial snd instruction))
+                                                     (Option.mapPartial #2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule'])
              |> pair [rule']
   end

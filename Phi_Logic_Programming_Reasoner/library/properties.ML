@@ -16,11 +16,15 @@ val add_property_kinds : term list -> theory -> theory
 
 val lookup_property_match : Context.generic -> property_pattern -> (Position.T * thm) list
 val lookup_property_unify : Context.generic -> property_pattern -> (Position.T * thm) list
-val add_property : Position.T * thm -> Context.generic -> Context.generic
+val add_property_instance : Position.T * thm -> Context.generic -> Context.generic
 (*val list_functors : Context.generic -> term list*)
 
-val adding_property : bool Config.T (*controlling if automatically for any new reasoning rules,
-  register to the property DB and invoking the related automation*)
+val invoking_instantiations : bool Config.T (*provides a controller to temporarily disable
+  instantiations of templates that are invoked when property instances are given.*)
+val adding_property : bool Config.T (*controls if for any new reasoning rules registered to \<phi>-LPR,
+  automatically checking whether the rule matches certain known form of properties and
+  if so registering it as an instance of the property and invoking the related automation (if the
+  `invoking_instantiations` is turned on)*)
 
 (*** The Framework for Automation based on Algebraic Property ***)
 
@@ -61,7 +65,7 @@ val list_templates : Context.generic -> template list
 
 type template_argument = Position.T (*position of the property*) * thm (*property*)
 val invoke_template : template -> template_argument -> Context.generic -> Context.generic
-val invoke_automations_on_property : template_argument -> Context.generic -> Context.generic
+val invoke_instantiations_on_property : template_argument -> Context.generic -> Context.generic
     (*invokes any template depending on the given property and of all dependencies satisfied*)
 
 (** Auxiliaries **)
@@ -363,7 +367,7 @@ fun add_template invoke_on_existing_instantiations (template : template) ctxt =
    |> invoke_on_existing_instantiations ? invk_on_existing_instantiations
   end
 
-fun invoke_automations_on_property (pos, property) ctxt =
+fun invoke_instantiations_on_property (pos, property) ctxt =
   let val idx = Thm.maxidx_of property
       val prop_concl = Thm.concl_of property
    in Net.unify_term (Templates.get ctxt) prop_concl
@@ -385,8 +389,9 @@ fun invoke_automations_on_property (pos, property) ctxt =
   end *)
 
 val adding_property = Attrib.setup_config_bool \<^binding>\<open>\<phi>adding_property\<close> (K true)
+val invoking_instantiations = Attrib.setup_config_bool \<^binding>\<open>\<phi>invoking_property_instantiation\<close> (K true)
 
-fun add_property (pos,property) ctxt =
+fun add_property_instance (pos,property) ctxt =
   let val thy = Context.theory_of ctxt
       val prop_concl = Thm.concl_of property
       (*val key_phityp = net_encode_phityp phityp'*)
@@ -418,7 +423,7 @@ fun add_property (pos,property) ctxt =
         end
    in ctxt
    |> chk_clashes
-   |> invoke_automations_on_property (pos, property)
+   |> Config.get_generic ctxt invoking_instantiations ? invoke_instantiations_on_property (pos, property)
    |> Properties.map (Net.insert_term property_eq (prop_concl, (pos, Thm.trim_context property)))
                     (*|> insert_term false (key_phityp, (phityp',pos,Drule.dummy_thm))*)
    handle SKIP => ctxt
@@ -436,7 +441,7 @@ fun add_property_kinds ks thy =
   let fun add_prop k pos rules ctxt =
         let val thy = Context.theory_of ctxt
             val rules' = filter (fn rule => Pattern.matches thy (k, Thm.concl_of rule)) rules
-         in fold (curry add_property pos) rules' ctxt
+         in fold (curry add_property_instance pos) rules' ctxt
         end
    in thy
    |> Property_Kinds.map (fold ((fn k =>
@@ -489,7 +494,7 @@ fun setup_rule_generation (template_pos,(raw_dependencies,pass),(b,gen)) rule0 c
 
 val _ = Theory.setup (
 
-  Attrib.setup \<^binding>\<open>\<phi>type_property\<close> (Scan.succeed (Thm.declaration_attribute (curry add_property Position.none)))
+  Attrib.setup \<^binding>\<open>\<phi>type_property\<close> (Scan.succeed (Thm.declaration_attribute (curry add_property_instance Position.none)))
     "Declare a \<phi>-type property that will be used to instantiate automation"
 
 #>Attrib.setup \<^binding>\<open>\<phi>reason_template\<close> (

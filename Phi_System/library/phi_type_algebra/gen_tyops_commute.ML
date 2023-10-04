@@ -1,7 +1,7 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val meta_Tyops_Commute : bool * int -> quiet -> Phi_Type_Algebra.derive
+val meta_Tyops_Commute : bool * int -> quiet * Position.T -> Phi_Type_Algebra.derive
 
 end
 
@@ -12,7 +12,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 (*is_intro: True for applying the inductive destruction on the source, False for on the target*)
 fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
-                            (_, name) instruction ctxt0 (phi0 : phi_type) thy =
+                            (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
   let val Const (const, _) = head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
       fun extract_oprs_from_hint (C $ D $ r) =
            (case head_of C
@@ -101,15 +101,15 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,
                                      [(K (SOME (if is_intro then [0] else [0,~1])), ind_conv, reasoning is_intro)],
                                      K NONE, simp)
-                                    phi0 (Option.map fst instruction) ctxt0
+                                    phi0 (Option.map #1 instruction) ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
         |> note_properties_s phi0 [(name, [rule'])]
-        |> Phi_Help.generic_theory_mapping (fn m =>
+        |> Phi_Help.generic_theory_mapping pos (fn m =>
              Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                    (the_default @{reasoner_group %\<phi>TA_derived_properties}
-                                                 (Option.mapPartial snd instruction))
+                                                 (Option.mapPartial #2 instruction))
                                    ([],[]) NONE [Morphism.thm m rule'])
         |> pair [rule']
   end
@@ -178,7 +178,7 @@ fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
 (*mode: 1 = only generates introduction deriver
         2 = only generates elimination deriver
         3 = generates both derivers*)
-fun meta_Tyops_Commute (reversed,mode) quiet ctxt (phi : phi_type) thy =
+fun meta_Tyops_Commute (reversed,mode) (quiet,_) ctxt (phi : phi_type) thy =
   let val (binding, deriver, pattern) = meta_gen_Tyops_Commute reversed ctxt phi
       val (binding_I, binding_E) = if reversed
             then (Binding.suffix_name "\<^sub>E" binding, Binding.suffix_name "\<^sub>I" binding)

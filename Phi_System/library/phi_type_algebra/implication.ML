@@ -1,8 +1,8 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val abstract_domain : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
-val abstract_domain_L : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val abstract_domain : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val abstract_domain_L : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 val guess_property_like_abst_domain :
       bool * bool * bool
@@ -297,7 +297,7 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
         | _ => error "Internal bug"
  end
 
-fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
+fun gen_inhab upper (der_id, name, pos) instruction0 ctxt0 (phi0 : phi_type) thy =
   let val guess_property = guess_property_like_abst_domain (
             not upper, false, true,
             if upper then fn (x,m) => \<^Const>\<open>Abstract_Domain x m\<close>
@@ -356,14 +356,14 @@ fun gen_inhab upper (der_id, name) instruction0 ctxt0 (phi0 : phi_type) thy =
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
                                       [(K (SOME [0]), ind_conv, Inh_reasoning)],
                                       solver, simp)
-                                     phi0 (Option.map fst instruction0) ctxt0
+                                     phi0 (Option.map #1 instruction0) ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
-            |> Phi_Help.generic_theory_mapping (fn m =>
+            |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_abstract_domain}
-                                                     (Option.mapPartial snd instruction0))
+                                                     (Option.mapPartial #2 instruction0))
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']

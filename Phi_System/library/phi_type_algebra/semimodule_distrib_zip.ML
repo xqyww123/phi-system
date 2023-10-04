@@ -1,15 +1,15 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val semimodule_distrib_zip : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
-val semimodule_distrib_unzip : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
+val semimodule_distrib_zip : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val semimodule_distrib_unzip : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
 
 end
 
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
+fun gen_MDz is_zip (_, name, pos) instruction ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
               fn (Const(\<^const_name>\<open>Semimodule_SDistr_Homo\<^sub>Z\<close>, _) $ F1 $ T_term $ _ $ _ $ _) =>
                     F1 $ Term.dummy $ T_term
@@ -50,14 +50,14 @@ fun gen_MDz is_zip (_, name) instruction ctxt0 (phi : phi_type) thy =
                                       Guess_Zip_of_Semimodule is_zip, (if is_zip then @{thm' \<phi>TA_MD\<^sub>Z_rule} else @{thm' \<phi>TA_MD\<^sub>U_rule}),
                                       [(K (SOME (if is_zip then [0,2,~1,~1,~1] else [0,2,~1,~1])), ind_conv, reasoning)],
                                       K NONE, simp)
-                                    phi (Option.map fst instruction) ctxt0
+                                    phi (Option.map #1 instruction) ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
-        |> Phi_Help.generic_theory_mapping (fn m =>
+        |> Phi_Help.generic_theory_mapping pos (fn m =>
               Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE
                                     (the_default @{reasoner_group %\<phi>TA_derived_properties}
-                                                 (Option.mapPartial snd instruction))
+                                                 (Option.mapPartial #2 instruction))
                                     ([],[]) NONE [Morphism.thm m rule'])
         |> note_properties_s phi [(name, [rule'])]
         |> pair [rule']

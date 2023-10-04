@@ -1,9 +1,9 @@
 signature PHI_TYPE_ALGEBRA_DERIVERS = sig
 include PHI_TYPE_ALGEBRA_DERIVERS
 
-val identity_element_I : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
-val identity_element_E : quiet -> deriving_instruction list -> Phi_Type_Algebra.derive
-val id_ele_properties : bool -> Phi_Type_Algebra.derive
+val identity_element_I : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val identity_element_E : quiet * Position.T -> deriving_instruction list -> Phi_Type_Algebra.derive
+val id_ele_properties : Position.T -> bool -> Phi_Type_Algebra.derive
 
 end
 
@@ -194,7 +194,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
          phi, ctxt))
   end
 
-fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
+fun gen_id_ele is_left (_,name,pos) instruction ctxt0 (phi0 : phi_type) generic =
   let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Identity_Elements\<^sub>I\<close>, _) $ T $ _ $ _ => T
              | Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ T $ _ => T
@@ -251,20 +251,20 @@ fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
                                      guess_property is_left, rule,
                                      [(K (SOME [0]), ind_conv, reasoning)],
                                      id_ele_infer, simp)
-                                    phi0 (Option.map fst instruction) ctxt0
+                                    phi0 (Option.map #1 instruction) ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
-            |> Phi_Help.generic_theory_mapping (fn m =>
+            |> Phi_Help.generic_theory_mapping pos (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_identity_element}
-                                                     (Option.mapPartial snd instruction))
+                                                     (Option.mapPartial #2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']
   end
 
-fun id_ele_properties is_intro ctxt0 (phi0 : phi_type) thy =
+fun id_ele_properties pos is_intro ctxt0 (phi0 : phi_type) thy =
   let val (_,_,m_ty0) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val inst = lift_types_sort (Proof_Context.theory_of ctxt0) [(m_ty0, \<^sort>\<open>one\<close>)]
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt0) inst
@@ -285,8 +285,8 @@ fun id_ele_properties is_intro ctxt0 (phi0 : phi_type) thy =
                     end)
               else ()
    in thy
-   |> Phi_Help.generic_theory_mapping (fn m =>
-        Phi_Type_Template_Properties.add_property (#pos phi, Morphism.thm m trigger))
+   |> Phi_Help.generic_theory_mapping pos (fn m =>
+        Phi_Type_Template_Properties.add_property_instance (pos, Morphism.thm m trigger))
   end
 
 val identity_element_I = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Identity_Element\<^sub>I") (gen_id_ele true)
