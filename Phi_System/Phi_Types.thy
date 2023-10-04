@@ -22,12 +22,25 @@ This is a planning feature has not been implemented\<close>
 
 syntax TY_of_\<phi> :: \<open>('a,'b) \<phi> \<Rightarrow> TY\<close> ("TY'_of'_\<phi>")
 
+subsection \<open>Itself\<close> \<comment> \<open>It and the vertical composition given later are the only primitives in the algbera of \<phi>-Types\<close>
+
+lemma Itself_is_primitive: \<open>x \<Ztypecolon> Itself \<equiv> x \<Ztypecolon> Itself\<close> .
+
+declare [[\<phi>trace_reasoning = 1]]
+
+setup \<open>Context.theory_map (
+  Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>Itself\<close>, Thm.transfer \<^theory> @{thm' Itself_is_primitive}),
+                             \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+   #> snd )\<close>
+
+text \<open>No deriver is available on \<open>Itself\<close>, and they will trap in infinite loops because the fake
+  definition \<open>Itself_is_primitive\<close> given to the deriving engine is infinitely recursive.\<close>
+
+
 subsection \<open>Embedding of Empty\<close>
 
 lemma \<phi>None_def': \<open> (x \<Ztypecolon> \<circle>) = (1 \<Ztypecolon> Itself) \<close>
   by (simp add: BI_eq_iff)
-
-declare [[\<phi>trace_reasoning = 1]]
 
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>None\<close>, Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
@@ -49,6 +62,49 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>None.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv \<circle> (\<lambda>_ _. True) \<close>)
 ]\<close>
 
+
+subsection \<open>Embedding of \<open>\<top>\<close>\<close>
+
+setup \<open>Context.theory_map (
+  Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>Any\<close>, Thm.transfer \<^theory> @{thm' \<phi>Any_def}),
+                             \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+   #> snd )\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
+
+let_\<phi>type \<phi>Any deriving Basic
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>Any.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L \<top>\<^sub>\<phi> (\<lambda>x. True) \<close>),
+  (@{thm' \<phi>Any.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain \<top>\<^sub>\<phi> (\<lambda>x. True) \<close>),
+  (@{thm' \<phi>Any.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv \<top>\<^sub>\<phi> (\<lambda>_ _. True) \<close>)
+]\<close>
+
+subsection \<open>Embedding of \<open>\<bottom>\<close>\<close>
+
+declare \<phi>Bot_def[embed_into_\<phi>type]
+
+setup \<open>Context.theory_map (
+  Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>Bot\<close>, Thm.transfer \<^theory> @{thm' \<phi>Bot_def}),
+                             \<^here>, Phi_Type_Algebra.Derivings.empty, [])
+   #> snd )\<close>
+
+let_\<phi>type \<phi>Bot
+  deriving Basic
+       and \<open>Abstract_Domain \<bottom>\<^sub>\<phi> (\<lambda>x. False)\<close>
+       and \<open>Abstract_Domain\<^sub>L \<bottom>\<^sub>\<phi> (\<lambda>x. False)\<close>
+       and Functionality
+       and Carrier_Set
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' \<phi>Bot.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L \<bottom>\<^sub>\<phi> (\<lambda>x. False) \<close>),
+  (@{thm' \<phi>Bot.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain \<bottom>\<^sub>\<phi> (\<lambda>x. False) \<close>),
+  (@{thm' \<phi>Bot.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv \<bottom>\<^sub>\<phi> (\<lambda>_ _. True) \<close>),
+  (@{thm' \<phi>Bot.Functionality}, \<^pattern_prop>\<open> Functionality \<bottom>\<^sub>\<phi> (\<lambda>x. True) \<close>),
+  (@{thm' \<phi>Bot.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set \<bottom>\<^sub>\<phi> (\<lambda>x. True)  \<close>)
+]\<close>
+
+(*TODO: bi-functors of \<phi>Prod?*)
 
 subsection \<open>Func\<close>
 

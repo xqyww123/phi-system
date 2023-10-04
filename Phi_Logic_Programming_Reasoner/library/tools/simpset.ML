@@ -87,12 +87,12 @@ structure Thms = Named_Thms (
 val simp_rules = Thms.get
 
 fun add_simps thms = map_with_result (fn ctxt =>
-            (maps (Simplifier.mksimps ctxt) thms, ctxt addsimps thms))
-              #-> fold Thms.add_thm
+          (maps (Simplifier.mksimps ctxt) thms, ctxt addsimps thms)
+        ) #-> fold Thms.add_thm
 val add_simps' = Context.proof_map o add_simps
 fun del_simps thms = map_with_result (fn ctxt =>
-            (maps (Simplifier.mksimps ctxt) thms, ctxt delsimps thms))
-              #-> fold Thms.del_thm
+          (maps (Simplifier.mksimps ctxt) thms, ctxt delsimps thms)
+        ) #-> fold Thms.del_thm
 
 val add = Thm.declaration_attribute (fn th => add_simps [th])
 val del = Thm.declaration_attribute (fn th => del_simps [th])

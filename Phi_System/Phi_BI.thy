@@ -3812,16 +3812,9 @@ lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\
   unfolding Object_Equiv_def Transformation_def Premise_def by clarsimp*)
 
 lemma [\<phi>reason %object_equiv_cut]:
-  \<open> Object_Equiv \<top>\<^sub>\<phi> (\<lambda>_ _. True) \<close>
-  unfolding Object_Equiv_def Transformation_def
-  by simp
-
-lemma [\<phi>reason %object_equiv_cut]:
   \<open> Object_Equiv \<circle> (\<lambda>_ _. True) \<close>
   unfolding Object_Equiv_def Transformation_def
   by simp
-
-
 
 lemma [\<phi>reason %object_equiv_cut]:
   \<open> (\<And>a. Object_Equiv (\<lambda>x. S x a) (R a))

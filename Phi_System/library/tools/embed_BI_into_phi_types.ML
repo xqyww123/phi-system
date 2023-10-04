@@ -40,6 +40,17 @@ fun chk_rewr ctxt thm =
    in chk (Thm.concl_of thm)
   end
 
+fun chk2T ctxt thm =
+  let val (X,Y) = case Thm.concl_of thm
+                    of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ Y => (X,Y)
+                     | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ Y) => (X,Y)
+      val tvar_X = Term.add_tvars X []
+      val badsT= subtract (op =) tvar_X (Term.add_tvars Y [] )
+   in if null badsT then thm
+      else Thm.instantiate (TVars.make (map (rpair \<^ctyp>\<open>unit\<close>) badsT), Vars.empty) thm
+  end
+
+
 fun chk2 ctxt thm =
   let val (X,Y) = case Thm.concl_of thm
                     of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ Y => (X,Y)
@@ -49,12 +60,16 @@ fun chk2 ctxt thm =
    in if null bads then thm
       else Thm.instantiate (TVars.empty,
               Vars.make (map (fn (v,t) =>
-                ((v,t), Thm.cterm_of ctxt (Const(\<^const_name>\<open>undefined\<close>, t)))) bads)) thm
+                let val const = case t of \<^Type>\<open>unit\<close> => \<^Const>\<open>Unity\<close>
+                                        | _ => \<^Const>\<open>undefined t\<close>
+                 in ((v,t), Thm.cterm_of ctxt const)
+                end) bads)) thm
   end
 
 fun chk_rewr' ctxt thm =
       (chk_rewr ctxt thm
        handle THM _ => chk_rewr ctxt (Phi_Type_Algebra.conv_def_to_equation ctxt thm))
+        |> chk2T ctxt
         |> chk2 ctxt
 
 structure Embed_into_Phi_Type = Simpset (

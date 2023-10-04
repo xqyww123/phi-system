@@ -476,10 +476,12 @@ consts mode_embed_into_\<phi>type :: mode
 
 \<phi>reasoner_ML Simp_Premise 10 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[mode_embed_into_\<phi>type] _ : _\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt => Embed_into_Phi_Type.equip ctxt) true) o snd\<close>
+
  
 lemmas [embed_into_\<phi>type] =
     \<phi>None_itself_is_one[where any=\<open>()\<close>] \<phi>Prod_expn' \<phi>Any_def
 
+ML \<open>Embed_into_Phi_Type.print \<^context> true\<close>
 
 subsection \<open>Semantic Type of Multiple Values\<close>
 

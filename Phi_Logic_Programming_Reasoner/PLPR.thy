@@ -354,7 +354,7 @@ ML_file_debug \<open>library/helpers.ML\<close>
 ML_file \<open>library/tools/Hook.ML\<close>
 ML_file \<open>library/handlers.ML\<close>
 ML_file \<open>library/pattern_translation.ML\<close>
-ML_file \<open>library/tools/simpset.ML\<close>
+ML_file_debug \<open>library/tools/simpset.ML\<close>
 
 subsubsection \<open>Isomorphic Atomize\<close>
 
