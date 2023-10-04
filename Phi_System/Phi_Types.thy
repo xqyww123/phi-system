@@ -787,23 +787,31 @@ lemma \<S>_Homo_rewr [\<phi>reason_template name Fa.\<S>_rewr []]:
 \<Longrightarrow> Functional_Transformation_Functor Fb Fa T (\<S> T) D' R' pm fm
 \<Longrightarrow> (\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> s' : Collect (mapper (\<lambda>S x. x \<in> S) s)) @action \<A>_template_reason
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s) \<and>
-           (\<forall>x a. x \<in> s' \<and> a \<in> D' x \<longrightarrow> f a \<in> R' x \<and> a \<in> f a) \<and>
-           (\<forall>x \<in> s'. fm f (\<lambda>_. True) x = s)
+           ( (\<forall>x a. x \<in> s' \<and> a \<in> D' x \<longrightarrow> s \<in> R' x \<and> a \<in> s) \<and>
+             (\<forall>x \<in> s'. fm (\<lambda>_. s) (\<lambda>_. True) x = s) \<comment> \<open>Isabelle simplifier fails to find an instantiation
+                  of \<open>f\<close> to reduce the following condition even when the instantiation is simply \<open>\<lambda>_. s\<close>
+                  in most of situations. Therefore, here we give a duplicated disjunction substituting
+                  \<open>\<lambda>_. s\<close> for \<open>f\<close> directly, so the the simplification works. \<close>
+           \<or> (\<forall>x a. x \<in> s' \<and> a \<in> D' x \<longrightarrow> f a \<in> R' x \<and> a \<in> f a) \<and>
+             (\<forall>x \<in> s'. fm f (\<lambda>_. True) x = s))
 \<Longrightarrow> (s \<Ztypecolon> Fa (\<S> T)) = (s' \<Ztypecolon> \<S> (Fb T)) \<close>
   unfolding Action_Tag_def Simplify_def Premise_def
-  by (rule assertion_eq_intro,
+  by ((clarify, elim disjE);
+     (rule assertion_eq_intro,
      (rule \<S>_Homo\<^sub>E[unfolded Premise_def Simplify_def Action_Tag_def, where Fa=Fa and Fb=Fb],
        assumption, simp, simp),
      (clarify, rule \<S>_Homo\<^sub>I[unfolded Premise_def, where Fa=Fb and Fb=Fa],
-       assumption, simp))
+       assumption, simp)))
 
 lemma \<S>_Homo_rewr_ty [\<phi>reason_template name Fa.\<S>_rewr_ty []]:
   \<open> Transformation_Functor Fa Fb (\<S> T) T D R mapper
 \<Longrightarrow> Functional_Transformation_Functor Fb Fa T (\<S> T) D' R' pm fm
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>s. Collect (mapper (\<lambda>S x. x \<in> S) s) = s) @action \<A>_template_reason
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>s a b. a \<in> D s \<and> b \<in> a \<longrightarrow> b \<in> R s) \<and>
-           (\<forall>s x a. x \<in> s \<and> a \<in> D' x \<longrightarrow> f s a \<in> R' x \<and> a \<in> f s a) \<and>
-           (\<forall>s x. x \<in> s \<longrightarrow> fm (f s) (\<lambda>_. True) x = s)
+           ( (\<forall>s x a. x \<in> s \<and> a \<in> D' x \<longrightarrow> s \<in> R' x \<and> a \<in> s) \<and>
+             (\<forall>s x. x \<in> s \<longrightarrow> fm (\<lambda>_. s) (\<lambda>_. True) x = s) \<or>
+             (\<forall>s x a. x \<in> s \<and> a \<in> D' x \<longrightarrow> f s a \<in> R' x \<and> a \<in> f s a) \<and>
+             (\<forall>s x. x \<in> s \<longrightarrow> fm (f s) (\<lambda>_. True) x = s) )
 \<Longrightarrow> Fa (\<S> T) = \<S> (Fb T) \<close>
   unfolding Action_Tag_def Simplify_def Premise_def
   apply (rule \<phi>Type_eqI_BI, clarify)
@@ -877,10 +885,10 @@ declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Composition :: \<open>('v,'a) \<phi> \<Rightarrow> ('a,'b) \<phi> \<Rightarrow> ('v,'b) \<phi>\<close> (infixl "\<Zcomp>" 30)
   where \<open>\<phi>Composition T U x = (y \<Ztypecolon> T \<s>\<u>\<b>\<j> y. y \<Turnstile> (x \<Ztypecolon> U))\<close>
-  deriving Carrier_Set
+  deriving \<open>Carrier_Set T P \<Longrightarrow> Carrier_Set (T \<Zcomp> U) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> U) \<longrightarrow> P v)\<close>
 
 ML \<open>assert_derived_properties \<^theory> [
-  (@{thm' \<phi>Composition.Carrier_Set}, \<^pattern_prop>\<open>Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set ?U ?Pa \<Longrightarrow> Carrier_Set (?T \<Zcomp> ?U) (\<lambda>x. \<forall>xa. xa \<Turnstile> (x \<Ztypecolon> ?U) \<longrightarrow> ?P xa)\<close>)
+  (@{thm' \<phi>Composition.Carrier_Set}, \<^pattern_prop>\<open>Carrier_Set ?T ?P \<Longrightarrow> Carrier_Set (?T \<Zcomp> ?U) (\<lambda>x. \<forall>v. v \<Turnstile> (x \<Ztypecolon> ?U) \<longrightarrow> ?P v)\<close>)
 ]\<close>
 
 text \<open>
@@ -1532,9 +1540,11 @@ lemma [simp]: (*TODO: move me*)
 
 declare [[\<phi>trace_reasoning = 0]]
 
-\<phi>reasoner_group identity_elements_of_\<phi>Fun = (100, [100, 140]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
-                                                               in identity_element and > derived_identity_element
-  \<open>Rules of \<phi>Fun\<close>
+\<phi>reasoner_group
+      identity_elements_of_\<phi>Fun = (100, [100, 140]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
+                                                     in identity_element and > derived_identity_element \<open>\<close>
+  and carrier_set_of_\<phi>Fun = (60, [60,70]) for \<open>Carrier_Set _ _\<close>
+                                           in carrier_set and > derived_carrier_set and < carrier_set_cut \<open>\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
@@ -1565,8 +1575,14 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        (*and Trivial_\<Sigma>*)
        and \<open>homo_sep \<psi> \<Longrightarrow> Separation_Homo\<^sub>E (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) (\<phi>Fun' \<psi>) T U (\<lambda>x. x)\<close>
-       and \<open>homo_mul_carrier f \<Longrightarrow> Carrier_Set U P \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
+       and \<open>\<g>\<u>\<a>\<r>\<d> homo_mul_carrier f
+        \<Longrightarrow> Carrier_Set U P
+        \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P \<close> \<comment> \<open>Guesser fails. It is
                             still too hard for our guesser to infer \<open>homo_mul_carrier f\<close>\<close>
+           (%carrier_set_of_\<phi>Fun+10)
+       and \<open>\<g>\<u>\<a>\<r>\<d> constantly_inside_carrier f
+        \<Longrightarrow> Carrier_Set (f \<Zcomp>\<^sub>f U) P\<close>
+           (%carrier_set_of_\<phi>Fun)
        and Abstraction_to_Raw
        and Commutativity_Deriver
        and \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] inj f
@@ -2511,12 +2527,6 @@ ML \<open>assert_derived_properties \<^theory> [
         \<Longrightarrow> Tyops_Commute ((\<odiv>) ?n) ((\<odiv>) ?n) ((\<^bold>\<rightarrow>\<^sub>@) ?k) ((\<^bold>\<rightarrow>\<^sub>@) ?k) (?Ta::?'a \<Rightarrow> (?'b list \<Rightarrow> ?'c::share_one) set) (\<lambda>x. True) (embedded_func (\<lambda>x. x) (\<lambda>_. True)) \<close>)
 ]\<close>
 
-lemmas \<phi>Share_\<S>_rewr [assertion_simps, simp] =
-  \<phi>Share.\<S>_rewr[where f=\<open>\<lambda>_. s\<close> and s=s and n=n and na=n for s n, simplified]
-
-lemmas \<phi>Share_\<S>_rewr_ty [assertion_simps, simp] =
-  \<phi>Share.\<S>_rewr_ty[where f=\<open>\<lambda>s _. s\<close> and n=n and na=n for n, simplified]
-
 thm \<phi>Share.\<S>_rewr_ty
 thm \<phi>MapAt_L.\<phi>Share.comm_rewr
 
@@ -2928,207 +2938,7 @@ abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
 \<phi>adhoc_overloading \<phi>coercion \<phi>Some \<phi>Share_Some \<phi>Share_Some_L
 
 
-paragraph \<open>Implication \& Action Rules\<close>
-
-
-
-
-thm \<phi>Some.intro
-
-ML \<open>Phi_Type_Algebra.add_type (Phi_Type_Algebra.DIRECT_DEF (\<^term>\<open>\<phi>Some\<close>, @{thm' \<phi>Some_def'}),
-                               \<^here>, Phi_Type_Algebra.Derivings.empty, [])\<close>
-
-
-
-
-
-lemma \<phi>Some_cast[\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<black_circle> U \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def by (clarsimp simp add: \<phi>expns)
-
-(* TODO:: fix me!!!
-lemma [\<phi>reason 1100]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> Itself \<w>\<i>\<t>\<h> P @action to Itself
-\<Longrightarrow> x \<Ztypecolon> \<black_circle> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Some x' \<Ztypecolon> Itself \<w>\<i>\<t>\<h> P @action to Itself \<close>
-  unfolding Action_Tag_def Transformation_def by (clarsimp simp add: \<phi>expns) *)
-
-
-lemma [simp]:
-  \<open>(\<black_circle> ExTyp T) = (\<exists>\<phi> c. \<black_circle> T c)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-lemma [simp]:
-  \<open>(\<black_circle> (T \<phi>\<s>\<u>\<b>\<j> P)) = (\<black_circle> T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-(*lemma \<phi>Some_simp_cong[folded atomize_eq]:
-  \<open> (x \<Ztypecolon> T) = (x' \<Ztypecolon> T')
-\<Longrightarrow> (x \<Ztypecolon> \<black_circle> T) = (x' \<Ztypecolon> \<black_circle> T')\<close>
-  unfolding set_eq_iff by (simp add: \<phi>expns)
-
-simproc_setup \<phi>Some_simp_cong ("x \<Ztypecolon> \<black_circle> T") = \<open>
-  K (fn ctxt => Phi_SimpProc.cong @{thm \<phi>Some_simp_cong} ctxt)
-\<close>*)
-
-lemma [\<phi>reason 1200]:
-  \<open> v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> T \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Some v \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> v' \<Ztypecolon> \<black_circle> T \<w>\<i>\<t>\<h> P\<close>
-  by (clarsimp simp add: \<phi>expns Transformation_def)
-
-lemma [\<phi>reason 1200]:
-  \<open> Is_Functional (x \<Ztypecolon> T)
-\<Longrightarrow> Is_Functional (x \<Ztypecolon> \<black_circle> T)\<close>
-  by (clarsimp simp add: \<phi>expns Is_Functional_def)
-
-paragraph \<open>Algebraic Properties\<close>
-
-interpretation \<phi>Some: Functional_Transformation_Functor \<phi>Some \<phi>Some
-      \<open>\<lambda>x. {x}\<close> \<open>\<lambda>x. x\<close> True \<open>\<lambda>x. x\<close> \<open>\<lambda>x. x\<close>
-  by (standard, clarsimp simp add: Transformation_Functor_def Transformation_def ExSet_expn
-      Subjection_expn \<phi>Some_expn; blast)
-
-interpretation \<phi>Some: Sep_Homo_Type_Functor_L \<phi>Some \<phi>Some \<phi>Some True
-  by (standard, rule \<phi>Type_eqI, clarsimp simp add: \<phi>Prod_expn \<phi>Some_expn, force)
-
-
-subsubsection \<open>\<phi>Sep_Disj\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj X Y
-\<Longrightarrow> \<phi>Sep_Disj X (m \<odiv> Y)\<close>
-  for X :: \<open>('a::share_sep_disj,'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def by (clarsimp simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj Y X
-\<Longrightarrow> \<phi>Sep_Disj (m \<odiv> Y) X\<close>
-  for X :: \<open>('a::share_sep_disj,'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def by (clarsimp simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj X \<phi>None\<close>
-  for X :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj \<phi>None X\<close>
-  for X :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k1 \<noteq> k2
-||| \<phi>Sep_Disj T U
-\<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow> T) (k2 \<^bold>\<rightarrow> U)\<close>
-  for T :: \<open>('a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def atomize_Branch
-  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)+
-
-lemma [\<phi>reason 1200]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k1 \<noteq> k2
-||| \<phi>Sep_Disj T U
-\<Longrightarrow> \<phi>Sep_Disj (k1 \<^bold>\<rightarrow>\<^sub># T) (k2 \<^bold>\<rightarrow>\<^sub># U)\<close>
-  for T :: \<open>('k list \<Rightarrow> 'a::sep_magma_1, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def atomize_Branch
-  by (clarsimp simp add: \<phi>expns sep_disj_fun_def push_map_def)+
-
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj X A
-\<Longrightarrow> \<phi>Sep_Disj X B
-\<Longrightarrow> \<phi>Sep_Disj X (A \<^emph> B) \<close>
-  for X :: \<open>('a::sep_disj_distrib, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def
-  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
-
-lemma [\<phi>reason 1300]:
-  \<open> \<phi>Sep_Disj X Z
-\<Longrightarrow> \<phi>Sep_Disj Y Z
-\<Longrightarrow> \<phi>Sep_Disj (X \<^emph> Y) Z \<close>
-  for X :: \<open>('a::sep_disj_distrib, 'b) \<phi>\<close>
-  unfolding \<phi>Sep_Disj_def
-  by (clarsimp simp add: \<phi>expns sep_disj_fun_def)
-
-
-subsubsection \<open>\<phi>Sep_Disj_Inj\<close>
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> n \<odiv> T)\<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  apply (clarsimp simp add: \<phi>expns)
-  by force
-
-lemma \<phi>Sep_Disj_Inj_\<phi>MapAt[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> k \<^bold>\<rightarrow> T)\<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  apply (clarsimp simp add: \<phi>expns)
-  by force
-
-lemma \<phi>Sep_Disj_Inj_\<phi>MapAt_L[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> k \<^bold>\<rightarrow>\<^sub>@ T)\<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  apply (clarsimp simp add: \<phi>expns)
-  using push_map_sep_disj by blast
-
-lemma \<phi>Sep_Disj_Inj_Prod[\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (y \<Ztypecolon> U)
-\<Longrightarrow> \<phi>Sep_Disj_Inj ((x,y) \<Ztypecolon> T \<^emph> U)\<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  apply (clarsimp simp add: )
-  by (metis sep_refl_mult_I sep_disj_multD1 sep_disj_multD2)
-
-lemma [\<phi>reason 1190]:
-  \<open> \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (snd x \<Ztypecolon> U)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> T \<^emph> U)\<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  by (cases x; clarsimp simp add: \<phi>expns; metis sep_refl_mult_I sep_disj_multD1 sep_disj_multD2)
-
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion f D T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow> T)) \<close>
-  by (subst \<phi>insertion_MapAt; rule \<phi>Sep_Disj_Inj_\<phi>MapAt)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion ((o) f) (pointwise_set D) T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion ((o) f) (pointwise_set D) (k \<^bold>\<rightarrow>\<^sub>@ T)) \<close>
-  by (subst \<phi>insertion_MapAt_L; rule \<phi>Sep_Disj_Inj_\<phi>MapAt_L)
-
-lemma [\<phi>reason 1190]:
-  \<open> \<phi>Sep_Disj_Inj (fst x \<Ztypecolon> \<phi>insertion f D T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (snd x \<Ztypecolon> \<phi>insertion f D U)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion f D (T \<^emph> U)) \<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  by (cases x; simp; smt (verit) Transformation_def \<phi>Sep_Disj_Inj_Prod \<phi>Sep_Disj_Inj_def \<phi>insertion_Prod_imply)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion f D T)
-\<Longrightarrow> \<phi>Sep_Disj_Inj (y \<Ztypecolon> \<phi>insertion f D U)
-\<Longrightarrow> \<phi>Sep_Disj_Inj ((x,y) \<Ztypecolon> \<phi>insertion f D (T \<^emph> U)) \<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  by (smt (verit) Transformation_def \<phi>Sep_Disj_Inj_Prod \<phi>Sep_Disj_Inj_def \<phi>insertion_Prod_imply)
-
-lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion to_share D (\<phi>Some T))\<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: \<phi>expns; rule; clarsimp)
-
-lemma [\<phi>reason 1200]:
-  \<open>\<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>insertion to_share D \<phi>None)\<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: \<phi>expns; rule; clarsimp)
-
-lemma [\<phi>reason 1200]:
-  \<open> \<phi>Sep_Disj_Inj (x \<Ztypecolon> \<phi>None :: 'a::share_semimodule set) \<close>
-  unfolding \<phi>Sep_Disj_Inj_def
-  by (clarsimp simp add: \<phi>expns)
-
-
+(* TODO: re-enable when needed. DO NOT REMOVE, are still useful but I don't want to repair them right now.
 subsection \<open>Agreement\<close>
 
 definition Agreement :: \<open>('T, 'x) \<phi> \<Rightarrow> ('T agree option, 'x) \<phi>\<close>
@@ -3218,89 +3028,37 @@ lemma [\<phi>reason 1100]:
   \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Z)
 \<Longrightarrow> x \<Ztypecolon> Agreement T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Agreement U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Agreement Z)\<close>
   unfolding Action_Tag_def using Agreement_cast .
+*)
 
+subsection \<open>Discrete Algebra\<close>
 
-subsection \<open>Nosep\<close>
+declare [[\<phi>trace_reasoning = 0]]
 
-definition Nosep :: \<open>('T, 'x) \<phi> \<Rightarrow> ('T nosep, 'x) \<phi>\<close>
-  where \<open>Nosep T x = nosep ` (x \<Ztypecolon> T)\<close>
-
-term \<open>\<lambda>T. \<fish_eye> Nosep T\<close>
+\<phi>type_def Nosep :: \<open>('c, 'a) \<phi> \<Rightarrow> ('c nosep, 'a) \<phi>\<close>
+  where \<open>Nosep T = (nosep \<Zcomp>\<^sub>f T)\<close>
+  deriving Basic
+       and \<open>Carrier_Set (Nosep T) (\<lambda>_. True)\<close>
+       and Functionality
+       and Functional_Transformation_Functor
 
 \<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. \<black_circle> Nosep T\<close> \<open>\<lambda>T. \<fish_eye> Nosep T\<close> (* \<open>\<lambda>T. \<fish_eye>\<^sub>L Nosep T\<close> *)
+
+ML \<open>assert_derived_properties \<^theory> [
+  (@{thm' Nosep.Abstract_Domain\<^sub>L}, \<^pattern_prop>\<open> Abstract_Domain\<^sub>L ?T ?P \<Longrightarrow> Abstract_Domain\<^sub>L (Nosep ?T) ?P  \<close>),
+  (@{thm' Nosep.Abstract_Domain}, \<^pattern_prop>\<open> Abstract_Domain ?T ?P \<Longrightarrow> Abstract_Domain (Nosep ?T) ?P \<close>),
+  (@{thm' Nosep.Carrier_Set}, \<^pattern_prop>\<open> Carrier_Set (Nosep ?T) (\<lambda>_. True) \<close>),
+  (@{thm' Nosep.Functionality}, \<^pattern_prop>\<open> Functionality ?T ?P \<Longrightarrow> Functionality (Nosep ?T) ?P   \<close>),
+  (@{thm' Nosep.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv ?T ?eq \<Longrightarrow> Object_Equiv (Nosep ?T) ?eq \<close>),
+  (@{thm' Nosep.Transformation_Functor}, \<^pattern_prop>\<open> Transformation_Functor Nosep Nosep ?T ?U (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>g. g) \<close>),
+  (@{thm' Nosep.Functional_Transformation_Functor}, \<^pattern_prop>\<open> Functional_Transformation_Functor Nosep Nosep ?T ?U (\<lambda>a. {a}) (\<lambda>x. UNIV) (\<lambda>f P. P) (\<lambda>f P. f) \<close>)
+]\<close>
 
 (*TODO: give a configure flag to control this sugar*)
 translations
   "\<coercion> T" <= "\<fish_eye> CONST Nosep T"
 
-lemma Nosep_expns[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> Nosep T) \<longleftrightarrow> (\<exists>v. p = nosep v \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Type_def Nosep_def by blast
 
-lemma Nosep_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> Nosep T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C @action \<A>EIF
-\<Longrightarrow> Inhabited (x \<Ztypecolon> Nosep T) \<longrightarrow> C @action \<A>EIF\<close>
-  unfolding Inhabited_def Action_Tag_def
-  by (simp add: Nosep_expns)
-
-
-paragraph \<open>Conversion\<close>
-
-lemma [simp]:
-  \<open>Nosep (T \<phi>\<s>\<u>\<b>\<j> P) = (Nosep T \<phi>\<s>\<u>\<b>\<j> P)\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-lemma [simp]:
-  \<open>Nosep (ExTyp T) = (\<exists>\<phi>c. Nosep (T c))\<close>
-  by (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; blast)
-
-
-paragraph \<open>Rule\<close>
-
-lemma Nosep_cast[\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Nosep T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Nosep U \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def
-  by (clarsimp simp add: \<phi>expns)
-
-lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action \<A>_structural Act
-\<Longrightarrow> x \<Ztypecolon> Nosep T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Nosep U \<w>\<i>\<t>\<h> P @action \<A>_structural Act\<close>
-  unfolding Action_Tag_def using Nosep_cast .
-
-lemma [\<phi>reason 2000]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Nosep T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Nosep U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Z\<close>
-  unfolding Action_Tag_def Transformation_def
-  by (clarsimp simp add: \<phi>expns)
-
-lemma [\<phi>reason 1100]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Nosep T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Nosep U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to (Nosep Z)\<close>
-  unfolding Action_Tag_def Transformation_def
-  by (clarsimp simp add: \<phi>expns)
-
-lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action as Z
-\<Longrightarrow> x \<Ztypecolon> Nosep T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Nosep U \<w>\<i>\<t>\<h> P @action as Z\<close>
-  unfolding Action_Tag_def using Nosep_cast .
-
-lemma [\<phi>reason 1100]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> x \<Ztypecolon> Nosep T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Nosep U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Nosep Z)\<close>
-  unfolding Action_Tag_def using Nosep_cast .
-
-lemma [\<phi>reason 1200 for \<open>_ \<Ztypecolon> Nosep _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Itself \<w>\<i>\<t>\<h> _\<close>]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> Nosep T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nosep y \<Ztypecolon> Itself \<w>\<i>\<t>\<h> P \<close>
-  unfolding Transformation_def 
-  by (clarsimp simp add: Nosep_expns Itself_expn)
-
-
+(* TODO: re-enable when needed. DO NOT REMOVE, can be useful perhaps but I don't want to repair them right now.
 section \<open>Specifc Structures\<close>
 
 subsection \<open>Potentially Uninitialized Structure\<close>
@@ -3372,11 +3130,11 @@ lemma \<phi>Uninit_expn[\<phi>expns]:
 (* TODO
 lemma \<phi>Uninit_inhabited[\<phi>inhabitance_rule, elim!]:
   \<open>Inhabited (x \<Ztypecolon> \<phi>Uninit) \<Longrightarrow> C \<Longrightarrow> C\<close> . *)
-
+*)
 
 section \<open>Misc.\<close>
 
-subsection \<open>Forward Simulation\<close>
+subsection \<open>Forward Simulation\<close> (*TODO*)
 
 definition \<phi>F_simulation
     :: \<open>('av,'a) \<phi> \<Rightarrow> ('bv,'b) \<phi> \<Rightarrow> (('av \<times> 'bv) set, ('a \<times> 'b) set) \<phi>\<close> (infixr "\<Rrightarrow>\<^sub>r" 25)

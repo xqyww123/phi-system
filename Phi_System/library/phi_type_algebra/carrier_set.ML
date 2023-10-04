@@ -68,6 +68,6 @@ fun gen_carrier_set (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
   end
 
-val carrier_set = deriver_framework (ACCEPT_ONE_HINT, ONLY_ONCE, "Carrier_Set") gen_carrier_set
+val carrier_set = deriver_framework (ACCEPT_ANY_HINTS, ONLY_ONCE_IF_NO_HINT, "Carrier_Set") gen_carrier_set
 
 end

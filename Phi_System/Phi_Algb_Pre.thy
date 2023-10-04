@@ -396,6 +396,8 @@ lemmas [\<phi>reason %algb_funcomp] =
 
 subsection \<open>Constant Functions\<close>
 
+subsubsection \<open>Constant One\<close>
+
 definition \<open>constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1)\<close>
 
 lemma [\<phi>premise_extraction add]:
@@ -408,6 +410,40 @@ lemma [\<phi>reason default %algb_falling_lattice]:
 \<Longrightarrow> constant_1 \<psi>\<close>
   unfolding constant_1_def Premise_def
   by simp
+
+
+subsubsection \<open>Constantly inside the Carrier Set\<close>
+
+definition \<open>constantly_inside_carrier f \<longleftrightarrow> (\<forall>x. mul_carrier (f x))\<close>
+
+declare [[\<phi>reason_default_pattern \<open>constantly_inside_carrier ?\<psi>\<close> \<Rightarrow> \<open>constantly_inside_carrier ?\<psi>\<close> (100) ]]
+
+paragraph \<open>Basic Properties\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> constantly_inside_carrier \<psi> \<longrightarrow> (\<forall>x. mul_carrier (\<psi> x)) @action \<A>EIF \<close>
+  unfolding Action_Tag_def constantly_inside_carrier_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<forall>x. mul_carrier (\<psi> x)) \<longrightarrow> constantly_inside_carrier \<psi> @action \<A>ESC \<close>
+  unfolding Action_Tag_def constantly_inside_carrier_def
+  by blast
+
+paragraph \<open>Fallback\<close>
+
+lemma [\<phi>reason %algb_falling_lattice]:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. mul_carrier (\<psi> x))
+\<Longrightarrow> constantly_inside_carrier \<psi> \<close>
+  unfolding \<r>Guard_def Premise_def constantly_inside_carrier_def .
+
+paragraph \<open>Instances\<close>
+
+lemma [\<phi>reason %algb_cut]:
+  \<open> constantly_inside_carrier nosep \<close>
+  unfolding constantly_inside_carrier_def
+  by simp
+
 
 subsection \<open>Instances of the Algebraic Properties\<close>
 
@@ -618,13 +654,8 @@ lemma [\<phi>reason %algb_cut]:
   unfolding homo_mul_carrier_def Premise_def
   by clarsimp
 
-thm homo_sep_disj_discrete
-
 text \<open>\<open>homo_sep_disj (Share n :: 'a::discrete_semigroup \<Rightarrow> 'a share)\<close> and
       \<open>homo_sep_mult (Share n :: 'a::discrete_semigroup \<Rightarrow> 'a share)\<close> are covered by \<open>homo_sep_disj_discrete\<close>\<close>
-
-thm homo_sep_disj_discrete
-
 
 
 subsubsection \<open>Annotation of Scalar Multiplication\<close>

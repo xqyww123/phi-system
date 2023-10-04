@@ -326,7 +326,7 @@ declare [[\<phi>reason_default_pattern
     \<open>Cutting rules\<close>
  and carrier_set_red = (2500, [2500, 2530]) for \<open>Within_Carrier_Set A\<close> in carrier_set and > carrier_set_cut
     \<open>Literal Reduction\<close>
- and derived_carrier_set = (50, [40,60]) for (\<open>Within_Carrier_Set A\<close>, \<open>Carrier_Set T D\<close>)
+ and derived_carrier_set = (50, [50,50]) for (\<open>Within_Carrier_Set A\<close>, \<open>Carrier_Set T D\<close>)
                                           in carrier_set and < carrier_set_cut
     \<open>Derived rules\<close>
  and carrier_set_to_within_carrier_set = (10, [10,10]) for (\<open>Within_Carrier_Set A\<close>, \<open>Carrier_Set T D\<close>)

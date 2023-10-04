@@ -3135,6 +3135,12 @@ definition times_nosep :: \<open>'a nosep \<Rightarrow> 'a nosep \<Rightarrow> '
 instance by (standard; case_tac x; simp; case_tac y; simp add: sep_disj_nosep_def)
 end
 
+instantiation nosep :: (type) sep_carrier begin
+definition mul_carrier_nosep :: \<open>'a nosep \<Rightarrow> bool\<close>
+  where [simp]: \<open>mul_carrier_nosep _ = True\<close>
+instance by (standard; simp)
+end
+
 instance nosep :: (type) sep_cancel by (standard; case_tac a; case_tac b; case_tac c; simp)
 
 instance nosep :: (type) sep_disj_distrib by (standard; case_tac a; case_tac b; case_tac c; simp)

@@ -1071,7 +1071,8 @@ fun add_type (def, pos, dervs, bundles) thy =
                                  handle THM _ => [])
                               @ (gen_from_tagged_eq_in_type I @{thm' \<phi>make_abstraction'Rt_br}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
-      val make_Identity_Element_E = gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
+      val make_Identity_Element_E = (gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
+                                     handle THM _ => [] (*the concrete algebra can be non-unital*))
 
       val proof_id =
         case term of Const _ => fst name_ty
@@ -1115,7 +1116,8 @@ fun add_type (def, pos, dervs, bundles) thy =
          |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived-10}
                         (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
                         make_abstraction_br
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} make_Identity_Element_E
+         |> not (null make_Identity_Element_E) ?
+            add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} make_Identity_Element_E
          |> Config.put_generic phi_allow_source_object_to_be_not_variable true
          |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA
          |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived-10}
