@@ -1679,7 +1679,7 @@ hide_fact End_Simplification' End_Simplification
 
 subsubsection \<open>Default Simplifier\<close>
 
-abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [1000,10] 9)
+abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> _ : _" [999,10] 9)
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)

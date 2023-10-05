@@ -236,7 +236,7 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                     (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)))
                     Conv.all_conv Conv.all_conv)))
 
-      val simp = if is_some instruction then K I else simplifier_by_cong @{thms' \<phi>TA_TrRA_cong}
+      val simp = if is_some instruction then K I else simplifier_by_LPR' @{thm' \<phi>TA_TrRA_simp}
 
     (*fun simp (_, ctxt) rule = rule
          |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (Phi_Conv.hol_all_conv (fn (_, ctxt) =>

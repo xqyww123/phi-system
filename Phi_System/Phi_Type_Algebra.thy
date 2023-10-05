@@ -4003,8 +4003,6 @@ text \<open>Simplifies only naked conditions (in sens of not wrapped by \<open>\
 
 paragraph \<open>Basic Rules\<close>
 
-thm HOL.conj_cong
-
 lemma
   \<open> PROP \<A>EIF' A A'
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> A' \<Longrightarrow> PROP Simplify_Result (PROP B) (PROP B'))
@@ -4244,6 +4242,11 @@ private lemma \<phi>TA_CarS_rule:
 \<Longrightarrow> Carrier_Set T P \<close>
   unfolding Carrier_Set_def Action_Tag_def Premise_def
   by clarsimp
+
+private lemma \<phi>TA_CarS_cong:
+  \<open> P \<equiv> P'
+\<Longrightarrow> Carrier_Set T P \<equiv> Carrier_Set T P' \<close>
+  by simp
 
 ML_file \<open>library/phi_type_algebra/carrier_set.ML\<close>
 
@@ -4917,8 +4920,9 @@ private lemma \<phi>TA_TrCstr_rule:
   unfolding Action_Tag_def
   by simp
 
-private lemma \<phi>TA_TrCstr_cong:
-  \<open> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<equiv> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
+private lemma \<phi>TA_TrCstr_simp:
+  \<open> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A
+\<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
 
 ML_file \<open>library/phi_type_algebra/constr_abst_weak.ML\<close>
 
@@ -4949,12 +4953,13 @@ private lemma \<phi>TA_TrRA_rule:
   unfolding Action_Tag_def
   by simp
 
-private lemma \<phi>TA_TrRA_cong:
-  \<open> (\<And>x. Inhabited (x \<Ztypecolon> T) \<equiv> P x )
- \<Longrightarrow> (\<And>x y. P x \<Longrightarrow> r x y \<equiv> r' x y )
- \<Longrightarrow> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to (Itself::('b,'b) \<phi>))
-  \<equiv> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r' x y @action to (Itself::('b,'b) \<phi>)) \<close>
-  unfolding Transformation_def Action_Tag_def Inhabited_def
+private lemma \<phi>TA_TrRA_simp:
+  \<open> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to (Itself::('b,'b) \<phi>))
+ \<Longrightarrow> Abstract_Domain T P
+ \<Longrightarrow> (\<And>x y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P x \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> r' x y : r x y )
+ \<Longrightarrow> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r' x y @action to (Itself::('b,'b) \<phi>)) \<close>
+  unfolding Transformation_def Action_Tag_def Inhabited_def Simplify_def
+            Abstract_Domain_def Premise_def
   by (clarsimp, smt (verit, del_insts))
 
 ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>

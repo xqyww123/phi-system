@@ -255,13 +255,15 @@ val oblg_solver': string -> solver
 
 (** Simplifier **)
 
-val default_simplifier : (Phi_Type_Algebra.phi_type * thm list (*contextual boolean facts, extracted from antecedents*)
-                            -> Proof.context -> conv)
+val default_simplifier : (phi_type * thm list (*contextual boolean facts, extracted from antecedents*)
+                            -> Proof.context -> thm -> thm)
                       -> simplifier
     (*extracts boolean facts from the antecedents of the rule to simplify the rule*)
 val default_simplifier' : ((Proof.context -> conv) -> Proof.context -> conv) -> simplifier
 
 val simplifier_by_cong : thm list (*congruence rules*) -> simplifier
+val simplifier_by_LPR : (phi_type * thm list -> Proof.context -> Proof.context) -> thm -> simplifier
+val simplifier_by_LPR' : thm -> simplifier
 
 (** A framework of deriver **)
 
@@ -1907,7 +1909,7 @@ fun default_simplifier conv (phi, ctxt) rule =
       val (lprems, ctxt') = Assumption.add_assms Assumption.presume_export (Thm.cprems_of rule) ctxt't1
       val pures = map_filter (Phi_Reasoners.extract_implied_fact ctxt') lprems
       val rule'2 = fold (fn lp => fn th => Thm.implies_elim th lp) lprems rule'1
-      val rule'3 = Conv.fconv_rule (conv (phi, pures) ctxt) rule'2
+      val rule'3 = conv (phi, pures) ctxt rule'2
    in rule'3
    |> Assumption.export ctxt' ctxt't1
    |> singleton (Variable.export ctxt't1 ctxt)
@@ -1915,14 +1917,29 @@ fun default_simplifier conv (phi, ctxt) rule =
 
 fun default_simplifier' gen_conv (phi, ctxt) rule =
   default_simplifier (fn (_, lprems) => fn ctxt =>
-      gen_conv (fn ctxt =>
+      Conv.fconv_rule (gen_conv (fn ctxt =>
           Simplifier.rewrite (ctxt addsimps (@{thm' special_Ex_def} :: lprems)
               |> Simplifier.add_cong @{thm' HOL.disj_cong}
               |> Simplifier.add_cong @{thm' HOL.conj_cong})) ctxt
-      ) (phi, ctxt) rule
+      )) (phi, ctxt) rule
 
 fun simplifier_by_cong congs =
       default_simplifier' (fn rewr => fn ctxt => rewr (fold Simplifier.add_cong congs ctxt))
+
+fun simplifier_by_LPR configure rule =
+  default_simplifier (fn phi_facts => fn ctxt => fn th =>
+    let val sequent = th RS' (ctxt, rule)
+        open Pretty
+        val _ = Phi_Reasoner.info_pretty ctxt 2 (fn () => str "\<phi>-LPR based simplification")
+     in case Phi_Reasoner.reason NONE NONE (configure phi_facts ctxt) sequent
+     of SOME ret => ret
+      | NONE => raise Automation_Fail (fn () => [para "\<phi>-LPR based simplification fails"])
+    end)
+
+val simplifier_by_LPR' = simplifier_by_LPR (fn (_, facts) => fn ctxt =>
+        ctxt addsimps (@{thm' special_Ex_def} :: facts)
+          |> Simplifier.add_cong @{thm' HOL.disj_cong}
+          |> Simplifier.add_cong @{thm' HOL.conj_cong})
 
 (** Other Tools **)
 

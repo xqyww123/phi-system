@@ -44,13 +44,8 @@ fun gen_carrier_set (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                     (oblg_solver' name)
             else K NONE
 
-      fun simp (_, ctxt) rule =
-        if is_some instruction then rule
-        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                HOLogic.Trueprop_conv (Conv.arg_conv (
-                  Simplifier.rewrite (Simplifier.add_cong @{thm' HOL.conj_cong} ctxt
-                                      addsimps @{thms special_Ex_def} ))
-                )) ctxt) rule
+      val simp = if is_some instruction then K I
+                 else simplifier_by_cong @{thms' \<phi>TA_CarS_cong}
 
       val ctxt = ctxt0
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_CarS_rule},
