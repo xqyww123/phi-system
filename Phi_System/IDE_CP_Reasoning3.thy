@@ -240,8 +240,7 @@ text \<open>The process transforms assertions of form \<^term>\<open>(If P A B)\
   i.e., from \<open>B\<close> to \<open>A\<close> for \<^term>\<open>(If P A B)\<close>.
 \<close>
 
-consts br_join :: \<open>action\<close> \<comment> \<open>main stage\<close>
-       br_join':: \<open>action\<close> \<comment> \<open>pre stage\<close>
+consts br_join :: \<open>action\<close>
 
 definition Identifier_of :: \<open>('c,'a) \<phi> \<Rightarrow> 'id \<Rightarrow> ('c2,'a2) \<phi> \<Rightarrow> bool\<close>
   where \<open>Identifier_of T identifier pattern \<equiv> True\<close>
@@ -253,10 +252,8 @@ subsubsection \<open>Conventions\<close>
 
 declare [[\<phi>reason_default_pattern
     \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join \<close> \<Rightarrow> \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join \<close> (100)
-and \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join'\<close> \<Rightarrow> \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join'\<close> (100)
 and \<open>If ?P ?A ?B = _ @action br_join \<close> \<Rightarrow> \<open>If ?P ?A ?B = _ @action br_join \<close> (100)
 and \<open>?X @action br_join \<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad rule\<close> (?X @action br_join ))\<close> (0)
-and \<open>?X @action br_join'\<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad rule\<close> (?X @action br_join'))\<close> (0)
 
 and \<open>Identifier_of ?T _ _\<close> \<Rightarrow> \<open>Identifier_of ?T _ _\<close> (100)
 ]]
@@ -265,7 +262,15 @@ and \<open>Identifier_of ?T _ _\<close> \<Rightarrow> \<open>Identifier_of ?T _ 
     \<open>All rules of \<phi>-type branch convergence\<close>
   and \<phi>br_join_fail = (1,[1,10]) for \<open>If C A B @action br_join\<close> in \<phi>br_join_all
                      \<open>Fallbacks\<close>
-  and \<phi>br_join_cut = (1000, [1000, 1030]) for \<open>If C A B @action br_join\<close> in \<phi>br_join_all
+  and \<phi>br_join_search_counterpart = (30, [30,30]) for \<open>If C A B @action br_join\<close>
+                       in \<phi>br_join_all and > \<phi>br_join_fail
+                     \<open>Looks from the false-branch for the counterpart of the heading \<phi>-type in the true-branch,
+                      and enters the sub-reasoning for joining the two \<phi>-types.\<close>
+  and \<phi>br_join_derived = (50,[50,50]) for \<open>If C A B @action br_join\<close>
+                       in \<phi>br_join_all and > \<phi>br_join_search_counterpart
+                     \<open>Derived from functor properties\<close>
+  and \<phi>br_join_cut = (1000, [1000, 1030]) for \<open>If C A B @action br_join\<close>
+                       in \<phi>br_join_all > \<phi>br_join_derived
                      \<open>Cutting rules\<close>
   and \<phi>br_join_spec = (1100, [1100,2000]) for \<open>If C A B @action br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_cut
@@ -279,7 +284,7 @@ and \<open>Identifier_of ?T _ _\<close> \<Rightarrow> \<open>Identifier_of ?T _ 
   and \<phi>br_join_red_zero = (2900, [2900,2900]) for \<open>If C A B @action br_join\<close>
                        in \<phi>br_join_all > \<phi>br_join_red
                      \<open>Reductions for zero\<close>
-  and \<phi>br_join_success = (3000, [3000,3000]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_success = (2990, [2990,3000]) for \<open>If C A B @action br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_red_zero
                      \<open>Direct success\<close>
 
@@ -311,7 +316,7 @@ subsubsection \<open>Entry Point\<close>
 lemma [\<phi>reason %\<phi>br_join_success for \<open>If _ _ _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action invoke_br_join\<close>]:
   \<open> Simplify (assertion_simps undefined) A' A
 \<Longrightarrow> Simplify (assertion_simps undefined) B' B
-\<Longrightarrow> If P A' B' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> C @action br_join'
+\<Longrightarrow> If P A' B' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> C @action br_join
 \<Longrightarrow> If P A  B  \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> C @action invoke_br_join \<close>
   unfolding Action_Tag_def Simplify_def
   by blast
@@ -332,24 +337,24 @@ lemma [\<phi>reason default %\<phi>br_join_fail+4]:
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P x y \<Ztypecolon> Z) @action br_join"
   unfolding Action_Tag_def by (cases P; simp)
 
-lemma [\<phi>reason %\<phi>br_join_success for \<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
+lemma [\<phi>reason %\<phi>br_join_success+5 for \<open>If _ (_ \<Ztypecolon> _) (_ \<Ztypecolon> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
   \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P x y \<Ztypecolon> T) @action br_join\<close>
   unfolding Action_Tag_def by (cases P; simp)
 
-lemma [\<phi>reason %\<phi>br_join_success for \<open>If ?P ?A ?A'' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X @action br_join'\<close>]:
-  \<open>If P A A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @action br_join'\<close>
+lemma [\<phi>reason %\<phi>br_join_success for \<open>If ?P ?A ?A'' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X @action br_join\<close>]:
+  \<open>If P A A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A @action br_join\<close>
   unfolding Action_Tag_def Transformation_def by simp
 
 
 subsubsection \<open>Zero\<close>
 
 lemma [\<phi>reason %\<phi>br_join_red_zero]:
-  \<open>If P A 0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (A \<s>\<u>\<b>\<j> P) @action br_join'\<close>
+  \<open>If P A 0 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (A \<s>\<u>\<b>\<j> P) @action br_join\<close>
   unfolding Action_Tag_def Transformation_def
   by (simp add: zero_set_def)
 
 lemma [\<phi>reason %\<phi>br_join_red_zero]:
-  \<open>If P 0 A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (A \<s>\<u>\<b>\<j> \<not> P) @action br_join'\<close>
+  \<open>If P 0 A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (A \<s>\<u>\<b>\<j> \<not> P) @action br_join\<close>
   unfolding Action_Tag_def Transformation_def
   by (simp add: zero_set_def)
 
@@ -361,31 +366,31 @@ subsubsection \<open>Subjection\<close>
                                 \<open>Reductions for Subejction\<close>
 
 lemma [\<phi>reason %\<phi>br_join_subj+20]:
-  \<open> If P (L \<s>\<u>\<b>\<j> Q1 \<and> Q2) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join'
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join' \<close>
+  \<open> If P (L \<s>\<u>\<b>\<j> Q1 \<and> Q2) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join \<close>
   unfolding Subjection_Subjection .
 
 lemma [\<phi>reason %\<phi>br_join_subj+20]:
-  \<open> If P L (R \<s>\<u>\<b>\<j> Q1 \<and> Q2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join'
-\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join' \<close>
+  \<open> If P L (R \<s>\<u>\<b>\<j> Q1 \<and> Q2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
+\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q1 \<s>\<u>\<b>\<j> Q2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join \<close>
   unfolding Subjection_Subjection .
 
 lemma [\<phi>reason %\<phi>br_join_subj+10]:
   \<open> If P QL QR = Q @action br_join
-\<Longrightarrow> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join'
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> QL) (R \<s>\<u>\<b>\<j> QR) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> Q) @action br_join'\<close>
+\<Longrightarrow> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> QL) (R \<s>\<u>\<b>\<j> QR) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> Q) @action br_join\<close>
   unfolding Action_Tag_def Transformation_def by force
 
 lemma [\<phi>reason %\<phi>br_join_subj]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  \<open> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join'
-\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> P \<longrightarrow> Q) @action br_join'\<close>
+  \<open> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
+\<Longrightarrow> If P (L \<s>\<u>\<b>\<j> Q) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> P \<longrightarrow> Q) @action br_join\<close>
   unfolding Transformation_def Action_Tag_def by simp
 
 lemma [\<phi>reason %\<phi>br_join_subj]:
   \<comment> \<open>The fallback if the subjection condition only occurs at one side\<close>
-  \<open> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join'
-\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> \<not>P \<longrightarrow> Q) @action br_join'\<close>
+  \<open> If P L R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
+\<Longrightarrow> If P L (R \<s>\<u>\<b>\<j> Q) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (X \<s>\<u>\<b>\<j> \<not>P \<longrightarrow> Q) @action br_join\<close>
   unfolding Action_Tag_def Transformation_def by simp
 
 
@@ -396,14 +401,14 @@ subsubsection \<open>Existential\<close>
                               \<open>Reductions for Existence\<close>
 
 lemma Conv_Merge_Ex_both_imp:
-  \<open> (\<And>x. If P (L x) (R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @action br_join')
-\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @action br_join' \<close>
+  \<open> (\<And>x. If P (L x) (R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @action br_join)
+\<Longrightarrow> If P (\<exists>* x. L x) (\<exists>* x. R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @action br_join \<close>
   unfolding Action_Tag_def Transformation_def
   by (cases P; clarsimp simp add: set_eq_iff; blast)
 
 lemma Conv_Merge_Ex_R_imp [\<phi>reason %\<phi>br_join_ex]:
-  \<open> (\<And>x. If P L (R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @action br_join')
-\<Longrightarrow> If P L (\<exists>* x. R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @action br_join' \<close>
+  \<open> (\<And>x. If P L (R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X x @action br_join)
+\<Longrightarrow> If P L (\<exists>* x. R x) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (\<exists>* x. X x) @action br_join \<close>
   unfolding Action_Tag_def Transformation_def
   by (cases P; simp add: set_eq_iff; blast)
 
@@ -431,16 +436,9 @@ text \<open>The merging recognizes two existential quantifier are identical if t
 \<close>
 
 
-subsubsection \<open>Main Procedure\<close>
+subsubsection \<open>Looks for the counterpart\<close>
 
-(*
-lemma [\<phi>reason 2000 for \<open>If ?P (?x \<Ztypecolon> ?T1) (?y \<Ztypecolon> ?T2) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X @action br_join\<close>]:
-  " If P x y = z @action br_join
-\<Longrightarrow> If P T U = Z @action br_join
-\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Z) @action br_join"
-  unfolding Action_Tag_def Transformation_def by (cases P; simp) *)
-
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
   \<open> Identifier_of T identifier T'
 \<Longrightarrow> (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' @action NToA) \<or>\<^sub>c\<^sub>u\<^sub>t
     FAIL TEXT(\<open>\<phi>-Type\<close> (x \<Ztypecolon> T) \<open>is given in the true-branch but its counterpart\<close> (y \<Ztypecolon> T') \<open>is not seen in the false-branch.\<close> \<newline>
@@ -448,12 +446,63 @@ lemma [\<phi>reason 1200]:
               (Identifier_of T identifier T''))
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
-\<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join'
-\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Z @action br_join'\<close>
+\<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
+\<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Z @action br_join\<close>
   unfolding Action_Tag_def Transformation_def Premise_def Orelse_shortcut_def FAIL_def
   by (cases P; clarsimp; blast)
 
-  
+subsubsection \<open>Join Two \<phi>-Types\<close>
+
+\<phi>reasoner_group br_join_\<phi>ty = (20, [20,20]) for \<open>If C (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action br_join\<close> 
+                               in \<phi>br_join_all and > \<phi>br_join_fail
+                              \<open>Fallbacks of joining two \<phi>-types, using ToA\<close>
+
+paragraph \<open>Fallback by ToA\<close>
+
+lemma [\<phi>reason %br_join_\<phi>ty]:
+  \<open> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T @action NToA
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x y' \<Ztypecolon> T @action br_join \<close>
+  unfolding Action_Tag_def Transformation_def
+  by clarsimp
+
+paragraph \<open>By Transformation Functor\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+
+declare if_cancel[simp]
+
+lemma [\<phi>reason_template %\<phi>br_join_derived]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<Longrightarrow> Functional_Transformation_Functor F\<^sub>T F' T Z D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T)
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> P \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F' U Z D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (D\<^sub>T x = {} \<longleftrightarrow> D\<^sub>U y = {}) \<and>
+           (\<forall>a \<in> D\<^sub>T x. z a (@b. b \<in> D\<^sub>U y) \<in> R\<^sub>T x) \<and>
+           (\<forall>b \<in> D\<^sub>U y. z (@a. a \<in> D\<^sub>T x) b \<in> R\<^sub>U y)
+\<Longrightarrow> (\<And>(a,b) \<in> (D\<^sub>T x \<times> D\<^sub>U y). If P (a \<Ztypecolon> T) (b \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z a b \<Ztypecolon> Z @action br_join)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> z' : If P (fm\<^sub>T (\<lambda>a. z a (@b. b \<in> D\<^sub>U y)) (\<lambda>_. True) x) (fm\<^sub>U (\<lambda>b. z (@a. a \<in> D\<^sub>T x) b) (\<lambda>_. True) y) @action \<A>_template_reason
+\<Longrightarrow> If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> F' Z @action br_join \<close>
+  unfolding Action_Tag_def Premise_def Functional_Transformation_Functor_def Transformation_def
+            meta_Ball_def meta_case_prod_def Simplify_def
+  apply (cases \<open>D\<^sub>T x = {}\<close>; clarsimp; cases P; clarsimp)
+  subgoal premises prems for v proof -
+    have t1: \<open>(@b. b \<in> D\<^sub>U y) \<in> D\<^sub>U y\<close>
+      by (simp add: prems(5) some_in_eq)
+    show ?thesis
+      by (insert prems(1)[THEN spec[where x=x], THEN spec[where x=\<open>\<lambda>a. z a (@b. b \<in> D\<^sub>U y)\<close>],
+                          THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+                 prems(2-)
+                 t1,
+          clarsimp)
+  qed
+  subgoal premises prems for v proof -
+    have t1: \<open>(@a. a \<in> D\<^sub>T x) \<in> D\<^sub>T x\<close>
+      by (simp add: prems(4) some_in_eq)
+    show ?thesis
+      by (insert prems(1)[THEN spec[where x=y], THEN spec[where x=\<open>\<lambda>b. z (@a. a \<in> D\<^sub>T x) b\<close>],
+                          THEN spec[where x=\<open>\<lambda>_. True\<close>]]
+                 prems(2-)
+                 t1,
+          clarsimp)
+  qed .
 
 
 subsubsection \<open>Convergence of Structural Nodes\<close>

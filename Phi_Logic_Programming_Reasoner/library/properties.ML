@@ -357,7 +357,6 @@ fun add_template invoke_on_existing_instantiations (template : template) ctxt =
               not (can (Pattern.match thy (d, dep)) (ty_fixes_of dep, tm_fixes_of dep))
             ) compact_deps
           ) compact_deps
-      |> @{print}
 
    in ctxt
    |> Templates.map (
