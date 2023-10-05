@@ -120,6 +120,7 @@ val aux_thms = Useful_Thms.get
 (* Simple Simplification of Obligations Before Exporting *)
 (*to see if it can be reduced to some trivial form like \<open>A = ?x\<close>*)
 
+(*
 val conv_LRHS_heads = [\<^const_name>\<open>id\<close>, \<^const_name>\<open>fst\<close>, \<^const_name>\<open>snd\<close>]
 fun conv_LRHS ctm =
   case Thm.term_of ctm
@@ -129,6 +130,8 @@ fun conv_LRHS ctm =
           Conv.rewr_conv @{thm' Product_Type.fst_conv[folded atomize_eq]} ctm
      | Const(\<^const_name>\<open>snd\<close>, _) $ (Const(\<^const_name>\<open>Pair\<close>, _) $ _ $ _) =>
           Conv.rewr_conv @{thm' Product_Type.snd_conv[folded atomize_eq]} ctm
+     | Const(\<^const_name>\<open>case_prod\<close>, _) $ _ $ (Const(\<^const_name>\<open>Pair\<close>, _) $ _ $ _) =>
+          Conv.rewr_conv @{thm' prod.case[folded atomize_eq]} ctm
      | _ => raise CTERM ("conv_LRHS", [ctm])
 
 fun need_conv_LRHS tm =
@@ -146,7 +149,7 @@ fun simple_simp ctxt sequent =
               ) 1 sequent
          else sequent
      | _ => sequent
-
+*)
 
 (*** Tactics ***)
 
@@ -186,10 +189,15 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
 
-      val th = simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+      val th = Conv.gconv_rule (Simplifier.full_rewrite ctxt) 1 th01
+   in case Thm.major_prem_of th
+   of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) =>
+        SOME (@{thm' TrueI} RS' (ctxt, th), Seq.empty)
+    | _ => let
+            (* simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 HOLogic.Trueprop_conv (Conv.arg_conv (
                   Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
-             ) ctxt) 1 th01)
+             ) ctxt) 1 th01) *)
 
       val fixing_targets = case fix_level
                              of 1 => #2 (Phi_Help.leading_antecedent (Thm.prop_of th))
@@ -242,7 +250,7 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
         let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
          in (f th, Seq.map f seq')
         end)
-  end)
+  end end)
 
 
 (*** Auxiliaries ***)

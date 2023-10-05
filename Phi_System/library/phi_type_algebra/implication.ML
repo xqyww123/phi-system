@@ -211,16 +211,23 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
                                      | _ => false) o Thm.prop_of) (#equations phi)
               |> not
       val exists_bad = predicate_infer__contains_bad allows_Inhabited_and_Sat
-      fun augment P prems =
-            if exists_bad P then prems else P :: prems
 
-      fun filter_bad (\<^Const>\<open>HOL.conj\<close> $ A $ B) = binop \<^Const>\<open>HOL.conj\<close> (filter_bad A, filter_bad B)
-        | filter_bad (\<^Const>\<open>HOL.disj\<close> $ A $ B) = binop \<^Const>\<open>HOL.disj\<close> (filter_bad A, filter_bad B)
-        | filter_bad (\<^Const>\<open>HOL.implies\<close> $ A $ B) = impop (if exists_bad A then NONE else SOME A, filter_bad B)
-        | filter_bad (\<^Const>\<open>HOL.All T\<close> $ Abs (N,T',X)) =
-            (case filter_bad X of SOME X' => SOME (\<^Const>\<open>HOL.All T\<close> $ Abs (N,T',X'))
-                                | NONE => NONE)
-        | filter_bad X = if exists_bad X then NONE else SOME X
+      
+      (*upper: true for parsing the conclusion part, false for parsing conditions*)
+      fun filter_bad upper (\<^Const>\<open>HOL.conj\<close> $ A $ B) = binop \<^Const>\<open>HOL.conj\<close> (filter_bad upper A, filter_bad upper B)
+        | filter_bad true (\<^Const>\<open>HOL.disj\<close> $ A $ B) = binop \<^Const>\<open>HOL.disj\<close> (filter_bad upper A, filter_bad upper B)
+        | filter_bad upper (\<^Const>\<open>HOL.implies\<close> $ A $ B) =
+            if upper then impop (filter_bad false A, filter_bad true B)
+                     else if exists_bad A orelse exists_bad B then NONE
+                          else SOME (\<^Const>\<open>HOL.implies\<close> $ A $ B)
+        | filter_bad upper (\<^Const>\<open>HOL.All T\<close> $ Abs (N,T',X)) =
+            (case filter_bad upper X of SOME X' => SOME (\<^Const>\<open>HOL.All T\<close> $ Abs (N,T',X'))
+                                      | NONE => NONE)
+        | filter_bad upper X = if exists_bad X then NONE else SOME X
+
+      fun augment P prems = case filter_bad false P
+                              of SOME P' => P' :: prems
+                               | NONE => prems
 
       fun inst_Lw context (Const(\<^const_name>\<open>conj\<close>, _) $ X $ Y)
             = binop \<^Const>\<open>HOL.conj\<close> (inst_Lw context X, inst_Lw context Y)
@@ -232,7 +239,7 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
             = inst_Lw (vars,prems) (\<^Const>\<open>All T\<close> $ (Abs ("_", T, Term.incr_boundvars 1 X $ Bound 0)))
         | inst_Lw (vars,prems) (Const(\<^const_name>\<open>implies\<close>, _) $ P $ X)
             = let fun meet v js = if var = v
-                                  then filter_bad X
+                                  then filter_bad true X
                                     |> Option.map (
                                           fold (fn prem => fn X =>
                                               \<^Const>\<open>HOL.implies\<close> $ prem $ X

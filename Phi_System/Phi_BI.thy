@@ -2307,7 +2307,7 @@ lemma [\<phi>reason %cutting]:
   \<open> Abstract_Domain Itself (\<lambda>_. True) \<close>
   unfolding Abstract_Domain_def Action_Tag_def Inhabited_def
   by clarsimp
-
+ 
 lemma [\<phi>reason %abstract_domain]:
   \<open> Abstract_Domain\<^sub>L Itself (\<lambda>_. True) \<close>
   unfolding Abstract_Domain\<^sub>L_def Action_Tag_def Inhabited_def

@@ -4920,10 +4920,6 @@ private lemma \<phi>TA_TrCstr_rule:
   unfolding Action_Tag_def
   by simp
 
-private lemma \<phi>TA_TrCstr_simp:
-  \<open> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A
-\<Longrightarrow> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
-
 ML_file \<open>library/phi_type_algebra/constr_abst_weak.ML\<close>
 
 end
