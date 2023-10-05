@@ -638,7 +638,7 @@ section \<open>Declaration of Reasonig Process\<close>
 
 subsection \<open>Declaration of Convergence of Branch\<close>
 
-consts invoke_branch_convergence :: \<open>action\<close>
+consts invoke_br_join :: \<open>action\<close> (*TODO: move?*)
 
 
 

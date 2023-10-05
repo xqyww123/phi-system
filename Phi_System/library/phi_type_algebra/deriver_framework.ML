@@ -1567,11 +1567,10 @@ fun default_reasoning_configure (focus:Subgoal.focus, lsequent) (local_prems,ctx
 
       val local_prems = pure_fact' @ filter_out (fn x => is_pure_fact x orelse is_ToA_template x) local_prems
 
-      val prem_ants = map_filter (Phi_Reasoners.extract_implied_fact ctxt) (@{print} local_prems)
+      val prem_ants = map_filter (Phi_Reasoners.extract_implied_fact ctxt) local_prems
                    |> maps (PLPR_Syntax.elim_ant_sequence_or_HOL_conj)
                  (*|> map (Conv.fconv_rule (HOLogic.Trueprop_conv (
                             Conv.rewr_conv @{thm' Premise_def[where mode=\<open>MODE_GUARD\<close>, symmetric]})))*)
-                   |> @{print}
 (*maps (fn th =>
             case extract_prems ctxt th
               of [] => if is_real_Premise (Thm.concl_of th) then [th] else []

@@ -34,6 +34,7 @@ declare [[\<phi>trace_reasoning = 0]]
   deriving \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S n T) (\<lambda>l. list_all T\<^sub>D l \<and> length l = n)\<close>
        and Identity_Elements\<^sub>I
 
+
 term \<open>Identity_Elements\<^sub>E T T\<^sub>D \<Longrightarrow> Identity_Elements\<^sub>E (List\<^sub>S n T) (\<lambda>l. list_all T\<^sub>D l \<and> length l = n)\<close>
 
 
