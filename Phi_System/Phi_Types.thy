@@ -109,7 +109,7 @@ ML \<open>assert_derived_properties \<^theory> [
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+  
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
   opening  extract_premises_in_local_inverse
@@ -129,7 +129,9 @@ ML \<open>assert_derived_properties \<^theory> [
   (@{thm' \<phi>Fun.Functionality}, \<^pattern_prop>\<open> Functionality (\<phi>Fun ?f) (\<lambda>x. True)  \<close>),
   (@{thm' \<phi>Fun.Identity_Element\<^sub>I}, \<^pattern_prop>\<open> Identity_Elements\<^sub>I (\<phi>Fun ?f) (\<lambda>x. ?f x = 1) (\<lambda>_. True)  \<close>),
   (@{thm' \<phi>Fun.Identity_Element\<^sub>E}, \<^pattern_prop>\<open> Identity_Elements\<^sub>E (\<phi>Fun ?f) (\<lambda>x. ?f x = 1)  \<close>),
-  (@{thm' \<phi>Fun.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv (\<phi>Fun ?f) (\<lambda>x y. ?f x = ?f y)  \<close>)
+  (@{thm' \<phi>Fun.Object_Equiv}, \<^pattern_prop>\<open> Object_Equiv (\<phi>Fun ?f) (\<lambda>x y. ?f x = ?f y)  \<close>),
+  (@{thm' \<phi>Fun.Make_Abstraction_from_Raw}, \<^pattern_prop>\<open> ?f ?xa \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?xa \<Ztypecolon> \<phi>Fun ?f \<close>),
+  (@{thm' \<phi>Fun.Open_Abstraction_to_Raw}, \<^pattern_prop>\<open> ?x \<Ztypecolon> \<phi>Fun ?f \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> (Itself :: (?'c,?'c) \<phi>) \<s>\<u>\<b>\<j> y. y = ?f ?x @action to (Itself :: (?'c,?'c) \<phi>) \<close>)
 ]\<close>
 
 
@@ -2305,13 +2307,14 @@ abbreviation \<phi>Share_Some_L ("\<fish_eye>\<^sub>L _" [91] 90)
 subsection \<open>Injection into Discrete Algebra\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+  
 \<phi>type_def Nosep :: \<open>('c, 'a) \<phi> \<Rightarrow> ('c nosep, 'a) \<phi>\<close>
   where \<open>Nosep T = (nosep \<Zcomp>\<^sub>f T)\<close>
   deriving Basic
        and \<open>Carrier_Set (Nosep T) (\<lambda>_. True)\<close>
-       and Functionality
+       and Functionality 
        and Functional_Transformation_Functor
+       and Abstraction_to_Raw
 
 \<phi>adhoc_overloading \<phi>coercion \<open>\<lambda>T. \<black_circle> Nosep T\<close> \<open>\<lambda>T. \<fish_eye> Nosep T\<close> (* \<open>\<lambda>T. \<fish_eye>\<^sub>L Nosep T\<close> *)
 

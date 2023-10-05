@@ -108,13 +108,12 @@ fun gen_is_functional (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                     (oblg_solver' name)
             else K NONE
 
-      fun simp (_, ctxt) rule =
-        if is_some instruction
-        then rule
-        else Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+      val simp = if is_some instruction then K I
+                 else simplifier_by_cong @{thms' \<phi>TA_IsFunc_cong}
+(*Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 HOLogic.Trueprop_conv (Conv.arg_conv (
                   Simplifier.rewrite (ctxt addsimps @{thms special_Ex_def}))
-                )) ctxt) rule
+                )) ctxt) rule*)
 
       val ctxt = ctxt0 (*Context.proof_map (Phi_Reasoners.add_premise_extraction_rules
                     @{thms' Is_Functional_premise_extraction Functionality_premise_extraction}) ctxt0*)

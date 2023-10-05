@@ -244,6 +244,8 @@ declare [[\<phi>reason_default_pattern \<open>Abstract_Domain ?T _\<close> \<Rig
                                               in abstract_domain_all and < abstract_domain
     \<open>Automatically derived rules\<close>
 
+
+
 paragraph \<open>Extracting Pure Facts\<close>
 
 lemma Inhabitance_Implication_\<A>EIF [\<phi>reason %extract_pure]:
@@ -374,6 +376,21 @@ declare [[
             Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
           ]) end)\<close> (1000)
 ]]
+
+setup \<open> Phi_Type_Template_Properties.add_property_kinds [
+  \<^pattern_prop>\<open>Abstract_Domain _ _\<close>, \<^pattern_prop>\<open>Abstract_Domain\<^sub>L _ _\<close>
+]\<close>
+
+paragraph \<open>Template Instantiation\<close>
+
+lemma Inhabited_rewr_template[\<phi>reason_template name T.inh_rewr [simp]]:
+  \<open> Abstract_Domain T D @action \<A>_template_reason
+\<Longrightarrow> Abstract_Domain\<^sub>L T D' @action \<A>_template_reason
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. D' x = D x) @action \<A>_template_reason
+\<Longrightarrow> Inhabited (x \<Ztypecolon> T) \<equiv> D x \<close>
+  unfolding Action_Tag_def Abstract_Domain_def Abstract_Domain\<^sub>L_def Premise_def
+  by (clarsimp, smt (verit, best))
+  
 
 (*
 (*depreciate!*)

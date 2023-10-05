@@ -61,7 +61,7 @@ fun reasoning phi ctxt =
          phi ctxt
   end
 
-fun instantiate_the_var var ctxt sequent =
+fun instantiate_the_var var phi ctxt sequent =
   let val (x_ty, y_ty) = case snd var
                            of \<^Type>\<open>fun x_ty \<^Type>\<open>fun y_ty \<^Type>\<open>bool\<close>\<close>\<close> => (x_ty, y_ty)
                             | _ => error "BUG qC2wYScnQXiFvdGaUF/mBA"
@@ -90,6 +90,16 @@ fun instantiate_the_var var ctxt sequent =
 
       val has_the_var = Term.exists_subterm (fn Var v' => v' = var | _ => false)
 
+      val allows_Inhabited_and_Sat = (*the inferred condition contains Inhabited and Satisfaction
+                                       only when they are also contained in the definition of the \<phi>-type,
+                                       to prevent the result corrupted by noises*)
+            exists (exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => true
+                                     | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
+                                     | _ => false) o Thm.prop_of) (#equations phi)
+              |> not
+      val exists_bad = predicate_infer__contains_bad allows_Inhabited_and_Sat
+      fun augment P prems = if exists_bad P then prems else P :: prems
+
       fun opt_join NONE x = SOME x
         | opt_join (SOME a) b = if a = b then SOME a else error "BUG"
       fun pass_conjs concls_varx (\<^Const>\<open>HOL.conj\<close> $ A $ B)
@@ -108,7 +118,7 @@ fun instantiate_the_var var ctxt sequent =
                (P::concls, meet))
 
       fun inst_body ret (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
-            = inst_body ret (quants, P::prems) X
+            = inst_body ret (quants, augment P prems) X
         | inst_body ret (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
             = inst_body ret ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
         | inst_body ret (quants, prems) (\<^Const>\<open>HOL.All ty\<close> $ X)
@@ -122,7 +132,7 @@ fun instantiate_the_var var ctxt sequent =
       fun final_assemble_dc dc = Abs("x", x_ty, Term.lambda y (assemble_dc dc))
 
       fun inst (quants, prems) (\<^Const>\<open>HOL.implies\<close> $ P $ X)
-            = inst (quants, P::prems) X
+            = inst (quants, augment P prems) X
         | inst (quants, prems) (\<^Const>\<open>HOL.All _\<close> $ Abs (N, ty, X))
             = inst ((N,ty)::quants, map (Term.incr_boundvars 1) prems) X
         | inst (quants, prems) (\<^Const>\<open>HOL.All ty\<close> $ X)
@@ -225,7 +235,10 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                   Phi_Syntax.transformation_conv
                     (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)))
                     Conv.all_conv Conv.all_conv)))
-      fun simp (_, ctxt) rule = rule
+
+      val simp = if is_some instruction then K I else simplifier_by_cong @{thms' \<phi>TA_TrRA_cong}
+
+    (*fun simp (_, ctxt) rule = rule
          |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (Phi_Conv.hol_all_conv (fn (_, ctxt) =>
               Phi_Conv.action_tag_conv (Phi_Syntax.transformation_conv Conv.all_conv
                 (Phi_Syntax.ExSet_conv (fn (bvar, ctxtxx) =>
@@ -236,7 +249,17 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                   end) ctxt)
                 Conv.all_conv)
             ) ctxt)) ctxt)
-         |> (fn rule => (rule RS' (ctxt, @{thm' spec})))
+         |> (fn rule => (rule RS' (ctxt, @{thm' spec})))*)
+
+    (*val solver = if not (is_some instruction) andalso not (#is_recursive phi0)
+                   then predicate_infer true
+                            (fn _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ Abs (_, _, \<^Const>\<open>Action_Tag\<close> $
+                                 (\<^Const>\<open>Transformation _\<close> $ _ $ (\<^Const>\<open>ExSet _ _\<close> $ Abs (_, _,
+                                         \<^Const>\<open>Subjection _\<close> $ _ $ (Var v $ Bound _ $ Bound _) ))
+                                     $ _)
+                                 $ _)) => v)
+                            (oblg_solver' name)
+                   else K NONE*)
 
       fun solver (phi, ctxt, sequent) =
             case Thm.concl_of sequent
@@ -247,7 +270,7 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                          $ _)
                      $ _))
                    => (case X of Var v $ _ $ _ =>
-                                    SOME ( instantiate_the_var v ctxt sequent
+                                    SOME ( instantiate_the_var v phi0 ctxt sequent
                                       |> oblg_solver (#proof_id phi ^ "/" ^ name) ctxt)
                                | _ => NONE)
                | _ => error "BUG"

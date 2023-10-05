@@ -4213,6 +4213,11 @@ private lemma \<phi>TA_IsFunc_rule:
   unfolding Action_Tag_def Functionality_def Is_Functional_def Premise_def
   by clarsimp
 
+private lemma \<phi>TA_IsFunc_cong:
+  \<open> P \<equiv> P'
+\<Longrightarrow> Functionality T P \<equiv> Functionality T P' \<close>
+  by simp
+
 ML_file \<open>library/phi_type_algebra/is_functional.ML\<close>
 
 end
@@ -4901,7 +4906,9 @@ subsubsection \<open>Construct Abstraction from Concrete Representation (by Itse
 
 (*Designed only for primitives, so can be buggy for advanced and particularly recursive \<phi>-types*)
 
-lemma \<phi>TA_TrCstr_rule:
+context begin
+
+private lemma \<phi>TA_TrCstr_rule:
   \<open> Ant \<longrightarrow> (c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A) @action \<phi>TA_ind_target undefined
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4910,7 +4917,12 @@ lemma \<phi>TA_TrCstr_rule:
   unfolding Action_Tag_def
   by simp
 
+private lemma \<phi>TA_TrCstr_cong:
+  \<open> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<equiv> c \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> A \<close>
+
 ML_file \<open>library/phi_type_algebra/constr_abst_weak.ML\<close>
+
+end
 
 \<phi>property_deriver Make_Abstraction_from_Raw 130
   for ( \<open>\<forall>x. Premise _ _ \<longrightarrow> (x \<Ztypecolon> Itself \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?f x \<Ztypecolon> ?T)\<close>
@@ -4926,7 +4938,9 @@ subsubsection \<open>Destruct Abstraction down to Concrete Representation (by It
 
 (*Designed only for primitives, so can be buggy for advanced and particularly recursive \<phi>-types*)
 
-lemma \<phi>TA_TrRA_rule:
+context begin
+
+private lemma \<phi>TA_TrRA_rule:
   \<open> (\<And>x. Ant \<longrightarrow> (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y) @action \<phi>TA_ind_target (to (Itself::('b,'b) \<phi>)))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -4935,7 +4949,17 @@ lemma \<phi>TA_TrRA_rule:
   unfolding Action_Tag_def
   by simp
 
+private lemma \<phi>TA_TrRA_cong:
+  \<open> (\<And>x. Inhabited (x \<Ztypecolon> T) \<equiv> P x )
+ \<Longrightarrow> (\<And>x y. P x \<Longrightarrow> r x y \<equiv> r' x y )
+ \<Longrightarrow> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r x y @action to (Itself::('b,'b) \<phi>))
+  \<equiv> \<forall>x. (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y::'b) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. r' x y @action to (Itself::('b,'b) \<phi>)) \<close>
+  unfolding Transformation_def Action_Tag_def Inhabited_def
+  by (clarsimp, smt (verit, del_insts))
+
 ML_file \<open>library/phi_type_algebra/open_all_abstraction.ML\<close>
+
+end
 
 \<phi>property_deriver Open_Abstraction_to_Raw 130 for ( \<open>\<forall>x. (x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself)\<close>
                                                 | \<open>\<forall>x. x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Itself \<s>\<u>\<b>\<j> y. ?r x y @action to Itself\<close>

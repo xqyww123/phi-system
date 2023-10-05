@@ -21,6 +21,7 @@ val guess_property_like_abst_domain :
               as strong as possible (but does not weaken the entire obligation)
 *)
 val predicate_infer : bool -> (term -> indexname * typ) -> solver -> solver
+val predicate_infer__contains_bad : bool -> term -> bool
 
 (*val guess_property_abst_dom : string -> guess_property
 val predicate_infer : bool -> string (*name of proof cache*) -> solver*)
@@ -165,6 +166,12 @@ fun guess_property_abst_dom upper (phi:phi_type) ctxt =
   Lower mode: the unknown locates at the condition part of the obligation, and we infer an instantiation
               as strong as possible (but does not weaken the entire obligation)
 *)
+fun predicate_infer__contains_bad allows_Inhabited_and_Sat =
+      exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => allows_Inhabited_and_Sat
+                       | Const(\<^const_name>\<open>Satisfaction\<close>, _) => allows_Inhabited_and_Sat
+                       | Var _ => true
+                       | _ => false)
+
 fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
   let fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
@@ -203,12 +210,10 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
                                      | Const(\<^const_name>\<open>Satisfaction\<close>, _) => true
                                      | _ => false) o Thm.prop_of) (#equations phi)
               |> not
-      val exists_bad = exists_subterm (fn Const(\<^const_name>\<open>Inhabited\<close>, _) => allows_Inhabited_and_Sat
-                                        | Const(\<^const_name>\<open>Satisfaction\<close>, _) => allows_Inhabited_and_Sat
-                                        | Var _ => true
-                                        | _ => false)
+      val exists_bad = predicate_infer__contains_bad allows_Inhabited_and_Sat
       fun augment P prems =
             if exists_bad P then prems else P :: prems
+
       fun filter_bad (\<^Const>\<open>HOL.conj\<close> $ A $ B) = binop \<^Const>\<open>HOL.conj\<close> (filter_bad A, filter_bad B)
         | filter_bad (\<^Const>\<open>HOL.disj\<close> $ A $ B) = binop \<^Const>\<open>HOL.disj\<close> (filter_bad A, filter_bad B)
         | filter_bad (\<^Const>\<open>HOL.implies\<close> $ A $ B) = impop (if exists_bad A then NONE else SOME A, filter_bad B)
