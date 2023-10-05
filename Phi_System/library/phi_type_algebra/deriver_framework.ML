@@ -267,7 +267,7 @@ val simplifier_by_LPR' : thm -> simplifier
 
 (** A framework of deriver **)
 
-datatype hint_mode = ACCEPT_NO_HINT | ACCEPT_ONE_HINT | ACCEPT_ANY_HINTS | REQUIRE_AT_LEAST_ONE_HINT | REQUIRE_HINTS
+datatype hint_mode = ACCEPT_NO_HINT | ACCEPT_ONE_HINT | ACCEPT_ANY_HINTS | REQUIRE_EXACT_ONE_HINT | REQUIRE_HINTS
 datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 
 type quiet = bool
@@ -998,7 +998,7 @@ fun Guess_Framework' (goal_template, insts_of, parsing_rule) =
 
 (** Deriver Framework **)
 
-datatype hint_mode = ACCEPT_NO_HINT | ACCEPT_ONE_HINT | ACCEPT_ANY_HINTS | REQUIRE_AT_LEAST_ONE_HINT | REQUIRE_HINTS
+datatype hint_mode = ACCEPT_NO_HINT | ACCEPT_ONE_HINT | ACCEPT_ANY_HINTS | REQUIRE_EXACT_ONE_HINT | REQUIRE_HINTS
 datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 
 type quiet = bool
@@ -1030,10 +1030,10 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
                   map (fn (H,_,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       deriving_instructions
                 )
-             | (REQUIRE_AT_LEAST_ONE_HINT, []) => raise Automation_Fail (fn () => [
+             | (REQUIRE_EXACT_ONE_HINT, []) => raise Automation_Fail (fn () => [
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but no hint is given")
                 ])
-             | (REQUIRE_AT_LEAST_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
+             | (REQUIRE_EXACT_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but more hints are given") ::
                   map (fn (H,_,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
                       deriving_instructions

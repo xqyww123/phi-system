@@ -5533,6 +5533,11 @@ ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
     = \<open>fn quiet => K (Phi_Type_Algebra_Derivers.meta_Tyops_Commute (true, 3) quiet) \<close>
 
 
+subsubsection \<open>Meta Deriver for Pure Syntactical Properties\<close>
+
+ML_file \<open>library/phi_type_algebra/gen_pure_synt_rules.ML\<close>
+
+
 
 section \<open>Deriving Configures for Specific Abstract Algebras\<close>
 
