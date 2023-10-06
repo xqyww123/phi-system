@@ -630,7 +630,7 @@ lemma [\<phi>reason %domainoids]:
 text \<open>\<open>'c share\<close> has no meaningful domainoid as that structure inevitably involves equality checking
   of inner data (luckily we don't need that domainoid).\<close>
 
-
+ 
 lemma [\<phi>reason %domainoid_cut]:
   \<open> homo_one \<delta>
 \<Longrightarrow> comm_domainoid_mapper TYPE('c) TYPE('k \<Rightarrow> 'c::sep_magma_1) \<delta> ((o) \<delta>) (fun_upd 1 k) (fun_upd 1 k) \<close>

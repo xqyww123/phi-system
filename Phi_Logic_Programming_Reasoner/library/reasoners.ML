@@ -70,6 +70,7 @@ signature PHI_REASONERS = sig
      and only remains the extracted premises.*)*)
   val asm_simplify : bool -> Proof.context -> thm -> thm
   val asm_lr_simplify : bool -> Proof.context -> thm -> thm
+  val full_simplify : bool -> Proof.context -> thm -> thm
   val asm_simp_tac : bool -> Proof.context -> int -> tactic
   val asm_lr_simp_tac : bool -> Proof.context -> int -> tactic
   val asm_rewrite : bool -> Proof.context -> conv
@@ -663,6 +664,7 @@ fun gen_simplify simp use_origin ctxt =
 
 val asm_simplify = gen_simplify Simplifier.asm_simplify
 val asm_lr_simplify = gen_simplify Simplifier.asm_lr_simplify
+val full_simplify = gen_simplify Simplifier.full_simplify
 val asm_simp_tac = gen_simplify Simplifier.asm_simp_tac
 val asm_lr_simp_tac = gen_simplify Simplifier.asm_lr_simp_tac
 val asm_rewrite = gen_simplify Simplifier.asm_rewrite

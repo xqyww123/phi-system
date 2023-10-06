@@ -485,28 +485,28 @@ setup \<open>Phi_Type_Template_Properties.add_property_kinds [
       ("Gen_Br_Join", @{lemma' \<open>Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds\<close> by (simp add: Gen_Br_Join_def)})\<close>
 
 thm if_cong
+thm if_cancel
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[br_join] _ : _\<close>)
   = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
                          (fn ctxt => ctxt addsimps Useful_Thms.get ctxt
-                                  |> Simplifier.add_cong @{thm' if_cong}) false)
-    o snd\<close>
+                                  |> Simplifier.add_cong @{thm' if_cong}) {fix_vars=true})
+    o @{print} o snd\<close>
 
 lemma [\<phi>reason_template %\<phi>br_join_derived]:
   \<open> Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> conds
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> conds \<and>   P \<Longrightarrow> Functional_Transformation_Functor F\<^sub>T F' T Z D\<^sub>T R\<^sub>T pm\<^sub>T fm\<^sub>T)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> conds \<and> \<not> P \<Longrightarrow> Functional_Transformation_Functor F\<^sub>U F' U Z D\<^sub>U R\<^sub>U pm\<^sub>U fm\<^sub>U)
-\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (D\<^sub>T x = {} \<longleftrightarrow> D\<^sub>U y = {}) \<and>
-           (\<forall>a \<in> D\<^sub>T x. z a (@b. b \<in> D\<^sub>U y) \<in> R\<^sub>T x) \<and>
-           (\<forall>b \<in> D\<^sub>U y. z (@a. a \<in> D\<^sub>T x) b \<in> R\<^sub>U y)
-\<Longrightarrow> (\<And>(a,b) \<in> (D\<^sub>T x \<times> D\<^sub>U y). If P (a \<Ztypecolon> T) (b \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z a b \<Ztypecolon> Z @action br_join)
-\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[br_join] z' : If P (fm\<^sub>T (\<lambda>a. z a (@b. b \<in> D\<^sub>U y)) (\<lambda>_. True) x) (fm\<^sub>U (\<lambda>b. z (@a. a \<in> D\<^sub>T x) b) (\<lambda>_. True) y) @action \<A>_template_reason
-\<Longrightarrow> If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z' \<Ztypecolon> F' Z @action br_join \<close>
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a \<in> D\<^sub>T x. z (Inl a) \<in> R\<^sub>T x) \<and>
+           (\<forall>b \<in> D\<^sub>U y. z (Inr b) \<in> R\<^sub>U y)
+\<Longrightarrow> (\<And>a \<in> (If P (Inl ` D\<^sub>T x) (Inr ` D\<^sub>U y)). If P (projl a \<Ztypecolon> T) (projr a \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> z a \<Ztypecolon> Z @action br_join)
+\<Longrightarrow>  (If P (x \<Ztypecolon> F\<^sub>T T) (y \<Ztypecolon> F\<^sub>U U)) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
+    (If P (fm\<^sub>T (z o Inl) (\<lambda>_. True) x) (fm\<^sub>U (z o Inr) (\<lambda>_. True) y)) \<Ztypecolon> F' Z @action br_join \<close>
   unfolding Action_Tag_def Premise_def Functional_Transformation_Functor_def Transformation_def
-            meta_Ball_def meta_case_prod_def Simplify_def \<r>Guard_def
-  apply (cases \<open>D\<^sub>T x = {}\<close>; clarsimp; cases P; clarsimp)
-  subgoal premises prems for v proof -
+            meta_Ball_def meta_case_prod_def Simplify_def \<r>Guard_def NO_SIMP_def
+  by (cases P; clarsimp)
+(*  subgoal premises prems for v proof -
     have t1: \<open>(@b. b \<in> D\<^sub>U y) \<in> D\<^sub>U y\<close>
       by (simp add: prems(7) some_in_eq)
     show ?thesis
@@ -526,11 +526,15 @@ lemma [\<phi>reason_template %\<phi>br_join_derived]:
                  t1,
           clarsimp)
   qed .
+*)
 
-
-let_\<phi>type Set_Abstraction deriving \<open>Gen_Br_Join \<S> \<S> \<S> P True\<close>
+declare if_cong[cong]
+thm if_cong
+ 
+    
+(*let_\<phi>type Set_Abstraction deriving \<open>Gen_Br_Join \<S> \<S> \<S> P True\<close>
 let_\<phi>type \<phi>Composition    deriving \<open>Gen_Br_Join ((\<Zcomp>) B) ((\<Zcomp>) B') ((\<Zcomp>) B) P (B = B')\<close>
-let_\<phi>type \<phi>Mul_Quant      deriving \<open>Gen_Br_Join (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) (\<big_ast>\<^sup>\<phi> (If P I J)) P True\<close> (*!!!*)
+let_\<phi>type \<phi>Mul_Quant      deriving \<open>Gen_Br_Join (\<big_ast>\<^sup>\<phi> I) (\<big_ast>\<^sup>\<phi> J) (\<big_ast>\<^sup>\<phi> (If P I J)) P True\<close> (*!!!*)*)
 let_\<phi>type \<phi>Some    deriving \<open>Gen_Br_Join \<phi>Some \<phi>Some \<phi>Some P True\<close>
 let_\<phi>type \<phi>MapAt   deriving \<open>Gen_Br_Join ((\<^bold>\<rightarrow>) k) ((\<^bold>\<rightarrow>) k') ((\<^bold>\<rightarrow>) k) P (k = k')\<close>
 let_\<phi>type \<phi>MapAt_L deriving \<open>Gen_Br_Join ((\<^bold>\<rightarrow>\<^sub>@) k) ((\<^bold>\<rightarrow>\<^sub>@) k') ((\<^bold>\<rightarrow>\<^sub>@) k) P (k = k')\<close>

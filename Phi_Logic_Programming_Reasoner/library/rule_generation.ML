@@ -149,21 +149,40 @@ fun normalize th = th
   |> Phi_Help.beta_eta_contract
   |> Drule.zero_var_indexes
 
+(*simplify the generated rule except the conclusion by default, unless a part of the conclusion has
+  been annotated by \<open>NO_SIMP\<close> (i.e., \<open>NO_SIMP\<close> occurs in the conclusion)*)
 fun pass_generated_rule {simp, masks} ctxt rule =
   let val rule'1 = case Thm.concl_of rule
                      of Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ _ => rule
                       | Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ _) => rule
-                      | _ => rule RS' (ctxt, @{thm' NO_SIMP'_I})
+                      | X => if exists_Const (fn (\<^const_name>\<open>NO_SIMP\<close>, _) => true | _ => false) X
+                             then rule
+                             else rule RS' (ctxt, @{thm' NO_SIMP'_I})
       val ((_, [rule'2]), ctxt'1) = Variable.import false [rule'1] ctxt
       val ctxt's = Template_Inst_SS.enhance ctxt'1
                 |> Simplifier.del_cong @{thm' HOL.if_weak_cong}
+                |> Simplifier.add_cong @{thm' if_cong}
       val rule'3 = rule'2
                 |> simp ? ( Simplification_Protect.protect ctxt's
                          #> Phi_Reasoners.asm_lr_simplify true ctxt's
                          #> Simplification_Protect.unprotect ctxt's )
                 |> singleton (Variable.export ctxt'1 ctxt)
                 |> Phi_Help.unique_flexflex ctxt
-   in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess' (~1, the_default [] masks) ctxt rule'3
+      fun default_mask () = let fun trim_tag (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ X) = SOME (the_default X (trim_tag X))
+                                  | trim_tag (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X) = SOME (the_default X (trim_tag X))
+                                  | trim_tag (A $ B) = (case (trim_tag A, trim_tag B)
+                                                          of (NONE, NONE) => NONE
+                                                           | (A', B') => SOME (the_default A A' $ the_default B B'))
+                                  | trim_tag (Abs (N,Ty,X)) = trim_tag X
+                                                           |> Option.map (fn X' => Abs (N, Ty, X'))
+                                  | trim_tag _ = NONE
+                                val concl = Thm.concl_of rule'3
+                                val concl' = the_default concl (trim_tag concl)
+                             in IN_Arg.default_mask_of (Context.Proof ctxt) concl'
+                            end
+      val masks' = case masks of SOME M => if null M then default_mask () else M
+                               | NONE => default_mask ()
+   in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess' (~1, masks') ctxt rule'3
          of SOME th => simplify ctxt th
           | NONE => rule'3)
    |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}

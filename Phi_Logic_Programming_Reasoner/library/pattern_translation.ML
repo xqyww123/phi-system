@@ -149,14 +149,16 @@ fun get_distinct_seq ctxt (n,ret) seq =
      | NONE => ret
 
 (*the term cannot contain loose bounded variables*)
-fun gen_translate calc ctxt term =
-  Net.match_term (Data.get ctxt) term
+fun gen_translate calc ctxt =
+  let val data = Data.get ctxt
+   in fn term => Net.match_term data term
     |> sort (fn ((n1,_,_,_),(n2,_,_,_)) => int_ord (n2,n1))
     |> Seq.of_list
     |> Seq.map_filter (calc ctxt term)
     |> Seq.pull
     |> (fn SOME ((n,ret), seq) => get_distinct_seq ctxt (n,ret) seq
          | NONE => [])
+  end
 
 val translate = gen_translate calculate
 

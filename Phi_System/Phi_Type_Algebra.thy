@@ -3888,7 +3888,7 @@ consts \<phi>deriver_expansion :: mode
 \<phi>reasoner_ML \<phi>deriver_expansion %cutting
   (\<open>Premise \<phi>deriver_expansion _\<close> | \<open>Simplify \<phi>deriver_expansion ?X' ?X\<close> )
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty)
-        Phi_Type_Algebra_Derivers.Expansion.get' true) o snd\<close>
+        Phi_Type_Algebra_Derivers.Expansion.get' {fix_vars=true}) o snd\<close>
 
 
 subsubsection \<open>Extending Property Guessers\<close>

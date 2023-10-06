@@ -4370,16 +4370,16 @@ subsubsection \<open>Reasoners\<close>
 \<phi>reasoner_ML assertion_simp_source 1300
   (\<open>Simplify (assertion_simps SOURCE) ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
-      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Source.get' ctxt)) false) o snd\<close>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Source.get' ctxt)) {fix_vars=false}) o snd\<close>
 
 \<phi>reasoner_ML assertion_simp_target 1300
   (\<open>Simplify (assertion_simps TARGET) ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
-      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt)) false) o snd\<close>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Target.get' ctxt)) {fix_vars=false}) o snd\<close>
 
 \<phi>reasoner_ML assertion_simp 1200
   (\<open>Premise (assertion_simps _) _\<close> | \<open>Simplify (assertion_simps ?ANY) ?X' ?X\<close> )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Assertion_SS.get' false) o snd\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Assertion_SS.get' {fix_vars=false}) o snd\<close>
 
 
 subsubsection \<open>Normalized Transformation\<close>

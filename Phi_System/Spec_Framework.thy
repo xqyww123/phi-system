@@ -990,13 +990,13 @@ structure Assertion_SS_Abnormal = Simpset (
 \<phi>reasoner_ML assertion_simp_abnormal 1300
   (\<open>Simplify (assertion_simps ABNORMAL) ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) (fn ctxt =>
-      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Abnormal.get' ctxt)) false) o snd\<close>
+      Raw_Simplifier.merge_ss (Assertion_SS.get' ctxt, Assertion_SS_Abnormal.get' ctxt)) {fix_vars=false}) o snd\<close>
 
 \<phi>reasoner_ML semantic_simps 1200
   (\<open>Premise semantic_mode _\<close> | \<open>Simplify semantic_mode ?X' ?X\<close>
      )
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
-        Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse}) false) o snd\<close>
+        Simplifier.clear_simpset ctxt addsimps @{thms \<phi>V_simps \<phi>arg.sel \<phi>arg.collapse}) {fix_vars=false}) o snd\<close>
 
 lemmas [assertion_simps] =
   \<phi>V_simps
