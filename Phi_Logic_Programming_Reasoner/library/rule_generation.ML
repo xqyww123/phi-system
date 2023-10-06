@@ -168,21 +168,25 @@ fun pass_generated_rule {simp, masks} ctxt rule =
                          #> Simplification_Protect.unprotect ctxt's )
                 |> singleton (Variable.export ctxt'1 ctxt)
                 |> Phi_Help.unique_flexflex ctxt
-      fun default_mask () = let fun trim_tag (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ X) = SOME (the_default X (trim_tag X))
-                                  | trim_tag (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X) = SOME (the_default X (trim_tag X))
-                                  | trim_tag (A $ B) = (case (trim_tag A, trim_tag B)
-                                                          of (NONE, NONE) => NONE
-                                                           | (A', B') => SOME (the_default A A' $ the_default B B'))
-                                  | trim_tag (Abs (N,Ty,X)) = trim_tag X
-                                                           |> Option.map (fn X' => Abs (N, Ty, X'))
-                                  | trim_tag _ = NONE
-                                val concl = Thm.concl_of rule'3
-                                val concl' = the_default concl (trim_tag concl)
-                             in IN_Arg.default_mask_of (Context.Proof ctxt) concl'
-                            end
-      val masks' = case masks of SOME M => if null M then default_mask () else M
-                               | NONE => default_mask ()
-   in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule_guess' (~1, masks') ctxt rule'3
+
+      fun trim_tag (Const(\<^const_name>\<open>NO_SIMP\<close>, _) $ X) = SOME (the_default X (trim_tag X))
+        | trim_tag (Const(\<^const_name>\<open>NO_SIMP'\<close>, _) $ X) = SOME (the_default X (trim_tag X))
+        | trim_tag (A $ B) = (case (trim_tag A, trim_tag B)
+                                of (NONE, NONE) => NONE
+                                 | (A', B') => SOME (the_default A A' $ the_default B B'))
+        | trim_tag (Abs (N,Ty,X)) = trim_tag X
+                                 |> Option.map (fn X' => Abs (N, Ty, X'))
+        | trim_tag _ = NONE
+      val concl = Thm.concl_of rule'3
+      val concl' = the_default concl (trim_tag concl)
+
+      val masks' = case masks of SOME M => if null M
+                                           then IN_Arg.default_mask_of (Context.Proof ctxt) concl'
+                                           else M
+                               | NONE => IN_Arg.default_mask_of (Context.Proof ctxt) concl'
+      val inargs = IN_Arg.parse_mask masks' concl'
+
+   in (case Phi_Help.instantiate_higher_order_schematic_var_for_rule' (~1, inargs) ctxt rule'3
          of SOME th => simplify ctxt th
           | NONE => rule'3)
    |> Simplifier.rewrite_rule ctxt @{thms' NO_SIMP_def NO_SIMP'_def template_NO_SIMP_USE_def}
