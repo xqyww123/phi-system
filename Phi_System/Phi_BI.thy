@@ -5063,7 +5063,6 @@ lemma [\<phi>reason %ToA_normalizing+1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>
 \<Longrightarrow> if C\<^sub>R then R = R' else R = 1
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<w>\<i>\<t>\<h> P \<close>
   for R :: \<open>'c :: sep_magma_1 BI\<close>
-  unfolding Premise_def
   by (cases C\<^sub>R; simp)
 
 lemma [\<phi>reason %ToA_normalizing for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] _ \<w>\<i>\<t>\<h> _\<close>]:

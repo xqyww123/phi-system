@@ -805,6 +805,8 @@ and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>
 and \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> \<Rightarrow> \<open>?X \<s>\<h>\<i>\<f>\<t>\<s> ?var_y \<Ztypecolon> ?U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> (30)
 ]]
 
+subsection \<open>Basic Rules\<close>
+
 lemma View_Shift_imply_P:
   \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P1
 \<Longrightarrow> (P1 \<longrightarrow> P2)
@@ -859,6 +861,21 @@ lemma \<phi>view_shift_intro_frame:
 lemma \<phi>view_shift_intro_frame_R:
   "U' \<s>\<h>\<i>\<f>\<t>\<s> U \<w>\<i>\<t>\<h> P \<Longrightarrow> U' * R \<s>\<h>\<i>\<f>\<t>\<s> U * R \<w>\<i>\<t>\<h> P "
   by (simp add: \<phi>frame_view mult.commute)
+
+subsection \<open>Basic Rules\<close>
+
+subsubsection \<open>When the conditional boolean is fixed\<close>
+
+lemma [\<phi>reason %ToA_normalizing for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] _ \<w>\<i>\<t>\<h> _\<close> ]:
+  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P
+\<Longrightarrow> if C\<^sub>R then R = R' else R = 1
+\<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R  \<w>\<i>\<t>\<h> P \<close>
+  by (cases C\<^sub>R; simp)
+
+lemma [\<phi>reason %ToA_normalizing for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] _ \<w>\<i>\<t>\<h> _\<close> ]:
+  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] \<top> \<w>\<i>\<t>\<h> P \<close>
+  by simp
 
 
 section \<open>Hoare Rules \& SL Rules\<close>

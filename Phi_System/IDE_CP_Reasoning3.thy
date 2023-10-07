@@ -863,79 +863,14 @@ lemma [\<phi>reason %\<phi>synthesis_gen_hhf]:
   unfolding Gen_Synthesis_Rule_def conjunction_imp
   subgoal premises P by (rule P(1), rule P(2), assumption, assumption) .
 
-subsection \<open>Transformation \& View Shift\<close>
-
-context begin
-
-private lemma Gen_Synthesis_Rule_transformation_12:
-  \<open> PROP Gen_Synthesis_Rule
-      (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yr * Y \<w>\<i>\<t>\<h> P))
-      Ant
-      (PROP Ant \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R * Yr \<w>\<i>\<t>\<h> P @action synthesis) \<close>
-  for R :: \<open>'a::sep_semigroup set\<close>
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def
-  by (simp; rule transformation_left_frame[where U=\<open>Yr * Y\<close>, simplified mult.assoc[symmetric]]; simp)
-
-private lemma Gen_Synthesis_Rule_transformation_11:
-  \<open> PROP Gen_Synthesis_Rule
-      (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
-      Ant
-      (PROP Ant \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> P @action synthesis) \<close>
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def
-  by (simp; rule transformation_left_frame; simp)
-
-private lemma Gen_Synthesis_Rule_transformation_00:
-  \<open> PROP Gen_Synthesis_Rule
-      (Trueprop (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
-      Ant
-      (PROP Ant \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action synthesis) \<close>
-  unfolding Gen_Synthesis_Rule_def Action_Tag_def
-  by simp
-
-\<phi>reasoner_ML Gen_Synthesis_Rule_transformation default %\<phi>synthesis_gen_ToA
-    (\<open>PROP Gen_Synthesis_Rule (Trueprop (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)) (PROP _) (PROP _)\<close>)
-  = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-    let val _ (*Gen_Synthesis_Rule*) $ (_ (*Trueprop*) $ TM) $ _ $ _ = Thm.major_prem_of sequent
-        fun last_ele (Const (\<^const_name>\<open>ExSet\<close>, _) $ X) = last_ele X
-          | last_ele (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = last_ele X
-          | last_ele (Const (\<^const_name>\<open>times\<close>, _) $ X $ _ ) = last_ele X
-          | last_ele X = X
-        val (mode,X,Y) =
-          case TM
-            of Const(\<^const_name>\<open>Transformation\<close>, _) $ X $ Y $ _ =>
-                  if last_ele X = last_ele Y then (01,X,Y) else (00,X,Y)
-             | Const(\<^const_name>\<open>View_Shift\<close>, _) $ X $ Y $ _ =>
-                  if last_ele X = last_ele Y then (11,X,Y) else (10,X,Y)
-
-        fun warn () = warning "You have multiple separated items and it is unclear which one is \
-                     \the target to be synthesised or the residue of the synthesis.\n\
-                     \We assume the synthesis target is the last item.\n\
-                     \You should use \<open> Residue \<heavy_comma> \<blangle> Target \<brangle> \<close> to annotate the target, \
-                     \or \<open> \<blangle> Target \<brangle> \<close> if there is no residue."
-        fun chk_target (Abs (_,_,tm)) = chk_target tm
-          | chk_target (Const (\<^const_name>\<open>ExSet\<close>, _) $ _)
-              = error ("Exisential quantification has not been supported in synthesis.")
-          | chk_target (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _)
-              = Phi_Reasoner.bad_config "Subjection shouldn't occur here."
-          | chk_target (Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _)
-              = @{thm Gen_Synthesis_Rule_transformation_00}
-          | chk_target (Const (\<^const_name>\<open>times\<close>, _) $ A $ B)
-              = (warn (); @{thm Gen_Synthesis_Rule_transformation_12})
-          | chk_target _ = @{thm Gen_Synthesis_Rule_transformation_11}
-     in case X
-          of Const (\<^const_name>\<open>REMAINS\<close>, _) $ _ $ _ $ _ => NONE
-           | _ => SOME ((ctxt, (chk_target Y) RS sequent), Seq.empty)
-    end)\<close>
-
-end
-
-
 subsection \<open>Procedure Application - General Methods\<close>
+
+text \<open>Note, synthesis is only available on procedure construction but no transformation nor view shift \<close>
 
 \<phi>reasoner_group \<phi>synthesis_gen_proc_cut = (1200, [1200, 1300]) in \<phi>synthesis_gen
       \<open>cutting rules\<close>
   and \<phi>synthesis_gen_proc_normalize = (2000, [2000, 2100])
-        in \<phi>synthesis_gen and > \<phi>synthesis_gen_proc_cut
+      in \<phi>synthesis_gen and > \<phi>synthesis_gen_proc_cut
       \<open>normalizing rules\<close>
   and \<phi>synthesis_gen_proc_init = (10, [10, 10]) in \<phi>synthesis_gen and < \<phi>synthesis_gen_proc_cut
       \<open>initiating reasoning\<close>
@@ -1163,10 +1098,10 @@ and   \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<la
    \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (90),
 
    generate_pattern_of_synthesis_rule
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
-   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (110)
-  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?Z ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (110)
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (110)
+  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (110)
   and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
    \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (120)
   and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
