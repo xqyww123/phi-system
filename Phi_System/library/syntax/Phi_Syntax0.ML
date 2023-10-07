@@ -5,6 +5,8 @@ include PHI_SYNTAX
   val fold_items_of_assertion : (term -> 'a -> 'a) -> term -> 'a -> 'a
   val exists_item_of_assertion : (term -> bool) -> term -> bool
   val forall_item_of_assertion : (term -> bool) -> term -> bool
+  val forall_item_of_assertion_blv : (int (*level of lambda abstractions*) -> term -> bool)
+                                  -> term -> bool
 
   val strip_separations : term -> term list
   val mk_separations : typ -> term list -> term
@@ -83,6 +85,26 @@ fun forall_item_of_assertion P =
         | forall (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = forall X
         | forall X = P X
    in forall
+  end
+
+fun forall_item_of_assertion_blv P =
+  let fun forall lv (Const(\<^const_name>\<open>times\<close>, \<^Type>\<open>set _\<close>) $ A $ B) = forall lv B andalso forall lv A
+        | forall lv (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = forall lv X
+        | forall lv (Const(\<^const_name>\<open>ExSet\<close>, _) $ Abs (_, _, X)) = forall (lv + 1) X
+        | forall lv (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) = forall (lv + 1) (Term.incr_boundvars 1 X $ Bound 0)
+        | forall lv (Abs (_, _, X)) = forall (lv+1) X
+        | forall lv (X as (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _)) = P lv X
+        | forall lv (Const(\<^const_name>\<open>plus\<close>, \<^Type>\<open>set _\<close>) $ A $ B) = forall lv B andalso forall lv A
+        | forall _ (Const(\<^const_name>\<open>top\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall _ (Const(\<^const_name>\<open>bot\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall _ (Const(\<^const_name>\<open>zero_class.zero\<close>, \<^Type>\<open>set _\<close>)) = true
+        | forall lv (Const(\<^const_name>\<open>AllSet\<close>, _) $ Abs (_, _, X)) = forall (lv + 1) X
+        | forall lv (Const(\<^const_name>\<open>AllSet\<close>, _) $ X) = forall (lv + 1) (Term.incr_boundvars 1 X $ Bound 0)
+        | forall lv (Const(\<^const_name>\<open>Additive_Conj\<close>, _) $ A $ B) = forall lv B andalso forall lv A
+        | forall lv (Const(\<^const_name>\<open>REMAINS\<close>, _) $ X $ _ $ Y) = forall lv X andalso forall lv Y
+        | forall lv (Const(\<^const_name>\<open>Mul_Quant\<close>, _) $ X) = forall lv X
+        | forall lv X = P lv X
+   in forall 0
   end
 
 

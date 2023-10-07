@@ -718,6 +718,9 @@ definition REMAINS :: \<open> 'a::sep_magma BI \<Rightarrow> bool \<Rightarrow> 
       A reasoning procedure can at any time if on a unital algebra, set a variable \<open>C\<close> to \<open>True\<close>
       and turns the reasoning into the unital mode.\<close>
 
+abbreviation ALWAYS_REMAINS :: \<open> 'a::sep_magma BI \<Rightarrow> 'a BI \<Rightarrow> 'a BI \<close> (infix "\<r>\<e>\<m>\<a>\<i>\<n>\<s>" 13)
+  where \<open>(X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<equiv> X \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R\<close>
+
 definition \<phi>Prod :: " ('concrete::sep_magma, 'abs_a) \<phi> \<Rightarrow> ('concrete, 'abs_b) \<phi> \<Rightarrow> ('concrete, 'abs_a \<times> 'abs_b) \<phi>" (infixr "\<^emph>" 70)
   where "A \<^emph> B = (\<lambda>(a,b). B b * A a)"
 
@@ -814,7 +817,7 @@ subsubsection \<open>Allocation of Priorities\<close>
                      normal process of the reasoning, and may cause unexpected exception in them.\<close>
   ToA_refl        = (4000, [3990, 4019]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
                     \<open>Reflexive tranformation rules\<close>
-  ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
+  ToA_splitting_source = (50, [49,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
                     \<open>split the separation sequent in the source part and reason the tranformation for
                      each separated item one by one.\<close>
   ToA_weak        = (20, [20,24]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA < default
@@ -928,6 +931,7 @@ fun extracting_elim_or_intro_ToA is_intro ctxt sequent =
 
 
 subsubsection \<open>Reasoning Configure\<close>
+
 
 ML_file \<open>library/tools/helper_reasoners.ML\<close>
 
@@ -1521,31 +1525,7 @@ lemma [\<phi>reason %ToA_fixes_quant+5]:
 \<Longrightarrow> W * ExSet T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> U \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] ExSet R \<w>\<i>\<t>\<h> Ex P"
   unfolding Transformation_def by (cases C; simp; fastforce)
 
-ML \<open>fun ToA_ex_intro_reasoning (ctxt,sequent) =
-  let val (_, X'', _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
-      fun parse (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) = (false, ty, X)
-        | parse (Const(\<^const_name>\<open>REMAINS\<close>, _) $ (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) $ _ $ _)
-            = (true, ty, X)
-        | parse X = parse (Envir.beta_eta_contract X)
-      val (has_focus, _, X) = parse X''
-      fun ex_var_is_in_obj_only i (Abs(_,_,X)) = ex_var_is_in_obj_only (i+1) X
-        | ex_var_is_in_obj_only i (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) = ex_var_is_in_obj_only i T
-        | ex_var_is_in_obj_only i (Const(\<^const_name>\<open>Subjection\<close>, _) $ X $ _) = ex_var_is_in_obj_only i X
-        | ex_var_is_in_obj_only i (Bound j) = j <> i
-        | ex_var_is_in_obj_only i (X $ Y) = ex_var_is_in_obj_only i X andalso ex_var_is_in_obj_only i Y
-        | ex_var_is_in_obj_only _ _ = true
-      val rule0 = if has_focus
-                  then if ex_var_is_in_obj_only ~1 X
-                  then @{thm' ExSet_transformation_I_R[where x=\<open>id c\<close> for c]}
-                  else @{thm' ExSet_transformation_I_R}
-                  else if ex_var_is_in_obj_only ~1 X
-                  then @{thm' ExSet_transformation_I[where x=\<open>id c\<close> for c]}
-                  else @{thm' ExSet_transformation_I}
-   in SOME ((ctxt, rule0 RS sequent), Seq.empty)
-  end\<close>
-
-\<phi>reasoner_ML ToA_ex_intro default ! %ToA_inst_qunat (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>)
-  = \<open>fn stat => Seq.make (fn () => ToA_ex_intro_reasoning (snd stat))\<close>
+text \<open>Continued in \ref{supp-ex-conj}\<close>
 
 
 subsection \<open>Additive Conjunction\<close>
@@ -1636,20 +1616,7 @@ lemma NToA_conj_src_B:
   unfolding Transformation_def
   by simp blast
 
-(*diverges to 3 branches, left branch, right branch, and instantiating the Ex in the domain if any. *)
-\<phi>reasoner_ML NToA_conj_src ! %ToA_branches  (\<open>_ \<and>\<^sub>B\<^sub>I _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-  let val tail = (case Thm.major_prem_of sequent
-                    of _ (*Trueprop*) $ (_ (*Transformation*) $ _ $ (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) $ _) =>
-                            if Term.exists_Const (fn (\<^const_name>\<open>Additive_Conj\<close>, _) => true
-                                                   | _ => false) X
-                            then Seq.make (fn () => ToA_ex_intro_reasoning (ctxt,sequent))
-                            else Seq.empty
-                     | _ => Seq.empty)
-   in SOME ((ctxt, @{thm' NToA_conj_src_A} RS sequent),
-        Seq.make (fn () => SOME ((ctxt, @{thm' NToA_conj_src_B} RS sequent), tail)))
-  end
-  )\<close>
-
+text \<open>Continued in \ref{supp-ex-conj}\<close>
 
 
 subsection \<open>Subjection: Conjunction to a Pure Fact\<close>
@@ -4351,13 +4318,15 @@ lemmas [assertion_simps] =
   sep_quant_subjection sep_quant_ExSet
 
   \<phi>Prod_expn'' \<phi>Prod_expn'
-  REMAINS_simp
+  REMAINS_simp(2)
   HOL.if_True HOL.if_False
 
   \<phi>Bot.unfold \<phi>Any.unfold
 
 lemmas [assertion_simps_source] =
   ExSet_times_left ExSet_times_right ExSet_adconj ExSet_addisj
+
+  REMAINS_simp(1)
 
   sep_quant_sep
 
@@ -4654,12 +4623,62 @@ lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<
               NONE)
     end)\<close>
 
+lemma [\<phi>reason %ToA_splitting_source-1]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P
+\<Longrightarrow> if C\<^sub>R then R'' = (R' * X) else R'' = X
+\<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R'' \<w>\<i>\<t>\<h> P \<close>
+  for Y :: \<open>'c::sep_ab_semigroup BI\<close>
+  by ((cases C\<^sub>R; clarsimp),
+      smt (verit, best) mult.commute mult.left_commute transformation_right_frame,
+      metis mult.commute transformation_left_frame)
+
 (* TODO:
 hide_fact enter_SEb enter_SEb_TH*)
 
 
 
 subsection \<open>Supplementary Transformations\<close>
+
+subsubsection \<open>Supplementary for Ex \& Conj \label{supp-ex-conj}\<close>
+
+ML \<open>fun ToA_ex_intro_reasoning (ctxt,sequent) =
+  let val (_, X'', _) = Phi_Syntax.dest_transformation (Thm.major_prem_of sequent)
+      fun parse (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) = (false, ty, X)
+        | parse (Const(\<^const_name>\<open>REMAINS\<close>, _) $ (Const(\<^const_name>\<open>ExSet\<close>, \<^Type>\<open>fun \<^Type>\<open>fun ty _\<close> _\<close>) $ X) $ _ $ _)
+            = (true, ty, X)
+        | parse X = parse (Envir.beta_eta_contract X)
+      val (has_focus, _, X'1) = parse X''
+      val X = case X'1 of Abs (_, _, X) => X | X => Term.incr_boundvars 1 X $ Bound 0
+      val ex_var_is_in_obj_only = Phi_Syntax.forall_item_of_assertion_blv (fn lv =>
+                                    (fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => not (Term.loose_bvar1 (T, lv))
+                                      | A => not (Term.loose_bvar1 (A, lv))))
+      val rule0 = if has_focus
+                  then if ex_var_is_in_obj_only X
+                  then @{thm' ExSet_transformation_I_R[where x=\<open>id c\<close> for c]}
+                  else @{thm' ExSet_transformation_I_R}
+                  else if ex_var_is_in_obj_only X
+                  then @{thm' ExSet_transformation_I[where x=\<open>id c\<close> for c]}
+                  else @{thm' ExSet_transformation_I}
+   in SOME ((ctxt, rule0 RS sequent), Seq.empty)
+  end\<close>
+
+\<phi>reasoner_ML ToA_ex_intro default ! %ToA_inst_qunat (\<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<w>\<i>\<t>\<h> _\<close> | \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ExSet _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close>)
+  = \<open>fn stat => Seq.make (fn () => ToA_ex_intro_reasoning (snd stat))\<close>
+
+(*diverges to 3 branches, left branch, right branch, and instantiating the Ex in the domain if any. *)
+\<phi>reasoner_ML NToA_conj_src ! %ToA_branches  (\<open>_ \<and>\<^sub>B\<^sub>I _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>) = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+  let val tail = (case Thm.major_prem_of sequent
+                    of _ (*Trueprop*) $ (_ (*Transformation*) $ _ $ (Const(\<^const_name>\<open>ExSet\<close>, _) $ X) $ _) =>
+                            if Term.exists_Const (fn (\<^const_name>\<open>Additive_Conj\<close>, _) => true
+                                                   | _ => false) X
+                            then Seq.make (fn () => ToA_ex_intro_reasoning (ctxt,sequent))
+                            else Seq.empty
+                     | _ => Seq.empty)
+   in SOME ((ctxt, @{thm' NToA_conj_src_A} RS sequent),
+        Seq.make (fn () => SOME ((ctxt, @{thm' NToA_conj_src_B} RS sequent), tail)))
+  end
+  )\<close>
+
 
 subsubsection \<open>Evaluations\<close>
 
@@ -5029,6 +5048,29 @@ lemma [\<phi>reason %ToA_splitting_If except \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<
 
 
 subsubsection \<open>Conditioned Remains\<close>
+
+paragraph \<open>When the conditional boolean is fixed\<close>
+
+lemma [\<phi>reason %ToA_normalizing for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R \<w>\<i>\<t>\<h> P
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<w>\<i>\<t>\<h> P \<close>
+  unfolding Premise_def
+  by simp
+
+lemma [\<phi>reason %ToA_normalizing+1 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P
+\<Longrightarrow> if C\<^sub>R then R = R' else R = 1
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<w>\<i>\<t>\<h> P \<close>
+  for R :: \<open>'c :: sep_magma_1 BI\<close>
+  unfolding Premise_def
+  by (cases C\<^sub>R; simp)
+
+lemma [\<phi>reason %ToA_normalizing for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] _ \<w>\<i>\<t>\<h> _\<close>]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[False] \<top> \<w>\<i>\<t>\<h> P \<close>
+  by simp
+
 
 paragraph \<open>Reduction\<close>
 
