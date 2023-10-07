@@ -4,7 +4,7 @@ theory PLPR
        and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
        and "\<phi>reasoner_group" :: thy_defn
        and "\<phi>reasoner_group_assert" :: thy_decl
-       and "print_\<phi>reasoners" :: diag
+       and "print_\<phi>reasoners" "print_\<phi>reasoner_groups" :: diag
        and ">" :: quasi_command
   abbrevs
       "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
@@ -1030,48 +1030,6 @@ lemma May_By_Assumption_I: \<open>PROP P \<Longrightarrow> PROP May_By_Assumptio
   end
 \<close>
 
-subsubsection \<open>Literal Check\<close>
-
-text \<open>check if a term is evaluated to a literal.\<close>
-
-definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Literal _ \<longleftrightarrow> True\<close>
-
-\<phi>reasoner_group is_literal = (%cutting, [%cutting, %cutting+99]) for \<open>Is_Literal _\<close>
-                              \<open>Cutting rules reasoning \<^const>\<open>Is_Literal\<close>\<close>
-
-paragraph \<open>Presets\<close>
-
-lemma Is_Literal_internal_rule:
-  \<open>Is_Literal any\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason %fail]:
-  \<open> FAIL TEXT(\<open>Fail to evaluate\<close> x \<open>to a literal\<close>)
-\<Longrightarrow> Is_Literal x\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason %is_literal]:
-  \<open>Is_Literal True\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason %is_literal]:
-  \<open>Is_Literal False\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason %is_literal]:
-  \<open>Is_Literal 0\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason %is_literal]:
-  \<open> Is_Literal x
-\<Longrightarrow> Is_Literal (Suc x)\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason %is_literal]:
-  \<open>Is_Literal 1\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason %is_literal]:
-  \<open>Is_Literal (numeral x)\<close> unfolding Is_Literal_def ..
-
-lemma [\<phi>reason %is_literal]:
-  \<open> Is_Literal x
-\<Longrightarrow> Is_Literal (- x)\<close>
-  unfolding Is_Literal_def ..
-
 
 subsection \<open>Cut\<close>
 
@@ -1742,6 +1700,62 @@ consts \<phi>instantiation :: mode
 \<phi>reasoner_ML \<open>Simplify \<phi>instantiation\<close> 1000 (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>instantiation] _ : _\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
         (PLPR_Rule_Gen.Template_Inst_SS.enhance) {fix_vars=true}) o snd\<close>
+
+
+subsection \<open>Literal Check\<close>
+
+text \<open>check if a term is evaluated to a literal.\<close>
+
+definition Is_Literal :: \<open>'a \<Rightarrow> bool\<close> where \<open>Is_Literal _ \<longleftrightarrow> True\<close>
+
+\<phi>reasoner_group is_literal = (%cutting, [%cutting, %cutting+99]) for \<open>Is_Literal _\<close>
+                              \<open>Cutting rules reasoning \<^const>\<open>Is_Literal\<close>\<close>
+
+paragraph \<open>Presets\<close>
+
+lemma [\<phi>reason %fail]:
+  \<open> FAIL TEXT(\<open>Fail to evaluate\<close> x \<open>to a literal\<close>)
+\<Longrightarrow> Is_Literal x\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason %is_literal]:
+  \<open>Is_Literal True\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason %is_literal]:
+  \<open>Is_Literal False\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason %is_literal]:
+  \<open>Is_Literal 0\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason %is_literal]:
+  \<open> Is_Literal x
+\<Longrightarrow> Is_Literal (Suc x)\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason %is_literal]:
+  \<open>Is_Literal 1\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason %is_literal]:
+  \<open>Is_Literal (numeral x)\<close> unfolding Is_Literal_def ..
+
+lemma [\<phi>reason %is_literal]:
+  \<open> Is_Literal x
+\<Longrightarrow> Is_Literal (- x)\<close>
+  unfolding Is_Literal_def ..
+
+paragraph \<open>Evaluation to Literal\<close>
+
+consts \<phi>mode_literal :: mode
+
+lemma [\<phi>reason 1000]:
+  \<open> Simplify default A B
+\<Longrightarrow> Is_Literal A
+\<Longrightarrow> Simplify \<phi>mode_literal A B\<close>
+  unfolding Simplify_def atomize_eq .
+
+lemma simplify_literal_implies_literal:
+  \<open>Simplify \<phi>mode_literal A B \<Longrightarrow> Is_Literal A\<close>
+  unfolding Is_Literal_def ..
+
+
 
 
 

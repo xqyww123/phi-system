@@ -169,6 +169,12 @@ signature NU_REASONER = sig
   val single_RS  : thm (*rule*) -> Proof.context -> thm -> thm Seq.seq
         (*The resolution that returns at most one solution.*)
 
+  val attr_syntax' :
+      'ext context_parser (*extension*) ->
+      (Position.T * mode * (priority * Reasoner_Group.name option) * 'ext * ML_guard option
+       -> attribute)
+     -> attribute context_parser
+
   val attr_syntax :
       'ext context_parser (*extension*) ->
       (Position.T * mode * (priority * Reasoner_Group.name option) * 'ext
@@ -1046,7 +1052,7 @@ val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
 val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
 end
 
-fun attr_syntax ext gen =
+fun attr_syntax' ext gen =
   let open Args Scan Parse
     val pos_parser = Phi_Help.pos_parser "\<phi>reasoner"
     val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
@@ -1062,11 +1068,20 @@ fun attr_syntax ext gen =
     lift pos_parser
     -- (lift (option add) |-- mode_and_priority')
     -- ext
-    -- ( optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
-      -- optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
     -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
-    >> (fn ((((pos, (mode, priority)), ext), (pattern, blacklist)), guard) =>
-          gen (pos, mode, priority, ext, (pattern, blacklist), guard))
+    >> (fn (((pos, (mode, priority)), ext), guard) =>
+          gen (pos, mode, priority, ext, guard))
+  end
+
+fun attr_syntax ext gen =
+  let open Args Scan Parse
+      val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
+   in attr_syntax' (
+           ext
+        -- (optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
+        --  optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) []) )
+      (fn (pos, mode, priority, (ext, pats), guard) =>
+            gen (pos, mode, priority, ext, pats, guard))
   end
 
 (*fun attr_syntax gen =

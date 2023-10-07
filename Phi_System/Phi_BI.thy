@@ -817,7 +817,7 @@ subsubsection \<open>Allocation of Priorities\<close>
                      normal process of the reasoning, and may cause unexpected exception in them.\<close>
   ToA_refl        = (4000, [3990, 4019]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
                     \<open>Reflexive tranformation rules\<close>
-  ToA_splitting_source = (50, [49,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
+  ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
                     \<open>split the separation sequent in the source part and reason the tranformation for
                      each separated item one by one.\<close>
   ToA_weak        = (20, [20,24]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA < default
@@ -4623,7 +4623,7 @@ lemma [\<phi>reason %ToA_splitting_source except \<open>_ \<t>\<r>\<a>\<n>\<s>\<
               NONE)
     end)\<close>
 
-lemma [\<phi>reason %ToA_splitting_source-1]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
+lemma [\<phi>reason %ToA_falling_latice]: \<comment> \<open>when X fails to match \<open>x \<Ztypecolon> T\<close>\<close>
   \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C\<^sub>R] R' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> if C\<^sub>R then R'' = (R' * X) else R'' = X
 \<Longrightarrow> R * X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R'' \<w>\<i>\<t>\<h> P \<close>

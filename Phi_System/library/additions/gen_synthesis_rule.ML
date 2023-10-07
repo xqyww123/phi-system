@@ -4,7 +4,7 @@ datatype pattern = Arg_and_Ret of term * term | Ret_only of term | No_Pattern
 
 val gen_rule : Proof.context -> thm -> thm
 val declare_rule : Position.T
-                -> Phi_Reasoner.priority
+                -> Phi_Reasoner.mode * (Phi_Reasoner.priority * Reasoner_Group.name option)
                 -> (pattern * Phi_Reasoner.priority option) list * pattern list
                 -> thm -> Context.generic -> Context.generic
 
@@ -24,7 +24,7 @@ fun gen_rule ctxt proc_thm0 =
                                              ((("R",0),\<^typ>\<open>prop\<close>), Thm.var (("R", idx), \<^ctyp>\<open>prop\<close>))])
                      @{thm Gen_Synthesis_Rule}
    in Thm.implies_elim rule proc_thm
-   |> Phi_Reasoner.reason1 (fn () => "Fail to extract the synthesis rule.") NONE ctxt
+   |> Phi_Reasoner.reason1 (fn () => "Fail to extract the synthesis rule.") NONE NONE ctxt
    |> Raw_Simplifier.rewrite_rule ctxt @{thms conjunction_imp PURE_TOP_imp}
    |> Thm.solve_constraints
    |> (fn sequent => (
@@ -68,7 +68,7 @@ fun encode_pattern _    No_Pattern = \<^term>\<open>TERM ()\<close>
                                 Logic.mk_term (pack true I ret))
       end
 
-fun declare_rule pos priority (patterns0,blacklist0) proc_thm0 ctxt0 =
+fun declare_rule pos (mode, (priority, group)) (patterns0,blacklist0) proc_thm0 ctxt0 =
   let val ctxt = Context.proof_of ctxt0
       val proc_thm = Drule.zero_var_indexes (gen_rule ctxt proc_thm0)
       val concl = Thm.concl_of proc_thm
@@ -94,8 +94,7 @@ fun declare_rule pos priority (patterns0,blacklist0) proc_thm0 ctxt0 =
                 Pretty.str "excluding pattern(s):",
                 Pretty.chunks (map (fn X => Pretty.item [Syntax.pretty_term ctxt X]) blacklist)
           ])))
-   in Phi_Reasoner.add_rule pos (Phi_Reasoner.default_mode_of priority) priority
-                                  (patterns, blacklist) NONE [proc_thm] ctxt0
+   in Phi_Reasoner.add_rule pos mode (priority, group) (patterns, blacklist) NONE [proc_thm] ctxt0
   end
 
 

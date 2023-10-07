@@ -287,6 +287,25 @@ text \<open>Registry of default attributes of antecedents in the deductive progr
 
 ML_file \<open>library/system/premise_attribute.ML\<close>
 
+paragraph \<open>Configuring Existing Antecedents\<close>
+
+declare [[
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Is_Literal _\<close>,
+
+  \<phi>premise_attribute_ML \<open>fn _ => Thm.declaration_attribute (fn thm => fn ctxt =>
+    let val term_A = case Thm.prop_of thm
+                       of _ $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ A $ _ ) => A
+                        | _ $ (Const(\<^const_name>\<open>Simplify\<close>, _) $ _ $ A $ _ ) => A
+        val cterm_A = Context.cases Thm.global_cterm_of Thm.cterm_of ctxt term_A
+        val rule = \<^instantiate>\<open>cterm_A and 'a=\<open>Thm.ctyp_of_cterm cterm_A\<close> in
+                                  lemma \<open>Is_Literal (cterm_A::'a)\<close> by (simp add: Is_Literal_def)\<close>
+     in Phi_Reasoner.add_rule Position.none Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %is_literal}
+            ([(Thm.concl_of rule, NONE)], []) NONE [rule] ctxt
+    end
+    handle MATCH => ctxt
+  )\<close> for \<open>Simplify \<phi>mode_literal _ _\<close>
+]]
+
 
 subsection \<open>Convention of Syntax Priority\<close>
 

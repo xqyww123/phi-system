@@ -730,6 +730,8 @@ text \<open>
 TODO: update the comment.
 \<close>
 
+subsubsection \<open>Conventions\<close>
+
 declare [[\<phi>reason_default_pattern
       \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
       \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (100)
@@ -738,6 +740,14 @@ declare [[\<phi>reason_default_pattern
   and \<open>?X @action synthesis\<close> \<Rightarrow>
       \<open>ERROR TEXT(\<open>Malformed Synthesis rule\<close> \<newline> ?X \<newline> \<open>expect: \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?R \<heavy_comma> \<blangle> Target \<brangle> \<rbrace>\<close>\<close>)\<close> (0)
 ]]
+
+\<phi>reasoner_group \<phi>synthesis_all = (100, [1, 3000]) for \<open>_ @action synthesis\<close>
+      \<open>Rules implementing Synthesis mechanism of IDE-CP\<close>
+  and \<phi>synthesis_split = (1230, [1230, 1250]) in \<phi>synthesis_all
+      \<open>Splitting the targets into each sub-reasoning goal\<close>
+
+
+subsubsection \<open>Post_Synthesis Simplification\<close>
 
 ML \<open>
 structure Post_Synthesis_SS = Simpset (
@@ -753,6 +763,7 @@ consts post_synthesis_simp :: mode
 
 \<phi>reasoner_ML post_synthesis_simp 1200 (\<open>Simplify post_synthesis_simp ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Post_Synthesis_SS.get' {fix_vars=true}) o snd\<close>
+
 
 subsubsection \<open>Synthesis Operations\<close>
 
