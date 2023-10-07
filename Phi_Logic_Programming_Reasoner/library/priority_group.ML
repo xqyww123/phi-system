@@ -154,7 +154,7 @@ val _ = Outer_Syntax.local_theory' \<^command_keyword>\<open>\<phi>reasoner_grou
             parser (*base*) --| \<^keyword>\<open>,\<close>
                             -- (\<^keyword>\<open>[\<close> |-- parser --| \<^keyword>\<open>,\<close> -- parser --| \<^keyword>\<open>]\<close>) (*priority interval*)
           --| \<^keyword>\<open>)\<close>) --
-         (\<^keyword>\<open>for\<close> |-- ((\<^keyword>\<open>(\<close> |-- list1 prop --| \<^keyword>\<open>)\<close>) || prop >> single) (*tasks*)) --
+         Scan.optional (\<^keyword>\<open>for\<close> |-- ((\<^keyword>\<open>(\<close> |-- list1 prop --| \<^keyword>\<open>)\<close>) || prop >> single) (*tasks*)) [] --
          constraints_parser --
          document_source)
    )) >> flat end >> (fn data => fn int =>

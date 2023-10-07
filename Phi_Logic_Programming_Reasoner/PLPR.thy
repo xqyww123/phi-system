@@ -4,7 +4,7 @@ theory PLPR
        and "\<phi>reasoner" "\<phi>reasoner_ML" :: thy_decl % "ML"
        and "\<phi>reasoner_group" :: thy_defn
        and "\<phi>reasoner_group_assert" :: thy_decl
-       and "print_\<phi>reasoners" "print_\<phi>reasoner_groups" :: diag
+       and "print_\<phi>reasoners" :: diag
        and ">" :: quasi_command
   abbrevs
       "<premise>" = "\<p>\<r>\<e>\<m>\<i>\<s>\<e>"
