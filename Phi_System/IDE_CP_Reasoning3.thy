@@ -1102,10 +1102,10 @@ and   \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<la
    \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (110)
   and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
    \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (110)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
-   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (120)
-  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R  \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
-   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x \<Ztypecolon> _ \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (120)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (120)
+  and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis &&& TERM ()\<close>
+   \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action overloaded_synthesis\<close>  (120)
   and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis &&& TERM ?Y'\<close>
    \<Rightarrow> \<open>\<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (110)
   and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis &&& TERM ?Y'\<close>
@@ -1189,48 +1189,50 @@ lemma [\<phi>reason 1050]:
 But it is a deficiency! Use a larger range of search to address this!*)
 
 lemma overloaded_synthesis_nullary:
-  \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. R1 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. R1\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
+  \<open> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> H \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R1 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis\<close>
   unfolding Action_Tag_def .
 
 
 lemma overloaded_synthesis_unary:
-  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> H vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. R3 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
+\<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> H vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
          \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> (h1 \<bind> H) \<lbrace> R1 \<longmapsto> \<lambda>ret. R3 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+\<Longrightarrow> \<p>\<r>\<o>\<c> (h1 \<bind> H) \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (E1 + E) @action synthesis\<close>
   \<medium_left_bracket> premises H1 and H
-    H1 H \<medium_right_bracket> .
+    H1 H
+  \<medium_right_bracket> .
 
 lemma [\<phi>reason add]:
   \<open> (\<And>vs. S1 vs \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> YY vs \<w>\<i>\<t>\<h> Any)
-\<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> Return vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. R2 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace> @action overloaded_synthesis\<close>
+\<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> Return vs \<lbrace> R2 \<heavy_comma> S1 vs \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> @action overloaded_synthesis\<close>
   \<medium_left_bracket> premises I
     I
-    \<medium_right_bracket> .
+  \<medium_right_bracket> .
 
 
 lemma overloaded_synthesis_binary:
-  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> h2 \<lbrace> R2 \<longmapsto> \<lambda>ret. R3\<heavy_comma> \<blangle> S2 ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
-\<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> H vs \<lbrace> R3 \<heavy_comma> S1 (\<phi>V_snd vs) \<heavy_comma> S2 (\<phi>V_fst vs) \<longmapsto> \<lambda>ret. R4\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> h2 \<lbrace> R2 \<longmapsto> \<lambda>ret. S2 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
+\<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> H vs \<lbrace> R3 \<heavy_comma> S1 (\<phi>V_snd vs) \<heavy_comma> S2 (\<phi>V_fst vs) \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R4 \<rbrace>
          \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (h1 \<bind> (\<lambda>v1. h2 \<bind> (\<lambda>v2. H (\<phi>V_pair v2 v1))))
-      \<lbrace> R1 \<longmapsto> \<lambda>ret. R4\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+      \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R4 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + E e) @action synthesis\<close>
   \<medium_left_bracket> premises H1 and H2 and H
-    H1 H2 H \<medium_right_bracket> .
+    H1 H2 H
+  \<medium_right_bracket> .
 
 lemma overloaded_synthesis_ternary:
-  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R2\<heavy_comma> \<blangle> S1 ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> h2 \<lbrace> R2 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R3\<heavy_comma> \<blangle> S2 ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> h3 \<lbrace> R3 \<longmapsto> \<lambda>ret::VAL \<phi>arg. R4\<heavy_comma> \<blangle> S3 ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E3 @action synthesis
+  \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> h2 \<lbrace> R2 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S2 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R3 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E2 @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> h3 \<lbrace> R3 \<longmapsto> \<lambda>ret::VAL \<phi>arg. S3 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R4 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E3 @action synthesis
 \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> H vs \<lbrace> R4 \<heavy_comma> S1 (\<phi>V_snd (\<phi>V_snd vs)) \<heavy_comma> S2 (\<phi>V_fst (\<phi>V_snd vs)) \<heavy_comma> S3 (\<phi>V_fst vs)
-                  \<longmapsto> \<lambda>ret. R5 \<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+                  \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R5 \<rbrace>
          \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis
 \<Longrightarrow> \<p>\<r>\<o>\<c> (h1 \<bind> (\<lambda>v1. h2 \<bind> (\<lambda>v2. h3 \<bind> (\<lambda>v3. H (\<phi>V_pair v3 (\<phi>V_pair v2 v1))))))
-      \<lbrace> R1 \<longmapsto> \<lambda>ret. R5\<heavy_comma> \<blangle> YY ret \<brangle> \<rbrace>
+      \<lbrace> R1 \<longmapsto> \<lambda>ret. YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R5 \<rbrace>
     \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. E1 e + ((\<exists>*v. S1 v)\<heavy_comma> E2 e) + ((\<exists>*v. S1 v)\<heavy_comma> (\<exists>*v. S2 v)\<heavy_comma> E3 e) + E e)
     @action synthesis\<close>
   \<medium_left_bracket> premises H1 and H2 and H3 and H
@@ -1244,7 +1246,7 @@ lemma make_overloaded_synthesis_rule:
           Ant
           ((\<And>vs. X' vs \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<w>\<i>\<t>\<h> Any1 vs)
        \<Longrightarrow> PROP Ant
-       \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
+       \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
            @action overloaded_synthesis)\<close>
   unfolding Gen_Synthesis_Rule_def
   \<medium_left_bracket> premises E[assertion_simps] and F and X and A
@@ -1255,14 +1257,14 @@ lemma make_overloaded_synthesis_rule:
 lemma make_overloaded_synthesis_rule':
   \<open> Simplify (assertion_simps ABNORMAL) E' (\<lambda>e. R'\<heavy_comma> E e)
 \<Longrightarrow> PROP Gen_Synthesis_Rule
-          (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
+          (Trueprop (\<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E))
           Ant
           ((\<And>vs. X' vs \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X vs \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<w>\<i>\<t>\<h> Any1 vs)
        \<Longrightarrow> PROP Ant
-       \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. R'\<heavy_comma> R\<heavy_comma> \<blangle> Y ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
+       \<Longrightarrow> \<forall>vs. \<p>\<r>\<o>\<c> F vs \<lbrace> X' vs \<longmapsto> \<lambda>ret. Y ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R'\<heavy_comma> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'
            @action overloaded_synthesis)\<close>
-  unfolding FOCUS_TAG_def
-  using make_overloaded_synthesis_rule[unfolded FOCUS_TAG_def, where Y = \<open>\<lambda>v. R\<heavy_comma> Y v\<close>, folded mult.assoc] .
+  unfolding REMAINS_simp
+  using make_overloaded_synthesis_rule[unfolded REMAINS_simp, where Y = \<open>\<lambda>v. R\<heavy_comma> Y v\<close>, folded mult.assoc] .
 
 ML_file \<open>library/additions/overloaded_synthesis.ML\<close>
 

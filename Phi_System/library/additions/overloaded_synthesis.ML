@@ -64,7 +64,7 @@ fun declare_overloaded_operator signat0 pos priority ctxt0 =
                   |> subst_vars ([(("'y",0), ret_val_ty)], [(("YY",0), ret)])
                   |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
       val pattern2 = \<^pattern_prop>\<open>PROP Gen_Synthesis_Rule
-                        (Trueprop (\<forall>vs::?'a. \<p>\<r>\<o>\<c> ?F vs \<lbrace> ?X vs \<longmapsto> \<lambda>ret::?'y \<phi>arg. ?R\<heavy_comma> \<blangle> ?YY ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E)) ?An ?Re\<close>
+                        (Trueprop (\<forall>vs::?'a. \<p>\<r>\<o>\<c> ?F vs \<lbrace> ?X vs \<longmapsto> \<lambda>ret::?'y \<phi>arg. ?YY ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E)) ?An ?Re\<close>
                   |> subst_vars ([(("'y",0), ret_val_ty)], [(("YY",0), ret)])
                   |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
    in ctxt0
