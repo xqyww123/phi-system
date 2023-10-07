@@ -1018,6 +1018,19 @@ lemma \<phi>Application_Conv:
 
 ML_file \<open>library/system/application.ML\<close>
 
+\<phi>reasoner_group \<phi>application_all = (1000, [10,3000]) for (\<open>PROP \<phi>Application Apps State Result\<close>)
+    \<open>describs how to apply \<open>Apps\<close> over \<open>State\<close>\<close>
+  and \<phi>application_traverse_apps = (70, [70,70]) in \<phi>application_all
+    \<open>attemps each application candidate in order\<close>
+  and \<phi>application = (1000, [1000, 1100]) in \<phi>application_all > \<phi>application_traverse_apps
+    \<open>usual cutting rules\<close>
+
+  and \<phi>app_conv_all = (1000, [10,3000]) for \<open>(PROP \<phi>Application_Conv Antcedent Consequent)\<close>
+    \<open>application as converting \<open>Antecedent\<close> to \<open>Consequent\<close>\<close>
+  and \<phi>app_conv_success = (3000, [3000,3000]) in \<phi>app_conv_all
+    \<open>direct success\<close>
+  and \<phi>app_conv = (1000, [1000,1200]) in \<phi>app_conv_all and < \<phi>app_conv_success
+    \<open>usual cutting rules\<close>
 
 subsubsection \<open>Common Rules of Application Methods\<close>
 
@@ -1044,19 +1057,24 @@ lemma [\<phi>reason 1000 \<phi>Application_opt_L \<phi>Application_opt_R for
   unfolding prop_def \<phi>Application_def Optimum_Among_def .
 *)
 
-lemma [\<phi>reason 71 for \<open>
-  PROP \<phi>Application (PROP ?App &&& PROP ?Apps) ?State ?Result
-\<close>]:
+context begin
+
+private lemma \<phi>App_L:
   \<open> PROP \<phi>Application (PROP App) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (PROP App &&& PROP Apps) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def conjunction_imp .
 
-lemma [\<phi>reason 70 for \<open>
-  PROP \<phi>Application (PROP ?App &&& PROP ?Apps) ?State ?Result
-\<close>]:
+private lemma \<phi>App_R:
   \<open> PROP \<phi>Application (PROP Apps) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (PROP App &&& PROP Apps) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def conjunction_imp .
+
+declare [[
+  \<phi>reason %\<phi>application_traverse_apps \<phi>App_L \<phi>App_R
+      for \<open>PROP \<phi>Application (PROP ?App &&& PROP ?Apps) ?State ?Result\<close>
+]]
+
+end
 
 lemma \<phi>apply_eager_antecedent_meta:
   \<open> PROP \<phi>Application (PROP App) State (PROP Result)
@@ -1084,7 +1102,7 @@ lemma \<phi>apply_user_antecedent:
   unfolding prop_def \<phi>Application_def imp_implication
   subgoal premises prems using prems(1)[OF prems(2) prems(3)[OF prems(4)]] . .
 
-\<phi>reasoner_ML \<phi>apply_admit_antecedent 1100
+\<phi>reasoner_ML \<phi>apply_admit_antecedent %\<phi>application
   ( \<open>PROP \<phi>Application (PROP ?Prem \<Longrightarrow> PROP ?App) ?State ?Result\<close>
   | \<open>PROP \<phi>Application (Trueprop (?Prem' \<longrightarrow> ?App')) ?State ?Result\<close> )
 = \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
@@ -1116,36 +1134,57 @@ lemma \<phi>apply_user_antecedent:
   end
 ) \<close>
 
-
-(*TODO!!! why not like \<forall>?*)
-lemma [\<phi>reason 1200 for \<open>
-  PROP \<phi>Application (Pure.all ?App) ?State ?Result
-\<close>]:
-  \<open> PROP \<phi>Application (PROP (App x)) State (PROP Result)
-\<Longrightarrow> PROP \<phi>Application (Pure.all App) State (PROP Result)\<close>
-  unfolding \<phi>Application_def
-  subgoal premises prems
-    apply (tactic \<open>Tactic.resolve_tac \<^context>
-      [((Thm.forall_elim \<^cterm>\<open>x\<close> @{thm prems(3)}) RS @{thm prems(1)[OF prems(2)]})] 1\<close>) . .
-
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>application]:
   \<open> PROP \<phi>Application (Trueprop App) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (Trueprop (App @action Act)) State (PROP Result)\<close>
   unfolding prop_def \<phi>Application_def Action_Tag_def
   subgoal premises prems using prems(1)[OF prems(2) prems(3)] . .
 
-lemma [\<phi>reason 1200]:
+(*
+lemma [\<phi>reason %\<phi>application+100]:
+  \<open> PROP \<phi>Application (\<And>a b. PROP App (a,b)) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (Pure.all App) State (PROP Result)\<close>
+  unfolding split_paired_all .
+*)
+
+lemma [\<phi>reason %\<phi>application]:
+  \<open> PROP \<phi>Application (PROP App x) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (\<And>x. PROP App x) State (PROP Result)\<close>
+  unfolding \<phi>Application_def
+proof -
+  assume p1: \<open>PROP State \<Longrightarrow> PROP App x \<Longrightarrow> PROP Result\<close>
+     and p2: \<open>PROP State\<close>
+     and p3: \<open>\<And>x. PROP App x\<close>
+  show \<open>PROP Result\<close>
+    by (rule p1, rule p2, rule p3)
+qed
+
+lemma [\<phi>reason %\<phi>application+100]:
+  \<open> PROP \<phi>Application (\<And>a. PROP App (\<phi>V_pair x a)) State (PROP Result)
+\<Longrightarrow> PROP \<phi>Application (\<And>x. PROP App x) State (PROP Result)\<close>
+  unfolding \<phi>Application_def
+proof -
+  assume p1: \<open>PROP State \<Longrightarrow> (\<And>a. PROP App (x\<^bold>, a)) \<Longrightarrow> PROP Result\<close>
+     and p2: \<open>PROP State\<close>
+     and p3: \<open>\<And>x. PROP App x\<close>
+  show \<open>PROP Result\<close>
+    by (rule p1, rule p2, rule p3)
+qed
+
+(*
+lemma [\<phi>reason %\<phi>application+100]:
   \<open> PROP \<phi>Application (Trueprop (\<forall>a b. App (a,b))) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
   unfolding split_paired_All .
+*)
 
-lemma [\<phi>reason 1100]:
+lemma [\<phi>reason %\<phi>application]:
   \<open> PROP \<phi>Application (Trueprop (App x)) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
   unfolding \<phi>Application_def
   subgoal premises p by (rule p(1), rule p(2), rule p(3)[THEN spec[where x=x]]) .
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>application+100]:
   \<open> PROP \<phi>Application (Trueprop (\<forall>a. App (\<phi>V_pair x a))) State (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (Trueprop (All App)) State (PROP Result)\<close>
   unfolding \<phi>Application_def
@@ -1156,22 +1195,22 @@ lemma [\<phi>reason 1200]:
 
 subsubsection \<open>Application as a Resolution\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>application]:
   \<open> PROP \<phi>Application_Conv X' X
 \<Longrightarrow> PROP \<phi>Application X' (PROP X \<Longrightarrow> PROP Y) Y\<close>
   unfolding \<phi>Application_def \<phi>Application_Conv_def
   subgoal premises prems using prems(3)[THEN prems(1), THEN prems(2)] . .
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>application]:
   \<open> PROP \<phi>Application_Conv (Trueprop X') (Trueprop X)
 \<Longrightarrow> PROP \<phi>Application (Trueprop X') (Trueprop (X \<longrightarrow> Y)) (Trueprop Y)\<close>
   unfolding \<phi>Application_def \<phi>Application_Conv_def by blast
 
-lemma [\<phi>reason 3000 for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
+lemma [\<phi>reason %\<phi>app_conv_success for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
   \<open>PROP \<phi>Application_Conv (PROP X) (PROP X)\<close>
   unfolding \<phi>Application_Conv_def .
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>app_conv]:
   \<open> PROP \<phi>Application_Conv (A x) X
 \<Longrightarrow> PROP \<phi>Application_Conv (Pure.all A) X\<close>
   unfolding \<phi>Application_Conv_def
@@ -1181,19 +1220,19 @@ proof -
   from A[OF B[of x]] show \<open>PROP X\<close> .
 qed
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>app_conv]:
   \<open> PROP May_By_Assumption X
 \<Longrightarrow> PROP \<phi>Application_Conv A Y
 \<Longrightarrow> PROP \<phi>Application_Conv (PROP X \<Longrightarrow> PROP A) Y\<close>
   unfolding \<phi>Application_Conv_def May_By_Assumption_def
   subgoal premises p using p(1)[THEN p(3), THEN p(2)] . .
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>app_conv]:
   \<open> PROP \<phi>Application_Conv X (Trueprop Y)
 \<Longrightarrow> PROP \<phi>Application_Conv X (Trueprop (Y @action A))\<close>
   unfolding Action_Tag_def .
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %\<phi>app_conv]:
   \<open> PROP \<phi>Application_Conv (Trueprop Y) X
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (Y @action A)) X\<close>
   unfolding Action_Tag_def .
@@ -1216,6 +1255,22 @@ The construction in a ready state should always be specified by a simple MTF.
 \end{convention}
 \<close>
 
+\<phi>reasoner_group \<phi>app_on_proc_or_VS = (1000, [1000,2000])
+      for \<open>PROP \<phi>Application App (Trueprop (CurrentConstruction mode blk R S)) Result\<close>
+       in \<phi>application_all and > \<phi>application_traverse_apps
+      \<open>applications in construction process of procedures\<close>
+  and \<phi>app_ToA_on_proc_or_VS = (1000, [1000,1200])
+      for \<open>PROP \<phi>Application (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P)) (Trueprop (CurrentConstruction mode blk R S)) Result\<close>
+       in \<phi>app_on_proc_or_VS
+      \<open>applying ToA\<close>
+  and \<phi>app_VS_on_proc_or_VS = (1000, [1000,1200])
+      for \<open>PROP \<phi>Application (Trueprop (S \<s>\<h>\<i>\<f>\<t>\<s> T \<w>\<i>\<t>\<h> P)) (Trueprop (CurrentConstruction mode blk R S)) Result\<close>
+       in \<phi>app_on_proc_or_VS
+      \<open>applying VS\<close>
+  and \<phi>app_proc_on_proc_or_VS = (1000, [1000,1200])
+      for \<open>PROP \<phi>Application (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> S \<longmapsto> T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E ))
+                             (Trueprop (CurrentConstruction mode blk R S)) Result\<close>
+      \<open>applying procedures\<close>
 
 paragraph \<open>Transformation Methods\<close>
 
@@ -1233,7 +1288,7 @@ lemma [\<phi>reason 3000 for \<open>
   by simp
 *)
 
-lemma [\<phi>reason 1200 for \<open>
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS+200 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1243,7 +1298,7 @@ lemma [\<phi>reason 1200 for \<open>
   unfolding \<phi>Application_def
   using \<phi>apply_implication .
 
-lemma [\<phi>reason 1100 for \<open>
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS+100 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S))) ?Result
 \<close>]:
@@ -1253,7 +1308,7 @@ lemma [\<phi>reason 1100 for \<open>
   unfolding \<phi>Application_def
   using \<phi>apply_implication transformation_left_frame by blast
 
-lemma \<phi>apply_transformation_fully[\<phi>reason 1000 for \<open>
+lemma \<phi>apply_transformation_fully[\<phi>reason %\<phi>app_ToA_on_proc_or_VS for \<open>
   PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T' \<w>\<i>\<t>\<h> ?P))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1265,7 +1320,7 @@ lemma \<phi>apply_transformation_fully[\<phi>reason 1000 for \<open>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication transformation_left_frame \<phi>apply_view_shift)
 
-lemma [\<phi>reason 1000 for \<open>
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS for \<open>
   PROP \<phi>Application (Trueprop (?S' = (?T' :: ?'a set)))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1294,7 +1349,7 @@ lemma [\<phi>reason 3000 for \<open>
   by simp
 *)
 
-lemma \<phi>apply_view_shift_fast[\<phi>reason 1200 for \<open>
+lemma \<phi>apply_view_shift_fast[\<phi>reason %\<phi>app_VS_on_proc_or_VS+200 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<s>\<h>\<i>\<f>\<t>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1304,7 +1359,7 @@ lemma \<phi>apply_view_shift_fast[\<phi>reason 1200 for \<open>
   unfolding \<phi>Application_def
   using "\<phi>apply_view_shift" .
 
-lemma [\<phi>reason 1100 for \<open>
+lemma [\<phi>reason %\<phi>app_VS_on_proc_or_VS+100 for \<open>
   PROP \<phi>Application (Trueprop (?S' \<s>\<h>\<i>\<f>\<t>\<s> ?T \<w>\<i>\<t>\<h> ?P))
           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S))) ?Result
 \<close>]:
@@ -1314,7 +1369,7 @@ lemma [\<phi>reason 1100 for \<open>
   unfolding \<phi>Application_def
   using "\<phi>apply_view_shift" \<phi>view_shift_intro_frame by blast
 
-lemma \<phi>apply_view_shift_fully[\<phi>reason 1000 for \<open>
+lemma \<phi>apply_view_shift_fully[\<phi>reason %\<phi>app_VS_on_proc_or_VS for \<open>
   PROP \<phi>Application (Trueprop (?S' \<s>\<h>\<i>\<f>\<t>\<s> ?T' \<w>\<i>\<t>\<h> ?P))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
@@ -1330,7 +1385,7 @@ lemma \<phi>apply_view_shift_fully[\<phi>reason 1000 for \<open>
 
 paragraph \<open>Procedure Methods\<close>
 
-lemma apply_proc_fast[\<phi>reason 1200 for \<open>
+lemma apply_proc_fast[\<phi>reason %\<phi>app_proc_on_proc_or_VS+200 for \<open>
   PROP \<phi>Application (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?S \<longmapsto> ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))
           (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S)) ?Result
 \<close>  \<open>
@@ -1345,7 +1400,7 @@ lemma apply_proc_fast[\<phi>reason 1200 for \<open>
   using \<phi>apply_proc .
 
 
-lemma \<phi>apply_proc_fully[\<phi>reason 1000 for
+lemma \<phi>apply_proc_fully[\<phi>reason %\<phi>app_proc_on_proc_or_VS for
     \<open>PROP \<phi>Application (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?S' \<longmapsto> ?T' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))
             (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S)) ?Result\<close>
 ]:
@@ -1446,7 +1501,7 @@ in
 end
 \<close>
 
-lemma [\<phi>reason 1200 for \<open>
+lemma [\<phi>reason %\<phi>app_conv for \<open>
   PROP \<phi>Application_Conv (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) (Trueprop (\<p>\<r>\<o>\<c> ?f' \<lbrace> ?X' \<longmapsto> ?Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' ))
 \<close>]:
   \<open> Simple_HO_Unification f f'
@@ -1458,7 +1513,7 @@ lemma [\<phi>reason 1200 for \<open>
   unfolding \<phi>Application_Conv_def Simple_HO_Unification_def Action_Tag_def
   using \<phi>CONSEQ view_shift_by_implication by blast
 
-lemma [\<phi>reason 1200 for \<open>
+lemma [\<phi>reason %\<phi>app_conv for \<open>
   PROP \<phi>Application_Conv (Trueprop (PendingConstruction _ _ _ _ _))
                          (Trueprop (PendingConstruction _ _ _ _ _))
 \<close>]:
@@ -1473,7 +1528,7 @@ lemma [\<phi>reason 1200 for \<open>
 
 subsubsection \<open>Applying on View Shift Mode\<close>
 
-lemma [\<phi>reason 1200 for \<open>
+lemma [\<phi>reason %\<phi>app_conv for \<open>
   PROP \<phi>Application_Conv (Trueprop (?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> ?P)) (Trueprop (?X' \<s>\<h>\<i>\<f>\<t>\<s> ?Y' \<w>\<i>\<t>\<h> ?P'))
 \<close>]:
   \<open> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any1 @action NToA
@@ -1486,7 +1541,14 @@ lemma [\<phi>reason 1200 for \<open>
 
 subsubsection \<open>Applying on Transformation Mode\<close>
 
-lemma apply_cast_on_imply_exact[\<phi>reason 2000 for \<open>
+\<phi>reasoner_group \<phi>app_ToA_on_ToA = (1000, [1000, 1200])
+  for \<open>PROP \<phi>Application (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
+                         (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
+                         Result \<close>
+   in \<phi>application_all and > \<phi>application_traverse_apps
+  \<open>applying ToA on ToA construction mode\<close>
+
+lemma apply_cast_on_imply_exact[\<phi>reason %\<phi>app_ToA_on_ToA+200 for \<open>
   PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
                            (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S')) ?Result
 \<close>]:
@@ -1496,7 +1558,7 @@ lemma apply_cast_on_imply_exact[\<phi>reason 2000 for \<open>
   unfolding \<phi>Application_def Transformation_def ToA_Construction_def
   by blast
 
-lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
+lemma apply_cast_on_imply_right_prod[\<phi>reason %\<phi>app_ToA_on_ToA+100 for \<open>
   PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
                            (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?R * ?S')) ?Result
 \<close>]:
@@ -1507,7 +1569,7 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason 1600 for \<open>
   unfolding \<phi>Application_def ToA_Construction_def
   using transformation_left_frame by (metis Transformation_def)
 
-lemma [\<phi>reason 1000 for \<open>
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA for \<open>
   PROP \<phi>Application (Trueprop (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
@@ -1519,7 +1581,7 @@ lemma [\<phi>reason 1000 for \<open>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication_impl transformation_left_frame)
 
-lemma [\<phi>reason 1000 for \<open>
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA for \<open>
   PROP \<phi>Application (Trueprop ((_ :: ?'a set) = _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
 \<close>]:
   "\<phi>IntroFrameVar R S'' S' T T'
