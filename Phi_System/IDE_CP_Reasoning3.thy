@@ -262,7 +262,7 @@ and \<open>Identifier_of ?T _ _\<close> \<Rightarrow> \<open>Identifier_of ?T _ 
     \<open>All rules of \<phi>-type branch convergence\<close>
   and \<phi>br_join_fail = (1,[1,10]) for \<open>If C A B @action br_join\<close> in \<phi>br_join_all
                      \<open>Fallbacks\<close>
-  and \<phi>br_join_search_counterpart = (30, [30,30]) for \<open>If C A B @action br_join\<close>
+  and \<phi>br_join_search_counterpart = (30, [29,30]) for \<open>If C A B @action br_join\<close>
                        in \<phi>br_join_all and > \<phi>br_join_fail
                      \<open>Looks from the false-branch for the counterpart of the heading \<phi>-type in the true-branch,
                       and enters the sub-reasoning for joining the two \<phi>-types.\<close>
@@ -438,18 +438,53 @@ text \<open>The merging recognizes two existential quantifier are identical if t
 
 subsubsection \<open>Looks for the counterpart\<close>
 
+definition br_join_counter_part_fail :: \<open>'c BI \<Rightarrow> 'c BI \<Rightarrow> bool\<close>
+  where \<open>br_join_counter_part_fail _ _ \<equiv> False\<close>
+
+lemma [\<phi>reason default %cutting]:
+  \<open> FAIL TEXT(\<open>\<phi>-Type\<close> (x \<Ztypecolon> T) \<open>is given in the true-branch but its counterpart\<close> B \<open>is not seen in the false-branch.\<close> \<newline>
+              \<open>Perhaps, I should search a more general form \<close> T'' \<open>of the counterpart and if so, feed \<phi>-LPR a rule\<close> \<newline>
+              (Identifier_of T identifier T''))
+\<Longrightarrow> br_join_counter_part_fail (x \<Ztypecolon> T) B \<close>
+  unfolding FAIL_def
+  by blast
+
 lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
   \<open> Identifier_of T identifier T'
 \<Longrightarrow> (R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> T' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] R' @action NToA) \<or>\<^sub>c\<^sub>u\<^sub>t
-    FAIL TEXT(\<open>\<phi>-Type\<close> (x \<Ztypecolon> T) \<open>is given in the true-branch but its counterpart\<close> (y \<Ztypecolon> T') \<open>is not seen in the false-branch.\<close> \<newline>
-              \<open>Perhaps, I should search a more general form \<close> T'' \<open>of the counterpart and if so, feed \<phi>-LPR a rule\<close> \<newline>
-              (Identifier_of T identifier T''))
+    br_join_counter_part_fail (x \<Ztypecolon> T) (y \<Ztypecolon> T')
 \<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
 \<Longrightarrow> If P L R' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action br_join
 \<Longrightarrow> If P (L * (x \<Ztypecolon> T)) R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X * Z @action br_join\<close>
-  unfolding Action_Tag_def Transformation_def Premise_def Orelse_shortcut_def FAIL_def
+  unfolding Action_Tag_def Transformation_def Premise_def Orelse_shortcut_def
+            br_join_counter_part_fail_def
   by (cases P; clarsimp; blast)
+
+lemma [\<phi>reason default %\<phi>br_join_search_counterpart]:
+  \<open> Identifier_of T identifier T'
+\<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C\<^sub>W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
+\<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
+\<Longrightarrow> if C\<^sub>R then (If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @action br_join) \<and>\<^sub>\<r> (Z' = Z\<^sub>R * Z)
+          else Identity_Element\<^sub>I (snd x \<Ztypecolon> T\<^sub>R) Any \<and>\<^sub>\<r> Z' = Z
+\<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z' @action br_join \<close>
+  for Z' :: \<open>'c::sep_magma_1 set\<close>
+  unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
+            Orelse_shortcut_def Ant_Seq_def Identity_Element\<^sub>I_def
+  by ((cases P; cases C\<^sub>R; clarsimp), blast, force, blast)
+
+lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
+  \<open> Identifier_of T identifier T'
+\<Longrightarrow> (y, w) \<Ztypecolon> U \<^emph>[C\<^sub>W] W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T' \<^emph>[C\<^sub>R] U'\<^sub>R
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C\<^sub>R \<and> \<not> C\<^sub>W) \<or>\<^sub>c\<^sub>u\<^sub>t br_join_counter_part_fail (fst x \<Ztypecolon> T) (y'' \<Ztypecolon> T')
+\<Longrightarrow> If P (fst x \<Ztypecolon> T) (fst y' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z @action br_join
+\<Longrightarrow> If P (snd x \<Ztypecolon> T\<^sub>R) (snd y' \<Ztypecolon> U'\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R @action br_join
+\<Longrightarrow> If P (x \<Ztypecolon> T \<^emph> T\<^sub>R) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Z\<^sub>R * Z @action br_join \<close>
+  unfolding Action_Tag_def Transformation_def Premise_def br_join_counter_part_fail_def
+            Orelse_shortcut_def
+  by (cases P; clarsimp; blast)
+
 
 subsubsection \<open>Join Two \<phi>-Types\<close>
 
@@ -515,19 +550,7 @@ let_\<phi>type \<phi>MapAt_L deriving \<open>Gen_Br_Join ((\<^bold>\<rightarrow>
 let_\<phi>type \<phi>Share   deriving \<open>Gen_Br_Join ((\<odiv>) n) ((\<odiv>) m) ((\<odiv>) (If P n m)) P True\<close>
 let_\<phi>type Nosep    deriving \<open>Gen_Br_Join Nosep Nosep Nosep P True\<close>
 
-
-subsubsection \<open>Convergence of Structural Nodes\<close>
-
-
-lemma [\<phi>reason 1200 for \<open>If _ ((_,_) \<Ztypecolon> _ \<^emph> _) ((_,_) \<Ztypecolon> _ \<^emph> _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
-  \<open> If P (fst xy \<Ztypecolon> T) (fst xy' \<Ztypecolon> T') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x'' \<Ztypecolon> T'' @action br_join
-\<Longrightarrow> If P (snd xy \<Ztypecolon> U) (snd xy' \<Ztypecolon> U') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y'' \<Ztypecolon> U'' @action br_join
-\<Longrightarrow> If P (xy \<Ztypecolon> T \<^emph> U) (xy' \<Ztypecolon> T' \<^emph> U') \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((x'',y'') \<Ztypecolon> T'' \<^emph> U'') @action br_join\<close>
-  unfolding Action_Tag_def
-  by ((cases xy; cases xy'; cases P; simp add: \<phi>Prod_transformation),
-      (rule \<phi>Prod_transformation[where Pa=True and Pb=True, simplified], assumption, assumption),
-      (rule \<phi>Prod_transformation[where Pa=True and Pb=True, simplified], assumption, assumption))
-(*TODO: bifunctor*)
+(*TODO: improve simplification*)
 
 
 (* TODO:
@@ -555,21 +578,6 @@ lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> \<circle>) (_ \<Ztypec
     cases \<medium_left_bracket> to Itself \<medium_right_bracket>. \<medium_left_bracket> to Itself \<medium_right_bracket>. ;; \<medium_right_bracket>. .
 *)
 
-
-lemma [\<phi>reason 1200 for \<open>If _ (_ \<Ztypecolon> Nosep _) (_ \<Ztypecolon> Nosep _) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join\<close>]:
-  \<open> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Z) @action br_join
-\<Longrightarrow> If P (x \<Ztypecolon> Nosep T) (y \<Ztypecolon> Nosep U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (z \<Ztypecolon> Nosep Z) @action br_join\<close>
-  unfolding Action_Tag_def by (cases P; simp add: Nosep_cast)
-
-(* subsubsection \<open>Object\<close>
-
-definition EqualAddress :: " 'a set \<Rightarrow> 'a set \<Rightarrow> bool "
-  where "EqualAddress _ _ = True"
-
-lemma [\<phi>reason]:
-  "\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> a1 = a2
-   \<Longrightarrow> EqualAddress (a1 \<Zinj> x1 \<Ztypecolon> T1) (a2 \<Zinj> x2 \<Ztypecolon> T2) "
-  unfolding EqualAddress_def .. *)
 
 subsubsection \<open>Unfold\<close>
 
