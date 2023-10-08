@@ -4123,11 +4123,9 @@ end
 
 
 \<phi>property_deriver Identity_Elements\<^sub>I 101 for (\<open>Identity_Elements\<^sub>I _ _ _\<close>)
-    requires Warn_if_contains_Sat
   = \<open>Phi_Type_Algebra_Derivers.identity_element_I\<close>
 
 \<phi>property_deriver Identity_Elements\<^sub>E 102 for (\<open>Identity_Elements\<^sub>E _ _\<close>)
-    requires Warn_if_contains_Sat
   = \<open>Phi_Type_Algebra_Derivers.identity_element_E\<close>
 
 \<phi>property_deriver Identity_Element_Properties\<^sub>I 103
@@ -4183,7 +4181,7 @@ private lemma \<phi>TA_OE_rewr':
   \<open>Trueprop (\<forall>y. P y \<longrightarrow> Q y) \<equiv> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y \<Longrightarrow> Q y)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def
   by (rule; blast)
-
+                     
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 
 end

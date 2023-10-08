@@ -1,3 +1,7 @@
+(*TODO: it is possible and would be good if we separate the entire system into a pure BI logic with reasoning,
+  and that applied over a semantic framework together with IDE-CP, but I have no time now.
+*)
+
 chapter \<open>Specification Framework\<close>
 
 theory Spec_Framework
@@ -23,19 +27,14 @@ subsubsection \<open>Value\<close>
 definition Val :: \<open>VAL \<phi>arg \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> ('x::one, 'a) \<phi>\<close> ("\<v>\<a>\<l>[_] _" [22,22] 21)
   where \<open>Val val T = (\<lambda>x. 1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T))\<close>
 
-lemma Val_expn [\<phi>expns]:
-  \<open>(x \<Ztypecolon> Val val T) = (1 \<s>\<u>\<b>\<j> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T))\<close>
+lemma Val_expn [simp, \<phi>expns]:
+  \<open>v \<Turnstile> (x \<Ztypecolon> Val val T) \<longleftrightarrow> v = 1 \<and> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
   unfolding Val_def \<phi>Type_def by simp
 
-lemma [\<phi>reason 1000]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C
-\<Longrightarrow> x \<Ztypecolon> Val val T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<close>
-  unfolding Inhabited_def Action_Tag_def
-  by (simp add: Val_expn) blast
+lemma Val_inh_rewr:
+  \<open>Inhabited (x \<Ztypecolon> Val val T) \<equiv> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
+  unfolding Inhabited_def by clarsimp
 
-lemma Val_inhabited_rewr:
-  \<open>Inhabited (x \<Ztypecolon> Val val T) \<longleftrightarrow> \<phi>arg.dest val \<Turnstile> (x \<Ztypecolon> T)\<close>
-  unfolding Inhabited_def by (clarsimp simp add: Val_expn)
 
 paragraph \<open>Syntax\<close>
 

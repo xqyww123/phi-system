@@ -53,6 +53,8 @@ signature NU_REASONER = sig
                      (*trace level: 0 - none; 1 - less info; 2 - more info; 3 - much more info*)
   val count_performance : bool Config.T
   val step_limit : int Config.T (*limit of the number of reasoning steps*)
+  val ignore_dup_reasoner : bool Config.T
+
   val info_print : Proof.context -> int (*level*) -> (unit -> string) -> unit
   val info_pretty: Proof.context -> int (*level*) -> (unit -> Pretty.T) -> unit
   val info_pretty_generic : Context.generic -> int (*level*) -> (unit -> Pretty.T) -> unit
@@ -397,10 +399,11 @@ fun pretty' ctxt (priority, pat, _, (r:reasoner)) =
    Pretty.block (
      Pretty.here (#pos r) @
     [Pretty.str "(", Pretty.str (string_of_int priority), Pretty.str ") on pattern ",
-     Syntax.pretty_term ctxt pat, Pretty.str " : ",
+     Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt pat, Pretty.str " : ",
      Pretty.fbrk,
-     Syntax.pretty_term ctxt (#name r)])
+     Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt (#name r)])
 
+val ignore_dup_reasoner = Attrib.setup_config_bool \<^binding>\<open>\<phi>reason_ignore_dup\<close> (K false)
 
 fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
   let val x = (priority, pat, hash (#name reasoner), reasoner)
@@ -413,12 +416,13 @@ fun insert_net ctxt (reasoner:reasoner) (pat,priority) net =
       handle iNet.INSERT =>
         let val dups = iNet.lookup net (iNet.key_of_term pat)
                    |> filter (fn y => registry_eq (x,y))
-            val ctxt' = Context.proof_of ctxt
-         in Exn.error (Pretty.string_of (Pretty.chunks (
-              Pretty.str "Clash with existing reasoner!" ::
-              pretty' ctxt' (priority, pat, pat, reasoner) ::
-              map (fn d => pretty' ctxt' d) dups
-           )))
+         in if Config.get_generic ctxt ignore_dup_reasoner
+         then net
+         else Exn.error (Pretty.string_of (Pretty.chunks (
+                Pretty.str "Clash with existing reasoner!" ::
+                pretty' ctxt (priority, pat, pat, reasoner) ::
+                map (fn d => pretty' ctxt d) dups
+             )))
         end
   end
 

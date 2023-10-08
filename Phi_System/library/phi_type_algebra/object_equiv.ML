@@ -355,13 +355,19 @@ fun gen_obj_equal' (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                  else default_simplifier' (fn rewr => fn ctxt =>
                           HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)))
 
+      val ctxt = if def_contains_satisfaction phi0 then ctxt0
+                      |> Config.put Phi_Reasoner.ignore_dup_reasoner true
+                      |> Bundle.includes ["Phi_BI.ToA_extract_pure_sat"]
+                      |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
+                 else ctxt0
+
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_obj_eq, @{thm' Object_Equiv_rule},
                                       [(K NONE, K (K I), K (pure_PLPR_reasoning 1)),
                                        (K (SOME [0]), ind_conv, OE_reasoning)],
                                       infer, simp)
                                      phi0 (Option.map #1 instruction)
-                                     (Config.put search_CSTR_rules true ctxt0)
+                                     (Config.put search_CSTR_rules true ctxt)
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy

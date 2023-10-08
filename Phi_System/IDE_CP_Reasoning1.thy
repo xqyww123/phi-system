@@ -491,13 +491,13 @@ lemma [\<phi>reason 1200 for \<open>\<phi>_Have_Types (\<lambda>vs. ?R vs\<heavy
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R vs) TYs
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R (\<phi>V_snd vs)\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[\<phi>V_fst vs] T) (TY#TYs)\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
-  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inhabited_rewr)
+  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>_Have_Types (\<lambda>vs. R\<heavy_comma> x \<Ztypecolon> \<v>\<a>\<l>[vs] T) [TY]\<close>
   unfolding \<phi>_Have_Types_def Well_Typed_Vals_def \<phi>arg_forall \<phi>SemType_def subset_iff
-  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inhabited_rewr)
+  by (clarsimp simp add: to_vals_prod_def to_vals_VAL_def Val_inh_rewr)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>_Have_Types R TYs

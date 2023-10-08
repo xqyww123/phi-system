@@ -100,11 +100,17 @@ fun gen_TF (der_id, name, pos) instruction ctxt0 (phi0 : phi_type) generic =
                       Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv))
       val simp = if is_some instruction then K I
                  else simplifier_by_cong @{thms' \<phi>TA_FT_deriver_cong}
+
+      val ctxt = if def_contains_satisfaction phi0 then ctxt0
+                      |> Config.put Phi_Reasoner.ignore_dup_reasoner true
+                      |> Bundle.includes ["Phi_BI.ToA_extract_pure_sat"]
+                      |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
+                 else ctxt0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property_TF, @{thm' \<phi>TA_TF_rule},
                                       [(K (SOME [0,~1]), ind_conv, TF_reasoning)],
                                       K NONE, simp)
-                                     phi0 (Option.map #1 instruction) ctxt0
+                                     phi0 (Option.map #1 instruction) ctxt
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) =>

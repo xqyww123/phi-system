@@ -929,6 +929,24 @@ fun extracting_elim_or_intro_ToA is_intro ctxt sequent =
 \<close>
 
 
+(*TODO*)
+lemma ToA_EIF_sat:
+  \<open> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> vA v : v \<Turnstile> A)
+\<Longrightarrow> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> vB v : v \<Turnstile> B)
+\<Longrightarrow> (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) \<longrightarrow> (\<forall>v. vA v \<longrightarrow> vB v \<and> P) @action \<A>EIF \<close>
+  unfolding Action_Tag_def Inhabited_def Transformation_def Simplify_def
+  by clarsimp
+
+lemma ToA_ESC_sat:
+  \<open> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> vA v : v \<Turnstile> A)
+\<Longrightarrow> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> vB v : v \<Turnstile> B)
+\<Longrightarrow> (\<forall>v. vA v \<longrightarrow> vB v \<and> P) \<longrightarrow>   (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> B \<w>\<i>\<t>\<h> P) @action \<A>ESC \<close>
+  unfolding Action_Tag_def Inhabited_def Transformation_def Simplify_def
+  by clarsimp
+
+bundle ToA_extract_pure_sat = ToA_EIF_sat[\<phi>reason %extract_pure_sat]
+                              ToA_ESC_sat[\<phi>reason %extract_pure_sat]
+
 
 subsubsection \<open>Reasoning Configure\<close>
 
@@ -2908,6 +2926,9 @@ declare [[\<phi>reason_default_pattern
    always using the abstract object(s) given in the left hand side to assign the abstract object(s)
    in the right.\<close>
 
+text \<open>Information is always given from left to right below.
+      They accept arguments from LHS and assign the result to RHS\<close>
+
 lemma [\<phi>reason %\<A>merge]: \<comment> \<open>contracts two sides respectively\<close>
   \<open>(x \<Ztypecolon> \<half_blkcirc>[True] (A \<^emph> B)) = ((fst x, snd x) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[True] B) @action \<A>merge\<close>
   \<open>(a \<Ztypecolon> \<half_blkcirc>[True] A) = ((a, undefined) \<Ztypecolon> \<half_blkcirc>[True] A \<^emph> \<half_blkcirc>[False] B) @action \<A>merge\<close>
@@ -3790,6 +3811,7 @@ lemma [\<phi>reason %extract_pure]:
 \<Longrightarrow> (\<forall>x. eq x x) \<and> (\<forall>x y. eq x y \<longrightarrow> P x y) \<longrightarrow> Object_Equiv T eq @action \<A>ESC\<close>
   unfolding Action_Tag_def Object_Equiv_def Premise_def Transformation_def
   by clarsimp
+
 
 
 subsubsection \<open>Basic Rules\<close>

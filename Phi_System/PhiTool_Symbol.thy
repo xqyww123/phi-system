@@ -4,8 +4,8 @@ begin
 
 section \<open>Symbol Identifier unique in Isabelle Runtime and Its Persistent Image\<close>
 
-text \<open>When the runtime system has N symbols in total, the length of the representation
-  is at most 2 + log2(N).
+text \<open>When the runtime system uses N symbols in total, the length of the representation
+      consumes at most 2 + log2(N) terms.
 TODO: don't use nat but make a numeral so we don't need the mk_symbol wrapper\<close>
 
 typedef symbol = \<open>UNIV::nat set\<close>

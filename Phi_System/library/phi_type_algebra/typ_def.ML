@@ -141,7 +141,9 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 (** Define \<phi>-Type and invoke derivings **)
 
 structure Defining_Phi_Type : HOOKS (*invoked before any deriving*)
-val add_type : def * Position.T * derivings * Bundle.name list -> generic_theory -> phi_type * generic_theory
+val add_type : {no_auto: bool}
+            -> def * Position.T * derivings * Bundle.name list
+            -> generic_theory -> phi_type * generic_theory
 
 val override_ind_rule : string * thm -> Context.generic -> Context.generic
 
@@ -203,9 +205,12 @@ open Phi_Type_Algebra
 
 (** Library **)
 
-fun open_proof_ctxt bundles generic =
-  Context.proof_of generic
+fun open_proof_ctxt' bundles ctxt = ctxt
+    |> Config.put Phi_Reasoner.ignore_dup_reasoner true
     |> not (null bundles) ? Bundle.includes bundles
+    |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt
+
+fun open_proof_ctxt bundles = open_proof_ctxt' bundles o Context.proof_of
 
 (*** \<phi>-Type Definition \& Infos ***)
 
@@ -322,7 +327,7 @@ fun invoke_automations_on_def (phi,hints) ctxt =
 
 (** Impl of Basic Conversions **)
 
-val add_premise_tag = Phi_Conv.recursive_premises_conv (fn ctxt => fn ctm =>
+val add_premise_tag = Phi_Conv.recursive_premises_conv (fn _ => fn ctm =>
       case Thm.term_of ctm
         of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ _ $ _) =>
               Conv.all_conv ctm
@@ -370,7 +375,7 @@ fun mk_ind_dest_ToA ctxt phi gen_prop =
       fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
         | parse_typ args \<^Type>\<open>fun a r\<close> = parse_typ (a::args) r
         | parse_typ _ _ = error "Internal bug"
-      val (rev_arg_tys, x_ty, model_ty) = parse_typ [] typ
+      val (rev_arg_tys, x_ty, _) = parse_typ [] typ
       val x_term = Bound 0
       val arity = length rev_arg_tys
       val T_term = fold_index (fn (i,_) => fn X => X $ Bound (arity-i)) rev_arg_tys (#term phi)
@@ -417,7 +422,7 @@ fun parameters_and_typs_of phi =
   end
 
 fun fix_phi_term_params phi ctxt =
-  let val (params, x_ty, model_ty) = parameters_and_typs_of phi
+  let val (params, x_ty, _) = parameters_and_typs_of phi
       val (x_name :: param_names, ctxt') =
               Variable.variant_fixes ("x" :: map (the_default "A" o #name o fst) params) ctxt
       val param_terms = map2 (fn N => fn (_,T) => Free(N,T)) param_names params
@@ -560,8 +565,7 @@ fun derive_properties (dervs, bundles) phityp thy = thy
   |> Context.mapping (Context_Position.set_visible_global false)
                      (Context_Position.set_visible false)
   |> Derivings.fold (fn ((_,name),(hints,derv,is_weak,pos)) => fn thy'goal =>
-      let val ctxt_derv = Context.proof_of thy'goal
-                       |> Bundle.includes bundles
+      let val ctxt_derv = open_proof_ctxt bundles thy'goal
                        |> Config.put under_deriving_ctxt true
                        |> Phi_Reasoners.report_failure_reason []
        in #derive derv (is_weak, pos) hints ctxt_derv phityp thy'goal
@@ -871,9 +875,8 @@ fun LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _) = LHS
   | LHS_of X = raise TERM ("Not an equation", [X])
 
 (*ctxt: the context used to derive properties*)
-fun add_type (def, pos, dervs, bundles) thy =
-  let val ctxt = Context.proof_of thy
-              |> Bundle.includes bundles
+fun add_type {no_auto} (def, pos, dervs, bundles) thy =
+  let val ctxt = open_proof_ctxt bundles thy
       val (idx,(name_ty,term)) =
            (case def of DIRECT_DEF (lhs, _) =>
                           (case Term.head_of lhs of X as Const name_ty => (~1, (name_ty, X))
@@ -916,13 +919,16 @@ fun add_type (def, pos, dervs, bundles) thy =
                              | _ => error "BUG") eqs
                      |> foldl1 (uncurry (map2 (curry merge_options)))
 
-      val tagged_eqs_in_type = map (try (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
+      val tagged_eqs_in_type =
+            if no_auto then [] else
+            map (try (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
               HOLogic.Trueprop_conv (Conv.arg_conv (fn ctm =>
                 Phi_Conv.embed_BI_assertion_into_phi_type ctxt ctm
                 handle CTERM (s, ctms) => (
                 warning (Pretty.string_of (Pretty.chunks (
                     Pretty.str s :: map (Syntax.pretty_term ctxt o Thm.term_of) ctms
-                    @ [Pretty.str "As a consequence, fail to generate the \<open>open_abstraction\<close> \<open>elim_SE\<close> lemmas"]
+                    @ [Pretty.str "As a consequence, fail to generate some of the \<open>open_abstraction\<close>\
+                                  \ \<open>make_abstraction\<close> \<open>elim_SE\<close> rules"]
                   )));
                   raise CTERM (s, ctms)
               )))) ctxt
@@ -943,7 +949,6 @@ fun add_type (def, pos, dervs, bundles) thy =
                   => let val (head, params) = case LHS
                                                 of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => Term.strip_comb T
                                                  | _ => error "BUG"
-                         val arity = length params
                          fun chk (X as _ $ _) =
                               let val (head', params') = Term.strip_comb X
                                   fun chk_eq (param :: params) (param' :: params') (ret :: rets) = (
@@ -1023,26 +1028,28 @@ fun add_type (def, pos, dervs, bundles) thy =
           of \<^Const>\<open>Trueprop\<close> $ (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ _) $ _) => is_Var x
            | _ => error ("BUG: the generated equations is malformed")*)
 
-      val intro_ToA = gen_from_eqs @{thm' \<phi>intro_transformation} I tagged_eqs
-      val intro_reasoning   = gen_from_eqs @{thm' \<phi>intro_reasoning_transformation} I tagged_eqs
-      val intro_reasoning_R = gen_from_eqs @{thm' \<phi>intro'_reasoning_transformation} I tagged_eqs
-                              handle THM _ => [] (*in case of not a separation magma*)
-      val intro'R_reasoning = map2 (normalize oo (
+      val intro_ToA = if no_auto then [] else gen_from_eqs @{thm' \<phi>intro_transformation} I tagged_eqs
+      val intro_reasoning   = if no_auto then [] else gen_from_eqs @{thm' \<phi>intro_reasoning_transformation} I tagged_eqs
+      val intro_reasoning_R = if no_auto then [] else gen_from_eqs @{thm' \<phi>intro'_reasoning_transformation} I tagged_eqs
+                                                      handle THM _ => [] (*in case of not a separation magma*)
+      val intro'R_reasoning = if no_auto then [] else
+            map2 (normalize oo (
               fn eq => (fn SOME tyeq => tyeq RS' (ctxt, @{thm' \<phi>intro'_reasoning_transformation_ty})
                          | NONE      =>   eq RS' (ctxt, @{thm' \<phi>intro'_reasoning_transformation}))
             )) tagged_eqs tagged_eqs_in_type
             handle THM _ => [] (*in case of not a separation magma*)
-      val elim_ToA = gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
-      val elim_reasoning = gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
-      val elim'SE_ToA = gen_from_tagged_eq_in_type I @{thm' \<phi>elim'SEi_transformation}
-                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1)
+      val elim_ToA = if no_auto then [] else gen_from_eqs @{thm' \<phi>elim_transformation} I tagged_eqs
+      val elim_reasoning = if no_auto then [] else gen_from_eqs @{thm' \<phi>elim_reasoning_transformation} I tagged_eqs
+      val elim'SE_ToA = if no_auto then [] else gen_from_tagged_eq_in_type I @{thm' \<phi>elim'SEi_transformation}
+                                             |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1)
       val expansions = gen_from_eqs @{thm' \<phi>gen_expansion}
                            (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                                   Conv.arg_conv (Simplifier.rewrite (
                                       Phi_Expansions.enhance (Simplifier.clear_simpset ctxt)))
                                 ) ctxt)) tagged_eqs
 
-      val open_abstraction = gen_from_tagged_eq_in_type
+      val open_abstraction = if no_auto then [] else
+                gen_from_tagged_eq_in_type
                 (Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   HOLogic.Trueprop_conv (Phi_Conv.action_tag_conv (
                       Phi_Syntax.transformation_conv Conv.all_conv
@@ -1050,28 +1057,33 @@ fun add_type (def, pos, dervs, bundles) thy =
                           Conv.all_conv))) ctxt))
                 @{thm' \<phi>open_abstraction}
 
-      val open_abstraction_ToA = gen_from_eqs @{thm' \<phi>open_abstraction_ToA} I tagged_eqs
+      val open_abstraction_ToA = if no_auto then [] else
+                                  gen_from_eqs @{thm' \<phi>open_abstraction_ToA} I tagged_eqs
                                @ (gen_from_eqs @{thm' \<phi>open_abstraction_ToA_R} I tagged_eqs
                                   handle THM _ => [])
                                @ (gen_from_tagged_eq_in_type I @{thm' \<phi>open_abstraction_ToA_W}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
-      val open_abstraction_ToA_br = gen_from_eqs @{thm' \<phi>open_abstraction_ToA_br} I tagged_eqs
+      val open_abstraction_ToA_br = if no_auto then [] else
+                                  gen_from_eqs @{thm' \<phi>open_abstraction_ToA_br} I tagged_eqs
                                @ (gen_from_eqs @{thm' \<phi>open_abstraction_ToA_R_br} I tagged_eqs
                                   handle THM _ => [])
                                @ (gen_from_tagged_eq_in_type I @{thm' \<phi>open_abstraction_ToA_W_br}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
 
-      val make_abstraction = gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
+      val make_abstraction = if no_auto then [] else
+                              gen_from_eqs @{thm' \<phi>make_abstraction} I tagged_eqs
                            @ (gen_from_eqs @{thm' \<phi>make_abstraction'R} I tagged_eqs
                               handle THM _ => [])
                            @ (gen_from_tagged_eq_in_type I @{thm' \<phi>make_abstraction'Rt}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
-      val make_abstraction_br = gen_from_eqs @{thm' \<phi>make_abstraction_branching} I tagged_eqs
+      val make_abstraction_br = if no_auto then [] else
+                                 gen_from_eqs @{thm' \<phi>make_abstraction_branching} I tagged_eqs
                               @ (gen_from_eqs @{thm' \<phi>make_abstraction'R_branching} I tagged_eqs
                                  handle THM _ => [])
                               @ (gen_from_tagged_eq_in_type I @{thm' \<phi>make_abstraction'Rt_br}
                                     |> map (Conv.gconv_rule (Simplifier.rewrite ctxt) 1))
-      val make_Identity_Element_E = (gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
+      val make_Identity_Element_E = if no_auto then [] else
+                                    (gen_from_eqs @{thm' \<phi>make_Identity_Element\<^sub>E} I tagged_eqs
                                      handle THM _ => [] (*the concrete algebra can be non-unital*))
 
       val proof_id =
@@ -1111,46 +1123,48 @@ fun add_type (def, pos, dervs, bundles) thy =
                   Phi_Reasoner.add_rules (map (fn rule =>
                       ([Morphism.thm m rule], pos, mode, priority, [], [], SOME G)) rules)
          in fn ctxt => ctxt
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction
-         |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived-10}
-                        (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
-                        make_abstraction_br
-         |> not (null make_Identity_Element_E) ?
-            add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} make_Identity_Element_E
-         |> Config.put_generic phi_allow_source_object_to_be_not_variable true
-         |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA
-         |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived-10}
-                        (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
-                        open_abstraction_ToA_br
-         |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
-         |> Phi_Expansions.add_simps expns
+         |> not no_auto ? (fn ctxt => ctxt
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %To_ToA_derived_OPEN} open_abstraction
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived} make_abstraction
+             |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_make_\<phi>type_derived-10}
+                            (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
+                            make_abstraction_br
+             |> not (null make_Identity_Element_E) ?
+                add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_identity_element} make_Identity_Element_E
+             |> Config.put_generic phi_allow_source_object_to_be_not_variable true
+             |> add_rules Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived} open_abstraction_ToA
+             |> add_rules_G Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %ToA_open_\<phi>type_derived-10}
+                            (fn (ctxt, _) => Config.get ctxt search_CSTR_rules)
+                            open_abstraction_ToA_br
+             |> Config.restore_generic phi_allow_source_object_to_be_not_variable ctxt
+       ) |> Phi_Expansions.add_simps expns
          |> Simplifier.map_ss (fn ctxt => ctxt addsimps expns)
        end)
    |> note_properties_s phi_type (
         (* (case open_abstraction of SOME x => [(open_abstractionN, x)] | _ => []) @ *)
-        [(unfoldN, eqs), (introN, intro_ToA),
-         (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),
-         (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ elim'SE_ToA),
-         (expansionN, expansions)])
-   |> Context.mapping (Context_Position.set_visible_global false)
-                      (Context_Position.set_visible false)
-   |> Defining_Phi_Type.invoke (Context.Proof ctxt) phi_type
-   |> derive_properties (dervs, bundles) phi_type
-   |> Context_Position.restore_visible_generic thy
-   |> pair phi_type
+        [(unfoldN, eqs), (expansionN, expansions)] @
+       (if no_auto then [] else
+        [(introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),
+         (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ elim'SE_ToA)]))
+   |> not no_auto ? (fn ctxt => ctxt
+       |> Context.mapping (Context_Position.set_visible_global false)
+                          (Context_Position.set_visible false)
+       |> Defining_Phi_Type.invoke ctxt phi_type
+       |> derive_properties (dervs, bundles) phi_type
+       |> Context_Position.restore_visible_generic thy
+ ) |> pair phi_type
   end
 
 fun prep_deriving_and_bundles raw_bundles raw_derv ctxt =
   let val bundles = map (Bundle.check ctxt) raw_bundles
-      val ctxt'1 = Bundle.includes bundles ctxt
+      val ctxt'1 = open_proof_ctxt' bundles ctxt
       val dervs = check_deriving_ast (Context.Proof ctxt'1) raw_derv
    in (dervs, bundles)
   end
 
-fun add_type_i (def, pos, raw_derv, raw_bundles) thy =
+fun add_type_i {no_auto} (def, pos, raw_derv, raw_bundles) thy =
   let val (dervs, bundles) = prep_deriving_and_bundles raw_bundles raw_derv (Context.proof_of thy)
-   in add_type (def, pos, dervs, bundles) thy
+   in add_type {no_auto=no_auto} (def, pos, dervs, bundles) thy
   end
 
 (** Interface **)
@@ -1222,7 +1236,8 @@ fun gen_add_fun pos raw_derv raw_bundles add (thy : generic_theory) =
    |> Context.mapping_result (
         Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
       ) prove_termination
-   |-> (fn info => add_type_i (WFREC_DEF (fst (raw_term_name_typ const), info), pos, raw_derv, raw_bundles) #> snd)
+   |-> (fn info => add_type_i {no_auto=false}
+                              (WFREC_DEF (fst (raw_term_name_typ const), info), pos, raw_derv, raw_bundles) #> snd)
   end
 
 fun add_function_cmd a b c tac int lthy = lthy
@@ -1281,7 +1296,7 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
                 (my_definition decl params prems spec int))
           (my_definition decl params prems spec int)
            #> (fn ((def_term, (_, def_eq)), generic) =>
-                add_type_i (DIRECT_DEF (def_term, def_eq), pos, raw_dervs, raw_bundles) generic |> snd)
+                add_type_i {no_auto=false} (DIRECT_DEF (def_term, def_eq), pos, raw_dervs, raw_bundles) generic |> snd)
         ))
 in
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "define \<phi>-types"

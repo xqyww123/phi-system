@@ -402,7 +402,7 @@ lemma \<phi>M_Success[intro!]: (*depreciated?*)
   \<open> v \<Turnstile> (y \<Ztypecolon> T)
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> Any \<close>
   unfolding \<phi>Procedure_def det_lift_def Return_def
-  by (clarsimp simp add: Val_expn)
+  by (clarsimp simp add: Val_def \<phi>Type_def)
 
 declare \<phi>M_Success[where X=1, simplified, intro!]
 
