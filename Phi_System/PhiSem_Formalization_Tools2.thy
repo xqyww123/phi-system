@@ -101,7 +101,7 @@ lemma \<phi>M_getV[intro!]:
 \<Longrightarrow> (v \<Turnstile> (x \<Ztypecolon> A) \<Longrightarrow> \<p>\<r>\<o>\<c> F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  )
 \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV TY VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_getV_def Premise_def
-  by (clarsimp simp add: Val_expn norm_precond_conj)
+  by (clarsimp simp add: Val.unfold norm_precond_conj)
 
 declare \<phi>M_getV[where X=1, simplified, intro!]
 
@@ -117,7 +117,7 @@ lemma semantic_return_\<phi>app:
 \<Longrightarrow> <\<phi>expn> v \<Turnstile> (y \<Ztypecolon> T)
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
   unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
-  by (clarsimp simp add: Val_expn)
+  by (clarsimp simp add: Val.unfold)
 
 lemma semantic_literal_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<Turnstile> (y \<Ztypecolon> T))
@@ -129,21 +129,21 @@ lemma semantic_literal_\<phi>app:
 lemma semantic_local_value_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> TY
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<longmapsto> \<lambda>_. Void \<s>\<u>\<b>\<j> \<phi>arg.dest v \<in> (x \<Ztypecolon> T) \<rbrace>\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<longmapsto> \<lambda>_. Void \<s>\<u>\<b>\<j> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) \<rbrace>\<close>
   unfolding \<phi>M_assert_def Premise_def \<phi>SemType_def subset_iff \<phi>Procedure_def det_lift_def Return_def
-  by (clarsimp simp add: Val_expn INTERP_SPEC Satisfaction_def Subjection_expn_set)
+  by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set)
 
 subsection \<open>Drop & Duplicate Value\<close>
 
 lemma [\<phi>reason 1200 for \<open>?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action action_dup\<close>]:
   \<open>x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val raw T \<heavy_comma> x \<Ztypecolon> Val raw T @action action_dup\<close>
   unfolding Transformation_def Action_Tag_def
-  by (clarsimp simp add: Val_expn INTERP_SPEC Satisfaction_def Subjection_expn_set)
+  by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set)
 
 lemma [\<phi>reason 1200 for \<open>?R \<heavy_comma> ?x \<Ztypecolon> Val ?raw ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?P @action action_drop\<close>]:
   \<open>Void \<heavy_comma> x \<Ztypecolon> Val raw T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Void @action action_drop\<close>
   unfolding Transformation_def Action_Tag_def
-  by (clarsimp simp add: Val_expn)
+  by (clarsimp simp add: Val.unfold)
 
 
 subsection \<open>Abnormal\<close>
@@ -221,9 +221,8 @@ lemma Union_the_Same_Or_Arbitrary_when_Var__Arbitrary:
   \<open>Union_the_Same_Or_Arbitrary_when_Var (\<lambda>v. X v + Y v) X Y\<close>
   unfolding Union_the_Same_Or_Arbitrary_when_Var_def by blast
 
-\<phi>reasoner_ML Union_the_Same_Or_Arbitrary_when_Var 1200
-  (\<open>Union_the_Same_Or_Arbitrary_when_Var ?Z ?X ?Y\<close>) = \<open>
-fn (ctxt,sequent) =>
+\<phi>reasoner_ML Union_the_Same_Or_Arbitrary_when_Var 1200 (\<open>Union_the_Same_Or_Arbitrary_when_Var ?Z ?X ?Y\<close>) = \<open>
+fn (_, (ctxt,sequent)) =>
   let
     val \<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>Union_the_Same_Or_Arbitrary_when_Var\<close>, _)
           $ Z $ _ $ _) = Thm.major_prem_of sequent

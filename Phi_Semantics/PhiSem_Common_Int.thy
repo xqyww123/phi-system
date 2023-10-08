@@ -62,8 +62,7 @@ definition \<r>int_to_suc_nat :: \<open>int \<Rightarrow> nat \<Rightarrow> bool
   where [simp]: \<open>\<r>int_to_suc_nat z n \<longleftrightarrow> z = of_nat n\<close>
 
 \<phi>reasoner_ML \<r>nat_to_suc_nat 1000 (\<open>\<r>nat_to_suc_nat _ _\<close> | \<open>\<r>int_to_suc_nat _ _\<close>) =
-\<open>fn (ctxt,sequent0) =>
-let
+\<open>fn (_, (ctxt,sequent0)) => let
  exception Not_A_Number
  fun dest_number (Const ("Groups.zero_class.zero", _)) = 0
   | dest_number (Const ("Groups.one_class.one", _)) = 1
@@ -73,9 +72,8 @@ let
   | dest_number t = raise Not_A_Number;
  val sequent = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                   Conv.arg_conv (Conv.arg1_conv (Simplifier.rewrite ctxt))) ctxt) 1 sequent0
-in
-  case Thm.major_prem_of sequent
-    of (_ (*Trueprop*) $ ( _ (*\<r>nat_to_suc_nat*) $ Z $ Var v))
+in case Thm.major_prem_of sequent
+     of (_ (*Trueprop*) $ ( _ (*\<r>nat_to_suc_nat*) $ Z $ Var v))
         => Seq.make (fn () =>
           let val z = dest_number Z
            in if z < 0 then NONE
@@ -145,10 +143,10 @@ lemma synthesis_const:
 *)
 
 lemma synthesis_const_by_imp:
-  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> const \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal v] T \<brangle> @action synthesis
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal v) \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
+  \<open> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> const \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal v] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R @action synthesis
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>literal v) \<lbrace> R \<longmapsto> \<lambda>ret. const \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def Premise_def \<phi>Procedure_def det_lift_def Return_def \<phi>literal_def Transformation_def
-  by (clarsimp simp add: \<phi>expns)
+  apply (clarsimp simp add: Val.unfold INTERP_SPEC_subj Subjection_expn_set INTERP_SPEC)
 
 
 (*lemma make_synthesis_rule_for_const:

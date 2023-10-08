@@ -4,6 +4,8 @@ begin
 
 section \<open>Value \& Reasoning over it\<close>
 
+subsection \<open>\<phi>-Type Abstraction\<close>
+
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type {no_auto=true}
         (Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>Val\<close>, Thm.transfer \<^theory> @{thm' Val_def}),
@@ -24,7 +26,7 @@ let_\<phi>type Val
        and Functional_Transformation_Functor
 
 
-subsection \<open>Application Methods for Transformations\<close>
+subsubsection \<open>Application Methods for Transformations\<close>
 
 (*TODO: I really don't like this. It is not generic.
 It should be some generic structural morphism.*)
@@ -61,19 +63,38 @@ lemma [\<phi>reason 2000 for \<open>
   by (simp, smt (z3) Premise_I Val.functional_transformation \<phi>apply_implication \<r>Guard_def mk_elim_transformation transformation_left_frame)
 
 
-subsection \<open>Synthesis\<close>
+subsubsection \<open>Synthesis\<close>
 
-lemma [\<phi>reason 1200 for
+lemma [\<phi>reason %\<phi>synthesis_parse for
   \<open>Synthesis_Parse (?x \<Ztypecolon> (?T::?'a \<Rightarrow> VAL set)) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse (x \<Ztypecolon> T) (\<lambda>v. x \<Ztypecolon> Val v T)\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 1200 for
+lemma [\<phi>reason %\<phi>synthesis_parse for
   \<open>Synthesis_Parse (?raw::?'a \<phi>arg) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
   unfolding Synthesis_Parse_def ..
+
+
+subsection \<open>Access of Local Values\<close>
+
+typedecl valname \<comment> \<open>Binding of local values used in user programming interface, only used syntactically\<close>
+
+subsubsection \<open>Conventions\<close>
+
+\<phi>reasoner_group ToA_access_to_local_value = (1000, [1000,1100]) in ToA_cut
+    \<open>Access local values via ToA\<close>
+  and synthesis_access_to_local_value = (1000, [1000, 1100]) in \<phi>synthesis_cut
+    \<open>Access local values via Synthesis\<close>
+
+  and local_value = (1000, [1000, 1000])
+                    for \<open>\<phi>arg.dest (v <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T)\<close>
+    \<open>specification facts of local values\<close>
+
+
+subsubsection \<open>Read\<close>
 
 (*
 lemma [\<phi>reason 1200 for \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S2\<heavy_comma> SYNTHESIS ?x \<Ztypecolon> Val ?raw ?T\<close>]:
@@ -82,7 +103,7 @@ lemma [\<phi>reason 1200 for \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>
   unfolding Action_Tag_def
   by (cases raw; simp add: Val_expn transformation_refl) *)
 
-lemma [\<phi>reason 1200 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
+lemma [\<phi>reason %ToA_access_to_local_value for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ \<w>\<i>\<t>\<h> _\<close>]:
   \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> report_unprocessed_element_index path
 \<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[raw] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
@@ -90,57 +111,58 @@ lemma [\<phi>reason 1200 for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?
   unfolding Action_Tag_def
   by (cases raw; simp add: Val.unfold)
 
-lemma [\<phi>reason 1200 for
-    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
+lemma [\<phi>reason %ToA_access_to_local_value for
+    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?x <val-of> (?raw::VAL \<phi>arg) <path> ?path \<Ztypecolon> ?T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
 ]:
-  \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> report_unprocessed_element_index path
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> raw <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
 lemma \<phi>arg_val_varify_type:
-  \<open> \<phi>arg.dest raw \<in> (x  \<Ztypecolon> T)
+  \<open> \<phi>arg.dest raw \<Turnstile> (x  \<Ztypecolon> T)
 \<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> Any
 ||| FAIL TEXT(\<open>Expect the value\<close> raw \<open>has spec\<close> (x' \<Ztypecolon> T') \<open>but is specified by\<close>
       (x \<Ztypecolon> T) \<open>actually, and the conversion fails.\<close>)
-\<Longrightarrow> \<phi>arg.dest raw \<in> (x' \<Ztypecolon> T')\<close>
-  unfolding Transformation_def atomize_Branch by blast
+\<Longrightarrow> \<phi>arg.dest raw \<Turnstile> (x' \<Ztypecolon> T')\<close>
+  unfolding Transformation_def atomize_Branch FAIL_def
+  by blast
 
-lemma [\<phi>reason 1200 for
-    \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S2\<heavy_comma> \<blangle> ?x <set-to> (?raw::VAL \<phi>arg) <path> _ \<Ztypecolon> ?T \<brangle> \<w>\<i>\<t>\<h> _ \<close>
+lemma [\<phi>reason %ToA_access_to_local_value for
+    \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x <set-to> (?raw::VAL \<phi>arg) <path> _ \<Ztypecolon> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?S2 \<w>\<i>\<t>\<h> _ \<close>
 ]:
   \<open> ERROR TEXT(\<open>Local value is immutable. Cannot assign to\<close> raw)
-\<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> x <set-to> (raw::VAL \<phi>arg) <path> any \<Ztypecolon> T \<brangle>\<close>
-  by simp
+\<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x <set-to> (raw::VAL \<phi>arg) <path> any \<Ztypecolon> T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R\<close>
+  unfolding ERROR_def
+  by blast
 
 lemma [OF \<phi>arg_val_varify_type,
-       \<phi>reason 1500 for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))\<close>]:
-  \<open> \<phi>arg.dest raw \<in> (x \<Ztypecolon> T)
+       \<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by (?raw::VAL \<phi>arg) (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?R1 \<longmapsto> \<lambda>ret. ?R2\<heavy_comma> ?x \<Ztypecolon> Val ret ?T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E ))\<close>]:
+  \<open> \<phi>arg.dest raw \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> PROP Synthesis_by raw (Trueprop (\<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> x \<Ztypecolon> Val ret T \<rbrace>))\<close>
   unfolding Synthesis_by_def Action_Tag_def \<phi>Procedure_def Return_def det_lift_def
-  by (cases raw; simp add: Val_expn)
+  by (cases raw; simp add: Val.unfold)
 
 
-subsection \<open>Assignment\<close>
-
-typedecl valname \<comment> \<open>The name of local value in user programming interface\<close>
+subsubsection \<open>Assignment\<close>
 
 lemma [OF \<phi>arg_val_varify_type,
-       \<phi>reason 1200 for \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?S2\<heavy_comma> \<blangle> ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T \<brangle> \<w>\<i>\<t>\<h> _ \<close>]:
-  \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<in> (x \<Ztypecolon> T)
+       \<phi>reason %ToA_access_to_local_value for \<open>?S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?S2 \<w>\<i>\<t>\<h> _ \<close>]:
+  \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> report_unprocessed_element_index path
-\<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R\<heavy_comma> \<blangle> x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[raw] T \<brangle>\<close>
+\<Longrightarrow> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[raw] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<close>
+  for R :: \<open>'c::sep_magma_1 BI\<close>
   unfolding Action_Tag_def
-  by (cases raw; simp add: Val_expn)
+  by (cases raw; simp add: Val.unfold)
 
 lemma [OF \<phi>arg_val_varify_type,
-       \<phi>reason 1200 for
-    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?R' \<heavy_comma> \<blangle> ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T ret \<brangle> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
+       \<phi>reason %synthesis_access_to_local_value for
+    \<open>\<p>\<r>\<o>\<c> ?GG \<lbrace> ?R \<longmapsto> \<lambda>ret. ?x <val-of> (?name::valname) <path> ?path \<Ztypecolon> ?T ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E @action synthesis\<close>
 ]:
-  \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<in> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest (raw <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> report_unprocessed_element_index path
-\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. R\<heavy_comma> \<blangle> x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<brangle> \<rbrace> @action synthesis\<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return raw \<lbrace> R \<longmapsto> \<lambda>ret. x <val-of> name <path> path \<Ztypecolon> \<v>\<a>\<l>[ret] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> @action synthesis\<close>
   unfolding Action_Tag_def
   by (cases raw; simp add: \<phi>M_Success)
 
@@ -148,19 +170,19 @@ lemma [OF \<phi>arg_val_varify_type,
 
 
 lemma "__set_value_rule__":
-  \<open> (\<phi>arg.dest (v <val-of> (name::valname) <path> []) \<in> (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> X \<brangle> \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )
-\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> R\<heavy_comma> \<blangle> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<brangle> \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+  \<open> (\<phi>arg.dest (v <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T) \<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E )
+\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>Procedure_def Value_of_def
-  by (clarsimp simp add: \<phi>expns)
+  by (clarsimp simp add: Val.unfold INTERP_SPEC_subj Subjection_expn_set)
 
 lemma "__fast_assign_val__":
-  \<open> R\<heavy_comma> \<blangle> X \<brangle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> P
-\<Longrightarrow> R\<heavy_comma> \<blangle> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<brangle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> \<phi>arg.dest (v <val-of> (name::valname) <path> []) \<in> (x \<Ztypecolon> T) \<and> P\<close>
+  \<open> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> P
+\<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<l>[v] T\<heavy_comma> X \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R' \<w>\<i>\<t>\<h> \<phi>arg.dest (v <val-of> (name::valname) <path> []) \<Turnstile> (x \<Ztypecolon> T) \<and> P\<close>
   unfolding Transformation_def
-  by (clarsimp simp add: Val_expn Subjection_expn)
+  by (clarsimp simp add: Val.unfold; blast)
 
 lemma "__fast_assign_val_0__":
-  \<open> R\<heavy_comma> \<blangle> Void \<brangle> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<close>
+  \<open> Void \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> R \<close>
   by simp
 
 ML_file \<open>library/additions/local_value.ML\<close>
@@ -178,19 +200,15 @@ subsection \<open>Prove Properties of Value Abstractions by Programming\<close>
 
 subsubsection \<open>Semantic Type\<close>
 
-lemma [\<phi>reason 1000]:
-  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Well_Type TY)) M D R F
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S')) M D R F
 \<Longrightarrow> Friendly_Help TEXT(\<open>Hi! You are trying to show the value abstraction\<close> S \<open>has semantic type\<close> TY
       \<open>Now you entered the programming mode and you need to transform the specification to\<close>
       \<open>some representation of \<phi>-types whose semantic type is know so that we can verify your claim.\<close>)
-\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>SemType S TY)) M D R F\<close>
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (\<phi>SemType S TY)) M D (\<phi>SemType S' TY &&& PROP R) F\<close>
   unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def Transformation_def
-  by (simp add: subset_iff)
+  by (simp add: subset_iff conjunction_imp)
 
-lemma [\<phi>reason 1000]:
-  \<open> \<phi>SemType S TY
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Well_Type TY\<close>
-  unfolding Transformation_def \<phi>SemType_def subset_iff by blast
 
 subsubsection \<open>Zero Value\<close>
 
@@ -204,9 +222,9 @@ lemma \<phi>deduce_zero_value:
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> \<phi>Zero TY T x\<close>
   unfolding ToA_Construction_def \<phi>Zero_def image_iff Inhabited_def Transformation_def
-  by (clarsimp; blast)
+  by clarsimp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method (Trueprop (\<phi>Zero TY T x)) working_mode_\<phi>Zero
                              (Trueprop (\<phi>Zero TY T x))
                              (Trueprop True)
@@ -216,7 +234,7 @@ lemma [\<phi>reason 1000]:
 
 subsubsection \<open>Equality\<close>
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>programming_method]:
   \<open> PROP \<phi>Programming_Method
           (\<And>x y vx vy. \<p>\<r>\<e>\<m>\<i>\<s>\<e> ceq x y
               \<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<l>[vx] T \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> \<v>\<a>\<l>[vx] U \<heavy_comma> y' \<Ztypecolon> \<v>\<a>\<l>[vy] U
@@ -232,8 +250,8 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Programming_Method_def conjunction_imp
 proof -
   have rule: \<open>PROP ?IMP \<Longrightarrow> \<phi>Equal T ceq eq\<close>
-  unfolding \<phi>Equal_def Premise_def Transformation_def Embedded_Reasoning_def
-  by (clarsimp simp add: \<phi>expns \<phi>arg_All, blast)
+  unfolding \<phi>Equal_def Premise_def Transformation_def Subj_Reasoning_def
+  by (clarsimp simp add: \<phi>arg_All, blast)
 
   assume D: \<open>PROP D\<close>
     and  R: \<open>PROP R\<close>

@@ -449,14 +449,14 @@ hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes
 
 subsubsection \<open>Reasoning Goals Embedded in BI Assertion\<close>
 
-definition Subjec_Reasoning :: \<open> 'p set \<Rightarrow> bool \<Rightarrow> 'p set \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
-  where \<open>Subjec_Reasoning \<equiv> Subjection\<close>
+definition Subj_Reasoning :: \<open> 'p set \<Rightarrow> bool \<Rightarrow> 'p set \<close> (infixl "\<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g>" 15)
+  where \<open>Subj_Reasoning \<equiv> Subjection\<close>
 
 lemma [\<phi>reason 1000]:
   \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P
 \<Longrightarrow> A
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<s>\<u>\<b>\<j>-\<r>\<e>\<a>\<s>\<o>\<n>\<i>\<n>\<g> A \<w>\<i>\<t>\<h> P\<close>
-  unfolding Subjec_Reasoning_def Transformation_def
+  unfolding Subj_Reasoning_def Transformation_def
   by simp
 
 subsection \<open>Embed BI Assertion into \<phi>-Type\<close>

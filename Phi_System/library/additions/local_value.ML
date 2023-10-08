@@ -13,8 +13,8 @@ val update_val : binding -> thm (*rule*) -> Proof.context -> Proof.context
 
 val valname_prefix : string
 
-(*the rules must be in form \<open>\<phi>arg.dest v \<in> x : T\<close>*)
-val add_reasoning_rules : (thm * Position.T * Phi_Reasoner.mode * priority) list
+(*the rules must be in form \<open>\<phi>arg.dest v \<Turnstile> x : T\<close>*)
+val add_reasoning_rules : (thm * Position.T * Phi_Reasoner.mode * (priority * Reasoner_Group.name option)) list
                        -> Context.generic -> Context.generic
 val remove_reasoning_rules: thm list -> Context.generic -> Context.generic
 val get_raw_val_in_rule : thm -> term
@@ -81,8 +81,7 @@ fun delete_val' pred xname ctxt =
           if pred rule
           then ctxt
           else Context.proof_map (
-                  Phi_Reasoner.del_reasoners
-                      (pattern_of__value_of ctxt xname rule)
+                  Phi_Reasoner.del_reasoners [pattern_of__value_of ctxt xname rule]
                       (fn r => #name r aconv Thm.prop_of rule)
                   ) ctxt
      | NONE => ctxt
@@ -116,9 +115,10 @@ fun update_val b rule ctxt =
       val thy = Proof_Context.theory_of ctxt
    in ctxt'
      |> Context.proof_map (
-          Phi_Reasoner.del_reasoners pattern (fn r => Pattern.matches thy (pattern, #name r))
-       #> Phi_Reasoner.add_rule (Binding.pos_of b) Phi_Reasoner.LOCAL_CUT 1000
-                              ([(pattern, NONE)],[]) NONE [rule])
+          Phi_Reasoner.del_reasoners [pattern] (fn r => Pattern.matches thy (pattern, #name r))
+       #> Phi_Reasoner.add_rule (Binding.pos_of b)
+                                Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %local_value}
+                                ([(pattern, NONE)],[]) NONE [rule])
      |> Generic_Variable_Access.bind_local_vals
             [(Binding.name_of b, (Thm.cterm_of ctxt (Free (vname, T)), K V))]
      |> Proof_Context.maybe_bind_term ((Binding.name_of b,0),
@@ -131,8 +131,7 @@ fun add_reasoning_rules rules ctxt =
     rules) ctxt
 
 fun remove_reasoning_rules rules ctxt =
-  fold (fn rule => Phi_Reasoner.del_reasoners
-                      (pattern_of rule)
+  fold (fn rule => Phi_Reasoner.del_reasoners [pattern_of rule]
                       (fn r => #name r aconv Thm.prop_of rule)
        ) rules ctxt
 
@@ -180,7 +179,7 @@ fun optimized_value_assign bs stat =
                     RS rule) vterms
               |> (fn rule => @{thm "__fast_assign_val_0__"} RS rule)
         val sequent = Phi_Apply.apply [rule] ctxt sequent
-              |> Phi_Reasoners.safer_obligation_solver1 ctxt
+              |> Phi_Reasoners.safer_obligation_solver1 {can_inst=false} ctxt
         val (sequent, vals) = PLPR_Syntax.elim_ant_seq_or_HOL_conj sequent
         val vals = PLPR_Syntax.elim_ant_sequence_or_HOL_conj vals
               |> Phi_Help.front

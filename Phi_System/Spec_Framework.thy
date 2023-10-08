@@ -10,6 +10,7 @@ theory Spec_Framework
     and   "<val>" = "\<v>\<a>\<l>"
 begin
 
+(*TODO*)
 subsubsection \<open>Configuration\<close>
 
 declare [[\<phi>reason_default_pattern \<open>Valid_Proc ?F\<close> \<Rightarrow> \<open>Valid_Proc ?F\<close> (100)]]
@@ -150,7 +151,7 @@ declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<R
 subsection \<open>Zero Value\<close>
 
 definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
-  where "\<phi>Zero ty T x \<longleftrightarrow> Zero ty \<in> Some ` (x \<Ztypecolon> T)"
+  where "\<phi>Zero ty T x \<longleftrightarrow> (\<exists>v. Zero ty = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))"
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>Zero ?TY ?T ?x\<close> \<Rightarrow> \<open>\<phi>Zero ?TY ?T _\<close> (100) ]]
 
@@ -160,7 +161,7 @@ subsection \<open>Equality\<close>
 
 definition \<phi>Equal :: "(VAL,'a) \<phi> \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> bool"
   where "\<phi>Equal T can_eq eq \<longleftrightarrow> (\<forall>p1 p2 x1 x2 res.
-    can_eq x1 x2 \<and> p1 \<in> (x1 \<Ztypecolon> T) \<and> p2 \<in> (x2 \<Ztypecolon> T)
+    can_eq x1 x2 \<and> p1 \<Turnstile> (x1 \<Ztypecolon> T) \<and> p2 \<Turnstile> (x2 \<Ztypecolon> T)
       \<longrightarrow> Can_EqCompare res p1 p2 \<and> (EqCompare p1 p2 = eq x1 x2))"
 
 declare [[\<phi>reason_default_pattern \<open>\<phi>Equal ?TY ?can_eq ?eq\<close> \<Rightarrow> \<open>\<phi>Equal ?TY _ _\<close> (100) ]]

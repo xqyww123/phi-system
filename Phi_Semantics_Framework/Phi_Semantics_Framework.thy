@@ -127,7 +127,6 @@ subsection \<open>Resource\<close>
 unspecified_type RES
 unspecified_type RES_N
 type_synonym resource = \<open>RES_N \<Rightarrow> RES\<close>
-type_synonym rassn = \<open>resource set\<close>
 type_synonym 'T resource_entry = "(RES_N, RES, 'T) Resource_Space.kind"
 
 setup \<open>Sign.mandatory_path "RES"\<close>
@@ -219,6 +218,7 @@ unspecified_type FIC_N
 
 type_synonym fiction = \<open>FIC_N \<Rightarrow> FIC\<close>
 type_synonym assn = \<open>fiction set\<close>
+type_synonym rassn = \<open>resource set\<close>
 type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T) Resource_Space.kind"
 
 setup \<open>Sign.mandatory_path "FIC"\<close>

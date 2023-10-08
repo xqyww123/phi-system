@@ -500,7 +500,7 @@ lemma [\<phi>reason %\<phi>programming_method]:
       \<open>someone which is functional, so that we can verify your claim.\<close>)
 \<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Is_Functional S)) M D R F\<close>
   unfolding \<phi>Programming_Method_def  ToA_Construction_def \<phi>SemType_def conjunction_imp
-            Subjec_Reasoning_def
+            Subj_Reasoning_def
   by (rule Is_Functional_imp''[where S'=S']; simp)
 
 end
@@ -656,23 +656,58 @@ lemma End_Optimal_Synthesis_I:
 \<close>
 *)
 
+subsubsection \<open>Conventions\<close>
+
+declare [[\<phi>reason_default_pattern
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (100)
+  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (110)
+  and \<open>?X @action synthesis\<close> \<Rightarrow>
+      \<open>ERROR TEXT(\<open>Malformed Synthesis rule\<close> \<newline> ?X \<newline> \<open>expect: \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?R \<heavy_comma> \<blangle> Target \<brangle> \<rbrace>\<close>\<close>)\<close> (0)
+]]
+
+\<phi>reasoner_group \<phi>synthesis_all = (100, [1, 3000]) for \<open>_ @action synthesis\<close>
+      \<open>Rules implementing Synthesis mechanism of IDE-CP\<close>
+  and \<phi>synthesis_red = (2500, [2500, 2799]) in \<phi>synthesis_all
+      \<open>Reductions and Evaluations\<close>
+  and \<phi>synthesis = (100, [100, 130]) in \<phi>synthesis_all
+      \<open>usual rules\<close>
+  and \<phi>synthesis_cut = (1000, [1000, 2000]) in \<phi>synthesis_all and > \<phi>synthesis and < \<phi>synthesis_red
+      \<open>cutting rules\<close>
+  and \<phi>synthesis_split = (1230, [1230, 1250]) in \<phi>synthesis_cut
+      \<open>Splitting the targets into each sub-reasoning goal\<close>
+
+  and interp_\<phi>synthesis = (%cutting, [%cutting, %cutting+30]) for \<open>PROP DoSynthesis _ _ _\<close>
+      \<open>describing how to carry out the synthesis in detail on specific IDE-CP sequent\<close>
+
+  and \<phi>synthesis_parse_all = (1000, [10, 3000]) for \<open>Synthesis_Parse input parsed\<close>
+      \<open>Synthesis Parsing\<close>
+  and \<phi>synthesis_parse = (1000, [1000, 1030]) in \<phi>synthesis_parse_all
+      \<open>usual rules\<close>
+  and \<phi>synthesis_parse_success = (3000, [3000, 3000]) in \<phi>synthesis_parse_all and > \<phi>synthesis_parse
+      \<open>direct success\<close>
+  and \<phi>synthesis_parse_default = (10, [10,30]) in \<phi>synthesis_parse_all and < \<phi>synthesis_parse
+      \<open>default parsing\<close>
+
+
 subsubsection \<open>Parse the Term to be Synthesised\<close>
 
-lemma [\<phi>reason 9999 for
+lemma [\<phi>reason %\<phi>synthesis_parse_success for
   \<open>Synthesis_Parse (?X'::?'ret \<Rightarrow> assn) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse X X\<close> for X :: \<open>'ret \<Rightarrow> assn\<close>
   \<comment> \<open>We do not need to rewrite the input once it is already an assertion\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 9999 for
+lemma [\<phi>reason %\<phi>synthesis_parse_success for
   \<open>Synthesis_Parse (?X'::assn) (?X::?'ret \<Rightarrow> assn)\<close>
 ]:
   \<open>Synthesis_Parse X (\<lambda>_. X)\<close> for X :: \<open>assn\<close>
   \<comment> \<open>We do not need to rewrite the input once it is already an assertion\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 10
+lemma [\<phi>reason %\<phi>synthesis_parse_default
     for \<open>Synthesis_Parse ?x (?Y::?'ret \<Rightarrow> assn)\<close>
     except \<open>Synthesis_Parse (?x \<Ztypecolon> ?T) ?Y\<close>
            \<open>Synthesis_Parse (?x::assn) ?Y\<close>
@@ -683,7 +718,7 @@ lemma [\<phi>reason 10
       the \<phi>-type unspecified to be arbitrarily anything.\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 20
+lemma [\<phi>reason %\<phi>synthesis_parse_default+10
   for \<open>Synthesis_Parse (numeral ?n::?'bb::numeral) ?X\<close>
       \<open>Synthesis_Parse (0::?'cc::zero) ?X\<close>
       \<open>Synthesis_Parse (1::?'dd::one) ?X\<close>
@@ -696,11 +731,11 @@ lemma [\<phi>reason 20
   unfolding Synthesis_Parse_def
   ..
 
-lemma [\<phi>reason 20 for \<open>Synthesis_Parse (?T :: ?'ret2 \<Rightarrow> (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
+lemma [\<phi>reason %\<phi>synthesis_parse_default+10 for \<open>Synthesis_Parse (?T :: ?'ret2 \<Rightarrow> (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
   \<open> Synthesis_Parse T (\<lambda>ret. x \<Ztypecolon> T ret :: assn) \<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 20 for \<open>Synthesis_Parse (?T :: (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
+lemma [\<phi>reason %\<phi>synthesis_parse_default+10 for \<open>Synthesis_Parse (?T :: (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
   \<open> Synthesis_Parse T (\<lambda>ret. x \<Ztypecolon> T :: assn) \<close>
   unfolding Synthesis_Parse_def ..
 
@@ -729,29 +764,6 @@ text \<open>
 
 TODO: update the comment.
 \<close>
-
-subsubsection \<open>Conventions\<close>
-
-declare [[\<phi>reason_default_pattern
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?Z ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (100)
-  and \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close> \<Rightarrow>
-      \<open>\<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> \<lambda>ret. ?x \<Ztypecolon> _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action synthesis\<close>    (110)
-  and \<open>?X @action synthesis\<close> \<Rightarrow>
-      \<open>ERROR TEXT(\<open>Malformed Synthesis rule\<close> \<newline> ?X \<newline> \<open>expect: \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?R \<heavy_comma> \<blangle> Target \<brangle> \<rbrace>\<close>\<close>)\<close> (0)
-]]
-
-\<phi>reasoner_group \<phi>synthesis_all = (100, [1, 3000]) for \<open>_ @action synthesis\<close>
-      \<open>Rules implementing Synthesis mechanism of IDE-CP\<close>
-  and \<phi>synthesis_split = (1230, [1230, 1250]) in \<phi>synthesis_all
-      \<open>Splitting the targets into each sub-reasoning goal\<close>
-  and \<phi>synthesis_red = (2500, [2500, 2799]) in \<phi>synthesis_all and > \<phi>synthesis_split
-      \<open>Reductions and Evaluations\<close>
-  and \<phi>synthesis = (100, [100, 130]) in \<phi>synthesis_all
-      \<open>usual rules\<close>
-
-  and interp_\<phi>synthesis = (%cutting, [%cutting, %cutting+30]) for \<open>PROP DoSynthesis _ _ _\<close>
-      \<open>describing how to carry out the synthesis in detail on specific IDE-CP sequent\<close>
 
 
 subsubsection \<open>Post_Synthesis Simplification\<close>

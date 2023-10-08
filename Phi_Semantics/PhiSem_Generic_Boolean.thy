@@ -58,32 +58,28 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
 
 section \<open>\<phi>-Type\<close>
 
-definition \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
-  where "\<bool> x = { V_bool.mk x }"
+declare [[\<phi>trace_reasoning = 0]]
 
-lemma \<phi>Bool_expn[\<phi>expns]:
-  " p \<in> (x \<Ztypecolon> \<bool>) \<longleftrightarrow> p = V_bool.mk x"
-  unfolding \<phi>Type_def \<phi>Bool_def by simp
-
-lemma \<phi>Bool_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<bool>) \<Longrightarrow> C \<Longrightarrow> C\<close> .
+\<phi>type_def \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
+  where \<open>x \<Ztypecolon> \<bool> \<equiv> V_bool.mk x \<Ztypecolon> Itself\<close>
+  deriving Basic
+       and Functionality
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
-  "\<phi>Equal \<bool> (\<lambda>x y. True) (=)"
-  unfolding \<phi>Equal_def by (simp add: \<phi>expns can_eq_bool eq_bool)
+  "\<phi>Equal \<bool> (\<lambda>x y. True) (=)" (*TODO: auto derive!*)
+  unfolding \<phi>Equal_def
+  by (simp add: can_eq_bool eq_bool)
 
 lemma \<phi>Bool_zero[\<phi>reason 2000]:
   "\<p>\<r>\<e>\<m>\<i>\<s>\<e> TY = bool \<Longrightarrow> \<phi>Zero TY \<bool> False"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_bool)
+  unfolding \<phi>Zero_def Premise_def
+  by (simp add: zero_bool)
 
 lemma \<phi>Bool_semty[\<phi>reason 2000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) bool\<close>
   unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns WT_bool)
+  by (simp add: WT_bool)
 
-lemma [\<phi>reason 2000]:
-  \<open>is_singleton (x \<Ztypecolon> \<bool>)\<close>
-  by (rule is_singletonI''; simp add: \<phi>expns)
 
 abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>
 
@@ -98,7 +94,7 @@ lemma op_const_bool_\<phi>app[\<phi>synthesis for \<open>\<lambda>v. True \<Ztyp
   \<open> Is_Literal b
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_const_bool b \<lbrace> Void \<longmapsto> \<v>\<a>\<l> b \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_const_bool_def
-  by (rule, simp add: \<phi>Bool_expn)
+  by (rule, simp)
 
 lemma True_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_const_bool True \<lbrace> Void \<longmapsto> \<v>\<a>\<l> True \<Ztypecolon> \<bool> \<rbrace>\<close>
@@ -114,7 +110,7 @@ subsection \<open>Not\<close>
 lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
   \<open>\<p>\<r>\<o>\<c> op_not raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<bool> \<longmapsto> \<v>\<a>\<l> \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
-  by (cases raw, simp, rule, simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns)
+  by (cases raw, simp, rule, simp add: Premise_def WT_bool, rule, simp)
 
 
 subsection \<open>And\<close>
@@ -122,20 +118,19 @@ subsection \<open>And\<close>
 lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
   \<open>\<p>\<r>\<o>\<c> op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
-  by (cases va; cases vb; simp, rule, rule, simp add: \<phi>expns WT_bool, rule,
-      simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
+  by (cases va; cases vb; simp, rule, rule, simp add: Premise_def WT_bool, rule,
+      simp add: Premise_def WT_bool, rule, simp, blast)
 
 subsection \<open>Or\<close>
 
 lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
   \<open>\<p>\<r>\<o>\<c> op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def
-  by(cases va; cases vb, simp, rule, rule, simp add: \<phi>expns WT_bool, rule,
-      simp add: \<phi>expns WT_bool, rule, simp add: \<phi>expns, blast)
+  by(cases va; cases vb, simp, rule, rule, simp add: Premise_def WT_bool, rule,
+      simp add: Premise_def WT_bool, rule, simp, blast)
 
 
 subsection \<open>Equal\<close>
-
 
 declare [[
     overloaded_operator_in_synthesis \<open>\<lambda>v. x \<Ztypecolon> T v\<close> \<open>\<lambda>v. y \<Ztypecolon> U v\<close> \<Rightarrow> \<open>\<lambda>v. x = y \<Ztypecolon> \<v>\<a>\<l>[v] \<bool>\<close>,
@@ -154,7 +149,7 @@ lemma op_equal_\<phi>app[\<phi>overload =]:
     apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
     apply (simp add: \<phi>SemType_def subset_iff Premise_def, rule)
    apply (unfold \<phi>Equal_def Premise_def, simp)
-  by (rule \<phi>M_Success', rule, simp add: \<phi>expns)
+  by (rule \<phi>M_Success', rule, simp)
 
 
 declare op_equal_\<phi>app[where eq=\<open>(=)\<close>, \<phi>synthesis 100]

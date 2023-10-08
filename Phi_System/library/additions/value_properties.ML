@@ -3,8 +3,8 @@ end
 
 structure Phi_Local_Value_Properties : PHI_LOCAL_VALUE_PROPERTIES = struct
 
-val dest_Zero   = Phi_Syntax.dest_tags   #> Phi_Help.dest_triop   \<^const_name>\<open>\<phi>Zero\<close>
-val dest_Zero_c = Phi_Syntax.dest_tags_c #> Phi_Help.dest_triop_c \<^const_name>\<open>\<phi>Zero\<close>
+val dest_Zero   = PLPR_Syntax.dest_tags   #> Phi_Help.dest_triop   \<^const_name>\<open>\<phi>Zero\<close>
+val dest_Zero_c = PLPR_Syntax.dest_tags_c #> Phi_Help.dest_triop_c \<^const_name>\<open>\<phi>Zero\<close>
 
 (* Zero Value *)
 
@@ -14,7 +14,7 @@ fun make_zero_value ctxt goal =
   in @{thm \<phi>deduce_zero_value}
   |> Thm.incr_indexes idx
   |> Drule.infer_instantiate ctxt [(("TY",idx),TY), (("T",idx),T), (("x",idx),x)]
-  |> Phi_Reasoner.reason (SOME 1) ctxt
+  |> Phi_Reasoner.reason NONE (SOME 1) ctxt
   |> (fn SOME s => s
        | NONE => error (Pretty.string_of (Pretty.block [
            Pretty.str "The rule of the semantic type of ",

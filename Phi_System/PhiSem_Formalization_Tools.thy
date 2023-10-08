@@ -80,7 +80,7 @@ lemma \<phi>M_getV_raw[intro!]:
    \<open>(v \<Turnstile> (x \<Ztypecolon> A) \<Longrightarrow> \<p>\<r>\<o>\<c> F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  )
 \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV_raw VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_getV_raw_def Premise_def
-  by (clarsimp simp add: norm_precond_conj Val_expn)
+  by (clarsimp simp add: norm_precond_conj Val.unfold)
 
 declare \<phi>M_getV_raw[where X=1, simplified, intro!]
 
@@ -89,7 +89,7 @@ lemma \<phi>M_getV[intro!]:
 \<Longrightarrow> (v \<Turnstile> (x \<Ztypecolon> A) \<Longrightarrow> \<p>\<r>\<o>\<c> F (VDT_dest v) \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E  )
 \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_getV TY VDT_dest (\<phi>arg v) F \<lbrace> X\<heavy_comma> x \<Ztypecolon> Val (\<phi>arg v) A \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   unfolding \<phi>M_getV_def Premise_def
-  by (clarsimp simp add: Val_expn norm_precond_conj)
+  by (clarsimp simp add: Val.unfold norm_precond_conj)
 
 declare \<phi>M_getV[where X=1, simplified, intro!]
 

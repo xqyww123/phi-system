@@ -12,7 +12,7 @@ theory Phi_Preliminary
       and "<suffices>" = "\<s>\<u>\<f>\<f>\<i>\<c>\<e>\<s>"
 begin
 
-declare [ [ML_debugger, ML_exception_debugger]]
+declare [[ML_debugger, ML_exception_debugger, ML_print_depth=100]]
 
 subsection \<open>Named Theorems\<close>
 
