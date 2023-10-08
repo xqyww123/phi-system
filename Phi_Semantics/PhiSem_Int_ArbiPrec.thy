@@ -89,8 +89,8 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Equal_def by (simp add: \<phi>expns eq_nat_nat_iff)
 
 lemma [\<phi>reason 1000]:
-    "\<phi>Zero aint \<int> 0"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+    "Semantic_Zero_Val aint \<int> 0"
+  unfolding Semantic_Zero_Val_def by (simp add: \<phi>expns)
 
 lemma \<phi>Int_semty[\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<int>) aint\<close>
@@ -152,7 +152,7 @@ lemma [\<phi>reason 1000]: \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<c
 
 declare [[\<phi>trace_reasoning = 2]]
 
-lemma [\<phi>reason 1000]: "\<phi>Zero aint \<nat> 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> \<int>\<close> \<medium_right_bracket> .
+lemma [\<phi>reason 1000]: "Semantic_Zero_Val aint \<nat> 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> \<int>\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason 1000]: \<open>\<phi>Equal \<nat> (\<lambda>_ _. True) (=)\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>.
 

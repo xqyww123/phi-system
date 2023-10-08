@@ -6,19 +6,101 @@ chapter \<open>Specification Framework\<close>
 
 theory Spec_Framework
   imports Phi_BI "Phi_Semantics_Framework.Phi_Semantics_Framework"
+  keywords "fiction_space"  :: thy_goal
   abbrevs "<shifts>" = "\<s>\<h>\<i>\<f>\<t>\<s>"
     and   "<val>" = "\<v>\<a>\<l>"
 begin
 
-(*TODO*)
 subsubsection \<open>Configuration\<close>
 
 declare [[\<phi>reason_default_pattern \<open>Valid_Proc ?F\<close> \<Rightarrow> \<open>Valid_Proc ?F\<close> (100)]]
 declare Valid_Proc_bind[\<phi>reason 1200]
 
+section \<open>Fiction\<close>
+
+unspecified_type FIC
+unspecified_type FIC_N
+
+type_synonym fiction = \<open>FIC_N \<Rightarrow> FIC\<close>
+type_synonym assn = \<open>fiction set\<close>
+type_synonym rassn = \<open>resource set\<close>
+type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T) Resource_Space.kind"
+
+setup \<open>Sign.mandatory_path "FIC"\<close>
+
+consts DOMAIN :: \<open>FIC_N \<Rightarrow> FIC sep_homo_set\<close>
+
+debt_axiomatization sort: \<open>OFCLASS(FIC, sep_algebra_class)\<close>
+
+setup \<open>Sign.parent_path\<close>
+
+instance FIC :: sep_algebra using FIC.sort .
+
+instantiation FIC :: sep_carrier_1 begin
+definition mul_carrier_FIC :: \<open>FIC \<Rightarrow> bool\<close> where \<open>mul_carrier_FIC = (\<lambda>_. True)\<close>
+  \<comment> \<open>As a type specially defined to represent the representation of fictions, it can be noisy-free.\<close>
+instance by (standard; simp add: mul_carrier_FIC_def)
+end
+
+consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) unital_homo_interp\<close>
+
+interpretation FIC: fictional_space FIC.DOMAIN INTERPRET .
+
+definition "INTERP_RES fic \<equiv> RES.SPACE \<inter> {_. fic \<in> FIC.SPACE } \<inter> FIC.INTERP fic"
+  \<comment> \<open>Interpret a fiction\<close>
+
+lemma In_INTERP_RES:
+  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> r \<in> FIC.INTERP fic\<close>
+  unfolding INTERP_RES_def by simp
+
+definition INTERP_SPEC :: \<open>assn \<Rightarrow> rassn\<close>
+  \<comment> \<open>Interpret a fictional specification\<close>
+  where "INTERP_SPEC T = { res. \<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic }"
+
+lemma INTERP_SPEC:
+  \<open>res \<in> INTERP_SPEC T \<longleftrightarrow> (\<exists>fic. fic \<Turnstile> T \<and> res \<in> INTERP_RES fic)\<close>
+  unfolding INTERP_SPEC_def Satisfaction_def
+  by simp
+
+lemma INTERP_SPEC_subset[intro, simp]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_SPEC A \<subseteq> INTERP_SPEC B\<close>
+  unfolding INTERP_SPEC_def subset_iff by simp blast
+
+lemma INTERP_SPEC_plus[iff]:
+  \<open>INTERP_SPEC (A + B) = INTERP_SPEC A + INTERP_SPEC B\<close>
+  unfolding INTERP_SPEC_def plus_set_def by simp blast
+
+lemma INTERP_SPEC_empty[intro, simp]:
+  \<open>S = {} \<Longrightarrow> INTERP_SPEC S = {}\<close>
+  unfolding INTERP_SPEC_def set_eq_iff by simp
+
+lemma INTERP_SPEC_0[simp]:
+  \<open>INTERP_SPEC 0  = 0\<close>
+  \<open>INTERP_SPEC {} = {}\<close>
+  unfolding INTERP_SPEC_def zero_set_def by simp+
+
+ML_file \<open>library/spec_framework/fiction_space.ML\<close>
+ML_file \<open>library/spec_framework/fiction_space_more.ML\<close>
+
+ML \<open>Fiction_Space.define_command \<^command_keyword>\<open>fiction_space\<close> "extend fictions"\<close>
+
+(*
+lemma INTERP_mult:
+  \<open> Fic_Space f1
+\<Longrightarrow> Fic_Space f2
+\<Longrightarrow> dom1 r1 \<inter> dom1 r2 = {}
+\<Longrightarrow> dom1 f1 \<inter> dom1 f2 = {}
+\<Longrightarrow> r1 \<in> \<I> INTERP f1
+\<Longrightarrow> r2 \<in> \<I> INTERP f2
+\<Longrightarrow> f1 ## f2
+\<Longrightarrow> r1 * r2 \<in> \<I> INTERP (f1 * f2) \<and> r1 ## r2\<close>
+  unfolding INTERP_def Fic_Space_def
+  by (simp add: dom1_sep_mult_disjoint times_fun prod.union_disjoint
+                disjoint_dom1_eq_1[of f1 f2],
+      meson dom1_disjoint_sep_disj times_set_I) *)
+
+
 section \<open>Specification of Value\<close>
 
-type_synonym rassn = \<open>resource BI\<close>
 type_synonym vassn = \<open>VAL BI\<close>
 
 subsection \<open>Primitive \<phi>-Types\<close>
@@ -70,12 +152,25 @@ definition \<phi>SemType :: "vassn \<Rightarrow> TY \<Rightarrow> bool"
   where \<open>\<phi>SemType S TY \<longleftrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)\<close>
   \<comment> \<open>Values specified by \<open>S\<close> are all of semantic type \<open>TY\<close>.\<close>
 
-abbreviation \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> TY \<Rightarrow> bool" (*where this is required?*)
-  where \<open>\<phi>\<phi>SemType T TY \<equiv> (\<forall>x. \<phi>SemType (x \<Ztypecolon> T) TY)\<close>
+(*definition \<phi>\<phi>SemType :: "(VAL, 'a) \<phi> \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> TY) \<Rightarrow> bool"
+  where \<open>\<phi>\<phi>SemType T D TY \<equiv> (\<forall>x. D x \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) (TY x))\<close>*)
 
 declare [[
   \<phi>reason_default_pattern \<open>\<phi>SemType ?S _\<close> \<Rightarrow> \<open>\<phi>SemType ?S _\<close> (100)
 ]]
+
+\<phi>reasoner_group \<phi>sem_type = (100, [0, 3000]) for (\<open>\<phi>SemType S TY\<close>)
+      \<open>giving the semantic type of the concrete value satisfying the given assertion or \<phi>-type\<close>
+  and \<phi>sem_type_fail = (0, [0,0]) in \<phi>sem_type
+      \<open>failures\<close>
+(*and \<phi>sem_type_\<phi>typ = (10, [10,10]) in \<phi>sem_type and > \<phi>sem_type_fail
+      \<open>\<open>\<phi>SemType\<close> -> \<open>\<phi>\<phi>SemType\<close>\<close>*)
+  and \<phi>sem_type_assertion = (20, [20,20]) in \<phi>sem_type and > \<phi>sem_type_fail
+      \<open>asserting the given with a semantic type if any\<close>
+  and \<phi>sem_type_derived = (50, [50,50]) in \<phi>sem_type and > \<phi>sem_type_assertion
+      \<open>derived rules\<close>
+  and \<phi>sem_type_cut = (1000, [1000,1000]) in \<phi>sem_type and > \<phi>sem_type_derived
+      \<open>cutting rules\<close>
 
 (*lemma \<phi>SemType_unique:
   \<open> S \<noteq> {}
@@ -101,13 +196,25 @@ lemma [\<phi>reason 100]:
 \<Longrightarrow> \<phi>\<phi>SemType T TY\<close>
   .. *)
 
-lemma [\<phi>reason 1]:
+paragraph \<open>Basic Rules\<close>
+
+lemma [\<phi>reason %\<phi>sem_type_fail]:
   \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
 \<Longrightarrow> \<phi>SemType X Any\<close>
   unfolding FAIL_def
   by blast
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>sem_type_assertion except \<open>\<phi>SemType _ ?var\<close>]:
+  \<open> \<phi>SemType A TY'
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>expecting\<close> A \<open>of semantic type\<close> TY \<open>but actually of\<close> TY')
+\<Longrightarrow> \<phi>SemType A TY \<close>
+  unfolding Premise_def Orelse_shortcut_def ERROR_def
+  by blast
+
+
+paragraph \<open>Over Logic Connectives\<close>
+
+lemma [\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<phi>SemType X TY1
 \<Longrightarrow> \<phi>SemType Y TY2
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> TY1 = TY2
@@ -115,24 +222,22 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>SemType_def subset_iff Premise_def
   by simp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<phi>SemType X TY
 \<Longrightarrow> \<phi>SemType (X \<s>\<u>\<b>\<j> P) TY\<close>
   unfolding \<phi>SemType_def subset_iff
   by simp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %\<phi>sem_type_cut]:
   \<open> (\<And>x. \<phi>SemType (X x) TY)
 \<Longrightarrow> \<phi>SemType (ExSet X) TY\<close>
   unfolding \<phi>SemType_def subset_iff by clarsimp
 
-lemma [\<phi>reason 1000]:
-  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
+lemma [\<phi>reason %\<phi>sem_type_cut]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<in> Well_Type TY
 \<Longrightarrow> \<phi>SemType (v \<Ztypecolon> Itself) TY \<close>
   unfolding Premise_def \<phi>SemType_def subset_iff
   by simp
-
-
 
 
 subsubsection \<open>Multiple Values\<close>
@@ -150,11 +255,17 @@ declare [[\<phi>reason_default_pattern \<open>\<phi>_Have_Types ?S _\<close> \<R
 
 subsection \<open>Zero Value\<close>
 
-definition \<phi>Zero :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
-  where "\<phi>Zero ty T x \<longleftrightarrow> (\<exists>v. Zero ty = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))"
+definition Semantic_Zero_Val :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
+  where "Semantic_Zero_Val ty T x \<longleftrightarrow> (\<exists>v. Zero ty = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))"
 
-declare [[\<phi>reason_default_pattern \<open>\<phi>Zero ?TY ?T ?x\<close> \<Rightarrow> \<open>\<phi>Zero ?TY ?T _\<close> (100) ]]
+declare [[\<phi>reason_default_pattern \<open>Semantic_Zero_Val ?TY ?T ?x\<close> \<Rightarrow> \<open>Semantic_Zero_Val ?TY ?T _\<close> (100) ]]
 
+\<phi>reasoner_group semantic_zero_val_all = (100, [10, 3000]) for \<open>Semantic_Zero_Val TY T x\<close>
+    \<open>giving the semantic zero value on the abstraction side\<close>
+  and semantic_zero_val_cut = (1000, [1000, 1000]) in semantic_zero_val_all
+    \<open>cutting rules\<close>
+  and semantic_zero_val_derived = (50, [50,50]) in semantic_zero_val_all and < semantic_zero_val_cut
+    \<open>derived rules\<close>
 
 
 subsection \<open>Equality\<close>
@@ -772,8 +883,8 @@ lemma \<phi>Procedure_alt:
   apply rule
   apply ((unfold \<phi>Procedure_def)[1], blast)
   unfolding \<phi>Procedure_def INTERP_SPEC subset_iff
-  apply (clarsimp simp add: times_set_def split_comp_All INTERP_SPEC_def)
-  by metis
+  apply (clarsimp simp add: times_set_def split_comp_All INTERP_SPEC_def Satisfaction_def)
+  by fastforce
 
 lemmas \<phi>Procedure_I = \<phi>Procedure_alt[THEN iffD2]
 
@@ -904,8 +1015,9 @@ lemma \<phi>frame:
 lemma \<phi>Inhabited:
   \<open>(Inhabited X \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E)
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<close>
-  unfolding \<phi>Procedure_def Inhabited_def Satisfaction_def
-  by (metis INTERP_SPEC set_mult_expn)
+  unfolding \<phi>Procedure_def Inhabited_def
+  by (meson INTERP_SPEC sep_conj_expn)
+
 
 subsubsection \<open>View Shift\<close>
 

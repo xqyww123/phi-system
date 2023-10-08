@@ -54,8 +54,8 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Equal_def by (simp add: Symbol_expn \<phi>embed_semantic_symbol)
 
 lemma [\<phi>reason 1000]:
-  "\<phi>Zero symbol Symbol SYMBOL(zero)"
-  unfolding \<phi>Zero_def by (simp add: Symbol_expn \<phi>embed_semantic_symbol)
+  "Semantic_Zero_Val symbol Symbol SYMBOL(zero)"
+  unfolding Semantic_Zero_Val_def by (simp add: Symbol_expn \<phi>embed_semantic_symbol)
 
 lemma [\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> Symbol) symbol\<close>

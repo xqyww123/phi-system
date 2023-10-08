@@ -344,8 +344,6 @@ lemma Fic_Space_mm[simp]: "f ## mk x \<Longrightarrow> f * mk x \<in> SPACE \<lo
 
 end
 
-ML_file_debug \<open>fiction_space.ML\<close>
-
 hide_type (open) kind
 hide_const (open) kind
 

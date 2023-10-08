@@ -111,14 +111,14 @@ lemma Empty_Tuple_reduce[simp]:
   by (metis V_tup_mult append.right_neutral)
 
 lemma Tuple_Field_zero  [\<phi>reason 1000]:
-  \<open>\<phi>Zero ty T x \<Longrightarrow> \<phi>Zero (tup [ty]) \<lbrace> T \<rbrace> x \<close>
-  unfolding \<phi>Zero_def by (clarsimp simp add: \<phi>expns)
+  \<open>Semantic_Zero_Val ty T x \<Longrightarrow> Semantic_Zero_Val (tup [ty]) \<lbrace> T \<rbrace> x \<close>
+  unfolding Semantic_Zero_Val_def by (clarsimp simp add: \<phi>expns)
 
 lemma Tuple_Field_zeros [\<phi>reason 1000]:
-  \<open>\<phi>Zero ty T x
-    \<Longrightarrow> \<phi>Zero (tup tys) Ts xs
-    \<Longrightarrow> \<phi>Zero (tup (ty#tys)) (\<lbrace> T \<rbrace> \<^emph> Ts) (x,xs) \<close>
-  unfolding \<phi>Zero_def
+  \<open>Semantic_Zero_Val ty T x
+    \<Longrightarrow> Semantic_Zero_Val (tup tys) Ts xs
+    \<Longrightarrow> Semantic_Zero_Val (tup (ty#tys)) (\<lbrace> T \<rbrace> \<^emph> Ts) (x,xs) \<close>
+  unfolding Semantic_Zero_Val_def
   apply (clarsimp simp add: \<phi>expns V_tup_mult_cons image_iff)
   using V_tup_sep_disj_L by blast
 

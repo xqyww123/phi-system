@@ -525,8 +525,8 @@ lemma [\<phi>inhabitance_rule 1000]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma RawPointer_zero[\<phi>reason 1200]:
-  "\<phi>Zero pointer RawPointer (Null |: 0)"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns zero_prod_def zero_memaddr_def)
+  "Semantic_Zero_Val pointer RawPointer (Null |: 0)"
+  unfolding Semantic_Zero_Val_def by (simp add: \<phi>expns zero_prod_def zero_memaddr_def)
 
 lemma RawPointer_eqcmp[\<phi>reason 1200]:
   "\<phi>Equal RawPointer (\<lambda>x y. x = 0 |: 0 \<or> y = 0 |: 0 \<or> memaddr.blk x = memaddr.blk y) (=)"

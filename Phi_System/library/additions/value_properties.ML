@@ -3,8 +3,8 @@ end
 
 structure Phi_Local_Value_Properties : PHI_LOCAL_VALUE_PROPERTIES = struct
 
-val dest_Zero   = PLPR_Syntax.dest_tags   #> Phi_Help.dest_triop   \<^const_name>\<open>\<phi>Zero\<close>
-val dest_Zero_c = PLPR_Syntax.dest_tags_c #> Phi_Help.dest_triop_c \<^const_name>\<open>\<phi>Zero\<close>
+val dest_Zero   = PLPR_Syntax.dest_tags   #> Phi_Help.dest_triop   \<^const_name>\<open>Semantic_Zero_Val\<close>
+val dest_Zero_c = PLPR_Syntax.dest_tags_c #> Phi_Help.dest_triop_c \<^const_name>\<open>Semantic_Zero_Val\<close>
 
 (* Zero Value *)
 
@@ -27,7 +27,7 @@ val make_zero_value' =
   Proof.map_context_result (fn c => (make_zero_value c (Phi_Envir.get_thesis c), c))
 
 val zero_value : Phi_Working_Mode.working_mode = {
-  name = \<^const_name>\<open>working_mode_\<phi>Zero\<close>,
+  name = \<^const_name>\<open>working_mode_Semantic_Zero_Val\<close>,
   domain = can dest_Zero,
   is_on_going_construction = can dest_Zero,
   spec_of = #spec_of Phi_Working_Mode.implication,

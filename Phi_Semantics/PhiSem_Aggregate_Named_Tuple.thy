@@ -163,17 +163,17 @@ lemma Empty_Tuple_reduce[simp]:
 
 
 lemma Named_Tuple_Field_zero  [\<phi>reason 1000]:
-  \<open>\<phi>Zero ty T x \<Longrightarrow> \<phi>Zero (named_tup.mk (fmupd s ty fmempty)) \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> x \<close>
-  unfolding \<phi>Zero_def
+  \<open>Semantic_Zero_Val ty T x \<Longrightarrow> Semantic_Zero_Val (named_tup.mk (fmupd s ty fmempty)) \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> x \<close>
+  unfolding Semantic_Zero_Val_def
   by (clarsimp simp add: \<phi>expns,
       metis (mono_tags, lifting) Named_Tuple_Field_expn comp_apply fmmap_empty fmmap_fmupd fmpred_empty fmpred_upd image_eqI option.sel)
 
 lemma Tuple_Field_zeros [\<phi>reason 1000]:
   \<open> s |\<notin>| fmdom tys
-\<Longrightarrow> \<phi>Zero ty T x
-\<Longrightarrow> \<phi>Zero (named_tup.mk tys) Ts xs
-\<Longrightarrow> \<phi>Zero (named_tup.mk (fmupd s ty tys)) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
-  unfolding \<phi>Zero_def
+\<Longrightarrow> Semantic_Zero_Val ty T x
+\<Longrightarrow> Semantic_Zero_Val (named_tup.mk tys) Ts xs
+\<Longrightarrow> Semantic_Zero_Val (named_tup.mk (fmupd s ty tys)) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
+  unfolding Semantic_Zero_Val_def
   apply (clarsimp simp add: \<phi>expns; cases \<open>fmpred (\<lambda>_ t. \<exists>y. Zero t = Some y) tys\<close>;
      auto simp add: inj_image_mem_iff \<phi>expns fmmap_fmupd
      V_named_tup_mult_cons[where s=s and y=\<open>fmmap (the \<circ> Zero) tys\<close>, symmetric])

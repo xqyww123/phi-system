@@ -43,7 +43,7 @@ consts programming_mode :: mode
        view_shift_mode  :: mode
 
 definition CurrentConstruction :: " mode \<Rightarrow> resource \<Rightarrow> assn \<Rightarrow> assn \<Rightarrow> bool "
-  where "CurrentConstruction mode s R S \<longleftrightarrow> s \<Turnstile> INTERP_SPEC (R * S)"
+  where "CurrentConstruction mode s R S \<longleftrightarrow> s \<in> INTERP_SPEC (R * S)"
 
 abbreviation Programming_CurrentConstruction ("\<c>\<u>\<r>\<r>\<e>\<n>\<t> _ [_]/ \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> _" [1000,1000,11] 10)
   where \<open>Programming_CurrentConstruction \<equiv> CurrentConstruction programming_mode\<close>
@@ -74,8 +74,8 @@ translations
 definition \<open>CodeBlock s s' f ret \<longleftrightarrow> Success ret s' \<in> f s\<close>
 
 lemma CurrentConstruction_D: "CurrentConstruction mode s H T \<Longrightarrow> Inhabited T"
-  unfolding CurrentConstruction_def Inhabited_def Satisfaction_def
-  by (clarsimp simp add: INTERP_SPEC set_mult_expn; blast)
+  unfolding CurrentConstruction_def Inhabited_def
+  by (clarsimp simp add: INTERP_SPEC set_mult_expn, blast)
 
 definition ToA_Construction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\<close> ("\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>'(_') \<i>\<s> _" [11,11] 10)
   where \<open>ToA_Construction = (\<Turnstile>)\<close>
@@ -334,7 +334,8 @@ paragraph \<open>Fact Store\<close>
 
 lemma [\<phi>programming_simps]:
   "CurrentConstruction mode s H (T \<s>\<u>\<b>\<j> P) \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> P"
-  unfolding CurrentConstruction_def by (simp_all add: INTERP_SPEC_subj split_paired_all)
+  unfolding CurrentConstruction_def
+  by (simp_all add: INTERP_SPEC_subj split_paired_all Subjection_expn_set)
 
 lemma [\<phi>programming_simps]:
   "(CurrentConstruction mode s H T \<and> B) \<and> C \<longleftrightarrow> (CurrentConstruction mode s H T) \<and> (B \<and> C)"
@@ -352,7 +353,8 @@ paragraph \<open>Fixing Existentially Quantified Variable\<close>
 
 lemma \<phi>ExTyp_strip:
   "(CurrentConstruction mode p H (ExSet T)) \<equiv> (\<exists>c. CurrentConstruction mode p H (T c))"
-  unfolding CurrentConstruction_def atomize_eq by (simp_all add: INTERP_SPEC_ex split_paired_all)
+  unfolding CurrentConstruction_def atomize_eq
+  by (simp_all add: INTERP_SPEC_ex split_paired_all Subjection_expn_set ExSet_expn_set)
 
 lemma \<phi>ExTyp_strip_imp:
   \<open>ToA_Construction s (ExSet T) \<equiv> (\<exists>c. ToA_Construction s (T c))\<close>

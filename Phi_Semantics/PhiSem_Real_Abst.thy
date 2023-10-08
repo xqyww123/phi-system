@@ -71,8 +71,8 @@ lemma [\<phi>reason 1000]:
   unfolding \<phi>Equal_def by (simp add: \<phi>expns eq_nat_nat_iff)
 
 lemma [\<phi>reason 1000]:
-    "\<phi>Zero areal \<real> 0"
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+    "Semantic_Zero_Val areal \<real> 0"
+  unfolding Semantic_Zero_Val_def by (simp add: \<phi>expns)
 
 lemma [\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<real>) areal\<close>

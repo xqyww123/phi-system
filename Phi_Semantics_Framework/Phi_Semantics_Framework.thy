@@ -15,7 +15,6 @@ supporting most of control flows and therefore most of (imperative) languages.
 theory Phi_Semantics_Framework
   imports Resource_Space Virtual_Datatype.Virtual_Datatype Debt_Axiom.Debt_Axiom
   keywords "resource_space" :: thy_goal
-       and "fiction_space"  :: thy_goal
   abbrevs "<throws>" = "\<t>\<h>\<r>\<o>\<w>\<s>"
     and "<proc>" = "\<p>\<r>\<o>\<c>"
 begin
@@ -209,87 +208,6 @@ debt_axiomatization Zero :: \<open>TY \<Rightarrow> VAL option\<close>
   using Well_Type_disjoint by blast
 
 abbreviation \<open>Valid_Type T \<equiv> Inhabited (Well_Type T)\<close>*)
-
-
-subsection \<open>Fiction\<close>
-
-unspecified_type FIC
-unspecified_type FIC_N
-
-type_synonym fiction = \<open>FIC_N \<Rightarrow> FIC\<close>
-type_synonym assn = \<open>fiction set\<close>
-type_synonym rassn = \<open>resource set\<close>
-type_synonym 'T fiction_entry = "(FIC_N, FIC, 'T) Resource_Space.kind"
-
-setup \<open>Sign.mandatory_path "FIC"\<close>
-
-consts DOMAIN :: \<open>FIC_N \<Rightarrow> FIC sep_homo_set\<close>
-
-debt_axiomatization sort: \<open>OFCLASS(FIC, sep_algebra_class)\<close>
-
-setup \<open>Sign.parent_path\<close>
-
-instance FIC :: sep_algebra using FIC.sort .
-
-instantiation FIC :: sep_carrier_1 begin
-definition mul_carrier_FIC :: \<open>FIC \<Rightarrow> bool\<close> where \<open>mul_carrier_FIC = (\<lambda>_. True)\<close>
-  \<comment> \<open>As a type specially defined to represent the representation of fictions, it can be noisy-free.\<close>
-instance by (standard; simp add: mul_carrier_FIC_def)
-end
-
-consts INTERPRET :: \<open>FIC_N \<Rightarrow> (FIC, resource) unital_homo_interp\<close>
-
-interpretation FIC: fictional_space FIC.DOMAIN INTERPRET .
-
-definition "INTERP_RES fic \<equiv> RES.SPACE \<inter> {_. fic \<in> FIC.SPACE } \<inter> FIC.INTERP fic"
-  \<comment> \<open>Interpret a fiction\<close>
-
-lemma In_INTERP_RES:
-  \<open>r \<in> INTERP_RES fic \<longleftrightarrow> r \<in> RES.SPACE \<and> fic \<in> FIC.SPACE \<and> r \<in> FIC.INTERP fic\<close>
-  unfolding INTERP_RES_def by simp
-
-definition INTERP_SPEC :: \<open>assn \<Rightarrow> rassn\<close>
-  \<comment> \<open>Interpret a fictional specification\<close>
-  where "INTERP_SPEC T = { res. \<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic }"
-
-lemma INTERP_SPEC:
-  \<open>res \<in> INTERP_SPEC T \<longleftrightarrow> (\<exists>fic. fic \<in> T \<and> res \<in> INTERP_RES fic)\<close>
-  unfolding INTERP_SPEC_def by simp
-
-lemma INTERP_SPEC_subset[intro, simp]: \<open>A \<subseteq> B \<Longrightarrow> INTERP_SPEC A \<subseteq> INTERP_SPEC B\<close>
-  unfolding INTERP_SPEC_def subset_iff by simp blast
-
-lemma INTERP_SPEC_plus[iff]:
-  \<open>INTERP_SPEC (A + B) = INTERP_SPEC A + INTERP_SPEC B\<close>
-  unfolding INTERP_SPEC_def plus_set_def by simp blast
-
-lemma INTERP_SPEC_empty[intro, simp]:
-  \<open>S = {} \<Longrightarrow> INTERP_SPEC S = {}\<close>
-  unfolding INTERP_SPEC_def set_eq_iff by simp
-
-lemma INTERP_SPEC_0[simp]:
-  \<open>INTERP_SPEC 0  = 0\<close>
-  \<open>INTERP_SPEC {} = {}\<close>
-  unfolding INTERP_SPEC_def zero_set_def by simp+
-
-ML_file_debug \<open>fiction_space_more.ML\<close>
-
-ML \<open>Fiction_Space.define_command \<^command_keyword>\<open>fiction_space\<close> "extend fictions"\<close>
-
-(*
-lemma INTERP_mult:
-  \<open> Fic_Space f1
-\<Longrightarrow> Fic_Space f2
-\<Longrightarrow> dom1 r1 \<inter> dom1 r2 = {}
-\<Longrightarrow> dom1 f1 \<inter> dom1 f2 = {}
-\<Longrightarrow> r1 \<in> \<I> INTERP f1
-\<Longrightarrow> r2 \<in> \<I> INTERP f2
-\<Longrightarrow> f1 ## f2
-\<Longrightarrow> r1 * r2 \<in> \<I> INTERP (f1 * f2) \<and> r1 ## r2\<close>
-  unfolding INTERP_def Fic_Space_def
-  by (simp add: dom1_sep_mult_disjoint times_fun prod.union_disjoint
-                disjoint_dom1_eq_1[of f1 f2],
-      meson dom1_disjoint_sep_disj times_set_I) *)
 
 
 subsection \<open>Formalization of Computation\<close>

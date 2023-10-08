@@ -28,7 +28,7 @@ fun cert_typ ctxt raw_T env =
     val env' = Term.add_tfreesT T env;
   in (T, env') end;
 
-fun entryT nameT repT T = \<^Type>\<open>kind nameT repT T\<close>
+fun entryT nameT repT T = \<^Type>\<open>Resource_Space.kind nameT repT T\<close>
 val prep_additional_data = read_typ
 val chk_additional_data = cert_typ
 

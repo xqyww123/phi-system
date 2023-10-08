@@ -158,14 +158,14 @@ lemma throw_reduce_tail[procedure_simps,simp]:
 lemma "__throw_rule__"[intro!]:
   \<open> (\<And>a. X a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' a)
 \<Longrightarrow> \<p>\<r>\<o>\<c> (throw excep :: 'ret proc) \<lbrace> X excep \<longmapsto> Any \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> X'\<close>
-  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Transformation_def Satisfaction_def
-  by (clarsimp, metis INTERP_SPEC set_mult_expn)
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Transformation_def
+  by (clarsimp simp add: INTERP_SPEC; metis)
 
 lemma throw_\<phi>app:
   \<open> (\<And>v. Remove_Values (X v) (X' v))
 \<Longrightarrow> \<p>\<r>\<o>\<c> throw excep \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> X' \<close>
-  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Transformation_def Satisfaction_def
-  by (clarsimp, metis INTERP_SPEC set_mult_expn)
+  unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Transformation_def
+  by (clarsimp simp add: INTERP_SPEC, metis)
 
 definition op_try :: "'ret proc \<Rightarrow> (ABNM \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"
   where \<open>op_try f g s = \<Union>((\<lambda>y. case y of Success x s' \<Rightarrow> {Success x s'}
@@ -183,7 +183,7 @@ lemma "__op_try__"[intro!]:
     apply (cases s; simp; cases x; clarsimp simp add: INTERP_SPEC set_mult_expn ring_distribs)
     subgoal premises prems for a b u v
       using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
-      by (metis (no_types, lifting) INTERP_SPEC LooseState_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) set_mult_expn)
+      by (metis (no_types, lifting) INTERP_SPEC LooseState_expn(1) prems(3) prems(6) prems(7) prems(8) prems(9) sep_conj_expn)
     subgoal premises prems for a b c d u v2 proof -
       have \<open>Abnormal a b \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
         using prems(1)[THEN spec[where x=comp], THEN spec[where x=R]]
@@ -191,10 +191,10 @@ lemma "__op_try__"[intro!]:
       note this[simplified]
       then have \<open>Success c d \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
         using prems(2)[of a, THEN spec[where x=b], THEN spec[where x=R]]
-        by (meson INTERP_SPEC prems(4) set_mult_expn)
+        by (meson INTERP_SPEC prems(4) sep_conj_expn)
       note this[simplified]
       then show ?thesis
-        by (metis INTERP_SPEC prems(11) set_mult_expn)
+        by (metis INTERP_SPEC prems(11) sep_conj_expn)
     qed
     subgoal premises prems for a b c d u v proof -
       have \<open>Abnormal a b \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y1 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E v))\<close>
@@ -203,12 +203,12 @@ lemma "__op_try__"[intro!]:
       note this[simplified]
       then have \<open>Abnormal c d \<in> LooseState (\<lambda>v. INTERP_SPEC (R \<heavy_comma> Y2 v)) (\<lambda>v. INTERP_SPEC (R \<heavy_comma> E2 v))\<close>
         using prems(2)[THEN spec[where x=b], THEN spec[where x=R]]
-        by (meson INTERP_SPEC prems(4) set_mult_expn)
+        by (meson INTERP_SPEC prems(4) sep_conj_expn)
       note this[simplified]
       then show ?thesis
         by (simp add: INTERP_SPEC set_mult_expn)
     qed
-     apply (smt (z3) INTERP_SPEC LooseState_expn(2) LooseState_expn(3) set_mult_expn)
+     apply (smt (z3) INTERP_SPEC LooseState_expn(2) LooseState_expn(3) sep_conj_expn)
     by blast .
 
 definition "Union_the_Same_Or_Arbitrary_when_Var Z X Y \<longleftrightarrow> (\<forall>v. (Z::'v \<Rightarrow> 'a set) v = X v + Y v)"

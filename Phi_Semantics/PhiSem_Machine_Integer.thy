@@ -108,8 +108,13 @@ There is no direct transformation between \<open>\<nat>\<^sup>r\<close> and \<op
 
 subsection \<open>Words\<close>
 
-definition Word :: \<open>'b itself \<Rightarrow> (VAL, 'b::len word) \<phi>\<close>
-  where \<open>Word _ x = { V_int.mk (LENGTH('b), unat x) }\<close>
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def Word :: \<open>'b itself \<Rightarrow> (VAL, 'b::len word) \<phi>\<close>
+  where \<open>x \<Ztypecolon> Word _ \<equiv> V_int.mk (LENGTH('b), unat x) \<Ztypecolon> Itself\<close>
+  deriving Basic
+       and \<open>Object_Equiv (Word ?uu) (=)\<close>
+       and \<open>\<phi>SemType (x \<Ztypecolon> Word TYPE('b)) int('b)\<close>
 
 syntax Word_syntax :: "type \<Rightarrow> (VAL, 'b::len word) \<phi>" ("Word'(_')")
 
@@ -120,29 +125,13 @@ parse_ast_translation \<open>
    in [(\<^syntax_const>\<open>Word_syntax\<close>, (fn _ => fn [V] =>
           Appl [Constant \<^const_syntax>\<open>Word\<close>, Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
-
-
-lemma Word_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> Word('b)) \<longleftrightarrow> p = V_int.mk (LENGTH('b), unat x)\<close>
-  unfolding \<phi>Type_def Word_def by simp
-
-lemma [elim!]:
-  \<open>Inhabited (x \<Ztypecolon> Word('b)) \<Longrightarrow> C \<Longrightarrow> C\<close> .
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open>Inhabited (x \<Ztypecolon> Word('b)) \<longrightarrow> True\<close> by blast
-
-lemma [\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> Word('b)) int('b)\<close>
-  unfolding \<phi>SemType_def subset_iff by (simp add: Word_expn)
-
 lemma [\<phi>reason 1000]:
   "\<phi>Equal Word('b) (\<lambda>x y. True) (=)"
-  unfolding \<phi>Equal_def by (simp add: word_unat_eq_iff Word_expn)
+  unfolding \<phi>Equal_def by (simp add: word_unat_eq_iff)
 
 lemma [\<phi>reason 1000]:
-  "\<phi>Zero int('b) Word('b) (0::'b::len word)"
-  unfolding \<phi>Zero_def by (simp add: Word_expn image_iff)
+  "Semantic_Zero_Val int('b) Word('b) (0::'b::len word)"
+  unfolding Semantic_Zero_Val_def by (simp add: image_iff)
 
 
 
@@ -150,8 +139,15 @@ subsection \<open>Natural Numbers\<close>
 
 subsubsection \<open>Rounded Natural Number\<close>
 
-definition \<phi>RoundedNat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
-  where [\<phi>defs]: "\<phi>RoundedNat _ x = ((of_nat x :: 'b word) \<Ztypecolon> Word('b))"
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def \<phi>RoundedNat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
+  where \<open>x \<Ztypecolon> \<phi>RoundedNat _ \<equiv> ((of_nat x :: 'b word) \<Ztypecolon> Word('b))\<close>
+  deriving Basic
+       and \<open>Object_Equiv (\<phi>RoundedNat (TY::'b::len itself)) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
+       and Semantic_Type
+       and \<open>Semantic_Zero_Val int('b) (\<phi>RoundedNat TYPE('b)) 0\<close>
+
 
 syntax \<phi>RoundedNat_syntax :: "type \<Rightarrow> (VAL, nat) \<phi>" ("\<nat>\<^sup>r'(_')")
 
@@ -163,13 +159,8 @@ parse_ast_translation \<open>
           Appl [Constant \<^const_syntax>\<open>\<phi>RoundedNat\<close>,
                 Appl [Constant \<^syntax_const>\<open>_TYPE\<close>, add_sort V]]))] end\<close>
 
-lemma [\<phi>reason add]:
-  \<open>Object_Equiv \<nat>\<^sup>r('b) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))\<close>
-  \<medium_left_bracket>
-    destruct\<phi> _
-    construct\<phi> \<open>y \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
-    certified by (simp add: the_\<phi> unat_of_nat word_unat_eq_iff)
-  \<medium_right_bracket> .
+thm \<phi>RoundedNat.intro
+thm \<phi>RoundedNat.elim
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>\<^sup>r(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> Word(_) \<w>\<i>\<t>\<h> _\<close>]:
   \<open> Threshold_Cost 7
@@ -195,20 +186,16 @@ lemma [\<phi>reason 1200 for \<open>_ \<Ztypecolon> Word _ \<t>\<r>\<a>\<n>\<s>\
   for x :: \<open>'b::len word\<close> \<medium_left_bracket> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> \<nat>\<^sup>r('b)) int('b)\<close>
-  \<medium_left_bracket> to \<open>Word _\<close> \<medium_right_bracket>.
-
-lemma [\<phi>reason 1000]:
-  \<open>\<phi>Zero int('b) \<nat>\<^sup>r('b) 0\<close>
-  \<medium_left_bracket> \<open>0 \<Ztypecolon> Word('b)\<close> \<medium_right_bracket>.
-
-lemma [\<phi>reason 1000]:
   "\<phi>Equal (\<nat>\<^sup>r('b::len)) (\<lambda>x y. True) (\<lambda>x y. x mod 2^LENGTH('b) = y mod 2^LENGTH('b))"
   \<medium_left_bracket> to \<open>Word('b)\<close> \<medium_right_bracket>
       certified by (simp add: unat_of_nat word_unat_eq_iff) .
 
 
 subsubsection \<open>Natural Number\<close>
+
+\<phi>type_def \<phi>Nat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
+  where \<open>x \<Ztypecolon> \<phi>Nat _ \<equiv> (x \<Ztypecolon> \<nat>\<^sup>r('b) \<s>\<u>\<b>\<j> x \<in> {0..< 2 ^ LENGTH('b)})\<close>
+  deriving Basic
 
 definition \<phi>Nat :: "'b::len itself \<Rightarrow> (VAL, nat) \<phi>"
   where [\<phi>defs]: "\<phi>Nat _ x = (x \<Ztypecolon> \<nat>\<^sup>r('b) \<s>\<u>\<b>\<j> x \<in> {0..< 2 ^ LENGTH('b)})"
@@ -282,7 +269,7 @@ lemma [\<phi>reason 1000]:
   \<medium_left_bracket> to \<open>Word _\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
-  \<open>\<phi>Zero int('b) \<nat>('b) 0\<close>
+  \<open>Semantic_Zero_Val int('b) \<nat>('b) 0\<close>
   \<medium_left_bracket> \<open>0 \<Ztypecolon> Word('b)\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
@@ -382,7 +369,7 @@ lemma [\<phi>reason 1000]:
   \<open>\<phi>SemType (x \<Ztypecolon> \<int>('b)) int('b)\<close> \<medium_left_bracket> to \<open>Word(_)\<close> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
-  "\<phi>Zero int('b) \<int>('b) 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> Word('b)\<close> \<medium_right_bracket>.
+  "Semantic_Zero_Val int('b) \<int>('b) 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> Word('b)\<close> \<medium_right_bracket>.
 
 
 lemma [\<phi>reason 1000]:

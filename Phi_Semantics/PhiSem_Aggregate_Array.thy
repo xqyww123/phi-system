@@ -81,8 +81,8 @@ lemma Array_semty[\<phi>reason 1000]:
           Inhabited_def, blast)
 
 lemma Array_zero[\<phi>reason 1000]:
-  \<open>\<phi>Zero TY T zero \<Longrightarrow> \<phi>\<phi>SemType T TY \<Longrightarrow> \<phi>Zero (array N TY) (Array N T) (replicate N zero)\<close>
-  unfolding \<phi>Zero_def
+  \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> \<phi>\<phi>SemType T TY \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>
+  unfolding Semantic_Zero_Val_def
   by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth Inhabited_def image_iff; blast)
 
 lemma [\<phi>reason 1000]:

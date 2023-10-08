@@ -1,3 +1,4 @@
+(*IDE_CP_P: Programming Module*)
 theory IDE_CP_App2
   imports Phi_Types
 begin
@@ -196,7 +197,7 @@ abbreviation Vals :: \<open>(VAL, 'a) \<phi> \<Rightarrow> (VAL list, 'a) \<phi>
 translations "(CONST Vals T) \<^emph> (CONST Vals U)" == "XCONST Vals (T \<^emph> U)"*)
 
 
-subsection \<open>Prove Properties of Value Abstractions by Programming\<close>
+subsection \<open>Programming Methods for Showing Properties of Values\<close>
 
 subsubsection \<open>Semantic Type\<close>
 
@@ -212,21 +213,21 @@ lemma [\<phi>reason %\<phi>programming_method]:
 
 subsubsection \<open>Zero Value\<close>
 
-consts working_mode_\<phi>Zero :: working_mode
+consts working_mode_Semantic_Zero_Val :: working_mode
 
 lemma \<phi>deduce_zero_value:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<p>\<a>\<r>\<a>\<m> (y \<Ztypecolon> U)
-\<Longrightarrow> \<phi>Zero TY U y
+\<Longrightarrow> Semantic_Zero_Val TY U y
 \<Longrightarrow> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> T \<w>\<i>\<t>\<h> Any
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> \<phi>Zero TY T x\<close>
-  unfolding ToA_Construction_def \<phi>Zero_def image_iff Inhabited_def Transformation_def
+\<Longrightarrow> Semantic_Zero_Val TY T x\<close>
+  unfolding ToA_Construction_def Semantic_Zero_Val_def image_iff Inhabited_def Transformation_def
   by clarsimp
 
 lemma [\<phi>reason %\<phi>programming_method]:
-  \<open> PROP \<phi>Programming_Method (Trueprop (\<phi>Zero TY T x)) working_mode_\<phi>Zero
-                             (Trueprop (\<phi>Zero TY T x))
+  \<open> PROP \<phi>Programming_Method (Trueprop (Semantic_Zero_Val TY T x)) working_mode_Semantic_Zero_Val
+                             (Trueprop (Semantic_Zero_Val TY T x))
                              (Trueprop True)
                              (Trueprop True)\<close>
   unfolding \<phi>Programming_Method_def .
@@ -266,6 +267,58 @@ subsubsection \<open>Finale\<close>
 ML_file \<open>library/additions/value_properties.ML\<close>
 
 hide_fact \<phi>deduce_zero_value
+
+subsection \<open>Derivers\<close>
+
+subsubsection \<open>Semantic Type\<close>
+
+context begin
+
+private lemma \<phi>TA_SemTy_rule:
+  \<open> (Ant \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY) @action \<phi>TA_ind_target undefined
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @action \<phi>TA_ANT
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<close>
+  unfolding Action_Tag_def
+  by blast
+
+private lemma \<phi>TA_SemTy_cong:
+  \<open> TY \<equiv> TY'
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<equiv> \<phi>SemType (x \<Ztypecolon> T) TY' \<close>
+  by simp
+
+ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
+
+end
+
+\<phi>property_deriver Semantic_Type 100 for (\<open>\<phi>SemType (_ \<Ztypecolon> _) _\<close>)
+    = \<open> Phi_Type_Algebra_Derivers.semantic_type \<close> 
+
+
+subsubsection \<open>Zero Value\<close>
+
+context begin
+
+private lemma \<phi>TA_Semantic_Zero_Val_rule:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> Zero TY = Some v
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> Ant \<longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<Turnstile> (z \<Ztypecolon> T))
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @action \<phi>TA_ANT
+\<Longrightarrow> Semantic_Zero_Val TY T z \<close>
+  unfolding Semantic_Zero_Val_def Premise_def Action_Tag_def
+  by clarsimp
+
+ML_file \<open>library/phi_type_algebra/semantic_zero_val.ML\<close>
+
+end
+
+\<phi>property_deriver Semantic_Zero_Val 110 for (\<open>Semantic_Zero_Val _ _ _\<close>)
+  requires Semantic_Type
+    = \<open> Phi_Type_Algebra_Derivers.semantic_zero_val \<close> 
+
 
 
 (*

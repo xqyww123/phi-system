@@ -16,8 +16,8 @@ interpretation V_bool: VDT_field V_bool using V_bool_ax .
 debt_axiomatization
       can_eq_bool: \<open>Can_EqCompare res (V_bool.mk x1) (V_bool.mk x2)\<close>
   and eq_bool:     \<open>EqCompare (V_bool.mk x1) (V_bool.mk x2) = (x1 = x2)\<close>
-  and zero_bool:   \<open>Zero bool = Some (V_bool.mk False)\<close>
-  and WT_bool:     \<open>Well_Type bool = { V_bool.mk x |x. True }\<close>
+  and zero_bool[simp]: \<open>Zero bool = Some (V_bool.mk False)\<close>
+  and WT_bool[simp]:   \<open>Well_Type bool = { V_bool.mk x |x. True }\<close>
 
 section \<open>Instructions\<close>
 
@@ -59,26 +59,18 @@ definition op_equal :: "TY \<Rightarrow> (VAL \<times> VAL, VAL) proc'"
 section \<open>\<phi>-Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+    
 \<phi>type_def \<phi>Bool :: "(VAL, bool) \<phi>" ("\<bool>")
   where \<open>x \<Ztypecolon> \<bool> \<equiv> V_bool.mk x \<Ztypecolon> Itself\<close>
   deriving Basic
        and Functionality
+       and \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) bool\<close>
+       and \<open>Semantic_Zero_Val bool \<bool> False\<close>
 
 lemma \<phi>Bool_eqcmp[\<phi>reason 2000]:
   "\<phi>Equal \<bool> (\<lambda>x y. True) (=)" (*TODO: auto derive!*)
   unfolding \<phi>Equal_def
   by (simp add: can_eq_bool eq_bool)
-
-lemma \<phi>Bool_zero[\<phi>reason 2000]:
-  "\<p>\<r>\<e>\<m>\<i>\<s>\<e> TY = bool \<Longrightarrow> \<phi>Zero TY \<bool> False"
-  unfolding \<phi>Zero_def Premise_def
-  by (simp add: zero_bool)
-
-lemma \<phi>Bool_semty[\<phi>reason 2000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> \<bool>) bool\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (simp add: WT_bool)
 
 
 abbreviation \<open>Predicate_About x \<equiv> (\<bool> <func-over> x)\<close>

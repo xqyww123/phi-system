@@ -150,8 +150,8 @@ lemma \<phi>Ref_inhabited[\<phi>inhabitance_rule, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 
 lemma \<phi>Ref_zero[\<phi>reason 1000]:
-  \<open>\<phi>Zero reference (Ref cls) Nil\<close>
-  unfolding \<phi>Zero_def by (simp add: \<phi>expns)
+  \<open>Semantic_Zero_Val reference (Ref cls) Nil\<close>
+  unfolding Semantic_Zero_Val_def by (simp add: \<phi>expns)
 
 lemma \<phi>Ref_eq[\<phi>reason 1000]:
   \<open>\<phi>Equal (Ref cls) (\<lambda>_ _. True) (=)\<close>

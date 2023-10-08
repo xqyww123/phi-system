@@ -336,7 +336,7 @@ fun norm_tyenv tyenv
 fun subst_tenv tyenv tenv =
   Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
       Vars.add ((N, Envir.subst_type tyenv TY),
-                Envir.subst_term_types tyenv (Envir.eta_contract TM))) tenv)
+                (*Envir.subst_term_types tyenv*) (Envir.eta_contract TM))) tenv)
 
 fun norm_tenv tyenv tenv =
   Vars.build (Vartab.fold (fn (N,(TY,TM)) =>
