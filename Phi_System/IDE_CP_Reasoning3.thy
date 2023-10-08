@@ -679,7 +679,7 @@ lemma [\<phi>reason %\<phi>synthesis_split+20]:
     F1 F2
   \<medium_right_bracket> .
 
-
+(*
 subsection \<open>Infer the binding pattern\<close>
 
 definition Infer_Binding_Pattern :: \<open>'c::{} \<Rightarrow> 'a::{} \<Rightarrow> 'b::{} \<Rightarrow> prop\<close>
@@ -722,7 +722,7 @@ lemma [\<phi>reason 1100]:
 \<Longrightarrow> PROP \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration A (B * D) (C * D)\<close>
   unfolding \<s>\<y>\<n>\<t>\<a>\<x>_prepend_speration_def .
 
-
+*)
 
 section \<open>Generation of Synthesis Rule\<close>
 
@@ -1120,6 +1120,7 @@ and   \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<la
 consts synthesis_pattern1 :: \<open>'ret::{} \<Rightarrow> 'any::{}\<close>
 consts synthesis_pattern2 :: \<open>'arg::{} \<Rightarrow> 'ret::{} \<Rightarrow> 'any::{}\<close>
 
+(*
 lemma [\<phi>reason 2000]:
   \<open> (\<And>vs. PROP Infer_Binding_Pattern
       (\<p>\<r>\<o>\<c> f vs \<lbrace> X vs \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis)
@@ -1177,7 +1178,7 @@ lemma [\<phi>reason 1050]:
       (synthesis_pattern1 x')
       (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> \<lambda>ret. x' \<Ztypecolon> Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action overloaded_synthesis)\<close>
   unfolding Infer_Binding_Pattern_def .
-
+*)
 
 
 
@@ -1210,7 +1211,6 @@ lemma [\<phi>reason add]:
   \<medium_left_bracket> premises I
     I
   \<medium_right_bracket> .
-
 
 lemma overloaded_synthesis_binary:
   \<open> \<p>\<r>\<o>\<c> h1 \<lbrace> R1 \<longmapsto> \<lambda>ret. S1 ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E1 @action synthesis
