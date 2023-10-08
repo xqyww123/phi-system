@@ -747,6 +747,8 @@ declare [[\<phi>reason_default_pattern
       \<open>Splitting the targets into each sub-reasoning goal\<close>
   and \<phi>synthesis_red = (2500, [2500, 2799]) in \<phi>synthesis_all and > \<phi>synthesis_split
       \<open>Reductions and Evaluations\<close>
+  and \<phi>synthesis = (100, [100, 130]) in \<phi>synthesis_all
+      \<open>usual rules\<close>
 
   and interp_\<phi>synthesis = (%cutting, [%cutting, %cutting+30]) for \<open>PROP DoSynthesis _ _ _\<close>
       \<open>describing how to carry out the synthesis in detail on specific IDE-CP sequent\<close>

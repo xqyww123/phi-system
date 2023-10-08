@@ -169,9 +169,14 @@ signature NU_REASONER = sig
   val single_RS  : thm (*rule*) -> Proof.context -> thm -> thm Seq.seq
         (*The resolution that returns at most one solution.*)
 
+  (* Helper Syntax Parser *)
+  val ML_guard_parser_raw : (context_state -> bool) context_parser
+  val ML_guard_parser : (context_state -> bool) option context_parser
+
   val attr_syntax' :
+      (priority * Reasoner_Group.name option) (*default reasoner group*) ->
       'ext context_parser (*extension*) ->
-      (Position.T * mode * (priority * Reasoner_Group.name option) * 'ext * ML_guard option
+      (Position.T * mode * (priority * Reasoner_Group.name option) * 'ext
        -> attribute)
      -> attribute context_parser
 
@@ -188,10 +193,9 @@ end
 
 (*A special name to prevent someone overriding this structure, whose visibility is essential
   for parsing ML guard, see the ML_guard parser in declaring the \<phi>reason attribute*)
-structure PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu = Proof_Data (
-  type T = (context_state -> bool)
-  val init = K (K true)
-)
+val PLP_Reasoner_Guard_Parse_Sender : (context_state -> bool) option Unsynchronized.ref
+      = Unsynchronized.ref NONE
+val PLP_Reasoner_Guard_Parse_Sender_locker = Synchronized.var "PLP_Reasoner_Guard_Parse_Sender_locker" ()
 
 structure Phi_Reasoner : NU_REASONER = struct
 
@@ -767,7 +771,9 @@ fun check_mode prio (SOME cm, bm) = (cm, bm)
 fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
-    val (priority, group) = Reasoner_Group.check_priority true (Context.Proof ctxt) priority
+    val (priority, group) = case priority
+                              of SOME prio => Reasoner_Group.check_priority true (Context.Proof ctxt) prio
+                               | NONE => (100, NONE)
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
     val patterns = map2 (fn ((flag,_),c) => fn tm => (flag,(tm, the_default priority c)))
@@ -786,7 +792,9 @@ fun setup_method_cmd (((name,(mode,priority)), raw_patterns), method) lthy =
 fun setup_cmd ((((name,pos),(mode,priority)),raw_patterns),tactic_src) lthy =
   let
     val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern lthy
-    val (priority, group) = Reasoner_Group.check_priority true (Context.Proof ctxt) priority
+    val (priority, group) = case priority
+                              of SOME prio => Reasoner_Group.check_priority true (Context.Proof ctxt) prio
+                               | NONE => (100, NONE)
     val name = Syntax.read_term ctxt name
     val terms = map (fn ((_,x),_) => x) raw_patterns
              |> Syntax.read_props ctxt
@@ -821,11 +829,13 @@ val backtrack_mode_parser = (Args.$$$ "default" >> K NO_BACKTRACK)
                          || Scan.succeed ALLOW_BACKTRACK
 
 val mode_and_priority =
-      ((backtrack_mode_parser -- cut_mode_parser >> swap) -- Reasoner_Group.parser_with_default 100)
+      ((backtrack_mode_parser -- cut_mode_parser >> swap) -- Scan.option Reasoner_Group.parser)
 
-val mode_and_priority' =
+fun mode_and_priority' default_group =
       Scan.peek (fn ctxt => mode_and_priority >> (fn (mode, priority) =>
-        let val (priority, group) = Reasoner_Group.check_priority true ctxt priority
+        let val (priority, group) = case priority
+                                      of SOME prio => Reasoner_Group.check_priority true ctxt prio
+                                       | NONE => default_group
          in (check_mode priority mode, (priority, group))
         end))
 
@@ -1050,37 +1060,44 @@ local open Args Scan Parse in
 fun read_prop_mode mode' ctxt tm = Syntax.read_prop (Proof_Context.set_mode mode' ctxt) tm
 val read_prop_pattern = read_prop_mode Proof_Context.mode_pattern
 val prop_pattern = Scan.peek (named_term o read_prop_pattern o Context.proof_of)
+
+val ML_guard_parser_raw = depend (fn ctxt0 => ML_source >> (fn src =>
+         Synchronized.change_result PLP_Reasoner_Guard_Parse_Sender_locker (fn () =>
+           let val _ = ctxt0
+                |> ML_Context.expression (Input.pos_of src)
+                  (ML_Lex.read "PLP_Reasoner_Guard_Parse_Sender := SOME ((" @
+                   ML_Lex.read_source src @
+                   ML_Lex.read ") : context_state -> bool)")
+               val ml = the (!PLP_Reasoner_Guard_Parse_Sender)
+               val _ = PLP_Reasoner_Guard_Parse_Sender := NONE
+           in ((ctxt0, ml), ()) end
+         )
+       ))
+
+val ML_guard_parser = option (lift \<^keyword>\<open>if\<close> |-- ML_guard_parser_raw)
+
 end
 
-fun attr_syntax' ext gen =
+fun attr_syntax' default_group ext gen =
   let open Args Scan Parse
     val pos_parser = Phi_Help.pos_parser "\<phi>reasoner"
-    val ML_guard = depend (fn ctxt0 => ML_source >> (fn src =>
-         let val ctxt = Context.Proof (Context.proof_of ctxt0)
-              |> ML_Context.expression (Input.pos_of src)
-                (ML_Lex.read "Theory.local_setup (PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.put ((" @
-                 ML_Lex.read_source src @
-                 ML_Lex.read ") : context_state -> bool))")
-         in (ctxt0, PLP_Reasoner_Guard_Parse_Sender_Qiyuan_Xu.get (Context.the_proof ctxt)) end
-       ))
     val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
   in
     lift pos_parser
-    -- (lift (option add) |-- mode_and_priority')
+    -- (lift (option add) |-- mode_and_priority' default_group)
     -- ext
-    -- option (lift \<^keyword>\<open>if\<close> |-- ML_guard)
-    >> (fn (((pos, (mode, priority)), ext), guard) =>
-          gen (pos, mode, priority, ext, guard))
+    >> (fn ((pos, (mode, priority)), ext) => gen (pos, mode, priority, ext))
   end
 
 fun attr_syntax ext gen =
   let open Args Scan Parse
       val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
-   in attr_syntax' (
+   in attr_syntax' (100, NONE) (
            ext
         -- (optional (lift (\<^keyword>\<open>for\<close>) |-- Scan.repeat (prop_pattern -- priority)) []
-        --  optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) []) )
-      (fn (pos, mode, priority, (ext, pats), guard) =>
+        --  optional (lift (\<^keyword>\<open>except\<close>) |-- Scan.repeat prop_pattern) [])
+        -- ML_guard_parser)
+      (fn (pos, mode, priority, ((ext, pats), guard)) =>
             gen (pos, mode, priority, ext, pats, guard))
   end
 

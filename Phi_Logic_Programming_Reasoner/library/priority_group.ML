@@ -24,7 +24,6 @@ val space : Context.generic -> T Name_Space.table
 datatype priority_base = Base | Top | Bottom
 datatype priority_syntax = Literal of int | Relative of ((xstring * Position.T) * priority_base) * offset
 val parser : priority_syntax parser
-val parser_with_default : priority -> priority_syntax parser
 val check_priority : bool (*if to verify the offset is within the range of the based group*)
                   -> Context.generic -> priority_syntax -> priority * name option
 val print_ML : name -> string
@@ -73,7 +72,6 @@ in val parser' = ((name_position -- priority_base) -- offset >> Relative)
              || (int >> Literal)
    val parser = ((\<^keyword>\<open>%\<close> |-- name_position -- priority_base) -- offset >> Relative)
              || (int >> Literal)
-   fun parser_with_default default = parser || Scan.succeed (Literal default)
 end
 
 fun check_priority _ _ (Literal i) = (i, NONE)

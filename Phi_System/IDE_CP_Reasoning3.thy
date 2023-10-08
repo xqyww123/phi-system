@@ -819,12 +819,10 @@ attribute_setup \<phi>synthesis = \<open>
       val priority = Scan.lift (Scan.option (\<^keyword>\<open>(\<close> |-- Parse.int --| \<^keyword>\<open>)\<close>))
       val pat2 = (Scan.optional (Scan.lift \<^keyword>\<open>for\<close> |-- Parse.and_list1' (pattern -- priority)) [] --
                   Scan.optional (Scan.lift \<^keyword>\<open>except\<close> |-- Parse.and_list1' pattern) [] )
-   in Phi_Reasoner.attr_syntax' pat2
-      (fn (pos, mode, group, pats, guard) =>
-        let val _ = if is_some guard then error "ML guard is not supported here" else ()
-         in Thm.declaration_attribute (fn rule =>
-              Phi_Synthesis.declare_rule pos (mode, group) pats rule)
-        end)
+   in Phi_Reasoner.attr_syntax' @{reasoner_group %\<phi>synthesis} pat2
+      (fn (pos, mode, group, pats) =>
+        Thm.declaration_attribute (fn rule =>
+            Phi_Synthesis.declare_rule pos (mode, group) pats rule))
   end
 \<close>
 
@@ -867,13 +865,15 @@ subsection \<open>Procedure Application - General Methods\<close>
 
 text \<open>Note, synthesis is only available on procedure construction but no transformation nor view shift \<close>
 
-\<phi>reasoner_group \<phi>synthesis_gen_proc_cut = (1200, [1200, 1300]) in \<phi>synthesis_gen
+\<phi>reasoner_group \<phi>synthesis_gen_proc_cut = (1200, [1200, 1300]) in \<phi>synthesis_gen_proc
       \<open>cutting rules\<close>
   and \<phi>synthesis_gen_proc_normalize = (2000, [2000, 2100])
-      in \<phi>synthesis_gen and > \<phi>synthesis_gen_proc_cut
+      in \<phi>synthesis_gen_proc and > \<phi>synthesis_gen_proc_cut
       \<open>normalizing rules\<close>
   and \<phi>synthesis_gen_proc_init = (10, [10, 10]) in \<phi>synthesis_gen and < \<phi>synthesis_gen_proc_cut
       \<open>initiating reasoning\<close>
+  and \<phi>synthesis_gen_by_overloading = (2500, [2500,2510]) in \<phi>synthesis_gen and > \<phi>synthesis_gen_proc_normalize
+      \<open>\<close>
 
 
 lemma [\<phi>reason %\<phi>synthesis_gen_proc_cut for \<open>PROP Gen_Synthesis_Rule
@@ -1088,8 +1088,9 @@ lemma make_synthesis_rule':
 
 subsection \<open>Overloaded Synthesis\<close>
 
-
 consts overloaded_synthesis :: action
+
+subsubsection \<open>Conventions\<close>
 
 declare [[\<phi>reason_default_pattern
       \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret::_ \<phi>arg. ?x \<Ztypecolon> ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis\<close>
@@ -1115,6 +1116,11 @@ and   \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<la
   and \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> _ \<longmapsto> \<lambda>ret. ?Y  ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R  \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E  @action overloaded_synthesis &&& (TERM ?X' &&& TERM ?Y')\<close>
    \<Rightarrow> \<open>\<forall>vs::?'a. \<p>\<r>\<o>\<c> _ \<lbrace> ?X' vs \<longmapsto> \<lambda>ret. ?Y' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' @action overloaded_synthesis\<close> (110)
 ]]
+
+\<phi>reasoner_group \<phi>overloaded_synthesis_all = (100, [10, 3000]) for \<open>\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action overloaded_synthesis\<close>
+    \<open>Synthesizes an overloaded given operator\<close>
+  and \<phi>overloaded_synthesis = (100, [100,100]) in \<phi>overloaded_synthesis_all
+    \<open>the default reasoner group\<close>
 
 
 consts synthesis_pattern1 :: \<open>'ret::{} \<Rightarrow> 'any::{}\<close>
@@ -1185,6 +1191,7 @@ lemma [\<phi>reason 1050]:
 (* \<forall>vs. \<p>\<r>\<o>\<c> op_add LENGTH(?'b) vs \<lbrace> ?X' vs \<longmapsto> \<lambda>ret. ?x + ?y \<Ztypecolon> \<v>\<a>\<l>[ret] \<nat>(?'b) \<r>\<e>\<m>\<a>\<i>\<n>\<s> ?R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> (\<lambda>e. ?R\<heavy_comma> 0 e)
     @action overloaded_synthesis *)
 
+subsubsection \<open>Rules of Overloaded Synthesis\<close>
 
 (*IMPROVE ME!: for now we limit the optimal synthesis to be readonly.
 But it is a deficiency! Use a larger range of search to address this!*)
@@ -1265,29 +1272,30 @@ lemma make_overloaded_synthesis_rule':
            @action overloaded_synthesis)\<close>
   unfolding REMAINS_simp
   using make_overloaded_synthesis_rule[unfolded REMAINS_simp, where Y = \<open>\<lambda>v. R\<heavy_comma> Y v\<close>, folded mult.assoc] .
-
+                                              
 ML_file \<open>library/additions/overloaded_synthesis.ML\<close>
 
 attribute_setup overloaded_operator_in_synthesis = \<open>
-  Scan.peek (fn ctxt =>
-    Scan.optional Parse.int 60 --
-    Parse.position (
-        (( (\<^keyword>\<open>(\<close> -- \<^keyword>\<open>)\<close>) >> (K []) || Scan.repeat Parse.term)
-       --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.term
-          >> (fn (A,Y) =>
-              let val ctxt' = Proof_Context.set_mode Proof_Context.mode_schematic (Context.proof_of ctxt)
-                  val terms = map (Type.constraint \<^typ>\<open>_ \<phi>arg \<Rightarrow> assn\<close> o Syntax.parse_term ctxt') (Y::A)
-                           |> Syntax.check_terms ctxt'
-                  val ctxt'' = fold Proof_Context.augment terms ctxt'
-                  val (Y'::A') = Variable.export_terms ctxt'' ctxt' terms
-               in Phi_Synthesis.Signat (A',Y')
-              end))
-      || (Parse.term >>
-            (Phi_Synthesis.Operator o Context.cases Syntax.read_term_global Syntax.read_term ctxt)))
->> (fn (priority, (signat, pos)) =>
-      Thm.declaration_attribute (K (
-        Phi_Synthesis.declare_overloaded_operator signat pos priority))))
+  let val signat = Scan.peek (fn ctxt =>
+            (( (\<^keyword>\<open>(\<close> -- \<^keyword>\<open>)\<close>) >> (K []) || Scan.repeat Parse.term)
+           --| (\<^keyword>\<open>=>\<close> || \<^keyword>\<open>\<Rightarrow>\<close>) -- Parse.term
+              >> (fn (A,Y) =>
+                  let val ctxt' = Proof_Context.set_mode Proof_Context.mode_schematic (Context.proof_of ctxt)
+                      val terms = map (Type.constraint \<^typ>\<open>_ \<phi>arg \<Rightarrow> assn\<close> o Syntax.parse_term ctxt') (Y::A)
+                               |> Syntax.check_terms ctxt'
+                      val ctxt'' = fold Proof_Context.augment terms ctxt'
+                      val (Y'::A') = Variable.export_terms ctxt'' ctxt' terms
+                   in Phi_Synthesis.Signature (A',Y')
+                  end))
+            || (Parse.term >>
+                  (Phi_Synthesis.Operator o Context.cases Syntax.read_term_global Syntax.read_term ctxt)))
+   in Phi_Reasoner.attr_syntax' @{reasoner_group %\<phi>overloaded_synthesis} signat
+        (fn (pos, mode, group, signat) =>
+          Thm.declaration_attribute (K (
+            Phi_Synthesis.declare_overloaded_operator signat pos (mode, group))))
+  end
 \<close>
+\<open>Declare the given term will be parsed as an overloaded operator in generating synthesis rules\<close>
 
 
 section \<open>Small Process - II\<close>

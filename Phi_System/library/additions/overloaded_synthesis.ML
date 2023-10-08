@@ -1,8 +1,9 @@
 signature PHI_SYNTHESIS = sig
 include PHI_SYNTHESIS
 
-datatype ovld_signat = Signat of term list * term | Operator of term
-val declare_overloaded_operator : ovld_signat -> Position.T -> Phi_Reasoner.priority
+datatype ovld_signat = Signature of term list * term | Operator of term
+val declare_overloaded_operator : ovld_signat -> Position.T
+                               -> Phi_Reasoner.mode * (priority * Reasoner_Group.name option)
                                -> Context.generic -> Context.generic
 
 end
@@ -19,9 +20,9 @@ fun overload_rule_of arity =
      | 3 => @{thm overloaded_synthesis_ternary}
      | _ => error "Arity greater than 3 is not supported yet."
 
-datatype ovld_signat = Signat of term list * term | Operator of term
+datatype ovld_signat = Signature of term list * term | Operator of term
 
-fun declare_overloaded_operator signat0 pos priority ctxt0 =
+fun declare_overloaded_operator signat0 pos (mode, (priority, group)) ctxt0 =
   let val ctxt = Context.proof_of ctxt0
 
       fun default_signature operator0 =
@@ -43,7 +44,7 @@ fun declare_overloaded_operator signat0 pos priority ctxt0 =
          in (arg_specs, y_spec)
         end
 
-      val (args0, ret0) = case signat0 of Signat s => s
+      val (args0, ret0) = case signat0 of Signature s => s
                                         | Operator f => default_signature f
       val (args, ret) = (map (Logic.incr_indexes ([],[],1)) args0,
                          Logic.incr_indexes ([],[],1) ret0)
@@ -68,11 +69,11 @@ fun declare_overloaded_operator signat0 pos priority ctxt0 =
                   |> subst_vars ([(("'y",0), ret_val_ty)], [(("YY",0), ret)])
                   |> Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt)
    in ctxt0
-   |> Phi_Reasoner.add_rule pos (Phi_Reasoner.default_mode_of priority) priority ([],[]) NONE [rule]
-   |> Phi_Reasoner.add_rule pos Phi_Reasoner.LOCAL_CUT 2000 ([(pattern1,NONE)],[]) NONE
-                   [@{thm make_overloaded_synthesis_rule}]
-   |> Phi_Reasoner.add_rule pos Phi_Reasoner.LOCAL_CUT 2010 ([(pattern2,NONE)],[]) NONE
-                   [@{thm make_overloaded_synthesis_rule'}]
+   |> Phi_Reasoner.add_rule pos mode (priority, group) ([],[]) NONE [rule]
+   |> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %\<phi>synthesis_gen_by_overloading}
+                   ([(pattern1,NONE)],[]) NONE [@{thm make_overloaded_synthesis_rule}]
+   |> Phi_Reasoner.add_rule pos Phi_Reasoner.NORMAL_LOCAL_CUT @{reasoner_group %\<phi>synthesis_gen_by_overloading+10}
+                   ([(pattern2,NONE)],[]) NONE [@{thm make_overloaded_synthesis_rule'}]
   end
 
 
