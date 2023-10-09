@@ -41,10 +41,10 @@ debt_axiomatization \<phi>Sem_int_to_logic_int :: \<open>VAL \<Rightarrow> int o
 subsubsection \<open>Reasoner Base for getting the logical int from a semantic int spec\<close>
 
 definition get_logical_int_from_semantic_int :: \<open>VAL set \<Rightarrow> int \<Rightarrow> bool\<close>
-  where \<open>get_logical_int_from_semantic_int S i = (\<forall>v \<in> S. Some i = \<phi>Sem_int_to_logic_int v)\<close>
+  where \<open>get_logical_int_from_semantic_int S i = (\<forall>v. v \<Turnstile> S \<longrightarrow> Some i = \<phi>Sem_int_to_logic_int v)\<close>
 
 definition get_logical_nat_from_semantic_int :: \<open>VAL set \<Rightarrow> nat \<Rightarrow> bool\<close>
-  where \<open>get_logical_nat_from_semantic_int S i = (\<forall>v \<in> S. Some i = \<phi>Sem_int_to_logic_nat v)\<close>
+  where \<open>get_logical_nat_from_semantic_int S i = (\<forall>v. v \<Turnstile> S \<longrightarrow> Some i = \<phi>Sem_int_to_logic_nat v)\<close>
 
 declare [[\<phi>reason_default_pattern
     \<open>get_logical_nat_from_semantic_int ?S _\<close> \<Rightarrow> \<open>get_logical_nat_from_semantic_int ?S _\<close> (100)

@@ -694,9 +694,10 @@ declare [[\<phi>reason_default_pattern
 subsubsection \<open>Parse the Term to be Synthesised\<close>
 
 lemma [\<phi>reason %\<phi>synthesis_parse_success for
-  \<open>Synthesis_Parse (?X'::?'ret \<Rightarrow> assn) (?X::?'ret \<Rightarrow> assn)\<close>
+          \<open>Synthesis_Parse (?X'::?'ret \<Rightarrow> assn) (?X::?'ret \<Rightarrow> assn)\<close>
+          \<open>Synthesis_Parse (?X'::?'c BI) (?X::?'c BI)\<close>
 ]:
-  \<open>Synthesis_Parse X X\<close> for X :: \<open>'ret \<Rightarrow> assn\<close>
+  \<open>Synthesis_Parse X X\<close>
   \<comment> \<open>We do not need to rewrite the input once it is already an assertion\<close>
   unfolding Synthesis_Parse_def ..
 
@@ -707,7 +708,7 @@ lemma [\<phi>reason %\<phi>synthesis_parse_success for
   \<comment> \<open>We do not need to rewrite the input once it is already an assertion\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason %\<phi>synthesis_parse_default
+lemma [\<phi>reason default %\<phi>synthesis_parse_default
     for \<open>Synthesis_Parse ?x (?Y::?'ret \<Rightarrow> assn)\<close>
     except \<open>Synthesis_Parse (?x \<Ztypecolon> ?T) ?Y\<close>
            \<open>Synthesis_Parse (?x::assn) ?Y\<close>
@@ -718,7 +719,11 @@ lemma [\<phi>reason %\<phi>synthesis_parse_default
       the \<phi>-type unspecified to be arbitrarily anything.\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason %\<phi>synthesis_parse_default+10
+lemma [\<phi>reason default %\<phi>synthesis_parse_default]:
+  \<open>Synthesis_Parse T (x \<Ztypecolon> T)\<close>
+  unfolding Synthesis_Parse_def ..
+
+lemma [\<phi>reason default %\<phi>synthesis_parse_default+10
   for \<open>Synthesis_Parse (numeral ?n::?'bb::numeral) ?X\<close>
       \<open>Synthesis_Parse (0::?'cc::zero) ?X\<close>
       \<open>Synthesis_Parse (1::?'dd::one) ?X\<close>
@@ -731,11 +736,11 @@ lemma [\<phi>reason %\<phi>synthesis_parse_default+10
   unfolding Synthesis_Parse_def
   ..
 
-lemma [\<phi>reason %\<phi>synthesis_parse_default+10 for \<open>Synthesis_Parse (?T :: ?'ret2 \<Rightarrow> (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
+lemma [\<phi>reason default %\<phi>synthesis_parse_default+10 for \<open>Synthesis_Parse (?T :: ?'ret2 \<Rightarrow> (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
   \<open> Synthesis_Parse T (\<lambda>ret. x \<Ztypecolon> T ret :: assn) \<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason %\<phi>synthesis_parse_default+10 for \<open>Synthesis_Parse (?T :: (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
+lemma [\<phi>reason default %\<phi>synthesis_parse_default+10 for \<open>Synthesis_Parse (?T :: (fiction,?'x) \<phi>) (?Y::?'ret \<Rightarrow> assn)\<close>]:
   \<open> Synthesis_Parse T (\<lambda>ret. x \<Ztypecolon> T :: assn) \<close>
   unfolding Synthesis_Parse_def ..
 
@@ -842,7 +847,7 @@ lemma [\<phi>reason %interp_\<phi>synthesis
 paragraph \<open>Construction on ToA\<close>
 
 lemma [\<phi>reason %interp_\<phi>synthesis
-    for \<open>PROP DoSynthesis ?X (Trueprop (\<v>\<i>\<e>\<w> ?blk [?H] \<i>\<s> ?S1)) ?RET\<close>
+    for \<open>PROP DoSynthesis ?X (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S1)) ?RET\<close>
 ]:
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2 \<w>\<i>\<t>\<h> P
@@ -2107,7 +2112,9 @@ ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 
 ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)\<close>
 
-\<phi>processor synthesis 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)
+\<phi>processor synthesis 8800 ( \<open>CurrentConstruction ?mode ?blk ?H ?S\<close>
+                          | \<open>ToA_Construction ?\<CC> ?S'\<close>
+                          | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close> )
   \<open>fn (ctxt, sequent) => Parse.position (Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number)))
 >> (fn (raw_term, pos) => fn _ =>
   let

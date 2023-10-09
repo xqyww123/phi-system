@@ -919,7 +919,7 @@ consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
  and To_ToA_system_fallback = (1, [1,1]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
                                            in To_ToA > To_ToA_fail
     \<open>System To-Transformation rules falling back to normal transformation.\<close>
- and To_ToA_fallback = (10, [2,15]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
+ and To_ToA_fallback = (10, [2,20]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
                                       in To_ToA > To_ToA_system_fallback
     \<open>A general group allocating priority space for fallbacks of To-Transformation.\<close>
  and To_ToA_derived = (50, [30,70]) for \<open>x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r x y \<w>\<i>\<t>\<h> P @action to U\<close>
@@ -1021,7 +1021,7 @@ subsubsection \<open>Entry Point\<close>
 
 lemma to_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> T
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<w>\<i>\<t>\<h> P @action to T
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Ya \<w>\<i>\<t>\<h> P @action \<A>_leading_item (to T)
 \<Longrightarrow> Ya \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>_apply_simplication
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P \<close>
   unfolding Do_def Action_Tag_def Transformation_def

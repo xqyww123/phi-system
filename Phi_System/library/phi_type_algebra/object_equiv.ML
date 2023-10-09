@@ -352,8 +352,7 @@ fun gen_obj_equal' (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
             else NONE*)
 
       val simp = if is_some instruction then K I
-                 else default_simplifier' (fn rewr => fn ctxt =>
-                          HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)))
+                 else simplifier_by_LPR' @{thm' \<phi>TA_OE_simp}
 
       val ctxt = if def_contains_satisfaction phi0 then ctxt0
                       |> Config.put Phi_Reasoner.ignore_dup_reasoner true

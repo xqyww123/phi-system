@@ -78,6 +78,14 @@ lemma [\<phi>reason %\<phi>synthesis_parse for
   \<open>Synthesis_Parse raw (\<lambda>_. x \<Ztypecolon> Val raw T)\<close>
   unfolding Synthesis_Parse_def ..
 
+subsubsection \<open>Special Parsing of Annotations\<close>
+
+lemma [\<phi>reason %To_ToA_fallback]:
+  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y @action to U'
+\<Longrightarrow> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<v>\<a>\<l>[v] U \<s>\<u>\<b>\<j> y. r y @action to U' \<close>
+  unfolding Action_Tag_def Transformation_def
+  by clarsimp
+
 
 subsection \<open>Access of Local Values\<close>
 
@@ -296,7 +304,7 @@ end
     = \<open> Phi_Type_Algebra_Derivers.semantic_type \<close> 
 
 
-subsubsection \<open>Zero Value\<close>
+subsubsection \<open>Semantic Zero Value\<close>
 
 context begin
 
@@ -319,6 +327,14 @@ end
   requires Semantic_Type
     = \<open> Phi_Type_Algebra_Derivers.semantic_zero_val \<close> 
 
+
+subsubsection \<open>Semantic Equality Comparison\<close>
+
+context begin
+
+(*TODO*)
+
+end
 
 
 (*

@@ -4181,7 +4181,17 @@ private lemma \<phi>TA_OE_rewr':
   \<open>Trueprop (\<forall>y. P y \<longrightarrow> Q y) \<equiv> (\<And>y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P y \<Longrightarrow> Q y)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all Premise_def
   by (rule; blast)
-                     
+
+private lemma \<phi>TA_OE_simp:
+  \<open> Object_Equiv T eq
+\<Longrightarrow> Abstract_Domain T D
+\<Longrightarrow> (\<And>x y. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> eq' x y : eq x y)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> ((\<forall>x. eq x x) \<longrightarrow> (\<forall>x. eq' x x))
+\<Longrightarrow> Object_Equiv T eq' \<close>
+  unfolding Object_Equiv_def Transformation_def Simplify_def Premise_def
+            Abstract_Domain_def Action_Tag_def Inhabited_def
+  by clarsimp blast
+
 ML_file \<open>library/phi_type_algebra/object_equiv.ML\<close>
 
 end

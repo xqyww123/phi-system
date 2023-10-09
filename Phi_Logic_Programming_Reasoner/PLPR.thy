@@ -63,6 +63,22 @@ ML_file \<open>library/priority_group.ML\<close>
 ML_file_debug \<open>library/helpers0.ML\<close>
 ML_file \<open>library/tools/where_tac.ML\<close>
 
+attribute_setup condition = \<open>
+  Scan.peek (fn ctxt_g => Args.internal_term ||
+                          Parse.token Parse.embedded -- Parse.for_fixes >> (fn (prop_token, fixes) =>
+    Token.evaluate Token.Term (fn raw_prop =>
+      let val ctxt = Context.proof_of ctxt_g
+          val (_, ctxt') = Proof_Context.add_fixes_cmd fixes ctxt
+          val prop = Syntax.read_prop ctxt' (Token.inner_syntax_of raw_prop)
+       in singleton (Variable.export_terms ctxt' ctxt) prop
+      end) prop_token)
+  ) >> (fn prop => Thm.rule_attribute [] (fn ctxt =>
+    let val cprop = Context.cases Thm.global_cterm_of Thm.cterm_of ctxt prop
+     in Thm.implies_intr cprop
+    end))
+\<close>
+
+
 subsubsection \<open>Guard of Reasoning Rule\<close>
 
 text \<open>If the guard of a rule fails, the rule will be considered non-appliable, just like the case

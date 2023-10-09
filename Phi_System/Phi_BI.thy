@@ -786,36 +786,38 @@ subsubsection \<open>Allocation of Priorities\<close>
 \<phi>reasoner_group
   ToA_all         = (100, [0, 4999]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
                     \<open>Rules of transformation\<close>
-  ToA_bottom      = (0, [0, 13]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_all
+  ToA_bottom      = (0, [0, 13]) in ToA_all
                     \<open>System transformation rules, of the lowest priority\<close>
-  ToA             = (100, [14, 4999]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA_all > ToA_bottom
+  ToA             = (100, [14, 4999]) in ToA_all > ToA_bottom
                     \<open>User rules for transformation\<close>
-  ToA_cut         = (1000, [1000, 1399]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
+  ToA_bk          = (100, [14, 999]) in ToA
+                    \<open>Backtracking rules\<close>
+  ToA_cut         = (1000, [1000, 1399]) in ToA
                     \<open>Deterministic transformation rules without backtracking, meaning the reasoning
                      on the specified cases is definite and no branching.\<close>
-  ToA_splitting_target = (1500, [1500,1500]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ * _ \<w>\<i>\<t>\<h> _\<close> > ToA_cut in ToA
+  ToA_splitting_target = (1500, [1500,1500]) > ToA_cut in ToA
                     \<open>split the separation sequent in the target part and reason the tranformation for
                      each separated item one by one.\<close>
-  ToA_splitting     = (1600, [1550,1699]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> > ToA_splitting_target in ToA
+  ToA_splitting     = (1600, [1550,1699]) > ToA_splitting_target in ToA
                     \<open>Transformation rules splitting the reasoning goal into more subgoals\<close>
-  ToA_assertion_cut = (1700, [1700,1899]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> > ToA_splitting in ToA
+  ToA_assertion_cut = (1700, [1700,1899]) > ToA_splitting in ToA
                     \<open>Deterministic transformation rules between unsplitted assertions.\<close>
-  ToA_normalizing = (2000, [1950, 2399]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> > ToA_assertion_cut in ToA
+  ToA_normalizing = (2000, [1950, 2399]) > ToA_assertion_cut in ToA
                     \<open>Rules normalizing the transformation problem. A normalization rule should neither
                      branch nor yield new subgoal, i.e., always from onetransformation to another
                      transformaiton. If it branches, see %ToA_branches; if yields new assertions,
                      see %ToA_assertion_cut\<close>
-  ToA_fixes_quant = (2400, [2400, 2409]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> > ToA_normalizing in ToA
+  ToA_fixes_quant = (2400, [2400, 2409]) > ToA_normalizing in ToA
                     \<open>Transformation rules fixing quantified variables.\<close>
-  ToA_red         = (2500, [2500, 2549]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> > ToA_fixes_quant in ToA
+  ToA_red         = (2500, [2500, 2549]) > ToA_fixes_quant in ToA
                     \<open>Transformation rules reducing literal or trivial cases.\<close>
-  ToA_success     = (3000, [2960, 3499]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close>
+  ToA_success     = (3000, [2960, 3499])
                     \<open>Transformation rules that are shortcuts leading to success on special cases\<close>
-  ToA_assigning_var = (4100, [4100, 4110]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
+  ToA_assigning_var = (4100, [4100, 4110]) in ToA
                     \<open>Tranformation rules assigning variable targets or sources, of the highest priority
                      as occurrences of schematic variables are usually not considered in the subsequent
                      normal process of the reasoning, and may cause unexpected exception in them.\<close>
-  ToA_refl        = (4000, [3990, 4019]) for \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> in ToA
+  ToA_refl        = (4000, [3990, 4019]) in ToA
                     \<open>Reflexive tranformation rules\<close>
   ToA_splitting_source = (50, [50,50]) for \<open>_ * _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _\<close> < ToA_cut in ToA
                     \<open>split the separation sequent in the source part and reason the tranformation for
