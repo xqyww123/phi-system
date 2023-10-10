@@ -299,9 +299,9 @@ lemma [\<phi>reason default %algb_falling_lattice]:
   unfolding homo_one_def Premise_def
   by simp
 
-declare (in homo_sep_mult) homo_sep_mult_axioms [\<phi>reason %algb_cut]
+declare (in homo_sep) homo_sep_axioms [\<phi>reason %algb_cut]
 
-declare (in closed_homo_sep_disj) closed_homo_sep_disj_axioms [\<phi>reason %algb_cut]
+declare (in closed_homo_sep) closed_homo_sep_axioms [\<phi>reason %algb_cut]
 
 subparagraph \<open>homo_mul_carrier\<close>
 

@@ -2023,7 +2023,7 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+  
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1

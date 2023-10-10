@@ -292,6 +292,37 @@ lemma infer_FTF_from_FT:
         clarsimp simp add: Transformation_def,
         blast) .
 
+subsubsection \<open>Transformation Bi-Functor\<close>
+
+definition \<open>Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper \<longleftrightarrow>
+  (\<forall>x g\<^sub>1 g\<^sub>2. (\<forall>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b) \<longrightarrow>
+            (\<forall>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b) \<longrightarrow>
+            (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x) \<longrightarrow>
+            (x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y))\<close>
+
+definition \<open>Functional_Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper \<longleftrightarrow>
+    (\<forall>x f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2. (\<forall>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> U\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
+                \<longrightarrow> (\<forall>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
+                \<longrightarrow> (\<forall>a. a \<in> D\<^sub>1 x \<longrightarrow> f\<^sub>1 a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+                \<longrightarrow> (x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x))\<close>
+
+lemma infer_biFTF_from_biFT:
+  \<open> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
+\<Longrightarrow> Object_Equiv (Fb U\<^sub>1 U\<^sub>2) eq
+\<Longrightarrow> (\<forall>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x y. mapper (\<lambda>a b. b = f\<^sub>1 a \<and> P\<^sub>1 a) (\<lambda>a b. b = f\<^sub>2 a \<and> P\<^sub>2 a) x y
+                  \<longrightarrow> eq y (fm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x) \<and> pm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x)
+\<Longrightarrow> Functional_Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pm fm \<close>
+  unfolding Functional_Transformation_BiFunctor_def Transformation_BiFunctor_def
+            Object_Equiv_def
+  apply clarify
+  subgoal premises prems for x f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2
+    by (insert prems(1)[THEN spec[where x=x],
+                        THEN spec[where x=\<open>\<lambda>a b. b = f\<^sub>1 a \<and> P\<^sub>1 a\<close>],
+                        THEN spec[where x=\<open>\<lambda>a b. b = f\<^sub>2 a \<and> P\<^sub>2 a\<close>]]
+               prems(2-),
+        clarsimp simp add: Transformation_def,
+        blast) .
+
 
 subsubsection \<open>Separation\<close>
 
@@ -553,6 +584,8 @@ declare [[
 
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Transformation_Functor _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _\<close>,
+  \<phi>premise_attribute? [\<phi>reason add] for \<open>Functional_Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _ _\<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Sep_Homo\<^sub>I _ _ \<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Object_Sep_Homo\<^sub>E _ \<close>,
   \<phi>premise_attribute? [\<phi>reason add] for \<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
@@ -580,6 +613,12 @@ declare [[
   and \<open>Functional_Transformation_Functor ?Fa ?Fb _ _ _ _ _ _\<close> \<Rightarrow>
       \<open>Functional_Transformation_Functor ?Fa _ _ _ _ _ _ _\<close>
       \<open>Functional_Transformation_Functor _ ?Fb _ _ _ _ _ _\<close>   (100)
+  and \<open>Transformation_BiFunctor ?Fa ?Fb _ _ _ _ _ _ _ _ _\<close> \<Rightarrow>
+      \<open>Transformation_BiFunctor ?Fa _ _ _ _ _ _ _ _ _ _\<close>
+      \<open>Transformation_BiFunctor _ ?Fb _ _ _ _ _ _ _ _ _\<close>   (100)
+  and \<open>Functional_Transformation_BiFunctor ?Fa ?Fb _ _ _ _ _ _ _ _ _ _ \<close> \<Rightarrow>
+      \<open>Functional_Transformation_BiFunctor ?Fa _ _ _ _ _ _ _ _ _ _ _\<close>
+      \<open>Functional_Transformation_BiFunctor _ ?Fb _ _ _ _ _ _ _ _ _ _\<close>   (100)
   and \<open>Separation_Homo\<^sub>I_Cond ?Ft ?Fu ?Fc _ _ _ _ _\<close> \<Rightarrow>
       \<open>Separation_Homo\<^sub>I_Cond ?Ft _ _ _ _ _ _ _\<close>
       \<open>Separation_Homo\<^sub>I_Cond _ ?Fu _ _ _ _ _ _\<close>
@@ -727,6 +766,51 @@ lemma apply_Functional_Transformation_Functor:
 \<Longrightarrow> x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pred_mapper f P x\<close>
   unfolding meta_Ball_def Argument_def Premise_def
             Functional_Transformation_Functor_def Transformation_Functor_def
+  by clarsimp
+
+
+subsubsection \<open>Transformation Functor\<close>
+
+lemma Transformation_BiFunctor_sub_dom:
+  \<open> (\<And>x. D\<^sub>1 x \<subseteq> D\<^sub>1' x)
+\<Longrightarrow> (\<And>x. D\<^sub>2 x \<subseteq> D\<^sub>2' x)
+\<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
+\<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1' D\<^sub>2' R\<^sub>1 R\<^sub>2 mapper\<close>
+  unfolding Transformation_BiFunctor_def
+  by (clarsimp simp add: subset_iff; blast)
+
+lemma Transformation_BiFunctor_sub_rng:
+  \<open> (\<And>x. R\<^sub>1' x \<subseteq> R\<^sub>1 x)
+\<Longrightarrow> (\<And>x. R\<^sub>2' x \<subseteq> R\<^sub>2 x)
+\<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1  R\<^sub>2  mapper
+\<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1' R\<^sub>2' mapper\<close>
+  unfolding Transformation_BiFunctor_def
+  by (clarsimp simp add: subset_iff; blast)
+
+lemma Transformation_BiFunctor_sub_mapper:
+  \<open> ma \<le> mb
+\<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 ma
+\<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mb\<close>
+  unfolding Transformation_BiFunctor_def le_fun_def Transformation_def
+  by (clarsimp simp add: Ball_def; smt (verit, best))
+
+lemma apply_Transformation_BiFunctor:
+  \<open> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
+\<Longrightarrow> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D\<^sub>1 x \<Longrightarrow> a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b)
+\<Longrightarrow> (\<And>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D\<^sub>2 x \<Longrightarrow> a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+\<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y \<close>
+  unfolding Transformation_BiFunctor_def Premise_def
+  by simp
+
+lemma apply_Functional_Transformation_BiFunctor:
+  \<open> Functional_Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper
+\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> U\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
+\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D\<^sub>1 x \<longrightarrow> f\<^sub>1 a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+\<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x\<close>
+  unfolding meta_Ball_def Argument_def Premise_def
+            Functional_Transformation_BiFunctor_def Transformation_Functor_def
   by clarsimp
 
 
@@ -919,6 +1003,17 @@ lemma [\<phi>reason %\<phi>programming_method]:
   unfolding \<phi>Programming_Method_def Transformation_Functor_def Premise_def
   by clarsimp
 
+lemma [\<phi>reason %\<phi>programming_method]:
+  \<open> PROP \<phi>Programming_Method (\<And>x g\<^sub>1 g\<^sub>2.
+            \<forall>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b
+        \<Longrightarrow> \<forall>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b
+        \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+        \<Longrightarrow> x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y) MM DD RR FF
+\<Longrightarrow> PROP \<phi>Programming_Method (Trueprop (Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper)) MM DD RR FF\<close>
+  unfolding \<phi>Programming_Method_def Transformation_BiFunctor_def Premise_def
+            Transformation_def
+  by (simp add: atomize_imp atomize_all)
+
 
 subsubsection \<open>Separation Homo\<close>
 
@@ -997,6 +1092,8 @@ in (*Phi_Type_Algebra.Detection_Rewr.setup_attribute \<^binding>\<open>\<phi>fun
 #>*)add_property_kinds [
   \<^pattern_prop>\<open>Transformation_Functor _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Functional_Transformation_Functor _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _\<close>,
+  \<^pattern_prop>\<open>Functional_Transformation_BiFunctor _ _ _ _ _ _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>I _ _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>E _ _ _ _ _ _\<close>,
   \<^pattern_prop>\<open>Separation_Homo\<^sub>I_Cond _ _ _ _ _ _ _ _\<close>,
@@ -1573,7 +1670,7 @@ lemma transformation[\<phi>reason_template name Fa.transformation []]:
   unfolding meta_Ball_def Premise_def \<r>Guard_def Transformation_Functor_def
   by clarsimp
 
-lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.To_ToAformation]:
+lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.To_Transformation]:
   \<open> \<g>\<u>\<a>\<r>\<d> Transformation_Functor Fa Fb T U D R mapper
 \<Longrightarrow> (\<And>a \<in> D x. a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<s>\<u>\<b>\<j> b. g a b @action to Z)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D x \<and> g a b \<longrightarrow> b \<in> R x)
@@ -1616,13 +1713,6 @@ lemma [\<phi>reason_template default 50 requires Separation_Homo\<^sub>E]:
   unfolding Action_Tag_def meta_Ball_def Premise_def Transformation_Functor_def Ball_def
   by (rule transformation_trans[where P=True and Q=True and B=\<open>y \<Ztypecolon> Fb U \<s>\<u>\<b>\<j> y. mapper g x y\<close>, simplified], blast)
 *)
-
-lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo]:
-  \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
-\<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
-  unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def
-  by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
-
 
 (*locale Functional_Transformation_Functor =
   Transformation_Functor_L Fa Fb D R mapper Prem
@@ -1678,6 +1768,55 @@ lemma [\<phi>TA_internal_simplify_special_cases,
   using functional_transformation[unfolded Argument_def] .
 *)
 
+subsubsection \<open>Bi-Transformation Functor\<close>
+
+lemma bitransformation[\<phi>reason_template name Fa.bitransformation []]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
+\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b)
+\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+\<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2  \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y\<close>
+  unfolding meta_Ball_def Premise_def \<r>Guard_def Transformation_BiFunctor_def
+            Transformation_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.To_BiTransformation]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
+\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action to Z\<^sub>1)
+\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action to Z\<^sub>2)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+\<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y @action to (Fb Z\<^sub>1 Z\<^sub>2) \<close>
+  unfolding Action_Tag_def \<r>Guard_def
+  using bitransformation[unfolded \<r>Guard_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
+
+lemma [\<phi>reason_template default %To_ToA_derived_Tr_functor name Fa.to_bitraverse]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
+\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z\<^sub>1))
+\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Z\<^sub>2))
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+\<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y @action to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> Fb Z\<^sub>1 Z\<^sub>2) \<close>
+  unfolding Action_Tag_def \<r>Guard_def
+  using bitransformation[unfolded \<r>Guard_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
+
+lemma [\<phi>reason_template name Fa.\<A>simp_bi [\<phi>transformation_based_simp default %\<phi>simp_derived_Tr_functor no trigger]]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper
+\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action \<A>simp)
+\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action \<A>simp)
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x)
+\<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y @action \<A>_transitive_simp \<close>
+  unfolding Action_Tag_def Premise_def \<r>Guard_def
+  using bitransformation[unfolded \<r>Guard_def Premise_def, where Fa=Fa and Fb=Fb and D\<^sub>1=D\<^sub>1 and D\<^sub>2=D\<^sub>2 and mapper=mapper] .
+
+lemma biFTF_template[no_atp, \<phi>reason_template default %ToA_derived_one_to_one_functor name Fa.functional_transformation]:
+  \<open> \<g>\<u>\<a>\<r>\<d> Functional_Transformation_BiFunctor Fa Fb T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pred_mapper func_mapper
+\<Longrightarrow> (\<And>a \<in> D\<^sub>1 x. a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>1 a \<Ztypecolon> U\<^sub>1 \<w>\<i>\<t>\<h> P\<^sub>1 a)
+\<Longrightarrow> (\<And>a \<in> D\<^sub>2 x. a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f\<^sub>2 a \<Ztypecolon> U\<^sub>2 \<w>\<i>\<t>\<h> P\<^sub>2 a)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D\<^sub>1 x \<longrightarrow> f\<^sub>1 a \<in> R\<^sub>1 x) \<and> (\<forall>a. a \<in> D\<^sub>2 x \<longrightarrow> f\<^sub>2 a \<in> R\<^sub>2 x)
+\<Longrightarrow> x \<Ztypecolon> Fa T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> func_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> Fb U\<^sub>1 U\<^sub>2 \<w>\<i>\<t>\<h> pred_mapper f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x\<close>
+  unfolding \<r>Guard_def
+  using apply_Functional_Transformation_BiFunctor[unfolded Argument_def,
+            where func_mapper=func_mapper and pred_mapper=pred_mapper] .
+
 
 
 subsubsection \<open>Separation Homomorphism\<close>
@@ -1688,6 +1827,13 @@ lemma Object_Sep_Homo\<^sub>I_subdom[\<phi>reason %\<phi>TA_varify_out except \<
 \<Longrightarrow> Object_Sep_Homo\<^sub>I T Db\<close>
   unfolding Object_Sep_Homo\<^sub>I_def Premise_def subset_iff
   by blast
+
+lemma [\<phi>reason_template default %\<phi>simp_derived_Tr_functor+5 name Fb.\<A>simp_sep_homo]:
+  \<open> Separation_Homo\<^sub>E Fa\<^sub>L Fa\<^sub>R Fb U\<^sub>L U\<^sub>R un
+\<Longrightarrow> x \<Ztypecolon> Fb (U\<^sub>L \<^emph>\<^sub>\<A> U\<^sub>R) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Fa\<^sub>L U\<^sub>L \<^emph>\<^sub>\<A> Fa\<^sub>R U\<^sub>R \<s>\<u>\<b>\<j> y. y = un x @action \<A>simp\<close>
+  unfolding Separation_Homo\<^sub>E_def Action_Tag_def Bubbling_def
+  by (clarsimp simp add: Subjection_transformation_rewr Ex_transformation_expn)
+
 
 (*Object_Sep_Homo\<^sub>I is necessary at least for composition \<phi>-type
 Object_Sep_Homo\<^sub>I B \<longleftrightarrow> Separation_Homo\<^sub>I ((\<Zcomp>) B) ((\<Zcomp>) B) ((\<Zcomp>) B) (\<lambda>x. x)
@@ -4313,6 +4459,22 @@ private lemma \<phi>TA_TF_rewr_C:
   \<open>Trueprop ((\<forall>x. P x \<longrightarrow> A2 x) \<longrightarrow> Ant \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
 \<equiv> ((\<And>x. P x \<Longrightarrow> A2 x) \<Longrightarrow> Ant \<Longrightarrow> C @action \<A>)\<close>
   unfolding Action_Tag_def atomize_imp atomize_all .
+
+paragraph \<open>Bi-Functor\<close>
+
+private lemma \<phi>TA_biTF_rule:
+  \<open>(\<And>g\<^sub>1 g\<^sub>2 x. \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a b. a \<in> D\<^sub>1 x \<and> g\<^sub>1 a b \<longrightarrow> b \<in> R\<^sub>1 x) \<and> (\<forall>a b. a \<in> D\<^sub>2 x \<and> g\<^sub>2 a b \<longrightarrow> b \<in> R\<^sub>2 x) \<Longrightarrow>
+              (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D\<^sub>1 x \<longrightarrow> (a \<Ztypecolon> T\<^sub>1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>1 \<s>\<u>\<b>\<j> b. g\<^sub>1 a b @action to U\<^sub>1)) \<longrightarrow> \<comment> \<open>split D\<close>
+              (\<forall>a. \<p>\<r>\<e>\<m>\<i>\<s>\<e> a \<in> D\<^sub>2 x \<longrightarrow> (a \<Ztypecolon> T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U\<^sub>2 \<s>\<u>\<b>\<j> b. g\<^sub>2 a b @action to U\<^sub>2)) \<longrightarrow> \<comment> \<open>split D\<close>
+              Ant \<longrightarrow>
+              (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> F2 U\<^sub>1 U\<^sub>2 \<s>\<u>\<b>\<j> y. mapper g\<^sub>1 g\<^sub>2 x y)
+              @action \<phi>TA_ind_target (to (\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T\<^sub>1 \<Rightarrow> U\<^sub>1 \<o>\<r>\<e>\<l>\<s>\<e> \<p>\<a>\<t>\<t>\<e>\<r>\<n> T\<^sub>2 \<Rightarrow> U\<^sub>2)))
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @action \<phi>TA_ANT
+\<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper\<close>
+  unfolding Transformation_BiFunctor_def Action_Tag_def Ball_def Premise_def \<A>\<D>\<V>_target_def
+  by simp
 
 
 subsubsection \<open>Functional Transformation Functor\<close>

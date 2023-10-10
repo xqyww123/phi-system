@@ -12,6 +12,21 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 (*** Transformation Functor ***)
 
+fun mk_TF's_two_instantiations ctxt (FT_term, phi) =
+  Seq.of_list (separate_type_operator_and_its_non_parameterized_parameter FT_term)
+  |> Seq.map (fn (T_term, F_term) => let
+      val T_ty = Term.fastype_of T_term
+      val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
+
+      val param_typs = Term.add_tvarsT element_ty []
+      val (param_typs', ctxt'1) = Variable.invent_types (map snd param_typs) ctxt
+                                |> apfst (map TFree)
+      val inst_ty = TFrees.make (param_typs ~~ param_typs')
+      val F'1_term = Term_Subst.instantiate_frees (inst_ty, Frees.empty) F_term
+
+   in xxx
+  end)
+
 fun mk_TF's_two_instantiations ctxt0 (FT_term0, phi0) =
   let val (inst0, phi, ctxt) = fix_phi_type true phi0 ctxt0
       val FT_term = Term_Subst.instantiate (Phi_Help.uncertify_vars inst0) FT_term0

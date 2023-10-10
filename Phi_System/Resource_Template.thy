@@ -82,6 +82,8 @@ end
 
 subsection \<open>Fiction Base\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+
 locale basic_fiction =
    R: resource Res
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> I\<close>
@@ -102,14 +104,14 @@ lemma [\<phi>inhabitance_rule, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 *)
 
-declare [[\<phi>trace_reasoning = 3]]
+declare [[\<phi>trace_reasoning = 0]]
  
 \<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
   where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
   deriving (*Basic
-       and Functional_Transformation_Functor
-       and Identity_Elements
-       and*) Separation_Homo\<^sub>I
+       and*) Transformation_Functor
+       (*and Identity_Elements
+       and Separation_Homo\<^sub>I*)
 
 thm \<phi>.unfold
 
