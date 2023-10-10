@@ -1327,7 +1327,7 @@ lemma [\<phi>reason %extract_pure]:
   \<open> P \<longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P @action \<A>ESC \<close>
   unfolding Action_Tag_def Premise_def
   by blast
-  
+
 
 subsection \<open>Instances for Predefined Basic \<phi>-Types\<close>
 

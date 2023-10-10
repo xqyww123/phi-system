@@ -424,4 +424,30 @@ fun map f ctxt =
 
 end
 
+signature CONTEXT = sig
+include CONTEXT
+
+val full_name : generic -> binding -> string
+
+end
+
+signature GENERIC_THEORY = sig
+
+val full_name : generic_theory -> binding -> string
+
+end
+
+structure Context : CONTEXT = struct
+
+val full_name = Context.cases Sign.full_name Proof_Context.full_name
+
+open Context
+
+end
+
+structure Generic_Theory : GENERIC_THEORY = struct
+
+val full_name = Context.cases Sign.full_name Local_Theory.full_name
+
+end
 

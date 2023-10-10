@@ -9,7 +9,7 @@ subsection \<open>\<phi>-Type Abstraction\<close>
 
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type {no_auto=true}
-        (Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>Val\<close>, Thm.transfer \<^theory> @{thm' Val_def}),
+        (\<^binding>\<open>Val\<close>, Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>Val\<close>, Thm.transfer \<^theory> @{thm' Val_def}),
          \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
 

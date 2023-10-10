@@ -270,8 +270,7 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                          $ _)
                      $ _))
                    => (case X of Var v $ _ $ _ =>
-                                    SOME ( instantiate_the_var v phi0 ctxt sequent
-                                      |> oblg_solver (#proof_id phi ^ "/" ^ name) ctxt)
+                                      oblg_solver' name (phi, ctxt, instantiate_the_var v phi0 ctxt sequent)
                                | _ => NONE)
                | _ => error "BUG"
 

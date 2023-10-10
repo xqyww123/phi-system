@@ -49,12 +49,12 @@ and \<phi>Sem_aint_to_logic_nat[simp]: \<open>\<phi>Sem_int_to_logic_nat (V_aint
 
 lemma [\<phi>reason 1000]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> n
-\<Longrightarrow> get_logical_nat_from_semantic_int {V_aint.mk n} (nat n)\<close>
+\<Longrightarrow> get_logical_nat_from_semantic_int (V_aint.mk n \<Ztypecolon> Itself) (nat n)\<close>
   unfolding get_logical_nat_from_semantic_int_def Premise_def
   by simp
 
 lemma [\<phi>reason 1000]:
-  \<open> get_logical_int_from_semantic_int {V_aint.mk n} n\<close>
+  \<open> get_logical_int_from_semantic_int (V_aint.mk n \<Ztypecolon> Itself) n\<close>
   unfolding get_logical_int_from_semantic_int_def Premise_def
   by simp
 
@@ -70,101 +70,67 @@ section \<open>\<phi>-Types\<close>
 
 subsection \<open>Integer in the normal sense\<close>
 
-definition \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
-  where "\<phi>AInt = (\<lambda>z. { V_aint.mk z})"
+declare [[\<phi>trace_reasoning = 0]]
 
-lemma \<phi>AInt_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<int>) \<longleftrightarrow> p = V_aint.mk x"
-  unfolding \<phi>Type_def by (simp add: \<phi>AInt_def)
-
-lemma \<phi>AInt_inhabited[elim!]:
-  "Inhabited (x \<Ztypecolon> \<int>) \<Longrightarrow> C \<Longrightarrow> C" .
-
-lemma [\<phi>inhabitance_rule 1000]:
-  "Inhabited (x \<Ztypecolon> \<int>) \<longrightarrow> True"
-  by blast
+\<phi>type_def \<phi>AInt :: "(VAL, int) \<phi>" ("\<int>")
+  where \<open>x \<Ztypecolon> \<phi>AInt \<equiv> V_aint.mk x \<Ztypecolon> Itself\<close>
+  deriving Basic
+       and \<open>\<phi>SemType (x \<Ztypecolon> \<int>) aint\<close>
+       and Semantic_Zero_Val
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<int> (\<lambda>x y. True) (=)"
-  unfolding \<phi>Equal_def by (simp add: \<phi>expns eq_nat_nat_iff)
-
-lemma [\<phi>reason 1000]:
-    "Semantic_Zero_Val aint \<int> 0"
-  unfolding Semantic_Zero_Val_def by (simp add: \<phi>expns)
-
-lemma \<phi>Int_semty[\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> \<int>) aint\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns)
+  unfolding \<phi>Equal_def by (simp add: eq_nat_nat_iff)
 
 lemma [\<phi>reason 1000]:
   \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<int>) n\<close>
   unfolding get_logical_int_from_semantic_int_def Ball_def
-  by (clarsimp simp add: \<phi>AInt_expn)
+  by clarsimp
 
 lemma [\<phi>reason 1000]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> n
 \<Longrightarrow> get_logical_nat_from_semantic_int (n \<Ztypecolon> \<int>) (nat n)\<close>
   unfolding get_logical_nat_from_semantic_int_def Ball_def Premise_def
-  by (clarsimp simp add: \<phi>AInt_expn)
+  by clarsimp
 
 
 subsection \<open>Natural Nmber\<close>
 
-definition \<phi>ANat ("\<nat>") where [\<phi>defs]: "\<nat> n = (of_nat n \<Ztypecolon> \<int>)"
+\<phi>type_def \<phi>ANat ("\<nat>")
+  where \<open>n \<Ztypecolon> \<nat> \<equiv> of_nat n \<Ztypecolon> \<int>\<close>
+  deriving Basic
 
-lemma \<phi>ANat_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<nat>) \<longleftrightarrow> p = V_aint.mk (of_nat x)"
-  unfolding \<phi>Type_def by (simp add: \<phi>ANat_def \<phi>AInt_expn)
+thm \<phi>ANat.elim
+thm \<phi>ANat.intro
 
-lemma [\<phi>reason 1000]:
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason %ToA_num_conv_cut]:
   " Threshold_Cost 4
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
 \<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat>"
-  \<medium_left_bracket> construct\<phi> \<open>nat x \<Ztypecolon> \<nat>\<close> \<medium_right_bracket>.
+  \<medium_left_bracket> \<open>nat x \<Ztypecolon> MAKE \<nat>\<close> \<medium_right_bracket>.
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %ToA_num_conv_cut]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
 \<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<nat> \<s>\<u>\<b>\<j> y. y = nat x @action to \<nat>\<close> \<medium_left_bracket> \<medium_right_bracket>.
 
-lemma [\<phi>reason 1000]:
-  " Threshold_Cost 2
-\<Longrightarrow> x \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Int.int x \<Ztypecolon> \<int>" \<medium_left_bracket> destruct\<phi> _ \<medium_right_bracket>.
+declare \<phi>ANat.elim[condition \<open>\<t>\<h>\<r>\<e>\<s>\<h>\<o>\<l>\<d> 2\<close>, \<phi>reason %ToA_num_conv_cut]
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %ToA_num_conv_cut]:
   " x \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<int> \<s>\<u>\<b>\<j> y. y = Int.int x @action to \<int> " \<medium_left_bracket> \<medium_right_bracket>.
-
-lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Int.int _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ \<close>]:
-  " x \<Ztypecolon> \<nat> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Int.int x \<Ztypecolon> \<int> " \<medium_left_bracket> \<medium_right_bracket>.
-
-lemma [\<phi>reason 1000 for \<open> _ \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _ \<close>]:
-  " \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> x
-\<Longrightarrow> x \<Ztypecolon> \<int> \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> nat x \<Ztypecolon> \<nat> " \<medium_left_bracket> \<medium_right_bracket>.
-
-lemma \<phi>ANat_inhabited[elim!]:
-  "Inhabited (n \<Ztypecolon> \<nat>) \<Longrightarrow> C \<Longrightarrow> C" .
-
-lemma [\<phi>inhabitance_rule 1000]:
-  "Inhabited (n \<Ztypecolon> \<nat>) \<longrightarrow> True "
-  by blast
-
-lemma [\<phi>reason 1000]: \<open>\<phi>SemType (n \<Ztypecolon> \<nat>) aint\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>.
-
-declare [[\<phi>trace_reasoning = 2]]
-
-lemma [\<phi>reason 1000]: "Semantic_Zero_Val aint \<nat> 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> \<int>\<close> \<medium_right_bracket> .
 
 lemma [\<phi>reason 1000]: \<open>\<phi>Equal \<nat> (\<lambda>_ _. True) (=)\<close> \<medium_left_bracket> to \<int> \<medium_right_bracket>.
 
 lemma [\<phi>reason 1000]:
   \<open>get_logical_int_from_semantic_int (n \<Ztypecolon> \<nat>) (of_nat n)\<close>
   unfolding get_logical_int_from_semantic_int_def Ball_def
-  by (clarsimp simp add: \<phi>ANat_expn)
+  by clarsimp
 
 lemma [\<phi>reason 1000]:
   \<open>get_logical_nat_from_semantic_int (n \<Ztypecolon> \<nat>) n\<close>
   unfolding get_logical_nat_from_semantic_int_def Ball_def
-  by (clarsimp simp add: \<phi>ANat_expn)
+  by clarsimp
 
 declare [[
     overloaded_operator_in_synthesis \<open>Int.int\<close>,
@@ -264,18 +230,20 @@ subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
 
+declare [[\<phi>trace_reasoning = 1]]
+
 lemma op_const_aint_\<phi>app[\<phi>synthesis 300]:
   \<open> Is_Literal x
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x)) \<int>\<close>
 \<medium_left_bracket>
-  semantic_literal \<open>V_aint.mk x \<in> (x \<Ztypecolon> \<int>)\<close>
+  semantic_literal \<open>V_aint.mk x \<Turnstile> (x \<Ztypecolon> \<int>)\<close>
 \<medium_right_bracket> .
 
 lemma op_const_anat_\<phi>app[\<phi>synthesis 300]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] x' : of_nat x
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat>\<close>
 \<medium_left_bracket>
-  semantic_literal \<open>V_aint.mk x' \<in> (x \<Ztypecolon> \<nat>)\<close>
+  semantic_literal \<open>V_aint.mk x' \<Turnstile> (x \<Ztypecolon> \<nat>)\<close>
 \<medium_right_bracket> .
 
 lemma [\<phi>reason 1210
@@ -325,8 +293,8 @@ lemma op_add_aint_\<phi>app
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<int> \<rbrace> \<close>
   unfolding op_aadd_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
-      simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule,
+      simp add: Premise_def, rule, simp)
 
 lemma op_add_anat_\<phi>app
   [\<phi>overload +,
@@ -335,6 +303,7 @@ lemma op_add_anat_\<phi>app
   \<open> \<p>\<r>\<o>\<c> op_aadd (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<nat> \<rbrace> \<close>
   \<medium_left_bracket> op_add_aint \<medium_right_bracket> .
 
+
 paragraph \<open>Subtraction\<close>
 
 lemma op_sub_aint_\<phi>app[\<phi>overload -,
@@ -342,8 +311,8 @@ lemma op_sub_aint_\<phi>app[\<phi>overload -,
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_asub_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def,
+      rule, simp add: Premise_def, rule, simp)
 
 lemma op_sub_anat_\<phi>app[\<phi>overload -,
                        \<phi>synthesis for _ (100)
@@ -351,6 +320,7 @@ lemma op_sub_anat_\<phi>app[\<phi>overload -,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_asub (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_sub_aint \<medium_right_bracket> .
+
 
 paragraph \<open>Negation\<close>
 
@@ -360,7 +330,7 @@ lemma op_neg_aint_\<phi>app
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. - x \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_aneg rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] \<int> \<longmapsto> \<v>\<a>\<l> -x \<Ztypecolon> \<int> \<rbrace> \<close>
   unfolding op_aneg_def Premise_def
-  by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases rv; simp, rule, simp add: Premise_def, rule, simp)
 
 
 paragraph \<open>Times\<close>
@@ -370,8 +340,8 @@ lemma op_mul_aint[\<phi>overload *,
                              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_amul (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_amul_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def,
+      rule, simp add: Premise_def, rule, simp)
 
 lemma op_mul_anat[\<phi>overload *,
                   \<phi>synthesis for _ (100)
@@ -388,8 +358,8 @@ lemma op_udiv_aint_\<phi>app[\<phi>overload /,
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_adiv (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_adiv_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
+      rule, simp)
 
 lemma op_udiv_anat_\<phi>app[\<phi>overload /,
                         \<phi>synthesis for _ (100)
@@ -406,8 +376,8 @@ lemma op_mod_aint_\<phi>app[\<phi>overload mod,
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_amod (vy \<^bold>, vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int> \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_amod_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns)                  
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
+      rule, simp)                  
 
 lemma op_mod_anat_\<phi>app[\<phi>overload mod,
                        \<phi>synthesis for _ (100)
@@ -424,8 +394,8 @@ lemma op_lshr_aint_pre_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> y
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_alshr (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<int> \<longmapsto> \<v>\<a>\<l> drop_bit (nat y) x \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_alshr_def Premise_def
-  apply (cases raw1; cases raw2; simp; rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
-      rule \<phi>M_assert, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  apply (cases raw1; cases raw2; simp; rule, rule, simp add: Premise_def, rule, simp add: Premise_def, rule,
+      rule \<phi>M_assert, simp, rule, simp)
   using drop_bit_int_def by presburger
 
 lemma op_lshr_aint_\<phi>app[\<phi>synthesis for _ (100)
@@ -445,8 +415,8 @@ lemma op_lshl_aint_pre_\<phi>app:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> 0 \<le> y
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_alshl (\<phi>V_pair raw2 raw1) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw1] \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[raw2] \<int> \<longmapsto> \<v>\<a>\<l> push_bit (nat y) x \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_alshl_def Premise_def
-  by (cases raw1; cases raw2; simp; rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
-      rule \<phi>M_assert, simp add: \<phi>expns, rule, simp add: \<phi>expns push_bit_int_def)
+  by (cases raw1; cases raw2; simp; rule, rule, simp add: Premise_def, rule, simp add: Premise_def, rule,
+      rule \<phi>M_assert, simp, rule, simp add: push_bit_int_def)
 
 lemma op_lshl_aint_\<phi>app[\<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int> \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. push_bit y x \<Ztypecolon> _\<close> (1200)]:
@@ -467,8 +437,8 @@ lemma op_lt_aint[\<phi>overload <,
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_a_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_a_lt_def
-  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns, rule,
-      simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases rawx; cases rawy; simp, rule, rule, simp add: Premise_def, rule,
+      simp add: Premise_def, rule, simp)
 
 lemma op_lt_anat[\<phi>overload <,
                  \<phi>synthesis for _ (100)
@@ -502,8 +472,8 @@ lemma op_le_aint_\<phi>app[\<phi>overload \<le>,
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_a_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<int> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_a_le_def
-  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases rawx; cases rawy; simp, rule, rule, simp add: Premise_def,
+      rule, simp add: Premise_def, rule, simp)
 
 lemma op_le_anat_\<phi>app[\<phi>overload \<le>,
                       \<phi>synthesis for _ (100)

@@ -7,7 +7,7 @@ chapter \<open>Resource Bases and Templates\<close>
 
 section \<open>Preliminary\<close>
 
-interpretation to_share: cancl_share_orthogonal_homo \<open>to_share::'a::discrete_semigroup option \<Rightarrow> 'a share option\<close> UNIV ..
+interpretation to_share: cancl_share_orthogonal_homo \<open>to_share::'a::{discrete_semigroup, sep_carrier} option \<Rightarrow> 'a share option\<close> UNIV ..
 interpretation pointwise_to_share:
   cancl_share_orthogonal_homo \<open>(o) (to_share::'a::discrete_semigroup option \<Rightarrow> 'a share option)\<close> \<open>pointwise_set UNIV\<close>
   by (standard; standard)
@@ -102,22 +102,16 @@ lemma [\<phi>inhabitance_rule, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 *)
 
-definition \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
-    \<comment> \<open>\<phi>Type for level-1 mapping\<close>
-  where \<open>\<phi> T = (\<lambda>x. { mk v |v. v \<Turnstile> (x \<Ztypecolon> T) })\<close>
+declare [[\<phi>trace_reasoning = 3]]
+   
+\<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
+  where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
+  deriving (*Basic
+       and Functional_Transformation_Functor
+       and Identity_Elements
+       and*) Separation_Homo\<^sub>I
 
-lemma \<phi>_expn[simp, \<phi>expns]:
-  \<open>p \<Turnstile> (x \<Ztypecolon> \<phi> T) \<longleftrightarrow> (\<exists>v. p = mk v \<and> v \<Turnstile> (x \<Ztypecolon> T))\<close>
-  unfolding \<phi>Type_def \<phi>_def Satisfaction_def by simp
-
-lemma \<phi>_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<phi> T) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by simp
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> x \<Ztypecolon> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<i>\<m>\<p>\<l>\<i>\<e>\<s> C \<close>
-  unfolding Inhabited_def by simp
+thm \<phi>.unfold
 
 lemma \<phi>_Prod:
   \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>
@@ -151,11 +145,6 @@ lemma [\<phi>reason 1500 for \<open>(x \<Ztypecolon> \<phi> \<circle>) \<t>\<r>\
   by (simp add: transformation_refl) *)
 
 paragraph \<open>Reasoning Rules\<close>
-
-lemma \<phi>_cast[\<phi>reason add]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P
-\<Longrightarrow> x \<Ztypecolon> \<phi> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<phi> U \<w>\<i>\<t>\<h> P\<close>
-  unfolding Transformation_def by (clarsimp simp add: \<phi>expns)
 
 lemma \<phi>_Structural_Extract:
   \<open> x \<Ztypecolon> T \<^emph> W \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<^emph> R \<w>\<i>\<t>\<h> P @action \<A>SE True

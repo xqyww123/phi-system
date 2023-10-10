@@ -99,6 +99,14 @@ end
 \<close>
 
 
+subsection \<open>Conventions\<close>
+
+\<phi>reasoner_group ToA_num_conv = (800, [800, 830]) in ToA_bk
+      \<open>Conversion between abstractions of numbers\<close>
+  and ToA_num_conv_cut = (1000, [1000, 1030]) in ToA_cut
+      \<open>Conversion between abstractions of numbers\<close>
+
+
 subsection \<open>Operator Overloading\<close>
 
 \<phi>overloads nat and int

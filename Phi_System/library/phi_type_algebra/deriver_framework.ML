@@ -1155,7 +1155,8 @@ fun oblg_solver proof_id ctxt sequent =
   end
      (*| _ => sequent*)
 
-fun oblg_solver' name (phi, ctxt, th) = SOME (oblg_solver (#proof_id phi ^ "/" ^ name) ctxt th)
+fun oblg_solver' name (phi, ctxt, th) =
+      SOME (oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name) ctxt th)
 
 
 (* The Framework *)
@@ -1322,7 +1323,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
 
       val rule'4 =(case solver (phi, ctxt, rule'3)
                      of SOME ret => ret
-                      | NONE => oblg_solver (#proof_id phi ^ "/" ^ name) ctxt rule'3)
+                      | NONE => oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name) ctxt rule'3)
                 |> Simplifier.rewrite_rule ctxt @{thms' Action_Tag_def[where A=\<phi>TA_ANT]}
                 |> simp (phi, Simps.enhance ctxt)
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt
@@ -1838,19 +1839,17 @@ in fn ctxt => fn th => th
 end
 
 fun chk_unfolded bads ctxt (phi : phi_type) term =
-  let val (N,_) = raw_term_name_typ (#term phi)
-      fun is_atom (Bound _) = true
+  let fun is_atom (Bound _) = true
         | is_atom (Free _) = true
         | is_atom (Var _) = true
         | is_atom _ = false
-      fun chk (Abs(_,_,X)) = chk X
-        | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A $ B $ C) = chk A andalso chk B andalso chk C
-        | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A $ B) = chk A andalso chk B
-        | chk (Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A) = chk A
-        | chk (Const(N',_)) = N = N'
-        | chk (Free(N',_)) = N = N'
-        | chk (X $ _) = chk X
-        | chk _ = false
+      fun chk X = X aconv (#term phi) orelse
+            (case X of Abs(_,_,X) => chk X
+                     | Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A $ B $ C => chk A andalso chk B andalso chk C
+                     | Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A $ B => chk A andalso chk B
+                     | Const(\<^const_name>\<open>Bubbling\<close>, _) $ _ $ A => chk A
+                     | X $ _ => chk X
+                     | _ => false )
    in if exists_subterm (
            fn Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T =>
                 is_atom x andalso chk T orelse

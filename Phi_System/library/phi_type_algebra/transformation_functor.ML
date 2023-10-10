@@ -20,13 +20,19 @@ fun mk_TF's_two_instantiations ctxt0 (FT_term0, phi0) =
       val T_ty = Term.fastype_of T_term
       val ([],element_ty,_) = dest_parameterized_phi_ty T_ty
 
-      val param_typs = Term.add_tfreesT element_ty []
+      fun head_of' (A $ _) = head_of' A
+        | head_of' (Abs (_, _, X)) = head_of' X
+        | head_of' X = X
+      val exclude = Term.add_frees (head_of' F_term) []
+      val exclude_ty = fold (Term.add_tfreesT o snd) exclude []
+
+      val param_typs = subtract (op =) exclude_ty (Term.add_tfreesT element_ty [])
       val (param_typs', ctxt'1) = Variable.invent_types (map snd param_typs) ctxt
                                 |> apfst (map TFree)
       val inst_ty = TFrees.make (param_typs ~~ param_typs')
       val F'1_term = Term_Subst.instantiate_frees (inst_ty, Frees.empty) F_term
 
-      val params = Term.add_frees F'1_term []      
+      val params = subtract (op =) exclude (Term.add_frees F'1_term [])
       val (U_name :: param_names', ctxt') = Variable.variant_fixes ("U" :: map fst params) ctxt'1
       val params' = map2 (fn N => fn (_,T) => Free(N,T)) param_names' params
       val inst = Frees.make (params ~~ params')
