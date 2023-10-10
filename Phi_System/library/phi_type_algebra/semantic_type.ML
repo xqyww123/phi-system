@@ -10,9 +10,9 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun guess_property phi ctxt =
   let val ((x_term, T_term), ctxt) = fix_phi_term_params phi ctxt
-      val (rev_arg_tys, x_ty, model_ty) = parameters_and_typs_of phi
+      val (arg_tys, x_ty, model_ty) = parameters_and_typs_of phi
 
-      val _ = if exists (can dest_parameterized_phi_ty o snd) rev_arg_tys
+      val _ = if exists (can dest_parameterized_phi_ty o snd) arg_tys
               then raise Automation_Fail (fn () => let open Pretty in
                   [para "Property gusser does not support type operators right now"]
                 end)

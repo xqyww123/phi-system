@@ -121,11 +121,11 @@ val lookup_derived_properties : Context.generic -> phi_type -> string (*name*) -
 val register_derived_properties : phi_type -> string * int * Position.T -> thm list -> generic_theory -> generic_theory
       (*It will also bind in Isabelle the properties to names <phi_type_name.property_names\<^sub>i>
         for the i-th property each.*)
-val note_properties' : term -> (binding * thm list) list -> generic_theory -> generic_theory
+val note_properties' : string -> (binding * thm list) list -> generic_theory -> generic_theory
 val note_properties  : phi_type -> (binding * thm list) list -> generic_theory -> generic_theory
 val note_properties_s: phi_type -> (bstring * thm list) list -> generic_theory -> generic_theory
 
-val local_note_properties' : term -> (binding * thm list) list -> Context.generic -> Context.generic
+val local_note_properties' : string -> (binding * thm list) list -> Context.generic -> Context.generic
 val local_note_properties  : phi_type -> (binding * thm list) list -> Context.generic -> Context.generic
 val local_note_properties_s: phi_type -> (bstring * thm list) list -> Context.generic -> Context.generic
 
@@ -149,7 +149,7 @@ val override_ind_rule : string * thm -> Context.generic -> Context.generic
 
 (** Tools **)
 
-val is_phi_head : phi_type -> term -> bool (*ignores type*)
+val is_term_of_phi : phi_type -> term -> bool (*ignores type*)
 val is_Type_Opr : typ -> bool
 val is_non_parameterized_phityp : typ -> bool
 val assert_Type_Opr : typ -> unit
@@ -354,7 +354,7 @@ fun raw_term_name_typ (Const N_T) = N_T
 
 val raw_term_name = fst o raw_term_name_typ o Term.head_of
 
-fun mk_ind_dest_ToA_internal ctxt (phi : phi_type) prop0 = (*not tested*)
+fun mk_ind_dest_ToA_internal ctxt (phi : phi_type) prop0 =
   let val typ = Term.fastype_of (#term phi)
       fun parse_typ args \<^Type>\<open>fun x \<open>\<^Type>\<open>set a\<close>\<close>\<close> = (args, x, a)
         | parse_typ args \<^Type>\<open>fun a r\<close> = parse_typ (a::args) r
@@ -596,14 +596,13 @@ fun short_name_of_tyop (Abs (_,_,X)) = short_name_of_tyop X
   | short_name_of_tyop (Free (N, _)) = N
   | short_name_of_tyop X = raise TERM ("Not a \<phi>-type term", [X])
 
-fun note_properties' phityp_term notes =
-  let val short_name = short_name_of_tyop phityp_term
-      val qualify = Binding.qualify true short_name
+fun note_properties' prefix notes =
+  let val qualify = Binding.qualify true prefix
    in Context.mapping (fold (fn (b,Th) => snd o Global_Theory.note_thms "" ((qualify b, []), [(Th,[])])) notes)
                       (fold (fn (b,Th) => snd o Local_Theory.note ((qualify b, []), Th)) notes)
   end
 
-fun local_note_properties' phityp_term notes ctxt =
+fun local_note_properties' prefix notes ctxt =
   let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt
       fun varify_binding i b =
         let val b' = if i = 0 then b else Binding.suffix_name ("_" ^ string_of_int i) b
@@ -613,20 +612,20 @@ fun local_note_properties' phityp_term notes ctxt =
             else b
         end
       val notes' = map (fn (b',rules') =>
-            let val b = varify_binding 0 (Binding.qualify true (short_name_of_tyop phityp_term) b')
+            let val b = varify_binding 0 (Binding.qualify true prefix b')
              in ((b, []), [(rules',[])])
             end) notes
    in Context.mapping (fold (snd oo Global_Theory.note_thms "") notes')
                       (fold (snd oo Proof_Context.note_thms "") notes') ctxt
   end
 
-fun note_properties (phi : phi_type) = note_properties' (#term phi)
-fun note_properties_s (phi : phi_type) notes =
-      note_properties' (#term phi) (map (fn (N,th) => (Binding.make (N, #pos phi), th)) notes)
+fun note_properties (phi : phi_type) = note_properties' (Binding.name_of (#name phi))
+fun note_properties_s phi notes =
+      note_properties phi (map (fn (N,th) => (Binding.make (N, #pos phi), th)) notes)
 
-fun local_note_properties (phi : phi_type) = local_note_properties' (#term phi)
-fun local_note_properties_s (phi : phi_type) notes =
-      local_note_properties' (#term phi) (map (fn (N,th) => (Binding.make (N, #pos phi), th)) notes)
+fun local_note_properties (phi : phi_type) = local_note_properties' (Binding.name_of (#name phi))
+fun local_note_properties_s phi notes =
+      local_note_properties phi (map (fn (N,th) => (Binding.make (N, #pos phi), th)) notes)
 
 
 fun suffix_name_by_index ind name =
@@ -769,11 +768,15 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>property_deriver\<c
 
 (** Tools **)
 
-fun is_the_same_const_or_free (Const(N, _), Const(N', _)) = N = N'
-  | is_the_same_const_or_free (Free(N, _), Free(N', _)) = N = N'
-  | is_the_same_const_or_free _ = false
+fun identical_name (Const(N, _), Const(N', _)) = N = N'
+  | identical_name (Free(N, _), Free(N', _)) = N = N'
+  | identical_name (Var(N, _), Var(N', _)) = N = N'
+  | identical_name (A $ B, A' $ B') = identical_name (A,B) andalso identical_name (A',B')
+  | identical_name (Abs (_, _, X), Abs (_, _, X')) = identical_name (X, X')
+  | identical_name (Bound i, Bound i') = i = i'
+  | identical_name _ = false
 
-fun is_phi_head phi term = is_the_same_const_or_free (#term phi, term)
+fun is_term_of_phi phi term = identical_name (#term phi, term)
 
 fun is_Type_Opr ty =
   case dest_parameterized_phi_ty ty
@@ -964,7 +967,7 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
                                         ret := NONE ;
                                         chk_eq params [] rets
                                       )
-                               in if is_the_same_const_or_free (head, head')
+                               in if identical_name (head, head')
                                   then (chk_eq params params' mutating_params ; List.app chk params')
                                   else (List.app chk params')
                               end
@@ -1147,12 +1150,17 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
        (if no_auto then [] else
         [(introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),
          (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ elim'SE_ToA)]))
-   |> not no_auto ? (fn ctxt => ctxt
+   |> not no_auto ? (fn thy' =>
+      let val phi' = case thy'
+                       of Context.Proof lthy => morphism_phi_type (Local_Theory.target_morphism lthy) phi_type
+                        | Context.Theory _ => phi_type
+       in thy'
        |> Context.mapping (Context_Position.set_visible_global false)
                           (Context_Position.set_visible false)
-       |> Defining_Phi_Type.invoke ctxt phi_type
-       |> derive_properties (dervs, bundles) phi_type
+       |> Defining_Phi_Type.invoke thy' phi'
+       |> derive_properties (dervs, bundles) phi'
        |> Context_Position.restore_visible_generic thy
+      end
  ) |> pair phi_type
   end
 

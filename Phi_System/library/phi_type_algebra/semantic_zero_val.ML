@@ -9,13 +9,13 @@ structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 fun guess_property phi0 ctxt =
-  let val (rev_arg_tys0, x_ty0, model_ty0) = parameters_and_typs_of phi0
+  let val (_, x_ty0, model_ty0) = parameters_and_typs_of phi0
       val inst = lift_types_sort (Proof_Context.theory_of ctxt) [(x_ty0, \<^sort>\<open>zero\<close>)]
       val inst' = Phi_Help.certify_tyvars (Context.Proof ctxt) inst
       val phi = instantiate_phi (inst',Vars.empty) phi0
 
       val ((x_term, T_term), ctxt) = fix_phi_term_params phi ctxt
-      val (rev_arg_tys, x_ty, model_ty) = parameters_and_typs_of phi
+      val (_, x_ty, model_ty) = parameters_and_typs_of phi
 
       val TY = get_first (fn th => case Thm.concl_of th of _ (*Trueprop*) $ (_ (*SemTyp*) $ TY) => SOME TY
                                       | _ => error "BUG: Bad rule of \<phi>SemType")

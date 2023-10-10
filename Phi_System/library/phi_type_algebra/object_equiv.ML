@@ -186,7 +186,7 @@ fun OE_reasoning phi ctxt rule =
 (*
 fun wrap_equation_by_base_tag ctxt phi thm =
   let fun conv ctxt ctm =
-        if is_phi_head phi (Term.head_of (Thm.term_of ctm))
+        if is_term_of_phi phi (Term.head_of (Thm.term_of ctm))
         then Conv.rewr_conv @{thm' \<A>simp_to_base_def[symmetric]} ctm
         else Conv.sub_conv conv ctxt ctm
    in Conv.fconv_rule (Conv.concl_conv (Thm.nprems_of thm) (conv ctxt)) thm
@@ -206,7 +206,7 @@ fun gen_obj_equal_singular (_,name) instruction ctxt0 (phi0 : phi_type) thy =
                       (apply2 (Logic.incr_indexes ([],[],1)) (#term phi0, #term phi0))
                  |> apply2 (Thm.cterm_of ctxt0)
       val rule't1 = Drule.infer_instantiate ctxt0 [(("T",0), fst inst_T), (("T\<^sub>0",0), snd inst_T)] rule0
-      val rule = case find_first (not o exists_subterm (is_phi_head phi0) o Phi_Help.RHS_of o Thm.concl_of)
+      val rule = case find_first (not o exists_subterm (is_term_of_phi phi0) o Phi_Help.RHS_of o Thm.concl_of)
                                  (#equations phi0)
                    of SOME th => Drule.mk_term (Thm.dest_arg (Thm.cconcl_of th)) RS rule't1
                     | NONE => raise Automation_Fail (fn () =>

@@ -162,7 +162,7 @@ lemma [\<phi>reason add]:
 subsection \<open>Embedding of Subjection\<close>
 
 declare [[\<phi>trace_reasoning = 0 ]]
-   
+
 \<phi>type_def SubjectionTY :: \<open>('a,'b) \<phi> \<Rightarrow> bool \<Rightarrow> ('a,'b) \<phi>\<close> (infixl "\<phi>\<s>\<u>\<b>\<j>" 25)
   where [embed_into_\<phi>type]: \<open> (T \<phi>\<s>\<u>\<b>\<j> P) = (\<lambda>x. x \<Ztypecolon> T \<s>\<u>\<b>\<j> P) \<close>
   deriving Sep_Functor_1
@@ -2813,11 +2813,11 @@ definition \<phi>F_simulation
     \<comment> \<open>Forward Simulation\<close>
   where \<open>(T \<Rrightarrow>\<^sub>r U) = (\<lambda>f. { g. \<forall>v x. v \<in> (x \<Ztypecolon> T) \<longrightarrow> (\<exists>u y. (v,u) \<in> g \<and> (x,y) \<in> f \<and> u \<in> (y \<Ztypecolon> U)) })\<close>
  
- 
+
 locale test =
   fixes param :: nat
 begin
-
+   
 \<phi>type_def XX
   where \<open>x \<Ztypecolon> XX \<equiv> (x + param \<Ztypecolon> Itself)\<close>
   deriving Basic

@@ -115,7 +115,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
   end
 
 fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
-  let val (rev_argtys, x_ty, c_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
+  let val (rev_args, x_ty, c_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
       fun calc_arity arity (argty :: rev_argtys) =
            (case try dest_parameterized_phi_ty argty
               of SOME ([], _, _) =>
@@ -126,7 +126,7 @@ fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
                   else calc_arity (arity + 1) rev_argtys
                | NONE => (arity, argty :: rev_argtys))
         | calc_arity arity [] = (arity, [])
-      val (arity, fixed_param_tys) = calc_arity 0 rev_argtys
+      val (arity, fixed_param_tys) = calc_arity 0 rev_args
       val idx = phi_maxidx_of phi ~1
       val F_term = fold_index (fn (i,(ty, N)) => fn X => X $ Var((N, i+idx), ty))
                               (rev fixed_param_tys ~~ map (the_default "A" o #name)
@@ -157,7 +157,7 @@ fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
 
       val pattern = apply2 Thm.concl_of rule
 
-      val name = Term.term_name (#term phi) ^ "_Comm"
+      val name = Binding.name_of (#name phi) ^ "_Comm"
       val name = if reversed then (name ^ "\<^sub>E", name ^ "\<^sub>I")
                              else (name ^ "\<^sub>I", name ^ "\<^sub>E")
 
@@ -170,7 +170,7 @@ fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
                                        dependences = [],
                                        derive= der}) deriving
 
-      val binding = Binding.qualify true (Term.term_name (#term phi)) (Binding.make ("Comm", #pos phi))
+      val binding = Binding.qualify true (Binding.name_of (#name phi)) (Binding.make ("Comm", #pos phi))
 
    in (binding, deriver, pattern)
   end

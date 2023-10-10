@@ -1171,7 +1171,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                       (phi0 : phi_type) hint ctxt0 =
   let (*val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0*)
       (*val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0*)
-      val property_const = Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
+      (*val property_const = Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))*)
       (*lame! DO NOT REMOVE!
         val hint' = case hint of NONE => guess_entire_property ctxt0 phi0 property_const
                              | some => some*)
@@ -1226,15 +1226,17 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
                      in (ants', property, parameters, phi, ctxt)
                     end ) *) )
    |> Seq.map (fn (ants01, property01, phi_typ_parameters01, phi01, ctxt01) => 
-  let val (ants, property, phi_typ_parameters, phi, ctxt) =
+  let val (ants, property, phi_typ_parameters', phi, ctxt) =
         if is_phi_type_fixed phi01
         then (ants01, property01, phi_typ_parameters01, phi01, ctxt01)
         else let val (inst, phi, ctxt) = fix_phi_type true phi01 ctxt01
                  val subst = Term_Subst.instantiate (Phi_Help.uncertify_vars inst)
               in (map subst ants01, subst property01, map (Option.map subst) phi_typ_parameters01, phi, ctxt)
              end
-      val phityp_arity = length (Term.binder_types (Term.fastype_of (#term phi)))
-      val _ = if phityp_arity = length phi_typ_parameters then ()
+      val phityp_arity = length (#params phi) + 1
+      val phi_typ_parameters =
+              if phityp_arity <= length phi_typ_parameters'
+              then List.take (phi_typ_parameters', phityp_arity)
               else error "Bad Argument: phi_typ_parameters"
 
       val ant = map (Phi_Conv.atomize_term ctxt) ants
@@ -1362,7 +1364,7 @@ fun parse_hint extract_phityp ctxt phi hint =
            |> Phi_Help.beta_eta_contract_term
            |> Term.strip_comb
            |> apsnd (rev #> map (fn tm => if tm = Term.dummy then NONE else SOME tm))
-      val _ = if is_phi_head phi phiconst then ()
+      val _ = if is_term_of_phi phi phiconst then ()
               else malformed_hint ctxt hint (fn () => let open Pretty in
                   [block (text "It specifies a irrelavent \<phi>-type" @
                           [brk 1, Syntax.pretty_term ctxt phiconst, brk 1] @
@@ -1702,7 +1704,7 @@ let fun elim_TA_ANT ctxt ctm =
           fun filter_param bvs (X as _ $ _) ret =
                (case Term.strip_comb X
                   of (head, args) =>
-                      if is_phi_head phi head
+                      if is_term_of_phi phi head
                       then fold (fn X =>
                               if is_Var (Term.head_of X) then I
                               else let val X' = fold (fn T => fn B => Abs("",T,B)) bvs X

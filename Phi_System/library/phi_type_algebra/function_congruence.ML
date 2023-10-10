@@ -66,6 +66,7 @@ val _ = Theory.setup (Context.theory_map (
                 end)
      in ctxt00
      |> Function_Context_Tree.add_function_cong rule
-     |> local_note_properties' (Thm.term_of F) [(Binding.make ("fundef_cong", pos), [rule])]
+     |> local_note_properties' (Term.term_name (Term.head_of (Thm.term_of F)))
+                               [(Binding.make ("fundef_cong", pos), [rule])]
     end))))
 end
