@@ -1342,7 +1342,19 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
         ))
 in
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "define \<phi>-types"
-          ((def_direct || def_by_fun) >> (fn f => Toplevel.generic_theory (f true)))
+          ((def_direct || def_by_fun) >> (fn f => Toplevel.generic_theory (
+              Context.mapping
+                  (  Sign.new_group
+                  #> Context.theory_map (f false)
+                  #> Sign.reset_group)
+                  (  Context.proof_map (
+                     Target_Context.switch_named_cmd NONE
+                  #-> (fn finish =>
+                     Local_Theory.new_group
+                  #> Context.proof_map (f false)
+                  #> Local_Theory.reset_group
+                  #> finish)) )
+            )))
 
 val _ = Outer_Syntax.command \<^command_keyword>\<open>let_\<phi>type\<close> "derive properties of existing \<phi>-types"
           ((Parse.position Parse.const -- bundle_parser -- deriving_parser)

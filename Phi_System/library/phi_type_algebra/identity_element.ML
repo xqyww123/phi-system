@@ -152,7 +152,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
                     end
                   else (NONE, ctxt)
                | _ => (NONE, ctxt))
-            (args ~~ snd (Term.strip_comb T_term)) ctxt
+            (args ~~ Phi_Help.take_last (length args) (snd (Term.strip_comb T_term))) ctxt
       val (ants, Ds, Ps) = (map_filter (Option.map #1) ants_Ds_Ps,
                             map_filter (Option.map #2) ants_Ds_Ps,
                             map_filter (Option.map #3) ants_Ds_Ps)

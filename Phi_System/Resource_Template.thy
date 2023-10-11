@@ -105,15 +105,18 @@ lemma [\<phi>inhabitance_rule, elim!]:
 *)
 
 declare [[\<phi>trace_reasoning = 0]]
-  
+
+
 \<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
   where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
-  deriving Basic
-       and Functional_Transformation_Functor
-       (*and Identity_Elements
-       and Separation_Homo\<^sub>I*)
+  deriving Sep_Functor_1
 
 thm \<phi>.unfold
+thm \<phi>.\<phi>Prod
+
+term \<phi>
+ML \<open>@{term \<open>\<phi>\<close>}\<close>
+
 
 lemma \<phi>_Prod:
   \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>

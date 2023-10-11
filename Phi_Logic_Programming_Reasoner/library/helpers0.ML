@@ -4,6 +4,7 @@ signature PHI_HELP = sig
 
 val warn_when_visible : Context.generic -> string -> unit
 
+val take_last : int -> 'a list -> 'a list
 val last : 'a list -> 'a
 val front : 'a list -> 'a list
 val split_last : 'a list -> 'a list * 'a
@@ -132,6 +133,7 @@ fun front [] = raise Fail "front"
   | front [x] = []
   | front (h::ls) = h :: front ls
 fun split_last L = (front L, last L)
+fun take_last n L = List.drop (L, length L - n)
 
 fun repeat f x = repeat f (f x) handle TERM _ => x | CTERM _ => x | THM _ => x
 fun ntimes_i i n f x = if i < n then ntimes_i (i+1) n f (f i x) else x

@@ -2820,10 +2820,12 @@ definition \<phi>F_simulation
 locale test =
   fixes param :: nat
 begin
-   
+
 \<phi>type_def XX
   where \<open>x \<Ztypecolon> XX \<equiv> (x + param \<Ztypecolon> Itself)\<close>
   deriving Basic
+
+term XX
 
 end
  
