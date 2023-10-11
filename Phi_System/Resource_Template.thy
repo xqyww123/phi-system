@@ -104,28 +104,19 @@ lemma [\<phi>inhabitance_rule, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 *)
 
-declare [[\<phi>trace_reasoning = 1]]
-thm assertion_simps
-
+declare [[\<phi>trace_reasoning = 0]]
+ 
 \<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
   where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
   deriving Sep_Functor_1
 
-thm assertion_simps
 thm \<phi>.unfold
 thm \<phi>.\<phi>Prod_ty
 thm \<phi>.\<phi>None
 
-term \<phi>
-ML \<open>@{term \<open>\<phi>\<close>}\<close>
-
-lemma \<phi>_\<phi>None:
-  \<open>\<phi> \<circle> = \<circle>\<close>
-  by (rule \<phi>Type_eqI; simp add: \<phi>expns)
-
 lemma \<phi>_unit:
   \<open>(1 \<Ztypecolon> \<phi> Itself) = Void\<close>
-  by (clarsimp simp add: BI_eq_iff \<phi>_expn Itself_expn)
+  by (clarsimp simp add: BI_eq_iff)
 
 (*
 lemma [\<phi>reason 1200 for \<open>(?x \<Ztypecolon> \<phi> \<circle>) = ?Z @action clean_automation_waste\<close>]:

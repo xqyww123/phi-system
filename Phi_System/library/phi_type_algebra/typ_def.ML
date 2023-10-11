@@ -19,8 +19,7 @@ include PHI_TYPE_ALGEBRA
 
 (** \<phi>-Type Definition \& Infos **)
 
-datatype def = DIRECT_DEF of term (*phi term*) * thm (*def*)
-             | WFREC_DEF  of term (*phi term*) * Function.info
+datatype def = DIRECT_DEF of thm (*def*) | WFREC_DEF  of Function.info
 
 type parameter_info = {
   name: string option (*not always given*),
@@ -142,7 +141,7 @@ val check_deriving_ast : Context.generic -> deriving_ast list -> derivings
 
 structure Defining_Phi_Type : HOOKS (*invoked before any deriving*)
 val add_type : {no_auto: bool}
-            -> binding * def * Position.T * derivings * Bundle.name list
+            -> binding * term * def * Position.T * derivings * Bundle.name list
             -> generic_theory -> phi_type * generic_theory
 
 val override_ind_rule : term * thm -> Context.generic -> Context.generic
@@ -223,9 +222,8 @@ val unfoldN = "unfold"
 val expansionN = "expansion"
 (* val open_abstractionN = "open_abstraction" *)
 
-datatype def = DIRECT_DEF of term (*phi term*) * thm (*def*)
-             | WFREC_DEF  of term (*phi term*) * Function.info
-               (*the phi term can be parameterized by fixed free variables like those in locales*)
+datatype def = DIRECT_DEF of thm (*def*)
+             | WFREC_DEF  of Function.info
 
 type parameter_info = {
   name: string option,
@@ -925,28 +923,27 @@ fun LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _) = LHS
   | LHS_of X = raise TERM ("Not an equation", [X])
 
 (*ctxt: the context used to derive properties*)
-fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
+(*term: the term of the phi type, can be parameterized by fixed free variables like those in locales *)
+fun add_type {no_auto} (binding, term, def, pos, dervs, bundles) thy =
   let val ctxt = open_proof_ctxt bundles thy
-
-      fun get_head_term (X $ Var _) = X
-        | get_head_term X = X
-      fun get_params ret (X $ Var v) = get_params (v :: ret) X
-        | get_params ret _ = ret
 
       fun match_head head (term as f $ _) = head aconv term orelse match_head head f
         | match_head head term = head aconv term
 
-      val (idx_in_def_eqs,term) =
-           (case def of DIRECT_DEF (term, _) => (~1, get_head_term term)
-                      | WFREC_DEF (term, info) =>
-                          case find_index (match_head term) (#fs info)
-                            of ~1 => error ("The given term " ^ Syntax.string_of_term ctxt term ^ " \
-                                            \is not defined inside the given function info")
-                             | i => (i, get_head_term term))
+      fun get_idx_in_def_eqs lhs =
+            case find_index (fn (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ x $ T) => match_head term (T $ x)
+                              | X => match_head term X) lhs
+              of ~1 => error ("The given term " ^ Syntax.string_of_term ctxt term ^ " \
+                              \is not defined inside the given definition")
+               | i => i
+
+      val idx_in_def_eqs =
+           (case def of DIRECT_DEF eq => get_idx_in_def_eqs [LHS_of (Thm.concl_of eq)]
+                      | WFREC_DEF info => get_idx_in_def_eqs (#fs info))
 
       fun filter_relevant_eqs term = filter (match_head term o LHS_of o Thm.concl_of)
-      val eqs = (case def of DIRECT_DEF (_, eq) => [eq]
-                    | WFREC_DEF (_, info) =>
+      val eqs = (case def of DIRECT_DEF eq => [eq]
+                    | WFREC_DEF info =>
                         (case #simps info
                            of SOME eqs => filter_relevant_eqs term eqs
                             | NONE => (warning "Termination of the definition is not proven. \
@@ -958,11 +955,12 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
 
       val typeqs = map (fn eq => SOME (eq RS refine_typeq) handle THM _ => NONE) eqs
 
+      val fixed_num = length (snd (strip_comb term))
       val param_names = map (fn eq =>
                           case LHS_of (Thm.concl_of eq)
                             of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T =>
                                   map (fn Var ((N,_),_) => SOME N | Free (N,_) => SOME N | _ => NONE)
-                                      (snd (strip_comb T))
+                                      (List.drop (snd (strip_comb T), fixed_num))
                              | _ => error "BUG") eqs
                      |> foldl1 (uncurry (map2 (curry merge_options)))
 
@@ -994,8 +992,10 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
                   => let val (head, params) = case LHS
                                                 of (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) => Term.strip_comb T
                                                  | _ => error "BUG"
+                         val params = List.drop (params, fixed_num)
                          fun chk (X as _ $ _) =
                               let val (head', params') = Term.strip_comb X
+                                  val params' = List.drop (params', fixed_num)
                                   fun chk_eq (param :: params) (param' :: params') (ret :: rets) = (
                                         if param = param' then () else ret := SOME true ;
                                         chk_eq params params' rets
@@ -1040,7 +1040,7 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
 
       val ind =(case def
                   of DIRECT_DEF _ => NONE
-                   | WFREC_DEF (_, info) =>
+                   | WFREC_DEF info =>
                         case #inducts info
                           of SOME rules => SOME (List.nth (rules, idx_in_def_eqs))
                            | _ => SOME (List.nth (#pinducts info, idx_in_def_eqs)))
@@ -1050,7 +1050,7 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
       val cases =
             case def
               of DIRECT_DEF _ => NONE
-               | WFREC_DEF (_, info) => SOME (List.nth (#cases info, idx_in_def_eqs))
+               | WFREC_DEF info => SOME (List.nth (#cases info, idx_in_def_eqs))
       (*I am a fool
       val cases_ToA = mk_cases_rule eqs mk_cases_ToA cases_origin term ctxt
       val cases_VS = SOME (mk_cases_rule eqs mk_cases_shift cases_origin term ctxt)
@@ -1210,9 +1210,16 @@ fun prep_deriving_and_bundles raw_bundles raw_derv ctxt =
    in (dervs, bundles)
   end
 
-fun add_type_i {no_auto} (name, def, pos, raw_derv, raw_bundles) thy =
+fun add_type_i {no_auto} (name, term, def, pos, raw_derv, raw_bundles) thy =
   let val (dervs, bundles) = prep_deriving_and_bundles raw_bundles raw_derv (Context.proof_of thy)
-   in add_type {no_auto=no_auto} (name, def, pos, dervs, bundles) thy
+      val (term, def) = case def of DIRECT_DEF def =>
+            let val cterm = Drule.mk_term (Context.cases Thm.global_cterm_of Thm.cterm_of thy term)
+                val [cterm, def] = Drule.zero_var_indexes_list [cterm, def]
+             in (Thm.term_of (Drule.dest_term cterm), DIRECT_DEF def)
+            end
+                                  | def => (term, def)
+      
+   in add_type {no_auto=no_auto} (name, term, def, pos, dervs, bundles) thy
   end
 
 (** Interface **)
@@ -1285,7 +1292,7 @@ fun gen_add_fun bs raw_derv raw_bundles add (thy : generic_theory) =
         Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
       ) prove_termination
    |-> (fn info => add_type_i {no_auto=false}
-                              (name, WFREC_DEF (const, info), Binding.pos_of name,
+                              (name, const, WFREC_DEF info, Binding.pos_of name,
                                raw_derv, raw_bundles) #> snd)
   end
 
@@ -1352,7 +1359,7 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
            #> (fn ((def_term, (_, def_eq)), generic) =>
               let val name = case decl of SOME (name, _, _) => name
                                         | NONE => Binding.make (Term.term_name def_term, pos)
-               in add_type_i {no_auto=false} (name, DIRECT_DEF (def_term, def_eq), pos,
+               in add_type_i {no_auto=false} (name, def_term, DIRECT_DEF def_eq, pos,
                                               raw_dervs, raw_bundles) generic |> snd
               end)
         end))

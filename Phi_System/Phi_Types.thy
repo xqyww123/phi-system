@@ -28,9 +28,11 @@ lemma Itself_is_primitive: \<open>x \<Ztypecolon> Itself \<equiv> x \<Ztypecolon
 
 declare [[\<phi>trace_reasoning = 1]]
 
+ML \<open>(Thm.transfer \<^theory> @{thm' Itself_is_primitive})\<close>
+
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type {no_auto=true}
-        (\<^binding>\<open>Itself\<close>, Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>Itself\<close>, Thm.transfer \<^theory> @{thm' Itself_is_primitive}),
+        (\<^binding>\<open>Itself\<close>, \<^pattern>\<open>Itself\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' Itself_is_primitive}),
          \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
 
@@ -45,7 +47,7 @@ lemma \<phi>None_def': \<open> (x \<Ztypecolon> \<circle>) = (1 \<Ztypecolon> It
 
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type {no_auto=false}
-      (\<^binding>\<open>\<phi>None\<close>, Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>None\<close>, Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
+      (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
        \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
  
@@ -72,7 +74,7 @@ subsection \<open>Embedding of \<open>\<top>\<close>\<close>
 
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type {no_auto=false}
-      (\<^binding>\<open>\<phi>Any\<close>, Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>Any\<close>, Thm.transfer \<^theory> @{thm' \<phi>Any_def}),
+      (\<^binding>\<open>\<phi>Any\<close>, \<^pattern>\<open>\<phi>Any::(?'c, ?'x) \<phi>\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Any_def}),
        \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
 
@@ -90,9 +92,11 @@ subsection \<open>Embedding of \<open>\<bottom>\<close>\<close>
 
 declare \<phi>Bot_def[embed_into_\<phi>type]
 
+thm \<phi>Bot_def
+
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type {no_auto=false}
-        (\<^binding>\<open>\<phi>Bot\<close>, Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>Bot\<close>, Thm.transfer \<^theory> @{thm' \<phi>Bot_def}),
+        (\<^binding>\<open>\<phi>Bot\<close>, \<^pattern>\<open>\<phi>Bot::(?'c,?'a) \<phi>\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Bot_def}),
          \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
 
@@ -1565,7 +1569,7 @@ declare [[\<phi>trace_reasoning = 0]]
 
 setup \<open>Context.theory_map (
   Phi_Type_Algebra.add_type {no_auto=false}
-        (\<^binding>\<open>\<phi>Some\<close>, Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>Some\<close>, Thm.transfer \<^theory> @{thm' \<phi>Some_def'}),
+        (\<^binding>\<open>\<phi>Some\<close>, \<^pattern>\<open>\<phi>Some\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>Some_def'}),
          \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
   \<comment> \<open>Setup an alternative definition in the language of \<phi>-types so that we can apply
@@ -2026,7 +2030,7 @@ subsection \<open>Point on a Mapping\<close>
 subsubsection \<open>By Key\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-  
+ 
 \<phi>type_def \<phi>MapAt :: \<open>'key \<Rightarrow> ('v::one, 'x) \<phi> \<Rightarrow> ('key \<Rightarrow> 'v, 'x) \<phi>\<close> (infixr "\<^bold>\<rightarrow>" 75)
   where \<open>\<phi>MapAt k T = (fun_upd 1 k \<Zcomp>\<^sub>f T)\<close>
   deriving Sep_Functor_1
@@ -2820,11 +2824,11 @@ definition \<phi>F_simulation
 locale test =
   fixes param :: nat
 begin
- 
+
 \<phi>type_def AA
   where \<open>(0 \<Ztypecolon> AA) = (param \<Ztypecolon> Itself)\<close>
       | \<open>(Suc n \<Ztypecolon> AA) = (n \<Ztypecolon> AA)\<close>
-
+ 
 \<phi>type_def XX
   where \<open>x \<Ztypecolon> XX \<equiv> (x + param \<Ztypecolon> Itself)\<close>
   deriving Basic
