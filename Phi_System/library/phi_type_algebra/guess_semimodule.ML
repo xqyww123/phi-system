@@ -57,7 +57,7 @@ fun Guess_Scalar_framework (sorts, mk_goal_term_and_parse_result) =
   Guess_Framework (fn (phi, ctxt) =>
     let val (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi sorts
         val module_ty = s_ty --> mk_phi_type_ty (model_ty, x_ele_ty) --> mk_phi_type_ty (model_ty, x_ty)
-        val idx = phi_maxidx_of phi ~1 + 1
+        val idx = maxidx_of_phi phi ~1 + 1
         val ((_, FT_term), ctxt) = fix_phi_term_params phi ctxt
         val (F_term $ _ $ T_term) = FT_term
   
@@ -74,7 +74,7 @@ fun Guess_Scalar_framework (unfold_place, sorts, mk_goal_term_and_parse_result)
                            (phi : phi_type) ctxt =
   let val (s_ty, x_ele_ty, x_ty, T_model_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi sorts
       val module_ty = s_ty --> mk_phi_type_ty (model_ty, x_ele_ty) --> mk_phi_type_ty (model_ty, x_ty)
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
 
@@ -231,7 +231,7 @@ fun Guess_Zip_of_Semimodule is_zip = Guess_Scalar_framework ( SOME (\<^sort>\<op
 (*
 fun Guess_Scalar_One_E (phi : phi_type) ctxt =
   let val (s_ty, x_ele_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi NONE
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
 

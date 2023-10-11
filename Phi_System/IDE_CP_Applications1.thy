@@ -902,8 +902,8 @@ subsection \<open>To\<close>
 
 consts to :: \<open>('a,'b) \<phi> \<Rightarrow> action\<close>
        \<A>pattern  :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('a,'b) \<phi>\<close> ("\<p>\<a>\<t>\<t>\<e>\<r>\<n> _ \<Rightarrow> _" [42,42] 41)
-       \<A>traverse :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> ("\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> _" [37] 36) \<comment> \<open>enter to elements recursively\<close>
-       \<A>then     :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> (infixr "\<t>\<h>\<e>\<n>" 35)
+       \<A>traverse :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> ("\<t>\<r>\<a>\<v>\<e>\<r>\<s>\<e> _" [30] 29) \<comment> \<open>enter to elements recursively\<close>
+       \<A>then     :: \<open>('a,'b) \<phi> \<Rightarrow> ('c,'d) \<phi> \<Rightarrow> ('c,'d) \<phi>\<close> (infixr "\<t>\<h>\<e>\<n>" 28)
                     \<comment> \<open>\<open>\<A> \<t>\<h>\<e>\<n> \<B>\<close> hints to first transform to \<open>\<A>\<close> and then from \<open>\<A>\<close> to \<open>\<B>\<close>.
                         \<open>\<A>\<close> and \<open>\<B>\<close> can be special commands.\<close>
        \<A>commute  :: \<open>'\<phi>\<^sub>F \<Rightarrow> '\<phi>\<^sub>G \<Rightarrow> ('c,'a) \<phi>\<close> ("\<c>\<o>\<m>\<m>\<u>\<t>\<e>")

@@ -43,7 +43,7 @@ fun guess_property (phi:phi_type) ctxt =
       val r_fixes = Name.invent_names (Variable.names_of ctxt) "r" r_types
       val ctxt' = Variable.add_fixes_direct (map fst r_fixes) ctxt
       val ants = map2 (mk_prop o Free) r_fixes T_params 
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
       val prop = mk_prop (Var(("r",idx), x_ty --> model_ty --> HOLogic.boolT)) (([], x_ty, model_ty), T_term)
    in Seq.single (ants, HOLogic.Trueprop $ prop,
                   NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt')

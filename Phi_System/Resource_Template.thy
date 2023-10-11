@@ -105,11 +105,11 @@ lemma [\<phi>inhabitance_rule, elim!]:
 *)
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+  
 \<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
   where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
-  deriving (*Basic
-       and*) Transformation_Functor
+  deriving Basic
+       and Functional_Transformation_Functor
        (*and Identity_Elements
        and Separation_Homo\<^sub>I*)
 

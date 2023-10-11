@@ -17,7 +17,7 @@ fun gen_Guess_Tyops_Commute_framework (template_of_reasoning_goal, parsing_rule,
   Guess_Framework'
     ( template_of_reasoning_goal,
       fn (phi, ctxt) =>
-        let val idx = phi_maxidx_of phi ~1 + 1
+        let val idx = maxidx_of_phi phi ~1 + 1
             val F_term' = Logic.incr_indexes ([], [], idx) F_term
             val (U_ty, x_ty, c_ty) = case dest_parameterized_phi_ty (Term.fastype_of (#term phi))
                                        of (U_ty :: _, x_ty, c_ty) => (U_ty, x_ty, c_ty)

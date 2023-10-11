@@ -64,14 +64,14 @@ val guess_self_rel : Proof.context -> (typ * term) list (*known operators*)
                                    -> typ (*container type*) -> (term * Proof.context) Seq.seq
 val guess_predicate : Proof.context -> (typ * term) list (*known predicates*) -> typ -> (term * Proof.context) Seq.seq
 val guess_rel_mapper : (typ * typ -> term (*dead_opr*)) -> (typ -> typ) (*f*) -> Proof.context ->
-                            typ (*container type*) -> typ (*the target element type*) ->
+                            typ (*container type*) -> typ list (*the target element types*) ->
                             (term * Proof.context) Seq.seq
          (*return the relation mapper from the container type T to f(T), which maps the inner element
               of type U to f(U)*)
 val guess_func_mapper : (typ -> typ) (*f*) ->
-      Proof.context -> typ (*container*) -> typ (*the target element*) -> (term * Proof.context) Seq.seq
+      Proof.context -> typ (*container*) -> typ list (*the target elements*) -> (term * Proof.context) Seq.seq
 val guess_pred_mapper : Proof.context ->
-      typ (*container*) -> typ (*the target element*) -> (term * Proof.context) Seq.seq
+      typ (*container*) -> typ list (*the target elements*) -> (term * Proof.context) Seq.seq
 
 val zip_typ : Context.generic -> typ * typ -> typ
   (* zip(T(a1,int,U(a3),W(nat,a4)) , T(b1,int,U(b3),W(nat,b4))) = T(a1*b1, int, U(a3*b3), W(nat,a4*b4))
@@ -643,60 +643,69 @@ val guess_predicate =
 
 (*ty: container_ty
   dead_opr: the relation for dead type parameters (including those are not the target element type)*)
-fun guess_rel_mapper dead_opr target_ty ctxt ty element_ty =
-  let val [g'] = Name.invent (Variable.names_of ctxt) "g" 1
-      val ([g], ctxt') = Variable.add_fixes [g'] ctxt
-      val element_ty' = target_ty element_ty
-      val g_ty = element_ty --> element_ty' --> HOLogic.boolT
-      val g_term = Free(g, g_ty)
-      val known_rels = [(element_ty, g_term)]
+fun guess_rel_mapper dead_opr target_ty ctxt ty ele_tys =
+  let val g_names = Name.invent (Variable.names_of ctxt) "g" (length ele_tys)
+      val ctxt' = Variable.add_fixes_direct g_names ctxt
+      val ele_tys' = map target_ty ele_tys
+      val g_tys = map2 (fn ele_ty => fn ele_ty' => ele_ty --> ele_ty' --> HOLogic.boolT) ele_tys ele_tys'
+      val g_terms = map Free (g_names ~~ g_tys)
+      val known_rels = ele_tys ~~ g_terms
       fun mk_term (ctxt, D, L, bnf) =
         let val ctxt' = load_ss (false,false,true,true,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_rel_of_bnf D L (map target_ty L) bnf, ctxt')
         end
-      val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
+      val is_live = Term.exists_subtype (member (op =) ele_tys)
       fun mk_operator_for_dead typ ctxt = (\<^Const>\<open>HOL.eq typ\<close>, ctxt)
       fun mk_dead_opr ty ctxt = Seq.single (dead_opr (ty, target_ty ty), ctxt)
    in guess_operator mk_term is_live mk_operator_for_dead mk_dead_opr ctxt' known_rels ty
    |> Seq.map (fn (rel_term', ctxt) =>
-        (Abs("", g_ty, Term.abstract_over (g_term, rel_term')), ctxt))
+        (fold_rev (fn g_term => fn X =>
+              Abs (Term.term_name g_term, fastype_of g_term, Term.abstract_over (g_term, X))
+           ) g_terms rel_term', ctxt)
+      )
   end
 
-fun guess_func_mapper target_ty ctxt ty element_ty =
-  let val [g'] = Name.invent (Variable.names_of ctxt) "g" 1
-      val ([g], ctxt') = Variable.add_fixes [g'] ctxt
-      val element_ty' = target_ty element_ty
-      val g_ty = element_ty --> element_ty'
-      val g_term = Free(g, g_ty)
-      val known_mappers = [(element_ty, g_term)]
+fun guess_func_mapper target_ty ctxt ty ele_tys =
+  let val g_names = Name.invent (Variable.names_of ctxt) "g" (length ele_tys)
+      val ctxt' = Variable.add_fixes_direct g_names ctxt
+      val ele_tys' = map target_ty ele_tys
+      val g_tys = map2 (fn ele_ty => fn ele_ty' => ele_ty --> ele_ty' --> HOLogic.boolT) ele_tys ele_tys'
+      val g_terms = map Free (g_names ~~ g_tys)
+      val known_mappers = ele_tys ~~ g_terms
       fun mk_term (ctxt, D, L, bnf) =
         let val ctxt' = load_ss (false,false,false,true,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_map_of_bnf D L (map target_ty L) bnf, ctxt')
         end
-      val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
+      val is_live = Term.exists_subtype (member (op =) ele_tys)
       fun mk_operator_for_dead typ ctxt = (Abs("", typ, Bound 0), ctxt)
       fun atom_opr ty ctxt = Seq.single (mk_operator_for_dead ty ctxt)
    in guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt' known_mappers ty
    |> Seq.map (fn (map_term', ctxt) =>
-        (Abs("", g_ty, Term.abstract_over (g_term, map_term')), ctxt))
+        (fold_rev (fn g_term => fn X =>
+              Abs (Term.term_name g_term, fastype_of g_term, Term.abstract_over (g_term, X))
+           ) g_terms map_term', ctxt)
+      )
   end
 
-fun guess_pred_mapper ctxt ty element_ty =
-  let val [g'] = Name.invent (Variable.names_of ctxt) "g" 1
-      val ([g], ctxt') = Variable.add_fixes [g'] ctxt
-      val g_ty = element_ty --> HOLogic.boolT
-      val g_term = Free(g, g_ty)
-      val known_mappers = [(element_ty, g_term)]
+fun guess_pred_mapper ctxt ty ele_tys =
+  let val g_names = Name.invent (Variable.names_of ctxt) "g" (length ele_tys)
+      val ctxt' = Variable.add_fixes_direct g_names ctxt
+      val g_tys = map (fn ele_ty => ele_ty --> HOLogic.boolT) ele_tys
+      val g_terms = map Free (g_names ~~ g_tys)
+      val known_mappers = ele_tys ~~ g_terms
       fun mk_term (ctxt, D, L, bnf) =
         let val ctxt' = load_ss (false,true,false,false,false) bnf ctxt
          in Seq.single (eBNF_Info.mk_pred_of_bnf D L bnf, ctxt')
         end
-      val is_live = Term.exists_subtype (fn ty' => ty' = element_ty)
+      val is_live = Term.exists_subtype (member (op =) ele_tys)
       fun mk_operator_for_dead typ ctxt = (Abs("", typ, \<^Const>\<open>True\<close>), ctxt)
       fun atom_opr ty ctxt = Seq.single (mk_operator_for_dead ty ctxt)
    in guess_operator mk_term is_live mk_operator_for_dead atom_opr ctxt' known_mappers ty
    |> Seq.map (fn (map_term', ctxt) =>
-        (Abs("", g_ty, Term.abstract_over (g_term, map_term')), ctxt))
+        (fold_rev (fn g_term => fn X =>
+              Abs (Term.term_name g_term, fastype_of g_term, Term.abstract_over (g_term, X))
+           ) g_terms map_term', ctxt)
+      )
   end
 
 (* Zip \& Unzip *)
@@ -1176,7 +1185,7 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
         val hint' = case hint of NONE => guess_entire_property ctxt0 phi0 property_const
                              | some => some*)
    in (case hint of SOME H0 =>
-              let (*val idx = Phi_Type_Algebra.phi_maxidx_of phi0 ~1 + 1
+              let (*val idx = Phi_Type_Algebra.maxidx_of_phi phi0 ~1 + 1
                   val H = Logic.incr_indexes ([],[],idx) H0*)
                   val thy = Proof_Context.theory_of ctxt0
                   val (typ_of_phi0, parameters0, H01) = parse_hint ctxt0 phi0 H0

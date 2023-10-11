@@ -48,7 +48,7 @@ fun guess_property (phi:phi_type) ctxt =
       val fixes = map2 (fn P => fn f => (Free P, Free f)) P_fixes f_fixes
 
       val ants = map2 mk_prop fixes T_params 
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
       val prop = mk_prop (Var(("P",idx), model_ty --> HOLogic.boolT),
                           Var(("f",idx), model_ty --> x_ty))
                          (([], x_ty, model_ty), T_term)

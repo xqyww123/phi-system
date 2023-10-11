@@ -127,7 +127,7 @@ fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
                | NONE => (arity, argty :: rev_argtys))
         | calc_arity arity [] = (arity, [])
       val (arity, fixed_param_tys) = calc_arity 0 rev_args
-      val idx = phi_maxidx_of phi ~1
+      val idx = maxidx_of_phi phi ~1
       val F_term = fold_index (fn (i,(ty, N)) => fn X => X $ Var((N, i+idx), ty))
                               (rev fixed_param_tys ~~ map (the_default "A" o #name)
                                                           (List.take (#params phi, length fixed_param_tys)))

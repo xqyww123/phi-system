@@ -74,7 +74,7 @@ fun guess_property_like_abst_domain (is_cov, infer_from_BNF, var_based_infer,
              |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs("A", ty, X)) rev_args
             end
           ) T_params preds
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
 
       val (ants_delta, oblg_delta, cond_delta) =
               guess_conditions ctxt (prop_head (x_ty, model_ty), is_cov) phi T_term
@@ -124,7 +124,7 @@ fun guess_property_abst_dom upper (phi:phi_type) ctxt =
              |> fold (fn ty => fn X => HOLogic.all_const ty $ Abs("A", ty, X)) rev_args
             end
           ) T_params preds
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
       
       val (ants_delta, oblg_delta, cond_delta) =
               guess_conditions ctxt (head x_ty model_ty, not upper) phi T_term
@@ -150,7 +150,7 @@ fun guess_property_abst_dom upper (phi:phi_type) ctxt =
 (*fun guess_property_inhab_atom upper (phi:phi_type) ctxt =
   let val ((_, T_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (_,x_ty,model_ty) = dest_parameterized_phi_ty (Term.fastype_of (#term phi))
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
       fun head x m = if upper then \<^Const>\<open>Abstract_Domain x m\<close>
                               else \<^Const>\<open>Abstract_Domain\<^sub>L x m\<close>
       val Prop = HOLogic.Trueprop $ (head x_ty model_ty $ T_term $ Var(("P",idx), x_ty --> HOLogic.boolT))

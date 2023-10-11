@@ -21,7 +21,7 @@ fun make_phi_for_pair ctxt0 (x_term0, FT_term0, (phi0:phi_type)) =
     |> Seq.map (fn (T_term, F_term) =>
   let val (rev_ty_args, _, _) = dest_parameterized_phi_ty (Term.fastype_of (#term phi0))
       val ([],element_ty,_) = dest_parameterized_phi_ty (hd rev_ty_args)
-      val idx = phi_maxidx_of phi0 ~1 + 1
+      val idx = maxidx_of_phi phi0 ~1 + 1
       val ty_x'dest = Term.add_tvarsT element_ty []
       val thy0 = Context.theory_of ctxt0
       val SS = map (Sign.arity_sorts thy0 \<^type_name>\<open>prod\<close> o snd) ty_x'dest
@@ -36,7 +36,7 @@ fun make_phi_for_pair ctxt0 (x_term0, FT_term0, (phi0:phi_type)) =
 fun instantiate_phi_to_pair_x ctxt (T_term0, phi0) =
   let val ([], element_ty0, _) = dest_parameterized_phi_ty (Term.fastype_of T_term0)
 
-      val idx = phi_maxidx_of phi0 ~1 + 1
+      val idx = maxidx_of_phi phi0 ~1 + 1
       val ty_x'dest = Term.add_tvarsT element_ty0 []
       val thy = Proof_Context.theory_of ctxt
       val SS = map (Sign.arity_sorts thy \<^type_name>\<open>prod\<close> o snd) ty_x'dest

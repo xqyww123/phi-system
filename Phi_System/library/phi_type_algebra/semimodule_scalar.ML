@@ -29,7 +29,7 @@ fun infer_the_default_scalar_domain ctxt (s_ty, x_ty, model_ty) =
 (*
 fun Guess_Scalar_Assoc is_intro (phi : phi_type) ctxt =
   let val (s_ty, x_ele_ty, x_ty, model_ty, phi) = parse_semimodule_phityp ctxt phi NONE
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
       val ((_, FT_term), ctxt) = fix_phi_term_params (#term phi) ctxt
       val (F_term $ _ $ T_term) = FT_term
 

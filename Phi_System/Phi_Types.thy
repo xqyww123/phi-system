@@ -1153,9 +1153,9 @@ declare [[\<phi>trace_reasoning = 0]]
         \<Longrightarrow> Identity_Elements\<^sub>E (T +\<^sub>\<phi> U) (case_sum T\<^sub>D U\<^sub>D) \<close> (*The inference works, but the result is not in an ideal form,
                                                             so we give the annotation manually*)
        and \<open>Identity_Elements\<^sub>I T T\<^sub>D T\<^sub>P
-        \<Longrightarrow> Identity_Elements\<^sub>I U U\<^sub>D U\<^sub>P
+        \<Longrightarrow> Identity_Elements\<^sub>I U U\<^sub>D U\<^sub>P 
         \<Longrightarrow> Identity_Elements\<^sub>I (T +\<^sub>\<phi> U) (case_sum T\<^sub>D U\<^sub>D) (case_sum T\<^sub>P U\<^sub>P) \<close> (*The inference works*)
-       and Transformation_Functor \<comment> \<open>TODO: should be replaced with bifunctor\<close>
+       and Functional_Transformation_Functor
        (*and Commutativity_Deriver\<^sub>E_rev*)
 
 ML \<open>assert_derived_properties \<^theory> [
@@ -1413,6 +1413,7 @@ lemma \<phi>Inter_Comm\<^sub>I [\<phi>reason %\<phi>type_algebra_prop_cut]:
 
 subsection \<open>Vertical Composition of Function\<close>
 
+
 text \<open>It is a more specific form than \<open>\<phi>Fun f \<Zcomp> T\<close> on which automation rules (particularly the Sep_Homo)
   can be given more generally.\<close>
 
@@ -1422,10 +1423,12 @@ declare [[\<phi>trace_reasoning = 0]]
       identity_elements_of_\<phi>Fun = (100, [100, 140]) for (\<open>Identity_Element\<^sub>I _ _\<close>, \<open>Identity_Element\<^sub>E _\<close>)
                                                      in identity_element and > derived_identity_element \<open>\<close>
   and carrier_set_of_\<phi>Fun = (60, [60,70]) for \<open>Carrier_Set _ _\<close>
-                                           in carrier_set and > derived_carrier_set and < carrier_set_cut \<open>\<close>
+              
+
+                             in carrier_set and > derived_carrier_set and < carrier_set_cut \<open>\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+    
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
   opening extract_premises_in_Carrier_Set

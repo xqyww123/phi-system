@@ -4476,8 +4476,26 @@ private lemma \<phi>TA_biTF_rule:
   unfolding Transformation_BiFunctor_def Action_Tag_def Ball_def Premise_def \<A>\<D>\<V>_target_def
   by simp
 
+private lemma \<phi>TA_biTF_rewr_C:
+  \<open>Trueprop ((\<forall>x. P1 x \<longrightarrow> A1 x) \<longrightarrow> (\<forall>x. P2 x \<longrightarrow> A2 x) \<longrightarrow> Ant \<longrightarrow> C @action \<phi>TA_ind_target \<A>)
+\<equiv> ((\<And>x. P1 x \<Longrightarrow> A1 x) \<Longrightarrow> (\<forall>x. P2 x \<longrightarrow> A2 x) \<Longrightarrow> Ant \<Longrightarrow> C @action \<A>)\<close>
+  unfolding Action_Tag_def atomize_imp atomize_all .
+
+private lemma \<phi>TA_biFT_deriver_cong:
+  \<open> D\<^sub>1 \<equiv> D'\<^sub>1
+\<Longrightarrow> D\<^sub>2 \<equiv> D'\<^sub>2
+\<Longrightarrow> (\<And>x. \<exists>a. a \<in> D'\<^sub>1 x \<Longrightarrow> R\<^sub>1 x \<equiv> R'\<^sub>1 x)
+\<Longrightarrow> (\<And>x. \<exists>a. a \<in> D'\<^sub>2 x \<Longrightarrow> R\<^sub>2 x \<equiv> R'\<^sub>2 x)
+\<Longrightarrow> (\<And>g\<^sub>1 g\<^sub>2 x y. Inhabited (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> Inhabited (y \<Ztypecolon> F2 U\<^sub>1 U\<^sub>2) \<Longrightarrow> m g\<^sub>1 g\<^sub>2 x y \<equiv> m' g\<^sub>1 g\<^sub>2 x y)
+\<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 m
+ \<equiv> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D'\<^sub>1 D'\<^sub>2 R'\<^sub>1 R'\<^sub>2 m' \<close>
+  unfolding Transformation_BiFunctor_def atomize_eq Transformation_def Inhabited_def
+  by clarsimp (smt (verit, ccfv_threshold))
+
 
 subsubsection \<open>Functional Transformation Functor\<close>
+
+paragraph \<open>Functor\<close>
 
 private lemma \<phi>TA_FTF_rule:
   \<open> (Ant \<Longrightarrow> Transformation_Functor F1 F2 T U D R mapper)
@@ -4498,6 +4516,32 @@ private lemma \<phi>TA_FTF_deriver_cong:
 \<Longrightarrow> Functional_Transformation_Functor F1 F2 T U D R pm fm \<equiv>
     Functional_Transformation_Functor F1 F2 T U D' R' pm' fm' \<close>
   unfolding Functional_Transformation_Functor_def atomize_eq Transformation_def Inhabited_def
+  by (clarsimp, smt (verit, best))
+
+paragraph \<open>Bi-Functor\<close>
+
+private lemma \<phi>TA_biFTF_rule:
+  \<open> (Ant \<Longrightarrow> Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 mapper)
+\<Longrightarrow> (Ant \<Longrightarrow> Object_Equiv (F2 U\<^sub>1 U\<^sub>2) eq)
+\<Longrightarrow> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x y. mapper (\<lambda>a b. b = f\<^sub>1 a \<and> P\<^sub>1 a) (\<lambda>a b. b = f\<^sub>2 a \<and> P\<^sub>2 a) x y
+                                  \<longrightarrow> eq y (fm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x) \<and> pm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x))
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @action \<phi>TA_ANT
+\<Longrightarrow> Functional_Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pm fm\<close>
+  unfolding Premise_def fun_eq_iff Action_Tag_def
+  using infer_biFTF_from_biFT .
+
+private lemma \<phi>TA_biFTF_deriver_cong:
+  \<open> D\<^sub>1 \<equiv> D'\<^sub>1
+\<Longrightarrow> D\<^sub>2 \<equiv> D'\<^sub>2
+\<Longrightarrow> (\<And>x. \<exists>a. a \<in> D'\<^sub>1 x \<Longrightarrow> R\<^sub>1 x \<equiv> R'\<^sub>1 x)
+\<Longrightarrow> (\<And>x. \<exists>a. a \<in> D'\<^sub>2 x \<Longrightarrow> R\<^sub>2 x \<equiv> R'\<^sub>2 x)
+\<Longrightarrow> (\<And>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x. Inhabited (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> fm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<equiv> fm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x)
+\<Longrightarrow> (\<And>f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x. Inhabited (x \<Ztypecolon> F1 T\<^sub>1 T\<^sub>2) \<Longrightarrow> Inhabited (fm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<Ztypecolon> F2 U\<^sub>1 U\<^sub>2) \<Longrightarrow> pm f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x \<equiv> pm' f\<^sub>1 f\<^sub>2 P\<^sub>1 P\<^sub>2 x)
+\<Longrightarrow> Functional_Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D\<^sub>1 D\<^sub>2 R\<^sub>1 R\<^sub>2 pm fm \<equiv>
+    Functional_Transformation_BiFunctor F1 F2 T\<^sub>1 T\<^sub>2 U\<^sub>1 U\<^sub>2 D'\<^sub>1 D'\<^sub>2 R'\<^sub>1 R'\<^sub>2 pm' fm' \<close>
+  unfolding Functional_Transformation_BiFunctor_def atomize_eq Transformation_def Inhabited_def
   by (clarsimp, smt (verit, best))
 
 ML_file \<open>library/phi_type_algebra/transformation_functor.ML\<close>

@@ -42,7 +42,7 @@ fun guess_property (phi:phi_type) ctxt =
         end
 
       val ants = map2 mk_prop fixes T_params
-      val idx = phi_maxidx_of phi ~1 + 1
+      val idx = maxidx_of_phi phi ~1 + 1
       val prop = mk_prop (Var(("x",idx), x_ty), Var(("c",idx), model_ty))
                          (([], x_ty, model_ty), T_term)
    in Seq.single (ants, HOLogic.Trueprop $ prop,

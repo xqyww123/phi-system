@@ -61,7 +61,7 @@ val instantiate_phi : (ctyp TVars.table * cterm Vars.table)
                    -> phi_type -> phi_type
 val phi_trim_context : phi_type -> phi_type
 val phi_transfer : theory -> phi_type -> phi_type
-val phi_maxidx_of : phi_type -> int -> int
+val maxidx_of_phi : phi_type -> int -> int
 
 type hint = term
 
@@ -157,6 +157,7 @@ val assert_first_parameter_is_type : typ -> unit
     (*note the T below is a \<phi>-type parameter*)
 val separate_type_operator_and_its_parameter : term (*F(T)*) -> (term (*T*) * term (*F*)) list
 val separate_type_operator_and_its_non_parameterized_parameter : term (*F(T)*) -> (term (*T*) * term (*F*)) list
+val separate_type_operator_and_its_non_parameterized_parameters : term (*F(T\<^sub>1,T\<^sub>2,...)*) -> term list (*T\<^sub>1,T\<^sub>2,...*) * term (*F*)
 val separate_type_operator_and_its_parameter_safe : term (*F(T)*) -> (term (*T*) * term (*F*)) list
 val separate_type_operator_and_its_non_parameterized_parameter_safe : term (*F(T)*) -> (term (*T*) * term (*F*)) list
 val separate_tyop_semimodule_and_its_non_parameterized : term (*F\<^sub>c(T)*) -> (term (*T*) * term (*c*) * term (*F*)) list
@@ -290,7 +291,7 @@ fun fold_phi_type (fold_tm, fold_thm) (phi : phi_type) x = x
 fun morphism_phi_type m = map_phi_type (Morphism.binding m, Morphism.term m, Morphism.fact m)
 val phi_trim_context = map_phi_type (I, I, map (Thm.trim_context))
 fun phi_transfer thy = map_phi_type (I, I, map (Thm.transfer thy))
-val phi_maxidx_of = fold_phi_type (Term.maxidx_term, Thm.maxidx_thm)
+val maxidx_of_phi = fold_phi_type (Term.maxidx_term, Thm.maxidx_thm)
 
 type hint = term
 
@@ -800,11 +801,20 @@ fun assert_first_parameter_is_type ty =
   if is_first_parameter_a_type ty then ()
   else raise Automation_Fail (fn () => [Pretty.str "Not a \<phi>-type operator!"])
 
+local
+
+datatype prev = Arg of term | Abst of string * typ
+fun assemble (Arg a) X = X $ a
+  | assemble (Abst (N,ty)) X = Abs (N, ty, X)
+
+fun name_of (Free (N,_)) = N
+  | name_of (Var ((N,_),_)) = N
+  | name_of _ = "A"
+
+in
+
 fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
-  let datatype prev = Arg of term | Abst of string * typ
-      fun assemble (Arg a) X = X $ a
-        | assemble (Abst (N,ty)) X = Abs (N, ty, X)
-      fun split (lv, prevs) (F $ T) =
+  let fun split (lv, prevs) (F $ T) =
             if can Term.fastype_of T andalso chk T
             then F
               |> not (null prevs) ? (fn F =>
@@ -818,6 +828,21 @@ fun gen_separate_type_operator_and_its_non_parameter chk FT_term =
    in split (0, []) (Phi_Help.beta_eta_contract_term FT_term)
   end
 
+fun gen_separate_type_operator_and_its_non_parameters chk =
+  let fun split (lv, bvs, Ts, prevs) (F $ T) =
+            if can Term.fastype_of T andalso chk T
+            then split (lv, (name_of T, Term.fastype_of T)::bvs, T :: Ts, Arg (Bound (lv + length bvs)) :: prevs) F
+            else split (lv, bvs, Ts, Arg T :: prevs) F
+        | split (lv, bvs, Ts, prevs) (Abs (N,ty,X)) = split (lv+1, bvs, Ts, Abst (N,ty)::prevs) X
+        | split (_, bvs, Ts, prevs) X = fold assemble prevs X
+                                     |> fold (fn (N,T) => fn X => Abs (N,T,X)) bvs
+                                     |> Phi_Help.beta_eta_contract_term
+                                     |> pair Ts
+   in split (0, [], [], [])
+  end
+
+end
+
 val separate_type_operator_and_its_parameter_safe =
   gen_separate_type_operator_and_its_non_parameter (can dest_parameterized_phi_ty o Term.fastype_of)
 
@@ -825,6 +850,9 @@ fun is_non_parameterized_phityp typ =
   case try dest_parameterized_phi_ty typ
     of SOME ([],_,_) => true
      | _ => false
+
+val separate_type_operator_and_its_non_parameterized_parameters =
+  gen_separate_type_operator_and_its_non_parameters (is_non_parameterized_phityp o Term.fastype_of)
 
 val separate_type_operator_and_its_non_parameterized_parameter_safe =
   gen_separate_type_operator_and_its_non_parameter (is_non_parameterized_phityp o Term.fastype_of)
