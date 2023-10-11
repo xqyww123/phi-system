@@ -65,6 +65,7 @@ lemma valid_index_tail[iff]:
 lemma [\<phi>reason 0]:
   \<open> FAIL TEXT(\<open>Fail to show the validity of index\<close> idx \<open>on type\<close> T)
 \<Longrightarrow> valid_index T idx\<close>
+  unfolding FAIL_def
   by blast
 
 lemma valid_index_cat: \<open>valid_index T (a@b) \<Longrightarrow> valid_index T a \<and> valid_index (index_type a T) b\<close>
@@ -280,7 +281,7 @@ lemma [\<phi>reason 900]:
   by simp
 
 lemma [\<phi>reason 850]:
-  \<open> \<phi>arg.dest v \<in> S @action parse_element_index_input
+  \<open> \<phi>arg.dest v \<Turnstile> S @action parse_element_index_input
 \<Longrightarrow> get_logical_nat_from_semantic_int S n'
 \<Longrightarrow> \<r>nat_to_suc_nat n' n
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) TY U
@@ -293,7 +294,7 @@ lemma [\<phi>reason 850]:
   by (cases v; simp; metis option.sel)
 
 lemma [\<phi>reason 880]:
-  \<open> \<phi>arg.dest (\<phi>literal v) \<in> S @action parse_element_index_input
+  \<open> \<phi>arg.dest (\<phi>literal v) \<Turnstile> S @action parse_element_index_input
 \<Longrightarrow> get_logical_nat_from_semantic_int {v} n'
 \<Longrightarrow> \<r>nat_to_suc_nat n' n
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N n) TY U
@@ -312,14 +313,15 @@ consts eval_aggregate_path :: mode
 ML \<open>
 structure Eval_Sem_Idx_SS = Simpset (
   val initial_ss = Simpset_Configure.Minimal_SS
-  val binding = \<^binding>\<open>eval_aggregate_path\<close>
+  val binding = SOME \<^binding>\<open>eval_aggregate_path\<close>
   val comment = "Rules evaluating indexing of semantic type and value"
   val attribute = NONE
+  val post_merging = I
 )\<close>
 
 \<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] ?X' : ?X\<close>
                                       | \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] ?P\<close> )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' Eval_Sem_Idx_SS.get')\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' Eval_Sem_Idx_SS.get') o snd\<close>
 
 
 lemmas [eval_aggregate_path] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms

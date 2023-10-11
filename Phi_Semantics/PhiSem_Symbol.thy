@@ -10,23 +10,16 @@ text \<open>Semantic symbol type is a literal string which cannot be modified ru
 section \<open>Semantics\<close>
 
 debt_axiomatization \<phi>embed_semantic_symbol :: \<open>symbol \<Rightarrow> VAL\<close>
+  where \<phi>embed_semantic_symbol_inj[simp]: \<open>\<phi>embed_semantic_symbol x = \<phi>embed_semantic_symbol y \<longleftrightarrow> x = y\<close>
 
 section \<open>\<phi>-Types\<close>
 
-definition Symbol :: "(VAL, symbol) \<phi>"
-  where "Symbol = (\<lambda>s. { \<phi>embed_semantic_symbol s })"
+declare [[\<phi>trace_reasoning = 0]]
 
-lemma Symbol_expn[\<phi>expns]:
-  \<open>p \<in> (s \<Ztypecolon> Symbol) \<longleftrightarrow> p = \<phi>embed_semantic_symbol s\<close>
-  unfolding \<phi>Type_def by (simp add: Symbol_def)
-
-lemma Symbol_inhabited[elim!]:
-  "Inhabited (x \<Ztypecolon> Symbol) \<Longrightarrow> C \<Longrightarrow> C" .
-
-lemma [\<phi>inhabitance_rule 1000]:
-  "Inhabited (x \<Ztypecolon> Symbol) \<longrightarrow> True"
-  by blast
-
+\<phi>type_def Symbol :: "(VAL, symbol) \<phi>"
+  where \<open>s \<Ztypecolon> Symbol \<equiv> \<phi>embed_semantic_symbol s \<Ztypecolon> Itself\<close>
+  deriving Basic
+       and Functionality
 
 section \<open>Instructions\<close>
 
@@ -36,12 +29,12 @@ text \<open>There is no semantic instruction to make a symbol, because they are 
 lemma "_intro_symbol_\<phi>app":
   \<open>Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
   unfolding Transformation_def \<phi>literal_def
-  by (clarsimp simp add: Symbol_expn Val_expn)
+  by clarsimp
 
 lemma "_intro_symbol_":
   \<open>S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S \<heavy_comma> s \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (\<phi>embed_semantic_symbol s)] Symbol\<close>
   unfolding Transformation_def \<phi>literal_def
-  by (clarsimp simp add: Symbol_expn Val_expn)
+  by clarsimp
 
 
 \<phi>processor literal_symbol 8500 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>) \<open>

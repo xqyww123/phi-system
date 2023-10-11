@@ -1949,7 +1949,10 @@ instance "fun" :: (type,sep_magma_1) sep_magma_1
 instantiation "fun" :: (type, mul_carrier) mul_carrier begin
 
 definition mul_carrier_fun :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
-  where [simp]: \<open>mul_carrier_fun f = (\<forall>k. mul_carrier (f k))\<close>
+  where \<open>mul_carrier_fun = (\<lambda>f. \<forall>k. mul_carrier (f k))\<close>
+
+lemma mul_carrier_fun[simp]: \<open>mul_carrier f = (\<forall>k. mul_carrier (f k))\<close>
+  unfolding mul_carrier_fun_def ..
 
 instance ..
 end
@@ -3137,7 +3140,7 @@ end
 
 instantiation nosep :: (type) sep_carrier begin
 definition mul_carrier_nosep :: \<open>'a nosep \<Rightarrow> bool\<close>
-  where [simp]: \<open>mul_carrier_nosep _ = True\<close>
+  where [simp]: \<open>mul_carrier_nosep = (\<lambda>_. True)\<close>
 instance by (standard; simp)
 end
 
