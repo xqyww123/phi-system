@@ -19,8 +19,8 @@ include PHI_TYPE_ALGEBRA
 
 (** \<phi>-Type Definition \& Infos **)
 
-datatype def = DIRECT_DEF of term (*lhs of the def*) * thm (*def*)
-             | WFREC_DEF  of string (*const name*) * Function.info
+datatype def = DIRECT_DEF of term (*phi term*) * thm (*def*)
+             | WFREC_DEF  of term (*phi term*) * Function.info
 
 type parameter_info = {
   name: string option (*not always given*),
@@ -65,7 +65,7 @@ val maxidx_of_phi : phi_type -> int -> int
 
 type hint = term
 
-val get_type_info : Context.generic -> string (*const name*) -> phi_type option
+val get_type_info : Context.generic -> term -> phi_type option
 
 (** Property Deriver from \<phi>-Type Definition **)
 type priority = int
@@ -145,7 +145,7 @@ val add_type : {no_auto: bool}
             -> binding * def * Position.T * derivings * Bundle.name list
             -> generic_theory -> phi_type * generic_theory
 
-val override_ind_rule : string * thm -> Context.generic -> Context.generic
+val override_ind_rule : term * thm -> Context.generic -> Context.generic
 
 (** Tools **)
 
@@ -223,8 +223,9 @@ val unfoldN = "unfold"
 val expansionN = "expansion"
 (* val open_abstractionN = "open_abstraction" *)
 
-datatype def = DIRECT_DEF of term (*lhs*) * thm (*def*)
-             | WFREC_DEF  of string * Function.info
+datatype def = DIRECT_DEF of term (*phi term*) * thm (*def*)
+             | WFREC_DEF  of term (*phi term*) * Function.info
+               (*the phi term can be parameterized by fixed free variables like those in locales*)
 
 type parameter_info = {
   name: string option,
@@ -295,17 +296,31 @@ val maxidx_of_phi = fold_phi_type (Term.maxidx_term, Thm.maxidx_thm)
 
 type hint = term
 
+fun phi_typ_binding_eq (phi1, phi2) = #name phi1 = #name phi2
+fun phi_typ_term_eq (phi1, phi2) = #term phi1 = #term phi2
+fun phi_typ_term_equiv thy (phi1, phi2) = Pattern.equiv thy (#term phi1, #term phi2)
+
 structure Phi_Types = Generic_Data (
-  type T = phi_type Symtab.table (*key: name of constant*)
-  val empty = Symtab.empty
-  val merge = Symtab.merge (K true)
+  type T = phi_type Net.net
+  val empty = Net.empty
+  val merge = Net.merge phi_typ_binding_eq
 )
 
-fun get_type_info ctxt k =
-      Option.map (phi_transfer (Context.theory_of ctxt)) (Symtab.lookup (Phi_Types.get ctxt) k)
+fun get_type_info ctxt term =
+      Option.map (phi_transfer (Context.theory_of ctxt))
+                 (Net.match_term (Phi_Types.get ctxt) term
+                    |> filter (curry (Pattern.equiv (Context.theory_of ctxt)) term o #term)
+                    |> try hd)
 
-fun override_ind_rule (name, ind) =
-  Phi_Types.map (Symtab.map_entry name (set_ind (Thm.trim_context ind)))
+fun override_ind_rule (term, ind) ctxt =
+  Phi_Types.map (fn net =>
+    let val phis = Net.match_term net term
+                |> filter (curry (Pattern.equiv (Context.theory_of ctxt)) term o #term)
+        val phis' = map (set_ind (Thm.trim_context ind)) phis
+     in net
+     |> fold (fn phi => Net.delete_term phi_typ_term_eq (#term phi, phi)) phis
+     |> fold (fn phi => Net.insert_term phi_typ_term_eq (#term phi, phi)) phis
+    end) ctxt
 
 (*
 fun add_automation_on_def priority automation ctxt =
@@ -912,34 +927,31 @@ fun LHS_of (Const(\<^const_name>\<open>HOL.eq\<close>, _) $ LHS $ _) = LHS
 (*ctxt: the context used to derive properties*)
 fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
   let val ctxt = open_proof_ctxt bundles thy
-      val (idx,(name_ty,term)) =
-           (case def of DIRECT_DEF (lhs, _) =>
-                          (case Term.head_of lhs of X as Const name_ty => (~1, (name_ty, X))
-                                                  | X as Free name_ty => (~1, (name_ty, X))
-                                                  | _ => error "Bad definition: not a const")
-                      | WFREC_DEF (name, info) =>
-                          case get_index (fn X as Const (name', ty) =>
-                                                if name = name' then SOME ((name', ty), X) else NONE
-                                           | X as Free (name', ty) =>
-                                                if name = name' then SOME ((name', ty), X) else NONE
-                                           | _ => NONE) (#fs info)
-                            of SOME idx_name_X => idx_name_X
-                             | _ => error "Bad Function.info, the expected function is not\
-                                          \ given inside.")
 
-      fun filter_relevant_eqs name =
-            filter (fn eq =>
-              case Term.head_of (LHS_of (Thm.concl_of eq))
-                of Const(N',_) => N' = name
-                 | Free (N',_) => N' = name
-                 | _ => false)
+      fun get_head_term (X $ Var _) = X
+        | get_head_term X = X
+      fun get_params ret (X $ Var v) = get_params (v :: ret) X
+        | get_params ret _ = ret
+
+      fun match_head head (term as f $ _) = head aconv term orelse match_head head f
+        | match_head head term = head aconv term
+
+      val (idx_in_def_eqs,term) =
+           (case def of DIRECT_DEF (term, _) => (~1, get_head_term term)
+                      | WFREC_DEF (term, info) =>
+                          case find_index (match_head term) (#fs info)
+                            of ~1 => error ("The given term " ^ Syntax.string_of_term ctxt term ^ " \
+                                            \is not defined inside the given function info")
+                             | i => (i, get_head_term term))
+
+      fun filter_relevant_eqs term = filter (match_head term o LHS_of o Thm.concl_of)
       val eqs = (case def of DIRECT_DEF (_, eq) => [eq]
-                    | WFREC_DEF (name, info) =>
+                    | WFREC_DEF (_, info) =>
                         (case #simps info
-                           of SOME eqs => filter_relevant_eqs name eqs
+                           of SOME eqs => filter_relevant_eqs term eqs
                             | NONE => (warning "Termination of the definition is not proven. \
                                                \Use partial simplification and induction rules.";
-                                       filter_relevant_eqs name (#psimps info))))
+                                       filter_relevant_eqs term (#psimps info))))
               |> map (conv_def_to_equation ctxt
                    #> normalize)
       val tagged_eqs = map (Conv.fconv_rule (add_premise_tag ctxt)) eqs
@@ -972,9 +984,7 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
       val is_recursive = exists (fn eq =>
             case Thm.concl_of eq
               of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ RHS)
-                  => exists_subterm (fn Const (N',_) => N' = fst name_ty
-                                      | Free (N',_) => N' = fst name_ty
-                                      | _ => false) RHS
+                  => exists_subterm (match_head term) RHS
                | _ => error "Internal bug #fc2042c3-0c46-4ae5-a66e-9697639068a0") eqs
 
       val mutating_params = map (fn _ => Unsynchronized.ref (SOME false)) param_names
@@ -1032,15 +1042,15 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
                   of DIRECT_DEF _ => NONE
                    | WFREC_DEF (_, info) =>
                         case #inducts info
-                          of SOME rules => SOME (List.nth (rules, idx))
-                           | _ => SOME (List.nth (#pinducts info, idx)))
+                          of SOME rules => SOME (List.nth (rules, idx_in_def_eqs))
+                           | _ => SOME (List.nth (#pinducts info, idx_in_def_eqs)))
                |> Option.map ( Conv.fconv_rule (add_premise_tag ctxt)
                             #> Phi_Help.beta_eta_contract )
 
       val cases =
             case def
               of DIRECT_DEF _ => NONE
-               | WFREC_DEF (_, info) => SOME (List.nth (#cases info, idx))
+               | WFREC_DEF (_, info) => SOME (List.nth (#cases info, idx_in_def_eqs))
       (*I am a fool
       val cases_ToA = mk_cases_rule eqs mk_cases_ToA cases_origin term ctxt
       val cases_VS = SOME (mk_cases_rule eqs mk_cases_shift cases_origin term ctxt)
@@ -1122,9 +1132,6 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
                                      handle THM _ => [] (*the concrete algebra can be non-unital*))
 
       val the_term = chk_zero_index_term term
-      val _ = case the_term of Const _ => ()
-                 | Free _ => ()
-                 | _ => raise TERM ("Must be a constant", [the_term])
 
       val phi_type = {
             name = binding,
@@ -1142,10 +1149,14 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
           } : phi_type
    in thy
    |> Context.mapping
-        (Context.theory_map (Phi_Types.map (Symtab.update_new (fst name_ty, phi_trim_context phi_type))))
+        (Context.theory_map (Phi_Types.map (
+            Net.insert_term (phi_typ_term_equiv (Context.theory_of thy))
+                            (the_term, phi_trim_context phi_type))))
         (Local_Theory.declaration {syntax=false, pervasive=false, pos=pos} (fn m => fn ctxt =>
-          Phi_Types.map (Symtab.update_new (Context.full_name ctxt (Morphism.binding m binding),
-                                            morphism_phi_type m (phi_trim_context phi_type))) ctxt))
+          let val phi = morphism_phi_type m (phi_trim_context phi_type)
+           in Phi_Types.map (Net.insert_term (phi_typ_term_equiv (Context.theory_of ctxt))
+                                             (the_term, phi)) ctxt
+          end))
    |> Phi_Help.generic_theory_mapping pos (fn m =>
         let val expns = Morphism.fact m expansions
             fun add_rules mode priority rules =
@@ -1179,9 +1190,9 @@ fun add_type {no_auto} (binding, def, pos, dervs, bundles) thy =
         [(introN, intro_ToA), (intro_reasoningN, intro_reasoning @ intro'R_reasoning), (intro_reasoning_R_N, intro_reasoning_R),
          (elimN, elim_ToA), (elim_reasoningN, elim_reasoning @ elim'SE_ToA)]))
    |> not no_auto ? (fn thy' =>
-      let val phi' = case thy'
+      let val phi' = phi_type (*case thy'
                        of Context.Proof lthy => morphism_phi_type (Local_Theory.target_morphism lthy) phi_type
-                        | Context.Theory _ => phi_type
+                        | Context.Theory _ => phi_type*)
        in thy'
        |> Context.mapping (Context_Position.set_visible_global false)
                           (Context_Position.set_visible false)
@@ -1274,7 +1285,7 @@ fun gen_add_fun bs raw_derv raw_bundles add (thy : generic_theory) =
         Named_Target.theory_map_result (Function_Common.transform_function_data) prove_termination
       ) prove_termination
    |-> (fn info => add_type_i {no_auto=false}
-                              (name, WFREC_DEF (raw_term_name const, info), Binding.pos_of name,
+                              (name, WFREC_DEF (const, info), Binding.pos_of name,
                                raw_derv, raw_bundles) #> snd)
   end
 
@@ -1293,16 +1304,19 @@ fun add_fun_cmd a b c raw_derv raw_bundles int generic =
         Context.mapping_result
           (Named_Target.theory_map_result Function_Common.transform_function_data
                                           (add_function_cmd a b c tac int))
-          (add_function_cmd a b c tac int)) generic
+          (Local_Theory.begin_nested #> snd
+           #> add_function_cmd a b c tac int
+           #> Local_Theory.end_nested_result Function_Common.transform_function_data
+          )) generic
 
 end
 
 fun let_phityp_deriving_cmd (((raw_const_name, pos), raw_bundles), raw_derv) thy =
   let val ctxt = Context.proof_of thy
-      val Const (const_name, _) = Proof_Context.read_const {proper=false, strict=false} ctxt raw_const_name
-      val phi = case get_type_info thy const_name
+      val term = Proof_Context.read_term_pattern ctxt raw_const_name
+      val phi = case get_type_info thy term
                   of SOME phi => phi
-                   | NONE => error ("No \<phi>-type named "^ const_name ^ " found")
+                   | NONE => error ("No \<phi>-type named "^ Syntax.string_of_term ctxt term ^ " found")
    in derive_properties (prep_deriving_and_bundles raw_bundles raw_derv ctxt) phi thy
   end
 
@@ -1328,32 +1342,28 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
         -- deriving_parser
         -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ())) (*to distinguish with the `def_by_fun` syntax*)
    >> (fn ((((((decl, (spec, pos)), prems), params), raw_bundles), raw_dervs), _) => fn int =>
-        Context.mapping_result
-          (Named_Target.theory_map_result (fn m => fn (tm, (name, def)) =>
-                    (Morphism.term m tm, (name, Morphism.thm m def)))
-                (my_definition decl params prems spec int))
-          (my_definition decl params prems spec int)
+        let fun morph m (tm, (name, def)) = (Morphism.term m tm, (name, Morphism.thm m def))
+         in Context.mapping_result
+          ( Named_Target.theory_map_result morph (my_definition decl params prems spec int) )
+          (   Local_Theory.begin_nested #> snd
+           #> my_definition decl params prems spec int
+           #> Local_Theory.end_nested_result morph
+          )
            #> (fn ((def_term, (_, def_eq)), generic) =>
               let val name = case decl of SOME (name, _, _) => name
                                         | NONE => Binding.make (Term.term_name def_term, pos)
                in add_type_i {no_auto=false} (name, DIRECT_DEF (def_term, def_eq), pos,
                                               raw_dervs, raw_bundles) generic |> snd
               end)
-        ))
+        end))
 in
 val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "define \<phi>-types"
-          ((def_direct || def_by_fun) >> (fn f => Toplevel.generic_theory (
-              Context.mapping
+          ((def_direct || def_by_fun) >> (fn f => Toplevel.generic_theory ( f false
+            (*Context.mapping
                   (  Sign.new_group
                   #> Context.theory_map (f false)
                   #> Sign.reset_group)
-                  (  Context.proof_map (
-                     Target_Context.switch_named_cmd NONE
-                  #-> (fn finish =>
-                     Local_Theory.new_group
-                  #> Context.proof_map (f false)
-                  #> Local_Theory.reset_group
-                  #> finish)) )
+                  (  Context.proof_map (f false) ) *)
             )))
 
 val _ = Outer_Syntax.command \<^command_keyword>\<open>let_\<phi>type\<close> "derive properties of existing \<phi>-types"

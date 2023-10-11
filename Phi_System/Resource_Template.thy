@@ -104,25 +104,20 @@ lemma [\<phi>inhabitance_rule, elim!]:
   unfolding Inhabited_def by (simp add: \<phi>expns)
 *)
 
-declare [[\<phi>trace_reasoning = 0]]
-
+declare [[\<phi>trace_reasoning = 1]]
+thm assertion_simps
 
 \<phi>type_def \<phi> :: \<open>('U, 'x) \<phi> \<Rightarrow> (fiction, 'x) \<phi>\<close>
   where \<open>\<phi> T \<equiv> mk \<Zcomp>\<^sub>f T\<close>
   deriving Sep_Functor_1
 
+thm assertion_simps
 thm \<phi>.unfold
-thm \<phi>.\<phi>Prod
+thm \<phi>.\<phi>Prod_ty
+thm \<phi>.\<phi>None
 
 term \<phi>
 ML \<open>@{term \<open>\<phi>\<close>}\<close>
-
-
-lemma \<phi>_Prod:
-  \<open> \<phi> T \<^emph> \<phi> U = \<phi> (T \<^emph> U)\<close>
-  apply (rule \<phi>Type_eqI; clarsimp simp add: \<phi>expns; rule; clarsimp)
-  apply (metis mk_homo_mult)
-  by (metis fun_1upd_homo inj.homo_mult sep_disj_mk)
 
 lemma \<phi>_\<phi>None:
   \<open>\<phi> \<circle> = \<circle>\<close>

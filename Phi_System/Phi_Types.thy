@@ -48,7 +48,7 @@ setup \<open>Context.theory_map (
       (\<^binding>\<open>\<phi>None\<close>, Phi_Type_Algebra.DIRECT_DEF (\<^pattern>\<open>\<phi>None\<close>, Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
        \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
-
+ 
 let_\<phi>type \<phi>None
   deriving Basic
        and Functionality
@@ -1036,7 +1036,7 @@ lemma \<phi>Mul_Quant_induct:
         induct rule: finite_induct[OF prems(1)]; clarsimp) .
 
 setup \<open>Context.theory_map (
-  Phi_Type_Algebra.override_ind_rule (\<^const_name>\<open>\<phi>Mul_Quant\<close>, @{thm' \<phi>Mul_Quant_induct}))\<close>
+  Phi_Type_Algebra.override_ind_rule (\<^pattern>\<open>\<phi>Mul_Quant\<close>, @{thm' \<phi>Mul_Quant_induct}))\<close>
 
 
 subsubsection \<open>Algebraic Properties\<close>
@@ -2820,6 +2820,10 @@ definition \<phi>F_simulation
 locale test =
   fixes param :: nat
 begin
+ 
+\<phi>type_def AA
+  where \<open>(0 \<Ztypecolon> AA) = (param \<Ztypecolon> Itself)\<close>
+      | \<open>(Suc n \<Ztypecolon> AA) = (n \<Ztypecolon> AA)\<close>
 
 \<phi>type_def XX
   where \<open>x \<Ztypecolon> XX \<equiv> (x + param \<Ztypecolon> Itself)\<close>

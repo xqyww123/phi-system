@@ -4654,7 +4654,7 @@ hide_fact \<phi>TA_SH\<^sub>I_rule \<phi>TA_SH\<^sub>E_rule \<phi>TA_SH\<^sub>I_
 \<phi>property_deriver Sep_Functor_1 131
   requires Sep_Functor
        and Identity_Elements
-
+       and Identity_Element_Properties
 
 
 subsubsection \<open>Congruence in Function Definition\<close>
