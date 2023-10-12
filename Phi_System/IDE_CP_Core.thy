@@ -1052,7 +1052,9 @@ ML_file \<open>library/system/application.ML\<close>
     \<open>application as converting \<open>Antecedent\<close> to \<open>Consequent\<close>\<close>
   and \<phi>app_conv_success = (3000, [3000,3000]) in \<phi>app_conv_all
     \<open>direct success\<close>
-  and \<phi>app_conv = (1000, [1000,1200]) in \<phi>app_conv_all and < \<phi>app_conv_success
+  and \<phi>app_conv_normalize = (2000, [2000,2300]) in \<phi>app_conv_all and < \<phi>app_conv_success
+    \<open>normalization rules\<close>
+  and \<phi>app_conv = (1000, [1000,1200]) in \<phi>app_conv_all and < \<phi>app_conv_normalize
     \<open>usual cutting rules\<close>
 
 subsubsection \<open>Common Rules of Application Methods\<close>
@@ -1230,6 +1232,12 @@ lemma [\<phi>reason %\<phi>application]:
   unfolding \<phi>Application_def \<phi>Application_Conv_def \<phi>App_Conv_def
   by blast
 
+lemma [\<phi>reason %\<phi>app_conv_success]:
+  \<open> \<phi>App_Conv X Y
+\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop X) (Trueprop Y)\<close>
+  unfolding \<phi>Application_Conv_def \<phi>App_Conv_def
+  by blast
+
 lemma [\<phi>reason %\<phi>app_conv_success for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
   \<open>PROP \<phi>Application_Conv (PROP X) (PROP X)\<close>
   unfolding \<phi>Application_Conv_def .
@@ -1249,13 +1257,33 @@ proof -
 qed
 
 lemma [\<phi>reason %\<phi>app_conv]:
+  \<open> \<phi>App_Conv (A x) X
+\<Longrightarrow> \<phi>App_Conv (All A) X\<close>
+  unfolding \<phi>App_Conv_def
+  by blast
+
+lemma [\<phi>reason %\<phi>app_conv_normalize]:
+  \<open> (\<And>x. PROP \<phi>Application_Conv X (Y x))
+\<Longrightarrow> PROP \<phi>Application_Conv X (Pure.all Y) \<close>
+  unfolding \<phi>Application_Conv_def
+  apply (simp add: norm_hhf_eq)
+  subgoal premises prems for x
+    by (rule prems(1), rule prems(2)) .
+
+lemma [\<phi>reason %\<phi>app_conv_normalize]:
+  \<open> (\<And>x. \<phi>App_Conv X (Y x))
+\<Longrightarrow> \<phi>App_Conv X (\<forall>x. Y x)\<close>
+  unfolding \<phi>App_Conv_def
+  by blast
+
+lemma [\<phi>reason %\<phi>app_conv]:
   \<open> PROP May_By_Assumption X
 \<Longrightarrow> PROP \<phi>Application_Conv A Y
 \<Longrightarrow> PROP \<phi>Application_Conv (PROP X \<Longrightarrow> PROP A) Y\<close>
   unfolding \<phi>Application_Conv_def May_By_Assumption_def
   subgoal premises p using p(1)[THEN p(3), THEN p(2)] . .
 
-lemma [\<phi>reason %\<phi>app_conv]:
+lemma [\<phi>reason %\<phi>app_conv_normalize]:
   \<open> (PROP A \<Longrightarrow> PROP \<phi>Application_Conv X Y)
 \<Longrightarrow> PROP \<phi>Application_Conv (PROP X) (PROP A \<Longrightarrow> PROP Y)\<close>
   unfolding \<phi>Application_Conv_def
@@ -1263,19 +1291,26 @@ lemma [\<phi>reason %\<phi>app_conv]:
     by (rule prems(1), rule prems(3), rule prems(2)) .
 
 lemma [\<phi>reason %\<phi>app_conv]:
+  \<open> PROP May_By_Assumption (Trueprop A)
+\<Longrightarrow> \<phi>App_Conv X Y
+\<Longrightarrow> \<phi>App_Conv (A \<longrightarrow> X) Y\<close>
+  unfolding \<phi>App_Conv_def May_By_Assumption_def
+  by blast
+
+lemma [\<phi>reason %\<phi>app_conv_normalize]:
   \<open> (A \<Longrightarrow> \<phi>App_Conv X Y)
 \<Longrightarrow> \<phi>App_Conv X (A \<longrightarrow> Y)\<close>
   unfolding \<phi>App_Conv_def
   by blast
 
 lemma [\<phi>reason %\<phi>app_conv]:
-  \<open> PROP \<phi>Application_Conv X (Trueprop Y)
-\<Longrightarrow> PROP \<phi>Application_Conv X (Trueprop (Y @action A))\<close>
+  \<open> \<phi>App_Conv X Y
+\<Longrightarrow> \<phi>App_Conv X (Y @action A)\<close>
   unfolding Action_Tag_def .
 
 lemma [\<phi>reason %\<phi>app_conv]:
-  \<open> PROP \<phi>Application_Conv (Trueprop Y) X
-\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (Y @action A)) X\<close>
+  \<open> \<phi>App_Conv Y X
+\<Longrightarrow> \<phi>App_Conv (Y @action A) X\<close>
   unfolding Action_Tag_def .
 
 
@@ -1543,40 +1578,35 @@ end
 \<close>
 
 lemma [\<phi>reason %\<phi>app_conv for \<open>
-  PROP \<phi>Application_Conv (Trueprop (\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E )) (Trueprop (\<p>\<r>\<o>\<c> ?f' \<lbrace> ?X' \<longmapsto> ?Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E' ))
+  \<phi>App_Conv (\<p>\<r>\<o>\<c> ?f \<lbrace> ?X \<longmapsto> ?Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E) (\<p>\<r>\<o>\<c> ?f' \<lbrace> ?X' \<longmapsto> ?Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> ?E')
 \<close>]:
   \<open> Simple_HO_Unification f f'
 \<Longrightarrow> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any1 @action NToA
 \<Longrightarrow> (\<And>ret. Y ret \<s>\<h>\<i>\<f>\<t>\<s> Y' ret \<w>\<i>\<t>\<h> Any2 @action NToA)
 \<Longrightarrow> (\<And>ex.  E ex \<s>\<h>\<i>\<f>\<t>\<s> E' ex \<w>\<i>\<t>\<h> Any3 @action NToA)
-\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E ))
-                           (Trueprop (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' ))\<close>
-  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def Action_Tag_def
+\<Longrightarrow> \<phi>App_Conv (\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E ) (\<p>\<r>\<o>\<c> f' \<lbrace> X' \<longmapsto> Y' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E') \<close>
+  unfolding \<phi>App_Conv_def Simple_HO_Unification_def Action_Tag_def
   using \<phi>CONSEQ view_shift_by_implication by blast
 
 lemma [\<phi>reason %\<phi>app_conv for \<open>
-  PROP \<phi>Application_Conv (Trueprop (PendingConstruction _ _ _ _ _))
-                         (Trueprop (PendingConstruction _ _ _ _ _))
+  \<phi>App_Conv (PendingConstruction _ _ _ _ _) (PendingConstruction _ _ _ _ _)
 \<close>]:
   \<open> Simple_HO_Unification f f'
 \<Longrightarrow> (\<And>ret. S ret \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S' ret \<w>\<i>\<t>\<h> Any2 @action NToA)
 \<Longrightarrow> (\<And>ex.  E ex \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E' ex \<w>\<i>\<t>\<h> Any3 @action NToA)
-\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (PendingConstruction f  s R S  E ))
-                           (Trueprop (PendingConstruction f' s R S' E'))\<close>
-  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def Action_Tag_def
+\<Longrightarrow> \<phi>App_Conv (PendingConstruction f s R S E) (PendingConstruction f' s R S' E') \<close>
+  unfolding \<phi>App_Conv_def Simple_HO_Unification_def Action_Tag_def
   using \<phi>apply_implication_pending \<phi>apply_implication_pending_E by blast
 
 
 subsubsection \<open>Applying on View Shift Mode\<close>
 
-lemma [\<phi>reason %\<phi>app_conv for \<open>
-  PROP \<phi>Application_Conv (Trueprop (?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> ?P)) (Trueprop (?X' \<s>\<h>\<i>\<f>\<t>\<s> ?Y' \<w>\<i>\<t>\<h> ?P'))
-\<close>]:
+lemma [\<phi>reason %\<phi>app_conv for \<open>\<phi>App_Conv (?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> ?P) (?X' \<s>\<h>\<i>\<f>\<t>\<s> ?Y' \<w>\<i>\<t>\<h> ?P')\<close>]:
   \<open> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any1 @action NToA
 \<Longrightarrow> Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> Any2 @action NToA
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (Any1 \<and> Any2 \<and> P \<longrightarrow> P')
-\<Longrightarrow> PROP \<phi>Application_Conv (Trueprop (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P)) (Trueprop (X' \<s>\<h>\<i>\<f>\<t>\<s> Y' \<w>\<i>\<t>\<h> P'))\<close>
-  unfolding \<phi>Application_Conv_def Simple_HO_Unification_def Action_Tag_def Premise_def
+\<Longrightarrow> \<phi>App_Conv (X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P) (X' \<s>\<h>\<i>\<f>\<t>\<s> Y' \<w>\<i>\<t>\<h> P') \<close>
+  unfolding \<phi>App_Conv_def Simple_HO_Unification_def Action_Tag_def Premise_def
   by (metis View_Shift_def view_shift_by_implication)
 
 

@@ -223,7 +223,7 @@ lemma map_tree_refinement_modify:
     \<i>\<n> { push_map idx a }\<close>
   for a :: \<open>'a list \<Rightarrow> VAL nosep option\<close>
   unfolding Fictional_Forward_Simulation_def the_subtree_def
-  apply (clarsimp simp add: Subjection_expn set_mult_expn ExSet_expn)
+  apply (clarsimp simp add: Subjection_expn_set set_mult_expn ExSet_expn_set)
   subgoal premises prems for r R a' u x
   proof -
     have t1: \<open>dom x \<inter> dom (idx \<tribullet>\<^sub>m b) = {}\<close>
@@ -339,10 +339,10 @@ lemma fiction_Map_of_Val_ins_refinement:
   apply (subst fiction_Map_of_Val_ins_comp_id_simp[symmetric])
   apply (rule sep_refinement_stepwise[
             OF refinement_frame[where R = UNIV, OF Map_of_Val_ins.\<F>_functional_refinement_complex[simplified]]])
-  apply (simp add: ExSet_expn Subjection_expn split_nosep_ex inj_image_mem_iff split_option_all
+  apply (simp add: ExSet_expn_set Subjection_expn_set split_nosep_ex inj_image_mem_iff split_option_all
                    split_nosep_all index_mod_value_welltyp)
   apply (simp add: frame_preserving_relation_def split_option_all split_nosep_all
-                   ExSet_expn Subjection_expn)
+                   ExSet_expn_set Subjection_expn_set)
   apply (simp add: Sep_Closed_def)
   subgoal premises prems proof -
     have t1: \<open>B \<subseteq> B' \<Longrightarrow> A * B \<subseteq> A * B'\<close> for A B B'
@@ -352,7 +352,7 @@ lemma fiction_Map_of_Val_ins_refinement:
              u \<in> nosep ` {a. index_value idx a = u_idx} \<and> u \<in> nosep ` Well_Type TY)
         \<subseteq> ({(a, a ++ (idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val v)))} \<s>\<u>\<b>\<j> a. dom a = Dom_of_TY TY)\<close>
       apply (clarsimp simp add: set_eq_iff ExSet_image Subjection_image;
-             auto simp add: ExSet_expn Subjection_expn split_nosep_ex inj_image_mem_iff)
+             auto simp add: ExSet_expn_set Subjection_expn_set split_nosep_ex inj_image_mem_iff)
       apply (metis Map_of_Val_mod map_option_funcomp_map_add homo_one_map_option prems(1) prems(2) push_map_homo)
       using Map_of_Val_dom apply blast
       using Map_of_Val_dom by blast
@@ -373,7 +373,7 @@ lemma fiction_Map_of_Val_ins_refinement:
   qed
   subgoal premises prems proof -
     have t1: \<open> Domain ({(a u, b u)} \<s>\<u>\<b>\<j> u. P u) = { a u |u. P u }\<close> for a b P
-      unfolding set_eq_iff Domain_unfold by (clarsimp simp add: ExSet_expn Subjection_expn)
+      unfolding set_eq_iff Domain_unfold by (clarsimp simp add: ExSet_expn_set Subjection_expn_set)
     have t2: \<open>{Some u |u. u \<in> nosep ` {a. index_value idx a = u_idx} \<and> u \<in> nosep ` Well_Type TY}
                 = Some ` nosep ` {a. index_value idx a = u_idx \<and> a \<in> Well_Type TY}\<close>
       by (clarsimp simp add: set_eq_iff image_iff Bex_def; blast)
