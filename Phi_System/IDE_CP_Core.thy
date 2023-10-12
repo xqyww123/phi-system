@@ -1025,7 +1025,10 @@ lemma \<phi>application:
   unfolding \<phi>Application_def Pure.prop_def Optimum_Solution_def Optimum_Among_def .
 
 definition \<phi>Application_Conv :: \<open>prop \<Rightarrow> prop \<Rightarrow> prop\<close>
-  where \<open>\<phi>Application_Conv P Q \<equiv> (PROP P \<Longrightarrow> PROP Q)\<close>
+  where \<open>\<phi>Application_Conv \<equiv> (\<Longrightarrow>)\<close>
+
+definition \<phi>App_Conv :: \<open>bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>\<phi>App_Conv \<equiv> (\<longrightarrow>)\<close>
 
 lemma \<phi>Application_Conv:
   \<open> PROP P
@@ -1044,7 +1047,8 @@ ML_file \<open>library/system/application.ML\<close>
   and \<phi>application = (1000, [1000, 1100]) in \<phi>application_all > \<phi>application_traverse_apps
     \<open>usual cutting rules\<close>
 
-  and \<phi>app_conv_all = (1000, [10,3000]) for \<open>(PROP \<phi>Application_Conv Antcedent Consequent)\<close>
+  and \<phi>app_conv_all = (1000, [10,3000]) for (\<open>(PROP \<phi>Application_Conv Antcedent Consequent)\<close>,
+                                             \<open>\<phi>App_Conv Antcedent Consequent\<close>)
     \<open>application as converting \<open>Antecedent\<close> to \<open>Consequent\<close>\<close>
   and \<phi>app_conv_success = (3000, [3000,3000]) in \<phi>app_conv_all
     \<open>direct success\<close>
@@ -1221,13 +1225,18 @@ lemma [\<phi>reason %\<phi>application]:
   subgoal premises prems using prems(3)[THEN prems(1), THEN prems(2)] . .
 
 lemma [\<phi>reason %\<phi>application]:
-  \<open> PROP \<phi>Application_Conv (Trueprop X') (Trueprop X)
+  \<open> \<phi>App_Conv X' X
 \<Longrightarrow> PROP \<phi>Application (Trueprop X') (Trueprop (X \<longrightarrow> Y)) (Trueprop Y)\<close>
-  unfolding \<phi>Application_def \<phi>Application_Conv_def by blast
+  unfolding \<phi>Application_def \<phi>Application_Conv_def \<phi>App_Conv_def
+  by blast
 
 lemma [\<phi>reason %\<phi>app_conv_success for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
   \<open>PROP \<phi>Application_Conv (PROP X) (PROP X)\<close>
   unfolding \<phi>Application_Conv_def .
+
+lemma [\<phi>reason %\<phi>app_conv_success for \<open>\<phi>App_Conv ?X ?X'\<close>]:
+  \<open>\<phi>App_Conv X X\<close>
+  unfolding \<phi>App_Conv_def ..
 
 lemma [\<phi>reason %\<phi>app_conv]:
   \<open> PROP \<phi>Application_Conv (A x) X
@@ -1245,6 +1254,19 @@ lemma [\<phi>reason %\<phi>app_conv]:
 \<Longrightarrow> PROP \<phi>Application_Conv (PROP X \<Longrightarrow> PROP A) Y\<close>
   unfolding \<phi>Application_Conv_def May_By_Assumption_def
   subgoal premises p using p(1)[THEN p(3), THEN p(2)] . .
+
+lemma [\<phi>reason %\<phi>app_conv]:
+  \<open> (PROP A \<Longrightarrow> PROP \<phi>Application_Conv X Y)
+\<Longrightarrow> PROP \<phi>Application_Conv (PROP X) (PROP A \<Longrightarrow> PROP Y)\<close>
+  unfolding \<phi>Application_Conv_def
+  subgoal premises prems
+    by (rule prems(1), rule prems(3), rule prems(2)) .
+
+lemma [\<phi>reason %\<phi>app_conv]:
+  \<open> (A \<Longrightarrow> \<phi>App_Conv X Y)
+\<Longrightarrow> \<phi>App_Conv X (A \<longrightarrow> Y)\<close>
+  unfolding \<phi>App_Conv_def
+  by blast
 
 lemma [\<phi>reason %\<phi>app_conv]:
   \<open> PROP \<phi>Application_Conv X (Trueprop Y)
