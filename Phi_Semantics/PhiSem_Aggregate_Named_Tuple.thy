@@ -96,24 +96,27 @@ section \<open>\<phi>Type\<close>
 
 subsection \<open>Empty Tuple\<close>
 
-definition Empty_Named_Tuple :: \<open>(VAL, unit) \<phi>\<close>
-  where \<open>Empty_Named_Tuple x = { V_named_tup.mk fmempty }\<close>
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def Empty_Named_Tuple :: \<open>(VAL, unit) \<phi>\<close>
+  where \<open>x \<Ztypecolon> Empty_Named_Tuple \<equiv> V_named_tup.mk fmempty \<Ztypecolon> Itself\<close>
+  deriving Basic
+       and Functionality
+       and \<open>\<phi>SemType (x \<Ztypecolon> Empty_Named_Tuple) (named_tup.mk fmempty)\<close>
+       and \<open>Semantic_Zero_Val (named_tup.mk fmempty) Empty_Named_Tuple ()\<close>
+       and \<open>Is_Aggregate Empty_Named_Tuple\<close>
 
 \<phi>adhoc_overloading \<phi>_Empty_Tuple_sugar Empty_Named_Tuple
-
-lemma Empty_Named_Tuple_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> Empty_Named_Tuple) \<longleftrightarrow> p = V_named_tup.mk fmempty \<close>
-  unfolding Empty_Named_Tuple_def \<phi>Type_def by simp
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Aggregate Empty_Named_Tuple\<close>
-  unfolding Is_Aggregate_def ..
 
 
 subsection \<open>Field\<close>
 
-definition Named_Tuple_Field :: "symbol \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
-  where "Named_Tuple_Field s T x = { V_named_tup.mk (fmupd s v fmempty) |v. v \<in> T x }"
+\<phi>type_def Named_Tuple_Field :: "symbol \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
+  where \<open>Named_Tuple_Field s T \<equiv> (\<lambda>v. V_named_tup.mk (fmupd s v fmempty)) \<Zcomp>\<^sub>f T\<close>
+  deriving Basic
+       and Functional_Transformation_Functor
+       and Functionality
+       and \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>
 
 syntax "\<phi>_named_tuple_" :: \<open>\<phi>_symbol_ \<Rightarrow> logic \<Rightarrow> \<phi>_tuple_arg_\<close> ("_: _")
 
@@ -137,67 +140,43 @@ print_translation \<open>[
               $ T)))
 ]\<close>
 
-lemma Named_Tuple_Field_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) \<longleftrightarrow> (\<exists>v. p = V_named_tup.mk (fmupd s v fmempty) \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding Named_Tuple_Field_def \<phi>Type_def by simp
-
-lemma Named_Tuple_Field_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
-\<Longrightarrow> Inhabited (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) \<longrightarrow> C \<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+let_\<phi>type Named_Tuple_Field
+  deriving \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+         \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) (named_tup.mk (fmupd s TY fmempty))\<close>
+       and \<open> Semantic_Zero_Val ty T x
+         \<Longrightarrow> Semantic_Zero_Val (named_tup.mk (fmupd s ty fmempty)) \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> x \<close>
 
 lemma Empty_Tuple_reduce[simp]:
   \<open>(((),a) \<Ztypecolon> Empty_Named_Tuple \<^emph> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) = (a \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>)\<close>
   \<open>((a,()) \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Empty_Named_Tuple) = (a \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>)\<close>
-  unfolding set_eq_iff
-  by ((clarsimp; rule; clarsimp simp add: \<phi>expns V_named_tup_mult V_named_tup_sep_disj),
+  unfolding BI_eq_iff
+  by ((clarsimp; rule; clarsimp simp add: V_named_tup_mult V_named_tup_sep_disj),
       blast,
       metis V_named_tup_mult V_named_tup_sep_disj fmadd_empty(2) fmdom'_restrict_fset_precise fmdom_empty fmrestrict_fset_null,
-      (clarsimp; rule; clarsimp simp add: \<phi>expns V_named_tup_mult V_named_tup_sep_disj),
+      (clarsimp; rule; clarsimp simp add: V_named_tup_mult V_named_tup_sep_disj),
       blast,
       metis V_named_tup_mult V_named_tup_sep_disj fmadd_empty(1) fmdom'_restrict_fset_precise fmdom_empty fmrestrict_fset_empty)
 
-
-lemma Named_Tuple_Field_zero  [\<phi>reason 1000]:
-  \<open>Semantic_Zero_Val ty T x \<Longrightarrow> Semantic_Zero_Val (named_tup.mk (fmupd s ty fmempty)) \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> x \<close>
-  unfolding Semantic_Zero_Val_def
-  by (clarsimp simp add: \<phi>expns,
-      metis (mono_tags, lifting) Named_Tuple_Field_expn comp_apply fmmap_empty fmmap_fmupd fmpred_empty fmpred_upd image_eqI option.sel)
-
-lemma Tuple_Field_zeros [\<phi>reason 1000]:
+lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   \<open> s |\<notin>| fmdom tys
 \<Longrightarrow> Semantic_Zero_Val ty T x
 \<Longrightarrow> Semantic_Zero_Val (named_tup.mk tys) Ts xs
 \<Longrightarrow> Semantic_Zero_Val (named_tup.mk (fmupd s ty tys)) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts) (x,xs) \<close>
   unfolding Semantic_Zero_Val_def
-  apply (clarsimp simp add: \<phi>expns; cases \<open>fmpred (\<lambda>_ t. \<exists>y. Zero t = Some y) tys\<close>;
-     auto simp add: inj_image_mem_iff \<phi>expns fmmap_fmupd
+  apply (clarsimp; cases \<open>fmpred (\<lambda>_ t. \<exists>y. Zero t = Some y) tys\<close>;
+     auto simp add: inj_image_mem_iff fmmap_fmupd
      V_named_tup_mult_cons[where s=s and y=\<open>fmmap (the \<circ> Zero) tys\<close>, symmetric])
   subgoal for x'
     by (rule exI[where x=\<open>V_named_tup.mk (fmmap (the \<circ> Zero) tys)\<close>],
         rule exI[where x=\<open>V_named_tup.mk (fmupd s x' fmempty)\<close>],
         auto simp add: V_named_tup_sep_disj) .
 
-lemma Tuple_Field_semty[\<phi>reason 1000]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>) (named_tup.mk (fmupd s TY fmempty))\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (clarsimp simp add: \<phi>expns; blast)
-
-lemma Tuple_Field_semtys[\<phi>reason 1000]:
+lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (named_tup.mk TYs)
 \<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> Ts)) (named_tup.mk (fmupd s TY TYs))\<close>
   unfolding \<phi>SemType_def subset_iff
-  by (clarsimp simp add: \<phi>expns; metis V_named_tup_mult fmadd_empty(2) fmadd_fmupd fmrel_upd)
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Aggregate (Named_Tuple_Field s T)\<close>
-  unfolding Is_Aggregate_def ..
+  by (clarsimp; metis V_named_tup_mult fmadd_empty(2) fmadd_fmupd fmrel_upd)
 
 
 section \<open>Reasoning\<close>
@@ -220,8 +199,8 @@ lemma [\<phi>reason 1000]:
 lemma [\<phi>reason 1020]:
   \<open> FAIL TEXT(s \<open>is not a field in the named tuple\<close>)
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_S s) (named_tup.mk fmempty) RET \<close>
-  unfolding \<r>Guard_def Premise_def
-  by (clarsimp simp add: valid_idx_step_named_tup idx_step_type_tup)
+  unfolding \<r>Guard_def Premise_def FAIL_def
+  by blast
 
 
 subsection \<open>General\<close>
@@ -244,31 +223,29 @@ lemma [\<phi>reason 1200]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' \<noteq> s
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> X) Y (f o snd)\<close>
-  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def
-  by (clarsimp simp add: \<phi>expns,
-      metis V_named_tup_mult V_named_tup_sep_disj_L fmadd_empty(2) fmadd_fmupd fmupd_lookup idx_step_value_named_tup)
+  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def \<phi>Type_Mapping_def
+  by (clarsimp, metis V_named_tup_mult V_named_tup_sep_disj_L fmadd_empty(2) fmadd_fmupd fmupd_lookup idx_step_value_named_tup)
 
 lemma [\<phi>reason 1201]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
 \<Longrightarrow> \<phi>Aggregate_Getter idx T Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> X) Y (f o fst)\<close>
-  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def
-  by (clarsimp simp add: \<phi>expns,
-      metis V_named_tup_mult V_named_tup_sep_disj_L fmadd_fmupd fmupd_lookup idx_step_value_named_tup option.sel)
+  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def \<phi>Type_Mapping_def
+  by (clarsimp, metis V_named_tup_mult V_named_tup_sep_disj_L fmadd_fmupd fmupd_lookup idx_step_value_named_tup option.sel)
 
 lemma [\<phi>reason 1201]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
 \<Longrightarrow> \<phi>Aggregate_Getter idx T Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_S s' # idx) \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> Y f\<close>
-  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def
-  by (clarsimp simp add: \<phi>expns, metis fmupd_lookup idx_step_value_named_tup option.sel)
+  unfolding \<phi>Aggregate_Getter_def \<r>Guard_def Premise_def \<phi>Type_Mapping_def
+  by (clarsimp, metis fmupd_lookup idx_step_value_named_tup option.sel)
 
 lemma [\<phi>reason 1200]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' \<noteq> s
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> X) (\<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> X') Y Y' (apsnd o f)\<close>
-  unfolding \<phi>Aggregate_Mapper_def \<r>Guard_def Premise_def
-  apply (clarsimp simp add: \<phi>expns )
+  unfolding \<phi>Aggregate_Mapper_def \<r>Guard_def Premise_def \<phi>Type_Mapping_def
+  apply clarsimp
   subgoal premises prems for g g' a b c' v' proof -
     obtain c'f where c'f: \<open>c' = V_named_tup.mk c'f\<close> using V_named_tup_sep_disj_L[OF \<open>c' ## _\<close>] by blast
     show ?thesis
@@ -284,12 +261,12 @@ lemma [\<phi>reason 1201]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
 \<Longrightarrow> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) (\<lbrace> LOGIC_SYMBOL(s): X \<rbrace> \<^emph> R) (\<lbrace> LOGIC_SYMBOL(s): X' \<rbrace> \<^emph> R) Y Y' (apfst o f)\<close>
-  unfolding \<phi>Aggregate_Mapper_def
-  apply (clarsimp simp add: \<phi>expns )
+  unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
+  apply clarsimp
   subgoal premises prems for g g' a b c' v' proof -
     obtain c'f where c'f: \<open>c' = V_named_tup.mk c'f\<close> using V_named_tup_sep_disj_L[OF \<open>c' ## _\<close>] by blast
     show ?thesis
-      by (insert prems, simp add: c'f V_named_tup_mult_cons idx_step_mod_value_named_tupl_cons' \<r>Guard_def,
+      by (insert prems, simp add: c'f V_named_tup_mult_cons idx_step_mod_value_named_tupl_cons' \<r>Guard_def Premise_def,
           metis V_named_tup_sep_disj fmdom_fmupd fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
   qed .
 
@@ -297,13 +274,13 @@ lemma [\<phi>reason 1201]:
   \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> s' = s
 \<Longrightarrow> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_S s' # idx) \<lbrace> LOGIC_SYMBOL(s): X \<rbrace> \<lbrace> LOGIC_SYMBOL(s): X' \<rbrace> Y Y' f\<close>
-  unfolding \<phi>Aggregate_Mapper_def
-  by (clarsimp simp add: \<phi>expns \<r>Guard_def Premise_def, metis fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
+  unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: \<r>Guard_def Premise_def, metis fmupd_idem fmupd_lookup idx_step_mod_value_named_tup option.sel)
 
 lemma [\<phi>reason 1000]:
   \<open>\<phi>Aggregate_Constructor (semantic_named_tuple_constructor []) [] (named_tup.mk fmempty) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
-  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def
-  by (clarsimp simp: Empty_Named_Tuple_expn)
+  unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>Type_Mapping_def
+  by clarsimp
 
 lemma [\<phi>reason 1020]:
   \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
@@ -311,21 +288,20 @@ lemma [\<phi>reason 1020]:
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor [s]) [v]
           (named_tup.mk (fmupd s TY fmempty)) (x \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
-  by (clarsimp simp: Named_Tuple_Field_expn, blast)
+  by (clarsimp, metis Satisfaction_def fmempty_transfer fmrel_upd)
 
 lemma [\<phi>reason 1000]:
-  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor sR) vR (named_tup.mk TyR) (r \<Ztypecolon> R)
 \<Longrightarrow> s |\<notin>| fmdom TyR
 \<Longrightarrow> \<phi>Aggregate_Constructor (semantic_named_tuple_constructor (s # sR)) (v # vR)
           (named_tup.mk (fmupd s TY TyR)) ((x, r) \<Ztypecolon> \<lbrace> LOGIC_SYMBOL(s): T \<rbrace> \<^emph> R)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_named_tuple_constructor_def \<phi>SemType_def
-  apply (clarsimp simp: Named_Tuple_Field_expn \<phi>Prod_expn
-                        V_named_tup_mult_cons[symmetric]; rule)
+  apply (clarsimp simp: V_named_tup_mult_cons[symmetric]; rule)
   subgoal for vs
     by (rule exI[where x=\<open>V_named_tup.mk vs\<close>], rule exI[where x=\<open>V_named_tup.mk (fmupd s (\<phi>arg.dest v) fmempty)\<close>],
-        simp add: V_named_tup_sep_disj, insert fmrel_fmdom_eq, blast)
+        simp add: V_named_tup_sep_disj , insert fmrel_fmdom_eq, blast)
   using V_named_tup_mult by auto
   
 setup \<open>Context.theory_map (

@@ -9,12 +9,12 @@ signature PHI_LOCAL_VALUE = sig
 val has_val : string (*external name*) -> Proof.context -> bool
 val delete_val : string (*external name*) -> Proof.context -> Proof.context
 val update_val : binding -> thm (*rule*) -> Proof.context -> Proof.context
-      (*a rule in form \<open>(\<phi>arg.dest (v <val-of> (name::valname)) \<in> (x \<Ztypecolon> T)\<close>*)
+      (*a rule in form \<open>(\<phi>arg.dest (v <val-of> (name::valname)) \<Turnstile> (x \<Ztypecolon> T)\<close>*)
 
 val valname_prefix : string
 
 (*the rules must be in form \<open>\<phi>arg.dest v \<Turnstile> x : T\<close>*)
-val add_reasoning_rules : (thm * Position.T * Phi_Reasoner.mode * (priority * Reasoner_Group.name option)) list
+val add_local_value_specs : (thm * Position.T * Phi_Reasoner.mode * (priority * Reasoner_Group.name option)) list
                        -> Context.generic -> Context.generic
 val remove_reasoning_rules: thm list -> Context.generic -> Context.generic
 val get_raw_val_in_rule : thm -> term
@@ -125,7 +125,7 @@ fun update_val b rule ctxt =
                                        Option.map (Thm.term_of o fst) V)
   end
 
-fun add_reasoning_rules rules ctxt =
+fun add_local_value_specs rules ctxt =
   Phi_Reasoner.add_rules (map (fn (rule,pos,mode, prio) =>
     ([rule], pos, mode, prio, [(pattern_of rule, NONE)],[], NONE))
     rules) ctxt

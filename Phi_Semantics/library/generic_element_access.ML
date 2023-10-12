@@ -68,13 +68,14 @@ fun mk_element_index_input_internal args0 ctxt =
             raise TERM ("bad rule #c419df7c-c917-4605-a129-bb914d5716bf", [X])
       val reasoning_rules = map (fn (pos, rule) =>
             ([rule RS @{thm Action_Tag_I[where A=\<open>parse_element_index_input\<close>]}], pos,
-             Phi_Reasoner.LOCAL_CUT, 1000, [(pattern_of (Thm.prop_of rule), NONE)], [], NONE)
+             Phi_Reasoner.NORMAL_LOCAL_CUT, (1000, NONE),
+             [(pattern_of (Thm.prop_of rule), NONE)], [], NONE)
           ) args
       val thy = Proof_Context.theory_of ctxt
       val pats = map (pattern_of o Thm.prop_of o snd) args
    in ctxt
    |> Context.proof_map (
-        Phi_Reasoner.del_reasoners \<^pattern_prop>\<open>(_ :: VAL) \<in> _ @action parse_element_index_input\<close>
+        Phi_Reasoner.del_reasoners [\<^pattern_prop>\<open>(_ :: VAL) \<Turnstile> _ @action parse_element_index_input\<close>]
           (fn r => exists (fn pat => Pattern.matches thy (pat, #name r)) pats))
    |> Context.proof_map (
         Phi_Reasoner.add_rules reasoning_rules)
@@ -129,15 +130,16 @@ fun gen_constructor kind pos_and_first_args stat =
             val args = Thm.cterm_of ctxt (HOLogic.mk_list \<^typ>\<open>VAL \<phi>arg\<close> args')
             val reasoning_rules =
                   maps (fn ((_, pos), rules) =>
-                    map (fn rule => (rule,pos,Phi_Reasoner.LOCAL_CUT,1000)) rules) args0
-            val ctxt'' = Context.proof_map (Phi_Local_Value.add_reasoning_rules reasoning_rules) ctxt'
+                    map (fn rule => (rule,pos,Phi_Reasoner.NORMAL_LOCAL_CUT,(1000,NONE))) rules) args0
+            val ctxt'' = Context.proof_map (Phi_Local_Value.add_local_value_specs reasoning_rules) ctxt'
             val rule' =
-                @{thm op_construct_aggregate_\<phi>app}
+                @{thm' op_construct_aggregate_\<phi>app}
+                  |> Thm.transfer' ctxt''
                   |> Thm.instantiate (TVars.empty, Vars.make [
                         ((("constructor", 0), \<^typ>\<open>VAL \<phi>arg list \<Rightarrow> VAL\<close>), ctor),
                         ((("args", 0), \<^typ>\<open>VAL \<phi>arg list\<close>), args)
                       ])
-                  |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') (SOME 1) ctxt''
+                  |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') NONE (SOME 1) ctxt''
          in (oprs, (ctxt'', Phi_Apply.apply [rule'] ctxt'' sequent))
         end
         | invoke _ _ = error "internal bug #5330d2f8-c5e3-46ae-9b45-5ae9550f037d"

@@ -321,7 +321,8 @@ structure Eval_Sem_Idx_SS = Simpset (
 
 \<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[eval_aggregate_path] ?X' : ?X\<close>
                                       | \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[eval_aggregate_path] ?P\<close> )
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' Eval_Sem_Idx_SS.get') o snd\<close>
+  = \<open>Phi_Reasoners.wrap (
+      PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Eval_Sem_Idx_SS.get' {fix_vars=false}) o snd\<close>
 
 
 lemmas [eval_aggregate_path] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms
@@ -334,48 +335,69 @@ declare [[
 
 subsection \<open>Index to Fields of Structures\<close>
 
+definition \<open>\<phi>Type_Mapping T U f g \<longleftrightarrow> (\<forall>v x. v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> g v \<Turnstile> (f x \<Ztypecolon> U))\<close>
+
 definition \<phi>Aggregate_Getter :: \<open>aggregate_path \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> bool\<close>
-  where \<open>\<phi>Aggregate_Getter idx T U g \<longleftrightarrow> index_value idx \<in> (g \<Ztypecolon> T \<Rrightarrow> U) \<close>
+  where \<open>\<phi>Aggregate_Getter idx T U g \<longleftrightarrow> \<phi>Type_Mapping T U g (index_value idx) \<close>
 
 definition \<phi>Aggregate_Mapper :: \<open>aggregate_path \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> (VAL,'a2) \<phi> \<Rightarrow> (VAL,'b) \<phi> \<Rightarrow> (VAL,'b2) \<phi> \<Rightarrow> (('b \<Rightarrow> 'b2) \<Rightarrow> 'a \<Rightarrow> 'a2) \<Rightarrow> bool\<close>
   where \<open>\<phi>Aggregate_Mapper idx T T' U U' f
-    \<longleftrightarrow> (\<forall>g g'. g \<in> (g' \<Ztypecolon> U \<Rrightarrow> U') \<longrightarrow> index_mod_value idx g \<in> (f g' \<Ztypecolon> T \<Rrightarrow> T')) \<close>
+    \<longleftrightarrow> (\<forall>g g'. \<phi>Type_Mapping U U' g' g \<longrightarrow> \<phi>Type_Mapping T T' (f g') (index_mod_value idx g)) \<close>
 
 definition \<phi>Aggregate_Constructor :: \<open>(VAL \<phi>arg list \<Rightarrow> VAL) \<Rightarrow> VAL \<phi>arg list \<Rightarrow> TY \<Rightarrow> VAL set \<Rightarrow> bool\<close>
   where \<open>\<phi>Aggregate_Constructor constructor args TY Spec
-    \<longleftrightarrow> constructor args \<in> Spec \<and> constructor args \<in> Well_Type TY\<close>
+    \<longleftrightarrow> constructor args \<Turnstile> Spec \<and> constructor args \<in> Well_Type TY\<close>
 
 declare [[\<phi>reason_default_pattern
     \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Getter ?idx ?T _ _ \<close> (100)
-and \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Mapper _ ?T _ _ _ _ \<close> (100)
+and \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _ \<close> \<Rightarrow> \<open>\<phi>Aggregate_Mapper ?idx ?T _ _ _ _ \<close> (100)
 and \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> \<Rightarrow> \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> (100)
 ]]
 
+\<phi>reasoner_group aggregate_access_all = (100, [1, 2000]) for (\<open>\<phi>Aggregate_Getter idx T U g\<close>,
+                                                         \<open>\<phi>Aggregate_Mapper idx T T' U U' f\<close>)
+      \<open>Rules lifting semantic access of aggregate structures onto abstract domain\<close>
+  and aggregate_access = (1000, [1000,1030]) in aggregate_access_all
+      \<open>cutting rules\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+
 lemma [\<phi>reason 1]:
   \<open>\<phi>Aggregate_Getter [] T T id\<close>
-  unfolding \<phi>Aggregate_Getter_def
-  by (simp add: \<phi>Mapping_expn)
+  unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
+  by simp
 
-lemma \<phi>Aggregate_Getter_Nil[\<phi>reason 1200]:
+lemma \<phi>Aggregate_Getter_Nil[\<phi>reason %aggregate_access]:
   \<open>\<phi>Aggregate_Getter [] T T id\<close>
-  unfolding \<phi>Aggregate_Getter_def
-  by (simp add: \<phi>Mapping_expn)
+  unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
+  by simp
 
 lemma [\<phi>reason 1]:
   \<open>\<phi>Aggregate_Mapper [] T T' T T' id\<close>
-  unfolding \<phi>Aggregate_Mapper_def
-  by (simp add: \<phi>Mapping_expn)
+  unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
+  by simp
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open>\<phi>Aggregate_Mapper [] T T' T T' id\<close>
-  unfolding \<phi>Aggregate_Mapper_def
-  by (simp add: \<phi>Mapping_expn)
+  unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
+  by simp
+
 
 subsection \<open>Is Aggregate\<close>
 
-definition \<open>Is_Aggregate T \<longleftrightarrow> True\<close>
+definition Is_Aggregate :: \<open>('c,'a) \<phi> \<Rightarrow> bool\<close>
+  where \<open>Is_Aggregate T \<longleftrightarrow> True\<close>
 
-lemma [\<phi>reason 1000]:
+\<phi>reasoner_group is_aggregate_all = (1000, [1, 2000]) for \<open>Is_Aggregate T\<close>
+      \<open>checking whether the given \<phi>type specifies an aggregate\<close>
+  and is_aggregate = (1000, [1000, 1030]) in is_aggregate_all
+      \<open>cutting rules\<close>
+
+\<phi>property_deriver Is_Aggregate 555 for (\<open>Is_Aggregate _\<close>)
+  = \<open>Phi_Type_Algebra_Derivers.meta_Synt_Deriver
+      ("Is_Aggregate", @{lemma' \<open>Is_Aggregate T\<close> by (simp add: Is_Aggregate_def)}, @{reasoner_group %is_aggregate})\<close>
+
+lemma [\<phi>reason %is_aggregate]:
   \<open> Is_Aggregate T
 \<Longrightarrow> Is_Aggregate U
 \<Longrightarrow> Is_Aggregate (T \<^emph> U)\<close>
@@ -411,7 +433,7 @@ lemma op_get_aggregate:
   unfolding op_get_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Getter_def
             parse_element_index_input_by_semantic_type_def
             parse_element_index_input_by_semantic_type_at_least_1_def
-  by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>Mapping_expn)
+  by (cases rv; simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
 
 lemma op_set_aggregate:
   \<open> Is_Aggregate T
@@ -426,18 +448,17 @@ lemma op_set_aggregate:
   unfolding op_set_aggregate_def \<phi>SemType_def subset_iff \<phi>Aggregate_Mapper_def Premise_def
             parse_element_index_input_by_semantic_type_def is_valid_index_of_def
             parse_element_index_input_by_semantic_type_at_least_1_def
-  by (cases rv; cases ru; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>Mapping_expn)
+  by (cases rv; cases ru; simp, rule, rule, simp, rule, simp, rule, simp add: \<phi>Type_Mapping_def)
 
 proc op_construct_aggregate:
   input  \<open>Void\<close>
   requires C[unfolded \<phi>Aggregate_Constructor_def, useful]:
             \<open>\<phi>Aggregate_Constructor constructor args TY (x \<Ztypecolon> T)\<close>
   output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
-\<medium_left_bracket>
-  semantic_assert \<open>constructor args \<in> Well_Type TY\<close>
-  semantic_return \<open>constructor args \<in> (x \<Ztypecolon> T)\<close>
-\<medium_right_bracket> .
+  \<medium_left_bracket>
+    semantic_assert \<open>constructor args \<in> Well_Type TY\<close>
+    semantic_return \<open>constructor args \<Turnstile> (x \<Ztypecolon> T)\<close>
+  \<medium_right_bracket> .
 
 
 section \<open>Syntax Base\<close>

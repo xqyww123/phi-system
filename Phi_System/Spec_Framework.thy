@@ -163,14 +163,18 @@ declare [[
       \<open>giving the semantic type of the concrete value satisfying the given assertion or \<phi>-type\<close>
   and \<phi>sem_type_fail = (0, [0,0]) in \<phi>sem_type
       \<open>failures\<close>
+  and \<phi>sem_type_brute = (2, [2,2]) in \<phi>sem_type > \<phi>sem_type_fail
+      \<open>reducing to concrete level, used only when deriving rules.\<close>
+  and \<phi>sem_type_assertion = (10, [10,10]) in \<phi>sem_type and > \<phi>sem_type_brute
+      \<open>asserting the given with a semantic type if any\<close>
 (*and \<phi>sem_type_\<phi>typ = (10, [10,10]) in \<phi>sem_type and > \<phi>sem_type_fail
       \<open>\<open>\<phi>SemType\<close> -> \<open>\<phi>\<phi>SemType\<close>\<close>*)
-  and \<phi>sem_type_assertion = (20, [20,20]) in \<phi>sem_type and > \<phi>sem_type_fail
-      \<open>asserting the given with a semantic type if any\<close>
   and \<phi>sem_type_derived = (50, [50,50]) in \<phi>sem_type and > \<phi>sem_type_assertion
       \<open>derived rules\<close>
   and \<phi>sem_type_cut = (1000, [1000,1000]) in \<phi>sem_type and > \<phi>sem_type_derived
       \<open>cutting rules\<close>
+  and \<phi>sem_type_red = (2200, [2200,2500]) in \<phi>sem_type and > \<phi>sem_type_cut
+      \<open>reduction and evaluation\<close>
 
 (*lemma \<phi>SemType_unique:
   \<open> S \<noteq> {}
@@ -198,18 +202,31 @@ lemma [\<phi>reason 100]:
 
 paragraph \<open>Basic Rules\<close>
 
-lemma [\<phi>reason %\<phi>sem_type_fail]:
+lemma [\<phi>reason default %\<phi>sem_type_fail]:
   \<open>FAIL TEXT(\<open>Fail to reason the semantic type of\<close> X)
 \<Longrightarrow> \<phi>SemType X Any\<close>
   unfolding FAIL_def
   by blast
 
-lemma [\<phi>reason %\<phi>sem_type_assertion except \<open>\<phi>SemType _ ?var\<close>]:
-  \<open> \<phi>SemType A TY'
-\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>expecting\<close> A \<open>of semantic type\<close> TY \<open>but actually of\<close> TY')
+lemma [\<phi>reason default %\<phi>sem_type_assertion except \<open>\<phi>SemType _ ?var\<close>]:
+  \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY \<Longrightarrow> \<phi>SemType A TY')
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> TY' = TY) \<or>\<^sub>c\<^sub>u\<^sub>t ERROR TEXT(\<open>expecting\<close> A \<open>of semantic type\<close> TY \<open>but actually of\<close> TY')
 \<Longrightarrow> \<phi>SemType A TY \<close>
   unfolding Premise_def Orelse_shortcut_def ERROR_def
   by blast
+
+lemma \<phi>sem_type_brute_derive:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)
+\<Longrightarrow> \<phi>SemType S TY \<close>
+  unfolding Premise_def \<phi>SemType_def \<r>Guard_def .
+
+lemma \<phi>sem_type_brute_EIF:
+  \<open> \<phi>SemType S TY \<longrightarrow> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY) @action \<A>EIF \<close>
+  unfolding Action_Tag_def \<phi>SemType_def
+  by blast
+
+bundle \<phi>sem_type_brute_derive = \<phi>sem_type_brute_derive[\<phi>reason default %\<phi>sem_type_brute]
+                                \<phi>sem_type_brute_EIF[\<phi>reason %extract_pure]
 
 
 paragraph \<open>Over Logic Connectives\<close>
@@ -240,6 +257,29 @@ lemma [\<phi>reason %\<phi>sem_type_cut]:
   by simp
 
 
+subsubsection \<open>Reduction \& Evaluation\<close>
+
+lemma [\<phi>reason %\<phi>sem_type_red]:
+  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (fst (x,y) \<Ztypecolon> T) TY \<close>
+  by simp
+
+lemma [\<phi>reason %\<phi>sem_type_red]:
+  \<open> \<phi>SemType (y \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (snd (x,y) \<Ztypecolon> T) TY \<close>
+  by simp
+
+lemma [\<phi>reason %\<phi>sem_type_red]:
+  \<open> \<phi>SemType ((f x, y) \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (apfst f (x,y) \<Ztypecolon> T) TY \<close>
+  by simp
+
+lemma [\<phi>reason %\<phi>sem_type_red]:
+  \<open> \<phi>SemType ((x, f y) \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (apsnd f (x,y) \<Ztypecolon> T) TY \<close>
+  by simp
+
+
 subsubsection \<open>Multiple Values\<close>
 
 definition Well_Typed_Vals :: \<open>TY list \<Rightarrow> 'a::VALs \<phi>arg set\<close>
@@ -260,12 +300,45 @@ definition Semantic_Zero_Val :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 
 
 declare [[\<phi>reason_default_pattern \<open>Semantic_Zero_Val ?TY ?T ?x\<close> \<Rightarrow> \<open>Semantic_Zero_Val ?TY ?T _\<close> (100) ]]
 
-\<phi>reasoner_group semantic_zero_val_all = (100, [10, 3000]) for \<open>Semantic_Zero_Val TY T x\<close>
+\<phi>reasoner_group semantic_zero_val_all = (100, [0, 3000]) for \<open>Semantic_Zero_Val TY T x\<close>
     \<open>giving the semantic zero value on the abstraction side\<close>
-  and semantic_zero_val_cut = (1000, [1000, 1000]) in semantic_zero_val_all
+  and semantic_zero_val_fail = (0, [0,0]) in semantic_zero_val_all
+    \<open>failure\<close>
+  and semantic_zero_val_brute = (1, [1,1]) in semantic_zero_val_all and > semantic_zero_val_fail
+    \<open>reducing to semantic level, only used in deriving rules\<close>
+  and semantic_zero_val_cut = (1000, [1000, 1000]) in semantic_zero_val_all and > semantic_zero_val_brute
     \<open>cutting rules\<close>
   and semantic_zero_val_derived = (50, [50,50]) in semantic_zero_val_all and < semantic_zero_val_cut
     \<open>derived rules\<close>
+
+subsubsection \<open>Basic Rules\<close>
+
+lemma [\<phi>reason default %semantic_zero_val_fail]:
+  \<open> FAIL TEXT(\<open>Don't know any semantic zero value satisfying \<phi>-type\<close> T)
+\<Longrightarrow> Semantic_Zero_Val TY T x \<close>
+  unfolding FAIL_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> Abstract_Domain T P
+\<Longrightarrow> Semantic_Zero_Val TY T x \<longrightarrow> P x @action \<A>EIF\<close>
+  unfolding Abstract_Domain_def Semantic_Zero_Val_def Action_Tag_def Inhabited_def
+  by blast
+
+(*lemma Semantic_Zero_Val_brute:
+  \<open> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<exists>v. Zero TY = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))
+\<Longrightarrow> Semantic_Zero_Val TY T x \<close>
+  unfolding Semantic_Zero_Val_def \<r>Guard_def Premise_def
+  by blast
+*)
+
+lemma Semantic_Zero_Val_EIF_sat:
+  \<open> Semantic_Zero_Val TY T x \<longrightarrow> (\<exists>v. Zero TY = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)) @action \<A>EIF \<close>
+  unfolding Action_Tag_def Semantic_Zero_Val_def
+  by blast
+
+bundle Semantic_Zero_Val_EIF_brute = (*Semantic_Zero_Val_brute[\<phi>reason default %semantic_zero_val_brute]*)
+                                     Semantic_Zero_Val_EIF_sat[\<phi>reason %extract_pure+10]
 
 
 subsection \<open>Equality\<close>

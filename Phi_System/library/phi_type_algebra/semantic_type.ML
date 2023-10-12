@@ -49,9 +49,15 @@ fun gen_semantic_type (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
       val solver = K NONE
       val simp = if is_some instruction then K I
                  else simplifier_by_cong @{thms' \<phi>TA_SemTy_cong}
+
+      val ctxt = ctxt0
+              |> Config.put Phi_Reasoner.ignore_dup_reasoner true
+              |> Bundle.includes ["Spec_Framework.\<phi>sem_type_brute_derive"]
+              |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
+
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_SemTy_rule},
                                       [(K (SOME []), ind_conv, reasoning)], solver, simp)
-                                    phi0 (Option.map #1 instruction) ctxt0
+                                    phi0 (Option.map #1 instruction) ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> note_properties_s phi0 [(name, [rule])]

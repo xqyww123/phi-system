@@ -162,9 +162,12 @@ lemma "__throw_rule__"[intro!]:
   by (clarsimp simp add: INTERP_SPEC; metis)
 
 lemma throw_\<phi>app:
-  \<open> (\<And>v. Remove_Values (X v) (X' v))
-\<Longrightarrow> \<p>\<r>\<o>\<c> throw excep \<lbrace> X excep \<longmapsto> 0 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> X' \<close>
+  \<open> \<p>\<a>\<r>\<a>\<m> excep
+\<Longrightarrow> lambda_abstraction excep XX X
+\<Longrightarrow> (\<And>v. Remove_Values (X v) (X' v))
+\<Longrightarrow> \<p>\<r>\<o>\<c> throw excep \<lbrace> XX \<longmapsto> 0 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> X' \<close>
   unfolding \<phi>Procedure_def subset_iff det_lift_def throw_def Remove_Values_def Transformation_def
+            lambda_abstraction_def
   by (clarsimp simp add: INTERP_SPEC, metis)
 
 definition op_try :: "'ret proc \<Rightarrow> (ABNM \<Rightarrow> 'ret proc) \<Rightarrow> 'ret proc"

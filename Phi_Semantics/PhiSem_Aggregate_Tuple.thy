@@ -69,76 +69,60 @@ section \<open>\<phi>Type\<close>
 
 subsection \<open>Empty Tuple\<close>
 
-definition Empty_Tuple :: \<open>(VAL, unit) \<phi>\<close>
-  where \<open>Empty_Tuple x = { V_tup.mk [] }\<close>
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def Empty_Tuple :: \<open>(VAL, unit) \<phi>\<close>
+  where \<open>x \<Ztypecolon> Empty_Tuple \<equiv> V_tup.mk [] \<Ztypecolon> Itself\<close>
+  deriving Basic
+       and Functionality
+       and \<open>\<phi>SemType (x \<Ztypecolon> Empty_Tuple) (tup [])\<close>
+       and \<open>Semantic_Zero_Val (tup []) Empty_Tuple ()\<close>
+       and \<open>Is_Aggregate Empty_Tuple\<close>
 
 \<phi>adhoc_overloading \<phi>_Empty_Tuple_sugar Empty_Tuple
 
-lemma EmptyTuple_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> Empty_Tuple) \<longleftrightarrow> p = V_tup.mk []\<close>
-  unfolding Empty_Tuple_def \<phi>Type_def by simp
-
 subsection \<open>Field\<close>
 
-definition Tuple_Field :: "(VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
-  where "Tuple_Field T x = { V_tup.mk [v] |v. v \<in> T x }"
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def Tuple_Field :: "(VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a) \<phi>"
+  where \<open>Tuple_Field T \<equiv> (\<lambda>v. V_tup.mk [v]) \<Zcomp>\<^sub>f T\<close>
+  deriving Basic
+       and Functional_Transformation_Functor
+       and Functionality
+       and \<open>\<phi>SemType (x \<Ztypecolon> T) TY
+        \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Tuple_Field T) (tup [TY])\<close>
+       and \<open>Semantic_Zero_Val TY T x
+        \<Longrightarrow> Semantic_Zero_Val (tup [TY]) (Tuple_Field T) x \<close>
+       and \<open>Is_Aggregate (Tuple_Field T)\<close>
 
 syntax "\<phi>_tuple_" :: \<open>logic \<Rightarrow> \<phi>_tuple_arg_\<close> ("_")
 
 translations
   "_\<phi>Tuple (_\<phi>tuple_arg (\<phi>_tuple_ X))" \<rightleftharpoons> "CONST Tuple_Field X"
 
-lemma Tuple_Field_expn[\<phi>expns]:
-  \<open>p \<in> (x \<Ztypecolon> \<lbrace> T \<rbrace>) \<longleftrightarrow> (\<exists>v. p = V_tup.mk [v] \<and> v \<in> (x \<Ztypecolon> T))\<close>
-  unfolding Tuple_Field_def \<phi>Type_def by simp
-
-lemma Tuple_Field_inhabited[elim!]:
-  \<open>Inhabited (x \<Ztypecolon> \<lbrace> T \<rbrace>) \<Longrightarrow> (Inhabited (x \<Ztypecolon> T) \<Longrightarrow> C) \<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> Inhabited (x \<Ztypecolon> T) \<longrightarrow> C
-\<Longrightarrow> Inhabited (x \<Ztypecolon> \<lbrace> T \<rbrace>) \<longrightarrow> C \<close>
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
 lemma Empty_Tuple_reduce[simp]:
   \<open>(((),a) \<Ztypecolon> Empty_Tuple \<^emph> \<lbrace> T \<rbrace>) = (a \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   \<open>((a,()) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Empty_Tuple) = (a \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
-  unfolding set_eq_iff
-  apply (clarsimp; rule; clarsimp simp add: \<phi>expns V_tup_mult)
-  apply (metis V_tup_mult append_Nil)
-  apply (clarsimp; rule; clarsimp simp add: \<phi>expns V_tup_mult)
-  by (metis V_tup_mult append.right_neutral)
+  unfolding BI_eq_iff
+  by ((clarsimp; rule; clarsimp simp add: V_tup_mult),
+      (metis V_tup_mult append_Nil),
+      (clarsimp; rule; clarsimp simp add: V_tup_mult),
+      metis V_tup_mult append.right_neutral)
 
-lemma Tuple_Field_zero  [\<phi>reason 1000]:
-  \<open>Semantic_Zero_Val ty T x \<Longrightarrow> Semantic_Zero_Val (tup [ty]) \<lbrace> T \<rbrace> x \<close>
-  unfolding Semantic_Zero_Val_def by (clarsimp simp add: \<phi>expns)
-
-lemma Tuple_Field_zeros [\<phi>reason 1000]:
-  \<open>Semantic_Zero_Val ty T x
-    \<Longrightarrow> Semantic_Zero_Val (tup tys) Ts xs
-    \<Longrightarrow> Semantic_Zero_Val (tup (ty#tys)) (\<lbrace> T \<rbrace> \<^emph> Ts) (x,xs) \<close>
+lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
+  \<open> Semantic_Zero_Val ty T x
+\<Longrightarrow> Semantic_Zero_Val (tup tys) Ts xs
+\<Longrightarrow> Semantic_Zero_Val (tup (ty#tys)) (\<lbrace> T \<rbrace> \<^emph> Ts) (x,xs) \<close>
   unfolding Semantic_Zero_Val_def
-  apply (clarsimp simp add: \<phi>expns V_tup_mult_cons image_iff)
-  using V_tup_sep_disj_L by blast
+  by (clarsimp simp add: V_tup_mult_cons image_iff, insert V_tup_sep_disj_L, blast)
 
-lemma Tuple_Field_semty[\<phi>reason 1000]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> \<lbrace> T \<rbrace>) (tup [TY])\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (clarsimp simp add: \<phi>expns)
-
-lemma Tuple_Field_semtys[\<phi>reason 1000]:
+lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (tup TYs)
 \<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<lbrace> T \<rbrace> \<^emph> Ts)) (tup (TY#TYs))\<close>
   unfolding \<phi>SemType_def subset_iff
-  apply (clarsimp simp add: \<phi>expns)
-  by (metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Aggregate (Tuple_Field T)\<close>
-  unfolding Is_Aggregate_def ..
+  by (clarsimp, metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
 
 
 section \<open>Reasoning\<close>
@@ -170,62 +154,61 @@ lemma idx_step_mod_value_V_tup_suc:
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Getter (AgIdx_N i # idx) X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y (f o snd)\<close>
-  unfolding \<phi>Aggregate_Getter_def
-  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_V_tup_suc)
+  unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: V_tup_mult idx_step_value_V_tup_suc)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Getter idx X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> Y f \<close>
-  unfolding \<phi>Aggregate_Getter_def
-  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
+  unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: V_tup_mult idx_step_value_tup)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Getter idx X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) Y (f o fst) \<close>
-  unfolding \<phi>Aggregate_Getter_def
-  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_value_tup)
+  unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: V_tup_mult idx_step_value_tup)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Mapper (AgIdx_N i # idx) X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) (\<lbrace> T \<rbrace> \<^emph> X') Y Y' (apsnd o f) \<close>
-  unfolding \<phi>Aggregate_Mapper_def
-  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_V_tup_suc)
-  by (metis V_tup_sep_disj_R idx_step_mod_value_tup)
+  unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: V_tup_mult idx_step_mod_value_V_tup_suc,
+      metis V_tup_sep_disj_R idx_step_mod_value_tup)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> \<lbrace> X' \<rbrace> Y Y' f \<close>
-  unfolding \<phi>Aggregate_Mapper_def
-  by (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
+  unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: V_tup_mult idx_step_mod_value_tup)
 
 lemma [\<phi>reason 1200]:
   \<open> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) (\<lbrace> X' \<rbrace> \<^emph> R) Y Y' (apfst o f) \<close>
-  unfolding \<phi>Aggregate_Mapper_def
-  apply (clarsimp simp add: \<phi>expns V_tup_mult idx_step_mod_value_tup)
-  by (metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
+  unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: V_tup_mult idx_step_mod_value_tup,
+      metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
 
 
 lemma [\<phi>reason 1000]:
   \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor [] (tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def
-  by (clarsimp simp add: EmptyTuple_expn)
+  by clarsimp
 
 lemma [\<phi>reason 1020]:
-  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor [v] (tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def
-  by (cases v; clarsimp simp add: Tuple_Field_expn; blast)
+  by (cases v; clarsimp; blast)
 
 lemma [\<phi>reason 1000]:
-  \<open> \<phi>arg.dest v \<in> (x \<Ztypecolon> T)
+  \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor vR (tup Tys) (r \<Ztypecolon> Tr)
 \<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor (v # vR) (tup (TY # Tys)) ((x, r) \<Ztypecolon> \<lbrace> T \<rbrace> \<^emph> Tr)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def
-  by (cases v; clarsimp simp add: Tuple_Field_expn \<phi>Prod_expn;
-      metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L subsetD)
+  by (cases v; clarsimp; metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
 
 setup \<open>Context.theory_map (
   Generic_Element_Access.Agg_Constructors.add 0 (fn (kind, args, (ctxt,sequent)) =>

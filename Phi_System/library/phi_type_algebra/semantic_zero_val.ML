@@ -32,19 +32,23 @@ fun guess_property phi0 ctxt =
 
 fun gen_semantic_zero_val (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const_>\<open>Semantic_Zero_Val _\<close> $ _ $ T $ _ => T)
-      fun reasoning goal phi ctxt =
-            default_reasoning true default_reasoning_configure
-                              (if goal = 1 then fn _ => fn Trueprop $ (Cond $ (Eq $ LHS $ (S $ v))) =>
-                                                SOME ([v], fn [v'] => Trueprop $ (Cond $ (Eq $ LHS $ (S $ v'))))
-                                           else K (K NONE))
+      fun reasoning phi ctxt =
+            default_reasoning true default_reasoning_configure (K (K NONE))
                               (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded [] ctxt phi))) phi ctxt
+
       val solver = K NONE
       val simp = K I
+
+      val ctxt = ctxt0
+              |> Config.put Phi_Reasoner.ignore_dup_reasoner true
+              |> Bundle.includes ["Spec_Framework.Semantic_Zero_Val_EIF_brute"]
+              |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt0
+
       val rules = deriving_framework (name, parse_hint, K [], guess_property,
                                       @{thm' \<phi>TA_Semantic_Zero_Val_rule},
-                                      [(K NONE, K (K I), reasoning 1), (K NONE, K (K I), reasoning 2)],
+                                      [(K NONE, K (K I), reasoning)],
                                       solver, simp)
-                                    phi0 (Option.map #1 instruction) ctxt0
+                                    phi0 (Option.map #1 instruction) ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> note_properties_s phi0 [(name, [rule])]

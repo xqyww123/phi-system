@@ -4439,7 +4439,7 @@ lemma "_NToA_init_having_Q_":
   unfolding Action_Tag_def Simplify_def Identity_Element\<^sub>I_def Inhabited_def Premise_def Transformation_def
   by clarsimp blast
 
-ML \<open>val augment_ToA_by_implication = Attrib.setup_config_bool \<^binding>\<open>augment_ToA_by_implication\<close> (K true)\<close>
+ML \<open>val augment_ToA_by_implication = Attrib.setup_config_bool \<^binding>\<open>augment_ToA_by_implication\<close> (K false)\<close>
 
 \<phi>reasoner_ML NToA_init 2000 (\<open>?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?Y \<w>\<i>\<t>\<h> ?var_P @action NToA' _\<close>) = \<open>
 fn (_, (ctxt0,sequent)) => Seq.make (fn () =>

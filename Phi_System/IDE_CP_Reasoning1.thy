@@ -203,6 +203,8 @@ abbreviation \<phi>expn_Premise ("<\<phi>expn> _" [26] 26) where \<open>\<phi>ex
         Phi_Expansions.enhance (ctxt addsimps (Useful_Thms.get ctxt))) {fix_vars=false})) o snd
 \<close>
 
+lemma Premise_MODE_\<phi>EXPN[iff]: \<open><\<phi>expn> True\<close>
+  unfolding Premise_def ..
 
 text \<open>Antecedent \<^prop>\<open><\<phi>expn> P\<close> indicates the reasoner solving the premise \<^prop>\<open>P\<close> using
   simplification rules of \<open>\<phi>expns\<close>.\<close>

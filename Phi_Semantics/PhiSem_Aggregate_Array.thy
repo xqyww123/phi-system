@@ -54,7 +54,26 @@ lemma list_all_replicate:
       meson length_replicate list_all_replicat)*)
 
 
+lemma
+  \<open>\<forall>x. P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> list_all P x \<Longrightarrow> N = length x \<Longrightarrow> \<exists>xa. list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) xa x\<close>
+  unfolding Inhabited_def
+  apply (induct x arbitrary: N; clarsimp)
+  by force
+
+
 section \<open>\<phi>Type\<close>
+
+declare [[\<phi>trace_reasoning = 0]]
+
+\<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
+  where \<open>l \<Ztypecolon> Array N T \<equiv> V_array.mk vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
+  deriving \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow>
+            Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
+
+
+
+term \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow>
+    Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
 
 definition Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
   where \<open>Array N T = (\<lambda>l. { V_array.mk vs |vs. length l = N \<and> list_all2 (\<lambda>v x. v \<in> (x \<Ztypecolon> T)) vs l  })\<close>

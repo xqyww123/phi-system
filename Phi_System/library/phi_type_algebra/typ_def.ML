@@ -208,6 +208,7 @@ fun open_proof_ctxt' bundles ctxt = ctxt
     |> Config.put Phi_Reasoner.ignore_dup_reasoner true
     |> not (null bundles) ? Bundle.includes bundles
     |> Config.restore Phi_Reasoner.ignore_dup_reasoner ctxt
+    |> Config.put augment_ToA_by_implication true
 
 fun open_proof_ctxt bundles = open_proof_ctxt' bundles o Context.proof_of
 
@@ -1376,7 +1377,7 @@ val _ = Outer_Syntax.command \<^command_keyword>\<open>\<phi>type_def\<close> "d
 val _ = Outer_Syntax.command \<^command_keyword>\<open>let_\<phi>type\<close> "derive properties of existing \<phi>-types"
           ((Parse.position Parse.const -- bundle_parser -- deriving_parser)
             >> (fn const_deriving =>
-              Toplevel.theory (Context.theory_map (let_phityp_deriving_cmd const_deriving))))
+              Toplevel.generic_theory (let_phityp_deriving_cmd const_deriving)))
 
 end
 

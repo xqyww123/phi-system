@@ -312,7 +312,7 @@ lemmas [procedure_simps] =
             proc_bind_assoc proc_bind_return_none \<phi>V_simps
 
 \<phi>reasoner_ML procedure_equivalence 1200 (\<open>Premise procedure_simplification ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=true}) o snd\<close>
+  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=false}) o snd\<close>
 
 \<phi>reasoner_ML procedure_simplification 1000 (\<open>Simplify procedure_simplification ?x ?y\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=true}) o snd\<close>

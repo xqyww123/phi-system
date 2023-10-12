@@ -516,7 +516,8 @@ setup \<open>Phi_Type_Template_Properties.add_property_kinds [
 
 \<phi>property_deriver Gen_Br_Join 555 for (\<open>Gen_Br_Join _ _ _ _ _\<close>)
   = \<open>Phi_Type_Algebra_Derivers.meta_Synt_Deriver
-      ("Gen_Br_Join", @{lemma' \<open>Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds\<close> by (simp add: Gen_Br_Join_def)})\<close>
+      ("Gen_Br_Join", @{lemma' \<open>Gen_Br_Join F\<^sub>T F\<^sub>U F' P conds\<close> by (simp add: Gen_Br_Join_def)},
+       @{reasoner_group %cutting})\<close>
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[br_join] _ : _\<close>)
   = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)

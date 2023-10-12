@@ -128,8 +128,8 @@ paragraph \<open>Short-cut of ToA\<close>
 
 \<phi>reasoner_group \<phi>_ToA = (1100, [1100, 1120]) in ToA_cut
   \<open>Short-cut transformations for fiction injector\<close>
-
-lemma NToA_skip [\<phi>reason %\<phi>_ToA except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> \<phi> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> ]:
+                        (*v TODO*)
+lemma NToA_skip [\<phi>reason 1100 except \<open> _ \<heavy_comma> ?y \<Ztypecolon> \<phi> ?U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?x \<Ztypecolon> \<phi> ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _ \<w>\<i>\<t>\<h> _\<close> ]:
   " R \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R' \<w>\<i>\<t>\<h> P
 \<Longrightarrow> R \<heavy_comma> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> \<phi> T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R'\<heavy_comma> X \<w>\<i>\<t>\<h> P"
   unfolding Action_Tag_def split_paired_All Action_Tag_def

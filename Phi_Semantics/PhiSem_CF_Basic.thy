@@ -128,6 +128,8 @@ lemma branch_\<phi>app:
   apply (cases rawc; cases C; simp; rule; simp add: \<phi>expns WT_bool)
   using \<phi>CONSEQ view_shift_by_implication view_shift_refl by blast+
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc "if":
   requires C: \<open>\<p>\<r>\<o>\<c> cond \<lbrace> X \<longmapsto> X1\<heavy_comma> \<v>\<a>\<l> C \<Ztypecolon> \<bool> \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
       and brT: \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e>   C \<longrightarrow> \<p>\<r>\<o>\<c> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>T \<close>
@@ -136,7 +138,7 @@ proc "if":
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
-  \<medium_left_bracket> C branch brT brF BC \<medium_right_bracket>.
+  \<medium_left_bracket> C branch brT brF BC \<medium_right_bracket> .
 
 
 subsection \<open>Loops\<close>
@@ -149,14 +151,15 @@ lemma "__DoWhile__rule_\<phi>app":
   apply (rule allI impI conjI)+
   subgoal for comp R s
   apply (rotate_tac 2)
-    apply (induct body comp s rule: SemDoWhile.induct; clarsimp simp add: \<phi>expns times_list_def)
+    apply (induct body comp s rule: SemDoWhile.induct;
+           clarsimp simp add: times_list_def INTERP_SPEC)
     apply fastforce
     subgoal premises prems for res f s s'' c u v proof -
-      have t1: \<open>\<exists>c. (\<exists>fic. (\<exists>u v. fic = u * v \<and> u \<in> R \<and> v \<in> X c \<and> u ## v) \<and> s \<in> INTERP_RES fic) \<and> P c\<close>
+      have t1: \<open>\<exists>uu. (\<exists>x. (\<exists>u v. uu = u * v \<and> u \<Turnstile> R \<and> v \<Turnstile> X x \<and> u ## v) \<and> P x) \<and> s \<in> INTERP_RES uu\<close>
         using prems(5) prems(6) prems(7) prems(8) prems(9) by blast
       show ?thesis
-        apply (insert \<open>\<forall>_ _. (\<exists>_. _) \<longrightarrow> _\<close>[THEN spec[where x=s], THEN spec[where x=R], THEN mp, OF t1])
-        using prems(1) prems(3) by fastforce
+        by (insert \<open>\<forall>_ _. (\<exists>_. _) \<longrightarrow> _\<close>[THEN spec[where x=s], THEN spec[where x=R], THEN mp, OF t1]
+                   prems(1) prems(3), fastforce)
     qed
     apply fastforce
     by blast .
@@ -220,8 +223,8 @@ proc (nodef) refine_while:
   \<medium_left_bracket> V ;;
     while \<open>X x' \<s>\<u>\<b>\<j> x' i.
         Inv: (x' = (f ^^ i) x \<and> (\<forall>k < i. cond ((f ^^ k) x)) \<and> (\<forall>k \<le> i. invariant ((f ^^ k) x)) ) \<and>
-        Guard: cond x'\<close>
-    \<medium_left_bracket> C \<medium_right_bracket>
+        Guard: cond x'\<close> ;;
+    \<medium_left_bracket> thm C ;; C \<medium_right_bracket>
     \<medium_left_bracket> B \<medium_right_bracket> certified by (of_tac  \<open>\<lambda>_. i + 1\<close>, insert \<phi>, auto simp add: less_Suc_eq_le,
                         (insert le_neq_implies_less, blast)[1],
                         metis funpow.simps(2) less_Suc_eq_le nat_less_le o_apply) ;;

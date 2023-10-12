@@ -102,7 +102,7 @@ subsection \<open>Not\<close>
 lemma op_not[\<phi>overload \<not>, \<phi>synthesis 100]:
   \<open>\<p>\<r>\<o>\<c> op_not raw \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[raw] \<bool> \<longmapsto> \<v>\<a>\<l> \<not> x \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_not_def
-  by (cases raw, simp, rule, simp add: Premise_def, rule, simp)
+  by (cases raw, simp, rule, simp, rule, simp)
 
 
 subsection \<open>And\<close>
@@ -110,16 +110,14 @@ subsection \<open>And\<close>
 lemma op_and[\<phi>overload \<and>, \<phi>synthesis add]:
   \<open>\<p>\<r>\<o>\<c> op_and (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<and> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_and_def
-  by (cases va; cases vb; simp, rule, rule, simp add: Premise_def, rule,
-      simp add: Premise_def, rule, simp, blast)
+  by (cases va; cases vb; simp, rule, rule, simp, rule, simp, rule, simp, blast)
 
 subsection \<open>Or\<close>
 
 lemma op_or[\<phi>overload \<or>, \<phi>synthesis 100]:
   \<open>\<p>\<r>\<o>\<c> op_or (\<phi>V_pair vb va) \<lbrace> a \<Ztypecolon> \<v>\<a>\<l>[va] \<bool>\<heavy_comma> b \<Ztypecolon> \<v>\<a>\<l>[vb] \<bool> \<longmapsto> \<v>\<a>\<l> (a \<or> b) \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_or_def
-  by(cases va; cases vb, simp, rule, rule, simp add: Premise_def, rule,
-      simp add: Premise_def, rule, simp, blast)
+  by(cases va; cases vb, simp, rule, rule, simp, rule, simp, rule, simp, blast)
 
 
 subsection \<open>Equal\<close>
