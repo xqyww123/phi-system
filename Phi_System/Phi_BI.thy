@@ -611,6 +611,11 @@ lemma assertion_eq_intro:
 \<Longrightarrow> P = Q\<close>
   unfolding Transformation_def BI_eq_iff by blast
 
+lemma BI_eq_ToA:
+  \<open> P = Q \<longleftrightarrow> (P \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Q) \<and> (Q \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> P) \<close>
+  unfolding BI_eq_iff Transformation_def
+  by blast
+
 lemma BI_sub_transformation:
   \<open> S \<le> S' \<longleftrightarrow> (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S') \<close>
   unfolding Transformation_def Satisfaction_def subset_iff

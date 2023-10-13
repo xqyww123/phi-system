@@ -1317,6 +1317,7 @@ lemma [\<phi>reason %\<phi>app_conv]:
   unfolding Action_Tag_def .
 
 
+
 subsubsection \<open>Applying on Procedure Mode\<close>
 
 text \<open>TODO: move this to user manual.
@@ -1391,25 +1392,27 @@ lemma \<phi>apply_transformation_fully[\<phi>reason %\<phi>app_ToA_on_proc_or_VS
   PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T' \<w>\<i>\<t>\<h> ?P))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
-  "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
+  " \<phi>IntroFrameVar R S'' S' T'' T'
+\<Longrightarrow> \<phi>App_Conv (S'' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T'' \<w>\<i>\<t>\<h> P) (S2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T2 \<w>\<i>\<t>\<h> P2)
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S2 \<w>\<i>\<t>\<h> Any @action NToA
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (CurrentConstruction mode blk RR S))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T) \<and> P)"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T2) \<and> P2)"
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def \<phi>App_Conv_def
   by (cases R; simp; meson \<phi>apply_implication transformation_left_frame \<phi>apply_view_shift)
 
 lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS for \<open>
   PROP \<phi>Application (Trueprop (?S' = (?T' :: ?'a set)))
       (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
 \<close>]:
-  "\<phi>IntroFrameVar R S'' S' T T'
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
+  " PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T'))
+      (Trueprop (CurrentConstruction mode blk RR S))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode blk RR T)
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T'))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode blk RR T)"
-  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
-  by (cases R; simp; meson \<phi>apply_implication transformation_left_frame \<phi>apply_view_shift)
+  unfolding \<phi>Application_def BI_eq_ToA
+  by blast
 
 
 paragraph \<open>View Shift Methods\<close>
@@ -2305,9 +2308,10 @@ in if Config.get ctxt Phi_Reasoner.auto_level >= 1
    else raise Bypass NONE
 end)\<close>
 
-\<phi>processor enter_proof 790 (premises \<open>Premise _ _\<close> | premises \<open>Simplify _ _ _\<close>)
+\<phi>processor enter_proof 790 (premises \<open>Premise _ _\<close> | premises \<open>Simplify _ _ _\<close> | \<open>PROP Trueprop _\<close>)
   \<open>fn stat => \<^keyword>\<open>certified\<close> >> (fn _ => fn _ =>
-      raise Terminate_Process (stat, SOME (snd oo Phi_Toplevel.prove_prem false)))\<close>
+      raise Terminate_Process (Phi_Opr_Stack.end_expression 900 stat,
+                               SOME (snd oo Phi_Toplevel.prove_prem false)))\<close>
 
 \<phi>processor auto_obligation_solver 800 (premises \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | premises \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
   \<open>fn (ctxt,sequent) => Scan.succeed (fn proc_id =>
