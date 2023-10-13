@@ -12,7 +12,7 @@ open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
 (*is_intro: True for applying the inductive destruction on the source, False for on the target*)
 fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
-                            (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
+                            (_, name) instruction ctxt0 (phi0 : phi_type) thy =
   let val Const (const, _) = head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))
       fun extract_oprs_from_hint (C $ D $ r) =
            (case head_of C
@@ -73,7 +73,7 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
             )*)
 
       fun simp (_, ctxt) =
-        if is_some instruction then I
+        if is_some (#1 instruction) then I
         else Conv.fconv_rule (
                Phi_Conv.hhf_concl_conv (fn ctxt =>
                  let val sctxt = ctxt addsimps @{thms special_Ex_def}
@@ -101,15 +101,15 @@ fun meta_gen_Tyops_Commute' (is_intro, rule, parse_hint', guess_property)
       val rules = deriving_framework (name, parse_hint parse_hint', extract_oprs_from_hint, guess_property, rule,
                                      [(K (SOME (if is_intro then [0] else [0,~1])), ind_conv, reasoning is_intro)],
                                      K NONE, simp)
-                                    phi0 (Option.map #1 instruction) ctxt0
+                                    phi0 instruction ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
         |> note_properties_s phi0 [(name, [rule'])]
-        |> Phi_Help.generic_theory_mapping pos (fn m =>
-             Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE
+        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+             Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE
                                    (the_default @{reasoner_group %\<phi>TA_derived_properties}
-                                                 (Option.mapPartial #2 instruction))
+                                                 (#2 instruction))
                                    ([],[]) NONE [Morphism.thm m rule'])
         |> pair [rule']
   end

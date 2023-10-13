@@ -171,7 +171,7 @@ declare [[
       \<open>\<open>\<phi>SemType\<close> -> \<open>\<phi>\<phi>SemType\<close>\<close>*)
   and \<phi>sem_type_derived = (50, [50,50]) in \<phi>sem_type and > \<phi>sem_type_assertion
       \<open>derived rules\<close>
-  and \<phi>sem_type_cut = (1000, [1000,1000]) in \<phi>sem_type and > \<phi>sem_type_derived
+  and \<phi>sem_type_cut = (1000, [1000,1030]) in \<phi>sem_type and > \<phi>sem_type_derived
       \<open>cutting rules\<close>
   and \<phi>sem_type_red = (2200, [2200,2500]) in \<phi>sem_type and > \<phi>sem_type_cut
       \<open>reduction and evaluation\<close>
@@ -215,6 +215,18 @@ lemma [\<phi>reason default %\<phi>sem_type_assertion except \<open>\<phi>SemTyp
   unfolding Premise_def Orelse_shortcut_def ERROR_def
   by blast
 
+lemma [\<phi>reason %\<phi>sem_type_cut]:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<in> Well_Type TY
+\<Longrightarrow> \<phi>SemType (v \<Ztypecolon> Itself) TY \<close>
+  unfolding Premise_def \<phi>SemType_def subset_iff
+  by simp
+
+lemma \<phi>SemType_Itself_brute:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<in> Well_Type TY
+\<Longrightarrow> \<phi>SemType (v \<Ztypecolon> Itself) TY \<close>
+  unfolding Premise_def \<phi>SemType_def subset_iff
+  by simp
+
 lemma \<phi>sem_type_brute_derive:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>v. v \<Turnstile> S \<longrightarrow> v \<in> Well_Type TY)
 \<Longrightarrow> \<phi>SemType S TY \<close>
@@ -227,6 +239,7 @@ lemma \<phi>sem_type_brute_EIF:
 
 bundle \<phi>sem_type_brute_derive = \<phi>sem_type_brute_derive[\<phi>reason default %\<phi>sem_type_brute]
                                 \<phi>sem_type_brute_EIF[\<phi>reason %extract_pure]
+                                \<phi>SemType_Itself_brute[\<phi>reason %\<phi>sem_type_cut+10]
 
 
 paragraph \<open>Over Logic Connectives\<close>
@@ -240,7 +253,7 @@ lemma [\<phi>reason %\<phi>sem_type_cut]:
   by simp
 
 lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> \<phi>SemType X TY
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> \<phi>SemType X TY
 \<Longrightarrow> \<phi>SemType (X \<s>\<u>\<b>\<j> P) TY\<close>
   unfolding \<phi>SemType_def subset_iff
   by simp
@@ -249,12 +262,6 @@ lemma [\<phi>reason %\<phi>sem_type_cut]:
   \<open> (\<And>x. \<phi>SemType (X x) TY)
 \<Longrightarrow> \<phi>SemType (ExSet X) TY\<close>
   unfolding \<phi>SemType_def subset_iff by clarsimp
-
-lemma [\<phi>reason %\<phi>sem_type_cut]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<in> Well_Type TY
-\<Longrightarrow> \<phi>SemType (v \<Ztypecolon> Itself) TY \<close>
-  unfolding Premise_def \<phi>SemType_def subset_iff
-  by simp
 
 
 subsubsection \<open>Reduction \& Evaluation\<close>
@@ -366,28 +373,29 @@ declare [[\<phi>reason_default_pattern \<open>Is_Functional ?S\<close> \<Rightar
 \<phi>reasoner_group \<phi>functionality_all = (%cutting, [1,3000]) for (\<open>Is_Functional S\<close>, \<open>Functionality T p\<close>)
     \<open>All reasoning rules giving functionality of \<phi>-types, meaning if the assertion uniquely fixes
      a concrete object for each abstract object.\<close>
-  and \<phi>functionality = (%cutting, [%cutting, %cutting+30]) for (\<open>Is_Functional S\<close>, \<open>Functionality T p\<close>)
-                                                            in \<phi>functionality_all
+  and \<phi>functionality = (%cutting, [%cutting, %cutting+30]) in \<phi>functionality_all
     \<open>Default rules are cutting\<close>
-  and derived_\<phi>functionality = (50, [40,60]) for (\<open>Is_Functional S\<close>, \<open>Functionality T p\<close>)
-                                              in \<phi>functionality_all and < \<phi>functionality
+  and derived_\<phi>functionality = (50, [40,60]) in \<phi>functionality_all and < \<phi>functionality
     \<open>Derived rules\<close>
-  and \<phi>functional_to_functionality = (10, [10,10]) for (\<open>Is_Functional S\<close>, \<open>Functionality T p\<close>)
-                                                    in \<phi>functionality_all and < derived_\<phi>functionality
+  and \<phi>functional_to_functionality = (10, [10,10]) in \<phi>functionality_all and < derived_\<phi>functionality
     \<open>Trunning \<open>Is_Functional (x : T)\<close> to \<open>Functionality T p\<close>\<close>
+  and \<phi>functionality_brute = (2, [2,2]) in \<phi>functionality_all and < \<phi>functional_to_functionality
+    \<open>reducing to concrete semantics, and only used in deriving rules\<close>
 
 subsubsection \<open>Basic Rules\<close>
 
+(*depreciated*)
 lemma Is_Functional_premise_extraction:
   \<open>Is_Functional S \<equiv> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) \<and> True\<close>
   unfolding Is_Functional_def atomize_eq
   by blast
 
+(*depreciated*)
 lemma Functionality_premise_extraction:
   \<open>Functionality T P \<equiv> (\<forall>x u v. P x \<and> u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v) \<and> True\<close>
   unfolding Functionality_def atomize_eq
   by blast
-  
+
 
 (* lemma Is_Functional_alt:
   \<open>Is_Functional S \<longleftrightarrow> (S = {} \<or> (\<exists>x. S = {x}))\<close>
@@ -417,6 +425,29 @@ lemma [\<phi>reason default %\<phi>functional_to_functionality]:
 \<Longrightarrow> Is_Functional (x \<Ztypecolon> T)\<close>
   unfolding Premise_def Is_Functional_def Functionality_def
   by simp
+
+lemma Is_Functional_brute:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v)
+\<Longrightarrow> Is_Functional S \<close>
+  unfolding Is_Functional_def Premise_def
+  by blast
+
+lemma Is_Functional_EIF_brute:
+  \<open> Is_Functional S \<longrightarrow> (\<forall>u v. u \<Turnstile> S \<and> v \<Turnstile> S \<longrightarrow> u = v) @action \<A>EIF \<close>
+  unfolding Action_Tag_def Is_Functional_def
+  by blast
+
+lemma Functionality_EIF_brute:
+  \<open> Functionality T D \<longrightarrow> (\<forall>x u v. D x \<and> u \<Turnstile> (x \<Ztypecolon> T) \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> u = v) @action \<A>EIF \<close>
+  unfolding Action_Tag_def Functionality_def
+  by blast
+
+bundle Is_Functional_brute = Is_Functional_brute[\<phi>reason default %\<phi>functionality_brute]
+                             Is_Functional_EIF_brute[\<phi>reason %extract_pure+10]
+                             Functionality_EIF_brute[\<phi>reason %extract_pure+10]
+
+
+subsubsection \<open>Basic Types and Connectives\<close>
 
 lemma [\<phi>reason %\<phi>functionality]:
   \<open>Functionality Itself (\<lambda>_. True)\<close>

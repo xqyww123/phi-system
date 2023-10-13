@@ -206,6 +206,16 @@ text \<open> Strategy of deriving:
   \<phi>-type colons down to raw predicates.
 \<close>
 
+text \<open>
+It is true there exists a type theory for which our \<phi>-type logic is a semantic interpretation of it,
+where \<open>\<lbrakk> x : T \<rbrakk> \<equiv> \<exists>c. c \<Turnstile> x \<Ztypecolon> T\<close> meaning there exists at least one low-level form \<open>c\<close> to which the
+term \<open>x\<close> can be compiled, so \<open>x\<close> can be a term of \<open>T\<close>; besides, a new judgement \<open>x : T \<longrightarrow> y : U\<close>
+is introduced between two typing judgements, meaning any low-level representation of \<open>x\<close> in the compiled
+object, can also be a representation of \<open>y\<close>, so it is safe to replace \<open>x : T\<close> in a program with \<open>y : U\<close>,
+without changing its semantics (if no type error occurs).
+\<open>\<lbrakk> x : T \<longrightarrow> y : U \<rbrakk> \<equiv> x \<Ztypecolon> T \<longrightarrow> y \<Ztypecolon> U\<close>, may be seen as an extended sub-typing where the term changes.
+\<close>
+
 
 chapter \<open>The Algebra of \<open>\<phi>\<close>-Type\<close>
 
@@ -5750,7 +5760,6 @@ ML_file \<open>library/phi_type_algebra/gen_tyops_commute.ML\<close>
 subsubsection \<open>Meta Deriver for Pure Syntactical Properties\<close>
 
 ML_file \<open>library/phi_type_algebra/gen_pure_synt_rules.ML\<close>
-
 
 
 section \<open>Deriving Configures for Specific Abstract Algebras\<close>

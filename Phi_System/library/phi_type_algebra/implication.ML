@@ -172,7 +172,7 @@ fun predicate_infer__contains_bad allows_Inhabited_and_Sat =
                        | Var _ => true
                        | _ => false)
 
-fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
+fun predicate_infer upper parse_var solver (phi,ctxt,sequent,text) =
   let fun err () = raise Automation_Fail (fn () =>
                         [Pretty.para "Obligation is obtained, but I fail to infer \
                                      \the expression of the implied pure fact from it."])
@@ -304,12 +304,12 @@ fun predicate_infer upper parse_var solver (phi,ctxt,sequent) =
                             then \<^Const>\<open>True\<close> (*the case of recursive, unsupported*)
                             else X'
                    val sequent' = Thm.instantiate (TVars.empty, Vars.make [(var, Thm.cterm_of ctxt X')]) sequent
-                in solver (phi, ctxt, sequent')
+                in solver (phi, ctxt, sequent', text)
                end
         | _ => error "Internal bug"
  end
 
-fun gen_inhab upper (der_id, name, pos) instruction0 ctxt0 (phi0 : phi_type) thy =
+fun gen_inhab upper (der_id, name) (instruction : deriving_instruction) ctxt0 (phi0 : phi_type) thy =
   let val guess_property = guess_property_like_abst_domain (
             not upper, false, true,
             if upper then fn (x,m) => \<^Const>\<open>Abstract_Domain x m\<close>
@@ -323,7 +323,7 @@ fun gen_inhab upper (der_id, name, pos) instruction0 ctxt0 (phi0 : phi_type) thy
                               Abs ("x", x_ty, \<^Const>\<open>HOL.conj\<close> $ (oblg $ Bound 0) $ (pred $ Bound 0)),
             \<^sort>\<open>type\<close>, \<^sort>\<open>type\<close>)
 
-      val mode_infer = not (is_some instruction0) andalso not (#is_recursive phi0)
+      val mode_infer = not (is_some (#1 instruction)) andalso not (#is_recursive phi0)
 
       val parse_hint = parse_hint (
               fn Const(\<^const_name>\<open>Abstract_Domain\<close>, _) $ T $ _ => T
@@ -360,7 +360,7 @@ fun gen_inhab upper (der_id, name, pos) instruction0 ctxt0 (phi0 : phi_type) thy
                     (fn _ (*Trueprop*) $ (_ $ Abs (_, _, Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ (Var v $ Bound 0))) => v)
                     (oblg_solver' name)
             else K NONE
-      val simp = if is_some instruction0 then K I
+      val simp = if is_some (#1 instruction) then K I
                  else default_simplifier' (fn rewr =>
                    Phi_Conv.hhf_concl_conv (fn ctxt =>
                       HOLogic.Trueprop_conv (Conv.arg_conv (rewr ctxt)) ))
@@ -368,14 +368,14 @@ fun gen_inhab upper (der_id, name, pos) instruction0 ctxt0 (phi0 : phi_type) thy
                                       (if upper then @{thm' \<phi>TA_Inh_rule} else @{thm' \<phi>TA_SuC_rule}),
                                       [(K (SOME [0]), ind_conv, Inh_reasoning)],
                                       solver, simp)
-                                     phi0 (Option.map #1 instruction0) ctxt0
+                                     phi0 instruction ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property."])
          | SOME (rule', _) => thy
-            |> Phi_Help.generic_theory_mapping pos (fn m =>
+            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_abstract_domain}
-                                                     (Option.mapPartial #2 instruction0))
+                                                     (#2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']

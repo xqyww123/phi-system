@@ -8,7 +8,7 @@ end
 structure Phi_Type_Algebra_Derivers : PHI_TYPE_ALGEBRA_DERIVERS = struct
 open Phi_Type_Algebra Phi_Type_Algebra_Derivers
 
-fun gen_MI (_, name, pos) instruction ctxt0 (phi : phi_type) thy =
+fun gen_MI (_, name) instruction ctxt0 (phi : phi_type) thy =
   let val parse_hint = parse_hint (
             fn (Const(\<^const_name>\<open>Semimodule_Identity\<close>, _) $ F $ _ $ _ $ _ $ _ ) => F)
       val extract_oprs_from_hint = K []
@@ -32,14 +32,14 @@ fun gen_MI (_, name, pos) instruction ctxt0 (phi : phi_type) thy =
                                       Guess_Scalar_One_E, @{thm' \<phi>TA_MI\<^sub>E_rule},
                                       [(K (SOME [0]), ind_conv, reasoning),
                                        (K (SOME [0]), ind_conv, reasoning)], K NONE, simp)
-                                    phi (Option.map #1 instruction) ctxt0
+                                    phi instruction ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
-        |> Phi_Help.generic_theory_mapping pos (fn m =>
+        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
               Phi_Reasoner.add_rule (#pos phi) Phi_Reasoner.TO_BE_OVERRIDE
                                     (the_default @{reasoner_group %\<phi>TA_derived_properties}
-                                                 (Option.mapPartial #2 instruction))
+                                                 (#2 instruction))
                                     ([],[]) NONE [Morphism.thm m rule'])
         |> note_properties_s phi [(name, [rule'])]
         |> pair [rule']

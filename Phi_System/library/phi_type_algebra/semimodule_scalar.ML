@@ -103,7 +103,7 @@ fun guess_property is_intro (phi0 : phi_type) ctxt =
   end
 *)
 
-fun gen_MS is_intro (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_MS is_intro (_, name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<^sub>I\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
              | (Const(\<^const_name>\<open>Semimodule_Scalar_Assoc\<^sub>E\<close>, _) $ F1 $ _ $ _ $ _ $ _ $ _ $ _ $ _ $ _) => F1
@@ -134,14 +134,14 @@ fun gen_MS is_intro (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
                                       (if is_intro then @{thm' \<phi>TA_MS\<^sub>I_rule} else @{thm' \<phi>TA_MS\<^sub>E_rule}),
                                       [(K (SOME [0,2,~1,~1,~1]), ind_conv, reasoning)],
                                       K NONE, simp)
-                                    phi0 (Option.map #1 instruction) ctxt0
+                                    phi0 instruction ctxt0
    in case Seq.pull rules
    of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
     | SOME (rule', _) => thy
-        |> Phi_Help.generic_theory_mapping pos (fn m =>
+        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
               Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                     (the_default @{reasoner_group %\<phi>TA_derived_properties}
-                                                 (Option.mapPartial #2 instruction))
+                                                 (#2 instruction))
                                     ([],[]) NONE [Morphism.thm m rule'])
         |> note_properties_s phi0 [(name, [rule'])]
         |> pair [rule']

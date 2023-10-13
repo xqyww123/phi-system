@@ -194,7 +194,7 @@ fun guess_property is_intro (phi0:phi_type) ctxt =
          phi, ctxt))
   end
 
-fun gen_id_ele is_left (_,name,pos) instruction ctxt0 (phi0 : phi_type) generic =
+fun gen_id_ele is_left (_,name) instruction ctxt0 (phi0 : phi_type) generic =
   let val parse_hint = parse_hint (
             fn Const(\<^const_name>\<open>Identity_Elements\<^sub>I\<close>, _) $ T $ _ $ _ => T
              | Const(\<^const_name>\<open>Identity_Elements\<^sub>E\<close>, _) $ T $ _ => T
@@ -212,7 +212,7 @@ fun gen_id_ele is_left (_,name,pos) instruction ctxt0 (phi0 : phi_type) generic 
                   Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
                   Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv) ctm)
 
-      val mode_infer = not (is_some instruction) andalso not (#is_recursive phi0)
+      val mode_infer = not (is_some (#1 instruction)) andalso not (#is_recursive phi0)
       val varify_subgoal = K (K NONE)
 
       fun reasoning phi =
@@ -251,14 +251,14 @@ fun gen_id_ele is_left (_,name,pos) instruction ctxt0 (phi0 : phi_type) generic 
                                      guess_property is_left, rule,
                                      [(K (SOME [0]), ind_conv, reasoning)],
                                      id_ele_infer, simp)
-                                    phi0 (Option.map #1 instruction) ctxt0
+                                    phi0 instruction ctxt0
    in case Seq.pull rules
         of NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
          | SOME (rule', _) => generic
-            |> Phi_Help.generic_theory_mapping pos (fn m =>
+            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_identity_element}
-                                                     (Option.mapPartial #2 instruction))
+                                                     (#2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule']

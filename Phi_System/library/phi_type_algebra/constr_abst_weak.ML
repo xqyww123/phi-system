@@ -49,7 +49,7 @@ fun guess_property (phi:phi_type) ctxt =
                   NONE :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
-fun gen_constr_from_raw (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_constr_from_raw (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (
             fn (Const(\<^const_name>\<open>Transformation\<close>, _) $ _ $ (Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ T) $ _)
                  => T
@@ -71,7 +71,7 @@ fun gen_constr_from_raw (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                       Expansion.equip ctxt addsimps eqs) then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
 
-      val mode_infer = not (is_some instruction)
+      val mode_infer = not (is_some (#1 instruction))
 
       fun reasoning phi ctxt =
             default_reasoning false
@@ -81,7 +81,7 @@ fun gen_constr_from_raw (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                                                 (K (chk_unfolded [] ctxt phi)))
               phi ctxt
 
-      fun solver (phi, ctxt, sequent) =
+      fun solver (phi, ctxt, sequent, _) =
         if mode_infer then
           let val sctxt = Simplifier.add_cong @{thm HOL.conj_cong} ctxt
                           addsimps [@{thm special_Ex_def}]
@@ -102,13 +102,13 @@ fun gen_constr_from_raw (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                                       guess_property, @{thm' \<phi>TA_TrCstr_rule},
                                       [(K (SOME [0,~1]), ind_conv, reasoning)],
                                       solver, K I)
-                                     phi0 (Option.map #1 instruction) ctxt0
+                                     phi0 instruction ctxt0
    in case Seq.pull rules
    of SOME (rule, _) => thy
-        |> Phi_Help.generic_theory_mapping pos (fn m =>
+        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_abstract_from_raw}
-                                                    (Option.mapPartial #2 instruction))
+                                                    (#2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule])
         |> note_properties_s phi0 [(name, [rule])]
         |> pair [rule]

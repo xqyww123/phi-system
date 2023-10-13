@@ -180,8 +180,8 @@ fun chk_quantifier_place (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ A $ 
       = \<^Const>\<open>Trueprop\<close> $ (H2 $ Abs (N, Ty, H $ X $ A))
   | chk_quantifier_place X = X
 
-fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy =
-  let val instruction = Option.map (fn (a,b,_) =>
+fun gen_trans_to_raw_abst (_,name) instruction ctxt0 (phi0 : phi_type) thy =
+  let val hint = Option.map (fn a =>
            (chk_quantifier_place a
               |> chk_abstract_object_quantified (
                 let fun target (Const(\<^const_name>\<open>Action_Tag\<close>, _) $ X $ _) = target X
@@ -191,9 +191,9 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                             else SOME X
                  in target
                 end
-                ) ctxt0,
-            b)
-          ) instruction0
+                ) ctxt0)
+          ) (#1 instruction)
+      val instruction = (hint, #2 instruction, #3 instruction, #4 instruction)
 
       fun parse_hint ctxt _ hint =
             let fun extract (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = extract X
@@ -236,7 +236,7 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                     (Simplifier.rewrite (Expansion.equip ctxt addsimps (#equations phi0)))
                     Conv.all_conv Conv.all_conv)))
 
-      val simp = if is_some instruction then K I else simplifier_by_LPR' @{thm' \<phi>TA_TrRA_simp}
+      val simp = if is_some hint then K I else simplifier_by_LPR' @{thm' \<phi>TA_TrRA_simp}
 
     (*fun simp (_, ctxt) rule = rule
          |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt => HOLogic.Trueprop_conv (Phi_Conv.hol_all_conv (fn (_, ctxt) =>
@@ -261,7 +261,7 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                             (oblg_solver' name)
                    else K NONE*)
 
-      fun solver (phi, ctxt, sequent) =
+      fun solver (phi, ctxt, sequent, text) =
             case Thm.concl_of sequent
               of _ (*Trueprop*) $ (\<^Const>\<open>All _\<close> $ Abs (_, _, \<^Const>\<open>Action_Tag\<close> $
                      (\<^Const>\<open>Transformation _\<close> $ _
@@ -270,24 +270,24 @@ fun gen_trans_to_raw_abst (_,name,pos) instruction0 ctxt0 (phi0 : phi_type) thy 
                          $ _)
                      $ _))
                    => (case X of Var v $ _ $ _ =>
-                                      oblg_solver' name (phi, ctxt, instantiate_the_var v phi0 ctxt sequent)
+                                      oblg_solver' name (phi, ctxt, instantiate_the_var v phi0 ctxt sequent, text)
                                | _ => NONE)
                | _ => error "BUG"
 
 
-      val ctxt0' = if is_some instruction then ctxt0
+      val ctxt0' = if is_some hint then ctxt0
                    else Config.put Phi_Reasoners.existential_obligation 2 ctxt0
       val rules = deriving_framework (name, parse_hint, extract_oprs_from_hint,
                                       guess_property, @{thm' \<phi>TA_TrRA_rule},
                                       [(K (SOME [0]), ind_conv, reasoning)],
                                       solver, simp)
-                                    phi0 (Option.map #1 instruction) ctxt0'
+                                    phi0 instruction ctxt0'
    in case Seq.pull rules
    of SOME (rule, _) => thy
-        |> Phi_Help.generic_theory_mapping pos (fn m =>
+        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %To_ToA_derived_to_raw}
-                                                     (Option.mapPartial #2 instruction))
+                                                     (#2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule])
         |> note_properties_s phi0 [(name, [rule])]
         |> pair [rule]

@@ -27,7 +27,7 @@ fun guess_property phi ctxt =
           SOME x_term :: parse_inst_params_from_phi_term T_term, phi, ctxt)
   end
 
-fun gen_semantic_type (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_semantic_type (_, name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const>\<open>\<phi>SemType\<close> $ (\<^Const_>\<open>\<phi>Type _ _\<close> $ x $ T) $ _ => T $ x)
 
       val ind_conv = default_ind_conv (
@@ -39,7 +39,7 @@ fun gen_semantic_type (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
                 Phi_Reasoners.asm_rewrite true (Expansion.equip ctxt addsimps (#equations phi0)) then_conv
                 Conv.implies_conv (Conv.rewr_conv @{thm' intro_\<phi>TA_ANT}) Conv.all_conv)
 
-      val varifier = if is_some instruction then K (K NONE)
+      val varifier = if is_some (#1 instruction) then K (K NONE)
                      else fn _ => fn (Trueprop $ (SemTyp $ TY)) =>
                             SOME ([TY], fn [TY'] => Trueprop $ (SemTyp $ TY'))
       fun reasoning phi ctxt =
@@ -47,7 +47,7 @@ fun gen_semantic_type (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
                               (exhaustive_PLPR_reasoner (SOME 1) (K (chk_unfolded [] ctxt phi))) phi ctxt
 
       val solver = K NONE
-      val simp = if is_some instruction then K I
+      val simp = if is_some (#1 instruction) then K I
                  else simplifier_by_cong @{thms' \<phi>TA_SemTy_cong}
 
       val ctxt = ctxt0
@@ -57,14 +57,14 @@ fun gen_semantic_type (_, name, pos) instruction ctxt0 (phi0 : phi_type) thy =
 
       val rules = deriving_framework (name, parse_hint, K [], guess_property, @{thm' \<phi>TA_SemTy_rule},
                                       [(K (SOME []), ind_conv, reasoning)], solver, simp)
-                                    phi0 (Option.map #1 instruction) ctxt
+                                    phi0 instruction ctxt
    in case Seq.pull rules
    of SOME (rule, _) => thy
         |> note_properties_s phi0 [(name, [rule])]
-        |> Phi_Help.generic_theory_mapping pos (fn m =>
-                  Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
+        |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
+                  Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %\<phi>sem_type_derived}
-                                                     (Option.mapPartial #2 instruction))
+                                                     (#2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule])
         |> pair [rule]
     | _ => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])

@@ -139,7 +139,7 @@ type subgoal_configure = (thm (*proof state*) * induct_inst_params ->
                             int list (*quant_interps*) option) (*If not given, no induction will be applied*)
                        * ind_conv
                        * (Phi_Type_Algebra.phi_type -> reasoning)
-type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
+type solver = Phi_Type_Algebra.phi_type * Proof.context * thm * Method.text option -> thm option
 type simplifier = Phi_Type_Algebra.phi_type * Proof.context -> thm -> thm
 
 (*Main Entry Point*)
@@ -152,7 +152,9 @@ val deriving_framework :
     * subgoal_configure list
     * solver
     * simplifier (*final simplification*)
-   -> Phi_Type_Algebra.phi_type -> term option -> Proof.context -> thm Seq.seq
+   -> Phi_Type_Algebra.phi_type
+   -> deriving_instruction
+   -> Proof.context -> thm Seq.seq
 
 (* Besides the parameters explained above,
   extract_oprs_from_hint allows user to indicate what are the mapper, predicator or other operators in
@@ -250,7 +252,7 @@ val default_reasoning_configure : reasoning_configure
     and perhaps call the fallback sledgehammer solver after it.
 *)
 
-val oblg_solver : string -> Proof.context -> thm -> thm (*the default Sledgehammer solver*)
+val oblg_solver : string -> Method.text option -> Proof.context -> thm -> thm (*the default Sledgehammer solver*)
 val oblg_solver': string -> solver
 
 (** Simplifier **)
@@ -274,8 +276,7 @@ type quiet = bool
 val deriver_framework : hint_mode * multiple_call * string (*name*)
                      -> (   int (*the times that the deriver has been invoked*)
                           * string (*name suffixed by the time*)
-                          * Position.T
-                          -> deriving_instruction option
+                          -> deriving_instruction
                           -> Phi_Type_Algebra.deriving_ctxt
                           -> Phi_Type_Algebra.phi_type
                           -> generic_theory
@@ -297,7 +298,7 @@ val deriver_framework : hint_mode * multiple_call * string (*name*)
 *)
 
 val deriver_framework_no_hints : multiple_call * string (*name*)
-                     -> (string (*name*) * Position.T
+                     -> (string (*name*)
                           -> Phi_Type_Algebra.deriving_ctxt
                           -> Phi_Type_Algebra.phi_type
                           -> generic_theory
@@ -1013,8 +1014,17 @@ datatype multiple_call = ONLY_ONCE | ONLY_ONCE_IF_NO_HINT | MULTIPLE_TIMES
 type quiet = bool
 
 fun deriver_framework (hint_mode, multiple_call, name) deriver
-                      (quiet, pos) deriving_instructions ctxt_derv phi thy =
-  let val ind = length (lookup_derived_properties thy phi name)
+                      (quiet, pos) (deriving_instructions0 : deriving_instruction list) ctxt_derv phi thy =
+  let val deriving_instructions'1 = filter_out (fn DI => not (is_some (#1 DI)) andalso not (is_some (#4 DI)))
+                                               deriving_instructions0
+      val deriving_instructions =
+            case deriving_instructions'1
+              of [] => [(NONE, get_first #2 deriving_instructions0,
+                         (case deriving_instructions0 of [] => pos
+                                                       | H :: _ => #3 H), NONE)]
+               | L => L
+
+      val ind = length (lookup_derived_properties thy phi name)
       val _ = let open Pretty in
           case (multiple_call, ind, deriving_instructions)
             of (_, 0, _) => ()
@@ -1027,25 +1037,27 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
                 ])
              | _ => ()
           end
+
+      val hint_terms = map_filter #1 deriving_instructions
       val _ = let open Pretty in
-          case (hint_mode, deriving_instructions)
+          case (hint_mode, hint_terms)
             of (ACCEPT_NO_HINT, _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts no hint, but given") ::
-                  map (fn (H,_,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
-                      deriving_instructions
+                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                      hint_terms
                 )
              | (ACCEPT_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "accepts at most one hint, but more hints are given") ::
-                  map (fn (H,_,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
-                      deriving_instructions
+                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                      hint_terms
                 )
              | (REQUIRE_EXACT_ONE_HINT, []) => raise Automation_Fail (fn () => [
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but no hint is given")
                 ])
              | (REQUIRE_EXACT_ONE_HINT, _ :: _ :: _) => raise Automation_Fail (fn () =>
                   paragraph (str name :: brk 1 :: text "requires exact one hint, but more hints are given") ::
-                  map (fn (H,_,_) => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
-                      deriving_instructions
+                  map (fn H => item [Context.cases Syntax.pretty_term_global Syntax.pretty_term thy H])
+                      hint_terms
                 )
              | (REQUIRE_HINTS, []) => raise Automation_Fail (fn () => [
                   paragraph (str name :: brk 1 :: text "requires some hint(s), but no hint is given")
@@ -1054,18 +1066,15 @@ fun deriver_framework (hint_mode, multiple_call, name) deriver
           end
       fun invoke (i,H) thy =
         let val iname = suffix_name_by_index (i+ind) name
-            val pos' = the_default pos (Option.map #3 H)
-         in deriver (i+ind, iname, pos') H ctxt_derv phi thy
-         |-> register_derived_properties phi (name, i+ind, pos')
+         in deriver (i+ind, iname) H ctxt_derv phi thy
+         |-> register_derived_properties phi (name, i+ind, #3 H)
         end
-   in (case deriving_instructions
-   of [] => invoke (ind, NONE) thy
-    |  L => fold_index invoke (map SOME L) thy)
+   in fold_index invoke deriving_instructions thy
   end
   handle (ex as Automation_Fail _) => if quiet then thy else Exn.reraise ex
 
 fun deriver_framework_no_hints (mcall, name) deriver quiet =
-  deriver_framework (ACCEPT_NO_HINT, mcall, name) (fn (_,name,pos) => fn _ => deriver (name,pos)) quiet []
+  deriver_framework (ACCEPT_NO_HINT, mcall, name) (fn (_,name) => fn _ => deriver name) quiet []
 
 (*
 fun accept gen [] phityp thy = gen NONE phityp thy
@@ -1139,22 +1148,31 @@ end
 
 (* Default Obligation Solver *)
 
-type solver = Phi_Type_Algebra.phi_type * Proof.context * thm -> thm option
+type solver = Phi_Type_Algebra.phi_type * Proof.context * thm * Method.text option -> thm option
 
-fun oblg_solver proof_id ctxt sequent =
+fun oblg_solver proof_id text ctxt sequent =
   (*case Thm.major_prem_of sequent
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
           Const(\<^const_name>\<open>Premise\<close>, _) $ Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) $ _) =>*)
-   let val ctxt'' = Expansion.equip ctxt
+   let val ctxt = Phi_Envir.freeze_dynamic_lemmas ctxt
+               |> Variable.declare_term (Thm.prop_of sequent)
+       val ctxt'' = Expansion.equip ctxt
                  |> Simplifier.del_cong @{thm HOL.conj_cong}
-                 |> Phi_Envir.freeze_dynamic_lemmas
+       val nprems = Thm.nprems_of sequent
        val sequent'1 = Timeout.apply (Time.fromSeconds 3) Seq.hd
                          (Phi_Reasoners.asm_lr_simp_tac true ctxt'' 1 sequent)
                        handle Timeout.TIMEOUT _ =>
                           (warning "Simplification timeouts!" ;
                            sequent)
                     (*|> @{print}*)
-    in Phi_Sledgehammer_Solver.auto (SOME proof_id) (ctxt addsimps Expansion.simp_rules ctxt, sequent'1)
+       val (ctxt, sequent'2) =
+              case text of SOME text' =>
+                    Seq.the_result "Fail to apply the hinted tactic" (
+                        Method.evaluate text' ctxt [] (ctxt, @{thm' Premise_I} RS sequent'1))
+                 | NONE => (ctxt, sequent'1)
+       val nprems' = Thm.nprems_of sequent'2
+       val ctxt = ctxt addsimps Expansion.simp_rules ctxt
+    in funpow (nprems' - nprems + 1) (Phi_Sledgehammer_Solver.auto (SOME proof_id) ctxt) sequent'2
           |> (fn th => case Thm.major_prem_of th
                          of \<^Const>\<open>Trueprop\<close> $ (\<^Const>\<open>Premise\<close> $ _ $ \<^Const>\<open>True\<close>) =>
                               @{thm' Premise_True} RS th
@@ -1164,8 +1182,8 @@ fun oblg_solver proof_id ctxt sequent =
   end
      (*| _ => sequent*)
 
-fun oblg_solver' name (phi, ctxt, th) =
-      SOME (oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name) ctxt th)
+fun oblg_solver' name (phi, ctxt, th, text) =
+      SOME (oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name) text ctxt th)
 
 
 (* The Framework *)
@@ -1177,14 +1195,14 @@ fun oblg_solver' name (phi, ctxt, th) =
   quants[i] = ~1 means interpret it as a fixed variable
   Note the quants is reversed against the quantified variables*)
 fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,rule,subgoal_reasonings,solver,simp)
-                      (phi0 : phi_type) hint ctxt0 =
+                       (phi0 : phi_type) instruction ctxt0 =
   let (*val (inst,inst',phi,ctxt01) = fix_phi_type true phi0 ctxt0*)
       (*val ((x_term0, T_term0), ctxt01) = fix_phi_term_params (#term phi0) ctxt0*)
       (*val property_const = Term.head_of (HOLogic.dest_Trueprop (Thm.concl_of rule))*)
       (*lame! DO NOT REMOVE!
         val hint' = case hint of NONE => guess_entire_property ctxt0 phi0 property_const
                              | some => some*)
-   in (case hint of SOME H0 =>
+   in (case #1 instruction of SOME H0 =>
               let (*val idx = Phi_Type_Algebra.maxidx_of_phi phi0 ~1 + 1
                   val H = Logic.incr_indexes ([],[],idx) H0*)
                   val thy = Proof_Context.theory_of ctxt0
@@ -1332,9 +1350,10 @@ fun deriving_framework (name,parse_hint,extract_oprs_from_hint,guess_property,ru
               reasoning phi ctxt (apply_induction (ind_config (rule', phi_typ_parameters)) conv rule')
             ) subgoal_reasonings rule'
 
-      val rule'4 =(case solver (phi, ctxt, rule'3)
+      val rule'4 =(case solver (phi, ctxt, rule'3, #4 instruction)
                      of SOME ret => ret
-                      | NONE => oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name) ctxt rule'3)
+                      | NONE => oblg_solver (Proof_Context.full_name ctxt (#name phi) ^ "/" ^ name)
+                                            (#4 instruction) ctxt rule'3)
                 |> Simplifier.rewrite_rule ctxt @{thms' Action_Tag_def[where A=\<phi>TA_ANT]}
                 |> simp (phi, Simps.enhance ctxt)
                 |> snd o PLPR_Syntax.rulify_antecedents false ~1 ctxt

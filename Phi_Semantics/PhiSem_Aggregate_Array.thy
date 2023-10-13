@@ -54,45 +54,71 @@ lemma list_all_replicate:
       meson length_replicate list_all_replicat)*)
 
 
+method_setup subgoal' = \<open>
+     Scan.lift (Scan.option (\<^keyword>\<open>premises\<close> |-- Parse.binding))
+  -- Scan.lift (Scan.option (\<^keyword>\<open>for\<close> |-- Parse.and_list (Scan.repeat1 Parse.binding) >> flat))
+  -- Scan.lift (Parse.token Parse.embedded) >>
+ (fn ((prem_b, fixes), text_tok) => fn ctxt => fn rules =>
+  let fun FOCUS tac ctxt i st =
+        if Thm.nprems_of st < i then Seq.empty
+        else let val (args as {context = ctxt', params, asms, prems, ...}, st') =
+                    (if is_some prem_b then Subgoal.focus else Subgoal.focus_params_fixed) ctxt i fixes st
+                 val ctxt' = case prem_b of SOME b =>
+                                    Proof_Context.note_thms "" ((b,[]), map (fn th => ([th],[])) prems) ctxt'
+                                      |> snd
+                                | _ => ctxt'
+              in Seq.lifts (Subgoal.retrofit ctxt' ctxt params asms i) (tac ctxt' st') st
+             end
+   in Context_Tactic.CONTEXT_TACTIC (HEADGOAL (FOCUS (fn ctxt =>
+      let val (text, src) = Method.read_closure_input ctxt (Token.input_of text_tok)
+       in Context_Tactic.NO_CONTEXT_TACTIC ctxt (Method.evaluate_runtime text ctxt rules)
+      end) ctxt))
+  end)
+\<close>
+
 lemma
-  \<open>\<forall>x. P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> list_all P x \<Longrightarrow> N = length x \<Longrightarrow> \<exists>xa. list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) xa x\<close>
+  \<open>\<And>x. \<forall>x. P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> list_all P x \<Longrightarrow> N = length x \<Longrightarrow> \<exists>xa. list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) xa x\<close>
   unfolding Inhabited_def
-  apply (induct x arbitrary: N; clarsimp)
-  by force
+  apply (subgoal' for x \<open>tactic \<open>all_tac o @{print}\<close>\<close>)
+  apply (subgoal' for x \<open>induct x arbitrary: N\<close>)
+  apply auto
+  
 
 
 section \<open>\<phi>Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
+
+(*declare list_all2_conv_all_nth[simp]*)
+
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
   where \<open>l \<Ztypecolon> Array N T \<equiv> V_array.mk vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
-  deriving \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow>
-            Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
+  deriving \<open>Abstract_Domain\<^sub>L T P
+        \<Longrightarrow> Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
+           tactic: (clarsimp; subgoal' for x \<open>induct x arbitrary: N\<close>) 
+       and \<open>Abstract_Domain T P
+        \<Longrightarrow> Abstract_Domain (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
+           tactic: (clarsimp; subgoal' for x v \<open>induct x arbitrary: N v\<close>)
+       and \<open>Object_Equiv T eq
+        \<Longrightarrow> Object_Equiv (Array N T) (list_all2 eq)\<close>
+       and Transformation_Functor
+           tactic: (clarsimp ; subgoal' for g x xa xb \<open>induct x arbitrary: xb N Na\<close>)
+       and Functional_Transformation_Functor
+       and \<open>Functionality T D
+        \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all D l)\<close>
+            tactic: (clarsimp ; subgoal' for x xa xb \<open>induct x arbitrary: x xa xb N\<close>)
+       and \<open>Is_Aggregate (Array N T)\<close>
+       and \<open>\<forall>a \<in> set x. \<phi>SemType (a \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
+       (*and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>*)
 
+term \<open>Functionality T D
+  \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all P l)\<close>
 
+term \<open>Object_Equiv T eq
+\<Longrightarrow> Object_Equiv (Array N T) (list_all2 eq)\<close>
 
-term \<open>Abstract_Domain\<^sub>L T P \<Longrightarrow>
-    Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
-
-definition Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
-  where \<open>Array N T = (\<lambda>l. { V_array.mk vs |vs. length l = N \<and> list_all2 (\<lambda>v x. v \<in> (x \<Ztypecolon> T)) vs l  })\<close>
-
-lemma Array_expns[\<phi>expns]:
-  \<open>v \<in> (l \<Ztypecolon> Array N T) \<longleftrightarrow>
-    (\<exists>vs. length l = N \<and> v = V_array.mk vs \<and> list_all2 (\<lambda>v x. v \<in> (x \<Ztypecolon> T)) vs l )\<close>
-  unfolding Array_def \<phi>Type_def by simp blast
-
-lemma Array_inhabited[elim!]:
-  \<open> Inhabited (l \<Ztypecolon> Array N T)
-\<Longrightarrow> (length l = N \<Longrightarrow> (\<And>i. i < length l \<Longrightarrow> Inhabited (l!i \<Ztypecolon> T)) \<Longrightarrow> C)
-\<Longrightarrow> C\<close>
-  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth) blast
-
-lemma [\<phi>inhabitance_rule 1000]:
-  \<open> (\<And>i. \<p>\<r>\<e>\<m>\<i>\<s>\<e> length l = N \<and> i < N \<Longrightarrow> Inhabited (l!i \<Ztypecolon> T) \<longrightarrow> C i)
-\<Longrightarrow> Inhabited (l \<Ztypecolon> Array N T) \<longrightarrow> length l = N \<and> (\<forall>i < N. C i)\<close>
-  unfolding Inhabited_def by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth) blast
+term \<open>(\<And>a \<in> set x. \<phi>SemType (a \<Ztypecolon> T) TY) \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
 
 lemma Array_semty[\<phi>reason 1000]:
   \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY) \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
@@ -100,7 +126,7 @@ lemma Array_semty[\<phi>reason 1000]:
           Inhabited_def, blast)
 
 lemma Array_zero[\<phi>reason 1000]:
-  \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> \<phi>\<phi>SemType T TY \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>
+  \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>
   unfolding Semantic_Zero_Val_def
   by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth Inhabited_def image_iff; blast)
 

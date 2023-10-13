@@ -1,6 +1,6 @@
 signature PHI_SLEDGEHAMMER_SOLVER = sig
 
-val auto : Phi_Cache_DB.proof_id option -> context_state -> thm
+val auto : Phi_Cache_DB.proof_id option -> Proof.context -> thm -> thm
 val assync_proof : bool Config.T
 
 end
@@ -398,7 +398,7 @@ if no_cache
    end
 (* val proof = raw_sledgehammer stat *)
 
-fun auto id (ctxt,sequent) =
+fun auto id ctxt sequent =
   wrapper (case id of SOME id' => auto' id'
                     | NONE => Phi_Reasoners.wrap'' Phi_Reasoners.auto_obligation_solver1 #> snd) (ctxt,sequent)
   handle Auto_Fail _ => error (Phi_Reasoners.error_message (SOME (ctxt,sequent)))
@@ -418,7 +418,7 @@ val _ = Theory.setup (Method.setup \<^binding>\<open>auto_sledgehammer\<close> (
                 of SOME (ret, _) => ret
                  | NONE => error "Why the insert_tac can fail?"
      in SOME (
-         (Seq.Result (ctxt, auto (SOME id) (ctxt,sequent'))
+         (Seq.Result (ctxt, auto (SOME id) ctxt sequent')
           handle Auto_Fail _ => Seq.Error err),
          Seq.empty)
     end))

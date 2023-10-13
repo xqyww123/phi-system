@@ -305,7 +305,7 @@ case #equations phi0
   end
 *)
 
-fun gen_obj_equal' (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
+fun gen_obj_equal' (_,name) instruction ctxt0 (phi0 : phi_type) thy =
   let val parse_hint = parse_hint (fn \<^Const>\<open>Object_Equiv _ _\<close> $ T' $ _ => T')
       fun extract_oprs_from_hint (\<^Const>\<open>Object_Equiv _ _\<close> $ _ $ eq) = [eq]
         | extract_oprs_from_hint _ = []
@@ -333,7 +333,7 @@ fun gen_obj_equal' (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                           conv_hol_imp_to_meta_if_has (Conv.rewr_conv @{thm' Action_Tag_def[symmetric, where A=\<phi>TA_pure_facts]})
                         ) ctxt)*))
 
-      val infer = if not (is_some instruction) andalso not (#is_recursive phi0)
+      val infer = if not (is_some (#1 instruction)) andalso not (#is_recursive phi0)
                   then predicate_infer false
                           (fn _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $ Var v) => v
                             | _ $ (Const(\<^const_name>\<open>Object_Equiv\<close>, _) $ _ $
@@ -351,7 +351,7 @@ fun gen_obj_equal' (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                    |> SOME
             else NONE*)
 
-      val simp = if is_some instruction then K I
+      val simp = if is_some (#1 instruction) then K I
                  else simplifier_by_LPR' @{thm' \<phi>TA_OE_simp}
 
       val ctxt = if def_contains_satisfaction phi0 then ctxt0
@@ -365,15 +365,15 @@ fun gen_obj_equal' (_,name,pos) instruction ctxt0 (phi0 : phi_type) thy =
                                       [(K NONE, K (K I), K (pure_PLPR_reasoning 1)),
                                        (K (SOME [0]), ind_conv, OE_reasoning)],
                                       infer, simp)
-                                     phi0 (Option.map #1 instruction)
+                                     phi0 instruction
                                      (Config.put search_CSTR_rules true ctxt)
    in Seq.pull rules
    |> (fn NONE => raise Automation_Fail (fn () => [Pretty.str "Fail to derive any property"])
         | SOME (rule', _) => thy
-            |> Phi_Help.generic_theory_mapping pos (fn m =>
+            |> Phi_Help.generic_theory_mapping (#3 instruction) (fn m =>
                   Phi_Reasoner.add_rule (#pos phi0) Phi_Reasoner.TO_BE_OVERRIDE
                                         (the_default @{reasoner_group %derived_object_equiv}
-                                                     (Option.mapPartial #2 instruction))
+                                                     (#2 instruction))
                                         ([],[]) NONE [Morphism.thm m rule'])
             |> note_properties_s phi0 [(name, [rule'])]
             |> pair [rule'])

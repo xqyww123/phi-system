@@ -2315,7 +2315,7 @@ end)\<close>
     if Config.get ctxt Phi_Toplevel.is_interactive
     then if Config.get ctxt Phi_Reasoner.auto_level >= 2
     then let val id = Option.map (Phi_ID.encode o Phi_ID.cons proc_id) (Phi_ID.get_if_is_named ctxt)
-          in (ctxt, Phi_Sledgehammer_Solver.auto id (ctxt,sequent))
+          in (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent)
           handle Phi_Reasoners.Automation_Fail err =>
               error (Phi_Reasoners.error_message err)
          end
@@ -2359,8 +2359,8 @@ in
                      |> map_index (fn (j,term) => term
                           |> Thm.cterm_of ctxt'
                           |> Goal.init
-                          |> (fn thm => Phi_Sledgehammer_Solver.auto (id'' j)
-                                                    (ctxt', @{thm Premise_D[where mode=default]} RS thm))
+                          |> (fn thm => Phi_Sledgehammer_Solver.auto (id'' j) ctxt'
+                                            @{thm Premise_D[where mode=default]} RS thm)
                           |> Goal.conclude
                           |> single
                           |> Variable.export ctxt' ctxt

@@ -50,7 +50,7 @@ setup \<open>Context.theory_map (
       (\<^binding>\<open>\<phi>None\<close>, \<^pattern>\<open>\<phi>None\<close>, Phi_Type_Algebra.DIRECT_DEF (Thm.transfer \<^theory> @{thm' \<phi>None_def'}),
        \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
- 
+
 let_\<phi>type \<phi>None
   deriving Basic
        and Functionality
@@ -354,7 +354,7 @@ lemma [\<phi>reason %guess_tyop_commute+10]:
 subsection \<open>Dependent Sum Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
- 
+  
 \<phi>type_def \<phi>Dependent_Sum :: \<open>('c \<Rightarrow> ('a,'b) \<phi>) \<Rightarrow> ('a, 'c \<times> 'b) \<phi>\<close> ("\<Sigma>")
   where \<open>cx \<Ztypecolon> \<Sigma> T \<equiv> (snd cx) \<Ztypecolon> T (fst cx)\<close>
   deriving Basic
