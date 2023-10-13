@@ -208,12 +208,19 @@ text \<open> Strategy of deriving:
 
 text \<open>
 It is true there exists a type theory for which our \<phi>-type logic is a semantic interpretation of it,
-where \<open>\<lbrakk> x : T \<rbrakk> \<equiv> \<exists>c. c \<Turnstile> x \<Ztypecolon> T\<close> meaning there exists at least one low-level form \<open>c\<close> to which the
-term \<open>x\<close> can be compiled, so \<open>x\<close> can be a term of \<open>T\<close>; besides, a new judgement \<open>x : T \<longrightarrow> y : U\<close>
-is introduced between two typing judgements, meaning any low-level representation of \<open>x\<close> in the compiled
-object, can also be a representation of \<open>y\<close>, so it is safe to replace \<open>x : T\<close> in a program with \<open>y : U\<close>,
-without changing its semantics (if no type error occurs).
-\<open>\<lbrakk> x : T \<longrightarrow> y : U \<rbrakk> \<equiv> x \<Ztypecolon> T \<longrightarrow> y \<Ztypecolon> U\<close>, may be seen as an extended sub-typing where the term changes.
+where, semantic interpretation \<open>\<lbrakk> x \<rbrakk>\<^sub>T \<equiv> {c : c \<Turnstile> x \<Ztypecolon> T}\<close> assigns (the evaluation of) a term \<open>x\<close> of type \<open>T\<close> to a set of
+semantic representations, which for instance can be the set of binary encoding to which the evaluation of term \<open>x\<close> can be compiled;
+\<open>\<lbrakk> x : T \<rbrakk> \<equiv> \<lbrakk> x \<rbrakk>\<^sub>T \<noteq> {} \<equiv> \<exists>c. c \<Turnstile> x \<Ztypecolon> T\<close> assigns the semantics of typing judgement,
+meaning term \<open>x\<close> is of type \<open>T\<close> iff its evaluation has some semantic representation \<open>c\<close>
+(e.g. the evaluation of \<open>x\<close> can be compiled to some binary encoding \<open>c\<close>);
+terms of different types can share common semantic representations, \<open>\<lbrakk> x \<rbrakk>\<^sub>T \<inter> \<lbrakk> y \<rbrakk>\<^sub>T\<close> can be non-empty;
+at last, a new judgement \<open>x : T \<longrightarrow> y : U\<close> is introduced between two typing judgements,
+\<open>\<lbrakk> x : T \<longrightarrow> y : U \<rbrakk> \<equiv> \<lbrakk> x \<rbrakk>\<^sub>T \<subseteq> \<lbrakk> y \<rbrakk>\<^sub>U\<close>, meaning the semantic representations of \<open>x\<close> are included in \<open>y\<close>,
+so the semantic is unchanged or relaxed when we replace a covariant \<open>x : T\<close> in a program with \<open>y : U\<close> or
+a contravariant \<open>y : U\<close> with \<open>x : T\<close>, if no type error occurs.
+The judgement is an extended sub-typing where the term changes for semantic consistency (relaxation),
+so may be called as semantical subtyping, the one preserving the semantics of terms versus normal subtyping
+preserving the syntactic term.
 \<close>
 
 
