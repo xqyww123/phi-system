@@ -76,30 +76,21 @@ method_setup subgoal' = \<open>
   end)
 \<close>
 
-lemma
-  \<open>\<And>x. \<forall>x. P x \<longrightarrow> Inhabited (x \<Ztypecolon> T) \<Longrightarrow> list_all P x \<Longrightarrow> N = length x \<Longrightarrow> \<exists>xa. list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) xa x\<close>
-  unfolding Inhabited_def
-  apply (subgoal' for x \<open>tactic \<open>all_tac o @{print}\<close>\<close>)
-  apply (subgoal' for x \<open>induct x arbitrary: N\<close>)
-  apply auto
-  
-
 
 section \<open>\<phi>Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
 
-
-(*declare list_all2_conv_all_nth[simp]*)
+context
+  notes list_all2_conv_all_nth[simp] list_all_length[simp]
+begin
 
 \<phi>type_def Array :: "nat \<Rightarrow> (VAL, 'a) \<phi> \<Rightarrow> (VAL, 'a list) \<phi>"
   where \<open>l \<Ztypecolon> Array N T \<equiv> V_array.mk vs \<Ztypecolon> Itself \<s>\<u>\<b>\<j> vs. length l = N \<and> list_all2 (\<lambda>v x. v \<Turnstile> (x \<Ztypecolon> T)) vs l\<close>
   deriving \<open>Abstract_Domain\<^sub>L T P
         \<Longrightarrow> Abstract_Domain\<^sub>L (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
-           tactic: (clarsimp; subgoal' for x \<open>induct x arbitrary: N\<close>) 
        and \<open>Abstract_Domain T P
         \<Longrightarrow> Abstract_Domain (Array N T) (\<lambda>x. length x = N \<and> list_all P x) \<close>
-           tactic: (clarsimp; subgoal' for x v \<open>induct x arbitrary: N v\<close>)
        and \<open>Object_Equiv T eq
         \<Longrightarrow> Object_Equiv (Array N T) (list_all2 eq)\<close>
        and Transformation_Functor
@@ -107,36 +98,16 @@ declare [[\<phi>trace_reasoning = 0]]
        and Functional_Transformation_Functor
        and \<open>Functionality T D
         \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all D l)\<close>
-            tactic: (clarsimp ; subgoal' for x xa xb \<open>induct x arbitrary: x xa xb N\<close>)
        and \<open>Is_Aggregate (Array N T)\<close>
        and \<open>\<forall>a \<in> set x. \<phi>SemType (a \<Ztypecolon> T) TY \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
-       (*and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>*)
+       and \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>
 
-term \<open>Functionality T D
-  \<Longrightarrow> Functionality (Array N T) (\<lambda>l. length l = N \<and> list_all P l)\<close>
+end
 
-term \<open>Object_Equiv T eq
-\<Longrightarrow> Object_Equiv (Array N T) (list_all2 eq)\<close>
-
-term \<open>(\<And>a \<in> set x. \<phi>SemType (a \<Ztypecolon> T) TY) \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
-
-lemma Array_semty[\<phi>reason 1000]:
-  \<open>(\<And>x. \<phi>SemType (x \<Ztypecolon> T) TY) \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> Array N T) (array N TY)\<close>
-  by (clarsimp simp add: \<phi>expns list_all_length list_all2_conv_all_nth \<phi>SemType_def subset_iff
-          Inhabited_def, blast)
-
-lemma Array_zero[\<phi>reason 1000]:
-  \<open>Semantic_Zero_Val TY T zero \<Longrightarrow> Semantic_Zero_Val (array N TY) (Array N T) (replicate N zero)\<close>
-  unfolding Semantic_Zero_Val_def
-  by (clarsimp simp add: \<phi>expns list_all2_conv_all_nth Inhabited_def image_iff; blast)
-
-lemma [\<phi>reason 1000]:
-  \<open>Is_Aggregate (Array N T)\<close>
-  unfolding Is_Aggregate_def ..
 
 section \<open>Reasoning\<close>
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> i < N
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N i) (array N TY) TY \<close>
   unfolding is_valid_step_idx_of_def Premise_def
@@ -144,19 +115,19 @@ lemma [\<phi>reason 1200]:
 
 subsection \<open>Index to Fields of Structures\<close>
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Getter idx X Y f
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N i # idx) (Array N X) Y (\<lambda>l. f (l!i))\<close>
-  unfolding \<phi>Aggregate_Getter_def Premise_def
-  by (clarsimp simp add: \<phi>expns idx_step_value_arr list_all2_conv_all_nth)
+  unfolding \<phi>Aggregate_Getter_def Premise_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: idx_step_value_arr list_all2_conv_all_nth)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Mapper idx X X Y Y' f
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> i < N
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N i # idx) (Array N X) (Array N X) Y Y' (\<lambda>g l. l[i := f g (l!i)])\<close>
-  unfolding \<phi>Aggregate_Mapper_def Premise_def
-  by (clarsimp simp add: \<phi>expns idx_step_mod_value_arr list_all2_conv_all_nth nth_list_update)
+  unfolding \<phi>Aggregate_Mapper_def Premise_def \<phi>Type_Mapping_def
+  by (clarsimp simp add: idx_step_mod_value_arr list_all2_conv_all_nth nth_list_update)
 
 
 

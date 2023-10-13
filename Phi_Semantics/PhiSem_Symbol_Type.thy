@@ -51,16 +51,10 @@ section \<open>\<phi>-Types\<close>
 
 lemma [\<phi>reason 1000]:
   "\<phi>Equal Symbol (\<lambda>x y. True) (=)"
-  unfolding \<phi>Equal_def by (simp add: Symbol_expn \<phi>embed_semantic_symbol)
+  unfolding \<phi>Equal_def by (simp add: \<phi>embed_semantic_symbol)
 
-lemma [\<phi>reason 1000]:
-  "Semantic_Zero_Val symbol Symbol SYMBOL(zero)"
-  unfolding Semantic_Zero_Val_def by (simp add: Symbol_expn \<phi>embed_semantic_symbol)
-
-lemma [\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> Symbol) symbol\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (simp add: Symbol_expn \<phi>embed_semantic_symbol)
-
+let_\<phi>type Symbol
+  deriving \<open>\<phi>SemType (x \<Ztypecolon> Symbol) symbol\<close>
+       and \<open>Semantic_Zero_Val symbol Symbol SYMBOL(zero)\<close>
 
 end

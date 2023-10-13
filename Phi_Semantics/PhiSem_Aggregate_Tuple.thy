@@ -129,12 +129,12 @@ section \<open>Reasoning\<close>
 
 subsection \<open>Show validity of an index for a type\<close>
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> is_valid_step_idx_of (AgIdx_N 0) (tup (Ty # Tys)) Ty \<close>
   unfolding is_valid_step_idx_of_def Premise_def
   by (simp add: valid_idx_step_tup idx_step_type_tup)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> is_valid_step_idx_of (AgIdx_N i) (tup Tys) RET
 \<Longrightarrow> is_valid_step_idx_of (AgIdx_N (Suc i)) (tup (Ty # Tys)) RET \<close>
   unfolding is_valid_step_idx_of_def Premise_def
@@ -151,38 +151,38 @@ lemma idx_step_mod_value_V_tup_suc:
   \<open>idx_step_mod_value (AgIdx_N (Suc i)) g (V_tup.mk (va # vs)) = idx_step_mod_value (AgIdx_N i) g (V_tup.mk vs) * V_tup.mk [va]\<close>
   by (metis NO_MATCH_I V_tup_mult_cons idx_step_mod_value_tup list_update_code(3) nth_Cons_Suc)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Getter (AgIdx_N i # idx) X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) Y (f o snd)\<close>
   unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
   by (clarsimp simp add: V_tup_mult idx_step_value_V_tup_suc)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Getter idx X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> Y f \<close>
   unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
   by (clarsimp simp add: V_tup_mult idx_step_value_tup)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Getter idx X Y f
 \<Longrightarrow> \<phi>Aggregate_Getter (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) Y (f o fst) \<close>
   unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
   by (clarsimp simp add: V_tup_mult idx_step_value_tup)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Mapper (AgIdx_N i # idx) X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N (Suc i) # idx) (\<lbrace> T \<rbrace> \<^emph> X) (\<lbrace> T \<rbrace> \<^emph> X') Y Y' (apsnd o f) \<close>
   unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
   by (clarsimp simp add: V_tup_mult idx_step_mod_value_V_tup_suc,
       metis V_tup_sep_disj_R idx_step_mod_value_tup)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) \<lbrace> X \<rbrace> \<lbrace> X' \<rbrace> Y Y' f \<close>
   unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
   by (clarsimp simp add: V_tup_mult idx_step_mod_value_tup)
 
-lemma [\<phi>reason 1200]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>Aggregate_Mapper idx X X' Y Y' f
 \<Longrightarrow> \<phi>Aggregate_Mapper (AgIdx_N 0 # idx) (\<lbrace> X \<rbrace> \<^emph> R) (\<lbrace> X' \<rbrace> \<^emph> R) Y Y' (apfst o f) \<close>
   unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
@@ -190,19 +190,19 @@ lemma [\<phi>reason 1200]:
       metis NO_MATCH_def V_tup_mult_cons V_tup_sep_disj_L)
 
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %aggregate_access]:
   \<open>\<phi>Aggregate_Constructor semantic_tuple_constructor [] (tup []) (() \<Ztypecolon> \<lbrace> \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def
   by clarsimp
 
-lemma [\<phi>reason 1020]:
+lemma [\<phi>reason %aggregate_access+20]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor [v] (tup [TY]) (x \<Ztypecolon> \<lbrace> T \<rbrace>)\<close>
   unfolding \<phi>Aggregate_Constructor_def semantic_tuple_constructor_def \<phi>SemType_def
   by (cases v; clarsimp; blast)
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %aggregate_access]:
   \<open> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T)
 \<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY
 \<Longrightarrow> \<phi>Aggregate_Constructor semantic_tuple_constructor vR (tup Tys) (r \<Ztypecolon> Tr)

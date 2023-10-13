@@ -1,5 +1,5 @@
 theory PhiSem_Mem_Pointer
-  imports PhiSem_Mem_C_Base PhiSem_Agg_Void
+  imports PhiSem_Mem_C_Base PhiSem_Agg_Void "HOL-Library.Word"
   keywords
       "\<tribullet>" :: quasi_command
   abbrevs "+_a" = "+\<^sub>a"
@@ -509,64 +509,34 @@ section \<open>\<phi>-Types for Pointer\<close>
 
 subsection \<open>Physical Pointer\<close>
 
-definition RawPointer :: "(VAL, rawaddr) \<phi>"
-  where "RawPointer x = ({ V_pointer.mk x } \<s>\<u>\<b>\<j> valid_rawaddr x)"
+declare [[\<phi>trace_reasoning = 0]]
 
-lemma RawPointer_expn[\<phi>expns]:
-  "v \<in> (p \<Ztypecolon> RawPointer) \<longleftrightarrow> v = V_pointer.mk p \<and> valid_rawaddr p"
-  by (simp add: \<phi>Type_def RawPointer_def \<phi>expns)
-
-lemma RawPointer_inhabited[elim!]:
-  "Inhabited (p \<Ztypecolon> RawPointer) \<Longrightarrow> (valid_rawaddr p \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  " Inhabited (p \<Ztypecolon> RawPointer) \<longrightarrow> valid_rawaddr p "
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma RawPointer_zero[\<phi>reason 1200]:
-  "Semantic_Zero_Val pointer RawPointer (Null |: 0)"
-  unfolding Semantic_Zero_Val_def by (simp add: \<phi>expns zero_prod_def zero_memaddr_def)
+\<phi>type_def RawPointer :: "(VAL, rawaddr) \<phi>"
+  where \<open>x \<Ztypecolon> RawPointer \<equiv> (V_pointer.mk x \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_rawaddr x)\<close>
+  deriving Basic
+       and \<open>Object_Equiv RawPointer (=)\<close>
+       and Functionality
+       and \<open>\<phi>SemType (x \<Ztypecolon> RawPointer) pointer\<close>
+       and \<open>Semantic_Zero_Val pointer RawPointer (Null |: 0)\<close>
 
 lemma RawPointer_eqcmp[\<phi>reason 1200]:
   "\<phi>Equal RawPointer (\<lambda>x y. x = 0 |: 0 \<or> y = 0 |: 0 \<or> memaddr.blk x = memaddr.blk y) (=)"
-  unfolding \<phi>Equal_def by (simp add: \<phi>expns zero_memaddr_def; blast)
-
-lemma RawPointer_semty[\<phi>reason 1200]:
-  \<open>\<phi>SemType (x \<Ztypecolon> RawPointer) pointer\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns)
+  unfolding \<phi>Equal_def by (simp add: zero_memaddr_def; blast)
 
 
 subsubsection \<open>Logical Pointer\<close>
 
-definition Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>"
-  where "Ptr TY x =
-            ({ V_pointer.mk (logaddr_to_raw x) } \<s>\<u>\<b>\<j> valid_logaddr x \<and> logaddr_type x = TY)"
-
-lemma Ptr_expn[\<phi>expns]:
-  "v \<in> (addr \<Ztypecolon> Ptr TY) \<longleftrightarrow>
-      v = V_pointer.mk (logaddr_to_raw addr) \<and> valid_logaddr addr \<and> logaddr_type addr = TY"
-  unfolding \<phi>Type_def by (simp add: Ptr_def Subjection_expn)
-
-lemma Ptr_inhabited[elim!]:
-  "Inhabited (addr \<Ztypecolon> Ptr TY) \<Longrightarrow>
-      (valid_logaddr addr \<and> logaddr_type addr = TY \<Longrightarrow> C) \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  " Inhabited (addr \<Ztypecolon> Ptr TY) \<longrightarrow> valid_logaddr addr \<and> logaddr_type addr = TY "
-  unfolding Inhabited_def by (simp add: \<phi>expns)
+\<phi>type_def Ptr :: "TY \<Rightarrow> (VAL, logaddr) \<phi>"
+  where \<open>x \<Ztypecolon> Ptr TY \<equiv> V_pointer.mk (logaddr_to_raw x) \<Ztypecolon> Itself \<s>\<u>\<b>\<j> valid_logaddr x \<and> logaddr_type x = TY\<close>
+  deriving Basic
+       and \<open>Object_Equiv (Ptr TY) (=)\<close>
+       and Functionality
+       and \<open>\<phi>SemType (x \<Ztypecolon> Ptr TY) pointer\<close>
 
 lemma Ptr_eqcmp[\<phi>reason 1000]:
     "\<phi>Equal (Ptr TY) (\<lambda>x y. memaddr.blk x = memaddr.blk y \<and> \<not> phantom_mem_semantic_type TY) (=)"
   unfolding \<phi>Equal_def
   by (simp add: \<phi>expns) (metis logaddr_to_raw_inj)
-
-lemma Ptr_semty[\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> Ptr TY) pointer\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns valid_logaddr_def)
 
 
 section \<open>Semantic Operations\<close>
@@ -582,8 +552,8 @@ proc op_get_element_pointer[\<phi>overload \<tribullet>]:
   $addr semantic_local_value pointer
   semantic_return \<open>
     V_pointer.mk (logaddr_to_raw (addr_gep_N (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sidx))
-      \<in> (addr_gep_N addr pidx \<Ztypecolon> Ptr TY')\<close>
-  certified by ((insert useful, simp add: \<phi>expns,
+      \<Turnstile> (addr_gep_N addr pidx \<Ztypecolon> Ptr TY')\<close>
+  certified by ((insert useful, simp,
                    cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>;
                    cases \<open>addr = 0\<close>;
                    simp add: logaddr_to_raw_phantom_mem_type),

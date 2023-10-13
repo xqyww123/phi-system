@@ -50,34 +50,16 @@ and  zero_areal[simp]: \<open>Zero areal   = Some (V_areal.mk 0)\<close>
 
 section \<open>\<phi>-Types\<close>
 
-definition \<phi>AReal :: "(VAL, real) \<phi>" ("\<real>")
-  where "\<phi>AReal = (\<lambda>z. { V_areal.mk z})"
-
-lemma \<phi>AReal_expn[\<phi>expns]:
-  "p \<in> (x \<Ztypecolon> \<real>) \<longleftrightarrow> p = V_areal.mk x"
-  unfolding \<phi>Type_def by (simp add: \<phi>AReal_def)
-
-lemma \<phi>AReal_inhabited[elim!]:
-  "Inhabited (x \<Ztypecolon> \<real>) \<Longrightarrow> C \<Longrightarrow> C"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
-lemma [\<phi>inhabitance_rule 1000]:
-  "Inhabited (x \<Ztypecolon> \<real>) \<longrightarrow> True"
-  unfolding Inhabited_def by (simp add: \<phi>expns)
-
+\<phi>type_def \<phi>AReal :: "(VAL, real) \<phi>" ("\<real>")
+  where \<open>x \<Ztypecolon> \<phi>AReal \<equiv> V_areal.mk x \<Ztypecolon> Itself\<close>
+  deriving Basic
+       and Functionality
+       and \<open>\<phi>SemType (x \<Ztypecolon> \<real>) areal\<close>
+       and \<open>Semantic_Zero_Val areal \<real> 0\<close>
 
 lemma [\<phi>reason 1000]:
     "\<phi>Equal \<real> (\<lambda>x y. True) (=)"
   unfolding \<phi>Equal_def by (simp add: \<phi>expns eq_nat_nat_iff)
-
-lemma [\<phi>reason 1000]:
-    "Semantic_Zero_Val areal \<real> 0"
-  unfolding Semantic_Zero_Val_def by (simp add: \<phi>expns)
-
-lemma [\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> \<real>) areal\<close>
-  unfolding \<phi>SemType_def subset_iff
-  by (simp add: \<phi>expns)
 
 
 section \<open>Instructions\<close>
@@ -151,7 +133,7 @@ lemma op_const_areal_\<phi>app[\<phi>synthesis 300]:
   \<open> Is_Literal x
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real>\<close>
 \<medium_left_bracket>
-  semantic_literal \<open>V_areal.mk x \<in> (x \<Ztypecolon> \<real>)\<close>
+  semantic_literal \<open>V_areal.mk x \<Turnstile> (x \<Ztypecolon> \<real>)\<close>
 \<medium_right_bracket> .
 
 lemma [\<phi>reason 1210
@@ -175,8 +157,7 @@ lemma op_add_areal_\<phi>app
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_add_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<real> \<rbrace> \<close>
   unfolding op_add_ar_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
-      simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
 paragraph \<open>Subtraction\<close>
 
@@ -186,8 +167,7 @@ lemma op_sub_areal_\<phi>app
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x - y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_sub_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<real> \<rbrace>\<close>
   unfolding op_sub_ar_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
 paragraph \<open>Negation\<close>
 
@@ -197,7 +177,7 @@ lemma op_neg_areal_\<phi>app
               and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. - x \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_neg_ar rv \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rv] \<real> \<longmapsto> \<v>\<a>\<l> -x \<Ztypecolon> \<real> \<rbrace> \<close>
   unfolding op_neg_ar_def Premise_def
-  by (cases rv; simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases rv; simp, rule, simp, rule, simp)
 
 
 paragraph \<open>Times\<close>
@@ -207,8 +187,7 @@ lemma op_mul_areal[\<phi>overload *,
                              and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x * y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_mul_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<real> \<rbrace>\<close>
   unfolding op_mul_ar_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
 
 paragraph \<open>Division\<close>
@@ -218,8 +197,7 @@ lemma op_div_areal_\<phi>app[\<phi>overload /,
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_div_ar (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<real> \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<real> \<rbrace>\<close>
   unfolding op_div_ar_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
 
 paragraph \<open>Less Than\<close>
@@ -229,8 +207,7 @@ lemma op_lt_areal[\<phi>overload <,
                             and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x < y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ar_lt (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<real> \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_ar_lt_def
-  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns, rule,
-      simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases rawx; cases rawy; simp, rule, rule, simp, rule, simp, rule, simp)
  
 proc (nodef) op_gt_areal[\<phi>overload >]:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close>
@@ -246,8 +223,7 @@ lemma op_le_areal_\<phi>app[\<phi>overload \<le>,
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close> \<Rightarrow> \<open>\<lambda>v. x \<le> y \<Ztypecolon> _\<close> (1200)]:
   \<open>\<p>\<r>\<o>\<c> op_ar_le (\<phi>V_pair rawy rawx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] \<real> \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_ar_le_def
-  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases rawx; cases rawy; simp, rule, rule, simp, rule, simp, rule, simp)
 
 proc (nodef) op_ge_areal[\<phi>overload \<ge>]:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<real>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<real>\<close>

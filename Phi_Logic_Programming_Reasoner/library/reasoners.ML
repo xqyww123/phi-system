@@ -455,10 +455,10 @@ fun gen_extract_prems_rewr ctxt =
   let val net = Premise_Extraction.get ctxt
       val thy = Context.theory_of ctxt
 
-      fun match_extraction bv_tys tm =
-            Net.match_term net tm
+      fun match_extraction bv_tys tm = []
+            (*Net.match_term net tm
               |> filter (fn Extract_Rule rule => Pattern_Translation.does_match_term thy bv_tys (pattern_of_rule rule, tm)
-                          | Extract_Fun (pat, _) => Pattern_Translation.does_match_term thy bv_tys (pat, tm))
+                          | Extract_Fun (pat, _) => Pattern_Translation.does_match_term thy bv_tys (pat, tm))*)
 
       fun apply_extraction ctxt ctm =
         match_extraction [] (Thm.term_of ctm)

@@ -1350,6 +1350,7 @@ fun my_definition decl params prems spec int lthy = lthy
         Syntax_Phases.term_check 99 "a dirty hack for rewriting the non-standard \<phi>-type definition"
           (K dirty_syntax_hack))
   |> Specification.definition_cmd decl params prems spec int
+  |> (fn ((term, (_, def)), lthy) => ([Drule.mk_term (Thm.cterm_of lthy term), def], lthy))
 
 val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec.opt_thm_name ":" -- Parse.prop) --
       Parse_Spec.if_assumes -- Parse.for_fixes
@@ -1357,15 +1358,16 @@ val def_direct = (Scan.option Parse_Spec.constdecl -- Parse.position (Parse_Spec
         -- deriving_parser
         -- (Scan.option \<^keyword>\<open>|\<close> >> (fn SOME _ => Scan.fail () | _ => ())) (*to distinguish with the `def_by_fun` syntax*)
    >> (fn ((((((decl, (spec, pos)), prems), params), raw_bundles), raw_dervs), _) => fn int =>
-        let fun morph m (tm, (name, def)) = (Morphism.term m tm, (name, Morphism.thm m def))
+        let val morph = Morphism.fact
          in Context.mapping_result
           ( Named_Target.theory_map_result morph (my_definition decl params prems spec int) )
           (   Local_Theory.begin_nested #> snd
            #> my_definition decl params prems spec int
            #> Local_Theory.end_nested_result morph
           )
-           #> (fn ((def_term, (_, def_eq)), generic) =>
-              let val name = case decl of SOME (name, _, _) => name
+           #> (fn ([def_term', def_eq], generic) =>
+              let val def_term = Thm.term_of (Drule.dest_term def_term')
+                  val name = case decl of SOME (name, _, _) => name
                                         | NONE => Binding.make (Term.term_name def_term, pos)
                in add_type_i {no_auto=false} (name, def_term, DIRECT_DEF def_eq, pos,
                                               raw_dervs, raw_bundles) generic |> snd

@@ -382,6 +382,7 @@ lemma fiction_Map_of_Val_ins_refinement:
       by (subst t1, subst t2, rule val_map_mod_index_value_projection, insert prems(1) prems(3))
   qed .
 
+context notes mul_carrier_option_def[simp] option.pred_True[simp] begin
 
 lemma fiction_Map_of_Val_perm_partial_refinement:
   \<open> valid_index TY idx
@@ -400,7 +401,8 @@ lemma fiction_Map_of_Val_perm_partial_refinement:
       assumption,
       assumption,
       assumption,
-      rule pointwise_to_share.\<F>_functional_refinement[simplified, simplified pointwise_set_UNIV],
+      rule pointwise_to_share.\<F>_functional_refinement[where a=\<open>idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)\<close>,
+              simplified, simplified pointwise_set_UNIV],
       simp,
       simp,
       rule pointwise_to_share.\<F>_functional_projection[
@@ -421,6 +423,8 @@ lemma fiction_Map_of_Val_ins_perm_projection:
       rule pointwise_to_share.\<F>_functional_projection[
         where S=\<open>{idx \<tribullet>\<^sub>m (map_option nosep \<circ> Map_of_Val u_idx)}\<close>, simplified, simplified pointwise_set_UNIV],
       simp)
+
+end
 
 locale aggregate_mem_resource =
   partial_map_resource Res \<open>\<lambda>blk. nosep ` Well_Type (typ_of_blk blk)\<close>
@@ -446,6 +450,8 @@ lemma getter_rule:
           \<s>\<u>\<b>\<j> x. ret = \<phi>arg (nosep x) \<and> x \<in> Well_Type (typ_of_blk blk) \<and> x \<in> {a. index_value idx a = u_idx} \<rbrace>\<close>
   by (rule "_getter_rule_2_"[OF fiction_Map_of_Val_ins_perm_projection,
                                 simplified split_nosep_ExSet inj_image_mem_iff inj_nosep])
+
+context notes mul_carrier_option_def[simp] option.pred_True[simp] begin
 
 lemma allocate_rule:
   \<open> (\<And>r. finite (dom r) \<Longrightarrow> \<exists>blk. blk \<notin> dom r \<and> typ_of_blk blk = TY)
@@ -523,6 +529,8 @@ proof -
           simplified],
         rule prems)
 qed .
+
+end
 
 end
 

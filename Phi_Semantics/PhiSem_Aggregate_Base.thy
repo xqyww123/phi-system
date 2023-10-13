@@ -220,20 +220,26 @@ declare [[
     and \<open>is_valid_step_idx_of ?idx ?T _ \<close> \<Rightarrow> \<open>is_valid_step_idx_of ?idx ?T _ \<close> (100)
 ]]
 
+\<phi>reasoner_group chk_sem_ele_idx_all = (1000, [10, 2000]) for (\<open>is_valid_step_idx_of idx T U\<close>,
+                                                              \<open>is_valid_index_of idx T U\<close>)
+    \<open>check whether the given element index \<open>idx\<close> is valid against semantic type \<open>T\<close>\<close>
+  and chk_sem_ele_idx = (1000, [1000,1030]) in chk_sem_ele_idx_all
+    \<open>cutting rules\<close>
+
 lemma is_valid_index_of_Nil:
   \<open>is_valid_index_of [] TY TY' \<longleftrightarrow> TY = TY'\<close>
   unfolding is_valid_index_of_def by simp blast
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> is_valid_index_of idx T U
 \<Longrightarrow> valid_index T idx\<close>
   unfolding is_valid_index_of_def by blast
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> is_valid_index_of [] T T \<close>
   unfolding is_valid_index_of_def by simp
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> is_valid_step_idx_of i T W
 \<Longrightarrow> is_valid_index_of idx W U
 \<Longrightarrow> is_valid_index_of (i # idx) T U \<close>
@@ -362,20 +368,24 @@ and \<open>\<phi>Aggregate_Constructor ?ctor ?args _ _\<close> \<Rightarrow> \<o
 
 declare [[\<phi>trace_reasoning = 1]]
 
+(*
 lemma [\<phi>reason 1]:
   \<open>\<phi>Aggregate_Getter [] T T id\<close>
   unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
   by simp
+*)
 
 lemma \<phi>Aggregate_Getter_Nil[\<phi>reason %aggregate_access]:
   \<open>\<phi>Aggregate_Getter [] T T id\<close>
   unfolding \<phi>Aggregate_Getter_def \<phi>Type_Mapping_def
   by simp
 
+(*
 lemma [\<phi>reason 1]:
   \<open>\<phi>Aggregate_Mapper [] T T' T T' id\<close>
   unfolding \<phi>Aggregate_Mapper_def \<phi>Type_Mapping_def
   by simp
+*)
 
 lemma [\<phi>reason %aggregate_access]:
   \<open>\<phi>Aggregate_Mapper [] T T' T T' id\<close>
