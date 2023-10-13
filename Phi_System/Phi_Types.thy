@@ -120,10 +120,9 @@ ML \<open>assert_derived_properties \<^theory> [
 subsection \<open>Func\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+ 
 \<phi>type_def \<phi>Fun :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('c,'a) \<phi>\<close>
   where \<open>\<phi>Fun f x = (f x \<Ztypecolon> Itself)\<close>
-  opening  extract_premises_in_local_inverse
   deriving \<open>Identity_Elements\<^sub>E (\<phi>Fun f) (\<lambda>x. f x = 1)\<close>
        and \<open>Identity_Elements\<^sub>I (\<phi>Fun f) (\<lambda>x. f x = 1) (\<lambda>_. True)\<close>
        and Basic
@@ -1436,7 +1435,8 @@ declare [[\<phi>trace_reasoning = 0]]
     
 \<phi>type_def \<phi>Fun' :: \<open>('a \<Rightarrow> 'c) \<Rightarrow> ('a,'x) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close> (infixr "\<Zcomp>\<^sub>f" 30)
   where \<open>\<phi>Fun' f T = (\<phi>Fun f \<Zcomp> T)\<close>
-  opening extract_premises_in_Carrier_Set
+  opening extracting_Carrier_Set_sat
+          extract_mul_carrier
           Identity_Element_sat
   deriving Basic
        and \<open> \<g>\<u>\<a>\<r>\<d> constant_1 f

@@ -254,12 +254,16 @@ subsubsection \<open>Local Inverse\<close>
 definition local_inverse
   where \<open>local_inverse D f g \<longleftrightarrow> (\<forall>x \<in> D. g (f x) = x)\<close>
 
-lemma prem_extract_local_inverse:
-  \<open>local_inverse D f g \<equiv> (\<forall>x \<in> D. g (f x) = x) \<and> True\<close>
-  unfolding local_inverse_def by simp
+lemma [\<phi>reason %extract_pure]:
+  \<open> local_inverse D f g \<longrightarrow> (\<forall>x \<in> D. g (f x) = x) @action \<A>EIF \<close>
+  unfolding Action_Tag_def local_inverse_def
+  by blast
 
-bundle extract_premises_in_local_inverse =
-  prem_extract_local_inverse[\<phi>premise_extraction add]
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<forall>x \<in> D. g (f x) = x) \<longrightarrow> local_inverse D f g @action \<A>ESC \<close>
+  unfolding Action_Tag_def local_inverse_def
+  by blast
+
 
 subsection \<open>Configuration of Existing Procedures\<close>
 
@@ -288,10 +292,15 @@ paragraph \<open>Setup Reasoning Rules\<close>
 
 declare (in homo_one) homo_one_axioms[\<phi>reason %algb_cut]
 
-lemma extraction_homo_one[\<phi>premise_extraction add]:
-  \<open>homo_one \<psi> \<equiv> \<psi> 1 = 1 \<and> True\<close>
-  unfolding homo_one_def
-  by simp
+lemma [\<phi>reason %extract_pure]:
+  \<open> homo_one \<psi> \<longrightarrow> \<psi> 1 = 1 @action \<A>EIF \<close>
+  unfolding Action_Tag_def homo_one_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> \<psi> 1 = 1 \<longrightarrow> homo_one \<psi> @action \<A>ESC \<close>
+  unfolding Action_Tag_def homo_one_def
+  by blast
 
 lemma [\<phi>reason default %algb_falling_lattice]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<psi> 1 = 1)
@@ -307,10 +316,18 @@ subparagraph \<open>homo_mul_carrier\<close>
 
 declare (in homo_mul_carrier) homo_mul_carrier_axioms[\<phi>reason %algb_cut]
 
-lemma prem_extract_homo_mul_carrier:
-  \<open>homo_mul_carrier \<psi> \<equiv> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<and> True\<close>
-  unfolding homo_mul_carrier_def
-  by simp
+lemma homo_mul_carrier_EIF:
+  \<open> homo_mul_carrier \<psi> \<longrightarrow> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) @action \<A>EIF \<close>
+  unfolding homo_mul_carrier_def Action_Tag_def
+  by blast
+
+lemma homo_mul_carrier_ESC:
+  \<open> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x)) \<longrightarrow> homo_mul_carrier \<psi> @action \<A>EIF \<close>
+  unfolding homo_mul_carrier_def Action_Tag_def
+  by blast
+
+bundle extract_mul_carrier = homo_mul_carrier_EIF [\<phi>reason %extract_pure]
+                             homo_mul_carrier_ESC [\<phi>reason %extract_pure]
 
 lemma [\<phi>reason default %algb_falling_lattice]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. mul_carrier x \<longrightarrow> mul_carrier (\<psi> x))
@@ -400,10 +417,15 @@ subsubsection \<open>Constant One\<close>
 
 definition \<open>constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1)\<close>
 
-lemma [\<phi>premise_extraction add]:
-  \<open> constant_1 \<psi> \<equiv> (\<forall>x. \<psi> x = 1) \<and> True \<close>
-  unfolding constant_1_def atomize_eq
-  by simp
+lemma [\<phi>reason %extract_pure]:
+  \<open> constant_1 \<psi> \<longrightarrow> (\<forall>x. \<psi> x = 1) @action \<A>EIF \<close>
+  unfolding Action_Tag_def constant_1_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<forall>x. \<psi> x = 1) \<longrightarrow> constant_1 \<psi> @action \<A>ESC \<close>
+  unfolding Action_Tag_def constant_1_def
+  by blast
 
 lemma [\<phi>reason default %algb_falling_lattice]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>x. \<psi> x = 1)
@@ -722,6 +744,18 @@ definition fun_commute :: \<open>('b \<Rightarrow> 'c) \<Rightarrow> ('a \<Right
 declare [[\<phi>reason_default_pattern
   \<open>fun_commute ?\<psi> ?\<phi> ?\<psi>' ?\<phi>'\<close> \<Rightarrow> \<open>fun_commute ?\<psi> ?\<phi> _ _\<close> \<open>fun_commute _ _ ?\<psi>' ?\<phi>'\<close> (100) ]]
 
+subsubsection \<open>Reasoning Configure\<close>
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> fun_commute \<psi> \<phi> \<psi>' \<phi>' \<longrightarrow> (\<forall>x. \<psi> (\<phi> x) = \<phi>' (\<psi>' x)) @action \<A>EIF \<close>
+  unfolding Action_Tag_def fun_commute_def fun_eq_iff
+  by simp
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> (\<forall>x. \<psi> (\<phi> x) = \<phi>' (\<psi>' x)) \<longrightarrow> fun_commute \<psi> \<phi> \<psi>' \<phi>' @action \<A>ESC \<close>
+  unfolding Action_Tag_def fun_commute_def fun_eq_iff
+  by simp
+  
 
 subsubsection \<open>Fallback\<close>
 

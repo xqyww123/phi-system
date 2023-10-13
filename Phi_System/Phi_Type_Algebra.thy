@@ -1432,9 +1432,9 @@ consts under_\<phi>deriving :: mode
                              by (simp add: Premise_def)} RS sequent), Seq.empty))
 \<close>
 
-lemma [\<phi>premise_extraction add]:
-  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P \<equiv> P \<and> True \<close>
-  unfolding atomize_eq Premise_def
+lemma [\<phi>reason %extract_pure]:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[under_\<phi>deriving] P \<longrightarrow> P @action \<A>EIF\<close>
+  unfolding Action_Tag_def Premise_def
   by blast
 
 lemma [\<phi>reason %extract_pure]:
@@ -4397,10 +4397,6 @@ end
 
 
 subsubsection \<open>Carrier Set\<close>
-
-bundle extract_premises_in_Carrier_Set =
-  prem_extract_Carrier_Set[\<phi>premise_extraction add]
-  prem_extract_homo_mul_carrier[\<phi>premise_extraction add]
 
 context begin
 

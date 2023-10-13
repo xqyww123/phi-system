@@ -1211,6 +1211,16 @@ ML_file \<open>library/tools/extracting_pure_facts.ML\<close>
 subsubsection \<open>Extraction Rules\<close>
 
 lemma [\<phi>reason %extract_pure]:
+  \<open> A = B \<longrightarrow> A = B @action \<A>EIF \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
+  \<open> A = B \<longrightarrow> A = B @action \<A>ESC \<close>
+  unfolding Action_Tag_def
+  by blast
+
+lemma [\<phi>reason %extract_pure]:
   \<open> A \<longrightarrow> A' @action \<A>EIF
 \<Longrightarrow> B \<longrightarrow> B' @action \<A>EIF
 \<Longrightarrow> A \<and> B \<longrightarrow> A' \<and> B' @action \<A>EIF \<close>
@@ -1569,20 +1579,14 @@ hide_fact contract_drop_waste contract_obligations contract_premise_all
 
 paragraph \<open>Extracting Pure\<close>
 
-lemma [\<phi>premise_extraction add]:
-  \<open>A = B \<equiv> (A = B) \<and> True\<close>
-  unfolding atomize_eq by simp
-
-declare [[\<phi>trace_reasoning = 3]]
-
-lemma [\<phi>premise_extraction add]:
-  \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<equiv> P \<and> True\<close>
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P \<equiv> P \<and> True\<close>
-  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P \<equiv> P \<and> True\<close>
-  \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<equiv> P \<and> True\<close>
-  unfolding Premise_def
-  by simp_all
+lemma [\<phi>reason %extract_pure]:
+  \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<longrightarrow> P @action \<A>EIF \<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> P \<longrightarrow> P @action \<A>EIF \<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[MODE_SAT] P \<longrightarrow> P @action \<A>EIF \<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[NO_INST] P \<longrightarrow> P @action \<A>EIF \<close>
+  \<open> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> P \<longrightarrow> P @action \<A>EIF \<close>
+  unfolding Action_Tag_def Premise_def
+  by blast+
 
 lemma [\<phi>reason %extract_pure]:
   \<open> P \<longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> P @action \<A>ESC \<close>

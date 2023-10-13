@@ -49,20 +49,9 @@ signature PHI_REASONERS = sig
   structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
       context before applying either the automatic solving*)
 
-  (* Premise Extraction from arbitrary antecedent *)
-  type pattern = term
-  datatype extraction = Extract_Rule of thm (*of form \<open>P \<equiv> premise \<and> waste\<close>*)
-                      | Extract_Fun of pattern * (Proof.context -> cterm -> thm option)
-
-  val add_premise_extractions : extraction list -> Context.generic -> Context.generic
-      (*users should also call derive_extracting_rules to add corresponded \<phi>-LPR rules extracting pure facts*)
-  val add_premise_extraction_rules : thm list -> Context.generic -> Context.generic
-  val del_premise_extractions : extraction list -> Context.generic -> Context.generic
-  val derive_extracting_rules : Position.T -> extraction -> Context.generic -> Context.generic
   val extract_prem  : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
   val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm list
-  val extract_prems_rewr : Context.generic (*the context used to fetch the extractions*)
-                        -> Proof.context -> cterm -> thm option option
+  val extract_prems_rewr : Proof.context -> cterm -> thm option option
   val is_syntactic_premise : term -> bool
 
   (*(* Simplifications that uses the extracted premises.
@@ -323,118 +312,6 @@ fun case_split_by_annotations_first_subgoal ctxt goal th =
   proof obligation?*)
 (*Convention: the rule of premise extraction has form \<open>A \<equiv> Premise \<and> A\<close>*)
 type pattern = term
-datatype extraction = Extract_Rule of thm | Extract_Fun of pattern * (Proof.context -> cterm -> thm option)
-
-fun extraction_eq (Extract_Rule tha, Extract_Rule thb) = Thm.eq_thm_prop (tha, thb)
-  | extraction_eq (Extract_Fun fa, Extract_Fun fb) = pointer_eq (fa, fb)
-  | extraction_eq _ = false
-
-structure Premise_Extraction = Generic_Data (
-  type T = extraction Net.net
-  val empty = Net.empty
-  val merge = Net.merge extraction_eq
-)
-
-fun pattern_of_rule th =
-  case Thm.prop_of th
-    of Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ _ => X
-     | _ => raise THM ("Bad rule of premise extraction", 0, [th])
-
-fun chk_pattern ctxt tm =
-  let val ty = Term.fastype_of tm
-      open Pretty
-   in if ty <> \<^Type>\<open>bool\<close>
-   then error (string_of (chunks [
-     paragraph ( text "The premise extraction should bind on"
-               @ [Context.cases Syntax.pretty_typ_global Syntax.pretty_typ ctxt HOLogic.boolT,
-                  brk 1, str "instead of", brk 1,
-                  Context.cases Syntax.pretty_typ_global Syntax.pretty_typ ctxt ty]),
-     Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
-   ]))
-   else (case tm
-     of Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _ =>
-          error (string_of (chunks [
-              para "The premise extraction cannot bind on HOL conjunction",
-              Context.cases Syntax.pretty_term_global Syntax.pretty_term ctxt tm
-          ]))
-      | _ => tm)
-  end
-
-fun chk_extraction ctxt (Extract_Rule rule) =
-      let open Pretty
-          fun err msg = error (string_of (chunks [
-                            paragraph (text "Bad rule of premise extraction:" @ [brk 1] @ text msg),
-                            Context.cases Thm.pretty_thm_global Thm.pretty_thm ctxt rule
-                         ]))
-       in case Thm.prop_of rule
-       of Const(\<^const_name>\<open>Trueprop\<close>, _) $ (
-              Const(\<^const_name>\<open>HOL.eq\<close>, _) $ X $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _)) =>
-                  (chk_pattern ctxt X, Extract_Rule (rule RS @{thm' eq_reflection}))
-        | Const(\<^const_name>\<open>Pure.eq\<close>, _) $ X $ (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ _ $ _) =>
-                  (chk_pattern ctxt X, Extract_Rule rule)
-        | Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-               err "cannot have premises"
-        | _ => err "malformed rule, must of form \<open>A \<equiv> Prem \<and> A'\<close> where Prem is the extracted premise"
-      end
-  | chk_extraction ctxt (Extract_Fun (pat, f)) = (chk_pattern ctxt pat, Extract_Fun (pat, f))
-
-val convert_prem_extr_to_AEIF = @{lemma' \<open>A \<equiv> B \<and> C \<Longrightarrow> A \<longrightarrow> B @action \<A>EIF\<close>
-                                     by (unfold Action_Tag_def, blast)}
-
-fun derive_extracting_rules pos (Extract_Rule rule) ctxt =
-      Phi_Reasoner.add_rule pos Phi_Reasoner.TO_BE_OVERRIDE @{reasoner_group %derived_\<A>EIF_from_premis_extraction}
-                            ([],[]) NONE
-                            [rule RS (Thm.transfer'' ctxt convert_prem_extr_to_AEIF)] ctxt
-  | derive_extracting_rules pos (Extract_Fun (pat, f)) ctxt =
-      Phi_Reasoner.add {name = Free("Derived_Premise_Extraction", Term.dummyT) $ pat,
-                        pos = pos,
-                        group = snd (@{reasoner_group %derived_\<A>EIF_from_premis_extraction}),
-                        mode = Phi_Reasoner.TO_BE_OVERRIDE,
-                        pattern = [(HOLogic.Trueprop $ (\<^Const>\<open>Action_Tag\<close>
-                                                          $ (\<^Const>\<open>HOL.implies\<close> $ pat $ Var(("P", maxidx_of_term pat), \<^Type>\<open>bool\<close>))
-                                                          $ \<^Const>\<open>\<A>EIF\<close>),
-                                    @{priority %derived_\<A>EIF_from_premis_extraction})],
-                        blacklist = [],
-                        tactic = Phi_Reasoner.Tac_ML (fn (_, (ctxt,sequent)) => Seq.make (fn () =>
-                          let val ctm = Thm.dest_arg1 (Thm.cprop_of sequent) (*dest_implies*)
-                                     |> Thm.dest_arg (*dest_Trueprop*)
-                                     |> Thm.dest_arg1 (*dest Action_Tag \<A>EIF*)
-                                     |> Thm.dest_arg1 (*dest \<longrightarrow>*)
-                           in f ctxt ctm
-                           |> Option.map (fn ret => ((ctxt, convert_prem_extr_to_AEIF RS ret), Seq.empty))
-                          end))} ctxt
-
-fun del_derived_extracting_rules rule ctxt =
-  Phi_Reasoner.del_reasoners (Phi_Reasoner.the_default_pattern_of ctxt (Thm.concl_of rule))
-                             (fn r => case #tactic r of Phi_Reasoner.Tac_Rule [(_, rule')] => Thm.eq_thm (rule',rule)
-                                                      | _ => false) ctxt
-
-fun add_premise_extractions [] ctxt = ctxt
-  | add_premise_extractions extrs ctxt =
-      Premise_Extraction.map (fold (
-        Net.insert_term_safe extraction_eq o chk_extraction ctxt
-      ) extrs) ctxt
-
-val add_premise_extraction_rules = add_premise_extractions o map Extract_Rule
-
-fun del_premise_extractions extrs ctxt =
-  Premise_Extraction.map (fold (Net.delete_term_safe extraction_eq o chk_extraction ctxt) extrs) ctxt
-
-val del_premise_extraction_rules = del_premise_extractions o map Extract_Rule
-
-fun add_del add del = Scan.lift (Args.add |-- Phi_Help.pos_parser "\<phi>premise_extraction" >> add
-                                || Args.del >> K del
-                                || Phi_Help.pos_parser "\<phi>premise_extraction" >> add);
-val premise_extraction =
-      add_del (fn pos => Thm.declaration_attribute (fn rule =>
-                        add_premise_extraction_rules [rule]
-                     #> derive_extracting_rules pos (Extract_Rule rule)))
-              (Thm.declaration_attribute (fn rule =>
-                        del_premise_extraction_rules [rule]
-                     #> del_derived_extracting_rules rule))
-
-val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>premise_extraction\<close> premise_extraction
-                      "Declare rewrite rules to extract premises augmenting the proof obligation")
 
 fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _) = is_syntactic_premise M
   | is_syntactic_premise (Const(\<^const_name>\<open>default\<close>, _)) = true
@@ -451,36 +328,15 @@ fun is_syntactic_premise (Const(\<^const_name>\<open>Premise\<close>, _) $ M $ _
 
 (*TODO: merge the \<phi>-LPR based extraction given in git tag PLPR-based-Premise-Extraction
         which gives a quick way to extend the extraction universally but heavily and slowly.*)
-fun gen_extract_prems_rewr ctxt =
-  let val net = Premise_Extraction.get ctxt
-      val thy = Context.theory_of ctxt
-
-      fun match_extraction bv_tys tm = []
-            (*Net.match_term net tm
-              |> filter (fn Extract_Rule rule => Pattern_Translation.does_match_term thy bv_tys (pattern_of_rule rule, tm)
-                          | Extract_Fun (pat, _) => Pattern_Translation.does_match_term thy bv_tys (pat, tm))*)
-
-      fun apply_extraction ctxt ctm =
-        match_extraction [] (Thm.term_of ctm)
-         |> map_filter (fn Extract_Rule rule => SOME (Conv.rewr_conv rule ctm)
-                         | Extract_Fun (_, f) => f ctxt ctm)
-         |> (fn [] => NONE
-              | [th] => SOME th
-              | L => SOME (foldr1 (fn (tha,thb) =>
-                        thb RS' (ctxt,
-                        tha RS' (ctxt,
-                        @{lemma' \<open>A \<equiv> P1 \<and> W1 \<Longrightarrow> A \<equiv> P2 \<and> W2 \<Longrightarrow> A \<equiv> (P1 \<and> P2) \<and> (W1 \<and> W2)\<close>
-                            by (simp add: atomize_eq, blast)}
-                     ))) L))
-
-      fun qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
+val gen_extract_prems_rewr =
+  let fun qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.conj\<close>, _) $ A $ B) =
             qchk_obj bv_tys A orelse qchk_obj bv_tys B
         | qchk_obj bv_tys (Const(\<^const_name>\<open>Ant_Seq\<close>, _) $ A $ B) =
             qchk_obj bv_tys A orelse qchk_obj bv_tys B
         | qchk_obj bv_tys (Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ X) = qchk_obj bv_tys X
         | qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (_, T, X)) = qchk_obj (T::bv_tys) X
         | qchk_obj bv_tys (Const(\<^const_name>\<open>HOL.All\<close>, _) $ X) = qchk_obj bv_tys (Term.incr_boundvars 1 X $ Bound 0)
-        | qchk_obj bv_tys tm = not (null (match_extraction bv_tys tm))
+        | qchk_obj _ _ = false
 
       fun quick_check bv_tys (Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ X) = quick_check bv_tys X
         | quick_check bv_tys (Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (_, T, X)) = quick_check (T::bv_tys) X
@@ -533,8 +389,7 @@ fun gen_extract_prems_rewr ctxt =
            | Const(\<^const_name>\<open>\<r>Guard\<close>, _) $ _ =>
                extract ctxt (Thm.dest_arg ctm)
                 |> Option.map (fn ret => (Conv.rewr_conv @{thm' \<r>Guard_def} then_conv (K ret)) ctm)
-           | _ => apply_extraction ctxt ctm
-
+           | _ => NONE
 
       fun simp_tag ctxt = Raw_Simplifier.rewrite ctxt true @{thms' Premise_def[where mode=default]
                                                                    Premise_def[where mode=MODE_GUARD]}
@@ -564,7 +419,7 @@ fun gen_extract_prems_rewr ctxt =
    else NONE)
   end
 
-fun extract_prems_rewr ctxt = snd (gen_extract_prems_rewr ctxt)
+val extract_prems_rewr = snd gen_extract_prems_rewr
 
 fun strip_premise_tag ctxt ctm =
   case Thm.term_of ctm
@@ -585,7 +440,7 @@ fun strip_premise_tag ctxt ctm =
 
 fun extract_prem ctxt strip =
   let val ctxt' = Context.proof_of ctxt
-      val (qchk, conv) = gen_extract_prems_rewr ctxt
+      val (qchk, conv) = gen_extract_prems_rewr
    in fn thm =>
    if is_syntactic_premise (Thm.prop_of thm)
    then SOME (if strip
@@ -805,7 +660,7 @@ fun augment_conditions conds ctxt sequent =
 (*the leading antecedent must be beta-eta normalized*)
 fun collect_obligation_premises option ctxt thm = let open Conv
   val (collect_premises,conv_all,conv_schematic) = chk_option ctxt option
-  val filter = extract_prems_rewr (Context.Proof ctxt)
+  val filter = extract_prems_rewr
   val new_cond = Unsynchronized.ref 0
   val rule1 = gconv_rule (Phi_Conv.meta_alls_conv (fn ctxt => 
                 (if collect_premises then obligation_collect new_cond ctxt filter

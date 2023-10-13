@@ -580,12 +580,6 @@ bundle extracting_Carrier_Set_sat =
 
 end
 
-subsubsection \<open>General Rules\<close>
-
-lemma prem_extract_Carrier_Set:
-  \<open>Carrier_Set T D \<equiv> (\<forall>x v. D x \<and> v \<Turnstile> (x \<Ztypecolon> T) \<longrightarrow> mul_carrier v) \<and> True\<close>
-  unfolding Carrier_Set_def Within_Carrier_Set_def atomize_eq
-  by (rule; clarsimp)
 
 subsubsection \<open>Rules for Logical Connectives\<close>
 

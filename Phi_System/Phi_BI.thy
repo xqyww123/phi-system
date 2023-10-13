@@ -3815,14 +3815,6 @@ lemma [\<phi>reason %extract_pure]:
   by clarsimp
 
 
-
-subsubsection \<open>Basic Rules\<close>
-
-lemma [\<phi>premise_extraction add]:
-  \<open>Object_Equiv T eq \<equiv> (\<forall>x. eq x x) \<and> Object_Equiv T eq\<close>
-  unfolding Object_Equiv_def atomize_eq
-  by blast
-
 subsubsection \<open>Reasoning Rules\<close>
 
 lemma Object_Equiv_fallback[\<phi>reason default %object_equiv_fallback]:
