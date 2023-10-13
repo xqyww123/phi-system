@@ -47,8 +47,7 @@ lemma Valid_Proc_\<phi>M_getV_raw[intro!, \<phi>reason 1200]:
 
 (*to depreciate the above!*)
 
-
-subsection \<open>Reasoning for Elementary Constructions\<close>
+subsection \<open>Basic Rules\<close>
 
 declare \<phi>SEQ[intro!]
 
@@ -122,9 +121,9 @@ lemma semantic_return_\<phi>app:
 lemma semantic_literal_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<Turnstile> (y \<Ztypecolon> T))
 \<Longrightarrow> <\<phi>expn> v \<Turnstile> (y \<Ztypecolon> T)
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X\<heavy_comma> y \<Ztypecolon> Val (\<phi>literal v) T \<close>
+\<Longrightarrow> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Val (\<phi>literal v) T \<close>
   unfolding Premise_def Transformation_def \<phi>literal_def
-  by (clarsimp simp add: Val_expn)
+  by clarsimp
 
 lemma semantic_local_value_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> TY
@@ -132,6 +131,22 @@ lemma semantic_local_value_\<phi>app:
 \<Longrightarrow> \<p>\<r>\<o>\<c> \<phi>M_assert (\<phi>arg.dest v \<in> Well_Type TY) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] T \<longmapsto> \<lambda>_. Void \<s>\<u>\<b>\<j> \<phi>arg.dest v \<Turnstile> (x \<Ztypecolon> T) \<rbrace>\<close>
   unfolding \<phi>M_assert_def Premise_def \<phi>SemType_def subset_iff \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val.unfold INTERP_SPEC Satisfaction_def Subjection_expn_set)
+
+
+subsection \<open>Reasoning Configure\<close>
+
+declare [[\<phi>reason_default_pattern \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal ?u] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _\<close> \<Rightarrow>
+                                  \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal ?u] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s>[_] _\<close>   (100) ]]
+
+\<phi>reasoner_group ToA_mk_literal_cut = (1000, [1000,1030]) in ToA_cut
+  \<open>cutting rule synthesizing literal local values\<close>
+
+lemma [\<phi>reason %\<phi>synthesis_cut]:
+  \<open> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal u] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2
+\<Longrightarrow> \<p>\<r>\<o>\<c> Return \<phi>V_none \<lbrace> S1 \<longmapsto> \<lambda>v. y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal u] T \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> @action synthesis \<close>
+  by (rule Synthesis_Proc_fallback_VS,
+      rule view_shift_by_implication)
+
 
 subsection \<open>Drop & Duplicate Value\<close>
 

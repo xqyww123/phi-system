@@ -9,7 +9,7 @@ lemma valid_index_void[iff]:
   \<open>valid_index void path \<longleftrightarrow> path = []\<close>
   by (induct path; simp add: valid_idx_step_void)
 
-lemma [\<phi>reason 1000]:
+lemma [\<phi>reason %chk_sem_ele_idx]:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> path = []
 \<Longrightarrow> valid_index void path\<close>
   unfolding Premise_def

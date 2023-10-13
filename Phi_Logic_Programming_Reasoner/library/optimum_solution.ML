@@ -131,9 +131,10 @@ fun best_among (_, []) = NONE
           Pretty.str "PLPR_Optimum_Solution: reasoning the optimal solution from candidates:" ::
           map (fn th => Pretty.item [Thm.pretty_thm ctxt th]) candidates
         ));
-      Seq.pull (gen_start ctxt candidates)
-        |> Option.map (fn ((ctxt', ret), _) => singleton (Proof_Context.export ctxt' ctxt) ret)
-      (*Phi_Reasoner.reason_sXXX NONE ctxt (fn ctxt => ((), gen_start ctxt candidates))
-        |> snd *))
+     (Seq.pull (gen_start ctxt candidates)
+        |> Option.map fst
+      handle Phi_Reasoner.Success s => SOME s)
+        |> Option.map (fn (ctxt', th) => singleton (Proof_Context.export ctxt' ctxt) th)
+    )
 
 end

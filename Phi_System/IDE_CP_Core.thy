@@ -558,6 +558,8 @@ the mechanism is to synthesis that guard according to the user-given specificati
 to synthesis \<open>\<p>\<r>\<o>\<c> ?f \<lbrace> X \<longmapsto> $x > 2 \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close>.
 \<close>
 
+consts synthesis :: action
+
 definition DoSynthesis :: \<open>'a \<Rightarrow> prop \<Rightarrow> prop \<Rightarrow> prop\<close>
   where \<open>DoSynthesis term sequent result \<equiv> (PROP sequent \<Longrightarrow> PROP result)\<close>
 
@@ -687,8 +689,11 @@ declare [[\<phi>reason_default_pattern
       \<open>usual rules\<close>
   and \<phi>synthesis_parse_success = (3000, [3000, 3000]) in \<phi>synthesis_parse_all and > \<phi>synthesis_parse
       \<open>direct success\<close>
-  and \<phi>synthesis_parse_default = (10, [10,30]) in \<phi>synthesis_parse_all and < \<phi>synthesis_parse
+  and \<phi>synthesis_parse_default = (10, [10,29]) in \<phi>synthesis_parse_all and < \<phi>synthesis_parse
       \<open>default parsing\<close>
+  and \<phi>synthesis_parse_number = (40, [30, 70]) in \<phi>synthesis_parse_all
+                                               and < \<phi>synthesis_parse and > \<phi>synthesis_parse_default
+      \<open>parsing numbers\<close>
 
 
 subsubsection \<open>Parse the Term to be Synthesised\<close>
@@ -748,8 +753,6 @@ lemma [\<phi>reason default %\<phi>synthesis_parse_default+10 for \<open>Synthes
 subsubsection \<open>Tagging the target of a synthesis rule\<close>
 
 (* definition Synthesis :: \<open>'a BI \<Rightarrow> 'a BI\<close> ("SYNTHESIS _" [17] 16) where [iff]: \<open>Synthesis S = S\<close> *)
-
-consts synthesis :: action
 
 text \<open>
   Only procedure rules need to be tagged by \<^const>\<open>synthesis\<close>. The view shift and the ToA do not.

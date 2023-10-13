@@ -232,21 +232,23 @@ subsubsection \<open>Constant Integer\<close>
 
 declare [[\<phi>trace_reasoning = 1]]
 
-lemma op_const_aint_\<phi>app[\<phi>synthesis 300]:
+lemma op_const_aint_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x)) \<int>\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x)) \<int> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X\<close>
+  for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x \<Turnstile> (x \<Ztypecolon> \<int>)\<close>
 \<medium_right_bracket> .
 
-lemma op_const_anat_\<phi>app[\<phi>synthesis 300]:
+lemma op_const_anat_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] x' : of_nat x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat>\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_aint.mk x')) \<nat> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X\<close>
+  for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_aint.mk x' \<Turnstile> (x \<Ztypecolon> \<nat>)\<close>
 \<medium_right_bracket> .
 
-lemma [\<phi>reason 1210
+lemma [\<phi>reason %\<phi>synthesis_parse_number+20
     for \<open>Synthesis_Parse (numeral ?n::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (1::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::nat) (?X :: ?'ret \<Rightarrow> assn)\<close>
@@ -256,7 +258,7 @@ lemma [\<phi>reason 1210
   for X :: \<open>'ret \<Rightarrow> assn\<close>
   unfolding Synthesis_Parse_def ..
 
-lemma [\<phi>reason 1210
+lemma [\<phi>reason %\<phi>synthesis_parse_number+20
     for \<open>Synthesis_Parse (numeral ?n::int) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (1::int) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::int) (?X :: ?'ret \<Rightarrow> assn)\<close>
@@ -447,6 +449,8 @@ lemma op_lt_anat[\<phi>overload <,
   \<medium_left_bracket> op_lt_aint \<medium_right_bracket>.
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
+
+thm "<_\<phi>app"
 
 proc (nodef) op_gt_aint[\<phi>overload >]:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>

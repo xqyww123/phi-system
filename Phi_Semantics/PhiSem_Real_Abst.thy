@@ -129,14 +129,17 @@ section \<open>Abstraction of Instructions\<close>
 
 subsubsection \<open>Constant\<close>
 
-lemma op_const_areal_\<phi>app[\<phi>synthesis 300]:
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma op_const_areal_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
   \<open> Is_Literal x
-\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real>\<close>
+\<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x \<Ztypecolon> Val (\<phi>literal (V_areal.mk x)) \<real> \<r>\<e>\<m>\<a>\<i>\<n>\<s> X\<close>
+  for X :: assn
 \<medium_left_bracket>
   semantic_literal \<open>V_areal.mk x \<Turnstile> (x \<Ztypecolon> \<real>)\<close>
 \<medium_right_bracket> .
 
-lemma [\<phi>reason 1210
+lemma [\<phi>reason %\<phi>synthesis_parse_number+20
     for \<open>Synthesis_Parse (numeral ?n::real) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (1::real) (?X :: ?'ret \<Rightarrow> assn)\<close>
        \<open>Synthesis_Parse (0::real) (?X :: ?'ret \<Rightarrow> assn)\<close>

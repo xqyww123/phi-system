@@ -56,13 +56,21 @@ primrec valid_index :: \<open>TY \<Rightarrow> aggregate_path \<Rightarrow> bool
 
 declare [[\<phi>reason_default_pattern \<open>valid_index ?T ?idx\<close> \<Rightarrow> \<open>valid_index ?T ?idx\<close> (100)]]
 
-lemma [\<phi>reason 1200]: \<open>valid_index T []\<close> by simp
+\<phi>reasoner_group chk_sem_ele_idx_all = (1000, [0, 2000]) for (\<open>is_valid_step_idx_of idx T U\<close>,
+                                                              \<open>is_valid_index_of idx T U\<close>)
+    \<open>check whether the given element index \<open>idx\<close> is valid against semantic type \<open>T\<close>\<close>
+  and chk_sem_ele_idx = (1000, [1000,1030]) in chk_sem_ele_idx_all
+    \<open>cutting rules\<close>
+  and chk_sem_ele_idx_fail = (0, [0,0]) in chk_sem_ele_idx_all
+    \<open>failure\<close>
+
+lemma [\<phi>reason %chk_sem_ele_idx]: \<open>valid_index T []\<close> by simp
 
 lemma valid_index_tail[iff]:
   \<open>valid_index T (idx@[i]) \<longleftrightarrow> valid_index T idx \<and> valid_idx_step (index_type idx T) i\<close>
   by (induct idx arbitrary: T; simp)
 
-lemma [\<phi>reason 0]:
+lemma [\<phi>reason %chk_sem_ele_idx_fail]:
   \<open> FAIL TEXT(\<open>Fail to show the validity of index\<close> idx \<open>on type\<close> T)
 \<Longrightarrow> valid_index T idx\<close>
   unfolding FAIL_def
@@ -219,12 +227,6 @@ declare [[
   \<phi>reason_default_pattern \<open>is_valid_index_of ?idx ?T _\<close> \<Rightarrow> \<open>is_valid_index_of ?idx ?T _\<close> (100)
     and \<open>is_valid_step_idx_of ?idx ?T _ \<close> \<Rightarrow> \<open>is_valid_step_idx_of ?idx ?T _ \<close> (100)
 ]]
-
-\<phi>reasoner_group chk_sem_ele_idx_all = (1000, [10, 2000]) for (\<open>is_valid_step_idx_of idx T U\<close>,
-                                                              \<open>is_valid_index_of idx T U\<close>)
-    \<open>check whether the given element index \<open>idx\<close> is valid against semantic type \<open>T\<close>\<close>
-  and chk_sem_ele_idx = (1000, [1000,1030]) in chk_sem_ele_idx_all
-    \<open>cutting rules\<close>
 
 lemma is_valid_index_of_Nil:
   \<open>is_valid_index_of [] TY TY' \<longleftrightarrow> TY = TY'\<close>
