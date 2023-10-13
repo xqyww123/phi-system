@@ -3,6 +3,93 @@ theory IDE_CP_App2
   imports Phi_Types
 begin
 
+section \<open>Derivers for IDE-CP\<close>
+
+subsection \<open>Properties of Semantic Value\<close>
+
+subsubsection \<open>Semantic Type\<close>
+
+context begin
+
+private lemma \<phi>TA_SemTy_rule:
+  \<open> (Ant \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY) @action \<phi>TA_ind_target undefined
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @action \<phi>TA_ANT
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<close>
+  unfolding Action_Tag_def
+  by blast
+
+private lemma \<phi>TA_SemTy_cong:
+  \<open> TY \<equiv> TY'
+\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<equiv> \<phi>SemType (x \<Ztypecolon> T) TY' \<close>
+  by simp
+
+ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
+
+end
+
+\<phi>property_deriver Semantic_Type 100 for (\<open>\<phi>SemType (_ \<Ztypecolon> _) _\<close>)
+    = \<open> Phi_Type_Algebra_Derivers.semantic_type \<close> 
+
+
+subsubsection \<open>Semantic Zero Value\<close>
+
+context begin
+
+private lemma \<phi>TA_Semantic_Zero_Val_rule:
+  \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T)))
+\<Longrightarrow> \<r>Success
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> Ant @action \<phi>TA_ANT
+\<Longrightarrow> Semantic_Zero_Val TY T z \<close>
+  unfolding Semantic_Zero_Val_def Premise_def Action_Tag_def
+  by clarsimp
+
+ML_file \<open>library/phi_type_algebra/semantic_zero_val.ML\<close>
+
+end
+
+\<phi>property_deriver Semantic_Zero_Val 110 for (\<open>Semantic_Zero_Val _ _ _\<close>)
+  requires Semantic_Type
+    = \<open> Phi_Type_Algebra_Derivers.semantic_zero_val \<close> 
+
+
+subsubsection \<open>Semantic Equality Comparison\<close>
+
+context begin
+
+(*TODO*)
+
+end
+
+
+subsection \<open>\<open>\<phi>App_Conv\<close>\<close> \<comment> \<open>used only when the given ToA is not in the target space\<close>
+
+declare [[\<phi>trace_reasoning = 1]]
+
+lemma [\<phi>reason_template default %\<phi>app_conv_derived+10]:
+  \<open> Functional_Transformation_Functor Fa Fb T U (\<lambda>x. {D x}) R pm fm
+\<Longrightarrow> NO_LAMBDA_CONVERTIBLE TYPE('ca \<times> 'xa) TYPE('c \<times> 'x) @action \<A>_template_reason
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x = a \<and> b \<in> R x
+\<Longrightarrow> NO_SIMP (\<phi>App_Conv ToA (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
+\<Longrightarrow> \<phi>App_Conv ToA (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>_. b) (\<lambda>_. P) x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pm (\<lambda>_. b) (\<lambda>_. P) x) \<close>
+  for Fa :: \<open>('ca,'xa) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
+  unfolding \<phi>App_Conv_def \<r>Guard_def Premise_def Functional_Transformation_Functor_def NO_SIMP_def
+  by clarsimp
+
+lemma [\<phi>reason_template default %\<phi>app_conv_derived]:
+  \<open> Functional_Transformation_Functor Fa Fb T U D R pm fm
+\<Longrightarrow> NO_MATCH (\<lambda>x. {D'' x}) D @action \<A>_template_reason
+\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a \<in> D x. f a \<in> R x)
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<forall>a \<in> D x. Q a) @action \<A>_template_reason
+\<Longrightarrow> NO_SIMP (\<phi>App_Conv ToA (\<forall>a. Q a \<longrightarrow> (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)))
+\<Longrightarrow> \<phi>App_Conv ToA (D' \<longrightarrow> (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pm f P x)) \<close>
+  unfolding Functional_Transformation_Functor_def \<phi>App_Conv_def \<r>Guard_def Premise_def
+            Action_Tag_def Simplify_def NO_SIMP_def
+  by clarsimp
+
+
 section \<open>Value \& Reasoning over it\<close>
 
 subsection \<open>\<phi>-Type Abstraction\<close>
@@ -14,7 +101,7 @@ setup \<open>Context.theory_map (
          \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
 
-declare [[\<phi>trace_reasoning = 0]]
+declare [[\<phi>trace_reasoning = 1]]
 
 let_\<phi>type Val
   deriving \<open>Abstract_Domain T P
@@ -308,64 +395,6 @@ subsubsection \<open>Finale\<close>
 ML_file \<open>library/additions/value_properties.ML\<close>
 
 hide_fact \<phi>deduce_zero_value
-
-subsection \<open>Derivers\<close>
-
-subsubsection \<open>Semantic Type\<close>
-
-context begin
-
-private lemma \<phi>TA_SemTy_rule:
-  \<open> (Ant \<longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY) @action \<phi>TA_ind_target undefined
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<close>
-  unfolding Action_Tag_def
-  by blast
-
-private lemma \<phi>TA_SemTy_cong:
-  \<open> TY \<equiv> TY'
-\<Longrightarrow> \<phi>SemType (x \<Ztypecolon> T) TY \<equiv> \<phi>SemType (x \<Ztypecolon> T) TY' \<close>
-  by simp
-
-ML_file \<open>library/phi_type_algebra/semantic_type.ML\<close>
-
-end
-
-\<phi>property_deriver Semantic_Type 100 for (\<open>\<phi>SemType (_ \<Ztypecolon> _) _\<close>)
-    = \<open> Phi_Type_Algebra_Derivers.semantic_type \<close> 
-
-
-subsubsection \<open>Semantic Zero Value\<close>
-
-context begin
-
-private lemma \<phi>TA_Semantic_Zero_Val_rule:
-  \<open> (Ant \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T)))
-\<Longrightarrow> \<r>Success
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> Ant @action \<phi>TA_ANT
-\<Longrightarrow> Semantic_Zero_Val TY T z \<close>
-  unfolding Semantic_Zero_Val_def Premise_def Action_Tag_def
-  by clarsimp
-
-ML_file \<open>library/phi_type_algebra/semantic_zero_val.ML\<close>
-
-end
-
-\<phi>property_deriver Semantic_Zero_Val 110 for (\<open>Semantic_Zero_Val _ _ _\<close>)
-  requires Semantic_Type
-    = \<open> Phi_Type_Algebra_Derivers.semantic_zero_val \<close> 
-
-
-subsubsection \<open>Semantic Equality Comparison\<close>
-
-context begin
-
-(*TODO*)
-
-end
 
 
 (*

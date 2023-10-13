@@ -998,6 +998,7 @@ text \<open>Antecedent \<^prop>\<open>Matches pattern term\<close> asserts \<^te
   \<^prop>\<open>NO_MATCH pattern term\<close> asserts \<^term>\<open>pattern\<close> does not match \<^term>\<open>term\<close>.\<close>
 
 definition Matches :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close> where \<open>Matches _ _ = True\<close>
+definition NO_LAMBDA_CONVERTIBLE :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close> where \<open>NO_LAMBDA_CONVERTIBLE _ _ \<equiv> True\<close>
 
 lemma Matches_I: \<open>Matches pattern term\<close> unfolding Matches_def ..
 
@@ -1022,6 +1023,17 @@ lemma NO_MATCH_I: "NO_MATCH A B" unfolding NO_MATCH_def ..
     if Pattern.matches (Proof_Context.theory_of ctxt) (a,b)
     then Seq.empty
     else Seq.single (ctxt, @{thm NO_MATCH_I} RS th)
+  end
+\<close>
+
+\<phi>reasoner_ML NO_LAMBDA_CONVERTIBLE %cutting ("NO_LAMBDA_CONVERTIBLE ?A ?B") = \<open>
+  fn (_,(ctxt,th)) =>
+  let
+    val (\<^const>\<open>Trueprop\<close> $ (Const (\<^const_name>\<open>NO_LAMBDA_CONVERTIBLE\<close>, _) $ a $ b)) = Thm.major_prem_of th
+  in
+    if Phi_Help.beta_eta_contract_term a aconv Phi_Help.beta_eta_contract_term b
+    then Seq.empty
+    else Seq.single (ctxt, @{lemma' \<open>NO_LAMBDA_CONVERTIBLE A B\<close> by (simp add: NO_LAMBDA_CONVERTIBLE_def)} RS th)
   end
 \<close>
 

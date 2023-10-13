@@ -1059,6 +1059,8 @@ ML_file \<open>library/system/application.ML\<close>
     \<open>normalization rules\<close>
   and \<phi>app_conv = (1000, [1000,1200]) in \<phi>app_conv_all and < \<phi>app_conv_normalize
     \<open>usual cutting rules\<close>
+  and \<phi>app_conv_derived = (50, [50, 60]) in \<phi>app_conv_all and < \<phi>app_conv
+    \<open>derived rules\<close>
 
 subsubsection \<open>Common Rules of Application Methods\<close>
 
