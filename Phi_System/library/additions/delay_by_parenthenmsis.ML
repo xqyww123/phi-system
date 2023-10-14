@@ -1,8 +1,10 @@
 signature PHI_OPR_STACK = sig
 
 structure Synt_No_Delayed_Apply : GENERIC_DATA
-  val synt_can_delay_apply  : Context.generic -> Symtab.key -> bool
-  val synt_can_delay_apply' : Context.generic -> Facts.ref -> bool
+  (*registries of whether a rule can be applied delayed*)
+
+val synt_can_delay_apply  : Context.generic -> Symtab.key -> bool
+val synt_can_delay_apply' : Context.generic -> Facts.ref -> bool
 
 type operator_info = (int (*left precedence*) * int (*precedence*) * int (*arity delta*) option)
 type arg_name = string option * Position.T
@@ -142,37 +144,42 @@ fun chk_no_name vs =
 fun bad_syntax (name, pos) =
       error ("Bad Syntax: " ^ name ^ " " ^ Position.here pos)
 
-fun eval_opr _ (acts as (Apply _ :: _)) s = (acts, s)
-  | eval_opr _ (acts as (Begin_Block :: _)) s = (acts, s)
-  | eval_opr (mode, limit, name') (acts as (Opr (pr, arity, name, rules) :: aR)) (ctxt,sequent)
-      = if pr < limit then (acts, (ctxt,sequent))
-        else if pr = limit then bad_syntax name'
-        else (
-          chk_arity_constraint arity mode name (ctxt,sequent);
-          eval_opr (mode, limit, name') aR (
-            Phi_Processor.process_all_antecedents NONE (ctxt, Phi_Apply.apply rules ctxt sequent)))
-  | eval_opr (mode, limit, name') (acts as (Meta_Opr (pr, arity, name, param, meta) :: aR)) s
-      = if pr < limit then (acts, s)
-        else if pr = limit then bad_syntax name'
-        else let
-          val _ = chk_arity_constraint arity mode name s
-          val (acts',s') = meta (name,param) (aR,s)
-                         |> apsnd (Phi_Processor.process_all_antecedents NONE)
-           in eval_opr (mode, limit, name') acts' s' end
-  | eval_opr _ (acts as (Left_Parenthesis _ :: _)) s = (acts, s)
-  | eval_opr _ (acts as (Meta_Apply _ :: _)) s = (acts, s)
-  | eval_opr _ (acts as (Comma _ :: _)) s = (acts, s)
-  | eval_opr _ [] s = ([], s)
+fun eval_opr (mode, limit, name', cfg) =
+  let fun eval (acts as (Apply _ :: _)) s = (acts, s)
+        | eval (acts as (Begin_Block :: _)) s = (acts, s)
+        | eval (acts as (Opr (pr, arity, name, rules) :: aR)) (ctxt,sequent)
+            = if pr < limit then (acts, (ctxt,sequent))
+              else if pr = limit then bad_syntax name'
+              else (
+                chk_arity_constraint arity mode name (ctxt,sequent);
+                eval aR ( (ctxt, Phi_Apply.apply rules ctxt sequent)
+                  |> Phi_CP_IDE.Post_App.invoke (Context.Proof ctxt) cfg
+                ) )
+        | eval (acts as (Meta_Opr (pr, arity, name, param, meta) :: aR)) s
+            = if pr < limit then (acts, s)
+              else if pr = limit then bad_syntax name'
+              else let
+                val _ = chk_arity_constraint arity mode name s
+                val (acts',s') = meta (name,param) (aR,s)
+                               |> apsnd (fn (ctxt,sequent) =>
+                                    Phi_CP_IDE.Post_App.invoke (Context.Proof ctxt) cfg (ctxt,sequent))
+                 in eval acts' s' end
+        | eval (acts as (Left_Parenthesis _ :: _)) s = (acts, s)
+        | eval (acts as (Meta_Apply _ :: _)) s = (acts, s)
+        | eval (acts as (Comma _ :: _)) s = (acts, s)
+        | eval [] s = ([], s)
+   in eval
+  end
 
 fun close_parenthesis arg c s0 =
   let fun close c args (Apply (_, rules, vals_before) :: acts) s =
             c acts (Phi_Reasoners.wrap'' (Phi_Apply.apply rules) (
                       Generic_Variable_Access.push_values (vals_before @ chk_no_name args) s))
         | close c args (Begin_Block :: acts) s =
-            raise Phi_Processor.Process_State_Call (
-                Generic_Variable_Access.push_values (chk_no_name args) s,
-                Phi_Toplevel.end_block_auto_proof_cmd NONE false
-             #> Phi_Envir.map_state_sequent (c acts))
+            raise s |> Generic_Variable_Access.push_values (chk_no_name args)
+                    |> Phi_CP_IDE.proof_state_call ( Phi_Toplevel.end_block_auto_proof_cmd NONE false
+                                                  #> Phi_Envir.map_state_sequent (c acts))
+
         | close _ _ (Opr _ :: _) _ = error "internal bug #91066fd2-8881-422f-bf54-4b3f69879042"
         | close _ _ (Meta_Opr _ :: _) _ = error "internal bug #10cc33ab-de95-48fb-8b8c-103f2c0110fd"
         | close c args (Left_Parenthesis vals_before :: acts) s =

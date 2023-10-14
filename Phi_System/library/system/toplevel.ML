@@ -12,8 +12,8 @@ signature PHI_TOPLEVEL = sig
   structure Finishing_Modifier_Hooks : HOOKS
   structure Finishing_Construction_Hooks : HOOKS
 
-  val is_interactive : bool Config.T
-  exception Schematic
+  (*val is_interactive : bool Config.T
+  exception Schematic*)
 
   val name_of_the_building_procedure : Proof.context -> binding option
   val begin_proc_cmd : bool (*whether to define a new constant*)
@@ -677,8 +677,8 @@ val _ = Theory.setup (Context.theory_map (
 
 fun previous_statement_is_finished ctxt = Config.get ctxt previous_statement_is_finished'
 
-val is_interactive = Config.declare_bool ("\<phi>Sys.interactive", \<^here>) (K true)
-exception Schematic
+(*val is_interactive = Config.declare_bool ("\<phi>Sys.interactive", \<^here>) (K true)
+exception Schematic*)
 
 (* fun export_LLVM thy =
   let

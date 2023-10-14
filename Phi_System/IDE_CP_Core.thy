@@ -2134,6 +2134,8 @@ subsection \<open>ML codes\<close>
 
 ML_file "library/instructions.ML"
 ML_file "library/tools/parse.ML"
+ML_file \<open>library/system/post-app-handlers.ML\<close>
+ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 ML_file "library/system/processor.ML"
 ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys.ML\<close>
@@ -2235,8 +2237,6 @@ lemma \<phi>cast_exception_UI:
 )\<close>
 
 hide_fact \<phi>cast_exception_UI
-
-ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 
 \<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
   (Phi_Opr_Stack.do_application (Phi_App_Rules.app_rules ctxt [xnames]) (ctxt, sequent)))\<close>
@@ -2410,79 +2410,98 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
 
 subsubsection \<open>Simplifiers \& Reasoners\<close>
 
-\<phi>processor \<phi>simplifier 100 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S\<close>)
-  \<open>Phi_Processor.simplifier\<close>
-(* \<phi>processor \<phi>simplifier_final 9999 \<open>PROP P\<close>  \<open>Phi_Processors.simplifier []\<close> *)
+subsubsection \<open>Post-Application Process\<close>
 
-\<phi>processor move_fact1  90 (\<open>?Any \<and> ?P\<close>)
-\<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (Phi_Sys.move_lemmata stat)))\<close>
+setup \<open>Context.theory_map (
 
-\<phi>processor move_fact2 110 (\<open>?Any \<and> ?P\<close>)
-\<open>fn stat => Scan.succeed (fn _ => raise Bypass (SOME (Phi_Sys.move_lemmata stat)))\<close>
+   Phi_CP_IDE.Post_App.add 50 (fn arg => fn (ctxt, sequent) =>
+    case Thm.major_prem_of sequent
+      of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _))
+         => (ctxt, @{thm Premise_True} RS sequent)
+       | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ prop) => (
+        if Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
+           not (Symtab.defined (#args arg) "no_oblg")   andalso
+           not (can \<^keyword>\<open>certified\<close> (#toks arg))
+        then let val id = Option.map (Phi_ID.encode o Phi_ID.cons (#id arg)) (Phi_ID.get_if_is_named ctxt)
+              in (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent)
+              handle Phi_Reasoners.Automation_Fail err =>
+                  error (Phi_Reasoners.error_message err)
+             end
+        else (ctxt, sequent)
+      )
+   )
+
+   (* process \<phi>-LPR antecedents *)
+#> Phi_CP_IDE.Post_App.add 100 (fn arg => fn (ctxt, sequent0) =>
+    case Thm.prop_of sequent0
+      of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+          let val sequent = case Thm.major_prem_of sequent0
+                              of Const(\<^const_name>\<open>Do\<close>, _) $ _ => @{thm Do_I} RS sequent0
+                               | _ => sequent0
+          in if Config.get ctxt Phi_Reasoner.auto_level >= 1
+                andalso not (Phi_Sys_Reasoner.is_user_dependent_antecedent (Thm.major_prem_of sequent))
+                andalso not (Phi_Sys_Reasoner.is_proof_obligation (Thm.major_prem_of sequent))
+             then (
+                Phi_Reasoner.info_print ctxt 2 (fn _ =>
+                      "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>) ;
+                Phi_Reasoner.reason1 (fn () => "Fail to solve a \<phi>-LPR antecedent")
+                                     NONE (SOME 1) ctxt sequent
+                |> (fn sequent =>
+                        raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, sequent)) ))
+             else (ctxt, sequent0)
+          end
+       | _ => (ctxt, sequent0)
+   )
+
+   (*move any obtained pure facts, \<open>_ \<and> _\<close>*)
+#> Phi_CP_IDE.Post_App.add 200 (K Phi_Sys.move_lemmata)
+
+#> Phi_CP_IDE.Post_App.add 300 (K (fn (ctxt, sequent) =>
+    let val lev = Config.get ctxt Phi_Reasoner.auto_level
+        val sctxt =
+          if lev >= 2
+          then Phi_Programming_Simp_SS.enhance ctxt
+          else if lev >= 1
+          then Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
+          else raise Phi_CP_IDE.Post_App.Return (ctxt, sequent)
+        val sequent' = Simplifier.full_simplify sctxt sequent
+                    |> Phi_Help.beta_eta_contract
+    in (ctxt, sequent')
+    end))
+
+#> Phi_CP_IDE.Post_App.add 400 (K Phi_Sys.move_lemmata)
+
+   (*automatic elimination of existential quantifiers*)
+#> Phi_CP_IDE.Post_App.add 500 (fn arg => fn (ctxt,sequent) =>
+    if Config.get ctxt NuObtain.enable_auto andalso
+       Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
+       not (can \<^keyword>\<open>\<exists>\<close> (#toks arg))
+    then let val mode = Phi_Working_Mode.mode1 ctxt
+      in case #spec_of mode (Thm.concl_of sequent)
+           of Const (\<^const_name>\<open>ExSet\<close>, _) $ _ =>
+                raise Process_State_Call ((ctxt,sequent), NuObtain.auto_choose)
+            | _ => (ctxt,sequent)
+     end
+    else (ctxt,sequent)
+  )
+
+   (*should be the end of the processing*)
+#> Phi_CP_IDE.Post_App.add 999 (K (fn (ctxt, sequent) =>
+      Phi_Envir.update_programming_sequent' sequent ctxt
+        |> rpair sequent
+   ))
+
+)\<close>
 
 \<phi>processor automatic_morphism 90 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S\<close>)
 \<open>not_safe (fn stat => Scan.succeed (fn _ => Phi_Sys.apply_automatic_morphism stat
       handle Empty => raise Bypass NONE))\<close>
-
-(* Any simplification should finish before priority 999, or else
- *  this processor will be triggered unnecessarily frequently.*)
-\<phi>processor set_\<phi>this 999 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S\<close>)
-\<open>fn (ctxt, sequent) => Scan.succeed (fn _ =>
-  let
-    val ctxt' = Phi_Envir.update_programming_sequent' sequent ctxt
-  in
-    raise Bypass (SOME(ctxt', sequent))
-  end)\<close>
-
-
-\<phi>processor \<phi>reason 1000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
-\<open>fn (ctxt,sequent0) => Scan.succeed (fn _ =>
-let val sequent = case Thm.major_prem_of sequent0
-                    of Const(\<^const_name>\<open>Do\<close>, _) $ _ => @{thm Do_I} RS sequent0
-                     | _ => sequent0
-    val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
-              "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>);
-in if Config.get ctxt Phi_Reasoner.auto_level >= 1
-
-      andalso not (Phi_Sys_Reasoner.is_user_dependent_antecedent (Thm.major_prem_of sequent))
-      andalso not (Phi_Sys_Reasoner.is_proof_obligation (Thm.major_prem_of sequent))
-   then case Phi_Reasoner.reason NONE (SOME 1) ctxt sequent
-          of SOME sequent' => (ctxt, sequent')
-           | NONE => raise Bypass (SOME (ctxt,sequent0))
-   else raise Bypass NONE
-end)\<close>
 
 \<phi>processor enter_proof 790 (premises \<open>Premise _ _\<close> | premises \<open>Simplify _ _ _\<close> | \<open>PROP Trueprop _\<close>)
   \<open>fn stat => \<^keyword>\<open>certified\<close> >> (fn _ => fn _ =>
       raise Terminate_Process (Phi_Opr_Stack.end_expression 900 stat,
                                SOME (snd oo Phi_Toplevel.prove_prem false)))\<close>
 
-\<phi>processor auto_obligation_solver 800 (premises \<open>\<p>\<r>\<e>\<m>\<i>\<s>\<e> ?P\<close> | premises \<open>\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> ?P\<close>)
-  \<open>fn (ctxt,sequent) => Scan.succeed (fn proc_id =>
-    case Thm.major_prem_of sequent
-      of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _))
-         => (ctxt, @{thm Premise_True} RS sequent)
-       | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ prop) => (
-    if Config.get ctxt Phi_Toplevel.is_interactive
-    then if Config.get ctxt Phi_Reasoner.auto_level >= 2
-    then let val id = Option.map (Phi_ID.encode o Phi_ID.cons proc_id) (Phi_ID.get_if_is_named ctxt)
-          in (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent)
-          handle Phi_Reasoners.Automation_Fail err =>
-              error (Phi_Reasoners.error_message err)
-         end
-(*case Seq.pull (Phi_Reasoners.auto_obligation_solver ctxt sequent)
-           of SOME (ret, _) => (ctxt, ret)
-            | NONE => raise Bypass NONE *)
-    else raise Bypass NONE
-    else if Term.maxidx_of_term prop >= 0
-    then raise Phi_Toplevel.Schematic
-    else let val sequent' = (@{thm Premise_I} RS sequent)
-                          |> Conv.gconv_rule (Object_Logic.atomize ctxt) 1
-             val ([assm], ctxt') = Assumption.add_assms Assumption.presume_export
-                                        [fst (Thm.dest_implies (Thm.cprop_of sequent'))] ctxt
-          in (ctxt', assm RS sequent')
-         end
-))\<close>
 
 \<phi>processor pure_fact 2000 (\<open>PROP ?P\<close>) \<open>
 let

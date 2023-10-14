@@ -5,71 +5,81 @@
    of IDE-CP.
 *)
 
-signature PHI_PROCESSOR = sig
+signature PHI_CP_IDE = sig
 
-  type binding = Binding.binding
-  type processing_id = int (*Unique id of each runtime processing in a statement*)
 
-  exception Bypass of context_state option
-  exception Terminate_Process of context_state * ((Proof.state -> Proof.state) (*continue*) -> Proof.state -> Proof.state) option
-  exception ProcessFail of binding * context_state * exn
-  exception Process_State_Call  of context_state * (Proof.state -> Proof.state)
-  exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
-  type proc = (context_state -> (processing_id -> context_state) parser)
+(*** Syntax Processors ***)
 
-  val trace : bool Config.T
-
-  datatype 'a pattern = Whole_Prop of 'a | Concl of 'a | Premise of 'a
-
-  val define : binding -> int (*precedence*) -> term pattern list -> proc
-            -> Context.generic -> Context.generic
-  val define_lthy : binding -> int (*precedence*) -> term pattern list -> proc
-            -> local_theory -> local_theory
-  (* val get : Proof.context -> string -> T option *)
-  val defined : Context.generic -> string -> bool
-  val get_attr : Context.generic -> xstring * Position.T -> attribute parser
-  val list : Context.generic -> (binding * term pattern list) list
-  val internal_process : context_state -> context_state parser
-  val simple_process   : context_state -> context_state parser
-  val powerful_process : (Proof.state -> Proof.state) (*continue*)
-                      -> Token.T list -> Proof.state -> Proof.state
-  val powerful_process_p : int (*auto-level*) * int (*auto-level when no user input*)
-                       -> (Proof.state -> Proof.state) (*continue*)
-                       -> (Proof.state -> Proof.state) parser
-                      (*if the input is empty, then powerful_process_p_inert does nothing*)
-  val process_by_input : int (*auto-level*) option -> Token.T list -> context_state -> context_state
-  val process_no_input : int (*auto-level*) option -> context_state -> context_state
-  val process_all_antecedents : int (*auto-level*) option -> context_state -> context_state
-  val process_attr : attribute parser
-
-  (* be activated only when auto level >= 1 *)
-  val almost_safe : proc -> proc
-  (* be activated only when auto level >= 2 *)
-  val not_safe : proc -> proc
-  val apply_attr : attribute -> context_state -> context_state
-  val parse_auto_level : proc -> proc
-
-  val setup : binding -> int (*precedence*) -> term pattern list -> proc ->
-        string (*comment*) -> local_theory -> local_theory
-  val setup_global : binding -> int (*precedence*) -> term pattern list -> proc ->
-        string (*comment*) -> theory -> theory
-  val setup' : binding -> int (*precedence*) ->
-        (string pattern list * (binding * string option * mixfix) list) -> proc ->
-        string (*comment*) -> local_theory -> local_theory
-  val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string pattern list)
-        * (binding * string option * mixfix) list)
-        * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
-
-  val simplifier : proc
-end
-
-structure Phi_Processor : PHI_PROCESSOR = struct
-open Thm Phi_Envir
 
 exception Bypass of context_state option
+exception Terminate_Process of context_state * ((Proof.state -> Proof.state) (*continue*) -> Proof.state -> Proof.state) option
+exception ProcessFail of binding * context_state * exn
+exception Process_State_Call  of context_state * (Proof.state -> Proof.state)
+exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
+type proc = (context_state -> (processing_id -> context_state) parser)
 
-type binding = Binding.binding
-type processing_id = int
+val trace : bool Config.T
+
+type processor = {
+  name : string,
+  pos : Position.T,
+  priorirty : int, (*the priority when the processor will be invoked*)
+  precedence : int, (*the processor will not be applied until all pending operations in the
+                      operator stack and of a higher precedence are processed.*)
+  pattern : term list, (*applied only when match the pattern*)
+  proc : proc
+}
+
+val define : binding -> int (*precedence*) -> term pattern list -> proc
+          -> Context.generic -> Context.generic
+val define_lthy : binding -> int (*precedence*) -> term pattern list -> proc
+          -> local_theory -> local_theory
+(* val get : Proof.context -> string -> T option *)
+val defined : Context.generic -> string -> bool
+val get_attr : Context.generic -> xstring * Position.T -> attribute parser
+
+val list : theory -> processor Ord_List.T Symtab.table
+
+val internal_process : context_state -> context_state parser
+val simple_process   : context_state -> context_state parser
+val powerful_process : (Proof.state -> Proof.state) (*continue*)
+                    -> Token.T list -> Proof.state -> Proof.state
+val powerful_process_p : int (*auto-level*) * int (*auto-level when no user input*)
+                     -> (Proof.state -> Proof.state) (*continue*)
+                     -> (Proof.state -> Proof.state) parser
+                    (*if the input is empty, then powerful_process_p_inert does nothing*)
+val process_by_input : int (*auto-level*) option -> Token.T list -> context_state -> context_state
+val process_no_input : int (*auto-level*) option -> context_state -> context_state
+val process_all_antecedents : int (*auto-level*) option -> context_state -> context_state
+val process_attr : attribute parser
+
+(* be activated only when auto level >= 1 *)
+val almost_safe : proc -> proc
+(* be activated only when auto level >= 2 *)
+val not_safe : proc -> proc
+val apply_attr : attribute -> context_state -> context_state
+val parse_auto_level : proc -> proc
+
+val setup : binding -> int (*precedence*) -> term pattern list -> proc ->
+      string (*comment*) -> local_theory -> local_theory
+val setup_global : binding -> int (*precedence*) -> term pattern list -> proc ->
+      string (*comment*) -> theory -> theory
+val setup' : binding -> int (*precedence*) ->
+      (string pattern list * (binding * string option * mixfix) list) -> proc ->
+      string (*comment*) -> local_theory -> local_theory
+val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string pattern list)
+      * (binding * string option * mixfix) list)
+      * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
+
+val simplifier : proc
+end
+
+structure Phi_CP_IDE : PHI_CP_IDE = struct
+open Phi_CP_IDE
+
+(*** Syntax Processors ***)
+
+exception Bypass of context_state option
 
 exception Terminate_Process  of context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
 exception Terminate_Process' of Token.T list * context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
@@ -81,97 +91,44 @@ val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_processing\<c
 
 type proc = context_state -> (processing_id -> context_state) parser
 
-datatype 'a pattern = Whole_Prop of 'a | Concl of 'a | Premise of 'a
+type processor = {
+    name : string,
+    pos : Position.T,
+    priorirty : int, (*the priority when the processor will be invoked*)
+    precedence : int, (*the processor will not be applied until all pending operations in the
+                        operator stack and of a higher precedence are processed.*)
+    pattern : term list, (*applied only when match the pattern*)
+    proc : proc
+  }
 
-fun map_pattern f (Whole_Prop x) = Whole_Prop (f x)
-  | map_pattern f (Concl x) = Concl (f x)
-  | map_pattern f (Premise x) = Premise (f x)
+val proc_eq = (op =) o apply2 #name
+fun proc_ord (a,b) = int_ord (#priorirty a, #priorirty b)
 
-fun pattern_burrow f pats =
-  map (fn Whole_Prop x => x | Concl x => x | Premise x => x) pats
-    |> f
-    |> map2 (fn Whole_Prop _ => Whole_Prop | Concl _ => Concl | Premise _ => Premise) pats
-
-fun pattern_print_ML (Whole_Prop x) = "Phi_Processor.Whole_Prop (" ^ ML_Syntax.print_term x ^ ")"
-  | pattern_print_ML (Concl x) = "Phi_Processor.Concl (" ^ ML_Syntax.print_term x ^ ")"
-  | pattern_print_ML (Premise x) = "Phi_Processor.Premise (" ^ ML_Syntax.print_term x ^ ")"
-
-
-datatype processor = Processor of {
-              binding : binding,
-              precedence : int,
-              pattern : term pattern list,
-              proc : proc
-            }
-
-fun precedence_of (Processor{precedence,...}) = precedence
-fun proc_of (Processor{proc,...}) = proc
-fun proc_ord (a,b) = int_ord (precedence_of a, precedence_of b)
-
-fun mk_processor (binding, precedence, pat, proc) =
-      Processor {binding = binding, precedence = precedence, pattern = pat, proc = proc}
-
-
-structure Data = Generic_Data
+structure Processors = Theory_Data
 (
-  type T = processor Name_Space.table
-  val empty: T = Name_Space.empty_table "\<phi>processor"
-  fun merge data : T = Name_Space.merge_tables data
+  type T = processor Ord_List.T Symtab.table (*indexed by leading keywords*)
+  val empty = Symtab.empty
+  val merge = Symtab.merge (eq_list proc_eq)
 );
 
-val ops_processor = {get_data = Data.get, put_data = Data.put}
-
-fun define binding precedence pat proc ctxt =
-  let
-    val x = mk_processor (binding, precedence, pat, proc)
-    val (name, data') = Name_Space.define ctxt true (binding, x) (Data.get ctxt);
-  in Data.put data' ctxt end;
-
-fun define_lthy binding precedence pat proc =
-  Local_Theory.declaration {syntax=false, pervasive=false, pos=Binding.pos_of binding} (fn m =>
-      define binding precedence (map (map_pattern (Morphism.term m)) pat) proc)
-
-fun define_global binding precedence pat proc thy =
-  Context.theory_map (define binding precedence pat proc) thy
-
-val list = Data.get #> Name_Space.dest_table
-      #> map (fn (name, Processor {pattern, ...}) => (Binding.name name,pattern))
-
-fun wrap_attr (proc:proc) : attribute parser =
-  Parse.args >> (fn toks => fn (ctxt, thm) =>
-      (proc (Context.proof_of ctxt, thm) --| Scan.catch Parse.eof) toks
-              |> (fn (f,_) => f 0
-                           |> apfst (SOME o Context.Proof)
-                           |> apsnd SOME))
-
-
-fun defined ctxt name =
-  let
-    val tab = Data.get ctxt
-    val name = Name_Space.intern (Name_Space.space_of_table tab) name
-  in
-    Name_Space.defined tab name
-  end
-
-fun get_attr ctxt name =
-  wrap_attr
-    (proc_of (Name_Space.check ctxt (Data.get ctxt) name |> snd))
-
-fun matches thy (Whole_Prop pat) X = PLPR_Pattern.matches thy [] (pat,X)
-  | matches thy (Premise pat) (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ X $ _)
-      = let val (bv_tys, obj) = Phi_Help.strip_meta_hhf_bvtys X
-         in PLPR_Pattern.matches thy bv_tys (pat, obj)
-        end
-  | matches thy (Premise pat) X = false
-  | matches thy (Concl pat) X =
-        let val (bv_tys, obj) = Phi_Help.strip_meta_hhf_bvtys X
-         in PLPR_Pattern.matches thy bv_tys (pat, obj)
-        end
+val list = Processors.get
 
 exception Processed of (context_state * Token.T list)
 
 fun eof_wrap parse [] = (fst (parse [Token.eof]), [])
   | eof_wrap parse toks = parse toks
+
+fun process_impl procs =
+  let fun eval toks proc stat = ()
+      fun eval toks candidate_procs stat = ()
+      fun process stat [] _ = stat
+        | process stat toks step_num =
+        let val tok = hd toks
+            
+         in ()
+        end
+   in ()
+  end
 
 fun process_impl procs (stat,toks) step_num =
       let
@@ -214,7 +171,7 @@ fun simple_process stat toks =
 
 fun powerful_process continue toks stat =
   let
-    val sequent = the_state_sequent stat
+    val sequent = Phi_Envir.the_state_sequent stat
   in
     stat
       |> Proof.map_context_result (fn ctxt =>
@@ -252,7 +209,6 @@ fun powerful_process_p (lev1,lev2) continue toks =
       ,if Token.is_eof (hd toks) then [Token.eof] else [])
 
 
-val process_attr = wrap_attr (fn stat => simple_process stat #> apfst K)
 fun process_by_input lev tokens stat =
       let val stat' = case lev of SOME lv => apfst (Config.put Phi_Reasoner.auto_level lv) stat
                                 | NONE => stat
@@ -329,6 +285,7 @@ fun apply_attr (attr:attribute) (ctxt, sequent) =
     |> apfst (Context.proof_of o the)
     |> apsnd the
 
+(*depreciated*)
 fun simplifier (ctxt, sequent) = Scan.succeed (fn _ =>
   let
     val lev = Config.get ctxt Phi_Reasoner.auto_level

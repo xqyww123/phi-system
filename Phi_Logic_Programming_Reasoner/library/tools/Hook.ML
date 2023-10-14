@@ -24,6 +24,9 @@ val invoke : Context.generic -> arg -> state -> state
 val clean : Context.generic -> Context.generic
 
 exception Success of state
+exception Redo_Entirely of arg * state
+exception Return of state
+
 val invoke_until_success : Context.generic
                         -> (arg -> state -> state) (*fallback*)
                         ->  arg -> state -> state
@@ -85,10 +88,17 @@ fun remove (priority,thy) = remove' (priority, Thy_Info.get_theory thy)
 
 val clean = Data.map (K PriorityTab.empty)
 
-fun invoke ctxt arg =
-      PriorityTab.fold (fn (_,f) => fn s => f arg s) (Data.get ctxt)
-
 exception Success of state
+exception Redo_Entirely of arg * state
+exception Return of state
+
+fun invoke ctxt =
+  let val hooks = Data.get ctxt
+      fun work arg s = PriorityTab.fold
+                          (fn (_,f) => fn s => f arg s handle Return s' => s') hooks s
+          handle Redo_Entirely (a,s) => work a s
+   in work
+  end
 
 fun invoke_until_success ctxt fallback arg s =
   (PriorityTab.fold (fn (_,f) => fn s => f arg s) (Data.get ctxt) s
