@@ -90,7 +90,7 @@ fun reason_programming_implication ctxt =
 
 fun gen_update_programming_sequent' put sequent ctxt =
   let val mode = Phi_Working_Mode.mode1 ctxt
-   in if #is_on_going_construction mode (Thm.prop_of sequent)
+   in if #constr_is_ready mode (Thm.prop_of sequent)
       then put ctxt (K (sequent, sequent, Lazy.lazy (fn () =>
                                        reason_programming_implication' mode ctxt sequent)))
       else put ctxt (fn (_, construction, implication)::_ => (sequent, construction, implication)

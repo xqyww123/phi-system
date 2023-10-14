@@ -4,7 +4,7 @@ type construct = string
 type ID = construct * int list
 type encoded_ID = string
 
-val cons : int -> ID -> ID
+val cons : int list -> ID -> ID
 
 val get : Proof.context -> ID
 val get_if_is_named : Proof.context -> ID option
@@ -34,7 +34,7 @@ type encoded_ID = string
 fun father (c,[]) = (c,[])
   | father (c,p::r) = (c,r)
 
-fun cons i (c,p) = (c,i::p)
+fun cons i (c,p) = (c,i@p)
 
 structure ID = Proof_Data (
   type T = ID

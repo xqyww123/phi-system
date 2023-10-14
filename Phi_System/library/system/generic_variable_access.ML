@@ -281,7 +281,7 @@ val add_extraction_rule = Extraction_Rules.map o Symtab.update_new
 fun extract_values (num_limit, remove) (ctxt, sequent) =
   if num_limit = 0 then ([], (ctxt, sequent)) else
   let val mode = Phi_Working_Mode.mode1 ctxt
-      val _ = if #is_on_going_construction mode (Thm.prop_of sequent)
+      val _ = if #constr_is_ready mode (Thm.prop_of sequent)
               then ()
               else raise THM ("Not a ready on-going construction", 0, [sequent])
       fun gen_rule_err rule () =

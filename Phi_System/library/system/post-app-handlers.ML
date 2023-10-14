@@ -1,6 +1,12 @@
 signature PHI_CP_IDE = sig
 
-type processing_id = int (*Unique id of each step of processing syntactic command*)
+type expr_id = int list (*Unique id of each step of processing syntactic command*)
+type eval_cfg = { id : expr_id,
+                  config : string Symtab.table,
+                  toks: Token.T list (*subsequent user inputs, may suppress certain automation
+                                       such as the implicit existential quantification fixer when
+                                       annotation \<open>\<exists>names...\<close> is given as the immediate user input.*)
+                }
 
 structure Post_App : HOOKS
 
@@ -10,10 +16,12 @@ end
 
 structure Phi_CP_IDE : PHI_CP_IDE = struct
 
-type processing_id = int
+type expr_id = int list
+
+type eval_cfg = {id : expr_id, config : string Symtab.table, toks: Token.T list}
 
 structure Post_App = Hooks (
-  type arg = {id : processing_id, config : string Symtab.table, toks: Token.T list}
+  type arg = eval_cfg
   type state = context_state
 )
 

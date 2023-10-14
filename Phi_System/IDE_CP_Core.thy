@@ -2135,10 +2135,13 @@ subsection \<open>ML codes\<close>
 ML_file "library/instructions.ML"
 ML_file "library/tools/parse.ML"
 ML_file \<open>library/system/post-app-handlers.ML\<close>
-ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
-ML_file "library/system/processor.ML"
+
 ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys.ML\<close>
+ML_file \<open>library/system/toplevel0.ML\<close>
+ML_file "library/system/processor.ML"
+ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
+
 ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
 (* ML_file "./codegen/compilation.ML" *)
@@ -2420,7 +2423,7 @@ setup \<open>Context.theory_map (
          => (ctxt, @{thm Premise_True} RS sequent)
        | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ prop) => (
         if Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
-           not (Symtab.defined (#args arg) "no_oblg")   andalso
+           not (Symtab.defined (#config arg) "no_oblg")   andalso
            not (can \<^keyword>\<open>certified\<close> (#toks arg))
         then let val id = Option.map (Phi_ID.encode o Phi_ID.cons (#id arg)) (Phi_ID.get_if_is_named ctxt)
               in (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent)
@@ -2479,7 +2482,7 @@ setup \<open>Context.theory_map (
     then let val mode = Phi_Working_Mode.mode1 ctxt
       in case #spec_of mode (Thm.concl_of sequent)
            of Const (\<^const_name>\<open>ExSet\<close>, _) $ _ =>
-                raise Process_State_Call ((ctxt,sequent), NuObtain.auto_choose)
+                Phi_CP_IDE.proof_state_call NuObtain.auto_choose (ctxt,sequent)
             | _ => (ctxt,sequent)
      end
     else (ctxt,sequent)

@@ -7,39 +7,37 @@
 
 signature PHI_CP_IDE = sig
 
+include PHI_CP_IDE
 
 (*** Syntax Processors ***)
 
 
-exception Bypass of context_state option
+exception Bypass
 exception Terminate_Process of context_state * ((Proof.state -> Proof.state) (*continue*) -> Proof.state -> Proof.state) option
 exception ProcessFail of binding * context_state * exn
 exception Process_State_Call  of context_state * (Proof.state -> Proof.state)
 exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
-type proc = (context_state -> (processing_id -> context_state) parser)
+type proc = (context_state -> (expr_id -> context_state) parser)
 
 val trace : bool Config.T
 
 type processor = {
-  name : string,
-  pos : Position.T,
-  priorirty : int, (*the priority when the processor will be invoked*)
-  precedence : int, (*the processor will not be applied until all pending operations in the
-                      operator stack and of a higher precedence are processed.*)
-  pattern : term list, (*applied only when match the pattern*)
-  proc : proc
-}
+    name : string,
+    pos : Position.T,
+    priorirty : int, (*the priority when the processor will be invoked*)
+    precedence : int, (*the processor will not be applied until all pending operations in the
+                        operator stack and of a higher precedence are processed.*)
+    pattern : term list, (*applied only when match the pattern*)
+    proc : proc
+  }
 
-val define : binding -> int (*precedence*) -> term pattern list -> proc
-          -> Context.generic -> Context.generic
-val define_lthy : binding -> int (*precedence*) -> term pattern list -> proc
-          -> local_theory -> local_theory
-(* val get : Proof.context -> string -> T option *)
-val defined : Context.generic -> string -> bool
-val get_attr : Context.generic -> xstring * Position.T -> attribute parser
-
+val add_processor : string list * processor -> theory -> theory
+val apply_processors : theory -> Token.T list
+                    -> int -> Phi_CP_IDE.expr_id -> context_state
+                    -> (context_state * Token.T list) option
 val list : theory -> processor Ord_List.T Symtab.table
 
+(*
 val internal_process : context_state -> context_state parser
 val simple_process   : context_state -> context_state parser
 val powerful_process : (Proof.state -> Proof.state) (*continue*)
@@ -52,26 +50,18 @@ val process_by_input : int (*auto-level*) option -> Token.T list -> context_stat
 val process_no_input : int (*auto-level*) option -> context_state -> context_state
 val process_all_antecedents : int (*auto-level*) option -> context_state -> context_state
 val process_attr : attribute parser
+*)
 
 (* be activated only when auto level >= 1 *)
 val almost_safe : proc -> proc
 (* be activated only when auto level >= 2 *)
 val not_safe : proc -> proc
-val apply_attr : attribute -> context_state -> context_state
 val parse_auto_level : proc -> proc
 
-val setup : binding -> int (*precedence*) -> term pattern list -> proc ->
-      string (*comment*) -> local_theory -> local_theory
-val setup_global : binding -> int (*precedence*) -> term pattern list -> proc ->
-      string (*comment*) -> theory -> theory
-val setup' : binding -> int (*precedence*) ->
-      (string pattern list * (binding * string option * mixfix) list) -> proc ->
-      string (*comment*) -> local_theory -> local_theory
-val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string pattern list)
+val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string list)
       * (binding * string option * mixfix) list)
       * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
 
-val simplifier : proc
 end
 
 structure Phi_CP_IDE : PHI_CP_IDE = struct
@@ -79,7 +69,7 @@ open Phi_CP_IDE
 
 (*** Syntax Processors ***)
 
-exception Bypass of context_state option
+exception Bypass
 
 exception Terminate_Process  of context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
 exception Terminate_Process' of Token.T list * context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
@@ -89,7 +79,7 @@ exception Process_State_Call of context_state * (Proof.state -> Proof.state)
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_processing\<close> (K false);
 
-type proc = context_state -> (processing_id -> context_state) parser
+type proc = context_state -> (expr_id -> context_state) parser
 
 type processor = {
     name : string,
@@ -109,9 +99,42 @@ structure Processors = Theory_Data
   type T = processor Ord_List.T Symtab.table (*indexed by leading keywords*)
   val empty = Symtab.empty
   val merge = Symtab.merge (eq_list proc_eq)
-);
+)
 
 val list = Processors.get
+
+fun add_processor (keywords, proc) =
+  let val keywords = if null keywords then [""] else keywords
+   in Processors.map (fold (fn key => Symtab.map_default (key, []) (Ord_List.insert proc_ord proc)) keywords)
+  end
+
+fun apply_processors thy =
+  let val processors = Processors.get thy
+      fun apply toks =
+        let val next = case toks of tok :: _ => Token.content_of tok | _ => ""
+            val ps = case Symtab.lookup processors next
+                       of SOME ps => ps
+                        | NONE => (case Symtab.lookup processors ""
+                                     of SOME ps => ps
+                                      | NONE => [])
+            fun invoke prec expr_id (ctxt,sequent) =
+              let fun try_app p =
+                    if prec < #precedence p andalso
+                       exists (fn pat => PLPR_Pattern.matches (Proof_Context.theory_of ctxt) []
+                                                              (pat, Thm.prop_of sequent))
+                              (#pattern p)
+                    then SOME (((#proc p (ctxt,sequent) || (fn _ => raise Bypass)) >> (fn f => f expr_id)) toks)
+                         handle Bypass => NONE
+                    else NONE
+      
+               in get_first try_app ps
+              end
+         in invoke
+        end
+   in apply
+  end
+
+(*
 
 exception Processed of (context_state * Token.T list)
 
@@ -192,7 +215,6 @@ fun powerful_process continue toks stat =
                     |> (case f of SOME f' => f' continue | _ => I))
   end
 
-val _ = Phi_Envir.under_programming_environ
 
 fun powerful_process_p_internal' lev continue toks s =
   if Phi_Envir.under_programming_environ (Proof.context_of s)
@@ -217,7 +239,7 @@ fun process_no_input lev = process_by_input lev []
 
 fun process_all_antecedents lev s =
   let val (ctxt',sequent') = process_no_input lev s
-   in if #is_on_going_construction (Phi_Working_Mode.mode1 (fst s)) (Thm.prop_of sequent')
+   in if #constr_is_ready (Phi_Working_Mode.mode1 (fst s)) (Thm.prop_of sequent')
       then (ctxt',sequent')
       else error (Pretty.string_of (
         let val ant = Phi_Help.leading_antecedent' sequent'
@@ -237,34 +259,21 @@ fun process_all_antecedents lev s =
         end))
   end
 
+*)
 
 val read_prop_pattern = Syntax.read_props o Proof_Context.set_mode Proof_Context.mode_pattern
-
-fun setup binding precedence term proc (comment:string) =
-  define_lthy binding precedence term proc
-
-fun setup_global binding precedence term proc (comment:string) =
-  define_global binding precedence term proc
-
-fun setup' binding precedence (raw_term,fixes) proc (comment:string) lthy =
-  let
-    val (_, lthy') = Proof_Context.add_fixes_cmd fixes lthy
-    val prop = pattern_burrow (read_prop_pattern lthy') raw_term
-  in
-    define_lthy binding precedence prop proc lthy
-  end
 
 fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) lthy =
   let
     val (_, lthy') = Proof_Context.add_fixes_cmd fixes lthy
-    val prop = pattern_burrow (read_prop_pattern lthy') raw_term
+    val prop = read_prop_pattern lthy' raw_term
   in
     lthy |> Context.proof_map (
       ML_Context.expression (Input.pos_of proc)
         (ML_Lex.read
           ("Theory.local_setup (Phi_Processor.setup (" ^
           ML_Syntax.make_binding binding ^ ") (" ^ ML_Syntax.print_int precedence ^ ") ("
-          ^ ML_Syntax.print_list pattern_print_ML prop ^ ") (let open Phi_Processor in ") @
+          ^ ML_Syntax.print_list ML_Syntax.print_term prop ^ ") (let open Phi_Processor in ") @
           ML_Lex.read_source proc @
           ML_Lex.read (" end) " ^ ML_Syntax.print_string comment ^ ")"))
     )
@@ -272,44 +281,19 @@ fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) lthy =
 
 
 fun almost_safe f (ctxt,sequent) =
-      if Config.get ctxt Phi_Reasoner.auto_level >= 1 then f (ctxt,sequent) else raise Bypass NONE
+      if Config.get ctxt Phi_Reasoner.auto_level >= 1 then f (ctxt,sequent) else raise Bypass
 
 fun not_safe f (ctxt,sequent) =
-      if Config.get ctxt Phi_Reasoner.auto_level >= 2 then f (ctxt,sequent) else raise Bypass NONE
+      if Config.get ctxt Phi_Reasoner.auto_level >= 2 then f (ctxt,sequent) else raise Bypass
 
 fun parse_auto_level (proc:proc) (ctxt,sequent) =
     proc (Phi_Reasoner.reduce_auto_level (Config.get ctxt Phi_Reasoner.auto_level) ctxt, sequent)
 
-fun apply_attr (attr:attribute) (ctxt, sequent) =
-  attr (Context.Proof ctxt, sequent)
-    |> apfst (Context.proof_of o the)
-    |> apsnd the
-
-(*depreciated*)
-fun simplifier (ctxt, sequent) = Scan.succeed (fn _ =>
-  let
-    val lev = Config.get ctxt Phi_Reasoner.auto_level
-    val sctxt =
-      if lev >= 2
-      then Phi_Programming_Simp_SS.enhance ctxt
-      else if lev >= 1
-      then Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
-      else raise Bypass (SOME (ctxt, sequent))
-    val sequent' = Simplifier.full_simplify sctxt sequent
-                |> Phi_Help.beta_eta_contract
-  in raise Bypass (SOME (ctxt, sequent'))
-  end)
-
-
-val pattern_keyword = (\<^keyword>\<open>premises\<close> >> K Premise)
-                   || (\<^keyword>\<open>conclusion\<close> >> K Concl)
-                   || (Scan.succeed Whole_Prop)
-val pattern = (pattern_keyword -- Parse.term) >> (fn (f,x) => f x)
 
 val _ =
   Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
       (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
-          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" pattern --| \<^keyword>\<open>)\<close> )
+          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
           -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.embedded ""
         >> setup_cmd)
 

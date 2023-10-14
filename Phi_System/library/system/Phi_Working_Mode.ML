@@ -1,11 +1,11 @@
 signature PHI_WORKING_MODE = sig
 
 type working_mode = {
-  name: string, (*the name of the constant binding the working mode*)
+  name: string, (*the name of the lambda constant binding the working mode*)
   domain: term -> bool,
-  is_on_going_construction: term -> bool,
-  spec_of  :  term (*on-going construction assertion*) ->  term (*the BI assertion*),
-  spec_of_c: cterm (*on-going construction assertion*) -> cterm,
+  constr_is_ready: term -> bool,
+  spec_of  :  term (*programming sequent*) ->  term (*the BI assertion*),
+  spec_of_c: cterm (*programming sequent*) -> cterm,
   initialize_sequent: Proof.state -> thm * Proof.state,
   inhabited_rule: thm,
   transformation_rule : thm,
@@ -51,7 +51,7 @@ structure Phi_Working_Mode : PHI_WORKING_MODE = struct
 type working_mode = {
   name: string,
   domain: term -> bool,
-  is_on_going_construction: term -> bool,
+  constr_is_ready: term -> bool,
   spec_of  :  term (*on-going construction assertion*) ->  term,
   spec_of_c: cterm (*on-going construction assertion*) -> cterm,
   inhabited_rule: thm,
@@ -329,7 +329,7 @@ val programming : working_mode =
     name = \<^const_name>\<open>working_mode_procedure\<close>,
     domain = (fn tm => Phi_Syntax.is_construction_mode \<^const>\<open>programming_mode\<close> tm orelse
                        can Phi_Syntax.dest_procedure tm),
-    is_on_going_construction = can Phi_Syntax.dest_CurrentConstruction,
+    constr_is_ready = can Phi_Syntax.dest_CurrentConstruction,
     spec_of   = #4 o Phi_Syntax.dest_CurrentConstruction,
     spec_of_c = #4 o Phi_Syntax.dest_CurrentConstruction_c,
 (*    target_spec = SOME o target_spec,
@@ -392,7 +392,7 @@ in
     name = \<^const_name>\<open>working_mode_view_shift\<close>,
     domain = (fn tm => Phi_Syntax.is_construction_mode \<^const>\<open>view_shift_mode\<close> tm orelse
                        can Phi_Syntax.dest_view_shift tm),
-    is_on_going_construction = can Phi_Syntax.dest_CurrentConstruction,
+    constr_is_ready = can Phi_Syntax.dest_CurrentConstruction,
     spec_of   = #4 o Phi_Syntax.dest_CurrentConstruction,
     spec_of_c = #4 o Phi_Syntax.dest_CurrentConstruction_c,
 (*    target_spec = SOME o target_spec,
@@ -456,7 +456,7 @@ val implication : working_mode = {
     name = \<^const_name>\<open>working_mode_implication\<close>,
     domain = (fn tm => can Phi_Syntax.dest_ToA_Construction tm orelse
                        can Phi_Syntax.dest_transformation tm),
-    is_on_going_construction = can Phi_Syntax.dest_ToA_Construction,
+    constr_is_ready = can Phi_Syntax.dest_ToA_Construction,
     spec_of   = #2 o Phi_Syntax.dest_ToA_Construction,
     spec_of_c = #2 o Phi_Syntax.dest_ToA_Construction_c,
     inhabited_rule = @{thm ToA_Construction_Inhabited_rule},
