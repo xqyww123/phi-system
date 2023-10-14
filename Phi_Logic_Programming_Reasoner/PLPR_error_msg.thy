@@ -165,5 +165,4 @@ definition ERROR :: \<open>text \<Rightarrow> bool\<close> where \<open>ERROR x 
 (*TODO: depreciate these*)
 definition ERROR' :: \<open>text \<Rightarrow> prop\<close> where \<open>ERROR' x \<equiv> (\<And>P. PROP P)\<close>
 
-
 end

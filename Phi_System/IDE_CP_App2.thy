@@ -70,24 +70,26 @@ declare [[\<phi>trace_reasoning = 1]]
 
 lemma [\<phi>reason_template default %\<phi>app_conv_derived+10]:
   \<open> Functional_Transformation_Functor Fa Fb T U (\<lambda>x. {D x}) R pm fm
-\<Longrightarrow> NO_LAMBDA_CONVERTIBLE TYPE('ca \<times> 'xa) TYPE('c \<times> 'x) @action \<A>_template_reason
+\<Longrightarrow> NO_LAMBDA_CONVERTIBLE TYPE('c\<^sub>a \<times> 'x\<^sub>a) TYPE('c \<times> 'x) @action \<A>_template_reason
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> D x = a \<and> b \<in> R x
-\<Longrightarrow> NO_SIMP (\<phi>App_Conv ToA (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
-\<Longrightarrow> \<phi>App_Conv ToA (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>_. b) (\<lambda>_. P) x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pm (\<lambda>_. b) (\<lambda>_. P) x) \<close>
-  for Fa :: \<open>('ca,'xa) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
-  unfolding \<phi>App_Conv_def \<r>Guard_def Premise_def Functional_Transformation_Functor_def NO_SIMP_def
+\<Longrightarrow> NO_SIMP (ToA_App_Conv TYPE('c\<^sub>a\<^sub>a) TYPE('c\<^sub>a) T ToA (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> b \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
+\<Longrightarrow> ToA_App_Conv TYPE('c\<^sub>a\<^sub>a) TYPE('c) (Fa T) ToA (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm (\<lambda>_. b) (\<lambda>_. P) x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pm (\<lambda>_. b) (\<lambda>_. P) x) \<close>
+  for Fa :: \<open>('c\<^sub>a,'x\<^sub>a) \<phi> \<Rightarrow> ('c,'x) \<phi>\<close>
+  unfolding ToA_App_Conv_def \<r>Guard_def Premise_def Functional_Transformation_Functor_def NO_SIMP_def
   by clarsimp
 
+(* TODO: planned
 lemma [\<phi>reason_template default %\<phi>app_conv_derived]:
   \<open> Functional_Transformation_Functor Fa Fb T U D R pm fm
 \<Longrightarrow> NO_MATCH (\<lambda>x. {D'' x}) D @action \<A>_template_reason
-\<Longrightarrow> \<g>\<u>\<a>\<r>\<d> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a \<in> D x. f a \<in> R x)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y> D' : (\<forall>a \<in> D x. Q a) @action \<A>_template_reason
 \<Longrightarrow> NO_SIMP (\<phi>App_Conv ToA (\<forall>a. Q a \<longrightarrow> (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f a \<Ztypecolon> U \<w>\<i>\<t>\<h> P a)))
+\<Longrightarrow> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> (\<forall>a \<in> D x. f a \<in> R x)
 \<Longrightarrow> \<phi>App_Conv ToA (D' \<longrightarrow> (x \<Ztypecolon> Fa T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> fm f P x \<Ztypecolon> Fb U \<w>\<i>\<t>\<h> pm f P x)) \<close>
   unfolding Functional_Transformation_Functor_def \<phi>App_Conv_def \<r>Guard_def Premise_def
             Action_Tag_def Simplify_def NO_SIMP_def
   by clarsimp
+*)
 
 
 section \<open>Value \& Reasoning over it\<close>

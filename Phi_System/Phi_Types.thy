@@ -1575,7 +1575,6 @@ setup \<open>Context.theory_map (
    #> snd )\<close>
   \<comment> \<open>Setup an alternative definition in the language of \<phi>-types so that we can apply
       derivers over these bootstrap \<phi>-types\<close>
-
 let_\<phi>type \<phi>Some
   deriving Sep_Functor
        and Carrier_Set

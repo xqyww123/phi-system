@@ -219,55 +219,6 @@ lemma [\<phi>reason 1280]:
 *)
 
 
-
-lemma [\<phi>reason 2100]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to Z
-\<Longrightarrow> x \<Ztypecolon> Var v T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Var v U \<s>\<u>\<b>\<j> y. r y \<w>\<i>\<t>\<h> P @action to (Var v Z) \<close>
-  unfolding Action_Tag_def Transformation_def
-  by (auto simp add: \<phi>expns, metis)
-
-
-lemma [\<phi>reason 2100]:
-  \<open> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Z)
-\<Longrightarrow> x \<Ztypecolon> Var v T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Var v U \<w>\<i>\<t>\<h> P @action as (z \<Ztypecolon> Var v Z) \<close>
-  unfolding Action_Tag_def
-  using Var_transformation .
-
-
-subsubsection \<open>Application Methods for Subtyping\<close>
-
-lemma [\<phi>reason 2000 for \<open>
-  PROP \<phi>Application (Trueprop (?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P))
-          (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R\<heavy_comma> ?x \<Ztypecolon> Var ?var ?T)) ?Result
-\<close> except \<open>
-  PROP \<phi>Application (Trueprop (?x \<Ztypecolon> Var ?var ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P))
-          (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R)) ?Result
-\<close>]:
-  \<open> PROP \<phi>Application (Trueprop (x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
-      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Var var T))
-      (Trueprop ((\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
-  unfolding \<phi>Application_def
-  by (meson Var_transformation \<phi>apply_implication transformation_left_frame)
-
-
-lemma [\<phi>reason 2000 for \<open>
-  PROP \<phi>Application (Trueprop (?x' \<Ztypecolon> ?T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P))
-      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R\<heavy_comma> ?x \<Ztypecolon> Var ?var ?T)) ?Result
-\<close> except \<open>
-  PROP \<phi>Application (Trueprop (?x \<Ztypecolon> Var ?var ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P))
-          (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?R)) ?Result
-\<close>]:
-  \<open> SUBGOAL TOP_GOAL G
-\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> x' \<Ztypecolon> T' \<w>\<i>\<t>\<h> Any
-\<Longrightarrow> SOLVE_SUBGOAL G
-\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
-\<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> U \<w>\<i>\<t>\<h> P))
-      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> x \<Ztypecolon> Var var T))
-      (Trueprop ((\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [RR] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> R\<heavy_comma> y \<Ztypecolon> Var var U) \<and> P))\<close>
-  unfolding \<phi>Application_def
-  by (meson Var_transformation \<phi>apply_implication transformation_left_frame)
-
-
 section \<open>Instructions\<close>
 
 subsection \<open>Preliminary - Reasoning Process\<close>

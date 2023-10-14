@@ -1043,6 +1043,8 @@ lemma \<phi>Application_Conv:
 
 ML_file \<open>library/system/application.ML\<close>
 
+declare [[\<phi>reason_default_pattern \<open>PROP \<phi>Application ?Apps ?State _\<close> \<Rightarrow> \<open>PROP \<phi>Application ?Apps ?State _\<close> (100) ]]
+
 \<phi>reasoner_group \<phi>application_all = (1000, [10,3000]) for (\<open>PROP \<phi>Application Apps State Result\<close>)
     \<open>describs how to apply \<open>Apps\<close> over \<open>State\<close>\<close>
   and \<phi>application_traverse_apps = (70, [70,70]) in \<phi>application_all
@@ -1050,7 +1052,7 @@ ML_file \<open>library/system/application.ML\<close>
   and \<phi>application = (1000, [1000, 1100]) in \<phi>application_all > \<phi>application_traverse_apps
     \<open>usual cutting rules\<close>
 
-  and \<phi>app_conv_all = (1000, [10,3000]) for (\<open>(PROP \<phi>Application_Conv Antcedent Consequent)\<close>,
+  and \<phi>app_conv_all = (1000, [0,3000]) for (\<open>(PROP \<phi>Application_Conv Antcedent Consequent)\<close>,
                                              \<open>\<phi>App_Conv Antcedent Consequent\<close>)
     \<open>application as converting \<open>Antecedent\<close> to \<open>Consequent\<close>\<close>
   and \<phi>app_conv_success = (3000, [3000,3000]) in \<phi>app_conv_all
@@ -1061,6 +1063,8 @@ ML_file \<open>library/system/application.ML\<close>
     \<open>usual cutting rules\<close>
   and \<phi>app_conv_derived = (50, [50, 60]) in \<phi>app_conv_all and < \<phi>app_conv
     \<open>derived rules\<close>
+  and \<phi>app_conv_failure = (0, [0,0]) in \<phi>app_conv_all and < \<phi>app_conv_derived
+    \<open>failures\<close>
 
 subsubsection \<open>Common Rules of Application Methods\<close>
 
@@ -1237,11 +1241,19 @@ lemma [\<phi>reason %\<phi>application]:
   unfolding \<phi>Application_def \<phi>Application_Conv_def \<phi>App_Conv_def
   by blast
 
+subsubsection \<open>Conversion of Applying Rule\<close>
+
+paragraph \<open>By \<open>\<phi>App_Conv\<close>\<close>
+
+subparagraph \<open>Basic Rules\<close>
+
 lemma [\<phi>reason %\<phi>app_conv_success]:
   \<open> \<phi>App_Conv X Y
 \<Longrightarrow> PROP \<phi>Application_Conv (Trueprop X) (Trueprop Y)\<close>
   unfolding \<phi>Application_Conv_def \<phi>App_Conv_def
   by blast
+
+subparagraph \<open>Direct Success\<close>
 
 lemma [\<phi>reason %\<phi>app_conv_success for \<open>PROP \<phi>Application_Conv (PROP ?X) (PROP ?X')\<close>]:
   \<open>PROP \<phi>Application_Conv (PROP X) (PROP X)\<close>
@@ -1250,6 +1262,9 @@ lemma [\<phi>reason %\<phi>app_conv_success for \<open>PROP \<phi>Application_Co
 lemma [\<phi>reason %\<phi>app_conv_success for \<open>\<phi>App_Conv ?X ?X'\<close>]:
   \<open>\<phi>App_Conv X X\<close>
   unfolding \<phi>App_Conv_def ..
+
+
+subparagraph \<open>Over Logic Connectives\<close>
 
 lemma [\<phi>reason %\<phi>app_conv]:
   \<open> PROP \<phi>Application_Conv (A x) X
@@ -1319,6 +1334,39 @@ lemma [\<phi>reason %\<phi>app_conv]:
   unfolding Action_Tag_def .
 
 
+paragraph \<open>Specifically for ToA\<close>
+
+definition ToA_App_Conv :: \<open>'ca itself \<Rightarrow> 'c itself \<Rightarrow> ('c, 'a) \<phi> \<Rightarrow> bool \<Rightarrow> bool \<Rightarrow> bool\<close>
+  where \<open>ToA_App_Conv _ _ T App Converted \<equiv> App \<longrightarrow> Converted\<close>
+  \<comment> \<open>The deductive programming is working on the algebra of \<open>'c\<close>, with leading item of \<phi>-type \<open>T\<close>.
+      Given a ToA that is on the algebra of \<open>'ca\<close> other than \<open>'c\<close>, how to convert
+      the ToA to a one on \<open>'c\<close> so that it can be applied in the programming.\<close>
+
+declare [[\<phi>reason_default_pattern \<open>ToA_App_Conv ?TYa ?TY ?T' (?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P) (_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _)\<close> \<Rightarrow>
+                                  \<open>ToA_App_Conv ?TYa ?TY ?T' (?x \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P) (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)\<close>    (100)
+                              and \<open>ToA_App_Conv ?TYa ?TY ?T' ?var_X (_ \<Ztypecolon> _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> _ \<w>\<i>\<t>\<h> _)\<close> \<Rightarrow>
+                                  \<open>ToA_App_Conv ?TYa ?TY ?T' ?X     (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)\<close>    (100)
+                              and \<open>ToA_App_Conv ?TYa ?TY ?T' (\<forall>a. ?Q a \<longrightarrow> (a \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P)) (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)\<close> \<Rightarrow>
+                                  \<open>ToA_App_Conv ?TYa ?TY ?T' (\<forall>a. ?Q a \<longrightarrow> (a \<Ztypecolon> ?T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> ?U \<w>\<i>\<t>\<h> ?P)) (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)\<close>    (100)
+                              and \<open>ToA_App_Conv ?TYa ?TY ?T' ?App ?C\<close> \<Rightarrow>
+                                  \<open>ERROR TEXT(\<open>Bad rule\<close> (ToA_App_Conv ?TYa ?TY ?T ?App ?C))\<close> (0)]]
+
+subparagraph \<open>Basic Rules\<close>
+
+lemma [\<phi>reason %\<phi>app_conv_success for \<open>ToA_App_Conv ?TY ?TY ?T ?App _\<close>]:
+  \<open> ToA_App_Conv TY TY T App App \<close>
+  unfolding ToA_App_Conv_def
+  by blast
+
+subparagraph \<open>Failure\<close>
+
+lemma [\<phi>reason default %\<phi>app_conv_failure for \<open>ToA_App_Conv _ _ _ (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _) (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)\<close>]:
+  \<open> ERROR TEXT(\<open>The programming is working on algbera\<close> TYPE('c) \<open>but the applying ToA is on\<close> TYPE('c\<^sub>a)
+               \<open>I don't know how to convert\<close> (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P))
+\<Longrightarrow> ToA_App_Conv TYPE('c\<^sub>a) TYPE('c) T (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P) (X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P') \<close>
+  for X :: \<open>'c\<^sub>a BI\<close> and X' :: \<open>'c BI\<close>
+  unfolding ERROR_def
+  by blast
 
 subsubsection \<open>Applying on Procedure Mode\<close>
 
@@ -1354,6 +1402,7 @@ The construction in a ready state should always be specified by a simple MTF.
                              (Trueprop (CurrentConstruction mode blk R S)) Result\<close>
       \<open>applying procedures\<close>
 
+
 paragraph \<open>Transformation Methods\<close>
 
 (* TODO: can I remove this?
@@ -1370,43 +1419,75 @@ lemma [\<phi>reason 3000 for \<open>
   by simp
 *)
 
-lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS+200 for \<open>
-  PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
-          (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
-\<close>]:
+subparagraph \<open>Shortcuts\<close>
+
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS+110
+    for \<open>PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
+                           (Trueprop (CurrentConstruction ?mode ?blk ?R ?S))
+                           (PROP _)\<close>
+        \<open>PROP \<phi>Application (Trueprop (?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
+                           (Trueprop (CurrentConstruction ?mode ?blk ?R ?S))
+                           (PROP _)\<close> ]:
   \<open> PROP \<phi>Application (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
       (Trueprop (CurrentConstruction mode blk R S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk R T) \<and> P)\<close>
   unfolding \<phi>Application_def
   using \<phi>apply_implication .
 
-lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS+100 for \<open>
-  PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
-          (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S))) ?Result
-\<close>]:
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS+100
+    for \<open>PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
+                           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S)))
+                           (PROP _) \<close>
+        \<open>PROP \<phi>Application (Trueprop (?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
+                           (Trueprop (CurrentConstruction ?mode ?blk ?RR (?R\<heavy_comma> ?S)))
+                           (PROP _) \<close>]:
   \<open> PROP \<phi>Application (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
       (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> S)))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR (R\<heavy_comma> T)) \<and> P)\<close>
   unfolding \<phi>Application_def
   using \<phi>apply_implication transformation_left_frame by blast
 
-lemma \<phi>apply_transformation_fully[\<phi>reason %\<phi>app_ToA_on_proc_or_VS for \<open>
-  PROP \<phi>Application (Trueprop (?S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T' \<w>\<i>\<t>\<h> ?P))
-      (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
-\<close>]:
+
+subparagraph \<open>ToA_App_Conv\<close>
+
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS+50]:
+  \<open> ToA_App_Conv TYPE('c\<^sub>a) TYPE(fiction) T (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P') (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P'))
+      (Trueprop (CurrentConstruction mode blk R (x \<Ztypecolon> T)))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk R Y) \<and> P \<and> P2)\<close>
+  for T' :: \<open>('c\<^sub>a,'a\<^sub>a) \<phi>\<close>
+  unfolding \<phi>Application_def ToA_App_Conv_def
+  using \<phi>apply_implication by blast
+
+
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS+50]:
+  \<open> ToA_App_Conv TYPE('c\<^sub>a) TYPE(fiction) T (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P') (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<phi>IntroFrameVar R' X'' X Y'' Y
+\<Longrightarrow> R\<heavy_comma> (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P'))
+      (Trueprop (CurrentConstruction mode blk RR (R\<heavy_comma> x \<Ztypecolon> T)))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR Y'') \<and> P \<and> P2)\<close>
+  for T' :: \<open>('c\<^sub>a,'a\<^sub>a) \<phi>\<close>
+  unfolding \<phi>Application_def ToA_App_Conv_def \<phi>IntroFrameVar_def
+  by (cases R'; simp; metis \<phi>apply_view_shift \<phi>frame_view_right mult.commute view_shift_by_implication)
+
+
+subparagraph \<open>Normal\<close>
+
+lemma \<phi>apply_transformation_fully[\<phi>reason %\<phi>app_ToA_on_proc_or_VS]:
   " \<phi>IntroFrameVar R S'' S' T'' T'
-\<Longrightarrow> \<phi>App_Conv (S'' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T'' \<w>\<i>\<t>\<h> P) (S2 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T2 \<w>\<i>\<t>\<h> P2)
-\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S2 \<w>\<i>\<t>\<h> Any @action NToA
+\<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T' \<w>\<i>\<t>\<h> P))
       (Trueprop (CurrentConstruction mode blk RR S))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T2) \<and> P2)"
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (CurrentConstruction mode blk RR T'') \<and> P)"
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def \<phi>App_Conv_def
   by (cases R; simp; meson \<phi>apply_implication transformation_left_frame \<phi>apply_view_shift)
 
-lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS for \<open>
-  PROP \<phi>Application (Trueprop (?S' = (?T' :: ?'a set)))
-      (Trueprop (CurrentConstruction ?mode ?blk ?RR ?S)) ?Result
-\<close>]:
+
+subparagraph \<open>Variant\<close>
+
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS]:
   " PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T'))
       (Trueprop (CurrentConstruction mode blk RR S))
       (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode blk RR T)
@@ -1416,6 +1497,32 @@ lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS for \<open>
   unfolding \<phi>Application_def BI_eq_ToA
   by blast
 
+(* TODO: planned
+subparagraph \<open>Quantified Source Object\<close>
+
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS ]:
+  \<open> ToA_App_Conv TYPE('c\<^sub>a) TYPE(fiction) T (\<forall>a. Q' a \<longrightarrow> (a \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P' a))
+                                           (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P2
+\<Longrightarrow> PROP \<phi>Application (Trueprop (\<forall>a. Q' a \<longrightarrow> (a \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> f' a \<Ztypecolon> U' \<w>\<i>\<t>\<h> P' a)))
+      (Trueprop (CurrentConstruction mode blk RR (x \<Ztypecolon> T)))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode blk RR Y \<and> P \<and> P2) \<close>
+  for T' :: \<open>('c\<^sub>a,'a\<^sub>a) \<phi>\<close>
+  unfolding \<phi>Application_def ToA_App_Conv_def
+  
+
+lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS ]:
+  \<open> PROP \<phi>Application (Q a \<Longrightarrow> a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' a \<w>\<i>\<t>\<h> P a)
+      (Trueprop (CurrentConstruction mode blk RR X))
+      (PROP Result)
+
+\<Longrightarrow> PROP \<phi>Application (Trueprop (\<forall>a. Q a \<longrightarrow> (a \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' a \<w>\<i>\<t>\<h> P a)))
+      (Trueprop (CurrentConstruction mode blk RR X))
+      (PROP Result) \<close>
+  unfolding \<phi>Application_def
+  subgoal premises prems
+    by (rule prems(1), rule prems(2), insert prems(3), blast) .
+*)
 
 paragraph \<open>View Shift Methods\<close>
 
@@ -1607,7 +1714,7 @@ lemma [\<phi>reason %\<phi>app_conv for \<open>
   using \<phi>apply_implication_pending \<phi>apply_implication_pending_E by blast
 
 
-subsubsection \<open>Applying on View Shift Mode\<close>
+subsubsection \<open>Applying on View Shift Construction\<close>
 
 lemma [\<phi>reason %\<phi>app_conv for \<open>\<phi>App_Conv (?X \<s>\<h>\<i>\<f>\<t>\<s> ?Y \<w>\<i>\<t>\<h> ?P) (?X' \<s>\<h>\<i>\<f>\<t>\<s> ?Y' \<w>\<i>\<t>\<h> ?P')\<close>]:
   \<open> X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> Any1 @action NToA
@@ -1618,7 +1725,7 @@ lemma [\<phi>reason %\<phi>app_conv for \<open>\<phi>App_Conv (?X \<s>\<h>\<i>\<
   by (metis View_Shift_def view_shift_by_implication)
 
 
-subsubsection \<open>Applying on Transformation Mode\<close>
+subsubsection \<open>Applying on ToA Construction\<close>
 
 \<phi>reasoner_group \<phi>app_ToA_on_ToA = (1000, [1000, 1200])
   for \<open>PROP \<phi>Application (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
@@ -1627,20 +1734,28 @@ subsubsection \<open>Applying on Transformation Mode\<close>
    in \<phi>application_all and > \<phi>application_traverse_apps
   \<open>applying ToA on ToA construction mode\<close>
 
-lemma apply_cast_on_imply_exact[\<phi>reason %\<phi>app_ToA_on_ToA+200 for \<open>
-  PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
-                           (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S')) ?Result
-\<close>]:
+lemma apply_cast_on_imply_exact
+      [\<phi>reason %\<phi>app_ToA_on_ToA+110 for \<open>PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
+                                                           (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S))
+                                                           (PROP _) \<close>
+                                        \<open>PROP \<phi>Application (Trueprop (?var_S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
+                                                           (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S))
+                                                           (PROP _) \<close>
+      ]:
   \<open> PROP \<phi>Application (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
-                             (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
-                             (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> ((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P))\<close>
+                      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S))
+                      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> ((\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> T) \<and> P))\<close>
   unfolding \<phi>Application_def Transformation_def ToA_Construction_def
   by blast
 
-lemma apply_cast_on_imply_right_prod[\<phi>reason %\<phi>app_ToA_on_ToA+100 for \<open>
-  PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
-                           (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?R * ?S')) ?Result
-\<close>]:
+lemma apply_cast_on_imply_right_prod
+      [\<phi>reason %\<phi>app_ToA_on_ToA+100 for \<open>PROP \<phi>Application (Trueprop (?S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
+                                                            (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?R * ?S))
+                                                            (PROP _) \<close>
+                                        \<open>PROP \<phi>Application (Trueprop (?var \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?T \<w>\<i>\<t>\<h> ?P))
+                                                            (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?R * ?S))
+                                                            (PROP _) \<close>
+      ]:
   \<open> PROP \<phi>Application
             (Trueprop (S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T \<w>\<i>\<t>\<h> P))
             (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> R * S))
@@ -1648,9 +1763,38 @@ lemma apply_cast_on_imply_right_prod[\<phi>reason %\<phi>app_ToA_on_ToA+100 for 
   unfolding \<phi>Application_def ToA_Construction_def
   using transformation_left_frame by (metis Transformation_def)
 
-lemma [\<phi>reason %\<phi>app_ToA_on_ToA for \<open>
-  PROP \<phi>Application (Trueprop (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
-\<close>]:
+
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA+50]:
+  " ToA_App_Conv TYPE('c\<^sub>a) TYPE('c) T (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P') (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<phi>IntroFrameVar R X'' X Y'' Y
+\<Longrightarrow> x \<Ztypecolon> T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> P2 @action NToA
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P'))
+      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> x \<Ztypecolon> T))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> Y'') \<and> P \<and> P2)"
+  for T :: \<open>('c::sep_magma,'a) \<phi>\<close> and T' :: \<open>('c\<^sub>a::sep_magma,'a\<^sub>a) \<phi>\<close>
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def ToA_App_Conv_def
+  by ((cases R; simp),
+      metis \<phi>apply_implication_impl,
+      meson \<phi>apply_implication_impl transformation_left_frame)
+
+
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA+50]:
+  " ToA_App_Conv TYPE('c\<^sub>a) TYPE('c) T (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P') (X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P)
+\<Longrightarrow> \<phi>IntroFrameVar R'' X'' X Y'' Y
+\<Longrightarrow> R * (x \<Ztypecolon> T) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X'' \<w>\<i>\<t>\<h> P2 @action NToA
+\<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+\<Longrightarrow> PROP \<phi>Application (Trueprop (x' \<Ztypecolon> T' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y' \<w>\<i>\<t>\<h> P'))
+      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> R * (x \<Ztypecolon> T)))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(\<CC>) \<i>\<s> Y'') \<and> P \<and> P2)"
+  for T :: \<open>('c::sep_magma,'a) \<phi>\<close> and T' :: \<open>('c\<^sub>a::sep_magma,'a\<^sub>a) \<phi>\<close>
+  unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def ToA_App_Conv_def
+  by ((cases R''; simp),
+      metis \<phi>apply_implication_impl,
+      meson \<phi>apply_implication_impl transformation_left_frame)
+
+
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
@@ -1660,9 +1804,7 @@ lemma [\<phi>reason %\<phi>app_ToA_on_ToA for \<open>
   unfolding \<phi>IntroFrameVar_def \<phi>Application_def Action_Tag_def
   by (cases R; simp; meson \<phi>apply_implication_impl transformation_left_frame)
 
-lemma [\<phi>reason %\<phi>app_ToA_on_ToA for \<open>
-  PROP \<phi>Application (Trueprop ((_ :: ?'a set) = _)) (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(_) \<i>\<s> _)) _
-\<close>]:
+lemma [\<phi>reason %\<phi>app_ToA_on_ToA]:
   "\<phi>IntroFrameVar R S'' S' T T'
 \<Longrightarrow> S \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> S'' \<w>\<i>\<t>\<h> Any @action NToA
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True

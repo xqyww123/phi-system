@@ -80,7 +80,7 @@ method_setup subgoal' = \<open>
 section \<open>\<phi>Type\<close>
 
 declare [[\<phi>trace_reasoning = 0]]
-
+ 
 context
   notes list_all2_conv_all_nth[simp] list_all_length[simp]
 begin
