@@ -2139,8 +2139,8 @@ ML_file \<open>library/system/post-app-handlers.ML\<close>
 ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/toplevel0.ML\<close>
-ML_file "library/system/processor.ML"
 ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
+ML_file "library/system/processor.ML"
 
 ML_file \<open>library/system/generic_variable_access2.ML\<close>
 ML_file \<open>library/system/obtain.ML\<close>
@@ -2157,12 +2157,6 @@ ML \<open>Theory.setup (Global_Theory.add_thms_dynamic (@{binding "\<phi>instr"}
 
 attribute_setup \<phi>instr = \<open>Scan.succeed (Thm.declaration_attribute NuInstructions.add) \<close>
   \<open>Instructions of \<phi>-system\<close>
-
-attribute_setup \<phi>process = \<open>Scan.lift (Parse.$$$ "(" |-- Parse.name_position --| Parse.$$$ ")") #>
-    (fn (name,(ctx,toks)) => Scan.lift (Phi_Processor.get_attr ctx name) (ctx,toks))
-  || Scan.lift Phi_Processor.process_attr\<close>
-  \<open>Evaluate the IDE-CP process on the target theorem.
-  Particular processor can be specified to be invoked alone.\<close>
 
 attribute_setup elim_premise_tag = \<open>
 Scan.succeed (Thm.rule_attribute [] (fn _ => fn th =>
@@ -2206,10 +2200,13 @@ text \<open>Convention of priorities:
 
 subsubsection \<open>Controls\<close>
 
-\<phi>processor set_auto_level 10 (\<open>PROP ?P\<close>) \<open>(fn (ctxt, sequent) => Phi_Parse.auto_level_force >>
-  (fn auto_level' => fn _ => (Config.put Phi_Reasoner.auto_level auto_level' ctxt, sequent)))\<close>
-  \<open>Note the declared auto-level is only valid during the current statement.
-   In the next statement, the auto-level will be reset to the default fully-automated level.\<close>
+\<phi>processor set_auto_level (10, 1000) ["!!", "!!!"] (\<open>PROP ?P\<close>)
+  \<open>(fn (oprs, (ctxt, sequent)) => Phi_Parse.auto_level_force >>
+      (fn auto_level' => fn _ =>
+          (oprs, (Config.put Phi_Reasoner.auto_level auto_level' ctxt, sequent))))\<close>
+ \<comment> \<open>Note the declared auto-level is only valid during the current statement.
+    In the next statement, the auto-level will be reset to the default fully-automated level.\<close>
+
 
 (*
 \<phi>processor repeat 12 (\<open>PROP ?P\<close>) \<open>let
@@ -2223,9 +2220,6 @@ subsubsection \<open>Controls\<close>
 
 subsubsection \<open>Constructive\<close>
 
-\<phi>processor accept_call 500 (\<open>\<p>\<e>\<n>\<d>\<i>\<n>\<g> ?f \<o>\<n> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T \<t>\<h>\<r>\<o>\<w>\<s> ?E\<close>)
-  \<open>fn stat => Scan.succeed (fn _ => Phi_Sys.accept_proc stat)\<close>
-
 lemma \<phi>cast_exception_UI:
   " PendingConstruction f blk H T E
 \<Longrightarrow> (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t E a \<s>\<h>\<i>\<f>\<t>\<s> E' a)
@@ -2234,15 +2228,15 @@ lemma \<phi>cast_exception_UI:
   using \<phi>apply_view_shift_pending_E .
 
 (*immediately before the accept call*)
-\<phi>processor throws 490 (\<open>\<p>\<e>\<n>\<d>\<i>\<n>\<g> ?f \<o>\<n> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T \<t>\<h>\<r>\<o>\<w>\<s> ?E\<close>)
-  \<open>fn (ctxt, sequent) => \<^keyword>\<open>throws\<close> >> (fn _ => fn _ =>
-    (ctxt, sequent RS @{thm "\<phi>cast_exception_UI"})
-)\<close>
+\<phi>processor "throws" (490, 900) ["throws"] (\<open>\<p>\<e>\<n>\<d>\<i>\<n>\<g> ?f \<o>\<n> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T \<t>\<h>\<r>\<o>\<w>\<s> ?E\<close>)
+  \<open>fn (oprs, (ctxt, sequent)) => \<^keyword>\<open>throws\<close> >> (fn _ => fn _ =>
+      (oprs, (ctxt, sequent RS @{thm "\<phi>cast_exception_UI"})) )\<close>
 
 hide_fact \<phi>cast_exception_UI
 
-\<phi>processor "apply" 9000 (\<open>?P\<close>) \<open> fn (ctxt,sequent) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
-  (Phi_Opr_Stack.do_application (Phi_App_Rules.app_rules ctxt [xnames]) (ctxt, sequent)))\<close>
+\<phi>processor "apply" (9000, 900) [] (\<open>?Bool\<close>)
+\<open> fn (oprs,(ctxt,sequent)) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
+  (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply (Phi_App_Rules.app_rules ctxt [xnames])) (ctxt, sequent)))\<close>
 
 \<phi>processor delayed_apply 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn (ctxt,sequent) =>
@@ -2459,6 +2453,7 @@ setup \<open>Context.theory_map (
    (*move any obtained pure facts, \<open>_ \<and> _\<close>*)
 #> Phi_CP_IDE.Post_App.add 200 (K Phi_Sys.move_lemmata)
 
+   (*simplification*)
 #> Phi_CP_IDE.Post_App.add 300 (K (fn (ctxt, sequent) =>
     let val lev = Config.get ctxt Phi_Reasoner.auto_level
         val sctxt =
@@ -2474,8 +2469,14 @@ setup \<open>Context.theory_map (
 
 #> Phi_CP_IDE.Post_App.add 400 (K Phi_Sys.move_lemmata)
 
+#> Phi_CP_IDE.Post_App.add 500 (fn arg => fn s =>
+      if not (Symtab.defined (#config arg) "no_accept_proc") andalso
+         not (can \<^keyword>\<open>throws\<close> (#toks arg))
+      then Phi_Sys.accept_proc s
+      else raise Phi_CP_IDE.Post_App.Success s)
+
    (*automatic elimination of existential quantifiers*)
-#> Phi_CP_IDE.Post_App.add 500 (fn arg => fn (ctxt,sequent) =>
+#> Phi_CP_IDE.Post_App.add 600 (fn arg => fn (ctxt,sequent) =>
     if Config.get ctxt NuObtain.enable_auto andalso
        Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
        not (can \<^keyword>\<open>\<exists>\<close> (#toks arg))

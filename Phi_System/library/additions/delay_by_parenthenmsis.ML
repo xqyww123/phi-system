@@ -1,5 +1,7 @@
 signature PHI_OPR_STACK = sig
 
+(* Library *)
+
 structure Synt_No_Delayed_Apply : GENERIC_DATA
   (*registries of whether a rule can be applied delayed*)
 
@@ -11,28 +13,7 @@ type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
 type free_param = exn option
 
-exception String_Param of string
-
-val do_application : Phi_CP_IDE.eval_cfg -> thm list -> context_state -> context_state
-val begin_apply : Phi_CP_IDE.eval_cfg -> (string * Position.T) * thm list -> context_state -> context_state
-
-val begin_block : Position.T -> Proof.context -> Proof.context
-
-val close_parenthesis : Phi_CP_IDE.eval_cfg -> free_param
-                     -> (context_state -> context_state)
-                     -> context_state -> context_state
-val open_parenthesis : arg_name -> context_state -> context_state
-
-val push_operator : Phi_CP_IDE.eval_cfg -> operator_info * (string * Position.T) * thm list
-                 -> context_state -> context_state
-val end_expression : Phi_CP_IDE.eval_cfg -> int (*precedence*)
-                  -> context_state -> context_state (*evaluate stacked operators
-      of precedence higher than the given argument*)
-val comma : Phi_CP_IDE.eval_cfg -> arg_name -> context_state -> context_state
-val lookup_operator : theory -> string -> operator_info option
-
-val is_during_apply : Proof.context -> string -> bool
-
+(* Operator Stack *)
 
 datatype opr_frame = Apply of ((string * Position.T) * thm list (*app rules*) * thm list (*values before*))
                    | Meta_Apply of ((named_arg list * exn option (*free argument*)
@@ -53,16 +34,60 @@ datatype opr_frame = Apply of ((string * Position.T) * thm list (*app rules*) * 
                                     opr_frame list * context_state))
                    | Left_Parenthesis of thm list (*values before*)
 
-type meta_opr = (string * Position.T) * free_param ->
-                opr_frame list * context_state ->
-                opr_frame list * context_state
+type opr_stack = opr_frame list
+               * (string option * Position.T) list (*The name of the current parameter that the programming is making;
+                                                     It enables named parameter like \<open>call (name1: aa, name2: bb)\<close>;
+                                                     This feature is used later in constructing named tuple, like \<open>{aa: 1, bb: 2}\<close>,
+                                                     where the \<open>aa\<close> and \<open>bb\<close> are actually such named parameters.
+                                                     The list is a stack of nested callings, but not calling stack! e.g.,
+                                                     when constructing the dd in \<open>{aa: 1, bb: {cc: 2, dd: 3}}\<close>, the stack is [bb,dd],
+                                                     and the source is identical to \<open>mk_tup(aa: 1, bb: mk_tup(cc: 2, dd: 3))\<close>,
+                                                     so the stack is about the two callings of \<open>mk_tup\<close>, rather than their
+                                                     operand stack.*)
+type context = opr_stack * context_state
 
-val lookup_current_opstack : Proof.context -> opr_frame list
+val init_opr_stack : opr_stack
+
+val precedence_of_frame : opr_frame -> int
+val precedence_of : opr_frame list -> int
+
+(** Operations **)
+
+exception String_Param of string
+
+(* Function Application *)
+
+val do_application : Phi_CP_IDE.eval_cfg -> thm list -> context -> context
+
+val begin_apply : Phi_CP_IDE.eval_cfg -> (string * Position.T) * thm list -> context -> context
 
 val meta_apply : Phi_CP_IDE.eval_cfg
               -> (string * Position.T) * arg_name
               -> (named_arg list * free_param -> opr_frame list * context_state -> opr_frame list * context_state)
-              -> context_state -> context_state
+              -> context -> context
+
+
+(* Block, Parenthesis *)
+
+val begin_block : Position.T -> context -> context
+
+val close_parenthesis : Phi_CP_IDE.eval_cfg -> free_param
+                     -> (context -> context)
+                     -> context -> context
+val open_parenthesis : arg_name -> context -> context
+
+val comma : Phi_CP_IDE.eval_cfg -> arg_name -> context -> context
+
+(* Operator *)
+
+val lookup_operator : theory -> string -> operator_info option
+
+val push_operator : Phi_CP_IDE.eval_cfg -> operator_info * (string * Position.T) * thm list
+                 -> context -> context
+
+type meta_opr = (string * Position.T) * free_param ->
+                opr_frame list * context_state ->
+                opr_frame list * context_state
 
 val lookup_meta_opr : theory -> string -> meta_opr option
 val set_meta_opr : string * meta_opr -> theory -> theory
@@ -71,11 +96,37 @@ val push_meta_operator : Phi_CP_IDE.eval_cfg
                        * ( (string * Position.T) * free_param
                               -> opr_frame list * context_state
                               -> opr_frame list * context_state )
-                       -> context_state -> context_state
+                       -> context -> context
+
+(* End of Expression *)
+
+val end_expression : Phi_CP_IDE.eval_cfg -> int (*precedence*)
+                  -> context -> context (*evaluate stacked operators
+      of precedence higher than the given argument*)
+
+(* Misc. *)
+
+val is_during_apply : string -> opr_stack -> bool
+
+type operation_name = ( string option (*title of the operation, e.g. operator or function*)
+                      * Markup.T (*used in pretty printing*)
+                      * (string * Position.T) (*name and position*))
+
+val eval_until : Context.generic -> int * int
+              -> Phi_Working_Mode.working_mode
+               * bool
+               * Phi_CP_IDE.eval_cfg
+              -> operation_name
+              -> opr_frame list -> context_state
+              -> int * operation_name * opr_frame list * context_state
+
+val eval_one_step : Context.generic
+                 -> Phi_Working_Mode.working_mode * int * bool * Phi_CP_IDE.eval_cfg
+                 -> operation_name * context -> (operation_name * context) option
 
 (* top-level interface *)
 
-val eval_tokens : context_state -> context_state parser
+(*val eval_tokens : context_state -> context_state parser*)
 
 (* declaring operators *)
 
@@ -122,14 +173,23 @@ type meta_opr = (string * Position.T) * free_param ->
 
 (*** Operator Stack ***)
 
-structure Opr_Stack = Proof_Data (
-  type T = (opr_frame list * (string option * Position.T) list (*current parameter name*))
-  val init = K ([], [(NONE, Position.none)])
-)
+type opr_stack = opr_frame list * (string option * Position.T) list (*names of parameters*)
+type context = opr_stack * context_state
+
+val init_opr_stack = ([], [(NONE, Position.none)])
+
+fun precedence_of_frame (Apply _) = 0
+  | precedence_of_frame (Meta_Apply _) = 0
+  | precedence_of_frame Begin_Block = 0
+  | precedence_of_frame (Comma _) = 0
+  | precedence_of_frame (Opr (prec, _, _, _)) = prec
+  | precedence_of_frame (Meta_Opr (prec, _, _, _, _)) = prec
+  | precedence_of_frame (Left_Parenthesis _) = 0
+
+fun precedence_of [] = 0
+  | precedence_of (frame :: _) = precedence_of_frame frame
 
 (** Tools **)
-
-val lookup_current_opstack = fst o Opr_Stack.get
 
 (* fun invoke_delayed_action (Apply (_, rules)) s = Phi_Apply.apply rules s
   | invoke_delayed_action End_Block s =
@@ -154,6 +214,8 @@ fun chk_no_name vs =
   case get_first (fn ((SOME _, pos),_) => SOME pos | _ => NONE) vs
     of SOME pos => error ("Named arguement is not supported here! " ^ Position.here pos)
      | _ =>  maps snd vs
+
+type operation_name = (string option * Markup.T * (string * Position.T))
 
 fun bad_syntax (title, m, name) =
   let open Pretty in error (string_of (
@@ -181,13 +243,13 @@ fun chk_complete_eval mode (title, m, name) (ctxt, sequent) =
 
 (*num: to be evaluated at most, negative to be unlimited
   returns: number of operations not evaluated yet*)
-fun eval_until gen_ctxt (limit, num) (mode, prev_name, complete_eval, cfg) =
+fun eval_until gen_ctxt (limit, num) (mode, complete_eval, cfg) =
   let val post_app = Phi_CP_IDE.Post_App.invoke gen_ctxt
-      fun eval 0 _ acts s = (0, (acts, s))
-        | eval num _ (acts as (Apply _ :: _)) s = (num, (acts, s))
-        | eval num _ (acts as (Begin_Block :: _)) s = (num, (acts, s))
+      fun eval 0 prev_name acts s = (0, prev_name, acts, s)
+        | eval num prev_name (acts as (Apply _ :: _)) s = (num, prev_name, acts, s)
+        | eval num prev_name (acts as (Begin_Block :: _)) s = (num, prev_name, acts, s)
         | eval num prev_name (acts as (Opr (pr, arity, name, rules) :: aR)) (ctxt,sequent)
-            = if pr < limit then (num, (acts, (ctxt,sequent)))
+            = if pr < limit then (num, prev_name, acts, (ctxt,sequent))
               else if pr = limit then bad_syntax prev_name
               else let val name' = (SOME "operator", Markup.operator, name)
                 in chk_arity_constraint arity mode name (ctxt,sequent);
@@ -197,7 +259,7 @@ fun eval_until gen_ctxt (limit, num) (mode, prev_name, complete_eval, cfg) =
                      |> complete_eval ? chk_complete_eval mode (SOME "operator", Markup.operator, name) )
                end
         | eval num prev_name (acts as (Meta_Opr (pr, arity, name, param, meta) :: aR)) s
-            = if pr < limit then (num, (acts, s))
+            = if pr < limit then (num, prev_name, acts, s)
               else if pr = limit then bad_syntax prev_name
               else let val _ = chk_arity_constraint arity mode name (chk_complete_eval mode prev_name s)
                        val name' = (SOME "operator", Markup.operator, name)
@@ -208,23 +270,38 @@ fun eval_until gen_ctxt (limit, num) (mode, prev_name, complete_eval, cfg) =
                                         )
                     in eval (num-1) name' acts' s'
                    end
-        | eval num _ (acts as (Left_Parenthesis _ :: _)) s = (num, (acts, s))
-        | eval num _ (acts as (Meta_Apply _ :: _)) s = (num, (acts, s))
-        | eval num _ (acts as (Comma _ :: _)) s = (num, (acts, s))
-        | eval num _ [] s = (num, ([], s))
-   in eval num prev_name
+        | eval num prev_name (acts as (Left_Parenthesis _ :: _)) s = (num, prev_name, acts, s)
+        | eval num prev_name (acts as (Meta_Apply _ :: _)) s = (num, prev_name, acts, s)
+        | eval num prev_name (acts as (Comma _ :: _)) s = (num, prev_name, acts, s)
+        | eval num prev_name [] s = (num, prev_name, [], s)
+   in eval num
+  end
+
+
+fun eval_one_step gen_ctxt =
+  let val eval_gen = eval_until gen_ctxt
+      fun work (mode, precedence, complete_eval, cfg) =
+        let val eval = eval_gen (precedence, 1) (mode, complete_eval, cfg)
+            fun one_step (prev_name, ((opr,names),s)) =
+                  let val (num,prev_name',opr',s') = eval prev_name opr s
+                   in if num = 0 then SOME (prev_name', ((opr',names),s')) else NONE
+                  end
+         in one_step
+        end
+   in work
   end
 
 (** open \& close parenthesis **)
 
-fun close_parenthesis cfg arg c s0 =
+fun close_parenthesis cfg arg c (oprs, s0) =
   let fun close c args (Apply (_, rules, vals_before) :: acts) s =
             c acts (Phi_Reasoners.wrap'' (Phi_Apply.apply rules) (
                       Generic_Variable_Access.push_values (vals_before @ chk_no_name args) s))
         | close c args (Begin_Block :: acts) s =
             s |> Generic_Variable_Access.push_values (chk_no_name args)
-              |> Phi_CP_IDE.proof_state_call ( Phi_Toplevel.end_block_auto_proof_cmd NONE false
-                                            #> Phi_Envir.map_state_sequent (c acts))
+              |> Phi_CP_IDE.proof_state_call_result (
+                      Phi_Toplevel.end_block_auto_proof_cmd NONE false
+                   #> Phi_Envir.map_state_sequent_result (c acts))
 
         | close _ _ (Opr _ :: _) _ = error "internal bug #91066fd2-8881-422f-bf54-4b3f69879042"
         | close _ _ (Meta_Opr _ :: _) _ = error "internal bug #10cc33ab-de95-48fb-8b8c-103f2c0110fd"
@@ -236,74 +313,61 @@ fun close_parenthesis cfg arg c s0 =
             close c (arg :: args) acts s
         | close _ _ [] _ = error "parenthesis is inbalanced!"
       val mode = Phi_Working_Mode.mode1 (fst s0)
-      val (actions, arg_name :: arg_names) = Opr_Stack.get (fst s0)
-      val (_, (actions', (ctxt,sequent))) =
-            eval_until (Context.Proof (fst s0)) (0, ~1)
-                       (mode, (NONE, Markup.error, ("<internal bug>", Position.none)), true, cfg)
-                       actions s0
+      val (actions, arg_name :: arg_names) = oprs
+      val (_, _, actions', (ctxt,sequent)) =
+            eval_until (Context.Proof (fst s0)) (0, ~1) (mode, true, cfg)
+                       (NONE, Markup.error, ("<internal bug>", Position.none)) actions s0
       val (vals, (ctxt',sequent')) = Generic_Variable_Access.extract_values (~1, true) (ctxt,sequent)
-   in close (fn acts => fn (ctxt, sequent) =>
-                  c (Opr_Stack.put (acts, arg_names) ctxt, sequent))
+   in close (fn acts => fn (ctxt, sequent) => c ((acts, arg_names), (ctxt, sequent)))
             [(arg_name, vals)] actions' (ctxt', sequent')
   end
 
-fun open_parenthesis arg_name (ctxt,sequent) =
+fun open_parenthesis arg_name ((oprs, arg_names), (ctxt,sequent)) =
   let val (vals,(ctxt',sequent')) = Generic_Variable_Access.extract_values (~1, true) (ctxt,sequent)
-   in (Opr_Stack.map (fn (L, arg_names) =>
-          (Left_Parenthesis vals :: L, arg_name :: arg_names)) ctxt',
-       sequent')
+   in ((Left_Parenthesis vals :: oprs, arg_name :: arg_names), (ctxt', sequent'))
   end
 
 (** Operator **)
 
-fun push_operator cfg ((left_prec,prec,arity_delta),name,rule) (ctxt,sequent) =
+fun push_operator cfg ((left_prec,prec,arity_delta),name,rule) ((actions, arg_names), (ctxt,sequent)) =
   let val mode = Phi_Working_Mode.mode1 ctxt
-      val (actions, arg_names) = Opr_Stack.get ctxt
-      val (_, (actions', (ctxt',sequent'))) =
-              eval_until (Context.Proof ctxt) (left_prec, ~1)
-                         (mode, (SOME "operator", Markup.operator, name), true, cfg)
-                          actions (ctxt,sequent)
+      val (_, _, actions', (ctxt',sequent')) =
+              eval_until (Context.Proof ctxt) (left_prec, ~1) (mode, true, cfg)
+                         (SOME "operator", Markup.operator, name) actions (ctxt,sequent)
       val arity_constraint =
             Option.map (fn x => x + Generic_Variable_Access.number_of_values
                                       (#spec_of mode (Thm.prop_of sequent')))
                        arity_delta
-   in (ctxt',sequent')
-   |> apfst (Opr_Stack.put (Opr (prec,arity_constraint,name,rule) :: actions', arg_names))
+   in ((Opr (prec,arity_constraint,name,rule) :: actions', arg_names), (ctxt',sequent'))
   end
 
-fun push_meta_operator cfg ((left_prec,prec,arity_delta),name,param,meta) (ctxt,sequent) =
+fun push_meta_operator cfg ((left_prec,prec,arity_delta),name,param,meta)
+                       ((actions, arg_names), (ctxt,sequent)) =
   let val mode = Phi_Working_Mode.mode1 ctxt
-      val (actions, arg_names) = Opr_Stack.get ctxt
-      val (_, (actions', (ctxt',sequent'))) =
-              eval_until (Context.Proof ctxt) (left_prec, ~1)
-                         (mode, (SOME "operator", Markup.operator, name), true, cfg)
-                          actions (ctxt,sequent)
+      val (_, _, actions', (ctxt',sequent')) =
+              eval_until (Context.Proof ctxt) (left_prec, ~1) (mode, true, cfg)
+                         (SOME "operator", Markup.operator, name) actions (ctxt,sequent)
       val arity_constraint =
             Option.map (fn x => x + Generic_Variable_Access.number_of_values (
                                         #spec_of (Phi_Working_Mode.mode1 ctxt') (Thm.prop_of sequent')))
                        arity_delta
-   in (ctxt',sequent')
-   |> apfst (Opr_Stack.put (Meta_Opr (prec,arity_constraint,name,param,meta) :: actions', arg_names))
+   in ((Meta_Opr (prec,arity_constraint,name,param,meta) :: actions', arg_names), (ctxt',sequent'))
   end
 
 (** End of Expression **)
 
-fun end_expression cfg precedence s =
+fun end_expression cfg precedence ((actions, arg_names), s) =
   let val mode = Phi_Working_Mode.mode1 (fst s)
-      val (actions, arg_names) = Opr_Stack.get (fst s)
-      val (_, (actions', s')) =
-          eval_until (Context.Proof (fst s)) (precedence, ~1)
-                     (mode, (NONE, Markup.plain_text, ("<end-of-expr>", Position.none)), true, cfg)
-                      actions s
-   in s'
-   |> apfst (Opr_Stack.put (actions', arg_names))
+      val (_, _, actions', s') =
+          eval_until (Context.Proof (fst s)) (precedence, ~1) (mode, true, cfg)
+                     (NONE, Markup.plain_text, ("<end-of-expr>", Position.none)) actions s
+   in ((actions', arg_names), s')
   end
 
 (** Comma **)
 
-fun comma cfg next_arg_name s =
+fun comma cfg next_arg_name ((actions, arg_name :: arg_names), s) =
   let val mode = Phi_Working_Mode.mode1 (fst s)
-      val (actions, arg_name :: arg_names) = Opr_Stack.get (fst s)
       val opr_name = (SOME "operator", Markup.operator, (",", snd next_arg_name))
       fun chk_actions (Left_Parenthesis _ :: _) = ()
         | chk_actions (Meta_Apply _ :: _) = ()
@@ -313,11 +377,10 @@ fun comma cfg next_arg_name s =
         | chk_actions (_ :: L) = chk_actions L
         | chk_actions [] = bad_syntax opr_name
       val _ = chk_actions actions
-      val (_, (actions', (ctxt,sequent))) =
-                eval_until (Context.Proof (fst s)) (0, ~1) (mode, opr_name, true, cfg) actions s
-      val (vals,(ctxt'1,sequent')) = Generic_Variable_Access.extract_values (~1, true) (ctxt,sequent)
-      val ctxt' = Opr_Stack.put (Comma (arg_name, vals) :: actions', next_arg_name :: arg_names) ctxt'1
-   in (ctxt', sequent')
+      val (_, _, actions', (ctxt,sequent)) =
+                eval_until (Context.Proof (fst s)) (0, ~1) (mode, true, cfg) opr_name actions s
+      val (vals,(ctxt',sequent')) = Generic_Variable_Access.extract_values (~1, true) (ctxt,sequent)
+   in ((Comma (arg_name, vals) :: actions', next_arg_name :: arg_names), (ctxt', sequent'))
   end
 
 (** Function Application **)
@@ -325,38 +388,33 @@ fun comma cfg next_arg_name s =
 fun do_application cfg rules stat =
       stat
    |> end_expression cfg 900
-   |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules)
+   |> apsnd (Phi_Reasoners.wrap'' (Phi_Apply.apply rules))
 
-fun begin_apply cfg (name, rules) (ctxt,sequent) =
+fun begin_apply cfg (name, rules) ((actions, arg_names), (ctxt,sequent)) =
   let val mode = Phi_Working_Mode.mode1 ctxt
-      val (actions, arg_names) = Opr_Stack.get ctxt
       val fun_name = (SOME "function", Markup.plain_text, name)
-      val (_, (actions', (ctxt',sequent'))) =
-              eval_until (Context.Proof ctxt) (900, ~1) (mode, fun_name, true, cfg) actions (ctxt,sequent)
+      val (_, _, actions', (ctxt',sequent')) =
+              eval_until (Context.Proof ctxt) (900, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
       val (vals,(ctxt'',sequent'')) = Generic_Variable_Access.extract_values (~1, true) (ctxt',sequent')
-      val ctxt'3 = Opr_Stack.put (Apply (name, rules, vals) :: actions', (NONE, snd name) :: arg_names) ctxt''
-   in (ctxt'3, sequent'')
+   in ((Apply (name, rules, vals) :: actions', (NONE, snd name) :: arg_names), (ctxt'', sequent''))
   end
 
-fun meta_apply cfg (pos,arg_name) f (ctxt,sequent) =
+fun meta_apply cfg (pos,arg_name) f ((actions, arg_names), (ctxt,sequent)) =
   let val mode = Phi_Working_Mode.mode1 ctxt
-      val (actions, arg_names) = Opr_Stack.get ctxt
       val fun_name = (SOME "function", Markup.plain_text, pos)
-      val (_, (actions', (ctxt',sequent'))) =
-              eval_until (Context.Proof ctxt) (900, ~1) (mode, fun_name, true, cfg) actions (ctxt,sequent)
+      val (_, _, actions', (ctxt',sequent')) =
+              eval_until (Context.Proof ctxt) (900, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
       val (vals,(ctxt'',sequent'')) = Generic_Variable_Access.extract_values (~1, true) (ctxt',sequent')
-      val ctxt'3 = Opr_Stack.put (Meta_Apply (f, vals, pos) :: actions', arg_name :: arg_names) ctxt''
-   in (ctxt'3, sequent'')
+   in ((Meta_Apply (f, vals, pos) :: actions', arg_name :: arg_names), (ctxt'', sequent''))
   end
 
-fun begin_block pos = Opr_Stack.map (fn (actions, arg_names) =>
-        (Begin_Block :: actions, (NONE, pos) :: arg_names))
+fun begin_block pos ((actions, arg_names), s) =
+      ((Begin_Block :: actions, (NONE, pos) :: arg_names), s)
 
 (** Misc. Tools **)
 
-fun is_during_apply ctxt name =
-  let val (actions, _) = Opr_Stack.get ctxt
-      fun is_during (Apply ((s, _), _, _) :: _) = (s = name)
+fun is_during_apply name (actions, _) =
+  let fun is_during (Apply ((s, _), _, _) :: _) = (s = name)
         | is_during (Meta_Apply (_, _, (s, _)) :: _) = s = name
         | is_during (Begin_Block :: _) = false
         | is_during (Comma _ :: L) = is_during L
@@ -367,15 +425,6 @@ fun is_during_apply ctxt name =
    in is_during actions
   end
 
-val delayed_apps = Opr_Stack.get #> fst
-
-(*** Top-level ***)
-
-fun eval_tokens (ctxt, sequent) toks =
-  let val parse_processor = Phi_CP_IDE.apply_processors (Proof_Context.theory_of ctxt)
-      
-   in ()
-  end
 
 (*** Prefix, Infix, Postfix operators  ***)
 
@@ -454,24 +503,29 @@ val _ =
        ))
 )
 
+structure Begin_of_Next_Statement = Hooks (type arg = Phi_CP_IDE.expr_id type state = context)
+structure End_of_Statement = Hooks (type arg = Phi_CP_IDE.expr_id type state = context)
+structure Begin_of_Line = Hooks (type arg = Phi_CP_IDE.expr_id type state = context)
+structure End_of_Line = Hooks (type arg = Phi_CP_IDE.expr_id type state = context)
+
 
 val _ = Theory.setup (Context.theory_map (
 
-  Phi_Toplevel.End_of_Statement.add ~10 (fn expr_id =>
+  End_of_Statement.add ~10 (fn expr_id =>
       end_expression {id=expr_id, toks=[], config=Symtab.empty} 0)
 
-#>Phi_Toplevel.End_of_Statement.add 998 (K (fn (ctxt,sequent) => (
-    if not (null (delayed_apps ctxt))
+#>End_of_Statement.add 998 (K (fn (oprs, (ctxt, sequent)) => (
+    if not (null (fst oprs))
     then warning "parenthesis is inbalanced!"
     else () ;
-    (ctxt,sequent)
+    (oprs, (ctxt,sequent))
   )))
 
-#>Phi_Toplevel.Begin_of_Next_Statement.add 1 (K (fn (ctxt,sequent) => (
-    if not (null (delayed_apps ctxt))
+#>Begin_of_Next_Statement.add 1 (K (fn (oprs, (ctxt, sequent)) => (
+    if not (null (fst oprs))
     then error "parenthesis is inbalanced!"
     else () ;
-    (ctxt,sequent)
+    (oprs, (ctxt,sequent))
   )))
 ))
 

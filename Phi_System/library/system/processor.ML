@@ -14,10 +14,8 @@ include PHI_CP_IDE
 
 exception Bypass
 exception Terminate_Process of context_state * ((Proof.state -> Proof.state) (*continue*) -> Proof.state -> Proof.state) option
-exception ProcessFail of binding * context_state * exn
-exception Process_State_Call  of context_state * (Proof.state -> Proof.state)
-exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
-type proc = (context_state -> (expr_id -> context_state) parser)
+
+type proc = (Phi_Opr_Stack.context -> (expr_id -> Phi_Opr_Stack.context) parser)
 
 val trace : bool Config.T
 
@@ -32,9 +30,14 @@ type processor = {
   }
 
 val add_processor : string list * processor -> theory -> theory
-val apply_processors : theory -> Token.T list
-                    -> int -> Phi_CP_IDE.expr_id -> context_state
-                    -> (context_state * Token.T list) option
+val apply_processors : theory -> Token.src
+                    -> int -> Phi_CP_IDE.expr_id -> Phi_Opr_Stack.context
+                    -> (Phi_Opr_Stack.context * Token.T list) option
+val eval_tokens : Phi_CP_IDE.config -> Proof.context
+               -> Token.src
+               -> Phi_CP_IDE.expr_id * Phi_Opr_Stack.context
+               -> Phi_CP_IDE.expr_id * Phi_Opr_Stack.context
+
 val list : theory -> processor Ord_List.T Symtab.table
 
 (*
@@ -58,10 +61,6 @@ val almost_safe : proc -> proc
 val not_safe : proc -> proc
 val parse_auto_level : proc -> proc
 
-val setup_cmd : (((((string * Position.T) * int (*precedence*)) * string list)
-      * (binding * string option * mixfix) list)
-      * Input.source (* proc source*)) * string (*comment*) -> local_theory -> local_theory
-
 end
 
 structure Phi_CP_IDE : PHI_CP_IDE = struct
@@ -73,13 +72,10 @@ exception Bypass
 
 exception Terminate_Process  of context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
 exception Terminate_Process' of Token.T list * context_state * ((Proof.state -> Proof.state) -> Proof.state -> Proof.state) option
-exception ProcessFail of binding * context_state * exn
-exception Process_State_Call' of Token.T list * context_state * (Proof.state -> Proof.state)
-exception Process_State_Call of context_state * (Proof.state -> Proof.state)
 
 val trace = Attrib.setup_config_bool \<^binding>\<open>\<phi>trace_processing\<close> (K false);
 
-type proc = context_state -> (expr_id -> context_state) parser
+type proc = Phi_Opr_Stack.context -> (expr_id -> Phi_Opr_Stack.context) parser
 
 type processor = {
     name : string,
@@ -117,13 +113,13 @@ fun apply_processors thy =
                         | NONE => (case Symtab.lookup processors ""
                                      of SOME ps => ps
                                       | NONE => [])
-            fun invoke prec expr_id (ctxt,sequent) =
+            fun invoke prec expr_id (oprs, (ctxt,sequent)) =
               let fun try_app p =
                     if prec < #precedence p andalso
                        exists (fn pat => PLPR_Pattern.matches (Proof_Context.theory_of ctxt) []
                                                               (pat, Thm.prop_of sequent))
                               (#pattern p)
-                    then SOME (((#proc p (ctxt,sequent) || (fn _ => raise Bypass)) >> (fn f => f expr_id)) toks)
+                    then SOME (((#proc p (oprs, (ctxt,sequent)) || (fn _ => raise Bypass)) >> (fn f => f expr_id)) toks)
                          handle Bypass => NONE
                     else NONE
       
@@ -132,6 +128,30 @@ fun apply_processors thy =
          in invoke
         end
    in apply
+  end
+
+fun eval_tokens cfg ctxt =
+  let val parse_token = apply_processors (Proof_Context.theory_of ctxt)
+      fun turn_expr_id (i::L) = (i+1::L)
+        | turn_expr_id [] = error "BUG: expr_id cannot be empty"
+      val mode = Phi_Working_Mode.mode1 ctxt
+      val one_step = Phi_Opr_Stack.eval_one_step (Context.Proof ctxt)
+
+      fun loop [] eid_opr_ctxt = eid_opr_ctxt
+        | loop toks (expr_id, opr_ctxt) =
+            let val processors = parse_token toks
+                fun apply (prev_name, opr_ctxt) =
+                      case processors (Phi_Opr_Stack.precedence_of (#1 (#1 opr_ctxt))) expr_id opr_ctxt
+                        of SOME (opr_ctxt', toks') => loop toks' (turn_expr_id expr_id, opr_ctxt')
+                         | NONE => case one_step (mode, 0, true, {id=expr_id, config=cfg, toks=toks}) (prev_name, opr_ctxt)
+                                     of SOME (prev_name', opr_ctxt') => apply (prev_name', opr_ctxt')
+                                      | NONE => error (let open Pretty in string_of (
+                                                    chunks [para "Do not know how to parse the given source",
+                                                            Token.pretty_src (#1 (#2 opr_ctxt)) toks]
+                                                       ) end)
+             in apply ((NONE, Markup.plain_text, ("<begining-of-parsing>", Position.none)), opr_ctxt)
+            end
+   in loop
   end
 
 (*
@@ -263,38 +283,47 @@ fun process_all_antecedents lev s =
 
 val read_prop_pattern = Syntax.read_props o Proof_Context.set_mode Proof_Context.mode_pattern
 
-fun setup_cmd (((((binding,precedence),raw_term),fixes),proc),comment) lthy =
+fun setup_cmd ((((((name, pos), (priority,precedence)), keywords), raw_pattern),fixes),proc) thy =
   let
-    val (_, lthy') = Proof_Context.add_fixes_cmd fixes lthy
-    val prop = read_prop_pattern lthy' raw_term
+    val ctxt_parse = Proof_Context.init_global thy
+    val (_, ctxt_parse') = Proof_Context.add_fixes_cmd fixes ctxt_parse
+    val pattern = read_prop_pattern ctxt_parse' raw_pattern
+    open ML_Syntax
   in
-    lthy |> Context.proof_map (
+    thy |> Context.theory_map (
       ML_Context.expression (Input.pos_of proc)
-        (ML_Lex.read
-          ("Theory.local_setup (Phi_Processor.setup (" ^
-          ML_Syntax.make_binding binding ^ ") (" ^ ML_Syntax.print_int precedence ^ ") ("
-          ^ ML_Syntax.print_list ML_Syntax.print_term prop ^ ") (let open Phi_Processor in ") @
+        (maps ML_Lex.read
+          ["Theory.setup (Phi_CP_IDE.add_processor (",
+           print_strings keywords,
+           ", {name=", print_string name,
+           ", pos=", print_position pos,
+           ", priorirty=", print_int priority,
+           ", precedence=", print_int precedence,
+           ", pattern=", print_list print_term pattern,
+           ", proc= let in ("] @
           ML_Lex.read_source proc @
-          ML_Lex.read (" end) " ^ ML_Syntax.print_string comment ^ ")"))
+          ML_Lex.read ") : Phi_CP_IDE.proc end}))")
     )
   end
 
 
-fun almost_safe f (ctxt,sequent) =
-      if Config.get ctxt Phi_Reasoner.auto_level >= 1 then f (ctxt,sequent) else raise Bypass
+fun almost_safe f (oprs, (ctxt,sequent)) =
+      if Config.get ctxt Phi_Reasoner.auto_level >= 1 then f (oprs, (ctxt,sequent)) else raise Bypass
 
-fun not_safe f (ctxt,sequent) =
-      if Config.get ctxt Phi_Reasoner.auto_level >= 2 then f (ctxt,sequent) else raise Bypass
+fun not_safe f (oprs, (ctxt,sequent)) =
+      if Config.get ctxt Phi_Reasoner.auto_level >= 2 then f (oprs, (ctxt,sequent)) else raise Bypass
 
-fun parse_auto_level (proc:proc) (ctxt,sequent) =
-    proc (Phi_Reasoner.reduce_auto_level (Config.get ctxt Phi_Reasoner.auto_level) ctxt, sequent)
+fun parse_auto_level (proc:proc) (oprs, (ctxt,sequent)) =
+    proc (oprs, (Phi_Reasoner.reduce_auto_level (Config.get ctxt Phi_Reasoner.auto_level) ctxt, sequent))
 
 
 val _ =
-  Outer_Syntax.local_theory \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
-      (Parse.position (Parse.short_ident || Parse.sym_ident || Parse.keyword || Parse.string)
-          -- Parse.nat -- (\<^keyword>\<open>(\<close> |-- Parse.enum "|" Parse.term --| \<^keyword>\<open>)\<close> )
-          -- Parse.for_fixes -- Parse.ML_source -- Scan.optional Parse.embedded ""
-        >> setup_cmd)
+  Outer_Syntax.command \<^command_keyword>\<open>\<phi>processor\<close> "define \<phi>processor"
+      (  Parse.name_position
+      -- (\<^keyword>\<open>(\<close> |-- Parse.nat --| \<^keyword>\<open>,\<close> -- Parse.nat --| \<^keyword>\<open>)\<close>)
+      -- (\<^keyword>\<open>[\<close> |-- Parse.list Parse.name --| \<^keyword>\<open>]\<close>)
+      -- (\<^keyword>\<open>(\<close> |-- Parse.enum1 "|" Parse.term --| \<^keyword>\<open>)\<close> )
+      -- Parse.for_fixes -- Parse.ML_source
+        >> (Toplevel.theory o setup_cmd))
 
 end

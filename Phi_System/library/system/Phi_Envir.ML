@@ -21,6 +21,7 @@ signature PHI_ENVIR = sig
   val the_state_sequent : Proof.state -> thm
   val set_state_sequent : thm -> Proof.state -> Proof.state
   val map_state_sequent : (context_state -> context_state) -> Proof.state -> Proof.state
+  val map_state_sequent_result : (context_state -> 'a * context_state) -> Proof.state -> 'a * Proof.state
   val update_programming_sequent' : thm -> Proof.context -> Proof.context
 
   val reason_programming_implication : Proof.context -> thm -> thm list
@@ -128,6 +129,13 @@ fun map_state_sequent f s =
                                          |> f
                                          |> swap)
     |-> set_state_sequent
+
+fun map_state_sequent_result f s =
+  s |> Proof.map_context_result (fn ctxt => 
+          case f (ctxt, the_state_sequent s)
+            of (result, (ctxt, sequent')) => ((result,sequent'), ctxt))
+    |-> (fn (result, sequent') => set_state_sequent sequent'
+                               #> pair result)
 
 fun get_thm_fast ctxt name =
       case Facts.lookup (Context.Proof ctxt) (Proof_Context.facts_of ctxt) name

@@ -97,7 +97,8 @@ fun invoke ctxt =
       fun work arg s = PriorityTab.fold
                           (fn (_,f) => fn s => f arg s handle Return s' => s') hooks s
           handle Redo_Entirely (a,s) => work a s
-   in work
+   in fn arg => fn s => work arg s
+                        handle Success s' => s'
   end
 
 fun invoke_until_success ctxt fallback arg s =

@@ -15,12 +15,6 @@ signature PHI_TOPLEVEL = sig
   val end_block : term option (*a spec that the sequent will be transformed to before assembling*)
                -> bool -> Proof.state -> Proof.state
 
-  (* Hooks *)
-  structure Begin_of_Line : HOOKS
-  structure End_of_Line : HOOKS
-  structure Begin_of_Next_Statement : HOOKS
-  structure End_of_Statement : HOOKS
-
 end
 
 structure Phi_Toplevel : PHI_TOPLEVEL = struct
@@ -29,13 +23,6 @@ structure Phi_Toplevel : PHI_TOPLEVEL = struct
 
 fun print_results int = Proof_Display.print_results
                             {interactive=int, pos=Position.thread_data (), proof_state=false}
-
-(** Hooks **)
-
-structure Begin_of_Next_Statement = Hooks (type arg = Phi_CP_IDE.expr_id type state = context_state)
-structure End_of_Statement = Hooks (type arg = Phi_CP_IDE.expr_id type state = context_state)
-structure Begin_of_Line = Hooks (type arg = Phi_CP_IDE.expr_id type state = context_state)
-structure End_of_Line = Hooks (type arg = Phi_CP_IDE.expr_id type state = context_state)
 
 
 (** Programming Block **)
