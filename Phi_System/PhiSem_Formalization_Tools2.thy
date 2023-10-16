@@ -111,6 +111,12 @@ lemma \<phi>M_caseV[intro!]:
 
 (*to depreciate the above!*)
 
+
+lemma "__Return_rule__":
+  \<open> \<p>\<r>\<o>\<c> Return v \<lbrace> X v \<longmapsto> X \<rbrace> \<close>
+  unfolding \<phi>Procedure_def det_lift_def Return_def
+  by clarsimp
+
 lemma semantic_return_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<Turnstile> (y \<Ztypecolon> T))
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<Turnstile> (y \<Ztypecolon> T)

@@ -722,7 +722,7 @@ end
 
 
 subsection \<open>Pointwise Fiction\<close>
-
+                           
 locale pointwise_fiction_for_partial_mapping_resource =
    R: partial_map_resource Res P
 +  fiction_kind FIC.DOMAIN INTERPRET Fic \<open>R.basic_fiction \<Zcomp>\<^sub>\<I> \<F>_pointwise (\<lambda>_. \<F>_it)\<close>
@@ -735,18 +735,20 @@ begin
 sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambda>_. \<F>_it\<close> Fic P ..
 
 lemma setter_rule:
-  \<open>(v \<in> P k \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> pred_option (\<lambda>x. x \<in> P k) u) \<Longrightarrow>
-    \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (\<lambda>_. u)) \<lbrace> 1(k \<mapsto> v) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>\<r>\<e>\<t>. 1(k := u) \<Ztypecolon> \<phi> Itself \<rbrace>  \<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<in> P k \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> pred_option (\<lambda>x. x \<in> P k) u)
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k' (\<lambda>_. u)) \<lbrace> 1(k \<mapsto> v) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>\<r>\<e>\<t>. 1(k := u) \<Ztypecolon> \<phi> Itself \<rbrace>  \<close>
+  unfolding Premise_def
 subgoal premises prems
 proof -
   have [simp]: \<open>(\<lambda>_. u) \<circ> the = (\<lambda>_. u)\<close> for u by auto
   show ?thesis
-    by (rule "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u u' v,
+    by (unfold prems(1),
+        rule "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u u' v,
                 simplified, unfolded refinement_source_subjection,
                 OF impI,
                 OF \<F>_it_refinement
-                   \<F>_it_refinement_projection[where S=S and S'=S for S, simplified]
-                   Premise_D[where mode=default],
+                   \<F>_it_refinement_projection[where S=S and S'=S for S, simplified],
                 simplified],
         rule prems)
 qed .
@@ -797,7 +799,6 @@ lemmas allocate_rule =
                         where u = \<open>Some u'\<close> for u', simplified]
 
 end
-
 
 end
 

@@ -253,6 +253,7 @@ subsubsection \<open>Conventions\<close>
 declare [[\<phi>reason_default_pattern
     \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join \<close> \<Rightarrow> \<open>If ?P ?A ?B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action br_join \<close> (100)
 and \<open>If ?P ?A ?B = _ @action br_join \<close> \<Rightarrow> \<open>If ?P ?A ?B = _ @action br_join \<close> (100)
+
 and \<open>?X @action br_join \<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Bad rule\<close> (?X @action br_join ))\<close> (0)
 
 and \<open>Identifier_of ?T _ _\<close> \<Rightarrow> \<open>Identifier_of ?T _ _\<close> (100)

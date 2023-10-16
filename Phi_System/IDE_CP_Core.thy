@@ -1490,12 +1490,13 @@ subparagraph \<open>Variant\<close>
 lemma [\<phi>reason %\<phi>app_ToA_on_proc_or_VS]:
   " PROP \<phi>Application (Trueprop (S' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> T'))
       (Trueprop (CurrentConstruction mode blk RR S))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode blk RR T)
+      (PROP Result)
 \<Longrightarrow> PROP \<phi>Application (Trueprop (S' = T'))
       (Trueprop (CurrentConstruction mode blk RR S))
-      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode blk RR T)"
+      (PROP Result)"
   unfolding \<phi>Application_def BI_eq_ToA
-  by blast
+  subgoal premises prems
+    by (rule prems(1); insert prems(2-); blast) .
 
 (* TODO: planned
 subparagraph \<open>Quantified Source Object\<close>
@@ -1634,7 +1635,7 @@ text \<open>\<^schematic_prop>\<open>Simple_HO_Unification A (?f x\<^sub>1 \<dot
 \<close>
 
 lemma Simple_HO_Unification_I:
-  \<open> Premise procedure_simplification (f = f')
+  \<open> Premise procedure_ss (f = f')
 \<Longrightarrow> Simple_HO_Unification f f'\<close>
   unfolding Simple_HO_Unification_def Premise_def by simp
 
@@ -1905,7 +1906,7 @@ definition Call_Action :: \<open>action \<Rightarrow> bool\<close> where \<open>
 
 lemma Call_Action_I[intro!]: \<open>Call_Action Act\<close> unfolding Call_Action_def ..
 
-lemma [\<phi>reason 2000]:
+lemma [\<phi>reason %\<phi>application]:
   \<open> PROP Do_Action action sequent result
 \<Longrightarrow> PROP \<phi>Application (Trueprop (Call_Action action)) sequent result\<close>
   unfolding \<phi>Application_def Do_Action_def .

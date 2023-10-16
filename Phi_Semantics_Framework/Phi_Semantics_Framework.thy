@@ -424,6 +424,7 @@ definition \<open>Return = det_lift o Success\<close>
 definition Nondet :: \<open>'ret proc \<Rightarrow> 'ret proc \<Rightarrow> 'ret proc\<close>
   where \<open>Nondet f g = (\<lambda>res. f res \<union> g res)\<close>
 
+
 lemma proc_bind_SKIP'[simp]:
   "f \<bind> Return \<equiv> f"
   "Return any \<bind> ff \<equiv> ff any"

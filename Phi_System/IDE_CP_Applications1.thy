@@ -192,9 +192,60 @@ lemma do_\<A>_view_shift_or_imp_VS_degrade:
 declare [[\<phi>reason 1100 do_\<A>_view_shift_or_imp_VS do_\<A>_view_shift_or_imp_VS_degrade
       for \<open>PROP Do_Action (\<A>_view_shift_or_imp ?action)
                 (Trueprop (CurrentConstruction ?mode ?s ?H ?X))
-                ?Result\<close>]]
+                (PROP ?Result)\<close>]]
 
 hide_fact do_\<A>_view_shift_or_imp_VS do_\<A>_view_shift_or_imp_VS_degrade
+
+
+subsubsection \<open>Morphism\<close>
+
+consts \<A>_morphism :: \<open>action \<Rightarrow> action\<close>
+
+lemma [\<phi>reason 1100]:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>
+\<Longrightarrow> PROP Do_Action (\<A>_morphism \<A>)
+      (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(s) \<i>\<s> X))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(s) \<i>\<s> Y) \<and> P )\<close>
+  unfolding Do_Action_def Action_Tag_def Transformation_def ToA_Construction_def
+  by blast
+
+context begin
+
+private lemma do_\<A>_morphism_proc:
+  \<open> \<p>\<r>\<o>\<c> f \<lbrace> S \<longmapsto> T' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action \<A>
+\<Longrightarrow> PROP Do_Action (\<A>_morphism \<A>)
+      (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S))
+      ( \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
+        \<Longrightarrow> PROP \<phi>Application (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> S \<longmapsto> T' \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' ))
+                               (Trueprop (\<c>\<u>\<r>\<r>\<e>\<n>\<t> blk [H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> S)) (PROP Result)
+        \<Longrightarrow> PROP Result) \<close>
+  unfolding Do_Action_def Action_Tag_def \<phi>Application_def
+  subgoal premises prems
+    by (rule prems(4), rule prems(2), rule prems(1)) .
+
+private lemma do_\<A>_morphism_VS:
+  \<open> X \<s>\<h>\<i>\<f>\<t>\<s> Y \<w>\<i>\<t>\<h> P @action \<A>
+\<Longrightarrow> PROP Do_Action (\<A>_morphism \<A>)
+      (Trueprop (CurrentConstruction mode s H X))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode s H Y \<and> P )\<close>
+  unfolding Do_Action_def Action_Tag_def Action_Tag_def
+  using \<phi>apply_view_shift by blast
+
+private lemma do_\<A>_morphism_ToA:
+  \<open> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y \<w>\<i>\<t>\<h> P @action action
+\<Longrightarrow> PROP Do_Action (\<A>_morphism action)
+      (Trueprop (CurrentConstruction mode s H X))
+      (\<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True \<Longrightarrow> CurrentConstruction mode s H Y \<and> P )\<close>
+  unfolding Do_Action_def Action_Tag_def Action_Tag_def
+  using \<phi>apply_implication by blast
+
+declare [[\<phi>reason 1100 do_\<A>_morphism_proc do_\<A>_morphism_VS do_\<A>_morphism_ToA
+      for \<open>PROP Do_Action (\<A>_morphism ?action)
+                (Trueprop (CurrentConstruction ?mode ?s ?H ?X))
+                (PROP ?Result)\<close>]]
+
+end
+
 
 subsubsection \<open>Nap, a space for injection\<close>
 
@@ -1332,13 +1383,13 @@ subsubsection \<open>Framework\<close>
 
 declare [[
   \<phi>reason_default_pattern
-      \<open> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>case \<close> \<Rightarrow> \<open> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>case \<close>   (100)
-  and \<open> ?X \<s>\<h>\<i>\<f>\<t>\<s> _ @action \<A>case \<close> \<Rightarrow> \<open> ?X \<s>\<h>\<i>\<f>\<t>\<s> _ @action \<A>case \<close>   (100)
+      \<open> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>case \<close> \<Rightarrow> \<open> ?X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>case \<close>  (100)
+  and \<open> ?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>case \<close> \<Rightarrow> \<open> ?X \<s>\<h>\<i>\<f>\<t>\<s> _ \<w>\<i>\<t>\<h> _ @action \<A>case \<close>   (100)
+  and \<open> \<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action \<A>case \<close> \<Rightarrow> \<open> \<p>\<r>\<o>\<c> _ \<lbrace> ?X \<longmapsto> _ \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> _ @action \<A>case \<close> (100)
   and \<open> ?X @action \<A>case \<close> \<Rightarrow> \<open>ERROR TEXT(\<open>Malformed \<A>case rule\<close> (?X @action \<A>case))\<close> (0)
 ]]
 
-lemma "_cases_app_rule_":
-  \<open>Call_Action (\<A>_view_shift_or_imp \<A>case)\<close> ..
+lemma "_cases_app_rule_": \<open>Call_Action (\<A>_morphism \<A>case)\<close> ..
 
 ML_file \<open>library/tools/induct_analysis.ML\<close>
 
@@ -1351,25 +1402,37 @@ hide_fact "_cases_app_rule_"
 subsubsection \<open>Case Rules\<close>
 
 lemma [\<phi>reason 1000]:
-  \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<s>\<h>\<i>\<f>\<t>\<s> Y
-\<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<s>\<h>\<i>\<f>\<t>\<s> Y
-\<Longrightarrow> B + A \<s>\<h>\<i>\<f>\<t>\<s> Y @action \<A>case\<close>
-  unfolding Argument_def Action_Tag_def
-  using \<phi>CASE_VS by fastforce
+  \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<s>\<h>\<i>\<f>\<t>\<s> Y\<^sub>A
+\<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<s>\<h>\<i>\<f>\<t>\<s> Y\<^sub>B
+\<Longrightarrow> \<^bold>d\<^bold>o \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps SOURCE] Y : Y\<^sub>A + Y\<^sub>B
+\<Longrightarrow> B + A \<s>\<h>\<i>\<f>\<t>\<s> Y @action \<A>case \<close>
+  unfolding Argument_def Action_Tag_def Simplify_def View_Shift_def Do_def
+  by (simp add: distrib_left)
 
 lemma [\<phi>reason 1000]:
-  \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y
-\<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y
-\<Longrightarrow> B + A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>case\<close>
-  unfolding Argument_def Action_Tag_def
-  using \<phi>CASE_IMP by fastforce
+  \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<^sub>A
+\<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<^sub>B
+\<Longrightarrow> \<^bold>d\<^bold>o \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps SOURCE] Y : Y\<^sub>A + Y\<^sub>B
+\<Longrightarrow> B + A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>case \<close>
+  unfolding Argument_def Action_Tag_def Simplify_def View_Shift_def Transformation_def Do_def
+  by simp
+
+lemma [\<phi>reason 1000]:
+  \<open> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<p>\<r>\<o>\<c> f\<^sub>A \<lbrace> A \<longmapsto> Y\<^sub>A \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>A
+\<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t \<p>\<r>\<o>\<c> f\<^sub>B \<lbrace> B \<longmapsto> Y\<^sub>B \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E\<^sub>B
+\<Longrightarrow> \<^bold>d\<^bold>o \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n>[procedure_ss] f\<^sub>A = f\<^sub>B
+\<Longrightarrow> \<^bold>d\<^bold>o \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps SOURCE] Y : Y\<^sub>A + Y\<^sub>B
+\<Longrightarrow> \<^bold>d\<^bold>o \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[assertion_simps ABNORMAL] E : E\<^sub>A + E\<^sub>B
+\<Longrightarrow> \<p>\<r>\<o>\<c> f\<^sub>A \<lbrace> B + A \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action \<A>case \<close>
+  unfolding Action_Tag_def Simplify_def Premise_def Argument_def Do_def
+  by (simp, metis \<phi>CASE \<phi>CONSEQ add.commute plus_fun view_shift_refl view_shift_union(1))
 
 lemma [\<phi>reason 1000]:
   \<open> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A \<s>\<h>\<i>\<f>\<t>\<s> Ya)
 \<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<s>\<h>\<i>\<f>\<t>\<s> Yb)
-\<Longrightarrow> If P Ya Yb \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action invoke_br_join
+\<Longrightarrow> \<^bold>d\<^bold>o If P Ya Yb \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action invoke_br_join
 \<Longrightarrow> If P A B \<s>\<h>\<i>\<f>\<t>\<s> Y @action \<A>case\<close>
-  unfolding Argument_def Action_Tag_def Premise_def
+  unfolding Argument_def Action_Tag_def Premise_def Do_def
   apply (cases P; simp)
   using \<phi>view_trans view_shift_by_implication apply fastforce
   using View_Shift_def view_shift_by_implication by force
@@ -1379,7 +1442,7 @@ lemma [\<phi>reason 1000]:
 \<Longrightarrow> (\<p>\<r>\<e>\<m>\<i>\<s>\<e> \<not> P \<Longrightarrow> \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Yb)
 \<Longrightarrow> \<^bold>d\<^bold>o If P Ya Yb \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action invoke_br_join
 \<Longrightarrow> If P A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action \<A>case\<close>
-  unfolding Argument_def Action_Tag_def Premise_def
+  unfolding Argument_def Action_Tag_def Premise_def Do_def
   apply (cases P; simp)
   using transformation_trans apply fastforce
   using transformation_trans by fastforce

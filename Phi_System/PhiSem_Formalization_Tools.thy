@@ -202,8 +202,8 @@ lemma \<phi>Procedure_Hybrid_DL:
       apply (insert prems(1)[THEN spec[where x=r], THEN spec[where x=res], THEN mp, OF t1,
               THEN spec[where x=s], THEN mp, OF \<open>s \<in> _\<close>])
       apply (cases s; simp add: ExSet_expn_set Subjection_expn_set INTERP_SPEC In_INTERP_RES)
-      using FIC.SPACE_mult_homo apply blast
-      using FIC.SPACE_mult_homo by blast
+      using FIC.SPACE_mult_homo apply blas
+      using FIC.SPACE_mult_homo by blas
   qed .
 
 lemma \<phi>Res_Spec_expn_R:
@@ -598,9 +598,9 @@ lemma partial_implies_raw:
       by (simp add: order_less_imp_le prems(2) share.\<psi>_mul_carrier share_sub t1)
     then have t3: \<open>\<psi> x \<preceq>\<^sub>S\<^sub>L share n (\<psi> x)\<close>
       using share_share_assoc0
-      by (metis prems(2) share_left_one t0 t1)
+      by (metis prems(2) share_left_one t0 t1
     then show ?thesis
-      by (metis UNIV_I join_sub_ext_left prems(10) prems(3) prems(8) sep_disj_get_name share.homo_join_sub)
+      by (metis UNIV_I join_sub_ext_let prems(10) prems(3) prems(8) sep_disj_get_name share.homo_join_sub)
   qed .
 
 paragraph \<open>Reasoning Rules\<close>
