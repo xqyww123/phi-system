@@ -1344,7 +1344,8 @@ ML_file \<open>library/tools/induct_analysis.ML\<close>
 
 hide_fact "_cases_app_rule_"
 
-\<phi>lang_parser case_analysis 5000 (\<open>_\<close>) \<open> IDECP_Induct_Analysis.case_analysis_processor \<close>
+\<phi>lang_parser case_analysis (5000, 0) ["case_analysis"] (\<open>_\<close>)
+  \<open> IDECP_Induct_Analysis.case_analysis_processor \<close>
 
 
 subsubsection \<open>Case Rules\<close>

@@ -1,7 +1,7 @@
 signature IDECP_INDUCT_ANALYSIS = sig
 
 val case_analysis : bool * (term option list list * thm option) -> Proof.context * thm -> thm
-val case_analysis_processor : context_state -> (int -> Proof.context * thm) parser
+val case_analysis_processor : Phi_Opr_Stack.context -> (Phi_CP_IDE.eval_cfg -> Phi_Opr_Stack.context) parser
 
 end
 
@@ -75,8 +75,8 @@ fun case_analysis (no_simp, (insts, opt_rule)) stat =
      | [[NONE]] => case_analysis_phityp stat
      | _ => case_analysis_system (no_simp, (insts, opt_rule)) stat
 
-fun case_analysis_processor (ctxt,sequent) =
+fun case_analysis_processor (oprs,(ctxt,sequent)) =
   Args.$$$ "case_analysis" |-- Scan.pass (Context.Proof ctxt) case_synt >> (fn data => fn _ =>
-    (ctxt, case_analysis data (ctxt,sequent)))
+    (oprs, (ctxt, case_analysis data (ctxt,sequent))))
 
 end

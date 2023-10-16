@@ -28,7 +28,7 @@ type processor = {
     proc : proc
   }
 
-val add_processor : string list * processor -> theory -> theory
+val add_parser : string list * processor -> theory -> theory
 val apply_processors : theory -> Token.src
                     -> int -> Phi_CP_IDE.eval_cfg -> Phi_Opr_Stack.context
                     -> (Phi_Opr_Stack.context * Token.T list) option
@@ -98,7 +98,7 @@ structure Processors = Theory_Data
 
 val list = Processors.get
 
-fun add_processor (keywords, proc) =
+fun add_parser (keywords, proc) =
   let val keywords = if null keywords then [""] else keywords
    in Processors.map (fold (fn key => Symtab.map_default (key, []) (Ord_List.insert proc_ord proc)) keywords)
   end
@@ -155,7 +155,7 @@ fun eval_tokens cfg ctxt =
                   let val ecfg = {id=expr_id, config=cfg, toks=toks}
                    in case processors (Phi_Opr_Stack.precedence_of (#1 (#1 opr_ctxt))) ecfg opr_ctxt
                         of SOME (opr_ctxt', toks') => loop toks' (uptick_expr_id expr_id, opr_ctxt')
-                         | NONE => case one_step (mode, 0, true, ecfg) (prev_name, opr_ctxt)
+                         | NONE => case one_step (mode, 0, false, ecfg) (prev_name, opr_ctxt)
                                      of SOME (prev_name', opr_ctxt') => apply (prev_name', opr_ctxt')
                                       | NONE => error (let open Pretty in string_of (
                                                     chunks [para "Do not know how to parse the given source",
@@ -189,7 +189,7 @@ fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
         val (expr_id, opr_ctxt) = if empty_tokens toks then (expr_id, opr_ctxt)
                                   else eval_tokens cfg (fst stat) toks (expr_id, opr_ctxt)
         val expr_id = uptick_expr_id expr_id
-        val opr_ctxt = Phi_Opr_Stack.end_expression {id=expr_id, config=cfg, toks=[]} 0
+        val opr_ctxt = Phi_Opr_Stack.end_expression {id=expr_id, config=cfg, toks=[]} 1
                                                     opr_ctxt
         val expr_id = uptick_expr_id expr_id
         val opr_ctxt = Phi_Opr_Stack.End_of_Line.invoke (Context.Proof (#1 (#2 opr_ctxt)))
@@ -342,7 +342,7 @@ fun setup_cmd ((((((name, pos), (priority, raw_precedence)), keywords), raw_patt
     thy |> Context.theory_map (
       ML_Context.expression (Input.pos_of proc)
         (maps ML_Lex.read
-          ["Theory.setup (Phi_CP_IDE.add_processor (",
+          ["Theory.setup (Phi_CP_IDE.add_parser (",
            print_strings keywords,
            ", {name=", print_string (@{print} name),
            ", pos=", print_position pos,

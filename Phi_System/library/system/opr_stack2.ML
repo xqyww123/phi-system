@@ -13,7 +13,7 @@ val begin_apply : Phi_CP_IDE.eval_cfg -> (string * Position.T) * thm list -> con
 
 val meta_apply : Phi_CP_IDE.eval_cfg
               -> (string * Position.T) * arg_name
-              -> (named_arg list * free_param option -> context -> context)
+              -> (Phi_CP_IDE.eval_cfg * named_arg list * free_param option -> context -> context)
               -> context -> context
 
 
@@ -34,7 +34,7 @@ val push_operator : Phi_CP_IDE.eval_cfg -> operator_info * (string * Position.T)
 
 val push_meta_operator : Phi_CP_IDE.eval_cfg
                       -> operator_info * (string * Position.T) * free_param option
-                       * ( (string * Position.T) * free_param option
+                       * ( Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option
                               -> opr_frame list * context_state
                               -> opr_frame list * context_state )
                        -> context -> context
@@ -166,7 +166,7 @@ fun eval_until gen_ctxt (limit, num) (mode, complete_eval, cfg) =
               else if pr = limit then bad_syntax prev_name
               else let val _ = chk_arity_constraint arity mode name (chk_complete_eval mode prev_name s)
                        val name' = (SOME "operator", Markup.operator, name)
-                       val (acts',s') = meta (name,param) (aR,s)
+                       val (acts',s') = meta (cfg,name,param) (aR,s)
                                      |> apsnd (fn (ctxt,sequent) => (ctxt,sequent)
                                           |> post_app (Phi_CP_IDE.set_expr_id expr_id cfg)
                                           |> complete_eval ? chk_complete_eval mode name'
@@ -218,7 +218,7 @@ fun close_parenthesis (cfg, meta_arg, complete_eval) (oprs, s0) =
         | close args ((Left_Parenthesis vals_before :: acts, arg_names), s) =
             ((acts, arg_names), Generic_Variable_Access.push_values (vals_before @ chk_no_name args) s)
         | close args ((Meta_Apply (f, vals_before, (_, pos)) :: acts, arg_names), (ctxt,sequent)) =
-            f (((NONE, pos), vals_before) :: args, meta_arg) ((acts, arg_names), (ctxt,sequent))
+            f (cfg, ((NONE, pos), vals_before) :: args, meta_arg) ((acts, arg_names), (ctxt,sequent))
         | close args ((Comma arg :: acts, arg_names), s) =
             close (arg :: args) ((acts, arg_names), s)
         | close _ (([],_), _) = error "parenthesis is inbalanced!"
@@ -296,7 +296,7 @@ fun comma cfg next_arg_name ((actions, arg_name :: arg_names), s) =
 (*
 fun do_application (cfg, complete_eval) rules stat =
       stat
-   |> end_expression cfg 900
+   |> end_expression cfg @{priority %\<phi>lang_app}
    |> apsnd (fn s => s
               |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules)
               |> Phi_CP_IDE.Post_App.invoke (Context.Proof (fst s)) cfg
@@ -307,7 +307,7 @@ fun begin_apply cfg (name, rules) ((actions, arg_names), (ctxt,sequent)) =
   let val mode = Phi_Working_Mode.mode1 ctxt
       val fun_name = (SOME "function", Markup.plain_text, name)
       val (_, _, actions', (ctxt',sequent')) =
-              eval_until (Context.Proof ctxt) (900, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
+              eval_until (Context.Proof ctxt) (@{priority %\<phi>lang_app}, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
       val (vals,(ctxt'',sequent'')) = Generic_Variable_Access.extract_values (~1, true) (ctxt',sequent')
    in ((Apply (name, #id cfg, rules, vals) :: actions', (NONE, snd name) :: arg_names), (ctxt'', sequent''))
   end
@@ -316,7 +316,7 @@ fun meta_apply cfg (pos,arg_name) f ((actions, arg_names), (ctxt,sequent)) =
   let val mode = Phi_Working_Mode.mode1 ctxt
       val fun_name = (SOME "function", Markup.plain_text, pos)
       val (_, _, actions', (ctxt',sequent')) =
-              eval_until (Context.Proof ctxt) (900, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
+              eval_until (Context.Proof ctxt) (@{priority %\<phi>lang_app}, ~1) (mode, true, cfg) fun_name actions (ctxt,sequent)
       val (vals,(ctxt'',sequent'')) = Generic_Variable_Access.extract_values (~1, true) (ctxt',sequent')
    in ((Meta_Apply (f, vals, pos) :: actions', arg_name :: arg_names), (ctxt'', sequent''))
   end

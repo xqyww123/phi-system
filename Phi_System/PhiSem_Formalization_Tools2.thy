@@ -120,7 +120,7 @@ lemma semantic_return_\<phi>app:
 
 lemma semantic_literal_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<Turnstile> (y \<Ztypecolon> T))
-\<Longrightarrow> <\<phi>expn> v \<Turnstile> (y \<Ztypecolon> T)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<Turnstile> (y \<Ztypecolon> T)
 \<Longrightarrow> Void \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y \<Ztypecolon> Val (\<phi>literal v) T \<close>
   unfolding Premise_def Transformation_def \<phi>literal_def
   by clarsimp

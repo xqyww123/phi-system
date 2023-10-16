@@ -1654,6 +1654,8 @@ lemma Simplify_cong[cong]: "A \<equiv> A' \<Longrightarrow> Simplify s x A \<equ
 
 lemma Simplify_D: \<open>Simplify m A B \<Longrightarrow> A = B\<close> unfolding Simplify_def .
 lemma Simplify_I: \<open>A = B \<Longrightarrow> Simplify m A B\<close> unfolding Simplify_def .
+lemma Simplify_to_Premise: \<open>Premise default (A = B) \<Longrightarrow> Simplify m A B\<close>
+  unfolding Simplify_def Premise_def .
 
 (* lemma Do_Simplification:
   \<open>PROP Do_Simplificatin A B \<Longrightarrow> Simplify s A B\<close>

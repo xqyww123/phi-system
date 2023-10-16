@@ -130,10 +130,14 @@ fun variable_declarer TY : Generic_Variable_Access.assigner = ("new_var", variab
 val _ = Theory.setup (
    Generic_Variable_Access.register_assigner
      ("var", \<^type_name>\<open>varname\<close>, "to declare a new variable", variable_assigner)
-#> Phi_Processor.setup_global
-    \<^binding>\<open>declare_variable\<close> 5000 [Phi_Processor.Whole_Prop
-                                                \<^pattern_prop>\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>]
-    (fn (ctxt,sequent) => \<^keyword>\<open>var\<close> |--
+#> Phi_CP_IDE.add_parser (["var"],
+    { name = "declare_variable",
+      pos = \<^here>,
+      priorirty = 5000,
+      precedence = 0,
+      pattern = [\<^pattern_prop>\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>],
+      proc = (fn opr_ctxt as (_,(ctxt,sequent)) =>
+        \<^keyword>\<open>var\<close> |--
                 Parse.list1 (Parse.list1 Parse.binding -- Scan.option (\<^keyword>\<open>::\<close> |-- Parse.term))
      >> (fn raw_vars => fn _ =>
       let
@@ -150,8 +154,8 @@ val _ = Theory.setup (
             |> uncurry (map2 (fn vs => fn TY =>
                     map (fn V => ((V, Generic_Element_Access.empty_input), variable_declarer TY)) vs))
             |> flat
-      in Generic_Variable_Access.assignment assigners (ctxt,sequent) end
-   )) ""
+      in apsnd (Generic_Variable_Access.assignment assigners) opr_ctxt end
+   ))})
 )
 
 

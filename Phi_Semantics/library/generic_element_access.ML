@@ -7,18 +7,21 @@ structure Agg_Constructors : HANDLERS
 
 val mk_element_index_input : thm list -> term
 
-val gen_access : string * string -> (string * Position.T) * Phi_Opr_Stack.arg_name -> context_state -> context_state
+val gen_access : string * string
+              -> (string * Position.T) * Phi_Opr_Stack.arg_name
+              -> Phi_CP_IDE.eval_cfg -> Phi_Opr_Stack.context -> Phi_Opr_Stack.context
+
 val gen_constructor : string -> (string * Position.T) * Phi_Opr_Stack.arg_name
-                   -> context_state -> context_state
+                   -> Phi_CP_IDE.eval_cfg -> Phi_Opr_Stack.context -> Phi_Opr_Stack.context
 
 exception Bracket_Opr_Read
 exception Bracket_Opr_Write of Position.T
 
-val dot_triangle_opr : (string * Position.T) * Phi_Opr_Stack.free_param
+val dot_triangle_opr : Phi_CP_IDE.eval_cfg * (string * Position.T) * Phi_Opr_Stack.free_param option
           -> Phi_Opr_Stack.opr_frame list * context_state
           -> Phi_Opr_Stack.opr_frame list * context_state
 
-val dot_triangle_assignment : (string * Position.T) * Phi_Opr_Stack.free_param
+val dot_triangle_assignment : Phi_CP_IDE.eval_cfg * (string * Position.T) * Phi_Opr_Stack.free_param option
           -> Phi_Opr_Stack.opr_frame list * context_state
           -> Phi_Opr_Stack.opr_frame list * context_state
 
@@ -82,32 +85,28 @@ fun mk_element_index_input_internal args0 ctxt =
    |> pair idx_input
   end
 
-fun gen_access named_thm_of_rules pos_and_first_args stat =
-  let fun invoke (args, rules_name) (opstack, (ctxt,sequent)) =
+fun gen_access named_thm_of_rules pos_and_first_args cfg stat =
+  let fun invoke (args, rules_name) (oprs, (ctxt,sequent)) =
         let val (idx_input, ctxt') = mk_element_index_input_internal args ctxt
             val rules = Named_Theorems.get ctxt' rules_name
                       |> map (Drule.infer_instantiate ctxt' [(("input_index", 0), Thm.cterm_of ctxt' idx_input)])
-         in (opstack, Phi_Reasoners.wrap'' (Phi_Apply.apply rules) (ctxt', sequent))
+         in (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply rules) (ctxt', sequent))
         end
-      fun invoke' (args, SOME Bracket_Opr_Read) (opstack, stat) =
-            invoke (map chk_arg args, fst named_thm_of_rules) (opstack, stat)
-        | invoke' (args, SOME (Bracket_Opr_Write pos)) (opstack, stat) =
-            let val arity = 1 + Generic_Variable_Access.number_of_values
-                                    (#spec_of Phi_Working_Mode.programming (Thm.prop_of (snd stat)))
-             in (Phi_Opr_Stack.Meta_Opr (50, SOME arity, (":=", pos), NONE,
-                      K (invoke (map chk_arg args, snd named_thm_of_rules))
-                   ) :: opstack,
-                 stat)
-            end
+      fun invoke' (_, args, SOME Bracket_Opr_Read) opr_ctxt =
+            invoke (map chk_arg args, fst named_thm_of_rules) opr_ctxt
+        | invoke' (cfg, args, SOME (Bracket_Opr_Write pos)) opr_ctxt=
+            Phi_Opr_Stack.push_meta_operator cfg
+                ((1001,@{priority %\<phi>lang_assignment_opr},SOME 1), (":=", pos), NONE,
+                 K (invoke (map chk_arg args, snd named_thm_of_rules))) opr_ctxt
         | invoke' _ _ =
             error "Bad free_arg in Generic_Element_Access"
-      fun invoke'3 ((_, vals_before) :: args, free_arg) (opstack, stat) =
+      fun invoke'3 (cfg, (_, vals_before) :: args, free_arg) (opstack, stat) =
             if length vals_before = 0
             then error ("Bad Syntax: The operand of aggregate access is absent. " ^
                          Position.here (snd (fst pos_and_first_args)))
-            else invoke' (args, free_arg) (opstack, Generic_Variable_Access.push_values vals_before stat)
+            else invoke' (cfg, args, free_arg) (opstack, Generic_Variable_Access.push_values vals_before stat)
         | invoke'3 _ _ = error "internal bug #a2a96e04-14d6-4b66-9c2e-053e5c2bfcbe"
-   in Phi_Opr_Stack.meta_apply pos_and_first_args invoke'3 stat
+   in Phi_Opr_Stack.meta_apply cfg pos_and_first_args invoke'3 stat
   end
 
 structure Agg_Constructors = Handlers (
@@ -116,8 +115,8 @@ structure Agg_Constructors = Handlers (
   type ret = Proof.context * cterm (*constructor*) * term list (*arguments*)
 )
 
-fun gen_constructor kind pos_and_first_args stat =
-  let fun invoke ((_, vals_before) :: args0, free_arg) (oprs, (ctxt0, sequent0)) =
+fun gen_constructor kind pos_and_first_args cfg stat =
+  let fun invoke (_, (_, vals_before) :: args0, free_arg) (oprs, (ctxt0, sequent0)) =
         let val _ = case free_arg of NONE => ()
                        | _ => error "Bad free_arg: a32d7843-538e-4ddc-af95-ea71514cc0ad"
             val (ctxt,sequent) = Generic_Variable_Access.push_values vals_before (ctxt0,sequent0)
@@ -143,7 +142,7 @@ fun gen_constructor kind pos_and_first_args stat =
          in (oprs, (ctxt'', Phi_Apply.apply [rule'] ctxt'' sequent))
         end
         | invoke _ _ = error "internal bug #5330d2f8-c5e3-46ae-9b45-5ae9550f037d"
-   in Phi_Opr_Stack.meta_apply pos_and_first_args invoke stat
+   in Phi_Opr_Stack.meta_apply cfg pos_and_first_args invoke stat
   end
 
 
@@ -151,10 +150,10 @@ fun is_empty (Const (\<^const_name>\<open>Nil\<close>, _)) = true
   | is_empty _ = false
 
 
-fun gen_dot_triangle_opr F front_arity ((name, pos), _) (stack, (ctxt0,sequent0)) =
+fun gen_dot_triangle_opr F front_arity (cfg, (name, pos), _) (stack, (ctxt0,sequent0)) =
   let val (front_args, (ctxt, sequent)) =
             Generic_Variable_Access.extract_values (front_arity, true) (ctxt0,sequent0)
-      fun collect (ret, Phi_Opr_Stack.Meta_Opr (_, _, ("\<tribullet>", pos), _, _) :: L) = collect (pos :: ret, L)
+      fun collect (ret, Phi_Opr_Stack.Meta_Opr (_, _, ("\<tribullet>", pos), _, _, _) :: L) = collect (pos :: ret, L)
         | collect ret_L = ret_L
       val (poss, stack') = collect ((if name = "\<tribullet>" then [pos] else []), stack)
       val actual = Generic_Variable_Access.number_of_values (
@@ -168,7 +167,7 @@ fun gen_dot_triangle_opr F front_arity ((name, pos), _) (stack, (ctxt0,sequent0)
       val (idx_input'0, ctxt'2) = mk_element_index_input_internal args ctxt'
       val idx_input = Thm.cterm_of ctxt'2 idx_input'0
       val (ctxt'3, sequent'3) = Generic_Variable_Access.push_values front_args (ctxt'2,sequent')
-   in F ((name, pos), stack', idx_input, ctxt'3, sequent'3)
+   in F (cfg, (name, pos), stack', idx_input, ctxt'3, sequent'3)
   end
 
 fun err_assignment pos =
@@ -176,10 +175,10 @@ fun err_assignment pos =
          Position.here pos)
 
 val dot_triangle_assignment =
-  gen_dot_triangle_opr (fn ((_, pos), stack, idx_input, ctxt, sequent) =>
+  gen_dot_triangle_opr (fn (_, (_, pos), stack, idx_input, ctxt, sequent) =>
     let val (stack', vname, pos) =
           case stack
-            of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), SOME (Phi_Opr_Stack.String_Param vname), _) :: stack')
+            of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), _, SOME (Phi_Opr_Stack.String_Param vname), _) :: stack')
                 => (stack', vname, pos)
              | _ => err_assignment pos
      in (stack', Generic_Variable_Access.assignment_cmd [(NONE, (Binding.make (vname, pos), idx_input))] (ctxt, sequent))
@@ -188,14 +187,16 @@ val dot_triangle_assignment =
  
 
 val dot_triangle_opr =
-  gen_dot_triangle_opr (fn (_, stack', idx_input, ctxt'3, sequent'3) =>
-    let val (idx_input', ctxt'4, sequent'4, stack'') =
+  gen_dot_triangle_opr (fn (cfg, _, stack', idx_input, ctxt'3, sequent'3) =>
+    let val post_app = Phi_CP_IDE.Post_App.invoke (Context.Proof ctxt'3)
+        val (idx_input', ctxt'4, sequent'4, stack'') =
           case stack'
-            of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", pos), SOME (Phi_Opr_Stack.String_Param vname), _) :: stack'')
+
+            of (Phi_Opr_Stack.Meta_Opr (_, _, ("$", _), _, SOME (Phi_Opr_Stack.String_Param vname), _) :: stack'')
                 => let val ctxt'3' = Generic_Element_Access.enable_report_unprocessed_element_index ctxt'3
                        val (ctxt'4, sequent'4) = (ctxt'3', sequent'3)
                               |> Phi_Reasoners.wrap'' (Generic_Variable_Access.get_value vname idx_input)
-                              |> Phi_Processor.process_all_antecedents NONE
+                              |> post_app cfg
                        val idx_input' = Generic_Element_Access.get_unprocessed_element_index ctxt'4
                     in (idx_input', ctxt'4, sequent'4, stack'')
                    end
@@ -209,7 +210,7 @@ val dot_triangle_opr =
                    val s' = s
                           |> apfst Generic_Element_Access.enable_report_unprocessed_element_index
                           |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules')
-                          |> Phi_Processor.process_all_antecedents NONE
+                          |> post_app cfg
                 in process_index (Generic_Element_Access.get_unprocessed_element_index (fst s')) s'
                end
      in (stack'', process_index idx_input' (ctxt'4, sequent'4))

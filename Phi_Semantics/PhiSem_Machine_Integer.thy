@@ -279,8 +279,6 @@ lemma [\<phi>reason 1000]:
 
 subsection \<open>Integer\<close>
 
-declare [[\<phi>trace_reasoning = 3]]
-
 \<phi>type_def \<phi>Int :: "'b::len itself \<Rightarrow> (VAL, int) \<phi>"
   where \<open>x \<Ztypecolon> \<phi>Int _ \<equiv> ((of_int x :: 'b word) \<Ztypecolon> Word('b)
                               \<s>\<u>\<b>\<j> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)})\<close>
@@ -324,13 +322,15 @@ lemma [
   \<open>x \<Ztypecolon> \<int>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (of_int x :: 'b::len word) \<Ztypecolon> Word('b) \<w>\<i>\<t>\<h> x \<in> { -(2^(LENGTH('b)-1)) ..< 2^(LENGTH('b)-1)}
    @action to Word('b)\<close>
   \<medium_left_bracket> \<medium_right_bracket> .
-   
+
+declare [[\<phi>trace_reasoning = 0]]
+
 lemma [\<phi>reason 800 for \<open>?x \<Ztypecolon> Word(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<Ztypecolon> \<int>(_) \<w>\<i>\<t>\<h> _\<close>]:
   " Threshold_Cost 9
 \<Longrightarrow> x \<Ztypecolon> Word('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> sint x \<Ztypecolon> \<int>('b)"
   for x :: \<open>'b::len word\<close>
   \<medium_left_bracket> \<open>sint x \<Ztypecolon> MAKE (\<int>('b))\<close>
-    certified
+    certified using sint_greater_eq sint_less by blast
   \<medium_right_bracket>.
 
 lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> Word(_) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> _ @action to (Word _)\<close>]:
@@ -361,13 +361,6 @@ lemma [\<phi>reason 800 for \<open>_ \<Ztypecolon> \<nat>(_) \<t>\<r>\<a>\<n>\<s
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> x < 2 ^ (LENGTH('b)-1)
 \<Longrightarrow> x \<Ztypecolon> \<nat>('b) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> of_nat x \<Ztypecolon> \<int>('b) \<close>
   \<medium_left_bracket> to \<open>\<int>(_)\<close> \<medium_right_bracket>.
-
-lemma [\<phi>reason 1000]:
-  \<open>\<phi>SemType (x \<Ztypecolon> \<int>('b)) int('b)\<close> \<medium_left_bracket> to \<open>Word(_)\<close> \<medium_right_bracket>.
-
-lemma [\<phi>reason 1000]:
-  "Semantic_Zero_Val int('b) \<int>('b) 0" \<medium_left_bracket> \<open>0 \<Ztypecolon> Word('b)\<close> \<medium_right_bracket>.
-
 
 lemma [\<phi>reason 1000]:
   "\<phi>Equal \<int>('b) (\<lambda>x y. True) (=)"
@@ -533,27 +526,30 @@ subsection \<open>Arithmetic Operations\<close>
 
 subsubsection \<open>Constant Integer\<close>
 
-lemma op_const_word_\<phi>app[\<phi>synthesis 300]:
+lemma op_const_word_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n : unat n'
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> n' \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n))] Word('b)\<close>
 \<medium_left_bracket>
-  semantic_literal \<open>V_int.mk (LENGTH('b),n) \<in> (n' \<Ztypecolon> Word('b))\<close>
+  semantic_literal \<open>V_int.mk (LENGTH('b),n) \<Turnstile> (n' \<Ztypecolon> Word('b))\<close>
 \<medium_right_bracket> .
 
-lemma op_const_nat_\<phi>app[\<phi>synthesis 300]:
+lemma op_const_nat_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> n < 2 ^ LENGTH('b)
 \<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n' : n
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n'))] \<nat>('b)\<close>
 \<medium_left_bracket>
-  semantic_literal \<open>V_int.mk (LENGTH('b),n') \<in> (n \<Ztypecolon> \<nat>('b))\<close>
+  semantic_literal \<open>V_int.mk (LENGTH('b),n') \<Turnstile> (n \<Ztypecolon> \<nat>('b))\<close>
+  certified by (simp add: \<phi> unat_of_nat_len)
 \<medium_right_bracket> .
 
-lemma op_const_natR_\<phi>app[\<phi>synthesis 300]:
+declare [[\<phi>trace_reasoning = 2]]
+
+lemma op_const_natR_\<phi>app[\<phi>reason %ToA_mk_literal_cut]:
   \<open> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[\<phi>mode_literal] n' : n mod 2 ^ LENGTH('b)
 \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<heavy_comma> n \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal (V_int.mk (LENGTH('b),n'))] \<nat>\<^sup>r('b)\<close>
 \<medium_left_bracket>
-  apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified]
-  certified by (simp add: the_\<phi>(1) unat_of_nat)
+  apply_rule op_const_word[where 'b='b and n=n' and n' = \<open>of_nat n\<close>, simplified, OF Simplify_to_Premise]
+  certified by (simp add: the_\<phi>(2) unat_of_nat) 
 \<medium_right_bracket> certified by (simp add: unat_of_nat) .
 
 lemma [\<phi>reason 50
@@ -589,8 +585,7 @@ lemma op_add_word_\<phi>app[\<phi>synthesis for _ (100)
                                    and \<open>x \<Ztypecolon> \<v>\<a>\<l> Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> Word('b)\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_add LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> Word('b) \<rbrace>\<close>
   unfolding op_add_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
-      simp add: \<phi>expns, rule, simp add: \<phi>expns unat_word_ariths)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp add: Premise_def unat_word_ariths)
 
 lemma op_add_nat_\<phi>app[\<phi>overload +,
                       \<phi>synthesis for _ (100)
@@ -605,7 +600,7 @@ lemma op_add_natR_\<phi>app[\<phi>overload +,
                                   and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<nat>\<^sup>r('b)\<close> \<Rightarrow> \<open>\<lambda>v. x + y \<Ztypecolon> _\<close> (1200)]:
   \<open> \<p>\<r>\<o>\<c> op_add LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>\<^sup>r('b) \<longmapsto> \<v>\<a>\<l> x + y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace> \<close>
   \<medium_left_bracket> apply_rule op_add_word[where 'b='b] \<medium_right_bracket>
-      certified by (metis Word.of_nat_unat of_nat_add ucast_id unat_of_nat)  .
+      certified by (metis of_nat_add unat_of_nat) .
 
 lemma op_add_int_\<phi>app[\<phi>overload +,
                       \<phi>synthesis for _ (100)
@@ -642,7 +637,7 @@ lemma op_sub_natR_\<phi>app[\<phi>overload -,
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<le> x
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sub LENGTH('b::len) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>\<^sup>r('b) \<longmapsto> \<v>\<a>\<l> x - y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_sub_word[where 'b='b] \<medium_right_bracket>
-      certified by (metis mod_less of_nat_diff the_\<phi>(1) unat_of_nat unsigned_less) .
+      certified by (metis of_nat_diff the_\<phi> unat_of_nat) .
 
 lemma op_sub_int_\<phi>app[\<phi>overload -,
                       \<phi>synthesis for _ (100)
@@ -663,8 +658,7 @@ lemma op_mul_word_\<phi>app[\<phi>synthesis for _ (100)
   \<open> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> Word('b) \<rbrace>\<close>
   unfolding op_umul_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns unat_word_ariths(2))
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp add: unat_word_ariths(2))
 
 lemma op_mul_nat_\<phi>app[\<phi>overload *,
                       \<phi>synthesis for _ (100)
@@ -681,7 +675,7 @@ lemma op_mul_natR_\<phi>app[\<phi>overload *,
   \<open> \<p>\<r>\<o>\<c> op_umul LENGTH('b::len) (\<phi>V_pair vy vx)
          \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<nat>\<^sup>r('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<nat>\<^sup>r('b) \<longmapsto> \<v>\<a>\<l> x * y \<Ztypecolon> \<nat>\<^sup>r('b) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_mul_word[where 'b='b] \<medium_right_bracket>
-      certified by (metis Word.of_nat_unat of_nat_mult ucast_id unat_of_nat)  .
+      certified by (metis of_nat_mult unat_of_nat) .
  
 lemma op_mul_int_\<phi>app[\<phi>overload *,
                       \<phi>synthesis for _ (100)
@@ -702,8 +696,8 @@ lemma op_udiv_word_\<phi>app[\<phi>synthesis for _ (100)
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_udiv LENGTH('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> Word('b) \<rbrace>\<close>
   unfolding op_udiv_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
-      rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule,
+      rule \<phi>M_assert, simp add: unat_gt_0, rule, simp add: unat_div)
 
 lemma op_div_nat_\<phi>app[\<phi>overload /,
                       \<phi>synthesis for _ (100)
@@ -722,8 +716,8 @@ lemma op_sdiv_word_\<phi>app[\<phi>synthesis for _ (100)
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_sdiv TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x sdiv y \<Ztypecolon> Word('b) \<rbrace>\<close>
   unfolding op_sdiv_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
-        rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule,
+        rule \<phi>M_assert, simp add: unat_gt_0, rule, simp)
 
 lemma op_div_int_\<phi>app[\<phi>synthesis for _ (100)
                                  and \<open>x \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l> \<int>('b)\<close> \<Rightarrow> \<open>\<lambda>v. x sdiv y \<Ztypecolon> _\<close> (1200)]:
@@ -744,6 +738,7 @@ lemma op_div_int_fail[\<phi>synthesis for _ (100)
               \<open>Note the C semantics is\<close> (sdiv) \<open>instead of\<close> (div)
               \<open>and they are different in negative numbers\<close>)
 \<Longrightarrow> \<p>\<r>\<o>\<c> fail \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x div y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
+  unfolding FAIL_def
   by blast
 
 subsubsection \<open>Modulo\<close>
@@ -754,8 +749,8 @@ lemma op_umod_word_\<phi>app
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_umod TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> Word('b) \<rbrace>\<close>
   unfolding op_umod_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
-      rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule,
+      rule \<phi>M_assert, simp add: unat_gt_0, rule, simp add: unat_div)
 
 lemma op_mod_nat_\<phi>app
   [\<phi>synthesis for _ (100)
@@ -774,8 +769,8 @@ lemma op_smod_word_\<phi>app
   \<open> \<p>\<r>\<e>\<m>\<i>\<s>\<e> y \<noteq> 0
 \<Longrightarrow> \<p>\<r>\<o>\<c> op_smod TYPE('b) (\<phi>V_pair vy vx) \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x smod y \<Ztypecolon> Word('b) \<rbrace>\<close>
   unfolding op_smod_def Premise_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns, rule,
-      rule \<phi>M_assert, simp add: \<phi>expns unat_gt_0, rule, simp add: \<phi>expns unat_div)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule,
+      rule \<phi>M_assert, simp add: unat_gt_0, rule, simp add: unat_div)
 
 lemma op_mod_int_\<phi>app
   [\<phi>synthesis for _ (100)
@@ -795,6 +790,7 @@ lemma op_mod_int_fail[\<phi>synthesis 100]:
               \<open>Note the C semantics is\<close> (smod) \<open>instead of\<close> (mod)
               \<open>and they are different in negative numbers\<close>)
 \<Longrightarrow> \<p>\<r>\<o>\<c> fail \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] \<int>('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] \<int>('b) \<longmapsto> \<v>\<a>\<l> x mod y \<Ztypecolon> \<int>('b) \<rbrace>\<close>
+  unfolding FAIL_def
   by blast
 
 
@@ -806,9 +802,8 @@ lemma op_lshr_word_pre_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_lshr LENGTH('ba) LENGTH('bb) (\<phi>V_pair v2 v1)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v1] Word('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] Word('bb) \<longmapsto> \<v>\<a>\<l> drop_bit (unat y) x \<Ztypecolon> Word('ba) \<rbrace>\<close>
   unfolding op_lshr_def
-  apply (cases v1; cases v2; simp; rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns)
-  by (metis drop_bit_eq_div unat_drop_bit_eq)
+  by (cases v1; cases v2; simp; rule, rule, simp, rule, simp, rule, simp,
+      metis drop_bit_eq_div unat_drop_bit_eq)
 
 lemma op_lshr_word_\<phi>app
   [\<phi>synthesis for _ (100)
@@ -837,13 +832,8 @@ proc op_lshr_int
   input \<open>x \<Ztypecolon> \<v>\<a>\<l>[v1] \<int>('ba)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] \<nat>('bb)\<close>
   premises \<open>0 \<le> x\<close>
   output \<open>\<v>\<a>\<l> drop_bit y x \<Ztypecolon> \<int>('ba)\<close>
-\<medium_left_bracket> 
-  ;; $v1
-  have t1: \<open>x < 2 ^ (LENGTH('ba) - 1)\<close>
-    using One_nat_def the_\<phi>(2) by presburger
-  have t2: \<open>nat x < 2 ^ (LENGTH('ba) - 1)\<close>
-    using t1 by fastforce ;;
-   apply_rule op_lshr_nat_\<phi>app[where 'ba='ba and 'bb='bb] ($v1, $v2)
+\<medium_left_bracket>
+  apply_rule op_lshr_nat_\<phi>app[where 'ba='ba and 'bb='bb]
 \<medium_right_bracket> .
 
 paragraph \<open>Left Shift\<close>
@@ -852,9 +842,8 @@ lemma op_lshl_word_pre_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_lshl LENGTH('ba) LENGTH('bb) (\<phi>V_pair v2 v1)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v1] Word('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] Word('bb) \<longmapsto> \<v>\<a>\<l> push_bit (unat y) x \<Ztypecolon> Word('ba) \<rbrace>\<close>
   unfolding op_lshl_def
-  apply (cases v1; cases v2; simp; rule, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns)
-  by (simp add: push_bit_nat_def take_bit_nat_def unsigned_push_bit_eq)
+  by (cases v1; cases v2; simp; rule, rule, simp, rule, simp, rule,
+      simp add: push_bit_nat_def take_bit_nat_def unsigned_push_bit_eq)
 
 lemma op_lshl_word_\<phi>app
   [\<phi>synthesis for _ (100)
@@ -884,7 +873,7 @@ lemma op_lshl_natR_\<phi>app
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v1] \<nat>\<^sup>r('ba) \<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[v2] \<nat>('bb) \<longmapsto> \<v>\<a>\<l> push_bit y x \<Ztypecolon> \<nat>\<^sup>r('ba) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_lshl_word_\<phi>app[where 'ba='ba and 'bb='bb] \<medium_right_bracket>
       certified unfolding push_bit_nat_def
-      by (metis of_nat_push_bit push_bit_nat_def unat_eq_of_nat unat_lt2p unat_of_nat) .
+      by (metis of_nat_push_bit push_bit_eq_mult unat_of_nat) .
 
 
 subsubsection \<open>Comparison\<close>
@@ -897,8 +886,7 @@ lemma op_lt_word_\<phi>app
   \<open>\<p>\<r>\<o>\<c> op_ult LENGTH('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x < y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_ult_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
-      simp add: \<phi>expns, rule, simp add: \<phi>expns word_less_nat_alt)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp add: word_less_nat_alt)
 
 lemma op_lt_nat_\<phi>app
   [\<phi>overload <, \<phi>synthesis for _ (100)
@@ -916,8 +904,7 @@ lemma op_slt_word_\<phi>app
   \<open>\<p>\<r>\<o>\<c> op_slt TYPE('b) (\<phi>V_pair vy vx)
        \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[vx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[vy] Word('b) \<longmapsto> \<v>\<a>\<l> x <s y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_slt_def
-  by (cases vx; cases vy; simp, rule, rule, simp add: \<phi>expns, rule,
-      simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases vx; cases vy; simp, rule, rule, simp, rule, simp, rule, simp)
 
 lemma op_slt_int_\<phi>app
   [\<phi>overload <, \<phi>synthesis for _ (100)
@@ -936,8 +923,7 @@ lemma op_le_word_\<phi>app
   \<open>\<p>\<r>\<o>\<c> op_ule LENGTH('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] Word('b) \<longmapsto> \<v>\<a>\<l> x \<le> y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_ule_def
-  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns word_le_nat_alt)
+  by (cases rawx; cases rawy; simp, rule, rule, simp, rule, simp, rule, simp add: word_le_nat_alt)
 
 lemma op_le_nat_\<phi>app
   [\<phi>overload \<le>, \<phi>synthesis for _ (100)
@@ -955,8 +941,7 @@ lemma op_sle_word_\<phi>app
   \<open>\<p>\<r>\<o>\<c> op_sle TYPE('b) (\<phi>V_pair rawy rawx)
         \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[rawx] Word('b)\<heavy_comma> y \<Ztypecolon> \<v>\<a>\<l>[rawy] Word('b) \<longmapsto> \<v>\<a>\<l> x \<le>s y \<Ztypecolon> \<bool> \<rbrace>\<close>
   unfolding op_sle_def
-  by (cases rawx; cases rawy; simp, rule, rule, simp add: \<phi>expns,
-      rule, simp add: \<phi>expns, rule, simp add: \<phi>expns word_le_nat_alt)
+  by (cases rawx; cases rawy; simp, rule, rule, simp, rule, simp, rule, simp add: word_le_nat_alt)
 
 lemma op_le_int_\<phi>app
   [\<phi>overload \<le>, \<phi>synthesis for _ (100)
@@ -972,7 +957,7 @@ lemma op_cast_uint_word_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_cast_uint TYPE('ba) TYPE('bb) v
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] Word('ba) \<longmapsto> Word.cast x \<Ztypecolon> \<v>\<a>\<l> Word('bb) \<rbrace>\<close>
   unfolding op_cast_uint_def
-  by (cases v, simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases v, simp, rule, simp, rule, simp)
 
 lemma op_cast_nat_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_cast_uint TYPE('ba) TYPE('bb) v
@@ -984,13 +969,13 @@ lemma op_cast_int_word_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_cast_int TYPE('ba) TYPE('bb) v
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] Word('ba) \<longmapsto> Word.scast x \<Ztypecolon> \<v>\<a>\<l> Word('bb) \<rbrace>\<close>
   unfolding op_cast_int_def
-  by (cases v, simp, rule, simp add: \<phi>expns, rule, simp add: \<phi>expns)
+  by (cases v, simp, rule, simp, rule, simp)
 
 lemma op_cast_int_\<phi>app:
   \<open>\<p>\<r>\<o>\<c> op_cast_int TYPE('ba) TYPE('bb) v
      \<lbrace> x \<Ztypecolon> \<v>\<a>\<l>[v] \<int>('ba) \<longmapsto> signed_take_bit (LENGTH('bb)-1) x \<Ztypecolon> \<v>\<a>\<l> \<int>('bb) \<rbrace>\<close>
   \<medium_left_bracket> apply_rule op_cast_int_word[where 'bb='bb] \<medium_right_bracket>
-      certified by (metis One_nat_def atLeastLessThan_iff signed_scast_eq signed_take_bit_int_eq_self sint_sbintrunc' the_\<phi>lemmata) .
+      certified by (simp add: signed_scast_eq sint_of_int_eq the_\<phi>(1) the_\<phi>(2)) .
 
 lemma op_upcast_nat_\<phi>app:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> LENGTH('ba) \<le> LENGTH('bb)

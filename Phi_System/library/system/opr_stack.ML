@@ -5,7 +5,7 @@ type arg_name = string option * Position.T
 type named_arg = arg_name * thm list (*values*)
 type free_param = exn
 
-val String_Param : string -> free_param
+exception String_Param of string
 
 type names_of_args = (string option * Position.T) list (*The name of the current parameter that the programming is making;
                                                      It enables named parameter like \<open>call (name1: aa, name2: bb)\<close>;
@@ -21,7 +21,7 @@ datatype opr_frame = Apply of ( (string * Position.T)
                               * Phi_CP_IDE.expr_id
                               * thm list (*app rules*)
                               * thm list (*values before*))
-                   | Meta_Apply of ((named_arg list * exn option (*free argument*)
+                   | Meta_Apply of ((Phi_CP_IDE.eval_cfg * named_arg list * exn option (*free argument*)
                                           -> (opr_frame list * names_of_args) * context_state
                                           -> (opr_frame list * names_of_args) * context_state)
                                     * thm list (*values before*)
@@ -36,7 +36,7 @@ datatype opr_frame = Apply of ( (string * Position.T)
                                * (string * Position.T)
                                * Phi_CP_IDE.expr_id
                                * free_param option
-                               * ((string * Position.T) * free_param option ->
+                               * (Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option ->
                                     opr_frame list * context_state ->
                                     opr_frame list * context_state))
                    | Left_Parenthesis of thm list (*values before*)
@@ -65,7 +65,7 @@ val decl_postfix : int * string * int option -> theory -> operator_info * theory
 
 (* Data Base of Meta Operators *)
 
-type meta_opr = (string * Position.T) * free_param option ->
+type meta_opr = Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option ->
                 opr_frame list * context_state ->
                 opr_frame list * context_state
 
@@ -112,7 +112,7 @@ datatype opr_frame = Apply of ( (string * Position.T)
                               * Phi_CP_IDE.expr_id
                               * thm list (*app rules*)
                               * thm list (*values before*))
-                      | Meta_Apply of ( (named_arg list * free_param option
+                      | Meta_Apply of ( (Phi_CP_IDE.eval_cfg * named_arg list * free_param option
                                               -> (opr_frame list * names_of_args) * context_state
                                               -> (opr_frame list * names_of_args) * context_state)
                                       * thm list (*values before*)
@@ -127,12 +127,12 @@ datatype opr_frame = Apply of ( (string * Position.T)
                                   * (string * Position.T)
                                   * Phi_CP_IDE.expr_id
                                   * free_param option
-                                  * ((string * Position.T) * free_param option ->
+                                  * (Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option ->
                                       opr_frame list * context_state ->
                                       opr_frame list * context_state))
                       | Left_Parenthesis of thm list (*values before*)
 
-type meta_opr = (string * Position.T) * free_param option ->
+type meta_opr = Phi_CP_IDE.eval_cfg * (string * Position.T) * free_param option ->
                 opr_frame list * context_state ->
                 opr_frame list * context_state
 
@@ -140,15 +140,15 @@ type opr_stack = opr_frame list * names_of_args
 type context = opr_stack * context_state
 
 
-fun precedence_of_frame (Apply _) = 0
-  | precedence_of_frame (Meta_Apply _) = 0
-  | precedence_of_frame Begin_Block = 0
-  | precedence_of_frame (Comma _) = 0
+fun precedence_of_frame (Apply _) = ~1
+  | precedence_of_frame (Meta_Apply _) = ~1
+  | precedence_of_frame Begin_Block = ~1
+  | precedence_of_frame (Comma _) = ~1
   | precedence_of_frame (Opr (prec, _, _, _, _)) = prec
   | precedence_of_frame (Meta_Opr (prec, _, _, _, _, _)) = prec
-  | precedence_of_frame (Left_Parenthesis _) = 0
+  | precedence_of_frame (Left_Parenthesis _) = ~1
 
-fun precedence_of [] = 0
+fun precedence_of [] = ~1
   | precedence_of (frame :: _) = precedence_of_frame frame
 
 (* Predefined Free Params *)

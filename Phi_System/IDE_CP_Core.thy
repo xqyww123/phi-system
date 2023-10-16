@@ -2130,6 +2130,26 @@ text \<open>\<phi>Processor realizes specific facilities for programming in a st
   and fixing an existentially quantified variable.
 \<close>
 
+subsection \<open>Convention of Operator Precedence\<close>
+
+\<phi>reasoner_group \<phi>lang_precedence = (100, [0,1000])
+      \<open>precedences of operators in Isar/\<phi> programming interface\<close>
+  and \<phi>lang_top = (1000, [1000,1000]) in \<phi>lang_precedence
+      \<open>technically used. No operator should be of this precedence.\<close>
+  and \<phi>lang_deref = (930, [930,931]) in \<phi>lang_precedence and < \<phi>lang_top
+      \<open>dereference operator\<close>
+  and \<phi>lang_push_val = (920, [920,921]) in \<phi>lang_precedence and < \<phi>lang_deref
+      \<open>pushing local value to thestate sequent\<close>
+  and \<phi>lang_dot_opr = (910, [910,911]) in \<phi>lang_precedence and < \<phi>lang_push_val
+      \<open>dot operator \<open>\<tribullet>\<close>\<close>
+  and \<phi>lang_app = (900, [900,900]) in \<phi>lang_precedence and < \<phi>lang_dot_opr
+      \<open>precedence of lambda application\<close>
+  and \<phi>lang_assignment_opr = (50, [50,50]) in \<phi>lang_precedence and < \<phi>lang_app
+      \<open>\<open>:=\<close>, as an arithmetic operartor\<close>
+  and \<phi>lang_assignment = (20, [20,20]) in \<phi>lang_precedence and < \<phi>lang_assignment_opr
+      \<open>\<open>\<leftarrow>\<close>, as a connective of statement\<close>
+
+
 subsection \<open>ML codes\<close>
 
 ML_file "library/instructions.ML"
@@ -2140,7 +2160,7 @@ ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/opr_stack.ML\<close>
 ML_file \<open>library/system/toplevel0.ML\<close>
-ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
+ML_file \<open>library/system/opr_stack2.ML\<close>
 ML_file "library/system/processor.ML"
 
 ML_file \<open>library/system/generic_variable_access2.ML\<close>
@@ -2198,16 +2218,6 @@ text \<open>Convention of priorities:
   \<^item> General Application not bound on specific pattern or keyword : 9000~9999
 \<close>
 
-\<phi>reasoner_group \<phi>lang_precedence = (100, [0,1000])
-      \<open>precedences of operators in Isar/\<phi> programming interface\<close>
-  and \<phi>lang_top = (1000, [1000,1000]) in \<phi>lang_precedence
-      \<open>technically used. No operator should be of this precedence.\<close>
-  and \<phi>lang_push_val = (920, [920,920]) in \<phi>lang_precedence and < \<phi>lang_top
-      \<open>pushing local value to thestate sequent\<close>
-  and \<phi>lang_app = (900, [900,900]) in \<phi>lang_precedence and < \<phi>lang_push_val
-      \<open>precedence of lambda application\<close>
-
-
 subsubsection \<open>Controls\<close>
 
 \<phi>lang_parser set_auto_level (10, %\<phi>lang_app) ["!!", "!!!"] (\<open>PROP ?P\<close>)
@@ -2250,7 +2260,7 @@ hide_fact \<phi>cast_exception_UI
           |> Phi_Reasoners.wrap'' (Phi_Apply.apply (Phi_App_Rules.app_rules ctxt [xnames]))
   ))\<close>
 
-\<phi>lang_parser delayed_apply (8998, %\<phi>lang_app) [] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<phi>lang_parser delayed_apply (8998, %\<phi>lang_app) ["", "apply_rule"] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn (opr_ctxt as (_,(ctxt,_))) =>
   (Phi_App_Rules.parser --| \<^keyword>\<open>(\<close>) >> (fn xname => fn cfg =>
     let fun name_pos_of (Facts.Named (name_pos, _)) = name_pos
@@ -2292,7 +2302,7 @@ hide_fact \<phi>cast_exception_UI
   stat |> Phi_Opr_Stack.begin_block pos
        |> apsnd (Phi_CP_IDE.proof_state_call (Phi_Toplevel.begin_block_cmd ([],[]) false)) ))\<close>
 
-\<phi>lang_parser delimiter_of_statement (8800, 1) [";"] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<phi>lang_parser delimiter_of_statement (8800, 0) [";"] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
 \<open> fn (s as (_, (ctxt, _))) => \<^keyword>\<open>;\<close> >> (fn _ => fn cfg =>
     s |> Phi_Opr_Stack.End_of_Statement.invoke (Context.Proof ctxt) cfg
       |> Phi_Opr_Stack.Begin_of_Statement.invoke (Context.Proof ctxt) cfg) \<close>
@@ -2364,7 +2374,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
     end)
 \<close>
 
-\<phi>lang_parser assignment (5000, 1) ["\<rightarrow>"] (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
+\<phi>lang_parser assignment (5000, 0) ["\<rightarrow>"] (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
   fn opr_ctxt => (\<^keyword>\<open>\<rightarrow>\<close> |--
           Parse.list1 ( Scan.option \<^keyword>\<open>$\<close> |-- Scan.option Parse.keyword
                     --| Scan.option \<^keyword>\<open>$\<close> -- Parse.binding))
@@ -2373,12 +2383,11 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
     val (vars', _ ) =
           fold_map (fn (NONE,b)    => (fn k' => ((k',(b,empty_input)),k'))
                      | (SOME k, b) => (fn _  => ((SOME k, (b,empty_input)), SOME k))) vars NONE
-  in Phi_Opr_Stack.end_expression cfg 0 opr_ctxt
-  |> apsnd (Generic_Variable_Access.assignment_cmd vars')
+  in apsnd (Generic_Variable_Access.assignment_cmd vars') opr_ctxt
   end
 )\<close>
 
-\<phi>lang_parser left_assignment (5000, 1) ["var", "val"] (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
+\<phi>lang_parser left_assignment (5000, 0) ["var", "val"] (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
   fn opr_ctxt =>
     Parse.list1 ((\<^keyword>\<open>var\<close> || \<^keyword>\<open>val\<close>) -- Parse.list1 Parse.binding) --
     Parse.position \<^keyword>\<open>\<leftarrow>\<close>
@@ -2390,7 +2399,7 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
   end
 )\<close>
 
-\<phi>lang_parser existential_elimination (150, 1) ["\<exists>"]
+\<phi>lang_parser existential_elimination (150, 0) ["\<exists>"]
                                     ( \<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>
                                     | \<open>ToA_Construction ?s (ExSet ?S)\<close> )
   \<open>fn s => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) >> (fn insts => fn _ =>
@@ -2512,7 +2521,7 @@ setup \<open>Context.theory_map (
       handle Empty => raise Bypass NONE))\<close>
 *)
 
-\<phi>lang_parser enter_proof (790, 1) ["certified"]
+\<phi>lang_parser enter_proof (790, 0) ["certified"]
                        (\<open>Premise _ _ \<Longrightarrow> PROP _\<close> | \<open>Simplify _ _ _ \<Longrightarrow> PROP _\<close> | \<open>?Bool\<close>)
   \<open>fn stat => \<^keyword>\<open>certified\<close> |-- Phi_Opr_Stack.end_of_input >> (fn _ => fn cfg => stat
    |>  apsnd (Phi_CP_IDE.proof_state_call (snd o Phi_Toplevel.prove_prem (cfg,false) I))
@@ -2520,7 +2529,7 @@ setup \<open>Context.theory_map (
  )\<close>
 
 
-\<phi>lang_parser "pure_fact" (2000, 1) ["pure_fact"] (\<open>PROP ?P\<close>) \<open>
+\<phi>lang_parser "pure_fact" (2000, 0) ["pure_fact"] (\<open>PROP ?P\<close>) \<open>
 let
   val for_fixes = Scan.optional (Parse.$$$ "for" |-- Parse.!!! Parse.params) [];
   val statement = Parse.and_list1 (
@@ -2562,17 +2571,17 @@ in
 end
 \<close>
 
-\<phi>lang_parser fold (2000, 1) ["fold"] (\<open>PROP ?P\<close>) \<open>
+\<phi>lang_parser fold (2000, 0) ["fold"] (\<open>PROP ?P\<close>) \<open>
   fn (oprs, (ctxt, sequent)) => Phi_Parse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (oprs, (ctxt, Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent))
 )\<close>
 
-\<phi>lang_parser unfold (2000, 1) ["unfold"] (\<open>PROP ?P\<close>) \<open>
+\<phi>lang_parser unfold (2000, 0) ["unfold"] (\<open>PROP ?P\<close>) \<open>
   fn (oprs, (ctxt, sequent)) => Phi_Parse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
     (oprs, (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent))
 )\<close>
 
-\<phi>lang_parser simplify (2000, 1) ["simplify"] (\<open>PROP ?P\<close>) \<open>
+\<phi>lang_parser simplify (2000, 0) ["simplify"] (\<open>PROP ?P\<close>) \<open>
   fn (oprs, (ctxt, sequent)) => Phi_Parse.$$$ "simplify" |-- \<^keyword>\<open>(\<close> |-- Parse.list Parse.thm --| \<^keyword>\<open>)\<close>
 >> (fn thms => fn _ =>
     (oprs, (ctxt, Simplifier.full_simplify (ctxt addsimps Attrib.eval_thms ctxt thms) sequent))
