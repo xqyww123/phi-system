@@ -3638,6 +3638,7 @@ paragraph \<open>Assuming no algebraic property supporting even non-associative 
    [--c--][-----b-----]
    Give a, expect b, remain d. c \<noteq> 0
 *)
+declare [[\<phi>trace_reasoning = 2]]
 lemma SE_Semimodule_SDistr_a_cb_noassoc[\<phi>reason_template default %derived_SE_sdistr_noassoc]:
   \<open> NO_SIMP (\<g>\<u>\<a>\<r>\<d> id a = id c + id b @action \<A>arith_eval)
 \<Longrightarrow> \<g>\<u>\<a>\<r>\<d> Semimodule_SDistr_Homo\<^sub>U F1 T Ds Dx uz
@@ -3688,8 +3689,9 @@ lemma SE_Semimodule_SDistr_da_b_noassoc[\<phi>reason_template default %derived_S
 \<Longrightarrow> x \<Ztypecolon> F1 a T \<^emph>[True] F1 d T \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (y, undefined) \<Ztypecolon> F3 b U \<^emph>[False] \<top>\<^sub>\<phi> \<w>\<i>\<t>\<h> P \<close>
   unfolding Action_Tag_def \<r>Guard_def id_apply NO_SIMP_def
   \<medium_left_bracket> premises [simp] and _ and _ and _ and _ and Tr
-    apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z[where s=\<open>d\<close> and t=a and F=F1]
-    Tr
+    note [[\<phi>trace_reasoning = 2]]
+    ;;  apply_rule apply_Semimodule_SDistr_Homo\<^sub>Z[where s=\<open>d\<close> and t=a and F=F1]
+      ;; Tr
   \<medium_right_bracket> .
 
 (* [-----a-----][--d--]

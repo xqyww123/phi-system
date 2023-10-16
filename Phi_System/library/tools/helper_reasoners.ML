@@ -24,11 +24,10 @@ val reasoner_ToA_conditioned_subgoals :
           thm (*rule having no Remainder*) * thm (*with conditioned Remainder*) (** thm (*necessarily with remainder*)*) *
         ( bool (*if to split the source or to split the target*) *
           thm list (*rewrites degenerating the branch*) * 
-          (thm (*fun and arg*) * thm (*func*) * thm (*arg*)) (*rewrite rules to move the conditional branch to the top*)) *
+          thm list (*reductions*)) *
         (Proof.context
             -> (indexname * typ) list (*vars in Y*) * cterm (*LHS, the Y*) * cterm (*RHS, the If C Y\<^sub>a Y\<^sub>B*)
-            -> (cterm Vars.table (*instantiations*) *
-                (term -> bool) (*check if the given term is the branch*))) *
+            -> (cterm Vars.table (*instantiations*) * term(*the condition term*))) *
         Proof.context (*context for preparation time*)
      -> Proof.context * thm -> (Proof.context * thm) Seq.seq
 
@@ -37,7 +36,7 @@ end
 structure Phi_Reasoners : PHI_REASONERS = struct
 open Phi_Reasoners
 
-fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, degenerates, rewrs),
+fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, degenerates, reds),
                                        mk_insts, ctxt_gen) =
   let datatype has_remainder = No_Rem | Has_Rem (*| True_Rem*)
       fun has_no_var tm = maxidx_of_term tm = ~1
@@ -68,7 +67,7 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, d
             val Ys = map_filter (try (mk_inst Y 0 o #1 o dest_Tr)) (Thm.prems_of rule)
          in Thm.instantiate (TVars.empty, Vars.make Ys) rule
          |> Simplifier.rewrite_rule ctxt_gen degenerates
-         |> (fn th => @{thm' Pure.reflexive} RS' (ctxt_gen, th))
+         |> (fn th => @{thm' HOL.refl} RS' (ctxt_gen, th))
          |> Thm.trim_context
         end
 
@@ -94,32 +93,17 @@ fun reasoner_ToA_conditioned_subgoals (rule, ruleR, (*ruleRT,*) (split_source, d
       (*val qvar_names = Names.build (fold (Names.add_set o Term.term_name o Thm.term_of) qvars)
       val idx = Thm.maxidx_of sequent' *)
 
-      val (Y,RHS) = (*Thm.generalize_cterm (Names.empty, qvar_names) (idx+1)*) equation0
-                 |> Phi_Help.dest_binop_c \<^const_name>\<open>Pure.eq\<close>
+      val (Y,RHS) = equation0
+                 |> Phi_Help.dest_Trueprop_c
+                 |> Phi_Help.dest_binop_c \<^const_name>\<open>HOL.eq\<close>
       val vars = Term.add_vars (Thm.term_of Y) []
-      val (inst, is_the_branch) = mk_insts ctxt'N (vars,Y,RHS)
-    (*fun is_target_const (Const (N, _)) = N = head_const
-        | is_target_const _ = false*)
-      fun move_to_top ctxt = Conv.bottom_conv (fn _ => fn ctm =>
-            case Thm.term_of ctm
-              of A $ B =>
-                if is_the_branch A
-                then if is_the_branch B
-                     then Conv.try_conv (Conv.rewr_conv (#1 rewrs)) ctm
-                     else Conv.try_conv (Conv.rewr_conv (#2 rewrs)) ctm
-                else if is_the_branch B
-                     then Conv.try_conv (Conv.rewr_conv (#3 rewrs)) ctm
-                     else Conv.all_conv ctm
-               | _ => Conv.all_conv ctm) ctxt then_conv
-            Conv.try_conv (Conv.rewrs_conv degenerates)
-      (*val move_to_top = Conv.bottom_rewrs_conv rewrs'*)
+      val (inst, condition_term) = mk_insts ctxt'N (vars,Y,RHS)
+    
       val sequent'' = Thm.instantiate (TVars.empty, inst) sequent'
-               |> Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-                      Phi_Help.beta_eta_conversion then_conv
-                      Conv.arg_conv (move_to_top ctxt) then_conv
-                      Conv.arg1_conv (move_to_top ctxt)) ctxt) 1
-               |> (fn th => @{thm' Pure.reflexive} RS th
-                            handle THM _ => error "BUG: fail to solve the equation")
+               |> Tactic.rule_by_tactic ctxt ( SOLVED' (
+                    Induct.cases_tac ctxt true [[SOME condition_term]] NONE [] THEN_ALL_NEW
+                    Simplifier.asm_simp_tac (Simplifier.clear_simpset ctxt addsimps (@{thm' HOL.refl} :: reds))
+                  ) 1)
    in SOME ((ctxt, sequent''), Seq.empty)
   end
   end)

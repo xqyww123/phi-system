@@ -2502,7 +2502,7 @@ setup \<open>Context.theory_map (
     then let val mode = Phi_Working_Mode.mode1 ctxt
       in case #spec_of mode (Thm.concl_of sequent)
            of Const (\<^const_name>\<open>ExSet\<close>, _) $ _ =>
-                Phi_CP_IDE.proof_state_call NuObtain.auto_choose (ctxt,sequent)
+                raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, Phi_CP_IDE.proof_state_call NuObtain.auto_choose (ctxt,sequent))
             | _ => (ctxt,sequent)
      end
     else (ctxt,sequent)

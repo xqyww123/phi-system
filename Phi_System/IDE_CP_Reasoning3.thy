@@ -332,6 +332,11 @@ lemma [\<phi>reason %\<phi>br_join_success for \<open>If ?P ?A ?A'' = ?X @action
   \<open>If P A A = A @action br_join\<close>
   unfolding Action_Tag_def by simp
 
+lemma [\<phi>reason default %\<phi>br_join_fail]:
+  \<open> If P A B \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P A B @action br_join \<close>
+  unfolding Action_Tag_def
+  by simp
+
 lemma [\<phi>reason default %\<phi>br_join_fail+4]:
   " If P T U = Z @action br_join
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (If P x y \<Ztypecolon> Z) @action br_join"

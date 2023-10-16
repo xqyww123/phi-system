@@ -190,7 +190,10 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
              ) ctxt) 1 th01) *)
 
       val fixing_targets = case fix_level
-                             of 1 => #2 (Phi_Help.leading_antecedent (Thm.prop_of th))
+                             of 1 => let val (_,prems,concl) = Phi_Help.leading_antecedent (Thm.prop_of th)
+                                      in subtract (op =) (add_vars concl []) (fold add_vars prems [])
+                                      |> map Var
+                                     end
                               | 2 => [Phi_Help.leading_antecedent' th]
                               | _ => []
 

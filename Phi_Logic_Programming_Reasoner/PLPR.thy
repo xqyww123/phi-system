@@ -1541,8 +1541,8 @@ fun defer_premise ctxt =
           of 0 => Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt
            | 1 => (fn th => if Phi_Reasoners.has_obligations_tag th
                             then Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt th
-                            else Phi_Reasoners.safer_obligation_solver {can_inst= true} ctxt th)
-           | 2 => Phi_Reasoners.safer_obligation_solver {can_inst= true} ctxt
+                            else Phi_Reasoners.safer_obligation_solver {can_inst=true} ctxt th)
+           | 2 => Phi_Reasoners.safer_obligation_solver {can_inst=true} ctxt
            | 3 => Phi_Reasoners.auto_obligation_solver ctxt
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
 \<close>
