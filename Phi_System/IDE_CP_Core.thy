@@ -2138,6 +2138,7 @@ ML_file "library/tools/parse.ML"
 ML_file \<open>library/system/post-app-handlers.ML\<close>
 ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys.ML\<close>
+ML_file \<open>library/system/opr_stack.ML\<close>
 ML_file \<open>library/system/toplevel0.ML\<close>
 ML_file \<open>library/additions/delay_by_parenthenmsis.ML\<close>
 ML_file "library/system/processor.ML"
@@ -2409,8 +2410,11 @@ setup \<open>Context.theory_map (
    (case Thm.major_prem_of sequent
       of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _))
          => (ctxt, @{thm Premise_True} RS sequent)
-       | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ prop) => (
-        if Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
+       | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ mode $ prop) => (
+        if (case mode of Const(\<^const_name>\<open>default\<close>, _) => true
+                       | Const(\<^const_name>\<open>MODE_COLLECT\<close>, _) => true
+                       | _ => false) andalso
+           Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
            not (Symtab.defined (#config arg) "no_oblg")   andalso
            not (can \<^keyword>\<open>certified\<close> (#toks arg))
         then let val id = Option.map (Phi_ID.encode o Phi_ID.cons (#id arg)) (Phi_ID.get_if_is_named ctxt)
@@ -2436,7 +2440,10 @@ setup \<open>Context.theory_map (
              then (
                 Phi_Reasoner.info_print ctxt 2 (fn _ =>
                       "reasoning the leading antecedent of the state sequent." ^ Position.here \<^here>) ;
-                Phi_Reasoner.reason1 (fn () => "Fail to solve a \<phi>-LPR antecedent")
+                Phi_Reasoner.reason1 (fn () => let open Pretty in string_of (
+                                                 chunks [para "Fail to solve a \<phi>-LPR antecedent",
+                                                         Thm.pretty_thm ctxt sequent]
+                                               ) end)
                                      NONE (SOME 1) ctxt sequent
                 |> (fn sequent =>
                         raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, sequent)) ))

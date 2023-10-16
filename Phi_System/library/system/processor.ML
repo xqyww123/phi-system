@@ -168,11 +168,6 @@ fun eval_tokens cfg ctxt =
   end
 
 
-structure Opr_Stack_Data = Proof_Data (
-  type T = Phi_Opr_Stack.opr_stack
-  val init = K Phi_Opr_Stack.init_opr_stack
-)
-
 val empty_tokens = forall (Token.is_eof)
 
 fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
@@ -181,7 +176,7 @@ fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
         val stat = (case auto_lev of SOME lev => apfst (Config.put Phi_Reasoner.auto_level lev) stat0
                                    | NONE => stat0)
                 |> apfst Phi_ID.next
-        val oprs = Opr_Stack_Data.get (#1 stat)
+        val oprs = Phi_Opr_Stack.Data.get (#1 stat)
         val opr_ctxt = (oprs, stat)
         val expr_id = initial_expr_id
         val opr_ctxt = Phi_Opr_Stack.Begin_of_Line.invoke (Context.Proof (#1 stat))
@@ -199,7 +194,7 @@ fun eval_line (cfg, auto_lev, auto_lev_no_input) toks =
         val expr_id = uptick_expr_id expr_id
         val opr_ctxt = Phi_Opr_Stack.End_of_Line.invoke (Context.Proof (#1 (#2 opr_ctxt)))
                                                         {id=expr_id, config=cfg, toks=[]} opr_ctxt
-        val opr_ctxt = apsnd (apfst ( Opr_Stack_Data.put (#1 opr_ctxt)
+        val opr_ctxt = apsnd (apfst ( Phi_Opr_Stack.Data.put (#1 opr_ctxt)
                                    #> Config.restore Phi_Reasoner.auto_level (fst stat0))) opr_ctxt
      in if null (#1 (#1 opr_ctxt)) orelse Phi_Opr_Stack.is_interrupted (#1 (#1 opr_ctxt))
         then ()

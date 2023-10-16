@@ -370,8 +370,8 @@ subsubsection \<open>Address Arithmetic - Get Element Pointer\<close>
 definition addr_gep :: "logaddr \<Rightarrow> aggregate_index \<Rightarrow> logaddr"
   where "addr_gep addr i = map_memaddr (\<lambda>idx. idx @ [i]) addr"
 
-definition addr_gep_N :: "logaddr \<Rightarrow> aggregate_path \<Rightarrow> logaddr"
-  where "addr_gep_N addr path = map_memaddr (\<lambda>idx. idx @ path) addr"
+definition addr_geps :: "logaddr \<Rightarrow> aggregate_path \<Rightarrow> logaddr"
+  where "addr_geps addr path = map_memaddr (\<lambda>idx. idx @ path) addr"
 
 syntax "_addr_gep_" :: \<open>logaddr \<Rightarrow> \<phi>_ag_idx_ \<Rightarrow> logaddr\<close> (infixl "\<tribullet>\<^sub>a" 55)
 
@@ -401,29 +401,29 @@ lemma addr_gep_memblk[iff]:
   \<open>memaddr.blk (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.blk addr\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
-lemma addr_gep_N_memblk[iff]:
-  \<open>memaddr.blk (addr_gep_N addr path) = memaddr.blk addr\<close>
-  unfolding addr_gep_N_def by (cases addr; simp)
+lemma addr_geps_memblk[iff]:
+  \<open>memaddr.blk (addr_geps addr path) = memaddr.blk addr\<close>
+  unfolding addr_geps_def by (cases addr; simp)
 
 lemma addr_gep_path[iff]:
   \<open>memaddr.index (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) = memaddr.index addr @ [i]\<close>
   unfolding addr_gep_def by (cases addr; simp)
 
-lemma addr_gep_N_path[iff]:
-  \<open>memaddr.index (addr_gep_N addr path) = memaddr.index addr @ path\<close>
-  unfolding addr_gep_N_def by (cases addr; simp)
+lemma addr_geps_path[iff]:
+  \<open>memaddr.index (addr_geps addr path) = memaddr.index addr @ path\<close>
+  unfolding addr_geps_def by (cases addr; simp)
 
 lemma addr_gep_eq[iff]:
   \<open>addra \<tribullet>\<^sub>a LOGIC_IDX(ia) = addrb \<tribullet>\<^sub>a LOGIC_IDX(ib) \<longleftrightarrow> addra = addrb \<and> ia = ib\<close>
   unfolding addr_gep_def by (cases addra; cases addrb; simp)
 
-lemma addr_gep_N_simp[iff]:
-  \<open>addr_gep_N addr (i#path) = addr_gep_N (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) path\<close>
-  unfolding addr_gep_N_def addr_gep_def by (cases addr; simp)
+lemma addr_geps_simp[iff]:
+  \<open>addr_geps addr (i#path) = addr_geps (addr \<tribullet>\<^sub>a LOGIC_IDX(i)) path\<close>
+  unfolding addr_geps_def addr_gep_def by (cases addr; simp)
 
-lemma addr_gep_N0_simp[iff]:
-  \<open>addr_gep_N addr [] = addr\<close>
-  unfolding addr_gep_N_def by (cases addr; simp)
+lemma addr_geps0_simp[iff]:
+  \<open>addr_geps addr [] = addr\<close>
+  unfolding addr_geps_def by (cases addr; simp)
 
 lemma addr_gep_not_eq_zero[intro!, simp]:
   \<open>addr \<noteq> 0 \<Longrightarrow> addr \<tribullet>\<^sub>a LOGIC_IDX(i) \<noteq> 0\<close>
@@ -441,13 +441,13 @@ lemma addr_gep_valid[intro!, simp]:
   unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
   by (cases addr; clarsimp simp add: valid_idx_step_void)
 
-lemma addr_gep_N_valid[intro!, simp]:
+lemma addr_geps_valid[intro!, simp]:
   \<open> valid_index (logaddr_type addr) path
 \<Longrightarrow> valid_logaddr addr
-\<Longrightarrow> valid_logaddr (addr_gep_N addr path)\<close>
+\<Longrightarrow> valid_logaddr (addr_geps addr path)\<close>
   unfolding valid_logaddr_def zero_memaddr_def addr_gep_def
   by (induct path arbitrary: addr; clarsimp simp add: valid_idx_step_void;
-      metis addr_gep_N_path addr_gep_N_simp addr_gep_memblk addr_gep_valid append_self_conv2 logaddr_type_gep not_Cons_self2 valid_logaddr_def)
+      metis addr_geps_path addr_geps_simp addr_gep_memblk addr_gep_valid append_self_conv2 logaddr_type_gep not_Cons_self2 valid_logaddr_def)
 
 lemma logaddr_to_raw_phantom_mem_type:
   \<open> phantom_mem_semantic_type (logaddr_type addr)
@@ -459,8 +459,8 @@ lemma logaddr_to_raw_phantom_mem_type:
 lemma logaddr_to_raw_phantom_mem_type_gep_N:
   \<open> phantom_mem_semantic_type (logaddr_type addr)
 \<Longrightarrow> valid_index (logaddr_type addr) path
-\<Longrightarrow> logaddr_to_raw (addr_gep_N addr path) = logaddr_to_raw addr\<close>
-  unfolding logaddr_to_raw_def phantom_mem_semantic_type_def addr_gep_N_def
+\<Longrightarrow> logaddr_to_raw (addr_geps addr path) = logaddr_to_raw addr\<close>
+  unfolding logaddr_to_raw_def phantom_mem_semantic_type_def addr_geps_def
   apply (induct path arbitrary: addr; clarsimp simp add: split_memaddr_meta_all)
   subgoal premises prems for a path blk ofs
     apply (simp add: prems(1)[of \<open>ofs @ [a]\<close> blk, simplified,
@@ -540,28 +540,19 @@ lemma Ptr_eqcmp[\<phi>reason 1000]:
 
 
 section \<open>Semantic Operations\<close>
-
+ 
 proc op_get_element_pointer[\<phi>overload \<tribullet>]:
   requires \<open>parse_element_index_input_by_semantic_type TY input_index sidx unwinded pidx reject\<close>
        and \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> input_index = [] \<or> unwinded \<noteq> []\<close>
        and [unfolded is_valid_index_of_def, useful]: \<open>is_valid_index_of unwinded TY TY'\<close>
        and \<open>report_unprocessed_element_index reject\<close>
   input  \<open>addr \<Ztypecolon> \<v>\<a>\<l> Ptr TY\<close>
-  output \<open>addr_gep_N addr pidx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
+  output \<open>addr_geps addr pidx \<Ztypecolon> \<v>\<a>\<l> Ptr TY'\<close>
 \<medium_left_bracket>
   $addr semantic_local_value pointer
   semantic_return \<open>
-    V_pointer.mk (logaddr_to_raw (addr_gep_N (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sidx))
-      \<Turnstile> (addr_gep_N addr pidx \<Ztypecolon> Ptr TY')\<close>
-  certified by ((insert useful, simp,
-                   cases \<open>phantom_mem_semantic_type (logaddr_type addr)\<close>;
-                   cases \<open>addr = 0\<close>;
-                   simp add: logaddr_to_raw_phantom_mem_type),
-                 metis addr_gep_N0_simp fold_simps(1) logaddr_to_raw memaddr_blk_zero memaddr_idx_zero memblk.layout(1) parse_element_index_input_by_semantic_type_def that(1) valid_index_void valid_logaddr_0 zero_list_def,
-                 metis addr_gep_N_valid logaddr_to_raw logaddr_to_raw_phantom_mem_type_gep_N parse_element_index_input_by_semantic_type_def that(1),
-                 simp add: phantom_mem_semantic_type_def,
-                 simp add: phantom_mem_semantic_type_def)
-
+    V_pointer.mk (logaddr_to_raw (addr_geps (rawaddr_to_log TY (V_pointer.dest (\<phi>arg.dest \<a>\<r>\<g>1))) sidx))
+      \<Turnstile> (addr_geps addr pidx \<Ztypecolon> Ptr TY')\<close>
 \<medium_right_bracket> .
 
 

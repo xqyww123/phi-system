@@ -113,7 +113,7 @@ lemma \<phi>M_caseV[intro!]:
 
 lemma semantic_return_\<phi>app:
   \<open> \<p>\<a>\<r>\<a>\<m> (v \<Turnstile> (y \<Ztypecolon> T))
-\<Longrightarrow> <\<phi>expn> v \<Turnstile> (y \<Ztypecolon> T)
+\<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> v \<Turnstile> (y \<Ztypecolon> T)
 \<Longrightarrow> \<p>\<r>\<o>\<c> Return (\<phi>arg v) \<lbrace> X \<longmapsto> \<lambda>u. X\<heavy_comma> y \<Ztypecolon> Val u T \<rbrace> \<close>
   unfolding Premise_def \<phi>Procedure_def det_lift_def Return_def
   by (clarsimp simp add: Val.unfold)

@@ -232,7 +232,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
       |> Proof.map_context (fn ctxt => ctxt
             |> Proof_Context.set_mode Proof_Context.mode_default
             |> Config.restore phi_allow_source_object_to_be_not_variable (Proof.context_of stat)
-            |> Phi_ID.step_in)
+            |> Phi_ID.step_in
+            |> Phi_Opr_Stack.initialize_opr_stack)
       |> Proof.proof (SOME (Method.Basic (fn _ => fn _ =>
             Context_Tactic.CONTEXT_TACTIC all_tac), Position.no_range))
       |> Seq.the_result "never fail"
