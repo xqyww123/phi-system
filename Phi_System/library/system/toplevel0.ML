@@ -6,12 +6,13 @@ signature PHI_TOPLEVEL = sig
       * (Attrib.binding * term list) list (*bindings of conditions, attributes registered by
                                       \<open>\<phi>premise_attribute\<close> will be applied on the conditions *)
         -> bool -> Proof.state -> Proof.state
-  val begin_block_cmd :   binding list * (Attrib.binding * string list) list
+  val begin_block_cmd :  binding list * (Attrib.binding * string list) list
         -> bool -> Proof.state -> Proof.state
 
   datatype spec_annot = Spec_Annot of string | Subj_Annot of string
   val end_block_cmd : spec_annot option -> bool -> Proof.state -> Proof.state
-  val end_block_auto_proof_cmd : spec_annot option -> bool -> Proof.state -> Proof.state
+  val end_block_auto_proof_cmd : spec_annot option -> bool
+                              -> Proof.state -> Proof.state
   val end_block : term option (*a spec that the sequent will be transformed to before assembling*)
                -> bool -> Proof.state -> Proof.state
 
@@ -95,6 +96,7 @@ in
 
 fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
   let
+    val stat = Proof.map_context Phi_ID.next stat
     val is_top = not (Phi_Envir.under_programming_environ (Proof.context_of stat))
                  orelse is_backward_mode stat
     val normalize_tac =
@@ -370,23 +372,26 @@ val end_block_cmd = gen_finish_proc (fn ctxt =>
                   $ term
             end
      )) Proof.local_qed
+
 val end_block = gen_finish_proc (K I) Proof.local_qed
 
-fun repeat_future_proof s =
+fun led_future_proof s =
   if Proof.goal_finished s then s
-  else let val id = Option.map Phi_ID.encode (Phi_ID.get_if_is_named (Proof.context_of s))
+  else let val s = Proof.map_context Phi_ID.next s
+           val id = Option.map Phi_ID.encode (Phi_ID.get_if_is_named (Proof.context_of s))
            val meth = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (fn sequent =>
                 Phi_Sledgehammer_Solver.auto id ctxt (@{thm Premise_D[where mode=default]} RS sequent))))
         in Proof.local_future_terminal_proof ((meth, Position.no_range), NONE) s
        end
-fun repeat_future_proof0 s =
+
+fun led_future_proof0 s =
   if Proof.goal_finished s
   then Proof.local_done_proof s
-  else repeat_future_proof s
+  else led_future_proof s
 
 fun end_block_auto_proof_cmd cast int =
        end_block_cmd cast int
-    #> repeat_future_proof0
+    #> led_future_proof0
 
 (* fun gen_finish_proc' prep_specthm qed int stat =
   let val sequent = Proof.the_fact stat

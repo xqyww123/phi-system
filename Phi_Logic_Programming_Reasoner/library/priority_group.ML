@@ -208,8 +208,9 @@ val print_ML = ML_Syntax.print_string
 
 val _ = Theory.setup (
   ML_Antiquotation.value \<^binding>\<open>priority\<close>
-    (Scan.peek (fn ctxt => parser >> (fn raw_priority =>
-        check_priority true ctxt raw_priority
+    (Scan.peek (fn ctxt => Scan.optional (Args.$$$ "loose" >> K false) true
+                        -- parser >> (fn (chk_range, raw_priority) =>
+        check_priority chk_range ctxt raw_priority
           |> ML_Syntax.print_int o fst
           |> ML_Syntax.atomic )))
 #>ML_Antiquotation.value \<^binding>\<open>reasoner_group\<close>

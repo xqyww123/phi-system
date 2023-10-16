@@ -760,11 +760,18 @@ lemma [\<phi>reason default ! %\<phi>simp_system_fallback for \<open>_ \<t>\<r>\
 print_\<phi>reasoners \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X @action \<A>simp' False\<close> 
 print_\<phi>reasoners \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ @action \<A>simp' _\<close> ? ?
 
-\<phi>processor \<phi>transformation_based_simplifier 101 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S\<close>)
-  \<open>fn (ctxt,sequent) => Scan.succeed (fn _ =>
-    case Phi_Working_Mode.mode ctxt
-      of SOME mode => raise Bypass (SOME (ctxt, Phi_CoP_Simp.invoke_when_needed (ctxt,mode) sequent))
-       | NONE => raise Bypass NONE)\<close>
+setup \<open>Context.theory_map (
+  Phi_CP_IDE.Post_App.add 320 (K (fn (ctxt, sequent) =>
+    case Thm.prop_of sequent
+      of prop as Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+   (case Phi_Working_Mode.mode ctxt
+      of SOME mode =>
+            if #constr_is_ready mode prop
+            then (ctxt, Phi_CoP_Simp.invoke_when_needed (ctxt,mode) sequent)
+            else (ctxt, sequent)
+       | NONE => (ctxt, sequent))
+       | _ => (ctxt, sequent)))
+)\<close>
 
 (*declare [[\<phi>simp_rule_pass]] \<comment> \<open>Must be enabled until all the internal rules are registered as
       it modifies any rule in form \<open>X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y\<close> into \<open>Y \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?? \<Longrightarrow> X \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ??\<close>\<close>
@@ -1337,7 +1344,7 @@ ML_file \<open>library/tools/induct_analysis.ML\<close>
 
 hide_fact "_cases_app_rule_"
 
-\<phi>processor case_analysis 5000 (\<open>_\<close>) \<open> IDECP_Induct_Analysis.case_analysis_processor \<close>
+\<phi>lang_parser case_analysis 5000 (\<open>_\<close>) \<open> IDECP_Induct_Analysis.case_analysis_processor \<close>
 
 
 subsubsection \<open>Case Rules\<close>

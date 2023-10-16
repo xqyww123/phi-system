@@ -47,9 +47,9 @@ signature PHI_TOPLEVEL = sig
 
   val statement_clean_values : bool Config.T (*controls whether the statement command \<^bold>;
         cleans all values at its beginning.*)
-  val statement_line_cmd : int * int -> (Proof.state -> Proof.state) parser
 
-  val prove_prem : bool -> (Proof.state -> Proof.state) -> Proof.state -> thm list * Proof.state
+  val prove_prem : Phi_CP_IDE.eval_cfg * bool -> (Proof.state -> Proof.state) -> Proof.state -> thm list * Proof.state
+
   (*val export_LLVM : theory -> theory *)
 
 end
@@ -83,28 +83,17 @@ datatype cond_kind = Premise | Assumption
 
 (** Statement **)
 
-val previous_statement_is_finished' =
-      Config.declare_bool ("Phi_Toplevel.previous_statement_is_finished", \<^here>) (K false)
-(* It is false iff the previous statement is ended by a proof meaning the intended construction
-   of the previous statement is interrupted by a pending proof so not finished.
- *)
-
-fun prove_prem int after_qed'' stat =
+fun prove_prem (cfg,int) after_qed'' stat =
   let
     val sequent = Phi_Envir.the_state_sequent stat
     fun after_qed sequent stat =
-      let
-        val original_auto_level = Config.get (Proof.context_of stat) Phi_Reasoner.auto_level
-      in
-        stat |> Proof.map_context_result
-                  (fn ctxt =>
-                   Phi_Processor.process_no_input (SOME 1) (ctxt,sequent)
-                  |> swap
-                  |> apsnd (Config.put Phi_Reasoner.auto_level original_auto_level
-                         #> Config.put previous_statement_is_finished' false))
-             |-> Phi_Envir.set_state_sequent
-             |> after_qed''
-      end
+          stat |> Phi_Envir.set_state_sequent sequent
+               |> Phi_CP_IDE.call_of_state_sequent (fn s => s
+                    |> apfst (Config.put Phi_Reasoner.auto_level 1)
+                    |> Phi_CP_IDE.Post_App.invoke (Context.Proof (fst s)) cfg
+                    |> apfst ( Config.restore Phi_Reasoner.auto_level (fst s) )
+                  )
+               |> after_qed''
   in stat
   |> Phi_Sys.obligation_proof (print_results int) Proof_Context.mode_schematic ""
         NONE after_qed [] [] sequent
@@ -247,7 +236,9 @@ fun clean_values (ctxt,sequent) =
       then snd (Generic_Variable_Access.extract_values (~1,true) (ctxt, sequent))
       else (ctxt, sequent)
 
-fun statement_line_cmd auto_lev =
+(*
+fun statement_line_cmd auto_lev = Phi_CP_IDE.eval_line
+
   Phi_Processor.powerful_process_p auto_lev (fn expr_id =>
                         Phi_Envir.map_state_sequent (fn (ctxt,sequent) =>
                             End_of_Line.invoke (Context.Proof ctxt) expr_id (ctxt,sequent)))
@@ -259,9 +250,10 @@ fun statement_line_cmd auto_lev =
        can be interrupted and suspended by inserted proofs.*)
   )
 
+
 fun statement_cmd_first_line auto_lev =
   statement_line_cmd auto_lev >> (fn f =>
-       Proof.map_context (Config.put previous_statement_is_finished' false)
+       Proof.map_context (Config.put previous_statement_completes' false)
     #> f)
 
 fun statement_cmd_tail auto_lev toks =
@@ -271,23 +263,20 @@ fun statement_cmd_tail auto_lev toks =
       else if null toks orelse Token.is_eof (hd toks)
            then s
            else error "The construction has ended but a statement is given")) toks
-
+*)
 
 val _ = Theory.setup (Context.theory_map (
-   Begin_of_Line.add 0 (K (fn s =>
-     if Config.get (fst s) previous_statement_is_finished'
-     then Begin_of_Next_Statement.invoke (Context.Proof (fst s)) () s
-     else s))
-#> End_of_Line.add 0 (K (fn s =>
-     if Config.get (fst s) previous_statement_is_finished'
-     then End_of_Statement.invoke (Context.Proof (fst s)) () s
-     else s))
-#> Begin_of_Next_Statement.add 50 (K clean_values)
-#> Begin_of_Line.add 1000 (K (apfst (Config.put previous_statement_is_finished' true))) (*reset*)
-#> End_of_Line.add 100 (K (apfst Phi_Envir.freeze_dynamic_lemmas))
+
+   Phi_Opr_Stack.Begin_of_Statement.add 50 (K (fn opr_ctxt =>
+      if Phi_Opr_Stack.is_the_first_statement (#1 (#1 opr_ctxt))
+      then opr_ctxt
+      else apsnd clean_values opr_ctxt))
+
+#> Phi_Opr_Stack.End_of_Line.add 100
+      (K (apsnd (apfst Phi_Envir.freeze_dynamic_lemmas)))
+
 ))
 
-fun previous_statement_is_finished ctxt = Config.get ctxt previous_statement_is_finished'
 
 (*val is_interactive = Config.declare_bool ("\<phi>Sys.interactive", \<^here>) (K true)
 exception Schematic*)
@@ -399,9 +388,16 @@ val _ =
         begin_rec_proc_cmd def_const b arg ret throws (vars,fixes) includes defs (prec1 @ prec2) G))
 *)
 
+fun is_eof_toks [] = true
+  | is_eof_toks (h :: _) = Token.is_eof h
+
 val _ =
-  Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Lead statements of \<phi> programs"
-    (statement_line_cmd (3,3) >> (fn f => Toplevel.proof (f o Proof.map_context Phi_ID.next)))
+  Outer_Syntax.command \<^command_keyword>\<open>;;\<close> "Leading a statement of \<phi> programs"
+    (fn toks => Toplevel.proof (Phi_CP_IDE.eval_line (Symtab.empty, SOME 3, SOME 3) (toks @ [Token.eof]))
+             |> rpair (if is_eof_toks toks then [Token.eof] else []))
+
+fun statement_cmd_no_auto toks = (Phi_CP_IDE.eval_line (Symtab.empty, SOME 3, SOME 1) (toks @ [Token.eof]),
+                                  if is_eof_toks (@{print} toks) then [Token.eof] else [])
 
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>\<medium_left_bracket>\<close> "Begin a \<phi> program block"
@@ -409,8 +405,8 @@ val _ =
      -- optional (\<^keyword>\<open>premises\<close> |--
             and_list ((binding -- opt_attribs || attribs >> pair Binding.empty) -- ppats)) []
       >> begin_block_cmd)
-   -- statement_cmd_first_line (3,1))
-   >> (fn (blk,prcs) => Toplevel.proof' (fn int => prcs o blk int o Proof.map_context Phi_ID.next)))
+   -- statement_cmd_no_auto)
+   >> (fn (blk,prcs) => Toplevel.proof' (fn int => @{print} o prcs o blk int o Proof.map_context Phi_ID.next)))
 
 datatype end_blk_action = Enter_Proof_Mode | Transparent_Proof of (Proof.state -> Proof.state)
 
@@ -419,7 +415,7 @@ val _ =
     (option (\<^keyword>\<open>for\<close> |-- term) --
      option (\<^keyword>\<open>subj\<close> |-- term) -- (
         \<^keyword>\<open>certified\<close> >> K Enter_Proof_Mode ||
-        statement_cmd_tail (3,1) >> Transparent_Proof
+        statement_cmd_no_auto >> Transparent_Proof
   ) >> (fn (spec_subj,act) => Toplevel.proof' (fn int => fn stat =>
   let val spec = case spec_subj of (SOME _, SOME _) =>
                                       Exn.error "keyword 'for' and 'subj' should not be given simutaneously."
@@ -431,8 +427,9 @@ val _ =
    |> (case act
          of Enter_Proof_Mode => end_block_cmd spec int
           | Transparent_Proof tail_statement => end_block_auto_proof_cmd spec int
-                                             #> Proof.map_context Phi_ID.next
-                                             #> tail_statement)
+                                             #> (fn s => s
+                                             |> Proof.map_context Phi_ID.next
+                                             |> Phi_Envir.under_programming_environ (Proof.context_of s) ? tail_statement))
   end)))
 (*
 val _ =

@@ -429,7 +429,7 @@ lemma Index_Param_Tag_Swap:
 
 ML_file \<open>syntax/index_param.ML\<close>
 
-\<phi>processor set_index_param 5000 (premises \<open>\<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> _\<close>) \<open>fn (ctxt,sequent) =>
+\<phi>lang_parser set_index_param 5000 (premises \<open>\<i>\<n>\<d>\<e>\<x> \<p>\<a>\<r>\<a>\<m> _\<close>) \<open>fn (ctxt,sequent) =>
   Scan.pass (Context.Proof ctxt) Synt_Index_Param.index_term_parser >> (fn term => fn _ =>
       Phi_Sys.set_param term (ctxt, @{thm Index_Param_Tag_Swap} RS sequent))\<close>
 *)
@@ -469,7 +469,7 @@ proc op_construct_aggregate:
   output \<open>x \<Ztypecolon> \<v>\<a>\<l> T\<close>
   \<medium_left_bracket>
     semantic_assert \<open>constructor args \<in> Well_Type TY\<close>
-    semantic_return \<open>constructor args \<Turnstile> (x \<Ztypecolon> T)\<close>
+      ;;    semantic_return \<open>constructor args \<Turnstile> (x \<Ztypecolon> T)\<close>
   \<medium_right_bracket> .
 
 
@@ -504,15 +504,15 @@ declare op_get_aggregate[\<phi>overload "[]", \<phi>overload "\<tribullet>"]
 
 ML_file \<open>library/generic_element_access.ML\<close>
 
-\<phi>processor aggregate_getter_setter 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser aggregate_getter_setter 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>[\<close> >> (fn (_, pos) => fn _ =>
     Generic_Element_Access.gen_access (\<^named_theorems>\<open>[]_\<phi>app\<close>, \<^named_theorems>\<open>[]:=_\<phi>app\<close>)
                                           (("[",pos), (NONE, pos)) s) \<close>
 
-\<phi>processor aggregate_getter_end 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser aggregate_getter_end 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>]\<close> -- Scan.option (Parse.position \<^keyword>\<open>:=\<close>)
 >> (fn ((_, pos), assign) => fn _ => (
-    if Phi_Opr_Stack.is_during_apply ctxt "[" then ()
+    if Phi_Opr_Stack.inside_calling_stack ctxt "[" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
     Phi_Opr_Stack.close_parenthesis
       (SOME (case assign of SOME (_, pos') => Generic_Element_Access.Bracket_Opr_Write pos'
@@ -520,19 +520,19 @@ ML_file \<open>library/generic_element_access.ML\<close>
       I (ctxt,sequent)
 )) \<close>
 
-\<phi>processor construct_aggregate 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser construct_aggregate 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>\<lbrace>\<close> -- Scan.option (Parse.short_ident --| \<^keyword>\<open>:\<close>)
 >> (fn ((_, pos), arg_name) => fn _ =>
     Generic_Element_Access.gen_constructor "" (("\<lbrace>",pos), (arg_name, pos)) s) \<close>
 
-\<phi>processor construct_aggregate_end 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser construct_aggregate_end 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn (ctxt,sequent) => Parse.position \<^keyword>\<open>\<rbrace>\<close> >> (fn (_, pos) => fn _ => (
-    if Phi_Opr_Stack.is_during_apply ctxt "\<lbrace>" then ()
+    if Phi_Opr_Stack.inside_calling_stack ctxt "\<lbrace>" then ()
     else error ("Unbalanced paranthenses and bracks. " ^ Position.here pos) ;
     Phi_Opr_Stack.close_parenthesis NONE I (ctxt,sequent)
 )) \<close>
 
-\<phi>processor triangle_operator 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser triangle_operator 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>\<tribullet>\<close> >> (fn (_, pos) => fn _ => (
 let open Phi_Opr_Stack
     fun is_the_first (Meta_Opr (_,_,("\<tribullet>",_),_,_) :: _) = false
@@ -550,7 +550,7 @@ let open Phi_Opr_Stack
 end
 )) \<close>
 
-\<phi>processor assignment_opr 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
+\<phi>lang_parser assignment_opr 8800 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>)
 \<open> fn s => Parse.position \<^keyword>\<open>\<leftarrow>\<close> >> (fn (_, pos) => fn _ => (
 let open Phi_Opr_Stack
     fun chk_val (Meta_Opr (_,_,("$",_),_,_) :: _) = ()

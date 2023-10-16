@@ -37,13 +37,14 @@ lemma "_intro_symbol_":
   by clarsimp
 
 
-\<phi>processor literal_symbol 8500 (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>) \<open>
-fn (ctxt,sequent) => Parse.string >> (fn s => fn _ =>
-  (ctxt, #transformation_rule Phi_Working_Mode.programming
+\<phi>lang_parser literal_symbol (8500, %\<phi>lang_app) [""]
+                            (\<open>CurrentConstruction programming_mode ?blk ?H ?S\<close>) \<open>
+fn (oprs,(ctxt,sequent)) => Parse.string >> (fn s => fn _ =>
+  (oprs, (ctxt, #transformation_rule Phi_Working_Mode.programming
             OF [sequent, Thm.instantiate
                             (TVars.empty, Vars.make [((("s",0),\<^typ>\<open>symbol\<close>),
                                                      Thm.cterm_of ctxt (Phi_Tool_Symbol.mk_symbol s))])
-                            @{thm "_intro_symbol_"}]))
+                            @{thm "_intro_symbol_"}])))
 \<close>
 
 

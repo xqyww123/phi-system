@@ -318,6 +318,7 @@ lemma parse_element_index_input_by_semantic_type_at_least_1_opt_NIL:
 subsection \<open>Variable Operations\<close>
 
 declare [[\<phi>trace_reasoning = 2]]
+declare [[\<phi>display_value_internal_name=true]]
 
 proc op_get_var:
   input  \<open>x \<Ztypecolon> \<v>\<a>\<r>[var] T\<close>
@@ -335,7 +336,7 @@ proc op_get_var:
   fold Inited_Var_identity_eq
   apply_rule op_get_aggregate[where input_index=input_index and sidx=sidx and unwinded=idx
                                 and pidx=pidx and reject=reject]
-\<medium_right_bracket> .
+ \<medium_right_bracket> .
 
 lemma op_get_var0:
   \<open> \<phi>SemType (x \<Ztypecolon> T) TY
@@ -362,7 +363,7 @@ proc op_set_var:
   \<open>var\<close> to Itself
   unfold Raw_Var_identity_eq
   FIC.Var.getter_rule
-
+ 
   semantic_assert \<open>
         pred_option (\<lambda>TY_var. pred_option ((=) TY_var) TY \<and> index_type sidx TY_var = UY) (varname.type var) \<and>
         pred_option (\<lambda>TY'. valid_index TY' sidx) TY\<close>
@@ -566,7 +567,7 @@ proc (nodef) "__set_new_var_rule_":
       and \<open>\<phi>SemType (y \<Ztypecolon> U) TY\<close>
   output \<open>Z\<close>
   throws E
-\<medium_left_bracket>
+\<medium_left_bracket> 
   op_var_scope \<open>Some TY\<close> \<medium_left_bracket>
     premises [\<phi>reason for \<open>varname.type var \<equiv> _\<close>]
     op_set_var_0

@@ -10,7 +10,7 @@ theory IDE_CP_Core
   and "\<medium_left_bracket>" :: prf_goal % "proof"
   and ";;" :: prf_goal % "proof"
   and "\<medium_right_bracket>" :: prf_goal % "proof"
-  and "\<phi>processor" :: thy_decl % "ML"
+  and "\<phi>lang_parser" :: thy_decl % "ML"
   and (* "\<phi>interface" "\<phi>export_llvm" *) "\<phi>overloads" "declare_\<phi>operator" :: thy_decl
 abbrevs
   "!!" = "!!"
@@ -2121,7 +2121,7 @@ section \<open>Implementing the Interactive Environment\<close>
 text \<open>The implementation consists of three steps:
 \<^enum> building the ML systems and libraries;
 \<^enum> defining the Isar commands;
-\<^enum> defining \<^emph>\<open>\<phi>processors\<close>.
+\<^enum> defining \<^emph>\<open>\<phi>lang_parsers\<close>.
 \<close>
 
 text \<open>\<phi>Processor realizes specific facilities for programming in a statement,
@@ -2134,8 +2134,8 @@ subsection \<open>ML codes\<close>
 
 ML_file "library/instructions.ML"
 ML_file "library/tools/parse.ML"
-ML_file \<open>library/system/post-app-handlers.ML\<close>
 
+ML_file \<open>library/system/post-app-handlers.ML\<close>
 ML_file "library/system/procedure.ML"
 ML_file \<open>library/system/sys.ML\<close>
 ML_file \<open>library/system/toplevel0.ML\<close>
@@ -2197,10 +2197,19 @@ text \<open>Convention of priorities:
   \<^item> General Application not bound on specific pattern or keyword : 9000~9999
 \<close>
 
+\<phi>reasoner_group \<phi>lang_precedence = (100, [0,1000])
+      \<open>precedences of operators in Isar/\<phi> programming interface\<close>
+  and \<phi>lang_top = (1000, [1000,1000]) in \<phi>lang_precedence
+      \<open>technically used. No operator should be of this precedence.\<close>
+  and \<phi>lang_push_val = (920, [920,920]) in \<phi>lang_precedence and < \<phi>lang_top
+      \<open>pushing local value to thestate sequent\<close>
+  and \<phi>lang_app = (900, [900,900]) in \<phi>lang_precedence and < \<phi>lang_push_val
+      \<open>precedence of lambda application\<close>
+
 
 subsubsection \<open>Controls\<close>
 
-\<phi>processor set_auto_level (10, 1000) ["!!", "!!!"] (\<open>PROP ?P\<close>)
+\<phi>lang_parser set_auto_level (10, %\<phi>lang_app) ["!!", "!!!"] (\<open>PROP ?P\<close>)
   \<open>(fn (oprs, (ctxt, sequent)) => Phi_Parse.auto_level_force >>
       (fn auto_level' => fn _ =>
           (oprs, (Config.put Phi_Reasoner.auto_level auto_level' ctxt, sequent))))\<close>
@@ -2209,7 +2218,7 @@ subsubsection \<open>Controls\<close>
 
 
 (*
-\<phi>processor repeat 12 (\<open>PROP ?P\<close>) \<open>let
+\<phi>lang_parser repeat 12 (\<open>PROP ?P\<close>) \<open>let
   in fn (ctxt, sequent) =>
     Parse.not_eof -- ((Parse.$$$ "^" |-- Parse.number) || Parse.$$$ "^*") >> (fn (tok,n) => fn () =>
         (case Int.fromString n of SOME n => funpow n | _ => error ("should be a number: "^n))
@@ -2228,81 +2237,77 @@ lemma \<phi>cast_exception_UI:
   using \<phi>apply_view_shift_pending_E .
 
 (*immediately before the accept call*)
-\<phi>processor "throws" (490, 900) ["throws"] (\<open>\<p>\<e>\<n>\<d>\<i>\<n>\<g> ?f \<o>\<n> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T \<t>\<h>\<r>\<o>\<w>\<s> ?E\<close>)
+\<phi>lang_parser "throws" (490, %\<phi>lang_app) ["throws"] (\<open>\<p>\<e>\<n>\<d>\<i>\<n>\<g> ?f \<o>\<n> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T \<t>\<h>\<r>\<o>\<w>\<s> ?E\<close>)
   \<open>fn (oprs, (ctxt, sequent)) => \<^keyword>\<open>throws\<close> >> (fn _ => fn _ =>
       (oprs, (ctxt, sequent RS @{thm "\<phi>cast_exception_UI"})) )\<close>
 
 hide_fact \<phi>cast_exception_UI
 
-\<phi>processor "apply" (9000, 900) [] (\<open>?Bool\<close>)
-\<open> fn (oprs,(ctxt,sequent)) => Phi_App_Rules.parser >> (fn xnames => fn _ =>
-  (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply (Phi_App_Rules.app_rules ctxt [xnames])) (ctxt, sequent)))\<close>
+\<phi>lang_parser "apply" (9000, %\<phi>lang_app) ["", "apply_rule"] (\<open>?Bool\<close> | \<open>PROP _ \<Longrightarrow> PROP _\<close>)
+\<open> fn (oprs,(ctxt,sequent)) => Phi_App_Rules.parser >> (fn xnames => fn cfg =>
+  (oprs, (ctxt, sequent)
+          |> Phi_Reasoners.wrap'' (Phi_Apply.apply (Phi_App_Rules.app_rules ctxt [xnames]))
+  ))\<close>
 
-\<phi>processor delayed_apply 8998 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
-\<open> fn (ctxt,sequent) =>
-  (Phi_App_Rules.parser --| \<^keyword>\<open>(\<close>) >> (fn xname => fn _ =>
+\<phi>lang_parser delayed_apply (8998, %\<phi>lang_app) [] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn (opr_ctxt as (_,(ctxt,_))) =>
+  (Phi_App_Rules.parser --| \<^keyword>\<open>(\<close>) >> (fn xname => fn cfg =>
     let fun name_pos_of (Facts.Named (name_pos, _)) = name_pos
           | name_pos_of _ = ("", Position.none)
     in
       if Phi_Opr_Stack.synt_can_delay_apply' (Context.Proof ctxt) (fst xname)
-      then Phi_Opr_Stack.begin_apply (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname]) (ctxt, sequent)
-      else raise Bypass NONE
+      then Phi_Opr_Stack.begin_apply cfg (name_pos_of (fst xname), Phi_App_Rules.app_rules ctxt [xname]) opr_ctxt
+      else raise Phi_CP_IDE.Bypass
     end)\<close>
 
-
-
-\<phi>processor apply_operator 8990 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
-\<open> fn (ctxt,sequent) =>
-  (Phi_App_Rules.symbol_position >> (fn (xname,pos) => fn _ =>
+\<phi>lang_parser apply_operator (8990, %\<phi>lang_app) [] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn (opr_ctxt as (_,(ctxt,_))) =>
+  (Phi_App_Rules.symbol_position >> (fn (xname,pos) => fn cfg =>
     case Phi_Opr_Stack.lookup_operator (Proof_Context.theory_of ctxt) xname
-      of NONE => raise Bypass NONE
+      of NONE => raise Phi_CP_IDE.Bypass
        | SOME opr => (
           case Phi_Opr_Stack.lookup_meta_opr (Proof_Context.theory_of ctxt) xname
             of SOME meta =>
-                Phi_Opr_Stack.push_meta_operator (opr, (xname,pos), NONE, meta) (ctxt, sequent)
+                Phi_Opr_Stack.push_meta_operator cfg (opr, (xname,pos), NONE, meta) opr_ctxt
              | NONE =>
                 let val rules = Phi_App_Rules.app_rules ctxt [(Facts.Named ((xname,pos), NONE), [])]
-                 in Phi_Opr_Stack.push_operator (opr, (xname,pos), rules)
-                                                        (ctxt, sequent)
+                 in Phi_Opr_Stack.push_operator cfg (opr, (xname,pos), rules) opr_ctxt
                 end)
   ))\<close>
 
-\<phi>processor open_parenthesis 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
-\<open> fn s =>
-  (Parse.position \<^keyword>\<open>(\<close>) >> (fn (_, pos) => fn _ =>
-    Phi_Opr_Stack.open_parenthesis (NONE, pos) s)\<close>
+\<phi>lang_parser open_parenthesis (8800, %\<phi>lang_app) ["("] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn s => (Parse.position \<^keyword>\<open>(\<close>) >> (fn (_, pos) => fn _ =>
+    Phi_Opr_Stack.open_parenthesis (NONE, pos) s) \<close>
 
-\<phi>processor close_parenthensis 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
-\<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn _ => Phi_Opr_Stack.close_parenthesis NONE I s)\<close>
+\<phi>lang_parser close_parenthensis (8800, %\<phi>lang_top) [")"] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn s => \<^keyword>\<open>)\<close> >> (fn _ => fn cfg => Phi_Opr_Stack.close_parenthesis (cfg, NONE, false) s)\<close>
 
-\<phi>processor comma 8800 (\<open>?P\<close>) \<open> fn s => 
+\<phi>lang_parser comma (8800, %\<phi>lang_top) [","] (\<open>?P\<close>) \<open> fn s => 
   Parse.position \<^keyword>\<open>,\<close> -- Scan.option (Parse.short_ident --| \<^keyword>\<open>:\<close>)
->> (fn ((_,pos), arg_name) => fn _ =>
-    Phi_Opr_Stack.comma (arg_name, pos) s)\<close>
+>> (fn ((_,pos), arg_name) => fn cfg => Phi_Opr_Stack.comma cfg (arg_name, pos) s)\<close>
 
-\<phi>processor embedded_block 8800 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
+\<phi>lang_parser embedded_block (8800, %\<phi>lang_app) ["("] (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
 \<open> fn stat => (Parse.position \<^keyword>\<open>(\<close> >> (fn (_, pos) => fn _ =>
-  raise Process_State_Call (
-          stat |> apfst (Phi_Opr_Stack.begin_block pos),
-          Phi_Toplevel.begin_block_cmd ([],[]) false)))\<close>
+  stat |> Phi_Opr_Stack.begin_block pos
+       |> apsnd (Phi_CP_IDE.proof_state_call (Phi_Toplevel.begin_block_cmd ([],[]) false)) ))\<close>
 
-\<phi>processor delimiter_of_statement 8800 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
-\<open> fn s => \<^keyword>\<open>;\<close> >> (fn _ => fn _ =>
-    s |> Phi_Toplevel.End_of_Statement.invoke (Context.Proof (fst s)) ()
-      |> Phi_Toplevel.Begin_of_Next_Statement.invoke (Context.Proof (fst s)) ()) \<close>
+\<phi>lang_parser delimiter_of_statement (8800, 1) [";"] (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close>)
+\<open> fn (s as (_, (ctxt, _))) => \<^keyword>\<open>;\<close> >> (fn _ => fn cfg =>
+    s |> Phi_Opr_Stack.End_of_Statement.invoke (Context.Proof ctxt) cfg
+      |> Phi_Opr_Stack.Begin_of_Statement.invoke (Context.Proof ctxt) cfg) \<close>
 
-\<phi>processor set_param 5000 (premises \<open>\<p>\<a>\<r>\<a>\<m> ?P\<close>) \<open>fn stat => Parse.term >> (fn term => fn _ =>
-  Phi_Sys.set_param_cmd term stat)\<close>
+\<phi>lang_parser set_param (5000, %\<phi>lang_app) ["<cartouche>", ""] (\<open>\<p>\<a>\<r>\<a>\<m> ?P \<Longrightarrow> PROP _\<close>)
+\<open>fn s => Parse.term >> (fn term => fn _ => apsnd (Phi_Sys.set_param_cmd term) s)\<close>
 
-\<phi>processor set_label 5000 (premises \<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P\<close>) \<open>fn stat => Parse.name >> (fn name => fn _ =>
-  Phi_Sys.set_label name stat)\<close>
+\<phi>lang_parser set_label (5000, %\<phi>lang_app) ["<cartouche>"] (\<open>\<^bold>l\<^bold>a\<^bold>b\<^bold>e\<^bold>l ?P \<Longrightarrow> PROP _\<close>)
+\<open>fn s => Parse.name >> (fn name => fn _ => apsnd (Phi_Sys.set_label name) s)\<close>
 
-\<phi>processor rule 9000 (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
-  \<open>fn (ctxt, sequent) => Phi_App_Rules.parser >> (fn thm => fn _ =>
+\<phi>lang_parser rule (9000, %\<phi>lang_app) [] (\<open>PROP ?P \<Longrightarrow> PROP ?Q\<close>)
+  \<open>fn (oprs, (ctxt, sequent)) => Phi_App_Rules.parser >> (fn thm => fn _ =>
     let open Phi_Envir
         val apps = Phi_App_Rules.app_rules ctxt [thm]
         val sequent = perhaps (try (fn th => @{thm Argument_I} RS th)) sequent
-     in Phi_Reasoners.wrap'' (Phi_Apply.apply apps) (ctxt,sequent)
+     in (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply apps) (ctxt,sequent))
     end)\<close>
 
 (* case Seq.pull (Thm.biresolution (SOME ctxt) false (map (pair false) apps) 1 sequent)
@@ -2311,11 +2316,13 @@ hide_fact \<phi>cast_exception_UI
 
 ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open>\<phi>_synthesis_parsing\<close> (K false)\<close>
 
-\<phi>processor synthesis 8800 ( \<open>CurrentConstruction ?mode ?blk ?H ?S\<close>
-                          | \<open>ToA_Construction ?\<CC> ?S'\<close>
-                          | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close> )
-  \<open>fn (ctxt, sequent) => Parse.position (Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number)))
->> (fn (raw_term, pos) => fn _ =>
+\<phi>lang_parser synthesis (8800, %\<phi>lang_app) ["<cartouche>"]
+                      ( \<open>CurrentConstruction ?mode ?blk ?H ?S\<close>
+                      | \<open>ToA_Construction ?\<CC> ?S'\<close>
+                      | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close> )
+  \<open>fn (oprs, (ctxt, sequent)) =>
+   Parse.position (Parse.group (fn () => "term") (Parse.inner_syntax (Parse.cartouche || Parse.number)))
+>> (fn (raw_term, pos) => fn cfg =>
   let
     val ctxt_parser = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
                         |> Config.put phi_synthesis_parsing true
@@ -2331,77 +2338,62 @@ ML \<open>val phi_synthesis_parsing = Attrib.setup_config_bool \<^binding>\<open
                   |> Thm.cterm_of ctxt
    in case Thm.prop_of sequent
         of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-              Phi_Reasoners.wrap'' (Phi_Sys.synthesis term) (ctxt, sequent)
+              (oprs, Phi_Reasoners.wrap'' (Phi_Sys.synthesis term) (ctxt, sequent))
          | _ =>
-              Phi_Opr_Stack.push_meta_operator ((920,921,SOME 0), ("<synthesis>", pos), NONE,
-                  (K (apsnd (Phi_Reasoners.wrap'' (Phi_Sys.synthesis term))))) (ctxt, sequent)
+              Phi_Opr_Stack.push_meta_operator cfg
+                  ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_push_val+1}, SOME 0), ("<synthesis>", pos), NONE,
+                  (K (apsnd (Phi_Reasoners.wrap'' (Phi_Sys.synthesis term))))) (oprs, (ctxt, sequent))
   end)\<close>
 
+
 (*access local value or variable or any generic variables*)
-\<phi>processor get_var 5000 (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)  \<open>
-  fn (ctxt,sequent) => \<^keyword>\<open>$\<close> |-- Parse.position (Parse.short_ident || Parse.long_ident || Parse.number)
-  >> (fn (var,pos) => fn _ =>
+\<phi>lang_parser get_var (5000, %\<phi>lang_push_val) ["$"]
+                   (\<open>CurrentConstruction ?mode ?blk ?H ?S\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?s) \<i>\<s> ?S'\<close> | \<open>PROP ?P \<Longrightarrow> PROP ?RM\<close>)  \<open>
+  fn (oprs,(ctxt,sequent)) => \<^keyword>\<open>$\<close> |-- Parse.position (Parse.short_ident || Parse.long_ident || Parse.number)
+  >> (fn (var,pos) => fn cfg =>
     let val get = Phi_Reasoners.wrap'' (Generic_Variable_Access.get_value var Generic_Element_Access.empty_input)
     in case Thm.prop_of sequent
-         of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => get (ctxt,sequent)
+         of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => (oprs, get (ctxt,sequent))
           | _ =>
-              Phi_Opr_Stack.push_meta_operator
-                  ((920,921, SOME 0), ("$", pos), SOME (Phi_Opr_Stack.String_Param var),
+              Phi_Opr_Stack.push_meta_operator cfg
+                  ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_push_val+1}, SOME 0),
+                      ("$", pos), SOME (Phi_Opr_Stack.String_Param var),
                       (K (fn (oprs, s) => (oprs, get s))))
-                  (ctxt,sequent)
+                  (oprs,(ctxt,sequent))
     end)
 \<close>
 
-\<phi>processor assignment 5000 (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
-  fn (ctxt,sequent) => (\<^keyword>\<open>\<rightarrow>\<close> |--
-          Parse.list1 (Scan.option \<^keyword>\<open>$\<close> |-- Scan.option Parse.keyword
-                       --| Scan.option \<^keyword>\<open>$\<close> -- Parse.binding))
->> (fn vars => fn _ =>
+\<phi>lang_parser assignment (5000, 1) ["\<rightarrow>"] (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
+  fn opr_ctxt => (\<^keyword>\<open>\<rightarrow>\<close> |--
+          Parse.list1 ( Scan.option \<^keyword>\<open>$\<close> |-- Scan.option Parse.keyword
+                    --| Scan.option \<^keyword>\<open>$\<close> -- Parse.binding))
+>> (fn vars => fn cfg =>
   let open Generic_Element_Access
     val (vars', _ ) =
           fold_map (fn (NONE,b)    => (fn k' => ((k',(b,empty_input)),k'))
                      | (SOME k, b) => (fn _  => ((SOME k, (b,empty_input)), SOME k))) vars NONE
-  in (ctxt,sequent)
-  |> Phi_Opr_Stack.end_expression 0
-  |> Generic_Variable_Access.assignment_cmd vars'
+  in Phi_Opr_Stack.end_expression cfg 0 opr_ctxt
+  |> apsnd (Generic_Variable_Access.assignment_cmd vars')
   end
 )\<close>
 
-\<phi>processor left_assignment 5000 (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
-  fn (ctxt,sequent) =>
+\<phi>lang_parser left_assignment (5000, 1) ["var", "val"] (\<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?S\<close>) \<open>
+  fn opr_ctxt =>
     Parse.list1 ((\<^keyword>\<open>var\<close> || \<^keyword>\<open>val\<close>) -- Parse.list1 Parse.binding) --
     Parse.position \<^keyword>\<open>\<leftarrow>\<close>
->> (fn (vars,(_,pos)) => fn _ =>
+>> (fn (vars,(_,pos)) => fn cfg =>
   let open Generic_Element_Access
       val vars' = maps (fn (k,bs) => map (pair (SOME k) o rpair empty_input) bs) vars
-   in (ctxt,sequent)
-    |> Phi_Opr_Stack.push_meta_operator ((0,20,SOME (length vars')),("\<leftarrow>",pos),NONE,
-          K (apsnd (Generic_Variable_Access.assignment_cmd vars')))
+   in Phi_Opr_Stack.push_meta_operator cfg ((0,20,SOME (length vars')),("\<leftarrow>",pos),NONE,
+          K (apsnd (Generic_Variable_Access.assignment_cmd vars'))) opr_ctxt
   end
 )\<close>
 
-
-\<phi>processor existential_elimination 150 ( \<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close> |
-                                         \<open>ToA_Construction ?s (ExSet ?S)\<close>)
-  \<open>fn stat => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) #> (fn (insts,toks) => (fn _ =>
-      raise Process_State_Call' (toks, stat, NuObtain.choose insts), []))\<close>
-
-\<phi>processor automatic_existential_elimination 800 ( \<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close> |
-                                                   \<open>ToA_Construction ?s (ExSet ?S)\<close>)
-  \<open>fn (ctxt,sequent) => Scan.succeed (fn _ =>
-    let
-      val _ = if Config.get ctxt NuObtain.enable_auto
-              andalso Config.get ctxt Phi_Reasoner.auto_level >= 2
-              then () else raise Bypass NONE
-      val mode = Phi_Working_Mode.mode1 ctxt
-    in
-      case #spec_of mode (Thm.concl_of sequent)
-        of Const (\<^const_name>\<open>ExSet\<close>, _) $ _ =>
-            (* the auto choose works only when the lambda variable is given explicitly,
-               i.e. no eta contract. *)
-            raise Process_State_Call ((ctxt,sequent), NuObtain.auto_choose)
-         | _ => raise Bypass NONE
-    end)\<close>
+\<phi>lang_parser existential_elimination (150, 1) ["\<exists>"]
+                                    ( \<open>CurrentConstruction ?mode ?blk ?H (ExSet ?T)\<close>
+                                    | \<open>ToA_Construction ?s (ExSet ?S)\<close> )
+  \<open>fn s => (\<^keyword>\<open>\<exists>\<close> |-- Parse.list1 Parse.binding) >> (fn insts => fn _ =>
+      apsnd (Phi_CP_IDE.proof_state_call (NuObtain.choose insts)) s)\<close>
 
 
 
@@ -2412,7 +2404,9 @@ subsubsection \<open>Post-Application Process\<close>
 setup \<open>Context.theory_map (
 
    Phi_CP_IDE.Post_App.add 50 (fn arg => fn (ctxt, sequent) =>
-    case Thm.major_prem_of sequent
+    case Thm.prop_of sequent
+      of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+   (case Thm.major_prem_of sequent
       of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>True\<close>, _))
          => (ctxt, @{thm Premise_True} RS sequent)
        | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ prop) => (
@@ -2420,12 +2414,13 @@ setup \<open>Context.theory_map (
            not (Symtab.defined (#config arg) "no_oblg")   andalso
            not (can \<^keyword>\<open>certified\<close> (#toks arg))
         then let val id = Option.map (Phi_ID.encode o Phi_ID.cons (#id arg)) (Phi_ID.get_if_is_named ctxt)
-              in (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent)
+              in raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, (ctxt, Phi_Sledgehammer_Solver.auto id ctxt sequent))
               handle Phi_Reasoners.Automation_Fail err =>
                   error (Phi_Reasoners.error_message err)
              end
-        else (ctxt, sequent)
-      )
+        else (ctxt, sequent))
+       | _ => (ctxt, sequent)
+     ) | _ => (ctxt, sequent)
    )
 
    (* process \<phi>-LPR antecedents *)
@@ -2455,6 +2450,8 @@ setup \<open>Context.theory_map (
 
    (*simplification*)
 #> Phi_CP_IDE.Post_App.add 300 (K (fn (ctxt, sequent) =>
+    case Thm.prop_of sequent
+      of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
     let val lev = Config.get ctxt Phi_Reasoner.auto_level
         val sctxt =
           if lev >= 2
@@ -2465,19 +2462,25 @@ setup \<open>Context.theory_map (
         val sequent' = Simplifier.full_simplify sctxt sequent
                     |> Phi_Help.beta_eta_contract
     in (ctxt, sequent')
-    end))
+    end
+      | _ => (ctxt, sequent)))
 
-#> Phi_CP_IDE.Post_App.add 400 (K Phi_Sys.move_lemmata)
+#> Phi_CP_IDE.Post_App.add 400 (K (fn s => Phi_Sys.move_lemmata s))
 
 #> Phi_CP_IDE.Post_App.add 500 (fn arg => fn s =>
-      if not (Symtab.defined (#config arg) "no_accept_proc") andalso
+      if (case Thm.prop_of (snd s)
+            of _ (*Trueprop*) $ (Const(\<^const_name>\<open>PendingConstruction\<close>, _) $ _ $ _ $ _ $ _ $ _) => true
+             | _ => false) andalso
+         not (Symtab.defined (#config arg) "no_accept_proc") andalso
          not (can \<^keyword>\<open>throws\<close> (#toks arg))
-      then Phi_Sys.accept_proc s
-      else raise Phi_CP_IDE.Post_App.Success s)
+      then raise Phi_CP_IDE.Post_App.Redo_Entirely (arg, Phi_Sys.accept_proc s)
+      else s)
 
    (*automatic elimination of existential quantifiers*)
 #> Phi_CP_IDE.Post_App.add 600 (fn arg => fn (ctxt,sequent) =>
-    if Config.get ctxt NuObtain.enable_auto andalso
+    if (case Thm.prop_of sequent of Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ => true
+                                  | _ => false) andalso
+       Config.get ctxt NuObtain.enable_auto andalso
        Config.get ctxt Phi_Reasoner.auto_level >= 2 andalso
        not (can \<^keyword>\<open>\<exists>\<close> (#toks arg))
     then let val mode = Phi_Working_Mode.mode1 ctxt
@@ -2491,37 +2494,40 @@ setup \<open>Context.theory_map (
 
    (*should be the end of the processing*)
 #> Phi_CP_IDE.Post_App.add 999 (K (fn (ctxt, sequent) =>
-      Phi_Envir.update_programming_sequent' sequent ctxt
-        |> rpair sequent
+      (Phi_Envir.update_programming_sequent' sequent ctxt, sequent)
    ))
 
 )\<close>
 
-\<phi>processor automatic_morphism 90 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S\<close>)
+(* TODO!
+\<phi>lang_parser automatic_morphism 90 (\<open>CurrentConstruction ?mode ?blk ?H ?T\<close> | \<open>\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(?x) \<i>\<s> ?S\<close>)
 \<open>not_safe (fn stat => Scan.succeed (fn _ => Phi_Sys.apply_automatic_morphism stat
       handle Empty => raise Bypass NONE))\<close>
+*)
 
-\<phi>processor enter_proof 790 (premises \<open>Premise _ _\<close> | premises \<open>Simplify _ _ _\<close> | \<open>PROP Trueprop _\<close>)
-  \<open>fn stat => \<^keyword>\<open>certified\<close> >> (fn _ => fn _ =>
-      raise Terminate_Process (Phi_Opr_Stack.end_expression 900 stat,
-                               SOME (snd oo Phi_Toplevel.prove_prem false)))\<close>
+\<phi>lang_parser enter_proof (790, 1) ["certified"]
+                       (\<open>Premise _ _ \<Longrightarrow> PROP _\<close> | \<open>Simplify _ _ _ \<Longrightarrow> PROP _\<close> | \<open>?Bool\<close>)
+  \<open>fn stat => \<^keyword>\<open>certified\<close> |-- Phi_Opr_Stack.end_of_input >> (fn _ => fn cfg => stat
+   |>  apsnd (Phi_CP_IDE.proof_state_call (snd o Phi_Toplevel.prove_prem (cfg,false) I))
+   |> Phi_Opr_Stack.interrupt
+ )\<close>
 
 
-\<phi>processor pure_fact 2000 (\<open>PROP ?P\<close>) \<open>
+\<phi>lang_parser "pure_fact" (2000, 1) ["pure_fact"] (\<open>PROP ?P\<close>) \<open>
 let
   val for_fixes = Scan.optional (Parse.$$$ "for" |-- Parse.!!! Parse.params) [];
   val statement = Parse.and_list1 (
           Parse_Spec.opt_thm_name ":" -- Scan.repeat1 Parse.prop -- for_fixes);
 in
-  fn (ctxt, sequent) => Parse.position \<^keyword>\<open>pure_fact\<close> -- statement >> (
+  fn (oprs, (ctxt, sequent)) => Parse.position \<^keyword>\<open>pure_fact\<close> -- statement >> (
   fn ((_,pos), raw_statements) => fn _ =>
   let val id = Phi_ID.get ctxt
 
       (*We first generate names of the facts if not given*)
       fun gen_name (_, ids) = String.concatWith "_" ("\<phi>fact" :: rev_map string_of_int [] ids)
       val ctxt' = fold_index (fn (i,(((b', raw_attrs),bodys'),fixes)) => fn ctxt =>
-        let val id' = Phi_ID.cons i id
-            fun id'' j = if fst id' = "" then NONE else SOME (Phi_ID.encode (Phi_ID.cons j id'))
+        let val id' = Phi_ID.cons [i] id
+            fun id'' j = if fst id' = "" then NONE else SOME (Phi_ID.encode (Phi_ID.cons [j] id'))
             val attrs = map (Attrib.check_src ctxt #> Attrib.attribute_cmd ctxt) raw_attrs
 
             val b = if Binding.is_empty b'
@@ -2543,30 +2549,30 @@ in
           in snd (Proof_Context.note_thms "" ((b,attrs), thms) ctxt) end
     ) raw_statements ctxt
 
-   in (ctxt', sequent)
+   in (oprs, (ctxt', sequent))
   end
 )
 end
 \<close>
 
-\<phi>processor fold 2000 (\<open>PROP ?P\<close>) \<open>
-  fn (ctxt, sequent) => Phi_Parse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
-    (ctxt, Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent)
+\<phi>lang_parser fold (2000, 1) ["fold"] (\<open>PROP ?P\<close>) \<open>
+  fn (oprs, (ctxt, sequent)) => Phi_Parse.$$$ "fold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
+    (oprs, (ctxt, Local_Defs.fold ctxt (Attrib.eval_thms ctxt thms) sequent))
 )\<close>
 
-\<phi>processor unfold 2000 (\<open>PROP ?P\<close>) \<open>
-  fn (ctxt, sequent) => Phi_Parse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
-    (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent)
+\<phi>lang_parser unfold (2000, 1) ["unfold"] (\<open>PROP ?P\<close>) \<open>
+  fn (oprs, (ctxt, sequent)) => Phi_Parse.$$$ "unfold" |-- Parse.list1 Parse.thm >> (fn thms => fn _ =>
+    (oprs, (ctxt, Local_Defs.unfold ctxt (Attrib.eval_thms ctxt thms) sequent))
 )\<close>
 
-\<phi>processor simplify 2000 (\<open>PROP ?P\<close>) \<open>
-  fn (ctxt, sequent) => Phi_Parse.$$$ "simplify" |-- \<^keyword>\<open>(\<close> |-- Parse.list Parse.thm --| \<^keyword>\<open>)\<close>
+\<phi>lang_parser simplify (2000, 1) ["simplify"] (\<open>PROP ?P\<close>) \<open>
+  fn (oprs, (ctxt, sequent)) => Phi_Parse.$$$ "simplify" |-- \<^keyword>\<open>(\<close> |-- Parse.list Parse.thm --| \<^keyword>\<open>)\<close>
 >> (fn thms => fn _ =>
-    (ctxt, Simplifier.full_simplify (ctxt addsimps Attrib.eval_thms ctxt thms) sequent)
+    (oprs, (ctxt, Simplifier.full_simplify (ctxt addsimps Attrib.eval_thms ctxt thms) sequent))
 )\<close>
 
 
-(* \<phi>processor goal 1300 \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T\<close> \<open>
+(* \<phi>lang_parser goal 1300 \<open>\<c>\<u>\<r>\<r>\<e>\<n>\<t> ?blk [?H] \<r>\<e>\<s>\<u>\<l>\<t>\<s> \<i>\<n> ?T\<close> \<open>
   fn (ctxt, sequent) => Parse.$$$ "goal" >> (fn _ => fn _ =>
     let
       val goal = Proof_Context.get_thm ctxt "\<phi>thesis" |> Drule.dest_term

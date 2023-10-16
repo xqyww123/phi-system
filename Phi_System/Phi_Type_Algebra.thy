@@ -1921,15 +1921,15 @@ lemma [\<phi>reason_template name Fc.\<phi>Prod_Cond []]:
 \<Longrightarrow> Fc (T \<^emph>[C] U) = Ft T \<^emph>[C] Fu U \<close>
   unfolding Separation_Homo\<^sub>I_Cond_def Separation_Homo\<^sub>E_Cond_def
   by (rule \<phi>Type_eqI_Tr ; simp add: split_paired_all)
- 
+   
 lemma apply_conditioned_Separation_Functor_unzip:
   \<open> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> C \<Longrightarrow> Separation_Homo\<^sub>E Ft Fu Fc T U un)
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> \<not> C \<Longrightarrow> Functional_Transformation_Functor Fc Ft (T \<^emph>[C] U) T D R pred_mapper func_mapper)
 \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> (\<forall>a. a \<in> D x \<and> \<not> C \<longrightarrow> fst a \<in> R x)
 \<Longrightarrow> x \<Ztypecolon> Fc(T \<^emph>[C] U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then un x else (func_mapper fst (\<lambda>_. True) x, undefined)) \<Ztypecolon> Ft(T) \<^emph>[C] Fu(U)\<close>
   unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'[symmetric] Premise_def
-  apply (cases C; simp)
-  \<medium_left_bracket> premises FTF[] and [useful] and []
+  apply (cases C; simp) 
+  \<medium_left_bracket> premises FTF[] and [useful] and [] 
     apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
     \<medium_left_bracket> ;; \<medium_right_bracket> ;;
   \<medium_right_bracket> .
