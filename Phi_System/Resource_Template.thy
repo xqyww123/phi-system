@@ -671,15 +671,18 @@ lemmas "__allocate_rule_3__" =
   "__allocate_rule_2__"[OF \<F>_pointwise_refinement[where A=\<open>{(1,u)}\<close> and B=\<open>{(1,u')}\<close> and D=\<open>{1}\<close> for u u', simplified]]
 
 lemma "_getter_rule_2_":
-  \<open> refinement_projection (I k) {x} \<subseteq> UNIV * Some ` S
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace> 1(k := x) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. 1(k := x) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> RP k \<and> v \<in> S \<rbrace>\<close>
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
+\<Longrightarrow> refinement_projection (I k) {x} \<subseteq> UNIV * Some ` S
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace> 1(k' := x) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>ret. 1(k' := x) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> RP k' \<and> v \<in> S \<rbrace>\<close>
+  unfolding Premise_def
 subgoal premises prems
 proof -
   have t1: \<open>{Some u |u. u \<in> S} = Some ` S\<close>
     unfolding set_eq_iff by (clarsimp simp add: image_iff; blast)
 
   show ?thesis
-    by (insert prems,
+    by (unfold prems(1),
+      insert prems(2-),
       rule "__getter_rule__",
       rule R.getter_valid,
       rule sep_refinement_stepwise,
@@ -692,11 +695,13 @@ proof -
 qed .
 
 lemma "_setter_rule_2_":
-  \<open> (Id_on UNIV * ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k) \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', F v')} \<w>.\<r>.\<t> I k \<i>\<n> {v'})
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
+\<Longrightarrow> (Id_on UNIV * ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k) \<r>\<e>\<f>\<i>\<n>\<e>\<s> {(v', F v')} \<w>.\<r>.\<t> I k \<i>\<n> {v'})
 \<Longrightarrow> refinement_projection (I k) {v'} \<subseteq> UNIV * Some ` V
 \<Longrightarrow> (\<And>v. v \<in> V \<and> v \<in> RP k \<Longrightarrow> pred_option (\<lambda>x. x \<in> RP k) (f v))
 \<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (f o the))
-      \<lbrace> 1(k := v') \<Ztypecolon> \<phi> Itself \<longmapsto> 1(k := F v') \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
+      \<lbrace> 1(k' := v') \<Ztypecolon> \<phi> Itself \<longmapsto> 1(k' := F v') \<Ztypecolon> \<phi> Itself \<rbrace> \<close>
+  unfolding Premise_def
 subgoal premises prems proof -
   have t1: \<open>Id_on UNIV * (pairself (fun_upd 1 k) ` {(Some v, f v)} \<s>\<u>\<b>\<j> v. ret = Normal \<phi>V_none \<and> v \<in> V \<and> v \<in> RP k)
          = (Id_on UNIV * (pairself (fun_upd 1 k) ` ({(Some v, f v)} \<s>\<u>\<b>\<j> v. v \<in> V \<and> v \<in> RP k )) \<s>\<u>\<b>\<j> ret = Normal \<phi>V_none)\<close>
@@ -704,7 +709,8 @@ subgoal premises prems proof -
     by (unfold Subjection_Id_on Subjection_times ExSet_Id_on ExSet_times_right ExSet_image
                   Subjection_image; simp add: set_eq_iff Subjection_expn_set ExSet_expn_set; blast)
   show ?thesis
-    by (insert prems,
+    by (unfold prems(1),
+      insert prems(2-),
       rule "__setter_rule__",
       rule R.setter_valid,
       rule sep_refinement_stepwise,
@@ -737,14 +743,14 @@ sublocale pointwise_base_fiction_for_partial_mapping_resource Res \<open>\<lambd
 lemma setter_rule:
   \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
 \<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<in> P k \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> pred_option (\<lambda>x. x \<in> P k) u)
-\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k' (\<lambda>_. u)) \<lbrace> 1(k \<mapsto> v) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>\<r>\<e>\<t>. 1(k := u) \<Ztypecolon> \<phi> Itself \<rbrace>  \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (\<lambda>_. u)) \<lbrace> 1(k' \<mapsto> v) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>\<r>\<e>\<t>. 1(k' := u) \<Ztypecolon> \<phi> Itself \<rbrace>  \<close>
   unfolding Premise_def
 subgoal premises prems
 proof -
   have [simp]: \<open>(\<lambda>_. u) \<circ> the = (\<lambda>_. u)\<close> for u by auto
   show ?thesis
     by (unfold prems(1),
-        rule "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u u' v,
+        rule "_setter_rule_2_"[where k=k and k'=k and f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u u' v,
                 simplified, unfolded refinement_source_subjection,
                 OF impI,
                 OF \<F>_it_refinement
@@ -753,8 +759,16 @@ proof -
         rule prems)
 qed .
 
-lemmas getter_rule = "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified,
-                                       OF \<F>_it_refinement_projection[where S=S and S'=S for S, simplified]]
+lemma getter_rule:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k \<lbrace>
+              1(k' \<mapsto> u) \<Ztypecolon> \<phi> Itself \<longmapsto>
+        \<lambda>ret. 1(k' \<mapsto> u) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> P k' \<and> v = u
+      \<rbrace> \<close>
+  by (rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified singleton_iff],
+      assumption,
+      rule \<F>_it_refinement_projection,
+      simp)
 
 lemmas allocate_rule = "__allocate_rule_2__"
                             [OF \<F>_pointwise_refinement[where I=\<open>\<lambda>_. \<F>_it\<close>, OF \<F>_it_refinement, where u2=1, simplified]
@@ -781,16 +795,27 @@ context begin
 
 declare mul_carrier_option_def[simp] option.pred_True[simp]
 
-lemmas setter_rule =
-  "_setter_rule_2_"[where f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u u' v,
-                    simplified, unfolded refinement_source_subjection,
-                    OF impI,
-                    OF to_share.\<F>_functional_refinement[where 'a=\<open>'val nosep\<close>, simplified], simplified,
-                    OF to_share.\<F>_functional_projection[where S=\<open>{Some v}\<close> for v :: \<open>'val nosep\<close>, simplified]]
+lemma setter_rule:
+  \<open> \<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
+\<Longrightarrow> (\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> v \<in> P k \<Longrightarrow> \<p>\<r>\<e>\<m>\<i>\<s>\<e> pred_option (\<lambda>x. x \<in> P k) u)
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_set_res' (map_fun_at k (\<lambda>x. u))
+      \<lbrace> 1(k' \<mapsto> Share 1 v) \<Ztypecolon> \<phi> Itself \<longmapsto> \<lambda>\<r>\<e>\<t>. 1(k' := to_share u) \<Ztypecolon> \<phi> Itself \<rbrace>  \<close>
+  by (rule "_setter_rule_2_"[where k=k and k'=k' and f=\<open>\<lambda>_. u\<close> and F=\<open>\<lambda>_. u'\<close> and V=\<open>{v}\<close> for u' v,
+                  simplified, unfolded refinement_source_subjection,
+                  OF _ impI,
+                  OF _ to_share.\<F>_functional_refinement[where 'a=\<open>'val nosep\<close>, simplified], simplified,
+                  OF _ to_share.\<F>_functional_projection[where S=\<open>{Some v}\<close>, simplified]],
+      simp,
+      simp add: Premise_def)
 
-lemmas getter_rule =
-  "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified,
-                    OF to_share.\<F>_functional_projection[where S=\<open>{x}\<close> for x :: \<open>'val nosep option\<close>, simplified]]
+lemma getter_rule:
+  \<open>\<c>\<o>\<n>\<d>\<i>\<t>\<i>\<o>\<n> k' = k
+\<Longrightarrow> \<p>\<r>\<o>\<c> R.\<phi>R_get_res_entry' k
+      \<lbrace>       1(k' := to_share (Some u)) \<Ztypecolon> \<phi> Itself \<longmapsto>
+        \<lambda>ret. 1(k' := to_share (Some u)) \<Ztypecolon> \<phi> Itself \<s>\<u>\<b>\<j> v. ret = \<phi>arg v \<and> v \<in> P k' \<and> v = u \<rbrace> \<close>
+  by(rule "_getter_rule_2_"[where S=\<open>{u}\<close> for u, simplified,
+                            OF _ to_share.\<F>_functional_projection[where S=\<open>{x}\<close> for x :: \<open>'val nosep option\<close>, simplified]],
+     assumption)
 
 lemmas allocate_rule =
   "__allocate_rule_2__"[OF \<F>_pointwise_refinement[where I=\<open>\<lambda>_. \<F>_functional to_share UNIV\<close>,

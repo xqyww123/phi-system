@@ -4419,6 +4419,8 @@ simproc_setup defined_ExSet ( \<open>ExSet A\<close> )
 setup \<open>Context.theory_map (Assertion_SS.map (fn ctxt =>
     ctxt addsimprocs [@{simproc defined_ExSet}]))\<close>
 
+lemmas [\<phi>programming_simps] = plus_fun[where 'a=\<open>'a::sep_magma BI\<close>]
+
 
 subsubsection \<open>Reasoners\<close>
 
