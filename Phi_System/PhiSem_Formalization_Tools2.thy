@@ -141,12 +141,14 @@ lemma semantic_local_value_\<phi>app:
 
 subsection \<open>Reasoning Configure\<close>
 
-declare [[\<phi>reason_default_pattern \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
-                                  \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>   (100) ]]
+declare [[\<phi>reason_default_pattern
+      \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close> \<Rightarrow>
+      \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _] ?T \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>
+      \<open>_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?y \<Ztypecolon> \<v>\<a>\<l>[\<phi>literal _]  _ \<r>\<e>\<m>\<a>\<i>\<n>\<s> _ @action synthesis\<close>    (100) ]]
 
-\<phi>reasoner_group ToA_mk_literal_cut = (1000, [1000,1030]) in ToA_cut
+\<phi>reasoner_group (*ToA_mk_literal_cut = (1000, [1000,1030]) in ToA_cut
       \<open>cutting rule synthesizing literal local values\<close>
-  and ToA_mk_literal = (100, [100,130]) in ToA
+  and*) ToA_mk_literal = (100, [100,130]) in ToA
       \<open>synthesizing literal local values\<close>
 
 (*

@@ -108,12 +108,12 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
         case Synchronized.change_result var get_heap
           of NONE => (
               Phi_Reasoner.info_print ctxt 2 (fn _ =>
-                "PLPR_Optimum_Solution: all choices are traversed, no solution found.");
+                "PLPR_Optimum_Solution: all choices have been traversed, and no solution is found.");
               NONE)
            | SOME s =>
                (case Phi_Reasoner.internal_reason (SOME (success_handler, gcut_handler)) NONE s
                   of NONE => (Phi_Reasoner.info_print ctxt 2 (fn _ =>
-                                "PLPR_Optimum_Solution: the search branch fails, try another");
+                                "PLPR_Optimum_Solution: the search branch fails, so try another");
                               next_candidate ())
                    | SOME s' => SOME (s', Seq.make next_candidate))
                 handle REACH s => SOME (s, Seq.make next_candidate)

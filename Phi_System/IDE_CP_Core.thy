@@ -915,6 +915,7 @@ lemma [\<phi>reason %\<phi>ant_by_synthesis]:
 \<Longrightarrow> PROP Synthesis_by X (PROP P \<Longrightarrow> PROP Q)\<close>
   unfolding Synthesis_by_def .
 
+(*
 lemma [\<phi>reason %\<phi>ant_by_synthesis+10]:
   \<open> \<r>CALL Synthesis_Parse X' X
 \<Longrightarrow> Begin_Optimum_Solution
@@ -924,12 +925,13 @@ lemma [\<phi>reason %\<phi>ant_by_synthesis+10]:
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
 \<Longrightarrow> PROP Synthesis_by X' (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> R1 \<longmapsto> \<lambda>ret. X'' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E'' ))\<close>
   unfolding Synthesis_by_def Action_Tag_def Simplify_def by fastforce
-
+*)
 lemma [\<phi>reason %\<phi>ant_by_synthesis]:
   \<open> \<r>CALL Synthesis_Parse A A'
 \<Longrightarrow> Begin_Optimum_Solution
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. A' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action synthesis
 \<Longrightarrow> End_Optimum_Solution
+\<comment> \<open>BUG! TODO\<close>
 \<Longrightarrow> Simplify post_synthesis_simp A'' (\<lambda>ret. A' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R)
 \<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E'
 \<Longrightarrow> (\<And>ret. A'' ret \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret @action NToA)

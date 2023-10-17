@@ -21,13 +21,11 @@ fun dest_Var ctm =
   case Thm.term_of ctm
     of (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
           $ x
-          $ (Const (\<^const_name>\<open>basic_fiction.\<phi>\<close>,_)
-              $ _
-              $ (Const (\<^const_name>\<open>\<phi>MapAt\<close>, _)
-                  $ Free (name, \<^typ>\<open>varname\<close>)
-                  $ (Const (\<^const_name>\<open>\<phi>Some\<close>, _) $ T))))
+          $ (Const (\<^const_name>\<open>Var\<close>,_)
+              $ Free (name, \<^typ>\<open>varname\<close>)
+              $ (Const (\<^const_name>\<open>\<phi>Some\<close>, _) $ T)))
          => SOME (name, (Thm.dest_arg1 ctm (*x*),
-                         Thm.dest_arg (Thm.dest_arg (Thm.dest_arg (Thm.dest_arg ctm))) (*T*)))
+                         Thm.dest_arg (Thm.dest_arg (Thm.dest_arg ctm)) (*T*)))
      | _ => NONE
 
 fun dest_Var' (Const (\<^const_name>\<open>\<phi>Type\<close>, _)

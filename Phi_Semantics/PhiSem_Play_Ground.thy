@@ -78,11 +78,15 @@ int XX(int x) { if 0 < x then x - 1 else 0 }
 
 *)
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<v>\<a>\<l> x - 1 \<Ztypecolon> \<nat>\<close>
-  \<medium_left_bracket> if \<open>True\<close>
-    ;; if ( \<open>0 < $x\<close> ) ( $x - 1) ( 0 ) \<medium_right_bracket> .
+  is [routine]
+  \<medium_left_bracket> 
+    if \<open>0 < $x\<close> \<open>$x - 1\<close> 0
+  \<medium_right_bracket> .
 
 proc
   input  \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
@@ -104,6 +108,8 @@ setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put
 (* declare [[\<phi>hide_techinicals=false]] *)
 
 declare [[\<phi>hide_techinicals=false]]
+
+declare [[\<phi>trace_reasoning = 1]]
 
 (* declare [[\<phi>hide_brk_frame=false, \<phi>easoning]] *)
 
@@ -129,19 +135,24 @@ proc FIB2:
   input \<open>\<v>\<a>\<l> n \<Ztypecolon> \<nat>(8)\<close>
   output \<open>\<v>\<a>\<l> fib n \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
   is [recursive n]
-\<medium_left_bracket>
-  if \<open>$n \<le> 1\<close>
-  \<medium_left_bracket> \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close> \<medium_right_bracket>
-  \<medium_left_bracket> FIB2 (\<open>$n - 1\<close>) + FIB2 (\<open>$n - 2\<close>) \<medium_right_bracket>
+\<medium_left_bracket> 
+  if \<open>$n \<le> 1\<close> \<medium_left_bracket>
+    \<open>1 \<Ztypecolon> \<nat>\<^sup>r(32)\<close>
+  \<medium_right_bracket> \<medium_left_bracket>
+    FIB2 (\<open>$n - 1\<close>) + FIB2 (\<open>$n - 2\<close>)
+  \<medium_right_bracket>
 \<medium_right_bracket>.
 
 thm FIB2_def
 
+declare [[\<phi>trace_reasoning = 2]]
 
 proc YYY:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
   output \<open>\<v>\<a>\<l> a + of_nat b + c \<Ztypecolon> \<int>\<close>
-  \<medium_left_bracket> \<open>$a + of_nat $b + $c\<close> \<medium_right_bracket>.
+  \<medium_left_bracket> \<open>of_nat $b\<close>
+
+    ;; \<open>$a + of_nat $b + $c\<close> \<medium_right_bracket>.
 
 proc YYY2:
   input \<open>\<v>\<a>\<l> a \<Ztypecolon> \<int>\<heavy_comma> \<v>\<a>\<l> b \<Ztypecolon> \<nat>\<heavy_comma> \<v>\<a>\<l> c \<Ztypecolon> \<int>\<close>
@@ -161,7 +172,8 @@ proc
   output \<open>\<v>\<a>\<l> a + b + c \<Ztypecolon> \<nat>\<^sup>r('b)\<close>
   \<medium_left_bracket> \<open>$a + $b + $c\<close> \<medium_right_bracket>.
 
-declare [[\<phi>hide_techinicals=true]]
+declare [[\<phi>trace_reasoning = 1]]
+declare [[\<phi>hide_techinicals=false]]
 
 proc
   input \<open>\<v>\<a>\<l> x \<Ztypecolon> \<nat>\<close>
@@ -171,9 +183,13 @@ proc
   $x \<rightarrow> var v (*x is an immutable value, and here we assign it to a variable v*)
   while \<open>x \<Ztypecolon> ?T \<s>\<u>\<b>\<j> x. Inv: (x \<le> 10) \<and> Guard: True \<and> End: (x = 10)\<close> (*annotation*)
   \<medium_left_bracket> \<open>True\<close> \<medium_right_bracket> (*guard*)
-  \<medium_left_bracket>
-    if \<open>$v = 10\<close> \<medium_left_bracket> break \<medium_right_bracket> \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v;; continue \<medium_right_bracket>
-    assert \<bottom>
+  \<medium_left_bracket> $v ;; \<open>$v = 10\<close> note [[\<phi>trace_reasoning = 2]] ;;
+        if ( \<open>$v = 10\<close> )
+        \<medium_left_bracket> 
+          ;; break 
+          \<medium_right_bracket> 
+            \<medium_left_bracket> \<open>$v + 1\<close> \<rightarrow> v ;; continue \<medium_right_bracket>
+    assert \<open>\<bottom>\<^sub>B\<^sub>I\<close>
   \<medium_right_bracket> (*loop body*)
   $v
 \<medium_right_bracket>.

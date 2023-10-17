@@ -494,17 +494,23 @@ lemma [\<phi>reason default %\<phi>br_join_search_counterpart-1]:
 
 subsubsection \<open>Join Two \<phi>-Types\<close>
 
-\<phi>reasoner_group br_join_\<phi>ty = (20, [20,20]) for \<open>If C (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action br_join\<close> 
+\<phi>reasoner_group br_join_\<phi>ty = (20, [19,20]) for \<open>If C (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y @action br_join\<close> 
                                in \<phi>br_join_all and > \<phi>br_join_fail
                               \<open>Fallbacks of joining two \<phi>-types, using ToA\<close>
 
 paragraph \<open>Fallback by ToA\<close>
 
 lemma [\<phi>reason default %br_join_\<phi>ty]:
-  \<open> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T @action NToA
+  \<open> \<g>\<u>\<a>\<r>\<d> y \<Ztypecolon> U \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> y' \<Ztypecolon> T @action NToA
 \<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x y' \<Ztypecolon> T @action br_join \<close>
-  unfolding Action_Tag_def Transformation_def
+  unfolding Action_Tag_def Transformation_def \<r>Guard_def
   by clarsimp
+
+lemma [\<phi>reason default %br_join_\<phi>ty-1]:
+  \<open> WARNING TEXT(\<open>Fail to join \<phi>type\<close> T \<open>and\<close> U)
+\<Longrightarrow> If P (x \<Ztypecolon> T) (y \<Ztypecolon> U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> If P x y \<Ztypecolon> If P T U @action br_join \<close>
+  unfolding Action_Tag_def Transformation_def
+  by (cases P; clarsimp)
 
 
 paragraph \<open>By Transformation Functor\<close>
