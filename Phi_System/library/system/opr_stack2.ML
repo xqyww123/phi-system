@@ -224,7 +224,7 @@ fun close_parenthesis (cfg, meta_arg, complete_eval) (oprs, s0) =
         | close _ (([],_), _) = error "parenthesis is inbalanced!"
 
       val (_, _, actions', (ctxt,sequent)) =
-            eval_until (Context.Proof (fst s0)) (0, ~1) (mode, true, cfg)
+            eval_until (Context.Proof (fst s0)) (0, ~1) (mode, false, cfg)
                        (NONE, Markup.error, ("<internal bug>", Position.none)) actions s0
       val (vals, (ctxt',sequent')) = Generic_Variable_Access.extract_values (~1, true) (ctxt,sequent)
    in close [(arg_name, vals)] ((actions', arg_names), (ctxt', sequent'))

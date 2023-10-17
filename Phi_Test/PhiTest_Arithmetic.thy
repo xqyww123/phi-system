@@ -107,15 +107,16 @@ proc Coprime:
 proc binary_search:
   requires F: \<open>\<forall>i v. \<p>\<r>\<o>\<c> F v \<lbrace> i \<Ztypecolon> \<v>\<a>\<l>[v] \<int> \<longmapsto> f i \<Ztypecolon> \<v>\<a>\<l> \<bool> \<rbrace>\<close> \<comment> \<open>v: raw value\<close>
   premises \<open>mono f\<close>
-  input  \<open>lower' \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> upper' \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
-  premises \<open>f upper'\<close> and \<open>lower' < upper'\<close>
-  output \<open>(LEAST i. lower' \<le> i \<and> i \<le> upper' \<and> f i) \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  input  \<open>lower \<Ztypecolon> \<v>\<a>\<l> \<int>\<heavy_comma> upper \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
+  premises \<open>f upper\<close> and \<open>lower < upper\<close>
+  output \<open>(LEAST i. lower \<le> i \<and> i \<le> upper \<and> f i) \<Ztypecolon> \<v>\<a>\<l> \<int>\<close>
   is [routine]
-\<medium_left_bracket>
+\<medium_left_bracket> 
   pure_fact \<open>i \<le> j \<Longrightarrow> f i \<Longrightarrow> f j\<close> for i j ;;
 
-  if ( F($lower) ) \<medium_left_bracket> return ($lower) \<medium_right_bracket>
-  \<medium_left_bracket>
+  if ( F($lower) ) \<medium_left_bracket>
+     return ($lower)
+  \<medium_right_bracket> \<medium_left_bracket>
     ($lower, $upper) \<rightarrow> var $l, $u ;;
     while \<open>l \<Ztypecolon> \<v>\<a>\<r>[l] \<int>\<heavy_comma> u \<Ztypecolon> \<v>\<a>\<r>[u] \<int> \<s>\<u>\<b>\<j> l u.
             Inv: (lower \<le> l \<and> l < u \<and> u \<le> upper \<and> \<not> f l \<and> f u) \<and>
@@ -123,7 +124,7 @@ proc binary_search:
             End: (l + 1 = u)\<close>
           ( \<open>$l + 1 < $u\<close> )
     \<medium_left_bracket>
-      \<open>($l + $u) div 2\<close> \<rightarrow> val m ;;
+      \<open>($l + $u) div 2\<close> \<rightarrow> val m
       if ( F($m) ) \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket> \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>
     \<medium_right_bracket>
     return ($u)

@@ -186,6 +186,6 @@ subsubsection \<open>Width\<close>
 abbreviation width_of :: \<open>'a::{preorder, minus} lcro_interval \<Rightarrow> 'a\<close>
   where \<open>width_of i \<equiv> (upper i - lower i)\<close>
 
-hide_const (open) width_of
+hide_const (open) width_of lower upper
 
 end

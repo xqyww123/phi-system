@@ -117,10 +117,12 @@ lemma Tuple_Field_zeros [\<phi>reason %semantic_zero_val_cut]:
   unfolding Semantic_Zero_Val_def
   by (clarsimp simp add: V_tup_mult_cons image_iff, insert V_tup_sep_disj_L, blast)
 
+declare [[\<phi>trace_reasoning = 1]]
+
 lemma Tuple_Field_semtys[\<phi>reason %\<phi>sem_type_cut]:
-  \<open> \<phi>SemType (x \<Ztypecolon> T) TY
-\<Longrightarrow> \<phi>SemType (xs \<Ztypecolon> Ts) (tup TYs)
-\<Longrightarrow> \<phi>SemType ((x,xs) \<Ztypecolon> (\<lbrace> T \<rbrace> \<^emph> Ts)) (tup (TY#TYs))\<close>
+  \<open> \<phi>SemType (fst x_xs \<Ztypecolon> T) TY
+\<Longrightarrow> \<phi>SemType (snd x_xs \<Ztypecolon> Ts) (tup TYs)
+\<Longrightarrow> \<phi>SemType (x_xs \<Ztypecolon> (\<lbrace> T \<rbrace> \<^emph> Ts)) (tup (TY#TYs))\<close>
   unfolding \<phi>SemType_def subset_iff
   by (clarsimp, metis V_tup_mult append.left_neutral append_Cons list.rel_inject(2))
 

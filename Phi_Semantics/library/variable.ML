@@ -4,7 +4,6 @@ signature PHI_VARIABLE = sig
 
   val variable_is_typed : bool Config.T
   val dest_Var : cterm -> (string * (cterm * cterm)) option
-  val dest_Var': term -> (string * (term * term)) option
 
   val varname_prefix : string
 
@@ -27,16 +26,6 @@ fun dest_Var ctm =
          => SOME (name, (Thm.dest_arg1 ctm (*x*),
                          Thm.dest_arg (Thm.dest_arg (Thm.dest_arg ctm)) (*T*)))
      | _ => NONE
-
-fun dest_Var' (Const (\<^const_name>\<open>\<phi>Type\<close>, _)
-                $ x
-                $ (Const (\<^const_name>\<open>basic_fiction.\<phi>\<close>,_)
-                    $ _
-                    $ (Const (\<^const_name>\<open>\<phi>MapAt\<close>, _)
-                        $ Free (name, \<^typ>\<open>varname\<close>)
-                        $ (Const (\<^const_name>\<open>\<phi>Some\<close>, _) $ T))))
-      = SOME (name, (x,T))
-  | dest_Var' _ = NONE
 
 fun find_Var var ctm =
   case Thm.term_of ctm
@@ -78,11 +67,11 @@ fun variable_assigner' (b,idx) (ctxt,sequent) =
      then (if Generic_Element_Access.is_empty_input (Thm.term_of idx)
            then Thm.instantiate
                    (TVars.empty,
-                    Vars.make [((("var",0),\<^typ>\<open>varname\<close>), Thm.cterm_of ctxt (Free(iname, \<^typ>\<open>varname\<close>)))])
+                    Vars.make [((("vari",0),\<^typ>\<open>varname\<close>), Thm.cterm_of ctxt (Free(iname, \<^typ>\<open>varname\<close>)))])
                    @{thm "__set_var_rule_0__\<phi>app"}
            else Thm.instantiate
                    (TVars.empty,
-                    Vars.make [((("var",0),\<^typ>\<open>varname\<close>), Thm.cterm_of ctxt (Free(iname, \<^typ>\<open>varname\<close>))),
+                    Vars.make [((("vari",0),\<^typ>\<open>varname\<close>), Thm.cterm_of ctxt (Free(iname, \<^typ>\<open>varname\<close>))),
                                ((("input_index",0), \<^typ>\<open>element_index_input\<close>), idx)])
                    @{thm "__set_var_rule__\<phi>app"},
            ctxt, [], [])

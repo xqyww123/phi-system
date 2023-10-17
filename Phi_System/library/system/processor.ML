@@ -126,7 +126,7 @@ fun apply_processors thy =
                               (#pattern p)
                     then SOME ((( Scan.permissive (#proc p (oprs, (ctxt,sequent)))
                                || (fn _ => raise Bypass))
-                               >> (fn f => f cfg)) toks
+                               #> (fn (f, toks) => (f (set_tokens toks cfg), toks))) toks
                                |> (fn (s, toks) =>
                                     if Phi_Opr_Stack.is_interrupted (#1 (#1 s))
                                     then (s, toks)

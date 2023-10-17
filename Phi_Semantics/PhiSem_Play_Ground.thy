@@ -10,7 +10,7 @@ theory PhiSem_Play_Ground
     PhiSem_Mem_Pointer
 begin
  
-(*
+
 declare [[\<phi>trace_reasoning = 0]]
 
 \<phi>type_def \<phi>Rational :: \<open>(VAL, rat) \<phi>\<close> ("\<rat>")
@@ -33,21 +33,23 @@ proc rat_add:
   input \<open>q1 \<Ztypecolon> \<v>\<a>\<l> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
   output \<open>q1 + q2 \<Ztypecolon> \<v>\<a>\<l> \<rat>\<close>
 \<medium_left_bracket>
-  var q1 \<leftarrow> $q1 destruct\<phi> _ ;; \<comment> \<open>The reasoner will not open an abstraction by default\<close>
-  var q2 \<leftarrow> $q2 destruct\<phi> _ ;; 
-  val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1] ;
+  val q1 \<leftarrow> $q1 to \<open>OPEN _\<close>
+  val q2 \<leftarrow> $q2 to \<open>OPEN _\<close>
+  val numerator \<leftarrow> $q1[0] * $q2[1] + $q2[0] * $q1[1]
   val denominator \<leftarrow> $q1[1] * $q2[1] ;
   \<lbrace> $numerator, $denominator \<rbrace>
 \<medium_right_bracket> . 
 
 thm rat_add_def
 
+
 proc test_ptr:
   input \<open>(ptr, x) \<Ztypecolon> \<v>\<a>\<l> \<lbrace> Ptr (tup [tup [aint], aint, aint]), \<int> \<rbrace>\<close>
   output \<open>ptr \<tribullet>\<^sub>a 2 \<Ztypecolon> \<v>\<a>\<l> Ptr aint\<close>
 \<medium_left_bracket>
-  val a, b \<leftarrow> (2, 0) ;
-  $1 \<tribullet> $b \<tribullet> $a
+  val a, b \<leftarrow> (2, 0)
+  ;; $1[0][2]
+  ;; $1 \<tribullet> $b \<tribullet> $a
 \<medium_right_bracket> .
 
  
@@ -74,8 +76,6 @@ proc
  *)
 (*
 int XX(int x) { if 0 < x then x - 1 else 0 }
-*)
-
 *)
 
 declare [[\<phi>trace_reasoning = 2]]

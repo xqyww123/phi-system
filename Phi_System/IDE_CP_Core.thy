@@ -2572,7 +2572,7 @@ in
                           |> Thm.cterm_of ctxt'
                           |> Goal.init
                           |> (fn thm => Phi_Sledgehammer_Solver.auto (id'' j) ctxt'
-                                            @{thm Premise_D[where mode=default]} RS thm)
+                                            (@{thm Premise_D[where mode=default]} RS thm))
                           |> Goal.conclude
                           |> single
                           |> Variable.export ctxt' ctxt
