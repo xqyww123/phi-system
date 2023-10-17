@@ -38,9 +38,12 @@ signature PHI_REASONERS = sig
 
 
   (*defer the leading antecedent to the nearest obligation and call the contract*)
-  val defer_antecedent : (Proof.context -> thm -> thm) (*contract*)
-                                 -> Proof.context -> thm -> thm Seq.seq
-  val defer_obligation_tac : contraction_mode -> Proof.context -> thm -> thm Seq.seq
+  val defer_antecedent : {can_inst:bool, fix_level:int}
+                      -> (Proof.context -> thm -> thm) (*contract*)
+                      -> Proof.context -> thm -> thm Seq.seq
+  val defer_obligation_tac : {can_inst:bool, fix_level:int}
+                          -> contraction_mode
+                          -> Proof.context -> thm -> thm Seq.seq
   val augment_conditions : thm list -> Proof.context -> thm -> thm
         (*augmenting conditions to the leading proof obligations*)
   val has_obligations_tag : thm -> bool
@@ -216,8 +219,6 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
    in(case (can_inst, PLPR_Syntax.dest_premise_tag (major_prem_of th))
         of (_, (_, Const (\<^const_name>\<open>True\<close>, _))) =>
                 SOME (@{thm' Premise_True} RS th, Seq.empty)
-         | (true, (_, Var _)) =>
-                SOME (@{thm' Premise_True} RS th, Seq.empty)
          | (true, (_, Const(\<^const_name>\<open>HOL.Not\<close>, _) $ X)) =>
              (let val th' = Thm.instantiate (TVars.empty,
                                 mk_boolean_inst (Phi_Help.beta_eta_contract_term X) false Vars.empty) th
@@ -238,6 +239,10 @@ fun oblg_template {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
              (*solves the equation by unification once single resolution*)
              (SOME (@{lemma' \<open>Premise mode (x = x)\<close> by (simp add: Premise_def)} RS th, Seq.empty)
               handle THM _ => f ctxt' th)
+         | (true, (_, V)) =>
+              if is_Var (Term.head_of V)
+              then SOME (@{thm' Premise_True} RS th, Seq.empty)
+              else f ctxt' th
          | _ => f ctxt' th)
    |> not (null fixing_targets) ? Option.map (fn (th, seq') =>
         let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
@@ -707,7 +712,7 @@ fun find_obligations_tag thm = tl (Thm.prems_of thm)
                      | _ => false)
 fun has_obligations_tag thm = find_obligations_tag thm <> ~1
 
-fun defer_antecedent contract = oblg_template {can_inst=true, fix_level=0} (fn ctxt => fn thm =>
+fun defer_antecedent cfg contract = oblg_template cfg (fn ctxt => fn thm =>
   let val idx = find_obligations_tag thm
   in if idx = ~1
      then error ("Fail to defer a proof obligation: an \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> antecedent is not found.")
@@ -717,7 +722,8 @@ fun defer_antecedent contract = oblg_template {can_inst=true, fix_level=0} (fn c
       |> (fn X => SOME (X, Seq.empty))
   end)
 
-val defer_obligation_tac = defer_antecedent o contract_obligations
+fun defer_obligation_tac cfg contr_mode =
+      defer_antecedent cfg (contract_obligations contr_mode)
 
 (*** Premise tac ***)
 

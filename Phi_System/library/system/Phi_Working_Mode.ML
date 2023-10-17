@@ -195,7 +195,7 @@ fun cast_exception desired ctxt sequent =
 
 fun vcg_by_cast destination ctxt sequent = (
       Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.block [
-        Pretty.str "casting to the destined post-condition ",
+        Pretty.str "casting to the target post-condition ",
         Syntax.pretty_term ctxt (Thm.term_of destination),
         Pretty.block (Pretty.here \<^here>)
       ]);

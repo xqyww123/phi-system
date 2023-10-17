@@ -1538,9 +1538,9 @@ val Phi_Reasoner_solve_obligation_and_no_defer =
           Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)
 fun defer_premise ctxt =
       case Config.get ctxt Phi_Reasoner_solve_obligation_and_no_defer
-          of 0 => Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt
+          of 0 => Phi_Reasoners.defer_obligation_tac {can_inst=true, fix_level=0} (true,true,~1) ctxt
            | 1 => (fn th => if Phi_Reasoners.has_obligations_tag th
-                            then Phi_Reasoners.defer_obligation_tac (true,true,~1) ctxt th
+                            then Phi_Reasoners.defer_obligation_tac {can_inst=true, fix_level=0} (true,true,~1) ctxt th
                             else Phi_Reasoners.safer_obligation_solver {can_inst=true} ctxt th)
            | 2 => Phi_Reasoners.safer_obligation_solver {can_inst=true} ctxt
            | 3 => Phi_Reasoners.auto_obligation_solver ctxt

@@ -1848,7 +1848,7 @@ fun reasoning ctxt0 sequent0 =
 
    in Subgoal.retrofit ctxt'' ctxt0 (#params focus) (#asms focus) 1 lsequent' sequent
    |> Seq.hd
-   |> Phi_Reasoners.defer_obligation_tac (false, true, ~1) ctxt
+   |> Phi_Reasoners.defer_obligation_tac {can_inst=false, fix_level=0} (false, true, ~1) ctxt
    |> Seq.hd
    |> varify_subgoal_finale
    |> reasoning ctxt

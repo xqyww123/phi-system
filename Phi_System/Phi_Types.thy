@@ -51,6 +51,8 @@ setup \<open>Context.theory_map (
        \<^here>, Phi_Type_Algebra.Derivings.empty, [])
    #> snd )\<close>
 
+declare [[\<phi>trace_reasoning = 3]]
+  
 let_\<phi>type \<phi>None
   deriving Basic
        and Functionality

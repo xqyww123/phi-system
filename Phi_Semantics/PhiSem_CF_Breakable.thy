@@ -2,6 +2,7 @@ theory PhiSem_CF_Breakable
   imports PhiSem_CF_Break PhiSem_CF_Basic
 begin
 
+declare [[\<phi>hide_techinicals=false]]
 
 text \<open>Since we have \<^verbatim>\<open>break\<close> and \<^verbatim>\<open>continue\<close> now, the termination condition of a loop is not
   necessarily the negative of the loop guard. Therefore here we need 3 assertions, invariance,
