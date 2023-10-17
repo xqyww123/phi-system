@@ -2095,7 +2095,7 @@ subsubsection \<open>Rule \& Implementation\<close>
 
 lemma "__value_access_0__":
   \<open> \<p>\<r>\<o>\<c> F \<lbrace> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E
-\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> Void \<r>\<e>\<m>\<a>\<i>\<n>\<s>[True] R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
+\<Longrightarrow> \<p>\<r>\<o>\<c> F \<lbrace> Void \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E \<close>
   by fastforce
 
 lemma implies_prod_right_1:

@@ -1929,8 +1929,9 @@ lemma apply_conditioned_Separation_Functor_unzip:
 \<Longrightarrow> x \<Ztypecolon> Fc(T \<^emph>[C] U) \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> (if C then un x else (func_mapper fst (\<lambda>_. True) x, undefined)) \<Ztypecolon> Ft(T) \<^emph>[C] Fu(U)\<close>
   unfolding Separation_Homo\<^sub>E_def \<phi>Prod_expn'[symmetric] Premise_def
   apply (cases C; simp) 
-  \<medium_left_bracket> premises FTF[] and [useful] and [] 
-    apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
+  \<medium_left_bracket> premises FTF[] and [useful] and []
+    note [[\<phi>trace_reasoning = 2]] 
+    ;; apply_rule apply_Functional_Transformation_Functor[where f=\<open>fst\<close> and P=\<open>\<lambda>_. True\<close>, OF FTF]
     \<medium_left_bracket> ;; \<medium_right_bracket> ;;
   \<medium_right_bracket> .
 

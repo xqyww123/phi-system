@@ -192,6 +192,8 @@ causing it is very difficult to recover the actual abstract guard
 \<open>cond\<close> from the reduced composition \<open>cond x'\<close>.
 *)
 
+declare [[\<phi>trace_reasoning = 2]]
+
 proc while:
   requires \<open>\<p>\<a>\<r>\<a>\<m> ( X x \<s>\<u>\<b>\<j> x. Inv: invariant x \<and> Guard: cond x)\<close>
     and V: "X' \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ((X x \<r>\<e>\<m>\<a>\<i>\<n>\<s> R) \<s>\<u>\<b>\<j> x. invariant x) \<w>\<i>\<t>\<h> Any @action NToA"
@@ -200,9 +202,9 @@ proc while:
   input  \<open>X'\<close>
   output \<open>R\<heavy_comma> X x \<s>\<u>\<b>\<j> x. invariant x \<and> \<not> cond x\<close>
   throws \<open>E1 + E2\<close>
-  \<medium_left_bracket> V C
+  \<medium_left_bracket> V C 
     branch \<medium_left_bracket>
-      do_while \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
+      ;;do_while ;; \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. Inv: invariant vars \<and> Guard: cond vars\<close>
       \<medium_left_bracket> B C \<medium_right_bracket>
     \<medium_right_bracket>
     \<medium_left_bracket> \<medium_right_bracket> for \<open>R\<heavy_comma> X vars \<s>\<u>\<b>\<j> vars. invariant vars \<and> \<not> cond vars\<close>

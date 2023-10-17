@@ -418,32 +418,36 @@ lemma \<phi>IntroFrameVar'_Yes:
 
 \<phi>reasoner_ML \<phi>IntroFrameVar 1000 ("\<phi>IntroFrameVar ?R ?S' ?S ?T' ?T") =
 \<open>fn (_, (ctxt, sequent)) =>
-  let
-    val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, \<^Type>\<open>fun \<^Type>\<open>option \<^Type>\<open>set Ty\<close>\<close> _\<close>) $ _ $ _ $ S $ _ $ _) =
-        Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = hd (Phi_Syntax.strip_separations S)
-    fun suppressed (Var _) = true
-      | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
-      | suppressed _ = false
-  in
-    if suppressed tail (* andalso fastype_of tail = \<^typ>\<open>assn\<close> *)
-    then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
-    else Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
+  let val (Const (\<^const_name>\<open>\<phi>IntroFrameVar\<close>, _) $ _ $ _ $ S $ _ $ _) =
+          Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
+      val suppressed = case S
+                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ C $ R =>
+                              Term.is_Var (Term.head_of R) andalso
+                              (case C of Const(\<^const_name>\<open>True\<close>, _) => true
+                                       | _ => Term.is_Var (Term.head_of C))
+                          | _ => (case hd (Phi_Syntax.strip_separations S)
+                         of (\<^const>\<open>TAIL\<close> $ _) => true
+                          | RR => Term.is_Var (Term.head_of RR))
+  in if suppressed
+     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar_No}  RS sequent)
+     else Seq.single (ctxt, @{thm \<phi>IntroFrameVar_Yes} RS sequent)
   end\<close>
 
 \<phi>reasoner_ML \<phi>IntroFrameVar' 1000 ("\<phi>IntroFrameVar' ?R ?S' ?S ?T' ?T ?E' ?E") =
 \<open>fn (_, (ctxt, sequent)) =>
-  let
-    val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
-        Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
-    val tail = hd (Phi_Syntax.strip_separations S)
-    fun suppressed (Var _) = true
-      | suppressed (\<^const>\<open>TAIL\<close> $ _) = true
-      | suppressed _ = false
-  in
-    if suppressed tail andalso fastype_of tail = \<^typ>\<open>assn\<close>
-    then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
-    else Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_Yes} RS sequent)
+  let val (Const (\<^const_name>\<open>\<phi>IntroFrameVar'\<close>, _) $ _ $ _ $ S $ _ $ _ $ _ $ _) =
+          Thm.major_prem_of sequent |> HOLogic.dest_Trueprop
+      val suppressed = case S
+                         of Const(\<^const_name>\<open>REMAINS\<close>, _) $ _ $ C $ R =>
+                              Term.is_Var (Term.head_of R) andalso
+                              (case C of Const(\<^const_name>\<open>True\<close>, _) => true
+                                       | _ => Term.is_Var (Term.head_of C))
+                          | _ => (case hd (Phi_Syntax.strip_separations S)
+                         of (\<^const>\<open>TAIL\<close> $ _) => true
+                          | RR => Term.is_Var (Term.head_of RR))
+  in if suppressed
+     then Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_No}  RS sequent)
+     else Seq.single (ctxt, @{thm \<phi>IntroFrameVar'_Yes} RS sequent)
   end\<close>
 
 hide_fact \<phi>IntroFrameVar_No \<phi>IntroFrameVar'_No \<phi>IntroFrameVar_Yes \<phi>IntroFrameVar'_Yes
