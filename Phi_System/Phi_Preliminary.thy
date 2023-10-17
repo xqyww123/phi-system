@@ -56,6 +56,8 @@ lemmas [\<phi>programming_base_simps] =
 setup \<open>Context.theory_map (Phi_Programming_Base_Simp_SS.map (fn ctxt =>
   ctxt addsimprocs [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>defined_Ex\<close>]))\<close>
 
+
+
 subsection \<open>Error Mechanism\<close>
 
 ML_file \<open>library/tools/error.ML\<close>

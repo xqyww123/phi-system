@@ -81,6 +81,25 @@ definition ToA_Construction :: \<open>'a \<Rightarrow> 'a BI \<Rightarrow> bool\
   where \<open>ToA_Construction = (\<Turnstile>)\<close>
 
 
+subsection \<open>Reasoning Configuration\<close>
+
+subsubsection \<open>Simplification\<close>
+
+\<phi>reasoner_ML \<phi>programming_simps (\<open>\<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] _ : _\<close>) =
+  \<open>fn (_, (ctxt,sequent)) => Seq.make (fn () =>
+    let val lev = Config.get ctxt Phi_Reasoner.auto_level
+     in if lev <= 0
+     then SOME ((ctxt, @{thm' Simplify_I} RS sequent), Seq.empty)
+     else sequent
+        |> PLPR_Simplifier.simplifier (K Seq.empty) (fn ctxt =>
+            if lev >= 2
+            then Phi_Programming_Simp_SS.enhance ctxt
+            else Phi_Programming_Simp_SS.enhance (Phi_Programming_Base_Simp_SS.equip ctxt)
+          ) {fix_vars=false} ctxt
+        |> Seq.map (pair ctxt)
+        |> Seq.pull
+    end)\<close>
+
 section \<open>Rules for Constructing Programs\<close>
 
 subsection \<open>Construct Procedure\<close>

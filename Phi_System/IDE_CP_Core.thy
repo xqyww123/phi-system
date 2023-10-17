@@ -773,7 +773,7 @@ text \<open>
 TODO: update the comment.
 \<close>
 
-
+(* depreciate
 subsubsection \<open>Post_Synthesis Simplification\<close>
 
 ML \<open>
@@ -790,7 +790,7 @@ consts post_synthesis_simp :: mode
 
 \<phi>reasoner_ML post_synthesis_simp %cutting (\<open>Simplify post_synthesis_simp ?X' ?X\<close>)
   = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Post_Synthesis_SS.get' {fix_vars=true}) o snd\<close>
-
+*)
 
 subsubsection \<open>Synthesis Operations\<close>
 
@@ -818,8 +818,7 @@ lemma [\<phi>reason %interp_\<phi>synthesis
 \<Longrightarrow> Begin_Optimum_Solution
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> S1 \<longmapsto> \<lambda>v. X' v \<r>\<e>\<m>\<a>\<i>\<n>\<s> S2 \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E @action synthesis
 \<Longrightarrow> End_Optimum_Solution
-\<Longrightarrow> Simplify post_synthesis_simp X'' X'
-\<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E
+\<Longrightarrow> (\<And>v. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] (X'' v, E'') : (X' v, E))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP DoSynthesis X
@@ -838,7 +837,7 @@ lemma [\<phi>reason %interp_\<phi>synthesis
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<s>\<h>\<i>\<f>\<t>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2 \<w>\<i>\<t>\<h> P
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> Simplify post_synthesis_simp X'' X'
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X'' : X'
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP DoSynthesis X
       (Trueprop (\<v>\<i>\<e>\<w> blk [H] \<i>\<s> S1))
@@ -855,7 +854,7 @@ lemma [\<phi>reason %interp_\<phi>synthesis
   " \<r>CALL Synthesis_Parse X X'
 \<Longrightarrow> S1 \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<r>\<e>\<m>\<a>\<i>\<n>\<s>[C] S2 \<w>\<i>\<t>\<h> P
 \<Longrightarrow> \<r>Success
-\<Longrightarrow> Simplify post_synthesis_simp X'' X'
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X'' : X'
 \<Longrightarrow> \<o>\<b>\<l>\<i>\<g>\<a>\<t>\<i>\<o>\<n> True
 \<Longrightarrow> PROP DoSynthesis X
       (Trueprop (\<a>\<b>\<s>\<t>\<r>\<a>\<c>\<t>\<i>\<o>\<n>(x) \<i>\<s> S1))
@@ -932,13 +931,12 @@ lemma [\<phi>reason %\<phi>ant_by_synthesis]:
 \<Longrightarrow> \<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> \<lambda>ret. A' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E' @action synthesis
 \<Longrightarrow> End_Optimum_Solution
 \<comment> \<open>BUG! TODO\<close>
-\<Longrightarrow> Simplify post_synthesis_simp A'' (\<lambda>ret. A' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R)
-\<Longrightarrow> Simplify (assertion_simps ABNORMAL) E'' E'
+\<Longrightarrow> (\<And>ret. \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] (A'' ret, E'') : (A' ret \<r>\<e>\<m>\<a>\<i>\<n>\<s> R, E'))
 \<Longrightarrow> (\<And>ret. A'' ret \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> Y ret @action NToA)
 \<Longrightarrow> (\<And>e. E'' e \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> E e @action NToA)
 \<Longrightarrow> PROP Synthesis_by A (Trueprop (\<p>\<r>\<o>\<c> f \<lbrace> X \<longmapsto> Y \<rbrace> \<t>\<h>\<r>\<o>\<w>\<s> E ))\<close>
   unfolding Synthesis_by_def Action_Tag_def Simplify_def
-  by (meson "_\<phi>cast_proc_exception_internal_rule_" "_\<phi>cast_proc_return_internal_rule_" Action_Tag_def Premise_True \<r>Success_I)
+  by (simp, meson "_\<phi>cast_proc_exception_internal_rule_" "_\<phi>cast_proc_return_internal_rule_" Action_Tag_def Premise_True \<r>Success_I)
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis]:
   \<open> (\<And>x. PROP Synthesis_by X (Trueprop (P x)))
@@ -970,37 +968,37 @@ lemma [\<phi>reason %\<phi>ant_by_synthesis_red]:
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (Trueprop (_ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> ?X' \<w>\<i>\<t>\<h> _))\<close>]:
   \<open> A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Simplify post_synthesis_simp X' X
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X' : X
 \<Longrightarrow> PROP Synthesis_by X (Trueprop (A \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' \<w>\<i>\<t>\<h> P))\<close>
   unfolding Synthesis_by_def Simplify_def by meson
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (Trueprop (_ \<s>\<h>\<i>\<f>\<t>\<s> ?X' \<w>\<i>\<t>\<h> _))\<close>]:
   \<open> A \<s>\<h>\<i>\<f>\<t>\<s> X \<w>\<i>\<t>\<h> P
-\<Longrightarrow> Simplify post_synthesis_simp X' X
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X' : X
 \<Longrightarrow> PROP Synthesis_by X (Trueprop (A \<s>\<h>\<i>\<f>\<t>\<s> X' \<w>\<i>\<t>\<h> P))\<close>
   unfolding Synthesis_by_def Simplify_def by meson
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<And>a. _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> ?P)\<close>]:
   \<open> (\<And>a. A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X a \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> Simplify post_synthesis_simp X' X
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X' : X
 \<Longrightarrow> PROP Synthesis_by X (\<And>a. A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
   unfolding Synthesis_by_def Simplify_def by meson
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<And>a. ?A a \<s>\<h>\<i>\<f>\<t>\<s> ?B a \<w>\<i>\<t>\<h> ?P)\<close>]:
   \<open> (\<And>a. A a \<s>\<h>\<i>\<f>\<t>\<s> X a \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> Simplify post_synthesis_simp X' X
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X' : X
 \<Longrightarrow> PROP Synthesis_by X (\<And>a. A a \<s>\<h>\<i>\<f>\<t>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
   unfolding Synthesis_by_def Simplify_def by meson
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t _ \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> _ \<w>\<i>\<t>\<h> ?P)\<close>]:
   \<open> (\<And>a. A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X a \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> Simplify post_synthesis_simp X' X
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X' : X
 \<Longrightarrow> PROP Synthesis_by X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A a \<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
   unfolding Synthesis_by_def Argument_def Simplify_def by meson
 
 lemma [\<phi>reason %\<phi>ant_by_synthesis for \<open>PROP Synthesis_by ?X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t ?A a \<s>\<h>\<i>\<f>\<t>\<s> ?B a \<w>\<i>\<t>\<h> ?P)\<close>]:
   \<open> (\<And>a. A a \<s>\<h>\<i>\<f>\<t>\<s> X a \<w>\<i>\<t>\<h> P)
-\<Longrightarrow> Simplify post_synthesis_simp X' X
+\<Longrightarrow> \<s>\<i>\<m>\<p>\<l>\<i>\<f>\<y>[programming_mode] X' : X
 \<Longrightarrow> PROP Synthesis_by X (\<And>a. \<^bold>a\<^bold>r\<^bold>g\<^bold>u\<^bold>m\<^bold>e\<^bold>n\<^bold>t A a \<s>\<h>\<i>\<f>\<t>\<s> X' a \<w>\<i>\<t>\<h> P)\<close>
   unfolding Synthesis_by_def Argument_def Simplify_def by meson
 
@@ -2054,7 +2052,7 @@ subsection \<open>Generic Variable Access\<close>
 subsubsection \<open>Annotation\<close>
 
 definition Value_of :: \<open>'x \<Rightarrow> 'v \<Rightarrow> element_index_input \<Rightarrow> 'x\<close> ("_ <val-of> _ <path> _" [23,23,23] 22)
-  where [iff, post_synthesis_simp]: \<open>(x <val-of> v <path> path) = x\<close>
+  where [iff, \<phi>programming_base_simps]: \<open>(x <val-of> v <path> path) = x\<close>
   \<comment> \<open>This tag annotates that \<open>x\<close> is the value of \<open>v\<close> at its element path \<open>path\<close>.
 
     One usage is during synthesis of variable access.
@@ -2065,7 +2063,7 @@ definition Value_of :: \<open>'x \<Rightarrow> 'v \<Rightarrow> element_index_in
     configured to synthesis the desired value.\<close>
 
 definition Set_Value :: \<open>'x \<Rightarrow> 'v \<Rightarrow> element_index_input \<Rightarrow> 'x\<close> ("_ <set-to> _ <path> _" [51, 1000, 51] 50)
-  where [iff, post_synthesis_simp]: \<open>(y <set-to> x <path> path) = y\<close>
+  where [iff, \<phi>programming_base_simps]: \<open>(y <set-to> x <path> path) = y\<close>
   \<comment> \<open>This tag is mainly used in synthesis, annotating the action of assigning the element \<open>path\<close>
       of value container \<open>x\<close> with value \<open>y\<close>. \<close>
 
